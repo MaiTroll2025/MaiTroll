@@ -630,7 +630,6 @@ export default function BottomNavigation() {
       { category: 'Broadcasting', label: 'Go Live', icon: Video, path: '/broadcast/setup', show: !!user && canBroadcast() },
 
       { category: 'Careers + Work', label: 'Jobs', icon: FileText, path: '/jobs' },
-      { category: 'Careers + Work', label: 'Mai Class', icon: BookOpen, path: '/mai-class' },
       { category: 'Careers + Work', label: 'My Earnings', icon: DollarSign, path: '/my-earnings' },
       { category: 'Careers + Work', label: 'My Orders', icon: ClipboardList, path: '/my-orders' },
       { category: 'Careers + Work', label: 'Hytro Gaming', icon: Gamepad2, path: '/hytrogaming' },

@@ -1,3 +1,4 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -15,7 +16,7 @@ async function isCEO(userId: string): Promise<boolean> {
   return !!(profile?.is_ceo || profile?.role === 'ceo' || profile?.is_admin)
 }
 
-export async function createGhostSession(req: Request, res: Response) {
+export async function createGhostSession(req: VercelRequest, res: VercelResponse) {
   try {
     const body = await req.json()
     const { streamId, userId } = body
@@ -83,7 +84,7 @@ export async function createGhostSession(req: Request, res: Response) {
   }
 }
 
-export async function leaveGhostSession(req: Request, res: Response) {
+export async function leaveGhostSession(req: VercelRequest, res: VercelResponse) {
   try {
     const body = await req.json()
     const { streamId, userId } = body
@@ -115,7 +116,7 @@ export async function leaveGhostSession(req: Request, res: Response) {
   }
 }
 
-export async function getGhostSessions(req: Request, res: Response) {
+export async function getGhostSessions(req: VercelRequest, res: VercelResponse) {
   try {
     const url = new URL(req.url)
     const streamId = url.searchParams.get('streamId')

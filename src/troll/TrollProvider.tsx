@@ -86,7 +86,6 @@ export const TrollProvider = ({ children }: TrollProviderProps) => {
     location.pathname.startsWith('/jail') ||
     location.pathname.startsWith('/court') ||
     location.pathname.startsWith('/church') ||
-    location.pathname.includes('/mai-class') ||
     location.pathname.includes('/coinstore') ||
     location.pathname.includes('/organization') ||
     location.pathname.includes('/tcnn') ||

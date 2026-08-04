@@ -187,7 +187,7 @@ async function sendTrackingNotifications(payload: TrackingWebhookPayload, normal
 
     if (!order) return
 
-    const itemTitle = order.marketplace_item?.title || 'Your item'
+    const itemTitle = order.marketplace_item?.[0]?.title || 'Your item'
 
     // Determine notification content based on status
     let title = ''

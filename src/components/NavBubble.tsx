@@ -175,12 +175,6 @@ export default function NavBubble() {
             icon: Briefcase,
           },
           {
-            label: 'Mai Class',
-            path: '/mai-class',
-            icon: Briefcase,
-            requiresAuth: true,
-          },
-          {
             label: 'Organization',
             path: '/organization/dashboard',
             icon: Building2,
