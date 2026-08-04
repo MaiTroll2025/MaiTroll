@@ -322,7 +322,7 @@ const ROLE_TASK_TEMPLATES: Record<string, RoleTaskTemplate[]> = {
     {
       title: 'Verify broadcast compliance',
       description:
-        'Confirm the assigned broadcast complies with current Troll City broadcasting requirements.',
+        'Confirm the assigned broadcast complies with current Mai Troll broadcasting requirements.',
       category: 'Compliance',
       priority: 'normal',
     },

@@ -3,8 +3,8 @@ const privacyPolicyHTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy - Troll City</title>
-  <link rel="canonical" href="https://maitrollcity.com/legal/privacy">
+  <title>Privacy Policy - Mai Troll</title>
+  <link rel="canonical" href="https://maiMai Troll.com/legal/privacy">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #e0e0e0; background: #05010a; }
     h1 { color: #f8f8f2; border-bottom: 1px solid #2c2c2c; padding-bottom: 10px; }
@@ -21,7 +21,7 @@ const privacyPolicyHTML = `<!DOCTYPE html>
     <p class="last-updated">Last updated: January 2026</p>
   </div>
 
-  <p><strong>Troll City</strong> (also referred to as "<strong>Mai Troll City</strong>") is a social streaming platform. This Privacy Policy explains how we collect, use, and protect your information when you use our app and services.</p>
+  <p><strong>Mai Troll</strong> (also referred to as "<strong>Mai Mai Troll</strong>") is a social streaming platform. This Privacy Policy explains how we collect, use, and protect your information when you use our app and services.</p>
 
   <h2>1. Information We Collect</h2>
   <p>We collect information you provide directly to us, such as when you create an account, verify your identity, request payouts, or contact support. This includes:</p>
@@ -33,7 +33,7 @@ const privacyPolicyHTML = `<!DOCTYPE html>
   </ul>
 
   <h2>2. How We Use Your Information</h2>
-  <p>We use your information to operate and improve Troll City, including:</p>
+  <p>We use your information to operate and improve Mai Troll, including:</p>
   <ul>
     <li>Processing transactions and payouts.</li>
     <li>Verifying your identity and age (compliance).</li>
@@ -47,7 +47,7 @@ const privacyPolicyHTML = `<!DOCTYPE html>
   <ul>
     <li><strong>Service Providers:</strong> With partners who help us provide services (e.g., payment processors, hosting).</li>
     <li><strong>Legal Requirements:</strong> If required by law, subpoena, or legal process.</li>
-    <li><strong>Safety:</strong> To protect the rights, property, or safety of Troll City, our users, or others.</li>
+    <li><strong>Safety:</strong> To protect the rights, property, or safety of Mai Troll, our users, or others.</li>
   </ul>
 
   <h2>4. Data Security</h2>
@@ -57,13 +57,13 @@ const privacyPolicyHTML = `<!DOCTYPE html>
   <p>Depending on your location, you may have rights to access, correct, or delete your personal information. You can manage most of your data in your Profile Settings. For other requests, contact support.</p>
 
   <h2>6. Children's Privacy</h2>
-  <p>Troll City is not intended for children under 13. We do not knowingly collect data from children under 13. If we learn we have collected such data, we will delete it. Users must be at least 18 to monetize or use paid features.</p>
+  <p>Mai Troll is not intended for children under 13. We do not knowingly collect data from children under 13. If we learn we have collected such data, we will delete it. Users must be at least 18 to monetize or use paid features.</p>
 
   <h2>7. Changes to This Policy</h2>
   <p>We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the new policy here.</p>
 
   <h2>8. Contact Information</h2>
-  <p>This app is operated by Mai Troll City. For privacy-related questions, please contact support through the app.</p>
+  <p>This app is operated by Mai Mai Troll. For privacy-related questions, please contact support through the app.</p>
 </body>
 </html>`;
 
@@ -72,7 +72,7 @@ const termsOfServiceHTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms of Service - Troll City</title>
+  <title>Terms of Service - Mai Troll</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #e0e0e0; background: #05010a; }
     h1 { color: #f8f8f2; border-bottom: 1px solid #2c2c2c; padding-bottom: 10px; }
@@ -84,11 +84,11 @@ const termsOfServiceHTML = `<!DOCTYPE html>
 <body>
   <h1>Terms of Service</h1>
   <p class="last-updated">Last updated: January 2026</p>
-  <p>By accessing or using Troll City ("the App"), you agree to be bound by these Terms of Service.</p>
+  <p>By accessing or using Mai Troll ("the App"), you agree to be bound by these Terms of Service.</p>
   <h2>1. Acceptance of Terms</h2>
-  <p>These terms constitute a binding agreement between you and Troll City. If you do not agree to these terms, do not use the App.</p>
+  <p>These terms constitute a binding agreement between you and Mai Troll. If you do not agree to these terms, do not use the App.</p>
   <h2>2. License Grant</h2>
-  <p>We grant you a limited, non-exclusive, non-transferable license to use Troll City for personal, non-commercial purposes.</p>
+  <p>We grant you a limited, non-exclusive, non-transferable license to use Mai Troll for personal, non-commercial purposes.</p>
   <h2>3. User Responsibilities</h2>
   <ul>
     <li>You must be at least 18 years old to use this app.</li>
@@ -96,10 +96,10 @@ const termsOfServiceHTML = `<!DOCTYPE html>
     <li>You will not engage in harassment, abuse, or illegal activity.</li>
   </ul>
   <h2>4. Content Ownership</h2>
-  <p>You retain ownership of content you create. By posting, you grant Troll City a license to display and distribute your content within the platform.</p>
+  <p>You retain ownership of content you create. By posting, you grant Mai Troll a license to display and distribute your content within the platform.</p>
   <h2>5. Termination</h2>
   <p>We may terminate or suspend your account for violation of these terms.</p>
-  <p><em>Troll City is operated by Mai Troll City. These terms are governed by the laws of [Jurisdiction].</em></p>
+  <p><em>Mai Troll is operated by Mai Mai Troll. These terms are governed by the laws of [Jurisdiction].</em></p>
 </body>
 </html>`;
 

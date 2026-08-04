@@ -1,5 +1,5 @@
 -- City Ads / Promo System Migration
--- Creates the city_ads table for internal Troll City promotional ads
+-- Creates the city_ads table for internal Mai Troll promotional ads
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.city_ads (
     end_at TIMESTAMPTZ,
     priority INTEGER DEFAULT 0,
     display_order INTEGER DEFAULT 0,
-    label TEXT DEFAULT 'Troll City Promo',
+    label TEXT DEFAULT 'Mai Troll Promo',
     campaign_type TEXT,
     background_style TEXT,
     impressions_count INTEGER DEFAULT 0,
@@ -147,7 +147,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Add comment
-COMMENT ON TABLE public.city_ads IS 'Internal Troll City promotional ads for house promos, special offers, and announcements';
+COMMENT ON TABLE public.city_ads IS 'Internal Mai Troll promotional ads for house promos, special offers, and announcements';
 COMMENT ON COLUMN public.city_ads.placement IS 'Placement location: left_sidebar_screensaver or right_panel_featured';
-COMMENT ON COLUMN public.city_ads.label IS 'Display label shown on the ad card (e.g., Troll City Promo, Special Offer)';
+COMMENT ON COLUMN public.city_ads.label IS 'Display label shown on the ad card (e.g., Mai Troll Promo, Special Offer)';
 COMMENT ON COLUMN public.city_ads.campaign_type IS 'Type of campaign: troll_coins, trollmonds, go_live, event, feature, limited_offer, announcement';

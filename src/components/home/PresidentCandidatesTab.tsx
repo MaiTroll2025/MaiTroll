@@ -334,7 +334,7 @@ function ElectionHeader({
         <div className="min-w-0">
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-lime-300/20 bg-lime-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-lime-200">
             <Sparkles className="h-3.5 w-3.5" />
-            Troll City Election Live
+            Mai Troll Election Live
           </div>
 
           <h3 className="truncate text-xl font-black text-white">{title}</h3>

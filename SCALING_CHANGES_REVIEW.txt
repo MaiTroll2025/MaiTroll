@@ -1,5 +1,5 @@
 ﻿================================================================================
-  TROLL CITY SCALING OPTIMIZATION - ALL CHANGES FOR REVIEW
+  Mai Troll SCALING OPTIMIZATION - ALL CHANGES FOR REVIEW
   Generated: 2026-06-21 22:19:13
 ================================================================================
 
@@ -425,7 +425,7 @@ index 4b4f20c..e6f7a0f 100644
 +}
 +
  if (typeof window !== 'undefined' && isDev()) {
-   ;(window as any).__TROLLCITY_REALTIME_MANAGER__ = {
+   ;(window as any).__Mai Troll_REALTIME_MANAGER__ = {
      getStats,
      cleanup,
      subscribe,

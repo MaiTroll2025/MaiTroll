@@ -8,8 +8,8 @@ const contactMethods = [
     icon: Mail,
     title: 'Email Us',
     description: 'Send us an email and we\'ll respond within 24 hours.',
-    action: 'trollcity2025@gmail.com',
-    link: 'mailto:trollcity2025@gmail.com'
+    action: 'ceo@maitroll.com',
+    link: 'mailto:Mai Troll2025@gmail.com'
   },
   {
     icon: MessageSquare,
@@ -34,7 +34,7 @@ const faqPreview = [
   },
   {
     question: 'How do I report a bug?',
-    answer: 'Use the Bug Center in the app or email us at bugs@maitrollcity.com with details.'
+    answer: 'Use the Bug Center in the app or email us at bugs@maiMaiTroll.com with details.'
   },
   {
     question: 'How do I delete my account?',
@@ -60,12 +60,12 @@ export default function ContactPage() {
 
   return (
     <SEOLayout
-      title="Contact Us | Troll City"
-      description="Contact Troll City (Mai Troll City) support team. Get help with your account, report issues, or send feedback. We're here to help."
+      title="Contact Us | Mai Troll"
+      description="Contact Mai Troll (MaiMaiTroll) support team. Get help with your account, report issues, or send feedback. We're here to help."
       keywords={[
-        'contact Troll City', 'Troll City support', 'Mai Troll City contact',
+        'contact Mai Troll', 'MaiTroll support', 'MaiMaiTroll contact',
         'help desk', 'customer support', 'report issue', 'feedback',
-        'Troll City email', 'Troll City help'
+        'MaiTroll email', 'MaiTroll help'
       ]}
     >
       <Breadcrumb items={[{ label: 'Contact' }]} />

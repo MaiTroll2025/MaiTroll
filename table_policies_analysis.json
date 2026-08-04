@@ -1985,13 +1985,13 @@
     "Authenticated users can react to posts",
     "Users can remove their own reactions"
   ],
-  "public.trollcity_orders": [
+  "public.Mai Troll_orders": [
     "deny_all"
   ],
-  "public.trollcity_products": [
+  "public.Mai Troll_products": [
     "deny_all"
   ],
-  "public.trollcity_shops": [
+  "public.Mai Troll_shops": [
     "auth_delete_own",
     "auth_insert_own",
     "auth_select_own",

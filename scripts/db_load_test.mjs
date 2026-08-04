@@ -67,7 +67,7 @@ async function createTestUsers(count) {
   const batchSize = 25;
   for (let i = 0; i < count; i += batchSize) {
     const batch = Array.from({ length: Math.min(batchSize, count - i) }, (_, idx) => {
-      const email = `load+${createdAt}-${i + idx}@trollcity.local`;
+      const email = `load+${createdAt}-${i + idx}@Mai Troll.local`;
       return adminClient.auth.admin.createUser({ email, password, email_confirm: true });
     });
 

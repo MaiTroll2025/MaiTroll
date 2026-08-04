@@ -32,7 +32,7 @@ export default function PromoAdCard({ ad, variant = 'sidebar', onClick }: PromoA
   const isHorizontal = variant === 'horizontal';
   const isRail = variant === 'rail';
 
-  // Check if URL is internal (Troll City route) vs external
+  // Check if URL is internal (Mai Troll route) vs external
   const isInternalLink = (url: string) => url.startsWith('/');
 
   // Determine if this is a maitalent promo

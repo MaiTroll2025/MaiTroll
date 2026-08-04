@@ -183,7 +183,7 @@ export default function TCNNInternalDashboard() {
 
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.3em] text-red-300">
-                    Troll City News Network
+                    Mai Troll News Network
                   </p>
                   <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
                     TCNN Newsroom Command

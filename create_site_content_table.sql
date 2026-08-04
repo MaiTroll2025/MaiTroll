@@ -122,7 +122,7 @@ INSERT INTO public.site_content (
 VALUES (
   'homepage_poster',
   'Earn & Cash Out',
-  'Troll City Rewards Hub',
+  'Mai Troll Rewards Hub',
   '[
     {"coins": 7500,  "usd": 25,  "label": "Tier 1", "color": "#cd7f32"},
     {"coins": 15000, "usd": 50,  "label": "Tier 2", "color": "#c0c0c0"},

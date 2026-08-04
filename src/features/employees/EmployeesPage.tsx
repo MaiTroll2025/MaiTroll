@@ -715,7 +715,7 @@ function EmployeesHeader({
 
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
-              Troll City Employee
+              Mai Troll Employee
             </p>
 
             <h1 className="mt-1 truncate text-lg font-black text-white">
@@ -999,7 +999,7 @@ function EmployeeAccessDenied() {
         </h1>
 
         <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-400">
-          This portal is available only to approved Troll City
+          This portal is available only to approved Mai Troll
           employees with an active employee role.
         </p>
 

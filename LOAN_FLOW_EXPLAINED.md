@@ -1,4 +1,4 @@
-# Troll City Loan Application Flow (Frontend → API → Supabase)
+# Mai Troll Loan Application Flow (Frontend → API → Supabase)
 
 ## 1. Frontend Request
 
@@ -8,7 +8,7 @@
   - `Content-Type: application/json`
   - `apikey: <VITE_SUPABASE_ANON_KEY>`
   - `Authorization: Bearer <access_token>`
-  - `x-client-info: trollcity-web`
+  - `x-client-info: Mai Troll-web`
 - **Request Body:**
   ```json
   {
@@ -74,7 +74,7 @@
   Authorization: Bearer <access_token>
   apikey: <VITE_SUPABASE_ANON_KEY>
   Content-Type: application/json
-  x-client-info: trollcity-web
+  x-client-info: Mai Troll-web
   ```
 - **Unauthorized Code Path:**
   ```typescript

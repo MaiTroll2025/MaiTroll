@@ -654,12 +654,11 @@ export default function AdminDashboard() {
       const { data: txData, error: txError } = await supabase
         .from('transactions')
         .select(
-          'id,user_id,type,transaction_type,coins_used,amount,description,status,metadata,created_at'
+          'id,user_id,transaction_type,coins_used,amount,description,status,metadata,created_at'
         )
         .or(
           [
             'transaction_type.eq.purchase',
-            'type.eq.purchase',
             'description.ilike.%PayPal purchase%',
             'description.ilike.%coin%',
             'metadata->>paypal_capture_id.not.is.null',
@@ -882,7 +881,7 @@ export default function AdminDashboard() {
         const { data: purchaseTx } = await supabase
           .from('transactions')
           .select('user_id, amount, coins_used, metadata')
-          .or('transaction_type.eq.purchase,type.eq.purchase,description.ilike.%coin%')
+          .or('transaction_type.eq.purchase,description.ilike.%coin%')
 
         // Also check paypal_transactions for authoritative PayPal purchase data
         const { data: paypalTx } = await supabase

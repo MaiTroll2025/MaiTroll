@@ -1,6 +1,6 @@
-# Troll City PWA Implementation Guide
+# Mai Troll PWA Implementation Guide
 
-This document describes the comprehensive Progressive Web App (PWA) implementation for Troll City, enabling native app-like experience for the livestreaming social platform.
+This document describes the comprehensive Progressive Web App (PWA) implementation for Mai Troll, enabling native app-like experience for the livestreaming social platform.
 
 ## Table of Contents
 
@@ -24,8 +24,8 @@ The manifest provides PWA metadata for installation prompts:
 
 ```json
 {
-  "name": "Troll City - Social Livestream Platform",
-  "short_name": "Troll City",
+  "name": "Mai Troll - Social Livestream Platform",
+  "short_name": "Mai Troll",
   "start_url": "/",
   "display": "standalone",
   "display_override": ["standalone", "fullscreen", "minimal-ui"],
@@ -159,7 +159,7 @@ Required environment variables:
 ```bash
 VAPID_PUBLIC_KEY=your_public_key
 VAPID_PRIVATE_KEY=your_private_key
-VAPID_SUBJECT=mailto:admin@maitrollcity.com
+VAPID_SUBJECT=mailto:admin@maiMai Troll.com
 ```
 
 ### Usage
@@ -180,7 +180,7 @@ if (pushPermission === 'default') {
 ### Offline Fallback Page (`public/offline.html`)
 
 Features:
-- Branded design matching Troll City theme
+- Branded design matching Mai Troll theme
 - Links to cached content
 - Auto-retry when connection restored
 - Connection status indicator
@@ -445,7 +445,7 @@ Add to `.env`:
 # VAPID Keys for Push Notifications
 VITE_VAPID_PUBLIC_KEY=your_vapid_public_key
 VAPID_PRIVATE_KEY=your_vapid_private_key
-VAPID_SUBJECT=mailto:admin@maitrollcity.com
+VAPID_SUBJECT=mailto:admin@maiMai Troll.com
 ```
 
 ---

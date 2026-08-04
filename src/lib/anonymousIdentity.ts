@@ -1,5 +1,5 @@
-const ANON_DISPLAY_NAME_KEY = 'trollcity-anonymous-display-name'
-const ANON_CHAT_COUNT_KEY = 'trollcity-anonymous-chat-count'
+const ANON_DISPLAY_NAME_KEY = 'MaiTroll-anonymous-display-name'
+const ANON_CHAT_COUNT_KEY = 'MaiTroll-anonymous-chat-count'
 const ANON_CHAT_LIMIT = 5
 
 export function getAnonymousDisplayName() {

@@ -1,5 +1,5 @@
 /**
- * Troll City Live Streaming Load Test
+ * Mai Troll Live Streaming Load Test
  * Tests capacity for:
  * (A) One room with 10k viewers
  * (B) 5k rooms with small audiences
@@ -352,7 +352,7 @@ class LoadTestSimulator {
 // Main execution
 async function main() {
   console.log('╔══════════════════════════════════════════════════════════════╗');
-  console.log('║     Troll City Live Streaming - Load Test & Capacity Plan   ║');
+  console.log('║     Mai Troll Live Streaming - Load Test & Capacity Plan   ║');
   console.log('╚══════════════════════════════════════════════════════════════╝');
 
   // Test Scenario A: Single Room 10k Viewers

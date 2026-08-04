@@ -80,7 +80,7 @@ export default function KickPage({ onClose, kickCount = 1 }: KickPageProps) {
               : 'bg-[#0A0A00] border-yellow-500/30'
           }`}>
             <h3 className={`font-semibold mb-2 ${isLastWarning ? 'text-orange-400' : 'text-yellow-400'}`}>
-              Re-enter Troll City
+              Re-enter Mai Troll
             </h3>
             <p className="text-sm text-gray-300 mb-3">
               Pay <strong className="text-yellow-400">250 troll_coins</strong> to re-enter the app.

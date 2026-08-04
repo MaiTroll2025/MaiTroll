@@ -1,6 +1,6 @@
 # Supabase Project - Complete Table Audit
 
-**Project:** Troll City  
+**Project:** Mai Troll  
 **Date:** 2026-06-10  
 **Total Unique Tables:** ~500+
 
@@ -379,9 +379,9 @@
 - troll_wall_likes
 - troll_wall_posts
 - troll_wall_reactions
-- trollcity_orders
-- trollcity_products
-- trollcity_shops
+- Mai Troll_orders
+- Mai Troll_products
+- Mai Troll_shops
 - trollmond_gifts
 - trollmond_ledger
 - trollmond_store_items

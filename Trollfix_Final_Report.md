@@ -75,7 +75,7 @@ The following migration files **MUST** be applied to the Supabase project using 
 **Target Stream**: `a5cc16a1-f5a3-4bc0-a9e7-2a7c0f243726`
 
 1.  **LiveKit Security**: **PASS**. Code review confirms strict server-side enforcement.
-2.  **HLS Reachability**: **PASS**. CDN endpoint `https://cdn.maitrollcity.com/...` returns 200 OK.
+2.  **HLS Reachability**: **PASS**. CDN endpoint `https://cdn.maiMai Troll.com/...` returns 200 OK.
 3.  **Chat Load**: **FAIL (Pending Migration)**. Script failed to insert due to missing `user_avatar` column. *Action: Apply Migration #1.*
 4.  **Gift Load**: **FAIL (Pending Migration)**. Script failed to insert into `gift_ledger` view. *Action: Verify underlying table schema and Apply Migration #2.*
 5.  **Leaderboard**: **WARN (Pending Migration)**. `broadcaster_stats` view missing. Fallback query worked (133ms) but is not O(1). *Action: Apply Migration #4.*

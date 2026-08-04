@@ -1416,7 +1416,7 @@ export default function LiveAuctionRoom() {
               </div>
               <div>
                 <p className="bg-gradient-to-r from-cyan-200 via-sky-200 to-purple-200 bg-clip-text text-xl font-black uppercase tracking-[0.25em] text-transparent">
-                  Troll City
+                  Mai Troll
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500">Live Auctions</p>
               </div>
@@ -2432,7 +2432,7 @@ export default function LiveAuctionRoom() {
           onClose={() => setIsShareModalOpen(false)}
           streamTitle={show.title}
           streamUrl={`${window.location.origin}/auction/${showId}`}
-          broadcasterName="Troll City Auction"
+          broadcasterName="Mai Troll Auction"
         />
       )}
 
@@ -2518,7 +2518,7 @@ function HostCard({ show, bids }: { show: AuctionShow; bids: AuctionBid[] }) {
           </div>
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Host / Auctioneer</p>
-            <h3 className="text-xl font-black">Troll City Auctioneer</h3>
+            <h3 className="text-xl font-black">Mai Troll Auctioneer</h3>
             <p className="text-sm text-slate-400">{show.title}</p>
           </div>
         </div>

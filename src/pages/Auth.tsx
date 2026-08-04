@@ -8,7 +8,7 @@ import { useAuthStore } from '../lib/store'
 import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Building2, Phone, Globe, MapPin } from 'lucide-react'
 import InstallButton from '../components/InstallButton';
 import NavBubble from '../components/NavBubble';
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { generateUUID } from '../lib/uuid';
 import { handleConcurrentLogin, resetConcurrentLoginCheck } from '../lib/sessionUtils';
 
@@ -134,7 +134,12 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
    const [orgPassword, setOrgPassword] = useState('')
    const [showOrgPassword, setShowOrgPassword] = useState(false)
    const [platform] = useState('')
-   const [selectedRole, setSelectedRole] = useState<'user' | 'staff' | 'admin' | 'organization'>('user')
+    const [selectedRole, setSelectedRole] = useState<'user' | 'staff' | 'admin' | 'organization'>('user')
+    const [isCelebSignup, setIsCelebSignup] = useState(false)
+    const [celebFullName, setCelebFullName] = useState('')
+    const [celebPhone, setCelebPhone] = useState('')
+    const [celebSocialLinks, setCelebSocialLinks] = useState<{ platform: string; url: string }[]>([])
+    const [showCelebFields, setShowCelebFields] = useState(false)
    const [roleEmailError, setRoleEmailError] = useState('')
    // Organization fields (only used when selectedRole === 'organization')
    const [orgName, setOrgName] = useState('')
@@ -468,12 +473,48 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
           return
         }
         
-         toast.success('Account created! Logging you in...')
-         // Use org credentials for org signup
-         const loginEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
-         const loginPassword = selectedRole === 'organization' ? orgPassword : password
-         await executeLogin(loginEmail, loginPassword)
-      }
+          toast.success('Account created! Logging you in...')
+          // Use org credentials for org signup
+          const loginEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
+          const loginPassword = selectedRole === 'organization' ? orgPassword : password
+          await executeLogin(loginEmail, loginPassword)
+
+          // If celeb signup was requested, submit the Celeb application
+          if (isCelebSignup) {
+            if (!celebFullName.trim() || !celebPhone.trim()) {
+              toast.error('Please provide your full name and phone number for the Celeb application')
+              return
+            }
+
+            try {
+              const socialMedia = celebSocialLinks.length > 0
+                ? celebSocialLinks.reduce((acc: Record<string, string>, link) => {
+                    acc[link.platform] = link.url
+                    return acc
+                  }, {})
+                : {}
+
+              toast.info('Submitting your Celeb application...')
+              const { success: appSuccess, error: appError } = await post(
+                API_ENDPOINTS.celeb.submitApplication,
+                {
+                  full_name: celebFullName.trim(),
+                  phone_number: celebPhone.trim(),
+                  email: email.trim(),
+                  social_media: socialMedia,
+                },
+              )
+
+              if (!appSuccess || appError) {
+                toast.error(appError || 'Failed to submit Celeb application')
+              } else {
+                toast.success('Celeb application submitted! You will be notified once reviewed.')
+              }
+            } catch (appErr: any) {
+              toast.error(appErr?.message || 'Failed to submit Celeb application')
+            }
+          }
+        }
     } catch (err: any) {
       console.error('Email auth error:', err)
       
@@ -558,13 +599,13 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
 
   return (
     <>
-    <div className={embedded ? "w-full text-white font-sans" : `auth-container flex items-center justify-center min-h-screen ${trollCityTheme.backgrounds.primary} text-white overflow-x-hidden relative font-sans`}>
+    <div className={embedded ? "w-full text-white font-sans" : `auth-container flex items-center justify-center min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white overflow-x-hidden relative font-sans`}>
       {/* Animated Background Gradients */}
       {!embedded && (
       <div className="absolute inset-0 overflow-hidden">
-        <div className={`absolute inset-0 ${trollCityTheme.overlays.radialPurple}`} />
-        <div className={`absolute inset-0 ${trollCityTheme.overlays.radialPink}`} />
-        <div className={`absolute inset-0 ${trollCityTheme.overlays.radialCyan}`} />
+        <div className={`absolute inset-0 ${MaiTrollTheme.overlays.radialPurple}`} />
+        <div className={`absolute inset-0 ${MaiTrollTheme.overlays.radialPink}`} />
+        <div className={`absolute inset-0 ${MaiTrollTheme.overlays.radialCyan}`} />
       </div>
       )}
 
@@ -593,7 +634,7 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
           <div className="flex flex-col items-center mb-8">
             <h1 className="text-4xl md:text-5xl font-black">
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                Troll City
+                Mai Troll
               </span>
             </h1>
             <p className="text-slate-400 text-sm mt-2 font-semibold tracking-widest">
@@ -803,6 +844,102 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
                      </div>
                     )}
 
+                 {/* Celeb Signup Checkbox (Sign Up Only) */}
+                 {!isLogin && (
+                   <>
+                     <div className="flex items-start gap-3 px-1">
+                       <div className="relative flex items-center pt-1">
+                         <input
+                           type="checkbox"
+                           id="celeb-signup"
+                           checked={isCelebSignup}
+                           onChange={(e) => {
+                             setIsCelebSignup(e.target.checked)
+                             setShowCelebFields(e.target.checked)
+                           }}
+                           className="peer h-5 w-5 appearance-none rounded border border-purple-500/30 bg-slate-800/50 checked:bg-purple-600 checked:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all cursor-pointer"
+                         />
+                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 transition-opacity">
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                           </svg>
+                         </div>
+                       </div>
+                       <label htmlFor="celeb-signup" className="text-sm text-slate-300 cursor-pointer select-none">
+                         Sign up as a{' '}
+                         <span className="text-yellow-400 font-semibold">Celebrity</span>
+                         {' '} — Apply for Celeb Stream status (requires review)
+                       </label>
+                     </div>
+
+                     {showCelebFields && (
+                       <>
+                         <div className="relative group">
+                           <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                           <input
+                             type="text"
+                             id="celeb-full-name"
+                             name="celeb-full-name"
+                             value={celebFullName}
+                             onChange={(e) => setCelebFullName(e.target.value)}
+                             className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all"
+                             placeholder="Full legal name"
+                             required={isCelebSignup}
+                           />
+                         </div>
+
+                         <div className="relative group">
+                           <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                           <input
+                             type="tel"
+                             id="celeb-phone"
+                             name="celeb-phone"
+                             value={celebPhone}
+                             onChange={(e) => setCelebPhone(e.target.value)}
+                             className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all"
+                             placeholder="Phone number"
+                             required={isCelebSignup}
+                           />
+                         </div>
+
+                         <div className="relative group">
+                           <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                           <input
+                             type="url"
+                             id="celeb-social-url"
+                             name="celeb-social-url"
+                             placeholder="Social media URL (e.g. https://instagram.com/yourname)"
+                             onKeyDown={(e) => {
+                               if (e.key === 'Enter') {
+                                 e.preventDefault()
+                                 const val = (e.target as HTMLInputElement).value.trim()
+                                 if (val) {
+                                   setCelebSocialLinks([...celebSocialLinks, { platform: 'social', url: val }])
+                                   ;(e.target as HTMLInputElement).value = ''
+                                 }
+                               }
+                             }}
+                             className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all"
+                           />
+                         </div>
+
+                         {celebSocialLinks.length > 0 && (
+                           <div className="flex flex-wrap gap-2">
+                             {celebSocialLinks.map((link, idx) => (
+                               <div key={idx} className="bg-slate-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-cyan-400 truncate max-w-full">
+                                 {link.url}
+                               </div>
+                             ))}
+                           </div>
+                         )}
+
+                         <div className="text-xs text-slate-500">
+                           Press Enter after entering a social media URL to add it. Your application will be reviewed by our team.
+                         </div>
+                       </>
+                     )}
+                   </>
+                 )}
                  {/* Submit Button */}
                 <button
                   type="submit"

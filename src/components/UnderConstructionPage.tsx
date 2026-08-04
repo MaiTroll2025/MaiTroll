@@ -4,9 +4,10 @@ import { ArrowLeft, Construction } from 'lucide-react';
 
 interface UnderConstructionPageProps {
   pageName?: string;
+  openingDate?: string;
 }
 
-export default function UnderConstructionPage({ pageName }: UnderConstructionPageProps) {
+export default function UnderConstructionPage({ pageName, openingDate }: UnderConstructionPageProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const path = searchParams.get('path');
@@ -14,7 +15,6 @@ export default function UnderConstructionPage({ pageName }: UnderConstructionPag
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black text-white gap-6 px-6">
-      {/* Animated construction icon */}
       <div className="relative">
         <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border-2 border-amber-500/30 flex items-center justify-center">
           <Construction size={48} className="text-amber-400 animate-pulse" />
@@ -32,6 +32,13 @@ export default function UnderConstructionPage({ pageName }: UnderConstructionPag
         <span className="text-white font-bold capitalize">{displayName}</span> is currently being built and is not accessible yet.
         Check back later!
       </p>
+
+      {openingDate && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full">
+          <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+          <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">Opening {openingDate}</span>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full">
         <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />

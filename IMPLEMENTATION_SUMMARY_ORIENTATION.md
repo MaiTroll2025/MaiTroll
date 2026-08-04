@@ -17,7 +17,7 @@
 
 ### 2. Frontend Pages
 - ✅ Created `src/pages/officer/Orientation.tsx` - Training content page with:
-  - Troll City Conduct Standards
+  - Mai Troll Conduct Standards
   - What is Bannable section
   - How to Review a Report
   - Warn vs Suspend vs Ban

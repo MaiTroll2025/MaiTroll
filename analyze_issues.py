@@ -1,7 +1,7 @@
 import json
 import os
 
-file_path = r'e:\trollcity-1\issues'
+file_path = r'e:\Mai Troll-1\issues'
 
 try:
     with open(file_path, 'r', encoding='utf-8') as f:

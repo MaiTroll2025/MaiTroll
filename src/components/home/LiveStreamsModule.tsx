@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, Video, Star, Trophy, TrendingUp, Flame, Zap, Crown, Sparkles } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { trollCityTheme } from '@/styles/trollCityTheme'
+import { MaiTrollTheme } from '@/styles/trollCityTheme'
 import { useLiveStreams, queryKeys } from '@/hooks/useQueries'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -146,7 +146,7 @@ export default function LiveStreamsModule({ onRequireAuth }: LiveStreamsModulePr
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} aspect-video rounded-2xl animate-pulse`}
+            className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} aspect-video rounded-2xl animate-pulse`}
           />
         ))}
       </div>
@@ -155,12 +155,12 @@ export default function LiveStreamsModule({ onRequireAuth }: LiveStreamsModulePr
 
   if (streams.length === 0) {
     return (
-      <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6 text-center`}>
+      <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 text-center`}>
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
           <Video className="h-6 w-6 text-white/40" />
         </div>
         <h3 className="text-lg font-semibold text-white">No Live Streams</h3>
-        <p className={`${trollCityTheme.text.muted} text-sm mt-1`}>Be the first to go live.</p>
+        <p className={`${MaiTrollTheme.text.muted} text-sm mt-1`}>Be the first to go live.</p>
       </div>
     )
   }
@@ -214,7 +214,7 @@ export default function LiveStreamsModule({ onRequireAuth }: LiveStreamsModulePr
                 <div
                   key={stream.id}
                   onClick={() => handleJoin(stream.id)}
-                  className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 ${
+                  className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 ${
                     isSpecialSection && section.key === 'featured'
                       ? 'hover:border-yellow-400/40 hover:shadow-lg hover:shadow-yellow-500/10 border-2 border-yellow-500/30'
                       : isSpecialSection && section.key === 'trending'

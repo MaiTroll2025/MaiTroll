@@ -108,7 +108,7 @@ export function InstallPrompt({ className = '', variant = 'banner' }: InstallPro
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">
-                        Install Troll City for the best experience
+                        Install Mai Troll for the best experience
                       </p>
                       <p className="text-xs text-purple-200">
                         Get notifications, offline access & instant loading
@@ -169,10 +169,10 @@ export function InstallPrompt({ className = '', variant = 'banner' }: InstallPro
                     <Smartphone className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-2">
-                    Install Troll City
+                    Install Mai Troll
                   </h3>
                   <p className="text-gray-400 mb-6">
-                    Add Troll City to your home screen for instant access, push notifications, and offline features.
+                    Add Mai Troll to your home screen for instant access, push notifications, and offline features.
                   </p>
                   <div className="space-y-3">
                     <button
@@ -250,7 +250,7 @@ function IOSInstallModal({ isOpen, onClose }: IOSInstallModalProps) {
         >
           <div className="text-center">
             <h3 className="text-xl font-bold text-white mb-2">
-              Install Troll City
+              Install Mai Troll
             </h3>
             <p className="text-gray-400 text-sm mb-6">
               Install this app on your iPhone for the best experience
@@ -382,7 +382,7 @@ export function UpdateBanner() {
       <div className="flex items-center justify-between">
         <div>
           <p className="font-semibold">Update Available</p>
-          <p className="text-sm text-purple-100">A new version of Troll City is ready</p>
+          <p className="text-sm text-purple-100">A new version of Mai Troll is ready</p>
         </div>
         <button
           onClick={updateApp}

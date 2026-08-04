@@ -228,7 +228,7 @@ create policy "Hosts can manage chat" on public.troll_station_chat for delete us
 
 -- Insert default station record
 insert into public.troll_station (id, name, description, is_online, current_mode)
-values ('00000000-0000-0000-0000-000000000001', 'Troll Station', 'Troll City Community Radio', false, 'auto')
+values ('00000000-0000-0000-0000-000000000001', 'Troll Station', 'Mai Troll Community Radio', false, 'auto')
 on conflict (id) do nothing;
 
 -- Add yourself as a host (replace YOUR_USER_ID with your user ID)

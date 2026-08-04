@@ -11,7 +11,7 @@ export default function BonusesPage() {
         <div className="rounded-[2rem] border border-cyan-400/20 bg-slate-950/80 p-8 shadow-[0_0_40px_rgba(45,212,191,0.12)] backdrop-blur-2xl">
           <h1 className="text-4xl font-black text-white">Bonuses, Coin Rewards & Fees</h1>
           <p className="mt-3 max-w-2xl text-slate-300">
-            Learn how new user bonuses, coin purchase rewards, and platform fees work in Troll City.
+            Learn how new user bonuses, coin purchase rewards, and platform fees work in Mai Troll.
           </p>
         </div>
 
@@ -29,7 +29,7 @@ export default function BonusesPage() {
           <section className="rounded-3xl border border-slate-700/80 bg-slate-900/80 p-6 shadow-lg">
             <h2 className="text-2xl font-semibold text-cyan-200">Cashout Fees</h2>
             <p className="mt-4 text-slate-300">
-              Troll City does not charge any fees to cash out your earnings.
+              Mai Troll does not charge any fees to cash out your earnings.
             </p>
             <p className="mt-2 text-slate-400">
               The full USD value of your selected cashout tier is paid out. Minimum cashout is 2,000 coins.

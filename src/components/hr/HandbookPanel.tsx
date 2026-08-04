@@ -14,9 +14,9 @@ const HANDBOOK_SECTIONS: HandbookSection[] = [
     title: 'Company Rules & Expectations',
     icon: Shield,
     content: [
-      'All approved role holders must adhere to the Troll City Code of Conduct at all times.',
+      'All approved role holders must adhere to the Mai Troll Code of Conduct at all times.',
       'Misuse of role permissions, moderation tools, or platform systems will result in immediate suspension and potential permanent removal.',
-      'Role holders represent Troll City and must maintain professional conduct in all official interactions.',
+      'Role holders represent Mai Troll and must maintain professional conduct in all official interactions.',
       'Confidential information encountered during role duties must not be shared externally.',
       'Failure to clock in/out accurately may affect payroll processing.',
     ],
@@ -38,7 +38,7 @@ const HANDBOOK_SECTIONS: HandbookSection[] = [
     title: 'Payout & Compensation Rules',
     icon: DollarSign,
     content: [
-      'Payroll is processed internally by Troll City\'s proprietary payroll system.',
+      'Payroll is processed internally by Mai Troll\'s proprietary payroll system.',
       'Base pay is calculated from verified clock-in/out records and approved shift hours.',
       'Bonuses may be awarded for exceptional performance, special events, or leadership contributions.',
       'Deductions may apply for policy violations, fines, or administrative actions as determined by HR/Admin.',
@@ -80,7 +80,7 @@ const HANDBOOK_SECTIONS: HandbookSection[] = [
       'Manipulating payroll records, hours, or payout amounts is fraud and will be prosecuted.',
       'Submitting false information in applications or HR forms is grounds for immediate rejection and potential ban.',
       'Collusion between role holders to exploit systems or bypass controls is a serious violation.',
-      'All HR actions are audited. Troll City maintains logs of all approvals, rejections, and role changes.',
+      'All HR actions are audited. Mai Troll maintains logs of all approvals, rejections, and role changes.',
     ],
   },
   {
@@ -104,14 +104,14 @@ export default function HandbookPanel() {
       <div>
         <h3 className="text-lg font-black text-white">Handbook & Rules</h3>
         <p className="text-xs text-slate-400">
-          Troll City internal handbook covering rules, expectations, and policies for all approved role holders.
+          Mai Troll internal handbook covering rules, expectations, and policies for all approved role holders.
         </p>
       </div>
 
       <div className="rounded-3xl border border-cyan-300/10 bg-cyan-500/5 p-4">
         <p className="text-xs text-cyan-200">
           <BookOpen className="mr-1 inline h-3.5 w-3.5" />
-          This handbook applies to all Troll City staff, contractors, agency members, moderators, creators, officers, court officials, pastors, and internal platform roles.
+          This handbook applies to all Mai Troll staff, contractors, agency members, moderators, creators, officers, court officials, pastors, and internal platform roles.
         </p>
       </div>
 

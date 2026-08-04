@@ -11,21 +11,21 @@ import { CheckCircle, Copy, Loader2, AlertCircle } from 'lucide-react';
 const PROVIDERS = {
   venmo: {
     name: 'Venmo',
-    handle: 'trollcityllc',
+    handle: 'MaiTrollllc',
     prefix: '@',
     color: 'bg-[#008CFF]',
     icon: '📱'
   },
   paypal: {
     name: 'PayPal',
-    handle: 'trollcity2025',
+    handle: 'MaiTroll2025',
     prefix: '@',
     color: 'bg-[#00457C]',
     icon: '🅿️'
   },
   cashapp: {
     name: 'Cash App',
-    handle: 'trollcity26',
+    handle: 'MaiTroll26',
     prefix: '$',
     color: 'bg-[#00D632]',
     icon: '💲'
@@ -59,7 +59,7 @@ export default function ManualPaymentModal({ isOpen, onClose, pkg, providerId = 
     }
 
     if (!username.trim()) {
-      toast.error('Please enter your Troll City username');
+      toast.error('Please enter your Mai Troll username');
       return;
     }
 
@@ -128,7 +128,7 @@ export default function ManualPaymentModal({ isOpen, onClose, pkg, providerId = 
           cash_app_tag: payerHandle,
           purchase_type: 'manual_' + providerId,
           username: username.trim() || profile?.username || user?.email?.split('@')[0],
-          trollcity_username: username.trim()
+          MaiTroll_username: username.trim()
         }
       });
 
@@ -213,10 +213,10 @@ export default function ManualPaymentModal({ isOpen, onClose, pkg, providerId = 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="username">Your Troll City Username <span className="text-red-400">*</span></Label>
+              <Label htmlFor="username">Your Mai Troll Username <span className="text-red-400">*</span></Label>
               <Input
                 id="username"
-                placeholder="Enter your Troll City username"
+                placeholder="Enter your Mai Troll username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"

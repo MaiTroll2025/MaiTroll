@@ -21,7 +21,7 @@ import {
   Building2,
   Video
 } from 'lucide-react';
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { MaiTrollTheme } from '../styles/trollCityTheme';
 
 type AppealCategory = 'non_delivery' | 'not_as_described' | 'damaged_item' | 'seller_issue' | 'buyer_issue' | 'payment_issue' | 'other';
 type AppealStatus = 'pending' | 'under_review' | 'approved' | 'denied' | 'escalated' | 'withdrawn';
@@ -137,7 +137,7 @@ export default function CityRegistry() {
       if (shopOrdersData && shopOrdersData.length > 0) {
         const shopIds = [...new Set(shopOrdersData.map((o) => o.shop_id))];
         const { data: shopsData } = await supabase
-          .from('trollcity_shops')
+          .from('MaiTroll_shops')
           .select('id, shop_name')
           .in('id', shopIds);
         const shopMap = new Map(shopsData?.map((s) => [s.id, s.shop_name]) || []);
@@ -330,15 +330,15 @@ export default function CityRegistry() {
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header */}
-        <div className={`flex items-center gap-4 border-b ${trollCityTheme.borders.glass} pb-6`}>
-          <div className={`p-4 ${trollCityTheme.backgrounds.card} rounded-2xl border ${trollCityTheme.borders.glass}`}>
+        <div className={`flex items-center gap-4 border-b ${MaiTrollTheme.borders.glass} pb-6`}>
+          <div className={`p-4 ${MaiTrollTheme.backgrounds.card} rounded-2xl border ${MaiTrollTheme.borders.glass}`}>
             <Building2 className="w-10 h-10 text-cyan-400" />
           </div>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
               City Registry - Appeals
             </h1>
-            <p className={`${trollCityTheme.text.muted} mt-1`}>
+            <p className={`${MaiTrollTheme.text.muted} mt-1`}>
               File appeals for transaction disputes. Coins are held in escrow until delivery is confirmed.
             </p>
           </div>
@@ -402,7 +402,7 @@ export default function CityRegistry() {
             {activeTab === 'file' && (
               <div className="space-y-6">
                 {/* Order Selection */}
-                <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-6 rounded-2xl`}>
+                <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-6 rounded-2xl`}>
                   <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                     <Package className="w-5 h-5 text-cyan-400" />
                     Select Order to Appeal
@@ -463,7 +463,7 @@ export default function CityRegistry() {
 
                 {/* Appeal Form */}
                 {selectedOrder && (
-                  <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-6 rounded-2xl`}>
+                  <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-6 rounded-2xl`}>
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <FileText className="w-5 h-5 text-cyan-400" />
                       Appeal Details
@@ -557,7 +557,7 @@ export default function CityRegistry() {
                 </div>
                 
                 {filteredAppeals.length === 0 ? (
-                  <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-12 rounded-2xl text-center`}>
+                  <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-12 rounded-2xl text-center`}>
                     <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-gray-400">No Appeals Filed</h3>
                     <p className="text-gray-500 mt-2">You haven&apos;t filed any appeals yet.</p>
@@ -573,7 +573,7 @@ export default function CityRegistry() {
                     {filteredAppeals.map(appeal => (
                       <div
                         key={appeal.id}
-                        className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-2xl`}
+                        className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-2xl`}
                       >
                         <div className="flex justify-between items-start mb-3">
                           <div>
@@ -623,7 +623,7 @@ export default function CityRegistry() {
         )}
 
         {/* Info Box */}
-        <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-xl`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-xl`}>
           <h3 className="font-semibold flex items-center gap-2 mb-2">
             <Scale className="w-4 h-4 text-cyan-400" />
             How the Appeal System Works

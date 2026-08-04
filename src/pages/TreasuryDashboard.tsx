@@ -393,7 +393,7 @@ export default function TreasuryDashboard() {
         <div className="rounded-[28px] border border-cyan-400/20 bg-slate-950/80 p-6 shadow-[0_0_36px_rgba(34,211,238,0.12)] backdrop-blur">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">Troll City Treasury</p>
+              <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">Mai Troll Treasury</p>
               <div>
                 <h1 className="text-3xl font-semibold text-white sm:text-4xl">Weekly treasury and payout control</h1>
 <p className="mt-2 max-w-3xl text-sm text-slate-300 sm:text-base">

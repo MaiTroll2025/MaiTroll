@@ -62,7 +62,7 @@ function PromoCardGrid({ cards }: { cards: UserPromoCard[] }) {
         .maybeSingle()
 
       if (cardError || !cardData) {
-        toast.error('Promo debug: code not found in Troll City DB')
+        toast.error('Promo debug: code not found in Mai Troll DB')
         return
       }
 
@@ -221,7 +221,7 @@ export default function ProfileMaitalentPromos() {
         </div>
         <h3 className="text-xl font-black text-white">No Promo Cards Yet</h3>
         <p className="mt-2 text-sm text-white/60 max-w-md mx-auto">
-          Start a broadcast, watch streams, or share maitrollcity.com / maitalent.fun links to earn MaiTalent promo cards.
+          Start a broadcast, watch streams, or share maiMaiTroll.com / maitalent.fun links to earn MaiTalent promo cards.
         </p>
       </div>
     )

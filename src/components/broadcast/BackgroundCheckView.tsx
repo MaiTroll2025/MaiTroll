@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Shield, AlertTriangle, Scale, Clock, TrendingUp, TrendingDown } from 'lucide-react';
-import { trollCityTheme } from '../../styles/trollCityTheme';
+import { MaiTrollTheme } from '../../styles/trollCityTheme';
 
 interface BackgroundCheckViewProps {
   userId: string;
@@ -148,7 +148,7 @@ export default function BackgroundCheckView({ userId }: BackgroundCheckViewProps
       </div>
 
       {/* Credit Score Card */}
-      <div className={`${trollCityTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}>
+      <div className={`${MaiTrollTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-green-400" />
@@ -183,7 +183,7 @@ export default function BackgroundCheckView({ userId }: BackgroundCheckViewProps
       </div>
 
       {/* Jail Records */}
-      <div className={`${trollCityTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}>
+      <div className={`${MaiTrollTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}>
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-red-400" />
           <h3 className="text-lg font-bold text-white">Jail History</h3>
@@ -222,7 +222,7 @@ export default function BackgroundCheckView({ userId }: BackgroundCheckViewProps
       </div>
 
       {/* Report/Incident Records */}
-      <div className={`${trollCityTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}>
+      <div className={`${MaiTrollTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}>
         <div className="flex items-center gap-2 mb-4">
           <Scale className="w-5 h-5 text-yellow-400" />
           <h3 className="text-lg font-bold text-white">Report History</h3>
@@ -258,7 +258,7 @@ export default function BackgroundCheckView({ userId }: BackgroundCheckViewProps
       </div>
 
       {/* Summary */}
-      <div className={`${trollCityTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}>
+      <div className={`${MaiTrollTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}>
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Clock className="w-5 h-5 text-blue-400" />
           Summary
@@ -289,7 +289,7 @@ export default function BackgroundCheckView({ userId }: BackgroundCheckViewProps
         </div>
       </div>
       {/* License & Insurance Details */}
-      <div className={`${trollCityTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}> 
+      <div className={`${MaiTrollTheme?.backgrounds?.card || 'bg-slate-800'} border border-white/10 rounded-xl p-6`}> 
         <h3 className="text-lg font-bold text-white mb-3">License & Insurance</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-lg p-3 bg-black/30">

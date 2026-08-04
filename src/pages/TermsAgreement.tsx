@@ -4,7 +4,7 @@ import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { CheckCircle, XCircle, FileText } from 'lucide-react'
-import { trollCityTheme } from '../styles/trollCityTheme'
+import { MaiTrollTheme } from '../styles/trollCityTheme'
 import { flushSync } from 'react-dom'
 
 export default function TermsAgreement() {
@@ -147,7 +147,7 @@ export default function TermsAgreement() {
          }
        }
 
-       toast.success('Welcome to Mai Troll City!')
+       toast.success('Welcome to MaiMaiTroll!')
 
        const targetPath = (updatedProfile?.role || profile?.role) === 'admin' ? '/admin' : '/home'
 
@@ -181,37 +181,37 @@ export default function TermsAgreement() {
       { icon: '💸', title: 'No Chargebacks', desc: 'All coin purchases are final. Chargebacks will result in permanent ban.' },
       { icon: '🔒', title: 'Account Reset on Ban', desc: 'Banned users lose ALL progress: coins, XP, level, badges reset to 0' },
       { icon: '📊', title: 'Free Marketplace', desc: 'No fees to run a shop. Sellers keep 100% of earnings from item sales.' },
-      { icon: '🎥', title: 'Content Ownership', desc: 'By streaming, you grant Troll City rights to use your content for promotion' },
+      { icon: '🎥', title: 'Content Ownership', desc: 'By streaming, you grant Mai Troll rights to use your content for promotion' },
       { icon: '⚖️', title: 'Dispute Resolution', desc: 'All disputes must go through our support ticket system first' },
       { icon: '🔄', title: 'Terms Can Change', desc: 'We reserve the right to update these terms. Continued use means acceptance.' },
     ]
   }
 
   return (
-    <div className={`fixed inset-0 z-[100000] overflow-y-auto ${trollCityTheme.backgrounds.app} text-white pointer-events-auto`}>
+    <div className={`fixed inset-0 z-[100000] overflow-y-auto ${MaiTrollTheme.backgrounds.app} text-white pointer-events-auto`}>
       <div className="max-w-5xl mx-auto p-6 pb-20">
         {/* Header */}
         <div className="text-center mb-8">
           <FileText className="w-16 h-16 mx-auto mb-4 text-troll-neon-blue" />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-green-400 bg-clip-text text-transparent mb-2">
-            Welcome to Mai Troll City
+            Welcome to MaiMaiTroll
           </h1>
-          <p className={`${trollCityTheme.text.muted}`}>Please read and agree to our platform terms before continuing</p>
+          <p className={`${MaiTrollTheme.text.muted}`}>Please read and agree to our platform terms before continuing</p>
         </div>
 
         {/* Pros Section */}
-        <div className={`${trollCityTheme.backgrounds.card} rounded-xl border border-green-500/30 p-6 mb-6`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl border border-green-500/30 p-6 mb-6`}>
           <h2 className="text-2xl font-bold text-green-400 mb-4 flex items-center gap-2">
             <CheckCircle className="w-6 h-6" />
             Platform Benefits
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {terms.pros.map((pro, i) => (
-              <div key={i} className={`flex gap-3 p-4 ${trollCityTheme.backgrounds.input} rounded-lg ${trollCityTheme.borders.glass}`}>
+              <div key={i} className={`flex gap-3 p-4 ${MaiTrollTheme.backgrounds.input} rounded-lg ${MaiTrollTheme.borders.glass}`}>
                 <span className="text-3xl">{pro.icon}</span>
                 <div>
                   <h3 className="font-semibold text-green-300">{pro.title}</h3>
-                  <p className={`text-sm ${trollCityTheme.text.muted}`}>{pro.desc}</p>
+                  <p className={`text-sm ${MaiTrollTheme.text.muted}`}>{pro.desc}</p>
                 </div>
               </div>
             ))}
@@ -219,18 +219,18 @@ export default function TermsAgreement() {
         </div>
 
         {/* Rules Section */}
-        <div className={`${trollCityTheme.backgrounds.card} rounded-xl border border-red-500/30 p-6 mb-6`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl border border-red-500/30 p-6 mb-6`}>
           <h2 className="text-2xl font-bold text-red-400 mb-4 flex items-center gap-2">
             <XCircle className="w-6 h-6" />
             Platform Rules & Consequences
           </h2>
           <div className="grid grid-cols-1 gap-4">
             {terms.rules.map((rule, i) => (
-              <div key={i} className={`flex gap-3 p-4 ${trollCityTheme.backgrounds.input} rounded-lg ${trollCityTheme.borders.glass}`}>
+              <div key={i} className={`flex gap-3 p-4 ${MaiTrollTheme.backgrounds.input} rounded-lg ${MaiTrollTheme.borders.glass}`}>
                 <span className="text-3xl">{rule.icon}</span>
                 <div>
                   <h3 className="font-semibold text-red-300">{rule.title}</h3>
-                  <p className={`text-sm ${trollCityTheme.text.muted}`}>{rule.desc}</p>
+                  <p className={`text-sm ${MaiTrollTheme.text.muted}`}>{rule.desc}</p>
                 </div>
               </div>
             ))}
@@ -256,8 +256,8 @@ export default function TermsAgreement() {
         </div>
 
         {/* Agreement Text */}
-        <div className={`relative z-[9999] ${trollCityTheme.backgrounds.card} rounded-xl ${trollCityTheme.borders.glass} p-6 mb-6 space-y-4 pointer-events-auto`} style={{ zIndex: 99999 }}>
-          <div className={`space-y-4 ${trollCityTheme.text.muted}`}>
+        <div className={`relative z-[9999] ${MaiTrollTheme.backgrounds.card} rounded-xl ${MaiTrollTheme.borders.glass} p-6 mb-6 space-y-4 pointer-events-auto`} style={{ zIndex: 99999 }}>
+          <div className={`space-y-4 ${MaiTrollTheme.text.muted}`}>
             <p className="font-semibold text-white">By clicking &quot;Agree & Continue&quot; below, you acknowledge and agree to the following:</p>
             
             <ul className="list-disc list-inside space-y-2 ml-2">
@@ -298,14 +298,14 @@ export default function TermsAgreement() {
                 navigate('/auth')
               }
             }}
-            className={`px-8 py-3 rounded-lg ${trollCityTheme.components.buttonSecondary}`}
+            className={`px-8 py-3 rounded-lg ${MaiTrollTheme.components.buttonSecondary}`}
           >
             Decline & Sign Out
           </button>
           <button
             onClick={handleAgree}
             disabled={submitting}
-            className={`px-8 py-3 rounded-lg ${trollCityTheme.components.buttonPrimary}
+            className={`px-8 py-3 rounded-lg ${MaiTrollTheme.components.buttonPrimary}
                      disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition font-bold`}
           >
             {submitting ? 'Processing...' : 'Agree & Continue'}
@@ -313,8 +313,8 @@ export default function TermsAgreement() {
         </div>
 
         {/* Footer */}
-        <p className={`text-center ${trollCityTheme.text.muted} text-sm mt-8`}>
-          Questions? Contact support at trollcity2025@gmail.com
+        <p className={`text-center ${MaiTrollTheme.text.muted} text-sm mt-8`}>
+          Questions? Contact support at Mai Troll2025@gmail.com
         </p>
       </div>
     </div>

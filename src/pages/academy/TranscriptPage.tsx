@@ -68,7 +68,7 @@ export default function TranscriptPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white">Official Academic Transcript</h1>
-            <p className="text-sm text-slate-400">{profile?.display_name || profile?.username} • Troll City Academy</p>
+            <p className="text-sm text-slate-400">{profile?.display_name || profile?.username} • Mai Troll Academy</p>
           </div>
         </div>
       </section>

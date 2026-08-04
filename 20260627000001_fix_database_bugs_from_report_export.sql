@@ -1,5 +1,5 @@
 -- ============================================================================
--- TROLL CITY DATABASE BUG FIX MIGRATION
+-- Mai Troll DATABASE BUG FIX MIGRATION
 -- Generated from Bug Center Report Export (2026-06-27)
 -- Schema-verified against live database (2026-06-27)
 -- Fixes: #1, #2, #6, #8, #10, #12, #15, #17 from the 52-report export

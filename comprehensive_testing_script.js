@@ -1,7 +1,7 @@
 // ===================================================
 // COMPREHENSIVE TESTING SCRIPT
 // ===================================================
-// TrollCity2 - Test all critical functionality
+// Mai Troll2 - Test all critical functionality
 // Date: 2025-12-09
 // ===================================================
 
@@ -273,7 +273,7 @@ async function testOfficerSystem() {
 }
 
 async function runAllTests() {
-  console.log('🚀 Starting TrollCity2 Comprehensive Testing')
+  console.log('🚀 Starting Mai Troll2 Comprehensive Testing')
   console.log('=' .repeat(50))
   
   // Wait a moment for imports to settle
@@ -325,7 +325,7 @@ async function runAllTests() {
   }
   
   if (testResults.passed === testResults.total) {
-    console.log('🎉 ALL TESTS PASSED! Your TrollCity2 deployment is ready!')
+    console.log('🎉 ALL TESTS PASSED! Your Mai Troll2 deployment is ready!')
   } else {
     console.log('⚠️  Some tests failed. Please review and fix the issues above.')
   }

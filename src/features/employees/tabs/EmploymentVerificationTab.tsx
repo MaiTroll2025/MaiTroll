@@ -249,7 +249,7 @@ export default function EmploymentVerificationAdminPage() {
 
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(11)
-      pdf.text('MAI CORP / TROLL CITY', left, y)
+      pdf.text('MAI CORP / Mai Troll', left, y)
 
       y += 28
       pdf.setFontSize(22)
@@ -272,7 +272,7 @@ export default function EmploymentVerificationAdminPage() {
         `This letter verifies the current employment information for ` +
         `${verification.legalName} (@${verification.username}), employee ` +
         `number ${verification.employeeNumber}, as maintained in the official ` +
-        `Troll City employee records system.`
+        `Mai Troll employee records system.`
 
       const introLines = pdf.splitTextToSize(intro, right - left)
       pdf.text(introLines, left, y)
@@ -323,7 +323,7 @@ export default function EmploymentVerificationAdminPage() {
       pdf.setTextColor(0)
       pdf.setFontSize(10)
       pdf.text('Human Resources', left, y)
-      pdf.text('MAI Corp / Troll City', left, y + 16)
+      pdf.text('MAI Corp / Mai Troll', left, y + 16)
 
       const safeName = verification.legalName
         .toLowerCase()

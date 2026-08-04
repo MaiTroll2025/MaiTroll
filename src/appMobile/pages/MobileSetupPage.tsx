@@ -293,7 +293,7 @@ export default function MobileSetupPage() {
       <section className="tc-mobile-setup__start-panel">
         <div>
           <p>Ready?</p>
-          <h3>Start your Troll City broadcast</h3>
+          <h3>Start your Mai Troll broadcast</h3>
         </div>
 
         <button

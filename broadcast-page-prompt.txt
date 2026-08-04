@@ -1,4 +1,4 @@
-Build a full-featured broadcast page for a live streaming platform called Troll City using React, TypeScript, Tailwind CSS, and Supabase. The page must handle both host (broadcaster) and viewer modes on a single route.
+Build a full-featured broadcast page for a live streaming platform called Mai Troll using React, TypeScript, Tailwind CSS, and Supabase. The page must handle both host (broadcaster) and viewer modes on a single route.
 
 CORE STREAMING:
 - LiveKit WebRTC integration for real-time video/audio (host publishes, viewers subscribe)

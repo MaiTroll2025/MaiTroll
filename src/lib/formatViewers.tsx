@@ -248,13 +248,13 @@ function CategoriesGrid() {
 export default function CategoriesPage() {
   return (
     <SEOLayout
-      title="Browse Categories on Troll City | Social Streaming Platform"
-      description="Discover trending content categories on Troll City (Mai Troll City). Browse live streams in gaming, music, art, chat, and more on our social streaming platform."
+      title="Browse Categories on Mai Troll | Social Streaming Platform"
+      description="Discover trending content categories on Mai Troll (MaiMaiTroll). Browse live streams in gaming, music, art, chat, and more on our social streaming platform."
       keywords={[
-        'Troll City', 'Mai Troll City', 'categories', 'browse streams', 'trending', 'gaming', 'music', 'art',
+        'MaiTroll', 'MaiMaiTroll', 'categories', 'browse streams', 'trending', 'gaming', 'music', 'art',
         'just chatting', 'live content', 'stream categories', 'find streams',
         'trending streams', 'popular streams', 'best streams', 'top streamers',
-        'watch live', 'live video', 'streaming categories', 'Troll City streaming',
+        'watch live', 'live video', 'streaming categories', 'MaiTroll streaming',
         'social streaming platform', 'community platform'
       ]}
     >
@@ -263,7 +263,7 @@ export default function CategoriesPage() {
       <section className="py-16 bg-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">Explore Categories on Troll City</h1>
+            <h1 className="text-4xl font-bold text-white mb-4">Explore Categories on Mai Troll</h1>
             <p className="text-slate-400 text-lg">Find your favorite content and discover new creators on our social streaming platform</p>
           </div>
           

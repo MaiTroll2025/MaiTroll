@@ -91,7 +91,7 @@ if (data.success) {
   setOrderId(data.orderId);
   setNoteSuggested(data.instructions.note);
   setStep('awaiting');
-  // Now show $trollcity95 and note for user to copy
+  // Now show $Mai Troll95 and note for user to copy
 } else {
   toast.error(data.error);
 }
@@ -340,7 +340,7 @@ CashAppPaymentModal opens with 3 steps
   ↓
 User fills Step 1 (Confirm Amount)
   ↓
-Step 2 shows $trollcity95 + payment note
+Step 2 shows $Mai Troll95 + payment note
   ↓
 User clicks "Done - I'll Verify"
   ↓

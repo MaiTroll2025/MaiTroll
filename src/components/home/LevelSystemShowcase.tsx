@@ -4,7 +4,7 @@ import { useXPStore } from '@/stores/useXPStore'
 import { getLevelName } from '@/lib/xp'
 import { getUnlockedPerks, getUpcomingPerks, calculateNextLevelXp, getLevelUpReward } from '@/config/levelSystem'
 import { Star, Shield, Zap, Gift, Crown, Radio, MessageCircle, Music, Palette } from 'lucide-react'
-import { trollCityTheme } from '@/styles/trollCityTheme'
+import { MaiTrollTheme } from '@/styles/trollCityTheme'
 
 interface LevelSystemShowcaseProps {
   className?: string
@@ -96,7 +96,7 @@ export default function LevelSystemShowcase({ className }: LevelSystemShowcasePr
         </div>
         <div className="w-full bg-slate-800/50 rounded-full h-2.5 overflow-hidden">
           <div
-            className={`${trollCityTheme.gradients.primary} h-full transition-all duration-500`}
+            className={`${MaiTrollTheme.gradients.primary} h-full transition-all duration-500`}
             style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>

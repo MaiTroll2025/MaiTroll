@@ -20,10 +20,10 @@ async function fixAdmin() {
       return
     }
     
-    const adminUser = users.find(u => u.email?.toLowerCase() === 'trollcity2025@gmail.com')
+    const adminUser = users.find(u => u.email?.toLowerCase() === 'Mai Troll2025@gmail.com')
     
     if (!adminUser) {
-      console.log('❌ No user found with email trollcity2025@gmail.com')
+      console.log('❌ No user found with email Mai Troll2025@gmail.com')
       return
     }
     
@@ -48,7 +48,7 @@ async function fixAdmin() {
         .from('user_profiles')
         .insert({
           id: adminUser.id,
-          username: 'trollcity2025',
+          username: 'Mai Troll2025',
           role: 'admin',
           tier: 'Platinum',
           troll_coins: 10000,

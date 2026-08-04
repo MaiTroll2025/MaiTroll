@@ -24,6 +24,33 @@ export function corsHeaders(requestOrigin: string | null): Record<string, string
   }
 }
 
+export function withCors(
+  body: unknown,
+  status = 200,
+  request?: Request | null,
+): Response {
+  const requestOrigin = request?.headers.get('origin') ?? null;
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders(requestOrigin),
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+export function handleCorsPreflight(req?: Request | null): Response {
+  const requestOrigin = req?.headers.get('origin') ?? null;
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...corsHeaders(requestOrigin),
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    },
+  });
+}
+
 export function unauthorizedResponse(
   message = 'Unauthorized',
   requestOrigin: string | null = null,

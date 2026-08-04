@@ -102,7 +102,7 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ isOpen, onSubmit,
               className="w-full px-4 py-2 rounded bg-[#23232b] text-white border border-gray-600 focus:outline-none focus:border-purple-500"
             >
               <option value="">Select platform</option>
-              <option value="trollcity">🏙️ Troll City</option>
+              <option value="Mai Troll">🏙️ Mai Troll</option>
               <option value="tiktok">🎵 TikTok</option>
               <option value="liveme">📺 LiveMe</option>
               <option value="bigo">🎥 Bigo Live</option>

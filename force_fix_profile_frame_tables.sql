@@ -102,7 +102,7 @@ VALUES
   ('verified_creator', 'Verified Creator', 'Premium verification glow for creators',                         '✅',   'verified',   'premium',    '#1d9bf0', 'linear-gradient(135deg, #1d9bf0, #1a8cd8, #1d9bf0)',                                '#1d9bf0', 0.6,  'normal', false, null,       0,  true,  false, 'rare',       3000,  9),
   ('family_leader',    'Family Leader',    'Royal crown aura for family leaders',                            '👑',   'crown',      'premium',    '#cc8800', 'linear-gradient(135deg, #cc8800, #ffcc44, #cc8800, #ffdd66)',                    '#ffcc44', 0.7,  'normal', true,  '#ffdd66', 4,  true,  false, 'epic',       7500,  10),
   ('battle_champion',  'Battle Champion',  'Gold rotating trophy aura from battle victories',               '🏆',   'trophy',     'animated',   '#ffd700', 'linear-gradient(135deg, #ffd700, #b8860b, #ffd700, #daa520)',                    '#ffd700', 0.9,  'normal', true,  '#ffd700', 5,  true,  true,  'legendary',  15000, 11),
-  ('troll_city_founder','Troll City Founder','Exclusive founder badge — only for the original trolls',       '🧌',   'founder',    'legendary',  '#ff3366', 'linear-gradient(135deg, #ff3366, #ffd700, #00ff88, #ff3366)',                  '#ff3366', 1.5,  'fast',   true,  '#ffd700', 10, true,  true,  'founder',    50000, 12)
+  ('troll_city_founder','Mai Troll Founder','Exclusive founder badge — only for the original trolls',       '🧌',   'founder',    'legendary',  '#ff3366', 'linear-gradient(135deg, #ff3366, #ffd700, #00ff88, #ff3366)',                  '#ff3366', 1.5,  'fast',   true,  '#ffd700', 10, true,  true,  'founder',    50000, 12)
 ON CONFLICT (id) DO NOTHING;
 
 -- 10. Verify the fix

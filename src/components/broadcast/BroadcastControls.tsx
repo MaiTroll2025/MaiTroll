@@ -15,7 +15,7 @@ import { PreflightStore } from '../../lib/preflightStore';
 import { useParticipantAttributes } from '../../hooks/useParticipantAttributes';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LocalVideoTrack, LocalAudioTrack } from 'livekit-client';
-import { trollCityTheme } from '../../styles/trollCityTheme';
+import { MaiTrollTheme } from '../../styles/trollCityTheme';
 
 interface BroadcastControlsProps {
   stream: Stream;

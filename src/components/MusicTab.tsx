@@ -231,15 +231,15 @@ export default function MusicTab() {
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-lime-300 mt-0.5" />
-                <span>Troll City LLC has non-exclusive rights to share and publish your tracks</span>
+                <span>Mai Troll LLC has non-exclusive rights to share and publish your tracks</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-lime-300 mt-0.5" />
-                <span>Troll City LLC will NEVER sell your music or make you an offer</span>
+                <span>Mai Troll LLC will NEVER sell your music or make you an offer</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-lime-300 mt-0.5" />
-                <span>You are NOT signed to Troll City LLC as a record label artist</span>
+                <span>You are NOT signed to Mai Troll LLC as a record label artist</span>
               </li>
               <li className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-pink-300 mt-0.5" />
@@ -295,7 +295,7 @@ export default function MusicTab() {
 
       <div className="text-xs text-slate-400 flex items-center gap-2">
         <AlertCircle className="h-3 w-3" />
-        <span>NO AI-generated music allowed. Troll City LLC is NOT a record label.</span>
+        <span>NO AI-generated music allowed. Mai Troll LLC is NOT a record label.</span>
       </div>
 
       {!canUpload && user && (

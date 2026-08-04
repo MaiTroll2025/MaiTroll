@@ -100,7 +100,7 @@ export default function SurveyNotification({ onDismissed }: SurveyNotificationPr
           <div className="px-5 py-4">
             <h3 className="text-lg font-bold text-white mb-1">{survey.title}</h3>
             <p className="text-sm text-gray-400 mb-4">
-              Share your feedback to help improve Troll City! Tell us what needs to be changed, any issues, and what you want to see next.
+              Share your feedback to help improve Mai Troll! Tell us what needs to be changed, any issues, and what you want to see next.
             </p>
 
             <button

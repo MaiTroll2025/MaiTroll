@@ -195,18 +195,18 @@ const HomeNotificationPrompt: React.FC = () => {
     if (canPromptInstall) {
       const outcome = await promptInstall();
       if (outcome === 'accepted') {
-        alert('Install in progress! Add Troll City to your home screen for quick access.');
+        alert('Install in progress! Add Mai Troll to your home screen for quick access.');
       }
       setShow(false);
       safeSessionStorageSet('homeNotificationPromptShown', 'true');
     } else if (isIOS()) {
       // iOS: show manual instructions
-      alert('On iOS, use Safari\'s Share button → "Add to Home Screen" to install Troll City.');
+      alert('On iOS, use Safari\'s Share button → "Add to Home Screen" to install Mai Troll.');
       setShow(false);
       safeSessionStorageSet('homeNotificationPromptShown', 'true');
     } else {
       // Desktop or unsupported — try browser menu
-      alert('Look for the install icon ⊡ in Chrome/Edge menu (three dots) to install Troll City.');
+      alert('Look for the install icon ⊡ in Chrome/Edge menu (three dots) to install Mai Troll.');
       setShow(false);
       safeSessionStorageSet('homeNotificationPromptShown', 'true');
     }
@@ -265,7 +265,7 @@ const HomeNotificationPrompt: React.FC = () => {
               ) : (
                 <>
                   <Download className="w-5 h-5" />
-                  Install Troll City App
+                  Install Mai Troll App
                 </>
               )}
             </button>

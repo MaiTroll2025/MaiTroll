@@ -67,7 +67,7 @@ export default function CashoutForecastPanel() {
             <TrendingUp className="w-6 h-6 text-green-400" />
             Cashout Forecast
           </h2>
-          <p className="text-slate-400">Friday Exposure Analysis</p>
+          <p className="text-slate-400">Cashout Exposure Analysis</p>
         </div>
         <div className="flex items-center gap-4">
             <div className="flex flex-col items-end mr-4">
@@ -182,7 +182,7 @@ export default function CashoutForecastPanel() {
                   
                   <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                          <span className="text-slate-400">Friday Forecast (100% Load)</span>
+                          <span className="text-slate-400">Cashout Forecast (100% Load)</span>
                           <span className="text-white">${stats.total_exposure_usd.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm">

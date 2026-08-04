@@ -5,7 +5,7 @@ It is intended for analysis and providing a final "fix-all" prompt.
 
 ---
 
-## FILE: e:\trollcity-1\src\types\broadcast.ts
+## FILE: e:\Mai Troll-1\src\types\broadcast.ts
 ```typescript
 export type StreamStatus = 'pending' | 'live' | 'ended';
 export type LayoutMode = 'grid' | 'battle' | 'spotlight';
@@ -90,7 +90,7 @@ export interface ChatMessage {
 
 ---
 
-## FILE: e:\trollcity-1\src\pages\broadcast\BroadcastPage.tsx
+## FILE: e:\Mai Troll-1\src\pages\broadcast\BroadcastPage.tsx
 ```tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
@@ -240,7 +240,7 @@ const RoomStateSync = ({ mode, isHost, streamId }: { mode: 'stage' | 'viewer'; i
 
 ---
 
-## FILE: e:\trollcity-1\src\components\broadcast\BattleView.tsx
+## FILE: e:\Mai Troll-1\src\components\broadcast\BattleView.tsx
 ```tsx
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { 
@@ -472,7 +472,7 @@ const BattleArena = ({ onGift }: { onGift: (uid: string, sourceStreamId: string)
 
 ---
 
-## FILE: e:\trollcity-1\src\components\broadcast\GiftTray.tsx
+## FILE: e:\Mai Troll-1\src\components\broadcast\GiftTray.tsx
 ```tsx
 import React, { useEffect, useState } from 'react';
 import { X, Coins, Loader2, ChevronDown } from 'lucide-react';
@@ -574,7 +574,7 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
 
 ---
 
-## FILE: e:\trollcity-1\src\hooks\useGiftSystem.ts
+## FILE: e:\Mai Troll-1\src\hooks\useGiftSystem.ts
 ```typescript
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
@@ -668,7 +668,7 @@ export function useGiftSystem(
 
 ---
 
-## FILE: e:\trollcity-1\src\hooks\useStreamSeats.ts
+## FILE: e:\Mai Troll-1\src\hooks\useStreamSeats.ts
 ```typescript
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
@@ -750,7 +750,7 @@ export function useStreamSeats(streamId: string | undefined, userId?: string, br
 
 ---
 
-## FILE: e:\trollcity-1\BROADCAST_SYSTEM_COMPLETE_FIXES.sql
+## FILE: e:\Mai Troll-1\BROADCAST_SYSTEM_COMPLETE_FIXES.sql
 ```sql
 -- ============================================
 -- 12. SPEND COINS RPC (For Gifts)
@@ -813,7 +813,7 @@ $$;
 
 ---
 
-## FILE: e:\trollcity-1\supabase\migrations\20270309000000_add_send_gift_in_stream.sql
+## FILE: e:\Mai Troll-1\supabase\migrations\20270309000000_add_send_gift_in_stream.sql
 ```sql
 CREATE OR REPLACE FUNCTION public.send_gift_in_stream(
   p_sender_id UUID,

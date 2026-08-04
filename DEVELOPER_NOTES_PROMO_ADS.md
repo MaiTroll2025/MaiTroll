@@ -1,7 +1,7 @@
-# Troll City Promo Ads System - Developer Notes
+# Mai Troll Promo Ads System - Developer Notes
 
 ## Overview
-This document describes the implementation of the internal promo ad system for Troll City, including the Secretary Console ad management UI and frontend display components.
+This document describes the implementation of the internal promo ad system for Mai Troll, including the Secretary Console ad management UI and frontend display components.
 
 ## Database Schema
 - Table: `public.city_ads`

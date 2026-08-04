@@ -6,7 +6,7 @@ export const CEO_BROADCAST_THEME_ID        = 'ceo_gold_premium';
 export const PRESIDENT_BROADCAST_THEME_ID  = 'president_mansion';
 export const PRIDE_LEGACY_THEME_ID         = 'pride_legacy_2026';
 export const CEO_THEME_ALLOWED_USER_ID     = '8dff9f37-21b5-4b8e-adc2-b9286874be1a';
-export const CEO_THEME_ALLOWED_EMAIL       = 'trollcity2025@gmail.com';
+export const CEO_THEME_ALLOWED_EMAIL       = 'Trollcity2025@gmail.com';
 
 const ALL_BROADCAST_CATEGORIES: BroadcastCategoryId[] = [
   'general', 'gaming', 'irl', 'debate', 'education',

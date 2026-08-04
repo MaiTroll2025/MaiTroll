@@ -79,7 +79,7 @@ export default function CityLawsFeesTab() {
   ], [])
 
   const payoutInfo = {
-    day: 'Based on Level Every Hr, Every 24 hrs, or every Friday',
+    day: 'Based on Level Every Hr, Every 24 hrs, or on request',
     system: 'MAI Pay',
   }
 

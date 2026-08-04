@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - TEACHER COURSE CREATION/EDIT WITH OER
+// Mai Troll ACADEMY - TEACHER COURSE CREATION/EDIT WITH OER
 // ============================================================
 
 import React, { useEffect, useState } from 'react';

@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { Radio, Users, Wifi, Activity } from 'lucide-react'
 
-const MAX_BROADCASTERS = 25
-const MAX_VIEWERS_PER_BROADCAST = 20
 const MAX_CONCURRENT_CONNECTIONS = 675
 
 const glassPanel =
@@ -53,7 +51,7 @@ function MetricCard({
   max: number
   unit?: string
 }) {
-  const remaining = Math.max(0, max - current)
+  const remaining = max > 0 ? Math.max(0, max - current) : 0
   const statusColor = getStatusColor(current, max)
   const bgColor = getBgColor(current, max)
   const barColor = getBarColor(current, max)
@@ -69,26 +67,32 @@ function MetricCard({
           <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{label}</p>
           <p className="text-2xl font-black text-white">
             {current}
-            <span className="text-sm text-slate-500">
-              /{max}{unit}
-            </span>
+            {max > 0 && (
+              <span className="text-sm text-slate-500">
+                /{max}{unit}
+              </span>
+            )}
           </p>
         </div>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500">
-          Remaining: <span className={`font-black ${statusColor}`}>{remaining}</span>
-        </span>
+        {max > 0 && (
+          <span className="text-xs text-slate-500">
+            Remaining: <span className={`font-black ${statusColor}`}>{remaining}</span>
+          </span>
+        )}
         <span className={`text-xs font-black ${statusColor}`}>
-          {current >= max ? 'AT CAPACITY' : current >= max * 0.8 ? 'NEAR LIMIT' : 'OK'}
+          {max === 0 ? 'NO LIMIT' : current >= max ? 'AT CAPACITY' : current >= max * 0.8 ? 'NEAR LIMIT' : 'OK'}
         </span>
       </div>
-      <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
+      {max > 0 && (
+        <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -102,6 +106,37 @@ export default function BetaCapacityMonitor() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [caps, setCaps] = useState<{ broadcasterCap: number | null; viewerCap: number | null }>({
+    broadcasterCap: null,
+    viewerCap: null,
+  })
+
+  const fetchCaps = useCallback(async () => {
+    try {
+      const { data: settings } = await supabase
+        .from('admin_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', [
+          'broadcast_start_cap_max',
+          'broadcast_viewer_cap_max',
+        ])
+
+      const map: Record<string, number> = {}
+      settings?.forEach((row: any) => {
+        const parsed = typeof row.setting_value === 'string' ? JSON.parse(row.setting_value) : row.setting_value
+        if (parsed?.value && Number.isFinite(parsed.value)) {
+          map[row.setting_key] = Number(parsed.value)
+        }
+      })
+
+      setCaps({
+        broadcasterCap: map.broadcast_start_cap_max ?? null,
+        viewerCap: map.broadcast_viewer_cap_max ?? null,
+      })
+    } catch {
+      // non-critical
+    }
+  }, [])
 
   const fetchStreamsData = useCallback(async () => {
     try {
@@ -148,6 +183,7 @@ export default function BetaCapacityMonitor() {
   useEffect(() => {
     fetchStreamsData()
     fetchConnectionData()
+    fetchCaps()
 
     const streamsChannel = supabase
       .channel('beta-capacity-streams')
@@ -162,11 +198,24 @@ export default function BetaCapacityMonitor() {
 
     const connectionInterval = setInterval(fetchConnectionData, 5000)
 
+    const capsChannel = supabase
+      .channel('beta-capacity-settings')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'admin_settings',
+        filter: 'setting_key=in.(broadcast_start_cap_max,broadcast_viewer_cap_max)',
+      }, () => {
+        fetchCaps()
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(streamsChannel)
+      supabase.removeChannel(capsChannel)
       clearInterval(connectionInterval)
     }
-  }, [fetchStreamsData, fetchConnectionData])
+  }, [fetchStreamsData, fetchConnectionData, fetchCaps])
 
   if (error && !loading) {
     return (
@@ -185,6 +234,8 @@ export default function BetaCapacityMonitor() {
       </section>
     )
   }
+
+  const viewerTotalCap = caps.viewerCap && caps.broadcasterCap ? caps.viewerCap * caps.broadcasterCap : null
 
   return (
     <section className={glassPanel}>
@@ -206,13 +257,13 @@ export default function BetaCapacityMonitor() {
             icon={Radio}
             label="Active Broadcasters"
             current={data.activeBroadcasters}
-            max={MAX_BROADCASTERS}
+            max={caps.broadcasterCap ?? 0}
           />
           <MetricCard
             icon={Users}
             label="Active Viewers"
             current={data.activeViewers}
-            max={MAX_VIEWERS_PER_BROADCAST * MAX_BROADCASTERS}
+            max={viewerTotalCap ?? 0}
           />
           <MetricCard
             icon={Wifi}
@@ -223,16 +274,16 @@ export default function BetaCapacityMonitor() {
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`rounded-2xl border ${getBgColor(data.activeBroadcasters, MAX_BROADCASTERS)} p-4 text-center`}>
+          <div className={`rounded-2xl border ${getBgColor(data.activeBroadcasters, caps.broadcasterCap ?? 0)} p-4 text-center`}>
             <p className="text-xs text-slate-500 uppercase tracking-widest font-black">Remaining Broadcasters</p>
-            <p className={`text-3xl font-black ${getStatusColor(data.activeBroadcasters, MAX_BROADCASTERS)}`}>
-              {MAX_BROADCASTERS - data.activeBroadcasters}
+            <p className={`text-3xl font-black ${getStatusColor(data.activeBroadcasters, caps.broadcasterCap ?? 0)}`}>
+              {caps.broadcasterCap ? caps.broadcasterCap - data.activeBroadcasters : '—'}
             </p>
           </div>
-          <div className={`rounded-2xl border ${getBgColor(data.maxViewersPerStream, MAX_VIEWERS_PER_BROADCAST)} p-4 text-center`}>
+          <div className={`rounded-2xl border ${getBgColor(data.maxViewersPerStream, caps.viewerCap ?? 0)} p-4 text-center`}>
             <p className="text-xs text-slate-500 uppercase tracking-widest font-black">Remaining Viewer Capacity</p>
-            <p className={`text-3xl font-black ${getStatusColor(data.maxViewersPerStream, MAX_VIEWERS_PER_BROADCAST)}`}>
-              {MAX_VIEWERS_PER_BROADCAST - data.maxViewersPerStream}
+            <p className={`text-3xl font-black ${getStatusColor(data.maxViewersPerStream, caps.viewerCap ?? 0)}`}>
+              {caps.viewerCap ? caps.viewerCap - data.maxViewersPerStream : '—'}
             </p>
           </div>
           <div className={`rounded-2xl border ${getBgColor(data.activeConnections, MAX_CONCURRENT_CONNECTIONS)} p-4 text-center`}>

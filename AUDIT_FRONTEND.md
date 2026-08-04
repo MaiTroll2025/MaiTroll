@@ -1,4 +1,4 @@
-# 🎨 TROLL CITY — FRONTEND AUDIT
+# 🎨 Mai Troll — FRONTEND AUDIT
 
 **Audit Date:** 2026-06-13  
 **Scope:** Every page, component, button, action, form, modal, drawer, and interaction  
@@ -532,8 +532,8 @@
 **File:** `src/pages/ShopView.tsx`  
 **Status:** ✅ Working
 
-#### Sell on Troll City (`/sell`)
-**File:** `src/pages/SellOnTrollCity.tsx`  
+#### Sell on Mai Troll (`/sell`)
+**File:** `src/pages/SellOnMai Troll.tsx`  
 **Status:** ✅ Working
 
 #### Seller Orders (`/seller/orders`)

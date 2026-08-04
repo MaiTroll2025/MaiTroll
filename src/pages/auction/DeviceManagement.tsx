@@ -579,7 +579,7 @@ export default function DeviceManagement() {
             <div class="label">
               <img src="${testDataURL}" alt="Test Barcode" />
               <p>TC-TEST-000001</p>
-              <p style="font-size: 10px; color: #666;">Test Label — Troll City Auction</p>
+              <p style="font-size: 10px; color: #666;">Test Label — Mai Troll Auction</p>
             </div>
           </body>
         </html>

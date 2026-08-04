@@ -17,15 +17,15 @@ import {
 export default function TermsPage() {
   return (
     <SEOLayout
-      title="Terms of Service | Troll City"
-      description="Read the Troll City Terms of Service, including account, content, payment, creator earnings, enforcement, and platform rules."
+      title="Terms of Service | Mai Troll"
+      description="Read the Mai Troll Terms of Service, including account, content, payment, creator earnings, enforcement, and platform rules."
       keywords={[
-        'Troll City terms of service',
-        'Mai Troll City terms',
+        'MaiTroll terms of service',
+        'MaiMaiTroll terms',
         'user agreement',
         'terms and conditions',
         'creator platform terms',
-        'Troll City rules',
+        'MaiTroll rules',
         'platform rules',
       ]}
     >
@@ -59,8 +59,8 @@ export default function TermsPage() {
 
             <div className="p-6 bg-purple-950/30 border border-purple-500/30 rounded-2xl">
               <p className="text-slate-200 leading-relaxed">
-                Welcome to Troll City. These Terms of Service are the agreement between you and
-                <strong> [INSERT LEGAL COMPANY NAME]</strong>, the company that operates Troll City
+                Welcome to Mai Troll. These Terms of Service are the agreement between you and
+                <strong> [INSERT LEGAL COMPANY NAME]</strong>, the company that operates Mai Troll
                 and its related services.
               </p>
 
@@ -86,10 +86,10 @@ export default function TermsPage() {
               </div>
 
               <p className="text-slate-300 leading-relaxed">
-                These Terms apply to Troll City websites, applications, progressive web apps,
+                These Terms apply to Mai Troll websites, applications, progressive web apps,
                 livestreams, chats, battles, collaborations, auctions, Troll Court features,
                 HytroGaming integrations, virtual items, creator tools, staff tools, and any other
-                Troll City service that links to these Terms.
+                Mai Troll service that links to these Terms.
               </p>
 
               <p className="text-slate-300 leading-relaxed mt-4">
@@ -145,7 +145,7 @@ export default function TermsPage() {
 
               <ul className="list-disc pl-6 space-y-3 text-slate-300">
                 <li>
-                  You must be at least 13 years old to create a general Troll City account.
+                  You must be at least 13 years old to create a general Mai Troll account.
                 </li>
 
                 <li>
@@ -182,11 +182,11 @@ export default function TermsPage() {
 
                 <li>
                   You may not sell, rent, transfer, or give your account to another person without
-                  written approval from Troll City.
+                  written approval from Mai Troll.
                 </li>
 
                 <li>
-                  Troll City may limit duplicate or deceptive accounts. Multiple accounts are not
+                  Mai Troll may limit duplicate or deceptive accounts. Multiple accounts are not
                   automatically prohibited when a legitimate Platform feature allows them, but
                   account farming, ban evasion, self-gifting schemes, reward manipulation, and
                   deceptive duplicate accounts are prohibited.
@@ -203,7 +203,7 @@ export default function TermsPage() {
               </div>
 
               <p className="text-slate-300 leading-relaxed mb-4">
-                Troll City is built for personality, jokes, debate, competition, creator culture,
+                Mai Troll is built for personality, jokes, debate, competition, creator culture,
                 and people who are not afraid to speak freely. That does not mean anything goes.
               </p>
 
@@ -262,7 +262,7 @@ export default function TermsPage() {
 
                 <li>
                   Scrape, copy, harvest, or automatically collect Platform data except through an
-                  authorized Troll City feature or written permission.
+                  authorized Mai Troll feature or written permission.
                 </li>
 
                 <li>
@@ -301,7 +301,7 @@ export default function TermsPage() {
               </div>
 
               <p className="text-slate-300 leading-relaxed">
-                You keep ownership of the original content you create and upload to Troll City.
+                You keep ownership of the original content you create and upload to Mai Troll.
                 Posting it does not transfer your copyright to us.
               </p>
 
@@ -313,7 +313,7 @@ export default function TermsPage() {
 
               <p className="text-slate-300 leading-relaxed mt-4">
                 By uploading, posting, broadcasting, or otherwise submitting content, you grant
-                Troll City a worldwide, non-exclusive, royalty-free, sublicensable, and
+                Mai Troll a worldwide, non-exclusive, royalty-free, sublicensable, and
                 transferable license to host, store, reproduce, process, adapt for technical
                 delivery, transmit, display, perform, distribute, and promote that content for the
                 purpose of operating, improving, securing, and marketing the Platform.
@@ -333,7 +333,7 @@ export default function TermsPage() {
               </p>
 
               <p className="text-slate-300 leading-relaxed mt-4">
-                You give Troll City permission to display your username, profile image, stream
+                You give Mai Troll permission to display your username, profile image, stream
                 title, category, and related public account information alongside your content.
               </p>
             </div>
@@ -342,14 +342,14 @@ export default function TermsPage() {
               <div className="flex items-center gap-3 mb-4">
                 <ShieldCheck className="w-6 h-6 text-purple-400" />
                 <h2 className="text-2xl font-bold text-white m-0">
-                  Troll City Content and Technology
+                  Mai Troll Content and Technology
                 </h2>
               </div>
 
               <p className="text-slate-300 leading-relaxed">
-                Troll City's software, code, databases, interfaces, graphics, designs, trademarks,
+                Mai Troll's software, code, databases, interfaces, graphics, designs, trademarks,
                 logos, original characters, branding, platform text, systems, and other proprietary
-                materials belong to Troll City or its licensors.
+                materials belong to Mai Troll or its licensors.
               </p>
 
               <p className="text-slate-300 leading-relaxed mt-4">
@@ -359,7 +359,7 @@ export default function TermsPage() {
 
               <p className="text-slate-300 leading-relaxed mt-4">
                 You may not copy, resell, reverse engineer, decompile, commercially exploit,
-                reproduce, or create unauthorized derivative services from Troll City's
+                reproduce, or create unauthorized derivative services from Mai Troll's
                 proprietary technology except where applicable law does not allow that restriction.
               </p>
             </div>
@@ -373,7 +373,7 @@ export default function TermsPage() {
               </div>
 
               <p className="text-slate-300 leading-relaxed">
-                Troll City may offer virtual items and Platform balances, including Troll Coins,
+                Mai Troll may offer virtual items and Platform balances, including Troll Coins,
                 Gifts, Troll Tokens, rewards, achievements, promotional credits, or other digital
                 benefits.
               </p>
@@ -382,7 +382,7 @@ export default function TermsPage() {
                 <li>
                   Troll Coins and other virtual items are licensed Platform features. They are not
                   legal tender, bank deposits, cryptocurrency, stored-value accounts, or property
-                  usable outside Troll City.
+                  usable outside Mai Troll.
                 </li>
 
                 <li>
@@ -431,7 +431,7 @@ export default function TermsPage() {
 
                 <li>
                   You are responsible for taxes, carrier charges, bank charges, currency conversion
-                  costs, and other third-party costs that apply to your activity unless Troll City
+                  costs, and other third-party costs that apply to your activity unless Mai Troll
                   expressly agrees otherwise.
                 </li>
 
@@ -452,7 +452,7 @@ export default function TermsPage() {
               </div>
 
               <p className="text-slate-300 leading-relaxed">
-                Creator balances and projected earnings are not final until Troll City verifies the
+                Creator balances and projected earnings are not final until Mai Troll verifies the
                 underlying activity and approves the related cashout.
               </p>
 
@@ -464,7 +464,7 @@ export default function TermsPage() {
                 </li>
 
                 <li>
-                  Troll City may require identity verification, tax information, payment details,
+                  Mai Troll may require identity verification, tax information, payment details,
                   proof of account ownership, or additional fraud-prevention checks.
                 </li>
 
@@ -475,7 +475,7 @@ export default function TermsPage() {
                 </li>
 
                 <li>
-                  Troll City's current cashout interface shows the total Troll Coin requirement for
+                  Mai Troll's current cashout interface shows the total Troll Coin requirement for
                   each cashout tier.
                 </li>
 
@@ -503,7 +503,7 @@ export default function TermsPage() {
 
                 <li>
                   You are responsible for determining and paying taxes related to your creator
-                  income. Troll City may issue tax documents or report payments when legally
+                  income. Mai Troll may issue tax documents or report payments when legally
                   required.
                 </li>
               </ul>
@@ -530,13 +530,13 @@ export default function TermsPage() {
               </div>
 
               <p className="text-slate-300 leading-relaxed">
-                Troll City may provide tools that allow users to list items, host auctions, place
+                Mai Troll may provide tools that allow users to list items, host auctions, place
                 bids, arrange shipping, communicate, or complete transactions with one another.
               </p>
 
               <ul className="list-disc pl-6 space-y-3 text-slate-300 mt-4">
                 <li>
-                  Unless Troll City expressly states otherwise, the seller—not Troll City—is
+                  Unless Mai Troll expressly states otherwise, the seller—not Mai Troll—is
                   responsible for the item, description, condition, legality, authenticity,
                   packaging, shipping, tracking information, returns, and transaction promises.
                 </li>
@@ -553,7 +553,7 @@ export default function TermsPage() {
                 </li>
 
                 <li>
-                  Troll City may cancel or restrict suspicious listings, bids, auctions, or orders
+                  Mai Troll may cancel or restrict suspicious listings, bids, auctions, or orders
                   and may preserve records needed to investigate disputes.
                 </li>
 
@@ -573,7 +573,7 @@ export default function TermsPage() {
               </div>
 
               <p className="text-slate-300 leading-relaxed">
-                Troll City may investigate suspected violations and take action reasonably related
+                Mai Troll may investigate suspected violations and take action reasonably related
                 to platform safety, fraud prevention, legal compliance, or enforcement of these
                 Terms.
               </p>
@@ -586,7 +586,7 @@ export default function TermsPage() {
               </p>
 
               <p className="text-slate-300 leading-relaxed mt-4">
-                Troll City is not required to start with the lightest consequence when the conduct
+                Mai Troll is not required to start with the lightest consequence when the conduct
                 is severe, dangerous, fraudulent, illegal, or creates an immediate risk.
               </p>
 
@@ -598,7 +598,7 @@ export default function TermsPage() {
               </p>
 
               <p className="text-slate-300 leading-relaxed mt-4">
-                You may stop using Troll City at any time. Account deletion does not erase payment
+                You may stop using Mai Troll at any time. Account deletion does not erase payment
                 obligations, completed transactions, legal records, fraud records, unresolved
                 disputes, or provisions of these Terms that are intended to survive termination.
               </p>
@@ -610,7 +610,7 @@ export default function TermsPage() {
               </h2>
 
               <p className="text-slate-300 leading-relaxed">
-                If you believe content on Troll City infringes your copyright, send a complete
+                If you believe content on Mai Troll infringes your copyright, send a complete
                 notice to our designated copyright contact:
               </p>
 
@@ -627,16 +627,16 @@ export default function TermsPage() {
                 <p>
                   <strong>Email:</strong>{' '}
                   <a
-                    href="mailto:copyright@maitrollcity.com"
+                    href="mailto:copyright@maiMaiTroll.com"
                     className="text-purple-400 hover:text-purple-300"
                   >
-                    copyright@maitrollcity.com
+                    copyright@maiMaiTroll.com
                   </a>
                 </p>
               </div>
 
               <p className="text-slate-400 leading-relaxed mt-4">
-                Troll City may remove allegedly infringing material and may terminate repeat
+                Mai Troll may remove allegedly infringing material and may terminate repeat
                 infringers where appropriate.
               </p>
             </div>
@@ -647,13 +647,13 @@ export default function TermsPage() {
               </h2>
 
               <p className="text-slate-300 leading-relaxed">
-                Troll City may rely on third-party services for payments, authentication, video,
+                Mai Troll may rely on third-party services for payments, authentication, video,
                 realtime communication, cloud hosting, storage, analytics, identity verification,
                 email, notifications, or other infrastructure.
               </p>
 
               <p className="text-slate-300 leading-relaxed mt-4">
-                Those providers may have their own terms and privacy practices. Troll City is not
+                Those providers may have their own terms and privacy practices. Mai Troll is not
                 responsible for an independent third party's products, outages, actions, or
                 policies, but we remain responsible for obligations the law places directly on us.
               </p>
@@ -666,7 +666,7 @@ export default function TermsPage() {
 
               <p className="text-slate-300 leading-relaxed">
                 We welcome suggestions, bug reports, feature ideas, and criticism. If you send us
-                feedback without a separate written agreement, you allow Troll City to use it
+                feedback without a separate written agreement, you allow Mai Troll to use it
                 without restriction or payment to you.
               </p>
 
@@ -682,7 +682,7 @@ export default function TermsPage() {
               </h2>
 
               <p className="text-slate-300 leading-relaxed">
-                To the fullest extent permitted by law, Troll City is provided on an “as is” and
+                To the fullest extent permitted by law, Mai Troll is provided on an “as is” and
                 “as available” basis.
               </p>
 
@@ -706,7 +706,7 @@ export default function TermsPage() {
               </h2>
 
               <p className="text-slate-300 leading-relaxed">
-                To the fullest extent permitted by law, Troll City and its owners, affiliates,
+                To the fullest extent permitted by law, Mai Troll and its owners, affiliates,
                 officers, employees, contractors, and service providers will not be liable for
                 indirect, incidental, special, exemplary, punitive, or consequential damages,
                 including lost profits, lost data, lost opportunities, reputational harm, or
@@ -714,13 +714,13 @@ export default function TermsPage() {
               </p>
 
               <p className="text-slate-300 leading-relaxed mt-4">
-                To the fullest extent permitted by law, Troll City's total liability for claims
+                To the fullest extent permitted by law, Mai Troll's total liability for claims
                 arising out of or related to the Platform will not exceed the greater of:
               </p>
 
               <ul className="list-disc pl-6 space-y-2 text-slate-300 mt-3">
                 <li>
-                  the amount you paid directly to Troll City during the 12 months before the event
+                  the amount you paid directly to Mai Troll during the 12 months before the event
                   giving rise to the claim; or
                 </li>
                 <li>$100 USD.</li>
@@ -739,7 +739,7 @@ export default function TermsPage() {
 
               <p className="text-slate-300 leading-relaxed">
                 To the extent permitted by law, you agree to defend, indemnify, and hold harmless
-                Troll City, its affiliates, owners, officers, employees, and contractors from
+                Mai Troll, its affiliates, owners, officers, employees, and contractors from
                 third-party claims, losses, liabilities, and reasonable legal costs arising from:
               </p>
 
@@ -752,7 +752,7 @@ export default function TermsPage() {
               </ul>
 
               <p className="text-slate-400 leading-relaxed mt-4">
-                This section does not require you to indemnify Troll City for Troll City's own
+                This section does not require you to indemnify Mai Troll for Mai Troll's own
                 unlawful conduct where such indemnification is prohibited.
               </p>
             </div>
@@ -774,10 +774,10 @@ export default function TermsPage() {
               <p className="text-slate-300 leading-relaxed mt-4">
                 Before filing a formal claim, you agree to contact us at{' '}
                 <a
-                  href="mailto:legal@maitrollcity.com"
+                  href="mailto:legal@maiMaiTroll.com"
                   className="text-purple-400 hover:text-purple-300"
                 >
-                  legal@maitrollcity.com
+                  legal@maiMaiTroll.com
                 </a>{' '}
                 and give us at least 30 days to try to resolve the dispute informally.
               </p>
@@ -801,7 +801,7 @@ export default function TermsPage() {
               </h2>
 
               <p className="text-slate-300 leading-relaxed">
-                Troll City will continue changing as features are added, removed, tested, repaired,
+                Mai Troll will continue changing as features are added, removed, tested, repaired,
                 or redesigned.
               </p>
 
@@ -827,7 +827,7 @@ export default function TermsPage() {
               <ul className="list-disc pl-6 space-y-3 text-slate-300">
                 <li>
                   These Terms and the policies incorporated into them make up the agreement between
-                  you and Troll City regarding the Platform.
+                  you and Mai Troll regarding the Platform.
                 </li>
 
                 <li>
@@ -836,7 +836,7 @@ export default function TermsPage() {
                 </li>
 
                 <li>
-                  Troll City's failure to enforce a provision once does not waive the right to
+                  Mai Troll's failure to enforce a provision once does not waive the right to
                   enforce it later.
                 </li>
 
@@ -846,7 +846,7 @@ export default function TermsPage() {
                 </li>
 
                 <li>
-                  Troll City may assign these Terms as part of a merger, acquisition,
+                  Mai Troll may assign these Terms as part of a merger, acquisition,
                   reorganization, financing, asset transfer, or transfer to an affiliate.
                 </li>
 
@@ -887,10 +887,10 @@ export default function TermsPage() {
                 <p>
                   <strong>Email:</strong>{' '}
                   <a
-                    href="mailto:legal@maitrollcity.com"
+                    href="mailto:legal@maiMaiTroll.com"
                     className="text-purple-400 hover:text-purple-300"
                   >
-                    legal@maitrollcity.com
+                    legal@maiMaiTroll.com
                   </a>
                 </p>
 

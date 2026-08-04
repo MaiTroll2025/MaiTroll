@@ -459,7 +459,7 @@ const FamilyWarsHub = ({ user: _authUser }: { user?: UserProfile | null }) => {
             ) : (
               <div className="text-center py-8 text-gray-400 bg-zinc-800/50 rounded-lg border border-zinc-700 border-dashed">
                 <p>No other families found to challenge.</p>
-                <p className="text-sm mt-2">Wait for more families to join Troll City!</p>
+                <p className="text-sm mt-2">Wait for more families to join Mai Troll!</p>
               </div>
             )}
           </div>

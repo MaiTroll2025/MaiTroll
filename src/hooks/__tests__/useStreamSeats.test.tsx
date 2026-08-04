@@ -18,12 +18,10 @@ const subscribeMock = jest.fn().mockImplementation((callback: ((status: string) 
   return { unsubscribe: jest.fn() }
 })
 
-const channelMock = {
-  on: jest.fn().mockReturnValue({
-    subscribe: subscribeMock,
-  }),
-  subscribe: subscribeMock,
-}
+const channelMock: any = {}
+channelMock.on = jest.fn().mockReturnValue(channelMock)
+channelMock.subscribe = subscribeMock
+channelMock.send = jest.fn().mockResolvedValue(undefined)
 
 jest.mock('../../lib/supabase', () => ({
   supabase: {

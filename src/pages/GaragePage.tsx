@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVehicleAssets } from '../lib/hooks/useVehicleAssets';
 import { useCoins } from '../lib/hooks/useCoins';
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { toast } from 'sonner';
 import {
   Car,
@@ -28,12 +28,12 @@ export default function GaragePage() {
   const { refreshCoins } = useCoins();
 
   useSEO({
-    title: 'Garage | Virtual Vehicle Community | Troll City',
-    description: 'Manage your virtual garage on Troll City. Buy, sell, and trade digital vehicles. View your collection, list vehicles for sale, and join the vehicle community.',
+    title: 'Garage | Virtual Vehicle Community | Mai Troll',
+    description: 'Manage your virtual garage on Mai Troll. Buy, sell, and trade digital vehicles. View your collection, list vehicles for sale, and join the vehicle community.',
     keywords: [
       'virtual garage', 'online garage', 'vehicle community', 'digital vehicles',
-      'Troll City garage', 'buy sell vehicles', 'car collection', 'virtual cars',
-      'vehicle trading', 'automobile community', 'Troll City vehicles'
+      'MaiTroll garage', 'buy sell vehicles', 'car collection', 'virtual cars',
+      'vehicle trading', 'automobile community', 'MaiTroll vehicles'
     ]
   });
 
@@ -80,36 +80,36 @@ export default function GaragePage() {
   const totalProfitLoss = totalValue - totalInvested;
 
   return (
-    <div className={`min-h-screen p-6 pb-24 ${trollCityTheme.backgrounds.primary} ${trollCityTheme.text.primary}`}>
+    <div className={`min-h-screen p-6 pb-24 ${MaiTrollTheme.backgrounds.primary} ${MaiTrollTheme.text.primary}`}>
       {/* Background Overlays */}
-      <div className={`fixed inset-0 pointer-events-none ${trollCityTheme.overlays.radialPurple}`} />
-      <div className={`fixed inset-0 pointer-events-none ${trollCityTheme.overlays.radialPink}`} />
+      <div className={`fixed inset-0 pointer-events-none ${MaiTrollTheme.overlays.radialPurple}`} />
+      <div className={`fixed inset-0 pointer-events-none ${MaiTrollTheme.overlays.radialPink}`} />
 
       <div className="relative max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate(-1)} className={`p-2 rounded-full transition ${trollCityTheme.interactive.hover} hover:bg-white/10`}>
+            <button onClick={() => navigate(-1)} className={`p-2 rounded-full transition ${MaiTrollTheme.interactive.hover} hover:bg-white/10`}>
               <ArrowLeft className="w-6 h-6" />
             </button>
             <div>
-              <h1 className={`text-3xl font-bold ${trollCityTheme.gradients.text}`}>
+              <h1 className={`text-3xl font-bold ${MaiTrollTheme.gradients.text}`}>
                 My Garage
               </h1>
-              <p className={trollCityTheme.text.secondary}>Your vehicle collection. {userAssets.length} vehicles owned.</p>
+              <p className={MaiTrollTheme.text.secondary}>Your vehicle collection. {userAssets.length} vehicles owned.</p>
             </div>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => navigate('/vehicle-transactions')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${trollCityTheme.interactive.hover} hover:bg-white/10 border ${trollCityTheme.borders.glass}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${MaiTrollTheme.interactive.hover} hover:bg-white/10 border ${MaiTrollTheme.borders.glass}`}
             >
               <History className="w-5 h-5" />
               <span className="hidden sm:inline">History</span>
             </button>
             <button
               onClick={() => navigate('/ktauto')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${trollCityTheme.interactive.hover} hover:bg-white/10 border ${trollCityTheme.borders.glass}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${MaiTrollTheme.interactive.hover} hover:bg-white/10 border ${MaiTrollTheme.borders.glass}`}
             >
               <Store className="w-5 h-5" />
               <span className="hidden sm:inline">Dealership</span>
@@ -119,7 +119,7 @@ export default function GaragePage() {
 
         {/* Portfolio Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`${trollCityTheme.components.card} p-4`}>
+          <div className={`${MaiTrollTheme.components.card} p-4`}>
             <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
               <Tag className="w-4 h-4" />
               Total Invested
@@ -128,7 +128,7 @@ export default function GaragePage() {
               {formatCompactNumber(totalInvested)} 🪙
             </div>
           </div>
-          <div className={`${trollCityTheme.components.card} p-4`}>
+          <div className={`${MaiTrollTheme.components.card} p-4`}>
             <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
               <DollarSign className="w-4 h-4" />
               Current Value
@@ -137,7 +137,7 @@ export default function GaragePage() {
               {formatCompactNumber(totalValue)} 🪙
             </div>
           </div>
-          <div className={`${trollCityTheme.components.card} p-4`}>
+          <div className={`${MaiTrollTheme.components.card} p-4`}>
             <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
               <TrendingDown className="w-4 h-4" />
               Profit/Loss
@@ -151,13 +151,13 @@ export default function GaragePage() {
         {/* Vehicle Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {userAssets.length === 0 ? (
-            <div className={`col-span-full p-12 text-center rounded-lg border ${trollCityTheme.borders.glass}`}>
+            <div className={`col-span-full p-12 text-center rounded-lg border ${MaiTrollTheme.borders.glass}`}>
               <Car className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <h3 className={`text-xl font-bold ${trollCityTheme.text.primary} mb-2`}>Your Garage is Empty</h3>
-              <p className={trollCityTheme.text.muted}>Visit the dealership to purchase your first vehicle!</p>
+              <h3 className={`text-xl font-bold ${MaiTrollTheme.text.primary} mb-2`}>Your Garage is Empty</h3>
+              <p className={MaiTrollTheme.text.muted}>Visit the dealership to purchase your first vehicle!</p>
               <button
                 onClick={() => navigate('/ktauto')}
-                className={`mt-4 px-6 py-3 ${trollCityTheme.gradients.button} rounded-lg font-bold transition hover:shadow-lg hover:-translate-y-0.5`}
+                className={`mt-4 px-6 py-3 ${MaiTrollTheme.gradients.button} rounded-lg font-bold transition hover:shadow-lg hover:-translate-y-0.5`}
               >
                 Browse Vehicles
               </button>
@@ -171,14 +171,14 @@ export default function GaragePage() {
               return (
                 <div
                   key={asset.id}
-                  className={`${trollCityTheme.components.card} group !p-0 overflow-hidden`}
+                  className={`${MaiTrollTheme.components.card} group !p-0 overflow-hidden`}
                 >
                   {/* Image Placeholder */}
-                  <div className={`h-48 ${trollCityTheme.backgrounds.card} flex items-center justify-center relative border-b ${trollCityTheme.borders.glass}`}>
+                  <div className={`h-48 ${MaiTrollTheme.backgrounds.card} flex items-center justify-center relative border-b ${MaiTrollTheme.borders.glass}`}>
                     {asset.image_url ? (
                       <img src={asset.image_url} alt={asset.vehicle_name} className="w-full h-full object-cover" />
                     ) : (
-                      <Car className={`w-16 h-16 ${trollCityTheme.text.muted} group-hover:text-purple-500 transition`} />
+                      <Car className={`w-16 h-16 ${MaiTrollTheme.text.muted} group-hover:text-purple-500 transition`} />
                     )}
                     {/* Tier Badge */}
                     <div className={`absolute top-2 left-2 ${tierBg} px-2 py-1 rounded text-xs font-bold border ${tierColor} backdrop-blur-sm`}>
@@ -192,14 +192,14 @@ export default function GaragePage() {
 
                   <div className="p-5 space-y-4">
                     <div>
-                      <h3 className={`text-xl font-bold ${trollCityTheme.text.primary}`}>{asset.vehicle_name}</h3>
+                      <h3 className={`text-xl font-bold ${MaiTrollTheme.text.primary}`}>{asset.vehicle_name}</h3>
                       <div className="flex items-center gap-2 text-sm mt-1 text-gray-400">
                         <Calendar className="w-3 h-3" />
                         Purchased {formatDate(asset.purchase_date)}
                       </div>
                     </div>
 
-                    <div className={`space-y-2 text-sm ${trollCityTheme.text.muted} bg-black/20 p-3 rounded-lg border ${trollCityTheme.borders.glass}`}>
+                    <div className={`space-y-2 text-sm ${MaiTrollTheme.text.muted} bg-black/20 p-3 rounded-lg border ${MaiTrollTheme.borders.glass}`}>
                       <div className="flex justify-between">
                         <span>Purchase Price</span>
                         <span className="text-yellow-400 font-mono">{formatCompactNumber(asset.purchase_price)} 🪙</span>
@@ -271,7 +271,7 @@ export default function GaragePage() {
                   <span className="text-green-400 font-bold font-mono text-lg">{formatCompactNumber(selectedAsset.buyback_value)} TC</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Troll City Keeps</span>
+                  <span className="text-gray-400">Mai Troll Keeps</span>
                   <span className="text-red-400 font-mono">{formatCompactNumber(selectedAsset.purchase_price - selectedAsset.buyback_value)} TC</span>
                 </div>
               </div>

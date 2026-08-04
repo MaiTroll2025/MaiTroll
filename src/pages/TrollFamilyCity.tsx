@@ -17,12 +17,12 @@ export default function TrollFamilyCity() {
   const { profile } = useAuthStore()
 
   useSEO({
-    title: 'Families | Online Communities & Social Groups | Troll City',
-    description: 'Join a family on Troll City. Create or join social families, compete in family wars, complete weekly tasks, and build your community together.',
+    title: 'Families | Online Communities & Social Groups | Mai Troll',
+    description: 'Join a family on Mai Troll. Create or join social families, compete in family wars, complete weekly tasks, and build your community together.',
     keywords: [
       'online communities', 'groups', 'social families', 'community groups',
-      'Troll City families', 'family wars', 'social groups', 'join a family',
-      'community building', 'team up', 'Troll City community'
+      'MaiTroll families', 'family wars', 'social groups', 'join a family',
+      'community building', 'team up', 'MaiTroll community'
     ]
   });
   const [families, setFamilies] = useState<any[]>([])
@@ -79,7 +79,7 @@ export default function TrollFamilyCity() {
       </h1>
 
       <p className="text-gray-300 text-sm mb-6 max-w-xl">
-        The Troll Families of Troll City compete weekly. Top family gets{' '}
+        The Troll Families of Mai Troll compete weekly. Top family gets{' '}
         <span className="text-yellow-300 font-bold">10,000 Free Coins</span> +
         Royal Badge + City Crown 👑
       </p>

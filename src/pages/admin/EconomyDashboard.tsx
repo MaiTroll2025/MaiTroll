@@ -192,7 +192,7 @@ export default function EconomyDashboard() {
     <div className="p-6 space-y-6 min-h-screen bg-[#0A0814] text-white">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-green-400 bg-clip-text">
-          Troll City Economy
+          Mai Troll Economy
         </h1>
       </div>
 

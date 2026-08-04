@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { useCoins } from '@/lib/hooks/useCoins'
 import { toast } from 'sonner'
-import { trollCityTheme } from '@/styles/trollCityTheme'
+import { MaiTrollTheme } from '@/styles/trollCityTheme'
 import useSEO from '@/hooks/useSEO';
 import {
   Coins,
@@ -56,7 +56,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 function ArcadePanel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cx(trollCityTheme.backgrounds.card, trollCityTheme.borders.glass, 'rounded-3xl shadow-[0_0_34px_rgba(147,51,234,0.12)]', className)}>
+    <div className={cx(MaiTrollTheme.backgrounds.card, MaiTrollTheme.borders.glass, 'rounded-3xl shadow-[0_0_34px_rgba(147,51,234,0.12)]', className)}>
       {children}
     </div>
   )
@@ -74,11 +74,11 @@ export default function TrollWheel() {
   const [showMobileInfo, setShowMobileInfo] = useState(true)
 
   useSEO({
-    title: 'Troll Wheel | Spin & Win Rewards | Troll City',
-    description: 'Spin the Troll Wheel on Troll City for a chance to win rewards, Trollmonds, and special abilities. Play online games, earn prizes, and join the fun with our social gaming community.',
+    title: 'Troll Wheel | Spin & Win Rewards | Mai Troll',
+    description: 'Spin the Troll Wheel on Mai Troll for a chance to win rewards, Trollmonds, and special abilities. Play online games, earn prizes, and join the fun with our social gaming community.',
     keywords: [
       'online games', 'spin wheel game', 'social games', 'multiplayer games',
-      'chance games', 'rewards game', 'Troll Wheel', 'Troll City games',
+      'chance games', 'rewards game', 'Troll Wheel', 'MaiTroll games',
       'win prizes', 'virtual rewards', 'community games', 'spin to win'
     ]
   });
@@ -216,7 +216,7 @@ export default function TrollWheel() {
   }
 
   return (
-    <div className={`relative flex flex-col overflow-x-hidden ${trollCityTheme.backgrounds.primary} text-white`}>
+    <div className={`relative flex flex-col overflow-x-hidden ${MaiTrollTheme.backgrounds.primary} text-white`}>
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(147,51,234,0.18),transparent)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(45,212,191,0.14),transparent)]" />
@@ -236,7 +236,7 @@ export default function TrollWheel() {
                 </div>
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-purple-300/25 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white">
-                    <Sparkles className="h-3 w-3" /> Troll City Arcade
+                    <Sparkles className="h-3 w-3" /> Mai Troll Arcade
                   </div>
                   <h1 className="mt-2 bg-gradient-to-r from-cyan-300 via-purple-400 to-pink-300 bg-clip-text text-3xl font-black uppercase tracking-tight text-transparent md:text-5xl">
                     Troll Wheel

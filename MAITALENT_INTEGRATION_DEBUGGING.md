@@ -1,7 +1,7 @@
-# MaiTalent ↔ Troll City Integration Debugging Findings
+# MaiTalent ↔ Mai Troll Integration Debugging Findings
 
 ## Issue Summary
-The `sync-mai-platform-user` function on MaiTalent's Supabase (`https://tovzpzpimvwaldqkkmmi.supabase.co/functions/v1/sync-mai-platform-user`) returns **400 Bad Request** when Troll City attempts to link accounts via the `link` action.
+The `sync-mai-platform-user` function on MaiTalent's Supabase (`https://tovzpzpimvwaldqkkmmi.supabase.co/functions/v1/sync-mai-platform-user`) returns **400 Bad Request** when Mai Troll attempts to link accounts via the `link` action.
 
 ## Payload Being Sent from MaiTalent Side
 ```json
@@ -23,7 +23,7 @@ Content-Type: application/json
 
 ## Required Verification Steps
 
-### 1. Verify Troll City Supabase Schema
+### 1. Verify Mai Troll Supabase Schema
 **Table:** `user_profiles` (not `profiles`)
 **Columns needed:** `id`, `email`
 
@@ -39,15 +39,15 @@ SELECT id, email FROM user_profiles WHERE id = 'test_user_123';
 ### 2. Verify Service Role Key Permissions
 **Environment Variables** (from `env.example`):
 ```bash
-TROLLCITY_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
-TROLLCITY_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeHB3ZmFsZW5vcnpycXh3bXRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDAyOTExNywiZXhwIjoyMDc5NjA1MTE3fQ.Ra1AhVwUYPxODzeFnCnWyurw8QiTzO0OeCo-sXzTVHo
+Mai Troll_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+Mai Troll_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeHB3ZmFsZW5vcnpycXh3bXRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDAyOTExNywiZXhwIjoyMDc5NjA1MTE3fQ.Ra1AhVwUYPxODzeFnCnWyurw8QiTzO0OeCo-sXzTVHo
 ```
 
 **Test Command:**
 ```bash
 curl -X GET "https://yjxpwfalenorzrqxwmtr.supabase.co/rest/v1/user_profiles?id=eq.test_user_123&select=id,email" \
-  -H "Authorization: Bearer $TROLLCITY_SERVICE_ROLE_KEY" \
-  -H "apikey: $TROLLCITY_SERVICE_ROLE_KEY"
+  -H "Authorization: Bearer $Mai Troll_SERVICE_ROLE_KEY" \
+  -H "apikey: $Mai Troll_SERVICE_ROLE_KEY"
 ```
 
 ### 3. Verify Test User Exists
@@ -88,8 +88,8 @@ The test user `test_user_123` with a valid email must exist in `user_profiles`.
 2. **Test service role key** with REST API:
    ```bash
    curl -X GET "https://yjxpwfalenorzrqxwmtr.supabase.co/rest/v1/user_profiles?id=eq.test_user_123&select=id,email" \
-     -H "Authorization: Bearer [TROLLCITY_SERVICE_ROLE_KEY]" \
-     -H "apikey: [TROLLCITY_SERVICE_ROLE_KEY]"
+     -H "Authorization: Bearer [Mai Troll_SERVICE_ROLE_KEY]" \
+     -H "apikey: [Mai Troll_SERVICE_ROLE_KEY]"
    ```
 
 3. **Enable External Accounts** in Supabase Dashboard:
@@ -112,10 +112,10 @@ ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
 
 ## Environment Variables Reference
 
-### Troll City Side (env.example)
+### Mai Troll Side (env.example)
 ```bash
-TROLLCITY_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
-TROLLCITY_SERVICE_ROLE_KEY=[service_role_key]
+Mai Troll_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+Mai Troll_SERVICE_ROLE_KEY=[service_role_key]
 TROLL_CITY_SYNC_URL=https://tovzpzpimvwaldqkkmmi.supabase.co/functions/v1/sync-mai-platform-user
 TROLL_CITY_SECRET=maicorp1336944428554803
 ```
@@ -130,6 +130,6 @@ MAITALENT_SERVICE_ROLE_KEY=[maitalent_service_role_key]
 ---
 
 ## Debugging Contact
-**Troll City Engineering** - This file should be shared with the MaiTalent team to coordinate the fix.
+**Mai Troll Engineering** - This file should be shared with the MaiTalent team to coordinate the fix.
 
 **Expected Resolution:** Once the test user exists in `user_profiles` and external accounts are enabled, the 400 error should resolve and the link action should succeed.

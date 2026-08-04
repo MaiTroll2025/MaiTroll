@@ -361,7 +361,7 @@ export default function MaiPayPage() {
     setSubmittingCashout(true);
     try {
       // The RPC now handles no-fee cashouts with a 10/24h rolling limit
-      const { data, error } = await supabase.rpc('request_friday_cashout', {
+      const { data, error } = await supabase.rpc('request_cashout', {
         p_user_id: user?.id,
         p_coins_to_redeem: selectedTier.coins,
         p_provider_type: selectedProvider,
@@ -778,7 +778,7 @@ export default function MaiPayPage() {
               <div>
                 <h3 className="text-sm font-bold text-green-300">No Cashout Fees</h3>
                 <p className="text-sm text-green-200/80">
-                  Troll City does not charge users to cash out their earnings. Select any tier and request up to {cashoutLimit} cashouts per rolling 24-hour period.{isMaiPayPlus ? ' MAI Pay Plus uses double coin requirements for the same cash payout.' : ''}
+                  Mai Troll does not charge users to cash out their earnings. Select any tier and request up to {cashoutLimit} cashouts per rolling 24-hour period.{isMaiPayPlus ? ' MAI Pay Plus uses double coin requirements for the same cash payout.' : ''}
                 </p>
               </div>
             </div>

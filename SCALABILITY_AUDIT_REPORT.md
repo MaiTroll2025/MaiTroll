@@ -1,4 +1,4 @@
-# Troll City Scalability Audit Report
+# Mai Troll Scalability Audit Report
 
 **Date:** 2026-06-18
 **Scope:** Full codebase audit for 10,000+ user readiness
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-The Troll City codebase has **33 setInterval polling loops** across 13 files and **28 Supabase realtime channel subscriptions** across 28 files. While all channels are properly cleaned up and all intervals have clearInterval in their cleanup, there are significant opportunities to reduce database load, browser requests, and realtime overhead.
+The Mai Troll codebase has **33 setInterval polling loops** across 13 files and **28 Supabase realtime channel subscriptions** across 28 files. While all channels are properly cleaned up and all intervals have clearInterval in their cleanup, there are significant opportunities to reduce database load, browser requests, and realtime overhead.
 
 **Key Findings:**
 - **~47 redundant polling intervals** can be replaced with realtime subscriptions or caching
@@ -30,14 +30,14 @@ The Troll City codebase has **33 setInterval polling loops** across 13 files and
 - `scripts/load-test-1000-users.mjs` - 1000-user load test
 - `scripts/phase2-load-test.mjs` - Phase 2 load test with DB writes + realtime
 - `scripts/stress-test.mjs` - LiveKit room stress test
-- Console API: `window.__TROLLCITY_BENCHMARK__.snapshot()`, `.report()`, `.reset()`
+- Console API: `window.__Mai Troll_BENCHMARK__.snapshot()`, `.report()`, `.reset()`
 
 ### Baseline Measurement Commands
 ```bash
 # Browser benchmark (in DevTools Console):
-window.__TROLLCITY_BENCHMARK__.reset();
+window.__Mai Troll_BENCHMARK__.reset();
 # ... run test scenario ...
-window.__TROLLCITY_BENCHMARK__.report();
+window.__Mai Troll_BENCHMARK__.report();
 
 # Load test:
 node scripts/phase2-load-test.mjs

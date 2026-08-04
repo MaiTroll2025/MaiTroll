@@ -141,7 +141,7 @@ export async function GET(request: Request) {
                 }}
               >
                 <span style={{ fontSize: '13px', fontWeight: 700, color: 'white', letterSpacing: '1.5px' }}>
-                  TROLL CITY ACADEMY
+                  Mai Troll ACADEMY
                 </span>
               </div>
               {course.difficulty_level && (
@@ -268,7 +268,7 @@ export async function GET(request: Request) {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Troll City Academy
+                Mai Troll Academy
               </span>
             </div>
           </div>
@@ -320,7 +320,7 @@ function renderFallbackOG() {
           <span style={{ fontSize: '30px' }}>🎓</span>
         </div>
         <span style={{ fontSize: '32px', fontWeight: 700, color: 'white' }}>
-          Troll City Academy
+          Mai Troll Academy
         </span>
         <span style={{ fontSize: '16px', color: 'rgba(255,255,255,0.5)' }}>
           Learn. Grow. Earn.

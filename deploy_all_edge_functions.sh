@@ -3,7 +3,7 @@
 # ===================================================
 # EDGE FUNCTIONS DEPLOYMENT SCRIPT
 # ===================================================
-# TrollCity2 - Deploy all edge functions to Supabase
+# Mai Troll2 - Deploy all edge functions to Supabase
 # Date: 2025-12-09
 # ===================================================
 
@@ -47,7 +47,7 @@ if ! supabase projects list &> /dev/null; then
     exit 1
 fi
 
-print_status "Starting edge functions deployment for TrollCity2..."
+print_status "Starting edge functions deployment for Mai Troll2..."
 
 # Define arrays of functions to deploy
 PAYPAL_FUNCTIONS=(
@@ -221,7 +221,7 @@ print_status "Failed deployments: $((total_functions - total_success))"
 
 if [ $total_success -eq $total_functions ]; then
     print_success "🎉 ALL EDGE FUNCTIONS DEPLOYED SUCCESSFULLY!"
-    print_success "Your TrollCity2 application is ready for production!"
+    print_success "Your Mai Troll2 application is ready for production!"
 else
     print_warning "⚠️ Some functions failed to deploy. Please check the errors above."
     print_warning "You can manually deploy failed functions using:"

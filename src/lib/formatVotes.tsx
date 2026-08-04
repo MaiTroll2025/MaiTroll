@@ -47,7 +47,7 @@ const features = [
   {
     icon: Vote,
     title: 'Democratic Elections',
-    description: 'Vote for leaders who represent your interests. Every voice matters in Troll City democracy.',
+    description: 'Vote for leaders who represent your interests. Every voice matters in Mai Troll democracy.',
   },
   {
     icon: Scale,
@@ -57,7 +57,7 @@ const features = [
   {
     icon: Shield,
     title: 'Community Safety',
-    description: 'Troll Officers work 24/7 to keep Troll City safe. Report issues and get help when you need it.',
+    description: 'Troll Officers work 24/7 to keep Mai Troll safe. Report issues and get help when you need it.',
   },
   {
     icon: FileText,
@@ -266,13 +266,13 @@ const trendingSearches = [
 export default function GovernmentPage() {
   return (
     <SEOLayout
-      title="Government System on Troll City | Social Streaming Platform"
-      description="Learn about the Troll City (Mai Troll City) government system. Vote in elections, run for office, and participate in our democratic social streaming community."
+      title="Government System on Mai Troll | Social Streaming Platform"
+      description="Learn about the Mai Troll (MaiMaiTroll) government system. Vote in elections, run for office, and participate in our democratic social streaming community."
       keywords={[
-        'Troll City', 'Mai Troll City', 'government', 'election', 'vote', 'democracy', 'president', 'voting',
+        'MaiTroll', 'MaiMaiTroll', 'government', 'election', 'vote', 'democracy', 'president', 'voting',
         'Troll Court', 'legal', 'court', 'attorney', 'prosecutor', 'officer',
         'run for office', 'political', 'elections 2026', 'candidate',
-        'community leadership', 'public office', 'government system', 'Troll City government',
+        'community leadership', 'public office', 'government system', 'MaiTroll government',
         'social streaming platform', 'community platform'
       ]}
     >
@@ -292,12 +292,12 @@ export default function GovernmentPage() {
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
               Your Voice Shapes{' '}
               <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-                Troll City
+                Mai Troll
               </span>
             </h1>
             
             <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Troll City is governed by its users. Vote in elections, run for office, 
+              Mai Troll is governed by its users. Vote in elections, run for office, 
               and participate in our democratic process. Fair courts ensure justice 
               for all community members.
             </p>
@@ -341,7 +341,7 @@ export default function GovernmentPage() {
 
       <SEOContentSection
         title="How Government Works"
-        description="Troll City operates as a digital democracy. Users elect leaders, participate in decisions, and hold government accountable."
+        description="Mai Troll operates as a digital democracy. Users elect leaders, participate in decisions, and hold government accountable."
         icon={Building2}
       >
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -382,7 +382,7 @@ export default function GovernmentPage() {
 
       <SEOContentSection
         title="Active Elections"
-        description="Participate in Troll City democracy. Your vote shapes the future of our platform."
+        description="Participate in Mai Troll democracy. Your vote shapes the future of our platform."
         icon={Calendar}
       >
         <ActiveElectionsSection />

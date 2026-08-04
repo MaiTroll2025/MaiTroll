@@ -88,7 +88,7 @@ export default function KickFee() {
     }
 
     const confirmed = window.confirm(
-      "This will permanently delete your Troll City account and all progress. This cannot be undone. Continue?"
+      "This will permanently delete your Mai Troll account and all progress. This cannot be undone. Continue?"
     );
     if (!confirmed) return;
 
@@ -191,7 +191,7 @@ export default function KickFee() {
                 <div className="font-semibold">Manual Cash App payment</div>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>
-                    Send payment to <span className="font-mono font-semibold">$trollcity26</span>
+                    Send payment to <span className="font-mono font-semibold">$Mai Troll26</span>
                   </li>
                   <li>
                     In the Cash App note include:{" "}

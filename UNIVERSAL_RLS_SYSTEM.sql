@@ -1,5 +1,5 @@
 -- ============================================================================
--- UNIVERSAL ROW LEVEL SECURITY SYSTEM FOR TROLL CITY
+-- UNIVERSAL ROW LEVEL SECURITY SYSTEM FOR Mai Troll
 -- ============================================================================
 -- Security > Convenience > Speed
 -- Designed for adversarial environment - assume all users are hostile

@@ -1,7 +1,7 @@
 // src/components/entrance/CityDoors.tsx
 import React from 'react'
 
-function TrollCityCrest() {
+function MaiTrollCrest() {
   return (
     <svg className="gce-crest" viewBox="0 0 100 100" aria-hidden="true">
       <defs>
@@ -60,8 +60,8 @@ function Door({ side }: { side: 'left' | 'right' }) {
         <span className="gce-seam gce-seam-1" />
         <span className="gce-seam gce-seam-2" />
         <span className="gce-seam gce-seam-3" />
-        <TrollCityCrest />
-        <span className="gce-door-name">MAITROLLCITY</span>
+        <MaiTrollCrest />
+        <span className="gce-door-name">MAIMaiTroll</span>
       </div>
       <span className="gce-handle" />
     </div>

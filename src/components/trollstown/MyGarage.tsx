@@ -354,7 +354,7 @@ export default function MyGarage() {
             <div className="p-8 text-center space-y-4">
               <div className="border-b-2 border-black pb-4 mb-4">
                 <h3 className="text-3xl font-serif font-bold tracking-wider">CERTIFICATE OF TITLE</h3>
-                <p className="text-xs uppercase tracking-[0.2em] mt-1">State of Troll City • Department of Motor Vehicles</p>
+                <p className="text-xs uppercase tracking-[0.2em] mt-1">State of Mai Troll • Department of Motor Vehicles</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-left font-mono text-sm">

@@ -225,7 +225,7 @@ export default function JailAppealPage() {
                 Your current balance: {profile?.troll_coins || 0} TC
               </p>
               <p className="text-xs text-gray-500 mt-2">
-                This fee goes to the Troll City public pool. Appeal is non-refundable regardless of outcome.
+                This fee goes to the Mai Troll public pool. Appeal is non-refundable regardless of outcome.
               </p>
             </div>
 

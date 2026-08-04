@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 async function runDiagnostics() {
-  console.log('🚀 Starting Troll City Diagnostics...');
+  console.log('🚀 Starting Mai Troll Diagnostics...');
   console.log(`Target: ${supabaseUrl}`);
 
   // 1. Database Connection Check

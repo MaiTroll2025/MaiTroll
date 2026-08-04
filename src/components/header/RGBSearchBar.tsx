@@ -215,7 +215,7 @@ const RGBSearchBar = () => {
             }
             setIsOpen(true);
           }}
-          placeholder={isMobile ? "Search or explore..." : "Search or explore Troll City..."}
+          placeholder={isMobile ? "Search or explore..." : "Search or explore Mai Troll..."}
           className={cn(
             'w-full rounded-full text-white placeholder-slate-500',
             'bg-slate-900/80 border border-slate-700/50 backdrop-blur-sm',

@@ -1,5 +1,5 @@
 /**
- * Performance optimization utilities for Troll City
+ * Performance optimization utilities for Mai Troll
  * Use these utilities to improve runtime performance
  */
 

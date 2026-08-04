@@ -44,8 +44,10 @@ export default function UniverseCalendarPage() {
 
   // Realtime: refresh on any event change broadcast
   useEffect(() => {
-    const ch = supabase.channel('universe-calendar').subscribe()
-    ch.on('broadcast', { event: 'refresh' }, () => load())
+    const ch = supabase
+      .channel('universe-calendar')
+      .on('broadcast', { event: 'refresh' }, () => load())
+      .subscribe()
     return () => supabase.removeChannel(ch)
   }, [load])
 

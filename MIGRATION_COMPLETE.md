@@ -1,4 +1,4 @@
-# TrollCity Column Migration & RLS Policy Fix - COMPLETE
+# Mai Troll Column Migration & RLS Policy Fix - COMPLETE
 
 ## Overview
 This document summarizes all changes made to migrate from legacy database column names to new standardized names, and to fix RLS policies blocking purchase functionality.

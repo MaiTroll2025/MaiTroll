@@ -107,7 +107,7 @@ export default function WallShareModal({ isOpen, onClose, post, postUrl, onShare
 
   const authorName = post.username || 'Someone'
   const postPreview = post.content.length > 80 ? post.content.slice(0, 80) + '…' : post.content
-  const shareText = `${postPreview} — by ${authorName} on MaiTrollCity`
+  const shareText = `${postPreview} — by ${authorName} on MaiMai Troll`
 
   const handleShare = async (platform: (typeof SOCIAL_PLATFORMS)[0]) => {
     onShare?.(post.id)
@@ -134,7 +134,7 @@ export default function WallShareModal({ isOpen, onClose, post, postUrl, onShare
     onShare?.(post.id)
     try {
       await navigator.share({
-        title: `Post by ${authorName} on MaiTrollCity`,
+        title: `Post by ${authorName} on MaiMai Troll`,
         text: shareText,
         url: postUrl,
       })

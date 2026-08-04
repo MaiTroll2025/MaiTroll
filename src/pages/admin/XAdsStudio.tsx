@@ -106,18 +106,18 @@ const contentTypeLabels: Record<ContentSourceType, string> = {
 };
 
 const ctaOptions: Record<ContentSourceType, string> = {
-  stream: 'Go live on Troll City',
+  stream: 'Go live on Mai Troll',
   trollpod: 'Join the conversation',
-  wall_post: 'Join Troll City',
+  wall_post: 'Join Mai Troll',
   event: 'Join the event',
   career: 'Apply now',
   wallet: 'Cash out for real',
-  government: 'Explore Troll City',
+  government: 'Explore Mai Troll',
   court: 'Enter Troll Court',
   church: 'Join the community',
-  safety: 'Stay safe in Troll City',
+  safety: 'Stay safe in Mai Troll',
   marketplace: 'Shop now',
-  profile: 'Follow on Troll City',
+  profile: 'Follow on Mai Troll',
   family: 'Join the family',
   tcnn: 'Read more on TCNN',
   battle: 'Join the battle',
@@ -329,7 +329,7 @@ export default function XAdsStudio() {
   };
 
   const connectAccount = async (platform: 'x' | 'instagram' | 'facebook') => {
-    const redirectUrl = customRedirectUrl || 'https://maitrollcity.com/admin/x-ads/oauth-callback';
+    const redirectUrl = customRedirectUrl || 'https://maiMaiTroll.com/admin/x-ads/oauth-callback';
     
     console.log('Connecting with redirect:', redirectUrl);
     
@@ -659,7 +659,7 @@ export default function XAdsStudio() {
                   type="text"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Enter Troll City URL..."
+                  placeholder="Enter Mai Troll URL..."
                   className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
                 />
                 <button
@@ -670,7 +670,7 @@ export default function XAdsStudio() {
                   Capture
                 </button>
               </div>
-              <p className="text-gray-500 text-sm mt-2">Enter a Troll City page URL to capture its content for ad generation</p>
+              <p className="text-gray-500 text-sm mt-2">Enter a Mai Troll page URL to capture its content for ad generation</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

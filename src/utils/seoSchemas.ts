@@ -1,6 +1,6 @@
-export const SITE_URL = 'https://maitrollcity.com'
-export const SITE_NAME = 'Troll City'
-export const SITE_ALT_NAME = 'Mai Troll City'
+export const SITE_URL = 'https://maiMaiTroll.com'
+export const SITE_NAME = 'MaiTroll'
+export const SITE_ALT_NAME = 'MaiMaiTroll'
 
 export function websiteSchema() {
   return {
@@ -9,7 +9,7 @@ export function websiteSchema() {
     name: SITE_NAME,
     alternateName: SITE_ALT_NAME,
     url: SITE_URL,
-    description: 'Troll City is a social streaming platform for creators, streamers, gamers, and online communities.',
+    description: 'MaiTroll is a social streaming platform for creators, streamers, gamers, and online communities.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -29,7 +29,7 @@ export function organizationSchema() {
     alternateName: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.png`,
-    description: 'Troll City (Mai Troll City) is a social streaming and content-sharing platform for creators, streamers, gamers, and online communities.',
+    description: 'MaiTroll (MaiMaiTroll) is a social streaming and content-sharing platform for creators, streamers, gamers, and online communities.',
     sameAs: [SITE_URL],
     contactPoint: {
       '@type': 'ContactPoint',

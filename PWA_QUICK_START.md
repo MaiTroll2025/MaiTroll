@@ -2,7 +2,7 @@
 
 ## ✅ Installation Complete!
 
-Your Troll City app now has a **fully functional PWA install system** that works on both iOS and Android!
+Your Mai Troll app now has a **fully functional PWA install system** that works on both iOS and Android!
 
 ## 🚀 What Just Got Added
 

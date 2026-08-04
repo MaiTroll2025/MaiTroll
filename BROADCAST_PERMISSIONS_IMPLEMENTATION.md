@@ -1,7 +1,7 @@
 # Broadcast Box & Permissions Implementation Guide
 
 ## Overview
-This document describes the implementation of the broadcast box management and role-based permissions system for TrollCity.
+This document describes the implementation of the broadcast box management and role-based permissions system for Mai Troll.
 
 ## Key Changes Implemented
 

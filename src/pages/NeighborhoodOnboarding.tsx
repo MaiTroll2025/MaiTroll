@@ -76,7 +76,7 @@ export default function NeighborhoodOnboarding() {
   const [currentScene, setCurrentScene] = useState<OnboardingScene>('street')
   const [loading, setLoading] = useState(true)
 
-  const [streetName, setStreetName] = useState('Troll City Lane')
+  const [streetName, setStreetName] = useState('MaiTroll Lane')
   const [zipCode, setZipCode] = useState('00001')
   const [houseCount, setHouseCount] = useState(5)
 
@@ -396,7 +396,7 @@ export default function NeighborhoodOnboarding() {
 
         if (hasNeighborhood && hasHouse && hasVehicle && carInsuranceValid && homeInsuranceValid && hasPlate && hasLicense) {
           nextScene = 'complete'
-          nextMessage = 'Your neighborhood is ready. Enter the streets of Troll City!'
+          nextMessage = 'Your neighborhood is ready. Enter the streets of Mai Troll!'
         } else if (isFamilyMember) {
           if (!hasVehicle) {
             nextScene = 'car'
@@ -408,7 +408,7 @@ export default function NeighborhoodOnboarding() {
             nextScene = 'license'
           } else {
             nextScene = 'complete'
-            nextMessage = 'Welcome to your family neighborhood! Enter the streets of Troll City!'
+            nextMessage = 'Welcome to your family neighborhood! Enter the streets of Mai Troll!'
           }
         } else if (!hasNeighborhood || !hasHouse) {
           const { data: followedUsers, error: followsError } = await supabase
@@ -654,7 +654,7 @@ export default function NeighborhoodOnboarding() {
       await refreshProfile(true)
 
       toast.success(`${selectedCar.name} is yours!`)
-      transitionToScene('driverTest', '🚗 Car purchased! Now get your Troll City license!')
+      transitionToScene('driverTest', '🚗 Car purchased! Now get your Mai Troll license!')
     } catch (error: any) {
       toast.error(error?.message || 'Purchase failed')
     } finally {
@@ -981,7 +981,7 @@ export default function NeighborhoodOnboarding() {
       await refreshProfile(true)
 
       toast.success('License plate saved')
-      transitionToScene('complete', '🏆 License complete! Welcome to Troll City!')
+      transitionToScene('complete', '🏆 License complete! Welcome to Mai Troll!')
     } catch (error: any) {
       toast.error(error?.message || 'Failed to save license plate')
     } finally {
@@ -1043,11 +1043,11 @@ export default function NeighborhoodOnboarding() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-violet-600/20 px-4 py-2 text-sm font-semibold text-violet-200">
               <Sparkles className="h-4 w-4 text-violet-300" />
-              Neighborhood Setup: Troll City Edition
+              Neighborhood Setup: Mai Troll Edition
             </div>
 
             <h1 className="mt-4 text-4xl font-bold tracking-tight">
-              Launch your first Troll City street
+              Launch your first Mai Troll street
             </h1>
 
             <p className="mt-3 max-w-2xl text-slate-400">
@@ -1138,7 +1138,7 @@ export default function NeighborhoodOnboarding() {
                 <div className="space-y-6">
                   <div className="space-y-3">
                     <h2 className="text-2xl font-semibold text-white">
-                      Create Your First Home in Troll City
+                      Create Your First Home in Mai Troll
                     </h2>
                     <p className="text-slate-400">
                       Choose a street name, zip, and the number of houses on your block.
@@ -1196,7 +1196,7 @@ export default function NeighborhoodOnboarding() {
                       <div className="space-y-3">
                         <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-4 text-sm text-slate-300">
                           <p className="font-semibold text-white">
-                            {streetName || 'Troll City Lane'}
+                            {streetName || 'MaiTroll Lane'}
                           </p>
                           <p>
                             ZIP {zipCode || '00001'} • {houseCount} houses
@@ -1279,7 +1279,7 @@ export default function NeighborhoodOnboarding() {
                   <div className="space-y-3">
                     <h2 className="text-2xl font-semibold text-white">Choose Your Car</h2>
                     <p className="text-slate-400">
-                      Pick a starter vehicle and prepare to get your Troll City license.
+                      Pick a starter vehicle and prepare to get your Mai Troll license.
                     </p>
                   </div>
 
@@ -1333,11 +1333,11 @@ export default function NeighborhoodOnboarding() {
                 <div className="space-y-6">
                   <div className="space-y-3">
                     <h2 className="text-2xl font-semibold text-white">
-                      Get Your Troll City License
+                      Get Your Mai Troll License
                     </h2>
                     <p className="text-slate-400">
                       The written driver test has been removed. Click the button below to
-                      activate your Troll City license.
+                      activate your Mai Troll license.
                     </p>
                   </div>
 
@@ -1533,7 +1533,7 @@ export default function NeighborhoodOnboarding() {
 
                       <div className="rounded-3xl border border-slate-600 bg-slate-900 p-4 text-center">
                         <div className="text-xl font-bold tracking-[0.3em] text-cyan-300">
-                          TROLL CITY
+                          Mai Troll
                         </div>
                         <div className="mt-4 text-4xl font-black tracking-[0.5em] text-white">
                           {plateText || 'XXXXXXX'}
@@ -1779,7 +1779,7 @@ export default function NeighborhoodOnboarding() {
 
           <div className="space-y-3 py-2 text-sm text-slate-300">
             <p>
-              Welcome to Troll City! Before you can go{' '}
+              Welcome to Mai Troll! Before you can go{' '}
               <strong className="text-white">live</strong>, you need to:
             </p>
 

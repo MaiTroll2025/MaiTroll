@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I acknowledge that I have read and agree to the Troll City Confidentiality and Data Security Agreement, including non-disclosure of proprietary, employee, user, moderation, and platform information.'
+  'I acknowledge that I have read and agree to the Mai Troll Confidentiality and Data Security Agreement, including non-disclosure of proprietary, employee, user, moderation, and platform information.'
 
 export default function ConfidentialityNDAForm(props: DocumentFormProps) {
   return (

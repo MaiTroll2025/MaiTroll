@@ -1,4 +1,4 @@
-# Troll City Hot-Path And Launch Fixes
+# Mai Troll Hot-Path And Launch Fixes
 
 Date: 2026-04-30
 
@@ -36,7 +36,7 @@ This file summarizes the changes made in the latest launch-readiness pass, inclu
   - Central stream realtime manager scaffold.
   - Tracks one `stream-realtime:{streamId}` channel per stream.
   - Supports stream, message, gift, participant, and battle events.
-  - Adds dev-only debug state via `window.__TROLLCITY_STREAM_REALTIME__`.
+  - Adds dev-only debug state via `window.__Mai Troll_STREAM_REALTIME__`.
 
 - Added `src/hooks/useStreamRealtime.ts`
   - React hook wrapper around the stream realtime manager.

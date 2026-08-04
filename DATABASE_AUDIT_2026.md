@@ -1,4 +1,4 @@
-# DATABASE AUDIT 2026 — Troll City
+# DATABASE AUDIT 2026 — Mai Troll
 
 **Date:** 2026-06-10  
 **Scope:** Full database schema audit — tables, functions, migrations, RLS policies  
@@ -683,8 +683,8 @@ The following tables exist in the migration/schema files but are **NOT** referen
 | 445 | `troll_wall_likes` | baseline |
 | 446 | `troll_wall_reactions` | baseline |
 | 447 | `troll_wars_ai_battle_logs` | 2026-04 |
-| 448 | `trollcity_orders` | baseline |
-| 449 | `trollcity_products` | baseline |
+| 448 | `Mai Troll_orders` | baseline |
+| 449 | `Mai Troll_products` | baseline |
 | 450 | `trollg_applications` | 2026-01 |
 | 451 | `trollmin_config` | various |
 | 452 | `trollmond_config` | 2027-03 |
@@ -2742,8 +2742,8 @@ Tables that exist in the schema but have **no RLS policies** defined (RLS may or
 | `troll_wall_likes` | ✅ | Policies exist |
 | `troll_wall_reactions` | ✅ | Policies exist |
 | `troll_wars_ai_battle_logs` | ✅ | Policies exist |
-| `trollcity_orders` | ✅ | Policies exist |
-| `trollcity_products` | ✅ | Policies exist |
+| `Mai Troll_orders` | ✅ | Policies exist |
+| `Mai Troll_products` | ✅ | Policies exist |
 | `trollg_applications` | ✅ | Policies exist |
 | `trollmin_config` | ✅ | Policies exist |
 | `trollmond_config` | ✅ | Policies exist |

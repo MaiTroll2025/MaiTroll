@@ -1,4 +1,4 @@
-# TROLL CITY ECONOMY SAFETY PASS — IMPLEMENTATION SUMMARY
+# Mai Troll ECONOMY SAFETY PASS — IMPLEMENTATION SUMMARY
 
 **Migration File:** `supabase/migrations/20290606000000_economy_safety_pass.sql`
 

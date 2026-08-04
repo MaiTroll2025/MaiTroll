@@ -1,0 +1,90 @@
+{
+  "gift_items": {
+    "alterStatements": [],
+    "enableRls": [
+      "ALTER TABLE IF EXISTS public.gift_items ENABLE ROW LEVEL SECURITY;"
+    ],
+    "createIndexes": [
+      "CREATE INDEX IF NOT EXISTS idx_gift_items_animation_url ON public.gift_items(animation_url) WHERE animation_url IS NOT NULL; -- Grant permissions for reading GRANT SELECT (animation_url) ON public.gift_items TO authenticated;"
+    ],
+    "createPolicies": [],
+    "grants": []
+  },
+  "insurance_plans": {
+    "alterStatements": [],
+    "enableRls": [
+      "ALTER TABLE IF EXISTS public.insurance_plans ENABLE ROW LEVEL SECURITY;"
+    ],
+    "createIndexes": [],
+    "createPolicies": [],
+    "grants": []
+  },
+  "officer_live_assignments": {
+    "alterStatements": [],
+    "enableRls": [
+      "ALTER TABLE IF EXISTS public.officer_live_assignments ENABLE ROW LEVEL SECURITY;"
+    ],
+    "createIndexes": [],
+    "createPolicies": [],
+    "grants": []
+  },
+  "officer_work_sessions": {
+    "alterStatements": [],
+    "enableRls": [
+      "ALTER TABLE IF EXISTS public.officer_work_sessions ENABLE ROW LEVEL SECURITY;"
+    ],
+    "createIndexes": [],
+    "createPolicies": [],
+    "grants": []
+  },
+  "property_upgrades": {
+    "alterStatements": [],
+    "enableRls": [
+      "ALTER TABLE IF EXISTS public.property_upgrades ENABLE ROW LEVEL SECURITY;"
+    ],
+    "createIndexes": [],
+    "createPolicies": [],
+    "grants": []
+  },
+  "user_ip_tracking": {
+    "alterStatements": [],
+    "enableRls": [],
+    "createIndexes": [
+      "CREATE INDEX IF NOT EXISTS idx_user_ip_tracking_city ON user_ip_tracking(city); CREATE INDEX IF NOT EXISTS idx_user_ip_tracking_country ON user_ip_tracking(country);",
+      "CREATE INDEX IF NOT EXISTS idx_user_ip_tracking_country ON user_ip_tracking(country); CREATE INDEX IF NOT EXISTS idx_stream_audio_monitoring_stream ON stream_audio_monitoring(stream_id);"
+    ],
+    "createPolicies": [],
+    "grants": []
+  },
+  "family_wars": {
+    "alterStatements": [],
+    "enableRls": [],
+    "createIndexes": [
+      "CREATE INDEX IF NOT EXISTS idx_family_wars_challenger ON public.family_wars(challenger_family_id); CREATE INDEX IF NOT EXISTS idx_family_wars_defender ON public.family_wars(defender_family_id);",
+      "CREATE INDEX IF NOT EXISTS idx_family_wars_defender ON public.family_wars(defender_family_id); CREATE INDEX IF NOT EXISTS idx_family_wars_status ON public.family_wars(status);",
+      "CREATE INDEX IF NOT EXISTS idx_family_wars_status ON public.family_wars(status); CREATE INDEX IF NOT EXISTS idx_xtrollz_applications_user_id ON public.xtrollz_applications(user_id);"
+    ],
+    "createPolicies": [],
+    "grants": []
+  },
+  "troll_family_members": {
+    "alterStatements": [],
+    "enableRls": [
+      "ALTER TABLE IF EXISTS public.troll_family_members ENABLE ROW LEVEL SECURITY;"
+    ],
+    "createIndexes": [],
+    "createPolicies": [
+      "CREATE POLICY \"Anyone can view family members\" ON public.troll_family_members FOR SELECT USING (true); END IF;"
+    ],
+    "grants": []
+  },
+  "broadcast_background_themes": {
+    "alterStatements": [],
+    "enableRls": [],
+    "createIndexes": [],
+    "createPolicies": [
+      "CREATE POLICY \"hide_ceo_theme_from_store\" ON public.broadcast_background_themes FOR SELECT TO authenticated USING ( slug != 'ceo_gold_premium' OR (slug = 'ceo_gold_premium' AND auth.uid() IN ( SELECT id FROM auth.users WHERE raw_user_meta_data->>'username' = 'ceo' )) );"
+    ],
+    "grants": []
+  }
+}

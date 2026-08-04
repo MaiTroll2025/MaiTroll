@@ -43,31 +43,32 @@ export default function PayoutPolicy() {
           </li>
           <li>
             Have a valid PayPal payout account or another approved payout method if
-            Troll City makes one available.
+            Mai Troll makes one available.
           </li>
         </ul>
 
-        <h2>2. Friday Payout Request Window</h2>
+        <h2>2. Payout Request Window</h2>
         <p>
-          Troll City payout requests are submitted during the Friday payout window.
+          Mai Troll payout requests are submitted through MAI Pay.
           A payout request is not automatically approved just because it is
           submitted. Each request must go through review before it can be included
           in a payout batch.
         </p>
 
         <p>
-          If the payout window is closed, you may need to wait until the next Friday
+          If the payout window is closed, you may need to wait until the next
+          available payout cycle.
           payout window to submit or process a payout request.
         </p>
 
         <h2>3. Payout Review and Batch Process</h2>
         <p>
-          Troll City uses a review and batch process for payouts:
+          Mai Troll uses a review and batch process for payouts:
         </p>
 
         <ol>
           <li>
-            A user submits a cashout request during the Friday payout window.
+            A user submits a cashout request through MAI Pay.
           </li>
           <li>
             A payout request is created with a pending status.
@@ -89,7 +90,7 @@ export default function PayoutPolicy() {
         </ol>
 
         <p>
-          Troll City may delay, reject, or require additional review for any payout
+          Mai Troll may delay, reject, or require additional review for any payout
           request that appears suspicious, incomplete, inaccurate, abusive, or in
           violation of platform rules.
         </p>
@@ -164,7 +165,7 @@ export default function PayoutPolicy() {
         <p className="mt-4 text-sm text-slate-400">
           Cashout amounts are based on eligible gift coins only. Rates, tiers,
           review rules, payout timing, and eligibility requirements may change as
-          Troll City grows or updates its payout system.
+          Mai Troll grows or updates its payout system.
         </p>
 
         <h2>5. Minimum and Maximum Payouts</h2>
@@ -178,18 +179,18 @@ export default function PayoutPolicy() {
         <h2>6. Eligible Coins</h2>
         <p>
           Not every coin balance is automatically eligible for payout. Cashout
-          amounts are based on eligible gift coins only unless Troll City states
+          amounts are based on eligible gift coins only unless Mai Troll states
           otherwise.
         </p>
 
         <p>
-          Troll City may separate paid coins, gift-earned coins, promotional coins,
+          Mai Troll may separate paid coins, gift-earned coins, promotional coins,
           Hype Coins, bonuses, credits, and other balances for review and payout
           eligibility.
         </p>
 
         <p>
-          Troll City may deny or delay a payout if the requested coins came from
+          Mai Troll may deny or delay a payout if the requested coins came from
           suspicious activity, fake engagement, chargeback-related activity,
           platform abuse, exploit behavior, or any source that is not eligible for
           cashout.
@@ -210,13 +211,13 @@ export default function PayoutPolicy() {
         <h2>8. Tax Obligations</h2>
         <p>
           <strong>United States users:</strong> If you receive $600 or more in
-          payouts during a calendar year, Troll City may be required to collect tax
+          payouts during a calendar year, Mai Troll may be required to collect tax
           information and may issue applicable tax forms.
         </p>
 
         <p>
           <strong>International users:</strong> You are responsible for reporting
-          and paying any taxes required by your local jurisdiction. Troll City may
+          and paying any taxes required by your local jurisdiction. Mai Troll may
           request tax documentation when required by law, payment processors, or
           platform policy.
         </p>
@@ -252,52 +253,51 @@ export default function PayoutPolicy() {
         </ul>
 
         <p>
-          If your payout is denied, Troll City may provide a reason when available.
+          If your payout is denied, Mai Troll may provide a reason when available.
           You may be allowed to correct the issue and request another review.
         </p>
 
         <h2>10. Processing Fees</h2>
         <p>
-          PayPal or other payment processor fees may apply. Troll City may deduct
+          PayPal or other payment processor fees may apply. Mai Troll may deduct
           applicable processor fees from the payout amount or require users to
           account for those fees depending on the payout method.
         </p>
 
         <p>
-          Troll City does not guarantee that the amount requested will exactly match
+          Mai Troll does not guarantee that the amount requested will exactly match
           the final amount received after third-party payment processor fees, holds,
           reversals, or restrictions.
         </p>
 
         <h2>11. Payment Method</h2>
         <p>
-          Payouts are primarily processed through PayPal unless Troll City provides
+          Payouts are primarily processed through PayPal unless Mai Troll provides
           another approved payout method. You are responsible for providing accurate
           payout information.
         </p>
 
         <p>
-          Troll City is not responsible for delays, failed payments, or lost funds
+          Mai Troll is not responsible for delays, failed payments, or lost funds
           caused by incorrect payout details submitted by the user.
         </p>
 
         <h2>12. Payout Timeline</h2>
         <p>
-          Payouts are reviewed and processed on Fridays when the payout window is
-          active. After admin processing, funds may arrive Within 5 Minutes, but
+Payouts are reviewed and processed on request. After admin processing, funds may arrive Within 5 Minutes, but
           timing can vary based on PayPal, payment processor review, account limits,
           holidays, weekends, or additional platform review.
         </p>
 
         <h2>13. Holds and Manual Review</h2>
         <p>
-          Troll City may place a payout on hold or require manual review for larger
+          Mai Troll may place a payout on hold or require manual review for larger
           payouts, suspicious activity, new accounts, unusual gifting patterns,
           refund risk, chargeback risk, or violations of platform rules.
         </p>
 
         <p>
-          A manual review does not guarantee approval. Troll City may approve,
+          A manual review does not guarantee approval. Mai Troll may approve,
           partially approve, delay, deny, or cancel a payout depending on the review.
         </p>
 
@@ -310,8 +310,8 @@ export default function PayoutPolicy() {
 
         <h2>15. Policy Updates</h2>
         <p>
-          Troll City may update this Creator & Payout Policy at any time. Continued
-          use of Troll City after updates means you accept the revised payout
+          Mai Troll may update this Creator & Payout Policy at any time. Continued
+          use of Mai Troll after updates means you accept the revised payout
           policy.
         </p>
       </article>

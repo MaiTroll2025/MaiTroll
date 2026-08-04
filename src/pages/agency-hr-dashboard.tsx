@@ -1421,7 +1421,7 @@ export default function AgencyHRDashboard() {
                     value={contractForm.payout_terms}
                     onChange={(event) => setContractForm((current) => ({ ...current, payout_terms: event.target.value }))}
                     className={`${inputClasses} mt-2 min-h-[5rem]`}
-                    placeholder="Friday payouts, fees, commission rules..."
+                    placeholder="Payout terms, fees, commission rules..."
                   />
                 </div>
 

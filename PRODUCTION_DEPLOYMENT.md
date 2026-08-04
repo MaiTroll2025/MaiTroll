@@ -27,7 +27,7 @@
 
 ### Step 1: Execute Database Migration
 
-Login to Supabase Dashboard (trollcity2025@gmail.com):
+Login to Supabase Dashboard (Mai Troll2025@gmail.com):
 1. Go to SQL Editor
 2. Execute: `supabase/migrations/20251126_delete_test_accounts.sql`
 3. Verify test accounts are deleted
@@ -44,7 +44,7 @@ Login to Supabase Dashboard (trollcity2025@gmail.com):
 
 2. **Import Project**
    - Click "Add New" → "Project"
-   - Import from GitHub: `kaintowns83-cmd/trollcity`
+   - Import from GitHub: `kaintowns83-cmd/Mai Troll`
    - Framework Preset: Vite
    - Root Directory: `./`
    - Build Command: `npm run build`
@@ -63,7 +63,7 @@ Login to Supabase Dashboard (trollcity2025@gmail.com):
    VITE_SQUARE_LOCATION_ID=LC50JZXVG8F0M
    VITE_SQUARE_ENVIRONMENT=production
    VITE_SQUARE_ACCESS_TOKEN=[from .env]
-   VITE_ADMIN_EMAIL=trollcity2025@gmail.com
+   VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com
    
    # Backend variables
    SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
@@ -96,7 +96,7 @@ vercel --prod
 
 # Follow prompts:
 # - Link to existing project? No
-# - Project name: trollcity
+# - Project name: Mai Troll
 # - Directory: ./
 # - Override settings? No
 ```
@@ -124,7 +124,7 @@ vercel --prod
 3. **Verify Production**
    - Visit deployment URL
    - Test signup (should be blocked by testing mode being disabled)
-   - Login as admin (trollcity2025@gmail.com)
+   - Login as admin (Mai Troll2025@gmail.com)
    - Enable testing mode from admin dashboard if needed
    - Test wheel spin
    - Test coin purchase
@@ -159,8 +159,8 @@ If issues occur:
 ## Support Contacts
 
 - **Vercel Account**: kaintowns83@gmail.com
-- **Supabase Account**: trollcity2025@gmail.com
-- **Admin Email**: trollcity2025@gmail.com
+- **Supabase Account**: Mai Troll2025@gmail.com
+- **Admin Email**: Mai Troll2025@gmail.com
 
 ---
 

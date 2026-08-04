@@ -214,6 +214,8 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
 
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const notifChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const coinPurchaseChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const signupAlertChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isMountedRef = useRef(true);
   const profileRef = useRef(profile);
   profileRef.current = profile;
@@ -366,7 +368,7 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
       const isAdmin = role === String(UserRole.ADMIN) || role === 'superadmin' || role === 'ceo' || (profile as any)?.is_admin;
 
       if (isAdmin) {
-        supabase
+        coinPurchaseChannelRef.current = supabase
           .channel('admin-coin-purchases')
           .on(
             'postgres_changes',
@@ -393,7 +395,7 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
 
       if (!isAdmin) return;
 
-      supabase
+      signupAlertChannelRef.current = supabase
         .channel('nav-signup-alerts')
         .on(
           'postgres_changes',
@@ -465,6 +467,14 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
       if (notifChannelRef.current) {
         supabase.removeChannel(notifChannelRef.current);
         notifChannelRef.current = null;
+      }
+      if (coinPurchaseChannelRef.current) {
+        supabase.removeChannel(coinPurchaseChannelRef.current);
+        coinPurchaseChannelRef.current = null;
+      }
+      if (signupAlertChannelRef.current) {
+        supabase.removeChannel(signupAlertChannelRef.current);
+        signupAlertChannelRef.current = null;
       }
     };
   }, [user?.id, fetchNotificationCounts, fetchUnreadMessages]);

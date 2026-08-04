@@ -56,7 +56,7 @@ begin
     when xp >= 1500000 then 9    -- Ancient Elder Troll
     when xp >= 750000  then 8    -- Divine OverTroll
     when xp >= 300000  then 7    -- Mythic Benefactor
-    when xp >= 150000  then 6    -- Titan of Troll City
+    when xp >= 150000  then 6    -- Titan of Mai Troll
     when xp >= 70000   then 5    -- Elite Troll Backer
     when xp >= 30000   then 4    -- Troll Champion
     when xp >= 10000   then 3    -- Chaos Supporter
@@ -85,7 +85,7 @@ begin
   select stream_xp into xp from public.user_levels where user_id = p_user;
 
   lvl := case
-    when xp >= 900000 then 10   -- Troll City MEGASTAR
+    when xp >= 900000 then 10   -- Mai Troll MEGASTAR
     when xp >= 300000 then 9    -- Troll Star Icon
     when xp >= 120000 then 8    -- Mischief Legend
     when xp >= 60000  then 7    -- Troll Master Broadcaster

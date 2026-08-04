@@ -1,5 +1,5 @@
--- Create user agreements table for Troll City
--- This table stores digital signatures and acceptance records for the Troll City User Agreement
+-- Create user agreements table for Mai Troll
+-- This table stores digital signatures and acceptance records for the Mai Troll User Agreement
 
 CREATE TABLE IF NOT EXISTS user_agreements (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -139,7 +139,7 @@ GRANT SELECT ON agreement_stats TO authenticated;
 GRANT ALL ON user_agreements TO service_role;
 
 -- Comments for documentation
-COMMENT ON TABLE user_agreements IS 'Stores user agreement acceptances and digital signatures for Troll City';
+COMMENT ON TABLE user_agreements IS 'Stores user agreement acceptances and digital signatures for Mai Troll';
 COMMENT ON COLUMN user_agreements.digital_signature IS 'SHA256 hash of user_id + agreement_version + timestamp for verification';
 COMMENT ON COLUMN user_agreements.ip_address IS 'IP address of the user when accepting the agreement';
 COMMENT ON COLUMN user_agreements.user_agent IS 'Browser/device information when accepting the agreement';

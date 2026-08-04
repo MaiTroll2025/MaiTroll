@@ -10,7 +10,7 @@ import { BroadcastPage } from './BroadcastPage'
 import ViewerPage from './ViewerPage'
 import StreamEndedPage from './StreamEndedPage'
 
-const APP_URL = import.meta.env.VITE_APP_URL || 'https://trollcity.app'
+const APP_URL = import.meta.env.VITE_APP_URL || 'https://Mai Troll.app'
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`
 
 type BroadcasterMeta = {
@@ -139,8 +139,8 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
 
   const isLive = stream.status === 'live' || stream.is_live === true
   const statusText = isLive ? 'LIVE' : 'Ended'
-  const title = `${broadcaster?.username || 'Broadcaster'} is ${statusText} on Troll City`
-  const description = stream.title || 'Watch this live broadcast on Troll City'
+  const title = `${broadcaster?.username || 'Broadcaster'} is ${statusText} on Mai Troll`
+  const description = stream.title || 'Watch this live broadcast on Mai Troll'
   const canonicalUrl = `${APP_URL}/watch/${stream.id}`
   const previewImage =
     (stream as any).thumbnail_url ||
@@ -155,7 +155,7 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
   updateMetaTag('og:description', description)
   updateMetaTag('og:url', canonicalUrl)
   updateMetaTag('og:image', previewImage)
-  updateMetaTag('og:site_name', 'Troll City')
+  updateMetaTag('og:site_name', 'MaiTroll')
 
   if (isLive) {
     updateMetaTag('og:video', `${APP_URL}/embed/${stream.id}`)
@@ -171,7 +171,7 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
   updateMetaTag('twitter:title', title, true)
   updateMetaTag('twitter:description', description, true)
   updateMetaTag('twitter:image', previewImage, true)
-  updateMetaTag('twitter:site', '@trollcityapp', true)
+  updateMetaTag('twitter:site', '@Mai Trollapp', true)
 
   if (isLive) {
     updateMetaTag('twitter:player', `${APP_URL}/embed/${stream.id}`, true)
@@ -199,12 +199,12 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
   schemaScript.type = 'application/ld+json'
 
   const streamStart = (stream as any).started_at || (stream as any).created_at || new Date().toISOString()
-  const broadcasterName = broadcaster?.username || 'Troll City Creator'
+  const broadcasterName = broadcaster?.username || 'MaiTroll Creator'
 
   schemaScript.textContent = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': isLive ? 'VideoObject' : 'VideoObject',
-    'name': stream.title || `${broadcasterName} on Troll City`,
+    'name': stream.title || `${broadcasterName} on Mai Troll`,
     'description': description,
     'thumbnailUrl': previewImage,
     'uploadDate': streamStart,

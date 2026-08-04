@@ -221,7 +221,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
                   participant.sourceStreamId ||
                   (participant.team === "challenger" ? challengerStream.id : opponentStream.id);
                 window.dispatchEvent(
-                  new CustomEvent("trollcity:open-user-actions", {
+                  new CustomEvent("Mai Troll:open-user-actions", {
                     detail: {
                       userId: participant.identity,
                       username: participant.name,

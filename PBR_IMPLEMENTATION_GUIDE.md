@@ -1,7 +1,7 @@
 # Physically Based Rendering (PBR) Implementation Guide
 
 ## Overview
-TrollCity 3D now features comprehensive Physically Based Rendering (PBR) with advanced lighting, post-processing, and material systems that achieve a realistic, GTA V-inspired look.
+Mai Troll 3D now features comprehensive Physically Based Rendering (PBR) with advanced lighting, post-processing, and material systems that achieve a realistic, GTA V-inspired look.
 
 ## Key Features Implemented
 
@@ -373,4 +373,4 @@ When implementing Sketchfab or Quixel Megascans models:
 
 ## Conclusion
 
-This PBR implementation provides TrollCity with a modern, cinematic visual style comparable to AAA game engines. The tiered quality system ensures accessibility across different hardware while maintaining stunning visuals on capable systems. The modular material system makes it easy to add new environmental assets while maintaining consistent visual quality.
+This PBR implementation provides Mai Troll with a modern, cinematic visual style comparable to AAA game engines. The tiered quality system ensures accessibility across different hardware while maintaining stunning visuals on capable systems. The modular material system makes it easy to add new environmental assets while maintaining consistent visual quality.

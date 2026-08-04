@@ -72,7 +72,6 @@ import { resolveUsername, DEFAULT_USERNAME } from '../../lib/chatUtils'
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration'
 import { useTrollFamilyActivity } from '../../hooks/useTrollFamilyActivity'
 import { useBroadcastTextPopup } from '../../hooks/useBroadcastTextPopup'
-import { useBroadcastViewerCap } from '../../hooks/useBroadcastViewerCap'
 import { logActiveChannels } from '../../lib/realtimeChannelDiagnostics'
 import BroadcastTextPopupOverlay from '../../components/broadcast/BroadcastTextPopupOverlay'
 import PaidChatViewerModal from '../../components/broadcast/PaidChatViewerModal'
@@ -87,11 +86,11 @@ import { sendChatThroughGate } from '../../lib/sendChatThroughGate'
 import { admitViewerToStream, releaseViewerSlot } from '@/lib/streamCapacity'
 
 // Import theme constants
-import { trollCityBroadcastTheme } from '../../styles/broadcastTheme'
+import { MaiTrollBroadcastTheme } from '../../styles/broadcastTheme'
 
-const theme = trollCityBroadcastTheme
+const theme = MaiTrollBroadcastTheme
 
-function getDisplayName(profile: any, fallback = 'Troll City') {
+function getDisplayName(profile: any, fallback = 'MaiTroll') {
   return (
     profile?.username ||
     profile?.email?.split?.('@')?.[0] ||
@@ -368,6 +367,12 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
     if (!videoEl) return
 
     const previousTrack = attachedVideoTrackRef.current
+    const previousTrackId = previousTrack?.mediaStreamTrack?.id || previousTrack?.sid || null
+    const nextTrackId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
+
+    if (previousTrackId && nextTrackId && previousTrackId === nextTrackId && previousTrack && videoTrack) {
+      return
+    }
 
     if (previousTrack) {
       try {
@@ -631,14 +636,6 @@ function ViewerPage() {
     currentUsername: profile?.username,
     canSend: false, // Viewers cannot send popups
   })
-
-  // Broadcast viewer cap
-  const {
-    viewerCapEnabled,
-    viewerCapMax,
-    allRestrictionsDisabled,
-    isStreamViewerCapped,
-  } = useBroadcastViewerCap()
 
   // Broadofficer appointment popup state
   const [broadofficerPopup, setBroadofficerPopup] = useState<{ visible: boolean; message: string; streamId: string } | null>(null)
@@ -951,23 +948,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
   } | null>(null)
   const [selectedSeatUserId, setSelectedSeatUserId] = useState<string | null>(null)
   const [viewerError, setViewerError] = useState<string | null>(null)
-  // When the authoritative viewer-cap admission rejects the join, we surface a
-  // clear message and expose a manual retry (no tight auto-retry loop). The
-  // retry re-runs the whole admission process.
-  const [viewerCapacityReached, setViewerCapacityReached] = useState(false)
   const [retryAdmissionKey, setRetryAdmissionKey] = useState(0)
 
-  // UI-only early feedback: when the known configured cap is already met by the
-  // locally-tracked viewer count, pre-flag capacity so the user sees the limit
-  // before attempting. This is NOT a security boundary — the join_stream_as_viewer
-  // RPC remains the authoritative enforcement at the database boundary.
-  useEffect(() => {
-    if (viewerCapacityReached) return
-    if (isStreamViewerCapped(viewerCount) && !allRestrictionsDisabled) {
-      setViewerCapacityReached(true)
-      setViewerError(`This broadcast has reached its viewer capacity (${viewerCapMax}). Please try again shortly.`)
-    }
-  }, [viewerCount, viewerCapEnabled, viewerCapMax, allRestrictionsDisabled, isStreamViewerCapped, viewerCapacityReached])
   // Stream-scoped broadofficer status (authoritative for current stream, realtime)
   const [isStreamBroadofficer, setIsStreamBroadofficer] = useState(false)
   // Server-authoritative moderation context (staff role + clock-in), realtime
@@ -1152,7 +1134,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
 
     const { data: giftItem, error } = await supabase
       .from('gift_items')
-      .select('id,name,slug,gift_slug,icon,icon_url,animation_url,animation_type,coin_cost')
+      .select('id,name,gift_slug,icon,icon_url,animation_url,animation_type,coin_cost')
       .eq('id', giftItemId)
       .maybeSingle()
 
@@ -1304,6 +1286,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     const joinAudienceRef = useRef<(options?: any) => Promise<any>>(null as any)
     const heartbeatAudienceRef = useRef<() => Promise<void>>(null as any)
     const leaveAudienceRef = useRef<() => Promise<void>>(null as any)
+    const leaveSeatRef = useRef<() => Promise<void>>(null as any)
     const audienceStreamIdRef = useRef<string>('')
     const hasJoinedStreamAudienceRef = useRef(false)
 
@@ -1359,6 +1342,9 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
   })
 
   const effectiveBoxCount = useMemo(() => {
+    // Celeb streams do not have guest seats — only the broadcaster tile.
+    if ((stream as any)?.stream_type === 'celeb_stream') return 1
+
     // Prefer seat_count (new field), fall back to box_count, then seat_prices.
     // The broadcaster occupies the first box, so we cap the total at 8 boxes (7 seats + host).
     const seatCount = (stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) : undefined
@@ -1388,17 +1374,19 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     return effectiveBoxCount <= 6 ? 'split' : 'grid'
   }, [effectiveBoxCount])
 
-   const {
-     seats,
-     mySeat,
-     joiningSeatId,
-     leavingSeatId,
-     joinSeat,
-     leaveSeat,
-     markSeatLive,
-     refreshSeats,
-     removeSeat,
-   } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any)
+    const {
+      seats,
+      mySeat,
+      joiningSeatId,
+      leavingSeatId,
+      joinSeat,
+      leaveSeat,
+      markSeatLive,
+      refreshSeats,
+      removeSeat,
+      removeSeatByUserId,
+      handleParticipantDisconnected,
+    } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any)
    const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id)
 
    useEffect(() => {
@@ -1409,11 +1397,15 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
      heartbeatAudienceRef.current = heartbeatAudience
    }, [heartbeatAudience])
 
-   useEffect(() => {
-     leaveAudienceRef.current = leaveAudience
-   }, [leaveAudience])
+    useEffect(() => {
+      leaveAudienceRef.current = leaveAudience
+    }, [leaveAudience])
 
-     // Refs to hold LiveKit functions populated after useLiveKitRoom hook runs
+    useEffect(() => {
+      leaveSeatRef.current = leaveSeat
+    }, [leaveSeat])
+
+      // Refs to hold LiveKit functions populated after useLiveKitRoom hook runs
      const unpublishLocalTracksRef = useRef<(() => Promise<void>) | null>(null)
      const leaveLiveKitRoomRef = useRef<(() => Promise<void>) | null>(null)
      const localAudioTrackRef = useRef<any>(null)
@@ -1432,11 +1424,12 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
        kickProcessedRef.current = false
        const channel = supabase.channel(`stream-seat-events-kick:${streamId}`)
        channel
-         .on('broadcast', { event: 'seat_left' }, (payload) => {
-           if (kickProcessedRef.current) return
+          .on('broadcast', { event: 'seat_left' }, (payload) => {
+            if (kickProcessedRef.current) return
+            if (!mySeat) return
 
-           const payloadUserId = payload?.payload?.user_id
-           const payloadSessionId = payload?.payload?.session_id
+            const payloadUserId = String(payload?.payload?.user_id || '').trim()
+            const payloadSessionId = String(payload?.payload?.session_id || '').trim()
 
            const isCurrentUserKicked =
              (payloadUserId && payloadUserId === user?.id) ||
@@ -1465,7 +1458,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
          }
          kickProcessedRef.current = false
        }
-     }, [streamId, user?.id, mySeat?.id, mySeat?.user_id, mySeat?.guest_id])
+      }, [streamId, user?.id, mySeat, navigate])
 
    const normalizeSeatStatus = (status?: string | null) => String(status || '').trim().toLowerCase()
    const isSeatActiveStatus = (status?: string | null) => {
@@ -1690,11 +1683,11 @@ const isActive = isStreamActive(stream)
       viewerIdentityRef.current = viewerIdentity
     }, [viewerIdentity])
 
-  const audienceName = useMemo(() => {
-    return user
-      ? ((user as any).username || user.email || 'Viewer')
-      : (anonDisplayName || 'Viewer')
-  }, [user, anonDisplayName])
+   const audienceName = useMemo(() => {
+     return user
+       ? (profile?.username || (user as any).username || 'Viewer')
+       : (anonDisplayName || 'Viewer')
+   }, [user, profile, anonDisplayName])
 
   const handleLiveKitError = useCallback((err: any) => {
     const errorDetail = err?.message || err?.statusText || String(err) || 'Unknown LiveKit audience error'
@@ -1726,7 +1719,12 @@ const isActive = isStreamActive(stream)
       userName: audienceName,
       identity: viewerIdentity,
       onUserJoined: noopCallback,
-      onUserLeft: noopCallback,
+      onUserLeft: useCallback((participant: any) => {
+        const identity = participant?.identity || null
+        if (identity) {
+          handleParticipantDisconnected(identity)
+        }
+      }, [handleParticipantDisconnected]),
       onError: handleLiveKitError,
     })
 
@@ -1776,18 +1774,24 @@ const isActive = isStreamActive(stream)
     const videoTrack = getVideoTrackFromParticipant(participant)
     const audioTrack = getAudioTrackFromParticipant(participant)
     setBroadcasterState(prev => {
+      const prevIdentity = prev.participant?.identity || null
+      const nextIdentity = participant?.identity || null
+
+      if (prevIdentity === nextIdentity) {
+        const nextVideoId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
+        const nextAudioId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
+
+        if (!nextVideoId && !nextAudioId) {
+          return prev
+        }
+      }
+
       const prevVideoId = prev.videoTrack?.mediaStreamTrack?.id || prev.videoTrack?.sid || null
       const nextVideoId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
       const prevAudioId = prev.audioTrack?.mediaStreamTrack?.id || prev.audioTrack?.sid || null
       const nextAudioId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
-      const prevIdentity = prev.participant?.identity || null
-      const nextIdentity = participant?.identity || null
 
-      if (
-        prevVideoId === nextVideoId &&
-        prevAudioId === nextAudioId &&
-        prevIdentity === nextIdentity
-      ) {
+      if (prevVideoId === nextVideoId && prevAudioId === nextAudioId && prevIdentity === nextIdentity) {
         return prev
       }
 
@@ -2197,7 +2201,7 @@ const isActive = isStreamActive(stream)
       hasJoinedAudienceRef.current = false
       joiningAudienceRef.current = false
       currentRoomKeyRef.current = null
-      navigate(`/broadcast/summary/${streamId}`, { replace: true })
+      navigate(`/broadcast/summary/${data.id}`, { replace: true })
       return
     }
 
@@ -2335,13 +2339,13 @@ const handleLeaveSeat = useCallback(async () => {
 
   const handleShare = useCallback(async () => {
     const shareUrl = `${window.location.origin}/broadcast/${streamId}`
-    const shareTitle = (stream as any)?.title || 'Watch me live on Troll City'
+    const shareTitle = (stream as any)?.title || 'Watch me live on Mai Troll'
 
     try {
       if (navigator.share) {
         await navigator.share({
           title: shareTitle,
-          text: 'Join this Troll City broadcast',
+          text: 'Join this Mai Troll broadcast',
           url: shareUrl,
         })
         return
@@ -2442,7 +2446,7 @@ const handleLeaveSeat = useCallback(async () => {
       }
 
       if (isStreamEnded(data as unknown as Stream)) {
-        navigate(`/broadcast/summary/${streamId}`, { replace: true })
+        navigate(`/broadcast/summary/${data.id}`, { replace: true })
         return
       }
 
@@ -2517,22 +2521,21 @@ useStreamRealtime(
          currentRoomKeyRef.current = null
          navigate(`/?kicked=${encodeURIComponent(kickData.reason)}`, { replace: true })
        },
-       onStream: (event: any) => {
-         const next = event?.new || event
-         if (!next) return
+        onStream: (event: any) => {
+          const next = event?.new || event
+          if (!next) return
 
-         const prev = event?.old;
-         const wasInActiveBattle = prev?.is_battle && !!prev?.battle_id && prev?.battle_status === 'active';
-         
-         if (isStreamEnded(next as Stream) && !wasInActiveBattle) {
-           // Hard disconnect from LiveKit before navigating
-           leaveLiveKitRoom().catch(() => {})
-           hasJoinedAudienceRef.current = false
-           joiningAudienceRef.current = false
-           currentRoomKeyRef.current = null
-           navigate(`/broadcast/summary/${streamId}`, { replace: true })
-           return
-         }
+          // When the stream ends, hard-disconnect from LiveKit and direct every
+          // viewer to the stream summary page (no battle-state exceptions).
+          if (isStreamEnded(next as Stream)) {
+            // Hard disconnect from LiveKit before navigating
+            leaveLiveKitRoom().catch(() => {})
+            hasJoinedAudienceRef.current = false
+            joiningAudienceRef.current = false
+            currentRoomKeyRef.current = null
+            navigate(`/broadcast/summary/${next.id}`, { replace: true })
+            return
+          }
 
          setStream((prev) => {
            if (!prev) return next as Stream
@@ -2702,12 +2705,13 @@ useStreamRealtime(
     }
   }, [streamId])
 
-   useEffect(() => {
-     return () => {
-       void leaveAudienceRef.current?.()
-       leaveLiveKitRoomRef.current?.().catch(() => {})
-     }
-   }, [])
+    useEffect(() => {
+      return () => {
+        void leaveAudienceRef.current?.()
+        leaveLiveKitRoomRef.current?.().catch(() => {})
+        void leaveSeatRef.current?.()
+      }
+    }, [])
 
     // Mute detection: subscribe to stream_mutes for current user.
     // The subscription must stay stable — re-subscribing would re-run the
@@ -2875,6 +2879,36 @@ useStreamRealtime(
           })
           .catch(async (err: any) => {
             const errorDetail = err?.message || err?.statusText || String(err) || 'Failed to publish seat tracks'
+            const isPermissionError = /permission|insufficient|forbidden|not authorized|not permitted|403/i.test(errorDetail)
+
+            if (isPermissionError && mySeat?.id && isUserOnStage) {
+              try {
+                setViewerError('Reconnecting with stage permissions...')
+                await leaveLiveKitRoom()
+
+                const identityToUse = viewerIdentityRef.current || viewerIdentity
+                await joinAsAudience({
+                  userId: identityToUse,
+                  streamId: streamId,
+                  roomName: roomId,
+                  viewerIdentity: identityToUse,
+                  publishCapable: true,
+                })
+
+                await new Promise(r => setTimeout(r, 800))
+
+                await publishLocalTracks()
+                setViewerError(null)
+
+                if (mySeat?.seat_index != null) {
+                  await markSeatLive(mySeat.seat_index, viewerIdentityRef.current || viewerIdentity)
+                }
+                return
+              } catch (retryErr) {
+                console.error('[ViewerPage] Retry publish after permission error failed:', retryErr)
+              }
+            }
+
             setViewerError(errorDetail)
             if (mySeat?.id) {
               await leaveSeat()
@@ -2963,29 +2997,27 @@ useStreamRealtime(
       .then((admission) => {
         if (cancelled) return
         if (!admission.allowed) {
-          if (admission.reason === 'viewer_cap_reached') {
-            setViewerCapacityReached(true)
-            setViewerError('This broadcast has reached its viewer capacity. Please try again shortly.')
-          } else {
-            setViewerError('Unable to join this broadcast right now. Please try again shortly.')
-          }
+          console.warn('[ViewerPage] join_stream_as_viewer rejected:', admission)
+          setViewerError('Unable to join this broadcast right now. Please try again shortly.')
           audienceFailedUntilRef.current = Date.now() + 30000
           return
         }
 
         // 2) Admitted — connect to LiveKit as audience.
-        return joinAsAudience({ userId: identityToUse, streamId, roomName: roomId, viewerIdentity: identityToUse, publishCapable: true })
+        // Regular viewers join with publishCapable: false so the token function
+        // issues a "viewer" category token (canSubscribe only). Stream owners who
+        // later join a seat will re-enter this flow with publishCapable: true.
+        return joinAsAudience({ userId: identityToUse, streamId, roomName: roomId, viewerIdentity: identityToUse, publishCapable: false })
           .then((res: any) => {
             if (cancelled) {
               // Joined then immediately unmounted — release the reserved slot.
               void releaseViewerSlot(streamId, user?.id ?? null, stableAnonId || null)
               return
             }
-            if (res && typeof res !== 'string') {
-              hasJoinedAudienceRef.current = true
-              setViewerError(null)
-              setViewerCapacityReached(false)
-              console.log('[ViewerPage] LiveKit audience joined:', { streamId, roomId })
+             if (res && typeof res !== 'string') {
+               hasJoinedAudienceRef.current = true
+               setViewerError(null)
+               console.log('[ViewerPage] LiveKit audience joined:', { streamId, roomId })
             } else {
               const errorDetail = typeof res === 'string'
                 ? res
@@ -3125,7 +3157,7 @@ useStreamRealtime(
       <div className={cn('flex h-dvh items-center justify-center text-white', theme.pageBg)}>
         <div className="rounded-3xl border border-cyan-400/20 bg-white/[0.035] px-8 py-6 text-center shadow-[0_0_35px_rgba(45,212,191,0.2)] backdrop-blur-2xl">
           <div className="text-lg font-black">Loading broadcast…</div>
-          <div className="mt-2 text-sm text-cyan-100/60">Connecting to Troll City LiveKit.</div>
+          <div className="mt-2 text-sm text-cyan-100/60">Connecting to Mai Troll LiveKit.</div>
         </div>
       </div>
     )
@@ -3631,25 +3663,20 @@ useStreamRealtime(
               {viewerError && (
                 <div className="absolute inset-x-4 top-16 z-30 rounded-2xl border border-red-400/35 bg-gradient-to-r from-red-950/90 to-red-900/80 px-4 py-3 text-sm font-bold text-red-100 shadow-[0_0_30px_rgba(239,68,68,0.25)] backdrop-blur-2xl">
                   <div>{viewerError}</div>
-                  {viewerCapacityReached && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Manual retry: reset local error/flags and re-run the
-                        // authoritative admission + join flow. No tight loop.
-                        setViewerError(null)
-                        setViewerCapacityReached(false)
-                        hasJoinedAudienceRef.current = false
-                        joiningAudienceRef.current = false
-                        audienceJoinAttemptedKeyRef.current = null
-                        audienceFailedUntilRef.current = 0
-                        setRetryAdmissionKey((k) => k + 1)
-                      }}
-                      className="mt-2 inline-flex items-center gap-1 rounded-lg bg-red-500/90 px-3 py-1 text-xs font-black text-white hover:bg-red-500"
-                    >
-                      Retry
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                     onClick={() => {
+                       setViewerError(null)
+                       hasJoinedAudienceRef.current = false
+                      joiningAudienceRef.current = false
+                      audienceJoinAttemptedKeyRef.current = null
+                      audienceFailedUntilRef.current = 0
+                      setRetryAdmissionKey((k) => k + 1)
+                    }}
+                    className="mt-2 inline-flex items-center gap-1 rounded-lg bg-red-500/90 px-3 py-1 text-xs font-black text-white hover:bg-red-500"
+                  >
+                    Retry
+                  </button>
                 </div>
               )}
 

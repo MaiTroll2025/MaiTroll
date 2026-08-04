@@ -1,11 +1,11 @@
--- Weekly Survey System for Troll City
+-- Weekly Survey System for Mai Troll
 -- Tables: weekly_surveys, survey_responses
 -- Created: 2026-06-18
 
 -- Survey definitions (admin-created)
 CREATE TABLE IF NOT EXISTS weekly_surveys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL DEFAULT 'Weekly Troll City Survey',
+  title TEXT NOT NULL DEFAULT 'Weekly Mai Troll Survey',
   description TEXT,
   week_start_date DATE NOT NULL,
   week_end_date DATE NOT NULL,

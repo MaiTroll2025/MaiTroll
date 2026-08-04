@@ -96,7 +96,7 @@ export interface MobileRouteItem {
 }
 
 export const mobileRoutes: MobileRouteItem[] = [
-  // Main regular Troll City pages
+  // Main regular Mai Troll pages
   {
     key: "home",
     label: "Home",

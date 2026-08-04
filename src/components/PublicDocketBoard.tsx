@@ -142,7 +142,7 @@ const PublicDocketBoard: React.FC = () => {
         </div>
         <p className="text-xs text-gray-400">
           This public docket shows scheduled court proceedings without revealing participant identities.
-          All cases are handled fairly and transparently in accordance with Troll City law.
+          All cases are handled fairly and transparently in accordance with Mai Troll law.
         </p>
       </div>
 

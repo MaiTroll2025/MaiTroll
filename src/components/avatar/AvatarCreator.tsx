@@ -67,7 +67,7 @@ export default function AvatarCreator({ onComplete, compact = false }: AvatarCre
       outfit: selectedOutfit.id,
       accessory: selectedAccessory.id
     })
-    return `https://trollcity.app/avatar/${user?.id}/troll.svg?${params.toString()}`
+    return `https://Mai Troll.app/avatar/${user?.id}/troll.svg?${params.toString()}`
   }
 
   const handleSave = async () => {

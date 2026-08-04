@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, AlertTriangle, ChevronRight, ClipboardList, Crown, LayoutDashboard, LogOut, Shield } from 'lucide-react'
+import { Activity, AlertTriangle, ChevronRight, ClipboardList, Crown, LayoutDashboard, LogOut, Shield, Coins } from 'lucide-react'
 import { navigation } from './navigationConfig.tsx'
 import { supabase } from '../../lib/supabase'
 
@@ -63,6 +63,7 @@ type View =
   | 'calendar'
   | 'secretary_dashboard'
   | 'crown_redemptions'
+  | 'coin_liability'
 
 /* ================================
    Main Component
@@ -110,17 +111,20 @@ export default function ExecutiveOperationsConsole() {
 
   const [intakeCount, setIntakeCount] = useState(0)
   const [alertCount, setAlertCount] = useState(0)
+  const [coinLiabilityCount, setCoinLiabilityCount] = useState(0)
 
-  // Fetch real counts for overview stats
+// Fetch real counts for overview stats
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const [intakeRes, alertsRes] = await Promise.all([
+        const [intakeRes, alertsRes, coinRes] = await Promise.all([
           supabase.from('executive_intake').select('id', { count: 'exact', head: true }).in('status', ['new', 'in_progress']),
-          supabase.from('critical_alerts').select('id', { count: 'exact', head: true }).eq('resolved', false)
+          supabase.from('critical_alerts').select('id', { count: 'exact', head: true }).eq('resolved', false),
+          supabase.from('payout_requests').select('id', { count: 'exact', head: true }).in('status', ['pending', 'approved'])
         ])
         if (intakeRes.count != null) setIntakeCount(intakeRes.count)
         if (alertsRes.count != null) setAlertCount(alertsRes.count)
+        if (coinRes.count != null) setCoinLiabilityCount(coinRes.count)
       } catch (err) {
         console.error('Error fetching overview counts:', err)
       }
@@ -152,9 +156,16 @@ export default function ExecutiveOperationsConsole() {
         icon: <Crown className="w-5 h-5" />,
         color: 'text-yellow-400',
         view: 'elections' as View
+      },
+      {
+        label: 'Coin Liability',
+        value: String(coinLiabilityCount),
+        icon: <Coins className="w-5 h-5" />,
+        color: 'text-green-400',
+        view: 'coin_liability' as View
       }
     ],
-    [currentElection, intakeCount, alertCount]
+    [currentElection, intakeCount, alertCount, coinLiabilityCount]
   )
 
   /* ================================
@@ -314,6 +325,10 @@ export default function ExecutiveOperationsConsole() {
 
       case 'secretary_dashboard':
         return <SecretaryOwnDashboard />
+
+      case 'coin_liability':
+        navigate('/secretary/coin-liability')
+        return null
 
       default:
         return null

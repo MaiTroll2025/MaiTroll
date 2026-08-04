@@ -409,7 +409,7 @@ async function createAuthUsers(count: number) {
 
   for (let i = 0; i < count; i += batchSize) {
     const batch = Array.from({ length: Math.min(batchSize, count - i) }, (_, idx) => {
-      const email = `loadtest+${RUN_ID}-${i + idx}@trollcity.local`;
+      const email = `loadtest+${RUN_ID}-${i + idx}@Mai Troll.local`;
       return adminClient.auth.admin.createUser({ email, password, email_confirm: true });
     });
 
@@ -420,7 +420,7 @@ async function createAuthUsers(count: number) {
         logError('create_auth_user', error?.message || 'Unknown error');
         continue;
       }
-      users.push({ id: data.user.id, email: data.user.email || `loadtest-${data.user.id}@trollcity.local`, password });
+      users.push({ id: data.user.id, email: data.user.email || `loadtest-${data.user.id}@Mai Troll.local`, password });
     }
     await sleep(200);
   }

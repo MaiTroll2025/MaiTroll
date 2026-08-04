@@ -4,7 +4,7 @@ import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { Package, Zap, Crown, Star, Palette, CheckCircle, XCircle, Sparkles, Shield, Phone, X, Car, Home, ChevronDown, ChevronUp, Gavel, Truck } from 'lucide-react'
-import { trollCityTheme } from '../styles/trollCityTheme'
+import { MaiTrollTheme } from '../styles/trollCityTheme'
 import { PERK_CONFIG } from '../lib/perkSystem'
 import { PERKS as LEVEL_PERKS } from '@/config/levelSystem'
 import { GlowingUsernameColorPicker } from '../components/GlowingUsernameColorPicker'
@@ -695,18 +695,18 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
             <Package className="w-8 h-8 text-purple-400" />
             My Inventory
           </h1>
-          <p className={trollCityTheme.text.muted}>Manage your purchased items and activate digital effects</p>
+          <p className={MaiTrollTheme.text.muted}>Manage your purchased items and activate digital effects</p>
         </div>
       )}
 
         <div className="flex items-center justify-center">
-          <div className={`${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass} border rounded-full p-1`}>
+          <div className={`${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass} border rounded-full p-1`}>
             <button
               onClick={() => setActiveTab('items')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeTab === 'items'
-                  ? `${trollCityTheme.interactive.active} ${trollCityTheme.text.highlight}`
-                  : `${trollCityTheme.text.muted} ${trollCityTheme.interactive.hover}`
+                  ? `${MaiTrollTheme.interactive.active} ${MaiTrollTheme.text.highlight}`
+                  : `${MaiTrollTheme.text.muted} ${MaiTrollTheme.interactive.hover}`
               }`}
             >
               Items
@@ -715,8 +715,8 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               onClick={() => setActiveTab('titles')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeTab === 'titles'
-                  ? `${trollCityTheme.interactive.active} ${trollCityTheme.text.highlight}`
-                  : `${trollCityTheme.text.muted} ${trollCityTheme.interactive.hover}`
+                  ? `${MaiTrollTheme.interactive.active} ${MaiTrollTheme.text.highlight}`
+                  : `${MaiTrollTheme.text.muted} ${MaiTrollTheme.interactive.hover}`
               }`}
             >
               Titles
@@ -725,8 +725,8 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               onClick={() => setActiveTab('deeds')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeTab === 'deeds'
-                  ? `${trollCityTheme.interactive.active} ${trollCityTheme.text.highlight}`
-                  : `${trollCityTheme.text.muted} ${trollCityTheme.interactive.hover}`
+                  ? `${MaiTrollTheme.interactive.active} ${MaiTrollTheme.text.highlight}`
+                  : `${MaiTrollTheme.text.muted} ${MaiTrollTheme.interactive.hover}`
               }`}
             >
               Deeds
@@ -735,8 +735,8 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               onClick={() => setActiveTab('shop')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeTab === 'shop'
-                  ? `${trollCityTheme.interactive.active} ${trollCityTheme.text.highlight}`
-                  : `${trollCityTheme.text.muted} ${trollCityTheme.interactive.hover}`
+                  ? `${MaiTrollTheme.interactive.active} ${MaiTrollTheme.text.highlight}`
+                  : `${MaiTrollTheme.text.muted} ${MaiTrollTheme.interactive.hover}`
               }`}
             >
               Shop
@@ -745,8 +745,8 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               onClick={() => setActiveTab('auction')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeTab === 'auction'
-                  ? `${trollCityTheme.interactive.active} ${trollCityTheme.text.highlight}`
-                  : `${trollCityTheme.text.muted} ${trollCityTheme.interactive.hover}`
+                  ? `${MaiTrollTheme.interactive.active} ${MaiTrollTheme.text.highlight}`
+                  : `${MaiTrollTheme.text.muted} ${MaiTrollTheme.interactive.hover}`
               }`}
             >
               Auction Items
@@ -757,7 +757,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
     {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1,2,3,4,5,6].map(i => (
-              <div key={i} className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-xl p-6 border animate-pulse`}>
+              <div key={i} className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-xl p-6 border animate-pulse`}>
                 <div className="h-4 bg-white/10 rounded w-1/2 mb-2"></div>
                 <div className="h-8 bg-white/10 rounded w-3/4"></div>
               </div>
@@ -774,7 +774,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
             {loadingAuction ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[1,2].map(i => (
-                  <div key={i} className={`${trollCityTheme.backgrounds.card} rounded-xl p-6 border animate-pulse`}>
+                  <div key={i} className={`${MaiTrollTheme.backgrounds.card} rounded-xl p-6 border animate-pulse`}>
                     <div className="h-4 bg-white/10 rounded w-1/2 mb-2" />
                     <div className="h-8 bg-white/10 rounded w-3/4" />
                   </div>
@@ -784,7 +784,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               <div className="text-center py-12">
                 <Gavel className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold mb-2">No won auction items</h2>
-                <p className={`${trollCityTheme.text.muted} mb-6`}>Items you win at live auctions will appear here.</p>
+                <p className={`${MaiTrollTheme.text.muted} mb-6`}>Items you win at live auctions will appear here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -795,7 +795,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                   const status = order.fulfillment_status || order.shipping_information_status || 'pending'
                   const isPickup = (order.shipping_method === 'local_pickup' || order.shipping_method === 'both') && !order.tracking_number
                   return (
-                    <div key={order.id} className={`${trollCityTheme.components.card} border-amber-500/20 hover:border-amber-500/40 transition-all`}>
+                    <div key={order.id} className={`${MaiTrollTheme.components.card} border-amber-500/20 hover:border-amber-500/40 transition-all`}>
                       <div className="flex items-center gap-2 mb-3">
                         <Gavel className="w-4 h-4 text-amber-400" />
                         <span className="text-xs text-amber-400 font-bold uppercase tracking-wider">Won Item</span>
@@ -849,7 +849,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               <div className="col-span-full text-center py-12">
                 <Car className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold mb-2">No Vehicle Titles</h2>
-                <p className={`${trollCityTheme.text.muted} mb-6`}>Visit the Dealership to buy vehicles.</p>
+                <p className={`${MaiTrollTheme.text.muted} mb-6`}>Visit the Dealership to buy vehicles.</p>
                 <button
                   onClick={() => navigate('/ktauto')}
                   className={`px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold`}
@@ -861,22 +861,22 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               userTitles.map((title) => {
                 const car = title.vehicles_catalog;
                 return (
-                  <div key={title.id} className={`${trollCityTheme.components.card} border-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer`} onClick={() => setSelectedTitleDeed({ type: 'title', ...title })}>
+                  <div key={title.id} className={`${MaiTrollTheme.components.card} border-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer`} onClick={() => setSelectedTitleDeed({ type: 'title', ...title })}>
                     <div className="flex items-center gap-2 mb-4">
                       <Car className="w-5 h-5 text-emerald-400" />
                       <span className="text-sm text-emerald-400 font-bold uppercase tracking-wider">Title</span>
                     </div>
-                    <div className={`mb-4 aspect-video rounded-lg overflow-hidden ${trollCityTheme.backgrounds.input}`}>
+                    <div className={`mb-4 aspect-video rounded-lg overflow-hidden ${MaiTrollTheme.backgrounds.input}`}>
                         <img src={car?.image} alt={car?.name} className="w-full h-full object-cover" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-1">
                       {car?.name || `Vehicle #${title.catalog_id || title.id.slice(0,8)}`}
                     </h3>
-                    <p className={`${trollCityTheme.text.muted} text-sm mb-4`}>
+                    <p className={`${MaiTrollTheme.text.muted} text-sm mb-4`}>
                       Purchased: {new Date(title.purchased_at).toLocaleDateString()}
                     </p>
                     <div className="flex items-center justify-between text-sm">
-                      <span className={`${trollCityTheme.text.muted}`}>Value</span>
+                      <span className={`${MaiTrollTheme.text.muted}`}>Value</span>
                       <span className="text-white font-mono">
                         {(car?.price || 0).toLocaleString()} coins
                       </span>
@@ -892,7 +892,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               <div className="col-span-full text-center py-12">
                 <Home className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold mb-2">No Property Deeds</h2>
-                <p className={`${trollCityTheme.text.muted} mb-6`}>Visit the Living section to buy properties.</p>
+                <p className={`${MaiTrollTheme.text.muted} mb-6`}>Visit the Living section to buy properties.</p>
                 <button
                   onClick={() => navigate('/living')}
                   className={`px-6 py-3 bg-amber-600 hover:bg-amber-700 rounded-lg font-semibold`}
@@ -902,7 +902,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               </div>
             ) : (
               userDeeds.map((deed) => (
-                <div key={deed.id} className={`${trollCityTheme.components.card} border-amber-500/20 hover:border-amber-500/40 transition-all cursor-pointer`} onClick={() => navigate('/living')}>
+                <div key={deed.id} className={`${MaiTrollTheme.components.card} border-amber-500/20 hover:border-amber-500/40 transition-all cursor-pointer`} onClick={() => navigate('/living')}>
                   <div className="flex items-center gap-2 mb-4">
                     <Home className="w-5 h-5 text-amber-400" />
                     <span className="text-sm text-amber-400 font-bold uppercase tracking-wider">Deed</span>
@@ -910,11 +910,11 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                   <h3 className="text-xl font-bold text-white mb-1">
                     {deed.name || `Property #${deed.id.slice(0, 8)}`}
                   </h3>
-                  <p className={`${trollCityTheme.text.muted} text-sm mb-4`}>
+                  <p className={`${MaiTrollTheme.text.muted} text-sm mb-4`}>
                     {deed.address || 'No address'}
                   </p>
                   <div className="flex items-center justify-between text-sm">
-                    <span className={`${trollCityTheme.text.muted}`}>Rent Income</span>
+                    <span className={`${MaiTrollTheme.text.muted}`}>Rent Income</span>
                     <span className="text-white font-mono">
                       {(deed.rent_amount || 0).toLocaleString()} coins/week
                     </span>
@@ -927,10 +927,10 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
           <div className="text-center py-12">
             <Package className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Your Inventory is Empty</h2>
-            <p className={`${trollCityTheme.text.muted} mb-6`}>Purchase items from the store to see them here</p>
+            <p className={`${MaiTrollTheme.text.muted} mb-6`}>Purchase items from the store to see them here</p>
             <button
               onClick={() => navigate('/marketplace')}
-              className={`px-6 py-3 ${trollCityTheme.gradients.button} rounded-lg font-semibold text-white`}
+              className={`px-6 py-3 ${MaiTrollTheme.gradients.button} rounded-lg font-semibold text-white`}
             >
               Browse Store
             </button>
@@ -957,11 +957,11 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                     const isExpired = perk.expires_at && new Date(perk.expires_at) < new Date()
                     
                     return (
-                      <div key={perk.id} className={`${trollCityTheme.components.card} border-pink-500/20 hover:border-pink-500/40 transition-all`}>
+                      <div key={perk.id} className={`${MaiTrollTheme.components.card} border-pink-500/20 hover:border-pink-500/40 transition-all`}>
                         <div className="mb-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Star className="w-5 h-5 text-pink-400" />
-                            <span className={`text-sm ${trollCityTheme.text.muted}`}>Perk</span>
+                            <span className={`text-sm ${MaiTrollTheme.text.muted}`}>Perk</span>
                             {isActive && !isExpired && (
                               <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">ACTIVE</span>
                             )}
@@ -972,14 +972,14 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                           <h3 className="text-xl font-bold text-white mb-1">
                             {perk.config?.name || perk.metadata?.perk_name || LEVEL_PERKS.find((item) => item.id === perk.perk_id)?.label || 'Unknown Perk'}
                           </h3>
-                          <p className={`${trollCityTheme.text.muted} text-sm mb-2`}>
+                          <p className={`${MaiTrollTheme.text.muted} text-sm mb-2`}>
                             {perk.config?.description || perk.metadata?.perk_description || perk.metadata?.description || LEVEL_PERKS.find((item) => item.id === perk.perk_id)?.description || 'No description'}
                           </p>
                           {perk.metadata?.source === 'level_unlock' && perk.metadata?.level_required && (
                             <p className="text-xs text-cyan-300">Level Reward • Level {perk.metadata.level_required}</p>
                           )}
                           {perk.expires_at && (
-                            <p className={`text-xs ${trollCityTheme.text.secondary}`}>
+                            <p className={`text-xs ${MaiTrollTheme.text.secondary}`}>
                               Expires: {new Date(perk.expires_at).toLocaleString()}
                             </p>
                           )}
@@ -990,7 +990,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                             disabled={isExpired}
                             className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                               isExpired 
-                                ? `${trollCityTheme.interactive.disabled} cursor-not-allowed`
+                                ? `${MaiTrollTheme.interactive.disabled} cursor-not-allowed`
                                 : isActive
                                   ? 'bg-red-600 hover:bg-red-700 text-white'
                                   : 'bg-green-600 hover:bg-green-700 text-white'
@@ -1039,11 +1039,11 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                     const isExpired = ins.expires_at && new Date(ins.expires_at) < new Date()
                     
                     return (
-                      <div key={ins.id} className={`${trollCityTheme.components.card} border-blue-500/20 hover:border-blue-500/40 transition-all`}>
+                      <div key={ins.id} className={`${MaiTrollTheme.components.card} border-blue-500/20 hover:border-blue-500/40 transition-all`}>
                         <div className="mb-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Shield className="w-5 h-5 text-blue-400" />
-                            <span className={`text-sm ${trollCityTheme.text.muted}`}>Insurance</span>
+                            <span className={`text-sm ${MaiTrollTheme.text.muted}`}>Insurance</span>
                             {isActive && !isExpired && (
                               <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">ACTIVE</span>
                             )}
@@ -1054,16 +1054,16 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                           <h3 className="text-xl font-bold text-white mb-1">
                             {ins.plan?.name || 'Insurance Plan'}
                           </h3>
-                          <p className={`${trollCityTheme.text.muted} text-sm mb-2`}>
+                          <p className={`${MaiTrollTheme.text.muted} text-sm mb-2`}>
                             {ins.plan?.description || 'Protection plan'}
                           </p>
                           {ins.expires_at && (
-                            <p className={`text-xs ${trollCityTheme.text.secondary}`}>
+                            <p className={`text-xs ${MaiTrollTheme.text.secondary}`}>
                               Expires: {new Date(ins.expires_at).toLocaleString()}
                             </p>
                           )}
                         </div>
-                        <div className={`text-center py-2 bg-white/5 rounded text-xs ${trollCityTheme.text.muted}`}>
+                        <div className={`text-center py-2 bg-white/5 rounded text-xs ${MaiTrollTheme.text.muted}`}>
                           {isActive ? 'Protection Active' : 'Protection Inactive'}
                         </div>
                       </div>
@@ -1097,7 +1097,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                     const isEquipped = uf.is_equipped;
                     const rarity = RARITY_COLORS[frame.rarity];
                     return (
-                      <div key={uf.id} className={`${trollCityTheme.components.card} rounded-xl p-5 border transition-all ${isEquipped ? 'border-purple-400/40 bg-purple-500/10' : 'border-white/10 hover:border-white/20'}`}>
+                      <div key={uf.id} className={`${MaiTrollTheme.components.card} rounded-xl p-5 border transition-all ${isEquipped ? 'border-purple-400/40 bg-purple-500/10' : 'border-white/10 hover:border-white/20'}`}>
                         <div className="flex justify-center mb-3">
                           <ProfileFrame frame={frame} avatarUrl={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`} size="md" showBadge />
                         </div>
@@ -1144,11 +1144,11 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                     const isActive = sound.is_active;
                     const catalog = sound.catalog || {};
                     return (
-                      <div key={sound.sound_id} className={`${trollCityTheme.components.card} rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all`}>
+                      <div key={sound.sound_id} className={`${MaiTrollTheme.components.card} rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all`}>
                         <div className="mb-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Phone className="w-5 h-5 text-cyan-300" />
-                            <span className={`text-sm ${trollCityTheme.text.muted}`}>{catalog.sound_type || 'call sound'}</span>
+                            <span className={`text-sm ${MaiTrollTheme.text.muted}`}>{catalog.sound_type || 'call sound'}</span>
                             {isActive && (
                               <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
                                 ACTIVE
@@ -1158,7 +1158,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                           <h3 className="text-xl font-bold text-white mb-1">
                             {catalog.name || 'Call Sound'}
                           </h3>
-                          <p className={`${trollCityTheme.text.muted} text-sm mb-2`}>
+                          <p className={`${MaiTrollTheme.text.muted} text-sm mb-2`}>
                             {catalog.asset_url}
                           </p>
                         </div>
@@ -1211,11 +1211,11 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                     const isExpired = item.expires_at && new Date(item.expires_at) < new Date()
 
                     return (
-                      <div key={item.id} className={`relative ${trollCityTheme.components.card} rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all group`}>
+                      <div key={item.id} className={`relative ${MaiTrollTheme.components.card} rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all group`}>
                         <div className="mb-4">
                           <div className="flex items-center gap-2 mb-2">
                             {getItemIcon(item.marketplace_item?.type)}
-                            <span className={`text-sm ${trollCityTheme.text.muted}`}>
+                            <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
                               {getItemTypeLabel(item.marketplace_item?.type)}
                             </span>
                             {isActive && (
@@ -1234,15 +1234,15 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                             {item.marketplace_item?.title}
                           </h3>
 
-                          <p className={`${trollCityTheme.text.muted} text-sm mb-2`}>
+                          <p className={`${MaiTrollTheme.text.muted} text-sm mb-2`}>
                             {item.marketplace_item?.description}
                           </p>
 
-                          <p className={`text-xs ${trollCityTheme.text.secondary}`}>
+                          <p className={`text-xs ${MaiTrollTheme.text.secondary}`}>
                             Acquired: {new Date(item.acquired_at).toLocaleDateString()}
                           </p>
                           {item.expires_at && (
-                            <p className={`text-xs ${trollCityTheme.text.secondary}`}>
+                            <p className={`text-xs ${MaiTrollTheme.text.secondary}`}>
                               Expires: {new Date(item.expires_at).toLocaleString()}
                             </p>
                           )}
@@ -1309,7 +1309,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
         )}
 
         {/* Digital Items Info */}
-        <div className={`${trollCityTheme.components.card} rounded-xl p-6 ${trollCityTheme.borders.glass} border`}>
+        <div className={`${MaiTrollTheme.components.card} rounded-xl p-6 ${MaiTrollTheme.borders.glass} border`}>
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Zap className="w-5 h-5 text-purple-400" />
             Digital Item Effects
@@ -1318,7 +1318,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <h3 className="font-semibold text-purple-400">Available Effects:</h3>
-              <ul className={`space-y-2 text-sm ${trollCityTheme.text.muted}`}>
+              <ul className={`space-y-2 text-sm ${MaiTrollTheme.text.muted}`}>
                 <li>• Entrance animations when joining streams</li>
                 <li>• Special profile borders and frames</li>
                 <li>• Animated badges and titles</li>
@@ -1329,7 +1329,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
 
             <div className="space-y-3">
               <h3 className="font-semibold text-purple-400">How to Use:</h3>
-              <ul className={`space-y-2 text-sm ${trollCityTheme.text.muted}`}>
+              <ul className={`space-y-2 text-sm ${MaiTrollTheme.text.muted}`}>
                 <li>• Click &quot;Activate&quot; on digital items</li>
                 <li>• Effects apply automatically across the app</li>
                 <li>• Multiple effects can be active simultaneously</li>

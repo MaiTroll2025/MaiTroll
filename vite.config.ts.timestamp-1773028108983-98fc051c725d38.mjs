@@ -1,12 +1,12 @@
 // vite.config.ts
-import { defineConfig } from "file:///e:/trollcity-1/node_modules/vite/dist/node/index.js";
-import react from "file:///e:/trollcity-1/node_modules/@vitejs/plugin-react/dist/index.js";
-import tsconfigPaths from "file:///e:/trollcity-1/node_modules/vite-tsconfig-paths/dist/index.js";
-import { VitePWA } from "file:///e:/trollcity-1/node_modules/vite-plugin-pwa/dist/index.js";
-import mkcert from "file:///e:/trollcity-1/node_modules/vite-plugin-mkcert/dist/mkcert.mjs";
+import { defineConfig } from "file:///e:/Mai Troll-1/node_modules/vite/dist/node/index.js";
+import react from "file:///e:/Mai Troll-1/node_modules/@vitejs/plugin-react/dist/index.js";
+import tsconfigPaths from "file:///e:/Mai Troll-1/node_modules/vite-tsconfig-paths/dist/index.js";
+import { VitePWA } from "file:///e:/Mai Troll-1/node_modules/vite-plugin-pwa/dist/index.js";
+import mkcert from "file:///e:/Mai Troll-1/node_modules/vite-plugin-mkcert/dist/mkcert.mjs";
 import path from "path";
 import fs from "fs";
-var __vite_injected_original_dirname = "e:\\trollcity-1";
+var __vite_injected_original_dirname = "e:\\Mai Troll-1";
 var disableHmr = process.env.DISABLE_HMR === "1";
 var appVersion = "1.0.0";
 var buildTime = Date.now();
@@ -40,8 +40,8 @@ var vite_config_default = defineConfig(({ mode: _mode }) => ({
         enabled: process.env.VITE_PWA_DEV === "1"
       },
       manifest: {
-        name: "Troll City",
-        short_name: "TrollCity",
+        name: "Mai Troll",
+        short_name: "Mai Troll",
         start_url: "/mobile",
         scope: "/",
         display: "standalone",
@@ -107,7 +107,7 @@ var vite_config_default = defineConfig(({ mode: _mode }) => ({
         }
       },
       "/streams": {
-        target: "https://cdn.maitrollcity.com",
+        target: "https://cdn.maiMai Troll.com",
         changeOrigin: true,
         secure: true,
         rewrite: (path2) => path2,

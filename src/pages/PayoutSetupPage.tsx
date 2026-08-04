@@ -11,7 +11,7 @@ export default function PayoutSetupPage() {
     // Redirect to MAI Pay setup
     if (user?.id) {
       const maiPayUrl = new URL('https://maicorp.online/mai-pay/setup')
-      maiPayUrl.searchParams.set('platform', 'trollcity')
+      maiPayUrl.searchParams.set('platform', 'MaiTroll')
       maiPayUrl.searchParams.set('user_id', user.id)
       window.location.href = maiPayUrl.toString()
     }

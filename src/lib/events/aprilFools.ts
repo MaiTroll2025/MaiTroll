@@ -1,5 +1,5 @@
 /**
- * Troll City April Fools "Chaos Mode" Event
+ * Mai Troll April Fools "Chaos Mode" Event
  *
  * Active ONLY on April 1st. Disables at 23:59.
  * Max 2 pranks per user per day. All changes are visual/temporary.
@@ -151,7 +151,7 @@ export const POPUP_MESSAGES: PopupMessage[] = [
   { title: 'Rekt', message: 'You just got trolled on the official day of trolling. Respect.', buttonText: 'GG' },
   { title: 'Whoopsie', message: "That was just a prank, bro. Your stuff is still here. Maybe.", buttonText: 'Check' },
   { title: '😎', message: 'Chaos Mode says: April Fools! No refunds.', buttonText: 'Fair enough' },
-  { title: 'Hehe', message: "We're not sorry. Happy April Fools' Day from Troll City!", buttonText: 'You monsters' },
+  { title: 'Hehe', message: "We're not sorry. Happy April Fools' Day from Mai Troll!", buttonText: 'You monsters' },
   { title: 'Surprise!', message: "What you just experienced was 100% fake. Unlike your student loans.", buttonText: 'Dark' },
   { title: 'PRANKED', message: "This message will self-destruct in 3... 2... just kidding. April Fools!", buttonText: 'You got me' },
   { title: 'Error 418', message: "I'm a teapot. And that was a prank. Happy April Fools!", buttonText: 'Brew coffee' },
@@ -184,7 +184,7 @@ export const FAKE_NOTIFICATIONS = [
   'You are now #1 on the leaderboard! (In our hearts)',
   'New follower: @RealElonMusk! Just kidding, it\'s Dave.',
   'Your stream just hit 1 million viewers! (Off by a few zeros)',
-  'Congratulations! You won a free trip to Troll City! (You\'re already here)',
+  'Congratulations! You won a free trip to Mai Troll! (You\'re already here)',
   'ALERT: Your vibe check has failed. Retrying...',
 ];
 
@@ -439,7 +439,7 @@ export const REALITY_MESSAGES = [
   '🧠 Your perception has been temporarily altered',
   '🔮 Reality is now optional',
   '⚡ Glitch in the Troll Matrix detected',
-  '🌍 Welcome to the Upside Down of Troll City',
+  '🌍 Welcome to the Upside Down of Mai Troll',
   '🎪 The circus has taken over',
 ];
 
@@ -454,7 +454,7 @@ export const PRESIDENT_ANNOUNCEMENTS = [
   '👑 Executive Order #404: All coins are now imaginary',
   '📢 PSA: Nothing you see today can be trusted',
   '🎩 The President is "definitely not" behind any pranks',
-  '🏛️ Troll City National Emergency: Too much chaos detected',
+  '🏛️ Mai Troll National Emergency: Too much chaos detected',
   '👑 By decree of the Troll President: gravity is now optional',
   '📢 The President reminds you: this is all in good fun',
   '🎩 Breaking: President admits to being "a little bit of a troll"',

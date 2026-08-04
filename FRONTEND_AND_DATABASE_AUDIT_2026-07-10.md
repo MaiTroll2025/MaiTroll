@@ -1,4 +1,4 @@
-# TrollCity Full-Stack Frontend & Database Audit Report
+# Mai Troll Full-Stack Frontend & Database Audit Report
 
 **Date:** 2026-07-10  
 **Scope:** Broadcast, Viewer, Gifting, Random Battle, BattleView, Treelz  

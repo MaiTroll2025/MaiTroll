@@ -580,7 +580,7 @@ export default function HighBcastersPage() {
             </span>
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
-            The most prestigious live creators on Troll City. Exclusive access to the top 10 broadcasters.
+            The most prestigious live creators on Mai Troll. Exclusive access to the top 10 broadcasters.
           </p>
           <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
             <Radio size={14} className="text-red-400" />

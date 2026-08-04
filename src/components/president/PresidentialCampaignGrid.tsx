@@ -43,7 +43,7 @@ export default function PresidentialCampaignGrid() {
         <p className="text-slate-400">
           {currentElection.voting_strategy === 'coins' 
             ? "Vote with your Coins! The wealthiest backers decide the future."
-            : "Cast your vote for the next President of Troll City."}
+            : "Cast your vote for the next President of Mai Troll."}
         </p>
       </div>
 

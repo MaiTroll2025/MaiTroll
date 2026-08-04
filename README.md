@@ -1,4 +1,4 @@
-# 🎮 Troll City - Broadcasting App
+# 🎮 Mai Troll - Broadcasting App
 
 A production-ready broadcasting application with a troll-themed twist! Built with React, TypeScript, Supabase, and Agora for real-time streaming.
 
@@ -112,7 +112,7 @@ npm run preview
 3. Configure environment variables in Vercel dashboard
 4. Deploy!
 
-## 🎨 Troll City Theme
+## 🎨 Mai Troll Theme
 
 The app uses a distinctive troll-themed color scheme:
 - **Primary**: Deep purple (#2e1065 to #8b5cf6)

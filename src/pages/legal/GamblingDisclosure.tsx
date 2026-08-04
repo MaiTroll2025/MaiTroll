@@ -18,7 +18,7 @@ export default function GamblingDisclosure() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">Legal Notice</h2>
             <p className="text-gray-300 leading-relaxed">
-              TrollCity coins are virtual currency with no gambling value. Coins cannot be used for gambling,
+              Mai Troll coins are virtual currency with no gambling value. Coins cannot be used for gambling,
               betting, or games of chance. Coins are for platform features only (gifts, battles, etc.).
             </p>
           </section>

@@ -5,8 +5,8 @@ ALTER TABLE public.user_profiles
   ADD COLUMN IF NOT EXISTS mai_link_source TEXT,
   ADD COLUMN IF NOT EXISTS external_account_id TEXT;
 
-COMMENT ON COLUMN public.user_profiles.mai_ecosystem_linked IS 'Whether the Troll City profile is linked to the MaiTalent ecosystem';
-COMMENT ON COLUMN public.user_profiles.maitalent_linked IS 'Whether the Troll City profile has a valid MaiTalent link';
+COMMENT ON COLUMN public.user_profiles.mai_ecosystem_linked IS 'Whether the Mai Troll profile is linked to the MaiTalent ecosystem';
+COMMENT ON COLUMN public.user_profiles.maitalent_linked IS 'Whether the Mai Troll profile has a valid MaiTalent link';
 COMMENT ON COLUMN public.user_profiles.mai_linked_at IS 'Timestamp when the MaiTalent link was established';
 COMMENT ON COLUMN public.user_profiles.mai_link_source IS 'Source of the MaiTalent link, such as profile_page or broadcast_flow';
 COMMENT ON COLUMN public.user_profiles.external_account_id IS 'External account identifier used for the MaiTalent link';

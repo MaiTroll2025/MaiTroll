@@ -28,7 +28,7 @@ export default function BanPage({ onClose }: BanPageProps) {
             <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
             <p className="text-red-300 text-lg font-semibold mb-2">Your account has been permanently banned</p>
             <p className="text-gray-300 text-sm">
-              You have violated Troll City&apos;s community guidelines. This action cannot be reversed.
+              You have violated Mai Troll&apos;s community guidelines. This action cannot be reversed.
             </p>
           </div>
         </div>
@@ -46,7 +46,7 @@ export default function BanPage({ onClose }: BanPageProps) {
           <div className="bg-[#0A0000] border border-red-500/30 rounded-lg p-4">
             <h3 className="text-red-400 font-semibold mb-2">What This Means</h3>
             <ul className="text-sm text-gray-300 list-disc list-inside space-y-1">
-              <li>You cannot access Troll City</li>
+              <li>You cannot access Mai Troll</li>
               <li>All your data and progress are locked</li>
               <li>You cannot create a new account</li>
               <li>This ban is permanent and cannot be appealed</li>

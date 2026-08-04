@@ -142,8 +142,8 @@ export default function EnhancedPublicProfile() {
 
   const updateSEOTags = (profileData: EnhancedProfile) => {
     const displayName = profileData.display_name || profileData.username;
-    const title = `${displayName} | Troll City`;
-    const description = profileData.bio || `Check out ${displayName}'s profile on Troll City`;
+    const title = `${displayName} | Mai Troll`;
+    const description = profileData.bio || `Check out ${displayName}'s profile on Mai Troll`;
     const profileUrl = `${window.location.origin}/${username}`;
     const ogImageUrl = buildOGImageUrl({ kind: 'profile', username: username! });
 
@@ -177,7 +177,7 @@ export default function EnhancedPublicProfile() {
 
   const handleShare = async () => {
     const shareData = {
-      title: `${profile?.display_name} on Troll City`,
+      title: `${profile?.display_name} on Mai Troll`,
       text: profile?.bio || `Check out ${profile?.display_name}'s profile`,
       url: window.location.href,
     };

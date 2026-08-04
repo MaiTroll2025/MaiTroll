@@ -60,7 +60,7 @@ const CourtAIAssistant: FC<CourtAIAssistantProps> = ({
       case 'deliberation':
         return {
           status: 'calculating',
-          message: 'Deliberation in progress. Cross-referencing Troll City statutes and precedents.',
+          message: 'Deliberation in progress. Cross-referencing Mai Troll statutes and precedents.',
           color: 'text-orange-400',
           borderColor: 'border-orange-900/50'
         };
@@ -141,7 +141,7 @@ const CourtAIAssistant: FC<CourtAIAssistantProps> = ({
         
         {/* Footer */}
         <div className="text-[10px] text-gray-600 font-mono text-center pt-2">
-            MAI SYSTEM v2.4.1 // TROLL CITY JURISDICTION
+            MAI SYSTEM v2.4.1 // Mai Troll JURISDICTION
         </div>
       </div>
     </div>

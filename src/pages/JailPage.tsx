@@ -680,7 +680,7 @@ export default function JailPage() {
                 <span className="absolute -right-1 -top-1 h-4 w-4 animate-pulse rounded-full bg-red-500 shadow-[0_0_14px_rgba(239,68,68,0.9)]" />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.35em] text-red-500">Troll City Correctional Facility</p>
+                <p className="text-xs font-black uppercase tracking-[0.35em] text-red-500">Mai Troll Correctional Facility</p>
                 <h1 className="text-3xl font-black uppercase tracking-[0.2em] text-zinc-100 md:text-4xl">Inmate Lockdown</h1>
                 <p className="mt-1 text-sm text-zinc-500">City privileges suspended until release or court order.</p>
               </div>

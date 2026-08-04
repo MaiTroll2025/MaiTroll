@@ -189,7 +189,7 @@ const TCNNVirtualStudio = forwardRef<TCNNVirtualStudioHandle, TCNNVirtualStudioP
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.font = `${Math.floor(csw * 0.035)}px system-ui, sans-serif`;
-      ctx.fillText('TROLL CITY NEWS NETWORK', csx + csw / 2, 14 + csh / 2 + 20);
+      ctx.fillText('MaiTroll NEWS NETWORK', csx + csw / 2, 14 + csh / 2 + 20);
 
       // Accent lighting strips
       ctx.shadowColor = 'rgba(255, 0, 40, 0.6)';

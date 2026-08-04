@@ -1730,7 +1730,7 @@ const BattleArena = ({
         return;
       }
 
-      window.dispatchEvent(new CustomEvent('trollcity:open-user-actions', {
+      window.dispatchEvent(new CustomEvent('MaiTroll:open-user-actions', {
         detail: {
           userId: participant.identity,
           username: participant.name,

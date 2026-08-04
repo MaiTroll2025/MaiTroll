@@ -44,7 +44,7 @@ export default function DriverTest() {
         return
       }
 
-      toast.success('Troll City license granted!')
+      toast.success('MaiTroll license granted!')
 
       setShowCelebration(true)
 
@@ -56,7 +56,7 @@ export default function DriverTest() {
         }, 1400)
       }, 2200)
     } catch (error) {
-      console.error('Failed to grant Troll City license:', error)
+      console.error('Failed to grant Mai Troll license:', error)
       toast.error('Unable to grant license. Please try again.')
     } finally {
       setGranting(false)
@@ -73,16 +73,16 @@ export default function DriverTest() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-sm font-semibold text-cyan-200 shadow-lg shadow-cyan-950/40">
                 <Car size={16} />
-                Troll City License Center
+                Mai Troll License Center
               </div>
 
               <h1 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-4xl">
-                Get Your Troll City License
+                Get Your Mai Troll License
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
                 The written driver test has been removed. Tap the button below to instantly
-                grant your Troll City license and unlock neighborhood driving access.
+                grant your Mai Troll license and unlock neighborhood driving access.
               </p>
             </div>
 
@@ -143,7 +143,7 @@ export default function DriverTest() {
                       You already have a license.
                     </p>
                     <p className="mt-1 text-sm text-slate-400">
-                      Your Troll City driver access is active.
+                      Your Mai Troll driver access is active.
                     </p>
                   </div>
 
@@ -161,7 +161,7 @@ export default function DriverTest() {
                   </p>
 
                   <p className="mt-2 text-sm leading-6 text-slate-400">
-                    Click the button below. Troll City will save your license to the backend
+                    Click the button below. Mai Troll will save your license to the backend
                     and mark it active.
                   </p>
 
@@ -203,7 +203,7 @@ export default function DriverTest() {
 
             <div className="mt-4 space-y-3">
               <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4 text-sm leading-6 text-slate-300">
-                Your Troll City license lets the neighborhood and vehicle system recognize you as licensed.
+                Your Mai Troll license lets the neighborhood and vehicle system recognize you as licensed.
               </div>
 
               <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4 text-sm leading-6 text-slate-300">
@@ -250,17 +250,17 @@ export default function DriverTest() {
               </h2>
 
               <p className="mb-6 text-lg text-emerald-100">
-                Welcome to Troll City drivers. Your license is now active.
+                Welcome to Mai Troll drivers. Your license is now active.
               </p>
 
               {!celebrationComplete ? (
                 <div className="flex items-center justify-center gap-2 text-emerald-200">
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Preparing your Troll City access...
+                  Preparing your Mai Troll access...
                 </div>
               ) : (
                 <div className="animate-bounce text-emerald-200">
-                  🚗 Entering Troll City streets...
+                  🚗 Entering Mai Troll streets...
                 </div>
               )}
             </div>

@@ -259,7 +259,7 @@ export default function OrganizationDashboard() {
           <div className="rounded-[2rem] border border-red-300/25 bg-red-500/10 p-6 shadow-[0_0_45px_rgba(239,68,68,0.16)] backdrop-blur-2xl">
             <h1 className="text-xl font-black text-red-100">Organization Access Required</h1>
             <p className="mt-2 text-sm text-red-100/80">
-              Organization access is available to Troll City staff and organization accounts.
+              Organization access is available to Mai Troll staff and organization accounts.
             </p>
           </div>
         </div>

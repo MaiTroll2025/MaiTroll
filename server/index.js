@@ -97,7 +97,7 @@ if (supabaseServiceKey && supabaseServiceKey.startsWith('eyJ')) {
 }
 
 // App URL for canonical URLs
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://trollcity.app';
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://Mai Troll.app';
 
 // Default fallback image (used when no stream thumbnail available)
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`;
@@ -222,14 +222,14 @@ app.post('/api/maitalent/sync-activity', async (req, res) => {
   try {
     const body = req.body || {};
     const normalizedEmail = normalizeEmail(
-      body.normalized_email || body.normalizedEmail || body.email || 'trollcity2025@gmail.com'
+      body.normalized_email || body.normalizedEmail || body.email || 'Mai Troll2025@gmail.com'
     );
 
     const response = await syncVerifiedMaiTalentActivity({
       supabase,
       externalUserId: body.external_user_id || body.externalUserId || null,
       normalizedEmail,
-      sourceEventId: body.source_event_id || body.sourceEventId || `trollcity:${Date.now()}`,
+      sourceEventId: body.source_event_id || body.sourceEventId || `Mai Troll:${Date.now()}`,
       activityType: body.activity_type || body.activityType || 'broadcast',
       tokensAwarded: Number(body.tokens_awarded || body.tokensAwarded || 0),
       metadata: body.metadata || {
@@ -242,7 +242,7 @@ app.post('/api/maitalent/sync-activity', async (req, res) => {
       success: true,
       payload: response.body,
       normalized_email: normalizedEmail,
-      source_event_id: body.source_event_id || body.sourceEventId || `trollcity:${Date.now()}`,
+      source_event_id: body.source_event_id || body.sourceEventId || `Mai Troll:${Date.now()}`,
     });
   } catch (err) {
     console.error('[MaiTalent Sync] Unexpected error', err);
@@ -255,17 +255,17 @@ app.post('/api/maitalent/test-sync', async (req, res) => {
     const response = await syncVerifiedMaiTalentActivity({
       supabase,
       externalUserId: req.body?.external_user_id || req.body?.externalUserId || null,
-      normalizedEmail: 'trollcity2025@gmail.com',
-      sourceEventId: req.body?.source_event_id || req.body?.sourceEventId || 'trollcity:test-sync',
+      normalizedEmail: 'Mai Troll2025@gmail.com',
+      sourceEventId: req.body?.source_event_id || req.body?.sourceEventId || 'Mai Troll:test-sync',
       activityType: req.body?.activity_type || req.body?.activityType || 'broadcast',
       tokensAwarded: Number(req.body?.tokens_awarded || req.body?.tokensAwarded || 25),
       metadata: req.body?.metadata || {
         source: 'troll_city_test_sync',
-        note: 'Uses the shared test email trollcity2025@gmail.com',
+        note: 'Uses the shared test email Mai Troll2025@gmail.com',
       },
     });
 
-    return res.status(200).json({ success: true, payload: response.body, normalized_email: 'trollcity2025@gmail.com' });
+    return res.status(200).json({ success: true, payload: response.body, normalized_email: 'Mai Troll2025@gmail.com' });
   } catch (err) {
     console.error('[MaiTalent Sync] Test sync failed', err);
     return res.status(500).json({ success: false, error: err?.message || 'Unexpected server error' });
@@ -366,7 +366,7 @@ app.post('/api/maitalent/link-account', async (req, res) => {
     }
 
     const { maitalent_user_id, metadata } = body;
-    const sourceEventId = body.source_event_id || body.sourceEventId || `trollcity:link:${userId}`;
+    const sourceEventId = body.source_event_id || body.sourceEventId || `Mai Troll:link:${userId}`;
     const payload = buildMaiTalentLinkPayload({
       externalUserId: userId,
       normalizedEmail: normalizedEmail,
@@ -471,7 +471,7 @@ app.post('/api/maitalent/link-account', async (req, res) => {
           const syncPayload = buildMaiTalentPayload({
             externalUserId: userId,
             normalizedEmail,
-            sourceEventId: body.source_event_id || body.sourceEventId || `trollcity:profile-sync:${userId}`,
+            sourceEventId: body.source_event_id || body.sourceEventId || `Mai Troll:profile-sync:${userId}`,
             activityType: 'profile_sync',
             tokensAwarded: 0,
             metadata: {
@@ -724,8 +724,8 @@ app.get('/api/social/:broadcastId', async (req, res) => {
     const playerUrl = `${APP_URL}/watch/${stream.id}`;
     
     const meta = generateSocialMetaHTML({
-      title: `${broadcaster?.username || 'Broadcaster'} is ${statusText} on Troll City`,
-      description: stream.title || `Watch this live broadcast on Troll City`,
+      title: `${broadcaster?.username || 'Broadcaster'} is ${statusText} on Mai Troll`,
+      description: stream.title || `Watch this live broadcast on Mai Troll`,
       image: previewImage,
       url: `${APP_URL}/watch/${stream.id}`,
       type: isLive ? 'video.other' : 'website',
@@ -737,7 +737,7 @@ app.get('/api/social/:broadcastId', async (req, res) => {
       twitterPlayerUrl: isLive ? `${APP_URL}/embed/${stream.id}` : null,
       twitterPlayerWidth: 1280,
       twitterPlayerHeight: 720,
-      site: '@trollcityapp'
+      site: '@Mai Trollapp'
     });
     
     res.status(200).send(meta);
@@ -745,8 +745,8 @@ app.get('/api/social/:broadcastId', async (req, res) => {
   } catch (error) {
     console.error('[SocialPreview] Error:', error);
     const meta = generateSocialMetaHTML({
-      title: 'Troll City - Live Streaming',
-      description: 'Join Troll City for live streaming and more.',
+      title: 'Mai Troll - Live Streaming',
+      description: 'Join Mai Troll for live streaming and more.',
       image: FALLBACK_PREVIEW_IMAGE,
       url: `${APP_URL}/watch/${broadcastId}`,
       type: 'website',
@@ -791,8 +791,8 @@ app.get('/embed/:broadcastId', async (req, res) => {
 // Helper: Generate Social Meta HTML with OG and Twitter Card tags
 function generateSocialMetaHTML(data) {
   const {
-    title = 'Troll City - Live Streaming',
-    description = 'Watch live streams on Troll City',
+    title = 'Mai Troll - Live Streaming',
+    description = 'Watch live streams on Mai Troll',
     image = FALLBACK_PREVIEW_IMAGE,
     url = APP_URL,
     type = 'website',
@@ -804,7 +804,7 @@ function generateSocialMetaHTML(data) {
     twitterPlayerUrl = null,
     twitterPlayerWidth = 1280,
     twitterPlayerHeight = 720,
-    site = '@trollcityapp'
+    site = '@Mai Trollapp'
   } = data;
   
   // Escape HTML entities to prevent XSS
@@ -832,7 +832,7 @@ function generateSocialMetaHTML(data) {
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:url" content="${esc(url)}">
   <meta property="og:image" content="${esc(image)}">
-  <meta property="og:site_name" content="Troll City">
+  <meta property="og:site_name" content="Mai Troll">
   
   ${videoUrl ? `
   <meta property="og:video" content="${esc(videoUrl)}">
@@ -857,9 +857,9 @@ function generateSocialMetaHTML(data) {
   
   <!-- Additional Meta Tags -->
   <meta property="al:ios:app_store_id" content="6471861674">
-  <meta property="al:ios:app_name" content="Troll City">
-  <meta property="al:android:package" content="app.trollcity.app">
-  <meta property="al:android:app_name" content="Troll City">
+  <meta property="al:ios:app_name" content="Mai Troll">
+  <meta property="al:android:package" content="app.Mai Troll.app">
+  <meta property="al:android:app_name" content="Mai Troll">
   
   ${isLive ? `
   <meta property="og:live" content="true">
@@ -898,7 +898,7 @@ function generateEmbedHTML(broadcastId, appUrl) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Watch Stream | Troll City</title>
+  <title>Watch Stream | Mai Troll</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; background: #000; }
@@ -989,7 +989,7 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})$/, async (req, res, next) => {
   // Bot detected — return full SEO HTML
   try {
     const html = profileSEO.generateProfileSEOHTML(
-      { username, display_name: username, bio: `View ${username}'s profile on Mai Troll City` },
+      { username, display_name: username, bio: `View ${username}'s profile on Mai Mai Troll` },
       null,
       APP_URL
     );

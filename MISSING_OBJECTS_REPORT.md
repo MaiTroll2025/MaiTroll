@@ -1,0 +1,1329 @@
+# FRONTEND MIGRATION AUDIT REPORT
+Generated: 2026-07-27T16:19:42.478Z
+
+## Summary
+- Frontend tables referenced: 721
+- Frontend RPCs referenced: 645
+- Frontend storage buckets: 13
+- Frontend columns referenced: 1696
+
+## Coverage in existing migrations
+| Object Type | Found | Missing |
+|-------------|-------|---------|
+| Tables | 401 | 305 |
+| Views | 15 | 0 |
+| RPC Functions | 359 | 286 |
+| Indexes | 867 | N/A |
+| Foreign Keys | 22 | N/A |
+| RLS Policies | 318 | N/A |
+| Grants | 317 | N/A |
+| Extensions | 8 | N/A |
+| Enum Types | 21 | N/A |
+| Storage Buckets | 7 | 6 |
+
+## Missing Tables (305)
+
+These tables are referenced in the frontend but not found in any migration file.
+You will need to create them manually in the Supabase SQL Editor.
+
+```sql
+-- TODO: Create these tables in your new Supabase project
+-- achievement_tiers
+-- active_marketplace_disputes
+-- active_sessions
+-- ad-assets
+-- admin_action_logs
+-- admin_broadcasts
+-- admin_finance_feed
+-- admin_finance_summary
+-- admin_tax_reviews
+-- agencies
+-- agency_activity_logs
+-- agency_contracts
+-- agency_goals
+-- agency_invites
+-- albums
+-- app_settings
+-- appeal-media
+-- applications
+-- artist_followers
+-- artist_profiles
+-- attorney_applications
+-- attorney_cases
+-- auction-items
+-- auction_device_sessions
+-- auction_devices
+-- auction_lots
+-- auction_orders
+-- auction_presence
+-- auction_reports
+-- auction_scan_events
+-- auction_shows
+-- auction_wins
+-- auctioneer_applications
+-- auctioneer_profiles
+-- audio
+-- avatars
+-- battle_challenges
+-- battle_scores
+-- battle_sessions
+-- bond_requests
+-- broadcast_background_themes
+-- broadcast_challenges
+-- broadcast_insurances
+-- broadcast_missions
+-- broadcast_tokens
+-- broadcast_troll_usages
+-- broadcaster_earnings
+-- call_history
+-- call_rooms
+-- car_insurances
+-- chat_messages
+-- city-ads
+-- coin_packages
+-- coin_purchases
+-- coin_store_sales
+-- coin_transactions
+-- contract_audit_events
+-- court_ai_feedback
+-- court_ai_messages
+-- court_ai_rate_limits
+-- court_docket
+-- court_events
+-- court_rulings_archive
+-- covers
+-- creator_applications
+-- creator_earnings
+-- creator_profiles
+-- creators_over_600
+-- critical_alerts
+-- daily_rewards
+-- deed_transfers
+-- deeds
+-- driver_tests
+-- earnings_payouts
+-- economy_summary
+-- emergency_alerts
+-- empire_applications
+-- entrance_effects
+-- escalation_matrix
+-- event_log
+-- executive_intake
+-- executive_reports
+-- families
+-- family-banners
+-- family_achievements
+-- family_achievements_new
+-- family_activity_log
+-- family_boosts
+-- family_earnings_pool
+-- family_gift_logs
+-- family_goal_progress
+-- family_goals
+-- family_invites
+-- family_level_unlocks
+-- family_member_earnings
+-- family_members
+-- family_members_extended
+-- family_notifications
+-- family_participation_tracking
+-- family_payout_records
+-- family_seasons
+-- family_shop_items
+-- family_shop_purchases
+-- family_songs
+-- family_stats
+-- family_stats_enhanced
+-- family_streaks
+-- family_vault
+-- family_war_scores
+-- family_wars
+-- fan_memories
+-- feedback-attachments
+-- founder_rewards
+-- founder_rewards_grants
+-- friendships
+-- gift_animation_test_logs
+-- gift_items
+-- government_elections
+-- government_positions
+-- hall_of_fame
+-- hidden_achievements
+-- homeowners_insurances
+-- house_raids
+-- hr_payroll_profiles
+-- inmate_messages
+-- insurance_logs
+-- insurance_options
+-- insurance_plans
+-- internet_game_matches
+-- interview_sessions
+-- jail_appeals
+-- jail_ip_violations
+-- jail_security_violations
+-- job_applications
+-- label_members
+-- landlord_applications
+-- live_viewers
+-- maitalent_promos
+-- marketplace_purchases
+-- meeting_documents
+-- messages
+-- moderation-evidence
+-- moderation_actions
+-- moderation_events
+-- moderation_reports
+-- music_tips
+-- music_tracks
+-- neighbors_hiring
+-- night_watch_recordings
+-- night_watch_shifts
+-- notifications
+-- officer_actions
+-- officer_earnings
+-- officer_live_assignments
+-- officer_members
+-- officer_payouts
+-- officer_quiz_results_view
+-- officer_quiz_submissions
+-- officer_shifts
+-- officer_stream_logs
+-- officer_work_sessions
+-- online_users
+-- org-files
+-- organization_documents
+-- owc_transactions
+-- paid_chat_access
+-- paid_chat_payments
+-- payment_holds
+-- payment_methods
+-- payout_dashboard
+-- payout_receipts
+-- payout_requests
+-- perks
+-- platform_fees
+-- podcast_episodes
+-- podcast_rtc_logs
+-- podcasts
+-- poll_votes
+-- post-images
+-- post-media
+-- profile_frames
+-- profiles
+-- property_upgrades
+-- prosecutor_applications
+-- record_labels
+-- referral_monthly_bonus
+-- referrals
+-- replays
+-- review-images
+-- role_bonuses
+-- role_permission_matrix
+-- role_requests
+-- royal_family_leaderboard
+-- scheduled_announcements
+-- secretary_assignments
+-- secretary_tasks
+-- seller_history
+-- seller_reliability
+-- sellers_with_fraud_holds
+-- shop_items
+-- shop_transactions
+-- site_content
+-- smokeathon_events
+-- smokeathon_music_requests
+-- smokeathon_participants
+-- song_likes
+-- songs
+-- staff_action_audit_log
+-- staff_meeting_participants
+-- staff_meetings
+-- stocks
+-- stream-recordings
+-- stream_battles
+-- stream_chat
+-- stream_chat_messages
+-- stream_ended_logs
+-- stream_energy_meters
+-- stream_incidents
+-- stream_participants
+-- stream_ranking
+-- streams_participants
+-- studio_projects
+-- survey_responses
+-- system_alerts
+-- system_errors
+-- system_settings
+-- system_wallets
+-- tax_forms
+-- tcnn_articles
+-- tcnn_bookmarks
+-- tcnn_journalist_profiles
+-- tcnn_role_assignments
+-- tcnn_ticker_queue
+-- tcnn_tips
+-- tip_packages
+-- tips
+-- transactions
+-- treelz-videos
+-- troll-city-assets
+-- troll_ai_avatars
+-- troll_church_daily_words
+-- troll_court_cases
+-- troll_court_participants
+-- troll_court_sessions
+-- troll_court_summons
+-- troll_dna_events
+-- troll_dna_profiles
+-- troll_dna_traits
+-- troll_event_claims
+-- troll_events
+-- troll_families
+-- troll_post_comments
+-- troll_wall_likes
+-- troll_wall_posts
+-- troll_wars_ai_battle_logs
+-- troll_wars_task_progress
+-- troll_wheel_wins
+-- Mai Troll_orders
+-- Mai Troll_products
+-- Mai Troll_shops
+-- trollmin_approvals
+-- trollmin_queue
+-- trollopoly_queue
+-- tromail_contract_templates
+-- tromail_contracts
+-- user-verification
+-- user_agreements
+-- user_bans
+-- user_blocks
+-- user_boosts
+-- user_broadcast_theme_purchases
+-- user_broadcast_theme_state
+-- user_call_sounds
+-- user_entrance_effects
+-- user_followers
+-- user_history
+-- user_insurance_policies
+-- user_insurances
+-- user_inventory
+-- user_ip_tracking
+-- user_jails
+-- user_licenses
+-- user_mutes
+-- user_payment_methods
+-- user_perks
+-- user_profile_frames
+-- user_profiles
+-- user_relationships
+-- user_reports
+-- user_reputation
+-- user_tax_info
+-- vehicle-documents
+-- vehicle_vandalism
+-- vehicles
+-- verification_docs
+-- verification_requests
+-- view_admin_creator_tax_status
+-- war_results
+-- web_push_subscriptions
+-- weekly_family_goals_new
+-- weekly_officer_reports
+-- weekly_reports
+-- weekly_surveys
+-- xtrollz-documents
+-- xtrollz_stream_messages
+```
+
+## Missing RPC Functions (286)
+
+These functions are called from the frontend but not found in any migration file.
+You will need to create them manually in the Supabase SQL Editor.
+
+```sql
+-- TODO: Create these functions in your new Supabase project
+-- accept_agency_invite()
+-- activate_wheel_inventory_item()
+-- add_agency_points()
+-- add_coins()
+-- add_family_earnings()
+-- add_trollopoly_spectator()
+-- add_user_coins()
+-- add_xp()
+-- adjust_agency_points()
+-- append_timeline()
+-- apply_fraud_hold()
+-- approve_advertisement()
+-- approve_attorney_application()
+-- approve_empire_partner()
+-- approve_lead_officer_application()
+-- approve_neighbor_business()
+-- approve_neighbor_event()
+-- approve_neighbor_job()
+-- approve_prosecutor_application()
+-- approve_seat_request()
+-- approve_tax_form()
+-- arrest_absent_summoned_users()
+-- arrest_user()
+-- auction_lot_action()
+-- auto_start_court_session()
+-- auto_start_court_with_docket()
+-- auto_unlock_payouts()
+-- award_family_xp()
+-- ban_family_member()
+-- ban_officer()
+-- ban_user_from_stream()
+-- boost_stream_energy()
+-- calculate_agency_tier()
+-- calculate_stream_ranking()
+-- can_access_staff_meeting()
+-- can_user_record()
+-- captain_click_battle()
+-- check_concurrent_login()
+-- check_creator_weekly_eligibility()
+-- check_daily_login()
+-- check_emergency_cooldown()
+-- check_family_rate_limit()
+-- check_influencer_eligibility()
+-- check_staff_permission()
+-- check_trollmin_daily_limit()
+-- clock_in_from_slot()
+-- clock_out_and_complete_slot()
+-- complete_family_goal()
+-- convert_owc_to_paid()
+-- convert_trollz_to_coins()
+-- create_agency_invite()
+-- create_auction_lot()
+-- create_auction_show()
+-- create_city_event()
+-- create_family_invite()
+-- create_safety_alert()
+-- create_troll_family()
+-- create_troll_us_game()
+-- create_trollmin_law()
+-- create_user_league()
+-- create_wall_post_reply()
+-- decrement_treelz_likes()
+-- decrement_treelz_saves()
+-- deduct_coins()
+-- deduct_troll_coins()
+-- delete_social_link()
+-- deny_application()
+-- deny_attorney_application()
+-- deny_prosecutor_application()
+-- deny_seat_request()
+-- distribute_prize()
+-- distribute_weekly_earnings()
+-- end_battle()
+-- end_battle_with_rewards()
+-- end_court_session()
+-- end_family_call()
+-- end_trial_early()
+-- end_troll_us_round()
+-- escalate_to_admin()
+-- escalate_to_officer()
+-- expose_bribe()
+-- find_utromail_thread()
+-- generate_family_goals()
+-- generate_weekly_goals()
+-- get_active_city_laws()
+-- get_active_event()
+-- get_active_event_signup_count()
+-- get_active_streams_v2()
+-- get_agency_leaderboard()
+-- get_all_creator_applications()
+-- get_all_docket_entries()
+-- get_auction_watchlist_count()
+-- get_available_mai_class_slots()
+-- get_available_payout_balance()
+-- get_battle_and_event_earnings()
+-- get_battle_status()
+-- get_broadofficers()
+-- get_buckets_summary_for_user()
+-- get_current_payout_batch()
+-- get_current_trollmin()
+-- get_daily_earnings_series()
+-- get_daily_free_spins()
+-- get_district_onboarding_tour()
+-- get_earnings_overview()
+-- get_effective_privileges()
+-- get_emergency_user_info()
+-- get_family_call_minutes()
+-- get_family_heartbeat()
+-- get_family_home_data()
+-- get_family_leaderboard()
+-- get_family_online_members()
+-- get_family_weekly_reward_total()
+-- get_hourly_activity()
+-- get_member_pending_payout()
+-- get_next_tier_threshold()
+-- get_pending_payouts_summary()
+-- get_platform_subscription_stats()
+-- get_portfolio_summary()
+-- get_portfolio_value()
+-- get_profile_customization()
+-- get_profile_social_links()
+-- get_profile_statistics()
+-- get_public_docket_board()
+-- get_role_statistics()
+-- get_royal_family_status()
+-- get_staff_audit_summary()
+-- get_staff_user_ids()
+-- get_system_settings()
+-- get_tm_matches()
+-- get_top_gifters()
+-- get_trollmers_week_start()
+-- get_trollmin_activity_feed()
+-- get_trollmin_queue()
+-- get_trollmin_stats()
+-- get_user_accessible_districts()
+-- get_user_active_roles()
+-- get_user_active_subscription()
+-- get_user_assets()
+-- get_user_docket()
+-- get_user_featured_badges()
+-- get_user_monthly_coins_earned()
+-- get_user_storage_breakdown()
+-- get_vote_weight()
+-- get_weekly_family_task_counts()
+-- gift_hype_coin_to_viewer()
+-- grant_family_crown()
+-- grant_league_reward()
+-- increment()
+-- increment_ad_impressions()
+-- increment_article_views()
+-- increment_insurance_trigger()
+-- increment_task_progress()
+-- increment_treelz_comments()
+-- increment_treelz_saves()
+-- increment_treelz_shares()
+-- increment_trollmonds()
+-- increment_user_crowns()
+-- is_lead_officer_position_filled()
+-- jail_user()
+-- join_family_call()
+-- join_game_match()
+-- join_game_seat()
+-- join_trollopoly_queue()
+-- join_user_league()
+-- judge_pardon_user()
+-- kick_family_member()
+-- kick_user()
+-- kick_user_free()
+-- kick_user_from_stream()
+-- leave_battle_queue()
+-- leave_family_call()
+-- leave_trollopoly_queue()
+-- leave_user_league()
+-- like_stream()
+-- log_agency_activity()
+-- log_government_action()
+-- log_staff_action()
+-- log_system_event()
+-- log_trollmin_action()
+-- lookup_user_location()
+-- manage_honorary_family_member()
+-- manage_tcnn_role()
+-- mark_all_notifications_read()
+-- mark_lot_sold()
+-- mark_order_shipped()
+-- moderate_product()
+-- mute_user()
+-- notify_all_users()
+-- notify_user_rpc()
+-- officer_cashout_after_shift()
+-- pay_ban_restoration_fee()
+-- pay_kick_reentry_fee()
+-- pick_battle_side()
+-- prestige_user()
+-- pride_check_complete_all()
+-- pride_increment_progress()
+-- pride_track_badge()
+-- pride_track_battle_win()
+-- pride_track_gift()
+-- pride_track_go_live()
+-- pride_track_invite()
+-- pride_track_spending()
+-- pride_track_visit()
+-- process_game_action()
+-- process_song_tip()
+-- promote_family_member()
+-- purchase_family_call_minutes()
+-- purchase_item()
+-- purchase_listing_premium()
+-- record_battle_gift()
+-- record_dna_event()
+-- record_post_view()
+-- record_replay_view()
+-- record_song_play()
+-- record_treelz_view()
+-- register_session()
+-- reject_empire_partner()
+-- reject_tax_form()
+-- release_fraud_hold()
+-- relock_payouts()
+-- remove_verification()
+-- reorder_social_links()
+-- reset_app_for_launch()
+-- resolve_marketplace_dispute()
+-- respond_family_invite()
+-- review_auction_report()
+-- review_auctioneer_application()
+-- review_creator_application()
+-- review_safety_alert()
+-- run_weekly_agency_evaluation()
+-- scan_lot_barcode()
+-- search_users()
+-- send_tm_message()
+-- send_treelz_tip()
+-- set_active_broadcast_theme()
+-- set_active_call_sound()
+-- set_lead_officer_status()
+-- setup_family_leader_tax()
+-- sign_lease_for_applicant()
+-- smokeathon_buy_raffle_ticket()
+-- smokeathon_claim_bonus()
+-- smokeathon_draw_raffle()
+-- smokeathon_get_status()
+-- smokeathon_request_song()
+-- smokeathon_reward_trivia()
+-- smokeathon_set_dj()
+-- smokeathon_set_stream()
+-- smokeathon_trigger_drop()
+-- spin_troll_wheel()
+-- start_family_call()
+-- start_inmate_call()
+-- start_instant_battle()
+-- start_launch_trial()
+-- start_troll_us_game()
+-- store_user_geolocation()
+-- submit_agency_application()
+-- submit_game_vote()
+-- submit_weekly_report()
+-- tip_journalist()
+-- toggle_staff_duty()
+-- toggle_wall_post_like()
+-- track_maitalent_promo_event()
+-- track_watch_time()
+-- transfer_coins()
+-- trigger_manual_backup()
+-- troll_wars_current_week()
+-- trollmin_grant_pardon()
+-- unban_officer()
+-- unban_user()
+-- unsubscribe_from_broadcaster()
+-- update_agency_invite_status()
+-- update_district_progress()
+-- update_family_participation()
+-- update_house_condition()
+-- update_order_fulfillment()
+-- update_system_health()
+-- update_system_setting()
+-- update_trade_cooldown()
+-- update_user_reputation()
+-- upsert_profile_customization()
+-- upsert_social_link()
+-- use_broadcast_ability()
+-- use_daily_free_spin()
+-- use_trollmin_daily_limit()
+-- verify_user()
+-- vote_trollmin_approval()
+```
+
+## Detailed Missing Tables by Category
+
+### Auth/Profiles (37)
+
+- `artist_profiles`
+- `auctioneer_profiles`
+- `creator_profiles`
+- `hr_payroll_profiles`
+- `online_users`
+- `profile_frames`
+- `profiles`
+- `tcnn_journalist_profiles`
+- `troll_dna_profiles`
+- `user-verification`
+- `user_agreements`
+- `user_bans`
+- `user_blocks`
+- `user_boosts`
+- `user_broadcast_theme_purchases`
+- `user_broadcast_theme_state`
+- `user_call_sounds`
+- `user_entrance_effects`
+- `user_followers`
+- `user_history`
+- `user_insurance_policies`
+- `user_insurances`
+- `user_inventory`
+- `user_ip_tracking`
+- `user_jails`
+- `user_licenses`
+- `user_mutes`
+- `user_payment_methods`
+- `user_perks`
+- `user_profile_frames`
+- `user_profiles`
+- `user_relationships`
+- `user_reports`
+- `user_reputation`
+- `user_tax_info`
+- `verification_docs`
+- `verification_requests`
+
+### Streams/Broadcast (20)
+
+- `admin_broadcasts`
+- `broadcast_background_themes`
+- `broadcast_challenges`
+- `broadcast_insurances`
+- `broadcast_missions`
+- `broadcast_tokens`
+- `broadcast_troll_usages`
+- `broadcaster_earnings`
+- `officer_stream_logs`
+- `stream-recordings`
+- `stream_battles`
+- `stream_chat`
+- `stream_chat_messages`
+- `stream_ended_logs`
+- `stream_energy_meters`
+- `stream_incidents`
+- `stream_participants`
+- `stream_ranking`
+- `streams_participants`
+- `xtrollz_stream_messages`
+
+### Chat/Messaging (8)
+
+- `chat_messages`
+- `court_ai_messages`
+- `inmate_messages`
+- `messages`
+- `paid_chat_access`
+- `paid_chat_payments`
+- `tromail_contract_templates`
+- `tromail_contracts`
+
+### Economy/Coins (18)
+
+- `auction_orders`
+- `coin_packages`
+- `coin_purchases`
+- `coin_store_sales`
+- `coin_transactions`
+- `earnings_payouts`
+- `family_payout_records`
+- `family_shop_purchases`
+- `marketplace_purchases`
+- `officer_payouts`
+- `owc_transactions`
+- `payout_dashboard`
+- `payout_receipts`
+- `payout_requests`
+- `shop_transactions`
+- `system_wallets`
+- `transactions`
+- `Mai Troll_orders`
+
+### Social/Feed (11)
+
+- `admin_finance_feed`
+- `artist_followers`
+- `court_ai_feedback`
+- `feedback-attachments`
+- `post-images`
+- `post-media`
+- `song_likes`
+- `treelz-videos`
+- `troll_post_comments`
+- `troll_wall_likes`
+- `troll_wall_posts`
+
+### Gaming (7)
+
+- `battle_challenges`
+- `battle_scores`
+- `battle_sessions`
+- `internet_game_matches`
+- `troll_wars_ai_battle_logs`
+- `troll_wheel_wins`
+- `trollopoly_queue`
+
+### Admin/Moderation (31)
+
+- `admin_action_logs`
+- `admin_finance_summary`
+- `admin_tax_reviews`
+- `contract_audit_events`
+- `court_ai_rate_limits`
+- `court_docket`
+- `court_events`
+- `court_rulings_archive`
+- `family-banners`
+- `jail_appeals`
+- `jail_ip_violations`
+- `jail_security_violations`
+- `moderation-evidence`
+- `moderation_actions`
+- `moderation_events`
+- `moderation_reports`
+- `officer_actions`
+- `officer_earnings`
+- `officer_live_assignments`
+- `officer_members`
+- `officer_quiz_results_view`
+- `officer_quiz_submissions`
+- `officer_shifts`
+- `officer_work_sessions`
+- `staff_action_audit_log`
+- `troll_court_cases`
+- `troll_court_participants`
+- `troll_court_sessions`
+- `troll_court_summons`
+- `view_admin_creator_tax_status`
+- `weekly_officer_reports`
+
+### Government/Legal (3)
+
+- `government_elections`
+- `government_positions`
+- `poll_votes`
+
+### Academy/Education (1)
+
+- `property_upgrades`
+
+### Agency/Organization (33)
+
+- `agency_activity_logs`
+- `agency_contracts`
+- `agency_goals`
+- `agency_invites`
+- `family_achievements`
+- `family_achievements_new`
+- `family_activity_log`
+- `family_boosts`
+- `family_earnings_pool`
+- `family_gift_logs`
+- `family_goal_progress`
+- `family_goals`
+- `family_invites`
+- `family_level_unlocks`
+- `family_member_earnings`
+- `family_members`
+- `family_members_extended`
+- `family_notifications`
+- `family_participation_tracking`
+- `family_seasons`
+- `family_shop_items`
+- `family_songs`
+- `family_stats`
+- `family_stats_enhanced`
+- `family_streaks`
+- `family_vault`
+- `family_war_scores`
+- `family_wars`
+- `neighbors_hiring`
+- `org-files`
+- `organization_documents`
+- `royal_family_leaderboard`
+- `weekly_family_goals_new`
+
+### Marketplace (15)
+
+- `active_marketplace_disputes`
+- `auction-items`
+- `auction_device_sessions`
+- `auction_devices`
+- `auction_lots`
+- `auction_presence`
+- `auction_reports`
+- `auction_scan_events`
+- `auction_shows`
+- `auction_wins`
+- `auctioneer_applications`
+- `gift_items`
+- `shop_items`
+- `Mai Troll_products`
+- `Mai Troll_shops`
+
+### Other (121)
+
+- `achievement_tiers`
+- `active_sessions`
+- `ad-assets`
+- `agencies`
+- `albums`
+- `app_settings`
+- `appeal-media`
+- `applications`
+- `attorney_applications`
+- `attorney_cases`
+- `audio`
+- `avatars`
+- `bond_requests`
+- `call_history`
+- `call_rooms`
+- `car_insurances`
+- `city-ads`
+- `covers`
+- `creator_applications`
+- `creator_earnings`
+- `creators_over_600`
+- `critical_alerts`
+- `daily_rewards`
+- `deed_transfers`
+- `deeds`
+- `driver_tests`
+- `economy_summary`
+- `emergency_alerts`
+- `empire_applications`
+- `entrance_effects`
+- `escalation_matrix`
+- `event_log`
+- `executive_intake`
+- `executive_reports`
+- `families`
+- `fan_memories`
+- `founder_rewards`
+- `founder_rewards_grants`
+- `friendships`
+- `gift_animation_test_logs`
+- `hall_of_fame`
+- `hidden_achievements`
+- `homeowners_insurances`
+- `house_raids`
+- `insurance_logs`
+- `insurance_options`
+- `insurance_plans`
+- `interview_sessions`
+- `job_applications`
+- `label_members`
+- `landlord_applications`
+- `live_viewers`
+- `maitalent_promos`
+- `meeting_documents`
+- `music_tips`
+- `music_tracks`
+- `night_watch_recordings`
+- `night_watch_shifts`
+- `notifications`
+- `payment_holds`
+- `payment_methods`
+- `perks`
+- `platform_fees`
+- `podcast_episodes`
+- `podcast_rtc_logs`
+- `podcasts`
+- `prosecutor_applications`
+- `record_labels`
+- `referral_monthly_bonus`
+- `referrals`
+- `replays`
+- `review-images`
+- `role_bonuses`
+- `role_permission_matrix`
+- `role_requests`
+- `scheduled_announcements`
+- `secretary_assignments`
+- `secretary_tasks`
+- `seller_history`
+- `seller_reliability`
+- `sellers_with_fraud_holds`
+- `site_content`
+- `smokeathon_events`
+- `smokeathon_music_requests`
+- `smokeathon_participants`
+- `songs`
+- `staff_meeting_participants`
+- `staff_meetings`
+- `stocks`
+- `studio_projects`
+- `survey_responses`
+- `system_alerts`
+- `system_errors`
+- `system_settings`
+- `tax_forms`
+- `tcnn_articles`
+- `tcnn_bookmarks`
+- `tcnn_role_assignments`
+- `tcnn_ticker_queue`
+- `tcnn_tips`
+- `tip_packages`
+- `tips`
+- `troll-city-assets`
+- `troll_ai_avatars`
+- `troll_church_daily_words`
+- `troll_dna_events`
+- `troll_dna_traits`
+- `troll_event_claims`
+- `troll_events`
+- `troll_families`
+- `troll_wars_task_progress`
+- `trollmin_approvals`
+- `trollmin_queue`
+- `vehicle-documents`
+- `vehicle_vandalism`
+- `vehicles`
+- `war_results`
+- `web_push_subscriptions`
+- `weekly_reports`
+- `weekly_surveys`
+- `xtrollz-documents`
+
+## Detailed Missing RPCs by Category
+
+### Economy/Coins (26)
+
+- `add_coins()`
+- `add_user_coins()`
+- `auto_unlock_payouts()`
+- `convert_trollz_to_coins()`
+- `deduct_coins()`
+- `deduct_troll_coins()`
+- `get_available_payout_balance()`
+- `get_current_payout_batch()`
+- `get_member_pending_payout()`
+- `get_pending_payouts_summary()`
+- `get_user_monthly_coins_earned()`
+- `gift_hype_coin_to_viewer()`
+- `mark_order_shipped()`
+- `officer_cashout_after_shift()`
+- `pride_track_spending()`
+- `process_song_tip()`
+- `purchase_family_call_minutes()`
+- `purchase_item()`
+- `purchase_listing_premium()`
+- `relock_payouts()`
+- `reorder_social_links()`
+- `send_treelz_tip()`
+- `smokeathon_buy_raffle_ticket()`
+- `tip_journalist()`
+- `transfer_coins()`
+- `update_order_fulfillment()`
+
+### Streams/Broadcast (10)
+
+- `ban_user_from_stream()`
+- `boost_stream_energy()`
+- `calculate_stream_ranking()`
+- `get_active_streams_v2()`
+- `kick_user_from_stream()`
+- `like_stream()`
+- `set_active_broadcast_theme()`
+- `smokeathon_set_stream()`
+- `unsubscribe_from_broadcaster()`
+- `use_broadcast_ability()`
+
+### Chat/Messaging (4)
+
+- `find_utromail_thread()`
+- `review_auction_report()`
+- `send_tm_message()`
+- `submit_weekly_report()`
+
+### Admin/Moderation (18)
+
+- `approve_lead_officer_application()`
+- `arrest_absent_summoned_users()`
+- `ban_family_member()`
+- `ban_officer()`
+- `escalate_to_officer()`
+- `get_broadofficers()`
+- `is_lead_officer_position_filled()`
+- `jail_user()`
+- `kick_family_member()`
+- `kick_user()`
+- `kick_user_free()`
+- `moderate_product()`
+- `mute_user()`
+- `pay_ban_restoration_fee()`
+- `pay_kick_reentry_fee()`
+- `set_lead_officer_status()`
+- `unban_officer()`
+- `unban_user()`
+
+### User Management (35)
+
+- `arrest_user()`
+- `can_user_record()`
+- `check_concurrent_login()`
+- `check_daily_login()`
+- `check_staff_permission()`
+- `create_user_league()`
+- `get_active_event_signup_count()`
+- `get_buckets_summary_for_user()`
+- `get_emergency_user_info()`
+- `get_profile_customization()`
+- `get_profile_social_links()`
+- `get_profile_statistics()`
+- `get_role_statistics()`
+- `get_staff_user_ids()`
+- `get_user_accessible_districts()`
+- `get_user_active_roles()`
+- `get_user_active_subscription()`
+- `get_user_assets()`
+- `get_user_docket()`
+- `get_user_featured_badges()`
+- `get_user_storage_breakdown()`
+- `increment_user_crowns()`
+- `join_user_league()`
+- `judge_pardon_user()`
+- `leave_user_league()`
+- `lookup_user_location()`
+- `manage_tcnn_role()`
+- `notify_all_users()`
+- `notify_user_rpc()`
+- `prestige_user()`
+- `search_users()`
+- `store_user_geolocation()`
+- `update_user_reputation()`
+- `upsert_profile_customization()`
+- `verify_user()`
+
+### Gaming/Battles (26)
+
+- `activate_wheel_inventory_item()`
+- `add_trollopoly_spectator()`
+- `captain_click_battle()`
+- `create_troll_us_game()`
+- `end_battle()`
+- `end_battle_with_rewards()`
+- `get_battle_and_event_earnings()`
+- `get_battle_status()`
+- `get_daily_free_spins()`
+- `get_vote_weight()`
+- `grant_league_reward()`
+- `join_game_match()`
+- `join_game_seat()`
+- `join_trollopoly_queue()`
+- `leave_battle_queue()`
+- `leave_trollopoly_queue()`
+- `pick_battle_side()`
+- `pride_track_battle_win()`
+- `process_game_action()`
+- `record_battle_gift()`
+- `spin_troll_wheel()`
+- `start_instant_battle()`
+- `start_troll_us_game()`
+- `submit_game_vote()`
+- `use_daily_free_spin()`
+- `vote_trollmin_approval()`
+
+### Family/Social (28)
+
+- `add_family_earnings()`
+- `approve_neighbor_business()`
+- `approve_neighbor_event()`
+- `approve_neighbor_job()`
+- `award_family_xp()`
+- `check_family_rate_limit()`
+- `complete_family_goal()`
+- `create_family_invite()`
+- `create_troll_family()`
+- `end_family_call()`
+- `generate_family_goals()`
+- `get_family_call_minutes()`
+- `get_family_heartbeat()`
+- `get_family_home_data()`
+- `get_family_leaderboard()`
+- `get_family_online_members()`
+- `get_family_weekly_reward_total()`
+- `get_royal_family_status()`
+- `get_weekly_family_task_counts()`
+- `grant_family_crown()`
+- `join_family_call()`
+- `leave_family_call()`
+- `manage_honorary_family_member()`
+- `promote_family_member()`
+- `respond_family_invite()`
+- `setup_family_leader_tax()`
+- `start_family_call()`
+- `update_family_participation()`
+
+### Government/Legal (13)
+
+- `approve_attorney_application()`
+- `approve_prosecutor_application()`
+- `auto_start_court_session()`
+- `auto_start_court_with_docket()`
+- `create_trollmin_law()`
+- `deny_attorney_application()`
+- `deny_prosecutor_application()`
+- `end_court_session()`
+- `end_trial_early()`
+- `get_active_city_laws()`
+- `get_all_docket_entries()`
+- `get_public_docket_board()`
+- `start_launch_trial()`
+
+### Agency/HR (12)
+
+- `accept_agency_invite()`
+- `add_agency_points()`
+- `adjust_agency_points()`
+- `calculate_agency_tier()`
+- `create_agency_invite()`
+- `get_agency_leaderboard()`
+- `get_district_onboarding_tour()`
+- `get_next_tier_threshold()`
+- `log_agency_activity()`
+- `run_weekly_agency_evaluation()`
+- `submit_agency_application()`
+- `update_agency_invite_status()`
+
+### System/Utilities (35)
+
+- `can_access_staff_meeting()`
+- `check_creator_weekly_eligibility()`
+- `check_emergency_cooldown()`
+- `check_influencer_eligibility()`
+- `check_trollmin_daily_limit()`
+- `get_active_event()`
+- `get_all_creator_applications()`
+- `get_auction_watchlist_count()`
+- `get_available_mai_class_slots()`
+- `get_current_trollmin()`
+- `get_daily_earnings_series()`
+- `get_earnings_overview()`
+- `get_effective_privileges()`
+- `get_hourly_activity()`
+- `get_platform_subscription_stats()`
+- `get_portfolio_summary()`
+- `get_portfolio_value()`
+- `get_staff_audit_summary()`
+- `get_system_settings()`
+- `get_tm_matches()`
+- `get_top_gifters()`
+- `get_trollmers_week_start()`
+- `get_trollmin_activity_feed()`
+- `get_trollmin_queue()`
+- `get_trollmin_stats()`
+- `log_system_event()`
+- `pride_check_complete_all()`
+- `scan_lot_barcode()`
+- `smokeathon_get_status()`
+- `trigger_manual_backup()`
+- `update_district_progress()`
+- `update_house_condition()`
+- `update_system_health()`
+- `update_system_setting()`
+- `update_trade_cooldown()`
+
+### Other (79)
+
+- `add_xp()`
+- `append_timeline()`
+- `apply_fraud_hold()`
+- `approve_advertisement()`
+- `approve_empire_partner()`
+- `approve_seat_request()`
+- `approve_tax_form()`
+- `auction_lot_action()`
+- `clock_in_from_slot()`
+- `clock_out_and_complete_slot()`
+- `convert_owc_to_paid()`
+- `create_auction_lot()`
+- `create_auction_show()`
+- `create_city_event()`
+- `create_safety_alert()`
+- `create_wall_post_reply()`
+- `decrement_treelz_likes()`
+- `decrement_treelz_saves()`
+- `delete_social_link()`
+- `deny_application()`
+- `deny_seat_request()`
+- `distribute_prize()`
+- `distribute_weekly_earnings()`
+- `end_troll_us_round()`
+- `escalate_to_admin()`
+- `expose_bribe()`
+- `generate_weekly_goals()`
+- `increment()`
+- `increment_ad_impressions()`
+- `increment_article_views()`
+- `increment_insurance_trigger()`
+- `increment_task_progress()`
+- `increment_treelz_comments()`
+- `increment_treelz_saves()`
+- `increment_treelz_shares()`
+- `increment_trollmonds()`
+- `log_government_action()`
+- `log_staff_action()`
+- `log_trollmin_action()`
+- `mark_all_notifications_read()`
+- `mark_lot_sold()`
+- `pride_increment_progress()`
+- `pride_track_badge()`
+- `pride_track_gift()`
+- `pride_track_go_live()`
+- `pride_track_invite()`
+- `pride_track_visit()`
+- `record_dna_event()`
+- `record_post_view()`
+- `record_replay_view()`
+- `record_song_play()`
+- `record_treelz_view()`
+- `register_session()`
+- `reject_empire_partner()`
+- `reject_tax_form()`
+- `release_fraud_hold()`
+- `remove_verification()`
+- `reset_app_for_launch()`
+- `resolve_marketplace_dispute()`
+- `review_auctioneer_application()`
+- `review_creator_application()`
+- `review_safety_alert()`
+- `set_active_call_sound()`
+- `sign_lease_for_applicant()`
+- `smokeathon_claim_bonus()`
+- `smokeathon_draw_raffle()`
+- `smokeathon_request_song()`
+- `smokeathon_reward_trivia()`
+- `smokeathon_set_dj()`
+- `smokeathon_trigger_drop()`
+- `start_inmate_call()`
+- `toggle_staff_duty()`
+- `toggle_wall_post_like()`
+- `track_maitalent_promo_event()`
+- `track_watch_time()`
+- `troll_wars_current_week()`
+- `trollmin_grant_pardon()`
+- `upsert_social_link()`
+- `use_trollmin_daily_limit()`
+
+## Validation Checks
+
+### Potential Issues in frontend_schema.sql
+
+- **Duplicate extensions**: 1 extensions appear multiple times
+- **Functions referencing undefined tables**: 652 functions reference tables not in the migration
+  - grant_xp() -> troll_court_cases
+  - grant_xp() -> user_profiles
+  - kick_church_member() -> troll_court_cases
+  - kick_church_member() -> user_profiles
+  - toggle_wall_post_pin() -> troll_wall_posts
+  - toggle_wall_post_pin() -> user_profiles
+  - toggle_wall_post_pin() -> troll_wall_posts
+  - troll_bank_spend_coins() -> user_profiles
+  - troll_bank_spend_coins() -> user_profiles
+  - troll_bank_credit_coins() -> user_profiles
+  - ... and 642 more
+
+### frontend_schema.sql Safety
+
+- All CREATE TABLE statements use `IF NOT EXISTS`
+- All CREATE INDEX statements use `IF NOT EXISTS` (where applicable)
+- All CREATE EXTENSION statements use `IF NOT EXISTS`
+- All CREATE TYPE statements use `IF NOT EXISTS`
+- The migration is **idempotent** - safe to run multiple times
+- RLS policies are included and will be applied
+
+### Recommended Approach
+
+1. Run `frontend_schema.sql` in the new Supabase SQL Editor
+2. Review the "Missing Tables" and "Missing RPCs" sections below
+3. Create missing objects manually in the SQL Editor
+4. Test the frontend connection

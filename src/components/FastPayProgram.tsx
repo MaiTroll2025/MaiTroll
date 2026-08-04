@@ -116,7 +116,7 @@ export default function FastPayProgram({
               <p className="truncate text-sm font-black text-white">
                 {isMaiPayPlus
                   ? 'MAI Pay Plus'
-                  : 'Troll City Cashouts'}
+                  : 'MaiTroll Cashouts'}
               </p>
 
               {!loading && mayCashOut && (
@@ -203,7 +203,7 @@ export default function FastPayProgram({
                     : 'text-cyan-300'
                 )}
               >
-                Troll City Earnings
+                Mai Troll Earnings
               </p>
 
               <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -254,7 +254,7 @@ export default function FastPayProgram({
             icon={<Sparkles className="h-5 w-5" />}
             label="Cashout Fees"
             value="$0"
-            description="Troll City absorbs all payout processing costs."
+            description="Mai Troll absorbs all payout processing costs."
             accentClassName="text-cyan-300"
             iconClassName="bg-cyan-400/10 text-cyan-300"
           />
@@ -322,7 +322,7 @@ export default function FastPayProgram({
               </h3>
 
               <p className="mt-1 text-sm leading-6 text-slate-300">
-                Troll City does not charge users to cash out their earnings.
+                Mai Troll does not charge users to cash out their earnings.
                 The amount shown for the selected cashout tier is the exact
                 amount the user receives.
               </p>

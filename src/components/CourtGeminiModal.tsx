@@ -281,7 +281,7 @@ export default function CourtGeminiModal({ isOpen, onClose, courtId, isAuthorize
         
         {/* Footer */}
         <div className="p-3 bg-zinc-950/50 border-t border-zinc-800 rounded-b-xl text-[10px] text-center text-gray-600 font-mono">
-          AI GENERATED CONTENT • NOT LEGAL ADVICE • TROLL CITY JURISDICTION
+          AI GENERATED CONTENT • NOT LEGAL ADVICE • Mai Troll JURISDICTION
         </div>
       </div>
     </div>

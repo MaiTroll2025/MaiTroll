@@ -1282,7 +1282,7 @@ export default function BetaFeedbackPage() {
           <h1 className="text-2xl font-black tracking-tight text-white">BETA TEST FEEDBACK</h1>
         </div>
         <p className="text-sm text-slate-400">
-          Help us improve Troll City by reporting bugs, sharing suggestions, or telling us what is working well.
+          Help us improve Mai Troll by reporting bugs, sharing suggestions, or telling us what is working well.
         </p>
         <div className="flex items-start gap-2 rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-100">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />

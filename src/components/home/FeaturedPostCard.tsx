@@ -104,7 +104,7 @@ export default function FeaturedPostCard({ post, onClick, variant = 'large' }: F
           </div>
           <div className="min-w-0 flex-1">
             <span className="block truncate text-xs font-bold text-white/90 group-hover:text-white">
-              {post.is_system_generated ? 'Troll City System' : post.username || 'Unknown'}
+              {post.is_system_generated ? 'MaiTroll System' : post.username || 'Unknown'}
             </span>
             <span className="text-[10px] text-white/30">{timeAgo(post.created_at)}</span>
           </div>

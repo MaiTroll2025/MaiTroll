@@ -50,7 +50,7 @@
   <!-- Main Content Area -->
   <rect x="190" y="10" width="600" height="60" rx="30" fill="#1a1a2a" fill-opacity="0.6"/>
   <rect x="195" y="14" width="250" height="52" rx="26" fill="url(#brandGrad)" filter="url(#glow)"/>
-  <text x="220" y="48" font-family="Arial Black" font-size="22" fill="white" font-weight="900">TROLL CITY</text>
+  <text x="220" y="48" font-family="Arial Black" font-size="22" fill="white" font-weight="900">Mai Troll</text>
   
   <!-- Featured Content -->
   <g transform="translate(200, 90)">

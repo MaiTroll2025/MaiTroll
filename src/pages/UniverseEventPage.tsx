@@ -372,7 +372,7 @@ export default function UniverseEventPage() {
                     <Card key={t.id} className="bg-black/40 border-gray-800 hover:border-blue-500/50 transition-colors cursor-pointer group">
                       <CardContent className="p-4 flex items-center justify-between">
                         <div>
-                          <h3 className="font-bold text-white group-hover:text-blue-400 transition-colors">{t.title.replace(/Neon City/i, 'Troll City')}</h3>
+                          <h3 className="font-bold text-white group-hover:text-blue-400 transition-colors">{t.title.replace(/Neon City/i, 'MaiTroll')}</h3>
                           <div className="text-sm text-gray-400 flex gap-4 mt-1">
                             <span>{new Date(t.start_at).toLocaleDateString()}</span>
                             {t.prize_pool && <span className="text-yellow-500/80">Pool: {t.prize_pool}</span>}
@@ -393,7 +393,7 @@ export default function UniverseEventPage() {
                 <div className="grid gap-4">
                   {pastTournaments.map(t => (
                     <div key={t.id} className="flex justify-between items-center p-4 rounded bg-gray-900/30 border border-gray-800 text-gray-500">
-                      <span>{t.title.replace(/Neon City/i, 'Troll City')}</span>
+                      <span>{t.title.replace(/Neon City/i, 'MaiTroll')}</span>
                       <span className="text-sm">Ended {new Date(t.end_at || '').toLocaleDateString()}</span>
                     </div>
                   ))}

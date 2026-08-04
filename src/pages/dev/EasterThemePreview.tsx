@@ -1,7 +1,7 @@
 /**
  * Easter Theme Preview
  *
- * Preview of the Easter holiday theme for Troll City.
+ * Preview of the Easter holiday theme for Mai Troll.
  * Access: /dev/easter-theme-preview
  *
  * Full Easter aesthetic: pastel pink, blue, purple, green backgrounds,
@@ -375,7 +375,7 @@ export default function EasterThemePreview() {
           <div className="space-y-6">
             <div className="text-center mb-4">
               <h2 className="text-xl font-bold mb-1" style={{ color: '#FF69B4' }}>Home Page with Easter Theme</h2>
-              <p className="text-sm" style={{ color: '#999' }}>Pastel spring background replaces the dark Troll City theme</p>
+              <p className="text-sm" style={{ color: '#999' }}>Pastel spring background replaces the dark Mai Troll theme</p>
             </div>
 
             <div className="rounded-3xl overflow-hidden" style={{ border: '2px solid rgba(255,182,193,0.35)', boxShadow: '0 8px 40px rgba(255,105,180,0.15)' }}>
@@ -396,7 +396,7 @@ export default function EasterThemePreview() {
                         🏰
                       </div>
                       <span className="text-lg font-extrabold" style={{ background: 'linear-gradient(135deg, #FF69B4, #9C27B0, #2196F3)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        TrollCity
+                        Mai Troll
                       </span>
                     </div>
                     <div className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: 'rgba(255,105,180,0.15)', color: '#FF69B4', border: '1px solid rgba(255,105,180,0.25)' }}>
@@ -558,7 +558,7 @@ export default function EasterThemePreview() {
                 <h4 className="font-bold text-sm mb-2" style={{ color: '#FF69B4' }}>Theme Design</h4>
                 <p className="text-xs" style={{ color: '#888' }}>
                   Full pastel Easter aesthetic: soft pink, blue, purple &amp; green backgrounds.
-                  Replaces the dark Troll City theme with a spring holiday feel.
+                  Replaces the dark Mai Troll theme with a spring holiday feel.
                 </p>
               </EasterCard>
               <EasterCard glow={EASTER.glowBlue}>
@@ -600,9 +600,9 @@ export default function EasterThemePreview() {
                 </div>
               </EasterCard>
 
-              {/* Troll City Colors */}
+              {/* Mai Troll Colors */}
               <EasterCard>
-                <h3 className="text-lg font-bold mb-4" style={{ color: '#9C27B0' }}>Troll City Base (for comparison)</h3>
+                <h3 className="text-lg font-bold mb-4" style={{ color: '#9C27B0' }}>Mai Troll Base (for comparison)</h3>
                 <div className="space-y-3">
                   <ColorSwatch label="Purple Neon" color="#9333ea" textColor="#4A4A4A" />
                   <ColorSwatch label="Pink Neon" color="#ec4899" textColor="#4A4A4A" />
@@ -620,10 +620,10 @@ export default function EasterThemePreview() {
             <div>
               <h3 className="text-lg font-bold mb-4 text-center" style={{ color: '#4A4A4A' }}>Side-by-Side</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Troll City */}
+                {/* Mai Troll */}
                 <div className="rounded-2xl overflow-hidden" style={{ border: '2px solid rgba(147,51,234,0.3)' }}>
                   <div className="p-3 text-center" style={{ background: 'rgba(147,51,234,0.1)' }}>
-                    <span className="text-sm font-bold" style={{ color: '#9333ea' }}>Default Troll City</span>
+                    <span className="text-sm font-bold" style={{ color: '#9333ea' }}>Default Mai Troll</span>
                   </div>
                   <div className="relative h-48">
                     <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
@@ -672,7 +672,7 @@ export default function EasterThemePreview() {
                   Easter Secondary
                 </button>
                 <button className="px-6 py-2.5 rounded-2xl font-bold text-white text-sm hover:scale-105 transition-transform" style={{ background: 'linear-gradient(135deg, #9333ea, #ec4899, #06b6d4)' }}>
-                  Troll City Primary
+                  Mai Troll Primary
                 </button>
                 <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: 'rgba(255,105,180,0.15)', color: '#FF69B4', border: '1px solid rgba(255,105,180,0.25)' }}>
                   Easter Badge

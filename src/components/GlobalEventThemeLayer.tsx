@@ -7,7 +7,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useGlobalEvent } from '../contexts/GlobalEventContext';
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { MaiTrollTheme } from '../styles/trollCityTheme';
 import type { EventTheme } from '../lib/events/types';
 
 // ============================================================================
@@ -185,9 +185,9 @@ export const useEventTheme = (): UseEventThemeReturn => {
     primaryColor: theme?.primaryColor || '',
     secondaryColor: theme?.secondaryColor || '',
     backgroundAccent: theme?.backgroundAccent || '',
-    textHighlight: theme?.textHighlight || trollCityTheme.text.highlight,
+    textHighlight: theme?.textHighlight || MaiTrollTheme.text.highlight,
     borderAccent: theme?.borderAccent || '',
-    buttonClass: theme?.buttonClass || trollCityTheme.buttons.primary,
+    buttonClass: theme?.buttonClass || MaiTrollTheme.buttons.primary,
     badgeBackground: theme?.badgeBackground || '',
     particleEffect: theme?.particleEffect || 'none',
   };

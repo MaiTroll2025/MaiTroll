@@ -15,7 +15,7 @@ export default function PayoutRequest() {
       const availableCoins = Math.max(0, rawCoins - reservedCoins)
 
       const maiPayUrl = new URL('https://maicorp.online/mai-pay')
-      maiPayUrl.searchParams.set('platform', 'trollcity')
+      maiPayUrl.searchParams.set('platform', 'MaiTroll')
       maiPayUrl.searchParams.set('user_id', user.id)
       maiPayUrl.searchParams.set('available_balance', availableCoins.toString())
 

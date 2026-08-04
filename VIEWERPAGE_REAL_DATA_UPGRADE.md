@@ -1,7 +1,7 @@
 # ViewerPage Real Data Integration - Implementation Complete
 
 ## Overview
-Successfully upgraded Troll City's viewer-side broadcast UI to connect all overlay sections to real data instead of hardcoded/mock data. This maintains passive Mux HLS viewing for viewers while wiring every UI element to live broadcast systems.
+Successfully upgraded Mai Troll's viewer-side broadcast UI to connect all overlay sections to real data instead of hardcoded/mock data. This maintains passive Mux HLS viewing for viewers while wiring every UI element to live broadcast systems.
 
 ## Changes Made
 
@@ -190,7 +190,7 @@ Multiple real-time sources:
 
 ### Why These Hooks?
 - **useStreamTopGifters**: Real-time top supporters is core to broadcast engagement
-- **useQuickBroadcastGifts**: Unique Troll City feature - shows what's trending NOW in this stream
+- **useQuickBroadcastGifts**: Unique Mai Troll feature - shows what's trending NOW in this stream
 - **useLeagueSnapshot**: Future-proofs for league/ranking features, gracefully fallsback if not implemented
 
 ### Fallback Strategy

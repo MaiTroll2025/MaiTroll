@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - COURSE CATALOG
+// Mai Troll ACADEMY - COURSE CATALOG
 // ============================================================
 
 import React, { useEffect, useState } from 'react';

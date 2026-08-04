@@ -86,7 +86,7 @@ function LabelBody({ lot, showName, auctioneerUsername, sale }: ItemBarcodeLabel
           <div className="grid h-7 w-7 place-items-center rounded bg-gradient-to-br from-yellow-300 to-amber-500 text-black">
             <BarcodeIcon className="h-4 w-4" />
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-600">Troll City Auction</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-600">Mai Troll Auction</span>
         </div>
         {sale && (
           <span className="rounded bg-red-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">SOLD</span>

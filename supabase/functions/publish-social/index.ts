@@ -62,7 +62,7 @@ serve(async (req) => {
       
       const postText = selectedCaption 
         ? `${selectedCaption.caption_text}${selectedCaption.hashtags ? '\n\n' + selectedCaption.hashtags : ''}`
-        : "Check out Troll City! https://maitrollcity.com";
+        : "Check out Mai Troll! https://maiMai Troll.com";
 
       const accessToken = account.access_token_encrypted;
       

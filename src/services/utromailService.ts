@@ -10,7 +10,7 @@ import type {
 } from '@/types/mail';
 
 export const UTROMAIL_SYSTEM_SENDER_ID = '00000000-0000-0000-0000-000000000000';
-export const UTROMAIL_SYSTEM_SENDER_MAIL = 'system@tromail.trollcity';
+export const UTROMAIL_SYSTEM_SENDER_MAIL = 'system@tromail.Mai Troll';
 
 // ============================================================
 // ACCOUNTS
@@ -334,7 +334,7 @@ export const sendMessage = async (params: {
       // Create new thread
       const { data: newThread, error: threadError } = await supabase
         .from('utromail_threads')
-        .insert({ subject: params.subject || 'Troll City System', created_by: params.senderId })
+        .insert({ subject: params.subject || 'MaiTroll System', created_by: params.senderId })
         .select('id')
         .single();
       if (threadError) throw threadError;
@@ -359,7 +359,7 @@ export const sendMessage = async (params: {
     // System/broadcast message
     const { data: newThread, error: threadError } = await supabase
       .from('utromail_threads')
-      .insert({ subject: params.subject || 'Troll City System', created_by: params.senderId })
+      .insert({ subject: params.subject || 'MaiTroll System', created_by: params.senderId })
       .select('id')
       .single();
     if (threadError) throw threadError;

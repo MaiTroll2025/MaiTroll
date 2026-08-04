@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - PUBLIC CERTIFICATE VERIFICATION
+// Mai Troll ACADEMY - PUBLIC CERTIFICATE VERIFICATION
 // ============================================================
 
 import React, { useState } from 'react';
@@ -49,7 +49,7 @@ export default function VerifyCertificatePage() {
           <QrCode className="h-8 w-8 text-white" />
         </div>
         <h1 className="mt-4 text-2xl font-black text-white">Certificate Verification</h1>
-        <p className="mt-2 text-sm text-slate-400">Verify Troll City Academy certificates</p>
+        <p className="mt-2 text-sm text-slate-400">Verify Mai Troll Academy certificates</p>
       </div>
 
       {/* Search */}
@@ -88,7 +88,7 @@ export default function VerifyCertificatePage() {
             <CheckCircle className="h-8 w-8 text-emerald-400" />
             <div>
               <h2 className="text-lg font-black text-white">Certificate Verified ✓</h2>
-              <p className="text-xs text-emerald-300">This is a valid Troll City Academy certificate</p>
+              <p className="text-xs text-emerald-300">This is a valid Mai Troll Academy certificate</p>
             </div>
           </div>
 

@@ -106,7 +106,7 @@ export default function ShareAThonSubmit() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Submit Share Proof
             </h1>
-            <p className="text-sm text-gray-400">Share your Troll City stream to external platforms</p>
+            <p className="text-sm text-gray-400">Share your Mai Troll stream to external platforms</p>
           </div>
         </div>
 
@@ -165,7 +165,7 @@ export default function ShareAThonSubmit() {
               className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Paste the link to your shared post/story about Troll City
+              Paste the link to your shared post/story about Mai Troll
             </p>
           </div>
 

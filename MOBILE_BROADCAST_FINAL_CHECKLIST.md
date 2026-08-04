@@ -118,7 +118,7 @@
       • Hardware-accelerated animations
       • No horizontal scrolling on mobile
       • Glow only on active elements
-      • TrollCity colors preserved
+      • Mai Troll colors preserved
     Lines: 526
     Size (minified): ~8KB
 ```
@@ -192,7 +192,7 @@
 
 ### Styling & Branding
 ```
-[✅] TrollCity dark navy base (#06030e)
+[✅] Mai Troll dark navy base (#06030e)
 [✅] Neon purple accents (rgba(167, 139, 250))
 [✅] Neon pink (#ff5adf) used for live badge
 [✅] Glow only on active/selected elements
@@ -523,7 +523,7 @@ Components:        6/6     ✅ Complete
 Styling:           1/1     ✅ Complete
 CSS Integration:   1/1     ✅ Complete
 Documentation:     5/5     ✅ Complete
-Design System:     ✅      TrollCity preserved
+Design System:     ✅      Mai Troll preserved
 Responsive:        ✅      All breakpoints covered
 Accessibility:     ✅      WCAG AA
 Performance:       ✅      Optimized

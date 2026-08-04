@@ -23,10 +23,10 @@ const TEST_PREFIX = 'test_role_check_';
 const TIMESTAMP = Date.now();
 
 const USERS = {
-    HOST: { email: `${TEST_PREFIX}host_${TIMESTAMP}@trollcity.com`, password: 'password123', role: 'user', id: null },
-    MOD: { email: `${TEST_PREFIX}mod_${TIMESTAMP}@trollcity.com`, password: 'password123', role: 'moderator', id: null },
-    USER: { email: `${TEST_PREFIX}user_${TIMESTAMP}@trollcity.com`, password: 'password123', role: 'user', id: null },
-    LISTENER: { email: `${TEST_PREFIX}listener_${TIMESTAMP}@trollcity.com`, password: 'password123', role: 'user', id: null },
+    HOST: { email: `${TEST_PREFIX}host_${TIMESTAMP}@Mai Troll.com`, password: 'password123', role: 'user', id: null },
+    MOD: { email: `${TEST_PREFIX}mod_${TIMESTAMP}@Mai Troll.com`, password: 'password123', role: 'moderator', id: null },
+    USER: { email: `${TEST_PREFIX}user_${TIMESTAMP}@Mai Troll.com`, password: 'password123', role: 'user', id: null },
+    LISTENER: { email: `${TEST_PREFIX}listener_${TIMESTAMP}@Mai Troll.com`, password: 'password123', role: 'user', id: null },
 };
 
 async function cleanup() {

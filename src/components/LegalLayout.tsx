@@ -79,7 +79,7 @@ export default function LegalLayout({ children }: LegalLayoutProps) {
             </div>
 
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300/80">
-              Troll City
+              Mai Troll
             </p>
 
             <h2 className="mt-2 text-xl font-black tracking-tight text-white">

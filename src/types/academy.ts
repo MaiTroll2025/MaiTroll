@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - TYPE DEFINITIONS
+// Mai Troll ACADEMY - TYPE DEFINITIONS
 // ============================================================
 
 export type CourseStatus = 'draft' | 'published' | 'closed' | 'archived' | 'cancelled';

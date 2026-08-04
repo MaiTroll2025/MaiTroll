@@ -1,4 +1,4 @@
-# 📜 Troll City Rules, Fees & Economy Summary
+# 📜 Mai Troll Rules, Fees & Economy Summary
 $1 is 150 coins not 100 coin packs must be the ones in the current coin store with $1.99 for 300 being the smallest so update that coin pack list, fix withdrawl limit
 This document serves as a centralized reference for all financial constants, fees, platform rules, and economic mechanics found in the codebase.
 
@@ -106,7 +106,7 @@ Users can set their own prices for interactions:
 
 ### Family & Community
 *   **Family Structure:** Includes Roles (Leader, Consort, etc.) and Contribution Points.
-*   **Wars/Battles:** Families can engage in battles (e.g., "Troll City Showdown").
+*   **Wars/Battles:** Families can engage in battles (e.g., "Mai Troll Showdown").
 
 ---
 

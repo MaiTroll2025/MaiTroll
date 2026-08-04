@@ -1,4 +1,4 @@
-# Troll City Pre-Launch Scaling Optimization Plan
+# Mai Troll Pre-Launch Scaling Optimization Plan
 
 ## Goal
 

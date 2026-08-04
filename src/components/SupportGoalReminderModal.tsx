@@ -97,7 +97,7 @@ const SupportGoalReminderModal: React.FC<SupportGoalReminderModalProps> = ({
                 <span className="text-[#ff00ff] font-bold">{broadcaster.coins_needed}</span> Troll Coins away from cashing out.
               </p>
               <p className="text-xs text-[#8080a0]">
-                Cashouts are subject to Troll City eligibility and payout rules.
+                Cashouts are subject to Mai Troll eligibility and payout rules.
               </p>
             </div>
             

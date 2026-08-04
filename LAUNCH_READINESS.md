@@ -1,4 +1,4 @@
-# 🚀 TROLL CITY - LAUNCH READINESS CHECKLIST
+# 🚀 Mai Troll - LAUNCH READINESS CHECKLIST
 
 - ✅ Avatar upload
 ### 🪙 Coin Economy System
@@ -154,7 +154,7 @@ Run these SQL files in Supabase SQL Editor (in order):
 - [x] `VITE_SUPABASE_URL`
 - [x] `VITE_SUPABASE_ANON_KEY`
 - [x] `SUPABASE_SERVICE_ROLE_KEY`
-- [x] `VITE_ADMIN_EMAIL=trollcity2025@gmail.com`
+- [x] `VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com`
 - [x] Square API keys
 - [x] Agora API credentials
 
@@ -225,7 +225,7 @@ All critical features implemented and tested:
 
 ## 📞 SUPPORT
 
-**Admin Email:** trollcity2025@gmail.com  
+**Admin Email:** Mai Troll2025@gmail.com  
 **Admin Access:** Automatic role assignment on login  
 **Dashboard:** `/admin`  
 **Risk Management:** `/api/admin/risk/*`

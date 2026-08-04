@@ -10,7 +10,7 @@ import { Progress } from '../components/ui/progress';
 import { AlertTriangle, Home, Car, DollarSign, Activity, ShieldAlert, Building, Gavel, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import HouseUpgrades from '../components/assets/HouseUpgrades';
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { MaiTrollTheme } from '../styles/trollCityTheme';
 
 interface House {
   id: string;
@@ -160,12 +160,12 @@ export default function ActiveAssetsPage() {
   if (loading) return <div className="p-8 text-center">Loading assets...</div>;
 
   return (
-    <div className={`container mx-auto p-4 md:p-8 space-y-8 max-w-7xl min-h-screen ${trollCityTheme.text.primary}`}>
+    <div className={`container mx-auto p-4 md:p-8 space-y-8 max-w-7xl min-h-screen ${MaiTrollTheme.text.primary}`}>
       <div className="flex flex-col gap-2">
-        <h1 className={`text-3xl font-bold ${trollCityTheme.text.gradient}`}>
+        <h1 className={`text-3xl font-bold ${MaiTrollTheme.text.gradient}`}>
           Active Asset Economy
         </h1>
-        <p className={trollCityTheme.text.secondary}>
+        <p className={MaiTrollTheme.text.secondary}>
           Manage your high-value assets. Keep them maintained to avoid penalties and foreclosure.
         </p>
       </div>
@@ -173,7 +173,7 @@ export default function ActiveAssetsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Button 
           variant="outline" 
-          className={`h-24 flex flex-col items-center justify-center gap-2 ${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} hover:border-emerald-500/50 transition-all text-white hover:text-emerald-400`}
+          className={`h-24 flex flex-col items-center justify-center gap-2 ${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} hover:border-emerald-500/50 transition-all text-white hover:text-emerald-400`}
           onClick={() => navigate('/real-estate')}
         >
           <Building className="w-8 h-8 mb-1" />
@@ -181,7 +181,7 @@ export default function ActiveAssetsPage() {
         </Button>
         <Button 
           variant="outline" 
-          className={`h-24 flex flex-col items-center justify-center gap-2 ${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} hover:border-cyan-500/50 transition-all text-white hover:text-cyan-400`}
+          className={`h-24 flex flex-col items-center justify-center gap-2 ${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} hover:border-cyan-500/50 transition-all text-white hover:text-cyan-400`}
           onClick={() => navigate('/ktauto')}
         >
           <Car className="w-8 h-8 mb-1" />
@@ -189,7 +189,7 @@ export default function ActiveAssetsPage() {
         </Button>
         <Button 
           variant="outline" 
-          className={`h-24 flex flex-col items-center justify-center gap-2 ${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} hover:border-purple-500/50 transition-all text-white hover:text-purple-400`}
+          className={`h-24 flex flex-col items-center justify-center gap-2 ${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} hover:border-purple-500/50 transition-all text-white hover:text-purple-400`}
           onClick={() => navigate('/rental-market')}
         >
           <Key className="w-8 h-8 mb-1" />
@@ -197,7 +197,7 @@ export default function ActiveAssetsPage() {
         </Button>
         <Button 
           variant="outline" 
-          className={`h-24 flex flex-col items-center justify-center gap-2 ${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} hover:border-orange-500/50 transition-all text-white hover:text-orange-400`}
+          className={`h-24 flex flex-col items-center justify-center gap-2 ${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} hover:border-orange-500/50 transition-all text-white hover:text-orange-400`}
           onClick={() => navigate('/auctions')}
         >
           <Gavel className="w-8 h-8 mb-1" />
@@ -206,7 +206,7 @@ export default function ActiveAssetsPage() {
       </div>
 
       <Tabs defaultValue="houses" className="w-full">
-        <TabsList className={`${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass} p-1 border`}>
+        <TabsList className={`${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass} p-1 border`}>
           <TabsTrigger value="houses" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 text-slate-400">
             <Home className="w-4 h-4 mr-2" /> Houses ({houses.length})
           </TabsTrigger>
@@ -217,20 +217,20 @@ export default function ActiveAssetsPage() {
 
         <TabsContent value="houses" className="mt-6 space-y-4">
           {houses.length === 0 ? (
-            <div className={`text-center py-12 ${trollCityTheme.backgrounds.glass} rounded-xl border border-dashed border-zinc-700`}>
-              <Home className={`w-12 h-12 mx-auto ${trollCityTheme.text.muted} mb-3`} />
-              <h3 className={`text-lg font-medium ${trollCityTheme.text.secondary}`}>No Houses Owned</h3>
-              <p className={trollCityTheme.text.muted}>Purchase a property to start building your empire.</p>
+            <div className={`text-center py-12 ${MaiTrollTheme.backgrounds.glass} rounded-xl border border-dashed border-zinc-700`}>
+              <Home className={`w-12 h-12 mx-auto ${MaiTrollTheme.text.muted} mb-3`} />
+              <h3 className={`text-lg font-medium ${MaiTrollTheme.text.secondary}`}>No Houses Owned</h3>
+              <p className={MaiTrollTheme.text.muted}>Purchase a property to start building your empire.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {houses.map(house => (
-                <Card key={house.id} className={`${trollCityTheme.components.card} !p-0 overflow-hidden`}>
+                <Card key={house.id} className={`${MaiTrollTheme.components.card} !p-0 overflow-hidden`}>
                   <div className="h-2 bg-gradient-to-r from-emerald-500 to-cyan-500" />
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <Badge variant="outline" className={`mb-2 ${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass} ${trollCityTheme.text.muted}`}>
+                        <Badge variant="outline" className={`mb-2 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass} ${MaiTrollTheme.text.muted}`}>
                           Tier {house.tier} {house.power_band}
                         </Badge>
                         <CardTitle className="text-xl text-white">{house.name}</CardTitle>
@@ -243,7 +243,7 @@ export default function ActiveAssetsPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className={trollCityTheme.text.muted}>Condition</span>
+                        <span className={MaiTrollTheme.text.muted}>Condition</span>
                         <span className={house.condition < 50 ? 'text-red-400' : 'text-emerald-400'}>
                           {house.condition}%
                         </span>
@@ -252,15 +252,15 @@ export default function ActiveAssetsPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className={`${trollCityTheme.backgrounds.glass} p-2 rounded border ${trollCityTheme.borders.glass}`}>
-                        <div className={`${trollCityTheme.text.muted} text-xs mb-1`}>Daily Tax</div>
+                      <div className={`${MaiTrollTheme.backgrounds.glass} p-2 rounded border ${MaiTrollTheme.borders.glass}`}>
+                        <div className={`${MaiTrollTheme.text.muted} text-xs mb-1`}>Daily Tax</div>
                         <div className="font-mono text-red-400 flex items-center">
                           <DollarSign className="w-3 h-3 mr-1" />
                           {calculateDailyCost(house.base_price, house.daily_tax_rate_bps)}
                         </div>
                       </div>
-                      <div className={`${trollCityTheme.backgrounds.glass} p-2 rounded border ${trollCityTheme.borders.glass}`}>
-                        <div className={`${trollCityTheme.text.muted} text-xs mb-1`}>Daily Maint</div>
+                      <div className={`${MaiTrollTheme.backgrounds.glass} p-2 rounded border ${MaiTrollTheme.borders.glass}`}>
+                        <div className={`${MaiTrollTheme.text.muted} text-xs mb-1`}>Daily Maint</div>
                         <div className="font-mono text-red-400 flex items-center">
                           <DollarSign className="w-3 h-3 mr-1" />
                           {calculateDailyCost(house.base_price, house.maintenance_rate_bps)}
@@ -268,7 +268,7 @@ export default function ActiveAssetsPage() {
                       </div>
                     </div>
 
-                    <div className={`flex items-center gap-2 text-xs ${trollCityTheme.text.muted}`}>
+                    <div className={`flex items-center gap-2 text-xs ${MaiTrollTheme.text.muted}`}>
                       <Activity className="w-3 h-3" />
                       <span>Influence: {house.influence_active ? 'Active' : 'Inactive (Delinquent)'}</span>
                     </div>
@@ -285,7 +285,7 @@ export default function ActiveAssetsPage() {
                       </div>
                     )}
 
-                    <div className={`pt-2 border-t ${trollCityTheme.borders.glass}`}>
+                    <div className={`pt-2 border-t ${MaiTrollTheme.borders.glass}`}>
                       <HouseUpgrades userHouseId={house.id} houseStatus={house.status} />
                     </div>
                   </CardContent>
@@ -297,15 +297,15 @@ export default function ActiveAssetsPage() {
 
         <TabsContent value="cars" className="mt-6 space-y-4">
            {cars.length === 0 ? (
-            <div className={`text-center py-12 ${trollCityTheme.backgrounds.glass} rounded-xl border border-dashed border-zinc-700`}>
-              <Car className={`w-12 h-12 mx-auto ${trollCityTheme.text.muted} mb-3`} />
-              <h3 className={`text-lg font-medium ${trollCityTheme.text.secondary}`}>No Active Cars</h3>
-              <p className={trollCityTheme.text.muted}>Visit the dealership to buy a vehicle.</p>
+            <div className={`text-center py-12 ${MaiTrollTheme.backgrounds.glass} rounded-xl border border-dashed border-zinc-700`}>
+              <Car className={`w-12 h-12 mx-auto ${MaiTrollTheme.text.muted} mb-3`} />
+              <h3 className={`text-lg font-medium ${MaiTrollTheme.text.secondary}`}>No Active Cars</h3>
+              <p className={MaiTrollTheme.text.muted}>Visit the dealership to buy a vehicle.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {cars.map(car => (
-                <Card key={car.id} className={`${trollCityTheme.components.card} !p-0 overflow-hidden`}>
+                <Card key={car.id} className={`${MaiTrollTheme.components.card} !p-0 overflow-hidden`}>
                   <div className="h-2 bg-gradient-to-r from-cyan-500 to-blue-500" />
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
@@ -314,7 +314,7 @@ export default function ActiveAssetsPage() {
                           <img src={car.image_url} alt={car.name} className="w-12 h-12 object-contain rounded bg-black/50" />
                         )}
                         <div>
-                          <Badge variant="outline" className={`mb-1 ${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass} ${trollCityTheme.text.muted}`}>
+                          <Badge variant="outline" className={`mb-1 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass} ${MaiTrollTheme.text.muted}`}>
                             Tier {car.tier}
                           </Badge>
                           <CardTitle className="text-lg text-white">{car.name}</CardTitle>
@@ -328,7 +328,7 @@ export default function ActiveAssetsPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className={trollCityTheme.text.muted}>Condition</span>
+                        <span className={MaiTrollTheme.text.muted}>Condition</span>
                         <span className={car.condition < 50 ? 'text-red-400' : 'text-emerald-400'}>
                           {car.condition}%
                         </span>
@@ -337,15 +337,15 @@ export default function ActiveAssetsPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className={`${trollCityTheme.backgrounds.glass} p-2 rounded border ${trollCityTheme.borders.glass}`}>
-                        <div className={`${trollCityTheme.text.muted} text-xs mb-1`}>Daily Insurance</div>
+                      <div className={`${MaiTrollTheme.backgrounds.glass} p-2 rounded border ${MaiTrollTheme.borders.glass}`}>
+                        <div className={`${MaiTrollTheme.text.muted} text-xs mb-1`}>Daily Insurance</div>
                         <div className="font-mono text-red-400 flex items-center">
                           <DollarSign className="w-3 h-3 mr-1" />
                           {calculateDailyCost(car.base_price, car.insurance_rate_bps)}
                         </div>
                       </div>
-                      <div className={`${trollCityTheme.backgrounds.glass} p-2 rounded border ${trollCityTheme.borders.glass}`}>
-                        <div className={`${trollCityTheme.text.muted} text-xs mb-1`}>Exposure Level</div>
+                      <div className={`${MaiTrollTheme.backgrounds.glass} p-2 rounded border ${MaiTrollTheme.borders.glass}`}>
+                        <div className={`${MaiTrollTheme.text.muted} text-xs mb-1`}>Exposure Level</div>
                         <div className="font-mono text-blue-400 flex items-center">
                           <ShieldAlert className="w-3 h-3 mr-1" />
                           {car.exposure_level}/4
@@ -354,8 +354,8 @@ export default function ActiveAssetsPage() {
                     </div>
 
                     {car.plate_number && (
-                      <div className={`flex justify-between items-center text-xs ${trollCityTheme.backgrounds.glass} p-2 rounded border ${trollCityTheme.borders.glass}`}>
-                        <span className={`${trollCityTheme.text.muted} uppercase tracking-wider`}>Plate</span>
+                      <div className={`flex justify-between items-center text-xs ${MaiTrollTheme.backgrounds.glass} p-2 rounded border ${MaiTrollTheme.borders.glass}`}>
+                        <span className={`${MaiTrollTheme.text.muted} uppercase tracking-wider`}>Plate</span>
                         <span className="font-mono text-yellow-500 font-bold">{car.plate_number}</span>
                       </div>
                     )}

@@ -41,14 +41,14 @@ const RESOURCES: ResourceItem[] = [
   {
     id: 'staff-code-of-conduct',
     title: 'Staff Code of Conduct',
-    description: 'The official code of conduct for all Troll City staff and role holders.',
+    description: 'The official code of conduct for all Mai Troll staff and role holders.',
     icon: BookOpen,
     category: 'Conduct',
   },
   {
     id: 'creator-agency-onboarding',
     title: 'Creator/Agency Onboarding',
-    description: 'Step-by-step guide for joining or creating an agency on Troll City.',
+    description: 'Step-by-step guide for joining or creating an agency on Mai Troll.',
     icon: UserPlus,
     category: 'Onboarding',
   },
@@ -72,7 +72,7 @@ const RESOURCE_CONTENT: Record<string, string[]> = {
   'role-expectations': [
     'Fulfill the duties outlined in your role description on the Jobs page.',
     'Maintain regular availability as expected by your department or agency.',
-    'Follow all Troll City rules, safety guidelines, and code of conduct.',
+    'Follow all Mai Troll rules, safety guidelines, and code of conduct.',
     'Participate in required training, meetings, or briefings.',
     'Escalate issues to HR/Admin when they exceed your authority.',
   ],
@@ -91,18 +91,18 @@ const RESOURCE_CONTENT: Record<string, string[]> = {
     'Excessive unapproved absences may affect your role status.',
   ],
   'free-agency-rules': [
-    'Agencies operate under the oversight of Agency HR Managers and Troll City Admin.',
+    'Agencies operate under the oversight of Agency HR Managers and Mai Troll Admin.',
     'Agency fees and platform fees are set in agency settings and contracts.',
     'Creators are free to leave agencies according to their contract terms.',
-    'Disputes between creators and agencies are mediated by Agency HR or Troll City Admin.',
-    'All agency operations must comply with Troll City platform rules.',
+    'Disputes between creators and agencies are mediated by Agency HR or Mai Troll Admin.',
+    'All agency operations must comply with Mai Troll platform rules.',
   ],
   'staff-code-of-conduct': [
     'Treat all users, colleagues, and community members with respect.',
     'Do not abuse role powers, moderation tools, or access privileges.',
     'Maintain confidentiality of sensitive information encountered in your role.',
     'Report violations, concerns, or conflicts of interest to HR.',
-    'Represent Troll City with integrity in all official interactions.',
+    'Represent Mai Troll with integrity in all official interactions.',
   ],
   'creator-agency-onboarding': [
     'Apply to an agency through the Agencies page or receive an invitation from an Agency Leader.',
@@ -119,10 +119,10 @@ const RESOURCE_CONTENT: Record<string, string[]> = {
     'For emergencies or urgent safety concerns, use the in-platform emergency report tools.',
   ],
   'tromail': [
-    'TrolMail is Troll City\'s internal email and communication system for approved role holders.',
+    'TrolMail is Mai Troll\'s internal email and communication system for approved role holders.',
     'Access TrolMail at /utromail or /tromail to send messages, create calendar events, and schedule team meetings.',
     'HR managers can use TrolMail to communicate with staff, send notices, and coordinate role-related matters.',
-    'All TrolMail messages are internal to Troll City and are not accessible to regular users without approved roles.',
+    'All TrolMail messages are internal to Mai Troll and are not accessible to regular users without approved roles.',
     'Use TrolMail for official HR communication — do not share sensitive HR information through public channels.',
   ],
   'reporting-issues': [

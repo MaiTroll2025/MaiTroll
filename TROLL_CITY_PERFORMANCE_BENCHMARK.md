@@ -1,4 +1,4 @@
-# Troll City Performance Benchmark
+# Mai Troll Performance Benchmark
 
 **Date:** 2026-06-14
 **Version:** 3.0
@@ -198,14 +198,14 @@ Open browser DevTools Console:
 
 ```js
 // Record baseline (before opening stream)
-const baseline = { ...window.__TROLLCITY_SUPABASE_REALTIME_DEBUG__ };
+const baseline = { ...window.__Mai Troll_SUPABASE_REALTIME_DEBUG__ };
 console.log('Baseline:', baseline);
 
 // Open a stream, wait 10s, then:
-console.log('During stream:', window.__TROLLCITY_SUPABASE_REALTIME_DEBUG__);
+console.log('During stream:', window.__Mai Troll_SUPABASE_REALTIME_DEBUG__);
 
 // Close stream, wait 10s, then:
-console.log('After close:', window.__TROLLCITY_SUPABASE_REALTIME_DEBUG__);
+console.log('After close:', window.__Mai Troll_SUPABASE_REALTIME_DEBUG__);
 ```
 
 ### Results
@@ -532,7 +532,7 @@ At 10k users the question becomes: **how much does each user cost?**
 
 ## Most Important Success Criteria
 
-For Troll City specifically, these eight KPIs determine whether the optimization project succeeded:
+For Mai Troll specifically, these eight KPIs determine whether the optimization project succeeded:
 
 | # | KPI | Before | After | Target | Status |
 |---|---|---|---|---|---|
@@ -575,7 +575,7 @@ See `SCALABILITY_REFACTOR_V3.md` for full details.
 ## Notes
 
 - Reset `pg_stat_statements` before each test: `SELECT pg_stat_statements_reset();`
-- Use `window.__TROLLCITY_SUPABASE_REALTIME_DEBUG__` for all browser channel tests
+- Use `window.__Mai Troll_SUPABASE_REALTIME_DEBUG__` for all browser channel tests
 - Always wait 30s after state changes before recording (let things stabilize)
 - Run each test 3 times and average for accuracy
 - For LiveKit metrics, use the LiveKit Server Dashboard or `lk cli` tools

@@ -1,7 +1,7 @@
 # Frontend Performance Audit
 
 Date: 2026-06-01
-Scope: polling, visibility guards, and heavy Three.js/gift effect controls in the TrollCity frontend.
+Scope: polling, visibility guards, and heavy Three.js/gift effect controls in the Mai Troll frontend.
 
 ## Summary
 

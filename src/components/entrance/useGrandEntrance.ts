@@ -311,7 +311,7 @@ export function useGrandEntrance(): GrandEntranceState {
             setTitleVisible(true)
             setSubtitleVisible(true)
             setAnnounce(
-              'Welcome to MaiTrollCity.com, the very first virtual broadcasting city.'
+              'Welcome to MaiMai Troll.com, the very first virtual broadcasting city.'
             )
             setShowEnter(true)
           }],
@@ -332,7 +332,7 @@ export function useGrandEntrance(): GrandEntranceState {
           [T_NORMAL.subtitle, () => {
             setSubtitleVisible(true)
             setAnnounce(
-              'Welcome to MaiTrollCity.com, the very first virtual broadcasting city.'
+              'Welcome to MaiMai Troll.com, the very first virtual broadcasting city.'
             )
           }],
           [T_NORMAL.ribbon, () => setRibbonVisible(true)],

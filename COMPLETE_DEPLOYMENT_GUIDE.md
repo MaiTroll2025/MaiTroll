@@ -1,4 +1,4 @@
-# 🚀 COMPLETE DEPLOYMENT GUIDE - TROLLCITY2
+# 🚀 COMPLETE DEPLOYMENT GUIDE - Mai Troll2
 
 **Date:** 2025-12-09  
 **Status:** READY FOR DEPLOYMENT
@@ -60,7 +60,7 @@ SELECT COUNT(*) as earnings_records FROM broadcaster_earnings;
 
 ```bash
 # Navigate to project directory
-cd /path/to/trollcity-1
+cd /path/to/Mai Troll-1
 
 # Deploy all PayPal functions
 npx supabase functions deploy paypal-create-order
@@ -179,7 +179,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_ADMIN_EMAIL=trollcity2025@gmail.com
+VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com
 VITE_API_URL=http://localhost:3001  # or production URL
 VITE_PAYPAL_CLIENT_ID=your_paypal_client_id
 ```
@@ -337,7 +337,7 @@ npm run build
 
 ## 📞 SUPPORT
 
-**Admin Email:** trollcity2025@gmail.com  
+**Admin Email:** Mai Troll2025@gmail.com  
 **Dashboard:** `/admin`  
 **Documentation:** This guide covers all deployment steps
 

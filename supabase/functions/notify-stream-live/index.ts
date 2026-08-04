@@ -148,7 +148,7 @@ serve(async (req) => {
 
     if (vapidPublicKey && vapidPrivateKey) {
       webPush.setVapidDetails(
-        'mailto:admin@trollcity.com',
+        'mailto:admin@Mai Troll.com',
         vapidPublicKey,
         vapidPrivateKey
       );

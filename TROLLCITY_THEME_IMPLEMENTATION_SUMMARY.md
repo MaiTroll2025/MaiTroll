@@ -1,9 +1,9 @@
-# TrollCity Theme & Features Implementation Summary
+# Mai Troll Theme & Features Implementation Summary
 
 ## ✅ Completed Changes
 
 ### 1. Global Theme System
-- **File**: `src/styles/trollCityTheme.ts`
+- **File**: `src/styles/Mai TrollTheme.ts`
 - Created comprehensive theme configuration with:
   - Background gradients (slate-950 → slate-900)
   - Glass morphism effects (backdrop-blur-xl, white/5)
@@ -38,7 +38,7 @@
   - Filters: All, Gaming, IRL, Music
   - Hover animations with play overlay
   - Stats: viewer count, time live, streamer level
-  - Full TrollCity theme integration
+  - Full Mai Troll theme integration
   - Floating particle effects
   - Responsive grid (1-4 columns)
 
@@ -73,7 +73,7 @@
 4. Exit Page - Branded logout experience
 
 ### 📋 Pages Ready for Theme Application
-The following pages should apply `trollCityTheme` from `src/styles/trollCityTheme.ts`:
+The following pages should apply `Mai TrollTheme` from `src/styles/Mai TrollTheme.ts`:
 
 **Game Pages:**
 - Car Dealership (`src/pages/game/CarDealershipPage.tsx`)
@@ -90,7 +90,7 @@ The following pages should apply `trollCityTheme` from `src/styles/trollCityThem
 **Social:**
 - Messages (`src/pages/Messages.tsx`)
 - Following (`src/pages/Following.tsx`)
-- Troll City Wall (`src/pages/TrollCityWall.tsx`)
+- Mai Troll Wall (`src/pages/Mai TrollWall.tsx`)
 
 **Admin & Management:**
 - Admin Dashboard (all admin pages)
@@ -311,22 +311,22 @@ Storm:
 ### To Apply Theme to Any Page:
 
 ```typescript
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { Mai TrollTheme } from '../styles/Mai TrollTheme';
 
 // Background
-<div className={trollCityTheme.backgrounds.primary}>
+<div className={Mai TrollTheme.backgrounds.primary}>
   {/* Overlays */}
-  <div className={trollCityTheme.overlays.radialPurple} />
-  <div className={trollCityTheme.overlays.radialPink} />
-  <div className={trollCityTheme.overlays.radialCyan} />
+  <div className={Mai TrollTheme.overlays.radialPurple} />
+  <div className={Mai TrollTheme.overlays.radialPink} />
+  <div className={Mai TrollTheme.overlays.radialCyan} />
   
   {/* Card */}
-  <div className={trollCityTheme.components.card}>
-    <h2 className={trollCityTheme.text.gradient}>Title</h2>
-    <p className={trollCityTheme.text.secondary}>Description</p>
+  <div className={Mai TrollTheme.components.card}>
+    <h2 className={Mai TrollTheme.text.gradient}>Title</h2>
+    <p className={Mai TrollTheme.text.secondary}>Description</p>
     
     {/* Button */}
-    <button className={trollCityTheme.components.buttonPrimary}>
+    <button className={Mai TrollTheme.components.buttonPrimary}>
       Action
     </button>
   </div>
@@ -372,7 +372,7 @@ Add to profiles table:
 
 ## 🔧 Next Steps
 
-1. **Apply Theme Globally**: Update remaining pages with `trollCityTheme`
+1. **Apply Theme Globally**: Update remaining pages with `Mai TrollTheme`
 2. **Enhance Driving Scene**: Implement realistic features per plan above
 3. **Test Performance**: Ensure smooth experience on mobile
 4. **Gather Assets**: Collect/create 3D models, textures, sounds

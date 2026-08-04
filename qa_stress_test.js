@@ -1,4 +1,4 @@
-// Troll City QA Stress Test Script
+// Mai Troll QA Stress Test Script
 // Simulates 20 concurrent users across all roles
 
 import { createClient } from '@supabase/supabase-js';
@@ -8,8 +8,8 @@ import axios from 'axios';
 const config = {
   supabaseUrl: 'https://yjxpwfalenorzrqxwmtr.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeHB3ZmFsZW5vcnpycXh3bXRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjkxMTcsImV4cCI6MjA3OTYwNTExN30.S5Vc1xpZoZ0aemtNFJGcPhL_zvgPA0qgZq8e8KigUx8',
-  loadTestSecret: 'trollcity_load_test_2026',
-  baseUrl: 'https://maitrollcity.com',
+  loadTestSecret: 'Mai Troll_load_test_2026',
+  baseUrl: 'https://maiMai Troll.com',
   concurrentUsers: 20,
   testDuration: 300000,
   apiTimeout: 10000
@@ -42,7 +42,7 @@ function randomChoice(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-class TrollCityQAStressTest {
+class Mai TrollQAStressTest {
   constructor() {
     this.supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
     this.testUsers = [];
@@ -70,7 +70,7 @@ class TrollCityQAStressTest {
       for (let i = 0; i < count; i++) {
         const testUser = {
           id: randomId(),
-          email: `qa_test_${role}_${userIndex}@trollcity.test`,
+          email: `qa_test_${role}_${userIndex}@Mai Troll.test`,
           password: 'Test123456!',
           role: role,
           profile: {
@@ -421,7 +421,7 @@ class TrollCityQAStressTest {
     
     console.log('\n');
     console.log('╔════════════════════════════════════════════════════════════════════╗');
-    console.log('║           TROLL CITY PLATFORM - QA STRESS TEST REPORT             ║');
+    console.log('║           Mai Troll PLATFORM - QA STRESS TEST REPORT             ║');
     console.log('╚════════════════════════════════════════════════════════════════════╝');
     
     // Test Summary
@@ -572,7 +572,7 @@ class TrollCityQAStressTest {
 
   async run() {
     console.log('╔════════════════════════════════════════════════════════════════════╗');
-    console.log('║       TROLL CITY PLATFORM - COMPREHENSIVE QA STRESS TEST          ║');
+    console.log('║       Mai Troll PLATFORM - COMPREHENSIVE QA STRESS TEST          ║');
     console.log('║                  20 Concurrent Users Simulation                    ║');
     console.log('╚════════════════════════════════════════════════════════════════════╝\n');
     
@@ -600,5 +600,5 @@ class TrollCityQAStressTest {
 }
 
 // Run the test
-const test = new TrollCityQAStressTest();
+const test = new Mai TrollQAStressTest();
 test.run();

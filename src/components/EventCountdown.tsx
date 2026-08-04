@@ -112,7 +112,7 @@ const EventCountdown: React.FC = React.memo(() => {
     >
       <div className="absolute inset-0 bg-white/5 animate-pulse" />
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="banner-rgb-title">Troll City</div>
+        <div className="banner-rgb-title">Mai Troll</div>
       </div>
       
       <div className="max-w-7xl mx-auto px-4 py-2 sm:py-3 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 relative z-10">

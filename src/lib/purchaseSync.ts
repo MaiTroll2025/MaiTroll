@@ -22,9 +22,9 @@ import { useAuthStore } from './store';
 export async function syncCarPurchase(userId: string) {
   try {
     // 1. Clear old LocalStorage caches immediately
-    localStorage.removeItem(`trollcity_car_${userId}`);
-    localStorage.removeItem(`trollcity_owned_vehicles_${userId}`);
-    localStorage.removeItem(`trollcity_car_insurance_${userId}`);
+    localStorage.removeItem(`MaiTroll_car_${userId}`);
+    localStorage.removeItem(`MaiTroll_owned_vehicles_${userId}`);
+    localStorage.removeItem(`MaiTroll_car_insurance_${userId}`);
 
     // 2. Fetch fresh vehicles from new TMV system
     const { data: userVehicles, error } = await supabase
@@ -61,7 +61,7 @@ export async function syncCarPurchase(userId: string) {
     // 5. Broadcast to other tabs/windows using BroadcastChannel API
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
-        const channel = new BroadcastChannel('trollcity_purchases');
+        const channel = new BroadcastChannel('MaiTroll_purchases');
         channel.postMessage({
           type: 'CAR_PURCHASED',
           userId,
@@ -87,7 +87,7 @@ export async function syncPropertyPurchase(userId: string) {
     // 1. Broadcast to other tabs/windows
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
-        const channel = new BroadcastChannel('trollcity_purchases');
+        const channel = new BroadcastChannel('MaiTroll_purchases');
         channel.postMessage({
           type: 'property_purchased',
           userId,
@@ -149,7 +149,7 @@ export function listenForPurchaseBroadcasts(callback: (data: any) => void) {
     return () => {};
   }
 
-  const channel = new BroadcastChannel('trollcity_purchases');
+  const channel = new BroadcastChannel('MaiTroll_purchases');
   
   const handler = (event: MessageEvent) => {
     callback(event.data);

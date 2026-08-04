@@ -416,7 +416,7 @@ const ONBOARDING_DOCUMENTS: DocumentTemplate[] = [
     category: 'Training',
     required: true,
     description:
-      'Required training for the employee’s assigned Troll City role.',
+      'Required training for the employee’s assigned Mai Troll role.',
   },
   {
     key: 'harassment_policy',
@@ -2513,7 +2513,7 @@ function PayrollSection({
               TC Payroll Readiness
             </h2>
             <p className="mt-1 text-xs leading-5 text-slate-400">
-              This area tracks what Troll City has collected. It does
+              This area tracks what Mai Troll has collected. It does
               not claim that an employee is enrolled in TC until
               a provider employee ID or confirmed integration status
               is recorded.

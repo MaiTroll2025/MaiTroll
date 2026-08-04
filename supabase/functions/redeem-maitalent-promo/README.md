@@ -1,6 +1,6 @@
-# Troll City Promo Redemption API Contract
+# Mai Troll Promo Redemption API Contract
 
-This document describes the contract MaiTalent.fun should use to redeem Troll City promo cards.
+This document describes the contract MaiTalent.fun should use to redeem Mai Troll promo cards.
 
 ## Recommended endpoint
 
@@ -12,7 +12,7 @@ This document describes the contract MaiTalent.fun should use to redeem Troll Ci
 
 MaiTalent.fun should call this single atomic endpoint to:
 
-1. validate that the promo code is a valid Troll City code,
+1. validate that the promo code is a valid Mai Troll code,
 2. verify that the code is signed and untampered,
 3. verify that the code is not expired,
 4. verify that the code has not already been redeemed,
@@ -25,7 +25,7 @@ This endpoint must be the only redemption call used by MaiTalent.fun to prevent 
 
 - `Content-Type: application/json`
 - `Authorization: Bearer <TROLL_CITY_SERVICE_TOKEN>`
-  - This token must be issued by Troll City and accepted by the Troll City redemption endpoint.
+  - This token must be issued by Mai Troll and accepted by the Mai Troll redemption endpoint.
   - It may also be implemented as an API key header such as `x-api-key: <TROLL_CITY_API_KEY>` if agreed.
 - `X-Client-Platform: maitalent.fun` (recommended for audit/logging)
 
@@ -43,7 +43,7 @@ This endpoint must be the only redemption call used by MaiTalent.fun to prevent 
 
 ### Field definitions
 
-- `code` (string, required): the promo card code issued by Troll City.
+- `code` (string, required): the promo card code issued by Mai Troll.
 - `requestor.platform` (string, optional but recommended): the caller platform, e.g. `maitalent.fun`.
 - `requestor.accountId` (string, optional): the MaiTalent.fun user identifier for logging and reconciliation.
 
@@ -65,9 +65,9 @@ This endpoint must be the only redemption call used by MaiTalent.fun to prevent 
 - `success` (boolean): always `true` for a successful redemption.
 - `code` (string): the promo code that was redeemed.
 - `tokenAmount` (number): the exact token amount MaiTalent.fun should trust and credit.
-- `promoId` (string): Troll City’s internal promo card identifier or UUID.
+- `promoId` (string): Mai Troll’s internal promo card identifier or UUID.
 - `status` (string): should be `redeemed` on success.
-- `redeemedAt` (string): ISO timestamp when Troll City marked the code redeemed.
+- `redeemedAt` (string): ISO timestamp when Mai Troll marked the code redeemed.
 
 ## Error response format
 
@@ -92,7 +92,7 @@ This endpoint must be the only redemption call used by MaiTalent.fun to prevent 
 | `EXPIRED_CODE` | The promo card has expired. |
 | `ALREADY_REDEEMED` | The promo card was already redeemed. |
 | `INVALID_CODE` | The provided promo code is invalid or malformed. |
-| `REVOKED_CODE` | The promo code was revoked by Troll City. |
+| `REVOKED_CODE` | The promo code was revoked by Mai Troll. |
 | `DAILY_CAP_EXCEEDED` | The user exceeded their daily token cap before redemption. |
 | `UNAUTHORIZED` | Missing or invalid auth token. |
 | `INVALID_REQUEST` | Request body or fields are invalid. |
@@ -101,14 +101,14 @@ This endpoint must be the only redemption call used by MaiTalent.fun to prevent 
 
 ## Signature / HMAC validation method
 
-Troll City promo cards must be secured by a signature mechanism so MaiTalent.fun can trust the returned token amount.
+Mai Troll promo cards must be secured by a signature mechanism so MaiTalent.fun can trust the returned token amount.
 
 ### Recommended security model
 
 1. Each promo card contains a signed payload or a signed token.
-2. Troll City signs the promo card with a server-side secret using HMAC-SHA256.
+2. Mai Troll signs the promo card with a server-side secret using HMAC-SHA256.
 3. The redemption endpoint validates the signature before processing.
-4. MaiTalent.fun does not need to verify the signature itself; it relies on Troll City’s authenticated endpoint.
+4. MaiTalent.fun does not need to verify the signature itself; it relies on Mai Troll’s authenticated endpoint.
 
 ### Example signed payload
 
@@ -118,12 +118,12 @@ Troll City promo cards must be secured by a signature mechanism so MaiTalent.fun
 - `issued_at`: `2026-07-03T12:00:00.000Z`
 - `signature`: `base64url(hmac_sha256(secret, payload))`
 
-### Required environment variables for Troll City
+### Required environment variables for Mai Troll
 
 - `SUPABASE_URL`: Supabase project URL.
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key for atomic redemption transactions.
-- `TROLLCITY_PROMO_SIGNING_SECRET`: secret used to generate/verify promo card signatures.
-- `TROLLCITY_PROMO_API_KEY` or `TROLLCITY_SERVICE_TOKEN`: token used by MaiTalent.fun for endpoint authentication.
+- `Mai Troll_PROMO_SIGNING_SECRET`: secret used to generate/verify promo card signatures.
+- `Mai Troll_PROMO_API_KEY` or `Mai Troll_SERVICE_TOKEN`: token used by MaiTalent.fun for endpoint authentication.
 
 ## Example valid request
 
@@ -219,7 +219,7 @@ X-Client-Platform: maitalent.fun
 ## Fields MaiTalent.fun should store
 
 - `promoCode` or `code`
-- `promoId` (Troll City internal promo record id)
+- `promoId` (Mai Troll internal promo record id)
 - `tokenAmount`
 - `redeemedAt`
 - `status` (`redeemed`)
@@ -244,4 +244,4 @@ Use:
 - success returns `tokenAmount`
 - error returns machine-readable `code`
 
-MaiTalent.fun must treat this endpoint as the single source of truth for all Troll City promo card redemptions.
+MaiTalent.fun must treat this endpoint as the single source of truth for all Mai Troll promo card redemptions.

@@ -20,7 +20,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 
 async function addTestCoins() {
   try {
-    const adminEmail = 'trollcity2025@gmail.com'
+    const adminEmail = 'Mai Troll2025@gmail.com'
     
     // Find admin user
     const { data: authUser, error: authError } = await supabase.auth.admin.listUsers()

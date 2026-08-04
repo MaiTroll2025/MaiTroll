@@ -48,7 +48,7 @@ async function runFlightChecks() {
       if (s.hls_url && (s.hls_url.includes('supabase.co') || s.hls_url.includes('supabase.in'))) {
         console.error(`❌ BAD URL FOUND: Stream ${s.id} -> ${s.hls_url}`);
         badUrls++;
-      } else if (s.hls_url && s.hls_url.includes('cdn.maitrollcity.com')) {
+      } else if (s.hls_url && s.hls_url.includes('cdn.maiMai Troll.com')) {
         console.log(`✅ Good CDN URL: Stream ${s.id} -> ${s.hls_url}`);
       } else if (!s.hls_url) {
          console.log(`ℹ️  No HLS URL for Stream ${s.id}`);

@@ -19,15 +19,15 @@ export default function SafetyGuidelines() {
 
         <h2>Our Commitment to Safety</h2>
         <p>
-          Troll City is committed to providing a safe, respectful, and enjoyable
+          Mai Troll is committed to providing a safe, respectful, and enjoyable
           environment for users, creators, broadcasters, staff, and community
           members. These guidelines explain what behavior is allowed, what is not
-          allowed, and how Troll City may respond when rules are violated.
+          allowed, and how Mai Troll may respond when rules are violated.
         </p>
 
         <h2>1. Prohibited Content and Behavior</h2>
         <p>
-          The following are not allowed on Troll City and may result in immediate
+          The following are not allowed on Mai Troll and may result in immediate
           action:
         </p>
 
@@ -60,7 +60,7 @@ export default function SafetyGuidelines() {
           </li>
           <li>
             <strong>Impersonation:</strong> Pretending to be another user, staff
-            member, admin, public figure, or official Troll City representative.
+            member, admin, public figure, or official Mai Troll representative.
           </li>
           <li>
             <strong>Spam and Platform Abuse:</strong> Repetitive messages,
@@ -79,7 +79,7 @@ export default function SafetyGuidelines() {
 
         <h2>2. Moderation System</h2>
         <p>
-          Troll City uses a human review and staff-based moderation system to keep
+          Mai Troll uses a human review and staff-based moderation system to keep
           the platform safe. Reports and safety concerns may be reviewed by trained
           staff, Troll Officers, BroadOfficers, secretaries, administrators, or
           other authorized platform roles.
@@ -112,7 +112,7 @@ export default function SafetyGuidelines() {
         <h2>3. Reporting Violations</h2>
         <p>
           If you see content or behavior that violates these guidelines, use the
-          available reporting tools inside Troll City.
+          available reporting tools inside Mai Troll.
         </p>
 
         <ol>
@@ -126,20 +126,20 @@ export default function SafetyGuidelines() {
             administrators.
           </li>
           <li>
-            Troll City may take action based on the severity of the violation and
+            Mai Troll may take action based on the severity of the violation and
             the available evidence.
           </li>
         </ol>
 
         <p>
-          <strong>Emergency Situations:</strong> Troll City is not an emergency
+          <strong>Emergency Situations:</strong> Mai Troll is not an emergency
           service. If you or someone else is in immediate danger, contact local
           emergency services immediately. In the United States, call 911.
         </p>
 
         <h2>4. Enforcement Actions</h2>
         <p>
-          Depending on the violation, Troll City may take one or more of the
+          Depending on the violation, Mai Troll may take one or more of the
           following actions:
         </p>
 
@@ -192,7 +192,7 @@ export default function SafetyGuidelines() {
           <li>Include any relevant evidence, context, screenshots, or timestamps.</li>
           <li>Appeals may be reviewed by authorized staff or administrators.</li>
           <li>
-            Troll City may uphold, reduce, modify, or reverse the action depending
+            Mai Troll may uphold, reduce, modify, or reverse the action depending
             on the review.
           </li>
         </ol>
@@ -253,15 +253,15 @@ export default function SafetyGuidelines() {
 
         <h2>9. Age Requirements</h2>
         <p>
-          Troll City is intended for users 16 years and older. Users under 18 must
+          Mai Troll is intended for users 16 years and older. Users under 18 must
           have permission from a parent or legal guardian. We do not knowingly allow
-          users under 16 to use Troll City. If Troll City discovers that an account
+          users under 16 to use Mai Troll. If Mai Troll discovers that an account
           belongs to an underage user, the account may be restricted or terminated.
         </p>
 
         <h2>10. Coins, Payouts, and Abuse</h2>
         <p>
-          Troll City coins, gifts, subscriptions, cashouts, and payout features must
+          Mai Troll coins, gifts, subscriptions, cashouts, and payout features must
           be used honestly. Users may not manipulate transactions, create fake
           activity, abuse refunds, exploit payout rules, or attempt to bypass
           platform systems.
@@ -279,15 +279,15 @@ export default function SafetyGuidelines() {
 
         <h2>11. Updates to Guidelines</h2>
         <p>
-          These guidelines may be updated as Troll City changes, grows, or adds new
-          features. Continued use of Troll City after updates means you accept the
+          These guidelines may be updated as Mai Troll changes, grows, or adds new
+          features. Continued use of Mai Troll after updates means you accept the
           revised guidelines.
         </p>
 
         <h2>12. Contact</h2>
         <p>
           For safety concerns, reporting violations, appeals, or questions about
-          these guidelines, contact Troll City support through the in-app support
+          these guidelines, contact Mai Troll support through the in-app support
           system.
         </p>
       </article>

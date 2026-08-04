@@ -1,5 +1,5 @@
 /**
- * Daily Reward System for Troll City
+ * Daily Reward System for Mai Troll
  * 
  * This system rewards:
  * - Broadcasters: 25 coins when they start a broadcast (once per day)
@@ -140,7 +140,7 @@ export async function hasClaimedRewardToday(
 export async function getPublicPoolBalance(): Promise<number> {
   try {
     // Check for admin_pool or create a system pool
-    // For Troll City, we'll use a system-configured pool value
+    // For Mai Troll, we'll use a system-configured pool value
     // This could be stored in app_settings or a dedicated table
     
     const { data, error } = await supabase
@@ -355,7 +355,7 @@ export async function sendRewardNotification(
   const metadata = {
     reward_type: rewardType,
     amount: amount,
-    source: 'Troll City Public Pool',
+    source: 'MaiTroll Public Pool',
     action_url: '/wallet'
   }
 
@@ -363,7 +363,7 @@ export async function sendRewardNotification(
     userId,
     'system_announcement',
     title,
-    `${message}\n\nSource: Troll City Public Pool`,
+    `${message}\n\nSource: Mai Troll Public Pool`,
     metadata
   )
 }

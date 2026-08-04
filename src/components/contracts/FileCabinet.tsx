@@ -124,7 +124,7 @@ export const FileCabinet = () => {
   return (
     <div className="p-4 bg-slate-900 text-white min-h-screen">
       <h2 className="text-2xl font-bold mb-2">Organization File Cabinet</h2>
-      <p className="text-gray-400 mb-4">Manage and organize documents for Troll City users</p>
+      <p className="text-gray-400 mb-4">Manage and organize documents for Mai Troll users</p>
       
       <div className="space-y-4">
         <div>

@@ -94,7 +94,7 @@ async function main() {
         
         v_email := COALESCE(NEW.email, '');
         
-        IF v_email = 'trollcity2025@gmail.com' THEN
+        IF v_email = 'Mai Troll2025@gmail.com' THEN
           v_role := 'admin';
         ELSE
           v_role := 'user';

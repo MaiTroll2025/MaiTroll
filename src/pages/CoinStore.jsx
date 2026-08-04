@@ -14,7 +14,7 @@ import { deductCoins } from '@/lib/coinTransactions';
 import { purchaseCallMinutes } from '../lib/callMinutes';
 import { useLiveContextStore } from '../lib/liveContextStore';
 import { PERKS as LEVEL_PERKS } from '@/config/levelSystem';
-import { trollCityTheme } from '@/styles/trollCityTheme';
+import { MaiTrollTheme } from '@/styles/trollCityTheme';
 import ProfileFrame from '../components/profile/ProfileFrame';
 import { LAUNCH_FRAMES, RARITY_COLORS, RARITY_LABELS } from '../config/profileFrames';
 
@@ -162,7 +162,7 @@ const SAMPLE_BROADCAST_THEMES = [
   },
 ];
 
-const STORE_TAB_KEY = 'trollcity_store_last_tab';
+const STORE_TAB_KEY = 'MaiTroll_store_last_tab';
 const STORE_COMPLETE_KEY = 'tc-store-show-complete';
 
 // Mini sparkline chart component
@@ -1382,23 +1382,23 @@ useEffect(() => {
 
   return (
       showPurchaseComplete ? (
-        <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} text-white flex items-center justify-center p-6`}>
+        <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white flex items-center justify-center p-6`}>
           <div className="text-center">
             <div className="text-xl font-semibold">Order submitted</div>
           </div>
         </div>
       ) : loading || stockLoading ? (
-        <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} text-white p-6`}>
+        <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white p-6`}>
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <h1 className="text-3xl font-bold text-white flex items-center gap-3">
                 <Coins className="w-8 h-8 text-purple-400" />
-                Troll City Coin Store
+                Mai Troll Coin Store
               </h1>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-xl p-3 animate-pulse`}>
+                <div key={i} className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-xl p-3 animate-pulse`}>
                   <div className="h-4 bg-gray-700 rounded w-1/2 mb-2"></div>
                   <div className="h-8 bg-gray-700 rounded w-3/4"></div>
                   <div className="h-4 bg-gray-700 rounded w-1/3 mt-2"></div>
@@ -1408,7 +1408,7 @@ useEffect(() => {
           </div>
         </div>
       ) : (
-        <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} text-white p-6 overflow-x-hidden`}>
+        <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white p-6 overflow-x-hidden`}>
         <div className="max-w-6xl mx-auto space-y-6 w-full">
           {/* Bank Info Banner */}
           <div className="bg-blue-500/10 border border-blue-500/50 rounded-xl p-4 flex items-start gap-3">
@@ -1425,20 +1425,20 @@ useEffect(() => {
             <div className="flex items-center gap-6">
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3">
                 <BarChart3 className="w-8 h-8 text-green-400" />
-                Troll City Market
+                Mai Troll Market
                 </h1>
             </div>
 
             <div className="flex gap-2 hidden md:flex relative items-center">
-               <button type="button" className={`px-3 py-2 rounded ${tab==='coins'?'bg-purple-600':trollCityTheme.backgrounds.card}`} onClick={() => setTab('coins')}>Coins</button>
-               <button type="button" className={`px-3 py-2 rounded ${tab==='bank'?'bg-purple-600':trollCityTheme.backgrounds.card}`} onClick={() => setTab('bank')}>Bank</button>
-               <button type="button" className={`px-3 py-2 rounded ${tab==='market'?'bg-green-600':trollCityTheme.backgrounds.card}`} onClick={() => setTab('market')}>Market</button>
-               <button type="button" className={`px-3 py-2 rounded ${tab==='portfolio'?'bg-green-600':trollCityTheme.backgrounds.card}`} onClick={() => setTab('portfolio')}>Portfolio</button>
+               <button type="button" className={`px-3 py-2 rounded ${tab==='coins'?'bg-purple-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('coins')}>Coins</button>
+               <button type="button" className={`px-3 py-2 rounded ${tab==='bank'?'bg-purple-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('bank')}>Bank</button>
+               <button type="button" className={`px-3 py-2 rounded ${tab==='market'?'bg-green-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('market')}>Market</button>
+               <button type="button" className={`px-3 py-2 rounded ${tab==='portfolio'?'bg-green-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('portfolio')}>Portfolio</button>
               
               <div className="relative">
                  <button 
                      type="button" 
-                     className={`px-3 py-2 rounded flex items-center gap-2 ${['perks', 'calls', 'insurance', 'themes', 'frames'].includes(tab) ? 'bg-purple-600' : trollCityTheme.backgrounds.card}`}
+                     className={`px-3 py-2 rounded flex items-center gap-2 ${['perks', 'calls', 'insurance', 'themes', 'frames'].includes(tab) ? 'bg-purple-600' : MaiTrollTheme.backgrounds.card}`}
                      onClick={() => setShowStoreDropdown(!showStoreDropdown)}
                  >
                      Store Items
@@ -1478,7 +1478,7 @@ useEffect(() => {
                <select
                  value={tab}
                  onChange={(e) => setTab(e.target.value)}
-                 className={`w-full ${trollCityTheme.backgrounds.card} text-white ${trollCityTheme.borders.glass} rounded-lg p-2 text-sm focus:outline-none focus:border-purple-500`}
+                 className={`w-full ${MaiTrollTheme.backgrounds.card} text-white ${MaiTrollTheme.borders.glass} rounded-lg p-2 text-sm focus:outline-none focus:border-purple-500`}
                >
                  <option value="coins">Coins</option>
                  <option value="bank">Bank</option>
@@ -1864,7 +1864,7 @@ useEffect(() => {
                   <span className="text-2xl">🎁</span>
                   <div>
                     <div className="font-bold text-blue-400">Welcome! New User</div>
-                    <div className="text-sm text-gray-300">Thanks for joining Troll City!</div>
+                    <div className="text-sm text-gray-300">Thanks for joining Mai Troll!</div>
                   </div>
                 </div>
               )}

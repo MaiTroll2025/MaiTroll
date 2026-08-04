@@ -30,7 +30,7 @@ export async function downloadPayrollPDF(report: PerkReport) {
 
     // Title
     doc.setFontSize(18)
-    doc.text('Troll City Weekly Role Perk Report', 14, 22)
+    doc.text('MaiTroll Weekly Role Perk Report', 14, 22)
 
     // Officer Information
     doc.setFontSize(12)
@@ -54,7 +54,7 @@ export async function downloadPayrollPDF(report: PerkReport) {
     // Treasury perk info
     const finalY = (doc as any).lastAutoTable?.finalY || 100
     doc.setFontSize(10)
-    doc.text('Weekly perk payments are processed through the Troll City Treasury.', 14, finalY + 15)
+    doc.text('Weekly perk payments are processed through the Mai Troll Treasury.', 14, finalY + 15)
     doc.text('Perks are not hourly wages or employment compensation.', 14, finalY + 22)
     
     const estimatedPayout = (Number(report.totalEarned || 0) * 0.01).toFixed(2)
@@ -75,7 +75,7 @@ export async function downloadPayrollPDF(report: PerkReport) {
     )
 
     // Save PDF
-    const filename = `TrollCity_RolePerk_${report.officerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+    const filename = `MaiTroll_RolePerk_${report.officerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
     doc.save(filename)
   } catch (error: any) {
     console.error('[OfficerPayrollPDF] Error generating PDF:', error)

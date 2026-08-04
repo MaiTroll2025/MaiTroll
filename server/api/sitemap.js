@@ -7,7 +7,7 @@
  * - All public streams (/:username/live/:slug)
  */
 
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maitrollcity.com';
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maiMai Troll.com';
 
 /**
  * Generate the full sitemap XML

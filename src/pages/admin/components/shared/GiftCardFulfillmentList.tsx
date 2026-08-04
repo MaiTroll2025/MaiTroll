@@ -104,7 +104,7 @@ export default function GiftCardFulfillmentList({ viewMode: _viewMode }: GiftCar
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <Gift className="w-5 h-5 text-purple-400" />
           Fast Pay Payouts
-          <span className="text-xs text-slate-400 ml-2">Level 1000+: 30min • Level 500-999: 24hr • Level 1-499: Fridays</span>
+          <span className="text-xs text-slate-400 ml-2">Level 1000+: 30min • Level 500-999: 24hr • Level 1-499: On request</span>
         </h2>
       </div>
 

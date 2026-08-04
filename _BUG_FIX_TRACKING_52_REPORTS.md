@@ -1,4 +1,4 @@
-# Troll City Bug Fix Tracking - 52 Report Export (2026-06-27)
+# Mai Troll Bug Fix Tracking - 52 Report Export (2026-06-27)
 
 ## Summary
 

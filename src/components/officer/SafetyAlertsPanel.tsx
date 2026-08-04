@@ -1,5 +1,5 @@
 /**
- * Troll City Officer Dashboard - Safety Alerts Panel
+ * Mai Troll Officer Dashboard - Safety Alerts Panel
  * 
  * This component displays safety alerts for officers to review and take action on.
  * Only accessible to users with officer, moderator, or admin roles.

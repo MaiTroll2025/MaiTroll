@@ -46,6 +46,10 @@ interface StreamDetail {
   isLive: boolean;
   broadcasterId: string;
   userId: string;
+  totalMinutesAllowed?: number;
+  minutesUsed?: number;
+  minutesRemaining?: number;
+  giftExtensionMinutes?: number;
 }
 
  interface StreamViewer {
@@ -86,7 +90,7 @@ interface SignupStats {
 
 interface ClickStats {
   total: number;
-  maitrollcity: number;
+  maiMaiTroll: number;
   googlePlay: number;
   topUrls: { url: string; count: number }[];
 }
@@ -208,6 +212,13 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
     totalUsers: 0,
   });
 
+  // RTC minutes reset state — manual restart only, never auto-resets on live creation
+  const [rtcMinutesResetAt, setRtcMinutesResetAt] = useState<Date | null>(null);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+
+  // Track the last fetch time so live-creation events don't trigger a full counter reset
+  const lastRtcFetchRef = useRef<number>(0);
+
   const [userListType, setUserListType] = useState<UserListType>(null);
   const [userList, setUserList] = useState<UserListItem[]>([]);
   const [userListLoading, setUserListLoading] = useState(false);
@@ -274,7 +285,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [recentSignups, setRecentSignups] = useState<UserListItem[]>([]);
   const [signupLoading, setSignupLoading] = useState(false);
 
-  const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, maitrollcity: 0, googlePlay: 0, topUrls: [] });
+  const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, maiMaiTroll: 0, googlePlay: 0, topUrls: [] });
   const [clickLoading, setClickLoading] = useState(false);
 
   const [cashoutBonusData, setCashoutBonusData] = useState<any[]>([]);
@@ -358,83 +369,96 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     };
   }, [streamAnalyticsRows]);
 
-  const fetchRTCStats = useCallback(async () => {
-    if (!isStaff) return;
-    setIsLoading(true);
-    try {
-      const { data: streams, error: streamsError } = await supabase
-        .from('streams')
-        .select('id, broadcaster_id, user_id, title, is_live, status, started_at, category, agora_channel')
-        .or('is_live.eq.true,status.eq.live')
-        .order('started_at', { ascending: false });
+const fetchRTCStats = useCallback(async () => {
+     if (!isStaff) return;
+     setIsLoading(true);
+     try {
+       const { data: streams, error: streamsError } = await supabase
+         .from('streams')
+         .select('id, broadcaster_id, user_id, title, is_live, status, started_at, category, agora_channel')
+         .or('is_live.eq.true,status.eq.live')
+         .order('started_at', { ascending: false });
 
-      if (streamsError) throw streamsError;
+       if (streamsError) throw streamsError;
 
-      const currentTime = Date.now();
-      const liveStreams = ((streams || []) as LiveStream[]).slice(0, 10);
+       const currentTime = Date.now();
+       const liveStreams = ((streams || []) as LiveStream[]).slice(0, 10);
 
-      const streamDetails = await Promise.all(
-        liveStreams.map(async (stream) => {
-          const { count } = await supabase
-            .from('stream_seat_sessions')
-            .select('id', { count: 'exact', head: true })
-            .eq('stream_id', stream.id)
-            .eq('status', 'active');
+       const streamDetails = await Promise.all(
+         liveStreams.map(async (stream) => {
+           const { count } = await supabase
+             .from('stream_seat_sessions')
+             .select('id', { count: 'exact', head: true })
+             .eq('stream_id', stream.id)
+             .eq('status', 'active');
 
-          const startedAt = stream.started_at ? new Date(stream.started_at).getTime() : currentTime;
-          return {
-            id: stream.id,
-            title: stream.title || 'Untitled',
-            startedAt: stream.started_at || new Date().toISOString(),
-            viewers: count || 0,
-            duration: Math.floor((currentTime - startedAt) / 1000),
-            isLive: Boolean(stream.is_live || stream.status === 'live'),
-            broadcasterId: stream.broadcaster_id,
-            userId: stream.user_id,
-          };
-        }),
-      );
+           const startedAt = stream.started_at ? new Date(stream.started_at).getTime() : currentTime;
 
-      const { data: sessions } = await supabase
-        .from('rtc_sessions')
-        .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active');
+           // Fetch minute tracking data from streams table
+           const { data: streamData } = await supabase
+             .from('streams')
+             .select('total_minutes_allowed, minutes_used, minutes_remaining, gift_extension_minutes')
+             .eq('id', stream.id)
+             .maybeSingle();
 
-      const rtcSessions = (sessions || []) as RTSSession[];
-      const totalSeconds = rtcSessions.reduce((sum, session) => {
-        if (session.is_active && session.started_at) {
-          return sum + Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000);
-        }
-        return sum + Number(session.duration_seconds || 0);
-      }, 0);
+           return {
+             id: stream.id,
+             title: stream.title || 'Untitled',
+             startedAt: stream.started_at || new Date().toISOString(),
+             viewers: count || 0,
+             duration: Math.floor((currentTime - startedAt) / 1000),
+             isLive: Boolean(stream.is_live || stream.status === 'live'),
+             broadcasterId: stream.broadcaster_id,
+             userId: stream.user_id,
+             totalMinutesAllowed: Number(streamData?.total_minutes_allowed) || 360,
+             minutesUsed: Number(streamData?.minutes_used) || 0,
+             minutesRemaining: streamData?.minutes_remaining !== null ? Number(streamData?.minutes_remaining) : undefined,
+             giftExtensionMinutes: Number(streamData?.gift_extension_minutes) || 0,
+           };
+         }),
+       );
 
-      const { count: totalUsers } = await supabase.from('user_profiles').select('id', { count: 'exact', head: true });
+       const { data: sessions } = await supabase
+         .from('rtc_sessions')
+         .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active');
 
-      setStats({
-        totalMinutes: Math.floor(totalSeconds / 60),
-        activeSessions: rtcSessions.filter((s) => s.is_active).length,
-        liveStreams: streamDetails.length,
-        liveStreamDetails: streamDetails,
-        totalUsers: totalUsers || 0,
-      });
-      setLastRefresh(new Date());
-      setNow(Date.now());
-    } catch (err: any) {
-      // AbortError ("Lock broken by another request with the 'steal' option")
-      // is a known Supabase Realtime issue when multiple channels compete.
-      // It's not a real failure — just log it silently and move on.
-      if (err?.name === 'AbortError' || err?.message?.includes('steal')) {
-        console.warn('[RTC Monitor] Realtime lock contention (non-fatal):', err?.message);
-      } else {
-        console.error('[RTC Monitor] Error:', err);
-        toast.error('Failed to refresh RTC monitor');
-        // Trigger red error flash
-        setShowErrorFlash(true);
-        setTimeout(() => setShowErrorFlash(false), 5000);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isStaff]);
+       const rtcSessions = (sessions || []) as RTSSession[];
+       const resetTime = rtcMinutesResetAt ? rtcMinutesResetAt.getTime() : 0;
+
+       const totalSeconds = rtcSessions.reduce((sum, session) => {
+         const sessionStart = session.started_at ? new Date(session.started_at).getTime() : 0;
+         if (sessionStart < resetTime) return sum;
+         if (session.is_active && session.started_at) {
+           return sum + Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000);
+         }
+         return sum + Number(session.duration_seconds || 0);
+       }, 0);
+
+       const { count: totalUsers } = await supabase.from('user_profiles').select('id', { count: 'exact', head: true });
+
+       setStats({
+         totalMinutes: Math.floor(totalSeconds / 60),
+         activeSessions: rtcSessions.filter((s) => s.is_active).length,
+         liveStreams: streamDetails.length,
+         liveStreamDetails: streamDetails,
+         totalUsers: totalUsers || 0,
+       });
+       setLastRefresh(new Date());
+       setNow(Date.now());
+       lastRtcFetchRef.current = Date.now();
+     } catch (err: any) {
+       if (err?.name === 'AbortError' || err?.message?.includes('steal')) {
+         console.warn('[RTC Monitor] Realtime lock contention (non-fatal):', err?.message);
+       } else {
+         console.error('[RTC Monitor] Error:', err);
+         toast.error('Failed to refresh RTC monitor');
+         setShowErrorFlash(true);
+         setTimeout(() => setShowErrorFlash(false), 5000);
+       }
+     } finally {
+       setIsLoading(false);
+     }
+   }, [isStaff, rtcMinutesResetAt]);
 
   const fetchSignupData = useCallback(async () => {
     if (!isStaff) return;
@@ -473,10 +497,10 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     setClickLoading(true);
     try {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: total }, { count: maitrollcity }, { count: googlePlay }, { data: topUrlsData }] = await Promise.all([
+      const [{ count: total }, { count: maiMaiTroll }, { count: googlePlay }, { data: topUrlsData }] = await Promise.all([
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }),
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%maitrollcity.com%'),
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.trollcity.twa%'),
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%maiMaiTroll.com%'),
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.Mai Troll.twa%'),
         supabase.from('outbound_clicks').select('url, created_at').gte('created_at', sevenDaysAgo),
       ]);
 
@@ -487,7 +511,7 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
 
       setClickStats({
         total: total || 0,
-        maitrollcity: maitrollcity || 0,
+        maiMaiTroll: maiMaiTroll || 0,
         googlePlay: googlePlay || 0,
         topUrls: Object.entries(counts).map(([url, count]) => ({ url, count })).sort((a, b) => b.count - a.count).slice(0, 5),
       });
@@ -1047,12 +1071,13 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     }
   }, [isOpen, isStaff, activeMainTab, fetchTromailInbox])
 
-  useEffect(() => {
-    if (!isStaff || !profile?.id) return
+   useEffect(() => {
+     if (!isStaff || !profile?.id) return
 
-    const channel = supabase
-      .channel(`tromail-inbox:${profile?.id}`)
-      .on(
+     const channelName = `tromail-inbox:${profile?.id}:admin-monitor`
+     const channel = supabase
+       .channel(channelName)
+       .on(
         'postgres_changes',
         {
           event: 'INSERT',
@@ -1630,58 +1655,112 @@ const renderFloatingButton = () => {
     </div>
   );
 
-  const renderRtcTab = () => (
-    <div className="space-y-3">
-      <button
-        type="button"
-        onClick={() => {
-          setNow(Date.now());
-          fetchRTCStats();
-        }}
-        disabled={isLoading}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600/20 px-3 py-2 text-xs text-blue-400 transition-colors hover:bg-blue-600/30 disabled:opacity-50"
-      >
-        <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
-        {isLoading ? 'Refreshing...' : 'Refresh'}
-      </button>
+const renderRtcTab = () => (
+     <div className="space-y-3">
+       <div className="flex items-center gap-2">
+         <button
+           type="button"
+           onClick={() => {
+             setNow(Date.now());
+             fetchRTCStats();
+           }}
+           disabled={isLoading}
+           className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600/20 px-3 py-2 text-xs text-blue-400 transition-colors hover:bg-blue-600/30 disabled:opacity-50"
+         >
+           <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+           {isLoading ? 'Refreshing...' : 'Refresh'}
+         </button>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <StatCard label="Streams" value={stats.liveStreams} tone="border-red-500/20 bg-red-500/10 text-red-400" icon={<Radio className="h-3 w-3" />} />
-        <StatCard label="Viewers" value={totalViewers} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<Users className="h-3 w-3" />} />
-        <StatCard label="Sessions" value={stats.activeSessions} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Clock className="h-3 w-3" />} />
-        <StatCard label="Online" value={onlineCount} tone="border-green-500/20 bg-green-500/10 text-green-400" icon={<Activity className="h-3 w-3" />} />
-        <StatCard label="Users" value={stats.totalUsers} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Users className="h-3 w-3" />} />
-        <StatCard label="Minutes" value={totalMinutes.toLocaleString()} tone="border-blue-500/20 bg-blue-500/10 text-blue-400" icon={<Clock className="h-3 w-3" />} />
-      </div>
+         <button
+           type="button"
+           onClick={() => {
+             if (showRestartConfirm) {
+               setRtcMinutesResetAt(new Date());
+               setShowRestartConfirm(false);
+               toast.success('RTC minutes counter restarted');
+               fetchRTCStats();
+             } else {
+               setShowRestartConfirm(true);
+               setTimeout(() => setShowRestartConfirm(false), 5000);
+             }
+           }}
+           className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600/20 px-3 py-2 text-xs text-amber-400 transition-colors hover:bg-amber-600/30"
+           title="Manually restart the RTC minutes counter. Use this when upgrading your LiveKit plan."
+         >
+           <RefreshCw className="h-3 w-3" />
+           {showRestartConfirm ? 'Confirm Restart?' : 'Restart RTC Minutes'}
+         </button>
+       </div>
+
+       {rtcMinutesResetAt && (
+         <div className="rounded border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[10px] text-amber-400">
+           RTC minutes counter reset at {rtcMinutesResetAt.toLocaleTimeString()}. Only minutes after this reset are counted.
+         </div>
+       )}
+
+       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+         <StatCard label="Streams" value={stats.liveStreams} tone="border-red-500/20 bg-red-500/10 text-red-400" icon={<Radio className="h-3 w-3" />} />
+         <StatCard label="Viewers" value={totalViewers} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<Users className="h-3 w-3" />} />
+         <StatCard label="Sessions" value={stats.activeSessions} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Clock className="h-3 w-3" />} />
+         <StatCard label="Online" value={onlineCount} tone="border-green-500/20 bg-green-500/10 text-green-400" icon={<Activity className="h-3 w-3" />} />
+         <StatCard label="Users" value={stats.totalUsers} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Users className="h-3 w-3" />} />
+         <StatCard label="Minutes" value={totalMinutes.toLocaleString()} tone="border-blue-500/20 bg-blue-500/10 text-blue-400" icon={<Clock className="h-3 w-3" />} />
+       </div>
 
       <div className="border-t border-white/10 pt-2">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-xs text-gray-500">Live Streams</span>
           <span className="text-[10px] text-gray-600">Last refresh {lastRefresh.toLocaleTimeString()}</span>
         </div>
-        <div className="max-h-[190px] space-y-2 overflow-y-auto">
-          {streamDetailsWithDuration.length === 0 ? (
-            <div className="rounded-lg bg-white/5 p-4 text-center text-xs text-gray-500">No active streams</div>
-          ) : (
-            streamDetailsWithDuration.map((stream) => (
-              <button
-                key={stream.id}
-                type="button"
-                onClick={() => openStreamModal(stream)}
-                className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition-colors hover:bg-white/10"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-semibold text-white">{stream.title}</span>
-                  <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-300">LIVE</span>
-                </div>
-                <div className="mt-1 flex items-center gap-3 text-[11px] text-gray-400">
-                  <span>{stream.viewers} viewers</span>
-                  <span>{formatDuration(stream.duration)}</span>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
+<div className="max-h-[190px] space-y-2 overflow-y-auto">
+           {streamDetailsWithDuration.length === 0 ? (
+             <div className="rounded-lg bg-white/5 p-4 text-center text-xs text-gray-500">No active streams</div>
+           ) : (
+             streamDetailsWithDuration.map((stream) => {
+               const totalAllowed = stream.totalMinutesAllowed || 360;
+               const minutesUsed = stream.minutesUsed || 0;
+               const minutesRemaining = stream.minutesRemaining ?? totalAllowed;
+               const giftExtension = stream.giftExtensionMinutes || 0;
+               const pctRemaining = totalAllowed > 0 ? (minutesRemaining / totalAllowed) * 100 : 100;
+               const isLow = minutesRemaining <= 30 && minutesRemaining > 0;
+               const isCritical = minutesRemaining <= 0;
+
+               return (
+                 <button
+                   key={stream.id}
+                   type="button"
+                   onClick={() => openStreamModal(stream)}
+                   className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition-colors hover:bg-white/10"
+                 >
+                   <div className="flex items-center justify-between gap-2">
+                     <span className="truncate text-sm font-semibold text-white">{stream.title}</span>
+                     <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-300">LIVE</span>
+                   </div>
+                   <div className="mt-1 flex items-center gap-3 text-[11px] text-gray-400">
+                     <span>{stream.viewers} viewers</span>
+                     <span>{formatDuration(stream.duration)}</span>
+                   </div>
+                   <div className="mt-2 flex items-center gap-2">
+                     <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                       <div
+                         className={`h-full rounded-full transition-all ${isCritical ? 'bg-red-500' : isLow ? 'bg-amber-500' : 'bg-green-500'}`}
+                         style={{ width: `${Math.min(100, pctRemaining)}%` }}
+                       />
+                     </div>
+                     <span className={`text-[10px] font-bold ${isCritical ? 'text-red-400' : isLow ? 'text-amber-400' : 'text-green-400'}`}>
+                       {minutesRemaining}m remaining
+                     </span>
+                   </div>
+                   {giftExtension > 0 && (
+                     <div className="mt-1 text-[10px] text-cyan-400">
+                       +{giftExtension}m from gifts
+                     </div>
+                   )}
+                 </button>
+               );
+             })
+           )}
+         </div>
       </div>
     </div>
   );

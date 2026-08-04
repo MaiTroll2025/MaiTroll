@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 import GiftTray from './GiftTray';
 import { GiftItem } from '../../lib/hooks/useGiftSystem';
 import BroadcastOfficerModal from './BroadcastOfficerModal';
-import { trollCityBroadcastTheme, bottomBarShell, bottomBarAmbient, hostActionButtonCenter } from '../../styles/broadcastTheme'
+import { MaiTrollBroadcastTheme, bottomBarShell, bottomBarAmbient, hostActionButtonCenter } from '../../styles/broadcastTheme'
 
 /**
  * Generic "icon grid" button used in host action bottom bar.
@@ -44,7 +44,7 @@ function HostActionButton({
   variant?: 'default' | 'danger';
   disabled?: boolean;
 }) {
-  const theme = trollCityBroadcastTheme
+  const theme = MaiTrollBroadcastTheme
   return (
     <button
       onClick={onClick}
@@ -64,7 +64,7 @@ function HostActionButton({
 
 /** Seats action card — the large purple button in the bottom bar */
 export function OpenStagePassCard({ onClick, label = 'Seats' }: { onClick: () => void; label?: string }) {
-  const theme = trollCityBroadcastTheme
+  const theme = MaiTrollBroadcastTheme
   return (
     <button
       onClick={onClick}
@@ -84,7 +84,7 @@ export function StagePassSummaryCard({
   openPassCount: number;
   onManage: () => void;
 }) {
-  const theme = trollCityBroadcastTheme
+  const theme = MaiTrollBroadcastTheme
   return (
     <div className={cn('flex h-[86px] items-center justify-between rounded-2xl border border-white/10 bg-white/[0.035] px-5 shadow-[0_0_18px_rgba(168,85,247,0.15)] backdrop-blur-2xl', theme.panel)}>
       <div className="flex items-center gap-4">
@@ -166,7 +166,7 @@ export default function BroadcastBottomBar({
   onInviteFollowers,
   saveBroadcastButton,
 }: BroadcastBottomBarProps) {
-  const theme = trollCityBroadcastTheme
+  const theme = MaiTrollBroadcastTheme
   return (
     <div className={cn(bottomBarShell, 'relative')}>
       {/* Ambient glow strip */}
@@ -206,6 +206,12 @@ export default function BroadcastBottomBar({
               onClick={onToggleCam}
               icon={isCamOn ? Video : VideoOff}
               label={isCamOn ? 'Turn Off' : 'Camera'}
+            />
+            <HostActionButton
+              active={Boolean(isGiftTrayOpen)}
+              onClick={onGift}
+              icon={Gift}
+              label="Gifts"
             />
             <HostActionButton
               active={false}
@@ -273,7 +279,7 @@ export function BroadcastFooterStrip({
   onLicenseClick?: () => void;
 }) {
   return (
-    <footer className={trollCityBroadcastTheme.footerStrip}>
+    <footer className={MaiTrollBroadcastTheme.footerStrip}>
       <span className="flex items-center gap-2 text-slate-400">
         <Sparkles className="h-4 w-4 text-purple-400" />
         Stream protected
@@ -289,7 +295,7 @@ export function BroadcastFooterStrip({
         </button>
       </span>
       <span className="text-white/15">•</span>
-      <span>Troll City Guidelines</span>
+      <span>Mai Troll Guidelines</span>
       <span className="text-white/15">•</span>
       <span className="text-emerald-400">{connectionQuality} Connection</span>
     </footer>

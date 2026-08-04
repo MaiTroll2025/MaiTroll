@@ -58,8 +58,8 @@ export default defineConfig(({ mode }) => {
           enabled: process.env.VITE_PWA_DEV === '1'
         },
         manifest: {
-          name: "Troll City",
-          short_name: "TrollCity",
+          name: "Mai Troll",
+          short_name: "Mai Troll",
           start_url: "/mobile",
           scope: "/",
           display: "standalone",
@@ -120,7 +120,7 @@ export default defineConfig(({ mode }) => {
           },
         },
         '/streams': {
-          target: 'https://cdn.maitrollcity.com',
+          target: 'https://cdn.maiMai Troll.com',
           changeOrigin: true,
           secure: true,
           rewrite: (path) => path,

@@ -1,7 +1,7 @@
 /**
  * LEVEL SYSTEM CONFIGURATION
  * ============================
- * This file defines all level progression rules for Troll City
+ * This file defines all level progression rules for Mai Troll
  * Edit this file to change how levels, XP, and progression work
  * 
  * After making changes, the system will automatically update everywhere
@@ -43,7 +43,7 @@ export const TIER_LEVELS: TierConfig[] = [
   // Tier 5: Legendary Tier (76-100)
   { level: 80, minXP: 90000,   maxXP: 99999,    title: "Troll Sovereign",       perks: ["Master streamer status", "revenue sharing", "exclusive perks"] },
   { level: 90, minXP: 100000,  maxXP: 109999,   title: "Chaos Deity",           perks: ["Legendary badge", "ultra-rare effects", "founder status"] },
-  { level: 100, minXP: 110000, maxXP: 110999,   title: "TROLL CITY IMMORTAL",   perks: ["God-mode effects", "legacy status", "eternal rewards"] },
+  { level: 100, minXP: 110000, maxXP: 110999,   title: "Mai Troll IMMORTAL",   perks: ["God-mode effects", "legacy status", "eternal rewards"] },
 
   // Tier 6: Mythic Tier (101-2000+)
   { level: 101, minXP: 111000, maxXP: 249999,   title: "Ascended Troll",        perks: ["Mythic aura", "custom command"] },
@@ -76,7 +76,7 @@ export const BUYER_LEVELS: BuyerLevelConfig[] = [
   { level: 3,  minXP: 5000,     title: "Chaos Supporter" },
   { level: 4,  minXP: 10000,    title: "Troll Champion" },
   { level: 5,  minXP: 30000,    title: "Elite Troll Backer" },
-  { level: 6,  minXP: 70000,    title: "Titan of Troll City" },
+  { level: 6,  minXP: 70000,    title: "Titan of Mai Troll" },
   { level: 7,  minXP: 150000,   title: "Mythic Benefactor" },
   { level: 8,  minXP: 300000,   title: "Divine OverTroll" },
   { level: 9,  minXP: 1500000,  title: "Ancient Elder Troll" },
@@ -105,7 +105,7 @@ export const STREAM_LEVELS: StreamLevelConfig[] = [
   { level: 7,  minXP: 60000,   title: "Troll Master Broadcaster" },
   { level: 8,  minXP: 120000,  title: "Mischief Legend" },
   { level: 9,  minXP: 300000,  title: "Troll Star Icon" },
-  { level: 10, minXP: 900000,  title: "Troll City MEGASTAR" },
+  { level: 10, minXP: 900000,  title: "Mai Troll MEGASTAR" },
 ];
 
 // ============================================================

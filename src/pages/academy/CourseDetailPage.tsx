@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - COURSE DETAIL PAGE
+// Mai Troll ACADEMY - COURSE DETAIL PAGE
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
@@ -72,8 +72,8 @@ export default function CourseDetailPage() {
   useEffect(() => {
     if (!course) return;
 
-    const title = `${course.name} | Troll City Academy`;
-    const description = course.short_description || course.description || 'Learn new skills with Troll City Academy.';
+    const title = `${course.name} | Mai Troll Academy`;
+    const description = course.short_description || course.description || 'Learn new skills with Mai Troll Academy.';
     const url = `${window.location.origin}/academy/course/${encodeURIComponent(course.slug || course.id)}`;
     const ogImageUrl = buildOGImageUrl({ kind: 'academy', slug: course.slug || course.id });
 

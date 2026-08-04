@@ -112,7 +112,7 @@ export default function RequestPayoutModal({
               Cash payouts and gift card cashouts are currently disabled.
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              You can still earn and spend coins inside Troll City while payouts are paused.
+              You can still earn and spend coins inside Mai Troll while payouts are paused.
             </p>
           </div>
         </div>

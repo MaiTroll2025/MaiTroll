@@ -1,18 +1,18 @@
 # MAI Sync Integration Plan
 
-This file documents the complete Troll City ↔ MaiTalent.fun integration setup, environment variables, auth rules, and verification checklist.
+This file documents the complete Mai Troll ↔ MaiTalent.fun integration setup, environment variables, auth rules, and verification checklist.
 
 ## What was done here
 
 - Reviewed MaiTalent repository sync architecture and the existing Supabase edge function.
 - Created a shared integration contract for auth headers, payload shape, and env variables.
-- Documented the current Troll City implementation state, including what is implemented and what is still missing.
+- Documented the current Mai Troll implementation state, including what is implemented and what is still missing.
 - Added a verification checklist and recommended security rules for server-to-server sync.
 
-## What Troll City needs to do now
+## What Mai Troll needs to do now
 
 - Deploy `supabase/functions/sync-mai-platform-user/index.ts` as a server-side edge function.
-- Ensure Troll City runtime has only server-only env vars:
+- Ensure Mai Troll runtime has only server-only env vars:
   - `SUPABASE_URL`
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `MAITALENT_SYNC_URL`
@@ -35,22 +35,22 @@ MAITALENT_SYNC_SECRET=<shared-service-secret>
 
 This secret must be treated as a service-role secret only. Do not expose it in frontend code.
 
-## Troll City setup
+## Mai Troll setup
 
 ### Required environment variables
 
-Add these to Troll City Supabase / function environment:
+Add these to Mai Troll Supabase / function environment:
 
 ```text
-SUPABASE_URL=<Troll City Supabase URL>
-SUPABASE_SERVICE_ROLE_KEY=<Troll City service role key>
+SUPABASE_URL=<Mai Troll Supabase URL>
+SUPABASE_SERVICE_ROLE_KEY=<Mai Troll service role key>
 MAITALENT_SYNC_URL=https://<maitalent-project>.functions.supabase.co/sync-mai-platform-user
 MAITALENT_SYNC_SECRET=<shared-service-secret>
 ```
 
 ### Optional direct MaiTalent DB access
 
-Only add these if Troll City needs to query MaiTalent directly, not just via the sync function:
+Only add these if Mai Troll needs to query MaiTalent directly, not just via the sync function:
 
 ```text
 MAITALENT_SUPABASE_URL=<MaiTalent Supabase URL>
@@ -59,7 +59,7 @@ MAITALENT_SERVICE_ROLE_KEY=<MaiTalent service role key>
 
 ### Required sync request format
 
-The Troll City backend should send requests to `MAITALENT_SYNC_URL` with:
+The Mai Troll backend should send requests to `MAITALENT_SYNC_URL` with:
 
 - HTTP method: `POST`
 - Header:
@@ -82,7 +82,7 @@ The Troll City backend should send requests to `MAITALENT_SYNC_URL` with:
 
 - The sync call must happen from server-side code only.
 - `MAITALENT_SYNC_SECRET` must never be exposed in frontend code.
-- Use `MAITALENT_SYNC_SECRET` as the incoming auth token for Troll City → MaiTalent.
+- Use `MAITALENT_SYNC_SECRET` as the incoming auth token for Mai Troll → MaiTalent.
 
 ## What MaiTalent.fun needs to do now
 
@@ -91,9 +91,9 @@ The Troll City backend should send requests to `MAITALENT_SYNC_URL` with:
    - `MAITALENT_SUPABASE_URL`
    - `MAITALENT_SERVICE_ROLE_KEY`
    - `MAITALENT_SYNC_SECRET=<shared-service-secret>`
-3. Optionally configure direct Troll City DB access only if needed:
-   - `TROLLCITY_SUPABASE_URL`
-   - `TROLLCITY_SERVICE_ROLE_KEY`
+3. Optionally configure direct Mai Troll DB access only if needed:
+   - `Mai Troll_SUPABASE_URL`
+   - `Mai Troll_SERVICE_ROLE_KEY`
 4. Enforce auth:
    - require `x-service-role: <MAITALENT_SYNC_SECRET>`
    - validate it against `MAITALENT_SYNC_SECRET`
@@ -112,19 +112,19 @@ The Troll City backend should send requests to `MAITALENT_SYNC_URL` with:
    - update `wallets.token_balance`
    - insert `token_transactions`
 7. Test the full path:
-   - send a server-side request from Troll City
+   - send a server-side request from Mai Troll
    - confirm MaiTalent returns success
    - confirm no `401` for valid requests
    - confirm duplicate handling works
 
-If Troll City currently forwards with `X-Service-Role: MAITALENT_SERVICE_ROLE_KEY`, MaiTalent.fun must either accept that temporary behavior or insist on the shared sync secret instead.
+If Mai Troll currently forwards with `X-Service-Role: MAITALENT_SERVICE_ROLE_KEY`, MaiTalent.fun must either accept that temporary behavior or insist on the shared sync secret instead.
 
 ## Verification checklist
 
-- [ ] Troll City has a deployed sync edge function
-- [ ] Troll City env vars include `MAITALENT_SYNC_URL` and `MAITALENT_SYNC_SECRET`
+- [ ] Mai Troll has a deployed sync edge function
+- [ ] Mai Troll env vars include `MAITALENT_SYNC_URL` and `MAITALENT_SYNC_SECRET`
 - [ ] MaiTalent.fun env vars include the two Supabase URLs/keys and `MAITALENT_SYNC_SECRET`
-- [ ] Troll City sync request header is `x-service-role: <MAITALENT_SYNC_SECRET>`
+- [ ] Mai Troll sync request header is `x-service-role: <MAITALENT_SYNC_SECRET>`
 - [ ] MaiTalent validates incoming requests against `MAITALENT_SYNC_SECRET`
 - [ ] The sync payload contains `action`, `external_platform`, `external_user_id`, `normalized_email`, and for `sync` requests also `source_event_id`, `activity_type`, and `tokens_awarded`
 - [ ] Duplicate detection and audit are working for external events
@@ -132,11 +132,11 @@ If Troll City currently forwards with `X-Service-Role: MAITALENT_SERVICE_ROLE_KE
 ## Testing
 
 1. Deploy both edge functions.
-2. Use a server-side request from Troll City to call `MAITALENT_SYNC_URL`.
+2. Use a server-side request from Mai Troll to call `MAITALENT_SYNC_URL`.
 3. Verify MaiTalent returns a success response.
 4. Verify there are no 401 unauthorized responses.
 5. Verify duplicate `source_event_id` requests return `409` or duplicate handling.
 
-## Notes for Troll City
+## Notes for Mai Troll
 
-Please make sure the same MAI secret is used in both projects and that the function is only called from trusted backend code. If you want, I can also provide a second file for the Troll City team with the exact function name and headers to validate.
+Please make sure the same MAI secret is used in both projects and that the function is only called from trusted backend code. If you want, I can also provide a second file for the Mai Troll team with the exact function name and headers to validate.

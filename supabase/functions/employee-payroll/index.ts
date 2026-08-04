@@ -461,7 +461,7 @@ Deno.serve(async (req) => {
             value: Number(s.net_pay).toFixed(2),
             currency: 'USD',
           },
-          note: 'Troll City employee payroll',
+          note: 'Mai Troll employee payroll',
           sender_item_id: s.id,
           receiver: s.paypal_email,
           notification_language: 'en-US',
@@ -476,8 +476,8 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             sender_batch_header: {
               sender_batch_id: `payroll_${runId}_${Date.now()}`,
-              email_subject: 'You have a payout from Troll City',
-              email_message: 'Your Troll City payroll payment is here.',
+              email_subject: 'You have a payout from Mai Troll',
+              email_message: 'Your Mai Troll payroll payment is here.',
             },
             items,
           }),
@@ -663,7 +663,7 @@ Deno.serve(async (req) => {
             value: Number(s.net_pay).toFixed(2),
             currency: 'USD',
           },
-          note: 'Troll City employee payroll (retry)',
+          note: 'Mai Troll employee payroll (retry)',
           sender_item_id: s.id,
           receiver: s.paypal_email,
           notification_language: 'en-US',
@@ -678,8 +678,8 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             sender_batch_header: {
               sender_batch_id: `payroll_retry_${runId}_${Date.now()}`,
-              email_subject: 'You have a payout from Troll City',
-              email_message: 'Your Troll City payroll payment is here.',
+              email_subject: 'You have a payout from Mai Troll',
+              email_message: 'Your Mai Troll payroll payment is here.',
             },
             items,
           }),

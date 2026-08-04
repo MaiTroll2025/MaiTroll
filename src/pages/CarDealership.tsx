@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { toast } from 'sonner';
 import { Car, ArrowLeft, DollarSign, Info, X, Warehouse, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -79,28 +79,28 @@ export default function CarDealership() {
   };
 
   return (
-    <div className={`min-h-screen p-6 pb-24 ${trollCityTheme.backgrounds.primary} ${trollCityTheme.text.primary}`}>
+    <div className={`min-h-screen p-6 pb-24 ${MaiTrollTheme.backgrounds.primary} ${MaiTrollTheme.text.primary}`}>
       {/* Background Overlays */}
-      <div className={`fixed inset-0 pointer-events-none ${trollCityTheme.overlays.radialPurple}`} />
-      <div className={`fixed inset-0 pointer-events-none ${trollCityTheme.overlays.radialPink}`} />
+      <div className={`fixed inset-0 pointer-events-none ${MaiTrollTheme.overlays.radialPurple}`} />
+      <div className={`fixed inset-0 pointer-events-none ${MaiTrollTheme.overlays.radialPink}`} />
 
       <div className="relative max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate(-1)} className={`p-2 rounded-full transition ${trollCityTheme.interactive.hover} hover:bg-white/10`}>
+            <button onClick={() => navigate(-1)} className={`p-2 rounded-full transition ${MaiTrollTheme.interactive.hover} hover:bg-white/10`}>
               <ArrowLeft className="w-6 h-6" />
             </button>
             <div>
-              <h1 className={`text-3xl font-bold ${trollCityTheme.gradients.text}`}>
-                Troll City Auto Mall
+              <h1 className={`text-3xl font-bold ${MaiTrollTheme.gradients.text}`}>
+                Mai Troll Auto Mall
               </h1>
-              <p className={trollCityTheme.text.secondary}>Premium vehicles for the discerning collector. {catalog.length} vehicles available.</p>
+              <p className={MaiTrollTheme.text.secondary}>Premium vehicles for the discerning collector. {catalog.length} vehicles available.</p>
             </div>
           </div>
           <button
             onClick={() => navigate('/garage')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${trollCityTheme.interactive.hover} hover:bg-white/10 border ${trollCityTheme.borders.glass}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${MaiTrollTheme.interactive.hover} hover:bg-white/10 border ${MaiTrollTheme.borders.glass}`}
           >
             <Warehouse className="w-5 h-5" />
             <span className="hidden sm:inline">My Garage</span>
@@ -110,9 +110,9 @@ export default function CarDealership() {
         {/* Vehicle Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {catalog.length === 0 ? (
-            <div className={`col-span-full p-8 text-center rounded-lg border ${trollCityTheme.borders.glass}`}>
+            <div className={`col-span-full p-8 text-center rounded-lg border ${MaiTrollTheme.borders.glass}`}>
               <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className={trollCityTheme.text.muted}>No vehicles in stock at this time.</p>
+              <p className={MaiTrollTheme.text.muted}>No vehicles in stock at this time.</p>
             </div>
           ) : (
             catalog.map((vehicle) => {
@@ -124,34 +124,34 @@ export default function CarDealership() {
               return (
                 <div
                   key={vehicle.vehicle_id}
-                  className={`${trollCityTheme.components.card} group !p-0 overflow-hidden ${isOutOfStock ? 'opacity-60' : ''}`}
+                  className={`${MaiTrollTheme.components.card} group !p-0 overflow-hidden ${isOutOfStock ? 'opacity-60' : ''}`}
                 >
                   {/* Image Placeholder */}
-                  <div className={`h-48 ${trollCityTheme.backgrounds.card} flex items-center justify-center relative border-b ${trollCityTheme.borders.glass}`}>
+                  <div className={`h-48 ${MaiTrollTheme.backgrounds.card} flex items-center justify-center relative border-b ${MaiTrollTheme.borders.glass}`}>
                     {vehicle.image_url ? (
                       <img src={vehicle.image_url} alt={vehicle.name} className="w-full h-full object-cover" />
                     ) : (
-                      <Car className={`w-16 h-16 ${trollCityTheme.text.muted} group-hover:text-purple-500 transition`} />
+                      <Car className={`w-16 h-16 ${MaiTrollTheme.text.muted} group-hover:text-purple-500 transition`} />
                     )}
                     {/* Tier Badge */}
                     <div className={`absolute top-2 left-2 ${tierBg} px-2 py-1 rounded text-xs font-bold border ${tierColor} backdrop-blur-sm`}>
                       {vehicle.tier}
                     </div>
                     {/* Stock Badge */}
-                    <div className={`absolute top-2 right-2 ${trollCityTheme.backgrounds.card} px-2 py-1 rounded text-xs font-medium border ${trollCityTheme.borders.glass} backdrop-blur-sm ${stock.color}`}>
+                    <div className={`absolute top-2 right-2 ${MaiTrollTheme.backgrounds.card} px-2 py-1 rounded text-xs font-medium border ${MaiTrollTheme.borders.glass} backdrop-blur-sm ${stock.color}`}>
                       {stock.text}
                     </div>
                   </div>
 
                   <div className="p-5 space-y-4">
                     <div>
-                      <h3 className={`text-xl font-bold ${trollCityTheme.text.primary}`}>{vehicle.name}</h3>
+                      <h3 className={`text-xl font-bold ${MaiTrollTheme.text.primary}`}>{vehicle.name}</h3>
                       {vehicle.description && (
-                        <p className={`text-sm ${trollCityTheme.text.muted} mt-1`}>{vehicle.description}</p>
+                        <p className={`text-sm ${MaiTrollTheme.text.muted} mt-1`}>{vehicle.description}</p>
                       )}
                     </div>
 
-                    <div className={`space-y-2 text-sm ${trollCityTheme.text.muted} bg-black/20 p-3 rounded-lg border ${trollCityTheme.borders.glass}`}>
+                    <div className={`space-y-2 text-sm ${MaiTrollTheme.text.muted} bg-black/20 p-3 rounded-lg border ${MaiTrollTheme.borders.glass}`}>
                       <div className="flex justify-between">
                         <span>Price</span>
                         <span className="text-yellow-400 font-mono font-bold">{formatCompactNumber(vehicle.base_price)} 🪙</span>
@@ -169,7 +169,7 @@ export default function CarDealership() {
                     <button
                       onClick={() => openVehicle(vehicle)}
                       disabled={isPurchasing || isOutOfStock}
-                      className={`w-full py-3 ${isOutOfStock ? 'bg-gray-700 cursor-not-allowed' : trollCityTheme.gradients.button} rounded-lg font-bold transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:-translate-y-0.5`}
+                      className={`w-full py-3 ${isOutOfStock ? 'bg-gray-700 cursor-not-allowed' : MaiTrollTheme.gradients.button} rounded-lg font-bold transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:-translate-y-0.5`}
                     >
                       {isOutOfStock ? (
                         'Out of Stock'

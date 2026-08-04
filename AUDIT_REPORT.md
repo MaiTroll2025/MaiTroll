@@ -1,4 +1,4 @@
-# TrollCity Broadcast & Battle System Audit Report
+# Mai Troll Broadcast & Battle System Audit Report
 
 **Date:** 2026-06-22  
 **Scope:** Random Battles, BroadcastPage, ViewerPage, Device Compatibility  

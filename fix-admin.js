@@ -11,13 +11,13 @@ console.log('Key starts with:', serviceRoleKey?.substring(0, 20))
 const supabase = createClient(supabaseUrl, serviceRoleKey)
 
 async function fixAdmin() {
-  console.log('Searching for trollcity2025@gmail.com...')
+  console.log('Searching for Mai Troll2025@gmail.com...')
   
   // Find the user by email
   const { data: profiles, error: searchError } = await supabase
     .from('user_profiles')
     .select('*')
-    .eq('email', 'trollcity2025@gmail.com')
+    .eq('email', 'Mai Troll2025@gmail.com')
   
   if (searchError) {
     console.error('Search error:', searchError)
@@ -36,7 +36,7 @@ async function fixAdmin() {
       return
     }
     
-    const adminUser = users.find(u => u.email === 'trollcity2025@gmail.com')
+    const adminUser = users.find(u => u.email === 'Mai Troll2025@gmail.com')
     console.log('Admin user from auth:', adminUser)
     
     if (adminUser) {
@@ -45,8 +45,8 @@ async function fixAdmin() {
         .from('user_profiles')
         .insert({
           id: adminUser.id,
-          email: 'trollcity2025@gmail.com',
-          username: 'trollcity2025',
+          email: 'Mai Troll2025@gmail.com',
+          username: 'Mai Troll2025',
           role: 'admin',
           tier: 'Platinum',
           troll_coins: 10000,

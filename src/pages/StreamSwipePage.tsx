@@ -53,8 +53,8 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
   const [searchParams] = useSearchParams();
 
   useSEO({
-    title: 'Live Streams | Troll City - Swipe & Watch Live Gaming & Podcasts',
-    description: 'Swipe through live streams on Troll City. Watch gaming battles, top streamers, podcasts, and more in a full-screen vertical feed. The TikTok-style streaming experience.',
+    title: 'Live Streams | Mai Troll - Swipe & Watch Live Gaming & Podcasts',
+    description: 'Swipe through live streams on Mai Troll. Watch gaming battles, top streamers, podcasts, and more in a full-screen vertical feed. The TikTok-style streaming experience.',
     keywords: [
       'live streams', 'stream swipe', 'watch live', 'gaming streams',
       'podcast streams', 'top streamers', 'vertical feed', 'live content',

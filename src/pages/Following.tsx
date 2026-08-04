@@ -305,7 +305,7 @@ export default function Following() {
                     </h1>
 
                     <p className="text-gray-400 mt-2">
-                      Manage your Troll City connections and followers
+                      Manage your Mai Troll connections and followers
                     </p>
                   </div>
                 </div>
@@ -395,7 +395,7 @@ export default function Following() {
             </h2>
 
             <p className="text-gray-400">
-              Syncing Troll City network...
+              Syncing Mai Troll network...
             </p>
           </div>
         ) : (
@@ -419,7 +419,7 @@ export default function Following() {
 
                   <p className="text-gray-400 max-w-md mx-auto">
                     Start connecting with creators, broadcasters, and citizens
-                    inside Troll City.
+                    inside Mai Troll.
                   </p>
                 </div>
               ) : (
@@ -451,7 +451,7 @@ export default function Following() {
 
                 <p className="text-gray-400 max-w-md mx-auto">
                   Grow your audience through broadcasts, battles, and content
-                  across Troll City.
+                  across Mai Troll.
                 </p>
               </div>
             ) : (

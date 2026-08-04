@@ -30,7 +30,7 @@ import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { usePodcastStore } from '@/stores/podcastStore'
-import { trollCityBroadcastTheme as theme } from '@/styles/broadcastTheme'
+import { MaiTrollBroadcastTheme as theme } from '@/styles/broadcastTheme'
 import { showStorageStartWarning } from '@/hooks/useStorageUsage'
 import { usePodcastLockdown } from '@/hooks/useFeatureLockdown'
 
@@ -127,12 +127,12 @@ export default function PodcastCentral() {
   const { isLocked: isPodcastLockedDown } = usePodcastLockdown()
 
   useSEO({
-    title: 'Podcasts | Troll City - Live Podcast Streaming & Creator Podcasts',
-    description: 'Listen to live podcasts on Troll City. Discover trending podcasts, creator-hosted shows, and podcast streaming from a vibrant community of podcasters and listeners.',
+    title: 'Podcasts | Mai Troll - Live Podcast Streaming & Creator Podcasts',
+    description: 'Listen to live podcasts on Mai Troll. Discover trending podcasts, creator-hosted shows, and podcast streaming from a vibrant community of podcasters and listeners.',
     keywords: [
       'podcasts', 'live podcasts', 'podcast streaming', 'podcast community',
       'creator podcasts', 'listen to podcasts', 'podcast platform',
-      'Troll City podcasts', 'audio content', 'podcast shows'
+      'MaiTroll podcasts', 'audio content', 'podcast shows'
     ]
   });
 

@@ -1,6 +1,6 @@
 # Gift Video Conversion & Upload Scripts
 
-This system converts raw gift videos into transparent WebM files and uploads them to Supabase Storage for use in Troll City gift overlays.
+This system converts raw gift videos into transparent WebM files and uploads them to Supabase Storage for use in Mai Troll gift overlays.
 
 ## Folder Structure
 

@@ -1,6 +1,6 @@
 # 100K Infrastructure Specification & Confirmation
 
-This document confirms the high-scale (100k+) infrastructure design for Troll City, addressing specific production-grade requirements for message trust, transport, and delivery semantics.
+This document confirms the high-scale (100k+) infrastructure design for Mai Troll, addressing specific production-grade requirements for message trust, transport, and delivery semantics.
 
 ## 1. Message Trust: Server-Signed Envelopes
 To prevent spoofing and ensure message integrity, all stream interactions pass through a secure "Event API" Edge Function.

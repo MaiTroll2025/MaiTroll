@@ -55,7 +55,7 @@ export default function MobileTopBar({
         type="button"
         className="tc-mobile-topbar__brand"
         onClick={() => navigate("/")}
-        aria-label="Go to Troll City home"
+        aria-label="Go to Mai Troll home"
       >
         <span className="tc-mobile-topbar__brand-mark">TC</span>
 
@@ -74,7 +74,7 @@ export default function MobileTopBar({
           type="button"
           className="tc-mobile-topbar__icon-btn"
           onClick={() => navigate("/search")}
-          aria-label="Search Troll City"
+          aria-label="Search Mai Troll"
         >
           <Search size={20} />
         </button>

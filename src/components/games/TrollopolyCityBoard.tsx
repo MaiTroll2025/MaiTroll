@@ -1549,7 +1549,7 @@ export const TrollopolyCityBoard: React.FC<TrollopolyCityBoardProps> = ({
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">
-                    {visibleTile.id === 10 || visibleTile.id === 30 ? 'Troll City Jail' : activePlayer?.username || 'Player'} Landed On
+                    {visibleTile.id === 10 || visibleTile.id === 30 ? 'MaiTroll Jail' : activePlayer?.username || 'Player'} Landed On
                   </p>
                   <h3 className="text-2xl font-black text-white leading-tight">{visibleTile.name}</h3>
                 </div>
@@ -1577,7 +1577,7 @@ export const TrollopolyCityBoard: React.FC<TrollopolyCityBoardProps> = ({
               </div>
               {(visibleTile.id === 10 || visibleTile.id === 30) && (
                 <p className="mt-3 text-sm text-red-200 bg-red-950/50 border border-red-500/30 rounded-lg p-3">
-                  You hit Troll City Jail. Resolve the jail action before the turn can continue.
+                  You hit Mai Troll Jail. Resolve the jail action before the turn can continue.
                 </p>
               )}
               {visibleTile.type === 'special' && ![10, 30].includes(visibleTile.id) && (

@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - BOARD OF EDUCATION ADMIN DASHBOARD
+// Mai Troll ACADEMY - BOARD OF EDUCATION ADMIN DASHBOARD
 // ============================================================
 
 import React, { useEffect, useState } from 'react';

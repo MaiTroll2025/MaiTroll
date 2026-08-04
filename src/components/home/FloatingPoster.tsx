@@ -53,7 +53,7 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
   // Admin-editable content from site_content table
   const [posterTiers, setPosterTiers] = useState<PosterTier[]>([]);
   const [posterTitle, setPosterTitle] = useState('Earn & Cash Out');
-  const [posterSubtitle, setPosterSubtitle] = useState('Troll City Rewards Hub');
+  const [posterSubtitle, setPosterSubtitle] = useState('MaiTroll Rewards Hub');
   const [featuredPkgIds, setFeaturedPkgIds] = useState<string[]>([
     'pkg-500', 'pkg-1000', 'pkg-2500', 'pkg-5000', 'pkg-10000',
   ]);
@@ -124,7 +124,7 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
 
         if (data) {
           setPosterTitle(data.title || 'Earn & Cash Out');
-          setPosterSubtitle(data.subtitle || 'Troll City Rewards Hub');
+          setPosterSubtitle(data.subtitle || 'MaiTroll Rewards Hub');
 
           if (Array.isArray(data.cashout_tiers) && data.cashout_tiers.length > 0) {
             setPosterTiers(data.cashout_tiers as PosterTier[]);
@@ -156,7 +156,7 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
           const data = payload.new;
           if (data) {
             setPosterTitle(data.title || 'Earn & Cash Out');
-            setPosterSubtitle(data.subtitle || 'Troll City Rewards Hub');
+            setPosterSubtitle(data.subtitle || 'MaiTroll Rewards Hub');
             if (Array.isArray(data.cashout_tiers) && data.cashout_tiers.length > 0) {
               setPosterTiers(data.cashout_tiers as PosterTier[]);
             }
@@ -446,7 +446,7 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
                 <div>
                   <p className="text-[10px] text-slate-300 leading-relaxed">
                     <span className="font-semibold text-white">Weekly payouts</span> are processed
-                    every Friday. Reach a cashout tier to unlock instant payout.
+                    on request. Reach a cashout tier to unlock instant payout.
                   </p>
                 </div>
               </div>

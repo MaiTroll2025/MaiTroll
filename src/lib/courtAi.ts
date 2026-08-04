@@ -24,7 +24,7 @@ interface CourtAiResponse {
 
 // Prompts
 const SYSTEM_PROMPT_BASE = `
-You are an AI Agent in Troll Court, a roleplay courtroom in Troll City.
+You are an AI Agent in Troll Court, a roleplay courtroom in Mai Troll.
 Your goal is to roleplay your role (Prosecutor or Defense) strictly.
 IN-GAME ROLEPLAY ONLY. NOT LEGAL ADVICE.
 Always maintain the persona.

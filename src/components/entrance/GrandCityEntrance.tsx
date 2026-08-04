@@ -13,8 +13,8 @@ import AudioControls from './AudioControls'
 
 /**
  * GrandCityEntrance
- * Cinematic ceremonial entrance shown when users first arrive at MaiTrollCity.com.
- * Reveals the live Troll City home page behind the doors once the sequence completes.
+ * Cinematic ceremonial entrance shown when users first arrive at MaiMai Troll.com.
+ * Reveals the live Mai Troll home page behind the doors once the sequence completes.
  */
 export default function GrandCityEntrance() {
   const e = useGrandEntrance()
@@ -76,7 +76,7 @@ export default function GrandCityEntrance() {
       ref={rootRef}
       className={rootClass}
       role="dialog"
-      aria-label="Troll City Grand Entrance"
+      aria-label="Mai Troll Grand Entrance"
       aria-modal="false"
     >
       <div className="gce-safe">
@@ -111,7 +111,7 @@ export default function GrandCityEntrance() {
 
         <AudioControls enabled={e.audioEnabled} onToggle={e.toggleAudio} />
 
-        <div className="gce-brand">MaiTrollCity.com</div>
+        <div className="gce-brand">MaiMai Troll.com</div>
 
         <div className="gce-sr" aria-live="polite" role="status">
           {e.announce}

@@ -48,7 +48,7 @@ interface ModActionsPopupProps {
 
 type TabType = 'gift' | 'mod';
 
-const MOD_ACTIONS = [
+const MOD_ACTIONS_LIST = [
   { id: 'mute', label: 'Mute', icon: Mic, color: 'text-red-400', description: 'Mute user\'s microphone' },
   { id: 'unmute', label: 'Unmute', icon: MicOff, color: 'text-green-400', description: 'Unmute user\'s microphone' },
   { id: 'arrest', label: 'Arrest', icon: AlertCircle, color: 'text-orange-400', description: 'Send to Troll Jail' },
@@ -141,7 +141,7 @@ const ModActionsPopup = memo(function ModActionsPopup({
     !profile?.is_lead_officer &&
     !(profile?.role && ['admin', 'ceo', 'owner', 'superadmin', 'staff', 'moderator', 'lead_troll_officer', 'broadcaster'].includes(profile.role));
   const visibleActions = useMemo(
-    () => isPlainUser ? MOD_ACTIONS.filter((a) => a.id !== 'arrest') : MOD_ACTIONS,
+    () => isPlainUser ? MOD_ACTIONS_LIST.filter((a) => a.id !== 'arrest') : MOD_ACTIONS_LIST,
     [isPlainUser]
   );
   const currentActorId = currentUserId || profile?.id;
@@ -410,7 +410,7 @@ const ModActionsPopup = memo(function ModActionsPopup({
       setShowArrestModal(false);
       setArrestReason('');
       setArrestSeverity('moderate');
-      onArrestUser?.(targetUserId, arrestSeverity, arrestSeverity, bail);
+      onArrestUser?.(targetUserId, arrestReason, arrestSeverity, bail);
     } catch (error) {
       console.error('Error arresting user:', error);
       toast.error('Failed to arrest user');
@@ -970,7 +970,7 @@ const ModActionsPopup = memo(function ModActionsPopup({
             </div>
             <div>
               <h3 className="text-white font-semibold tracking-wide">{targetUsername}</h3>
-              <span className="text-[11px] uppercase tracking-[0.18em] text-purple-300/80">Troll City Command</span>
+              <span className="text-[11px] uppercase tracking-[0.18em] text-purple-300/80">Mai Troll Command</span>
               {targetUser?.role && (
                 <div className="mt-1 text-[10px] text-slate-400 capitalize">{targetUser.role.replace('_', ' ')}</div>
               )}

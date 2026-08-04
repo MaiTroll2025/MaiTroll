@@ -1,7 +1,7 @@
 /**
  * T LEAGUE CONFIGURATION — REWORKED
  * ==================================
- * Troll City Broadcast League System
+ * Mai Troll Broadcast League System
  *
  * League score = total_xp (from the user XP/level system)
  *   - The T league reads from the same xp system the bottom nav bar uses
@@ -39,7 +39,7 @@ export const T_LEAGUE_TIERS: TLeagueTier[] = [
   { tier: 'T7',  minScore: 100000,     label: 'Hype Commander',     color: 'from-orange-700 to-orange-500', badgeColor: 'bg-orange-700',  textColor: 'text-orange-300', icon: '🔥', subTiers: ['a','b','c','d'] },
   { tier: 'T8',  minScore: 300000,     label: 'Troll Elite',        color: 'from-amber-700 to-amber-500',   badgeColor: 'bg-amber-700',   textColor: 'text-amber-300',  icon: '⭐', subTiers: ['a','b','c','d'] },
   { tier: 'T9',  minScore: 750000,     label: 'City Legend',        color: 'from-yellow-600 to-yellow-400', badgeColor: 'bg-yellow-600',  textColor: 'text-yellow-200', icon: '🌟', subTiers: ['a','b','c','d'] },
-  { tier: 'T10', minScore: 2000000,    label: 'Troll City Immortal', color: 'from-red-600 to-yellow-500',    badgeColor: 'bg-red-700',     textColor: 'text-red-200',    icon: '🏆', subTiers: ['a','b','c','d'] },
+  { tier: 'T10', minScore: 2000000,    label: 'MaiTroll Immortal', color: 'from-red-600 to-yellow-500',    badgeColor: 'bg-red-700',     textColor: 'text-red-200',    icon: '🏆', subTiers: ['a','b','c','d'] },
 ];
 
 /**
@@ -70,7 +70,7 @@ export const LEAGUE_LEVELS: LeagueLevel[] = [
   { level: 7,  label: 'Troll Angel',      minGiftsSent: 40000,   color: 'from-orange-800 to-orange-600', textColor: 'text-orange-300', icon: '😇', perk: 'Angel gift effect' },
   { level: 8,  label: 'City Guardian',    minGiftsSent: 100000,  color: 'from-amber-800 to-amber-600',   textColor: 'text-amber-300',  icon: '🛡️', perk: '+20% gift XP bonus' },
   { level: 9,  label: 'Legendary Gifter', minGiftsSent: 300000,  color: 'from-yellow-700 to-yellow-500', textColor: 'text-yellow-200', icon: '🌟', perk: 'Legendary gift trail' },
-  { level: 10, label: 'Troll City Legend', minGiftsSent: 1000000, color: 'from-red-700 to-yellow-500',    textColor: 'text-red-200',    icon: '🏆', perk: 'All perks + Crown' },
+  { level: 10, label: 'MaiTroll Legend', minGiftsSent: 1000000, color: 'from-red-700 to-yellow-500',    textColor: 'text-red-200',    icon: '🏆', perk: 'All perks + Crown' },
 ];
 
 /**

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Troll City Load Test - 1000 Concurrent Users (Simple Version)
+ * Mai Troll Load Test - 1000 Concurrent Users (Simple Version)
  * Tests backend performance and basic connectivity without database writes
  */
 
@@ -15,7 +15,7 @@ class SimpleLoadTester {
   }
 
   async runLoadTest() {
-    console.log('🚀 Starting Troll City 1000 User Load Test (Simple)');
+    console.log('🚀 Starting Mai Troll 1000 User Load Test (Simple)');
     console.log('📊 Testing backend performance without database writes');
 
     // Test different endpoints with increasing user counts
@@ -96,7 +96,7 @@ class SimpleLoadTester {
 
       const requestOptions = {
         headers: {
-          'User-Agent': `TrollCity-LoadTest-User-${userIndex}`,
+          'User-Agent': `Mai Troll-LoadTest-User-${userIndex}`,
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.5',
           'Accept-Encoding': 'gzip, deflate',
@@ -104,7 +104,7 @@ class SimpleLoadTester {
           'Upgrade-Insecure-Requests': '1',
           // Mock authentication to prevent real database calls
           'Authorization': 'Bearer mock-jwt-token-for-load-testing',
-          'X-TrollCity-Load-Test': 'true',
+          'X-Mai Troll-Load-Test': 'true',
         },
         timeout: 10000, // 10 second timeout per request
       };
@@ -153,7 +153,7 @@ class SimpleLoadTester {
 
   printResults() {
     console.log('\n' + '='.repeat(80));
-    console.log('📊 TROLL CITY LOAD TEST RESULTS - 1000 USERS (SIMPLE)');
+    console.log('📊 Mai Troll LOAD TEST RESULTS - 1000 USERS (SIMPLE)');
     console.log('='.repeat(80));
 
     console.log('\n🎯 SUMMARY:');

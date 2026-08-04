@@ -2,8 +2,8 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://maitrollcity.com/sitemap.xml
-Sitemap: https://maitrollcity.com/sitemap-dynamic.xml
+Sitemap: https://maiMai Troll.com/sitemap.xml
+Sitemap: https://maiMai Troll.com/sitemap-dynamic.xml
 
 # Block authentication
 Disallow: /auth/

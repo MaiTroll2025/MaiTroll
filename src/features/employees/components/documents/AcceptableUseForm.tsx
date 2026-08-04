@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I acknowledge that I have read and agree to the Troll City Systems Acceptable Use Policy governing company accounts, devices, passwords, records, and administrative systems.'
+  'I acknowledge that I have read and agree to the Mai Troll Systems Acceptable Use Policy governing company accounts, devices, passwords, records, and administrative systems.'
 
 export default function AcceptableUseForm(props: DocumentFormProps) {
   return (

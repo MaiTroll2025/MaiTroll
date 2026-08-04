@@ -145,7 +145,7 @@ export default function PayoutQueue() {
                       <p><strong>Status: ${newStatus.toUpperCase()}</strong></p>
                       ${reason ? `<p>Reason: ${reason}</p>` : ''}
                       ${paymentReference ? `<p>Payment Reference: ${paymentReference}</p>` : ''}
-                      <p>– TrollCity Team</p>
+                      <p>– Mai Troll Team</p>
                     `
                 }
              });
@@ -322,7 +322,7 @@ export default function PayoutQueue() {
                         {payout.username}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-white">{payout.coins_used.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-white">{payout.coins_used?.toLocaleString() || 0}</td>
                     <td className="px-4 py-3 text-green-400 font-semibold">
                       {formatCurrency(payout.cash_amount)}
                     </td>
@@ -407,7 +407,7 @@ export default function PayoutQueue() {
                   </div>
                   <div>
                     <div className="text-gray-400">Coins Requested</div>
-                    <div className="text-white">{selectedPayout.coins_used.toLocaleString()}</div>
+                    <div className="text-white">{selectedPayout.coins_used?.toLocaleString() || 0}</div>
                   </div>
                   <div>
                     <div className="text-gray-400">Cash Amount</div>

@@ -1,4 +1,4 @@
-# Troll City Scalability Refactor v3 — Realtime & Architecture Focused
+# Mai Troll Scalability Refactor v3 — Realtime & Architecture Focused
 
 **Date:** 2026-06-14
 **Status:** Planning
@@ -253,7 +253,7 @@ interface ChannelInfo {
 
 ```ts
 // Exposed in dev console
-window.__TROLLCITY_REALTIME_STATS__ = RealtimeManager.getStats();
+window.__Mai Troll_REALTIME_STATS__ = RealtimeManager.getStats();
 
 // Auto-warn on leak
 if (stats.leaked > 0) {
@@ -474,7 +474,7 @@ SELECT COALESCE(wal->>'type', 'unknown') FROM ...
 | 1 | Stream query calls | ↓ 80%+ | `pg_stat_statements` |
 | 2 | Browser requests/minute | ↓ 50%+ | DevTools Network |
 | 3 | Realtime channel leaks | 0 | `RealtimeManager.getStats()` |
-| 4 | Channels return to baseline | Yes | `window.__TROLLCITY_SUPABASE_REALTIME_DEBUG__` |
+| 4 | Channels return to baseline | Yes | `window.__Mai Troll_SUPABASE_REALTIME_DEBUG__` |
 | 5 | Connection counts | ↓ | `pg_stat_activity` |
 | 6 | League JSON errors | 0 | `cron.job_run_details` |
 | 7 | 40-min stream resources | ≤ baseline | Supabase dashboard |

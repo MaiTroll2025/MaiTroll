@@ -1,5 +1,5 @@
 -- ============================================
--- TCPS (Troll City Postal Service) Cleanup SQL
+-- TCPS (Mai Troll Postal Service) Cleanup SQL
 -- Run this in Supabase SQL Editor to remove
 -- all TCPS-related database objects
 -- ============================================

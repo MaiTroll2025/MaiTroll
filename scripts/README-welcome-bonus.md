@@ -1,6 +1,6 @@
 # Welcome Bonus for Existing Users
 
-This script applies a 1000 Tromonds welcome bonus to all existing users in Troll City.
+This script applies a 1000 Tromonds welcome bonus to all existing users in Mai Troll.
 
 ## Option 1: Run via Supabase Dashboard (Recommended)
 
@@ -24,7 +24,7 @@ SELECT
   id as user_id,
   'welcome_bonus' as type,
   1000 as amount,
-  'Welcome bonus for existing Troll City users!' as description,
+  'Welcome bonus for existing Mai Troll users!' as description,
   NOW() as created_at
 FROM user_profiles
 WHERE id IS NOT NULL;

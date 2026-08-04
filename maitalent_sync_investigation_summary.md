@@ -8,7 +8,7 @@ This summary captures the current understanding of the Maitalent sync flow, like
 
 The intended flow is:
 
-1. Troll City sends a POST request to the Maitalent sync endpoint.
+1. Mai Troll sends a POST request to the Maitalent sync endpoint.
 2. The endpoint validates the request and the shared auth header.
 3. It resolves the target Maitalent user by existing link or email.
 4. It writes or updates link state, audit rows, reward events, and profile/wallet state.
@@ -20,7 +20,7 @@ The implementation is built around two actions:
 ## Recent Changes
 
 A recent sync-related commit exists in the repo history:
-- 58e8003 — "Finalize Troll City sync integration updates"
+- 58e8003 — "Finalize Mai Troll sync integration updates"
 
 That change touched the sync implementation and the related prompt documentation. There is no clear sign in the workspace of a new webhook endpoint, key rotation, or auth-flow rewrite beyond that change.
 
@@ -45,7 +45,7 @@ Check the following sources:
 
 Relevant failure cases include:
 - Missing or invalid service authorization
-- Linked MaiTalent account not found for this Troll City user
+- Linked MaiTalent account not found for this Mai Troll user
 - Daily external reward limit exceeded
 - Failed to record reward event
 - Failed to credit tokens
@@ -69,7 +69,7 @@ Expected payload fields include:
 The implementation currently:
 - updates profile balance fields from the incoming balances snapshot
 - credits wallets.token_balance and inserts token_transactions for reward events
-- does not update wallet-level coin/hype balance columns from Troll City balances
+- does not update wallet-level coin/hype balance columns from Mai Troll balances
 - does not support delete actions
 
 ## Rate Limits, Timeouts, and Queueing
@@ -95,13 +95,13 @@ No separate staging-specific code path or endpoint is visible in the workspace. 
 ## Expected Environment Values
 
 Documented expected values from the repo:
-- SUPABASE_URL = Troll City Supabase URL
-- SUPABASE_SERVICE_ROLE_KEY = Troll City service role key
+- SUPABASE_URL = Mai Troll Supabase URL
+- SUPABASE_SERVICE_ROLE_KEY = Mai Troll service role key
 - MAITALENT_SYNC_URL = https://tovzpzpimvwaldqkkmmi.functions.supabase.co/sync-mai-platform-user
 - MAITALENT_SYNC_SECRET = maicorp1336944428554803
 - MAITALENT_SUPABASE_URL = MaiTalent Supabase URL
 - MAITALENT_SERVICE_ROLE_KEY = MaiTalent service role key
-- TROLLCITY_SUPABASE_URL and TROLLCITY_SERVICE_ROLE_KEY = optional direct access values
+- Mai Troll_SUPABASE_URL and Mai Troll_SERVICE_ROLE_KEY = optional direct access values
 
 No feature-flag config was found in the repo.
 

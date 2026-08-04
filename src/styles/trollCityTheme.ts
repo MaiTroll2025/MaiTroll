@@ -1,7 +1,7 @@
-// TrollCity Global Theme Configuration
+// Mai Troll Global Theme Configuration
 // Applied across all pages for consistent branding
 
-export const trollCityTheme = {
+export const MaiTrollTheme = {
   // Background Gradients
   backgrounds: {
     app: 'tc-page-surface',

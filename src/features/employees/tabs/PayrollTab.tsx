@@ -687,7 +687,7 @@ export default function PayrollTab({
             <div className="flex items-center gap-2">
               <WalletCards className="h-5 w-5 text-fuchsia-300" />
               <h1 className="text-xl font-black text-white">
-                Troll City Payroll
+                Mai Troll Payroll
               </h1>
             </div>
 

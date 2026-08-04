@@ -51,9 +51,9 @@ export default function HRCenter() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
 
   useSEO({
-    title: 'HR Center | Troll City',
-    description: 'Troll City HR Center — applications, time tracking, payroll, time off, handbook, and role management.',
-    keywords: ['HR Center', 'Troll City HR', 'applications', 'payroll', 'time clock', 'time off'],
+    title: 'HR Center | Mai Troll',
+    description: 'MaiTroll HR Center — applications, time tracking, payroll, time off, handbook, and role management.',
+    keywords: ['HR Center', 'MaiTroll HR', 'applications', 'payroll', 'time clock', 'time off'],
   })
 
   const role = String(profile?.role || '')
@@ -128,7 +128,7 @@ export default function HRCenter() {
             <div>
               <h3 className="text-lg font-black text-white">Welcome to HR Center</h3>
               <p className="text-xs text-slate-400">
-                Troll City's central hub for employment, roles, payroll, time tracking, and HR resources.
+                Mai Troll's central hub for employment, roles, payroll, time tracking, and HR resources.
               </p>
             </div>
 
@@ -153,14 +153,14 @@ export default function HRCenter() {
               </div>
               <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl">
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Platform</p>
-                <p className="mt-2 text-xl font-black text-purple-300">Troll City</p>
+                <p className="mt-2 text-xl font-black text-purple-300">Mai Troll</p>
               </div>
             </div>
 
             <div className="rounded-3xl border border-cyan-300/10 bg-cyan-500/5 p-5">
-              <h4 className="text-sm font-bold text-cyan-100">About Troll City HR Center</h4>
+              <h4 className="text-sm font-bold text-cyan-100">About Mai Troll HR Center</h4>
               <p className="mt-2 text-xs text-slate-300">
-                Troll City uses its own proprietary internal HR and payroll management system for approved platform roles,
+                Mai Troll uses its own proprietary internal HR and payroll management system for approved platform roles,
                 applications, time tracking, payroll records, and HR resources. All employment logic — including role
                 applications, clock-in/out, payroll, time off, handbook, and HR resources — is centralized here in HR Center.
               </p>
@@ -213,7 +213,7 @@ export default function HRCenter() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">HR Center</h1>
-              <p className="text-xs text-slate-400">Troll City Employment · Roles · Payroll · Resources</p>
+              <p className="text-xs text-slate-400">Mai Troll Employment · Roles · Payroll · Resources</p>
             </div>
           </div>
         </div>

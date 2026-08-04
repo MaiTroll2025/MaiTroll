@@ -50,7 +50,7 @@ These had no obvious import/path reference in the scan:
 - `src/components/broadcast/RiveGiftPlayer.tsx`
 - `src/components/broadcast/TrollBattleArena.tsx`
 - `src/components/broadcast/TrollBattleRoom.tsx`
-- `src/components/broadcast/TrollCityLoading.tsx`
+- `src/components/broadcast/Mai TrollLoading.tsx`
 - `src/components/broadcast/TrollmersBattleControls.tsx`
 - `src/components/CarUpgradesModal.tsx`
 - `src/components/ClickableUsernameWithReport.tsx`

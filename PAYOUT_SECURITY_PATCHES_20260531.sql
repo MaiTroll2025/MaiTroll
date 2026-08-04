@@ -1,5 +1,5 @@
 -- ============================================================
--- TROLL CITY PAYOUT SECURITY PATCHES (2026-05-31)
+-- Mai Troll PAYOUT SECURITY PATCHES (2026-05-31)
 -- ============================================================
 -- STATUS: PREPARED ONLY — DO NOT RUN WITHOUT APPROVAL
 -- These patches address P0/P1 security findings from the payout audit.

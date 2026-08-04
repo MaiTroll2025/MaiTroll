@@ -53,10 +53,10 @@ function websiteSchemaStub() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Troll City',
-    alternateName: 'Mai Troll City',
+    name: 'MaiTroll',
+    alternateName: 'MaiMaiTroll',
     url: SITE_URL,
-    description: 'Troll City is a social streaming platform for creators, streamers, gamers, and online communities.',
+    description: 'MaiTroll is a social streaming platform for creators, streamers, gamers, and online communities.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {

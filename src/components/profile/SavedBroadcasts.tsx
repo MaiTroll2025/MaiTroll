@@ -15,7 +15,7 @@ import {
   Save,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { trollCityTheme } from '../../styles/trollCityTheme';
+import { MaiTrollTheme } from '../../styles/trollCityTheme';
 import { useAuthStore } from '../../lib/store';
 
 interface SavedBroadcastsProps {
@@ -316,7 +316,7 @@ export default function SavedBroadcasts({ userId }: SavedBroadcastsProps) {
   if (savedItems.length === 0) {
     return (
       <div
-        className={`text-center py-12 ${trollCityTheme.backgrounds.card} rounded-xl border border-white/10`}
+        className={`text-center py-12 ${MaiTrollTheme.backgrounds.card} rounded-xl border border-white/10`}
       >
         <div className="text-4xl mb-3">🔖</div>
         <h3 className="text-lg font-bold text-white mb-2">No Saved Streams</h3>
@@ -335,7 +335,7 @@ export default function SavedBroadcasts({ userId }: SavedBroadcastsProps) {
           return (
             <div
               key={`${item.id}-${item.saved_at}`}
-              className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-xl overflow-hidden hover:border-purple-500/50 transition-all group cursor-pointer relative`}
+              className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-xl overflow-hidden hover:border-purple-500/50 transition-all group cursor-pointer relative`}
               onClick={() => {
                 if (hasRecording) {
                   setSelectedStream(item);

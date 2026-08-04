@@ -32,9 +32,9 @@ import Following from "./pages/Following";
 import CoinStore from "./pages/CoinStore";
 import Marketplace from "./pages/Marketplace";
 import UserInventory from "./pages/UserInventory";
-import SellOnTrollCity from "./pages/SellOnTrollCity";
+import SellOnMai Troll from "./pages/SellOnMai Troll";
 import Leaderboard from "./pages/Leaderboard";
-import TrollCityWall from "./pages/TrollCityWall";
+import Mai TrollWall from "./pages/Mai TrollWall";
 import TrollCourt from "./pages/TrollCourt";
 import EmpirePartnerDashboard from "./pages/EmpirePartnerDashboard";
 import GiftStorePage from "./pages/GiftStorePage";
@@ -480,7 +480,7 @@ function AppContent() {
                   <Route path="/inventory" element={<UserInventory />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/support" element={<Support />} />
-                  <Route path="/wall" element={<TrollCityWall />} />
+                  <Route path="/wall" element={<Mai TrollWall />} />
                   <Route path="/reels" element={<ReelFeed />} />
                   <Route path="/profile/id/:userId" element={<Profile />} />
                   <Route path="/profile/:username" element={<Profile />} />
@@ -530,7 +530,7 @@ function AppContent() {
                   <Route path="/withdraw" element={<Withdraw />} />
                   <Route path="/transactions" element={<TransactionHistory />} />
                   <Route path="/shop-partner" element={<ShopPartnerPage />} />
-                  <Route path="/sell" element={<SellOnTrollCity />} />
+                  <Route path="/sell" element={<SellOnMai Troll />} />
                   <Route path="/seller/earnings" element={<ShopEarnings />} />
                   <Route path="/gift-inventory" element={<GiftInventoryPage />} />
 

@@ -159,7 +159,7 @@ const JailPreviewPage: React.FC = () => {
             {isJailed ? (
               <div className="space-y-6">
                 <div className="bg-red-900/20 p-4 rounded-lg border border-red-900/50">
-                  <p className="text-gray-300 mb-2">You are currently serving a sentence in Troll City Jail.</p>
+                  <p className="text-gray-300 mb-2">You are currently serving a sentence in Mai Troll Jail.</p>
                   <p className="text-red-400 text-sm italic">Access to city services has been suspended.</p>
                 </div>
                 

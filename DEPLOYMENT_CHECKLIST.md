@@ -107,13 +107,13 @@ VITE_SQUARE_ACCESS_TOKEN=<production_token>
 AGORA_APP_ID=7b95b64b0e154f7ab931e2abf000e694
 VITE_AGORA_APP_ID=7b95b64b0e154f7ab931e2abf000e694
 LIVEKIT_APP_CERTIFICATE=<certificate>
-VITE_BACKEND_TOKEN_SERVER_URL=https://trollcity.app/api/livekit-token
+VITE_BACKEND_TOKEN_SERVER_URL=https://Mai Troll.app/api/livekit-token
 
 # Admin
-VITE_ADMIN_EMAIL=trollcity2025@gmail.com
+VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com
 
 # API (UPDATE FOR PRODUCTION)
-VITE_API_URL=https://trollcity.app
+VITE_API_URL=https://Mai Troll.app
 ```
 
 **⚠️ IMPORTANT:** Update `VITE_API_URL` to production domain!
@@ -159,7 +159,7 @@ Or via Vercel Dashboard:
    - [ ] Verify terms acceptance works
 
 2. **Admin Access**
-   - [ ] Login with `trollcity2025@gmail.com`
+   - [ ] Login with `Mai Troll2025@gmail.com`
    - [ ] Verify auto-assigned admin role
    - [ ] Access `/admin` dashboard
    - [ ] Verify economy overview loads
@@ -242,7 +242,7 @@ Supabase Dashboard → Database → Logs:
 
 1. **API Health**
    ```bash
-   curl https://trollcity.app/api/health
+   curl https://Mai Troll.app/api/health
    ```
    Expected: `{"success":true,"message":"ok"}`
 
@@ -281,9 +281,9 @@ If migrations cause issues:
 4. Debug offline
 
 ### Emergency Contacts
-- Supabase Support: trollcity2025@gmail.com
-- Square Support: trollcity2025@gmail.com
-- Vercel Support: trollcity2025@gmail.com
+- Supabase Support: Mai Troll2025@gmail.com
+- Square Support: Mai Troll2025@gmail.com
+- Vercel Support: Mai Troll2025@gmail.com
 
 ---
 

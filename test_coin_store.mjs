@@ -517,7 +517,7 @@ async function runAllTests() {
   console.log(`
 ${colors.cyan}╔════════════════════════════════════════════════════════════════╗
 ║          Coin Store Comprehensive Test Suite                      ║
-║                  Troll City - Test Runner                          ║
+║                  Mai Troll - Test Runner                          ║
 ╚══════════════════════════════════════════════════════════════════╝${colors.reset}
   `);
 

@@ -115,9 +115,9 @@
 | Area | File | Button Label | Handler | Safe To Test | Action Type | Tables | RPCs | Edge Functions | Notes |
 |------|------|--------------|---------|--------------|-------------|--------|------|----------------|-------|
 | Marketplace | pages/Marketplace.tsx | Buy Item | handleBuy | No | MONEY_RISK | marketplace_purchases | fulfill_marketplace_order | - | Costs coins |
-| SellOnTrollCity | pages/SellOnTrollCity.tsx | Create Listing | handleCreateListing | Yes | SAFE_WRITE_DEV_ONLY | marketplace_items, vehicle_listings, service_listings, business_profiles, trollcity_shops, shop_items | create_marketplace_listing | - | - |
-| SellOnTrollCity | pages/SellOnTrollCity.tsx | Create Shop | handleCreateShop | Yes | SAFE_WRITE_DEV_ONLY | trollcity_shops | - | - | - |
-| SellOnTrollCity | pages/SellOnTrollCity.tsx | Add Shop Item | handleAddItem | Yes | SAFE_WRITE_DEV_ONLY | shop_items | - | - | - |
+| SellOnMai Troll | pages/SellOnMai Troll.tsx | Create Listing | handleCreateListing | Yes | SAFE_WRITE_DEV_ONLY | marketplace_items, vehicle_listings, service_listings, business_profiles, Mai Troll_shops, shop_items | create_marketplace_listing | - | - |
+| SellOnMai Troll | pages/SellOnMai Troll.tsx | Create Shop | handleCreateShop | Yes | SAFE_WRITE_DEV_ONLY | Mai Troll_shops | - | - | - |
+| SellOnMai Troll | pages/SellOnMai Troll.tsx | Add Shop Item | handleAddItem | Yes | SAFE_WRITE_DEV_ONLY | shop_items | - | - | - |
 | GiftStorePage | pages/GiftStorePage.jsx | Gift Item | handleGift | No | MONEY_RISK | - | send_gift_in_stream | - | Costs coins |
 | GiftInventoryPage | pages/GiftInventoryPage.jsx | Send Gift | handleSendGift | No | MONEY_RISK | - | send_gift_in_stream | - | Costs coins |
 

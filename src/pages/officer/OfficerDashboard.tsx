@@ -6,7 +6,7 @@ import { OFFICER_BASE_HOURLY_COINS } from '../../lib/officerPay'
 import { toast } from 'sonner'
 import { format12hr, formatFullDateTime12hr } from '../../utils/timeFormat'
 import { Shield, Ghost, Clock, Award, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react'
-import { trollCityTheme } from '../../styles/trollCityTheme'
+import { MaiTrollTheme } from '../../styles/trollCityTheme'
 import OfficerShiftCalendar from '../../components/officer/OfficerShiftCalendar'
 import OfficerClock from '../../components/officer/OfficerClock'
 
@@ -193,11 +193,11 @@ export default function OfficerDashboard() {
   }
 
   if (loading) {
-    return <div className={`p-6 ${trollCityTheme.text.primary} text-center`}>Loading...</div>
+    return <div className={`p-6 ${MaiTrollTheme.text.primary} text-center`}>Loading...</div>
   }
 
   return (
-    <div className={`${trollCityTheme.backgrounds.primary} ${trollCityTheme.text.primary} p-6 max-w-5xl mx-auto`}>
+    <div className={`${MaiTrollTheme.backgrounds.primary} ${MaiTrollTheme.text.primary} p-6 max-w-5xl mx-auto`}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Shield className="w-8 h-8 text-purple-400" />
@@ -208,10 +208,10 @@ export default function OfficerDashboard() {
       <div className="mb-6 grid md:grid-cols-2 gap-6">
         <OfficerClock onActionComplete={loadData} />
         
-        <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-lg p-6 flex flex-col justify-between`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-lg p-6 flex flex-col justify-between`}>
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Ghost className={`w-6 h-6 ${localGhostMode ? 'text-purple-400 animate-pulse' : trollCityTheme.text.muted}`} />
+              <Ghost className={`w-6 h-6 ${localGhostMode ? 'text-purple-400 animate-pulse' : MaiTrollTheme.text.muted}`} />
               <h2 className="text-xl font-bold">Ghost Mode</h2>
               {localGhostMode && (
                 <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-400/30">
@@ -219,7 +219,7 @@ export default function OfficerDashboard() {
                 </span>
               )}
             </div>
-            <p className={`text-sm ${trollCityTheme.text.muted}`}>
+            <p className={`text-sm ${MaiTrollTheme.text.muted}`}>
               {localGhostMode 
                 ? 'You are invisible to regular users. They cannot see your role in the audience bar or viewer list.' 
                 : 'Become invisible to users while keeping all moderation tools active.'
@@ -231,8 +231,8 @@ export default function OfficerDashboard() {
             disabled={togglingGhost}
             className={`mt-4 w-full py-3 rounded-xl font-bold transition-all ${
               localGhostMode 
-                ? `${trollCityTheme.interactive.active} hover:bg-slate-700/70 ${trollCityTheme.borders.glass}` 
-                : `${trollCityTheme.gradients.button} text-white`
+                ? `${MaiTrollTheme.interactive.active} hover:bg-slate-700/70 ${MaiTrollTheme.borders.glass}` 
+                : `${MaiTrollTheme.gradients.button} text-white`
             }`}
           >
             {togglingGhost 
@@ -251,15 +251,15 @@ export default function OfficerDashboard() {
 
       {/* Live Status */}
       {activeAssignment && workSessions.length > 0 && workSessions[0].clock_out === null && (
-        <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} border-green-500 rounded-lg p-4 mb-6`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} border-green-500 rounded-lg p-4 mb-6`}>
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-5 h-5 text-green-400" />
             <p className="font-semibold">Currently Assigned</p>
           </div>
-          <p className={`text-sm ${trollCityTheme.text.muted}`}>
+          <p className={`text-sm ${MaiTrollTheme.text.muted}`}>
             Stream: {activeAssignment.streams?.title || activeAssignment.stream_id}
           </p>
-          <p className={`text-sm ${trollCityTheme.text.muted}`}>
+          <p className={`text-sm ${MaiTrollTheme.text.muted}`}>
             Active for: {calculateDuration(activeAssignment.joined_at)}
           </p>
         </div>
@@ -267,24 +267,24 @@ export default function OfficerDashboard() {
 
       {/* Stats */}
     <div className="grid md:grid-cols-4 gap-4 mb-6">
-        <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-lg p-4`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-lg p-4`}>
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-5 h-5 text-purple-400" />
-            <div className={`text-sm ${trollCityTheme.text.muted}`}>Reputation Score</div>
+            <div className={`text-sm ${MaiTrollTheme.text.muted}`}>Reputation Score</div>
           </div>
           <div className="text-2xl font-bold">{profile?.officer_reputation_score || 100}</div>
         </div>
-        <div className={`${trollCityTheme.backgrounds.card} border-blue-600/30 border rounded-lg p-4`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} border-blue-600/30 border rounded-lg p-4`}>
           <div className="flex items-center gap-2 mb-2">
             <Award className="w-5 h-5 text-blue-400" />
-            <div className={`text-sm ${trollCityTheme.text.muted}`}>Officer Level</div>
+            <div className={`text-sm ${MaiTrollTheme.text.muted}`}>Officer Level</div>
           </div>
           <div className="text-2xl font-bold">Level {profile?.officer_level || 1}</div>
         </div>
-        <div className={`${trollCityTheme.backgrounds.card} border-green-600/30 border rounded-lg p-4`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} border-green-600/30 border rounded-lg p-4`}>
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-5 h-5 text-green-400" />
-            <div className={`text-sm ${trollCityTheme.text.muted}`}>Status</div>
+            <div className={`text-sm ${MaiTrollTheme.text.muted}`}>Status</div>
           </div>
           <div className="text-2xl font-bold">
             {profile?.is_troll_officer && !profile?.is_officer_active
@@ -295,13 +295,13 @@ export default function OfficerDashboard() {
             }
           </div>
         </div>
-        <div className={`${trollCityTheme.backgrounds.card} border-yellow-600/30 border rounded-lg p-4`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} border-yellow-600/30 border rounded-lg p-4`}>
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="w-5 h-5 text-yellow-400" />
-            <div className={`text-sm ${trollCityTheme.text.muted}`}>Hourly Rate</div>
+            <div className={`text-sm ${MaiTrollTheme.text.muted}`}>Hourly Rate</div>
           </div>
           <div className="text-2xl font-bold text-yellow-400">{OFFICER_BASE_HOURLY_COINS.toLocaleString()}</div>
-          <div className={`text-xs ${trollCityTheme.text.muted}`}>coins/hour</div>
+          <div className={`text-xs ${MaiTrollTheme.text.muted}`}>coins/hour</div>
       </div>
     </div>
 
@@ -309,13 +309,13 @@ export default function OfficerDashboard() {
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-semibold">Scheduled Shifts</h2>
-        <p className={`text-sm ${trollCityTheme.text.muted}`}>{shiftSlots.length} slots</p>
+        <p className={`text-sm ${MaiTrollTheme.text.muted}`}>{shiftSlots.length} slots</p>
       </div>
-      <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-lg overflow-hidden`}>
+      <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-lg overflow-hidden`}>
         {/* Mobile Card View */}
         <div className="block md:hidden p-4">
           {shiftSlots.length === 0 ? (
-            <div className={`text-center py-8 ${trollCityTheme.text.muted} whitespace-normal break-words`}>
+            <div className={`text-center py-8 ${MaiTrollTheme.text.muted} whitespace-normal break-words`}>
               No scheduled shifts available at this time. Check back later for new shift assignments.
             </div>
           ) : (
@@ -326,7 +326,7 @@ export default function OfficerDashboard() {
                 const canClockIn = slot.status === 'scheduled'
                 const canClockOut = slot.status === 'active'
                 return (
-                  <div key={slot.id} className={`p-3 rounded-lg border ${trollCityTheme.borders.glass} bg-white/5`}>
+                  <div key={slot.id} className={`p-3 rounded-lg border ${MaiTrollTheme.borders.glass} bg-white/5`}>
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="font-medium">{start.toLocaleDateString()}</div>
@@ -339,7 +339,7 @@ export default function OfficerDashboard() {
                           ? 'bg-green-500/20 text-green-300'
                           : slot.status === 'scheduled'
                             ? 'bg-blue-500/10 text-blue-300'
-                            : `${trollCityTheme.backgrounds.input} ${trollCityTheme.text.muted}`
+                            : `${MaiTrollTheme.backgrounds.input} ${MaiTrollTheme.text.muted}`
                       }`}>
                         {slot.status}
                       </span>
@@ -371,17 +371,17 @@ export default function OfficerDashboard() {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full min-w-[600px]">
             <thead>
-              <tr className={`border-b ${trollCityTheme.borders.glass}`}>
-                <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Date</th>
-                <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Time</th>
-                <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Status</th>
-                <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Actions</th>
+              <tr className={`border-b ${MaiTrollTheme.borders.glass}`}>
+                <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Date</th>
+                <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Time</th>
+                <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Status</th>
+                <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {shiftSlots.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className={`p-6 text-center ${trollCityTheme.text.muted} whitespace-normal break-words`}>
+                  <td colSpan={4} className={`p-6 text-center ${MaiTrollTheme.text.muted} whitespace-normal break-words`}>
                     No scheduled shifts available at this time. Check back later for new shift assignments.
                   </td>
                 </tr>
@@ -392,7 +392,7 @@ export default function OfficerDashboard() {
                 const canClockIn = slot.status === 'scheduled'
                 const canClockOut = slot.status === 'active'
                 return (
-                  <tr key={slot.id} className={`border-b ${trollCityTheme.borders.glass} hover:bg-white/5`}>
+                  <tr key={slot.id} className={`border-b ${MaiTrollTheme.borders.glass} hover:bg-white/5`}>
                     <td className="p-3">{start.toLocaleDateString()}</td>
                     <td className="p-3 text-sm">
                       {format12hr(start)} - {format12hr(end)}
@@ -403,7 +403,7 @@ export default function OfficerDashboard() {
                           ? 'bg-green-500/20 text-green-300'
                           : slot.status === 'scheduled'
                             ? 'bg-blue-500/10 text-blue-300'
-                            : `${trollCityTheme.backgrounds.input} ${trollCityTheme.text.muted}`
+                            : `${MaiTrollTheme.backgrounds.input} ${MaiTrollTheme.text.muted}`
                       }`}>
                         {slot.status}
                       </span>
@@ -439,17 +439,17 @@ export default function OfficerDashboard() {
       {/* Work Sessions */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4">Recent Work Sessions</h2>
-        <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-lg overflow-hidden`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-lg overflow-hidden`}>
           {/* Mobile Card View */}
           <div className="block md:hidden p-4">
             {workSessions.length === 0 ? (
-              <div className={`text-center py-8 ${trollCityTheme.text.muted}`}>
+              <div className={`text-center py-8 ${MaiTrollTheme.text.muted}`}>
                 No work sessions yet
               </div>
             ) : (
               <div className="space-y-3">
                 {workSessions.map((session) => (
-                  <div key={session.id} className={`p-3 rounded-lg border ${trollCityTheme.borders.glass} bg-white/5`}>
+                  <div key={session.id} className={`p-3 rounded-lg border ${MaiTrollTheme.borders.glass} bg-white/5`}>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{session.streams?.title || 'N/A'}</div>
@@ -474,7 +474,7 @@ export default function OfficerDashboard() {
                           <span className="text-xs text-yellow-400">Auto-clockout</span>
                         )}
                         {session.clock_out ? (
-                          <span className={`text-xs ${trollCityTheme.text.muted}`}>Completed</span>
+                          <span className={`text-xs ${MaiTrollTheme.text.muted}`}>Completed</span>
                         ) : (
                           <span className="text-xs text-green-400">Active</span>
                         )}
@@ -490,25 +490,25 @@ export default function OfficerDashboard() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full min-w-[800px]">
               <thead>
-                <tr className={`border-b ${trollCityTheme.borders.glass}`}>
-                  <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Stream</th>
-                  <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Clock In</th>
-                  <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Clock Out</th>
-                  <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Time Worked</th>
-                  <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Coins</th>
-                  <th className={`p-3 text-left ${trollCityTheme.text.muted}`}>Status</th>
+                <tr className={`border-b ${MaiTrollTheme.borders.glass}`}>
+                  <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Stream</th>
+                  <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Clock In</th>
+                  <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Clock Out</th>
+                  <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Time Worked</th>
+                  <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Coins</th>
+                  <th className={`p-3 text-left ${MaiTrollTheme.text.muted}`}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {workSessions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className={`p-6 text-center ${trollCityTheme.text.muted}`}>
+                    <td colSpan={6} className={`p-6 text-center ${MaiTrollTheme.text.muted}`}>
                       No work sessions yet
                     </td>
                   </tr>
                 ) : (
                   workSessions.map((session) => (
-                    <tr key={session.id} className={`border-b ${trollCityTheme.borders.glass} hover:bg-white/5`}>
+                    <tr key={session.id} className={`border-b ${MaiTrollTheme.borders.glass} hover:bg-white/5`}>
                       <td className="p-3">{session.streams?.title || 'N/A'}</td>
                       <td className="p-3 text-sm">
                         {formatFullDateTime12hr(session.clock_in)}
@@ -525,7 +525,7 @@ export default function OfficerDashboard() {
                           <span className="text-xs text-yellow-400">Auto-clockout</span>
                         )}
                         {session.clock_out ? (
-                          <span className={`text-xs ${trollCityTheme.text.muted}`}>Completed</span>
+                          <span className={`text-xs ${MaiTrollTheme.text.muted}`}>Completed</span>
                         ) : (
                           <span className="text-xs text-green-400">Active</span>
                         )}
@@ -543,19 +543,19 @@ export default function OfficerDashboard() {
       <div className="grid md:grid-cols-2 gap-4">
         <button
           onClick={() => navigate('/officer/payroll')}
-          className={`p-4 ${trollCityTheme.backgrounds.card} border border-yellow-600 rounded-lg hover:bg-white/5 transition-colors text-left`}
+          className={`p-4 ${MaiTrollTheme.backgrounds.card} border border-yellow-600 rounded-lg hover:bg-white/5 transition-colors text-left`}
         >
           <DollarSign className="w-6 h-6 text-yellow-400 mb-2" />
           <p className="font-semibold">Payroll Dashboard</p>
-          <p className={`text-sm ${trollCityTheme.text.muted}`}>View earnings and work hours</p>
+          <p className={`text-sm ${MaiTrollTheme.text.muted}`}>View earnings and work hours</p>
         </button>
         <button
           onClick={() => navigate('/officer/moderation')}
-          className={`p-4 ${trollCityTheme.backgrounds.card} border border-red-600 rounded-lg hover:bg-white/5 transition-colors text-left`}
+          className={`p-4 ${MaiTrollTheme.backgrounds.card} border border-red-600 rounded-lg hover:bg-white/5 transition-colors text-left`}
         >
           <AlertTriangle className="w-6 h-6 text-red-400 mb-2" />
           <p className="font-semibold">Moderation Tools</p>
-          <p className={`text-sm ${trollCityTheme.text.muted}`}>Access moderation panel</p>
+          <p className={`text-sm ${MaiTrollTheme.text.muted}`}>Access moderation panel</p>
         </button>
       </div>
     </div>

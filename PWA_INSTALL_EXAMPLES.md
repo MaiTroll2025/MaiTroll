@@ -159,7 +159,7 @@ function SettingsPage() {
         <div>
           <h3>Progressive Web App</h3>
           <p className="text-sm text-gray-400">
-            Install Troll City for a native app experience
+            Install Mai Troll for a native app experience
           </p>
         </div>
         
@@ -198,7 +198,7 @@ function MobileMenu({ isOpen, onClose }) {
           <div className="pt-4 border-t border-gray-700">
             <InstallButton 
               className="w-full py-3"
-              text="Install Troll City"
+              text="Install Mai Troll"
             />
           </div>
         </nav>
@@ -219,7 +219,7 @@ import InstallButton from '../components/InstallButton'
 function OnboardingWelcome() {
   return (
     <div className="onboarding-step">
-      <h1>Welcome to Troll City!</h1>
+      <h1>Welcome to Mai Troll!</h1>
       
       <div className="features-list">
         <p>✓ Live streaming</p>
@@ -296,7 +296,7 @@ interface InstallButtonProps {
 // 5. Large prominent CTA
 <InstallButton 
   className="w-full py-5 text-xl"
-  text="Install Troll City"
+  text="Install Mai Troll"
 />
 ```
 

@@ -24,14 +24,14 @@ export default function MobileBattleShareSheet({
   const shareUrl = streamId
     ? `${window.location.origin}/broadcast/${streamId}`
     : window.location.href;
-  const shareTitle = title || "Watch this Troll City battle";
+  const shareTitle = title || "Watch this Mai Troll battle";
 
   const shareToPlatforms = async () => {
     try {
       if (navigator.share) {
         await navigator.share({
           title: shareTitle,
-          text: "Join this Troll City battle",
+          text: "Join this Mai Troll battle",
           url: shareUrl,
         });
       } else {

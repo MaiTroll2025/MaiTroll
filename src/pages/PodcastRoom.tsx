@@ -21,7 +21,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import { trollCityBroadcastTheme as theme } from '@/styles/broadcastTheme'
+import { MaiTrollBroadcastTheme as theme } from '@/styles/broadcastTheme'
 import { usePodcastStore } from '@/stores/podcastStore'
 import { usePodcastAgora } from '@/hooks/usePodcastAgora'
 import { useBroadcastRecorder } from '@/hooks/useBroadcastRecorder'
@@ -187,7 +187,7 @@ export default function PodcastRoom() {
   const localAudioTrackRef = useRef<any>(null)
 
   // Use the same recorder as BroadcastPage — captures the entire screen
-  // (full Troll City UI) via getDisplayMedia, with Agora audio tracks merged in
+  // (full Mai Troll UI) via getDisplayMedia, with Agora audio tracks merged in
   // so the recording includes both the screen video AND the podcast audio (mic + remote users)
   const recorder = useBroadcastRecorder({
     sourceStream: () => {

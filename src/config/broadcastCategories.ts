@@ -344,12 +344,12 @@ export const BROADCAST_CATEGORIES: Record<BroadcastCategoryId, BroadcastCategory
     showCoinBalanceInChat: true,
   },
 
-  // 12. TCNN - Troll City News Network (News Casters, Chief News Casters, Admins only)
+  // 12. TCNN - Mai Troll News Network (News Casters, Chief News Casters, Admins only)
   tcnn: {
     id: 'tcnn',
     name: '📺 TCNN News',
     icon: '📺',
-    description: 'Official Troll City News Network broadcasts',
+    description: 'Official Mai Troll News Network broadcasts',
     layoutMode: 'spotlight',
     defaultBoxCount: 1,
     maxBoxCount: 4,

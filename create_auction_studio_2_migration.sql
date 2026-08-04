@@ -125,7 +125,7 @@ CREATE TRIGGER trigger_auction_orders_updated_at
   FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 
 -- ============================================================================
--- ORDER RECEIPTS — auto-generated Troll City LLC receipts
+-- ORDER RECEIPTS — auto-generated Mai Troll LLC receipts
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS order_receipts (
@@ -233,7 +233,7 @@ BEGIN
       NEW.shipping_zip,
       COALESCE(NEW.shipping_country, 'US'),
       jsonb_build_object(
-        'brand', 'Troll City LLC',
+        'brand', 'Mai Troll LLC',
         'source', 'auction_order',
         'batch_id', NEW.batch_id
       )

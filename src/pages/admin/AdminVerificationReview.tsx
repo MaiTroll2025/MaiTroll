@@ -141,7 +141,7 @@ export default function AdminVerificationReview() {
         <h1 className="text-3xl font-bold">Verification Review</h1>
       </div>
       <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
-        Admin and secretary only. Use this queue for Friday cashout ID checks; reject unclear, expired, or mismatched IDs so users can resubmit.
+        Admin and secretary only. Use this queue for cashout ID checks; reject unclear, expired, or mismatched IDs so users can resubmit.
       </div>
 
       {/* Filters */}

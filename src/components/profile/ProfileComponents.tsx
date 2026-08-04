@@ -84,7 +84,7 @@ export function ProfileHeader({
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-black/45 to-black/10" />
                 <div className="absolute left-5 top-5 rounded-full border border-white/20 bg-slate-950/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/80 backdrop-blur-xl">
-                    Troll City Profile
+                    Mai Troll Profile
                 </div>
             </div>
 

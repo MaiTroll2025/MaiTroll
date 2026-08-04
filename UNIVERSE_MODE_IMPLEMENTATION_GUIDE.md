@@ -2,7 +2,7 @@
 
 ## Overview
 
-Universe Mode is a new battle system layer that adds **Troll Battle** (4v4 team-based) and **Multi Battle** (1v1/2v2/3v3/4v4 formats) to TrollCity. This system is fully backward compatible with existing battles and uses a hybrid architecture: **LiveKit for interactive participants** and **Mux for viewers**.
+Universe Mode is a new battle system layer that adds **Troll Battle** (4v4 team-based) and **Multi Battle** (1v1/2v2/3v3/4v4 formats) to Mai Troll. This system is fully backward compatible with existing battles and uses a hybrid architecture: **LiveKit for interactive participants** and **Mux for viewers**.
 
 ---
 

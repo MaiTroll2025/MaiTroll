@@ -1472,13 +1472,13 @@ boxClass,
                  }
                }}
             >
-              {/* DEBUG: Red circle for broadcaster or TrollCityAdmin - indicates component is rendering */}
-              {(isStreamHost && seatIndex === 0) || displayProfile?.username === 'TrollCityAdmin' && (
+              {/* DEBUG: Red circle for broadcaster or Mai TrollAdmin - indicates component is rendering */}
+              {(isStreamHost && seatIndex === 0) || displayProfile?.username === 'MaiTrollAdmin' && (
                 <div 
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-4 border-red-500 bg-red-500/20 z-30 pointer-events-none flex items-center justify-center"
                   title="Broadcaster Test Indicator"
                 >
-                  <span className="text-red-500 font-bold text-xs">{displayProfile?.username === 'TrollCityAdmin' ? 'ADMIN' : 'HOST'}</span>
+                  <span className="text-red-500 font-bold text-xs">{displayProfile?.username === 'MaiTrollAdmin' ? 'ADMIN' : 'HOST'}</span>
                 </div>
               )}
 

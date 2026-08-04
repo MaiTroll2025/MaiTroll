@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 'https://yjxpwfa
 export const API_ENDPOINTS = {
   auth: {
     fixAdminRole: '/auth/fix-admin-role',
-    signup: '/auth/signup',
+    signup: '/signup',
     createOrgStudent: '/auth/create-org-student',
   },
   bank: {
@@ -64,7 +64,21 @@ export const API_ENDPOINTS = {
     vote: '/officer-vote',
     cycle: '/officer-vote-cycle'
   },
-};
+  celeb: {
+    submitApplication: '/submit-celeb-application',
+    uploadDocument: '/upload-celeb-document',
+    reviewAction: '/celeb-review-action',
+    createStream: '/celeb-create-stream',
+    joinBattleQueue: '/celeb-join-battle-queue',
+    paidChat: '/celeb-paid-chat',
+    paidChatSettings: '/celeb-paid-chat-settings',
+    externalLinks: '/celeb-external-links',
+    products: '/celeb-products',
+    cashout: '/celeb-cashout',
+    moderation: '/celeb-moderation',
+    auditLog: '/celeb-audit-log',
+  },
+}
 
 interface ApiResponse<T = any> {
   data?: T;
@@ -90,7 +104,7 @@ async function request<T = any>(
     let url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     
     // Debug logging for signup endpoint
-    if (endpoint.includes('/auth/signup')) {
+    if (endpoint.includes('/signup')) {
       console.log(`[API ${requestId}] Signup request details:`, {
         endpoint,
         url,
@@ -146,7 +160,7 @@ async function request<T = any>(
     }
 
     // Don't require auth for signup endpoint (user doesn't exist yet)
-    const isSignupEndpoint = endpoint.includes('/auth/signup');
+    const isSignupEndpoint = endpoint.includes('/signup');
 
     // For all endpoints (except signup), try to refresh session if no token or expiring soon
     if (((!token || sessionExpiringSoon) && !isSignupEndpoint)) {
@@ -215,7 +229,7 @@ async function request<T = any>(
     }
 
     // Add client info header
-    requestHeaders['x-client-info'] = 'trollcity-web';
+    requestHeaders['x-client-info'] = 'MaiTroll-web';
 
     // Merge any additional headers (these can override defaults)
     Object.assign(requestHeaders, headers);

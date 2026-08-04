@@ -1,7 +1,7 @@
 # Admin Voice Notifications Integration - Complete
 
 ## Overview
-The admin voice notifications feature has been fully integrated into the TrollCity platform. Admins will now receive automatic British male voice announcements for important notifications.
+The admin voice notifications feature has been fully integrated into the Mai Troll platform. Admins will now receive automatic British male voice announcements for important notifications.
 
 ## What's New
 

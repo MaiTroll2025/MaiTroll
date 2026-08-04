@@ -174,7 +174,7 @@ export default function AdminAgenciesPage() {
             Agency Management
           </h1>
           <p className="text-slate-400">
-            Manage all Talent Offices in Troll City
+            Manage all Talent Offices in Mai Troll
           </p>
         </header>
 

@@ -1,4 +1,4 @@
--- Troll City Marketplace Schema
+-- Mai Troll Marketplace Schema
 -- Run this in your Supabase SQL editor
 
 -- 1. Marketplace Items Table

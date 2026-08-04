@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I consent to enrollment in Troll City company systems and to employment eligibility verification via E-Verify (or equivalent, where applicable by law). I understand this consent is provided for payroll and work-authorization purposes.'
+  'I consent to enrollment in Mai Troll company systems and to employment eligibility verification via E-Verify (or equivalent, where applicable by law). I understand this consent is provided for payroll and work-authorization purposes.'
 
 export default function TcEnrollmentForm(props: DocumentFormProps) {
   return (
@@ -28,7 +28,7 @@ export default function TcEnrollmentForm(props: DocumentFormProps) {
               onChange={(e) => setField('consent', e.target.checked)}
               className="mt-1 h-4 w-4"
             />
-            I consent to enrollment in Troll City company systems for payroll and communications.
+            I consent to enrollment in Mai Troll company systems for payroll and communications.
           </label>
           <label className="flex items-start gap-3 text-sm text-slate-200">
             <input

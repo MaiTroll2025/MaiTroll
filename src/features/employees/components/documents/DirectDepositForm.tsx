@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I authorize Troll City to deposit my net pay into the account identified above. I understand this is an electronic authorization and signature. Banking details are sensitive and handled per company security policy.'
+  'I authorize Mai Troll to deposit my net pay into the account identified above. I understand this is an electronic authorization and signature. Banking details are sensitive and handled per company security policy.'
 
 export default function DirectDepositForm(props: DocumentFormProps) {
   return (

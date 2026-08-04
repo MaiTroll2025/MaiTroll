@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   TROLL CITY BROADCAST                      │
+│                   Mai Troll BROADCAST                      │
 │              Mobile-First Live Streaming UI                 │
 │                     TikTok/Bigo Pattern                     │
 └─────────────────────────────────────────────────────────────┘
@@ -83,7 +83,7 @@ lg (769-1024px)       desktop (≥1025px)
 └──────────────────┘
 
 ════════════════════════════════════════════════════════════════
-🎨 TROLL CITY IDENTITY PRESERVED
+🎨 Mai Troll IDENTITY PRESERVED
 ════════════════════════════════════════════════════════════════
 
 Color Palette:
@@ -288,7 +288,7 @@ UX Metrics:
   ✓ Bottom nav suppression works
 
 Design Metrics:
-  ✓ TrollCity colors preserved
+  ✓ Mai Troll colors preserved
   ✓ Neon purple/pink accents
   ✓ Glow only on active
   ✓ Clean, minimal aesthetic
@@ -331,7 +331,7 @@ A: See MOBILE_BROADCAST_IMPLEMENTATION.md
 5. Deploy!
 
 The mobile broadcast redesign is complete, tested, and ready
-to launch. All components follow TrollCity's design language,
+to launch. All components follow Mai Troll's design language,
 support responsive breakpoints, and provide a TikTok/Bigo-like
 experience on all mobile devices.
 

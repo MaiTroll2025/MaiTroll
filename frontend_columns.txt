@@ -1,0 +1,1885 @@
+Academy
+Alert
+BREAKING
+Evidence
+Note
+Vandalism
+academy_categories(name
+academy_courses(name)
+academy_teachers(teacher_id
+academy_teachers(teacher_user:user_profiles!academy_teachers_user_id_fkey(display_name))
+accent_color
+accepted_at
+achievement
+achievement_key
+acknowledged_at
+acquired_at
+action
+action_category
+action_taken
+action_type
+action_url
+actions_taken
+activated_at
+active
+active_entrance_effect
+active_entrance_effect)
+active_frame_id
+active_game_id
+active_theme_id
+active_theme_url
+active_vehicle
+activity_date
+actor:actor_id(username)
+actor:user_profiles!moderation_actions_actor_id_fkey(username
+actor_id
+actor_profile:user_profiles(username
+actor_role
+actor_user_id
+added_at
+admin_notes
+admin_override_reason
+admin_response
+admin_user_id
+age_agreement_version
+agencies (
+             id
+agencies(name)
+agency:agencies!agency_applications_agency_id_fkey (
+            id
+agency_code
+agency_fee_percent
+agency_fee_waived
+agency_id
+agency_responsibilities
+agent_role
+agora_channel
+agreement_url
+ai_detection_score
+ai_enabled
+album:albums(*)
+album_id
+alert_level
+amount
+amount_cents
+amount_coins
+amount_in_dispute
+amount_usd
+animation_type
+animation_url
+announcement_id
+annual_salary
+anonymous_round_duration_seconds
+anonymous_round_ends_at
+anonymous_round_max_duration
+appeal_id
+appeal_number
+appeals_filed
+appeared_at
+applicant:user_profiles!academy_teacher_applications_user_id_fkey(username
+applicant:user_profiles!agency_applications_applicant_id_fkey (
+            id
+applicant:user_profiles!interviews_applicant_id_fkey(username)
+applicant:user_profiles!job_applications_user_id_fkey_to_user_profiles(id
+applicant:user_profiles(username)
+applicant_id
+applicant_name
+application_fee_amount
+application_fee_enabled
+application_fee_paid
+application_type
+applies_to
+applies_to_categories
+applies_to_roles
+appointee:user_profiles!president_appointments_president_user_id_fkey(username
+appointee:user_profiles!president_appointments_vice_president_user_id_fkey(username
+approval_status
+approved_at
+approved_weekly_hours
+archived_at
+armor
+          )
+arrest_date
+arrest_longitude
+arrested_by
+article_id
+artist
+artist:artist_profiles(*)
+artist_id
+ask_price
+asset_url
+assigned_at
+assigned_attorney
+assigned_by
+assigned_course:academy_courses!academy_admissions_applications_assigned_course_id_fkey(name)
+assigned_judge_id
+assigned_role
+assigned_to
+assigned_zip_count
+assignment_id
+attendee_count
+attorney:attorney_id(username)
+attorney_id
+auction_lots (
+            title
+auction_lots (
+            title
+auction_lots ( title
+auction_lots (title
+auction_lots(
+            title
+auction_show_id
+auction_shows (
+            id
+auction_shows (
+            title
+          )
+auction_shows (
+            title
+          )
+auction_shows ( title )
+auction_shows!inner(
+            id
+auction_shows(
+            title
+auctioneer:auctioneer_profiles(
+              user_id
+auctioneer_id
+audio_name
+author:author_id(
+            id
+author:author_id(
+            username
+author:author_id(username
+author:user_profiles!academy_discussions_author_id_fkey(username
+author:user_profiles(id
+author:user_profiles(username
+author_avatar
+author_id
+author_name
+auto_clocked_out
+avatar_config
+avatar_url
+avatar_url
+            )
+avatar_url
+          )
+avatar_url
+              )
+            )
+          )
+avatar_url
+          )
+avatar_url)
+avatar_url)
+             )
+avatar_url)
+            )
+avatar_url))
+avatar_url:user_profiles(avatar_url)
+background_jail_appealed
+badge
+badge
+            )
+badge
+          )
+badge)
+badge.eq.president,username_style.eq.gold
+badge_color)
+badge_definitions(*)
+badge_icon
+badge_id
+badge_name
+balance
+balance_after
+balance_cents
+balance_coins
+balance_due
+          )
+ban_reason
+banned_at
+banned_until
+banner_url
+barcode
+barcode.eq.${code},lot_number.eq.${code},sku.eq.${code},item_number.eq.${code}
+base_pay
+base_price
+batch_id
+battle:universe_showdown_battles(*)
+battle_count
+battle_crown_streak
+battle_crowns
+battle_enabled
+battle_end_time
+battle_format
+battle_id
+battle_interest
+battle_mode
+battle_points
+battle_points_earned
+battle_start_time
+battle_status
+battle_theme
+battle_wins
+bid_increment
+bidder_id
+billing_period
+billing_status
+bio
+blocked_at
+blocked_id
+blocker_id
+body
+bond_amount
+bond_posted
+bonus_amount
+bonus_coin_balance
+bonus_coins
+bonus_pay
+bonus_percentage
+boost_bid_allowed_increments
+boost_bid_custom_enabled
+boost_bid_max_amount
+boost_bids_enabled
+boost_expires_at
+box_count
+bracket_position
+bribee_profile:user_profiles!bribe_logs_to_user_fkey(username
+briber_id
+briber_profile:user_profiles!bribe_logs_from_user_fkey(username
+broadcast_chat_disable_strike_count
+broadcast_chat_disabled
+broadcast_chat_disabled_stream_id
+broadcast_chat_disabled_until
+broadcast_disclaimer_user_id
+broadcast_mic_muted
+          )
+broadcast_notification_until
+broadcaster: broadcaster_id(username)
+broadcaster:user_profiles!streams_broadcaster_id_fkey(
+            id
+broadcaster:user_profiles!streams_broadcaster_id_fkey(
+            username
+broadcaster:user_profiles!streams_broadcaster_id_fkey(
+              username
+broadcaster:user_profiles!streams_broadcaster_id_fkey(
+            username
+broadcaster:user_profiles!streams_broadcaster_id_fkey(id
+broadcaster:user_profiles!streams_broadcaster_id_fkey(username
+broadcaster:user_profiles(username)
+            )
+broadcaster_id
+broadcaster_id
+          )
+broadcaster_user_id
+bucket
+business_name
+buy_now_price
+buyer_id
+buyer_profile:user_profiles!marketplace_purchases_buyer_id_fkey(
+            id
+call_id
+call_room_id
+call_sound_catalog(asset_url
+call_sound_catalog(id
+caller:user_profiles!caller_id(username)
+camera_enabled
+can_chat
+candidate_count
+candidate_id
+candidates:president_candidates!president_candidates_election_id_fkey(
+              
+candidates:president_candidates!president_candidates_election_id_fkey(
+               
+captain:user_profiles!captain_user_id(username
+captured_at
+car_insurance_expiry
+career_positions(id
+carrier
+carrier_code
+carrier_name
+case_details
+case_id
+case_type
+cases_count
+cash_amount
+cashapp_handle
+cashout_approved
+cashout_coins
+cashout_hold_until
+cashout_reserved_coins
+cashout_reserved_coins)
+cashout_tier
+cashout_tiers
+catalog:houses_catalog(name
+catalog:houses_catalog(name))
+catalog:vehicles_catalog (
+            id
+catalog_id
+category
+category.eq.${articleData.category},status.eq.published
+category_id
+category_name
+ceo_fam_badge
+certificate_number
+challenge_id
+challenger:user_profiles!battles_challenger_id_fkey(
+            username
+challenger_family:challenger_family_id ( name )
+challenger_id
+challenger_stream_id
+champion:user_profiles!champion_user_id(username
+channel_id
+chat_disabled
+chat_message_count
+city
+claimed
+claims_made
+class_id
+clock_in
+clock_out
+clothing_id
+cloudflare_playback_url
+cloudflare_recording_id
+code
+coin_amount
+coin_balance
+coin_cost
+coin_price
+coin_type
+coins
+coins_awarded
+coins_earned
+coins_earned_from_gifts
+coins_received
+coins_used
+color)
+color_hex
+color_hex)
+comments_count: troll_post_comments(count)
+commission_coins
+completed
+completed_at
+completed_sales
+completion_rate
+component
+condition
+condition_factor
+connected_at
+content
+content_id
+content_key
+content_type
+contest_id
+contract_active
+contract_body
+contract_id
+contract_type
+contribution_points
+contribution_score
+contribution_value
+conversation_id
+conversations(* )
+correct_answer
+                )
+              )
+cost
+cost_family_coins
+count
+countdown_end_at
+country
+course:academy_courses(name
+course:academy_courses(name)
+course:academy_courses(slug
+course_id
+court_cases!inner(
+court_cases!inner(
+              docket_id
+court_cases(
+court_date
+court_dockets!inner(court_date)
+court_dockets!inner(court_date)
+            )
+court_recording_consent
+court_recording_consent_at
+court_session_id
+cover_image_url
+cover_letter
+cover_url
+coverage_type
+created_at
+created_at
+            )
+created_at
+          )
+created_at)
+created_by
+created_by_profile:user_profiles(username
+created_by_role
+created_by_user_id
+creator))
+creator:user_profiles!created_by(username
+creator_id
+creator_subscription_enabled
+creator_subscription_price_coins
+creators_count:agency_members (count
+credit_score
+crest_url
+crowns
+currency
+currency_type
+current_highest_bid
+current_highest_bidder_id
+current_lot_id
+current_owner_user_id
+current_path
+current_progress
+current_score
+current_title
+current_value
+current_viewers
+currently_streaming
+cycle_id
+daily_date
+daily_tax_rate_bps
+damage_level
+data
+date
+date_of_birth
+declined_at
+deductible_paid
+deed_id
+default_split_percent
+defendant:defendant_id(id
+defendant:defendant_id(username
+defendant:defendant_id(username)
+defendant_id
+defender_family:defender_family_id ( name )
+defender_score
+deleted_at
+delivered_at
+delivery_status
+delta
+denied_at
+department
+department
+              )
+department)
+description
+description
+          )
+details
+device_name
+device_type
+difficulty_level
+direction
+disabled_reason
+dismissed_at
+display_name
+display_name)
+display_name:user_profiles(display_name)
+display_order
+display_text
+dispute_count
+disqualification_reason
+disqualified
+docket_id
+document_id
+document_key
+document_name
+document_type
+document_type_id
+document_type_slug
+document_types(name
+draws
+drivers_license_expiry
+drivers_license_status
+due_date
+duration_hours
+duration_hours)
+duration_minutes
+duration_seconds
+early_supporter
+earned_at
+effective_date
+electric_cost
+electric_on
+email
+email
+              )
+email
+          )
+email)
+email_address
+emblem_url
+emblem_url
+              )
+emblem_url
+        )
+emoji
+empire_partner_request
+employee_id
+employee_number
+employment_status
+enabled
+encrypted_card_data
+end_at
+end_at.is.null,end_at.gte.
+end_at.is.null,end_at.gte.${now}
+end_date
+end_reason
+end_time
+ended_at
+ended_by
+endpoint
+ends_at
+enrollment_date
+enrollment_fee
+entrance_join_type
+entrance_playback_enabled
+entrance_voice_enabled
+eq(role
+error_message
+error_message.ilike.%${term}%,error_code.ilike.%${term}%,table_name.ilike.%${term}%,function_name.ilike.%${term}%
+escrow_release_status
+escrow_status
+escrow_status)
+estimated_delivery_at
+estimated_delivery_date
+event
+event:universe_events(*)
+event_categories(name
+event_date
+event_id
+event_message
+event_note
+event_start_at
+event_time
+event_time
+            )
+          )
+event_type
+evidence_url
+excerpt
+experience
+expiration_date
+expires_at
+expires_at
+          )
+expires_at.gt.${new Date().toISOString()}
+expires_at.gt.${new Date().toISOString()},expires_at.is.null
+expires_at.is.null,expires_at.gt.${new Date().toISOString()}
+exposed_by_profile:user_profiles!bribe_logs_exposed_by_fkey(username
+external_id
+extra
+failed
+false
+families(id
+family:troll_families(id
+family:troll_families(name)
+family_a:troll_families!family_wars_family_a_id_fkey (
+                id
+family_a_id.eq.${familyId},family_b_id.eq.${familyId}
+family_a_id.eq.${familyMember.family_id},family_b_id.eq.${familyMember.family_id}
+family_b:troll_families!family_wars_family_b_id_fkey (
+                id
+family_id
+fan_id
+fan_id.eq.${currentUserId},fan_id.eq.${broadcasterId}
+feature_flags
+feature_flags->>is_for_rent
+featured
+featured_at
+featured_broadcaster_until
+featured_broadcaster_until
+          )
+featured_image_url
+featured_packages
+fee_coins
+fee_paid_at
+fee_percentage
+fee_updated_at
+fee_updated_by
+feedback_id
+file_path
+file_size
+file_size_bytes
+file_type
+file_url
+final_bid
+final_percentage
+final_score
+final_visibility_score
+first_choice:academy_courses!academy_admissions_applications_first_choice_course_id_fkey(name)
+flagged_reason
+folder
+folder)
+folder:office_folders(*)
+folder_id
+follower:user_profiles!user_followers_follower_id_fkey(id
+follower:user_profiles!user_follows_follower_id_fkey(*)
+follower_id
+follower_user_id
+followers_count
+following:user_profiles!user_follows_following_id_fkey(*)
+following_count
+following_id
+founder_status
+founding_partner
+frame_id
+fraud_flags
+fraud_hold_until
+free_box_price_credit
+free_coin_balance
+free_message_used
+friend_id
+from_user_id
+from_user_name
+frontend_source
+fulfillment_status
+full_name
+game_id
+game_state
+game_title
+game_type
+genre
+ghost_mode_until
+gift_coins_received
+gift_count
+gift_id
+gift_name
+gift_slug
+gift_total
+gifts_received
+glowing_username_color
+glowing_username_color)
+goal_id
+goal_type
+goal_value
+graded_at
+guest_id
+has_active_warrant
+has_crown_badge
+has_paid
+has_pending_bond_request
+headline
+help_text
+hire_date
+hls_path
+hls_url
+hold_type
+homeowners_insurance_expiry
+host:user_profiles!host_user_id(
+            username
+host:user_profiles!host_user_id(
+              username
+host_id)
+host_user_id
+hot_score
+hourly_rate
+hours_worked
+house:user_houses(
+            house_catalog_id
+          )
+house_catalog_id
+house_id
+houses_catalog (
+            name
+hype_coins
+hype_score
+icon
+icon_emoji
+icon_name
+icon_name)
+icon_url
+id
+id)
+id.eq.${query},username.ilike.%${query}%
+id_document_url
+id_selfie_url
+id_verification_ocr
+id_verification_score
+id_verification_status
+id_verification_submitted_at
+id_verified_at
+image
+image_url
+image_urls
+image_urls
+          )
+image_urls
+          )
+image_urls)
+influence_active
+inmate_id
+instructions
+instructor_avatar
+instructor_name
+insurance:vehicle_insurance_policies (
+            status
+insurance_expires_at
+insurance_options(name
+insurance_required
+interests
+internal_notes
+internet_on
+interview_id
+interview_notes
+interviewer:user_profiles!interviews_interviewer_id_fkey(username)
+interviewer_id
+invite_code
+invite_type
+invited:user_profiles!invited_user_id(username
+invited_by
+invited_user_id
+invitee_id
+inviter:user_profiles!inviter_id(username)
+inviter:user_profiles!inviter_user_id(username
+inviter_user_id
+ip_address
+ip_address_history
+is_active
+is_admin
+is_admin)
+is_admin.eq.true,is_lead_officer.eq.true,is_troll_officer.eq.true,role.eq.lead_troll_officer,role.eq.secretary,role.eq.agency_hr_manager,role.eq.hr_admin,role.eq.admin
+is_admin.eq.true,is_troll_officer.eq.true,is_lead_officer.eq.true,role.eq.admin,role.eq.superadmin,role.eq.owner
+is_admin_document
+is_admin_email
+is_agency_hr
+is_agency_hr_manager
+is_agency_leader
+is_anonymous
+is_anonymous_round_active
+is_approved
+is_at_risk
+is_attorney
+is_auctioneer
+is_azgora
+is_background_jailed
+is_banned
+is_banned)
+is_battle
+is_battle.eq.true,category.eq.trollmers
+is_breaking
+is_broadcaster
+is_ceo
+is_ceo_assistant
+is_challenger
+is_chief_news_caster
+is_coin_pack
+is_completed
+is_contracted
+is_default
+is_dismissed
+is_dismissed.is.null,is_dismissed.eq.false
+is_draft
+is_equipped
+is_featured
+is_for_rent
+is_for_sale
+is_free_message
+is_ghost_mode
+is_gold
+is_gold)
+is_hr_admin
+is_important
+is_jailed
+is_journalist
+is_journalist.eq.true,is_news_caster.eq.true,is_chief_news_caster.eq.true
+is_judge
+is_kicked
+is_landlord
+is_lead_officer
+is_lead_officer.eq.true,is_troll_officer.eq.true
+is_lead_officer.eq.true,role.eq.lead_troll_officer
+is_listed
+is_live
+is_live.eq.true,status.eq.live
+is_live.eq.true,status.eq.live,status.eq.active
+is_locked
+is_news_caster
+is_noah_assistant
+is_officer_active
+is_officer_active
+          )
+is_og_user
+is_og_user)
+is_online
+is_open
+is_pastor
+is_pastor)
+is_permanent
+is_permanent_ban
+is_pinned
+is_political_party
+is_pro_bono
+is_prosecutor
+is_public
+is_published
+is_read
+is_read_only
+is_reposessed
+is_rising
+is_royal_troll
+is_secretary
+is_staff
+is_starred
+is_starred.eq.true,tromail_messages.is_important.eq.true
+is_starter
+is_super_admin
+is_superadmin
+is_trending
+is_troll_officer
+is_troll_officer.eq.true,is_lead_officer.eq.true
+is_troll_officer.eq.true,is_lead_officer.eq.true,role.eq.troll_officer,role.eq.lead_troll_officer
+is_troller
+is_troller)
+is_under_construction
+is_urgent
+is_valid
+is_verified
+is_verified
+          )
+issued_at
+issued_at
+          )
+issued_by
+item_category
+item_description
+item_id
+item_key
+item_name
+item_type
+items(
+jail_id
+job_application_id
+job_applications(id
+job_title
+joined_at
+json_data
+judge_id
+judgment
+label:record_labels(*)
+label_id
+last_active
+last_activity
+last_activity_at
+last_battle_win_at
+last_connected_at
+last_heartbeat_at
+last_interruption_at
+last_known_ip
+last_message_at
+last_monthly_fee_paid_at
+last_rent_change_at
+last_seen
+last_seen_at
+last_viewed_at
+latitude
+layout_mode
+lead_officer:user_profiles!weekly_officer_reports_lead_officer_id_fkey (
+            username
+lead_officer_id
+leader_commission_percent
+leader_id
+leader_id.eq.${profile.id}
+leader_profile:user_profiles(username
+leader_responsibilities
+leader_user_id
+league_event_id
+league_id
+league_level
+league_score
+league_tier
+league_type
+left_at
+legal_first_name
+legal_full_name
+legal_last_name
+legal_name
+level
+level
+            )
+level)
+license_number
+license_plate
+license_status
+license_strikes
+license_suspended_at
+likes
+likes_count
+likes_count: troll_post_reactions(count)
+link
+listener_count
+live_restricted_until
+live_schedule
+live_started_at
+live_started_at
+          )
+livekit_room_name
+loan_approved
+loan_balance
+location
+locked_at
+login_streak
+logo_url
+longitude
+losses
+lot_id
+lot_number
+mai_pay_plus
+main_tier
+maintenance_rate_bps
+management_note
+marketplace_item(title)
+marketplace_item:marketplace_items!marketplace_purchases_item_id_fkey ( title )
+marketplace_item:marketplace_items!marketplace_purchases_item_id_fkey(
+            id
+marketplace_items:marketplace_items(id
+max_appeals
+max_applications
+max_cases
+max_members
+max_participants
+max_students
+max_uses
+meeting_id
+member_count
+members_count
+members_count:agency_members (count)
+mentor_id
+message
+message_cost
+message_id
+message_minutes
+message_minutes_used
+message_price
+message_type
+meta
+metadata
+metric
+microphone_enabled
+min_tenure_days
+mission_count
+moderation_status
+mods
+momentum
+momentum_level
+monitoring_ended_at
+month
+monthly_fee_amount
+monthly_fee_enabled
+monthly_fee_status
+monthly_subscriber_count
+music_contract_accepted_at
+name
+name)
+name.ilike.${search},slug.ilike.${search},owner.username.ilike.${search}
+name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%
+negative_reviews
+neighborhood_id
+neighborhood_id.eq.${neighborhoodId},neighborhood_id.is.null
+neighborhoods(name
+neighbors_businesses(business_name)
+net_amount
+next_billing_at
+next_due_at
+next_level_xp
+next_monthly_fee_due_at
+next_monthly_fee_due_at
+           )
+notes
+notification_type
+null
+obs_playback_url
+officer:user_profiles!officer_actions_officer_id_fkey(username)
+officer:user_profiles!officer_id(
+            username
+officer:user_profiles!officer_shift_slots_officer_id_fkey(
+            id
+officer:user_profiles!officer_time_off_requests_officer_id_fkey(
+              username
+officer:user_profiles!officer_time_off_requests_officer_id_fkey(id
+officer:user_profiles!officer_time_off_requests_officer_id_fkey(username
+officer:user_profiles!officer_time_off_requests_officer_id_fkey(username)
+officer:user_profiles(username
+officer_id
+officer_level
+officer_quiz_questions!question_id (
+                  question_text
+officer_rank
+officer_reputation_score
+officer_role
+officer_tier_badge
+on_duty
+onboarding_completed
+opponent:user_profiles!battles_opponent_id_fkey(
+            username
+opponent_id
+opponent_stream_id
+opponent_stream_id.is.null,opponent_stream_id.eq.${currentStream.id}
+option_id
+order:marketplace_purchases!inner(
+            price_paid
+order:shop_orders!order_id(order_number
+order_id
+order_index
+order_number
+order_shipments(*)
+org:academy_accreditation_orgs(name)
+org_id
+organization_documents(
+        document_title
+organization_id
+organizer_profile:user_profiles(username
+other_user_id
+other_username
+owc_balance
+owner:user_profiles (username)
+owner:user_profiles!houses_owner_user_id_fkey(username)
+owner:user_profiles!owner_id(id
+owner_id
+owner_user_id
+p_amount
+p_entry
+package_id
+page_name
+page_url
+paid_amount
+paid_at
+paid_chat_enabled
+paid_chat_price
+paid_chat_type
+paid_coin_balance
+paid_coins
+pairing_code
+parent_folder_id
+parent_id
+parent_message_id
+participant1:user_profiles!trollmers_tournament_battles_participant1_id_fkey(username)
+participant2:user_profiles!trollmers_tournament_battles_participant2_id_fkey(username)
+participant_count
+party_membership_count
+passage
+passed
+password_created_at
+pastor_id
+path
+pathway:academy_learning_pathways(name
+pay_period_end
+pay_period_start
+pay_rate
+pay_type
+payer_email
+payment
+payment_reference
+payment_status
+payment_type
+payout_coins
+payout_paypal_email
+payout_paypal_email)
+payout_run_id
+payout_terms
+paypal_capture_id
+paypal_email
+paypal_order_id
+payroll_status
+pdf_path
+peak_listener_count
+peak_viewer_count
+percentage
+performance_score
+perk_id
+phone
+pickup_instructions
+pitch_id
+placement
+placement.is.null,placement.eq.${placement},placement.eq.any
+plaintiff:plaintiff_id(id
+plaintiff:plaintiff_id(username)
+plaintiff:plaintiff_id(username))
+plaintiff_id
+plaintiff_id.eq.${user.id},defendant_id.eq.${user.id}
+plate_status
+platform_fee
+platform_fee_percent
+platform_profit
+playback_url
+player1_id
+player2_id
+player_ids
+player_usernames
+plays
+podcast
+podcasts!inner(host_user_id)
+podcasts.host_user_id
+points
+points_multiplier
+policy_type
+poll_id
+position
+position:career_positions(
+                id
+position:career_positions(title
+position:career_positions(title)
+position_id
+positive_reviews
+post:treelz_posts(
+post_id
+post_type
+posted_at
+power_band
+power_band)
+prayer_id
+predicted_price
+predicted_winner_id
+prediction_type
+predictions_enabled
+predictions_locked
+preferred_payout_method
+premium_amount
+          )
+price
+pricePerUser
+price_cents
+price_coins
+price_coins)
+price_paid
+price_usd
+priority
+processed_at
+product(*))
+profile:user_id(
+            stage_name
+profile:user_profiles(id
+profile:user_profiles(username
+profiles!inner(
+            id
+profiles!stream_gifts_sender_id_fkey(username
+profiles(username)
+profiles:user_id (
+              username
+profiles:user_id (username
+profiles:user_profiles!family_activity_log_user_id_fkey (username
+pronouns
+proof_screenshot_url
+property:properties(*)
+property_id
+property_name
+property_value_interest
+prosecutor_id
+protection_type
+protection_type.eq.${protectionType},protection_type.eq.full
+protest_id
+public_id
+public_slug
+published_at
+purchase_type
+purchased_at
+purchased_by
+push_notifications_enabled
+qualified_at
+quality_cap
+quantity
+quantity )
+queue_position
+quiz_answers (
+                question_id
+quiz_id
+raided_at
+random_battle_cooldown_until
+random_battle_queue_enabled
+random_battle_queued_at
+rank
+rater:user_profiles!academy_teacher_ratings_student_id_fkey(username
+rating
+reaction_type
+read_at
+reason
+receipt_url
+receiver:user_profiles!receiver_id(username)
+receiver_id
+receiver_id.eq.${hostId},recipient_id.eq.${hostId}
+recipient:recipient_id(username)
+recipient:user_profiles(username)
+recipient_id
+recipient_mail_address
+recipient_role
+recipient_tromail_address
+recipient_user_id
+recorded_at
+recording_url
+recruiter:user_profiles!referrals_recruiter_id_fkey (
+            username
+          )
+recruiter_bonus_paid
+recruiter_bonus_paid_at
+recruiter_commission_percent
+recruiter_id
+recruiter_user_id
+ref_user_id
+reference_id
+reference_type
+referral_code
+referred_user:user_profiles!referrals_referred_user_id_fkey (
+            username
+          )
+referred_user_bonus_active
+referred_user_id
+registered_at
+registration:universe_registrations(*)
+registration:vehicle_registrations (
+            plate_number
+rejection_reason
+related_goal_id
+related_meeting_id
+related_user:user_profiles!related_user_id(username
+related_user_id
+release_time
+released_by
+remaining_amount
+removal_reason
+removed_at
+rent_amount
+rent_slots
+          )
+repaired_at
+replay_url
+replies
+reply_to_post_id
+report_date
+report_reason
+reported:user_profiles!utromail_reports_reported_id_fkey(username
+reported_by_id
+reported_user:user_profiles!user_reports_reported_user_id_fkey(username
+reported_user_id.eq.${userId},reported_id.eq.${userId}
+reporter:reporter_id(username)
+reporter:user_profiles!reporter_id(username
+reporter:user_profiles!user_reports_reporter_id_fkey(username
+reporter:user_profiles!utromail_reports_reporter_id_fkey(username
+reporter_id
+request_date
+request_id
+request_type
+requested_at
+requester:user_profiles!payout_requests_user_id_fkey(username
+required
+reserve_price
+reserved_troll_coins
+reset_at
+reset_method
+resolved
+resolved_at
+resource
+responded_at
+restrict_new_broadcasters
+resubmit_required
+result
+resume_url
+review_note
+review_notes
+reviewed_at
+reviewed_by
+reviewed_by_admin
+reviewed_reason
+reviewer:user_profiles!empire_applications_reviewed_by_fkey (
+            username
+          )
+reviewer:user_profiles!officer_time_off_requests_reviewed_by_fkey(
+              username
+            )
+reviewer:user_profiles!utromail_reports_reviewed_by_fkey(username
+revoked_at
+reward_amount
+reward_coins
+reward_type
+rgb_username_expires_at
+rgb_username_expires_at
+           )
+rgb_username_expires_at)
+risk_level
+risk_score
+role
+role
+            )
+role
+          )
+role)
+role))
+role.eq.admin,is_admin.eq.true
+role.eq.admin,role.eq.lead_troll_officer,role.eq.troll_officer,role.eq.officer,role.eq.secretary,role.eq.prosecutor,role.eq.judge,role.eq.attorney,role.eq.pastor,role.eq.auctioneer,role.eq.moderator,role.eq.ceo,role.eq.ceo_assistant,role.eq.noah_assistant,role.eq.agency_hr,role.eq.agency_hr_manager,role.eq.journalist,role.eq.tcnn_news_caster,role.eq.tcnn_chief_news_caster,role.eq.troller,role.eq.troll_family_leader,role.eq.agency_leader,role.eq.noah_admin,is_admin.eq.true,is_ceo.eq.true,is_lead_officer.eq.true,is_troll_officer.eq.true,is_officer.eq.true,is_secretary.eq.true,is_prosecutor.eq.true,is_judge.eq.true,is_attorney.eq.true,is_pastor.eq.true,is_auctioneer.eq.true,is_moderator.eq.true,is_ceo_assistant.eq.true,is_noah_assistant.eq.true,is_agency_hr.eq.true,is_agency_hr_manager.eq.true,is_journalist.eq.true,is_tcnn_news_caster.eq.true,is_tcnn_chief_news_caster.eq.true,is_troller.eq.true,is_troll_family_leader.eq.true,is_agency_leader.eq.true,is_noah_admin.eq.true
+role.eq.lead_troll_officer,is_lead_officer.eq.true,officer_rank.eq.lead_officer
+role.eq.lead_troll_officer,role.eq.troll_officer,role.eq.secretary,troll_role.eq.lead_troll_officer,troll_role.eq.troll_officer,troll_role.eq.secretary
+role.eq.troll_officer,is_troll_officer.eq.true
+role_id
+role_key
+role_label
+role_name
+role_offered
+role_type
+room
+room_name
+round
+round_id
+route_path
+rules_version
+run_id
+run_week_end
+run_week_end)
+run_week_start
+s1:user_profiles!seat_one_user_id(username
+s2:user_profiles!seat_two_user_id(username
+s3:user_profiles!seat_three_user_id(username
+sale_amount
+saved_at
+scheduled_at
+scheduled_date
+scheduled_for
+scheduled_start
+scheduled_time
+score
+score_challenger
+score_opponent
+screenshot_url
+scripture
+scripture_reference
+season_coins
+season_id
+season_key
+seat_count
+seat_id
+seat_index
+seat_price
+seat_prices
+second_choice:academy_courses!academy_admissions_applications_second_choice_course_id_fkey(name)
+secretary_id
+seed
+seller:user_profiles!seller_id(
+        id
+seller:user_profiles!seller_id(id
+seller:user_profiles(username
+seller_earnings
+seller_id
+seller_profile: user_profiles!marketplace_purchases_seller_id_fkey ( username )
+seller_profile:user_profiles!marketplace_purchases_seller_id_fkey(
+            id
+seller_profile:user_profiles!seller_id(username)
+seller_tier
+seller_tier
+      )
+sender:sender_id (
+              id
+sender:user_profiles!sender_id(username
+sender:user_profiles(username)
+sender_avatar_url
+sender_deleted_at
+sender_id
+sender_mail_address
+sender_mail_address)
+sender_name
+sender_role
+sender_tromail_address
+sender_user_id
+sender_username
+sent_at
+sent_by
+sent_by.eq.${user.id},recipient_user_id.eq.${user.id}
+sentence_days
+sermon_title
+session:interview_sessions(room_name)
+session_date
+session_end_time
+session_id
+session_status
+setting_key
+setting_value
+settings
+severity
+shared_at
+shared_with_user_id
+shares_count
+shift_date
+shift_end
+shift_end_time
+shift_log_id
+shift_start
+shift_start_time
+shipment:order_shipments(
+            id
+shipment_id
+shipped_at
+shipped_date
+shipping_address
+shipping_base_price
+shipping_carrier
+shipping_city
+shipping_cost
+shipping_information_status
+shipping_line1
+shipping_line2
+shipping_method
+shipping_name
+shipping_state
+shipping_zip
+shop:Mai Troll_shops!shop_id(shop_name)
+shop_id
+shop_name
+short_description
+side_a_name
+side_a_score
+side_b_name
+side_b_score
+signature_name
+signature_note
+signed_at
+signed_by
+signed_terms_accepted_at
+slot
+slot_start_time
+slot_status
+slug
+slug)
+social_links
+song_id
+song_title
+sort_order
+sort_order)
+sound_id
+sound_type
+sound_type)
+source
+sourceStreamId
+source_family_id
+source_id
+source_type
+specialties
+spectator_count
+speed
+spins_date
+spins_used
+split_percent
+spreadsheet_id
+square_card_id
+          )
+square_card_id)
+stack
+staff_meeting_participants(count)
+staff_role
+stage_index
+stage_name
+start_at
+start_at.is.null,start_at.lte.
+start_at.is.null,start_at.lte.${now}
+start_date
+start_time
+started
+started_at
+started_by
+starting_bid
+starts_at
+state
+state_a.eq.${code},state_b.eq.${code}
+state_a.eq.${stateCode},state_b.eq.${stateCode}
+state_battle_mode
+state_battle_state_code
+state_code
+state_province
+status
+status
+          )
+status.eq.completed,status.eq.shipped,status.eq.disputed
+status.eq.live,status.eq.starting
+stock_quantity
+stock_symbol
+storage_path
+stream:streams(
+              title
+stream:streams(id
+stream_channel
+stream_count
+stream_id
+stream_id.eq.${streamId},stream_id.is.null
+stream_id_a.eq.${stream.id},stream_id_b.eq.${stream.id}
+stream_key
+stream_url
+streamer_id
+streams (
+            id
+streams(title
+streams(title)
+strike_count
+stripe_checkout_session_id
+stripe_customer_id
+stripe_payment_method_id
+stripe_price_id
+student:user_profiles!academy_admissions_applications_student_id_fkey(username
+student_id
+student_id_number
+student_profile:user_profiles!academy_certificates_student_id_fkey(username
+sub_tier
+subject
+subject_id
+submitted_answer
+submitted_at
+submitted_by
+submitted_by.eq.${userId},assigned_to.eq.${userId}
+submitted_by:user_profiles(username
+submitter:submitted_by(stage_name)
+subscriber: subscriber_id(username)
+subscriber:user_profiles!user_subscriptions_subscriber_id_fkey(username
+subscriber_id
+subscriber_only_chat
+subscribers_count
+subtitle
+sudden_death
+summoned_user_id
+survey_id
+survey_responses(count)
+suspended_at
+suspended_until
+system_value_at_sale
+tag
+tags
+target:user_profiles!target_user_id(username
+target_id
+target_name.ilike.%${filters.search}%,staff_email.ilike.%${filters.search}%,action_type.ilike.%${filters.search}%
+target_post_id
+target_type
+target_user:user_profiles!moderation_actions_target_user_id_fkey(username
+target_user_id
+target_user_id.eq.${user.id},requested_by.eq.${user.id}
+target_username
+target_value
+task_id
+task_type
+tax_last_updated
+tax_year
+tcnn_banned_until
+teacher:academy_teachers(teacher_user:user_profiles!academy_teachers_user_id_fkey(display_name
+teacher:academy_teachers(teacher_user:user_profiles(display_name))
+teacher_id
+teacher_user:user_profiles!academy_teachers_user_id_fkey(username
+team_a_stream_id
+team_b_stream_id
+teams:universe_round_teams(*)
+template:task_templates(*)
+tenant_id
+tenant_user_id
+termination_date
+termination_terms
+terms_accepted
+terms_accepted_at
+test_date
+text
+theme_color
+theme_id
+third_choice:academy_courses!academy_admissions_applications_third_choice_course_id_fkey(name)
+thread_id
+threshold
+thumbnail_url
+thumbnail_url)
+tier
+tier: subscription_tiers(*)
+tier: subscription_tiers(name
+tier:subscription_tiers (id
+tier:subscription_tiers (name
+tier:tier_id (name
+tier_number
+tier_updated_at
+timeline
+tip_count
+tipper:tipper_id(username)
+tips_total
+title
+title)
+title.ilike.%${searchTerm}%,metadata->>searchable_text.ilike.%${searchTerm}%
+title:vehicle_titles (
+            status
+to_user_id
+to_user_name
+token
+token_amount
+total_achievement
+total_amount_coins
+total_battle_matches
+total_battle_wins
+total_broadcasts
+total_chat_messages
+total_coins
+total_coins_earned
+total_coins_gifted
+total_distributed_coins
+total_earned_coins
+total_earnings_usd
+total_gifts
+total_gifts_all_time
+total_gifts_coins
+total_gifts_sent
+total_liability_coins
+total_likes
+total_likes
+          )
+total_live_minutes
+total_messages
+total_negative_reviews
+total_owc_earned
+total_paid
+total_paid_usd
+total_podcasts
+total_points
+total_positive_reviews
+total_ratings
+total_rep
+total_reviews
+total_spent_coins
+total_streams
+total_subscriber_revenue_coins
+total_tips
+total_troll_coins
+total_xp
+tournament_id
+track_number
+tracking_events(
+              id
+tracking_number
+tracking_status
+tracking_url
+transaction_type
+transaction_type.eq.purchase,type.eq.purchase,description.ilike.%coin%
+treasury_payout_runs!inner(run_week_start
+treelz_uploads_enabled
+treelz_uploads_enabled)
+trend_30d
+trend_7d
+trigger_type
+troll_avatar_url
+troll_coins
+troll_coins
+            )
+troll_coins
+          )
+troll_coins)
+troll_families (
+            id
+troll_families (
+          id
+troll_families:family_id (id
+troll_role
+troll_role
+          )
+Mai Troll_products(name)
+trollcoins_balance
+troller_level
+trollmin_id
+trollmonds
+trollmonds
+        )
+trollmonds)
+trollmonds_spent
+trollopoly_match_id
+trollz_balance
+tromail_address
+tromail_messages!inner(
+              id
+tromail_messages!inner(
+        id
+tromail_messages.is_admin_email
+type
+type
+          )
+type)
+          )
+type.ilike.%paypal%,source.ilike.%paypal%,paypal_order_id.not.is.null,paypal_capture_id.not.is.null
+type_id
+uc_message
+uid
+unlocked_at
+updated_at
+updated_at
+      )
+updated_by
+upgrade:car_upgrades(*)
+upgrade_level
+uploaded
+uploaded_by
+      )
+url
+usd_amount
+usd_price
+usd_value
+used
+used_count
+user:user_profiles (
+                username
+user:user_profiles!empire_applications_user_id_fkey (
+            username
+user:user_profiles!job_applications_user_id_fkey_to_user_profiles(id
+user:user_profiles!trollmers_tournament_participants_user_id_fkey(username)
+user:user_profiles!trollmers_weekly_leaderboard_user_id_fkey(username
+user:user_profiles!trollmers_weekly_payouts_user_id_fkey(username)
+user:user_profiles!user_id (
+            username
+user:user_profiles!user_id(username
+user:user_profiles(id
+user:user_profiles(username
+user:user_profiles(username)
+userAgent
+user_agent
+user_created_at
+user_house:user_houses(house_catalog_id
+user_house_id
+user_id
+user_id.eq.${targetUserId},broadcaster_id.eq.${targetUserId}
+user_id.eq.${userId},from_user_id.eq.${userId},to_user_id.eq.${userId}
+user_id.in.(${userIds.join(
+user_leagues:league_id (*)
+user_profile:user_profiles!stream_stage_passes_user_id_fkey(
+            id
+user_profiles (username
+user_profiles!applications_user_id_fkey (
+            username
+user_profiles!beta_feedback_user_id_fkey(username
+user_profiles!broadcaster_stats_user_id_fkey (
+            id
+user_profiles!creator_migration_claims_user_id_fkey (
+            username
+user_profiles!documents_submitted_by_fkey(username)
+user_profiles!houses_owner_user_id_fkey(username)
+user_profiles!inner(
+                id
+user_profiles!inner(id
+user_profiles!inner(username
+user_profiles!jail_user_id_fkey(username
+user_profiles!moderation_actions_target_user_id_fkey(username
+user_profiles!officer_live_assignments_officer_id_fkey(username)
+user_profiles!role_requests_user_id_fkey(username
+user_profiles!stream_reports_reporter_id_fkey(username)
+user_profiles!streams_broadcaster_id_fkey(username
+user_profiles!student_id (
+          id
+user_profiles!user_advertisements_user_id_fkey (username)
+user_profiles!user_blocks_blocked_id_fkey(username
+user_profiles!user_id (
+            username
+user_profiles!user_id(username
+user_profiles!user_id(username)
+user_profiles!utromail_blocks_blocked_id_fkey(username
+user_profiles!utromail_messages_sender_id_fkey(username
+user_profiles!utromail_requests_sender_id_fkey(username
+user_profiles(id
+user_profiles(username
+user_profiles(username)
+user_profiles.role
+user_profiles.username
+user_profiles:officer_id (username
+user_profiles:pastor_id (username
+user_profiles:subscriber_id (username)
+user_profiles:user_id (
+             username
+user_profiles:user_id (
+            username
+user_profiles:user_id (username
+user_profiles:user_id (username)
+user_profiles:user_id(username
+user_profiles:user_id(username)
+user_profiles:user_profiles!streams_broadcaster_id_fkey (
+            username
+user_vehicle_id
+username
+username)
+username)))
+username.ilike.%${query}%,email.ilike.%${query}%,id.eq.${query}
+username.ilike.%${q}%,display_name.ilike.%${q}%,email.ilike.%${q}%
+username.ilike.%${searchQuery}%,id.ilike.%${searchQuery}%
+username.ilike.%${userSearchTerm}%,email.ilike.%${userSearchTerm}%
+username:user_profiles(username)
+username_style
+utility_cost
+utromail_address
+utromail_address)
+utromail_attachments(*)
+utromail_messages(id
+utromail_thread_members(user_id
+value
+vehicle:vehicles_catalog(*)
+vehicle_id
+vehicle_insurance_policies (
+             status
+vehicle_registrations (
+             plate_number
+vehicles_catalog (
+            name
+vehicles_catalog(*)
+velocity_trend
+venmo_handle
+verification_date
+verification_id
+verification_paid_amount
+verification_payment_method
+verification_selfie_path
+verification_status
+verified
+verified.eq.true,approval_status.eq.approved
+verified_at
+verified_since
+verse_reference
+version
+version_number
+victim_id
+video_size_bytes
+view_count
+viewed_at
+viewer_count
+viewer_user_id
+views_count
+violation_type
+visibility
+visible_to_roles
+vote
+vote_count
+voted_at
+voter_user_id
+votes
+w9_status
+waitlist_position
+walkie_talkie_page
+walkie_talkie_page)
+war_id
+warned_by
+warrant_active
+watch_minutes
+watch_time_seconds
+water_cost
+water_on
+website
+week_end
+week_end_date
+week_number
+week_start
+week_start_date
+week_start_date)
+weekly_amount_coins
+weekly_coins
+weekly_cycle_id
+weekly_due
+weekly_surveys(title
+weekly_war_points
+wheel_balance
+wheel_troll_locked_until
+window_start
+winner:user_profiles!trollmers_tournament_battles_winner_id_fkey(username)
+winner_candidate_id
+winner_id
+winner_user_id
+wins
+withdrawn_at
+withdrawn_date
+won_at
+x
+xp
+xp_progress
+xp_to_next_level
+xp_total
+xtrollz_role
+year
+zip_code)

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The XP (Experience Points) and Badge system is a comprehensive gamification layer that rewards users for various activities across Troll City. Users earn XP through economy actions, engagement, streaming, and community participation, which unlocks level badges, achievement badges, and exclusive perks.
+The XP (Experience Points) and Badge system is a comprehensive gamification layer that rewards users for various activities across Mai Troll. Users earn XP through economy actions, engagement, streaming, and community participation, which unlocks level badges, achievement badges, and exclusive perks.
 
 ---
 
@@ -128,7 +128,7 @@ Secret badges with undisclosed requirements:
 | **750** | Custom Badge Slot | Extra badge display slot on profile |
 | **1000** | Crown | Exclusive crown icon next to name |
 | **1500** | Animated Avatar | Animated profile picture frame |
-| **2000** | City Statue + Ultimate Flair | Virtual statue in Troll City + ultimate visual flair |
+| **2000** | City Statue + Ultimate Flair | Virtual statue in Mai Troll + ultimate visual flair |
 
 ---
 
@@ -429,7 +429,7 @@ ORDER BY level ASC;
 
 ## Summary
 
-The XP and Badge system provides comprehensive gamification across all user activities in Troll City. With multiple earning paths, tiered badge categories, and progressive perk unlocks, users have continuous incentives to engage with the platform.
+The XP and Badge system provides comprehensive gamification across all user activities in Mai Troll. With multiple earning paths, tiered badge categories, and progressive perk unlocks, users have continuous incentives to engage with the platform.
 
 **Key Files:**
 - Migration: `supabase/migrations/20270121050000_comprehensive_badge_system.sql`

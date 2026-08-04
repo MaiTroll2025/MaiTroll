@@ -1,4 +1,4 @@
-# Troll City Database Cleanup Plan
+# Mai Troll Database Cleanup Plan
 
 **Generated:** 2026-06-10  
 **Based on:** `_orphan_analysis_v2.json` (559 tables scored across 11,654 SQL files)
@@ -156,9 +156,9 @@ These pairs represent the same concept with inconsistent naming:
 | `troll_officer_applications` | `officer_applications` | Migrate data to `officer_applications`, drop `troll_officer_applications` |
 | `troll_officers` | `officers` | Migrate data to `officers`, drop `troll_officers` |
 | `troll_wheel_wins` | `wheel_wins` | Migrate data to `wheel_wins`, drop `troll_wheel_wins` |
-| `trollcity_orders` | `shop_orders` | Migrate data to `shop_orders`, drop `trollcity_orders` |
-| `trollcity_products` | `shop_items` | Migrate data to `shop_items`, drop `trollcity_products` |
-| `trollcity_shops` | `shops` | Migrate data to `shops`, drop `trollcity_shops` |
+| `Mai Troll_orders` | `shop_orders` | Migrate data to `shop_orders`, drop `Mai Troll_orders` |
+| `Mai Troll_products` | `shop_items` | Migrate data to `shop_items`, drop `Mai Troll_products` |
+| `Mai Troll_shops` | `shops` | Migrate data to `shops`, drop `Mai Troll_shops` |
 | `trollg_applications` | `trollg_applications` | Keep — unique feature |
 | `trollmond_gifts` | `trollmond_gifts` | Keep — unique feature |
 | `trollmond_ledger` | `trollmond_ledger` | Keep — unique feature |

@@ -18,7 +18,7 @@ export default function RefundPolicy() {
         <h2>1. General Policy</h2>
         <p>
           All purchases of Coins, digital items, perks, entrance effects, and other
-          virtual goods on Troll City are final and non-refundable, except where
+          virtual goods on Mai Troll are final and non-refundable, except where
           required by applicable law or as explicitly stated in this policy.
         </p>
 

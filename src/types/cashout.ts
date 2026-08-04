@@ -26,8 +26,7 @@ export interface CashoutRequest {
   opened_by_admin_id: string | null;
   opened_at: string | null;
   prior_status: string | null;
-  cashout_type: 'gift' | 'friday_bonus' | 'admin_override';
-  is_friday_battle_bonus: boolean;
+  cashout_type: 'gift' | 'admin_override';
   created_at: string;
   updated_at: string;
   processed_at: string | null;
@@ -140,13 +139,6 @@ export interface CashoutTier {
   updated_at: string;
 }
 
-export function isFriday(): boolean {
-  const now = new Date();
-  const mtDateString = now.toLocaleString("en-US", { timeZone: "America/Denver" });
-  const mtDate = new Date(mtDateString);
-  return mtDate.getDay() === 5;
-}
-
 export const FAST_PAY_FEE_PERCENT = 5;
 
 export const FAST_PAY_MIN_LEVEL = 500;
@@ -196,7 +188,7 @@ export function getFastPayTierLabel(tier: FastPayTier): string {
     case 'fast_pay':
       return 'Fast Pay';
     default:
-      return 'Friday Payout';
+      return 'Standard';
   }
 }
 
@@ -207,7 +199,7 @@ export function getFastPayTierDescription(tier: FastPayTier): string {
     case 'fast_pay':
       return 'Fast Pay • Every 24 Hrs • Within 24h';
     default:
-      return 'Standard • Paid every Friday';
+      return 'Standard • Paid on request';
   }
 }
 
@@ -218,7 +210,7 @@ export function getFastPayProcessingTime(tier: FastPayTier): string {
     case 'fast_pay':
       return 'Within 24h';
     default:
-      return 'Every Friday';
+      return 'On request';
   }
 }
 
@@ -237,15 +229,5 @@ export function getFastPayTierInfo(_userLevel: number): {
   tier: FastPayTier;
 } {
   return { tier: getFastPayTier(_userLevel) };
-}
-
-export function isCashoutWindowOpen(): boolean {
-  const now = new Date();
-  const mtDateString = now.toLocaleString("en-US", { timeZone: "America/Denver" });
-  const mtDate = new Date(mtDateString);
-  const day = mtDate.getDay();
-  const hour = mtDate.getHours();
-
-  return [5, 6, 0].includes(day) && hour >= 1 && hour < 19;
 }
 

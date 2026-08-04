@@ -348,7 +348,7 @@ export function useVehicleSystem() {
 
       return {
         canDrive: false,
-        message: 'You need an active Troll City license to use vehicles.',
+        message: 'You need an active Mai Troll license to use vehicles.',
       }
     } catch (error) {
       console.error('Error checking drive permission:', error)
@@ -544,7 +544,7 @@ export function useDriverTest() {
         success: true,
         passed: true,
         score: 10,
-        message: 'Troll City license granted. Your license is now active.',
+        message: 'MaiTroll license granted. Your license is now active.',
         licenseNumber,
       }
     } catch (error: any) {

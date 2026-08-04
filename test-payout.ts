@@ -3,7 +3,7 @@
  * This script creates a test payout transaction to verify the PayPal payout system works.
  * 
  * User: aab07dfc-3304-4553-a1db-fa410f264ead
- * PayPal: trollcity2025@gmail.com
+ * PayPal: Mai Troll2025@gmail.com
  * Coins: 5000 (=$1)
  */
 
@@ -16,7 +16,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 const TEST_USER_ID = 'aab07dfc-3304-4553-a1db-fa410f264ead';
-const TEST_PAYPAL_EMAIL = 'trollcity2025@gmail.com';
+const TEST_PAYPAL_EMAIL = 'Mai Troll2025@gmail.com';
 const TEST_COINS = 5000;
 const TEST_USD = 1.00;
 

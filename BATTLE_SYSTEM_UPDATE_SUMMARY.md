@@ -1,7 +1,7 @@
 # Battle System Update Summary
 
 ## Overview
-Comprehensive updates to the Troll City battle system including crown/streak mechanics, troll arena background, Three.js animations, and enhanced battle mechanics.
+Comprehensive updates to the Mai Troll battle system including crown/streak mechanics, troll arena background, Three.js animations, and enhanced battle mechanics.
 
 ## Files Created/Modified
 

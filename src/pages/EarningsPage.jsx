@@ -199,13 +199,7 @@ export default function EarningsPage() {
   const paidCoins = earningsData.purchased_coins || 0;
   const eligibleTier = getEligibleTier(paidCoins);
   
-  // Cashout window check: Friday/Saturday/Sunday 1:00 AM - 7:00 PM MST (America/Denver)
-  const now = new Date();
-  const mtDateString = now.toLocaleString("en-US", {timeZone: "America/Denver"});
-  const mtDate = new Date(mtDateString);
-  const day = mtDate.getDay();
-  const hour = mtDate.getHours();
-  const isCashoutWindowOpen = [5, 6, 0].includes(day) && hour >= 1 && hour < 19;
+  // Cashout is available anytime through MAI Pay
 
   return (
     <RequireRole roles={['broadcaster', 'admin']} fallbackPath="/dashboard">
@@ -347,16 +341,10 @@ export default function EarningsPage() {
                     ) : !isCurrentEligible ? (
                       <button
                         onClick={() => handleCashoutRequest(tier)}
-                        disabled={processing || !isCashoutWindowOpen}
-                        className={`w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors mt-2 ${
-                          isCashoutWindowOpen 
-                            ? 'bg-gray-700 hover:bg-gray-600' 
-                            : 'bg-gray-800 cursor-not-allowed opacity-70'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        disabled={processing}
+                        className="w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors mt-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isCashoutWindowOpen 
-                          ? `Request ${formatUSD(tier.payout)}` 
-                          : 'Cashouts open Fri-Sun 1AM-7PM MST'}
+                        {`Request ${formatUSD(tier.payout)}`}
                       </button>
                     ) : null}
                   </div>

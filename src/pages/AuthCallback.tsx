@@ -9,7 +9,7 @@ const AuthCallback = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { setAuth, setProfile } = useAuthStore()
-  const ADMIN_EMAIL = (import.meta as any).env?.VITE_ADMIN_EMAIL || 'trollcity2025@gmail.com'
+  const ADMIN_EMAIL = (import.meta as any).env?.VITE_ADMIN_EMAIL || 'Trollcity2025@gmail.com'
 
   const landingForProfile = (prof: any) => {
     const userRole = prof?.role || prof?.troll_role

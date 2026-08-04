@@ -104,7 +104,7 @@ const TrollCourtSummons: React.FC<TrollCourtSummonsProps> = ({ rarity }) => {
             <p className="text-yellow-400 text-sm mb-2">COURT ANNOUNCEMENT</p>
             <div className="bg-yellow-900 bg-opacity-20 rounded p-4">
               <p className="text-yellow-300 text-sm">
-                The Troll King has personally reviewed your case. This trial will be broadcast to all of Troll City!
+                The Troll King has personally reviewed your case. This trial will be broadcast to all of Mai Troll!
               </p>
             </div>
           </div>

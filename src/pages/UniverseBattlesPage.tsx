@@ -1105,7 +1105,7 @@ export default function UniverseBattlesPage() {
         </section>
 
         <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4 text-center text-xs leading-5 text-slate-500">
-          Universe Showdown is separate from regular Troll City battles. LiveKit, gifting, wallets,
+          Universe Showdown is separate from regular Mai Troll battles. LiveKit, gifting, wallets,
           chat, moderation, and realtime infrastructure are reused without breaking the regular
           battle system. Opponent identities are hidden until the official reveal.
         </div>

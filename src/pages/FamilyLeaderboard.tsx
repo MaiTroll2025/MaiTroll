@@ -157,7 +157,7 @@ const FamilyLeaderboard = ({ user: _authUser }: { user?: UserProfile | null }) =
             <Trophy className="w-10 h-10 text-yellow-400" />
             FAMILY LEADERBOARD
           </h1>
-          <p className="text-gray-300">Compete with families across Troll City</p>
+          <p className="text-gray-300">Compete with families across Mai Troll</p>
 
           {/* Season Banner */}
           {seasonInfo && (

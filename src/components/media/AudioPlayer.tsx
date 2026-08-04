@@ -5,7 +5,7 @@ import {
   X, Repeat, Shuffle, ListMusic 
 } from 'lucide-react';
 import { Howl } from 'howler';
-import { trollCityTheme } from '@/styles/trollCityTheme';
+import { MaiTrollTheme } from '@/styles/trollCityTheme';
 import type { Song } from '@/types/media';
 import { TIP_AMOUNTS } from '@/types/media';
 import { useSong } from '@/lib/hooks/useMedia';
@@ -213,7 +213,7 @@ export default function AudioPlayer({
   if (isMinimized) {
     return (
       <div className="fixed bottom-4 left-4 right-4 md:left-80 md:right-4 z-50">
-        <div className={`${trollCityTheme.backgrounds.card} border ${trollCityTheme.borders.glass} rounded-2xl p-3 shadow-2xl flex items-center gap-4`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} border ${MaiTrollTheme.borders.glass} rounded-2xl p-3 shadow-2xl flex items-center gap-4`}>
           <img 
             src={song.cover_url || '/assets/default-cover.png'} 
             alt={song.title}
@@ -249,7 +249,7 @@ export default function AudioPlayer({
   return (
     <>
       <div className="fixed bottom-4 left-4 right-4 md:left-80 md:right-4 z-50">
-        <div className={`${trollCityTheme.backgrounds.card} border ${trollCityTheme.borders.glass} rounded-2xl shadow-2xl overflow-hidden`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} border ${MaiTrollTheme.borders.glass} rounded-2xl shadow-2xl overflow-hidden`}>
           {/* Error/Loading Banner */}
           {loadError && (
             <div className="bg-red-500/20 border-b border-red-500/30 px-4 py-2 text-red-400 text-sm">
@@ -428,7 +428,7 @@ function TipModal({ song, onClose, onTip }: TipModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className={`${trollCityTheme.backgrounds.card} border ${trollCityTheme.borders.glass} rounded-2xl p-6 max-w-md w-full`}>
+      <div className={`${MaiTrollTheme.backgrounds.card} border ${MaiTrollTheme.borders.glass} rounded-2xl p-6 max-w-md w-full`}>
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Coins className="w-6 h-6 text-yellow-400" />
           Tip the Artist

@@ -20,8 +20,8 @@ ALTER TABLE public.user_profiles
   ADD COLUMN IF NOT EXISTS mai_link_source TEXT,
   ADD COLUMN IF NOT EXISTS external_account_id TEXT;
 
-COMMENT ON COLUMN public.user_profiles.mai_ecosystem_linked IS 'Whether the Troll City profile is linked to the MaiTalent ecosystem';
-COMMENT ON COLUMN public.user_profiles.maitalent_linked IS 'Whether the Troll City profile has a valid MaiTalent link';
+COMMENT ON COLUMN public.user_profiles.mai_ecosystem_linked IS 'Whether the Mai Troll profile is linked to the MaiTalent ecosystem';
+COMMENT ON COLUMN public.user_profiles.maitalent_linked IS 'Whether the Mai Troll profile has a valid MaiTalent link';
 COMMENT ON COLUMN public.user_profiles.mai_linked_at IS 'Timestamp when the MaiTalent link was established';
 COMMENT ON COLUMN public.user_profiles.mai_link_source IS 'Source of the MaiTalent link, such as profile_page or broadcast_flow';
 COMMENT ON COLUMN public.user_profiles.external_account_id IS 'External account identifier used for the MaiTalent link';
@@ -62,7 +62,7 @@ If your backend is a Node/Express service, deploy the updated server bundle or r
 Run the server-side link route with a real authenticated user:
 
 ```bash
-curl -X POST https://<your-trollcity-backend>/api/maitalent/link-account \
+curl -X POST https://<your-Mai Troll-backend>/api/maitalent/link-account \
   -H "Authorization: Bearer <user-access-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -92,12 +92,12 @@ Expected values:
 Trigger a server-side sync request:
 
 ```bash
-curl -X POST https://<your-trollcity-backend>/api/maitalent/sync-activity \
+curl -X POST https://<your-Mai Troll-backend>/api/maitalent/sync-activity \
   -H "Content-Type: application/json" \
   -d '{
     "external_user_id": "<user-id>",
     "normalized_email": "<user-email>",
-    "source_event_id": "trollcity:test-sync:<timestamp>",
+    "source_event_id": "Mai Troll:test-sync:<timestamp>",
     "activity_type": "broadcast",
     "tokens_awarded": 25,
     "metadata": {
@@ -111,7 +111,7 @@ curl -X POST https://<your-trollcity-backend>/api/maitalent/sync-activity \
 Start a broadcast and then hit the broadcast-view tracker:
 
 ```bash
-curl -X POST https://<your-trollcity-backend>/api/maitalent/track-broadcast-view \
+curl -X POST https://<your-Mai Troll-backend>/api/maitalent/track-broadcast-view \
   -H "Authorization: Bearer <user-access-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -122,7 +122,7 @@ curl -X POST https://<your-trollcity-backend>/api/maitalent/track-broadcast-view
 
 ## 7) Confirm source-of-truth balances
 
-The backend should be sending balances derived from the Troll City profile:
+The backend should be sending balances derived from the Mai Troll profile:
 
 ```sql
 SELECT id, email, troll_coins, hype_coins, battle_crowns

@@ -170,7 +170,7 @@ export default function HomeLiveGrid() {
         </div>
         <h3 className="text-xl font-semibold text-slate-300 mb-2">No Live Streams</h3>
         <p className="text-slate-500 max-w-sm mx-auto">
-          It&apos;s quiet in Troll City right now. Be the first to go live!
+          It&apos;s quiet in Mai Troll right now. Be the first to go live!
         </p>
         <button
           onClick={() => navigate('/broadcast/setup')}

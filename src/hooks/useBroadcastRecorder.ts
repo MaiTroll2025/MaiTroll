@@ -177,7 +177,7 @@ export function useBroadcastRecorder(options: UseBroadcastRecorderOptions = {}):
           ownsPlaybackStreamRef.current = true
         } else if (resolvedStream?.getTracks().length) {
           // Source stream provided (e.g. LiveKit local + remote tracks).
-          // Capture the full screen via getDisplayMedia for the Troll City UI,
+          // Capture the full screen via getDisplayMedia for the Mai Troll UI,
           // then merge in audio tracks from the source stream (mic + seat users).
           console.log('[useBroadcastRecorder] Capturing screen via getDisplayMedia, merging source audio')
           const screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -192,7 +192,7 @@ export function useBroadcastRecorder(options: UseBroadcastRecorderOptions = {}):
           ownsSourceStreamRef.current = true
         } else {
           // No source stream or URL — capture the entire screen the viewer sees
-          // (full Troll City UI: podcast room, gaming viewer, broadcast viewer, etc.)
+          // (full Mai Troll UI: podcast room, gaming viewer, broadcast viewer, etc.)
           // Uses getDisplayMedia which shows a one-time browser screen share picker
           console.log('[useBroadcastRecorder] Capturing entire screen via getDisplayMedia')
           displayStream = await navigator.mediaDevices.getDisplayMedia({

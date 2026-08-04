@@ -50,7 +50,7 @@ export default function StreamerARSettings({
     {
       key: 'legendaryGiftsEnabled' as const,
       label: 'Legendary Gifts',
-      description: 'Presidential, Troll City, and Legendary AR gifts',
+      description: 'Presidential, Mai Troll, and Legendary AR gifts',
       icon: <Shield size={18} />,
       color: 'text-fuchsia-400',
       bgColor: 'bg-fuchsia-500/10',

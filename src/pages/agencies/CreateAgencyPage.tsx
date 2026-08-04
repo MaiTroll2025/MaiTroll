@@ -123,7 +123,7 @@ export default function CreateAgencyPage() {
       <div className="mx-auto max-w-2xl">
         <div className="mb-6">
           <p className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">
-            Troll City Talent Offices
+            Mai Troll Talent Offices
           </p>
           <h1 className="mt-2 text-3xl font-black text-white">
             Create Talent Office

@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { Gavel, Heart, Calendar, Loader2, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import { trollCityTheme } from '../../styles/trollCityTheme';
+import { MaiTrollTheme } from '../../styles/trollCityTheme';
 
 interface WatchlistShow {
   id: string;
@@ -123,7 +123,7 @@ export default function ProfileWatchlist({ userId }: ProfileWatchlistProps) {
 
   if (watchlistItems.length === 0) {
     return (
-      <div className={`text-center py-12 ${trollCityTheme.backgrounds.card} rounded-xl border border-white/10`}>
+      <div className={`text-center py-12 ${MaiTrollTheme.backgrounds.card} rounded-xl border border-white/10`}>
         <div className="text-4xl mb-3">🔖</div>
         <h3 className="text-lg font-bold text-white mb-2">No Watchlisted Auctions</h3>
         <p className="text-gray-400">Add auctions to your watchlist to track them here!</p>
@@ -149,7 +149,7 @@ export default function ProfileWatchlist({ userId }: ProfileWatchlistProps) {
           return (
             <div
               key={item.id}
-              className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl overflow-hidden hover:border-purple-500/50 transition-all group`}
+              className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl overflow-hidden hover:border-purple-500/50 transition-all group`}
             >
               <div className="relative aspect-video bg-gradient-to-br from-purple-900 to-cyan-900 overflow-hidden">
                 {show.thumbnail_url ? (

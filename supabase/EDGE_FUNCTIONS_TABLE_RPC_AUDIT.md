@@ -1,6 +1,6 @@
 # Supabase Edge Functions - Table & RPC Audit
 
-**Project:** Troll City  
+**Project:** Mai Troll  
 **Date:** 2026-06-10  
 **Scope:** All edge functions under `supabase/functions/` (100+ directories)
 

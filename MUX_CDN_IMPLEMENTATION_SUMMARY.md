@@ -1,7 +1,7 @@
 # Mux CDN Integration Implementation Summary
 
 ## Overview
-Implemented Mux CDN integration for Troll City broadcasting system.
+Implemented Mux CDN integration for Mai Troll broadcasting system.
 
 ## Files Created
 - server/services/muxService.js

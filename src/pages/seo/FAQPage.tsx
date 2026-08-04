@@ -9,24 +9,24 @@ const faqData = [
     icon: HelpCircle,
     questions: [
       {
-        question: 'What is Troll City?',
-        answer: 'Troll City is an interactive live-streaming and social platform where viewers do more than watch—they participate through live broadcasts, battles, communities, games, creator events, and real-time interaction.'
+        question: 'What is Mai Troll?',
+        answer: 'MaiTroll is an interactive live-streaming and social platform where viewers do more than watch—they participate through live broadcasts, battles, communities, games, creator events, and real-time interaction.'
       },
       {
-        question: 'How is Troll City different from TikTok Live?',
-        answer: 'Troll City focuses on audience participation, creator interaction, battles, community engagement, and creator-friendly monetization instead of endless scrolling.'
+        question: 'How is Mai Troll different from TikTok Live?',
+        answer: 'MaiTroll focuses on audience participation, creator interaction, battles, community engagement, and creator-friendly monetization instead of endless scrolling.'
       },
       {
-        question: 'Is Troll City free to use?',
+        question: 'Is Mai Troll free to use?',
         answer: 'Yes. Creating an account, watching broadcasts, posting content, and joining the community are completely free.'
       },
       {
         question: 'Do I need to download an app?',
-        answer: 'No. Troll City runs directly in your browser as a Progressive Web App (PWA).'
+        answer: 'No. Mai Troll runs directly in your browser as a Progressive Web App (PWA).'
       },
       {
-        question: 'Can I use Troll City on desktop and mobile?',
-        answer: 'Yes. Troll City works on desktops, tablets, and mobile devices.'
+        question: 'Can I use Mai Troll on desktop and mobile?',
+        answer: 'Yes. Mai Troll works on desktops, tablets, and mobile devices.'
       },
       {
         question: 'How do I create an account?',
@@ -37,8 +37,8 @@ const faqData = [
         answer: 'Social login options may be available depending on future platform updates.'
       },
       {
-        question: 'Is Troll City currently in beta?',
-        answer: 'Yes. Troll City is currently in beta. Features, events, and functionality may evolve as we continue improving the platform based on community feedback.'
+        question: 'Is Mai Troll currently in beta?',
+        answer: 'Yes. Mai Troll is currently in beta. Features, events, and functionality may evolve as we continue improving the platform based on community feedback.'
       },
     ]
   },
@@ -52,7 +52,7 @@ const faqData = [
       },
       {
         question: 'Can I stream from OBS?',
-        answer: 'No. Troll City includes HytroGaming, a dedicated game-streaming page that allows direct PC screen sharing without the need for OBS or third-party streaming software.'
+        answer: 'No. Mai Troll includes HytroGaming, a dedicated game-streaming page that allows direct PC screen sharing without the need for OBS or third-party streaming software.'
       },
       {
         question: 'Can I stream from my phone?',
@@ -106,7 +106,7 @@ const faqData = [
       },
       {
         question: 'When do payouts happen?',
-        answer: 'Payouts are processed every Friday.'
+        answer: 'Payouts are processed on request through MAI Pay.'
       },
       {
         question: 'What is the minimum cashout amount?',
@@ -136,7 +136,7 @@ const faqData = [
     questions: [
       {
         question: 'Can I message other users?',
-        answer: 'Yes. Troll City includes private messaging through UTroMail. The feature is located under the Chats tab.'
+        answer: 'Yes. Mai Troll includes private messaging through UTroMail. The feature is located under the Chats tab.'
       },
       {
         question: 'Can I follow creators?',
@@ -212,11 +212,11 @@ const faqData = [
       },
       {
         question: 'Is there content moderation?',
-        answer: 'Yes. Troll City actively moderates content to maintain community standards and user safety.'
+        answer: 'Yes. Mai Troll actively moderates content to maintain community standards and user safety.'
       },
       {
         question: 'What content is allowed?',
-        answer: "Content must comply with Troll City's Community Guidelines and Terms of Service."
+        answer: "Content must comply with Mai Troll's Community Guidelines and Terms of Service."
       },
       {
         question: 'What happens if someone violates the rules?',
@@ -281,12 +281,12 @@ const faqData = [
     icon: Play,
     questions: [
       {
-        question: 'Why should I choose Troll City over TikTok Live?',
-        answer: 'Troll City focuses on community interaction, creator participation, battles, audience engagement, and creator-focused monetization.'
+        question: 'Why should I choose Mai Troll over TikTok Live?',
+        answer: 'MaiTroll focuses on community interaction, creator participation, battles, audience engagement, and creator-focused monetization.'
       },
       {
         question: 'Can I bring my audience with me?',
-        answer: 'Yes. Creators are encouraged to invite their existing audiences to join Troll City.'
+        answer: 'Yes. Creators are encouraged to invite their existing audiences to join Mai Troll.'
       },
       {
         question: 'What creator tools are available?',
@@ -294,14 +294,14 @@ const faqData = [
       },
       {
         question: 'How is content moderated?',
-        answer: 'Troll City focuses on fair, transparent moderation while maintaining community safety and platform integrity.'
+        answer: 'MaiTroll focuses on fair, transparent moderation while maintaining community safety and platform integrity.'
       },
       {
         question: 'Are payouts competitive?',
-        answer: 'Troll City is designed to provide competitive creator earnings and transparent monetization opportunities.'
+        answer: 'MaiTroll is designed to provide competitive creator earnings and transparent monetization opportunities.'
       },
       {
-        question: 'Is it easier to grow on Troll City?',
+        question: 'Is it easier to grow on Mai Troll?',
         answer: 'Early creators often have a greater opportunity to build an audience before the platform becomes crowded.'
       },
       {
@@ -325,12 +325,12 @@ export default function FAQPage() {
 
   return (
     <SEOLayout
-      title="Frequently Asked Questions | Troll City"
-      description="Find answers to frequently asked questions about Troll City. Learn about streaming, battles, coins, payouts, safety, account management, and more."
+      title="Frequently Asked Questions | Mai Troll"
+      description="Find answers to frequently asked questions about Mai Troll. Learn about streaming, battles, coins, payouts, safety, account management, and more."
       keywords={[
-        'Troll City FAQ', 'Troll City questions', 'Mai Troll City FAQ',
+        'MaiTroll FAQ', 'MaiTroll questions', 'MaiMaiTroll FAQ',
         'help', 'how to', 'streaming help', 'account help',
-        'payment FAQ', 'creator FAQ', 'Troll City guide',
+        'payment FAQ', 'creator FAQ', 'MaiTroll guide',
         'Troll Coins', 'battles', 'payouts', 'HytroGaming'
       ]}
     >
@@ -354,7 +354,7 @@ export default function FAQPage() {
             </h1>
 
             <p className="text-xl text-slate-300 leading-relaxed">
-              Find quick answers to the most common questions about Troll City.
+              Find quick answers to the most common questions about Mai Troll.
               Can't find what you're looking for? <Link to="/contact" className="text-purple-400 hover:text-purple-300">Contact us</Link>.
             </p>
           </div>
@@ -430,12 +430,12 @@ export default function FAQPage() {
             <p className="text-slate-400 text-sm">Browse all articles</p>
           </Link>
           <a
-            href="mailto:trollcity2025@gmail.com"
+            href="mailto:Mai Troll2025@gmail.com"
             className="p-6 bg-slate-900/50 border border-slate-800 hover:border-purple-500/30 rounded-xl transition-all text-center"
           >
             <Mail className="w-8 h-8 text-blue-400 mx-auto mb-3" />
             <h4 className="text-white font-medium mb-1">Email Us</h4>
-            <p className="text-slate-400 text-sm">trollcity2025@gmail.com</p>
+            <p className="text-slate-400 text-sm">Mai Troll2025@gmail.com</p>
           </a>
         </div>
       </SEOContentSection>

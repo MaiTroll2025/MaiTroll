@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Cash App manual coin order system has been **fully implemented, documented, and tested**. The system allows users to purchase coins via Cash App ($trollcity95) with admin verification, replacing the CORS error that was preventing payments.
+The Cash App manual coin order system has been **fully implemented, documented, and tested**. The system allows users to purchase coins via Cash App ($Mai Troll95) with admin verification, replacing the CORS error that was preventing payments.
 
 **Status**: 🟢 **PRODUCTION READY**  
 **Completion Date**: 2025-01-18  
@@ -23,7 +23,7 @@ The Cash App manual coin order system has been **fully implemented, documented, 
 **Component Created**: `CashAppPaymentModal.tsx` (238 lines)  
 **Feature**: 3-step payment request flow
 - Step 1: Confirm payment amount
-- Step 2: Display Cash App address ($trollcity95) and payment note
+- Step 2: Display Cash App address ($Mai Troll95) and payment note
 - Step 3: Success confirmation with order ID
 
 **Integration**: Modified `CoinStoreModal.tsx` to add payment method toggle
@@ -134,7 +134,7 @@ The Cash App manual coin order system has been **fully implemented, documented, 
 3. Select coin package
 4. Click "Send via Cash App"
 5. Follow 3-step modal instructions
-6. Send Cash App payment to $trollcity95 with note
+6. Send Cash App payment to $Mai Troll95 with note
 7. Wait for admin approval
 8. Coins appear automatically ✅
 ```
@@ -143,7 +143,7 @@ The Cash App manual coin order system has been **fully implemented, documented, 
 ```
 1. Go to Admin Dashboard → Manual Orders
 2. See pending payment requests
-3. Verify payment in your Cash App $trollcity95
+3. Verify payment in your Cash App $Mai Troll95
 4. Click "Mark Paid & Credit"
 5. Coins automatically credited to user ✅
 ```
@@ -441,6 +441,6 @@ The Cash App payment system is complete, secure, and ready for deployment. No bl
 
 **Completion Date**: 2025-01-18  
 **Version**: 1.0.0  
-**System**: Trollcity Cash App Manual Coin Order v1.0
+**System**: Mai Troll Cash App Manual Coin Order v1.0
 
 🎉 **Ready to go live!**

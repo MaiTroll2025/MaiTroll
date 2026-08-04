@@ -257,7 +257,7 @@ export default function CreatePostModal({
             <MessageSquare className="w-6 h-6 text-purple-400" />
             Create Post
           </h2>
-          <p className="text-sm text-gray-400 mt-1">Share with the Troll City community</p>
+          <p className="text-sm text-gray-400 mt-1">Share with the Mai Troll community</p>
         </div>
 
         {/* Form */}

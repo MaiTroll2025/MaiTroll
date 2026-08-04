@@ -150,7 +150,7 @@ export default function TrollDropOverlay({ drop, onClaim, onClose }: TrollDropOv
         >
           <div className="w-12 h-6 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 rounded-sm shadow-lg border border-amber-500/50 flex items-center justify-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
-            <span className="text-[8px] font-black text-amber-900 relative z-10">TROLL CITY</span>
+            <span className="text-[8px] font-black text-amber-900 relative z-10">Mai Troll</span>
             <div className="absolute right-0 top-0 w-2 h-2 bg-amber-600 rounded-full" />
           </div>
         </button>

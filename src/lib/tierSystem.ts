@@ -1,4 +1,4 @@
-// XP-based tier system for Troll City
+// XP-based tier system for Mai Troll
 
 export interface TierInfo {
   level: number

@@ -20,7 +20,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 
 async function setupCoinsAndBadges() {
   try {
-    const adminEmail = 'trollcity2025@gmail.com'
+    const adminEmail = 'Mai Troll2025@gmail.com'
     const ogDate = new Date('2026-01-01').toISOString()
     
     console.log('🔧 Setting up coins and badges...\n')

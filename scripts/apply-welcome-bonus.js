@@ -56,7 +56,7 @@ async function applyWelcomeBonus() {
             user_id: user.id,
             type: 'welcome_bonus',
             amount: 1000,
-            description: 'Welcome bonus for existing Troll City users!',
+            description: 'Welcome bonus for existing Mai Troll users!',
             created_at: new Date().toISOString()
           });
 

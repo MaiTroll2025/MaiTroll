@@ -193,4 +193,4 @@ export function getEmployeeTabs(p?: EmployeeProfileLike | null): EmployeeTab[] {
 }
 
 export const EMPLOYEE_CORP = 'MAI CORP'
-export const EMPLOYEE_BUSINESS = 'Mai Troll City'
+export const EMPLOYEE_BUSINESS = 'MaiMaiTroll'

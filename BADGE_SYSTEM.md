@@ -1,6 +1,6 @@
 # Badge System
 
-This document describes the Troll City badge system: schema, security, edge functions, frontend components, and how to extend.
+This document describes the Mai Troll badge system: schema, security, edge functions, frontend components, and how to extend.
 
 ## Database
 - `badge_catalog`: global list of badges (slug, name, description, category, rarity, sort_order, icon_url, is_active).

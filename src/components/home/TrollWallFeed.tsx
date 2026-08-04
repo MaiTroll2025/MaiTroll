@@ -452,7 +452,7 @@ export default function TrollWallFeed({ onRequireAuth, feedClassName }: TrollWal
                         <div className="min-w-0 flex-1">
                           {post.is_system_generated ? (
                             <span className="block truncate text-xs font-bold text-white/80">
-                              Troll City System
+                              Mai Troll System
                             </span>
                           ) : (
                             <span

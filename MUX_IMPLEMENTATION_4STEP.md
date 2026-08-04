@@ -2,7 +2,7 @@
 
 ## Overview
 
-TrollCity broadcasts now follow a MANDATORY 4-STEP flow to properly initialize Mux streams.
+Mai Troll broadcasts now follow a MANDATORY 4-STEP flow to properly initialize Mux streams.
 
 ---
 

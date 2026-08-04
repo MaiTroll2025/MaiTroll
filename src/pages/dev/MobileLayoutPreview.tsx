@@ -24,7 +24,7 @@ function MockHeader({ variant, showSearch = true }: { variant: LayoutVariant; sh
             <Crown size={18} className="text-white" />
           </div>
           <div>
-            <p className="text-xs font-bold text-white">Troll City</p>
+            <p className="text-xs font-bold text-white">Mai Troll</p>
             <p className="text-[10px] text-white/50">Live: 2.4K viewers</p>
           </div>
         </div>
@@ -48,7 +48,7 @@ function MockHeader({ variant, showSearch = true }: { variant: LayoutVariant; sh
             <Menu size={20} className="text-white" />
           </button>
           <div>
-            <p className="text-sm font-bold text-white">Troll City</p>
+            <p className="text-sm font-bold text-white">Mai Troll</p>
             <p className="text-[10px] text-emerald-400 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               LIVE
@@ -77,7 +77,7 @@ function MockHeader({ variant, showSearch = true }: { variant: LayoutVariant; sh
         </button>
         <div className="flex-1 flex items-center gap-2 bg-white/5 rounded-lg px-3 mx-2">
           <Search size={16} className="text-white/40" />
-          <input placeholder="Search Troll City..." className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30" />
+          <input placeholder="Search Mai Troll..." className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30" />
         </div>
         <button className="p-3 text-white/70">
           <Bell size={20} />
@@ -94,7 +94,7 @@ function MockHeader({ variant, showSearch = true }: { variant: LayoutVariant; sh
             <Crown size={24} className="text-white" />
           </div>
           <div>
-            <p className="text-base font-bold text-white">Troll City</p>
+            <p className="text-base font-bold text-white">Mai Troll</p>
             <p className="text-[10px] text-purple-400 font-medium">PREMIUM</p>
           </div>
         </div>
@@ -128,7 +128,7 @@ function MockHeader({ variant, showSearch = true }: { variant: LayoutVariant; sh
           <div className="w-9 h-9 rounded-lg bg-purple-600 flex items-center justify-center">
             <Crown size={18} className="text-white" />
           </div>
-          <span className="text-white font-bold">Troll City</span>
+          <span className="text-white font-bold">Mai Troll</span>
         </div>
       )}
       <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ function MockDrawer({ variant, open, onClose }: { variant: LayoutVariant; open?:
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center">
               <Crown size={20} className="text-white" />
             </div>
-            <span className="text-white font-bold">Troll City</span>
+            <span className="text-white font-bold">Mai Troll</span>
           </div>
           <button onClick={onClose} className="p-2 text-white/50">
             <X size={20} />

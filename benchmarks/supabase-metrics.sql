@@ -1,5 +1,5 @@
 -- ============================================================
--- TROLL CITY PERFORMANCE BENCHMARK - SUPABASE SQL QUERIES
+-- Mai Troll PERFORMANCE BENCHMARK - SUPABASE SQL QUERIES
 -- Date: 2026-06-14
 -- Run each section in Supabase SQL Editor
 -- ============================================================

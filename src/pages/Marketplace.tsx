@@ -34,11 +34,11 @@ export default function Marketplace() {
   const { user } = useAuthStore()
 
   useSEO({
-    title: 'Marketplace | Troll City - Buy & Sell Online',
-    description: 'Browse the Troll City marketplace. Buy and sell virtual goods, items, and services from creators and community members. Social marketplace for the streaming community.',
+    title: 'Marketplace | Mai Troll - Buy & Sell Online',
+    description: 'Browse the Mai Troll marketplace. Buy and sell virtual goods, items, and services from creators and community members. Social marketplace for the streaming community.',
     keywords: [
       'online marketplace', 'buy and sell online', 'community marketplace',
-      'social marketplace', 'virtual goods', 'marketplace', 'Troll City shop',
+      'social marketplace', 'virtual goods', 'marketplace', 'MaiTroll shop',
       'sell online', 'buy online', 'creator marketplace'
     ]
   });
@@ -59,7 +59,7 @@ export default function Marketplace() {
     }
 
     const { data } = await supabase
-      .from('trollcity_shops')
+      .from('MaiTroll_shops')
       .select('id')
       .eq('owner_id', user.id)
       .eq('is_active', true)
@@ -73,7 +73,7 @@ export default function Marketplace() {
 
     try {
       const { data: shopsData, error: shopsError } = await supabase
-        .from('trollcity_shops')
+        .from('MaiTroll_shops')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
@@ -152,7 +152,7 @@ export default function Marketplace() {
 
               <div>
                 <h1 className="bg-gradient-to-r from-cyan-200 via-blue-300 to-cyan-100 bg-clip-text text-3xl font-black tracking-tight text-transparent md:text-5xl">
-                  Troll City Marketplace
+                  Mai Troll Marketplace
                 </h1>
                 <p className="mt-1 text-sm text-slate-400">
                   Browse city shops, manage orders, and sell items to the community.
@@ -347,7 +347,7 @@ function EmptyMarketplace({
         <Store className="mx-auto mb-4 h-14 w-14 text-slate-600" />
         <h2 className="text-2xl font-black text-white">No Shops Available</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-          Be the first seller in the marketplace and start listing items for Troll City members.
+          Be the first seller in the marketplace and start listing items for Mai Troll members.
         </p>
 
         {!hasShop && (

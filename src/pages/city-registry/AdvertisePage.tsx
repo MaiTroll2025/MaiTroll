@@ -321,7 +321,7 @@ export default function AdvertisePage() {
 
                 <div>
                   <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-cyan-100">
-                    Troll City Ad Command
+                    Mai Troll Ad Command
                   </div>
                   <h1 className="text-3xl font-black tracking-tight sm:text-5xl">
                     Advertisement Management
@@ -516,10 +516,10 @@ export default function AdvertisePage() {
 
               <div>
                 <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-cyan-100">
-                  Troll City Promotion
+                  Mai Troll Promotion
                 </div>
                 <h1 className="text-3xl font-black tracking-tight sm:text-5xl">
-                  Advertise on Troll City
+                  Advertise on Mai Troll
                 </h1>
                 <p className="mt-1 max-w-2xl text-sm text-cyan-100/70">
                   Submit a premium ad for review. Approved ads enter the public rotation queue.

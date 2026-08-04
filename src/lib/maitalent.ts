@@ -67,7 +67,7 @@ export class MaitalentIntegrator {
   }
 
   private handlePromoUpdate(promo: MaitalentPromo) {
-    // Dispatch update to Troll City promo system
+    // Dispatch update to Mai Troll promo system
     window.dispatchEvent(new CustomEvent('maitalent-promo-update', { detail: promo }))
     
     // Optional custom callback

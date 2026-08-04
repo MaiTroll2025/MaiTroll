@@ -26,7 +26,7 @@ import {
   Repeat, Home as HomeIcon, Lock, Unlock, Heart, Trophy, Flag,
   Hourglass, Layout, MessageSquare, Send, Landmark, Megaphone
 } from 'lucide-react'
-import { trollCityTheme } from '../../styles/trollCityTheme'
+import { MaiTrollTheme } from '../../styles/trollCityTheme'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEMO / MOCK DATA
@@ -139,7 +139,7 @@ const DISTRICTS: District[] = [
     id:        'mai',
     name:      'MAICorp Jobs',
     icon:      <Briefcase className="w-7 h-7" />,
-    description: 'Apply for Troll City roles — officer, court staff, city admin, broadcaster, journalist.',
+    description: 'Apply for Mai Troll roles — officer, court staff, city admin, broadcaster, journalist.',
     color:  'text-pink-400',
     glow:   '0 0 30px rgba(244,114,182,0.35)',
     badgeText: 'HIRING',
@@ -164,7 +164,7 @@ interface ChecklistStep {
 
 function getDefaultSteps(): ChecklistStep[] {
   return [
-    { step: 1, title: 'Create your city profile', description: 'Pick a username, avatar, and make your Troll City identity.', icon: <Users className="w-5 h-5" />, actionLabel: 'Set up profile →', actionPath: '/profile/setup' },
+    { step: 1, title: 'Create your city profile', description: 'Pick a username, avatar, and make your Mai Troll identity.', icon: <Users className="w-5 h-5" />, actionLabel: 'Set up profile →', actionPath: '/profile/setup' },
     { step: 2, title: 'Pick your neighborhood', description: 'Choose a district and find a house to call home in the city.', icon: <HomeIcon className="w-5 h-5" />, actionLabel: 'Explore neighborhoods →', actionPath: '/neighborhood-map' },
     { step: 3, title: 'Watch a broadcast', description: 'See what city content is live. Click a stream and join the chat.', icon: <Play className="w-5 h-5" />, actionLabel: 'Watch a stream →', actionPath: '/live' },
     { step: 4, title: 'Send or earn coins', description: 'Top up at the Coin Store or earn coins by engaging with the city.', icon: <Coins className="w-5 h-5" />, actionLabel: 'Open Coin Store →', actionPath: '/coin-store' },
@@ -241,7 +241,7 @@ const ROLE_PATHS: RolePath[] = [
   {
     id: 'tcnn', name: 'TCNN Journalist', icon: <Megaphone className="w-5 h-5" />,
     color: 'text-blue-400',
-    description: 'Report city news, host live events, and keep Troll City informed.',
+    description: 'Report city news, host live events, and keep Mai Troll informed.',
     whatYouDo: ['Report on live city events', 'Host breaking-news segments', 'Cover battles & court rulings', 'Build your brand as a news anchor'],
     howToStart: 'Apply through TCNN after reaching minimum level.',
     whereToGo: '/tcnn',
@@ -301,7 +301,7 @@ const FEATURES: FeatureExplain[] = [
     id: 'jail-utromail',
     icon: <Lock className="w-5 h-5" />,
     title: 'Jail & Utromail',
-    content: 'Troll City uses a jail system instead of boring bans. Utromail officers manage arrests, reports, and inmate records.',
+    content: 'MaiTroll uses a jail system instead of boring bans. Utromail officers manage arrests, reports, and inmate records.',
     color: 'cyan',
   },
   {
@@ -331,14 +331,14 @@ function buildTourSteps(): TourStep[] {
   return [
     {
       id: 'hero', sectionTitle: '🎯 Welcome Tour',
-      title: 'Welcome to Troll City!',
+      title: 'Welcome to Mai Troll!',
       description: 'A live city where broadcasting, battles, courts, neighborhoods, and real-time drama all connect. Use keyboard ← → to navigate.',
       targetId: 'tc-hero', actionLabel: 'Start Exploring →', actionPath: '#tc-districts',
     },
     {
       id: 'districts', sectionTitle: '🏙️ The City',
       title: 'The Interactive City Map',
-      description: 'Troll City is divided into 8 districts. Click any card to explore — each district has its own rules, features, and drama.',
+      description: 'MaiTroll is divided into 8 districts. Click any card to explore — each district has its own rules, features, and drama.',
       targetId: 'tc-districts', actionLabel: 'Explore a district →', actionPath: '/live',
     },
     {
@@ -362,7 +362,7 @@ function buildTourSteps(): TourStep[] {
     {
       id: 'live', sectionTitle: '🔴 Live City',
       title: 'Live City Activity',
-      description: 'Watch what\'s happening right now in Troll City — streams starting, gifts flying, battles launching, arrests being made.',
+      description: 'Watch what\'s happening right now in Mai Troll — streams starting, gifts flying, battles launching, arrests being made.',
       targetId: 'tc-live', actionLabel: 'See the city live →', actionPath: '/tcnn',
     },
   ]
@@ -565,7 +565,7 @@ export default function CityMapGuidePreview() {
                   <br />
                   <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400
                     bg-clip-text text-transparent">
-                    Troll City
+                    Mai Troll
                   </span>
                 </h1>
 
@@ -684,7 +684,7 @@ export default function CityMapGuidePreview() {
               </h2>
             </div>
             <p className="text-slate-400 mb-10 max-w-2xl">
-              New in Troll City? Follow these 7 steps to understand every major feature.
+              New in Mai Troll? Follow these 7 steps to understand every major feature.
             </p>
 
             <div className="space-y-3">
@@ -716,7 +716,7 @@ export default function CityMapGuidePreview() {
               <h2 className="text-2xl md:text-3xl font-bold text-white">How the City Works</h2>
             </div>
             <p className="text-slate-400 mb-10 max-w-2xl">
-              Six quick explanations for every major system you will interact with as a Troll City citizen.
+              Six quick explanations for every major system you will interact with as a Mai Troll citizen.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -780,7 +780,7 @@ export default function CityMapGuidePreview() {
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-cyan-500/50" />
-              <span>© 2026 Mai Troll City. All rights reserved.</span>
+              <span>© 2026 MaiMaiTroll. All rights reserved.</span>
             </div>
             <div className="flex gap-5">
               {['/legal/terms', '/legal/privacy', '/legal/safety', '/support'].map(p => (

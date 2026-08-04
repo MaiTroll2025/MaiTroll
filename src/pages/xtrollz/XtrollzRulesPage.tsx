@@ -101,7 +101,7 @@ export default function XtrollzRulesPage() {
             <section className="rounded-2xl border border-white/10 bg-black/25 p-4">
               <h2 className="text-lg font-black text-white">Staff Monitoring</h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-white/70">
-                <li>XTrollz streams may be monitored by authorized Troll City staff, including private streams.</li>
+                <li>XTrollz streams may be monitored by authorized Mai Troll staff, including private streams.</li>
                 <li>Private stream passwords do not prevent authorized staff monitoring.</li>
                 <li>Streamers cannot remove, mute, ban, or block authorized monitoring staff.</li>
               </ul>
@@ -110,7 +110,7 @@ export default function XtrollzRulesPage() {
             <section className="rounded-2xl border border-white/10 bg-black/25 p-4">
               <h2 className="text-lg font-black text-white">Payments</h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-white/70">
-                <li>Troll Coins must be purchased in Troll City. XTrollz does not sell Troll Coins directly.</li>
+                <li>Troll Coins must be purchased in Mai Troll. XTrollz does not sell Troll Coins directly.</li>
                 <li>XCoins are XTrollz earnings and are separately tracked.</li>
                 <li>The $1 application fee does not guarantee approval.</li>
               </ul>

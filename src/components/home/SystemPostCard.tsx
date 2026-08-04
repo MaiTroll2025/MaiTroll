@@ -55,7 +55,7 @@ export default function SystemPostCard({ post, onClick }: SystemPostCardProps) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-black uppercase tracking-[0.12em] text-cyan-400/70">
-            Troll City System
+            Mai Troll System
           </p>
         </div>
         <Zap className="h-3 w-3 text-cyan-400/40" />

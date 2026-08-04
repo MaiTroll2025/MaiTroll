@@ -426,7 +426,7 @@ export default function InmatesPage() {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-400/25 bg-red-500/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-red-200">
                 <Lock className="h-4 w-4" />
-                Troll City Jail Registry
+                Mai Troll Jail Registry
               </div>
               <h1 className="text-4xl font-black tracking-tight md:text-6xl">
                 City Jail

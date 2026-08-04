@@ -1,6 +1,6 @@
 /**
  * City Ads / Promo System Types
- * Internal Troll City promotional ads
+ * Internal Mai Troll promotional ads
  */
 
 export type AdPlacement = 'left_sidebar_screensaver' | 'right_panel_featured' | 'home_horizontal_banner' | 'left_rail' | 'right_rail' | 'home_right_upper' | 'home_right_lower';
@@ -113,7 +113,7 @@ export const CAMPAIGN_TYPES: { value: CampaignType; label: string }[] = [
  * Default ad labels
  */
 export const DEFAULT_LABELS = [
-  'Troll City Promo',
+  'MaiTroll Promo',
   'Special Offer',
   'Featured',
   'Limited Time',

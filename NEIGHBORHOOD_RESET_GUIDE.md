@@ -1,7 +1,7 @@
 # How to Clear All Neighborhoods - Frontend & Database Reset Guide
 
 ## Overview
-This guide explains how to completely reset all neighborhood data in Troll City, clearing both frontend state and database records so all users can start fresh.
+This guide explains how to completely reset all neighborhood data in Mai Troll, clearing both frontend state and database records so all users can start fresh.
 
 ## Method 1: Complete Database Reset (Recommended)
 

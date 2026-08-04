@@ -1,19 +1,19 @@
-# New Landing Page - Troll City
+# New Landing Page - Mai Troll
 
 ## Overview
-Completely redesigned the landing page (Home.tsx) to better showcase Troll City's features with a modern, attractive design using the Troll City neon theme.
+Completely redesigned the landing page (Home.tsx) to better showcase Mai Troll's features with a modern, attractive design using the Mai Troll neon theme.
 
 ## Key Changes
 
 ### Design Philosophy
 - **Modern & Clean**: Removed the complex 3D city animation in favor of a cleaner, more professional look
-- **Feature-Focused**: Highlights what Troll City offers (streaming, families, marketplace, games)
+- **Feature-Focused**: Highlights what Mai Troll offers (streaming, families, marketplace, games)
 - **Mobile-First**: Fully responsive with safe area support for notched devices
 - **Performance**: Lighter animations and better performance
 
 ### Visual Design
 
-#### Color Scheme (Troll City Theme)
+#### Color Scheme (Mai Troll Theme)
 - **Primary Purple**: #8b5cf6 (purple-600)
 - **Accent Cyan**: #06b6d4 (cyan-600)
 - **Accent Pink**: #ec4899 (pink-600)
@@ -71,7 +71,7 @@ Completely redesigned the landing page (Home.tsx) to better showcase Troll City'
 - **Navigation**: User authentication state detection
 - **Routing**: All route navigation (signup, login, go-live, feed)
 - **Auth Store**: Uses existing Zustand auth store
-- **Theme Colors**: Uses established Troll City purple/cyan/pink palette
+- **Theme Colors**: Uses established Mai Troll purple/cyan/pink palette
 
 ## What Was Removed
 
@@ -92,7 +92,7 @@ Completely redesigned the landing page (Home.tsx) to better showcase Troll City'
 If you want to go back to the old 3D city homepage:
 
 ```powershell
-cd e:\troll\trollcity-1
+cd e:\troll\Mai Troll-1
 Copy-Item "src\pages\Home.old.tsx" "src\pages\Home.tsx" -Force
 ```
 

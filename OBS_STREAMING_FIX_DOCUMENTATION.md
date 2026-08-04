@@ -110,7 +110,7 @@ const heartbeat = useObsHeartbeat({
 
 ### Prerequisites
 1. OBS Studio installed locally
-2. Troll City app loaded at `/broadcast/setup/gaming`
+2. Mai Troll app loaded at `/broadcast/setup/gaming`
 3. Agora credentials configured (AGORA_APP_ID, AGORA_CUSTOMER_ID, AGORA_CUSTOMER_SECRET)
 
 ### Test Steps
@@ -140,7 +140,7 @@ const heartbeat = useObsHeartbeat({
 5. **Go Live**
    - Click "Go Live" button
    - Broadcasting should start
-   - Page should show "Live on Troll City" (red)
+   - Page should show "Live on Mai Troll" (red)
 
 ### Expected Status Progression
 ```

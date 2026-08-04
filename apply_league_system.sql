@@ -225,7 +225,7 @@ BEGIN
   ORDER BY random() * weight DESC LIMIT 1;
 
   IF NOT FOUND THEN
-    v_template := ROW('default_rush','Troll City Rush','weekly_clash','A fast city competition.',168,1,'troll_city',1,TRUE,'{}'::jsonb);
+    v_template := ROW('default_rush','Mai Troll Rush','weekly_clash','A fast city competition.',168,1,'troll_city',1,TRUE,'{}'::jsonb);
   END IF;
 
   v_slug := lower(regexp_replace(v_template.name_template || '-' || substring(md5(random()::text) FROM 1 FOR 6), '[^a-z0-9]+', '-', 'g'));
@@ -463,12 +463,12 @@ VALUES
   ('crown_rush', 'Crown Rush', 'weekly_clash', 'Stack points fast and claim the crown.', 168, 1.1, 'troll_city', 12, '{"emoji":"👑"}'),
   ('gift_storm', 'Gift Storm', 'gift_rush', 'Send gifts and push your favorite creators up the leaderboard.', 24, 1.25, 'troll_city', 14, '{"emoji":"🎁"}'),
   ('courtroom_clash', 'Courtroom Clash', 'court_showdown', 'A dramatic league with courtroom-style leaderboard stakes.', 24, 1.15, 'troll_city', 8, '{"emoji":"⚖️"}'),
-  ('neighborhood_takeover', 'Neighborhood Takeover', 'neighborhood_war', 'Rally your corner of Troll City for fame and prizes.', 48, 1.1, 'troll_city', 10, '{"emoji":"🌆"}'),
+  ('neighborhood_takeover', 'Neighborhood Takeover', 'neighborhood_war', 'Rally your corner of Mai Troll for fame and prizes.', 48, 1.1, 'troll_city', 10, '{"emoji":"🌆"}'),
   ('auction_heat', 'Auction Heat', 'auction_rush', 'High bids and fast action keep points blazing.', 24, 1.2, 'troll_city', 9, '{"emoji":"💸"}'),
   ('broadcaster_boost', 'Broadcaster Boost', 'broadcaster_boost', 'Support your host and lock in elite rewards.', 24, 1.1, 'troll_city', 8, '{"emoji":"📣"}'),
   ('viewer_sprint', 'Viewer Sprint', 'viewer_grind', 'Stay live and earn points while the city pulses.', 12, 1.05, 'troll_city', 7, '{"emoji":"⚡"}'),
   ('paid_chat_push', 'Paid Chat Push', 'paid_chat_push', 'Paid Chats get a league surge for top earners.', 24, 1.3, 'troll_city', 6, '{"emoji":"💬"}'),
-  ('city_pulse_frenzy', 'City Pulse Frenzy', 'city_pulse_frenzy', 'A neon-fueled rush across Troll City.', 18, 1.2, 'troll_city', 8, '{"emoji":"🌐"}')
+  ('city_pulse_frenzy', 'City Pulse Frenzy', 'city_pulse_frenzy', 'A neon-fueled rush across Mai Troll.', 18, 1.2, 'troll_city', 8, '{"emoji":"🌐"}')
 ON CONFLICT (template_key) DO NOTHING;
 
 -- 21. Seed mission templates
@@ -477,9 +477,9 @@ VALUES
   ('send_3_gifts', 'send_3_gifts', 'Send 3 gift powers', 'Send 3 gifts during live broadcasts to climb the leaderboard.', 'send_gift', 3, 5, 100, 50, 10, 'easy', 12),
   ('watch_15_minutes', 'watch_15_minutes', 'Watch 15 minutes live', 'Stay in the stream for 15 minutes and keep the city pulse moving.', 'watch_live_10_min', 15, 20, 125, 60, 10, 'easy', 10),
   ('join_1_seat', 'join_1_seat', 'Enter the Seat', 'Join 1 broadcast seat and stake your presence in the league.', 'join_broadcast_seat', 1, 1, 100, 50, 10, 'easy', 11),
-  ('send_10_messages', 'send_10_messages', 'Send 10 chat messages', 'Send 10 live messages and build your Troll City momentum.', 'send_chat_message', 10, 15, 90, 40, 10, 'easy', 10),
+  ('send_10_messages', 'send_10_messages', 'Send 10 chat messages', 'Send 10 live messages and build your Mai Troll momentum.', 'send_chat_message', 10, 15, 90, 40, 10, 'easy', 10),
   ('participate_battle', 'participate_battle', 'Join a Battle', 'Participate in 1 live battle to earn league progression.', 'participate_battle', 1, 1, 150, 90, 10, 'normal', 9),
-  ('win_1_battle', 'win_1_battle', 'Win a Battle', 'Win 1 live battle and prove you rule Troll City.', 'win_battle', 1, 1, 500, 200, 10, 'hard', 6),
+  ('win_1_battle', 'win_1_battle', 'Win a Battle', 'Win 1 live battle and prove you rule Mai Troll.', 'win_battle', 1, 1, 500, 200, 10, 'hard', 6),
   ('visit_coin_store', 'visit_coin_store', 'Visit the Coin Store', 'Open the coin store and keep your economy strong.', 'visit_coin_store', 1, 1, 75, 30, 10, 'easy', 7),
   ('follow_1_broadcaster', 'follow_1_broadcaster', 'Support the Broadcaster', 'Follow 1 broadcaster and strengthen your city crew.', 'follow_broadcaster', 1, 2, 80, 40, 10, 'easy', 8),
   ('complete_3_missions', 'complete_3_missions', 'Complete 3 missions', 'Finish 3 league missions to unlock extra progress.', 'mission_progress', 3, 3, 200, 120, 10, 'normal', 7),

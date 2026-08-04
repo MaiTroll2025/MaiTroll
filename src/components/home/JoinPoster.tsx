@@ -79,18 +79,18 @@ export default function JoinPoster() {
             <Sparkles className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-white">Why Join Troll City?</h3>
+            <h3 className="text-lg font-black text-white">Why Join Mai Troll?</h3>
             <p className="mt-2 text-sm text-slate-300">Fast facts to get you started — no barriers, lots of rewards.</p>
 
             <ul className="mt-3 space-y-2 text-sm text-slate-200">
               <li>• Weekly payouts — 97% retained in cashouts</li>
               <li>• 100% coins are yours to keep</li>
               <li>• Create agencies without high level requirements</li>
-              <li>• Work for Troll City and earn real rewards</li>
+              <li>• Work for Mai Troll and earn real rewards</li>
               <li>• Battle from day one — jump in immediately</li>
               <li>• Goo Live by Clicking Go live in sidebar</li>
               <li>• Cashout 1x per week</li>
-              <li>• Cashout Friday, Saturday Or Sunday</li>
+              <li>• Cashout any day of the week</li>
               <li>• Go live without thousands of followers</li>
               <li>• Violations are handled seriously — not just bans</li>
               <li className="text-emerald-300 font-semibold">XXXX TROLL ON AND DONT GET ARRESTED XXXX</li>
@@ -103,7 +103,7 @@ export default function JoinPoster() {
                   Install Official App
                 </div>
                 <p className="text-xs text-slate-300 mb-3">
-                  Get the Troll City app for the best experience with push notifications and instant loading.
+                  Get the Mai Troll app for the best experience with push notifications and instant loading.
                 </p>
                 <button
                   onClick={handleInstall}

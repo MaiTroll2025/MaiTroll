@@ -1,5 +1,5 @@
 /**
- * Troll City Background Audio Safety Monitor Service
+ * Mai Troll Background Audio Safety Monitor Service
  * 
  * This service handles server-side audio monitoring for safety detection.
  * It processes audio chunks, performs speech-to-text conversion, and

@@ -437,7 +437,7 @@ function TierTaskCard({
 }
 
 /**
- * Premium Troll City league panel for live broadcasts/home surfaces.
+ * Premium Mai Troll league panel for live broadcasts/home surfaces.
  * Real-data first. No fake production usernames.
  */
 export default function LeaguesTab({ streamId, category }: LeaguesTabProps) {
@@ -701,7 +701,7 @@ export default function LeaguesTab({ streamId, category }: LeaguesTabProps) {
 
   const topThree = normalizedLeaderboard.slice(0, 3)
   const rest = normalizedLeaderboard.slice(3)
-  const eventTitle = event?.name || 'Troll City Clash'
+  const eventTitle = event?.name || 'MaiTroll Clash'
   const eventType = getEventTypeLabel(event)
 
   const hasLeaderboard = normalizedLeaderboard.length > 0
@@ -830,7 +830,7 @@ export default function LeaguesTab({ streamId, category }: LeaguesTabProps) {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-white/45">
-                  Troll City Tier System
+                  Mai Troll Tier System
                 </p>
                 <h4 className="mt-2 text-2xl font-black text-white">{formatTierLabel(userTier)}</h4>
               </div>
@@ -885,7 +885,7 @@ export default function LeaguesTab({ streamId, category }: LeaguesTabProps) {
               <p className="mt-2 text-sm leading-6 text-slate-300">
                 {nextTierInfo
                   ? `Earn ${formatCompactNumber(tierProgress.xpNeededForNextTier)} more XP to unlock ${nextTierInfo.reward}.`
-                  : 'Maintain top rank and complete seasonal goals to stay on top of Troll City.'}
+                  : 'Maintain top rank and complete seasonal goals to stay on top of Mai Troll.'}
               </p>
             </div>
           </div>
@@ -895,7 +895,7 @@ export default function LeaguesTab({ streamId, category }: LeaguesTabProps) {
               <div className="flex items-center gap-3">
                 <Sparkles className="h-5 w-5 text-cyan-200" />
                 <div>
-                  <p className="font-black text-white">Troll City Tier System</p>
+                  <p className="font-black text-white">Mai Troll Tier System</p>
                   <p className="mt-1 text-sm leading-6 text-slate-300">
                     Your T0–T10 tier grows from real activity: watching, chatting, gifting, battles, family wars, and agency missions.
                   </p>

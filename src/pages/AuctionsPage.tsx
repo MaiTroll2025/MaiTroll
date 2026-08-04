@@ -134,12 +134,12 @@ export default function AuctionsPage() {
     !!(profile as any)?.is_admin
 
   useSEO({
-    title: 'Live Auctions | Troll City - Bid Online & Win',
-    description: 'Join live auctions on Troll City. Bid on exclusive items, virtual goods, and unique experiences. Social auctions with real-time bidding and entertainment.',
+    title: 'Live Auctions | Mai Troll - Bid Online & Win',
+    description: 'Join live auctions on Mai Troll. Bid on exclusive items, virtual goods, and unique experiences. Social auctions with real-time bidding and entertainment.',
     keywords: [
       'live auctions', 'online auctions', 'bid online', 'social auctions',
       'virtual auctions', 'auction platform', 'live bidding', 'online bidding',
-      'auction entertainment', 'Troll City auctions'
+      'auction entertainment', 'MaiTroll auctions'
     ]
   });
 
@@ -233,7 +233,7 @@ export default function AuctionsPage() {
                   {!isMobileWidth && (
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                       <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100">
-                        Troll City Auction House
+                        Mai Troll Auction House
                       </span>
                       <span className="rounded-full border border-purple-300/20 bg-purple-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-purple-100">
                         Powered by Troll Coins

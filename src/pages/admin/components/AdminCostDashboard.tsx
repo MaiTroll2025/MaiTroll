@@ -25,7 +25,7 @@ export default function AdminCostDashboard() {
         <div>
           <h2 className="text-xl font-semibold text-white">Cost Dashboard</h2>
           <p className="text-sm text-gray-400">
-            Track infrastructure, labor, and partner spend to ensure Troll City stays lean.
+            Track infrastructure, labor, and partner spend to ensure Mai Troll stays lean.
           </p>
         </div>
         <button

@@ -57,7 +57,7 @@ export default function TitleDeedModal({ isOpen, onClose, item }: TitleDeedModal
                 {isTitle ? 'Vehicle Title' : 'Property Deed'}
               </h2>
               <p className="text-xs text-zinc-400 uppercase tracking-wider">
-                Official {isTitle ? 'Troll City' : 'Troll City'} Document
+                Official {isTitle ? 'MaiTroll' : 'MaiTroll'} Document
               </p>
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function TitleDeedModal({ isOpen, onClose, item }: TitleDeedModal
         {/* Footer */}
         <div className="p-4 bg-zinc-950/50 border-t border-zinc-800">
           <p className="text-xs text-center text-zinc-500">
-            Document ID: {item.id} • Issued by Troll City Authority
+            Document ID: {item.id} • Issued by Mai Troll Authority
           </p>
         </div>
       </div>

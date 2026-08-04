@@ -93,8 +93,8 @@ export default function ArticleReader() {
   useEffect(() => {
     if (!article) return;
 
-    const title = `${article.headline} | TCNN | Troll City`;
-    const description = article.excerpt || article.headline || 'Read the latest TCNN story on Troll City.';
+    const title = `${article.headline} | TCNN | Mai Troll`;
+    const description = article.excerpt || article.headline || 'Read the latest TCNN story on Mai Troll.';
     const url = `${window.location.origin}/tcnn/article/${article.id}`;
     const ogImageUrl = buildOGImageUrl({ kind: 'tcnn', id: article.id });
 

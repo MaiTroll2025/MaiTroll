@@ -271,7 +271,7 @@ export default function XtrollzPaymentPage() {
 
           <p className="mt-3 text-center text-[11px] text-white/50">
             The fee and application submission are processed securely by the
-            Troll City backend.
+            Mai Troll backend.
           </p>
         </div>
       </div>

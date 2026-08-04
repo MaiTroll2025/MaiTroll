@@ -107,19 +107,19 @@ function detectContentType(url: string): string {
 async function fetchPageContent(url: string) {
   try {
     const response = await fetch(url, {
-      headers: { 'User-Agent': 'TrollCity/1.0' }
+      headers: { 'User-Agent': 'Mai Troll/1.0' }
     });
     const html = await response.text();
     
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : 'Troll City Content';
+    const title = titleMatch ? titleMatch[1].trim() : 'Mai Troll Content';
     
     const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
-    const description = descMatch ? descMatch[1].trim() : 'Check out Troll City - the ultimate digital city experience!';
+    const description = descMatch ? descMatch[1].trim() : 'Check out Mai Troll - the ultimate digital city experience!';
     
     return { title, description };
   } catch {
-    return { title: 'Troll City', description: 'Join the digital city revolution!' };
+    return { title: 'Mai Troll', description: 'Join the digital city revolution!' };
   }
 }
 
@@ -140,22 +140,22 @@ serve(async (req) => {
     const pageContent = await fetchPageContent(url);
 
     const ctaMap: Record<string, string> = {
-      stream: "Go live on Troll City",
+      stream: "Go live on Mai Troll",
       trollpod: "Join the conversation",
       event: "Join the event",
       career: "Apply now",
       wallet: "Cash out for real",
-      government: "Explore Troll City",
+      government: "Explore Mai Troll",
       court: "Enter Troll Court",
       church: "Join the community",
-      safety: "Stay safe in Troll City",
+      safety: "Stay safe in Mai Troll",
       marketplace: "Shop now",
       battle: "Join the battle",
       broadcast: "Start broadcasting",
-      profile: "Follow on Troll City",
+      profile: "Follow on Mai Troll",
       family: "Join the family",
       tcnn: "Read more on TCNN",
-      wall_post: "Join Troll City"
+      wall_post: "Join Mai Troll"
     };
 
     // First create the source record
@@ -165,7 +165,7 @@ serve(async (req) => {
       title: pageContent.title,
       description: pageContent.description,
       url: url,
-      cta_text: ctaMap[contentType] || "Visit Troll City",
+      cta_text: ctaMap[contentType] || "Visit Mai Troll",
       stats: {}
     }).select().single();
 

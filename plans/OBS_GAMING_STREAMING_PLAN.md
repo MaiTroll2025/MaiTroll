@@ -2,7 +2,7 @@
 
 ## Current Situation
 
-Troll City currently uses **Agora** for real-time streaming within the browser. The gaming broadcast category tries to show OBS setup instructions but:
+Mai Troll currently uses **Agora** for real-time streaming within the browser. The gaming broadcast category tries to show OBS setup instructions but:
 - Uses Mux RTMP URL (wrong - user said they use Agora)
 - Agora doesn't support standard RTMP ingest without additional configuration
 - Users get "hostname not found" errors when trying to connect
@@ -10,7 +10,7 @@ Troll City currently uses **Agora** for real-time streaming within the browser. 
 ## Problem
 
 OBS streams via **RTMP** (Real-Time Messaging Protocol)
-Troll City streams via **Agora WebRTC** (Real-Time Communication)
+Mai Troll streams via **Agora WebRTC** (Real-Time Communication)
 
 These are incompatible - OBS cannot directly stream to Agora without middleware.
 

@@ -7,7 +7,7 @@
 ```
 ╔════════════════════════════════════════════════════════════════════════════════╗
 ║                                                                                ║
-║  💬 Troll City Wall                                                  [+ New Post]║
+║  💬 Mai Troll Wall                                                  [+ New Post]║
 ║  Share updates, achievements, and connect with the community                  ║
 ║                                                                                ║
 ╠════════════════════════════════════════════════════════════════════════════════╣

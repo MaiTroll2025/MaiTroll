@@ -9,7 +9,7 @@ export default function ShopEarnings() {
 
   const load = useCallback(async () => {
     const { data: shops } = await supabase
-      .from('trollcity_shops')
+      .from('MaiTroll_shops')
       .select('id')
       .eq('owner_id', user!.id)
     const shopIds = (shops || []).map(s => s.id)
@@ -19,8 +19,8 @@ export default function ShopEarnings() {
       return
     }
     const { data } = await supabase
-      .from('trollcity_orders')
-      .select('*, trollcity_products(name)')
+      .from('MaiTroll_orders')
+      .select('*, MaiTroll_products(name)')
       .in('shop_id', shopIds)
       .order('created_at', { ascending: false })
     const list = data || []
@@ -71,7 +71,7 @@ export default function ShopEarnings() {
                 {orders.map((o) => (
                   <tr key={o.id} className="border-t border-[#2C2C2C]">
                     <td className="py-2">{new Date(o.created_at).toLocaleString()}</td>
-                    <td className="py-2">{(o as any).trollcity_products?.name || 'Product'}</td>
+                    <td className="py-2">{(o as any).MaiTroll_products?.name || 'Product'}</td>
                     <td className="py-2 text-right">{(o.coins_paid || 0).toLocaleString()}</td>
                   </tr>
                 ))}

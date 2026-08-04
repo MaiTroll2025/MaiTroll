@@ -48,7 +48,7 @@ export default function BroadcastThemes() {
             animate={{ opacity: 1, x: 0 }}
             className="text-lg font-bold"
           >
-            Troll City Broadcast Themes
+            Mai Troll Broadcast Themes
           </motion.h1>
           <div className="flex gap-2">
             <button

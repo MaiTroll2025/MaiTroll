@@ -86,7 +86,7 @@ interface GamingSetupProps {
 }
 
 export function GamingSetup({
-  streamTitle = 'Ranked Grind to Top 1 | Troll City',
+  streamTitle = 'Ranked Grind to Top 1 | Mai Troll',
   isMicEnabled = true,
   hasMicTrack = false,
   onToggleMic,

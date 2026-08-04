@@ -164,7 +164,7 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
         bg-slate-900/50 rounded-xl border border-slate-800 flex flex-col items-center justify-center gap-2 p-4`}>
         <div className="text-purple-400 text-lg font-semibold">Want to Advertise?</div>
         <p className="text-slate-400 text-xs text-center">
-          Advertise on Troll City for 1000 Troll Coins • Lasts 7 days
+          Advertise on Mai Troll for 1000 Troll Coins • Lasts 7 days
         </p>
         <button 
           className="mt-2 px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-colors"

@@ -4,7 +4,7 @@ import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
 import { LogIn, LogOut, Clock, User, Search, Coffee } from 'lucide-react';
 import { format12hr } from '../../utils/timeFormat';
-import { trollCityTheme } from '../../styles/trollCityTheme';
+import { MaiTrollTheme } from '../../styles/trollCityTheme';
 
 interface OfficerClockProps {
   onActionComplete?: () => void;
@@ -190,7 +190,7 @@ export default function OfficerClock({ onActionComplete }: OfficerClockProps) {
   if (loading) return null;
 
   return (
-    <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6 h-full flex flex-col justify-between`}>
+    <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 h-full flex flex-col justify-between`}>
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -213,13 +213,13 @@ export default function OfficerClock({ onActionComplete }: OfficerClockProps) {
 
         <div className="space-y-4">
           <div className="flex flex-col gap-1">
-            <span className={`text-xs ${trollCityTheme.text.muted} uppercase tracking-wider font-bold`}>Current Time</span>
-            <span className={`text-2xl font-mono ${trollCityTheme.text.primary}`}>{format12hr(new Date())}</span>
+            <span className={`text-xs ${MaiTrollTheme.text.muted} uppercase tracking-wider font-bold`}>Current Time</span>
+            <span className={`text-2xl font-mono ${MaiTrollTheme.text.primary}`}>{format12hr(new Date())}</span>
           </div>
 
           {activeSession && (
-            <div className={`flex flex-col gap-1 p-3 bg-white/5 rounded-xl ${trollCityTheme.borders.glass}`}>
-              <span className={`text-xs ${trollCityTheme.text.muted}`}>Shift Started At</span>
+            <div className={`flex flex-col gap-1 p-3 bg-white/5 rounded-xl ${MaiTrollTheme.borders.glass}`}>
+              <span className={`text-xs ${MaiTrollTheme.text.muted}`}>Shift Started At</span>
               <span className="text-lg font-medium text-purple-300">{format12hr(activeSession.clock_in)}</span>
               {activeSession.status === 'break' && (
                 <div className="mt-2 pt-2 border-t border-white/5">

@@ -1,7 +1,7 @@
 {
   "name": "redeem-maitalent-promo",
   "version": "0.0.2",
-  "description": "Atomic Troll City promo redemption endpoint for MaiTalent.fun",
+  "description": "Atomic Mai Troll promo redemption endpoint for MaiTalent.fun",
   "type": "module",
   "functions": {
     "verify_jwt": false

@@ -47,7 +47,7 @@ const INSURANCE_TYPES: InsuranceType[] = [
     name: 'Homeowners Insurance',
     shortName: 'Home',
     icon: Home,
-    description: 'Protect your Troll City property from raids, damage, and city chaos.',
+    description: 'Protect your Mai Troll property from raids, damage, and city chaos.',
     protection: ['Raid protection', 'Damage coverage', 'Property recovery support'],
     accent: 'from-cyan-300 to-blue-500',
     glow: 'shadow-cyan-500/20',
@@ -448,13 +448,13 @@ const activeCount = useMemo(
 
               <div>
                 <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-cyan-100">
-                  Troll City Coverage
+                  Mai Troll Coverage
                 </div>
                 <h1 className="text-3xl font-black tracking-tight sm:text-5xl">
                   Insurance Center
                 </h1>
                 <p className="mt-1 max-w-2xl text-sm text-cyan-100/70">
-                  Protect your house, car, and broadcast life with premium Troll City coverage.
+                  Protect your house, car, and broadcast life with premium Mai Troll coverage.
                 </p>
               </div>
             </div>

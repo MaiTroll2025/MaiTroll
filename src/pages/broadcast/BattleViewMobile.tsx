@@ -205,7 +205,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       const streamId =
         vm.team === "blue" ? challengerStream?.id : opponentStream?.id;
       window.dispatchEvent(
-        new CustomEvent("trollcity:open-user-actions", {
+        new CustomEvent("Mai Troll:open-user-actions", {
           detail: {
             userId: vm.userId,
             username: vm.username,

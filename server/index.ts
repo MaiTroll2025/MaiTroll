@@ -87,7 +87,7 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
 console.log(`
  ╔═══════════════════════════════════════╗
- ║   Troll City Broadcast API Server     ║
+ ║   Mai Troll Broadcast API Server     ║
  ╚═══════════════════════════════════════╝
 
 ✓ Server running on http://localhost:${port}

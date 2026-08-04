@@ -220,7 +220,7 @@ export default function SpreadsheetEditor({
       .on('presence', { event: 'sync' }, () => setPresence(channel.presenceState()))
       .subscribe(async (status) => {
         if ((status as string) === 'presented') {
-          await channel.track({ user_id: user.id, name: profile?.username || profile?.display_name || 'Troll City User' })
+          await channel.track({ user_id: user.id, name: profile?.username || profile?.display_name || 'MaiTroll User' })
         }
       })
     return () => {

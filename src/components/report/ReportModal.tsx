@@ -160,7 +160,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
       if (reportError) throw reportError;
 
-      toast.success('Report submitted successfully. Thank you for helping keep Troll City safe.');
+      toast.success('Report submitted successfully. Thank you for helping keep Mai Troll safe.');
       
       // Reset and close
       setSelectedType(null);

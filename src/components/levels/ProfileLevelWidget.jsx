@@ -45,7 +45,7 @@ export default function ProfileLevelWidget() {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-      <div className="text-sm text-gray-400 mb-1">Troll City Levels</div>
+      <div className="text-sm text-gray-400 mb-1">Mai Troll Levels</div>
 
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-gray-400">Troll Level</span>

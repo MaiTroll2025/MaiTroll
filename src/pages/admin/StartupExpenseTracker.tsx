@@ -488,7 +488,7 @@ export default function StartupExpenseTracker() {
             Startup Expense Tracker
           </h1>
           <p className="text-sm text-slate-400">
-            Track Troll City startup expenses, infrastructure, licensed gifts, promoters, and remaining runway.
+            Track Mai Troll startup expenses, infrastructure, licensed gifts, promoters, and remaining runway.
             <span className="text-cyan-300 font-bold ml-1">Admin / CEO only.</span>
           </p>
         </div>

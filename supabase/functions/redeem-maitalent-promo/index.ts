@@ -14,8 +14,8 @@ serve(async (req) => {
     const apiKey = req.headers.get('x-api-key')
     const promoSecret =
       Deno.env.get('TROLL_CITY_PROMO_SECRET') ||
-      Deno.env.get('TROLLCITY_PROMO_API_KEY') ||
-      Deno.env.get('TROLLCITY_SERVICE_TOKEN')
+      Deno.env.get('Mai Troll_PROMO_API_KEY') ||
+      Deno.env.get('Mai Troll_SERVICE_TOKEN')
 
     const hasUserAuth = Boolean(authHeader)
     const hasApiKeyAuth = Boolean(apiKey && promoSecret && apiKey === promoSecret)

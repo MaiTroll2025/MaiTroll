@@ -104,7 +104,7 @@ A comprehensive PWA install system that works properly on **both Android/Chrome 
 **Already had all necessary tags:**
 - ✅ `<meta name="apple-mobile-web-app-capable" content="yes">`
 - ✅ `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`
-- ✅ `<meta name="apple-mobile-web-app-title" content="Troll City">`
+- ✅ `<meta name="apple-mobile-web-app-title" content="Mai Troll">`
 - ✅ `<meta name="viewport" content="viewport-fit=cover, interactive-widget=resizes-content">`
 - ✅ `<link rel="manifest" href="/manifest.json">`
 

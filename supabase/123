@@ -1,8 +1,8 @@
-Consolidate all existing Troll City  dashboards for moderation, lead hq, secretary panel/dashboard leave tromail alone do not touch that page or admin dashboard also officer pages, assistant pages, scheduling pages, and clock-in pages which inclides hr page into one unified internal employee page called:
+Consolidate all existing Mai Troll  dashboards for moderation, lead hq, secretary panel/dashboard leave tromail alone do not touch that page or admin dashboard also officer pages, assistant pages, scheduling pages, and clock-in pages which inclides hr page into one unified internal employee page called:
 Employees
 Use a single route for all non-admin employees as in career approved users:
 /Employees
-This page should function as the official Troll City Employee Office.
+This page should function as the official Mai Troll Employee Office.
 Do not create separate Employees dashboards after this change.
 Do not remove existing working logic. Move and integrate the existing logic into the Employees page.
 Do not touch, redesign, replace, rename, or modify:
@@ -11,10 +11,10 @@ Do not touch, redesign, replace, rename, or modify:
 •	Existing admin-only systems unless they must be linked into Employees
 •	Public user-facing pages
 Admins must still be able to access the separate Admin Dashboard.
-The Employees page is for all Troll City employees and approved Employees roles.
+The Employees page is for all Mai Troll employees and approved Employees roles.
 Main goal
 Replace the scattered Employees experience with one central Employee Office 
-add a real application flow for all career applications like we have in careers page to this new application page so when a user clicks employees page they first can see all available applications, apply, can see applications status, when hired they instantly get access to employee page for that job, then msut be added to our new employee system for hr so they are added to our payroll system that need to be added to the employees page as well only secretary and ceo and admin can edit,update that page but all employees can view the payroll page as well as download payroll and paystubs for them, we also need to have a paystub generated as MAI CORP as the corp and Mai Troll City as the business with whihc msut use real stats for each employee location city and state for all tax purposed it needs to be a full real payroll system if any payroll logic exists in the codebase remove it this new prompt overwrites everything we currently have but remember to not touch admin dashboard at all 
+add a real application flow for all career applications like we have in careers page to this new application page so when a user clicks employees page they first can see all available applications, apply, can see applications status, when hired they instantly get access to employee page for that job, then msut be added to our new employee system for hr so they are added to our payroll system that need to be added to the employees page as well only secretary and ceo and admin can edit,update that page but all employees can view the payroll page as well as download payroll and paystubs for them, we also need to have a paystub generated as MAI CORP as the corp and Mai Mai Troll as the business with whihc msut use real stats for each employee location city and state for all tax purposed it needs to be a full real payroll system if any payroll logic exists in the codebase remove it this new prompt overwrites everything we currently have but remember to not touch admin dashboard at all 
 where every Employees member can:
 •	Clock in and out
 •	View their work schedule
@@ -69,7 +69,7 @@ Create a professional Employee Office layout with:
 •	Mobile navigation
 •	Desktop sidebar or tab navigation
 •	Realtime online Employees list
-The page should match Troll City’s existing design system.
+The page should match Mai Troll’s existing design system.
 It should feel like an internal employee workspace, not a public social page.
 Do not copy Slack, Discord, Microsoft Teams, or another platform.
 Shared tabs for all Employees
@@ -438,7 +438,7 @@ Authorized managers can:
 Troll Officers cannot fire anyone.
 Lead Troll Officers may fire Troll Officers only when permitted.
 Admins retain full authorized control.
-Do not delete the user’s normal Troll City account unless a separate authorized action requires it.
+Do not delete the user’s normal Mai Troll account unless a separate authorized action requires it.
 Termination from Employees should only remove or deactivate Employees employment access.
 Preserve:
 •	Attendance records

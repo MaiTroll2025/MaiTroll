@@ -143,16 +143,16 @@ graph LR
 
 ### BroadcastChannel API
 - Supported on all modern browsers except Safari (gracefully degrades)
-- Uses channel name `trollcity_purchases` for all purchase events
+- Uses channel name `Mai Troll_purchases` for all purchase events
 - Messages include: type, userId, timestamp, ownedIds/activeVehicleId
 
 ### LocalStorage Keys Affected
-- `trollcity_car_${userId}` - Active car config (cleared)
-- `trollcity_owned_vehicles_${userId}` - Owned vehicle IDs (cleared)
-- `trollcity_car_insurance_${userId}` - Insurance status (cleared)
-- `trollcity_owned_properties_${userId}` - Owned property IDs (cleared)
-- `trollcity_active_property_${userId}` - Active property (cleared)
-- `trollcity_property_insurance_${userId}` - Property insurance (cleared)
+- `Mai Troll_car_${userId}` - Active car config (cleared)
+- `Mai Troll_owned_vehicles_${userId}` - Owned vehicle IDs (cleared)
+- `Mai Troll_car_insurance_${userId}` - Insurance status (cleared)
+- `Mai Troll_owned_properties_${userId}` - Owned property IDs (cleared)
+- `Mai Troll_active_property_${userId}` - Active property (cleared)
+- `Mai Troll_property_insurance_${userId}` - Property insurance (cleared)
 
 ### Database Updates
 - `user_cars` table: New row inserted via `purchase_car_v2()` RPC

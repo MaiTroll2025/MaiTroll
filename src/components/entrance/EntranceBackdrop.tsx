@@ -6,7 +6,7 @@ interface EntranceBackdropProps {
   lowPower: boolean
 }
 
-/* Troll City skyline silhouette with neon windows */
+/* Mai Troll skyline silhouette with neon windows */
 function CitySilhouette() {
   const windows: React.ReactNode[] = []
   const towers = [

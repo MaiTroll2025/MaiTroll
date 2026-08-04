@@ -42,7 +42,7 @@ const DEFAULT_PROFILE: MobileProfile = {
   avatarUrl: null,
   bannerUrl: null,
   role: "user",
-  bio: "Welcome to my Troll City profile.",
+  bio: "Welcome to my Mai Troll profile.",
   level: 1,
   xp: 0,
   xpToNextLevel: 100,

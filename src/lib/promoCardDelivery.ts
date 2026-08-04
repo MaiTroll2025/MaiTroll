@@ -12,7 +12,7 @@ export interface PromoCardMailPayload {
 export async function sendPromoCardMailToUser(payload: PromoCardMailPayload): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const body = [
-      'You received a Troll City promo card.',
+      'You received a Mai Troll promo card.',
       '',
       `Promo Code: ${payload.promoCode}`,
       `Token Reward: ${payload.tokenAmount}`,
@@ -20,7 +20,7 @@ export async function sendPromoCardMailToUser(payload: PromoCardMailPayload): Pr
       `Reward: ${payload.rewardReason}`,
       '',
       'Use this promo card only on MaiTalent.fun to redeem your tokens.',
-      '— Troll City System',
+      '— Mai Troll System',
     ].join('\n')
 
     const message = await sendMessage({

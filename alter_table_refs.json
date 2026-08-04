@@ -1,0 +1,1095 @@
+{
+  "gift_items": [
+    "ALTER TABLE IF EXISTS public.gift_items ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.gift_items ENABLE ROW LEVEL SECURITY;",
+    "[file: frontend_schema.sql] ALTER TABLE IF EXISTS public.gift_items ENABLE ROW LEVEL SECURITY;"
+  ],
+  "insurance_plans": [
+    "ALTER TABLE IF EXISTS public.insurance_plans ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.insurance_plans ENABLE ROW LEVEL SECURITY;",
+    "[file: frontend_schema.sql] ALTER TABLE IF EXISTS public.insurance_plans ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_live_assignments": [
+    "ALTER TABLE IF EXISTS public.officer_live_assignments ENABLE ROW LEVEL SECURITY;",
+    "[file: apply_new_migrations.sql] ALTER TABLE officer_live_assignments ADD COLUMN last_activity TIMESTAMPTZ DEFAULT NOW();",
+    "[file: apply_new_migrations.sql] ALTER TABLE officer_live_assignments ADD COLUMN auto_clocked_out BOOLEAN DEFAULT FALSE;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_live_assignments ENABLE ROW LEVEL SECURITY;",
+    "[file: force_apply_new_migration.sql] ALTER TABLE officer_live_assignments ADD COLUMN ghost_mode_active BOOLEAN DEFAULT FALSE;",
+    "[file: frontend_schema.sql] ALTER TABLE IF EXISTS public.officer_live_assignments ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_work_sessions": [
+    "ALTER TABLE IF EXISTS public.officer_work_sessions ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_work_sessions ENABLE ROW LEVEL SECURITY;",
+    "[file: frontend_schema.sql] ALTER TABLE IF EXISTS public.officer_work_sessions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "property_upgrades": [
+    "ALTER TABLE IF EXISTS public.property_upgrades ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.property_upgrades ENABLE ROW LEVEL SECURITY;",
+    "[file: frontend_schema.sql] ALTER TABLE IF EXISTS public.property_upgrades ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_family_members": [
+    "ALTER TABLE IF EXISTS public.troll_family_members ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_family_members ENABLE ROW LEVEL SECURITY;",
+    "[file: frontend_schema.sql] ALTER TABLE IF EXISTS public.troll_family_members ENABLE ROW LEVEL SECURITY;"
+  ],
+  "cashout_requests": [
+    "[file: 20260627000001_fix_database_bugs_from_report_export.sql] ALTER TABLE cashout_requests ADD COLUMN username TEXT;",
+    "[file: ensure-cashout-table.sql] ALTER TABLE public.cashout_requests ENABLE ROW LEVEL SECURITY;",
+    "[file: fix-cashout-email-column.sql] ALTER TABLE public.cashout_requests ADD COLUMN email text;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.cashout_requests ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_ip_tracking": [
+    "[file: 20260627000001_fix_database_bugs_from_report_export.sql] ALTER TABLE user_ip_tracking\r\n            ADD COLUMN IF NOT EXISTS city TEXT,\r\n            ADD COLUMN IF NOT EXISTS state TEXT,\r\n            ADD COLUMN IF NOT EXISTS region TEXT,\r\n            ADD COLUMN IF NOT EXISTS country TEXT,\r\n            ADD COLUMN IF NOT EXISTS country_code TEXT,\r\n            ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION,\r\n            ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION,\r\n            ADD COLUMN IF NOT EXISTS isp TEXT,\r\n            ADD COLUMN IF NOT EXISTS organization TEXT,\r\n            ADD COLUMN IF NOT EXISTS timezone TEXT,\r\n            ADD COLUMN IF NOT EXISTS geolocation_source TEXT;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_ip_tracking ENABLE ROW LEVEL SECURITY;"
+  ],
+  "broadcaster_applications": [
+    "[file: ADD_ALL_MISSING_COLUMNS.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS bank_account_last_four TEXT,\r\nADD COLUMN IF NOT EXISTS id_verification_url TEXT,\r\nADD COLUMN IF NOT EXISTS tax_form_url TEXT,\r\nADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();",
+    "[file: DIAGNOSE_AND_FIX.sql] ALTER TABLE public.broadcaster_applications ADD COLUMN id_verification_url TEXT;",
+    "[file: DIAGNOSE_AND_FIX.sql] ALTER TABLE public.broadcaster_applications ADD COLUMN tax_form_url TEXT;",
+    "[file: fix_bank_account_column.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS bank_account_last_four TEXT,\r\nADD COLUMN IF NOT EXISTS id_verification_url TEXT,\r\nADD COLUMN IF NOT EXISTS tax_form_url TEXT,\r\nADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();",
+    "[file: FIX_MISSING_COLUMNS_NOW.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS bank_account_last_four TEXT,\r\nADD COLUMN IF NOT EXISTS id_verification_url TEXT,\r\nADD COLUMN IF NOT EXISTS tax_form_url TEXT;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcaster_applications ENABLE ROW LEVEL SECURITY;",
+    "[file: FIX_TRIGGER.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();",
+    "[file: FORCE_ADD_COLUMNS.sql] ALTER TABLE public.broadcaster_applications ADD COLUMN bank_account_last_four TEXT';",
+    "[file: FORCE_ADD_COLUMNS.sql] ALTER TABLE public.broadcaster_applications ADD COLUMN id_verification_url TEXT';",
+    "[file: FORCE_ADD_COLUMNS.sql] ALTER TABLE public.broadcaster_applications ADD COLUMN tax_form_url TEXT';",
+    "[file: QUICK_FIX_TRIGGER.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();",
+    "[file: RUN_THIS_NOW.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS id_verification_url TEXT;",
+    "[file: RUN_THIS_NOW.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS bank_account_last_four TEXT;",
+    "[file: RUN_THIS_NOW.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS tax_form_url TEXT;",
+    "[file: RUN_THIS_NOW.sql] ALTER TABLE public.broadcaster_applications \r\nADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();"
+  ],
+  "broadcast_background_themes": [
+    "[file: add_ceo_theme_migration.sql] ALTER TABLE public.broadcast_background_themes\r\nADD COLUMN IF NOT EXISTS is_exclusive BOOLEAN DEFAULT false NOT NULL,\r\nADD COLUMN IF NOT EXISTS is_system_locked BOOLEAN DEFAULT false NOT NULL;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcast_background_themes ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_presets": [
+    "[file: add_stream_pricing_columns.sql] ALTER TABLE stream_presets ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_presets ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_entries": [
+    "[file: add_stream_pricing_columns.sql] ALTER TABLE stream_entries ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_entries ENABLE ROW LEVEL SECURITY;"
+  ],
+  "car_insurance_policies": [
+    "[file: apply-key-migrations.sql] ALTER TABLE public.car_insurance_policies \r\n      ALTER COLUMN plan_id TYPE TEXT;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.car_insurance_policies ENABLE ROW LEVEL SECURITY;",
+    "[file: RUN_THIS_FIX_22P02.sql] ALTER TABLE public.car_insurance_policies \r\n      ALTER COLUMN plan_id TYPE TEXT;"
+  ],
+  "property_insurance_policies": [
+    "[file: apply-key-migrations.sql] ALTER TABLE public.property_insurance_policies \r\n      ALTER COLUMN plan_id TYPE TEXT;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.property_insurance_policies ENABLE ROW LEVEL SECURITY;",
+    "[file: RUN_THIS_FIX_22P02.sql] ALTER TABLE public.property_insurance_policies \r\n      ALTER COLUMN plan_id TYPE TEXT;"
+  ],
+  "revenue_settings": [
+    "[file: apply_all_pending_migrations.sql] ALTER TABLE revenue_settings ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.revenue_settings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_risk_profile": [
+    "[file: apply_all_pending_migrations.sql] ALTER TABLE user_risk_profile ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_risk_profile ENABLE ROW LEVEL SECURITY;"
+  ],
+  "risk_events": [
+    "[file: apply_all_pending_migrations.sql] ALTER TABLE risk_events ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.risk_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "broadcaster_earnings": [
+    "[file: apply_all_pending_migrations.sql] ALTER TABLE broadcaster_earnings ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcaster_earnings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_actions": [
+    "[file: apply_all_pending_migrations.sql] ALTER TABLE officer_actions ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_actions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_earnings": [
+    "[file: apply_all_pending_migrations.sql] ALTER TABLE officer_earnings ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_earnings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "battle_queue": [
+    "[file: apply_instant_battle_system.sql] ALTER TABLE public.battle_queue ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_instant_battle_system.sql] ALTER TABLE public.battle_queue ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.battle_queue ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_levels": [
+    "[file: backfill_user_levels.sql] ALTER TABLE public.user_levels ADD COLUMN buyer_xp bigint NOT NULL DEFAULT 0;",
+    "[file: backfill_user_levels.sql] ALTER TABLE public.user_levels ADD COLUMN buyer_level int NOT NULL DEFAULT 1;",
+    "[file: backfill_user_levels.sql] ALTER TABLE public.user_levels ADD COLUMN stream_xp bigint NOT NULL DEFAULT 0;",
+    "[file: backfill_user_levels.sql] ALTER TABLE public.user_levels ADD COLUMN stream_level int NOT NULL DEFAULT 1;",
+    "[file: backfill_user_levels.sql] ALTER TABLE public.user_levels ADD COLUMN updated_at timestamptz NOT NULL DEFAULT NOW();",
+    "[file: create_level_system.sql] alter table public.user_levels enable row level security;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_levels ENABLE ROW LEVEL SECURITY;"
+  ],
+  "daily_rewards": [
+    "[file: create_daily_rewards_migration.sql] ALTER TABLE daily_rewards ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.daily_rewards ENABLE ROW LEVEL SECURITY;"
+  ],
+  "broadcast_seats": [
+    "[file: create_jail_attorney_prosecutor_system.sql] ALTER TABLE public.broadcast_seats\r\nADD COLUMN IF NOT EXISTS last_interaction TIMESTAMPTZ;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcast_seats ENABLE ROW LEVEL SECURITY;",
+    "[file: secure_roles_and_permissions.sql] ALTER TABLE public.broadcast_seats ENABLE ROW LEVEL SECURITY;"
+  ],
+  "onboarding_progress": [
+    "[file: create_onboarding_tables.sql] ALTER TABLE onboarding_progress ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.onboarding_progress ENABLE ROW LEVEL SECURITY;"
+  ],
+  "onboarding_events": [
+    "[file: create_onboarding_tables.sql] ALTER TABLE onboarding_events ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.onboarding_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "referrals": [
+    "[file: create_referral_system.sql] ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;"
+  ],
+  "empire_partner_rewards": [
+    "[file: create_referral_system.sql] ALTER TABLE empire_partner_rewards ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.empire_partner_rewards ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_activity_log": [
+    "[file: create_troll_families_system.sql] ALTER TABLE public.family_activity_log ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_activity_log ENABLE ROW LEVEL SECURITY;"
+  ],
+  "tromody_queue": [
+    "[file: create_tromody_tables.sql] ALTER TABLE tromody_queue ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.tromody_queue ENABLE ROW LEVEL SECURITY;"
+  ],
+  "tromody_matches": [
+    "[file: create_tromody_tables.sql] ALTER TABLE tromody_matches ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.tromody_matches ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_agreements": [
+    "[file: create_user_agreements_table.sql] ALTER TABLE user_agreements ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_agreements ENABLE ROW LEVEL SECURITY;"
+  ],
+  "weekly_reports": [
+    "[file: create_weekly_reports_table.sql] ALTER TABLE weekly_reports ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.weekly_reports ENABLE ROW LEVEL SECURITY;"
+  ],
+  "matchmaking_queue": [
+    "[file: fix_battle_matchmaking_system.sql] ALTER TABLE public.matchmaking_queue ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.matchmaking_queue ENABLE ROW LEVEL SECURITY;"
+  ],
+  "profiles": [
+    "[file: fix_profiles_tax_columns.sql] ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS tax_status TEXT;",
+    "[file: fix_profiles_tax_columns.sql] ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS tax_last_updated TIMESTAMPTZ;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;",
+    "[file: lead_officer_system.sql] alter table public.profiles\r\nadd column if not exists troll_role text default 'user'\r\ncheck (troll_role in ('user','troll_officer','lead_troll_officer','admin'));"
+  ],
+  "users": [
+    "[file: fix_rls_all_tables.sql] ALTER TABLE users ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_rls_errors.sql] ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;"
+  ],
+  "abuse_reports": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.abuse_reports ENABLE ROW LEVEL SECURITY;"
+  ],
+  "action_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.action_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "activity_log": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;"
+  ],
+  "activity_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_adjustments": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_adjustments ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_allocation_buckets": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_allocation_buckets ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_coin_pool": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_coin_pool ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_coin_revenue": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_coin_revenue ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_flags": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_flags ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_gift_totals": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_gift_totals ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_pool_buckets": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_pool_buckets ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_tax_reviews": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_tax_reviews ENABLE ROW LEVEL SECURITY;"
+  ],
+  "admin_top_buyers": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.admin_top_buyers ENABLE ROW LEVEL SECURITY;"
+  ],
+  "ai_action_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.ai_action_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "app_settings": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "app_updates": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.app_updates ENABLE ROW LEVEL SECURITY;"
+  ],
+  "applications": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;"
+  ],
+  "badge_definitions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.badge_definitions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "balance_ledger": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.balance_ledger ENABLE ROW LEVEL SECURITY;"
+  ],
+  "bank_audit_log": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.bank_audit_log ENABLE ROW LEVEL SECURITY;"
+  ],
+  "bank_feature_flags": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.bank_feature_flags ENABLE ROW LEVEL SECURITY;"
+  ],
+  "battle_history": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.battle_history ENABLE ROW LEVEL SECURITY;"
+  ],
+  "battle_rewards": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.battle_rewards ENABLE ROW LEVEL SECURITY;"
+  ],
+  "battle_sessions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.battle_sessions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "battle_skips": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.battle_skips ENABLE ROW LEVEL SECURITY;"
+  ],
+  "blocked_users": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.blocked_users ENABLE ROW LEVEL SECURITY;"
+  ],
+  "broadcast_cycle_stats": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcast_cycle_stats ENABLE ROW LEVEL SECURITY;"
+  ],
+  "broadcast_seat_bans": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcast_seat_bans ENABLE ROW LEVEL SECURITY;",
+    "[file: secure_roles_and_permissions.sql] ALTER TABLE public.broadcast_seat_bans ENABLE ROW LEVEL SECURITY;"
+  ],
+  "broadcast_theme_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcast_theme_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "broadcast_tokens": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcast_tokens ENABLE ROW LEVEL SECURITY;"
+  ],
+  "broadcaster_metrics": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.broadcaster_metrics ENABLE ROW LEVEL SECURITY;"
+  ],
+  "call_history": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.call_history ENABLE ROW LEVEL SECURITY;"
+  ],
+  "call_sessions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.call_sessions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "call_transactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.call_transactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "car_models": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.car_models ENABLE ROW LEVEL SECURITY;"
+  ],
+  "case_audit_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.case_audit_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "case_evidence": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.case_evidence ENABLE ROW LEVEL SECURITY;"
+  ],
+  "case_participants": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.case_participants ENABLE ROW LEVEL SECURITY;"
+  ],
+  "case_templates": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.case_templates ENABLE ROW LEVEL SECURITY;"
+  ],
+  "city_districts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.city_districts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "clan_rewards": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.clan_rewards ENABLE ROW LEVEL SECURITY;"
+  ],
+  "clan_vault": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.clan_vault ENABLE ROW LEVEL SECURITY;"
+  ],
+  "coin_packages": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.coin_packages ENABLE ROW LEVEL SECURITY;"
+  ],
+  "coin_pool_contributions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.coin_pool_contributions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "coin_purchases": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.coin_purchases ENABLE ROW LEVEL SECURITY;"
+  ],
+  "coin_reward_pool": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.coin_reward_pool ENABLE ROW LEVEL SECURITY;"
+  ],
+  "coinback_log": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.coinback_log ENABLE ROW LEVEL SECURITY;"
+  ],
+  "config": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.config ENABLE ROW LEVEL SECURITY;"
+  ],
+  "content": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.content ENABLE ROW LEVEL SECURITY;"
+  ],
+  "court_ai_messages": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.court_ai_messages ENABLE ROW LEVEL SECURITY;"
+  ],
+  "court_box_members": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.court_box_members ENABLE ROW LEVEL SECURITY;"
+  ],
+  "court_docket": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.court_docket ENABLE ROW LEVEL SECURITY;"
+  ],
+  "court_rulings_archive": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.court_rulings_archive ENABLE ROW LEVEL SECURITY;"
+  ],
+  "court_schedules": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.court_schedules ENABLE ROW LEVEL SECURITY;"
+  ],
+  "creator_panic_alerts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.creator_panic_alerts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "creators_over_600": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.creators_over_600 ENABLE ROW LEVEL SECURITY;"
+  ],
+  "critical_alerts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.critical_alerts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "daily_giveaways": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.daily_giveaways ENABLE ROW LEVEL SECURITY;"
+  ],
+  "daily_login_claims": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.daily_login_claims ENABLE ROW LEVEL SECURITY;"
+  ],
+  "daily_logins": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.daily_logins ENABLE ROW LEVEL SECURITY;"
+  ],
+  "declined_transactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.declined_transactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "deed_transfers": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.deed_transfers ENABLE ROW LEVEL SECURITY;"
+  ],
+  "deeds": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.deeds ENABLE ROW LEVEL SECURITY;"
+  ],
+  "district_announcements": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.district_announcements ENABLE ROW LEVEL SECURITY;"
+  ],
+  "district_features": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.district_features ENABLE ROW LEVEL SECURITY;"
+  ],
+  "earnings": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.earnings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "economy_abuse_flags": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.economy_abuse_flags ENABLE ROW LEVEL SECURITY;"
+  ],
+  "empire_applications": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.empire_applications ENABLE ROW LEVEL SECURITY;"
+  ],
+  "empire_partners": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.empire_partners ENABLE ROW LEVEL SECURITY;"
+  ],
+  "empire_referrals": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.empire_referrals ENABLE ROW LEVEL SECURITY;"
+  ],
+  "empire_rewards": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.empire_rewards ENABLE ROW LEVEL SECURITY;"
+  ],
+  "entrance_effect_catalog": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.entrance_effect_catalog ENABLE ROW LEVEL SECURITY;"
+  ],
+  "error_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.error_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "escalation_matrix": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.escalation_matrix ENABLE ROW LEVEL SECURITY;"
+  ],
+  "escalation_reports": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.escalation_reports ENABLE ROW LEVEL SECURITY;"
+  ],
+  "executive_intake": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.executive_intake ENABLE ROW LEVEL SECURITY;"
+  ],
+  "executive_reports": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.executive_reports ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_badges_earned": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_badges_earned ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_lounge_messages": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_lounge_messages ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_seasons": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_seasons ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_shop_items": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_shop_items ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_shop_purchases": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_shop_purchases ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_stats": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_stats ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_tasks_new": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_tasks_new ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_war_stats": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_war_stats ENABLE ROW LEVEL SECURITY;"
+  ],
+  "family_wars": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.family_wars ENABLE ROW LEVEL SECURITY;"
+  ],
+  "follows": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;"
+  ],
+  "gas_requests": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.gas_requests ENABLE ROW LEVEL SECURITY;"
+  ],
+  "ghost_presence_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.ghost_presence_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "gift_bonus_tracker": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.gift_bonus_tracker ENABLE ROW LEVEL SECURITY;"
+  ],
+  "gift_card_redemptions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.gift_card_redemptions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "gift_catalog": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.gift_catalog ENABLE ROW LEVEL SECURITY;"
+  ],
+  "gift_leaderboard_entries": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.gift_leaderboard_entries ENABLE ROW LEVEL SECURITY;"
+  ],
+  "gift_leaderboards": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.gift_leaderboards ENABLE ROW LEVEL SECURITY;"
+  ],
+  "giftcard_fulfillments": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.giftcard_fulfillments ENABLE ROW LEVEL SECURITY;"
+  ],
+  "gifts_owned": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.gifts_owned ENABLE ROW LEVEL SECURITY;"
+  ],
+  "group_chats": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.group_chats ENABLE ROW LEVEL SECURITY;"
+  ],
+  "hire_fire_actions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.hire_fire_actions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "hire_limits": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.hire_limits ENABLE ROW LEVEL SECURITY;"
+  ],
+  "home_feature_cycles": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.home_feature_cycles ENABLE ROW LEVEL SECURITY;"
+  ],
+  "home_feature_spend": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.home_feature_spend ENABLE ROW LEVEL SECURITY;"
+  ],
+  "honorary_family_members": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.honorary_family_members ENABLE ROW LEVEL SECURITY;"
+  ],
+  "hr_employees": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.hr_employees ENABLE ROW LEVEL SECURITY;"
+  ],
+  "hr_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.hr_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "hr_notes": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.hr_notes ENABLE ROW LEVEL SECURITY;"
+  ],
+  "identity_reward_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.identity_reward_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "incidents": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;",
+    "[file: lead_officer_system.sql] alter table public.incidents enable row level security;"
+  ],
+  "insurance": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.insurance ENABLE ROW LEVEL SECURITY;"
+  ],
+  "insurance_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.insurance_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "insurance_packages": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.insurance_packages ENABLE ROW LEVEL SECURITY;"
+  ],
+  "insurance_policies": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.insurance_policies ENABLE ROW LEVEL SECURITY;"
+  ],
+  "interview_sessions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.interview_sessions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "inventory_items": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.inventory_items ENABLE ROW LEVEL SECURITY;"
+  ],
+  "invoices": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;"
+  ],
+  "kick_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.kick_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "live_sessions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.live_sessions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "lucky_coin_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.lucky_coin_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "mai_appeals": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.mai_appeals ENABLE ROW LEVEL SECURITY;"
+  ],
+  "mai_incidents": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.mai_incidents ENABLE ROW LEVEL SECURITY;"
+  ],
+  "mai_overrides": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.mai_overrides ENABLE ROW LEVEL SECURITY;"
+  ],
+  "mai_timeline_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.mai_timeline_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "mai_user_memory": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.mai_user_memory ENABLE ROW LEVEL SECURITY;"
+  ],
+  "message_receipts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.message_receipts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "message_requests": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.message_requests ENABLE ROW LEVEL SECURITY;"
+  ],
+  "millionaire_hall_of_fame": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.millionaire_hall_of_fame ENABLE ROW LEVEL SECURITY;"
+  ],
+  "moderation_actions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.moderation_actions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "moderation_actions_log": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.moderation_actions_log ENABLE ROW LEVEL SECURITY;"
+  ],
+  "moderation_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.moderation_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "moderation_fee_settings": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.moderation_fee_settings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "moderation_notes": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.moderation_notes ENABLE ROW LEVEL SECURITY;"
+  ],
+  "moderation_reports": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.moderation_reports ENABLE ROW LEVEL SECURITY;"
+  ],
+  "observer_ratings": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.observer_ratings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_activity": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_activity ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_applications": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_applications ENABLE ROW LEVEL SECURITY;",
+    "[file: lead_officer_system.sql] alter table public.officer_applications enable row level security;"
+  ],
+  "officer_assignments": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_assignments ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_availability": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_availability ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_badges": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_badges ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_chat": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_chat ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_hours": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_hours ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_mission_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_mission_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_orientation_results": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_orientation_results ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_orientations": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_orientations ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_patrols": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_patrols ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_payouts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_payouts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_quiz_attempts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_quiz_attempts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_quiz_questions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_quiz_questions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_quiz_results": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_quiz_results ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_shift_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_shift_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_strikes": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_strikes ENABLE ROW LEVEL SECURITY;",
+    "[file: lead_officer_system.sql] alter table public.officer_strikes enable row level security;"
+  ],
+  "officer_training_sessions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_training_sessions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "officer_weekly_reports": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.officer_weekly_reports ENABLE ROW LEVEL SECURITY;"
+  ],
+  "owc_transactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.owc_transactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "payment_fees": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.payment_fees ENABLE ROW LEVEL SECURITY;"
+  ],
+  "payment_holds": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.payment_holds ENABLE ROW LEVEL SECURITY;"
+  ],
+  "payment_logs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.payment_logs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "payment_methods": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;"
+  ],
+  "payment_transactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.payment_transactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "payout_audit_log": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.payout_audit_log ENABLE ROW LEVEL SECURITY;"
+  ],
+  "payout_reviews": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.payout_reviews ENABLE ROW LEVEL SECURITY;"
+  ],
+  "payout_settings": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.payout_settings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "perk_catalog": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.perk_catalog ENABLE ROW LEVEL SECURITY;"
+  ],
+  "pitch_votes": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.pitch_votes ENABLE ROW LEVEL SECURITY;"
+  ],
+  "platform_fees": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.platform_fees ENABLE ROW LEVEL SECURITY;"
+  ],
+  "platform_wallet": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.platform_wallet ENABLE ROW LEVEL SECURITY;"
+  ],
+  "pod_bans": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.pod_bans ENABLE ROW LEVEL SECURITY;"
+  ],
+  "pod_episodes": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.pod_episodes ENABLE ROW LEVEL SECURITY;"
+  ],
+  "post_gifts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.post_gifts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "posts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "promo_code_uses": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.promo_code_uses ENABLE ROW LEVEL SECURITY;"
+  ],
+  "promo_codes": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;"
+  ],
+  "property_loans": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.property_loans ENABLE ROW LEVEL SECURITY;"
+  ],
+  "property_types": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.property_types ENABLE ROW LEVEL SECURITY;"
+  ],
+  "provider_costs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.provider_costs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "punishment_transactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.punishment_transactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "punishments": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.punishments ENABLE ROW LEVEL SECURITY;"
+  ],
+  "recent_matches": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.recent_matches ENABLE ROW LEVEL SECURITY;"
+  ],
+  "referral_claims": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.referral_claims ENABLE ROW LEVEL SECURITY;"
+  ],
+  "referral_monthly_bonus": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.referral_monthly_bonus ENABLE ROW LEVEL SECURITY;"
+  ],
+  "report_cases": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.report_cases ENABLE ROW LEVEL SECURITY;"
+  ],
+  "reputation_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.reputation_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "revenue_ledger": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.revenue_ledger ENABLE ROW LEVEL SECURITY;"
+  ],
+  "role_change_log": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.role_change_log ENABLE ROW LEVEL SECURITY;"
+  ],
+  "role_privileges": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.role_privileges ENABLE ROW LEVEL SECURITY;"
+  ],
+  "roles": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;"
+  ],
+  "rooms": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;"
+  ],
+  "royal_family_history": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.royal_family_history ENABLE ROW LEVEL SECURITY;"
+  ],
+  "royal_family_perks": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.royal_family_perks ENABLE ROW LEVEL SECURITY;"
+  ],
+  "royal_family_titles": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.royal_family_titles ENABLE ROW LEVEL SECURITY;"
+  ],
+  "scheduled_announcements": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.scheduled_announcements ENABLE ROW LEVEL SECURITY;",
+    "[file: run_missing_migrations.sql] ALTER TABLE scheduled_announcements \r\n      ADD COLUMN is_sent boolean DEFAULT false;",
+    "[file: run_missing_migrations.sql] ALTER TABLE scheduled_announcements \r\n      ADD COLUMN scheduled_time timestamptz;",
+    "[file: run_missing_migrations.sql] ALTER TABLE scheduled_announcements \r\n      ALTER COLUMN scheduled_time SET NOT NULL;",
+    "[file: run_missing_migrations.sql] ALTER TABLE scheduled_announcements ENABLE ROW LEVEL SECURITY;",
+    "[file: verify_scheduled_announcements.sql] ALTER TABLE scheduled_announcements \r\n      ADD COLUMN scheduled_time timestamptz;",
+    "[file: verify_scheduled_announcements.sql] ALTER TABLE scheduled_announcements \r\n      ALTER COLUMN scheduled_time SET NOT NULL;"
+  ],
+  "secretary_assignments": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.secretary_assignments ENABLE ROW LEVEL SECURITY;",
+    "[file: fix_secretary_assignments_fk.sql] ALTER TABLE public.secretary_assignments\r\nDROP CONSTRAINT IF EXISTS secretary_assignments_secretary_id_fkey;",
+    "[file: fix_secretary_assignments_fk.sql] ALTER TABLE public.secretary_assignments\r\nADD CONSTRAINT secretary_assignments_secretary_id_fkey\r\nFOREIGN KEY (secretary_id) REFERENCES public.user_profiles(id) ON DELETE CASCADE;",
+    "[file: fix_secretary_assignments_fk.sql] ALTER TABLE public.secretary_assignments\r\nDROP CONSTRAINT IF EXISTS secretary_assignments_assigned_by_fkey;",
+    "[file: fix_secretary_assignments_fk.sql] ALTER TABLE public.secretary_assignments\r\nADD CONSTRAINT secretary_assignments_assigned_by_fkey\r\nFOREIGN KEY (assigned_by) REFERENCES public.user_profiles(id) ON DELETE CASCADE;"
+  ],
+  "seller_reliability": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.seller_reliability ENABLE ROW LEVEL SECURITY;"
+  ],
+  "shadow_bans": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.shadow_bans ENABLE ROW LEVEL SECURITY;"
+  ],
+  "shifts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "shop_partners": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.shop_partners ENABLE ROW LEVEL SECURITY;"
+  ],
+  "shop_transactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.shop_transactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "shops": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.shops ENABLE ROW LEVEL SECURITY;"
+  ],
+  "special_gift_earnings": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.special_gift_earnings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "square_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.square_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "staff_applications": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.staff_applications ENABLE ROW LEVEL SECURITY;"
+  ],
+  "staff_profiles": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.staff_profiles ENABLE ROW LEVEL SECURITY;"
+  ],
+  "store_items": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.store_items ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stores": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_discovery_prefs": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_discovery_prefs ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_entrances": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_entrances ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_join_requests": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_join_requests ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_momentum": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_momentum ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_mute_counts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_mute_counts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_passwords": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_passwords ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_ranking": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_ranking ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_reactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_reactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_sessions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_sessions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_snack_purchases": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_snack_purchases ENABLE ROW LEVEL SECURITY;"
+  ],
+  "stream_vods": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.stream_vods ENABLE ROW LEVEL SECURITY;"
+  ],
+  "system_alerts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.system_alerts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "system_settings": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "task_completions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.task_completions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "task_history": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.task_history ENABLE ROW LEVEL SECURITY;"
+  ],
+  "tax_report_status": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.tax_report_status ENABLE ROW LEVEL SECURITY;"
+  ],
+  "ticket_messages": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.ticket_messages ENABLE ROW LEVEL SECURITY;"
+  ],
+  "town_player_state": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.town_player_state ENABLE ROW LEVEL SECURITY;"
+  ],
+  "training_scenarios": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.training_scenarios ENABLE ROW LEVEL SECURITY;"
+  ],
+  "transactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_ai_avatars": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_ai_avatars ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_battle_gifts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_battle_gifts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_battle_weekly_stats": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_battle_weekly_stats ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_dna_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_dna_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_dna_profiles": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_dna_profiles ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_dna_traits": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_dna_traits ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_drops_log": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_drops_log ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_event_claims": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_event_claims ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_events": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_events ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_family_memberships": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_family_memberships ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_family_messages": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_family_messages ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_family_wars": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_family_wars ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_gift_items": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_gift_items ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_officer_applications": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_officer_applications ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_officers": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_officers ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_post_gifts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_post_gifts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_post_views": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_post_views ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_stream_messages": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_stream_messages ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_streams": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_streams ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_wall_gifts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_wall_gifts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_wall_likes": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_wall_likes ENABLE ROW LEVEL SECURITY;"
+  ],
+  "troll_wall_reactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.troll_wall_reactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "Mai Troll_orders": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.Mai Troll_orders ENABLE ROW LEVEL SECURITY;"
+  ],
+  "Mai Troll_products": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.Mai Troll_products ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trollmond_gifts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trollmond_gifts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trollmond_ledger": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trollmond_ledger ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trollmond_store_items": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trollmond_store_items ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trollmonds_pools": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trollmonds_pools ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trolls_night_applications": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trolls_night_applications ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trollstown_properties": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trollstown_properties ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trollstown_property_upgrades": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trollstown_property_upgrades ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trollstown_upgrade_config": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trollstown_upgrade_config ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trolltract_contracts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trolltract_contracts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trolltract_weekly_rewards": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trolltract_weekly_rewards ENABLE ROW LEVEL SECURITY;"
+  ],
+  "tromody_battles": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.tromody_battles ENABLE ROW LEVEL SECURITY;"
+  ],
+  "tromody_gifts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.tromody_gifts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "tromody_sessions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.tromody_sessions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "trophies": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.trophies ENABLE ROW LEVEL SECURITY;"
+  ],
+  "typing_statuses": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.typing_statuses ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_active_entrance_effect": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_active_entrance_effect ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_badges_earned": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_badges_earned ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_balances": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_balances ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_bans": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_bans ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_broadcast_theme_purchases": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_broadcast_theme_purchases ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_broadcast_theme_state": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_broadcast_theme_state ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_car_upgrades": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_car_upgrades ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_cars": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_cars ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_devices": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_devices ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_district_progress": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_district_progress ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_entrances": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_entrances ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_garage": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_garage ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_insurance": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_insurance ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_level_perks": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_level_perks ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_notifications": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_notifications ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_payout_settings": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_payout_settings ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_streamer_entitlements": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_streamer_entitlements ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_tax_info": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_tax_info ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_vouchers": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_vouchers ENABLE ROW LEVEL SECURITY;"
+  ],
+  "user_wallets": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.user_wallets ENABLE ROW LEVEL SECURITY;"
+  ],
+  "vehicle_bids": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.vehicle_bids ENABLE ROW LEVEL SECURITY;"
+  ],
+  "vehicle_upgrades": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.vehicle_upgrades ENABLE ROW LEVEL SECURITY;"
+  ],
+  "vendor_invoices": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.vendor_invoices ENABLE ROW LEVEL SECURITY;"
+  ],
+  "verification_requests": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.verification_requests ENABLE ROW LEVEL SECURITY;"
+  ],
+  "verification_transactions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.verification_transactions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "videos": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;"
+  ],
+  "visa_redemptions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.visa_redemptions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "wall_comments": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.wall_comments ENABLE ROW LEVEL SECURITY;"
+  ],
+  "wall_gifts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.wall_gifts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "wall_likes": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.wall_likes ENABLE ROW LEVEL SECURITY;"
+  ],
+  "wall_posts": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.wall_posts ENABLE ROW LEVEL SECURITY;"
+  ],
+  "wallets": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;"
+  ],
+  "war_results": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.war_results ENABLE ROW LEVEL SECURITY;"
+  ],
+  "wars": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.wars ENABLE ROW LEVEL SECURITY;"
+  ],
+  "web_push_subscriptions": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.web_push_subscriptions ENABLE ROW LEVEL SECURITY;"
+  ],
+  "weekly_officer_reports": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.weekly_officer_reports ENABLE ROW LEVEL SECURITY;"
+  ],
+  "xp_ledger": [
+    "[file: fix_rls_errors.sql] ALTER TABLE public.xp_ledger ENABLE ROW LEVEL SECURITY;"
+  ]
+}

@@ -1,10 +1,10 @@
-# Troll City Beta Audit Report
+# Mai Troll Beta Audit Report
 
 Generated from the current workspace after a non-destructive audit pass.
 
 ## Executive Summary
 
-Troll City currently builds for production, but it is not yet clean enough for a confident full beta. The production Vite build passes, which means the app can ship a bundle. The TypeScript health check fails with many legacy type and integration errors across animations, broadcast battle/livekit code, notifications, TCNN, secretary/admin pages, and troll jobs.
+Mai Troll currently builds for production, but it is not yet clean enough for a confident full beta. The production Vite build passes, which means the app can ship a bundle. The TypeScript health check fails with many legacy type and integration errors across animations, broadcast battle/livekit code, notifications, TCNN, secretary/admin pages, and troll jobs.
 
 Critical shell files were treated as protected surfaces during this pass:
 

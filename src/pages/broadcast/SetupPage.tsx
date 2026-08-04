@@ -5,8 +5,8 @@ import { useAuthStore } from '@/lib/store';
 import { PreflightStore } from '@/lib/preflightStore';
 import requestBroadcastMediaAccess from '@/lib/media/requestBroadcastMediaAccess';
 import { useStreamStore } from '@/lib/streamStore';
-import { LocalAudioTrack, LocalVideoTrack, AudioPresets, VideoPresets, Room } from 'livekit-client';
-import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame } from 'lucide-react';
+import { LocalAudioTrack, LocalVideoTrack, AudioPresets, VideoPresets, Room, Track } from 'livekit-client';
+import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame, Crown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useScreenShare, StreamMode, canScreenShare } from '../../hooks/useScreenShare';
 import { DraggableCameraOverlay } from '../../components/broadcast/DraggableCameraOverlay';
@@ -91,44 +91,29 @@ function normalizeLiveKitTokenResponse(raw: any, expectedRoomName: string, expec
 }
 
 async function requestLiveKitToken(roomName: string, userId: string): Promise<NormalizedLiveKitToken> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase environment is not configured')
-  }
-
-  const { data: sessionData } = await supabase.auth.getSession()
-  const authToken = sessionData.session?.access_token || supabaseAnonKey
-  const response = await fetch(`${supabaseUrl}/functions/v1/livekit-token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: supabaseAnonKey,
-      Authorization: `Bearer ${authToken}`,
+  const { data, error } = await supabase.functions.invoke('livekit-token', {
+    body: {
+      room: roomName,
+      userId,
+      identity: userId,
+      role: 'publisher',
+      isHost: true,
     },
-    body: JSON.stringify({ room: roomName, userId, identity: userId, role: 'publisher', isHost: true }),
   })
 
-  const responseText = await response.text()
+  if (error) {
+    const statusCode = error?.status || error?.statusCode || error?.status_code || null
+    const bodyText = error?.body || error?.message || JSON.stringify(error)
+    throw new Error(`LiveKit token request failed${statusCode ? ` (${statusCode})` : ''}: ${bodyText}`)
+  }
+
   broadcastStartLog('token response received', {
-    status: response.status,
-    ok: response.ok,
-    bodyLength: responseText.length,
-    preview: responseText.slice(0, 180),
+    status: 200,
+    ok: true,
+    preview: JSON.stringify(data || {}).slice(0, 180),
   })
 
-  let parsed: any
-  try {
-    parsed = JSON.parse(responseText)
-  } catch {
-    throw new Error(`LiveKit token returned invalid JSON (${response.status}): ${responseText.slice(0, 180)}`)
-  }
-
-  if (!response.ok) {
-    throw new Error(parsed?.error || `LiveKit token request failed with HTTP ${response.status}`)
-  }
-
-  return normalizeLiveKitTokenResponse(parsed, roomName, userId)
+  return normalizeLiveKitTokenResponse(data, roomName, userId)
 }
 
 async function markBroadcastStartFailed(streamId: string | null, stage: BroadcastStartStage, reason: unknown) {
@@ -301,20 +286,36 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const [broadcastPassword, setBroadcastPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  // Check if user can create protected broadcast (admin/staff or level >= 50)
-  const canCreateProtected = profile && (
-    profile.role === 'admin' || 
-    profile.is_admin || 
-    profile.is_troll_officer || 
-    profile.is_lead_officer || 
-    (profile.level !== undefined && profile.level >= 50)
-  );
+   // Check if user can create protected broadcast (admin/staff or level >= 50)
+   const canCreateProtected = profile && (
+     profile.role === 'admin' || 
+     profile.is_admin || 
+     profile.is_troll_officer || 
+     profile.is_lead_officer || 
+     (profile.level !== undefined && profile.level >= 50)
+   );
+   
+    // Celeb stream support — only approved celebrities can create Celeb Streams
+    const isApprovedCeleb = !!(profile && profile.celeb_role === 'approved');
+    const [isCelebStream, setIsCelebStream] = useState(() => {
+     const params = new URLSearchParams(location.search);
+     return params.get('type') === 'celeb_stream';
+   });
 
-  // Determine if user is admin for quality settings (1080p admin, 720p regular)
-  const isStreamAdmin = !!(profile && (
-    profile.role === 'admin' || profile.is_admin ||
-    profile.role === 'owner'
-  ));
+   useEffect(() => {
+     if (isCelebStream && !isApprovedCeleb) {
+       const params = new URLSearchParams(location.search);
+       params.delete('type');
+       window.history.replaceState({}, '', `${location.pathname}?${params.toString()}`);
+       setIsCelebStream(false);
+     }
+   }, [isApprovedCeleb, isCelebStream, location.search])
+
+   // Determine if user is admin for quality settings (1080p admin, 720p regular)
+   const isStreamAdmin = !!(profile && (
+     profile.role === 'admin' || profile.is_admin ||
+     profile.role === 'owner'
+   ));
   
   // Pre-generate stream ID for token optimization
   const [streamId] = useState(() => generateUUID());
@@ -587,13 +588,11 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     async function checkBroadcasterLimit() {
       if (!user?.id) return;
 
-      const BETA_MAX_BROADCASTERS = 25;
-
       // If "Remove All Restrictions" is enabled, skip the cap entirely
       if (allRestrictionsDisabled) {
         setBroadcasterLimitInfo({
           current: 0,
-          max: BETA_MAX_BROADCASTERS,
+          max: startCapMax,
           canStart: true,
           unrestricted: true,
         });
@@ -613,7 +612,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       if (isStaffOrAdmin) {
         setBroadcasterLimitInfo({
           current: 0,
-          max: BETA_MAX_BROADCASTERS,
+          max: startCapMax,
           canStart: true,
           unrestricted: true,
           isStaffBypass: true,
@@ -653,8 +652,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       }
       const currentCount = orderedBroadcasters.length;
 
-      // Hard-enforced beta limit of 25 simultaneous broadcasters
-      const maxLimit = BETA_MAX_BROADCASTERS;
+      const maxLimit = startCapMax;
 
       // Check if current user is already in the allowed broadcasters
       const userPosition = orderedBroadcasters.indexOf(user.id);
@@ -977,8 +975,9 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
        const audioTracks = nativeStream.getAudioTracks();
        if (audioTracks.length > 0) {
          try {
-           audioTrack = new LocalAudioTrack(audioTracks[0]);
-           console.log('[acquireMediaStream] Audio track wrapped in LiveKit');
+            audioTrack = new LocalAudioTrack(audioTracks[0]);
+            audioTrack.source = Track.Source.Microphone;
+            console.log('[acquireMediaStream] Audio track wrapped in LiveKit');
          } catch (audioErr) {
            console.warn('[acquireMediaStream] Failed to wrap audio track:', audioErr);
          }
@@ -987,8 +986,9 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
        const videoTracks = nativeStream.getVideoTracks();
        if (videoTracks.length > 0) {
          try {
-           videoTrack = new LocalVideoTrack(videoTracks[0]);
-           console.log('[acquireMediaStream] Video track wrapped in LiveKit');
+            videoTrack = new LocalVideoTrack(videoTracks[0]);
+            videoTrack.source = Track.Source.Camera;
+            console.log('[acquireMediaStream] Video track wrapped in LiveKit');
          } catch (videoErr) {
            console.warn('[acquireMediaStream] Failed to wrap video track:', videoErr);
          }
@@ -1333,6 +1333,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
         
         // Wrap in LiveKit track
         const newVideoTrack = new LocalVideoTrack(newVideoTracks[0]);
+        newVideoTrack.source = Track.Source.Camera;
         
         // Update state with new track
         setLivekitTracksState([livekitTracks[0], newVideoTrack]);
@@ -1459,6 +1460,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       const videoTrack = new LocalVideoTrack(displayVideoTrack, {
         name: 'screen-share'
       } as any);
+      videoTrack.source = Track.Source.ScreenShare;
 
       // Also create audio track for system audio
       let audioTrack: LocalAudioTrack | null = null;
@@ -1466,6 +1468,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
         audioTrack = new LocalAudioTrack(displayAudioTrack, {
           name: 'screen-share-audio'
         } as any);
+        audioTrack.source = Track.Source.ScreenShareAudio;
         console.log('[toggleScreenShare] Created audio track from display stream');
       }
 
@@ -1600,7 +1603,7 @@ const handleStartStream = async () => {
       const result = await requestBroadcastMediaAccess();
       if (result.status !== 'success') {
         if (result.status === 'insecure_context') {
-          toast.error('Camera and microphone require HTTPS. Open Troll City from the secure website link.');
+          toast.error('Camera and microphone require HTTPS. Open Mai Troll from the secure website link.');
         } else if (result.status === 'unsupported_browser') {
           toast.error('This browser does not support camera/microphone broadcasting. Use Safari on iOS.');
         } else if (result.status === 'camera_denied' || result.status === 'microphone_denied') {
@@ -1635,12 +1638,14 @@ const handleStartStream = async () => {
         const at = mediaStream.getAudioTracks();
         if (at.length > 0) {
           audioTrack = new LocalAudioTrack(at[0]);
+          audioTrack.source = Track.Source.Microphone;
         }
       } catch (e) { console.warn('[SetupPage] Failed to create LocalAudioTrack from preflight stream', e); }
       try {
         const vt = mediaStream.getVideoTracks();
         if (vt.length > 0) {
           videoTrack = new LocalVideoTrack(vt[0]);
+          videoTrack.source = Track.Source.Camera;
         }
       } catch (e) { console.warn('[SetupPage] Failed to create LocalVideoTrack from preflight stream', e); }
 
@@ -1701,20 +1706,21 @@ const handleStartStream = async () => {
                        categoryConfig.layoutMode === 'spotlight' ? 'spotlight' : 'grid';
 
         // Build insert object with optional password protection
-         const insertData: Record<string, unknown> = {
-           id: streamId,
-           user_id: user.id,
-           broadcaster_id: user.id,
-           streamer_id: user.id,
-           owner_id: user.id,
-           title,
-           category,
-           camera_ready: isVideoEnabled,
+          const insertData: Record<string, unknown> = {
+            id: streamId,
+            user_id: user.id,
+            broadcaster_id: user.id,
+            streamer_id: user.id,
+            owner_id: user.id,
+            title,
+            category,
+            stream_type: isCelebStream ? 'celeb_stream' : 'standard',
+            camera_ready: isVideoEnabled,
            status: 'starting',
            is_live: false,
            started_at: null,
-           box_count: seatCount === 0 ? 1 : seatCount,
-           seat_count: seatCount,
+            box_count: seatCount === 0 ? 1 : seatCount,
+            seat_count: isCelebStream ? 0 : (seatCount === 0 ? 1 : seatCount),
            layout_mode: layoutMode,
            random_battle_queue_enabled: RANDOM_BATTLE_ENABLED && category === 'general' && battleMode === 'world' ? randomBattleQueueEnabled : false,
            random_battle_queued_at: null,
@@ -2416,8 +2422,8 @@ livekit_room_name: roomName,
               </div>
             </div>
 
-            {/* Admin-Only: Seat Count Selector */}
-            {isStreamAdmin && (
+            {/* Admin-Only: Seat Count Selector (hidden for Celeb Streams) */}
+            {isStreamAdmin && !isCelebStream && (
               <div className="flex-1 bg-zinc-900/80 rounded-xl border border-amber-500/20 p-3 flex flex-col justify-between">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Seats</span>
@@ -2459,8 +2465,8 @@ livekit_room_name: roomName,
               </div>
             )}
 
-            {/* Random Battle Queue Card */}
-            {RANDOM_BATTLE_ENABLED && category === 'general' && (
+            {/* Random Battle Queue Card (hidden for Celeb Streams) */}
+            {RANDOM_BATTLE_ENABLED && category === 'general' && !isCelebStream && (
               <div className="flex-1 bg-zinc-900/80 rounded-xl border border-fuchsia-500/20 p-3 flex flex-col gap-2">
                 <div className="flex items-center gap-1.5">
                   <Swords size={13} className="text-fuchsia-400" />
@@ -2661,16 +2667,16 @@ livekit_room_name: roomName,
           </div>
           <div className="max-h-40 overflow-y-auto rounded-xl bg-zinc-800/60 border border-zinc-700 p-3 mb-3 text-xs text-zinc-300 leading-relaxed space-y-2">
             <p>
-              By starting a broadcast, I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I understand that I am solely responsible for the content I create, stream, share, or display on Troll City.
+              By starting a broadcast, I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I understand that I am solely responsible for the content I create, stream, share, or display on Mai Troll.
             </p>
             <p>
-              I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Troll City's Terms of Service or Community Guidelines.
+              I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Mai Troll's Terms of Service or Community Guidelines.
             </p>
             <p>
               I further acknowledge that I am of legal age in my jurisdiction to consume any products, substances, beverages, or other items that may be displayed or consumed during my broadcast, and that any such activity is conducted at my own responsibility and in compliance with local laws.
             </p>
             <p>
-              Troll City reserves the right to remove content, suspend broadcasts, restrict features, or terminate accounts that violate these rules.
+              Mai Troll reserves the right to remove content, suspend broadcasts, restrict features, or terminate accounts that violate these rules.
             </p>
           </div>
           <label className="flex items-start gap-3 cursor-pointer group">
@@ -2771,7 +2777,28 @@ livekit_room_name: roomName,
                </div>
              )}
 
-             {/* Start Broadcast Button */}
+              {/* Celeb Stream Toggle (approved celebs only) */}
+              {isApprovedCeleb && (
+                <div className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsCelebStream(!isCelebStream)}
+                    className={cn(
+                      "w-full md:w-auto px-4 py-2.5 rounded-xl text-xs font-bold transition-all border",
+                      isCelebStream
+                        ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-black border-yellow-400/50 shadow-[0_4px_12px_rgba(251,191,36,0.3)]"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Crown size={14} />
+                      Celeb Stream {isCelebStream ? 'ON' : 'OFF'}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* Start Broadcast Button */}
              <div className="shrink-0">
                <button
                  type="button"

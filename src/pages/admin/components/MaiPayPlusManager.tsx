@@ -172,7 +172,7 @@ export default function MaiPayPlusManager() {
           <ShieldCheck className="w-5 h-5 text-emerald-300 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-emerald-200">
             MAI Pay Plus remains fully enforced server-side. Cashout tiers, rolling limits, and double
-            coin requirements are validated by the <code>request_friday_cashout</code> /{' '}
+            coin requirements are validated by the <code>request_cashout</code> /{' '}
             <code>request_payout</code> RPCs.
           </p>
         </div>

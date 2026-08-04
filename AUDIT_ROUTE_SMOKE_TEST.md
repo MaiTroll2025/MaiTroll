@@ -96,7 +96,7 @@
 | `/jail` | JailPage | Authenticated | jail | - |
 | `/inmates` | InmatesPage | Authenticated | jail, user_profiles | - |
 | `/jail/appeal` | JailAppealPage | Authenticated | - | - |
-| `/wall` | TrollCityWall | Authenticated | troll_wall_posts | - |
+| `/wall` | Mai TrollWall | Authenticated | troll_wall_posts | - |
 | `/wall/:postId` | WallPostPage | Authenticated | troll_wall_posts | - |
 | `/messages`, `/tcps` | TCPS | Authenticated | conversations, conversation_messages | - |
 | `/following` | Following | Authenticated | user_follows | - |
@@ -107,7 +107,7 @@
 | `/marketplace/orders` | Marketplace | Authenticated | marketplace_purchases | - |
 | `/marketplace/sales` | Marketplace | Authenticated | marketplace_purchases | - |
 | `/shop/:username` | ShopView | Authenticated | shop_items | - |
-| `/sell` | SellOnTrollCity | Authenticated | marketplace_items, shop_items | - |
+| `/sell` | SellOnMai Troll | Authenticated | marketplace_items, shop_items | - |
 | `/seller/orders` | SellerOrders | Authenticated | marketplace_purchases | - |
 | `/my-orders` | MyOrders | Authenticated | marketplace_purchases | - |
 | `/seller/earnings` | ShopEarnings | Authenticated | shop_transactions | - |

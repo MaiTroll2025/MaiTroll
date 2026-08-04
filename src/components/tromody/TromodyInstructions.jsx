@@ -19,7 +19,7 @@ export default function TromodyInstructions({ onClose }) {
           <li>• Free coins and troll_coins BOTH count.</li>
           <li>• Usernames are clickable to open profiles.</li>
           <li>• Troll emoji button is the LIKE button.</li>
-          <li>• Enjoy the chaos — this is Troll City!</li>
+          <li>• Enjoy the chaos — this is Mai Troll!</li>
         </ul>
 
         <button

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
-import { trollCityTheme } from '../styles/trollCityTheme'
+import { MaiTrollTheme } from '../styles/trollCityTheme'
 import { X, ChevronLeft, ChevronRight, CheckCircle, Sparkles } from 'lucide-react'
 
 interface TourStep {
@@ -117,7 +117,7 @@ export default function DistrictOnboardingTour({
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className={`${trollCityTheme.backgrounds.card} rounded-xl p-6 ${trollCityTheme.borders.glass}`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl p-6 ${MaiTrollTheme.borders.glass}`}>
           <div className="animate-pulse space-y-4">
             <div className="h-6 bg-gray-700 rounded w-48"></div>
             <div className="h-16 bg-gray-700 rounded"></div>
@@ -131,10 +131,10 @@ export default function DistrictOnboardingTour({
   if (completed) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className={`${trollCityTheme.backgrounds.card} rounded-xl p-8 border border-green-500/30 text-center`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl p-8 border border-green-500/30 text-center`}>
           <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-          <h2 className={`text-2xl font-bold ${trollCityTheme.text.primary} mb-2`}>Tour Completed!</h2>
-          <p className={`${trollCityTheme.text.muted}`}>You&apos;ve successfully explored this district.</p>
+          <h2 className={`text-2xl font-bold ${MaiTrollTheme.text.primary} mb-2`}>Tour Completed!</h2>
+          <p className={`${MaiTrollTheme.text.muted}`}>You&apos;ve successfully explored this district.</p>
         </div>
       </div>
     )
@@ -145,14 +145,14 @@ export default function DistrictOnboardingTour({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className={`${trollCityTheme.backgrounds.card} rounded-xl ${trollCityTheme.borders.glass} max-w-2xl w-full max-h-[90vh] overflow-hidden`}>
+      <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl ${MaiTrollTheme.borders.glass} max-w-2xl w-full max-h-[90vh] overflow-hidden`}>
         {/* Header */}
-        <div className={`flex items-center justify-between p-6 border-b ${trollCityTheme.borders.glass}`}>
+        <div className={`flex items-center justify-between p-6 border-b ${MaiTrollTheme.borders.glass}`}>
           <div className="flex items-center gap-3">
             <Sparkles className="w-6 h-6 text-purple-400" />
             <div>
-              <h2 className={`text-xl font-bold ${trollCityTheme.text.primary}`}>District Tour</h2>
-              <p className={`text-sm ${trollCityTheme.text.muted}`}>
+              <h2 className={`text-xl font-bold ${MaiTrollTheme.text.primary}`}>District Tour</h2>
+              <p className={`text-sm ${MaiTrollTheme.text.muted}`}>
                 Step {currentStep + 1} of {tourSteps.length}
               </p>
             </div>
@@ -180,16 +180,16 @@ export default function DistrictOnboardingTour({
           {currentStepData && (
             <div className="space-y-6">
               <div>
-                <h3 className={`text-2xl font-bold ${trollCityTheme.text.primary} mb-3`}>
+                <h3 className={`text-2xl font-bold ${MaiTrollTheme.text.primary} mb-3`}>
                   {currentStepData.title}
                 </h3>
-                <p className={`${trollCityTheme.text.muted} text-lg leading-relaxed`}>
+                <p className={`${MaiTrollTheme.text.muted} text-lg leading-relaxed`}>
                   {currentStepData.description}
                 </p>
               </div>
 
               {currentStepData.target_feature && (
-                <div className={`bg-white/5 rounded-lg p-4 border ${trollCityTheme.borders.glass}`}>
+                <div className={`bg-white/5 rounded-lg p-4 border ${MaiTrollTheme.borders.glass}`}>
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
                     <span className="font-semibold text-purple-300">
@@ -197,7 +197,7 @@ export default function DistrictOnboardingTour({
                     </span>
                   </div>
                   {currentStepData.route_path && (
-                    <p className={`text-sm ${trollCityTheme.text.muted}`}>
+                    <p className={`text-sm ${MaiTrollTheme.text.muted}`}>
                       Navigate to: {currentStepData.route_path}
                     </p>
                   )}

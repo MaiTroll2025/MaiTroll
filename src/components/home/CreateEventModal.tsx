@@ -161,7 +161,7 @@ export default function CreateEventModal({ isOpen, onClose, onCreated, initialDa
             </div>
             <div>
               <h2 className="text-xl font-black text-white">Create Event</h2>
-              <p className="text-xs text-slate-400">Schedule a new event for Troll City</p>
+              <p className="text-xs text-slate-400">Schedule a new event for Mai Troll</p>
             </div>
           </div>
           <button onClick={onClose} className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white">

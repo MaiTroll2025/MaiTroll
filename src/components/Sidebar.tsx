@@ -468,7 +468,7 @@ export default function Sidebar() {
               </div>
                 <div className="min-w-0 text-left">
                 <div className="truncate bg-gradient-to-r from-white via-pink-100 via-yellow-100 via-cyan-100 to-purple-200 bg-clip-text text-lg font-black leading-tight text-transparent">
-                  Mai Troll City
+                  MaiMaiTroll
                 </div>
                 <div className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-white/80">
                   City OS
@@ -618,7 +618,7 @@ export default function Sidebar() {
               <GridItem collapsed={isSidebarCollapsed} icon={Lock} label="XTrollz" to="/xtrollz" active={isActive('/xtrollz')} highlight={isUpdated('/xtrollz')} onClick={() => markAsViewed('/xtrollz')} className="text-pink-300" tone="pink" />
 
 
-              <SectionTitle title="Troll City Academy" collapsed={isSidebarCollapsed} />
+              <SectionTitle title="Mai Troll Academy" collapsed={isSidebarCollapsed} />
               <GridItem collapsed={isSidebarCollapsed} icon={BookOpen} label="Academy" to="/academy" active={isActivePath('/academy')} highlight={isUpdated('/academy')} onClick={() => markAsViewed('/academy')} className="text-emerald-400" tone="green" />
               <GridItem collapsed={isSidebarCollapsed} icon={GraduationCap} label="Courses" to="/academy/courses" active={isActivePath('/academy/courses')} highlight={isUpdated('/academy/courses')} onClick={() => markAsViewed('/academy/courses')} className="text-teal-400" tone="teal" />
               <GridItem collapsed={isSidebarCollapsed} icon={Award} label="Certificates" to="/academy/certificates" active={isActivePath('/academy/certificates')} highlight={isUpdated('/academy/certificates')} onClick={() => markAsViewed('/academy/certificates')} className="text-yellow-400" tone="orange" />

@@ -93,8 +93,8 @@ Deno.serve(async (req) => {
     const payoutPayload = {
         sender_batch_header: {
             sender_batch_id: `payout_${payoutRequestId}_${Date.now()}`,
-            email_subject: "You have a payout from TrollCity!",
-            email_message: "You have received a payout for your TrollCity earnings."
+            email_subject: "You have a payout from Mai Troll!",
+            email_message: "You have received a payout for your Mai Troll earnings."
         },
         items: [
             {
@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
                     value: amount.toFixed(2),
                     currency: "USD"
                 },
-                note: "TrollCity Payout",
+                note: "Mai Troll Payout",
                 sender_item_id: payoutRequestId,
                 receiver: email,
                 notification_language: "en-US"

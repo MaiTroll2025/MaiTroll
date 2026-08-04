@@ -43,7 +43,7 @@ export default function GlassBentoLayout({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
-            Troll City
+            Mai Troll
           </h1>
           <p className="text-sm text-white/50 mt-1">
             {totalViewers.toLocaleString()} citizens online now

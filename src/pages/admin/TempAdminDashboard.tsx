@@ -19,7 +19,7 @@ import {
   UserMinus,
   Search,
 } from 'lucide-react'
-import { trollCityTheme } from '../../styles/trollCityTheme'
+import { MaiTrollTheme } from '../../styles/trollCityTheme'
 import { formatDistanceToNow } from 'date-fns'
 
 export default function TempAdminDashboard() {
@@ -272,7 +272,7 @@ export default function TempAdminDashboard() {
 
   if (isExpired) {
     return (
-      <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} text-white p-6 flex items-center justify-center`}>
+      <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white p-6 flex items-center justify-center`}>
         <div className="text-center">
           <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold mb-2">Admin Term Expired</h1>
@@ -283,7 +283,7 @@ export default function TempAdminDashboard() {
   }
 
   return (
-    <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} text-white p-6`}>
+    <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white p-6`}>
       <div className="max-w-6xl mx-auto">
         
         {/* Header */}
@@ -617,7 +617,7 @@ export default function TempAdminDashboard() {
                       value={announcementMsg}
                       onChange={e => setAnnouncementMsg(e.target.value)}
                       className="w-full bg-black/40 border border-zinc-700 rounded p-2 text-sm h-24"
-                      placeholder="Citizens of Troll City..."
+                      placeholder="Citizens of Mai Troll..."
                     />
                   </div>
                   <button 

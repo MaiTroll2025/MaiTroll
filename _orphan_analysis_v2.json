@@ -30838,7 +30838,7 @@
         ]
       },
       {
-        "table": "trollcity_orders",
+        "table": "Mai Troll_orders",
         "score": 5,
         "categories": [
           "IN_FUNCTION"
@@ -30871,7 +30871,7 @@
         ]
       },
       {
-        "table": "trollcity_products",
+        "table": "Mai Troll_products",
         "score": 5,
         "categories": [
           "IN_FUNCTION"

@@ -246,7 +246,7 @@ Deno.serve(async (req) => {
                 const { data: targetUserRes, error: targetError } = await supabaseAdmin.auth.admin.getUserById(userId);
                 if (targetError) throw targetError;
                 
-                const OWNER_EMAIL = 'trollcity2025@gmail.com';
+                const OWNER_EMAIL = 'Mai Troll2025@gmail.com';
                 const isTargetOwner = targetUserRes.user.email?.toLowerCase() === OWNER_EMAIL;
                 const isActorOwner = user.email?.toLowerCase() === OWNER_EMAIL;
 

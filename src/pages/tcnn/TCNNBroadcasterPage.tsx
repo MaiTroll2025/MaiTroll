@@ -89,7 +89,7 @@ export default function TCNNBroadcasterPage() {
 
   const [lowerThird, setLowerThird] = useState<LowerThird>({
     headline: 'BREAKING NEWS',
-    subtext: 'TROLL CITY LAUNCHES – A NEW ERA OF LIVE STREAMING',
+    subtext: 'MaiTroll LAUNCHES – A NEW ERA OF LIVE STREAMING',
     visible: true,
   });
 
@@ -98,7 +98,7 @@ export default function TCNNBroadcasterPage() {
   const [editSubtext, setEditSubtext] = useState(lowerThird.subtext);
 
   const tickerText =
-    'TCNN LIVE • Virtual City • Real Creators • Weekly Cashouts Friday • Powered by Kain, AI, VS Code';
+    'TCNN LIVE • Virtual City • Real Creators • Weekly Cashouts via MAI Pay • Powered by Kain, AI, VS Code';
 
   const [chatOpen, setChatOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);

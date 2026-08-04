@@ -51,7 +51,7 @@ export default function InstallButton({
         // Android/Chrome: Show native install prompt
         const outcome = await promptInstall();
         if (outcome === 'accepted') {
-          toast.success('Thanks for installing Troll City!');
+          toast.success('Thanks for installing Mai Troll!');
         } else if (outcome === 'dismissed') {
           toast.info('You can install later from your browser menu');
         }
@@ -70,7 +70,7 @@ export default function InstallButton({
         if (canPromptInstall) {
           const outcome = await promptInstall();
           if (outcome === 'accepted') {
-            toast.success('Thanks for installing Troll City!');
+            toast.success('Thanks for installing Mai Troll!');
           }
         } else {
           toast.info('Look for the install icon ⊡ in Chrome/Edge menu (three dots)');
@@ -122,9 +122,9 @@ export default function InstallButton({
   // Button title/tooltip
   const getButtonTitle = () => {
     if (installStatus === 'installed') return 'App is installed';
-    if (installStatus === 'prompt-available') return 'Install Troll City';
+    if (installStatus === 'prompt-available') return 'Install Mai Troll';
     if (installStatus === 'ios-manual') return 'See installation instructions';
-    if (installStatus === 'mobile-installable') return 'Install Troll City';
+    if (installStatus === 'mobile-installable') return 'Install Mai Troll';
     return 'Install not available';
   };
 

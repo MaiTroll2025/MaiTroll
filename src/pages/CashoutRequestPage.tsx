@@ -259,7 +259,7 @@ export default function CashoutRequestPage() {
     try {
       setSubmitting(true);
 
-         const { data, error } = await supabase.rpc('request_friday_cashout', {
+         const { data, error } = await supabase.rpc('request_cashout', {
          p_user_id: profile.id,
          p_coins_to_redeem: selectedTier.coins,
          p_provider_type: payoutMethod,
@@ -400,7 +400,7 @@ export default function CashoutRequestPage() {
             <div>
               <h3 className="text-sm font-bold text-green-300">No Cashout Fees</h3>
               <p className="text-sm text-green-200/80">
-                Troll City does not charge users to cash out their earnings. The full USD value of your selected tier is paid out.
+                Mai Troll does not charge users to cash out their earnings. The full USD value of your selected tier is paid out.
               </p>
             </div>
           </div>
@@ -544,7 +544,7 @@ export default function CashoutRequestPage() {
 
           <p className="text-xs text-gray-500 text-center">
             By requesting a cashout, you confirm that the payout information is correct.
-            Cashout requests are manually reviewed by our admin team. Troll City does not charge any cashout fees.
+            Cashout requests are manually reviewed by our admin team. Mai Troll does not charge any cashout fees.
           </p>
         </div>
 

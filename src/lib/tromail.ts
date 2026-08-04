@@ -1,4 +1,4 @@
-// Tromail - Internal Role-Based Email System for Troll City
+// Tromail - Internal Role-Based Email System for Mai Troll
 
 import { supabase } from './supabase'
 import { createNotification } from './notifications'
@@ -171,7 +171,7 @@ export const canSendAdminEmail = (profile: any): boolean => {
 export const generateTromailAddress = (role: string, username: string): string => {
   // Convert role to address format
   const roleSlug = role.toLowerCase().replace(/_/g, '-')
-  return `${roleSlug}@tromail.trollcity`
+  return `${roleSlug}@tromail.Mai Troll`
 }
 
 // Create Tromail account for a user
@@ -200,7 +200,7 @@ export const createTromailAccount = async (
 
     if (existing) {
       // Try with username suffix
-      const altAddress = `${role.toLowerCase().replace(/_/g, '-')}.${username.toLowerCase()}@tromail.trollcity`
+      const altAddress = `${role.toLowerCase().replace(/_/g, '-')}.${username.toLowerCase()}@tromail.Mai Troll`
       return await supabase.from('tromail_accounts').insert({
         user_id: userId,
         role,
@@ -569,7 +569,7 @@ export const scheduleTeamMeeting = async (params: {
       recipient_roles: params.recipient_roles,
     })
 
-    // Send Tromail notifications from Troll City System
+    // Send Tromail notifications from Mai Troll System
     const scheduledDate = new Date(params.scheduled_at)
     const formattedDate = scheduledDate.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -586,9 +586,9 @@ export const scheduleTeamMeeting = async (params: {
     await sendTromailMessage({
       sender_user_id: params.created_by,
       sender_role: 'system',
-      sender_tromail_address: 'system@tromail.trollcity',
+      sender_tromail_address: 'system@tromail.Mai Troll',
       subject: `📅 Team Meeting Scheduled: ${params.title}`,
-      body: `A new team meeting has been scheduled by Troll City System.\n\n📋 Meeting: ${params.title}\n📅 Date: ${formattedDate}\n🕐 Time: ${formattedTime}\n\n${params.description ? `Description: ${params.description}\n\n` : ''}You will receive a notification when the meeting starts.\n\n— Troll City System`,
+      body: `A new team meeting has been scheduled by Mai Troll System.\n\n📋 Meeting: ${params.title}\n📅 Date: ${formattedDate}\n🕐 Time: ${formattedTime}\n\n${params.description ? `Description: ${params.description}\n\n` : ''}You will receive a notification when the meeting starts.\n\n— Mai Troll System`,
       is_admin_email: true,
       is_important: true,
       related_meeting_id: meeting.id,
@@ -1083,8 +1083,8 @@ export const generateContractPreview = (template: TromailContractTemplate, formD
       '',
     '{{start_date}}': formData.start_date || '',
     '{{pay_terms}}': formData.pay_terms || '',
-    '{{admin_name}}': 'Troll City Administration', // This could come from the sender's profile
-    '{{company_name}}': 'Troll City / MAI Corp',
+    '{{admin_name}}': 'MaiTroll Administration', // This could come from the sender's profile
+    '{{company_name}}': 'MaiTroll / MAI Corp',
     '{{date}}': new Date().toLocaleDateString(),
     '{{duties_responsibilities}}': formData.duties_responsibilities || '',
     '{{confidentiality_clause}}': formData.confidentiality_clause || '',

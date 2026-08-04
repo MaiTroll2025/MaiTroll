@@ -1,4 +1,4 @@
-# Troll City Performance Scorecard
+# Mai Troll Performance Scorecard
 
 **Date:** 2026-06-14
 **Tested By:** _______________

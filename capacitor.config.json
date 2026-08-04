@@ -1,11 +1,11 @@
 {
-  "appId": "com.trollcity.app",
-  "appName": "trollcity",
+  "appId": "com.Mai Troll.app",
+  "appName": "Mai Troll",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https",
-    "hostname": "maitrollcity.com",
+    "hostname": "maiMai Troll.com",
     "iosScheme": "https"
   },
   "android": {
@@ -26,7 +26,7 @@
     "allowMixedContent": false,
     "preferredContentMode": "mobile",
     "scheme": "https",
-    "hostname": "maitrollcity.com"
+    "hostname": "maiMai Troll.com"
   },
   "plugins": {
     "SplashScreen": {

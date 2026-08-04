@@ -15,9 +15,9 @@ export function usePreventTabRefresh() {
       if (!isNavigation) {
         // Store current state in sessionStorage to restore on reload
         const currentPath = window.location.pathname + window.location.search;
-        sessionStorage.setItem('trollcity_last_path', currentPath);
-        sessionStorage.setItem('trollcity_tab_hidden', 'true');
-        sessionStorage.setItem('trollcity_hidden_time', Date.now().toString());
+        sessionStorage.setItem('MaiTroll_last_path', currentPath);
+        sessionStorage.setItem('MaiTroll_tab_hidden', 'true');
+        sessionStorage.setItem('MaiTroll_hidden_time', Date.now().toString());
       }
     };
 
@@ -31,14 +31,14 @@ export function usePreventTabRefresh() {
         document.body.classList.remove('tab-hidden');
 
         // Mark that we returned to the tab
-        const hiddenTime = sessionStorage.getItem('trollcity_hidden_time');
+        const hiddenTime = sessionStorage.getItem('MaiTroll_hidden_time');
         if (hiddenTime) {
           const timeHidden = Date.now() - parseInt(hiddenTime);
-          sessionStorage.setItem('trollcity_time_hidden', timeHidden.toString());
+          sessionStorage.setItem('MaiTroll_time_hidden', timeHidden.toString());
         }
 
-        sessionStorage.removeItem('trollcity_tab_hidden');
-        sessionStorage.removeItem('trollcity_hidden_time');
+        sessionStorage.removeItem('MaiTroll_tab_hidden');
+        sessionStorage.removeItem('MaiTroll_hidden_time');
       }
     };
 
@@ -55,8 +55,8 @@ export function usePreventTabRefresh() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('contextmenu', handleContextMenu, { passive: false });
 
-    // Mark that we're on a TrollCity tab
-    sessionStorage.setItem('trollcity_active', 'true');
+    // Mark that we're on a Mai Troll tab
+    sessionStorage.setItem('MaiTroll_active', 'true');
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -69,10 +69,10 @@ export function usePreventTabRefresh() {
   useEffect(() => {
     const handleFocus = () => {
       // Restore scroll position if it was saved
-      const savedScroll = sessionStorage.getItem('trollcity_scroll_y');
+      const savedScroll = sessionStorage.getItem('MaiTroll_scroll_y');
       if (savedScroll) {
         window.scrollTo(0, parseInt(savedScroll));
-        sessionStorage.removeItem('trollcity_scroll_y');
+        sessionStorage.removeItem('MaiTroll_scroll_y');
       }
     };
 
@@ -99,7 +99,7 @@ export function useStatePersistence<T>(
 
   const [state, setState] = useState<T>(() => {
     try {
-      const stored = sessionStorage.getItem(`trollcity_${key}`);
+      const stored = sessionStorage.getItem(`MaiTroll_${key}`);
       return stored ? JSON.parse(stored) : defaultValue;
     } catch {
       return defaultValue;
@@ -113,7 +113,7 @@ export function useStatePersistence<T>(
       setState(newValue);
 
       try {
-        sessionStorage.setItem(`trollcity_${key}`, JSON.stringify(newValue));
+        sessionStorage.setItem(`MaiTroll_${key}`, JSON.stringify(newValue));
       } catch (error) {
         console.warn(`Failed to persist state for ${key}:`, error);
       }
@@ -125,7 +125,7 @@ export function useStatePersistence<T>(
   useEffect(() => {
     if (persistOnHidden && !isVisible) {
       try {
-        sessionStorage.setItem(`trollcity_${key}`, JSON.stringify(state));
+        sessionStorage.setItem(`MaiTroll_${key}`, JSON.stringify(state));
       } catch (error) {
         console.warn(`Failed to persist state for ${key} on hide:`, error);
       }
@@ -144,7 +144,7 @@ export function useScrollPersistence() {
    useEffect(() => {
      if (!isVisible) {
        // Save current scroll position
-       sessionStorage.setItem('trollcity_scroll_y', window.scrollY.toString());
+       sessionStorage.setItem('MaiTroll_scroll_y', window.scrollY.toString());
      }
    }, [isVisible]);
 }
@@ -155,8 +155,8 @@ export function useScrollPersistence() {
 export function useRefreshPrevention() {
   const preventRefresh = useCallback((event: BeforeUnloadEvent) => {
     // Only prevent refresh if there are unsaved changes or ongoing operations
-    const hasUnsavedChanges = sessionStorage.getItem('trollcity_unsaved_changes') === 'true';
-    const hasOngoingOperations = sessionStorage.getItem('trollcity_ongoing_ops') === 'true';
+    const hasUnsavedChanges = sessionStorage.getItem('MaiTroll_unsaved_changes') === 'true';
+    const hasOngoingOperations = sessionStorage.getItem('MaiTroll_ongoing_ops') === 'true';
 
     if (hasUnsavedChanges || hasOngoingOperations) {
       event.preventDefault();
@@ -171,10 +171,10 @@ export function useRefreshPrevention() {
 
   return {
     markUnsavedChanges: (hasChanges: boolean) => {
-      sessionStorage.setItem('trollcity_unsaved_changes', hasChanges.toString());
+      sessionStorage.setItem('MaiTroll_unsaved_changes', hasChanges.toString());
     },
     markOngoingOperation: (hasOperation: boolean) => {
-      sessionStorage.setItem('trollcity_ongoing_ops', hasOperation.toString());
+      sessionStorage.setItem('MaiTroll_ongoing_ops', hasOperation.toString());
     }
   };
 }

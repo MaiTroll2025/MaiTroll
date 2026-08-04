@@ -60,14 +60,14 @@ export default function DistrictNavigation() {
         { feature_name: 'Living & Housing', route_path: '/living', required_role: 'user' },
         { feature_name: 'Following', route_path: '/following', required_role: 'user' },
         { feature_name: 'Leaderboard', route_path: '/leaderboard', required_role: 'user' },
-        { feature_name: 'Troll City Wall', route_path: '/wall', required_role: 'user' }
+        { feature_name: 'MaiTroll Wall', route_path: '/wall', required_role: 'user' }
       ],
       commerce_district: [
         { feature_name: 'Coin Store', route_path: '/store', required_role: 'user' },
         { feature_name: 'Marketplace', route_path: '/marketplace', required_role: 'user' },
         { feature_name: 'My Inventory', route_path: '/inventory', required_role: 'user' },
         { feature_name: 'Gift Inventory', route_path: '/gift-inventory', required_role: 'user' },
-        { feature_name: 'Sell on Troll City', route_path: '/sell', required_role: 'user' }
+        { feature_name: 'Sell on Mai Troll', route_path: '/sell', required_role: 'user' }
       ],
       justice_district: [
         { feature_name: 'Troll Court', route_path: '/troll-court', required_role: 'user' },

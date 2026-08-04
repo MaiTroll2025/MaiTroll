@@ -7,7 +7,7 @@ node_modules/@types/webgl-ext/index.d.ts(55,11): error TS2717: Subsequent proper
 node_modules/@types/webgl-ext/index.d.ts(56,11): error TS2717: Subsequent property declarations must have the same type.  Property 'UNSIGNED_NORMALIZED_EXT' must be of type '35863', but here has type 'number'.
 node_modules/@types/webgl-ext/index.d.ts(74,11): error TS2717: Subsequent property declarations must have the same type.  Property 'COMPRESSED_RGB_ETC1_WEBGL' must be of type '36196', but here has type 'number'.
 node_modules/@types/webgl2/index.d.ts(582,13): error TS2403: Subsequent variable declarations must have the same type.  Variable 'WebGL2RenderingContext' must be of type '{ new (): WebGL2RenderingContext; prototype: WebGL2RenderingContext; readonly READ_BUFFER: 3074; readonly UNPACK_ROW_LENGTH: 3314; ... 556 more ...; readonly BROWSER_DEFAULT_WEBGL: 37444; }', but here has type '{ new (): WebGL2RenderingContext; prototype: WebGL2RenderingContext; readonly ACTIVE_ATTRIBUTES: number; readonly ACTIVE_TEXTURE: number; ... 557 more ...; readonly MAX_CLIENT_WAIT_TIMEOUT_WEBGL: number; }'.
-node_modules/sonner/dist/index.d.ts(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/TrollCity-main/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/sonner/dist/index.d.ts(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/Mai Troll-main/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
 node_modules/typescript/lib/lib.dom.d.ts(18876,5): error TS2374: Duplicate index signature for type 'number'.
 node_modules/typescript/lib/lib.dom.d.ts(33804,11): error TS2430: Interface 'WebGL2RenderingContext' incorrectly extends interface 'WebGL2RenderingContextBase'.
   Types of property 'clearBufferfv' are incompatible.
@@ -54,13 +54,13 @@ src/lib/supabase.ts(953,27): error TS2304: Cannot find name '__BUILD_TIME__'.
 src/lib/supabase.ts(953,60): error TS2304: Cannot find name '__BUILD_TIME__'.
 src/lib/supabase.ts(1377,25): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
 src/lib/supabase.ts(1466,23): error TS2304: Cannot find name 'profile'.
-src/pages/NeighborhoodOnboarding.tsx(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/TrollCity-main/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
-src/pages/NeighborhoodOnboarding.tsx(22,24): error TS6142: Module '../components/ui/button' was resolved to 'C:/Users/kainm/Documents/troll/TrollCity-main/src/components/ui/button.tsx', but '--jsx' is not set.
-src/pages/NeighborhoodOnboarding.tsx(23,58): error TS6142: Module '../components/ui/card' was resolved to 'C:/Users/kainm/Documents/troll/TrollCity-main/src/components/ui/card.tsx', but '--jsx' is not set.
-src/pages/NeighborhoodOnboarding.tsx(24,23): error TS6142: Module '../components/ui/input' was resolved to 'C:/Users/kainm/Documents/troll/TrollCity-main/src/components/ui/input.tsx', but '--jsx' is not set.
-src/pages/NeighborhoodOnboarding.tsx(25,23): error TS6142: Module '../components/ui/badge' was resolved to 'C:/Users/kainm/Documents/troll/TrollCity-main/src/components/ui/badge.tsx', but '--jsx' is not set.
-src/pages/NeighborhoodOnboarding.tsx(26,23): error TS6142: Module '../components/ui/label' was resolved to 'C:/Users/kainm/Documents/troll/TrollCity-main/src/components/ui/label.tsx', but '--jsx' is not set.
-src/pages/NeighborhoodOnboarding.tsx(27,79): error TS6142: Module '../components/ui/select' was resolved to 'C:/Users/kainm/Documents/troll/TrollCity-main/src/components/ui/select.tsx', but '--jsx' is not set.
+src/pages/NeighborhoodOnboarding.tsx(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/Mai Troll-main/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+src/pages/NeighborhoodOnboarding.tsx(22,24): error TS6142: Module '../components/ui/button' was resolved to 'C:/Users/kainm/Documents/troll/Mai Troll-main/src/components/ui/button.tsx', but '--jsx' is not set.
+src/pages/NeighborhoodOnboarding.tsx(23,58): error TS6142: Module '../components/ui/card' was resolved to 'C:/Users/kainm/Documents/troll/Mai Troll-main/src/components/ui/card.tsx', but '--jsx' is not set.
+src/pages/NeighborhoodOnboarding.tsx(24,23): error TS6142: Module '../components/ui/input' was resolved to 'C:/Users/kainm/Documents/troll/Mai Troll-main/src/components/ui/input.tsx', but '--jsx' is not set.
+src/pages/NeighborhoodOnboarding.tsx(25,23): error TS6142: Module '../components/ui/badge' was resolved to 'C:/Users/kainm/Documents/troll/Mai Troll-main/src/components/ui/badge.tsx', but '--jsx' is not set.
+src/pages/NeighborhoodOnboarding.tsx(26,23): error TS6142: Module '../components/ui/label' was resolved to 'C:/Users/kainm/Documents/troll/Mai Troll-main/src/components/ui/label.tsx', but '--jsx' is not set.
+src/pages/NeighborhoodOnboarding.tsx(27,79): error TS6142: Module '../components/ui/select' was resolved to 'C:/Users/kainm/Documents/troll/Mai Troll-main/src/components/ui/select.tsx', but '--jsx' is not set.
 src/pages/NeighborhoodOnboarding.tsx(155,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
 src/pages/NeighborhoodOnboarding.tsx(157,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
 src/pages/NeighborhoodOnboarding.tsx(161,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.

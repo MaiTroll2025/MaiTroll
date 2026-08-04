@@ -2,7 +2,7 @@
 
 Use a consistent style for all images:
 - Stylized semi-realistic game art
-- Dark-neon Troll City aesthetic
+- Dark-neon Mai Troll aesthetic
 - Nighttime lighting with soft glow highlights
 - Clean modern look optimized for dark UI
 - 1:1 or 4:5 aspect ratio, centered subject
@@ -19,16 +19,16 @@ Save to: public/assets/properties/
   Prompt: “Modern suburban duplex in a futuristic city, two connected homes, clean lines, glowing windows, subtle neon accents, medium-scale property, nighttime, stylized semi-realistic game art”
 
 - urban_loft.png
-  Prompt: “Stylish urban loft apartment in a dense futuristic city, tall windows, exposed structure, glowing city skyline in background, neon signs, modern Troll City vibe, night, stylized game art”
+  Prompt: “Stylish urban loft apartment in a dense futuristic city, tall windows, exposed structure, glowing city skyline in background, neon signs, modern Mai Troll vibe, night, stylized game art”
 
 - city_high_rise.png
-  Prompt: “Premium city high-rise residential tower, sleek futuristic skyscraper, many illuminated windows, dramatic perspective from below, Troll City atmosphere, night scene, cinematic game art”
+  Prompt: “Premium city high-rise residential tower, sleek futuristic skyscraper, many illuminated windows, dramatic perspective from below, Mai Troll atmosphere, night scene, cinematic game art”
 
 - luxury_penthouse.png
-  Prompt: “Luxury penthouse atop a futuristic skyscraper, panoramic city view, glass walls, elegant lighting, elite atmosphere, Troll City below, night, high-end stylized game art”
+  Prompt: “Luxury penthouse atop a futuristic skyscraper, panoramic city view, glass walls, elegant lighting, elite atmosphere, Mai Troll below, night, high-end stylized game art”
 
 - troll_mansion.png
-  Prompt: “Massive elite mansion in Troll City, futuristic luxury estate, bold architecture, glowing accents, elevated status, dramatic lighting, night scene, stylized semi-realistic game art”
+  Prompt: “Massive elite mansion in Mai Troll, futuristic luxury estate, bold architecture, glowing accents, elevated status, dramatic lighting, night scene, stylized semi-realistic game art”
 
 - mega_estate.png
   Prompt: “Ultra-rare mega estate in a futuristic city, sprawling luxury compound, dramatic neon accents, elite skyline backdrop, cinematic night lighting, stylized semi-realistic game art”
@@ -44,29 +44,29 @@ Save to: public/assets/cars/
   Prompt: “Mid-size SUV / crossover vehicle, rugged but reliable, balanced proportions, neutral colors, urban-ready, night lighting, stylized semi-realistic game art”
 
 - urban_drift_r.png
-  Prompt: “Aggressive street tuner coupe, aerodynamic body kit, low stance, neon underglow, racing accents, cyberpunk Troll City night, stylized game art”
+  Prompt: “Aggressive street tuner coupe, aerodynamic body kit, low stance, neon underglow, racing accents, cyberpunk Mai Troll night, stylized game art”
 
 - ironclad_gt.png
-  Prompt: “Heavy luxury muscle car, wide body, powerful stance, premium finish, dark dramatic lighting, elite Troll City backdrop, stylized game art”
+  Prompt: “Heavy luxury muscle car, wide body, powerful stance, premium finish, dark dramatic lighting, elite Mai Troll backdrop, stylized game art”
 
 - vanta_lx.png
   Prompt: “High-end luxury performance motorcycle, sleek aerodynamic design, premium materials, neon accents, dark studio background, stylized game art”
 
 - phantom_x.png
-  Prompt: “Stealth supercar, angular futuristic design, low profile, glowing trim, hypercar presence, Troll City night setting, cinematic stylized game art”
+  Prompt: “Stealth supercar, angular futuristic design, low profile, glowing trim, hypercar presence, Mai Troll night setting, cinematic stylized game art”
 
 - obsidian_one_apex.png
-  Prompt: “Ultra-elite hypercar, black obsidian finish, razor-sharp lines, extreme performance design, glowing neon details, futuristic Troll City night, cinematic stylized game art”
+  Prompt: “Ultra-elite hypercar, black obsidian finish, razor-sharp lines, extreme performance design, glowing neon details, futuristic Mai Troll night, cinematic stylized game art”
 
 - titan_enforcer.png
-  Prompt: “Heavily armored futuristic enforcement vehicle, tank-like presence, reinforced body, intimidating silhouette, glowing tactical lights, dark Troll City setting, stylized game art”
+  Prompt: “Heavily armored futuristic enforcement vehicle, tank-like presence, reinforced body, intimidating silhouette, glowing tactical lights, dark Mai Troll setting, stylized game art”
 
 ## Driving Scene Background
 
 Save to: public/assets/
 
 - driving_scene.jpg
-  Prompt: “Realistic cinematic night city highway, wet asphalt reflections, neon signage glow, modern Troll City skyline, shallow depth of field, photorealistic lighting, no cartoon styling”
+  Prompt: “Realistic cinematic night city highway, wet asphalt reflections, neon signage glow, modern Mai Troll skyline, shallow depth of field, photorealistic lighting, no cartoon styling”
 
 ## New Vehicles (Added)
 
@@ -80,10 +80,10 @@ Save to: public/assets/
   Prompt: “Sport SUV with rugged stance, urban-ready, glowing trims, night lighting, stylized semi-realistic game art”
 
 - quantum_veil.png
-  Prompt: “Experimental prototype hypercar, angular futuristic silhouette, glowing trim, dark Troll City setting, cinematic stylized game art”
+  Prompt: “Experimental prototype hypercar, angular futuristic silhouette, glowing trim, dark Mai Troll setting, cinematic stylized game art”
 
 - driftline_pulse_bike.png
-  Prompt: “Drift-ready performance bike, low stance, neon underglow, aggressive Troll City styling, night lighting, stylized semi-realistic game art”
+  Prompt: “Drift-ready performance bike, low stance, neon underglow, aggressive Mai Troll styling, night lighting, stylized semi-realistic game art”
 
 - regal_meridian.png
   Prompt: “Executive luxury sedan, elegant proportions, premium finish, subtle neon reflections, dark studio background, stylized semi-realistic game art”

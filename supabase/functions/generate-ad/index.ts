@@ -336,9 +336,9 @@ serve(async (req) => {
         throw new Error("RUNWAY_API_KEY not configured in Supabase secrets.");
       }
       
-      const title = source.title || 'Troll City';
+      const title = source.title || 'Mai Troll';
       const description = source.description || '';
-      const prompt = `Professional promotional ad featuring ${title}. ${description}. Include www.maitrollcity.com text and "Mai Troll City on Google Play" badge. Digital city, cyberpunk, neon lights, high quality, marketing style, app store badge visible`;
+      const prompt = `Professional promotional ad featuring ${title}. ${description}. Include www.maiMai Troll.com text and "Mai Mai Troll on Google Play" badge. Digital city, cyberpunk, neon lights, high quality, marketing style, app store badge visible`;
       
       // Use screenshot_url if available, otherwise will generate without reference
       const sourceImageUrl = source.screenshot_url || null;
@@ -375,7 +375,7 @@ serve(async (req) => {
       if (generation_type === 'video_promo' || generation_type === 'full_campaign') {
         console.log('Generating video...');
         
-        const videoPrompt = `Professional promotional video ad featuring ${title}. ${description}. Include www.maitrollcity.com text and "Mai Troll City on Google Play" badge. Digital city, cyberpunk, neon lights, high quality cinematic marketing video, app store badge visible`;
+        const videoPrompt = `Professional promotional video ad featuring ${title}. ${description}. Include www.maiMai Troll.com text and "Mai Mai Troll on Google Play" badge. Digital city, cyberpunk, neon lights, high quality cinematic marketing video, app store badge visible`;
         
         const videoUrl = await generateWithRunwayVideo(supabase, sourceImageUrl, videoPrompt, job.id);
         console.log('Generated video:', videoUrl);

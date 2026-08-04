@@ -1,4 +1,4 @@
-// TypeScript types for Troll City Wall
+// TypeScript types for Mai Troll Wall
 
 export type WallPostType =
   | 'text'
@@ -45,7 +45,7 @@ export interface WallPost {
 
 // Extended interface for system-generated posts in Troll Wall feed
 export interface SystemWallPost extends WallPost {
-  username?: string; // Will be overridden to show "Troll City System"
+  username?: string; // Will be overridden to show "Mai Troll System"
   avatar_url?: string; // Optional system avatar
 }
 

@@ -38,7 +38,6 @@ function getChannelName(nameOrConfig: string | { name: string }): string {
 }
 
 function createChannel(name: string): ChannelEntry | null {
-  // Check connection budget before creating
   if (!connectionBudget.acquire(name)) {
     console.warn(`[RealtimeManager] Connection budget full — skipping channel "${name}"`)
     return null
@@ -54,7 +53,12 @@ function createChannel(name: string): ChannelEntry | null {
     createdAt: Date.now(),
   }
 
-  channel.subscribe((status) => {
+  totalCreated++
+  return entry
+}
+
+function subscribeChannel(entry: ChannelEntry, name: string) {
+  entry.channel.subscribe((status) => {
     if (status === 'SUBSCRIBED') {
       entry.status = 'subscribed'
     } else if (status === 'CHANNEL_ERROR') {
@@ -68,9 +72,6 @@ function createChannel(name: string): ChannelEntry | null {
       console.warn(`[RealtimeManager] channel "${name}" status: ${status}`)
     }
   })
-
-  totalCreated++
-  return entry
 }
 
 function destroyChannel(name: string) {
@@ -102,6 +103,8 @@ export function subscribe(
     if (builder) {
       builder(entry.channel)
     }
+
+    subscribeChannel(entry, name)
   }
 
   entry.refCount++
@@ -247,7 +250,7 @@ export function getPageChannelStats() {
 }
 
 if (typeof window !== 'undefined' && isDev()) {
-  ;(window as any).__TROLLCITY_REALTIME_MANAGER__ = {
+  ;(window as any).__MaiTroll_REALTIME_MANAGER__ = {
     getStats,
     cleanup,
     subscribe,

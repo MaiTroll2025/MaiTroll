@@ -133,7 +133,7 @@ export default function BusinessProfileForm({ user, existingProfile, onProfileCr
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
             className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2C2C2C] rounded-lg focus:border-purple-500 focus:outline-none text-white"
-            placeholder="e.g. Troll City Auto Mechanics"
+            placeholder="e.g. Mai Troll Auto Mechanics"
             required
           />
         </div>
@@ -205,7 +205,7 @@ export default function BusinessProfileForm({ user, existingProfile, onProfileCr
             value={city}
             onChange={(e) => setCity(e.target.value)}
             className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2C2C2C] rounded-lg focus:border-purple-500 focus:outline-none text-white"
-            placeholder="e.g. Troll City"
+            placeholder="e.g. Mai Troll"
           />
         </div>
 

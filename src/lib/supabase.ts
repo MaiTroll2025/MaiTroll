@@ -127,7 +127,7 @@ export async function doesUserProfileExist(userId: string): Promise<boolean> {
 }
 
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  ;(window as any).__TROLLCITY_SUPABASE_REALTIME_DEBUG__ = {
+    ;(window as any).__MaiTroll_SUPABASE_REALTIME_DEBUG__ = {
     get created() {
       return supabaseRealtimeCounters.created
     },
@@ -148,7 +148,7 @@ export type StreamStatus = 'live' | 'ended'
 export type TransactionType = 'purchase' | 'gift' | 'spin' | 'insurance' | 'cashout'
 
 export const PLATFORM_OPTIONS = [
-  { value: 'trollcity', label: 'Troll City', color: '#a855f7', icon: '🏙️' },
+  { value: 'MaiTroll', label: 'MaiTroll', color: '#a855f7', icon: '🏙️' },
   { value: 'tiktok', label: 'TikTok', color: '#00f2ea', icon: '🎵' },
   { value: 'liveme', label: 'LiveMe', color: '#ff4d4f', icon: '📺' },
   { value: 'bigo', label: 'Bigo Live', color: '#f59e0b', icon: '🎥' },
@@ -322,7 +322,7 @@ export interface UserProfile {
   card_exp_month?: number | null
   card_exp_year?: number | null
 
-  // TrollCity Saved Card (encrypted locally, hidden from everyone including admin)
+  // Mai Troll Saved Card (encrypted locally, hidden from everyone including admin)
   encrypted_card_data?: string | null
 
   // Empire Partner
@@ -433,6 +433,9 @@ export interface UserProfile {
   preference?: string[];
   message_price?: number;
   last_active?: string | null;
+
+  // Celebrity fields
+  celeb_role?: string | null;
 }
 
 

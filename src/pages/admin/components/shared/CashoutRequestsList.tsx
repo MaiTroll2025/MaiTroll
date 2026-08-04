@@ -138,7 +138,7 @@ export default function CashoutRequestsList({ viewMode: _viewMode }: CashoutRequ
           <div>
             <h4 className="text-sm font-bold text-blue-200">Fast Pay / MAI Pay Payouts</h4>
             <p className="text-xs text-blue-300/80">
-              Level 1-499: Fridays only • Level 500-999: Every 24hrs • Level 1000+: Every 30min
+              Level 1-499: On request • Level 500-999: Every 24hrs • Level 1000+: Every 30min
             </p>
           </div>
         </div>

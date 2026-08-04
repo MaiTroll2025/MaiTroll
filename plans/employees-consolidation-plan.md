@@ -1,6 +1,6 @@
 # Employees Office — Consolidation Plan
 
-**Goal:** Replace all scattered non-admin Troll City employee dashboards (officer, lead officer, secretary, CEO assistant, Noah assistant, HR, scheduling, clock-in, applications) with ONE unified internal employee page at **`/Employees`**. Every approved employee role uses this single page; tabs, actions, and permissions are driven by the logged-in member's role. The Admin Dashboard (`/admin` and related admin routes) and the CEO's personal admin page are **untouched**.
+**Goal:** Replace all scattered non-admin Mai Troll employee dashboards (officer, lead officer, secretary, CEO assistant, Noah assistant, HR, scheduling, clock-in, applications) with ONE unified internal employee page at **`/Employees`**. Every approved employee role uses this single page; tabs, actions, and permissions are driven by the logged-in member's role. The Admin Dashboard (`/admin` and related admin routes) and the CEO's personal admin page are **untouched**.
 
 > Status: STAGE 1 (foundation + core tabs). Old pages are retained (not deleted) and old routes redirect to `/Employees`. Old nav links remain until each feature's migration is verified (per instructions: "Do not delete an old page until all of its working logic has been successfully moved and verified").
 
@@ -48,7 +48,7 @@ Shared tabs: **Office Home, Clock In, Schedule, Chat, Tasks, Reports, Announceme
 - Reports → new `employee_reports` (replaces ad-hoc officer reports) with statuses + routing to supervisor.
 - Change Requests → new `employee_change_requests` (vote, comment, attach; no auto-approve).
 - Frontend Studio → new `frontend_studio_drafts` (gated; config-only, no code exec/SQL/terminal).
-- Payroll → new `employee_payroll_runs` + `employee_paystubs` + `employee_perk_pay`; MAI CORP / Mai Troll City; real location/state tax fields; PDF paystub (jsPDF). Secretary + CEO + admin can edit payroll; all employees can view/download their own.
+- Payroll → new `employee_payroll_runs` + `employee_paystubs` + `employee_perk_pay`; MAI CORP / Mai Mai Troll; real location/state tax fields; PDF paystub (jsPDF). Secretary + CEO + admin can edit payroll; all employees can view/download their own.
 - Applications → reuse `career_positions` + `job_applications`; apply, view status, on hire grant role + add to payroll + onboarding tasks.
 - Hiring → role-gated hire/fire/suspend with reason + confirmation + audit + notification; Troll Officers cannot hire/fire; Lead Troll Officers only for Troll Officers.
 - Attendance → `officer_work_sessions` history, corrections (management), excused/unexcused (management), audit.

@@ -1,4 +1,4 @@
-# Mux CDN Integration Guide for Troll City
+# Mux CDN Integration Guide for Mai Troll
 
 ## Overview
 This implementation uses Mux HLS for watch-only viewers and LiveKit for participants/broadcasters. This reduces LiveKit costs by offloading viewer traffic to Mux CDN.

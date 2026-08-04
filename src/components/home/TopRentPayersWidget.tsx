@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ShieldCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { trollCityTheme } from '@/styles/trollCityTheme'
+import { MaiTrollTheme } from '@/styles/trollCityTheme'
 
 interface RentPayerRow {
   user_id: string
@@ -88,7 +88,7 @@ export default function TopRentPayersWidget({ onRequireAuth }: TopRentPayersWidg
 
   return (
     <div
-      className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-4`}
+      className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-4`}
       onClick={() => onRequireAuth('view Top Rent Payers')}
     >
       <div className="flex items-center gap-2 mb-3">

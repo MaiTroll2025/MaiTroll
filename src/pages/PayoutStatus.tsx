@@ -31,7 +31,7 @@ export default function PayoutStatus() {
               <ul className="text-sm text-slate-300 space-y-1">
                 <li>• Earn coins through streaming, battles, and city activities</li>
                 <li>• Coins are held securely until payout</li>
-                <li>• Payouts processed weekly on Fridays through MAI Pay</li>
+                <li>• Payouts processed on request through MAI Pay</li>
                 <li>• All transactions powered by PayPal for security</li>
               </ul>
             </div>

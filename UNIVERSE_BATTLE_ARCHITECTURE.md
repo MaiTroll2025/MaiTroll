@@ -1,8 +1,8 @@
-# TrollCity Universe Battle System - Architecture & Implementation Summary
+# Mai Troll Universe Battle System - Architecture & Implementation Summary
 
 ## EXECUTIVE SUMMARY
 
-The TrollCity Universe Battle System is a **real-time, team-based battle platform** where up to 5v5 broadcasters and viewers compete by sending gifts during 3-minute matches. The system uses Supabase real-time channels for synchronization, server-authoritative timers for accuracy, and comprehensive crown/reward systems for engagement.
+The Mai Troll Universe Battle System is a **real-time, team-based battle platform** where up to 5v5 broadcasters and viewers compete by sending gifts during 3-minute matches. The system uses Supabase real-time channels for synchronization, server-authoritative timers for accuracy, and comprehensive crown/reward systems for engagement.
 
 ---
 
@@ -10,7 +10,7 @@ The TrollCity Universe Battle System is a **real-time, team-based battle platfor
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    TROLL CITY UNIVERSE BATTLE                       │
+│                    Mai Troll UNIVERSE BATTLE                       │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌──────────────┐                    ┌──────────────┐              │

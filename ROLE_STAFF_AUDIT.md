@@ -1,7 +1,7 @@
-# 🛡️ TrollCity Role Staff Audit — Complete Report
+# 🛡️ Mai Troll Role Staff Audit — Complete Report
 
 **Generated:** 2026-06-28  
-**Scope:** Every page, route, action, and permission gate in the TrollCity platform
+**Scope:** Every page, route, action, and permission gate in the Mai Troll platform
 
 ---
 
@@ -20,7 +20,7 @@
 
 ## 1. Executive Summary
 
-This audit maps **every page and every action** in TrollCity to the staff roles that can access them, identifies gaps where staff-only features are unprotected, and catalogs critical security issues.
+This audit maps **every page and every action** in Mai Troll to the staff roles that can access them, identifies gaps where staff-only features are unprotected, and catalogs critical security issues.
 
 ### Key Findings
 
@@ -376,7 +376,7 @@ These routes are inside `<RequireAuth />` but have **NO `RequireRole` guard**, m
 
 3. **`set_user_role(UUID)` RPC is a full privilege escalation vector** — Flagged in `SECURITY_AUDIT_ROUND2.md`. Allows arbitrary role assignment.
 
-4. **Hardcoded admin email** — `src/pages/handleSearchChange.tsx:50` checks `user.email === 'trollcity2025@gmail.com'` as an admin bypass, bypassing normal role checks.
+4. **Hardcoded admin email** — `src/pages/handleSearchChange.tsx:50` checks `user.email === 'Mai Troll2025@gmail.com'` as an admin bypass, bypassing normal role checks.
 
 ### 🟡 HIGH
 

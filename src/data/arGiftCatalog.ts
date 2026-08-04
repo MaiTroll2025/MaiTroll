@@ -55,7 +55,7 @@ export const AR_GIFTS: ARGiftEffect[] = [
   {
     id: 'ar_troll_mask',
     name: 'Troll Mask',
-    description: 'Animated Troll City face mask overlay',
+    description: 'Animated Mai Troll face mask overlay',
     price: 1000,
     category: 'mask',
     trackingPoint: 'eyes',
@@ -197,12 +197,12 @@ export const AR_GIFTS: ARGiftEffect[] = [
   },
 
   // =====================================================
-  // TROLL CITY GIFT CATEGORY
+  // Mai Troll GIFT CATEGORY
   // =====================================================
   {
     id: 'ar_mini_troll',
     name: 'Mini Troll',
-    description: 'Tiny Troll City mascot sits on shoulder with idle animations',
+    description: 'Tiny Mai Troll mascot sits on shoulder with idle animations',
     price: 1000,
     category: 'troll_city',
     trackingPoint: 'right_shoulder',
@@ -231,7 +231,7 @@ export const AR_GIFTS: ARGiftEffect[] = [
   },
   {
     id: 'ar_troll_city_president',
-    name: 'Troll City President',
+    name: 'MaiTroll President',
     description: 'LEGENDARY: President Mansion appears, crown descends, helicopter flyover, gold & purple particle storm',
     price: 1000000,
     category: 'legendary',

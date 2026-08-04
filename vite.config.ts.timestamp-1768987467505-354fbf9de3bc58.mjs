@@ -1,11 +1,11 @@
 // vite.config.ts
-import { defineConfig } from "file:///E:/troll/trollcity-1/node_modules/vite/dist/node/index.js";
-import react from "file:///E:/troll/trollcity-1/node_modules/@vitejs/plugin-react/dist/index.js";
-import tsconfigPaths from "file:///E:/troll/trollcity-1/node_modules/vite-tsconfig-paths/dist/index.js";
-import { VitePWA } from "file:///E:/troll/trollcity-1/node_modules/vite-plugin-pwa/dist/index.js";
+import { defineConfig } from "file:///E:/troll/Mai Troll-1/node_modules/vite/dist/node/index.js";
+import react from "file:///E:/troll/Mai Troll-1/node_modules/@vitejs/plugin-react/dist/index.js";
+import tsconfigPaths from "file:///E:/troll/Mai Troll-1/node_modules/vite-tsconfig-paths/dist/index.js";
+import { VitePWA } from "file:///E:/troll/Mai Troll-1/node_modules/vite-plugin-pwa/dist/index.js";
 import path from "path";
-import mkcert from "file:///E:/troll/trollcity-1/node_modules/vite-plugin-mkcert/dist/mkcert.mjs";
-var __vite_injected_original_dirname = "E:\\troll\\trollcity-1";
+import mkcert from "file:///E:/troll/Mai Troll-1/node_modules/vite-plugin-mkcert/dist/mkcert.mjs";
+var __vite_injected_original_dirname = "E:\\troll\\Mai Troll-1";
 var disableHmr = process.env.DISABLE_HMR === "1";
 var vite_config_default = defineConfig({
   define: {
@@ -22,8 +22,8 @@ var vite_config_default = defineConfig({
         enabled: false
       },
       manifest: {
-        name: "Troll City",
-        short_name: "TrollCity",
+        name: "Mai Troll",
+        short_name: "Mai Troll",
         start_url: "/mobile",
         scope: "/",
         display: "standalone",

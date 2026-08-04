@@ -1,4 +1,4 @@
-import { LayoutDashboard, ClipboardList, AlertTriangle, DollarSign, CreditCard, Shield, Landmark, Crown, FileText, Building2, Users, Bell, Briefcase, LogOut, ChevronRight, Activity, CalendarDays, CheckSquare } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, AlertTriangle, DollarSign, CreditCard, Shield, Landmark, Crown, FileText, Building2, Users, Bell, Briefcase, LogOut, ChevronRight, Activity, CalendarDays, CheckSquare, Coins } from 'lucide-react'
 
 type Section =
   | 'dashboard'
@@ -23,6 +23,7 @@ type View =
   | 'calendar'
   | 'secretary_dashboard'
   | 'crown_redemptions'
+  | 'coin_liability'
 
 interface NavigationItem {
   id: View
@@ -70,6 +71,19 @@ export const navigation: NavigationGroup[] = [
         id: 'alerts',
         label: 'Critical Alerts',
         icon: <AlertTriangle className="w-4 h-4" />
+      }
+    ]
+  },
+
+  {
+    id: 'finance',
+    title: 'Finance',
+    icon: <DollarSign className="w-4 h-4" />,
+    items: [
+      {
+        id: 'coin_liability',
+        label: 'Coin Liability',
+        icon: <Coins className="w-4 h-4" />
       }
     ]
   },

@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I acknowledge that I have received, read, and understand the Troll City Employee Handbook, and I agree to comply with its policies and procedures.'
+  'I acknowledge that I have received, read, and understand the Mai Troll Employee Handbook, and I agree to comply with its policies and procedures.'
 
 export default function HandbookAcknowledgementForm(props: DocumentFormProps) {
   return (
@@ -24,7 +24,7 @@ export default function HandbookAcknowledgementForm(props: DocumentFormProps) {
             onChange={(e) => setField('acknowledged', e.target.checked)}
             className="mt-1 h-4 w-4"
           />
-          I acknowledge receipt and review of the Troll City Employee Handbook, including all
+          I acknowledge receipt and review of the Mai Troll Employee Handbook, including all
           policies on conduct, compensation, leave, and platform safety.
         </label>
       )}

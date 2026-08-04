@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Users, Shield, AlertTriangle, Gavel, Scale } from 'lucide-react';
 
 /**
- * Troll City Minor Safety Policy Page
+ * Mai Troll Minor Safety Policy Page
  */
 export default function MinorSafetyPolicy() {
   return (
@@ -18,7 +18,7 @@ export default function MinorSafetyPolicy() {
             Minor Safety Policy
           </h1>
           <p className="text-zinc-400 text-lg">
-            Protecting minors on Troll City through community vigilance and clear guidelines
+            Protecting minors on Mai Troll through community vigilance and clear guidelines
           </p>
         </div>
 
@@ -31,13 +31,13 @@ export default function MinorSafetyPolicy() {
               Platform Commitment
             </h2>
             <p className="text-zinc-300 leading-relaxed mb-4">
-              Troll City is committed to creating a safe environment for all users. While our platform 
+              Mai Troll is committed to creating a safe environment for all users. While our platform 
               is designed for adult users (18+), we recognize that minors may occasionally appear on 
               broadcasts when supervised by their adult guardians.
             </p>
             <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-4">
               <p className="text-yellow-400 font-bold">
-                Important: Troll City accounts must be held by adults 18 years or older.
+                Important: Mai Troll accounts must be held by adults 18 years or older.
               </p>
             </div>
           </section>
@@ -185,7 +185,7 @@ export default function MinorSafetyPolicy() {
         {/* Footer */}
         <div className="mt-12 text-center text-zinc-600 text-sm">
           <p>Last updated: {new Date().toLocaleDateString()}</p>
-          <p className="mt-2">Troll City Platform</p>
+          <p className="mt-2">Mai Troll Platform</p>
         </div>
       </div>
     </div>

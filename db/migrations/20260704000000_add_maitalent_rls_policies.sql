@@ -165,7 +165,7 @@ DROP TABLE IF EXISTS share_reward_links;
 CREATE TABLE IF NOT EXISTS share_reward_links (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    shared_url text NOT NULL CHECK (shared_url ~* '^https?://(www\.)?(maitrollcity\.com|maitalent\.fun)'),
+    shared_url text NOT NULL CHECK (shared_url ~* '^https?://(www\.)?(maiMai Troll\.com|maitalent\.fun)'),
     platform_source text NOT NULL,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone NOT NULL DEFAULT now(),

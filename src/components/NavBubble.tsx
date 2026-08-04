@@ -465,7 +465,7 @@ export default function NavBubble() {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200/70">
-                  Troll City OS
+                  Mai Troll OS
                 </p>
                 <h2 className="text-lg font-black text-white">Pages</h2>
                 <p className="mt-1 text-sm text-slate-400">Quick access to your city world, role tools, and rewards.</p>

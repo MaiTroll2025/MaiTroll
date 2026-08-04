@@ -12,7 +12,7 @@ import {
   Eye,
   Scale
 } from 'lucide-react';
-import { trollCityTheme } from '../../styles/trollCityTheme';
+import { MaiTrollTheme } from '../../styles/trollCityTheme';
 
 type AppealCategory = 'non_delivery' | 'not_as_described' | 'damaged_item' | 'seller_issue' | 'buyer_issue' | 'payment_issue' | 'other';
 type AppealStatus = 'pending' | 'under_review' | 'approved' | 'denied' | 'escalated' | 'withdrawn';
@@ -152,7 +152,7 @@ export default function AppealManagement() {
           *,
           user:user_profiles!user_id(username, avatar_url),
           related_user:user_profiles!related_user_id(username, avatar_url),
-          shop:trollcity_shops!shop_id(shop_name),
+          shop:MaiTroll_shops!shop_id(shop_name),
           order:shop_orders!order_id(order_number, buyer_id, seller_id, total_coins, status, escrow_status)
         `)
         .order('created_at', { ascending: false });
@@ -296,15 +296,15 @@ export default function AppealManagement() {
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header */}
-        <div className={`flex items-center gap-4 border-b ${trollCityTheme.borders.glass} pb-6`}>
-          <div className={`p-4 ${trollCityTheme.backgrounds.card} rounded-2xl border ${trollCityTheme.borders.glass}`}>
+        <div className={`flex items-center gap-4 border-b ${MaiTrollTheme.borders.glass} pb-6`}>
+          <div className={`p-4 ${MaiTrollTheme.backgrounds.card} rounded-2xl border ${MaiTrollTheme.borders.glass}`}>
             <Scale className="w-10 h-10 text-amber-400" />
           </div>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
               Appeal Management
             </h1>
-            <p className={`${trollCityTheme.text.muted} mt-1`}>
+            <p className={`${MaiTrollTheme.text.muted} mt-1`}>
               Review and manage transaction disputes. Approve refunds or release escrow to sellers.
             </p>
           </div>
@@ -312,23 +312,23 @@ export default function AppealManagement() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-xl`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-xl`}>
             <div className="text-2xl font-bold text-white">{stats.total}</div>
             <div className="text-sm text-gray-400">Total Appeals</div>
           </div>
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-xl`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-xl`}>
             <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
             <div className="text-sm text-gray-400">Pending</div>
           </div>
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-xl`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-xl`}>
             <div className="text-2xl font-bold text-blue-400">{stats.under_review}</div>
             <div className="text-sm text-gray-400">Under Review</div>
           </div>
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-xl`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-xl`}>
             <div className="text-2xl font-bold text-green-400">{stats.approved}</div>
             <div className="text-sm text-gray-400">Approved</div>
           </div>
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-xl`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-xl`}>
             <div className="text-2xl font-bold text-red-400">{stats.denied}</div>
             <div className="text-sm text-gray-400">Denied</div>
           </div>
@@ -370,7 +370,7 @@ export default function AppealManagement() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Appeals List */}
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-2xl`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-2xl`}>
             <h2 className="text-lg font-bold mb-4">Appeals</h2>
             
             {loading ? (
@@ -423,7 +423,7 @@ export default function AppealManagement() {
           </div>
 
           {/* Appeal Details */}
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} p-4 rounded-2xl`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} p-4 rounded-2xl`}>
             <h2 className="text-lg font-bold mb-4">Appeal Details</h2>
             
             {!selectedAppeal ? (

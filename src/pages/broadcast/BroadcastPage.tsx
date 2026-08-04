@@ -44,7 +44,7 @@ import { useBroadcastFrame } from '../../hooks/useBroadcastFrame'
 import SaveBroadcastButton from '../../components/broadcast/SaveBroadcastButton'
 import BroadcastFrame from '../../components/broadcast/BroadcastFrame'
 
-import { trollCityBroadcastTheme as theme } from '../../styles/broadcastTheme'
+import { MaiTrollBroadcastTheme as theme } from '../../styles/broadcastTheme'
 
 // Reusable label classes from broadcastTheme
 // const guestLabel = 'rounded-lg bg-cyan-500/20 px-2.5 py-1 text-[11px] font-black text-cyan-300 shadow-[0_0_12px_rgba(45,212,191,0.25)]'
@@ -417,15 +417,25 @@ function getParticipantLabel(participant: any, fallbackOrSeat: string | any = 'V
   const identity = getRemoteParticipantIdentity(participant)
   const normalizedIdentity = normalizeIdentityToken(identity)
 
+  // A participant's LiveKit `name` can fall back to their email address when
+  // their username is unset. Seat labels must only ever show the username, so
+  // any email-like name is discarded in favour of the resolved seat profile
+  // username (which becomes the fallback passed in by the caller).
+  const isEmailName =
+    Boolean(participant?.name) && String(participant.name).includes('@')
+  const participantName = isEmailName ? undefined : participant?.name
+
   return (
     seatProfile?.username ||
     seat?.username ||
     metadata?.username ||
-    participant?.name ||
+    participantName ||
     (seat?.user_id ? `User ${String(seat.user_id).slice(0, 6)}` : '') ||
-    (normalizedIdentity && !isUuidLike(normalizedIdentity) && !normalizedIdentity.startsWith('viewer-')
-      ? normalizedIdentity
-      : '') ||
+    (isEmailName
+      ? ''
+      : (normalizedIdentity && !isUuidLike(normalizedIdentity) && !normalizedIdentity.startsWith('viewer-')
+        ? normalizedIdentity
+        : '')) ||
     fallback
   )
 }
@@ -487,7 +497,6 @@ import { useBroadcastPinnedProducts } from '@/hooks/useBroadcastPinnedProducts'
 import { BroadcastGift } from '@/hooks/useBroadcastRealtime'
 import { useRandomBattleQueueController } from '@/hooks/useRandomBattleQueueController'
 import { useBroadcastTextPopup } from '@/hooks/useBroadcastTextPopup'
-import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap'
 import { logActiveChannels } from '@/lib/realtimeChannelDiagnostics'
 import BroadcastTextPopupOverlay from '@/components/broadcast/BroadcastTextPopupOverlay'
 import BroadcastTextPopupComposer from '@/components/broadcast/BroadcastTextPopupComposer'
@@ -503,7 +512,7 @@ import { getGiftVisualConfig } from '@/lib/giftVisuals'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -632,8 +641,12 @@ export function BroadcastPage() {
    const [streamMods, setStreamMods] = useState<string[]>([]);
    // Accumulate gift amounts received while broadcasterProfile is still loading (null);
    // applied once the profile arrives via @see applyPendingGiftsEffect
-    const isHost = stream?.user_id === user?.id
+     const isHost = stream?.user_id === user?.id
     const isBroadcaster = isHost;
+
+    // Celeb stream: no seats, viewer-only participation with paid chat + products
+    const isCelebStream = stream?.stream_type === 'celeb_stream'
+    const isApprovedCeleb = !!(profile && profile.celeb_role === 'approved')
 
    usePromoCardWatchReward(streamId, isHost, user?.id)
 
@@ -742,11 +755,6 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
       return [...filtered, ...audience]
     }, [audience, remoteUsers, stream?.user_id, streamId])
 
-    // Latest active-audience count in a ref (see viewerCountRef note): read inside
-    // the LiveKit connect effect for the capacity check without re-triggering it.
-    const activeAudienceLenRef = useRef(0)
-    useEffect(() => { activeAudienceLenRef.current = activeAudience.length }, [activeAudience.length])
-
     // Broadcast frame - decorative border for host's stream
     const broadcastFrame = useBroadcastFrame(stream?.user_id)
 
@@ -798,6 +806,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
   const viewerSeatCards = useMemo(() => {
     if (currentViewerSeatCount <= 0) return []
+    if (isCelebStream) return []
 
     return Array.from({ length: currentViewerSeatCount }, (_, offset) => {
       const seatIndex = offset + 1
@@ -1583,12 +1592,6 @@ useEffect(() => {
   const [isChatOpen, setIsChatOpen] = useState(true)
   const [canSwipe, setCanSwipe] = useState(false)
   const [viewerCount, setViewerCount] = useState(0)
-  // Latest audience/viewer counts kept in refs so the LiveKit connect effect can
-  // read them for the viewer capacity check WITHOUT depending on them. Depending
-  // on them caused the effect to tear down + reconnect (killing the host camera)
-  // every time a viewer joined or left.
-  const viewerCountRef = useRef(0)
-  useEffect(() => { viewerCountRef.current = viewerCount }, [viewerCount])
   const [activeViewerProfiles, setActiveViewerProfiles] = useState<Array<{
     user_id: string;
     username: string;
@@ -2160,7 +2163,7 @@ const processedGiftIdsRef = useRef<Set<string>>(new Set())
 
     const { data: giftItem, error } = await supabase
       .from('gift_items')
-      .select('id,name,slug,gift_slug,icon,icon_url,animation_url,animation_type,coin_cost')
+      .select('id,name,gift_slug,icon,icon_url,animation_url,animation_type,coin_cost')
       .eq('id', giftItemId)
       .maybeSingle();
 
@@ -2450,18 +2453,6 @@ const processedGiftIdsRef = useRef<Set<string>>(new Set())
     canSend: isHost,
   })
 
-  // Broadcast viewer cap
-  const {
-    viewerCapEnabled,
-    viewerCapMax,
-    allRestrictionsDisabled,
-    isStreamViewerCapped,
-  } = useBroadcastViewerCap()
-
-  const BETA_MAX_VIEWERS_PER_BROADCAST = 20
-
-  const [viewerCapacityReached, setViewerCapacityReached] = useState(false)
-
    // Quick Coin Store
    const [isCoinStoreOpen, setIsCoinStoreOpen] = useState(false)
 
@@ -2648,15 +2639,6 @@ const processedGiftIdsRef = useRef<Set<string>>(new Set())
       }
     }
 
-    // Stop local and published media
-    cleanupLocalMedia()
-
-    // Full LiveKit teardown: unpublish, detach handlers, disconnect
-    disconnectLiveKitRoom()
-
-    // Clear PreflightStore
-    PreflightStore.clear()
-
     // If host, mark stream as ended in the database
     if (isHost && stream) {
       let backendStopped = false
@@ -2703,6 +2685,20 @@ const processedGiftIdsRef = useRef<Set<string>>(new Set())
 
       setStream((prev: any) => prev ? { ...prev, status: 'ended', is_live: false } : null)
     }
+
+    // Leave seat if host is currently on stage
+    if (mySeat) {
+      await leaveSeat()
+    }
+
+    // Stop local and published media
+    cleanupLocalMedia()
+
+    // Full LiveKit teardown: unpublish, detach handlers, disconnect
+    disconnectLiveKitRoom()
+
+    // Clear PreflightStore
+    PreflightStore.clear()
 
     // Navigate away
     navigate('/home', { replace: true })
@@ -2985,7 +2981,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
       if (data.status === 'ended') {
         stopLocalTracks()
-        navigate(`/broadcast/summary/${streamId}`)
+        navigate(`/broadcast/summary/${data.id || streamId}`)
       }
 
       // INSTANT JOIN: Don't set isLoading - let page render immediately
@@ -3204,7 +3200,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       disconnectLiveKitRoom();
       setRemoteParticipants(new Map());
       setTimeout(() => {
-        navigate(`/broadcast/summary/${streamId}`);
+        navigate(`/broadcast/summary/${nextStream.id || streamId}`);
       }, 100);
     }
   }, [areStreamRealtimeUpdatesEqual, disconnectLiveKitRoom, navigate, recordStreamStarted, streamId, user?.id]);
@@ -3589,10 +3585,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       return;
     }
 
-    if (viewerCapacityReached && Math.max(activeAudienceLenRef.current, viewerCountRef.current) < BETA_MAX_VIEWERS_PER_BROADCAST) {
-      setViewerCapacityReached(false);
-    }
-
     // Only connect to LiveKit if the stream is actually live
     // This prevents RTC session minutes from accumulating when there's no broadcast
     const isBroadcastActive = (s: any) => {
@@ -3658,13 +3650,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
     const initLiveKit = async () => {
       if (!shouldPublish) {
-        // Hard-enforced beta viewer capacity: do not join once 20 viewers are present
-        const currentViewers = Math.max(activeAudienceLenRef.current, viewerCountRef.current)
-        if (currentViewers >= BETA_MAX_VIEWERS_PER_BROADCAST) {
-          setViewerCapacityReached(true)
-          toast.error('This broadcast has reached maximum viewer capacity.')
-          return
-        }
         // OPTIMIZED: Don't block UI - connect in background without isJoining state
         try {
           const viewerIdentity = userIdentity
@@ -3681,7 +3666,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
               room: roomName,
               roomName,
               identity: viewerIdentity,
-              name: profile?.username || user?.email || 'Guest Viewer',
+              name: profile?.username || 'Guest Viewer',
               role: 'audience',
               isHost: false
             }
@@ -3757,7 +3742,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
             room: roomName,
             roomName,
             identity: hostIdentity, // Use hostIdentity for publisher
-            name: profile?.username || user?.email || 'Guest',
+            name: profile?.username || 'Guest',
             role: 'publisher',
             isHost
           }
@@ -4496,10 +4481,10 @@ const toggleMicrophone = useCallback(async () => {
 
 
 
-   const onGift = useCallback((userId: string) => {
-     setGiftRecipientId(userId)
+   const onGift = useCallback((userId?: string) => {
+     setGiftRecipientId(userId || stream?.user_id || null)
      setIsGiftModalOpen(true)
-   }, [])
+   }, [stream?.user_id])
    const handleCloseGiftModal = useCallback(() => {
      setIsGiftModalOpen(false)
      setGiftRecipientId(null)
@@ -7322,7 +7307,38 @@ const toggleMicrophone = useCallback(async () => {
                 onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
                 isHost={isHost}
                 onInviteFollowers={handleInviteFollowers}
-              />}
+               />}
+
+              {/* Celeb Stream Toolbar — only for hosts of celeb_stream */}
+              {isCelebStream && isHost && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-slate-900/80 border border-yellow-500/30 rounded-xl px-3 py-2 shadow-[0_0_20px_rgba(251,191,36,0.2)]">
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/celeb/dashboard/products`, '_blank')}
+                    className="flex items-center gap-1.5 text-xs font-medium text-yellow-300 hover:text-yellow-200 hover:bg-yellow-500/10 px-3 py-1.5 rounded-lg transition-all"
+                  >
+                    <ShoppingBag size={14} />
+                    Products
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/celeb/dashboard/earnings`, '_blank')}
+                    className="flex items-center gap-1.5 text-xs font-medium text-yellow-300 hover:text-yellow-200 hover:bg-yellow-500/10 px-3 py-1.5 rounded-lg transition-all"
+                  >
+                    <BarChart3 size={14} />
+                    Earnings
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/celeb/moderation/${streamId}`, '_blank')}
+                    className="flex items-center gap-1.5 text-xs font-medium text-yellow-300 hover:text-yellow-200 hover:bg-yellow-500/10 px-3 py-1.5 rounded-lg transition-all"
+                  >
+                    <Shield size={14} />
+                    Moderate
+                  </button>
+                </div>
+              )}
+
 
           
 
@@ -7936,6 +7952,14 @@ function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | nu
       }
       div.innerHTML = '';
       return;
+    }
+
+    const previousTrack = videoElRef.current?.srcObject
+    const previousTrackId = previousTrack?.mediaStreamTrack?.id || previousTrack?.sid || null
+    const nextTrackId = (track as any)?.mediaStreamTrack?.id || (track as any)?.sid || null
+
+    if (previousTrackId && nextTrackId && previousTrackId === nextTrackId) {
+      return
     }
 
     let cancelled = false;

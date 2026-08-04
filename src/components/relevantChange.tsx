@@ -159,13 +159,13 @@ function TopPrideHero({
             </div>
             <div>
               <h1 className="text-3xl font-black leading-tight text-white md:text-5xl">
-                Welcome to Troll City{' '}
+                Welcome to Mai Troll{' '}
                 <span className="bg-gradient-to-r from-pink-400 via-yellow-300 to-cyan-300 bg-clip-text text-transparent">
-                  (Mai Troll City)
+                  (MaiMaiTroll)
                 </span>
               </h1>
               <p className="mt-2 max-w-2xl text-sm font-medium text-slate-200 md:text-base">
-                Troll City is a social streaming platform for creators, streamers, gamers, and online communities. 
+                Mai Troll is a social streaming platform for creators, streamers, gamers, and online communities. 
                 Livestream, create communities, chat, and engage with content creators. 
                 This is your city, your way — complete Pride challenges, go live, support creators,
                 and keep the homepage glowing for June!
@@ -418,7 +418,7 @@ function CityAnnouncementCard() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-black text-white">City Announcement</h3>
-          <p className="mt-1 text-sm font-bold text-slate-200">Troll City Stands With You</p>
+          <p className="mt-1 text-sm font-bold text-slate-200">Mai Troll Stands With You</p>
         </div>
         <Shield className="h-10 w-10 text-cyan-300 drop-shadow-[0_0_18px_rgba(34,211,238,0.7)]" />
       </div>
@@ -439,7 +439,7 @@ function CashOutCard() {
             <Zap className="h-4 w-4 text-fuchsia-300" />
             Farm & Cash Out
           </h3>
-          <p className="text-[11px] text-slate-400">Troll City Rewards Hub</p>
+          <p className="text-[11px] text-slate-400">Mai Troll Rewards Hub</p>
         </div>
         <button className="rounded-full bg-white/10 p-1">
           <X className="h-4 w-4 text-slate-300" />
@@ -902,7 +902,7 @@ function RightSidebar({ user, liveAuctions, liveItems, isPride, onOpenStore, onO
           City Announcement
         </h3>
         <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
-          City elections are now LIVE! Vote for your next president and shape the future of Troll City.
+          City elections are now LIVE! Vote for your next president and shape the future of Mai Troll.
         </p>
         <button className="mt-3 w-full rounded-lg bg-gradient-to-r from-amber-500 to-yellow-600 px-3 py-2 text-xs font-black text-white">
           Vote Now
@@ -1189,7 +1189,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050715]/85 backdrop-blur-md">
           <div className="text-center">
             <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-purple-500/30 border-t-cyan-300" />
-            <p className="text-sm font-bold text-slate-300">Loading Troll City...</p>
+            <p className="text-sm font-bold text-slate-300">Loading Mai Troll...</p>
           </div>
         </div>
       )}
@@ -1213,7 +1213,7 @@ export default function Home() {
                 <Sparkles className="h-5 w-5 text-purple-400" />
                 Browse Categories
               </h2>
-              <p className="text-xs font-medium text-slate-400">Discover live streams by category on Troll City</p>
+              <p className="text-xs font-medium text-slate-400">Discover live streams by category on Mai Troll</p>
             </div>
             <Link to="/categories" className="rounded-lg border border-purple-400/30 bg-purple-600/10 px-3 py-1.5 text-xs font-bold text-purple-300 transition hover:bg-purple-600/20">
               View All
@@ -1272,7 +1272,7 @@ export default function Home() {
                     <h2 className="flex items-center gap-2 text-2xl font-black text-white">
                       Troll Wall <span className="text-2xl">🏳️‍🌈</span>
                     </h2>
-                    <p className="text-sm font-medium text-slate-400">The live social pulse of Troll City.</p>
+                    <p className="text-sm font-medium text-slate-400">The live social pulse of Mai Troll.</p>
                   </div>
                   <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1.5 text-xs font-black text-cyan-100">
                     ∞ LIVE FEED

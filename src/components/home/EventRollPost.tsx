@@ -198,7 +198,7 @@ export default function EventRollPost() {
 
               {/* Subtitle */}
               <p className="text-white/40 text-xs mt-1 text-center">
-                Troll City Community Event
+                Mai Troll Community Event
               </p>
 
               {/* Feature pills */}

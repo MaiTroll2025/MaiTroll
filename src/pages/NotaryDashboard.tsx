@@ -441,7 +441,7 @@ export default function NotaryDashboard() {
               {/* Stamp */}
               {docStamp && (
                 <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-6">
-                  <h3 className="text-sm font-semibold text-blue-400 mb-4 flex items-center gap-2"><Stamp size={14} /> Official Troll City Approval Stamp</h3>
+                  <h3 className="text-sm font-semibold text-blue-400 mb-4 flex items-center gap-2"><Stamp size={14} /> Official Mai Troll Approval Stamp</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div><span className="text-gray-500 text-xs">Approval ID</span><p className="text-yellow-400 font-mono">{docStamp.stamp_id}</p></div>
                     <div><span className="text-gray-500 text-xs">Approver</span><p className="text-white">{docStamp.approver_username}</p></div>

@@ -875,7 +875,7 @@ export default function NeighborsPage() {
 
               <div>
                 <h1 className="bg-gradient-to-r from-cyan-200 via-fuchsia-200 to-cyan-300 bg-clip-text text-3xl font-black text-transparent md:text-5xl">
-                  Troll City Neighbors
+                  Mai Troll Neighbors
                 </h1>
                 <p className="mt-1 text-sm text-slate-400">
                   Local events, businesses, neighborhoods, driver tests, jobs, and community rewards.
@@ -1114,7 +1114,7 @@ export default function NeighborsPage() {
           </TabsContent>
 
           <TabsContent value="businesses">
-            <PanelTitle title="Businesses" subtitle="Verified local businesses inside Troll City Neighbors." />
+            <PanelTitle title="Businesses" subtitle="Verified local businesses inside Mai Troll Neighbors." />
 
             {businesses.length === 0 ? (
               <EmptyPanel
@@ -1152,7 +1152,7 @@ export default function NeighborsPage() {
           </TabsContent>
 
           <TabsContent value="hiring">
-            <PanelTitle title="Hiring & Jobs" subtitle="Business job posts for the Troll City local economy." />
+            <PanelTitle title="Hiring & Jobs" subtitle="Business job posts for the Mai Troll local economy." />
 
             <Card className={cn(tcCard, 'p-5')}>
               <div className="mb-5 flex items-center justify-between gap-3">

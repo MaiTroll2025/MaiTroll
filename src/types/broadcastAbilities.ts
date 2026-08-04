@@ -170,7 +170,7 @@ export const BROADCAST_ABILITIES: BroadcastAbility[] = [
     id: 'citywide_broadcast',
     name: 'Citywide Broadcast',
     icon: '🏙️',
-    description: 'Push your live to ALL online users across Troll City. LEGENDARY power!',
+    description: 'Push your live to ALL online users across Mai Troll. LEGENDARY power!',
     rarity: 'legendary',
     abilityType: 'broadcast_wide',
     cooldownSeconds: 3600,

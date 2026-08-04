@@ -307,7 +307,7 @@ function ShareAThonContent() {
               <div className="space-y-3 text-sm text-gray-300">
                 <p className="flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  Exclusively for current Troll City broadcasters who had access before the event started
+                  Exclusively for current Mai Troll broadcasters who had access before the event started
                 </p>
                 <p className="flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />

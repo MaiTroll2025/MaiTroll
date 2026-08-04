@@ -11,7 +11,7 @@ function buildSourceEventId({ scope, streamId, userId }) {
   const normalizedScope = typeof scope === 'string' && scope.trim() ? scope.trim() : 'broadcast';
   const normalizedStreamId = typeof streamId === 'string' && streamId.trim() ? streamId.trim() : 'unknown';
   const normalizedUserId = typeof userId === 'string' && userId.trim() ? userId.trim() : 'unknown';
-  return `trollcity:${normalizedScope}:${normalizedStreamId}:${normalizedUserId}`;
+  return `Mai Troll:${normalizedScope}:${normalizedStreamId}:${normalizedUserId}`;
 }
 
 function resolveMaiTalentConfig(env = process.env) {
@@ -150,14 +150,14 @@ function postJson({ url, headers, body }) {
   });
 }
 
-async function resolveTrollCityUser({ supabase, externalUserId, normalizedEmail }) {
+async function resolveMai TrollUser({ supabase, externalUserId, normalizedEmail }) {
   if (externalUserId) {
     return externalUserId;
   }
 
   const email = normalizeEmail(normalizedEmail);
   if (!supabase || !email) {
-    throw new Error('A Supabase client and a normalized email are required to resolve the Troll City user');
+    throw new Error('A Supabase client and a normalized email are required to resolve the Mai Troll user');
   }
 
   const { data, error } = await supabase
@@ -189,7 +189,7 @@ async function resolveTrollCityUser({ supabase, externalUserId, normalizedEmail 
     console.warn('[MaiTalent Sync] Fallback user lookup failed', lookupError);
   }
 
-  throw new Error(`Troll City user not found for ${email}`);
+  throw new Error(`Mai Troll user not found for ${email}`);
 }
 
 async function syncVerifiedMaiTalentActivity({
@@ -205,13 +205,13 @@ async function syncVerifiedMaiTalentActivity({
   logger = console,
 }) {
   const resolvedSupabase = supabase || createClient(
-    process.env.TROLLCITY_SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
-    process.env.TROLLCITY_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    process.env.Mai Troll_SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
+    process.env.Mai Troll_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '',
     { auth: { persistSession: false, autoRefreshToken: false } }
   );
 
-  const email = normalizeEmail(normalizedEmail || 'trollcity2025@gmail.com');
-  const resolvedExternalUserId = await resolveTrollCityUser({
+  const email = normalizeEmail(normalizedEmail || 'Mai Troll2025@gmail.com');
+  const resolvedExternalUserId = await resolveMai TrollUser({
     supabase: resolvedSupabase,
     externalUserId,
     normalizedEmail: email,

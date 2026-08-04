@@ -87,7 +87,7 @@ interface SignupStats {
 
 interface ClickStats {
   total: number;
-  maitrollcity: number;
+  maiMaiTroll: number;
   googlePlay: number;
   topUrls: { url: string; count: number }[];
 }
@@ -241,7 +241,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [recentSignups, setRecentSignups] = useState<UserListItem[]>([]);
   const [signupLoading, setSignupLoading] = useState(false);
 
-  const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, maitrollcity: 0, googlePlay: 0, topUrls: [] });
+  const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, maiMaiTroll: 0, googlePlay: 0, topUrls: [] });
   const [clickLoading, setClickLoading] = useState(false);
 
   const [cashoutBonusData, setCashoutBonusData] = useState<any[]>([]);
@@ -430,10 +430,10 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     setClickLoading(true);
     try {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: total }, { count: maitrollcity }, { count: googlePlay }, { data: topUrlsData }] = await Promise.all([
+      const [{ count: total }, { count: maiMaiTroll }, { count: googlePlay }, { data: topUrlsData }] = await Promise.all([
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }),
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%maitrollcity.com%'),
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.trollcity.twa%'),
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%maiMaiTroll.com%'),
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.Mai Troll.twa%'),
         supabase.from('outbound_clicks').select('url, created_at').gte('created_at', sevenDaysAgo),
       ]);
 
@@ -444,7 +444,7 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
 
       setClickStats({
         total: total || 0,
-        maitrollcity: maitrollcity || 0,
+        maiMaiTroll: maiMaiTroll || 0,
         googlePlay: googlePlay || 0,
         topUrls: Object.entries(counts).map(([url, count]) => ({ url, count })).sort((a, b) => b.count - a.count).slice(0, 5),
       });
@@ -998,67 +998,6 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       return () => window.clearInterval(interval)
     }
   }, [isOpen, isStaff, activeMainTab, fetchTromailInbox])
-
-  useEffect(() => {
-    if (!isStaff || !profile?.id) return
-
-    const channel = supabase
-      .channel(`tromail-inbox:${profile?.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'tromail_recipients',
-          filter: `recipient_user_id=eq.${profile?.id}`,
-        },
-        (payload) => {
-          const newRecipient = payload.new as any
-          if (newRecipient) {
-            supabase
-              .from('tromail_messages')
-              .select('id, sender_user_id, sender_role, sender_tromail_address, subject, body, is_important, created_at')
-              .eq('id', newRecipient.message_id)
-              .single()
-              .then(({ data: msg }) => {
-                if (msg) {
-                  const fullMessage: TromailInboxItem = {
-                    id: newRecipient.id,
-                    message_id: msg.id,
-                    sender_user_id: msg.sender_user_id,
-                    sender_role: msg.sender_role,
-                    sender_tromail_address: msg.sender_tromail_address,
-                    subject: msg.subject,
-                    body: msg.body,
-                    read_at: newRecipient.read_at,
-                    is_important: msg.is_important,
-                    created_at: msg.created_at,
-                  }
-                  
-                  setTromailInbox(prev => [fullMessage, ...prev].slice(0, 10))
-                  if (!newRecipient.read_at) {
-                    setTromailUnreadCount(prev => prev + 1)
-                  }
-                  
-                  toast.info(`New Tromail: ${msg.subject}`, {
-                    action: {
-                      label: 'View',
-                      onClick: () => navigate(`/tromail?messageId=${msg.id}`),
-                    },
-                  })
-                }
-              })
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
-    }
-  }, [isStaff, profile?.id])
 
   const handleTromailMessageClick = (messageId: string) => {
     navigate(`/tromail?messageId=${messageId}`)

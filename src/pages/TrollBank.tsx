@@ -5,7 +5,7 @@ import { useBank } from '@/lib/hooks/useBank'
 import { useCoins } from '@/lib/hooks/useCoins'
 import { toast } from 'sonner'
 import { Coins, CreditCard, Landmark, History, AlertCircle, CheckCircle, Lock, Plus, ArrowUpRight, CalendarClock, AlertTriangle, Clock, TrendingDown } from 'lucide-react'
-import { trollCityTheme } from '@/styles/trollCityTheme'
+import { MaiTrollTheme } from '@/styles/trollCityTheme'
 import SquarePaymentModal from '@/components/broadcast/SquarePaymentModal'
 import TrollCardSaver from '@/components/payments/TrollCardSaver'
 import { useAuthStore } from '@/lib/store'
@@ -162,7 +162,7 @@ export default function TrollBank() {
   }
 
   return (
-    <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} text-white p-6 pb-24`}>
+    <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white p-6 pb-24`}>
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Header */}
@@ -171,22 +171,22 @@ export default function TrollBank() {
             <Landmark className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className={`text-3xl font-bold ${trollCityTheme.text.heading}`}>
+            <h1 className={`text-3xl font-bold ${MaiTrollTheme.text.heading}`}>
               Troll Bank
             </h1>
-            <p className={trollCityTheme.text.secondary}>Secure Coin Storage & Credit Services</p>
+            <p className={MaiTrollTheme.text.secondary}>Secure Coin Storage & Credit Services</p>
           </div>
         </div>
 
         {/* Balance Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Main Balance */}
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6 relative overflow-hidden group`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 relative overflow-hidden group`}>
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <Coins className="w-32 h-32" />
             </div>
             <div className="relative z-10">
-              <p className={`${trollCityTheme.text.secondary} text-sm font-medium mb-1`}>Available Balance</p>
+              <p className={`${MaiTrollTheme.text.secondary} text-sm font-medium mb-1`}>Available Balance</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-yellow-400">{(balances?.troll_coins ?? 0).toLocaleString()}</span>
                 <span className="text-sm text-yellow-400/70">coins</span>
@@ -199,12 +199,12 @@ export default function TrollBank() {
           </div>
 
           {/* Bank Reserves */}
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6 relative overflow-hidden group`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 relative overflow-hidden group`}>
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <Landmark className="w-32 h-32" />
             </div>
             <div className="relative z-10">
-              <p className={`${trollCityTheme.text.secondary} text-sm font-medium mb-1`}>Bank Reserves</p>
+              <p className={`${MaiTrollTheme.text.secondary} text-sm font-medium mb-1`}>Bank Reserves</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-emerald-400">
                   {bankBalance !== null ? bankBalance.toLocaleString() : '---'}
@@ -219,12 +219,12 @@ export default function TrollBank() {
           </div>
 
           {/* Credit Card Status */}
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6 relative overflow-hidden`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 relative overflow-hidden`}>
             <div className="absolute top-0 right-0 p-4 opacity-10">
               <CreditCard className="w-32 h-32" />
             </div>
             <div className="relative z-10">
-              <p className={`${trollCityTheme.text.secondary} text-sm font-medium mb-1`}>Credit Card Debt</p>
+              <p className={`${MaiTrollTheme.text.secondary} text-sm font-medium mb-1`}>Credit Card Debt</p>
               {creditInfo.used > 0 ? (
                 <div>
                   <div className="flex items-baseline gap-2">
@@ -252,7 +252,7 @@ export default function TrollBank() {
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-bold text-green-400">None</span>
                   </div>
-                  <p className={`mt-2 text-sm ${trollCityTheme.text.secondary}`}>You are debt free!</p>
+                  <p className={`mt-2 text-sm ${MaiTrollTheme.text.secondary}`}>You are debt free!</p>
                 </div>
               )}
             </div>
@@ -260,7 +260,7 @@ export default function TrollBank() {
         </div>
 
          {/* Credit Card Management */}
-         <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6`}>
+         <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
              <CreditCard className="w-5 h-5 text-purple-400" />
              Credit Card Management
@@ -339,7 +339,7 @@ export default function TrollBank() {
 
                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                  <h3 className="font-semibold text-emerald-400 mb-2">Make a Payment</h3>
-                 <p className={`text-sm ${trollCityTheme.text.secondary} mb-4`}>
+                 <p className={`text-sm ${MaiTrollTheme.text.secondary} mb-4`}>
                    Pay down your balance to reduce interest charges and restore your spending limit.
                    {creditInfo.pastDue && <span className="text-red-300 block mt-1">Pay at least the minimum of {(creditInfo.minimumPayment ?? 0).toLocaleString()} coins to stop additional late fees.</span>}
                  </p>
@@ -349,7 +349,7 @@ export default function TrollBank() {
                      value={payAmount}
                      onChange={(e) => setPayAmount(e.target.value)}
                      placeholder="Amount to pay"
-                     className={`${trollCityTheme.components.input} flex-1`}
+                     className={`${MaiTrollTheme.components.input} flex-1`}
                    />
                    <button
                      onClick={handlePayCredit}
@@ -361,14 +361,14 @@ export default function TrollBank() {
                    {creditInfo.minimumPayment > 0 && (
                      <button
                        onClick={() => setPayAmount(creditInfo.minimumPayment.toString())}
-                       className={`${trollCityTheme.buttons.secondary} px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap`}
+                       className={`${MaiTrollTheme.buttons.secondary} px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap`}
                      >
                        Minimum
                      </button>
                    )}
                    <button
                      onClick={() => setPayAmount(creditInfo.used.toString())}
-                     className={`${trollCityTheme.buttons.secondary} px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap`}
+                     className={`${MaiTrollTheme.buttons.secondary} px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap`}
                    >
                      Full Balance
                    </button>
@@ -414,7 +414,7 @@ export default function TrollBank() {
          </div>
 
         {/* ── Small Installment Purchase Credit Building ─────────────────── */}
-        <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <ArrowUpRight className="w-5 h-5 text-amber-400" />
             Small Purchase Credit Building
@@ -467,7 +467,7 @@ export default function TrollBank() {
         </div>
 
         {/* Saved Payment Methods */}
-        <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
           <h2 className="text-xl font-bold mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-blue-400" />
@@ -494,7 +494,7 @@ export default function TrollBank() {
                   className={`flex items-center justify-between p-4 rounded-xl border ${
                     card.is_default 
                       ? 'bg-blue-500/10 border-blue-500/30' 
-                      : `${trollCityTheme.backgrounds.input} border-white/5`
+                      : `${MaiTrollTheme.backgrounds.input} border-white/5`
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -576,7 +576,7 @@ export default function TrollBank() {
 
         {/* Legacy Loan Section (Only visible if active) */}
         {activeLoan && (
-            <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6 border-red-500/30`}>
+            <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 border-red-500/30`}>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-red-400">
                 <AlertCircle className="w-5 h-5" />
                 Legacy Loan (Outstanding)
@@ -594,7 +594,7 @@ export default function TrollBank() {
                     value={legacyPayAmount}
                     onChange={(e) => setLegacyPayAmount(e.target.value)}
                     placeholder="Amount to pay"
-                    className={`${trollCityTheme.components.input} flex-1`}
+                    className={`${MaiTrollTheme.components.input} flex-1`}
                   />
                   <button
                     onClick={handlePayLegacyLoan}
@@ -609,7 +609,7 @@ export default function TrollBank() {
         )}
 
         {/* Ledger */}
-        <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <History className="w-5 h-5 text-blue-400" />
             Recent Activity
@@ -618,7 +618,7 @@ export default function TrollBank() {
             {ledger.map((entry) => (
               <div 
                 key={entry.id} 
-                className={`flex justify-between items-center p-3 rounded-lg ${trollCityTheme.backgrounds.input} border border-white/5`}
+                className={`flex justify-between items-center p-3 rounded-lg ${MaiTrollTheme.backgrounds.input} border border-white/5`}
               >
                 <div>
                   <p className="font-medium text-white">{entry.description}</p>
@@ -641,7 +641,7 @@ export default function TrollBank() {
       {/* Save Card Modal */}
       {showSaveCardModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6 max-w-md w-full mx-4`}>
+          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 max-w-md w-full mx-4`}>
             <h2 className="text-xl font-bold mb-4 text-white">Add Payment Method</h2>
             <TrollCardSaver
               onCardSaved={() => {

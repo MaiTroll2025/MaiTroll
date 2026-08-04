@@ -101,7 +101,7 @@ export default function SurveyPage() {
             <CheckCircle2 className="h-16 w-16 text-green-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-2">Response Submitted!</h2>
             <p className="text-slate-400 mb-6">
-              Thank you for your feedback. Your response has been recorded and will help improve Troll City.
+              Thank you for your feedback. Your response has been recorded and will help improve Mai Troll.
             </p>
             <Button onClick={() => navigate('/')} className="w-full bg-green-600 hover:bg-green-500">
               Return Home
@@ -153,7 +153,7 @@ export default function SurveyPage() {
                 </div>
               </div>
               <p className="text-xs text-cyan-300">
-                Your feedback helps us improve Troll City. All responses are anonymous to other users.
+                Your feedback helps us improve Mai Troll. All responses are anonymous to other users.
               </p>
             </div>
 

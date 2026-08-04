@@ -110,7 +110,7 @@
 
 ### 3. **Hardcoded Admin Email**
 - **File:** `src/lib/supabase.ts`
-- **Code:** `ADMIN_EMAIL = 'trollcity2025@gmail.com'`
+- **Code:** `ADMIN_EMAIL = 'Mai Troll2025@gmail.com'`
 - **Impact:** Not flexible for multiple admins
 - **Recommendation:** Use database role checks instead
 - **Priority:** LOW (current setup works)
@@ -130,8 +130,8 @@
 
 ### User Accounts Summary
 - **Total Users:** 13
-- **Admins:** 1 (trollcity2025@gmail.com)
-- **Real Users:** 2 (trollcity2025@gmail.com, kaintowns83@gmail.com)
+- **Admins:** 1 (Mai Troll2025@gmail.com)
+- **Real Users:** 2 (Mai Troll2025@gmail.com, kaintowns83@gmail.com)
 - **Test Users:** 2 (udryve2025@gmail.com, Test)
 - **Fake/E2E Accounts:** 10 (e2e-cancel-*, tester_*)
 

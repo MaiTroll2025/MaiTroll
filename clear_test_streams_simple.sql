@@ -1,7 +1,7 @@
 -- ============================================================================
 -- CLEAR TEST STREAMS - SIMPLIFIED EXECUTION SCRIPT
 -- ============================================================================
--- This script deletes test streams from the TrollCity database
+-- This script deletes test streams from the Mai Troll database
 -- Test streams are identified by title containing test keywords
 -- ============================================================================
 

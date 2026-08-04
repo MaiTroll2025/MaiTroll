@@ -11,7 +11,7 @@ export async function subscribeToNtfyGlobal() {
       const registration = await navigator.serviceWorker.getRegistration();
       if (registration && registration.active) {
         registration.showNotification('🔔 Notifications enabled!', {
-          body: 'You will receive Troll City updates.',
+          body: 'You will receive Mai Troll updates.',
           icon: '/img/logo.png',
         });
         return;
@@ -20,7 +20,7 @@ export async function subscribeToNtfyGlobal() {
 
     // Fallback for non-SW environments
     new Notification('🔔 Notifications enabled!', {
-      body: 'You will receive Troll City updates.',
+      body: 'You will receive Mai Troll updates.',
       icon: '/img/logo.png',
     });
   } catch (err) {

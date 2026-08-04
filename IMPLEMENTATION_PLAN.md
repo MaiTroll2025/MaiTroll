@@ -170,7 +170,7 @@ try {
 ### P3-3: Add LiveKit room/participant leak detection
 **New file:** `src/lib/liveKitMonitor.ts`
 - Track active rooms and participants
-- Expose `window.__TROLLCITY_LIVEKIT__.getStats()` for debugging
+- Expose `window.__Mai Troll_LIVEKIT__.getStats()` for debugging
 - Alert on room/participant count growth after stream ends
 
 ---

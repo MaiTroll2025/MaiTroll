@@ -62,11 +62,11 @@ export interface MaiNetworkSwitcherProps {
 const DEFAULT_MAI_APPS: MaiApp[] = [
   {
     id: 'troll-city',
-    name: 'Troll City',
+    name: 'MaiTroll',
     tagline: 'Go live, earn coins, enter the virtual city.',
     category: 'Live Social City',
-    websiteUrl: 'https://maitrollcity.com',
-    googlePlayUrl: 'https://play.google.com/store/apps/details?id=com.trollcity.twa',
+    websiteUrl: 'https://maiMaiTroll.com',
+    googlePlayUrl: 'https://play.google.com/store/apps/details?id=com.Mai Troll.twa',
     appleStoreUrl: '',
     status: 'live',
     theme: 'city',

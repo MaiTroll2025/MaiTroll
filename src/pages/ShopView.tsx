@@ -4,7 +4,7 @@ import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { Store, ShoppingCart, Coins, ArrowLeft, Package, Receipt, X } from 'lucide-react'
-import { trollCityTheme } from '../styles/trollCityTheme'
+import { MaiTrollTheme } from '../styles/trollCityTheme'
 import { addCoins } from '../lib/coinTransactions'
 import { useLiveContextStore } from '../lib/liveContextStore'
 
@@ -40,7 +40,7 @@ export default function ShopView() {
 
       // Load shop details by owner_id
       const { data: shopData, error: shopError } = await supabase
-        .from('trollcity_shops')
+        .from('MaiTroll_shops')
         .select('*')
         .eq('owner_id', owner.id)
         .eq('is_active', true)
@@ -315,7 +315,7 @@ export default function ShopView() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${trollCityTheme.backgrounds.app} text-white p-6`}>
+      <div className={`min-h-screen ${MaiTrollTheme.backgrounds.app} text-white p-6`}>
         <div className="max-w-4xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-700 rounded w-1/3 mb-6"></div>
@@ -324,7 +324,7 @@ export default function ShopView() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1,2,3,4,5,6].map(i => (
-                <div key={i} className={`${trollCityTheme.components.card} rounded-xl p-6`}>
+                <div key={i} className={`${MaiTrollTheme.components.card} rounded-xl p-6`}>
                   <div className="h-4 bg-gray-700 rounded w-1/2 mb-2"></div>
                   <div className="h-8 bg-gray-700 rounded w-3/4"></div>
                 </div>
@@ -338,17 +338,17 @@ export default function ShopView() {
 
   if (!shop) {
     return (
-      <div className={`min-h-screen ${trollCityTheme.backgrounds.app} text-white p-6`}>
+      <div className={`min-h-screen ${MaiTrollTheme.backgrounds.app} text-white p-6`}>
         <div className="max-w-4xl mx-auto text-center py-12">
           <Store className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Shop Not Found</h2>
-          <p className={`${trollCityTheme.text.muted} mb-6`}>This shop may have been removed or is no longer available.</p>
+          <p className={`${MaiTrollTheme.text.muted} mb-6`}>This shop may have been removed or is no longer available.</p>
           <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 text-sm text-yellow-300 mb-6">
             All sales are final. Illegal items or sales are strictly prohibited and will result in enforcement actions.
           </div>
           <button
             onClick={() => navigate('/marketplace')}
-            className={`px-6 py-3 ${trollCityTheme.buttons.primary} rounded-lg font-semibold`}
+            className={`px-6 py-3 ${MaiTrollTheme.buttons.primary} rounded-lg font-semibold`}
           >
             Back to Marketplace
           </button>
@@ -358,35 +358,35 @@ export default function ShopView() {
   }
 
   return (
-    <div className={`min-h-screen ${trollCityTheme.backgrounds.app} text-white p-6`}>
+    <div className={`min-h-screen ${MaiTrollTheme.backgrounds.app} text-white p-6`}>
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/marketplace')}
-              className={`p-2 ${trollCityTheme.buttons.secondary} rounded-lg transition-colors`}
+              className={`p-2 ${MaiTrollTheme.buttons.secondary} rounded-lg transition-colors`}
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-3">
-                <Store className={`w-8 h-8 ${trollCityTheme.text.accent}`} />
+                <Store className={`w-8 h-8 ${MaiTrollTheme.text.accent}`} />
                 {shop.name}
               </h1>
-              <p className={trollCityTheme.text.secondary}>Browse and purchase items from this shop</p>
+              <p className={MaiTrollTheme.text.secondary}>Browse and purchase items from this shop</p>
             </div>
           </div>
         </div>
 
         {/* Shop Info */}
-        <div className={`${trollCityTheme.components.card} rounded-xl p-6`}>
+        <div className={`${MaiTrollTheme.components.card} rounded-xl p-6`}>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className={`text-xl font-semibold ${trollCityTheme.text.accent}`}>{shop.name}</h2>
+              <h2 className={`text-xl font-semibold ${MaiTrollTheme.text.accent}`}>{shop.name}</h2>
             </div>
             <div className="text-right">
-              <p className={`text-sm ${trollCityTheme.text.secondary}`}>Items Available</p>
+              <p className={`text-sm ${MaiTrollTheme.text.secondary}`}>Items Available</p>
               <p className="text-2xl font-bold text-green-400">{items.length}</p>
             </div>
           </div>
@@ -397,12 +397,12 @@ export default function ShopView() {
           <div className="text-center py-12">
             <Package className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">No Items Available</h2>
-            <p className={trollCityTheme.text.secondary}>This shop doesn&apos;t have any items listed yet.</p>
+            <p className={MaiTrollTheme.text.secondary}>This shop doesn&apos;t have any items listed yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => (
-              <div key={item.id} className={`${trollCityTheme.components.card} rounded-xl p-6 hover:border-cyan-500/40 transition-all`}>
+              <div key={item.id} className={`${MaiTrollTheme.components.card} rounded-xl p-6 hover:border-cyan-500/40 transition-all`}>
                 {item.image_url && (
                   <img
                     src={item.image_url}
@@ -415,18 +415,18 @@ export default function ShopView() {
                 )}
 
                 <div className="mb-4">
-                  <h3 className={`text-lg font-bold ${trollCityTheme.text.accent} mb-2`}>{item.name}</h3>
+                  <h3 className={`text-lg font-bold ${MaiTrollTheme.text.accent} mb-2`}>{item.name}</h3>
                   {item.description && (
-                    <p className={`text-sm ${trollCityTheme.text.secondary} mb-3`}>{item.description}</p>
+                    <p className={`text-sm ${MaiTrollTheme.text.secondary} mb-3`}>{item.description}</p>
                   )}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Coins className="w-4 h-4 text-yellow-400" />
                       <span className="text-xl font-bold text-yellow-400">{item.price.toLocaleString()}</span>
-                      <span className={`text-sm ${trollCityTheme.text.secondary}`}>Troll Coins</span>
+                      <span className={`text-sm ${MaiTrollTheme.text.secondary}`}>Troll Coins</span>
                     </div>
                     {item.stock_quantity !== null && (
-                      <div className={`text-xs ${trollCityTheme.text.secondary}`}>
+                      <div className={`text-xs ${MaiTrollTheme.text.secondary}`}>
                         {item.item_type === 'broadcast_consumable' ? '' : (item.stock_quantity > 0 ? `${item.stock_quantity} left` : 'Out of stock')}
                       </div>
                     )}
@@ -436,7 +436,7 @@ export default function ShopView() {
                 <button
                   onClick={() => purchaseItem(item)}
                   disabled={purchasing === item.id || (item.stock_quantity !== null && item.stock_quantity <= 0)}
-                  className={`w-full px-4 py-3 ${trollCityTheme.buttons.primary} rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                  className={`w-full px-4 py-3 ${MaiTrollTheme.buttons.primary} rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
                 >
                   {purchasing === item.id ? (
                     <>Processing...</>
@@ -457,7 +457,7 @@ export default function ShopView() {
         {/* Purchase Receipt Modal */}
         {showReceipt && purchaseReceipt && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className={`${trollCityTheme.components.card} rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto`}>
+            <div className={`${MaiTrollTheme.components.card} rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <Receipt className="w-5 h-5 text-green-400" />
@@ -469,7 +469,7 @@ export default function ShopView() {
                     setPurchaseReceipt(null)
                     navigate('/inventory')
                   }}
-                  className={`p-1 ${trollCityTheme.buttons.secondary} rounded`}
+                  className={`p-1 ${MaiTrollTheme.buttons.secondary} rounded`}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -477,7 +477,7 @@ export default function ShopView() {
 
               <div className="space-y-4">
                 {/* Item Details */}
-                <div className={`${trollCityTheme.backgrounds.input} rounded-lg p-4 border border-white/5`}>
+                <div className={`${MaiTrollTheme.backgrounds.input} rounded-lg p-4 border border-white/5`}>
                   <div className="flex items-center gap-3 mb-3">
                     {purchaseReceipt.item.image_url && (
                       <img
@@ -487,18 +487,18 @@ export default function ShopView() {
                       />
                     )}
                     <div>
-                      <h4 className={`font-semibold ${trollCityTheme.text.accent}`}>{purchaseReceipt.item.name}</h4>
-                      <p className={`text-sm ${trollCityTheme.text.secondary}`}>from {purchaseReceipt.shop.name}</p>
+                      <h4 className={`font-semibold ${MaiTrollTheme.text.accent}`}>{purchaseReceipt.item.name}</h4>
+                      <p className={`text-sm ${MaiTrollTheme.text.secondary}`}>from {purchaseReceipt.shop.name}</p>
                     </div>
                   </div>
 
                   {purchaseReceipt.item.description && (
-                    <p className={`text-sm ${trollCityTheme.text.secondary} mb-3`}>{purchaseReceipt.item.description}</p>
+                    <p className={`text-sm ${MaiTrollTheme.text.secondary} mb-3`}>{purchaseReceipt.item.description}</p>
                   )}
                 </div>
 
                 {/* Transaction Details */}
-                <div className={`${trollCityTheme.backgrounds.input} rounded-lg p-4 space-y-2 border border-white/5`}>
+                <div className={`${MaiTrollTheme.backgrounds.input} rounded-lg p-4 space-y-2 border border-white/5`}>
                   <div className="flex justify-between text-sm">
                     <span>Item Price:</span>
                     <span className="text-yellow-400">{purchaseReceipt.price.toLocaleString()} coins</span>
@@ -516,7 +516,7 @@ export default function ShopView() {
                 </div>
 
                 {/* Receipt Info */}
-                <div className={`${trollCityTheme.backgrounds.input} rounded-lg p-4 space-y-2 text-sm border border-white/5`}>
+                <div className={`${MaiTrollTheme.backgrounds.input} rounded-lg p-4 space-y-2 text-sm border border-white/5`}>
                   <div className="flex justify-between">
                     <span>Receipt ID:</span>
                     <span className="font-mono text-xs text-gray-400">{purchaseReceipt.id.slice(0, 8)}...</span>
@@ -553,7 +553,7 @@ export default function ShopView() {
                     setPurchaseReceipt(null)
                     navigate('/inventory')
                   }}
-                  className={`flex-1 py-2 ${trollCityTheme.buttons.primary} rounded font-semibold transition-colors`}
+                  className={`flex-1 py-2 ${MaiTrollTheme.buttons.primary} rounded font-semibold transition-colors`}
                 >
                   View in Inventory
                 </button>
@@ -562,7 +562,7 @@ export default function ShopView() {
                     setShowReceipt(false)
                     setPurchaseReceipt(null)
                   }}
-                  className={`px-4 py-2 ${trollCityTheme.buttons.secondary} rounded font-semibold transition-colors`}
+                  className={`px-4 py-2 ${MaiTrollTheme.buttons.secondary} rounded font-semibold transition-colors`}
                 >
                   Close
                 </button>

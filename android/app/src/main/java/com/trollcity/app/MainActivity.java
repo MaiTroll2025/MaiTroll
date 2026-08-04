@@ -1,4 +1,4 @@
-package com.trollcity.app;
+package com.Mai Troll.app;
 
 import com.getcapacitor.BridgeActivity;
 

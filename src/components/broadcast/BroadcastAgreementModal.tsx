@@ -73,16 +73,16 @@ export const BroadcastAgreementModal: React.FC<BroadcastAgreementModalProps> = (
 
             <div className="max-h-60 overflow-y-auto rounded-xl bg-zinc-800/60 border border-zinc-700 p-4 mb-5 text-sm text-zinc-300 leading-relaxed space-y-3">
               <p>
-                By starting a broadcast, I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I understand that I am solely responsible for the content I create, stream, share, or display on Troll City.
+                By starting a broadcast, I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I understand that I am solely responsible for the content I create, stream, share, or display on Mai Troll.
               </p>
               <p>
-                I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Troll City's Terms of Service or Community Guidelines.
+                I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Mai Troll's Terms of Service or Community Guidelines.
               </p>
               <p>
                 I further acknowledge that I am of legal age in my jurisdiction to consume any products, substances, beverages, or other items that may be displayed or consumed during my broadcast, and that any such activity is conducted at my own responsibility and in compliance with local laws.
               </p>
               <p>
-                Troll City reserves the right to remove content, suspend broadcasts, restrict features, or terminate accounts that violate these rules.
+                Mai Troll reserves the right to remove content, suspend broadcasts, restrict features, or terminate accounts that violate these rules.
               </p>
             </div>
 

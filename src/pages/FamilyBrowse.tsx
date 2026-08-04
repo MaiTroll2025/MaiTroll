@@ -278,7 +278,7 @@ export default function FamilyBrowse() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold">Browse Troll Families</h1>
-            <p className="text-sm text-gray-400">Find your perfect family community in Troll City</p>
+            <p className="text-sm text-gray-400">Find your perfect family community in Mai Troll</p>
           </div>
           
           {/* Action Buttons */}

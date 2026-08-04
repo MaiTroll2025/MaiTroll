@@ -6,7 +6,7 @@ This file tells any AI tool:
 🔹 Which tables are core vs optional
 🔹 Which tables affect streaming, wheel, earnings, gifts, payouts, etc.
 
-🧠 Troll City – AI Context (Database Overview)
+🧠 Mai Troll – AI Context (Database Overview)
 
 💾 Copy and keep in your project (Cursor / Trae / ChatGPT / Claude etc.)
 

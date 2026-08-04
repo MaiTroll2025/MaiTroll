@@ -5,7 +5,7 @@
  */
 import { JournalistStats } from '@/types/tcnn';
 import { Trophy, Eye, FileText, User } from 'lucide-react';
-import { trollCityTheme } from '@/styles/trollCityTheme';
+import { MaiTrollTheme } from '@/styles/trollCityTheme';
 
 interface JournalistLeaderboardProps {
   journalists: JournalistStats[];
@@ -14,7 +14,7 @@ interface JournalistLeaderboardProps {
 export default function JournalistLeaderboard({ journalists }: JournalistLeaderboardProps) {
   if (journalists.length === 0) {
     return (
-      <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6`}>
+      <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
         <div className="flex items-center gap-2 mb-4">
           <Trophy className="w-5 h-5 text-yellow-400" />
           <h3 className="font-bold text-white">Top Journalists</h3>
@@ -25,7 +25,7 @@ export default function JournalistLeaderboard({ journalists }: JournalistLeaderb
   }
 
   return (
-    <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-6`}>
+    <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
       <div className="flex items-center gap-2 mb-4">
         <Trophy className="w-5 h-5 text-yellow-400" />
         <h3 className="font-bold text-white">Top Journalists</h3>

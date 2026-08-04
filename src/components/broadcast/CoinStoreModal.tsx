@@ -362,15 +362,14 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
          </div>
        </div>
 
-      <PayPalPaymentModal
-        isOpen={showPayPalPayment || showCardPayment}
-        onClose={() => {
-          // Only allow close if payment is not actively in progress
-          if (paymentInProgressRef.current) return;
-          setShowPayPalPayment(false);
-          setShowCardPayment(false);
-          setSelectedPack(null);
-        }}
+        <PayPalPaymentModal
+         isOpen={showPayPalPayment || showCardPayment}
+         onClose={() => {
+           paymentInProgressRef.current = false;
+           setShowPayPalPayment(false);
+           setShowCardPayment(false);
+           setSelectedPack(null);
+         }}
         pkg={selectedPack}
         userId={user?.id || ''}
         profile={profile}

@@ -176,7 +176,7 @@ export function DocumentFormShell({
     const rows = maskSensitive(fieldsForPdf(data, safeName, date))
 
     doc.setFontSize(18)
-    doc.text('Troll City', 40, 48)
+    doc.text('MaiTroll', 40, 48)
     doc.setFontSize(10)
     doc.setTextColor(120)
     doc.text('Employee Document — Employee Copy', 40, 64)
@@ -230,7 +230,7 @@ export function DocumentFormShell({
       <div className="flex flex-col justify-between gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-start">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/70">
-            Troll City
+            Mai Troll
           </p>
           <h3 className="mt-1 text-lg font-black text-white">{documentName}</h3>
           <p className="mt-1 text-xs text-slate-500">

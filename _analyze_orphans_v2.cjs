@@ -31,7 +31,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const WORKSPACE = 'C:\\Users\\kainm\\TC ONLY\\TrollCity';
+const WORKSPACE = 'C:\\Users\\kainm\\TC ONLY\\Mai Troll';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 {
-  "name": "trollcity",
+  "name": "Mai Troll",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -32,7 +32,7 @@
     "load:test-phase2": "node scripts/phase2-load-test.mjs",
     "seed:test-users": "tsx ./scripts/seed_test_users.ts",
     "cleanup:test-users": "tsx ./scripts/cleanup_test_users.ts",
-    "cap:init": "cap init trollcity com.trollcity.app --web-dir=dist",
+    "cap:init": "cap init Mai Troll com.Mai Troll.app --web-dir=dist",
     "cap:add:android": "cap add android",
     "cap:sync": "npm run build && cap sync",
     "cap:sync:android": "npm run build && cap sync android",

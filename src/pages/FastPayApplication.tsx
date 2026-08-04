@@ -587,7 +587,7 @@ export default function FastPayApplication() {
                 />
                 <div className="text-xs text-slate-400">
                   <span className="font-bold text-slate-300">Terms of Service</span>
-                  <p className="mt-0.5">I agree to the Troll City Fast Pay Program terms and conditions.</p>
+                  <p className="mt-0.5">I agree to the Mai Troll Fast Pay Program terms and conditions.</p>
                 </div>
               </label>
               <label className="flex items-start gap-3 cursor-pointer">
@@ -611,7 +611,7 @@ export default function FastPayApplication() {
                 />
                 <div className="text-xs text-slate-400">
                   <span className="font-bold text-slate-300">Identity Verification</span>
-                  <p className="mt-0.5">I authorize Troll City to verify my identity for compliance purposes.</p>
+                  <p className="mt-0.5">I authorize Mai Troll to verify my identity for compliance purposes.</p>
                 </div>
               </label>
             </div>

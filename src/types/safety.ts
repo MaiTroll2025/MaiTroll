@@ -1,5 +1,5 @@
 /**
- * Troll City Background Audio Safety & Location System Types
+ * Mai Troll Background Audio Safety & Location System Types
  *
  * Covers:
  * - Audio safety monitoring
@@ -8,16 +8,16 @@
  * - Admin audit logging
  *
  * Role model note:
- * This file uses current Troll City canonical roles only.
+ * This file uses current Mai Troll canonical roles only.
  * Do not reintroduce moderator, super_admin, platform_admin,
  * troll_officer, or lead_troll_officer here unless the app role model changes.
  */
 
 // ============================================================
-// CANONICAL TROLL CITY ROLE TYPES
+// CANONICAL Mai Troll ROLE TYPES
 // ============================================================
 
-export type TrollCitySafetyRole =
+export type MaiTrollSafetyRole =
   | 'admin'
   | 'ceo'
   | 'staff'
@@ -31,7 +31,7 @@ export type LocationAccessRole =
   | 'ceo'
   | 'secretary';
 
-export type SafetyAlertAccessRole = TrollCitySafetyRole;
+export type SafetyAlertAccessRole = MaiTrollSafetyRole;
 
 export const LOCATION_ACCESS_ROLES: LocationAccessRole[] = [
   'admin',
@@ -292,7 +292,7 @@ export interface AdminAuditLog {
   admin_id?: string | null;
 
   /**
-   * Preferred database column for Troll City audit logs.
+   * Preferred database column for Mai Troll audit logs.
    * Use this when the table is public.admin_audit_log/action.
    */
   action?: AuditActionType | string;
@@ -455,7 +455,7 @@ export interface ObfuscatedCoordinate {
 /**
  * A listing pin on the Trollifieds map.
  * Can represent a marketplace_item, vehicle_listing, service_listing,
- * or shop_item from the Troll City marketplace.
+ * or shop_item from the Mai Troll marketplace.
  */
 export interface TrollifiedMapPin {
   id: string

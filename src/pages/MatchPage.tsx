@@ -159,7 +159,7 @@ export function MatchPage() {
                   Troll Match
                 </h1>
                 <p className="mt-1 text-sm text-slate-400">
-                  Connect with citizens, creators, broadcasters, and matches across Troll City.
+                  Connect with citizens, creators, broadcasters, and matches across Mai Troll.
                 </p>
               </div>
             </div>

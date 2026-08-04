@@ -56,7 +56,7 @@ export function useAvatar() {
   const { user, profile } = useAuthStore()
   const gender = (profile as any)?.gender as string | null | undefined
   const [config, setConfigState] = useState<AvatarConfig>(getGenderDefaultConfig(gender))
-  const userKey = user?.id ? `trollcity_avatar_${user.id}` : null
+  const userKey = user?.id ? `MaiTroll_avatar_${user.id}` : null
 
   useEffect(() => {
     let isMounted = true

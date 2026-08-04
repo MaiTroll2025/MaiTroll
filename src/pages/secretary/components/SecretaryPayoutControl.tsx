@@ -48,7 +48,6 @@ export default function SecretaryPayoutControl() {
     setLoading(true);
     try {
       // Payout window is now determined by user level in the backend RPC
-      // Level 1-499: Fridays only, Level 500-999: Every 24hrs, Level 1000+: Every 30min
       setStatus({ enabled: true, duration_minutes: 20, min_coins: 7500, special_tier_usd: 1 });
       setDuration(20);
       setMinCoins(7500);

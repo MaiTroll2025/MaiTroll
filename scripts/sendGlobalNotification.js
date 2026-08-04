@@ -3,7 +3,7 @@
 
 const fetch = require('node-fetch');
 
-const NTFY_TOPIC = 'trollcity-global';
+const NTFY_TOPIC = 'Mai Troll-global';
 const NTFY_URL = 'https://ntfy.sh';
 
 async function sendGlobalNotification(title, message) {

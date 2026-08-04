@@ -6,7 +6,7 @@
 
 ```
 ┌─────────────────────────────────────────┐
-│  Trollcity App                          │
+│  Mai Troll App                          │
 ├─────────────────────────────────────────┤
 │                                         │
 │  ⭐ Your Coins: 1000                   │
@@ -98,7 +98,7 @@ User clicks [Send via Cash App] button →
 │  You will send:                         │
 │                                         │
 │  💵 $4.99                               │
-│  to: Trollcity                          │
+│  to: Mai Troll                          │
 │                                         │
 │  You'll receive:                        │
 │  🪙 500 Coins                           │
@@ -124,7 +124,7 @@ User clicks [Continue] button →
 │                                         │
 │  📱 Send to (Cash App):                 │
 │  ┌─────────────────────────────────┐  │
-│  │ $trollcity95            [Copy] 📋│ │
+│  │ $Mai Troll95            [Copy] 📋│ │
 │  └─────────────────────────────────┘  │
 │                                         │
 │  💬 Payment Note:                       │
@@ -136,7 +136,7 @@ User clicks [Continue] button →
 │  1. Copy the Cash App address above     │
 │  2. Open Cash App on your phone         │
 │  3. Tap "Send" button                   │
-│  4. Enter $trollcity95 as recipient     │
+│  4. Enter $Mai Troll95 as recipient     │
 │  5. Enter amount $4.99                  │
 │  6. In memo, paste the note above:      │
 │     JOHND-500                           │
@@ -175,7 +175,7 @@ User clicks [Done - I'll Send] button →
 │  Status: ⏳ AWAITING ADMIN APPROVAL     │
 │                                         │
 │  What's next?                           │
-│  1. Send Cash App payment to $trollcity95
+│  1. Send Cash App payment to $Mai Troll95
 │  2. Include note: JOHND-500             │
 │  3. Wait for admin verification         │
 │  4. Coins will appear when approved     │
@@ -205,7 +205,7 @@ Modal closes, returns to main page
 │                                         │
 │ Send Money:                             │
 │                                         │
-│ Recipient: [$ trollcity95 ✓]           │
+│ Recipient: [$ Mai Troll95 ✓]           │
 │ Amount: [$4.99]                         │
 │ Memo: [JOHND-500]                       │
 │                                         │
@@ -316,9 +316,9 @@ DESKTOP - ADMIN DASHBOARD
 ### Back to User: Coins Appear ✅
 
 ```
-PHONE - TROLLCITY APP
+PHONE - Mai Troll APP
 ┌─────────────────────────────────────────┐
-│  Trollcity App                          │
+│  Mai Troll App                          │
 ├─────────────────────────────────────────┤
 │                                         │
 │  ⭐ Your Coins: 1500 ✅ (was 1000)     │
@@ -355,7 +355,7 @@ Active tab is highlighted
 
 ### Copy Buttons
 ```
-Address: $trollcity95 [Copy] 📋
+Address: $Mai Troll95 [Copy] 📋
 Note: JOHND-500 [Copy] 📋
 
 Single click → copies to clipboard
@@ -418,7 +418,7 @@ Step 3 of 3: SUCCESS
        (can take minutes to hours depending on user)
 
 ADMIN SIDE:
-2:30  - Admin sees payment arrive in Cash App $trollcity95
+2:30  - Admin sees payment arrive in Cash App $Mai Troll95
 2:35  - Admin goes to Admin Dashboard
 2:40  - Admin finds the matching pending order
 2:45  - Admin verifies amount and note match

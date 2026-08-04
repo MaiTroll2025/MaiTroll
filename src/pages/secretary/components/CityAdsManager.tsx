@@ -38,7 +38,7 @@ export default function CityAdsManager() {
   const [formData, setFormData] = useState<Partial<CityAd>>({
     placement: HOME_PAGE_PROMO_PLACEMENTS[0],
     is_active: true,
-    label: 'Troll City Promo'
+    label: 'MaiTroll Promo'
   });
   const [uploading, setUploading] = useState(false);
   const [placementFilter, setPlacementFilter] = useState<AdPlacement | ''>('');
@@ -164,7 +164,7 @@ export default function CityAdsManager() {
       end_at: '',
       priority: 0,
       display_order: 0,
-      label: 'Troll City Promo',
+      label: 'MaiTroll Promo',
       campaign_type: undefined,
       background_style: undefined
     });
@@ -291,7 +291,7 @@ export default function CityAdsManager() {
       end_at: ad.end_at || '',
       priority: ad.priority,
       display_order: ad.display_order,
-      label: ad.label || 'Troll City Promo',
+      label: ad.label || 'MaiTroll Promo',
       campaign_type: ad.campaign_type as CampaignType | undefined,
       background_style: ad.background_style
     });
@@ -470,13 +470,13 @@ export default function CityAdsManager() {
               <input
                 type="text"
                 name="label"
-                value={formData.label || 'Troll City Promo'}
+                value={formData.label || 'MaiTroll Promo'}
                 onChange={handleFormChange}
                 className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:border-purple-500 focus:ring-purple-500"
                 list="label-options"
               />
               <datalist id="label-options">
-                {['Troll City Promo', 'Special Offer', 'Featured', 'Limited Time', 'New', 'Exclusive'].map(label => (
+                {['MaiTroll Promo', 'Special Offer', 'Featured', 'Limited Time', 'New', 'Exclusive'].map(label => (
                   <option key={label} value={label} />
                 ))}
               </datalist>
@@ -698,7 +698,7 @@ export default function CityAdsManager() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-purple-600/80 text-white">
-                          {ad.label || 'Troll City Promo'}
+                          {ad.label || 'MaiTroll Promo'}
                         </span>
                         <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-purple-600/80 text-white">
                           {AD_PLACEMENTS.find(p => p.value === ad.placement)?.label || ad.placement}

@@ -1,4 +1,4 @@
-# 🔍 TROLL CITY — FULL FRESH CONCURRENCY AUDIT
+# 🔍 Mai Troll — FULL FRESH CONCURRENCY AUDIT
 
 **Date:** 2026-06-21  
 **Method:** Live code analysis only. No prior audit files referenced.

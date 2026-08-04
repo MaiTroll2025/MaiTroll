@@ -34,7 +34,7 @@ class VisualEffectsEngine {
   private ensureContainer() {
     if (this.container) return
     this.container = document.createElement('div')
-    this.container.id = 'trollcity-vfx-engine'
+    this.container.id = 'MaiTroll-vfx-engine'
     this.container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden'
     document.body.appendChild(this.container)
   }

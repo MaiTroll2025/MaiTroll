@@ -616,7 +616,7 @@ const MobileGlobalTicker = React.memo(function MobileGlobalTicker() {
   if (!events || events.length === 0) {
     return (
       <div className="relative flex items-center justify-between gap-2 border-b border-cyan-400/15 bg-[#070b19]/80 px-3 py-1.5 backdrop-blur-md">
-        <span className="text-[10px] font-bold text-cyan-200/70">Troll City</span>
+        <span className="text-[10px] font-bold text-cyan-200/70">Mai Troll</span>
       </div>
     )
   }
@@ -717,10 +717,10 @@ export default function Home() {
   const { isMobile, isMobileWidth } = useIsMobile()
 
   useSEO({
-    title: 'Troll City | Social Streaming Platform - Livestream, Create, Connect',
-    description: 'Troll City (Mai Troll City) is a social streaming platform for creators, streamers, gamers, and online communities. Watch live streams, go live, join creator battles, spin the Troll Wheel, and connect with a global community.',
+    title: 'MaiTroll | Social Streaming Platform - Livestream, Create, Connect',
+    description: 'MaiTroll (MaiMaiTroll) is a social streaming platform for creators, streamers, gamers, and online communities. Watch live streams, go live, join creator battles, spin the Troll Wheel, and connect with a global community.',
     keywords: [
-      'Troll City', 'Mai Troll City', 'social streaming platform', 'live streaming',
+      'MaiTroll', 'MaiMaiTroll', 'social streaming platform', 'live streaming',
       'go live', 'content creator', 'stream games online', 'watch live streams',
       'creator economy', 'livestream', 'gaming community', 'online entertainment',
       'social platform', 'streaming app', 'live broadcast', 'creator battles',
@@ -846,7 +846,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050715]/85 backdrop-blur-md">
           <div className="text-center">
             <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-purple-500/30 border-t-cyan-300" />
-            <p className="text-sm font-bold text-slate-300">Loading Troll City...</p>
+            <p className="text-sm font-bold text-slate-300">Loading Mai Troll...</p>
           </div>
         </div>
       )}
@@ -899,7 +899,7 @@ export default function Home() {
           <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-gradient-to-r from-purple-900/40 via-slate-900/60 to-cyan-900/40 backdrop-blur-xl p-4 sm:p-5">
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               <div className="flex-1 text-center sm:text-left">
-                <h3 className="text-base sm:text-lg font-bold text-white">Welcome to Troll City!</h3>
+                <h3 className="text-base sm:text-lg font-bold text-white">Welcome to Mai Troll!</h3>
                 <p className="text-xs sm:text-sm text-slate-300 mt-1">
                   Sign in to join the community, go live, send gifts, and more.
                 </p>

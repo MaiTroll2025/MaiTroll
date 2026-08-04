@@ -36,7 +36,7 @@ export default function Safety() {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
                 <Shield className="h-4 w-4" />
-                Troll City Safety Division
+                Mai Troll Safety Division
               </div>
 
               <h1 className="text-4xl font-black tracking-tight md:text-6xl">
@@ -47,7 +47,7 @@ export default function Safety() {
               </h1>
 
               <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">
-                These rules apply across Troll City, including live broadcasts,
+                These rules apply across Mai Troll, including live broadcasts,
                 battles, camera seats, chats, families, auctions, marketplace
                 activity, gifting, profiles, posts, and messages. Troll Officers
                 and administrators may act immediately when safety requires it.
@@ -199,7 +199,7 @@ export default function Safety() {
             />
             <PolicyItem
               title="Immediate Action"
-              text="Troll City may immediately remove content, restrict accounts, preserve relevant records, and contact law enforcement or child-safety organizations when legally appropriate."
+              text="Mai Troll may immediately remove content, restrict accounts, preserve relevant records, and contact law enforcement or child-safety organizations when legally appropriate."
             />
           </PolicyCard>
 
@@ -225,7 +225,7 @@ export default function Safety() {
           <PolicyCard icon={Gift} title="Coins, Gifts & Payments" accent="yellow">
             <PolicyItem
               title="Use Approved Payment Flows"
-              text="Coin purchases, gifts, auction payments, subscriptions, and payouts must use official Troll City payment systems."
+              text="Coin purchases, gifts, auction payments, subscriptions, and payouts must use official Mai Troll payment systems."
             />
             <PolicyItem
               title="No Payment Manipulation"
@@ -256,7 +256,7 @@ export default function Safety() {
             />
             <PolicyItem
               title="Dispute Review"
-              text="Troll City may review transaction records, listings, chats, bids, and payment activity when investigating a marketplace dispute."
+              text="Mai Troll may review transaction records, listings, chats, bids, and payment activity when investigating a marketplace dispute."
             />
           </PolicyCard>
 
@@ -267,7 +267,7 @@ export default function Safety() {
             />
             <PolicyItem
               title="Official Staff Contact"
-              text="Troll City staff will not ask you to send your password, full card number, or one-time login code through chat."
+              text="Mai Troll staff will not ask you to send your password, full card number, or one-time login code through chat."
             />
             <PolicyItem
               title="Blocking & Boundaries"
@@ -281,7 +281,7 @@ export default function Safety() {
 
           <PolicyCard icon={AlertTriangle} title="Reporting Violations" accent="yellow">
             <p className="mb-4 text-sm leading-6 text-slate-300">
-              Use Troll City's reporting tools when you see a genuine violation.
+              Use Mai Troll's reporting tools when you see a genuine violation.
               Give staff enough information to understand what happened.
             </p>
 
@@ -311,7 +311,7 @@ export default function Safety() {
             />
             <PolicyItem
               title="Troll Jail"
-              text="Troll City may use timed jail restrictions, court summons, bond requirements, feature restrictions, or other city-based penalties."
+              text="Mai Troll may use timed jail restrictions, court summons, bond requirements, feature restrictions, or other city-based penalties."
             />
             <PolicyItem
               title="Temporary Suspension"
@@ -326,7 +326,7 @@ export default function Safety() {
           <PolicyCard icon={Gavel} title="Appeals & Court">
             <p className="text-sm leading-6 text-slate-300">
               Users may appeal eligible moderation decisions through support or
-              the Troll City court system when available. Appeals should explain
+              the Mai Troll court system when available. Appeals should explain
               what happened, identify the action being challenged, and include
               relevant evidence.
             </p>
@@ -349,7 +349,7 @@ export default function Safety() {
           <PolicyCard icon={HeartHandshake} title="Emergency & Wellness Safety">
             <PolicyItem
               title="Immediate Danger"
-              text="If someone appears to be in immediate danger, contact local emergency services. Troll City reporting tools are not a replacement for emergency assistance."
+              text="If someone appears to be in immediate danger, contact local emergency services. Mai Troll reporting tools are not a replacement for emergency assistance."
             />
             <PolicyItem
               title="Self-Harm Concerns"
@@ -372,14 +372,14 @@ export default function Safety() {
             />
             <PolicyItem
               title="Platform Safety First"
-              text="Troll City may remove content or restrict features when reasonably necessary to protect users, staff, transactions, or platform operations."
+              text="Mai Troll may remove content or restrict features when reasonably necessary to protect users, staff, transactions, or platform operations."
             />
           </PolicyCard>
 
           <PolicyCard icon={MessageSquare} title="Need Help?">
             <StepList
               items={[
-                'Visit Support from your Troll City dashboard.',
+                'Visit Support from your Mai Troll dashboard.',
                 'Use the report button for content or user violations.',
                 'Contact Troll Officers through official moderation tools.',
                 'Use court or appeal routes when they are available.',

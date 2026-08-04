@@ -1,4 +1,4 @@
--- Troll City 3D System - Database Migration
+-- Mai Troll 3D System - Database Migration
 -- Run these queries in your Supabase SQL editor to prepare the database
 
 -- ============================================================================

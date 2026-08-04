@@ -1,9 +1,9 @@
--- Protect the Owner Admin account (trollcity2025@gmail.com) from being modified by other admins
+-- Protect the Owner Admin account (Mai Troll2025@gmail.com) from being modified by other admins
 
 CREATE OR REPLACE FUNCTION public.protect_owner_admin_changes()
 RETURNS TRIGGER AS $$
 DECLARE
-  owner_email TEXT := 'trollcity2025@gmail.com';
+  owner_email TEXT := 'Mai Troll2025@gmail.com';
   target_is_owner BOOLEAN;
   actor_is_owner BOOLEAN;
 BEGIN

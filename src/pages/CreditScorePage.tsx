@@ -153,7 +153,7 @@ export default function CreditScorePage() {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
                 <BadgeCheck className="h-4 w-4" />
-                Troll City Public Credit Bureau
+                Mai Troll Public Credit Bureau
               </div>
 
               <h1 className="text-4xl font-black tracking-tight md:text-6xl">
@@ -164,7 +164,7 @@ export default function CreditScorePage() {
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
-                Public trust scores for Troll City residents based on payments, loans, defaults, repossessions, and credit events.
+                Public trust scores for Mai Troll residents based on payments, loans, defaults, repossessions, and credit events.
               </p>
             </div>
 

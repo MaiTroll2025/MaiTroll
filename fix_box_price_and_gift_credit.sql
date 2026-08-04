@@ -50,6 +50,15 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'message', 'Seat is occupied');
     END IF;
 
+    -- Clean up any stale active sessions for this user on this stream
+    UPDATE public.stream_seat_sessions
+    SET status = 'left',
+        left_at = NOW(),
+        updated_at = NOW()
+    WHERE stream_id = p_stream_id
+      AND user_id = p_user_id
+      AND status IN ('active', 'live', 'reserved', 'camera_starting');
+
     -- If user/guest already paid in this stream, skip charging again
     IF p_user_id IS NOT NULL AND v_effective_price > 0 THEN
         SELECT EXISTS (

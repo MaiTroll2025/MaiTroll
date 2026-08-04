@@ -299,8 +299,8 @@ function ProfileInner() {
         if (!profile?.username) return;
 
         const displayName = profile.display_name || profile.username;
-        const title = `${displayName} | Troll City`;
-        const description = profile.bio || `Check out ${displayName}'s profile on Troll City`;
+        const title = `${displayName} | Mai Troll`;
+        const description = profile.bio || `Check out ${displayName}'s profile on Mai Troll`;
         const profileUrl = `${window.location.origin}/${encodeURIComponent(profile.username)}`;
         const ogImageUrl = buildOGImageUrl({ kind: 'profile', username: profile.username });
 
@@ -350,7 +350,7 @@ function ProfileInner() {
         schemaScript.textContent = JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'ProfilePage',
-            name: `${displayName} on Troll City`,
+            name: `${displayName} on Mai Troll`,
             description,
             url: profileUrl,
             mainEntity: {
@@ -394,7 +394,7 @@ function ProfileInner() {
 
     const handleShare = async () => {
         const shareData = {
-            title: `${profile.display_name} on Troll City`,
+            title: `${profile.display_name} on Mai Troll`,
             text: profile.bio || `Check out ${profile.display_name}'s profile`,
             url: window.location.href,
         };

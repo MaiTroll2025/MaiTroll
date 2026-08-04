@@ -58,7 +58,7 @@ export function LotSticker({
       }}
     >
       <div style={{ fontSize: compact ? '8px' : '10px', fontWeight: 900, letterSpacing: '0.15em', color: '#0e7490' }}>
-        TROLL CITY
+        Mai Troll
       </div>
       <div
         style={{
@@ -129,7 +129,7 @@ export function PackingSlip({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0e7490', paddingBottom: '12px', marginBottom: '16px' }}>
         <div>
           <div style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '0.1em', color: '#0e7490' }}>
-            TROLL CITY
+            Mai Troll
           </div>
           <div style={{ fontSize: '10px', color: '#64748b' }}>AUCTION PACKING SLIP</div>
         </div>
@@ -164,7 +164,7 @@ export function PackingSlip({
       </div>
 
       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', fontSize: '9px', color: '#94a3b8', textAlign: 'center' }}>
-        Thank you for bidding on Troll City! Questions? Contact the auctioneer through the platform.
+        Thank you for bidding on Mai Troll! Questions? Contact the auctioneer through the platform.
       </div>
     </div>
   )
@@ -229,7 +229,7 @@ export function ShippingLabel({
       }}
     >
       <div style={{ fontSize: '8px', fontWeight: 900, letterSpacing: '0.15em', color: '#0e7490', marginBottom: '4px' }}>
-        TROLL CITY AUCTIONS
+        Mai Troll AUCTIONS
       </div>
       <div style={{ fontSize: '8px', color: '#64748b', marginBottom: '8px' }}>
         Order: {orderNumber} | Lot: {lotNumber}

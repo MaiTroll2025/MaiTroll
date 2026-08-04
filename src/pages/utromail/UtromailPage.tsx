@@ -792,7 +792,7 @@ export default function UtromailPage() {
                 ) : (
                   <p className="truncate text-[11px] text-slate-500">
                     {activeThread.other_utromail_address ||
-                      "Active in Troll City"}
+                      "Active in Mai Troll"}
                   </p>
                 )}
               </div>
@@ -1017,7 +1017,7 @@ export default function UtromailPage() {
           <Send className="h-10 w-10 text-fuchsia-300" />
         </div>
         <p className="mt-6 text-[10px] font-black uppercase tracking-[0.3em] text-lime-400">
-          Troll City communication grid
+          Mai Troll communication grid
         </p>
         <h2 className="mt-3 text-3xl font-black tracking-tight text-white">
           Your city conversations live here.

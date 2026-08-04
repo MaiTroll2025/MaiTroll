@@ -1,0 +1,800 @@
+{
+  "found": [
+    "abuse_reports",
+    "admin_pool_buckets",
+    "bank_audit_log",
+    "bank_feature_flags",
+    "battle_queue",
+    "battle_sessions",
+    "battle_skips",
+    "broadcast_seat_bans",
+    "broadcaster_earnings",
+    "car_insurance_policies",
+    "cashout_requests",
+    "creator_panic_alerts",
+    "daily_rewards",
+    "empire_partner_rewards",
+    "family_activity_log",
+    "gas_requests",
+    "ghost_presence_logs",
+    "home_feature_cycles",
+    "home_feature_spend",
+    "incidents",
+    "invoices",
+    "live_sessions",
+    "matchmaking_queue",
+    "moderation_actions_log",
+    "moderation_events",
+    "observer_ratings",
+    "officer_actions",
+    "officer_applications",
+    "officer_assignments",
+    "officer_badges",
+    "officer_earnings",
+    "officer_live_assignments",
+    "officer_mission_logs",
+    "officer_patrols",
+    "officer_strikes",
+    "officer_training_sessions",
+    "officer_work_sessions",
+    "onboarding_events",
+    "onboarding_progress",
+    "payment_logs",
+    "pitch_votes",
+    "pod_bans",
+    "pod_episodes",
+    "property_insurance_policies",
+    "property_loans",
+    "property_types",
+    "punishment_transactions",
+    "referrals",
+    "revenue_settings",
+    "risk_events",
+    "role_change_log",
+    "scheduled_announcements",
+    "shadow_bans",
+    "stream_entries",
+    "stream_presets",
+    "town_player_state",
+    "training_scenarios",
+    "troll_battle_weekly_stats",
+    "troll_post_gifts",
+    "troll_post_views",
+    "troll_wall_gifts",
+    "trolls_night_applications",
+    "tromody_matches",
+    "tromody_queue",
+    "user_agreements",
+    "user_car_upgrades",
+    "user_cars",
+    "user_level_perks",
+    "user_levels",
+    "user_risk_profile",
+    "user_vouchers",
+    "vehicle_upgrades",
+    "visa_redemptions",
+    "wallets",
+    "weekly_reports",
+    "xp_ledger"
+  ],
+  "notFound": [
+    "action_logs",
+    "activity_log",
+    "activity_logs",
+    "admin_adjustments",
+    "admin_allocation_buckets",
+    "admin_coin_pool",
+    "admin_coin_revenue",
+    "admin_flags",
+    "admin_gift_totals",
+    "admin_tax_reviews",
+    "admin_top_buyers",
+    "ai_action_logs",
+    "app_settings",
+    "app_updates",
+    "applications",
+    "badge_definitions",
+    "balance_ledger",
+    "battle_history",
+    "battle_rewards",
+    "blocked_users",
+    "broadcast_background_themes",
+    "broadcast_cycle_stats",
+    "broadcast_seats",
+    "broadcast_theme_events",
+    "broadcast_tokens",
+    "broadcaster_applications",
+    "broadcaster_metrics",
+    "call_history",
+    "call_sessions",
+    "call_transactions",
+    "car_models",
+    "case_audit_logs",
+    "case_evidence",
+    "case_participants",
+    "case_templates",
+    "city_districts",
+    "clan_rewards",
+    "clan_vault",
+    "coin_packages",
+    "coin_pool_contributions",
+    "coin_purchases",
+    "coin_reward_pool",
+    "coinback_log",
+    "config",
+    "content",
+    "court_ai_messages",
+    "court_box_members",
+    "court_docket",
+    "court_rulings_archive",
+    "court_schedules",
+    "creators_over_600",
+    "critical_alerts",
+    "daily_giveaways",
+    "daily_login_claims",
+    "daily_logins",
+    "declined_transactions",
+    "deed_transfers",
+    "deeds",
+    "district_announcements",
+    "district_features",
+    "earnings",
+    "economy_abuse_flags",
+    "empire_applications",
+    "empire_partners",
+    "empire_referrals",
+    "empire_rewards",
+    "entrance_effect_catalog",
+    "error_logs",
+    "escalation_matrix",
+    "escalation_reports",
+    "executive_intake",
+    "executive_reports",
+    "family_badges_earned",
+    "family_lounge_messages",
+    "family_seasons",
+    "family_shop_items",
+    "family_shop_purchases",
+    "family_stats",
+    "family_tasks_new",
+    "family_war_stats",
+    "family_wars",
+    "follows",
+    "gift_bonus_tracker",
+    "gift_card_redemptions",
+    "gift_catalog",
+    "gift_items",
+    "gift_leaderboard_entries",
+    "gift_leaderboards",
+    "giftcard_fulfillments",
+    "gifts_owned",
+    "group_chats",
+    "hire_fire_actions",
+    "hire_limits",
+    "honorary_family_members",
+    "hr_employees",
+    "hr_events",
+    "hr_notes",
+    "identity_reward_logs",
+    "insurance",
+    "insurance_logs",
+    "insurance_packages",
+    "insurance_plans",
+    "insurance_policies",
+    "interview_sessions",
+    "inventory_items",
+    "kick_logs",
+    "lucky_coin_events",
+    "mai_appeals",
+    "mai_incidents",
+    "mai_overrides",
+    "mai_timeline_events",
+    "mai_user_memory",
+    "message_receipts",
+    "message_requests",
+    "millionaire_hall_of_fame",
+    "moderation_actions",
+    "moderation_fee_settings",
+    "moderation_notes",
+    "moderation_reports",
+    "officer_activity",
+    "officer_availability",
+    "officer_chat",
+    "officer_hours",
+    "officer_logs",
+    "officer_orientation_results",
+    "officer_orientations",
+    "officer_payouts",
+    "officer_quiz_attempts",
+    "officer_quiz_questions",
+    "officer_quiz_results",
+    "officer_shift_logs",
+    "officer_weekly_reports",
+    "owc_transactions",
+    "payment_fees",
+    "payment_holds",
+    "payment_methods",
+    "payment_transactions",
+    "payout_audit_log",
+    "payout_reviews",
+    "payout_settings",
+    "perk_catalog",
+    "platform_fees",
+    "platform_wallet",
+    "post_gifts",
+    "posts",
+    "profiles",
+    "promo_code_uses",
+    "promo_codes",
+    "property_upgrades",
+    "provider_costs",
+    "punishments",
+    "recent_matches",
+    "referral_claims",
+    "referral_monthly_bonus",
+    "report_cases",
+    "reputation_events",
+    "revenue_ledger",
+    "role_privileges",
+    "roles",
+    "rooms",
+    "royal_family_history",
+    "royal_family_perks",
+    "royal_family_titles",
+    "secretary_assignments",
+    "seller_reliability",
+    "shifts",
+    "shop_partners",
+    "shop_transactions",
+    "shops",
+    "special_gift_earnings",
+    "square_events",
+    "staff_applications",
+    "staff_profiles",
+    "store_items",
+    "stores",
+    "stream_discovery_prefs",
+    "stream_entrances",
+    "stream_events",
+    "stream_join_requests",
+    "stream_momentum",
+    "stream_mute_counts",
+    "stream_passwords",
+    "stream_ranking",
+    "stream_reactions",
+    "stream_sessions",
+    "stream_snack_purchases",
+    "stream_vods",
+    "system_alerts",
+    "system_settings",
+    "task_completions",
+    "task_history",
+    "tax_report_status",
+    "ticket_messages",
+    "transactions",
+    "troll_ai_avatars",
+    "troll_battle_gifts",
+    "troll_dna_events",
+    "troll_dna_profiles",
+    "troll_dna_traits",
+    "troll_drops_log",
+    "troll_event_claims",
+    "troll_events",
+    "troll_family_members",
+    "troll_family_memberships",
+    "troll_family_messages",
+    "troll_family_wars",
+    "troll_gift_items",
+    "troll_officer_applications",
+    "troll_officers",
+    "troll_stream_messages",
+    "troll_streams",
+    "troll_wall_likes",
+    "troll_wall_reactions",
+    "Mai Troll_orders",
+    "Mai Troll_products",
+    "trollmond_gifts",
+    "trollmond_ledger",
+    "trollmond_store_items",
+    "trollmonds_pools",
+    "trollstown_properties",
+    "trollstown_property_upgrades",
+    "trollstown_upgrade_config",
+    "trolltract_contracts",
+    "trolltract_weekly_rewards",
+    "tromody_battles",
+    "tromody_gifts",
+    "tromody_sessions",
+    "trophies",
+    "typing_statuses",
+    "user_active_entrance_effect",
+    "user_badges_earned",
+    "user_balances",
+    "user_bans",
+    "user_broadcast_theme_purchases",
+    "user_broadcast_theme_state",
+    "user_devices",
+    "user_district_progress",
+    "user_entrances",
+    "user_garage",
+    "user_insurance",
+    "user_ip_tracking",
+    "user_notifications",
+    "user_payout_settings",
+    "user_streamer_entitlements",
+    "user_tax_info",
+    "user_wallets",
+    "users",
+    "vehicle_bids",
+    "vendor_invoices",
+    "verification_requests",
+    "verification_transactions",
+    "videos",
+    "wall_comments",
+    "wall_gifts",
+    "wall_likes",
+    "wall_posts",
+    "war_results",
+    "wars",
+    "web_push_subscriptions",
+    "weekly_officer_reports"
+  ],
+  "details": [
+    {
+      "table": "stream_presets",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\add_stream_pricing_columns.sql",
+      "startLine": 15,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS stream_presets (\r\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,\r\n  preset_data JSONB NOT NULL,\r\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "stream_entries",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\add_stream_pricing_columns.sql",
+      "startLine": 26,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS stream_entries (\r\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n  stream_id UUID REFERENCES streams(id) ON DELETE CASCADE,\r\n  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,\r\n  has_paid_entry BOOLEAN DEFAULT false,\r\n  entry_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\r\n  UNIQUE(stream_id, user_id)\r\n);"
+    },
+    {
+      "table": "revenue_settings",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_all_pending_migrations.sql",
+      "startLine": 58,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS revenue_settings (\r\n  id INTEGER PRIMARY KEY DEFAULT 1,\r\n  platform_cut_pct INTEGER DEFAULT 40,\r\n  broadcaster_cut_pct INTEGER DEFAULT 60,\r\n  officer_cut_pct INTEGER DEFAULT 30,\r\n  min_cashout_usd NUMERIC(10,2) DEFAULT 50,\r\n  min_stream_hours_for_cashout INTEGER DEFAULT 10,\r\n  cashout_hold_days INTEGER DEFAULT 7,\r\n  tax_form_required BOOLEAN DEFAULT true,\r\n  created_at TIMESTAMPTZ DEFAULT now(),\r\n  updated_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "user_risk_profile",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_all_pending_migrations.sql",
+      "startLine": 97,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS user_risk_profile (\r\n  user_id UUID PRIMARY KEY REFERENCES user_profiles(id),\r\n  risk_score INTEGER DEFAULT 0,\r\n  is_frozen BOOLEAN DEFAULT false,\r\n  freeze_reason TEXT,\r\n  last_event_at TIMESTAMPTZ,\r\n  created_at TIMESTAMPTZ DEFAULT now(),\r\n  updated_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "risk_events",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_all_pending_migrations.sql",
+      "startLine": 108,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS risk_events (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID REFERENCES user_profiles(id),\r\n  event_type TEXT NOT NULL,\r\n  severity INTEGER NOT NULL,\r\n  metadata JSONB DEFAULT '{}',\r\n  created_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "broadcaster_earnings",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_all_pending_migrations.sql",
+      "startLine": 194,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS broadcaster_earnings (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  broadcaster_id UUID REFERENCES user_profiles(id),\r\n  gift_id UUID,\r\n  coins_received INTEGER NOT NULL,\r\n  usd_value NUMERIC(10,2),\r\n  created_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "officer_actions",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_all_pending_migrations.sql",
+      "startLine": 275,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS officer_actions (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID REFERENCES user_profiles(id),\r\n  action_type TEXT NOT NULL, -- 'kick', 'ban', 'mute', 'warn'\r\n  target_user_id UUID REFERENCES user_profiles(id),\r\n  reason TEXT,\r\n  coins_penalty INTEGER DEFAULT 0,\r\n  created_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "officer_earnings",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_all_pending_migrations.sql",
+      "startLine": 285,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS officer_earnings (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID REFERENCES user_profiles(id),\r\n  earnings_type TEXT NOT NULL, -- 'shift_pay', 'commission', 'bonus'\r\n  amount INTEGER NOT NULL,\r\n  source_type TEXT, -- 'stream', 'gift', 'bonus'\r\n  source_id UUID,\r\n  created_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "battle_skips",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_battle_migrations.sql",
+      "startLine": 150,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.battle_skips (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\r\n    skip_date DATE NOT NULL DEFAULT CURRENT_DATE,\r\n    skips_used INTEGER DEFAULT 0,\r\n    last_skip_time TIMESTAMPTZ,\r\n    created_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "battle_queue",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_instant_battle_system.sql",
+      "startLine": 21,
+      "createTableSql": "CREATE TABLE public.battle_queue (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    stream_id UUID NOT NULL REFERENCES public.streams(id) ON DELETE CASCADE,\r\n    user_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n    category VARCHAR(50) NOT NULL DEFAULT 'trollmers',\r\n    status VARCHAR(20) NOT NULL DEFAULT 'waiting',\r\n    battle_id UUID REFERENCES public.battles(id) ON DELETE SET NULL,\r\n    created_at TIMESTAMPTZ NOT NULL DEFAULT now()\r\n);"
+    },
+    {
+      "table": "officer_live_assignments",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_new_migrations.sql",
+      "startLine": 6,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS officer_live_assignments (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  stream_id UUID NOT NULL REFERENCES streams(id) ON DELETE CASCADE,\r\n  status TEXT NOT NULL DEFAULT 'active', -- 'active' or 'left'\r\n  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  left_at TIMESTAMPTZ,\r\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  CONSTRAINT valid_status CHECK (status IN ('active', 'left'))\r\n);"
+    },
+    {
+      "table": "officer_work_sessions",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_new_migrations.sql",
+      "startLine": 65,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS officer_work_sessions (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  stream_id UUID REFERENCES streams(id) ON DELETE SET NULL,\r\n  clock_in TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  clock_out TIMESTAMPTZ,\r\n  hours_worked NUMERIC(10, 2) DEFAULT 0,\r\n  coins_earned INTEGER DEFAULT 0,\r\n  payout_status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'paid', 'rejected'\r\n  auto_clocked_out BOOLEAN DEFAULT FALSE,\r\n  admin_note TEXT,\r\n  processed_at TIMESTAMPTZ,\r\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  CONSTRAINT valid_payout_status CHECK (payout_status IN ('pending', 'approved', 'paid', 'rejected'))\r\n);"
+    },
+    {
+      "table": "abuse_reports",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\apply_new_migrations.sql",
+      "startLine": 89,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS abuse_reports (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  reported_by UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  stream_id UUID REFERENCES streams(id) ON DELETE SET NULL,\r\n  offender_user_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,\r\n  reason TEXT NOT NULL,\r\n  severity INTEGER NOT NULL DEFAULT 1, -- 1-5 scale\r\n  reviewed BOOLEAN DEFAULT FALSE,\r\n  admin_note TEXT,\r\n  reviewed_by UUID REFERENCES user_profiles(id) ON DELETE SET NULL,\r\n  reviewed_at TIMESTAMPTZ,\r\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  CONSTRAINT valid_severity CHECK (severity >= 1 AND severity <= 5)\r\n);"
+    },
+    {
+      "table": "user_levels",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\backfill_user_levels.sql",
+      "startLine": 8,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.user_levels (\r\n  user_id uuid primary key references public.user_profiles(id) on delete cascade,\r\n  buyer_xp bigint not null default 0,\r\n  buyer_level int not null default 1,\r\n  stream_xp bigint not null default 0,\r\n  stream_level int not null default 1,\r\n  updated_at timestamptz not null default now()\r\n);"
+    },
+    {
+      "table": "daily_rewards",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_daily_rewards_migration.sql",
+      "startLine": 5,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS daily_rewards (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\r\n  reward_type VARCHAR(50) NOT NULL CHECK (reward_type IN ('broadcaster_daily', 'viewer_daily')),\r\n  date DATE NOT NULL,  -- Calendar date (YYYY-MM-DD)\r\n  broadcast_id UUID REFERENCES streams(id) ON DELETE SET NULL,\r\n  amount INTEGER NOT NULL DEFAULT 0,\r\n  source VARCHAR(50) NOT NULL DEFAULT 'public_pool',\r\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  -- Unique constraint: one reward per user per type per day\r\n  UNIQUE(user_id, reward_type, date)\r\n);"
+    },
+    {
+      "table": "home_feature_cycles",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_home_feature.sql",
+      "startLine": 2,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS home_feature_cycles (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  start_time TIMESTAMP NOT NULL,\r\n  end_time TIMESTAMP NOT NULL,\r\n  total_spent_coins BIGINT DEFAULT 0,\r\n  reward_paid BOOLEAN DEFAULT false,\r\n  winner_user_id UUID REFERENCES user_profiles(id),\r\n  created_at TIMESTAMP DEFAULT now()\r\n);"
+    },
+    {
+      "table": "home_feature_spend",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_home_feature.sql",
+      "startLine": 13,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS home_feature_spend (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  cycle_id UUID REFERENCES home_feature_cycles(id),\r\n  user_id UUID REFERENCES user_profiles(id),\r\n  coins_spent BIGINT NOT NULL,\r\n  created_at TIMESTAMP DEFAULT now()\r\n);"
+    },
+    {
+      "table": "onboarding_progress",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_onboarding_tables.sql",
+      "startLine": 2,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS onboarding_progress (\r\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\r\n  current_step INTEGER DEFAULT 1,\r\n  completed_steps JSONB DEFAULT '[]'::jsonb,\r\n  personal_info JSONB,\r\n  tax_info JSONB,\r\n  payout_method JSONB,\r\n  rules_acknowledged BOOLEAN DEFAULT false,\r\n  digital_signature TEXT,\r\n  simulation_score INTEGER,\r\n  hr_approved BOOLEAN DEFAULT false,\r\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\r\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\r\n  UNIQUE(user_id)\r\n);"
+    },
+    {
+      "table": "onboarding_events",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_onboarding_tables.sql",
+      "startLine": 20,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS onboarding_events (\r\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\r\n  event_type TEXT NOT NULL,\r\n  step_number INTEGER,\r\n  event_data JSONB,\r\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "referrals",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_referral_system.sql",
+      "startLine": 5,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS referrals (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    referrer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,\r\n    referred_user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,\r\n    referred_at TIMESTAMPTZ DEFAULT NOW(),\r\n    reward_status TEXT DEFAULT 'pending' CHECK (reward_status IN ('pending', 'completed', 'failed')),\r\n    deadline TIMESTAMPTZ NOT NULL,\r\n    created_at TIMESTAMPTZ DEFAULT NOW(),\r\n    updated_at TIMESTAMPTZ DEFAULT NOW(),\r\n\r\n    -- Prevent self-referrals and duplicate referrals\r\n    CONSTRAINT no_self_referral CHECK (referrer_id != referred_user_id),\r\n    UNIQUE(referrer_id, referred_user_id)\r\n);"
+    },
+    {
+      "table": "empire_partner_rewards",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_referral_system.sql",
+      "startLine": 21,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS empire_partner_rewards (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    referrer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,\r\n    referred_user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,\r\n    coins_awarded BIGINT NOT NULL DEFAULT 10000,\r\n    rewarded_at TIMESTAMPTZ DEFAULT NOW(),\r\n\r\n    -- Ensure one reward per referral\r\n    UNIQUE(referrer_id, referred_user_id)\r\n);"
+    },
+    {
+      "table": "family_activity_log",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_troll_families_system.sql",
+      "startLine": 466,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.family_activity_log (\r\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    family_id uuid NOT NULL REFERENCES public.troll_families(id) ON DELETE CASCADE,\r\n    user_id uuid NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n    \r\n    -- Event details\r\n    event_type text NOT NULL,\r\n    -- 'member_activity', 'goal_completed', 'achievement_unlocked', 'member_joined', 'member_left', 'streak_milestone'\r\n    event_message text,\r\n    metadata jsonb DEFAULT '{}'::jsonb,\r\n    \r\n    created_at timestamp with time zone DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "tromody_queue",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_tromody_tables.sql",
+      "startLine": 2,
+      "createTableSql": "CREATE TABLE tromody_queue (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,\r\n  status TEXT DEFAULT 'searching' CHECK (status IN ('searching', 'matched', 'exited')),\r\n  match_id UUID,\r\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\r\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\r\n  UNIQUE(user_id)\r\n);"
+    },
+    {
+      "table": "tromody_matches",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_tromody_tables.sql",
+      "startLine": 13,
+      "createTableSql": "CREATE TABLE tromody_matches (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  player1_id UUID REFERENCES auth.users(id),\r\n  player2_id UUID REFERENCES auth.users(id),\r\n  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'rematch_pending')),\r\n  winner_id UUID REFERENCES auth.users(id),\r\n  room_name TEXT UNIQUE,\r\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\r\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "user_agreements",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_user_agreements_table.sql",
+      "startLine": 4,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS user_agreements (\r\n    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n    user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n    username TEXT NOT NULL,\r\n    email TEXT,\r\n    agreement_version TEXT NOT NULL DEFAULT '1.0',\r\n    terms_accepted BOOLEAN NOT NULL DEFAULT true,\r\n    accepted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\r\n    ip_address INET,\r\n    user_agent TEXT,\r\n    digital_signature TEXT, -- Could store a hash or encrypted signature\r\n    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\r\n    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "weekly_reports",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\create_weekly_reports_table.sql",
+      "startLine": 2,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS weekly_reports (\r\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n  officer_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  officer_username TEXT NOT NULL,\r\n  week_start DATE NOT NULL,\r\n  week_end DATE NOT NULL,\r\n  work_summary TEXT NOT NULL,\r\n  challenges_faced TEXT,\r\n  achievements TEXT,\r\n  streams_moderated INTEGER DEFAULT 0,\r\n  actions_taken INTEGER DEFAULT 0,\r\n  recommendations TEXT,\r\n  submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\r\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\r\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "cashout_requests",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\ensure-cashout-table.sql",
+      "startLine": 5,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.cashout_requests (\r\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id uuid NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n  username text,\r\n  full_name text,\r\n  email text,\r\n  payout_method text CHECK (payout_method IN ('PayPal', 'CashApp', 'Venmo')) NOT NULL,\r\n  payout_details text NOT NULL,\r\n  requested_coins integer NOT NULL,\r\n  usd_value numeric(10,2) NOT NULL,\r\n  status text NOT NULL DEFAULT 'pending',\r\n  admin_notes text,\r\n  user_confirmation boolean DEFAULT false,\r\n  fee_applied numeric(12,2),\r\n  usd_after_fee numeric(12,2),\r\n  transaction_ref text,\r\n  created_at timestamp with time zone DEFAULT now(),\r\n  updated_at timestamp with time zone DEFAULT now()\r\n);"
+    },
+    {
+      "table": "matchmaking_queue",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\fix_battle_matchmaking_system.sql",
+      "startLine": 19,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.matchmaking_queue (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    stream_id UUID NOT NULL REFERENCES public.streams(id) ON DELETE CASCADE,\r\n    user_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n    category VARCHAR(50) NOT NULL DEFAULT 'trollmers',\r\n    status VARCHAR(20) NOT NULL DEFAULT 'waiting', -- 'waiting', 'matched', 'accepted', 'declined', 'expired'\r\n    matched_with UUID REFERENCES public.matchmaking_queue(id) ON DELETE SET NULL,\r\n    battle_id UUID REFERENCES public.battles(id) ON DELETE SET NULL,\r\n    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),\r\n    matched_at TIMESTAMPTZ,\r\n    expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '5 minutes'),\r\n    CONSTRAINT unique_active_stream UNIQUE (stream_id, status) WHERE status IN ('waiting', 'matched')\r\n);"
+    },
+    {
+      "table": "training_scenarios",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\force_apply_new_migration.sql",
+      "startLine": 5,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS training_scenarios (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  scenario_type TEXT NOT NULL,\r\n  description TEXT NOT NULL,\r\n  chat_messages JSONB NOT NULL,\r\n  correct_action TEXT NOT NULL,\r\n  points_awarded INTEGER DEFAULT 10,\r\n  difficulty_level INTEGER DEFAULT 1,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "officer_training_sessions",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\force_apply_new_migration.sql",
+      "startLine": 16,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS officer_training_sessions (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  scenario_id UUID NOT NULL REFERENCES training_scenarios(id) ON DELETE CASCADE,\r\n  action_taken TEXT NOT NULL,\r\n  is_correct BOOLEAN NOT NULL,\r\n  response_time_seconds INTEGER,\r\n  points_earned INTEGER DEFAULT 0,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "moderation_events",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\force_apply_new_migration.sql",
+      "startLine": 31,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS moderation_events (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  stream_id UUID REFERENCES streams(id) ON DELETE SET NULL,\r\n  target_user_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,\r\n  action_type TEXT NOT NULL,\r\n  reason TEXT NOT NULL,\r\n  context JSONB,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "observer_ratings",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\force_apply_new_migration.sql",
+      "startLine": 42,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS observer_ratings (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  event_id UUID NOT NULL REFERENCES moderation_events(id) ON DELETE CASCADE,\r\n  score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),\r\n  verdict TEXT NOT NULL,\r\n  policy_tags TEXT[],\r\n  feedback TEXT,\r\n  model_version TEXT,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "shadow_bans",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\force_apply_new_migration.sql",
+      "startLine": 74,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS shadow_bans (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  target_user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  stream_id UUID REFERENCES streams(id) ON DELETE SET NULL,\r\n  reason TEXT NOT NULL,\r\n  expires_at TIMESTAMPTZ,\r\n  is_active BOOLEAN DEFAULT TRUE,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "ghost_presence_logs",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\force_apply_new_migration.sql",
+      "startLine": 97,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS ghost_presence_logs (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  stream_id UUID REFERENCES streams(id) ON DELETE SET NULL,\r\n  minutes_in_ghost_mode INTEGER DEFAULT 0,\r\n  events_moderated INTEGER DEFAULT 0,\r\n  created_at TIMESTAMPTZ DEFAULT NOW(),\r\n  updated_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "officer_mission_logs",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\force_apply_new_migration.sql",
+      "startLine": 107,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS officer_mission_logs (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  mission_type TEXT NOT NULL,\r\n  stream_id UUID REFERENCES streams(id) ON DELETE SET NULL,\r\n  coins_awarded INTEGER DEFAULT 0,\r\n  reputation_awarded INTEGER DEFAULT 0,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "punishment_transactions",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\force_apply_new_migration.sql",
+      "startLine": 118,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS punishment_transactions (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  coins_deducted BIGINT NOT NULL,\r\n  reason TEXT NOT NULL,\r\n  appeal_id UUID,\r\n  verdict TEXT NOT NULL,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "officer_applications",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\lead_officer_system.sql",
+      "startLine": 11,
+      "createTableSql": "create table if not exists public.officer_applications (\r\n  id uuid primary key default gen_random_uuid(),\r\n  user_id uuid references public.profiles(id) on delete cascade,\r\n  status text default 'pending' check (status in ('pending','approved','denied')),\r\n  training_score int,\r\n  experience text,\r\n  social_links text,\r\n  notes text,\r\n  reviewed_by uuid references public.profiles(id),\r\n  reviewed_at timestamptz,\r\n  created_at timestamptz default now()\r\n);"
+    },
+    {
+      "table": "officer_strikes",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\lead_officer_system.sql",
+      "startLine": 27,
+      "createTableSql": "create table if not exists public.officer_strikes (\r\n  id uuid primary key default gen_random_uuid(),\r\n  officer_id uuid references public.profiles(id),\r\n  issued_by uuid references public.profiles(id),\r\n  reason text,\r\n  points int default 1,\r\n  created_at timestamptz default now()\r\n);"
+    },
+    {
+      "table": "incidents",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\lead_officer_system.sql",
+      "startLine": 50,
+      "createTableSql": "create table if not exists public.incidents (\r\n  id uuid primary key default gen_random_uuid(),\r\n  reported_by uuid references public.profiles(id),\r\n  assigned_to uuid references public.profiles(id),\r\n  stream_id text,\r\n  category text,\r\n  description text,\r\n  evidence jsonb,\r\n  status text default 'open'\r\n    check (status in ('open','investigating','closed','escalated')),\r\n  created_at timestamptz default now(),\r\n  updated_at timestamptz default now()\r\n);"
+    },
+    {
+      "table": "payment_logs",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\migrations\\20260109_create_payment_logs.sql",
+      "startLine": 5,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.payment_logs (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  \r\n  -- PayPal identifiers (primary idempotency keys)\r\n  paypal_order_id TEXT NOT NULL,\r\n  paypal_capture_id TEXT,\r\n  \r\n  -- User and package info\r\n  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n  package_id UUID REFERENCES public.coin_packages(id) ON DELETE SET NULL,\r\n  \r\n  -- Transaction status\r\n  status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED')),\r\n  \r\n  -- Financial details\r\n  amount_usd DECIMAL(10, 2) NOT NULL,\r\n  coins_granted INTEGER DEFAULT 0,\r\n  \r\n  -- Error tracking (populated when status = FAILED)\r\n  error_code TEXT,\r\n  error_message TEXT,\r\n  raw_response JSONB,\r\n  \r\n  -- Metadata\r\n  metadata JSONB DEFAULT '{}',\r\n  \r\n  -- Timestamps\r\n  created_at TIMESTAMPTZ DEFAULT NOW(),\r\n  updated_at TIMESTAMPTZ DEFAULT NOW(),\r\n  completed_at TIMESTAMPTZ,\r\n  \r\n  -- Constraints for idempotency\r\n  CONSTRAINT unique_paypal_order_id UNIQUE (paypal_order_id)\r\n);"
+    },
+    {
+      "table": "battle_sessions",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\migrations\\create_5v5_battle_system.sql",
+      "startLine": 5,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS battle_sessions (\r\n  id TEXT PRIMARY KEY,\r\n  stream_id_a TEXT NOT NULL,\r\n  stream_id_b TEXT NOT NULL,\r\n  host_id_a UUID NOT NULL REFERENCES auth.users(id),\r\n  host_id_b UUID NOT NULL REFERENCES auth.users(id),\r\n  status TEXT NOT NULL DEFAULT 'pre_battle' CHECK (status IN ('pre_battle', 'active', 'ended', 'cancelled')),\r\n  participants JSONB NOT NULL DEFAULT '[]',\r\n  score_a INTEGER NOT NULL DEFAULT 0,\r\n  score_b INTEGER NOT NULL DEFAULT 0,\r\n  gift_count_a INTEGER NOT NULL DEFAULT 0,\r\n  gift_count_b INTEGER NOT NULL DEFAULT 0,\r\n  winner TEXT CHECK (winner IN ('A', 'B', 'draw')),\r\n  abilities_used JSONB NOT NULL DEFAULT '{}',\r\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  started_at TIMESTAMPTZ,\r\n  ended_at TIMESTAMPTZ,\r\n  duration_seconds INTEGER NOT NULL DEFAULT 180\r\n);"
+    },
+    {
+      "table": "scheduled_announcements",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\run_missing_migrations.sql",
+      "startLine": 8,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS scheduled_announcements (\r\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  message text NOT NULL,\r\n  created_by uuid REFERENCES user_profiles(id) ON DELETE SET NULL,\r\n  is_sent boolean DEFAULT false,\r\n  created_at timestamptz DEFAULT now()\r\n);"
+    },
+    {
+      "table": "xp_ledger",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20240101_xp_system.sql",
+      "startLine": 14,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.xp_ledger (\r\n    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,\r\n    source TEXT NOT NULL,\r\n    source_id TEXT NOT NULL, -- Unique per source\r\n    xp_amount BIGINT NOT NULL,\r\n    metadata JSONB DEFAULT '{}'::jsonb,\r\n    created_at TIMESTAMPTZ DEFAULT NOW(),\r\n    UNIQUE(source, source_id)\r\n);"
+    },
+    {
+      "table": "wallets",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260115001000_stripe_coin_purchases.sql",
+      "startLine": 6,
+      "createTableSql": "create table if not exists public.wallets (\r\n  user_id uuid primary key references auth.users(id) on delete cascade,\r\n  coin_balance integer not null default 0,\r\n  created_at timestamp with time zone not null default now(),\r\n  updated_at timestamp with time zone not null default now()\r\n);"
+    },
+    {
+      "table": "car_insurance_policies",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260117100000_car_property_insurance.sql",
+      "startLine": 6,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.car_insurance_policies (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID NOT NULL,\r\n  car_garage_id UUID NOT NULL,\r\n  plan_id UUID,\r\n  price_paid_coins BIGINT NOT NULL,\r\n  duration_days INTEGER NOT NULL,\r\n  starts_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  expires_at TIMESTAMPTZ NOT NULL,\r\n  is_active BOOLEAN NOT NULL DEFAULT true,\r\n  metadata JSONB DEFAULT '{}'::jsonb,\r\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "property_insurance_policies",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260117100000_car_property_insurance.sql",
+      "startLine": 46,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.property_insurance_policies (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID NOT NULL,\r\n  property_id UUID NOT NULL,\r\n  plan_id UUID,\r\n  price_paid_coins BIGINT NOT NULL,\r\n  duration_days INTEGER NOT NULL,\r\n  starts_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\r\n  expires_at TIMESTAMPTZ NOT NULL,\r\n  is_active BOOLEAN NOT NULL DEFAULT true,\r\n  metadata JSONB DEFAULT '{}'::jsonb,\r\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "troll_wall_gifts",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260118212000_manual_order_wallet_and_wall_fixes.sql",
+      "startLine": 2,
+      "createTableSql": "create table if not exists public.troll_wall_gifts (\r\n    id uuid primary key default gen_random_uuid(),\r\n    post_id uuid not null references public.troll_wall_posts(id) on delete cascade,\r\n    sender_id uuid not null references auth.users(id) on delete cascade,\r\n    gift_type text not null,\r\n    quantity integer not null default 1,\r\n    coin_cost integer not null default 0,\r\n    created_at timestamptz not null default now()\r\n);"
+    },
+    {
+      "table": "user_cars",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260118230000_user_cars_properties.sql",
+      "startLine": 20,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.user_cars (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\r\n    car_id TEXT NOT NULL, -- ID from the game config/catalog\r\n    model_url TEXT NOT NULL, -- URL to the GLB/GLTF model\r\n    purchased_at TIMESTAMPTZ DEFAULT now(),\r\n    is_active BOOLEAN DEFAULT false,\r\n    customization_json JSONB DEFAULT '{}'::jsonb,\r\n    \r\n    CONSTRAINT user_cars_user_car_unique UNIQUE (user_id, car_id)\r\n);"
+    },
+    {
+      "table": "bank_audit_log",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260120000000_troll_bank_init.sql",
+      "startLine": 61,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.bank_audit_log (\r\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    action text NOT NULL,\r\n    performed_by uuid REFERENCES public.user_profiles(id), -- NULL for system\r\n    target_user_id uuid REFERENCES public.user_profiles(id),\r\n    details jsonb,\r\n    created_at timestamptz DEFAULT now()\r\n);"
+    },
+    {
+      "table": "bank_feature_flags",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260120000001_bank_feature_flags.sql",
+      "startLine": 1,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.bank_feature_flags (\r\n    key text PRIMARY KEY,\r\n    value jsonb NOT NULL,\r\n    is_enabled boolean DEFAULT false,\r\n    description text,\r\n    updated_at timestamptz DEFAULT now(),\r\n    updated_by uuid REFERENCES auth.users(id)\r\n);"
+    },
+    {
+      "table": "user_car_upgrades",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260204000000_active_asset_economy.sql",
+      "startLine": 241,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.user_car_upgrades (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    user_car_id UUID NOT NULL REFERENCES public.user_cars(id) ON DELETE CASCADE,\r\n    car_upgrade_id UUID NOT NULL REFERENCES public.car_upgrades(id),\r\n    purchased_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "vehicle_upgrades",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260605000000_fix_everything_audit.sql",
+      "startLine": 28,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS vehicle_upgrades (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID NOT NULL REFERENCES user_profiles(id),\r\n  vehicle_id INTEGER NOT NULL,\r\n  upgrade_type TEXT NOT NULL,\r\n  cost INTEGER NOT NULL,\r\n  status TEXT NOT NULL DEFAULT 'installed',\r\n  tasks_required_total INTEGER DEFAULT 0,\r\n  tasks_completed INTEGER DEFAULT 0,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "town_player_state",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260605000000_fix_everything_audit.sql",
+      "startLine": 239,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS town_player_state (\r\n  user_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  position_x NUMERIC NOT NULL,\r\n  position_z NUMERIC NOT NULL,\r\n  rotation_y NUMERIC NOT NULL,\r\n  vehicle TEXT,\r\n  updated_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "officer_assignments",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20260609000001_officer_of_week_voting.sql",
+      "startLine": 27,
+      "createTableSql": "create table if not exists officer_assignments (\r\n  id uuid primary key default gen_random_uuid(),\r\n  cycle_id uuid not null references officer_vote_cycles(id) on delete cascade,\r\n  broadcaster_id uuid not null references public.user_profiles(id) on delete cascade,\r\n  starts_at timestamptz not null,\r\n  ends_at timestamptz not null,\r\n  created_at timestamptz not null default now()\r\n);"
+    },
+    {
+      "table": "live_sessions",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20261001002000_live_sessions_wallet_transactions.sql",
+      "startLine": 2,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.live_sessions (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n  requested_quality TEXT NOT NULL,\r\n  allowed_quality TEXT NOT NULL,\r\n  status TEXT NOT NULL DEFAULT 'created',\r\n  cost INTEGER NOT NULL DEFAULT 0,\r\n  hd_paid BOOLEAN NOT NULL DEFAULT false,\r\n  hd_refunded BOOLEAN NOT NULL DEFAULT false,\r\n  refunded_at TIMESTAMPTZ,\r\n  room_name TEXT,\r\n  stream_id UUID,\r\n  idempotency_key TEXT,\r\n  created_at TIMESTAMPTZ DEFAULT NOW(),\r\n  updated_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "admin_pool_buckets",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270120000900_admin_pool_allocations.sql",
+      "startLine": 2,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.admin_pool_buckets (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    bucket_name TEXT NOT NULL UNIQUE,\r\n    balance_coins BIGINT DEFAULT 0,\r\n    target_coins BIGINT DEFAULT 0, -- For provider targets\r\n    metadata JSONB DEFAULT '{}',\r\n    updated_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "troll_battle_weekly_stats",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270120008000_troll_battles_setup.sql",
+      "startLine": 48,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.troll_battle_weekly_stats (\r\n    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n    user_id UUID REFERENCES public.user_profiles(id) NOT NULL,\r\n    week_start_date DATE NOT NULL,\r\n    wins INTEGER DEFAULT 0,\r\n    losses INTEGER DEFAULT 0,\r\n    total_score INTEGER DEFAULT 0,\r\n    UNIQUE(user_id, week_start_date)\r\n);"
+    },
+    {
+      "table": "user_level_perks",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270121050000_comprehensive_badge_system.sql",
+      "startLine": 118,
+      "createTableSql": "create table if not exists user_level_perks (\r\n  id uuid primary key default gen_random_uuid(),\r\n  user_id uuid not null references auth.users(id) on delete cascade,\r\n  level int not null,\r\n  perk_type text not null, -- 'custom_emoji', 'chat_glow', 'chat_color', 'chat_animation', 'entrance_effect', 'custom_badge_slot', 'crown', 'animated_avatar', 'city_statue', 'ultimate_flair'\r\n  unlocked_at timestamptz not null default now(),\r\n  unique(user_id, perk_type)\r\n);"
+    },
+    {
+      "table": "broadcast_seat_bans",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270125000050_create_broadcast_seat_bans.sql",
+      "startLine": 2,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.broadcast_seat_bans (\r\n    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\r\n    room TEXT NOT NULL,\r\n    user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n    banned_by UUID REFERENCES user_profiles(id),\r\n    banned_until TIMESTAMPTZ,\r\n    created_at TIMESTAMPTZ DEFAULT NOW(),\r\n    reason TEXT\r\n);"
+    },
+    {
+      "table": "gas_requests",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270203000000_tmv_system.sql",
+      "startLine": 13,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.gas_requests (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    requester_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n    target_user_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n    amount NUMERIC NOT NULL CHECK (amount > 0),\r\n    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),\r\n    created_at TIMESTAMPTZ DEFAULT now(),\r\n    updated_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "pitch_votes",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270204040000_free_voting.sql",
+      "startLine": 2,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.pitch_votes (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    pitch_id UUID REFERENCES public.pitches(id) ON DELETE CASCADE NOT NULL,\r\n    voter_id UUID REFERENCES public.user_profiles(id) NOT NULL,\r\n    created_at TIMESTAMPTZ DEFAULT NOW(),\r\n    UNIQUE(pitch_id, voter_id)\r\n);"
+    },
+    {
+      "table": "officer_patrols",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270208050000_officer_ops_and_management.sql",
+      "startLine": 11,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS officer_patrols (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  officer_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  patrol_type TEXT NOT NULL,\r\n  priority_level INTEGER DEFAULT 1,\r\n  status TEXT DEFAULT 'pending', -- pending, in_progress, completed\r\n  instructions TEXT,\r\n  created_at TIMESTAMPTZ DEFAULT NOW(),\r\n  updated_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "creator_panic_alerts",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270208050000_officer_ops_and_management.sql",
+      "startLine": 33,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS creator_panic_alerts (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  creator_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  alert_type TEXT NOT NULL,\r\n  severity TEXT NOT NULL, -- critical, high, medium, low\r\n  description TEXT,\r\n  status TEXT DEFAULT 'active', -- active, assigned, resolved\r\n  assigned_officer_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,\r\n  created_at TIMESTAMPTZ DEFAULT NOW(),\r\n  resolved_at TIMESTAMPTZ\r\n);"
+    },
+    {
+      "table": "role_change_log",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270208050000_officer_ops_and_management.sql",
+      "startLine": 46,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS role_change_log (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  target_user UUID REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  changed_by UUID REFERENCES user_profiles(id) ON DELETE SET NULL,\r\n  old_role TEXT,\r\n  new_role TEXT,\r\n  reason TEXT,\r\n  created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "officer_badges",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270208050000_officer_ops_and_management.sql",
+      "startLine": 57,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS officer_badges (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  badge_type TEXT NOT NULL,\r\n  awarded_at TIMESTAMPTZ DEFAULT NOW(),\r\n  awarded_by UUID REFERENCES user_profiles(id) ON DELETE SET NULL\r\n);"
+    },
+    {
+      "table": "visa_redemptions",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270208060000_admin_finance_and_reports.sql",
+      "startLine": 10,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS visa_redemptions (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,\r\n  coins_reserved INTEGER NOT NULL CHECK (coins_reserved > 0),\r\n  usd_amount NUMERIC(10, 2) NOT NULL CHECK (usd_amount > 0),\r\n  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'fulfilled', 'rejected')),\r\n  giftcard_code TEXT, -- Only populated when fulfilled\r\n  created_at TIMESTAMPTZ DEFAULT NOW(),\r\n  approved_at TIMESTAMPTZ,\r\n  fulfilled_at TIMESTAMPTZ,\r\n  rejected_at TIMESTAMPTZ,\r\n  rejection_reason TEXT,\r\n  processed_by UUID REFERENCES user_profiles(id)\r\n);"
+    },
+    {
+      "table": "moderation_actions_log",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270209000000_fix0_general_updates.sql",
+      "startLine": 59,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.moderation_actions_log (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    actor_user_id UUID REFERENCES public.user_profiles(id),\r\n    target_user_id UUID REFERENCES public.user_profiles(id),\r\n    action_type TEXT NOT NULL, -- 'kick', 'ban', 'mute', 'disable_chat'\r\n    reason TEXT,\r\n    context JSONB DEFAULT '{}'::jsonb, -- broadcast_id, chat_id, etc.\r\n    duration_minutes INTEGER, -- for temp bans/mutes\r\n    original_state JSONB, -- For rollback: what was the state before this action?\r\n    is_reverted BOOLEAN DEFAULT false,\r\n    reverted_by UUID REFERENCES public.user_profiles(id),\r\n    reverted_at TIMESTAMPTZ,\r\n    created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "property_types",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270209120000_fix2_fix3_housing_revenue.sql",
+      "startLine": 8,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.property_types (\r\n    id TEXT PRIMARY KEY, -- 'apartment', 'house', 'mansion', 'trailer'\r\n    name TEXT NOT NULL,\r\n    base_rent INTEGER DEFAULT 1000,\r\n    base_utilities INTEGER DEFAULT 100,\r\n    max_occupants INTEGER DEFAULT 2\r\n);"
+    },
+    {
+      "table": "property_loans",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270209150000_fix2_loans.sql",
+      "startLine": 23,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.property_loans (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    user_id UUID REFERENCES public.user_profiles(id),\r\n    property_id UUID REFERENCES public.properties(id),\r\n    total_amount INTEGER NOT NULL,\r\n    remaining_amount INTEGER NOT NULL,\r\n    monthly_payment INTEGER NOT NULL,\r\n    interest_rate NUMERIC DEFAULT 0.05,\r\n    next_payment_due_at TIMESTAMPTZ,\r\n    last_payment_at TIMESTAMPTZ,\r\n    missed_payments INTEGER DEFAULT 0,\r\n    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'paid', 'defaulted')),\r\n    created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "invoices",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270210000000_complete_fix_implementation.sql",
+      "startLine": 115,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.invoices (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    lease_id UUID REFERENCES public.leases(id),\r\n    tenant_id UUID REFERENCES public.user_profiles(id),\r\n    type TEXT NOT NULL CHECK (type IN ('rent', 'electric', 'water', 'deposit', 'application_fee')),\r\n    amount INTEGER NOT NULL,\r\n    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'overdue', 'cancelled')),\r\n    due_date TIMESTAMPTZ,\r\n    paid_at TIMESTAMPTZ,\r\n    created_at TIMESTAMPTZ DEFAULT NOW()\r\n);"
+    },
+    {
+      "table": "pod_episodes",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270215000000_remove_gamerz_add_pods.sql",
+      "startLine": 92,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.pod_episodes (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    room_id UUID REFERENCES public.pod_rooms(id) ON DELETE SET NULL,\r\n    host_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,\r\n    title TEXT NOT NULL,\r\n    audio_url TEXT,\r\n    duration_seconds INTEGER,\r\n    created_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "pod_bans",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270215030000_pod_chat_and_ui.sql",
+      "startLine": 36,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.pod_bans (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    room_id UUID NOT NULL REFERENCES public.pod_rooms(id) ON DELETE CASCADE,\r\n    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\r\n    banned_at TIMESTAMPTZ DEFAULT now(),\r\n    UNIQUE(room_id, user_id)\r\n);"
+    },
+    {
+      "table": "troll_post_gifts",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\20270216000002_more_notifications.sql",
+      "startLine": 24,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.troll_post_gifts (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    post_id UUID NOT NULL, -- references troll_posts(id) but we skip FK to avoid dependency loop if table missing\r\n    sender_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,\r\n    gift_type TEXT NOT NULL, \r\n    amount NUMERIC NOT NULL DEFAULT 0,\r\n    metadata JSONB DEFAULT '{}'::jsonb,\r\n    created_at TIMESTAMPTZ DEFAULT now()\r\n);"
+    },
+    {
+      "table": "user_vouchers",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\migrations\\pending_ignored\\20270211000005_replace_starter_car_with_voucher.sql",
+      "startLine": 5,
+      "createTableSql": "CREATE TABLE IF NOT EXISTS public.user_vouchers (\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\r\n    voucher_type TEXT NOT NULL DEFAULT 'vehicle',\r\n    item_id TEXT NOT NULL, -- The car_id or item slug\r\n    item_name TEXT,\r\n    description TEXT,\r\n    is_claimed BOOLEAN DEFAULT false,\r\n    claimed_at TIMESTAMPTZ,\r\n    created_at TIMESTAMPTZ DEFAULT now(),\r\n    expires_at TIMESTAMPTZ, -- Optional expiration\r\n    CONSTRAINT user_vouchers_one_per_user_type UNIQUE (user_id, voucher_type, item_id)\r\n);"
+    },
+    {
+      "table": "troll_post_views",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\post_engagement_tables.sql",
+      "startLine": 4,
+      "createTableSql": "create table if not exists troll_post_views (\r\n  id uuid default gen_random_uuid() primary key,\r\n  post_id uuid not null references troll_posts(id) on delete cascade,\r\n  user_id uuid references auth.users(id) on delete cascade,\r\n  viewed_at timestamptz default now(),\r\n  unique(post_id, user_id, date_trunc('day', viewed_at))\r\n);"
+    },
+    {
+      "table": "trolls_night_applications",
+      "file": "C:\\Users\\kainm\\TC ONLY\\Mai Troll\\.kilo\\worktrees\\checkered-slide\\supabase\\schema.sql",
+      "startLine": 163,
+      "createTableSql": "create table if not exists public.trolls_night_applications (\r\n  id uuid primary key default gen_random_uuid(),\r\n  user_id uuid not null references public.user_profiles(id) on delete cascade,\r\n  full_name text not null,\r\n  date_of_birth date,\r\n  id_type text,\r\n  id_number text,\r\n  id_document_url text,\r\n  category_preference text,\r\n  additional_notes text,\r\n  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'disqualified')),\r\n  rejection_reason text,\r\n  rejection_count integer default 0,\r\n  last_reviewed_by uuid references public.user_profiles(id),\r\n  last_reviewed_at timestamptz,\r\n  disqualified_at timestamptz,\r\n  created_at timestamptz not null default now(),\r\n  updated_at timestamptz not null default now()\r\n);"
+    }
+  ]
+}

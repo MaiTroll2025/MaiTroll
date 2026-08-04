@@ -520,7 +520,7 @@ export default function GovernmentStreams() {
               <div>
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
                   <Shield className="h-4 w-4" />
-                  Troll City Government Network
+                  Mai Troll Government Network
                 </div>
 
                 <h1 className="text-4xl font-black tracking-tight md:text-6xl">
@@ -531,7 +531,7 @@ export default function GovernmentStreams() {
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400">
-                  Monitor broadcasts, dispatch officers, moderate hosts, and enforce Troll City laws in real-time.
+                  Monitor broadcasts, dispatch officers, moderate hosts, and enforce Mai Troll laws in real-time.
                 </p>
               </div>
 
@@ -635,7 +635,7 @@ export default function GovernmentStreams() {
               <EmptyState
                 icon={Video}
                 title="No Active Streams"
-                description="No live broadcasts are currently active in Troll City."
+                description="No live broadcasts are currently active in Mai Troll."
               />
             ) : (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

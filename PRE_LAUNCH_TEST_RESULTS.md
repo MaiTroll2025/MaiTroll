@@ -49,7 +49,7 @@ All required environment variables present:
 - ✅ `SQUARE_ENVIRONMENT=production`
 - ✅ `AGORA_APP_ID`
 - ✅ `AGORA_APP_CERTIFICATE`
-- ✅ `VITE_ADMIN_EMAIL=trollcity2025@gmail.com`
+- ✅ `VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com`
 - ✅ `VITE_API_URL=http://localhost:3001`
 
 **Security Note:** All secrets properly configured, not exposed in frontend bundle.

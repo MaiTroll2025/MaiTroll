@@ -1,16 +1,16 @@
-# 🎮 Troll City - New User Guide
+# 🎮 Mai Troll - New User Guide
 
-Welcome to **Troll City**, a live streaming and social community platform where you can broadcast, connect with others, join families, and participate in a unique virtual city experience.
+Welcome to **Mai Troll**, a live streaming and social community platform where you can broadcast, connect with others, join families, and participate in a unique virtual city experience.
 
 ---
 
 ## 📋 Quick Start (Step-by-Step)
 
 ### Step 1: Create Your Account
-1. Visit the Troll City website
+1. Visit the Mai Troll website
 2. Click **Sign Up** 
 3. Enter your email and create a password
-4. Choose a unique **username** - this is your identity in Troll City
+4. Choose a unique **username** - this is your identity in Mai Troll
 
 
 ### Step 2: Complete Your Profile
@@ -37,7 +37,7 @@ Welcome to **Troll City**, a live streaming and social community platform where 
 | **Home** | See real-time platform stats, live broadcaster count, and quick access to features |
 | **Explore** | Browse live broadcasts, discover new content creators, see trending streams |
 
-Why Join? We know how other platforms regulate streams and restrict you for absolutely nothing we are here to stop the crap. Why go live and recieve 10000 coins to just get a 3rd why nto keep all Troll City hears you every coins you earn is yours 
+Why Join? We know how other platforms regulate streams and restrict you for absolutely nothing we are here to stop the crap. Why go live and recieve 10000 coins to just get a 3rd why nto keep all Mai Troll hears you every coins you earn is yours 
 Use those coins to cashout on fridays every week 
 Earn up to $4k a month 
 
@@ -99,7 +99,7 @@ Earn up to $4k a month
 | **TrollBank** | Deposit/withdraw coins, take loans, manage finances |
 | **CoinStore** | Purchase Troll Coins (premium currency) |
 | **Wallet** | View your balance and transaction history |
-| **SellOnTrollCity** | List items for sale |
+| **SellOnMai Troll** | List items for sale |
 | **MyOrders** | View your purchase orders |
 | **SellerOrders** | Manage your sales (if you're a seller) |
 
@@ -161,7 +161,7 @@ Earn up to $4k a month
 
 ### Human Moderators - No AI Moderation
 
-Troll City is moderated by **real human moderators** - not AI. Our team of dedicated staff works around the clock to:
+Mai Troll is moderated by **real human moderators** - not AI. Our team of dedicated staff works around the clock to:
 
 - Review reported content
 - Enforce community guidelines
@@ -170,7 +170,7 @@ Troll City is moderated by **real human moderators** - not AI. Our team of dedic
 
 ### Freedom of Speech - But To An Extent
 
-Troll City values **freedom of expression**, but with reasonable limits:
+Mai Troll values **freedom of expression**, but with reasonable limits:
 
 **✅ You Can:**
 - Express opinions and viewpoints
@@ -207,7 +207,7 @@ If you encounter problems:
 - Officer Misconduct
 - Appeal Case
 - Copyright / Content Claim
-- TrollCity Policy Violation
+- Mai Troll Policy Violation
 
 ---
 
@@ -258,4 +258,4 @@ If you encounter problems:
 ---
 
 
-*Welcome to Troll City! Enjoy your stay and have fun! 🎉*
+*Welcome to Mai Troll! Enjoy your stay and have fun! 🎉*

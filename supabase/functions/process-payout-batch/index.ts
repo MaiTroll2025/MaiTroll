@@ -104,28 +104,35 @@ serve(async (req) => {
     const { access_token } = await tokenResp.json();
 
     // 5. Construct PayPal Batch
-    const items = requests
-      .filter((r: any) => r.requester?.payout_paypal_email)
-      .map((r: any) => ({
+const items = requests
+       .filter((r: any) => r.requester?.payout_paypal_email && Number(r.net_amount) > 0)
+       .map((r: any) => ({
         recipient_type: "EMAIL",
         amount: {
           value: Number(r.net_amount).toFixed(2),
           currency: "USD",
         },
         receiver: r.requester.payout_paypal_email,
-        note: `Troll City Weekly Payout - Week Ending ${batch.week_end}`,
+        note: `Mai Troll Weekly Payout - Week Ending ${batch.week_end}`,
         sender_item_id: r.id,
       }));
 
-    if (items.length === 0) {
-      throw new Error("No valid PayPal emails found in batch");
-    }
+if (items.length === 0) {
+       console.log('No valid PayPal payouts to process (all amounts are $0 or missing emails)');
+       const now = new Date().toISOString();
+       const { error: updateError } = await supabase
+         .from('payout_requests')
+         .update({ status: 'completed', paid_at: now, payment_reference: 'skipped_zero_amount' })
+         .in('id', requests.map((r: any) => r.id));
+       if (updateError) console.error('Error marking zero-amount payouts as completed:', updateError);
+       return { success: true, batchId, processed: 0, skipped: requests.length };
+     }
 
     const payload = {
       sender_batch_header: {
         sender_batch_id: `batch_${batchId}_${Date.now()}`,
-        email_subject: "You have a payout from Troll City!",
-        email_message: "Congratulations! You've received your weekly payout from Troll City, including any seasonal bonuses earned.",
+        email_subject: "You have a payout from Mai Troll!",
+        email_message: "Congratulations! You've received your weekly payout from Mai Troll, including any seasonal bonuses earned.",
       },
       items: items,
     };

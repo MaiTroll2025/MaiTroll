@@ -396,7 +396,7 @@ export default function TrollWallPostModal({
                   ⚡
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-cyan-400">Troll City System</span>
+                  <span className="text-sm font-bold text-cyan-400">Mai Troll System</span>
                   <span className="ml-2 inline-flex items-center rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-cyan-300">
                     System
                   </span>

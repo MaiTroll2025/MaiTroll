@@ -4,7 +4,7 @@
 -- Option A: If you know your email
 SELECT id, username, email, role, is_admin, is_superadmin, is_ceo
 FROM user_profiles
-WHERE email = 'trollcity2025@gmail.com';
+WHERE email = 'Mai Troll2025@gmail.com';
 
 -- Option B: See all admin-level profiles
 SELECT id, username, email, role, is_admin, is_superadmin, is_ceo

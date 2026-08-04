@@ -77,7 +77,7 @@ export default function PresidentPage() {
             <div>
               <h1 className="text-3xl font-black tracking-tight">Citizen Access Required</h1>
               <p className="mt-3 text-sm leading-6 text-slate-300">
-                You must be signed in as a Troll City citizen to view elections, vote, or run for office.
+                You must be signed in as a Mai Troll citizen to view elections, vote, or run for office.
               </p>
             </div>
 
@@ -106,7 +106,7 @@ export default function PresidentPage() {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.12)]">
                 <Landmark className="h-4 w-4" />
-                Troll City Presidential Office
+                Mai Troll Presidential Office
               </div>
 
               <h1 className="text-4xl font-black tracking-tight text-white md:text-7xl">
@@ -117,7 +117,7 @@ export default function PresidentPage() {
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
-                Vote, run for office, view the active administration, and manage official Troll City election operations.
+                Vote, run for office, view the active administration, and manage official Mai Troll election operations.
               </p>
             </div>
 
@@ -391,7 +391,7 @@ function OfficeCard({
 
           <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">{role}</p>
           <p className="mt-2 text-sm text-slate-400">
-            {username === 'Vacant' ? 'This office is currently vacant.' : 'Currently serving Troll City citizens.'}
+            {username === 'Vacant' ? 'This office is currently vacant.' : 'Currently serving Mai Troll citizens.'}
           </p>
 
           {canManage && (

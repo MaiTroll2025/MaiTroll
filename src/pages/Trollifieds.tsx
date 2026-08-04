@@ -404,7 +404,7 @@ export default function Trollifieds() {
       // that should appear on the Trollifieds map for everyone to discover
       if (activeTab === 'shop_items') {
         const { data: shopsData, error: shopsError } = await supabase
-          .from('trollcity_shops')
+          .from('MaiTroll_shops')
           .select(`
             id,
             name,
@@ -834,7 +834,7 @@ export default function Trollifieds() {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
                 <Store className="h-4 w-4" />
-                Troll City Local Marketplace
+                Mai Troll Local Marketplace
               </div>
 
               <h1 className="text-4xl font-black tracking-tight md:text-6xl">
@@ -953,7 +953,7 @@ export default function Trollifieds() {
           <div className="flex items-start gap-3">
             <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-yellow-300" />
             <p className="text-sm leading-6 text-yellow-100">
-              Troll City does not verify physical goods, shipping, pickup, seller claims, or package contents. Illegal items are prohibited and may be reported.
+              Mai Troll does not verify physical goods, shipping, pickup, seller claims, or package contents. Illegal items are prohibited and may be reported.
               Exact map locations are intentionally offset for user safety.
             </p>
           </div>

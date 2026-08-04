@@ -1,7 +1,7 @@
 # Comprehensive End-to-End Audit & Wiring Report
 
 ## 1. Executive Summary
-This report confirms the completion of the end-to-end audit and wiring for the Troll City application. All major systems (Moderation, Economy, XP/Badges, Officer Management) have been audited, and mock data/logic has been replaced with real backend implementations using Supabase RPCs, Edge Functions, and Database Triggers.
+This report confirms the completion of the end-to-end audit and wiring for the Mai Troll application. All major systems (Moderation, Economy, XP/Badges, Officer Management) have been audited, and mock data/logic has been replaced with real backend implementations using Supabase RPCs, Edge Functions, and Database Triggers.
 
 ## 2. System-by-System Wiring Status
 

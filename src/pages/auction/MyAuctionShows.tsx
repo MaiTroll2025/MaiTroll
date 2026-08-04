@@ -144,7 +144,7 @@ export default function MyAuctionShows() {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
                 <Gavel className="h-4 w-4" />
-                Troll City Auction Network
+                Mai Troll Auction Network
               </div>
 
               <h1 className="text-4xl font-black tracking-tight md:text-6xl">
@@ -157,7 +157,7 @@ export default function MyAuctionShows() {
               <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
                 {isAuctioneer
                   ? 'Manage your auction shows, lots, bids, sales, and live auction events.'
-                  : 'Browse live, scheduled, and completed Troll City auction shows.'}
+                  : 'Browse live, scheduled, and completed Mai Troll auction shows.'}
               </p>
             </div>
 

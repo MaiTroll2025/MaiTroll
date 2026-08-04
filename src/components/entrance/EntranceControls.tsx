@@ -16,7 +16,7 @@ export default function EntranceControls({
         type="button"
         className="gce-btn gce-skip"
         onClick={onSkip}
-        aria-label="Skip the Troll City entrance animation"
+        aria-label="Skip the Mai Troll entrance animation"
       >
         Skip Entrance
       </button>
@@ -26,9 +26,9 @@ export default function EntranceControls({
           type="button"
           className="gce-btn gce-enter"
           onClick={onEnter}
-          aria-label="Enter Troll City"
+          aria-label="Enter Mai Troll"
         >
-          Enter Troll City
+          Enter Mai Troll
         </button>
         <span className="gce-enter-hint">Or press Skip to continue</span>
       </div>

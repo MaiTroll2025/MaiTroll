@@ -1068,7 +1068,7 @@ export default function BottomNavigation() {
 
                     <div>
                       <h3 className="text-lg font-black text-white">{roleInfo.label}</h3>
-                      <p className="text-xs text-cyan-100/50">Troll City quick navigation</p>
+                      <p className="text-xs text-cyan-100/50">Mai Troll quick navigation</p>
                     </div>
                   </div>
 
@@ -1210,45 +1210,43 @@ export default function BottomNavigation() {
                           {category}
                         </h4>
 
-                        <div className="grid grid-cols-4 gap-2 md:grid-cols-2">
-                          {options
-                            .filter((opt) => !['Home', 'Coin Store', 'Search'].includes(opt.label))
-                            .map((opt) => {
-                              const OptIcon = opt.icon
-                              const active = location.pathname === opt.path
+<div className="grid grid-cols-3 gap-2 md:grid-cols-4">
+                           {options
+                             .filter((opt) => !['Home', 'Coin Store', 'Search'].includes(opt.label))
+                             .map((opt) => {
+                               const active = location.pathname === opt.path
 
-                              return (
-                                <SafeLink
-                                  key={`${category}-${opt.label}-${opt.path}`}
-                                  to={opt.path}
-                                  onClick={() => {
-                                    if (opt.onClick) opt.onClick()
-                                    else setIsMenuOpen(false)
-                                  }}
-                                  className={cx(
-                                    'relative flex flex-col items-center gap-1 rounded-xl border p-2 transition-all duration-200',
-                                    active
-                                      ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.18)]'
-                                      : 'border-white/[0.06] bg-white/[0.035] text-white hover:border-cyan-300/25 hover:bg-white/[0.06]',
-                                  )}
-                                >
-                                  <div className="rounded-lg bg-purple-500/[0.10] p-1.5 text-purple-300">
-                                    <OptIcon size={16} />
-                                  </div>
+                               return (
+                                 <SafeLink
+                                   key={`${category}-${opt.label}-${opt.path}`}
+                                   to={opt.path}
+                                   onClick={() => {
+                                     if (opt.onClick) opt.onClick()
+                                     else setIsMenuOpen(false)
+                                   }}
+                                   className={cx(
+                                     'relative flex flex-col items-center gap-2 rounded-xl border p-3 transition-all duration-200',
+                                     active
+                                       ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.18)]'
+                                       : 'border-white/[0.06] bg-white/[0.035] text-white hover:border-cyan-300/25 hover:bg-white/[0.06]',
+                                   )}
+                                 >
+                                   <span className={cx(
+                                     'text-sm font-black',
+                                     active ? 'text-cyan-300' : 'text-white',
+                                   )}>
+                                     {opt.label}
+                                   </span>
 
-                                  <span className="line-clamp-1 flex-1 text-center text-[10px] font-semibold">
-                                    {opt.label}
-                                  </span>
-
-                                  {!!opt.badge && opt.badge > 0 && (
-                                    <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-black text-white">
-                                      {opt.badge > 9 ? '9+' : opt.badge}
-                                    </span>
-                                  )}
-                                </SafeLink>
-                              )
-                            })}
-                        </div>
+                                   {!!opt.badge && opt.badge > 0 && (
+                                     <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-black text-white">
+                                       {opt.badge > 9 ? '9+' : opt.badge}
+                                     </span>
+                                   )}
+                                 </SafeLink>
+                               )
+                             })}
+                         </div>
                       </div>
                     ))}
                   </>

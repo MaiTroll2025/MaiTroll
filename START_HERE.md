@@ -18,10 +18,10 @@
 Open PowerShell/Terminal in project directory:
 
 ```powershell
-cd E:\troll\trollcity-1
+cd E:\troll\Mai Troll-1
 
 # Initialize Capacitor
-npx cap init trollcity com.trollcity.app --web-dir=dist
+npx cap init Mai Troll com.Mai Troll.app --web-dir=dist
 
 # Add Android platform (creates android/ folder)
 npx cap add android
@@ -124,7 +124,7 @@ npm run android:dev        # Web dev server + Android app
 After running the setup commands, you'll have:
 
 ```
-trollcity-1/
+Mai Troll-1/
 ├── android/               # ← NEW! Native Android project
 │   ├── app/
 │   ├── gradle/
@@ -280,10 +280,10 @@ After setup, verify:
 
 ```powershell
 # Navigate to project
-cd E:\troll\trollcity-1
+cd E:\troll\Mai Troll-1
 
 # Initialize Capacitor
-npx cap init trollcity com.trollcity.app --web-dir=dist
+npx cap init Mai Troll com.Mai Troll.app --web-dir=dist
 
 # Add Android
 npx cap add android
@@ -331,7 +331,7 @@ git push origin main
 
 ## 💡 Pro Tips
 
-1. **Use VS Code Workspace**: Open `trollcity.code-workspace` for better experience
+1. **Use VS Code Workspace**: Open `Mai Troll.code-workspace` for better experience
 2. **Use Tasks**: Press `Ctrl+Shift+B` for quick commands
 3. **Live Reload**: Use `npm run android:dev` during development
 4. **Debug Mobile**: Use `chrome://inspect` for web debugging on Android

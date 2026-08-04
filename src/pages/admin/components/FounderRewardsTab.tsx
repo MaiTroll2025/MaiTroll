@@ -70,7 +70,7 @@ const REWARD_TYPES = [
   {
     id: 'early_supporter',
     label: '⭐ Early Supporter Recognition',
-    description: 'Grants Early Supporter badge displayed inside Troll City profile',
+    description: 'Grants Early Supporter badge displayed inside Mai Troll profile',
     icon: Star,
     color: 'blue',
     gradient: 'from-blue-500/20 to-cyan-500/20',
@@ -528,7 +528,7 @@ export default function FounderRewardsTab() {
             <p>
               As a Secretary, you can grant these exclusive rewards to selected users. 
               Each reward can only be granted once per user. These rewards are intended 
-              for early community members who helped build Troll City.
+              for early community members who helped build Mai Troll.
             </p>
           </div>
         </div>

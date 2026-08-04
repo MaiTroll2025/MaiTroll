@@ -1,6 +1,6 @@
 # App Icons
 
-This folder contains the Progressive Web App (PWA) icons for Troll City.
+This folder contains the Progressive Web App (PWA) icons for Mai Troll.
 
 ## Required Icon Sizes
 

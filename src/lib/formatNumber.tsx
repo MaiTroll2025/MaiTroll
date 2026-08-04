@@ -277,14 +277,14 @@ const trendingSearches = [
 export default function BroadcastingPage() {
   return (
     <SEOLayout
-      title="Live Broadcasting on Troll City | Social Streaming Platform"
-      description="Start broadcasting live on Troll City (Mai Troll City). Stream to unlimited viewers, earn money through virtual gifts and tips, and build your creator career on our social streaming platform."
+      title="Live Broadcasting on Mai Troll | Social Streaming Platform"
+      description="Start broadcasting live on Mai Troll (MaiMaiTroll). Stream to unlimited viewers, earn money through virtual gifts and tips, and build your creator career on our social streaming platform."
       keywords={[
-        'Troll City', 'Mai Troll City', 'live broadcasting', 'go live', 'streaming', 'stream live', 'broadcast live',
+        'MaiTroll', 'MaiMaiTroll', 'live broadcasting', 'go live', 'streaming', 'stream live', 'broadcast live',
         'live stream', 'how to stream', 'streaming platform', 'live video', 'real-time streaming',
         'creator streaming', 'broadcasting software', 'live streaming app',
         'video streaming', 'online streaming', 'webcam streaming', 'mobile streaming',
-        'Troll City streaming', 'livestreaming on Troll City', 'social streaming platform'
+        'MaiTroll streaming', 'livestreaming on Mai Troll', 'social streaming platform'
       ]}
     >
       <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Broadcasting' }]} />
@@ -304,14 +304,14 @@ export default function BroadcastingPage() {
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                 Broadcast Live on{' '}
                 <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Troll City
+                  Mai Troll
                 </span>
               </h1>
               
               <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-                Start streaming today on <strong>Troll City</strong> (Mai Troll City) and reach viewers worldwide. 
+                Start streaming today on <strong>Mai Troll</strong> (MaiMaiTroll) and reach viewers worldwide. 
                 Our social streaming platform provides powerful broadcasting tools to help you create engaging content. 
-                Whether you're a gamer, musician, or just want to chat – go live on Troll City and build your audience.
+                Whether you're a gamer, musician, or just want to chat – go live on Mai Troll and build your audience.
               </p>
               
               <div className="flex flex-col sm:flex-row items-start gap-4 mb-8">
@@ -452,7 +452,7 @@ export default function BroadcastingPage() {
 
       <SEOContentSection
         title="Earn Money Streaming"
-        description="Turn your passion into profit. Troll City offers multiple ways to monetize your content and build a sustainable creator career."
+        description="Turn your passion into profit. Mai Troll offers multiple ways to monetize your content and build a sustainable creator career."
         icon={DollarSign}
       >
         <div className="grid md:grid-cols-2 gap-6">
@@ -513,7 +513,7 @@ export default function BroadcastingPage() {
 
       <CTASection
         title="Ready to Start Broadcasting?"
-        description="Join thousands of creators who are building their audience and earning money on Troll City."
+        description="Join thousands of creators who are building their audience and earning money on Mai Troll."
         primaryAction={{ label: 'Go Live Now', path: '/live' }}
         secondaryAction={{ label: 'Watch Streams', path: '/explore' }}
       />

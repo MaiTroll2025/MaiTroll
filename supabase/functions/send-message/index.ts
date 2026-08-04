@@ -292,7 +292,7 @@ serve(async (req) => {
           username: `user${user.id.slice(0, 8)}`,
           avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
           bio: 'New troll in the city!',
-          role: user.email === 'trollcity2025@gmail.com' ? 'admin' : 'user',
+          role: user.email === 'Mai Troll2025@gmail.com' ? 'admin' : 'user',
           tier: 'Bronze',
           paid_coins: 0,
           troll_coins: 100,

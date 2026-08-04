@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         TrollCity Frontend                       │
+│                         Mai Troll Frontend                       │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │  CoinStoreProd.tsx Component                              │  │
 │  │  ✓ PayPal Checkout Button                                 │  │
@@ -281,7 +281,7 @@ paid_coins            INTEGER           Coins from purchases only
 ## 💳 Payment Flow Diagram
 
 ```
-User App                 PayPal Checkout              TrollCity Backend
+User App                 PayPal Checkout              Mai Troll Backend
   │                            │                            │
   ├─ Select Package ─────────────────────────────────────────┤
   │                            │                             │
@@ -326,7 +326,7 @@ User App                 PayPal Checkout              TrollCity Backend
 ## 📁 File Structure
 
 ```
-trollcity-1/
+Mai Troll-1/
 ├── supabase/
 │   ├── migrations/
 │   │   └── 20260109_coin_system.sql         ← Database schema

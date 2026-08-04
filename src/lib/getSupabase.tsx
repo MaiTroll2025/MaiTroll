@@ -136,7 +136,7 @@ async function handleStartStream(body: any, supabase: any) {
   const { rtmpUrl, streamKey } = await createLiveKitIngest(roomName);
   console.log(`[livekit-gaming] Ingest created: rtmpUrl=${rtmpUrl}`);
 
-  // Update the streams table — same columns as troll city SetupPage uses
+  // Update the streams table — same columns as Mai Troll SetupPage uses
   // livekit_room_name stores the room name, stream_key stores the ingest key
   const { error: updateError } = await supabase
     .from("streams")

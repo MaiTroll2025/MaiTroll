@@ -40,7 +40,7 @@ interface StreamEntry {
 
 const entries = new Map<string, StreamEntry>()
 
-const isDev = () => Boolean((import.meta as any)?.env?.DEV)
+const isDev = () => process.env.NODE_ENV !== 'production'
 
 function emit(entry: StreamEntry, table: StreamRealtimeTable, payload: any) {
   const eventType = payload.eventType || '*'
@@ -171,7 +171,7 @@ export function getStreamRealtimeDebugState() {
 }
 
 if (typeof window !== 'undefined' && isDev()) {
-  ;(window as any).__TROLLCITY_STREAM_REALTIME__ = {
+  ;(window as any).__MaiTroll_STREAM_REALTIME__ = {
     getState: getStreamRealtimeDebugState,
   }
 }

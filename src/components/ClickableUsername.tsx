@@ -33,6 +33,7 @@ interface ClickableUsernameProps {
     username_style?: string
     badge?: string
     glowing_username_color?: string | null
+    celeb_role?: string | null
   }
   royalTitle?: {
     title_type: string
@@ -598,7 +599,7 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
             const daysStr = prompt('Enter sentence days:', '1');
             if (daysStr === null) return;
             const days = parseInt(daysStr) || 1;
-            const reason = window.prompt('Reason for arrest:', 'Violation of Troll City rules') || 'Violation of rules';
+            const reason = window.prompt('Reason for arrest:', 'Violation of Mai Troll rules') || 'Violation of rules';
             
             try {
                 const releaseTime = new Date();
@@ -895,10 +896,15 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
             </span>
         )}
 
-        {/* Verified Badge (shows for all verified users) */}
-        {userProfile?.is_verified && (
-            <VerifiedBadge size="sm" title="Verified User" />
-        )}
+         {/* Verified Badge (shows for all verified users) */}
+         {userProfile?.is_verified && (
+             <VerifiedBadge size="sm" title="Verified User" />
+         )}
+
+         {/* Celebrity Badge (shows for approved celebrities) */}
+         {userProfile?.celeb_role === 'approved' && (
+             <Crown size={16} className="text-yellow-400" title="Verified Celebrity" />
+         )}
 
         {/* Staff Action Menu */}
         {showMenu && (

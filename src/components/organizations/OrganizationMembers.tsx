@@ -54,7 +54,7 @@ export default function OrganizationMembers({ organization, canManage = false }:
     try {
       const { data: profile } = await supabase.from('user_profiles').select('id,email').eq('email', email.trim()).maybeSingle()
       if (!profile?.id) {
-        toast.error('That user must create a Troll City account first')
+        toast.error('That user must create a Mai Troll account first')
         return
       }
       const { error } = await supabase.from('organization_members').upsert({

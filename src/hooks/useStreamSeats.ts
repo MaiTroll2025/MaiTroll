@@ -282,7 +282,7 @@ export function useStreamSeats(
         const rows = Array.isArray(data) ? data : data || []
         const result = applySeatRows(rows)
 
-        if (import.meta.env.DEV) {
+        if (process.env.NODE_ENV !== 'production') {
           const seatDetails = Object.values(result.map).map((s) => ({
             seatIndex: s.seat_index,
             livekit_participant_identity: s.livekit_participant_identity || null,
@@ -349,6 +349,12 @@ export function useStreamSeats(
     async (seatIndex: number, price: number) => {
       if (!effectiveUserId || !streamId) {
         toast.error('Login to join a stage seat')
+        return false
+      }
+
+      // Celeb streams do not support seat joining — viewers participate via chat only
+      if (_streamData?.stream_type === 'celeb_stream') {
+        toast.error('Seats are not available in Celeb Streams')
         return false
       }
 
@@ -557,8 +563,6 @@ export function useStreamSeats(
         user_id: userId,
         session_id: currentSeat.id,
       })
-
-      scheduleRefresh('leaveSeat:post-event')
     } catch (err) {
       console.warn('[useStreamSeats] leaveSeat failed:', err)
       safeSetSeats(previousSeat)

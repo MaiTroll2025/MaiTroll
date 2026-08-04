@@ -2,7 +2,7 @@
 
 ## Overview
 
-Your TrollCity project now has full support for Supabase Edge Functions through a centralized API helper (`src/lib/api.ts`).
+Your Mai Troll project now has full support for Supabase Edge Functions through a centralized API helper (`src/lib/api.ts`).
 
 ## Configuration
 
@@ -289,4 +289,4 @@ export default function CleverChat() {
 
 **Setup Complete!** 🎉
 
-Your TrollCity app is now ready to use Supabase Edge Functions through the clean `api.ts` helper.
+Your Mai Troll app is now ready to use Supabase Edge Functions through the clean `api.ts` helper.

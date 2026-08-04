@@ -1,6 +1,6 @@
 # MAI Network App Switcher
 
-Universal component for switching between all MAI platform apps. Works across Troll City, MaiPlay, MaiCorp, UDryve (Auto/Health/Food), MaiPay, and future MAI applications.
+Universal component for switching between all MAI platform apps. Works across Mai Troll, MaiPlay, MaiCorp, UDryve (Auto/Health/Food), MaiPay, and future MAI applications.
 
 ## Features
 
@@ -8,7 +8,7 @@ Universal component for switching between all MAI platform apps. Works across Tr
 - ✅ **Universal config-driven** - Add new apps by updating the config array only
 - ✅ **Unified authentication** - Users sign in once, access all MAI apps
 - ✅ **External links** - All store links open safely in new tabs
-- ✅ **Platform theming** - Automatically matches Troll City (neon), MaiPlay (red/gold), MaiCorp (corporate), etc.
+- ✅ **Platform theming** - Automatically matches Mai Troll (neon), MaiPlay (red/gold), MaiCorp (corporate), etc.
 - ✅ **Status badges** - Live / Beta / Coming Soon states
 - ✅ **Responsive** - Mobile bottom sheet, desktop-ready for future header dropdown
 
@@ -77,12 +77,12 @@ In your **Supabase Dashboard** → **Authentication** → **URL Configuration**:
 
 **Site URL:**
 ```
-https://maitrollcity.com  (or your primary domain)
+https://maiMai Troll.com  (or your primary domain)
 ```
 
 **Redirect URLs** (add ALL MAI domains):
 ```
-https://maitrollcity.com/*
+https://maiMai Troll.com/*
 https://maiplay.cloud/*
 https://maicorp.online/*
 https://udryveauto.com/*
@@ -94,7 +94,7 @@ http://localhost:5173/*  (development only)
 
 **Allowed CORS origins** (Settings → API → Configuration):
 ```
-https://maitrollcity.com
+https://maiMai Troll.com
 https://maiplay.cloud
 https://maicorp.online
 https://udryveauto.com
@@ -105,7 +105,7 @@ https://maipay.app
 
 ### Step 5: Add User Profile Store
 
-If your project uses Zustand for auth state (like Troll City), ensure you have:
+If your project uses Zustand for auth state (like Mai Troll), ensure you have:
 
 ```typescript
 // src/lib/store.ts (or similar)
@@ -200,7 +200,7 @@ const myCustomApps: MaiApp[] = [
 
 | `platformTheme` prop | Used For | Colors |
 |---------------------|----------|--------|
-| `'troll-city'` | Troll City | Purple → Pink → Cyan neon |
+| `'troll-city'` | Mai Troll | Purple → Pink → Cyan neon |
 | `'maiplay'` | MaiPlay | Red → Rose → Gold |
 | `'maicorp'` | MaiCorp | Slate → Zinc → Neutral |
 | `'default'` | Fallback | Purple → Pink → Cyan (generic MAI) |
@@ -228,7 +228,7 @@ const myCustomApps: MaiApp[] = [
 
 ```
 User Journey:
-  1. User signs into ANY MAI app (e.g., Troll City)
+  1. User signs into ANY MAI app (e.g., Mai Troll)
   2. Supabase creates session stored in browser
   3. User visits MaiNetworkSwitcher → sees all apps + sign-in prompt if not logged in
   4. User clicks MaiPlay card → opens https://maiplay.cloud
@@ -258,7 +258,7 @@ mai-network/
 
 ## Customization Examples
 
-### Change Button Text (Troll City → "Network")
+### Change Button Text (Mai Troll → "Network")
 ```tsx
 // In Home.tsx
 <button>
@@ -305,7 +305,7 @@ Edit `DEFAULT_MAI_APPS` array at the top of the file:
 
 1. **Mobile**: Open dev tools → toggle device toolbar → test bottom sheet animation
 2. **Auth flow**: 
-   - Sign in on Troll City
+   - Sign in on Mai Troll
    - Open Network Switcher → should show "Sign in with Google" hidden (user logged in)
    - Click any app card → opens in new tab
    - Verify that the target app recognizes the session

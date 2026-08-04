@@ -40,7 +40,7 @@ export default function AdminPoliciesDocsPage() {
           </p>
         </div>
         <h1 className="text-2xl font-bold text-white">
-          Troll City Policy & Economy Overview
+          Mai Troll Policy & Economy Overview
         </h1>
         <p className="text-xs text-gray-400">
           Quick reference for admins: payouts, officer rules, bans, and economy

@@ -201,7 +201,7 @@ export const prideEvent = createYearlyEvent(
 export const easterEvent = createYearlyEvent(
   'easter',
   'Easter',
-  'Find hidden eggs across Troll City and earn springtime rewards!',
+  'Find hidden eggs across Mai Troll and earn springtime rewards!',
   4, 6, 4, 7,
   {
     priority: 8,

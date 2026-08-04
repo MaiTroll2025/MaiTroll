@@ -1,4 +1,4 @@
-// Troll City - COMPREHENSIVE BATTLE STRESS TEST
+// Mai Troll - COMPREHENSIVE BATTLE STRESS TEST
 // Tests all battle components: votes, gifts, chats, animations, participants
 
 import { createClient } from '@supabase/supabase-js';
@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 const config = {
   supabaseUrl: 'https://yjxpwfalenorzrqxwmtr.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeHB3ZmFsZW5vcnpycXh3bXRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjkxMTcsImV4cCI6MjA3OTYwNTExN30.S5Vc1xpZoZ0aemtNFJGcPhL_zvgPA0qgZq8e8KigUx8',
-  baseUrl: 'https://maitrollcity.com',
+  baseUrl: 'https://maiMai Troll.com',
   testDuration: 10 * 60 * 1000, // 10 minutes
   concurrentUsers: 30
 };
@@ -174,7 +174,7 @@ class BattleTestUser {
   constructor(userData, supabase) {
     this.userId = userData?.id || randomId();
     this.username = userData?.username || `battle_user_${randomId().substring(0, 8)}`;
-    this.email = `${this.username}@trollcity.test`;
+    this.email = `${this.username}@Mai Troll.test`;
     this.supabase = supabase;
     this.session = null;
     this.testBattleIds = [];
@@ -629,7 +629,7 @@ class BattleTestUser {
 
 async function runBattleStressTest() {
   console.log('╔══════════════════════════════════════════════════════════════════════╗');
-  console.log('║  TROLL CITY - COMPREHENSIVE BATTLE STRESS TEST                    ║');
+  console.log('║  Mai Troll - COMPREHENSIVE BATTLE STRESS TEST                    ║');
   console.log('║  VOTES | GIFTS | CHATS | PARTICIPANTS | ANIMATIONS                 ║');
   console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
 

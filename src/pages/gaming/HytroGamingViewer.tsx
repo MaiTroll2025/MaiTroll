@@ -422,15 +422,15 @@ export default function HytroGamingViewer() {
 
   // SEO meta tags for stream page (accessible to Google for indexing)
   const streamUrl = currentStream
-    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://maitrollcity.com'}/live/${encodeURIComponent(currentStream.broadcaster_name || streamId)}`
-    : `${typeof window !== 'undefined' ? window.location.origin : 'https://maitrollcity.com'}/gaming/watch/${streamId}`
+    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://maiMaiTroll.com'}/live/${encodeURIComponent(currentStream.broadcaster_name || streamId)}`
+    : `${typeof window !== 'undefined' ? window.location.origin : 'https://maiMaiTroll.com'}/gaming/watch/${streamId}`
   useSEO({
     title: currentStream
-      ? `${currentStream.broadcaster_name || 'Gamer'} is LIVE on HytroGaming | Troll City`
-      : 'HytroGaming Stream | Troll City',
+      ? `${currentStream.broadcaster_name || 'Gamer'} is LIVE on HytroGaming | Mai Troll`
+      : 'HytroGaming Stream | Mai Troll',
     description: currentStream
-      ? `${currentStream.title} — Watch ${currentStream.broadcaster_name || 'a gamer'} live on HytroGaming by Troll City. ${currentStream.game_title ? `Playing ${currentStream.game_title}. ` : ''}${currentStream.description || ''}`
-      : 'Watch live gaming streams on HytroGaming by Troll City.',
+      ? `${currentStream.title} — Watch ${currentStream.broadcaster_name || 'a gamer'} live on HytroGaming by Mai Troll. ${currentStream.game_title ? `Playing ${currentStream.game_title}. ` : ''}${currentStream.description || ''}`
+      : 'Watch live gaming streams on HytroGaming by Mai Troll.',
     ogImage: currentStream?.thumbnail_url || currentStream?.broadcaster_avatar || undefined,
     ogType: isLive ? 'video.other' : 'website',
     canonical: streamUrl,
@@ -446,7 +446,7 @@ export default function HytroGamingViewer() {
       author: {
         '@type': 'Person',
         name: currentStream.broadcaster_name || 'Gamer',
-        url: `${typeof window !== 'undefined' ? window.location.origin : 'https://maitrollcity.com'}/profile/${encodeURIComponent(currentStream.broadcaster_name || '')}`,
+        url: `${typeof window !== 'undefined' ? window.location.origin : 'https://maiMaiTroll.com'}/profile/${encodeURIComponent(currentStream.broadcaster_name || '')}`,
       },
       ...(isLive && {
         isLiveBroadcast: true,
@@ -746,7 +746,7 @@ export default function HytroGamingViewer() {
 
   // Ended stream → redirect to stream summary
   if (streamEnded || currentStream.status === 'ended') {
-    return <Navigate to={`/broadcast/summary/${streamId}`} replace />
+    return <Navigate to={`/broadcast/summary/${currentStream.id || streamId}`} replace />
   }
 
   // ─── Desktop Layout ──────────────────────────────────────────────────────

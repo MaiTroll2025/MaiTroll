@@ -15,12 +15,12 @@
 Code is already in place:
 - ✅ `src/components/trollWall/DailyLoginWall.tsx` - User interface component
 - ✅ `src/lib/hooks/useDailyLoginPost.ts` - Business logic hook
-- ✅ `src/pages/TrollCityWall.tsx` - Wall page integration
+- ✅ `src/pages/Mai TrollWall.tsx` - Wall page integration
 - ✅ `src/pages/Home.tsx` - Home page feature card
 
 ### Step 3: Test the Feature
 1. Start your dev server: `npm run dev`
-2. Navigate to `/wall` (Troll City Wall page)
+2. Navigate to `/wall` (Mai Troll Wall page)
 3. You should see the **Daily Login Wall** section at the top
 4. Try posting to earn coins!
 
@@ -129,7 +129,7 @@ Project Root/
     │   └── supabase.ts                 ← (existing Supabase client)
     │
     └── pages/
-        ├── TrollCityWall.tsx           ← (modified - added component)
+        ├── Mai TrollWall.tsx           ← (modified - added component)
         ├── Home.tsx                    ← (modified - added feature card)
         └── WallPostPage.tsx            ← (existing single post view)
 ```
@@ -222,7 +222,7 @@ LIMIT 20;
 
 ### Day 1
 - User sees Daily Login Wall on `/wall`
-- Posts "Hello Troll City!" 
+- Posts "Hello Mai Troll!" 
 - Earns 47 Troll Coins randomly
 - Toast shows: "🎉 You earned 47 Troll Coins!"
 - Post appears in wall feed with `is_daily_login_post` flag
@@ -273,6 +273,6 @@ LIMIT 20;
 
 **Setup Complete! 🎉**
 
-Your Daily Login Wall system is now live. Users can earn coins daily by posting to the Troll City Wall!
+Your Daily Login Wall system is now live. Users can earn coins daily by posting to the Mai Troll Wall!
 
 Last Updated: January 21, 2026

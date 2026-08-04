@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          given_name: profile?.username || 'TrollCity User',
-          email_address: profile?.email || 'user@trollcity.com',
+          given_name: profile?.username || 'Mai Troll User',
+          email_address: profile?.email || 'user@Mai Troll.com',
           reference_id: userId,
         }),
       })

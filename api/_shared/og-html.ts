@@ -1,4 +1,4 @@
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maitrollcity.com'
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maiMai Troll.com'
 
 export interface OGMetaOptions {
   title: string
@@ -89,7 +89,7 @@ export function generateOGHTML(data: OGMetaOptions): string {
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="${esc(title)}">
-  <meta property="og:site_name" content="Troll City">
+  <meta property="og:site_name" content="Mai Troll">
   <meta property="og:locale" content="en_US">
 
   ${videoUrl ? `
@@ -105,7 +105,7 @@ export function generateOGHTML(data: OGMetaOptions): string {
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${esc(ogImage)}">
   <meta name="twitter:image:alt" content="${esc(title)}">
-  <meta name="twitter:site" content="@trollcityapp">
+  <meta name="twitter:site" content="@Mai Trollapp">
 
   ${twitterPlayerUrl ? `
   <meta name="twitter:player" content="${esc(twitterPlayerUrl)}">
@@ -205,7 +205,7 @@ export function generateOGHTML(data: OGMetaOptions): string {
     <a class="cta" href="${esc(url)}">${isLive ? 'Watch Now' : 'Learn More'}</a>
     <div class="brand">
       <div class="brand-icon">👁</div>
-      <span class="brand-name">Troll City</span>
+      <span class="brand-name">Mai Troll</span>
     </div>
   </div>
 </body>

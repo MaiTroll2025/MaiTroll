@@ -10,7 +10,7 @@ interface MinorSafetyBadgeProps {
 /**
  * Minor Safety Badge Component
  * Displays when a streamer has indicated minors may appear on their broadcast
- * Follows Troll City theme: gold border, purple background, neon green icon
+ * Follows Mai Troll theme: gold border, purple background, neon green icon
  */
 export const MinorSafetyBadge: React.FC<MinorSafetyBadgeProps> = ({
   className,
@@ -34,7 +34,7 @@ export const MinorSafetyBadge: React.FC<MinorSafetyBadgeProps> = ({
       className={cn(
         // Base styles
         'inline-flex items-center font-bold rounded-full',
-        // Troll City theme colors
+        // Mai Troll theme colors
         'bg-purple-600/90 border-2 border-yellow-400',
         'shadow-[0_0_10px_rgba(168,85,247,0.5),0_0_20px_rgba(250,204,21,0.3)]',
         'backdrop-blur-sm',

@@ -37,11 +37,11 @@ All components of the manual Cash App payment system have been successfully impl
 │  │ CashAppPaymentModal                                     │    │
 │  │ ┌────────────────────────────────────────────────────┐  │    │
 │  │ │ Step 1: CONFIRM                                    │  │    │
-│  │ │ "You'll send ${amount} to $trollcity95"           │  │    │
+│  │ │ "You'll send ${amount} to $Mai Troll95"           │  │    │
 │  │ │ [Continue] button                                 │  │    │
 │  │ │                                                    │  │    │
 │  │ │ Step 2: AWAITING                                  │  │    │
-│  │ │ Cash App: $trollcity95 (copy button)             │  │    │
+│  │ │ Cash App: $Mai Troll95 (copy button)             │  │    │
 │  │ │ Note: USER123-500 (copy button)                 │  │    │
 │  │ │ Message: "Send payment, include note..."         │  │    │
 │  │ │ [Go Back] [Done - I'll Verify]                   │  │    │
@@ -116,7 +116,7 @@ All components of the manual Cash App payment system have been successfully impl
 │                      Real World                                   │
 │                                                                   │
 │ 1. Admin receives Cash App payment notification                  │
-│    From: User or $trollcity95                                    │
+│    From: User or $Mai Troll95                                    │
 │    Amount: $4.99                                                 │
 │    Note: USER123-500 (matches order)                             │
 │                                                                   │
@@ -188,7 +188,7 @@ Step 1: Confirmation
   - User confirms intent
 
 Step 2: Awaiting Payment
-  - Displays $trollcity95 (copyable)
+  - Displays $Mai Troll95 (copyable)
   - Shows note like "USER123-500" (copyable)
   - Waits for user to send payment
 
@@ -382,7 +382,7 @@ This validates:
    - Click "📱 Cash App" tab
    - Click "Send via Cash App" button
    - Confirm amount in CashAppPaymentModal
-   - Copy Cash App address ($trollcity95)
+   - Copy Cash App address ($Mai Troll95)
    - Copy payment note (USER123-500)
    - Click "Done - I'll Verify"
    - See success message with order ID

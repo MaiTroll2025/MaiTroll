@@ -6,12 +6,12 @@ import { Shield, Eye, Lock, Database, Cookie, Share2, Mail } from 'lucide-react'
 export default function PrivacyPage() {
   return (
     <SEOLayout
-      title="Privacy Policy | Troll City"
-      description="Read the Troll City (Mai Troll City) Privacy Policy. Learn how we collect, use, and protect your personal information."
+      title="Privacy Policy | Mai Troll"
+      description="Read the Mai Troll (MaiMaiTroll) Privacy Policy. Learn how we collect, use, and protect your personal information."
       keywords={[
-        'Troll City privacy policy', 'Mai Troll City privacy', 'data protection',
+        'MaiTroll privacy policy', 'MaiMaiTroll privacy', 'data protection',
         'personal information', 'privacy', 'GDPR', 'data collection',
-        'Troll City terms', 'user data'
+        'MaiTroll terms', 'user data'
       ]}
     >
       <Breadcrumb items={[{ label: 'Privacy Policy' }]} />
@@ -43,8 +43,8 @@ export default function PrivacyPage() {
           <div className="prose prose-invert max-w-none">
             <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl mb-8">
               <p className="text-slate-300 leading-relaxed">
-                This Privacy Policy describes how Troll City ("we", "us", or "our") collects, uses, and shares information
-                when you use our platform. By using Troll City, you agree to the collection and use of information in accordance
+                This Privacy Policy describes how Mai Troll ("we", "us", or "our") collects, uses, and shares information
+                when you use our platform. By using Mai Troll, you agree to the collection and use of information in accordance
                 with this policy.
               </p>
             </div>
@@ -146,8 +146,8 @@ export default function PrivacyPage() {
                 </div>
                 <p className="text-slate-300">
                   If you have any questions about this Privacy Policy, please contact us at{' '}
-                  <a href="mailto:privacy@maitrollcity.com" className="text-purple-400 hover:text-purple-300">
-                    privacy@maitrollcity.com
+                  <a href="mailto:privacy@maiMaiTroll.com" className="text-purple-400 hover:text-purple-300">
+                    privacy@maiMaiTroll.com
                   </a>{' '}
                   or visit our <Link to="/contact" className="text-purple-400 hover:text-purple-300">Contact page</Link>.
                 </p>

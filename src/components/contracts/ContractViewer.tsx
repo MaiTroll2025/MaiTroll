@@ -137,7 +137,7 @@ export const ContractViewer = () => {
       
       <div className="p-4 bg-slate-800 rounded-lg mb-4">
         <p className="mb-2">Dear {userAccount?.display_name || userAccount?.username},</p>
-        <p>You have been appointed as a {contract.role_label} for Troll City.</p>
+        <p>You have been appointed as a {contract.role_label} for Mai Troll.</p>
         <p className="mt-2">Please review all terms carefully before signing.</p>
       </div>
       

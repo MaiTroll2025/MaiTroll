@@ -23,7 +23,7 @@ async function handleAIEvent(eventType: string, payload: any) {
   if (!openai) return "AI not configured";
 
   const prompt = `
-  You are MAI, the AI host inside TrollCity Live Streams.
+  You are MAI, the AI host inside Mai Troll Live Streams.
   Event Type: ${eventType}
   Event Data: ${JSON.stringify(payload)}
 

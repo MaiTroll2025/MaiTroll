@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I acknowledge that I have read and understand the Troll City Code of Conduct and agree to abide by its standards of professional and lawful behavior while representing the company.'
+  'I acknowledge that I have read and understand the Mai Troll Code of Conduct and agree to abide by its standards of professional and lawful behavior while representing the company.'
 
 export default function CodeOfConductForm(props: DocumentFormProps) {
   return (
@@ -24,7 +24,7 @@ export default function CodeOfConductForm(props: DocumentFormProps) {
             onChange={(e) => setField('acknowledged', e.target.checked)}
             className="mt-1 h-4 w-4"
           />
-          I agree to the Troll City Code of Conduct, including respect for colleagues and users,
+          I agree to the Mai Troll Code of Conduct, including respect for colleagues and users,
           lawful behavior, and platform safety obligations.
         </label>
       )}

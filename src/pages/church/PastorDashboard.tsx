@@ -274,7 +274,7 @@ export default function PastorDashboard() {
       const wallPostContent = `Troll Church is LIVE! Join the service: /church/live/${session.id}`;
       const { error: wallPostError } = await supabase.from('troll_wall_posts').insert({
         user_id: profile.id,
-        username: 'Troll City System',
+        username: 'MaiTroll System',
         post_type: 'stream_announce',
         content: wallPostContent,
         is_system_generated: true,

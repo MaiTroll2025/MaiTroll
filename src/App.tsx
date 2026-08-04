@@ -71,6 +71,7 @@ import { RequireLeadOrOwner } from "./components/auth/RequireLeadOrOwner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GrandCityEntrance from "./components/entrance/GrandCityEntrance";
 import UnderConstructionPage from "./components/UnderConstructionPage";
+import CareersPage from "./pages/CareersPage";
 
 // Agency Pages (lazy-loaded)
 const AgenciesPage = lazyWithRetry(() => import("./pages/agencies"));
@@ -102,6 +103,7 @@ const HelpPage = lazyWithRetry(() => import("./pages/HelpPage"));
 const AccessDenied = lazyWithRetry(() => import("./pages/AccessDenied"));
 const ReferralBonusPanel = lazyWithRetry(() => import("./pages/admin/ReferralBonusPanel"));
 const SecretaryConsole = lazyWithRetry(() => import("./pages/secretary/SecretaryConsole"));
+const CoinLiabilityPage = lazyWithRetry(() => import("./pages/secretary/coin-liability/CoinLiabilityPage"));
 const AppealManagement = lazyWithRetry(() => import("./pages/admin/AppealManagement"));
 const AdminMeetingsDashboard = lazyWithRetry(() => import("./pages/admin/AdminMeetingsDashboard"));
 import { systemManagementRoutes } from "./pages/admin/adminRoutes";
@@ -219,6 +221,12 @@ const ShareAThonVerification = lazyWithRetry(() => import("./pages/shareathon/Sh
 const ResetMaintenance = lazyWithRetry(() => import("./pages/admin/ResetMaintenance"));
 const Government = lazyWithRetry(() => import("./pages/Government"));
 const GovernmentStreams = lazyWithRetry(() => import("./pages/government/GovernmentStreams"));
+const MayorDashboard = lazyWithRetry(() => import("./pages/MayorDashboard"));
+const TownMeetingPage = lazyWithRetry(() => import("./pages/TownMeetingPage"));
+const CityGovernmentPage = lazyWithRetry(() => import("./pages/CityGovernmentPage"));
+const GovernmentProposalsPage = lazyWithRetry(() => import("./pages/GovernmentProposalsPage"));
+const CityOpeningsPage = lazyWithRetry(() => import("./pages/CityOpeningsPage"));
+const CityNewspaperPage = lazyWithRetry(() => import("./pages/CityNewspaperPage"));
 const HRCenter = lazyWithRetry(() => import("./pages/HRCenter"));
 const UserFormsTab = lazyWithRetry(() => import("./pages/admin/components/UserFormsTab"));
 const BucketsDashboard = lazyWithRetry(() => import("./pages/admin/BucketsDashboard"));
@@ -235,6 +243,7 @@ const AdminLiveOfficersTracker = lazyWithRetry(() => import("./pages/admin/Admin
 const AdminVerifiedUsers = lazyWithRetry(() => import("./pages/admin/AdminVerifiedUsers"));
 const AdminActivity = lazyWithRetry(() => import("./pages/admin/AdminActivity"));
 const AdminVerificationReview = lazyWithRetry(() => import("./pages/admin/AdminVerificationReview"));
+const CelebVerificationDashboard = lazyWithRetry(() => import("./pages/admin/CelebVerificationDashboard"));
 const AdminPoliciesDocs = lazyWithRetry(() => import("./pages/admin/AdminPoliciesDocs"));
 const ExecutiveSecretaries = lazyWithRetry(() => import("./pages/admin/ExecutiveSecretaries"));
 const ExecutiveReports = lazyWithRetry(() => import("./pages/admin/ExecutiveReports"));
@@ -248,6 +257,8 @@ const TMFamilyInviteHandler = lazyWithRetry(() => import("./components/trollmatc
 const EmbedPage = lazyWithRetry(() => import("./pages/broadcast/EmbedPage"));
 const HomepageBackgroundShowcase = lazyWithRetry(() => import("./pages/dev/HomepageBackgroundShowcase"));
 const BlockedUsers = lazyWithRetry(() => import("./pages/BlockedUsers"));
+const CelebEarningsDashboard = lazyWithRetry(() => import("./pages/CelebEarningsDashboard"));
+const CelebStreamDiscovery = lazyWithRetry(() => import("./pages/CelebStreamDiscovery"));
 
 const AuthenticatedHome = lazyWithRetry(() => import("./pages/Home"));
 
@@ -257,7 +268,6 @@ const TroMailOfficePage = lazyWithRetry(() => import("./pages/office/TroMailOffi
 const UtromailPage = lazyWithRetry(() => import("./pages/utromail/UtromailPage"));
 const UtromailThreadView = lazyWithRetry(() => import("./pages/utromail/UtromailThreadView"));
 const UtromailCompose = lazyWithRetry(() => import("./pages/utromail/UtromailCompose"));
-const AcademyHomePage = lazyWithRetry(() => import("./pages/academy/AcademyHomePage"));
 const CourseCatalogPage = lazyWithRetry(() => import("./pages/academy/CourseCatalogPage"));
 const CourseDetailPage = lazyWithRetry(() => import("./pages/academy/CourseDetailPage"));
 const VerifyCertificatePage = lazyWithRetry(() => import("./pages/academy/VerifyCertificatePage"));
@@ -316,6 +326,9 @@ const isPublicRoute = (pathname: string) => {
 
   // Jobs page is public
   if (pathname === '/jobs') return true
+
+  // Careers page is public
+  if (pathname === '/careers') return true
 
   // Profile pages are public - usernames and user IDs
   if (pathname.startsWith('/profile/')) return true
@@ -524,7 +537,6 @@ import MatchPage from "./pages/MatchPage";
 import CityRegistry from "./pages/CityRegistry";
 import AdvertisePage from "./pages/city-registry/AdvertisePage";
 import Following from "./pages/Following";
-import Marketplace from "./pages/Marketplace";
 import PublicPool from "./pages/PublicPool";
 import GiveawaysPage from "./pages/GiveawaysPage";
 import TrollWheel from "./pages/TrollWheel";
@@ -571,7 +583,7 @@ import AuctioneerScanner from "./pages/auction/AuctioneerScanner.js";
 import AuctionApp from "./pages/auction/AuctionApp.js";
 import CoinStore from "./pages/CoinStore.jsx";
 import ProfileFrameStore from "./pages/ProfileFrameStore";
-import SellOnTrollCity from "./pages/SellOnTrollCity.js";
+import SellOnTrollCity from "./pages/SellOnTrollCity";
 import SellerOrders from "./pages/SellerOrders.js";
 import MyOrders from "./pages/MyOrders.js";
 import FamilyBrowse from "./pages/FamilyBrowse.js";
@@ -821,7 +833,7 @@ function AppContent() {
     if (isStandalone) {
       toast.info("New update available!", {
         duration: Infinity,
-        description: "A new version of Troll City is available.",
+        description: "A new version of Mai Troll is available.",
         action: {
           label: "Update Now",
           onClick: () => {
@@ -838,7 +850,7 @@ function AppContent() {
 
     toast.info("New update available!", {
       duration: Infinity,
-      description: "A new version of Troll City is available.",
+      description: "A new version of Mai Troll is available.",
       action: {
         label: "Update Now",
         onClick: () => {
@@ -1059,7 +1071,7 @@ function AppContent() {
             if (data && data.user_id === user.id) {
               const releaseTime = new Date(data.release_time);
               if (releaseTime > new Date()) {
-                toast.error(`🚔 ARRESTED: ${data.reason || 'Violation of Troll City rules'}`, { duration: 5000 });
+                toast.error(`🚔 ARRESTED: ${data.reason || 'Violation of Mai Troll rules'}`, { duration: 5000 });
                 const onCourtSummary =
                   location.pathname.startsWith('/court/') && location.pathname.endsWith('/summary');
                 if (!onCourtSummary) {
@@ -1438,7 +1450,7 @@ const handleVisibilityChange = async () => {
     <>
       {updateAvailable && (
         <div className="fixed top-0 inset-x-0 z-[60] flex items-center justify-between bg-purple-900 text-white px-4 py-2">
-          <span className="text-sm">A new version of Troll City is available.</span>
+          <span className="text-sm">A new version of Mai Troll is available.</span>
           <button
             type="button"
             onClick={handleUpdateClick}
@@ -1578,9 +1590,7 @@ const handleVisibilityChange = async () => {
                 {/* Application Routes */}
                 <Route path="/apply" element={<ApplicationPage />} />
 
-                {/* Careers → Jobs (Careers page retired in favor of Jobs) */}
-                <Route path="/careers" element={<Navigate to="/jobs" replace />} />
-                <Route path="/career" element={<Navigate to="/jobs" replace />} />
+                <Route path="/careers" element={<CareersPage />} />
 
                 {/* 🏠 Home - Public with limited auth for interactions */}
                 <Route path="/home" element={<Navigate to="/" replace />} />
@@ -1610,17 +1620,20 @@ const handleVisibilityChange = async () => {
                 <Route path="/broadcast/:id" element={<BroadcastRouter />} />
                 <Route path="/watch/:id" element={<BroadcastRouter />} />
                 <Route path="/live/:streamId" element={<BroadcastRouter />} />
-                <Route path="/stream/:id" element={<BroadcastRouter />} />
+                 <Route path="/stream/:id" element={<BroadcastRouter />} />
 
-                {/* 🏛️ State Battle Routes */}
-                <Route path="/state-rankings" element={<StateRankings />} />
+                 {/* Stream summary page (reached after a broadcast ends) */}
+                 <Route path="/broadcast/summary/:streamId" element={<StreamSummary />} />
+
+                 {/* 🏛️ State Battle Routes */}
+                 <Route path="/state-rankings" element={<StateRankings />} />
                 <Route path="/state/:stateCode" element={<StateDetail />} />
 
                 {/* ✅ Verified Badge */}
                 <Route path="/verified-badge" element={<VerifiedBadgePage />} />
 
-                {/* 🎓 Troll City Academy */}
-                <Route path="/academy" element={<AcademyHomePage />} />
+                {/* 🎓 Mai Troll Academy */}
+                <Route path="/academy" element={<UnderConstructionPage pageName="Academy" openingDate="Oct 1, 2026" />} />
                 <Route path="/academy/courses" element={<CourseCatalogPage />} />
                 <Route path="/academy/course/:slug" element={<CourseDetailPage />} />
                 <Route path="/academy/verify" element={<VerifyCertificatePage />} />
@@ -1736,6 +1749,12 @@ const handleVisibilityChange = async () => {
                       <PresidentDashboard />
                     </RequireRole>
                   } />
+                  <Route path="/mayor" element={<MayorDashboard />} />
+                  <Route path="/town-meeting" element={<TownMeetingPage />} />
+                  <Route path="/city-government" element={<CityGovernmentPage />} />
+                  <Route path="/government/proposals" element={<GovernmentProposalsPage />} />
+                  <Route path="/government/openings" element={<CityOpeningsPage />} />
+                  <Route path="/government/newspaper" element={<CityNewspaperPage />} />
                   <Route path="/president/secretary" element={
                     <RequireRole roles={[UserRole.SECRETARY, UserRole.ADMIN]}>
                       <SecretaryDashboard />
@@ -1810,7 +1829,7 @@ const handleVisibilityChange = async () => {
                 <Route path="/universe/champions" element={<UniverseBattlesPage />} />
                 <Route path="/events/universe" element={<Navigate to="/universe" replace />} />
                 
-                {/* 📺 TCNN - Troll City News Network */}
+                {/* 📺 TCNN - Mai Troll News Network */}
                 <Route path="/tcnn" element={<TCNNMainPage />} />
                 <Route path="/tcnn/article/:id" element={<ArticleReader />} />
                 <Route
@@ -1854,9 +1873,9 @@ const handleVisibilityChange = async () => {
                   <Route path="/following/:userId" element={<Following />} />
                   <Route path="/trollifications" element={<Trollifications />} />
                   <Route path="/trollifieds" element={<Trollifieds />} />
-                  <Route path="/marketplace" element={<Marketplace />} />
-                  <Route path="/marketplace/orders" element={<Marketplace />} />
-                  <Route path="/marketplace/sales" element={<Marketplace />} />
+                  <Route path="/marketplace" element={<UnderConstructionPage pageName="Shop" openingDate="Oct 1, 2026" />} />
+                  <Route path="/marketplace/orders" element={<UnderConstructionPage pageName="Shop" openingDate="Oct 1, 2026" />} />
+                  <Route path="/marketplace/sales" element={<UnderConstructionPage pageName="Shop" openingDate="Oct 1, 2026" />} />
                   <Route path="/pool" element={<PublicPool />} />
 
                   <Route path="/troll-games/giveaways" element={<GiveawaysPage />} />
@@ -2273,6 +2292,38 @@ const handleVisibilityChange = async () => {
                       }
                     />
                     <Route
+                      path="/admin/celeb-verification"
+                      element={
+                        <RequireRole roles={[UserRole.ADMIN]}>
+                          <CelebVerificationDashboard />
+                        </RequireRole>
+                      }
+                    />
+                    <Route
+                      path="/celeb/dashboard"
+                      element={
+                        <CelebEarningsDashboard />
+                      }
+                    />
+                    <Route
+                      path="/celeb/dashboard/products"
+                      element={
+                        <CelebEarningsDashboard />
+                      }
+                    />
+                    <Route
+                      path="/celeb/dashboard/earnings"
+                      element={
+                        <CelebEarningsDashboard />
+                      }
+                    />
+                    <Route
+                      path="/celeb/streams"
+                      element={
+                        <CelebStreamDiscovery />
+                      }
+                    />
+                    <Route
                       path="/admin/applications"
                       element={
                         <RequireRole roles={[UserRole.ADMIN]}>
@@ -2428,6 +2479,14 @@ const handleVisibilityChange = async () => {
                       element={
                         <RequireRole roles={[UserRole.ADMIN, UserRole.SECRETARY]}>
                           <SecretaryConsole />
+                        </RequireRole>
+                      }
+                    />
+                    <Route
+                      path="/secretary/coin-liability"
+                      element={
+                        <RequireRole roles={[UserRole.ADMIN, UserRole.SECRETARY, UserRole.OWNER, UserRole.CEO]}>
+                          <CoinLiabilityPage />
                         </RequireRole>
                       }
                     />

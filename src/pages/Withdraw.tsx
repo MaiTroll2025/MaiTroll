@@ -97,7 +97,7 @@ export default function Withdraw() {
     }
 
     // Use the unified Fast Pay cashout RPC
-    const { data, error } = await supabase.rpc('request_friday_cashout', {
+    const { data, error } = await supabase.rpc('request_cashout', {
       p_user_id: user.id,
       p_coins_to_redeem: tier.coins,
       p_provider_type: payoutMethod,
@@ -128,7 +128,7 @@ export default function Withdraw() {
         <h2 className="text-2xl font-bold mb-4">Withdraw Earnings</h2>
 
         <div className="mb-3 rounded-lg border border-green-500/30 bg-green-900/10 px-3 py-2 text-xs text-green-200">
-          Troll City does not charge any cashout fees. Up to {isMaiPayPlus ? 20 : 10} cashouts per rolling 24 hours.
+          Mai Troll does not charge any cashout fees. Up to {isMaiPayPlus ? 20 : 10} cashouts per rolling 24 hours.
         </div>
 
         <p className="mb-2">

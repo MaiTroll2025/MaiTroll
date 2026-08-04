@@ -1,5 +1,5 @@
 /**
- * Troll City Safety Keyword Detection System
+ * Mai Troll Safety Keyword Detection System
  * 
  * This file contains all safety-related keyword categories and detection logic.
  * These keywords are used ONLY for backend safety monitoring and are NEVER

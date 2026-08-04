@@ -352,7 +352,7 @@ export default function AdmissionsDashboardPage() {
               {studentApplication.agreement_url && (
                 <a
                   href={studentApplication.agreement_url}
-                  download={`TrollCity_LoanApplication_${studentApplication.id}.pdf`}
+                  download={`MaiTroll_LoanApplication_${studentApplication.id}.pdf`}
                   className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-cyan-500/20 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-200 transition hover:bg-cyan-500/30"
                 >
                   <DownloadCloud className="h-3.5 w-3.5" /> Download Loan Application PDF

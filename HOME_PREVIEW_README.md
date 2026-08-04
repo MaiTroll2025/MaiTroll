@@ -88,7 +88,7 @@ Each layout uses the same data sources:
 
 - All layouts are fully responsive (mobile + desktop)
 - Uses Tailwind CSS custom config
-- Integrates with existing `trollCityTheme`
+- Integrates with existing `Mai TrollTheme`
 - Glass effects via backdrop-blur and border utilities
 - Animations via Framer Motion
 - No external dependencies beyond existing stack

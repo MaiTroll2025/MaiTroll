@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - MAIN HOMEPAGE
+// Mai Troll ACADEMY - MAIN HOMEPAGE
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
@@ -102,7 +102,7 @@ export default function AcademyHomePage() {
               <GraduationCap className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white">Troll City Academy</h1>
+              <h1 className="text-2xl font-black text-white">Mai Troll Academy</h1>
               <p className="text-sm text-slate-400">
                 {profile?.display_name || profile?.username || 'Student'}
                 {studentId && <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">{studentId}</span>}

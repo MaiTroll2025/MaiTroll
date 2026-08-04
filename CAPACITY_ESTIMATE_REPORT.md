@@ -1,4 +1,4 @@
-# Troll City Live Streaming - Capacity Estimate & Load Test Report
+# Mai Troll Live Streaming - Capacity Estimate & Load Test Report
 
 ## Executive Summary
 
@@ -19,7 +19,7 @@ Based on analysis of the current architecture (LiveKit + Supabase Realtime + Edg
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Troll City Architecture                      │
+│                        Mai Troll Architecture                      │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────────────┐  │

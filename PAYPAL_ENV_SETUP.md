@@ -32,7 +32,7 @@ FRONTEND_URL
 - **PAYPAL_CLIENT_ID**: Your live PayPal client ID
 - **PAYPAL_CLIENT_SECRET**: Your live PayPal client secret
 - **PAYPAL_MODE**: Set to `live` (must be exactly "live")
-- **FRONTEND_URL**: Your frontend URL (e.g., `https://trollcity.app`)
+- **FRONTEND_URL**: Your frontend URL (e.g., `https://Mai Troll.app`)
 
 ### Step 4: Redeploy Functions
 

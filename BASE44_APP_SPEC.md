@@ -1,12 +1,12 @@
-# Troll City Mobile App - Base44 Specification
+# Mai Troll Mobile App - Base44 Specification
 
-> Complete specification for building a native mobile app version of Troll City using Base44
+> Complete specification for building a native mobile app version of Mai Troll using Base44
 
 ---
 
 ## 📱 App Overview
 
-**Troll City** is a comprehensive social media and entertainment platform that combines live streaming, social networking, virtual economy, family/clan systems, government simulation, and gamification elements. Think of it as a virtual city-state where users live, work, play, and govern together.
+**Mai Troll** is a comprehensive social media and entertainment platform that combines live streaming, social networking, virtual economy, family/clan systems, government simulation, and gamification elements. Think of it as a virtual city-state where users live, work, play, and govern together.
 
 ---
 
@@ -62,7 +62,7 @@
 - **Leaderboard.tsx** - Top users, families, content
 
 ### 3. Social Feed
-- **TrollCityWall.tsx** - Main social feed (posts, images, videos)
+- **Mai TrollWall.tsx** - Main social feed (posts, images, videos)
 - **Trollifications.tsx** - Content feed with reactions
 - **ExploreFeed.tsx** - Discover new content/users
 - **Following.tsx** - Feed from followed users
@@ -114,7 +114,7 @@
 - **CoinsComplete.tsx** - Coin purchase completion
 - **Wallet.tsx** - View balance and transactions
 - **ShopView.tsx** - Browse marketplace
-- **SellOnTrollCity.tsx** - Seller dashboard
+- **SellOnMai Troll.tsx** - Seller dashboard
 - **MyOrders.tsx** - Purchase orders
 - **SellerOrders.tsx** - Seller order management
 - **ActiveAssetsPage.tsx** - Owned digital assets

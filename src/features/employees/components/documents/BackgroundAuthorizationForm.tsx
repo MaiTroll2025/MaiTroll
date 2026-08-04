@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I authorize Troll City, where permitted by applicable law, to obtain a consumer report and/or background screening for employment purposes. I understand that providing consent is voluntary and that my employment is not conditioned on consent where prohibited by law. I may request a copy of any report obtained.'
+  'I authorize Mai Troll, where permitted by applicable law, to obtain a consumer report and/or background screening for employment purposes. I understand that providing consent is voluntary and that my employment is not conditioned on consent where prohibited by law. I may request a copy of any report obtained.'
 
 export default function BackgroundAuthorizationForm(props: DocumentFormProps) {
   return (

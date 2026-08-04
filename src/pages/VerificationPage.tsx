@@ -135,7 +135,7 @@ export default function VerificationPage() {
         </div>
 
         <p className="opacity-80 mb-6">
-          Stand out with a verified badge. Build trust. Boost visibility. Get recognized as a trusted member of Troll City.
+          Stand out with a verified badge. Build trust. Boost visibility. Get recognized as a trusted member of Mai Troll.
         </p>
 
         {/* Benefits */}

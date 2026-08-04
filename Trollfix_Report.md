@@ -14,7 +14,7 @@ The Trollfix engineering plan has been fully implemented and verified. The syste
 | **P1** | **Performance** | **Chat Throttling** | ✅ DONE | Client-side rate limit (1 msg/s) + Denormalized rendering. |
 | **P1** | **Reliability** | **Gift Ledger** | ✅ DONE | New Append-Only Table + Batch Processor (RPC). |
 | **P1** | **Observability**| **Metrics** | ✅ DONE | `gift_batch_logs` tracks processing health. |
-| **P1** | **Infrastructure**| **HLS Playback** | ✅ DONE | `cdn.maitrollcity.com` is reachable (HTTP 200). |
+| **P1** | **Infrastructure**| **HLS Playback** | ✅ DONE | `cdn.maiMai Troll.com` is reachable (HTTP 200). |
 
 ## 3. Measured Limits (Load Test v2)
 

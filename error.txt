@@ -1,56 +1,56 @@
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\DistrictOnboardingTour.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\DistrictOnboardingTour.tsx[24m[0m
 [0m  [2m2:23[22m  [33mwarning[39m  'useParams' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\EscalateReportModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\EscalateReportModal.tsx[24m[0m
 [0m  [2m2:13[22m  [33mwarning[39m  'Shield' is defined but never used. Allowed unused vars must match /^_/u         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m2:21[22m  [33mwarning[39m  'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\ExpandedStatsPanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\ExpandedStatsPanel.tsx[24m[0m
 [0m   [2m2:42[22m  [33mwarning[39m  'Gem' is defined but never used. Allowed unused vars must match /^_/u               [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m45:15[22m  [33mwarning[39m  'dnaData' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\GiftModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\GiftModal.tsx[24m[0m
 [0m   [2m26:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u             [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m124:9[22m   [33mwarning[39m  'getMultiplierColor' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\Header.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\Header.tsx[24m[0m
 [0m   [2m19:10[22m  [33mwarning[39m  'notifications' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m19:25[22m  [33mwarning[39m  'setNotifications' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m305:21[22m  [33mwarning[39m  'e' is defined but never used. Allowed unused args must match /^_/u                          [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\IncomingCallPopup.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\IncomingCallPopup.tsx[24m[0m
 [0m  [2m28:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\LegalLayout.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\LegalLayout.tsx[24m[0m
 [0m  [2m3:40[22m  [33mwarning[39m  'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\LiveKitGuard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\LiveKitGuard.tsx[24m[0m
 [0m  [2m18:3[22m   [33mwarning[39m  'requireConnection' is assigned a value but never used. Allowed unused args must match /^_/u                                    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m40:17[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\PayoutAdmin.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\PayoutAdmin.tsx[24m[0m
 [0m  [2m14:3[22m  [33mwarning[39m  'Eye' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\PayoutRequest.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\PayoutRequest.tsx[24m[0m
 [0m   [2m5:54[22m  [33mwarning[39m  'XCircle' is defined but never used. Allowed unused vars must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m20:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\PlatformWallet.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\PlatformWallet.tsx[24m[0m
 [0m  [2m49:10[22m  [33mwarning[39m  'lastUpdate' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\ProfitSummary.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\ProfitSummary.tsx[24m[0m
 [0m  [2m27:10[22m  [33mwarning[39m  'lastUpdate' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\PublicDocketBoard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\PublicDocketBoard.tsx[24m[0m
 [0m  [2m3:27[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\ReportDetailsModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\ReportDetailsModal.tsx[24m[0m
 [0m  [2m20:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u               [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m28:10[22m  [33mwarning[39m  'showEscalateModal' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m28:29[22m  [33mwarning[39m  'setShowEscalateModal' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\ReportModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\ReportModal.tsx[24m[0m
 [0m   [2m2:28[22m  [33mwarning[39m  'ArrowUp' is defined but never used. Allowed unused vars must match /^_/u                        [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m7:8[22m   [33mwarning[39m  'EscalateReportModal' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m30:10[22m  [33mwarning[39m  'showEscalateModal' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -58,101 +58,101 @@
 [0m  [2m31:10[22m  [33mwarning[39m  'submittedReportId' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m31:29[22m  [33mwarning[39m  'setSubmittedReportId' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\RequireWeeklyReport.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\RequireWeeklyReport.tsx[24m[0m
 [0m   [2m2:10[22m  [33mwarning[39m  'Navigate' is defined but never used. Allowed unused vars must match /^_/u                 [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m15:10[22m  [33mwarning[39m  'lastReportDate' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\RoyalCrownOverlay.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\RoyalCrownOverlay.tsx[24m[0m
 [0m  [2m20:3[22m  [33mwarning[39m  'streamId' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\SendGiftModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\SendGiftModal.tsx[24m[0m
 [0m  [2m245:17[22m  [33mwarning[39m  'useFree' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\StreamDiagnostics.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\StreamDiagnostics.tsx[24m[0m
 [0m  [2m105:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\TrollBattleArena.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\TrollBattleArena.tsx[24m[0m
 [0m  [2m42:3[22m   [33mwarning[39m  'isHost' is defined but never used. Allowed unused args must match /^_/u         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m44:11[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\TrollEvent.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\TrollEvent.tsx[24m[0m
 [0m  [2m19:50[22m  [33mwarning[39m  'streamId' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\UserRecord.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\UserRecord.tsx[24m[0m
 [0m  [2m2:52[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m2:64[22m  [33mwarning[39m  'EyeOff' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\admin\CreatorApplicationsPanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\admin\CreatorApplicationsPanel.tsx[24m[0m
 [0m  [2m5:59[22m  [33mwarning[39m  'Calendar' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\auth\TrollsNightGuard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\auth\TrollsNightGuard.tsx[24m[0m
 [0m  [2m4:18[22m  [33mwarning[39m  'Lock' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\battle\BattleArena.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\battle\BattleArena.tsx[24m[0m
 [0m   [2m2:32[22m  [33mwarning[39m  'Zap' is defined but never used. Allowed unused vars must match /^_/u               [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m39:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\battle\StartBattleModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\battle\StartBattleModal.tsx[24m[0m
 [0m  [2m24:10[22m  [33mwarning[39m  'selectedOpponent' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m24:28[22m  [33mwarning[39m  'setSelectedOpponent' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\broadcast\BroadcasterBox.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\broadcast\BroadcasterBox.tsx[24m[0m
 [0m  [2m15:11[22m  [31merror[39m  Definition for rule '@next/next/no-img-element' was not found  [2m@next/next/no-img-element[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\broadcast\CoinStoreModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\broadcast\CoinStoreModal.tsx[24m[0m
 [0m  [2m13:14[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\broadcast\UserActionsMenu.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\broadcast\UserActionsMenu.tsx[24m[0m
 [0m  [2m2:32[22m  [33mwarning[39m  'Shield' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\AdminBroadcast.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\AdminBroadcast.tsx[24m[0m
 [0m  [2m12:72[22m  [33mwarning[39m  'onComplete' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\BattleChatOverlay.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\BattleChatOverlay.tsx[24m[0m
 [0m  [2m30:11[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\ChatInput.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\ChatInput.tsx[24m[0m
 [0m  [2m12:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\ChatOverlay.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\ChatOverlay.tsx[24m[0m
 [0m  [2m33:49[22m  [33mwarning[39m  'compact' is assigned a value but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\ControlBar.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\ControlBar.tsx[24m[0m
 [0m   [2m2:10[22m  [33mwarning[39m  'Camera' is defined but never used. Allowed unused vars must match /^_/u               [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m29:3[22m   [33mwarning[39m  'layoutMode' is assigned a value but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m30:3[22m   [33mwarning[39m  'onLayoutChange' is defined but never used. Allowed unused args must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\EntranceEffect.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\EntranceEffect.tsx[24m[0m
 [0m  [2m151:70[22m  [33mwarning[39m  'profile' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\GiftBoxButton.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\GiftBoxButton.tsx[24m[0m
 [0m  [2m11:10[22m  [33mwarning[39m  'giftBoxIcon' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\GiftBurst.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\GiftBurst.tsx[24m[0m
 [0m  [2m109:3[22m  [33mwarning[39m  'targetUserId' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\GiftPopup.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\GiftPopup.tsx[24m[0m
 [0m  [2m3:10[22m  [33mwarning[39m  'Gift' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\GuestSlots.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\GuestSlots.tsx[24m[0m
 [0m   [2m4:8[22m   [33mwarning[39m  'EntranceChatPanel' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m13:52[22m  [33mwarning[39m  'streamId' is defined but never used. Allowed unused args must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\StudioComponents.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\StudioComponents.tsx[24m[0m
 [0m  [2m55:3[22m  [33mwarning[39m  'isConnected' is defined but never used. Allowed unused args must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m56:3[22m  [33mwarning[39m  'isConnecting' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\TrollDrop.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\TrollDrop.tsx[24m[0m
 [0m   [2m2:38[22m  [33mwarning[39m  'TrollColor' is defined but never used. Allowed unused vars must match /^_/u         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m19:10[22m  [33mwarning[39m  'timeLeft' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\stream\TrollEventOverlay.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\stream\TrollEventOverlay.tsx[24m[0m
 [0m  [2m7:8[22m  [33mwarning[39m  'api' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\components\trollWall\CreatePostModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\components\trollWall\CreatePostModal.tsx[24m[0m
 [0m  [2m2:49[22m  [33mwarning[39m  'Trophy' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\contexts\GlobalAppContext.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\contexts\GlobalAppContext.tsx[24m[0m
 [0m  [2m23:21[22m  [33mwarning[39m  'setIsLoading' is assigned a value but never used. Allowed unused vars must match /^_/u                                         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m24:26[22m  [33mwarning[39m  'setLoadingMessage' is assigned a value but never used. Allowed unused vars must match /^_/u                                    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m26:26[22m  [33mwarning[39m  'setIsReconnecting' is assigned a value but never used. Allowed unused vars must match /^_/u                                    [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -160,95 +160,95 @@
 [0m  [2m29:10[22m  [33mwarning[39m  'isStreamEnded' is assigned a value but never used. Allowed unused vars must match /^_/u                                        [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m75:14[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\hooks\useGoLiveFlow.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\hooks\useGoLiveFlow.ts[24m[0m
 [0m  [2m4:44[22m  [33mwarning[39m  'ParticipantEvent' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\hooks\useOfficerStreamTracking.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\hooks\useOfficerStreamTracking.ts[24m[0m
 [0m  [2m143:21[22m  [33mwarning[39m  'edgeFunctionsUrl' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m145:21[22m  [33mwarning[39m  'blob' is assigned a value but never used. Allowed unused vars must match /^_/u              [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\hooks\useProfileViewPayment.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\hooks\useProfileViewPayment.ts[24m[0m
 [0m   [2m3:23[22m  [33mwarning[39m  'useParams' is defined but never used. Allowed unused vars must match /^_/u         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m5:10[22m  [33mwarning[39m  'supabase' is defined but never used. Allowed unused vars must match /^_/u          [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m20:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\hooks\useRoom.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\hooks\useRoom.ts[24m[0m
 [0m  [2m12:16[22m  [33mwarning[39m  'setRoom' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\hooks\useSeatRoster.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\hooks\useSeatRoster.ts[24m[0m
 [0m  [2m289:17[22m  [33mwarning[39m  'data' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\LiveKitService.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\LiveKitService.ts[24m[0m
 [0m  [2m348:17[22m  [33mwarning[39m  'safeStringify' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\adminCoins.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\adminCoins.ts[24m[0m
 [0m    [2m7:10[22m  [33mwarning[39m  'ADMIN_EMAIL' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m198:3[22m   [33mwarning[39m  'reason' is defined but never used. Allowed unused args must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m250:3[22m   [33mwarning[39m  'reason' is defined but never used. Allowed unused args must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\adminEconomy.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\adminEconomy.ts[24m[0m
 [0m  [2m7:10[22m  [33mwarning[39m  'toast' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\battleHelpers.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\battleHelpers.ts[24m[0m
 [0m  [2m12:3[22m  [33mwarning[39m  'challengerStreamId' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\coinUtils.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\coinUtils.ts[24m[0m
 [0m  [2m2:10[22m  [33mwarning[39m  'toast' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\courtSystem.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\courtSystem.ts[24m[0m
 [0m   [2m82:48[22m  [33mwarning[39m  'username' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m159:33[22m  [33mwarning[39m  'username' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m159:51[22m  [33mwarning[39m  'reason' is defined but never used. Allowed unused args must match /^_/u    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m166:33[22m  [33mwarning[39m  'username' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\endStream.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\endStream.ts[24m[0m
 [0m  [2m117:14[22m  [33mwarning[39m  'viewerError' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\entranceAnimations.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\entranceAnimations.ts[24m[0m
 [0m  [2m4:90[22m  [33mwarning[39m  'RoleBasedEffectKey' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\hooks\useGiftSystem.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\hooks\useGiftSystem.ts[24m[0m
 [0m  [2m6:10[22m  [33mwarning[39m  'applyGiftToBattle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\paypalUtils.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\paypalUtils.ts[24m[0m
 [0m  [2m2:10[22m  [33mwarning[39m  'toast' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\progressionEngine.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\progressionEngine.ts[24m[0m
 [0m  [2m39:25[22m  [33mwarning[39m  'familyResult' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\test-promise.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\test-promise.ts[24m[0m
 [0m  [2m2:7[22m  [33mwarning[39m  'test' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\themeContext.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\themeContext.tsx[24m[0m
 [0m  [2m49:17[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\lib\translation.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\lib\translation.ts[24m[0m
 [0m  [2m16:3[22m  [33mwarning[39m  'options' is assigned a value but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\AIVerificationPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\AIVerificationPage.tsx[24m[0m
 [0m  [2m21:10[22m  [33mwarning[39m  'paymentMethod' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\AccountPaymentLinkedSuccess.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\AccountPaymentLinkedSuccess.tsx[24m[0m
 [0m   [2m6:10[22m  [33mwarning[39m  'recordAppEvent' is defined but never used. Allowed unused vars must match /^_/u      [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m34:15[22m  [33mwarning[39m  'authToken' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\AccountPaymentsSuccess.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\AccountPaymentsSuccess.tsx[24m[0m
 [0m   [2m6:10[22m  [33mwarning[39m  'recordAppEvent' is defined but never used. Allowed unused vars must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m16:10[22m  [33mwarning[39m  'status' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\AddCard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\AddCard.tsx[24m[0m
 [0m  [2m17:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\Application.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Application.tsx[24m[0m
 [0m   [2m3:10[22m  [33mwarning[39m  'supabase' is defined but never used. Allowed unused vars must match /^_/u                  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m11:26[22m  [33mwarning[39m  'refreshProfile' is assigned a value but never used. Allowed unused vars must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m13:10[22m  [33mwarning[39m  'selectedType' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m13:24[22m  [33mwarning[39m  'setSelectedType' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\BanFee.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\BanFee.tsx[24m[0m
 [0m  [2m3:10[22m  [33mwarning[39m  'useState' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\BroadcastPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\BroadcastPage.tsx[24m[0m
 [0m   [2m81:9[22m   [33mwarning[39m  'displayName' is assigned a value but never used. Allowed unused vars must match /^_/u        [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m118:5[22m   [33mwarning[39m  'isConnecting' is assigned a value but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m129:11[22m  [33mwarning[39m  'participants' is assigned a value but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -256,31 +256,31 @@
 [0m  [2m187:10[22m  [33mwarning[39m  'coinCount' is assigned a value but never used. Allowed unused vars must match /^_/u          [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m192:26[22m  [33mwarning[39m  'setEntranceEffect' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\BroadcastSummary.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\BroadcastSummary.tsx[24m[0m
 [0m  [2m2:55[22m  [33mwarning[39m  'X' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m4:11[22m  [33mwarning[39m  'SummaryData' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\Call.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Call.tsx[24m[0m
 [0m   [2m34:10[22m  [33mwarning[39m  'isConnected' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m108:58[22m  [33mwarning[39m  'publication' is defined but never used. Allowed unused args must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m108:71[22m  [33mwarning[39m  'participant' is defined but never used. Allowed unused args must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\CashoutPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\CashoutPage.tsx[24m[0m
 [0m  [2m45:9[22m  [33mwarning[39m  'eligibleTiers' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\Cashouts.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Cashouts.tsx[24m[0m
 [0m  [2m67:14[22m  [33mwarning[39m  'e' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\CoinsComplete.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\CoinsComplete.tsx[24m[0m
 [0m  [2m10:11[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\CreatorApplication.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\CreatorApplication.tsx[24m[0m
 [0m  [2m17:11[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\CreatorApplicationStatus.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\CreatorApplicationStatus.tsx[24m[0m
 [0m  [2m11:11[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\CreatorDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\CreatorDashboard.tsx[24m[0m
 [0m   [2m6:3[22m  [33mwarning[39m  'TrendingUp' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m7:3[22m  [33mwarning[39m  'Users' is defined but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m8:3[22m  [33mwarning[39m  'DollarSign' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -294,109 +294,109 @@
 [0m  [2m16:3[22m  [33mwarning[39m  'Target' is defined but never used. Allowed unused vars must match /^_/u      [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m17:3[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\EarningsDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\EarningsDashboard.tsx[24m[0m
 [0m   [2m8:18[22m  [33mwarning[39m  'CheckCircle' is defined but never used. Allowed unused vars must match /^_/u                [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m8:38[22m  [33mwarning[39m  'Download' is defined but never used. Allowed unused vars must match /^_/u                   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m58:10[22m  [33mwarning[39m  'selectedMonth' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m58:25[22m  [33mwarning[39m  'setSelectedMonth' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\EmpirePartnerApply.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\EmpirePartnerApply.tsx[24m[0m
 [0m  [2m14:10[22m  [33mwarning[39m  'paymentMethod' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m14:25[22m  [33mwarning[39m  'setPaymentMethod' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\FamilyWarsPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\FamilyWarsPage.tsx[24m[0m
 [0m  [2m3:10[22m  [33mwarning[39m  'recordAppEvent' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\GoLive.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\GoLive.tsx[24m[0m
 [0m   [2m1:38[22m  [33mwarning[39m  'useRef' is defined but never used. Allowed unused vars must match /^_/u                   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m1:46[22m  [33mwarning[39m  'useCallback' is defined but never used. Allowed unused vars must match /^_/u              [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m19:23[22m  [33mwarning[39m  'setIsStreaming' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\KickFee.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\KickFee.tsx[24m[0m
 [0m  [2m7:10[22m  [33mwarning[39m  'paymentMethod' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m7:25[22m  [33mwarning[39m  'setPaymentMethod' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\LandingPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\LandingPage.tsx[24m[0m
 [0m  [2m3:37[22m  [33mwarning[39m  'Star' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\Messages.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Messages.tsx[24m[0m
 [0m  [2m4:10[22m  [33mwarning[39m  'MessageSquarePlus' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\OfficerModeration.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\OfficerModeration.tsx[24m[0m
 [0m  [2m7:31[22m  [33mwarning[39m  'EyeOff' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m7:39[22m  [33mwarning[39m  'Ban' is defined but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m8:32[22m  [33mwarning[39m  'Filter' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\PaymentCallback.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\PaymentCallback.tsx[24m[0m
 [0m  [2m26:13[22m  [33mwarning[39m  'payerId' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\PaymentSettings.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\PaymentSettings.tsx[24m[0m
 [0m    [2m7:15[22m  [33mwarning[39m  'API_ENDPOINTS' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m219:14[22m  [33mwarning[39m  'e' is defined but never used                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\PayoutSetupPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\PayoutSetupPage.tsx[24m[0m
 [0m  [2m12:10[22m  [33mwarning[39m  'loading' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m12:19[22m  [33mwarning[39m  'setLoading' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\ProfileSetup.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\ProfileSetup.tsx[24m[0m
 [0m  [2m4:10[22m  [33mwarning[39m  'recordAppEvent' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m4:26[22m  [33mwarning[39m  'recordEvent' is defined but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m7:8[22m   [33mwarning[39m  'IdVerifyClient' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\ProfileSetupPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\ProfileSetupPage.tsx[24m[0m
 [0m  [2m10:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\ReportDetailsPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\ReportDetailsPage.tsx[24m[0m
 [0m   [2m5:44[22m  [33mwarning[39m  'Ban' is defined but never used. Allowed unused vars must match /^_/u               [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m5:49[22m  [33mwarning[39m  'EyeOff' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m5:57[22m  [33mwarning[39m  'CheckCircle' is defined but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m5:70[22m  [33mwarning[39m  'X' is defined but never used. Allowed unused vars must match /^_/u                 [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m12:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\Safety.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Safety.tsx[24m[0m
 [0m  [2m3:39[22m  [33mwarning[39m  'Eye' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\SellOnTrollCity.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\SellOnMai Troll.tsx[24m[0m
 [0m  [2m17:10[22m  [33mwarning[39m  'applicationSubmitted' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m21:10[22m  [33mwarning[39m  'newProduct' is assigned a value but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m21:22[22m  [33mwarning[39m  'setNewProduct' is assigned a value but never used. Allowed unused vars must match /^_/u         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\ShopDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\ShopDashboard.tsx[24m[0m
 [0m  [2m118:14[22m  [33mwarning[39m  'err' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\StreamPicture.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\StreamPicture.tsx[24m[0m
 [0m  [2m1:28[22m  [33mwarning[39m  'useMemo' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\Support.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Support.tsx[24m[0m
 [0m  [2m5:26[22m  [33mwarning[39m  'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TaxOnboarding.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TaxOnboarding.tsx[24m[0m
 [0m  [2m6:31[22m  [33mwarning[39m  'CheckCircle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TaxUpload.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TaxUpload.tsx[24m[0m
 [0m  [2m43:21[22m  [33mwarning[39m  'uploadData' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m56:21[22m  [33mwarning[39m  'urlData' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TermsAgreement.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TermsAgreement.tsx[24m[0m
 [0m  [2m110:16[22m  [33mwarning[39m  'e' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollCityWall.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Mai TrollWall.tsx[24m[0m
 [0m  [2m15:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollCourt.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TrollCourt.tsx[24m[0m
 [0m  [2m6:66[22m  [33mwarning[39m  'XCircle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollFamily.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TrollFamily.tsx[24m[0m
 [0m  [2m2:8[22m  [33mwarning[39m  'React' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollIdentityLab.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TrollIdentityLab.tsx[24m[0m
 [0m  [2m12:10[22m  [33mwarning[39m  'dna' is assigned a value but never used. Allowed unused vars must match /^_/u    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m13:10[22m  [33mwarning[39m  'level' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollOfficerApplication.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TrollOfficerApplication.tsx[24m[0m
 [0m  [2m14:11[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollOfficerLounge.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TrollOfficerLounge.tsx[24m[0m
 [0m   [2m6:8[22m   [33mwarning[39m  'ClickableUsername' is defined but never used. Allowed unused vars must match /^_/u        [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m16:3[22m   [33mwarning[39m  'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m19:3[22m   [33mwarning[39m  'Star' is defined but never used. Allowed unused vars must match /^_/u                     [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -407,81 +407,81 @@
 [0m  [2m62:10[22m  [33mwarning[39m  'reportAlerts' is assigned a value but never used. Allowed unused vars must match /^_/u    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m69:10[22m  [33mwarning[39m  'payrollLoading' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollWheel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TrollWheel.tsx[24m[0m
 [0m  [2m6:10[22m  [33mwarning[39m  'supabase' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\Trollifications.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Trollifications.tsx[24m[0m
 [0m    [2m5:58[22m  [33mwarning[39m  'MessageSquare' is defined but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m5:73[22m  [33mwarning[39m  'Heart' is defined but never used. Allowed unused vars must match /^_/u             [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m9:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m128:15[22m  [33mwarning[39m  'data' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollmondsStore.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TrollmondsStore.tsx[24m[0m
 [0m  [2m168:9[22m  [33mwarning[39m  'navigate' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TrollsNightPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TrollsNightPage.tsx[24m[0m
 [0m   [2m6:3[22m  [33mwarning[39m  'Heart' is defined but never used. Allowed unused vars must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m10:3[22m  [33mwarning[39m  'Search' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\TromodyShow.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\TromodyShow.tsx[24m[0m
 [0m   [2m1:31[22m  [33mwarning[39m  'useRef' is defined but never used. Allowed unused vars must match /^_/u                   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m24:23[22m  [33mwarning[39m  'setViewer1Data' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m29:23[22m  [33mwarning[39m  'setViewer2Data' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\UserInventory.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\UserInventory.tsx[24m[0m
 [0m  [2m6:46[22m  [33mwarning[39m  'MessageCircle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m6:61[22m  [33mwarning[39m  'Play' is defined but never used. Allowed unused vars must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\Wallet.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\Wallet.tsx[24m[0m
 [0m   [2m3:10[22m  [33mwarning[39m  'supabase' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m6:33[22m  [33mwarning[39m  'refreshUserBalance' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m93:14[22m  [33mwarning[39m  'error' is defined but never used                                                     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\WatchPage.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\WatchPage.tsx[24m[0m
 [0m    [2m5:3[22m   [33mwarning[39m  'useRef' is defined but never used. Allowed unused vars must match /^_/u                      [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m50:10[22m  [33mwarning[39m  'hasSession' is assigned a value but never used. Allowed unused vars must match /^_/u         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m121:26[22m  [33mwarning[39m  'setTrollLikeCount' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m122:10[22m  [33mwarning[39m  'coinCount' is assigned a value but never used. Allowed unused vars must match /^_/u          [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m127:26[22m  [33mwarning[39m  'setEntranceEffect' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\WheelModal.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\WheelModal.tsx[24m[0m
 [0m  [2m5:37[22m  [33mwarning[39m  'Skull' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\AdminEarningsDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\AdminEarningsDashboard.tsx[24m[0m
 [0m    [2m7:11[22m  [33mwarning[39m  'Shield' is defined but never used. Allowed unused vars must match /^_/u                [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m8:23[22m  [33mwarning[39m  'Filter' is defined but never used. Allowed unused vars must match /^_/u                [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m8:39[22m  [33mwarning[39m  'Calendar' is defined but never used. Allowed unused vars must match /^_/u              [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m57:10[22m  [33mwarning[39m  'monthlyData' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m117:14[22m  [33mwarning[39m  'err' is defined but never used                                                         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\AdminHQ.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\AdminHQ.tsx[24m[0m
 [0m     [2m3:10[22m  [33mwarning[39m  'useAuthStore' is defined but never used. Allowed unused vars must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m     [2m7:11[22m  [33mwarning[39m  'Tab' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m1164:15[22m  [33mwarning[39m  'data' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\AdminMarketplace.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\AdminMarketplace.tsx[24m[0m
 [0m  [2m4:45[22m   [33mwarning[39m  'Ban' is defined but never used. Allowed unused vars must match /^_/u    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m4:72[22m   [33mwarning[39m  'Edit' is defined but never used. Allowed unused vars must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m4:130[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\AdminOfficerReports.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\AdminOfficerReports.tsx[24m[0m
 [0m   [2m4:30[22m  [33mwarning[39m  'User' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m38:12[22m  [33mwarning[39m  'error' is defined but never used                                       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\CityEventsManager.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\CityEventsManager.tsx[24m[0m
 [0m  [2m4:3[22m  [33mwarning[39m  'Users' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\EscalationMatrix.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\EscalationMatrix.tsx[24m[0m
 [0m  [2m2:45[22m  [33mwarning[39m  'Save' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\MobileAdminDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\MobileAdminDashboard.tsx[24m[0m
 [0m   [2m12:3[22m   [33mwarning[39m  'Bell' is defined but never used. Allowed unused vars must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m404:42[22m  [33mwarning[39m  'onStatsUpdate' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m497:30[22m  [33mwarning[39m  'onStatsUpdate' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m599:33[22m  [33mwarning[39m  'onStatsUpdate' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m667:30[22m  [33mwarning[39m  'onStatsUpdate' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\OfficerOperations.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\OfficerOperations.tsx[24m[0m
 [0m    [2m4:3[22m  [33mwarning[39m  'Users' is defined but never used. Allowed unused vars must match /^_/u                  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m7:3[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u                  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m10:3[22m  [33mwarning[39m  'XCircle' is defined but never used. Allowed unused vars must match /^_/u                [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -489,82 +489,82 @@
 [0m  [2m173:9[22m  [33mwarning[39m  'createShift' is assigned a value but never used. Allowed unused vars must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m187:9[22m  [33mwarning[39m  'assignPatrol' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\PaymentsDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\PaymentsDashboard.tsx[24m[0m
 [0m  [2m6:20[22m  [33mwarning[39m  'Filter' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\ReferralBonusPanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\ReferralBonusPanel.tsx[24m[0m
 [0m  [2m275:37[22m  [33mwarning[39m  'idx' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\ReputationDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\ReputationDashboard.tsx[24m[0m
 [0m  [2m2:86[22m  [33mwarning[39m  'Filter' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\TrollFamily.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\TrollFamily.tsx[24m[0m
 [0m  [2m12:3[22m  [33mwarning[39m  'Gift' is defined but never used. Allowed unused vars must match /^_/u      [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m13:3[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m15:3[22m  [33mwarning[39m  'Sparkles' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\WeeklyReportsView.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\WeeklyReportsView.tsx[24m[0m
 [0m   [2m5:36[22m  [33mwarning[39m  'Filter' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m31:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\AdminApplications.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\AdminApplications.tsx[24m[0m
 [0m  [2m62:9[22m  [33mwarning[39m  'isAdmin' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\AdminControlPanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\AdminControlPanel.tsx[24m[0m
 [0m   [2m15:3[22m   [33mwarning[39m  'Search' is defined but never used. Allowed unused vars must match /^_/u                  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m21:10[22m  [33mwarning[39m  'targetUser' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m21:22[22m  [33mwarning[39m  'setTargetUser' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m251:27[22m  [33mwarning[39m  'approveData' is assigned a value but never used. Allowed unused vars must match /^_/u    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m292:25[22m  [33mwarning[39m  'rejectData' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\AdminGrantCoins.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\AdminGrantCoins.tsx[24m[0m
 [0m  [2m24:20[22m  [33mwarning[39m  'setCoinType' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\AgreementsManagement.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\AgreementsManagement.tsx[24m[0m
 [0m   [2m1:27[22m  [33mwarning[39m  'useEffect' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m10:3[22m   [33mwarning[39m  'Filter' is defined but never used. Allowed unused vars must match /^_/u               [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m42:3[22m   [33mwarning[39m  'agreements' is assigned a value but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\AllApplications.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\AllApplications.tsx[24m[0m
 [0m  [2m34:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\ApplicationsHub.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\ApplicationsHub.tsx[24m[0m
 [0m   [2m9:3[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u                  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m11:3[22m  [33mwarning[39m  'Award' is defined but never used. Allowed unused vars must match /^_/u                  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m12:3[22m  [33mwarning[39m  'UserCheck' is defined but never used. Allowed unused vars must match /^_/u              [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m27:3[22m  [33mwarning[39m  'applications' is assigned a value but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\BroadcasterApplications.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\BroadcasterApplications.tsx[24m[0m
 [0m    [2m7:15[22m  [33mwarning[39m  'Calendar' is defined but never used. Allowed unused vars must match /^_/u                    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m7:25[22m  [33mwarning[39m  'MapPin' is defined but never used. Allowed unused vars must match /^_/u                      [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m47:10[22m  [33mwarning[39m  'officers' is assigned a value but never used. Allowed unused vars must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m70:9[22m   [33mwarning[39m  'fetchApplications' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m267:9[22m   [33mwarning[39m  'handleFireOfficer' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\CityControlsHealth.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\CityControlsHealth.tsx[24m[0m
 [0m   [2m4:3[22m  [33mwarning[39m  'Server' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m6:3[22m  [33mwarning[39m  'Wifi' is defined but never used. Allowed unused vars must match /^_/u    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m17:3[22m  [33mwarning[39m  'Pause' is defined but never used. Allowed unused vars must match /^_/u   [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\CitySummaryBar.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\CitySummaryBar.tsx[24m[0m
 [0m  [2m32:67[22m  [33mwarning[39m  'economySummary' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\CreateSchedulePanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\CreateSchedulePanel.tsx[24m[0m
 [0m  [2m4:27[22m  [33mwarning[39m  'User' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\EarningsTaxOverview.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\EarningsTaxOverview.tsx[24m[0m
 [0m   [2m95:16[22m  [33mwarning[39m  'error' is defined but never used                                                      [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m157:13[22m  [33mwarning[39m  'creatorSet' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m161:15[22m  [33mwarning[39m  'monthKey' is assigned a value but never used. Allowed unused vars must match /^_/u    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m296:29[22m  [33mwarning[39m  'creator' is defined but never used. Allowed unused args must match /^_/u              [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\FinanceEconomyCenter.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\FinanceEconomyCenter.tsx[24m[0m
 [0m  [2m5:3[22m  [33mwarning[39m  'TrendingDown' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\OfficerShiftsPanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\OfficerShiftsPanel.tsx[24m[0m
 [0m  [2m4:17[22m  [33mwarning[39m  'User' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\OperationsControlDeck.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\OperationsControlDeck.tsx[24m[0m
 [0m   [2m4:3[22m  [33mwarning[39m  'Users' is defined but never used. Allowed unused vars must match /^_/u          [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m6:3[22m  [33mwarning[39m  'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m7:3[22m  [33mwarning[39m  'Play' is defined but never used. Allowed unused vars must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -578,22 +578,22 @@
 [0m  [2m19:3[22m  [33mwarning[39m  'XCircle' is defined but never used. Allowed unused vars must match /^_/u        [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m20:3[22m  [33mwarning[39m  'Activity' is defined but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\PayPalPaymentsPanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\PayPalPaymentsPanel.tsx[24m[0m
 [0m   [2m5:33[22m  [33mwarning[39m  'CheckCircle' is defined but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m5:46[22m  [33mwarning[39m  'XCircle' is defined but never used. Allowed unused vars must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m5:63[22m  [33mwarning[39m  'Filter' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m24:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\PayPalPayoutsPanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\PayPalPayoutsPanel.tsx[24m[0m
 [0m   [2m5:31[22m  [33mwarning[39m  'CheckCircle' is defined but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m5:44[22m  [33mwarning[39m  'XCircle' is defined but never used. Allowed unused vars must match /^_/u           [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m24:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\PayPalTestPanel.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\PayPalTestPanel.tsx[24m[0m
 [0m  [2m8:11[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m8:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\PayoutQueue.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\PayoutQueue.tsx[24m[0m
 [0m    [2m7:37[22m  [33mwarning[39m  'Filter' is defined but never used. Allowed unused vars must match /^_/u                    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m8:14[22m  [33mwarning[39m  'Eye' is defined but never used. Allowed unused vars must match /^_/u                       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m8:19[22m  [33mwarning[39m  'AlertCircle' is defined but never used. Allowed unused vars must match /^_/u               [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -601,7 +601,7 @@
 [0m   [2m40:10[22m  [33mwarning[39m  'rejectionReason' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m294:9[22m   [33mwarning[39m  'maskDestination' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\QuickActionsBar.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\QuickActionsBar.tsx[24m[0m
 [0m   [2m4:3[22m  [33mwarning[39m  'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m5:3[22m  [33mwarning[39m  'Users' is defined but never used. Allowed unused vars must match /^_/u          [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m6:3[22m  [33mwarning[39m  'DollarSign' is defined but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -618,7 +618,7 @@
 [0m  [2m24:3[22m  [33mwarning[39m  'Monitor' is defined but never used. Allowed unused vars must match /^_/u        [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m25:3[22m  [33mwarning[39m  'Database' is defined but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\admin\components\TestDiagnostics.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\admin\components\TestDiagnostics.tsx[24m[0m
 [0m    [2m3:10[22m  [33mwarning[39m  'toast' is defined but never used. Allowed unused vars must match /^_/u          [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m4:69[22m  [33mwarning[39m  'Database' is defined but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m4:79[22m  [33mwarning[39m  'Zap' is defined but never used. Allowed unused vars must match /^_/u            [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -626,7 +626,7 @@
 [0m   [2m30:15[22m  [33mwarning[39m  'data' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m199:15[22m  [33mwarning[39m  'data' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\lead-officer\LeadOfficerDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\lead-officer\LeadOfficerDashboard.tsx[24m[0m
 [0m    [2m5:65[22m  [33mwarning[39m  'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u                     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m62:11[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u                     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m67:10[22m  [33mwarning[39m  'liveStreams' is assigned a value but never used. Allowed unused vars must match /^_/u              [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -641,32 +641,32 @@
 [0m  [2m538:60[22m  [33mwarning[39m  'userId' is defined but never used. Allowed unused args must match /^_/u                            [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m573:11[22m  [33mwarning[39m  'rejectReason' is assigned a value but never used. Allowed unused vars must match /^_/u             [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\lead-officer\Review.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\lead-officer\Review.tsx[24m[0m
 [0m  [2m19:11[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m19:20[22m  [33mwarning[39m  'user' is assigned a value but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\legal\TrollsNightRules.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\legal\TrollsNightRules.tsx[24m[0m
 [0m  [2m3:18[22m  [33mwarning[39m  'FileText' is defined but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m3:28[22m  [33mwarning[39m  'CheckCircle' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\messages\components\InboxSidebar.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\messages\components\InboxSidebar.tsx[24m[0m
 [0m  [2m5:8[22m  [33mwarning[39m  'ClickableUsername' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\officer\OfficerOnboarding.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\officer\OfficerOnboarding.tsx[24m[0m
 [0m  [2m3:10[22m  [33mwarning[39m  'supabase' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m7:3[22m   [33mwarning[39m  'BookOpen' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m8:18[22m  [33mwarning[39m  'Lock' is defined but never used. Allowed unused vars must match /^_/u      [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m8:24[22m  [33mwarning[39m  'Users' is defined but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m8:46[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u     [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\officer\OfficerPayrollDashboard.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\officer\OfficerPayrollDashboard.tsx[24m[0m
 [0m  [2m130:9[22m  [33mwarning[39m  'formatCurrency' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\officer\OfficerTrainingSimulator.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\officer\OfficerTrainingSimulator.tsx[24m[0m
 [0m   [2m6:18[22m  [33mwarning[39m  'Clock' is defined but never used. Allowed unused vars must match /^_/u             [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m28:17[22m  [33mwarning[39m  'profile' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\src\pages\officer\OrientationQuiz.tsx[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\src\pages\officer\OrientationQuiz.tsx[24m[0m
 [0m    [2m7:42[22m  [33mwarning[39m  'ArrowRight' is defined but never used. Allowed unused vars must match /^_/u               [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m    [2m7:54[22m  [33mwarning[39m  'ArrowLeft' is defined but never used. Allowed unused vars must match /^_/u                [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m   [2m22:26[22m  [33mwarning[39m  'setProfile' is assigned a value but never used. Allowed unused vars must match /^_/u      [2m@typescript-eslint/no-unused-vars[22m[0m
@@ -676,50 +676,50 @@
 [0m  [2m161:9[22m   [33mwarning[39m  'gradeAnswers' is assigned a value but never used. Allowed unused vars must match /^_/u    [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m420:19[22m  [33mwarning[39m  'isAnswered' is assigned a value but never used. Allowed unused vars must match /^_/u      [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\add-card\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\add-card\index.ts[24m[0m
 [0m  [2m70:13[22m  [33mwarning[39m  'SQUARE_LOCATION_ID' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\admin-reset\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\admin-reset\index.ts[24m[0m
 [0m  [2m74:26[22m  [33mwarning[39m  'deleteError' is assigned a value but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m90:26[22m  [33mwarning[39m  'deleteUsersError' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\admin\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\admin\index.ts[24m[0m
 [0m   [2m29:47[22m  [33mwarning[39m  '_' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m480:18[22m  [33mwarning[39m  '_' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m517:18[22m  [33mwarning[39m  '_' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m548:18[22m  [33mwarning[39m  '_' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\live\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\live\index.ts[24m[0m
 [0m  [2m38:45[22m  [33mwarning[39m  '_' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\payments-status\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\payments-status\index.ts[24m[0m
 [0m  [2m73:17[22m  [33mwarning[39m  'responseData' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\payments\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\payments\index.ts[24m[0m
 [0m    [2m4:41[22m  [33mwarning[39m  'corsHeaders' is defined but never used. Allowed unused vars must match /^_/u                         [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m267:11[22m  [33mwarning[39m  'SQUARE_APPLICATION_SECRET' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\paypal-complete-order\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\paypal-complete-order\index.ts[24m[0m
 [0m  [2m11:7[22m  [33mwarning[39m  'PAYPAL_BASE' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\paypal-create-order\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\paypal-create-order\index.ts[24m[0m
 [0m  [2m18:16[22m  [33mwarning[39m  'req' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\paypal-test-live\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\paypal-test-live\index.ts[24m[0m
 [0m  [2m16:16[22m  [33mwarning[39m  'req' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m33:16[22m  [33mwarning[39m  'req' is defined but never used. Allowed unused args must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\paypal-verify-transaction\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\paypal-verify-transaction\index.ts[24m[0m
 [0m  [2m118:14[22m  [33mwarning[39m  '_' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\sendEmail\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\sendEmail\index.ts[24m[0m
 [0m  [2m2:10[22m  [33mwarning[39m  'createClient' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\streams-maintenance\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\streams-maintenance\index.ts[24m[0m
 [0m  [2m46:15[22m  [33mwarning[39m  'effectiveBroadcasterId' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m  [2m88:24[22m  [33mwarning[39m  'participantsError' is assigned a value but never used. Allowed unused vars must match /^_/u       [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
-[0m[4mC:\Users\justk\Videos\2026\trollcity-1\supabase\functions\verify-user-complete\index.ts[24m[0m
+[0m[4mC:\Users\justk\Videos\2026\Mai Troll-1\supabase\functions\verify-user-complete\index.ts[24m[0m
 [0m  [2m87:19[22m  [33mwarning[39m  'result' is assigned a value but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
 [0m[0m
 [0m[31m[1m✖ 385 problems (1 error, 384 warnings)[22m[39m[0m

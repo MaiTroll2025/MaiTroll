@@ -189,12 +189,12 @@ const GiftBoxModalComponent = function GiftBoxModal({
       // Normalize gift items from any table schema into unified GiftItem format
       const transformedGifts: GiftItem[] = rawGifts.map((g: any) => {
         const id = g.id || String(g._id || g.gift_id || '');
-        const name = g.name || g.gift_name || g.title || 'Unknown Gift';
+        const name = g.name || g.gift_name || g.title || g.display_name || 'Unknown Gift';
         const icon = g.icon || g.icon_url || g.emoji || g.gift_icon || '🎁';
-        const coinCost = g.coinCost || g.value || g.cost || g.price || g.coin_price || g.coins || g.amount || 0;
-        const slug = g.slug || g.gift_slug || name.toLowerCase().replace(/\s+/g, '-');
+        const coinCost = Number(g.coinCost ?? g.value ?? g.cost ?? g.price ?? g.coin_price ?? g.coins ?? g.amount ?? 0);
+        const slug = g.slug || g.gift_slug || g.item_key || name.toLowerCase().replace(/\s+/g, '-');
         const animationType = g.animation_type || g.animationType || g.animation || undefined;
-        const category = g.category || g.gift_category || undefined;
+        const category = g.category || g.gift_category || g.metadata?.subcategory || undefined;
 
         return {
           id,
@@ -232,16 +232,15 @@ const GiftBoxModalComponent = function GiftBoxModal({
 
   // Helper function to get gift category
   const getGiftCategory = (gift: GiftItem): GiftCategory => {
-    // This would need to be enriched from the original data
-    // For now, we'll try to infer from the gift name/icon
     const nameLower = gift.name.toLowerCase();
     const icon = gift.icon;
-    
+    const category = String(gift.category || '').toLowerCase();
+
+    if (category.includes('royalty') || category.includes('luxury') || nameLower.includes('crown') || nameLower.includes('diamond') || nameLower.includes('gold') || nameLower.includes('platinum') || nameLower.includes('aurora')) return 'luxury';
     if (nameLower.includes('car') || nameLower.includes('lamborghini') || nameLower.includes('ferrari')) return 'cars';
     if (nameLower.includes('house') || nameLower.includes('mansion') || nameLower.includes('castle')) return 'houses';
     if (nameLower.includes('boat') || nameLower.includes('yacht')) return 'boats';
     if (nameLower.includes('plane') || nameLower.includes('jet') || nameLower.includes('helicopter')) return 'planes';
-    if (nameLower.includes('crown') || nameLower.includes('diamond') || nameLower.includes('gold')) return 'luxury';
     if (nameLower.includes('cigarette') || nameLower.includes('cigar') || nameLower.includes('smoke')) return 'smoking';
     if (nameLower.includes('beer') || nameLower.includes('wine') || nameLower.includes('champagne')) return 'drinking';
     if (nameLower.includes('clown') || nameLower.includes('meme') || nameLower.includes('troll')) return 'funny';
@@ -476,7 +475,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
               )}
             >
               <Coins size={16} />
-              Store
+              Quick Store
             </button>
           </div>
 
@@ -498,6 +497,9 @@ const GiftBoxModalComponent = function GiftBoxModal({
 
           {activeTab === 'store' ? (
             <div className="flex-1 overflow-hidden">
+              <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs text-slate-400">
+                <span>Quick Store • buy coins without leaving the stream</span>
+              </div>
               <CoinStoreModal isOpen={true} onClose={() => setActiveTab('gifts')} embedded allowCardPayment={false} />
             </div>
           ) : activeTab === 'abilities' ? (

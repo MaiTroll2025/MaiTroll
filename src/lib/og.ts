@@ -1,4 +1,4 @@
-const APP_ORIGIN = import.meta.env.VITE_APP_URL || import.meta.env.APP_URL || 'https://maitrollcity.com'
+const APP_ORIGIN = import.meta.env.VITE_APP_URL || import.meta.env.APP_URL || 'https://maiMaiTroll.com'
 
 export function buildOGImageUrl(params: {
   kind: 'profile' | 'tcnn' | 'academy' | 'default'

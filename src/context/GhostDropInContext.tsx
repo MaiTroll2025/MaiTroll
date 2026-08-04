@@ -25,11 +25,11 @@ interface GhostDropInContextType {
 
 const GhostDropInContext = createContext<GhostDropInContextType | null>(null);
 
-const STORAGE_KEY = 'trollcity_ghost_last_seen';
+const STORAGE_KEY = 'MaiTroll_ghost_last_seen';
 
 function getStoredState(): GhostDropInState {
   try {
-    const raw = localStorage.getItem('trollcity_ghost_state');
+    const raw = localStorage.getItem('MaiTroll_ghost_state');
     if (raw) {
       const parsed = JSON.parse(raw);
       // Clear stale state if older than 24h
@@ -52,7 +52,7 @@ function getStoredState(): GhostDropInState {
 
 function saveState(state: GhostDropInState) {
   try {
-    localStorage.setItem('trollcity_ghost_state', JSON.stringify(state));
+    localStorage.setItem('MaiTroll_ghost_state', JSON.stringify(state));
   } catch {}
 }
 

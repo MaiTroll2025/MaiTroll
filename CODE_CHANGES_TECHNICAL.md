@@ -65,10 +65,10 @@ export default function ProfileSettings() {
 
 **Toggle UI Added (in Preferences section):**
 ```tsx
-<div className={`flex items-center justify-between p-4 ${trollCityTheme.backgrounds.glass} rounded-xl border ${trollCityTheme.borders.glass}`}>
+<div className={`flex items-center justify-between p-4 ${Mai TrollTheme.backgrounds.glass} rounded-xl border ${Mai TrollTheme.borders.glass}`}>
   <div>
     <p className="font-medium text-white">Verbal Notifications</p>
-    <p className={`text-xs ${trollCityTheme.text.muted}`}>Receive voice announcements for important alerts.</p>
+    <p className={`text-xs ${Mai TrollTheme.text.muted}`}>Receive voice announcements for important alerts.</p>
   </div>
   <button
     onClick={() => {

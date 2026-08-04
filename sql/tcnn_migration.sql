@@ -1,4 +1,4 @@
--- Troll City News Network (TCNN) Database Migration
+-- Mai Troll News Network (TCNN) Database Migration
 -- This migration creates all necessary tables and functions for TCNN
 
 -- ============================================

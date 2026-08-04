@@ -1,6 +1,6 @@
 /**
  * iOS Compatibility Tests
- * Tests that validate iOS-specific fixes for Troll City PWA
+ * Tests that validate iOS-specific fixes for Mai Troll PWA
  * Run with: npm run test:ios
  * Run with UI: npm run test:ios:ui
  */

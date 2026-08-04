@@ -3,7 +3,7 @@ TRAE — MASTER PROMPT (FINAL + LIVEKIT REQUIREMENT ADDED, AUTHORITATIVE)
 
 ABSOLUTE RULE (READ FIRST)
 ----------------------------------------------------------------------
-You MUST NOT modify, drop, rename, refactor, or reinterpret ANY existing Troll City tables,
+You MUST NOT modify, drop, rename, refactor, or reinterpret ANY existing Mai Troll tables,
 columns, enums, functions, triggers, views, RLS policies, or economy logic.
 
 You may ONLY:
@@ -11,22 +11,22 @@ You may ONLY:
 - ADD new columns if required
 - ADD new RPC/functions if required
 
-All existing Troll City behavior, restrictions (including “cannot update restricted column” rules),
+All existing Mai Troll behavior, restrictions (including “cannot update restricted column” rules),
 economy, permissions, and LiveKit usage patterns MUST remain intact.
 
 ======================================================================
 0) OBJECTIVE
 ======================================================================
 Build **Troll World** as a **3D world** using **PlayCanvas Engine (self-hosted)** that is fully
-connected to **Troll City**.
+connected to **Mai Troll**.
 
-Troll City and Troll World are TWO MODES of the SAME PLATFORM:
+Mai Troll and Troll World are TWO MODES of the SAME PLATFORM:
 - Same auth user
 - Same wallet/balance
 - Same inventory/ownership
 - Same permissions/roles
 - Same rule enforcement and transactions
-- Same LiveKit broadcasting/calling surfaces wherever Troll City uses LiveKit
+- Same LiveKit broadcasting/calling surfaces wherever Mai Troll uses LiveKit
 
 Troll World is NOT a separate game.
 
@@ -57,7 +57,7 @@ COST SAFETY
 2) AUTH PAGE — MODE SELECTION (REQUIRED)
 ======================================================================
 On existing /auth:
-- [ Enter Troll City ]
+- [ Enter Mai Troll ]
 - [ Enter Troll World ]
 
 Rules:
@@ -67,15 +67,15 @@ Rules:
   - /auth?mode=world
 - Auth/session is identical for both.
 - After login:
-  - city  → redirect Troll City routes
+  - city  → redirect Mai Troll routes
   - world → redirect /world
 
 This does NOT create new users. It is a mode selector only.
 
 ======================================================================
-3) NEW USER FLOW — TROLL WORLD (MUST MATCH TROLL CITY GATING)
+3) NEW USER FLOW — TROLL WORLD (MUST MATCH Mai Troll GATING)
 ======================================================================
-If a NEW USER selects Enter Troll World, they MUST complete the same gating steps as Troll City.
+If a NEW USER selects Enter Troll World, they MUST complete the same gating steps as Mai Troll.
 
 Order (no skips):
 1) Terms & Agreements
@@ -83,7 +83,7 @@ Order (no skips):
 3) Profile Setup (existing user_profiles)
 4) Spawn into Troll World city
 
-If user already completed these steps in Troll City, do not force re-do.
+If user already completed these steps in Mai Troll, do not force re-do.
 
 Spawn rules:
 - If user owns housing → spawn at their house/apartment
@@ -92,12 +92,12 @@ Spawn rules:
 ======================================================================
 4) LIVEKIT REQUIREMENTS (CRITICAL)
 ======================================================================
-ANYWHERE Troll City uses LiveKit, Troll World must mirror that capability in 3D.
+ANYWHERE Mai Troll uses LiveKit, Troll World must mirror that capability in 3D.
 
 This includes (at minimum):
 - Users can be “LIVE” (broadcasting) and appear live in-world.
 - “Troll Court” LiveKit sessions must be accessible/enterable from Troll World.
-- Any LiveKit-based call/broadcast room used in Troll City must be reachable in Troll World.
+- Any LiveKit-based call/broadcast room used in Mai Troll must be reachable in Troll World.
 
 IN-WORLD BEHAVIOR:
 A) Live Presence in the City
@@ -108,27 +108,27 @@ A) Live Presence in the City
   - Be able to enter the LiveKit experience (watch/participate) from within Troll World
 
 B) Joining LiveKit From World
-- Joining must reuse the same tokens/rooms logic Troll City uses.
+- Joining must reuse the same tokens/rooms logic Mai Troll uses.
 - Do NOT create a separate LiveKit auth system.
-- Use the same env keys and server endpoints already used in Troll City.
+- Use the same env keys and server endpoints already used in Mai Troll.
 
 C) Movement + Proximity
 - Movement replication uses LiveKit DataChannel or WebSocket.
 - Proximity detection is computed client-side or in a lightweight world server;
   it must NOT cause DB write spam.
 - Proximity events (entered/left radius of a live session) can be ephemeral (no DB persistence),
-  unless Troll City already persists similar events.
+  unless Mai Troll already persists similar events.
 
 D) LiveKit Surfaces/Portals
 - In Troll World, implement “portals/buildings/interaction points” for:
   - Troll Court (enter courtroom session)
-  - Any other LiveKit zones in Troll City (broadcast rooms, pods, lounges, etc.)
+  - Any other LiveKit zones in Mai Troll (broadcast rooms, pods, lounges, etc.)
 - The portal triggers must route the user into the correct LiveKit session UI overlay.
 
 E) UI Strategy
 - In-world interaction triggers a web overlay panel:
   - (a) minimal player controls + video/audio
-  - (b) chat if Troll City has it
+  - (b) chat if Mai Troll has it
 - The user should feel like they are still in-world while watching/joining LiveKit.
 
 ======================================================================

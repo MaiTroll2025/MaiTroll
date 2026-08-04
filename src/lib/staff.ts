@@ -79,6 +79,16 @@ export const NIGHT_WATCH_PROTECTED_ROLES = [
 
 export const ADMIN_ONLY_RECORDING_ROLES = ['admin', 'ceo'] as const;
 
+export function isCelebApproved(profile: any): boolean {
+  if (!profile) return false;
+  return profile.celeb_role === 'approved';
+}
+
+export function isCelebPending(profile: any): boolean {
+  if (!profile) return false;
+  return profile.celeb_role === 'pending';
+}
+
 export function canAccessNightWatch(profile: any): boolean {
   if (!profile) return false;
   const role = String(profile.role || '').toLowerCase();

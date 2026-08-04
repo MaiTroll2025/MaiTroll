@@ -1,6 +1,6 @@
 # Final Audit Summary
 
-> Generated: 2026-05-31. Complete Troll City app usage audit.
+> Generated: 2026-05-31. Complete Mai Troll app usage audit.
 > All findings based on static code analysis + migration review. No destructive operations performed.
 
 ---
@@ -25,7 +25,7 @@ These tables/features are directly used by the frontend and should NOT be remove
 
 | Category | Tables |
 |----------|--------|
-| Marketplace | `marketplace_items`, `marketplace_purchases`, `shop_items`, `trollcity_shops`, `vehicle_listings`, `service_listings`, `business_profiles` |
+| Marketplace | `marketplace_items`, `marketplace_purchases`, `shop_items`, `Mai Troll_shops`, `vehicle_listings`, `service_listings`, `business_profiles` |
 | Auctions | `auction_shows`, `auction_lots`, `auction_bids`, `auction_wins`, `auctioneer_profiles`, `auction_presence` |
 | Neighborhood | `neighborhoods`, `neighborhood_members`, `houses`, `house_raids`, `homeowners_insurances`, `user_licenses`, `vehicles`, `vehicle_loans` |
 | Government | `government_laws`, `law_votes`, `bribe_logs`, `protests`, `protest_participants`, `government_history`, `president_elections`, `emergency_powers_log` |

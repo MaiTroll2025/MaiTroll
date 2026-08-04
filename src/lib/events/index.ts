@@ -1,7 +1,7 @@
 /**
  * Global Event System - Main Export
  * 
- * A permanent, reusable event system for Troll City that supports:
+ * A permanent, reusable event system for Mai Troll that supports:
  * - All holidays (Valentine's, Easter, Halloween, Christmas, etc.)
  * - Pride Month (June) with inclusive, opt-in features
  * - Automatic activation and reversion

@@ -42,8 +42,8 @@ export default function AuctionWon() {
   const [wonLots, setWonLots] = useState<WonLot[]>([])
 
   useSEO({
-    title: 'Items You Won | Troll City Auctions',
-    description: 'View the items you won in this Troll City live auction.',
+    title: 'Items You Won | Mai Troll Auctions',
+    description: 'View the items you won in this Mai Troll live auction.',
   })
 
   useEffect(() => {

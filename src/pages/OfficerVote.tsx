@@ -157,7 +157,7 @@ export default function OfficerVote() {
               Vote: Troll Officer of the Week
             </h1>
             <p className="text-sm text-gray-300 mt-1">
-              Choose the broadcaster who represented Troll City best this week.
+              Choose the broadcaster who represented Mai Troll best this week.
             </p>
           </div>
           {cycle && (
@@ -281,7 +281,7 @@ export default function OfficerVote() {
                   Troll Officer Perks
                 </h3>
                 <p>
-                  Troll Officers are highlighted across Troll City and recognized for their
+                  Troll Officers are highlighted across Mai Troll and recognized for their
                   leadership and community impact.
                 </p>
               </div>

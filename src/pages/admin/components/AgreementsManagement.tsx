@@ -47,19 +47,19 @@ export default function AgreementsManagement({
   const [selectedAgreement, setSelectedAgreement] = useState<AgreementRecord | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const trollCityAgreement = `TROLL CITY USER AGREEMENT & COMMUNITY CODE
+  const Mai TrollAgreement = `Mai Troll USER AGREEMENT & COMMUNITY CODE
 
 1. ACCEPTANCE OF TERMS
-By accessing or using Troll City, you agree to be bound by these Terms of Service and our Community Code of Conduct.
+By accessing or using Mai Troll, you agree to be bound by these Terms of Service and our Community Code of Conduct.
 
 2. USER CONDUCT
-Users must conduct themselves in a manner consistent with the satirical and humorous nature of Troll City. While trolling is part of the experience, harassment, hate speech, and illegal activities are strictly prohibited.
+Users must conduct themselves in a manner consistent with the satirical and humorous nature of Mai Troll. While trolling is part of the experience, harassment, hate speech, and illegal activities are strictly prohibited.
 
 3. VIRTUAL CURRENCY (TROLL COINS)
-Troll Coins are a virtual currency with no real-world value outside the Troll City platform. They cannot be exchanged for fiat currency except through authorized payout channels for approved creators.
+Troll Coins are a virtual currency with no real-world value outside the Mai Troll platform. They cannot be exchanged for fiat currency except through authorized payout channels for approved creators.
 
 4. CONTENT OWNERSHIP
-You retain ownership of content you create, but grant Troll City a license to display and distribute it.
+You retain ownership of content you create, but grant Mai Troll a license to display and distribute it.
 
 5. TERMINATION
 We reserve the right to suspend or terminate accounts that violate these terms.
@@ -471,7 +471,7 @@ Last Updated: January 1, 2026`
   const renderAgreementTextTab = () => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium text-white">Troll City User Agreement & Community Code</h4>
+        <h4 className="font-medium text-white">Mai Troll User Agreement & Community Code</h4>
         <div className="flex gap-2">
           <button className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors">
             <Download className="w-4 h-4" />
@@ -486,7 +486,7 @@ Last Updated: January 1, 2026`
 
       <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-6 max-h-[70vh] overflow-y-auto">
         <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
-          {trollCityAgreement}
+          {Mai TrollAgreement}
         </pre>
       </div>
     </div>

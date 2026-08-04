@@ -1,5 +1,5 @@
 /**
- * Troll City Admin Dashboard - Location Intelligence Panel
+ * Mai Troll Admin Dashboard - Location Intelligence Panel
  * 
  * This component displays user location data for emergency response.
  * ONLY accessible to super_admin and platform_admin roles.

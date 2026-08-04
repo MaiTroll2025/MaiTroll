@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 // ============================================================================
-// Troll City road network
+// Mai Troll road network
 // ----------------------------------------------------------------------------
 // The city is laid out as a connected, node-based street grid (not a random
 // spiderweb of diagonal segments). Every road connects NODE TO NODE so that

@@ -55,7 +55,7 @@ const CATEGORIES = [
 ]
 
 const TOPICS = [
-  { label: '#TrollCity', posts: '12.4K posts' },
+  { label: '#Mai Troll', posts: '12.4K posts' },
   { label: '#TreelzChallenge', posts: '8.7K posts' },
   { label: '#FunnyAF', posts: '6.2K posts' },
   { label: '#DanceVibes', posts: '5.1K posts' },
@@ -464,7 +464,7 @@ function Header({ user }: { user: any }) {
             TREELZ
           </p>
           <p className="mt-1 text-[8px] font-black uppercase tracking-[0.18em] text-lime-400">
-            by Troll City
+            by Mai Troll
           </p>
         </div>
       </Link>
@@ -573,7 +573,7 @@ function DesktopSidebar({
       <div className="mt-4 rounded-2xl border border-purple-500/30 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.18),transparent_58%),rgba(255,255,255,0.025)] p-4 text-center">
         <p className="text-xs font-bold text-white">Go LIVE on</p>
         <p className="mt-1 text-xl font-black italic text-lime-400">
-          TROLL CITY
+          Mai Troll
         </p>
         <p className="mt-3 text-xs leading-5 text-slate-400">
           Start your broadcast and grow your city.
@@ -607,7 +607,7 @@ function DesktopSidebar({
       </div>
 
       <div className="mt-auto pt-5">
-        <p className="text-[10px] text-slate-600">© 2026 Troll City</p>
+        <p className="text-[10px] text-slate-600">© 2026 Mai Troll</p>
         <div className="mt-2 flex gap-3 text-[10px] text-slate-500">
           <Link to="/legal/safety">Safety</Link>
           <Link to="/legal/privacy">Privacy</Link>
@@ -757,7 +757,7 @@ function CaptionOverlay({ post }: { post: TreelzPost }) {
       </p>
 
       <p className="mt-2 text-sm font-bold text-fuchsia-300">
-        #TrollCity #Treelz #NewVibes
+        #Mai Troll #Treelz #NewVibes
       </p>
 
       <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-3 py-2 text-xs font-semibold text-white/85 backdrop-blur-md">
@@ -981,7 +981,7 @@ function EmptyState({
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
         {profileMode
           ? "This creator hasn't uploaded any Treelz yet."
-          : 'Watch, troll, gift, comment, and share short videos from across Troll City.'}
+          : 'Watch, troll, gift, comment, and share short videos from across Mai Troll.'}
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-3">

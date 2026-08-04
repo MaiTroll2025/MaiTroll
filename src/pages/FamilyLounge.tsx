@@ -352,7 +352,7 @@ const FamilyLounge = ({ user: _authUser }: { user: UserProfile }) => {
           <Crown className="w-16 h-16 mx-auto mb-6 text-purple-400" />
           <h1 className="text-3xl font-bold mb-4">Not in a Family</h1>
           <p className="text-gray-300 mb-8 max-w-lg mx-auto">
-            Join an existing family or create your own legacy. Lead your family to glory in the Troll City wars!
+            Join an existing family or create your own legacy. Lead your family to glory in the Mai Troll wars!
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

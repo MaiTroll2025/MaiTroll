@@ -1,4 +1,4 @@
--- Fix for Troll City Wall post deletion and reply function
+-- Fix for Mai Troll Wall post deletion and reply function
 -- Run this in your Supabase SQL Editor
 
 -- ============================================================================

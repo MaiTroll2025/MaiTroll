@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - FULL TEACHER DASHBOARD
+// Mai Troll ACADEMY - FULL TEACHER DASHBOARD
 // ============================================================
 
 import React, { useEffect, useState, useCallback } from 'react';

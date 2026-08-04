@@ -20,7 +20,7 @@ import {
   ChevronDown,
   FileText
 } from 'lucide-react'
-import { trollCityTheme } from '../styles/trollCityTheme'
+import { MaiTrollTheme } from '../styles/trollCityTheme'
 
 type Stream = {
   id: string
@@ -460,14 +460,14 @@ export default function TrollOfficerLounge() {
   }
 
   return (
-    <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} text-white flex flex-col font-sans`}>
+    <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white flex flex-col font-sans`}>
       {/* HEADER */}
-      <header className={`border-b ${trollCityTheme.borders.glass} ${trollCityTheme.backgrounds.card} px-6 py-4 flex items-center justify-between sticky top-0 z-50`}>
+      <header className={`border-b ${MaiTrollTheme.borders.glass} ${MaiTrollTheme.backgrounds.card} px-6 py-4 flex items-center justify-between sticky top-0 z-50`}>
         <div className="flex items-center gap-3">
           <Shield className="text-blue-500 w-8 h-8" />
           <div>
             <h1 className="text-xl font-bold tracking-wide uppercase">Troll Officer Lounge</h1>
-            <p className={`text-xs ${trollCityTheme.text.muted}`}>Authorized Personnel Only</p>
+            <p className={`text-xs ${MaiTrollTheme.text.muted}`}>Authorized Personnel Only</p>
           </div>
         </div>
         <div className="flex items-center gap-6 text-sm">
@@ -476,7 +476,7 @@ export default function TrollOfficerLounge() {
               <select
                 value={viewingOfficerId}
                 onChange={(e) => setViewingOfficerId(e.target.value)}
-                className={`appearance-none ${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass} text-blue-400 text-sm font-bold rounded-lg py-1 pl-3 pr-8 focus:outline-none focus:border-blue-500 cursor-pointer min-w-[150px]`}
+                className={`appearance-none ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass} text-blue-400 text-sm font-bold rounded-lg py-1 pl-3 pr-8 focus:outline-none focus:border-blue-500 cursor-pointer min-w-[150px]`}
               >
                 {officersList.map((officer) => (
                   <option key={officer.id} value={officer.id} className="bg-slate-900">
@@ -529,12 +529,12 @@ export default function TrollOfficerLounge() {
       {/* MAIN CONTENT */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT SIDEBAR - NAVIGATION */}
-        <aside className={`w-64 ${trollCityTheme.backgrounds.card} border-r ${trollCityTheme.borders.glass} flex flex-col`}>
+        <aside className={`w-64 ${MaiTrollTheme.backgrounds.card} border-r ${MaiTrollTheme.borders.glass} flex flex-col`}>
           <div className="p-4 space-y-2">
             <button
               onClick={() => setActiveTab('moderation')}
               className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition ${
-                activeTab === 'moderation' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : `hover:bg-white/5 ${trollCityTheme.text.muted}`
+                activeTab === 'moderation' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : `hover:bg-white/5 ${MaiTrollTheme.text.muted}`
               }`}
             >
               <Eye size={18} />
@@ -543,7 +543,7 @@ export default function TrollOfficerLounge() {
             <button
               onClick={() => setActiveTab('families')}
               className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition ${
-                activeTab === 'families' ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30' : `hover:bg-white/5 ${trollCityTheme.text.muted}`
+                activeTab === 'families' ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30' : `hover:bg-white/5 ${MaiTrollTheme.text.muted}`
               }`}
             >
               <Users size={18} />
@@ -552,7 +552,7 @@ export default function TrollOfficerLounge() {
             <button
               onClick={() => setActiveTab('calls')}
               className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition ${
-                activeTab === 'calls' ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30' : `hover:bg-white/5 ${trollCityTheme.text.muted}`
+                activeTab === 'calls' ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30' : `hover:bg-white/5 ${MaiTrollTheme.text.muted}`
               }`}
             >
               <Phone size={18} />
@@ -561,7 +561,7 @@ export default function TrollOfficerLounge() {
             <button
               onClick={() => setActiveTab('requests')}
               className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition ${
-                activeTab === 'requests' ? 'bg-red-600/20 text-red-400 border border-red-500/30' : `hover:bg-white/5 ${trollCityTheme.text.muted}`
+                activeTab === 'requests' ? 'bg-red-600/20 text-red-400 border border-red-500/30' : `hover:bg-white/5 ${MaiTrollTheme.text.muted}`
               }`}
             >
               <FileText size={18} />
@@ -569,22 +569,22 @@ export default function TrollOfficerLounge() {
             </button>
           </div>
 
-          <div className={`mt-auto p-4 border-t ${trollCityTheme.borders.glass}`}>
-            <div className={`${trollCityTheme.backgrounds.glass} rounded-xl p-4 ${trollCityTheme.borders.glass}`}>
-              <h3 className={`text-xs font-bold uppercase ${trollCityTheme.text.mutedDark} mb-3 flex items-center gap-2`}>
+          <div className={`mt-auto p-4 border-t ${MaiTrollTheme.borders.glass}`}>
+            <div className={`${MaiTrollTheme.backgrounds.glass} rounded-xl p-4 ${MaiTrollTheme.borders.glass}`}>
+              <h3 className={`text-xs font-bold uppercase ${MaiTrollTheme.text.mutedDark} mb-3 flex items-center gap-2`}>
                 <TrendingUp size={12} /> Your Session Stats
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className={`${trollCityTheme.text.muted}`}>Kicks</span>
+                  <span className={`${MaiTrollTheme.text.muted}`}>Kicks</span>
                   <span className="text-white font-mono">{officerStats.kicks}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className={`${trollCityTheme.text.muted}`}>Bans</span>
+                  <span className={`${MaiTrollTheme.text.muted}`}>Bans</span>
                   <span className="text-white font-mono">{officerStats.bans}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className={`${trollCityTheme.text.muted}`}>Coins Earned</span>
+                  <span className={`${MaiTrollTheme.text.muted}`}>Coins Earned</span>
                   <span className="text-yellow-400 font-mono">+{officerStats.coinsEarned}</span>
                 </div>
               </div>
@@ -596,18 +596,18 @@ export default function TrollOfficerLounge() {
               </button>
             </div>
           </div>
-          <div className={`p-4 border-t ${trollCityTheme.borders.glass}`}>
-            <div className={`${trollCityTheme.backgrounds.glass} rounded-xl p-4 ${trollCityTheme.borders.glass}`}>
-              <h3 className={`text-xs font-bold uppercase ${trollCityTheme.text.mutedDark} mb-3 flex items-center gap-2`}>
+          <div className={`p-4 border-t ${MaiTrollTheme.borders.glass}`}>
+            <div className={`${MaiTrollTheme.backgrounds.glass} rounded-xl p-4 ${MaiTrollTheme.borders.glass}`}>
+              <h3 className={`text-xs font-bold uppercase ${MaiTrollTheme.text.mutedDark} mb-3 flex items-center gap-2`}>
                 <Shield size={12} /> Role Bonus
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className={`${trollCityTheme.text.muted}`}>Status</span>
+                  <span className={`${MaiTrollTheme.text.muted}`}>Status</span>
                   <span className="text-green-400 font-mono">Active</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className={`${trollCityTheme.text.muted}`}>Bonus</span>
+                  <span className={`${MaiTrollTheme.text.muted}`}>Bonus</span>
                   <span className="text-yellow-400 font-mono">+10%</span>
                 </div>
               </div>
@@ -619,8 +619,8 @@ export default function TrollOfficerLounge() {
               </button>
             </div>
 
-            <div className={`${trollCityTheme.backgrounds.glass} rounded-xl p-4 ${trollCityTheme.borders.glass} mt-4`}>
-              <h3 className={`text-xs font-bold uppercase ${trollCityTheme.text.mutedDark} mb-3 flex items-center gap-2`}>
+            <div className={`${MaiTrollTheme.backgrounds.glass} rounded-xl p-4 ${MaiTrollTheme.borders.glass} mt-4`}>
+              <h3 className={`text-xs font-bold uppercase ${MaiTrollTheme.text.mutedDark} mb-3 flex items-center gap-2`}>
                 <Calendar size={12} /> Schedule Actions
               </h3>
               <button
@@ -644,7 +644,7 @@ export default function TrollOfficerLounge() {
 
               {/* SELECTED STREAM MONITOR */}
               {selectedStream && (
-                <div className={`border-t ${trollCityTheme.borders.glass} pt-6`}>
+                <div className={`border-t ${MaiTrollTheme.borders.glass} pt-6`}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
                       <Eye size={20} className="text-blue-400" />
@@ -652,7 +652,7 @@ export default function TrollOfficerLounge() {
                     </h3>
                     <button 
                       onClick={() => setSelectedStream(null)}
-                      className={`text-xs ${trollCityTheme.text.muted} hover:text-white`}
+                      className={`text-xs ${MaiTrollTheme.text.muted} hover:text-white`}
                     >
                       Close Monitor
                     </button>
@@ -660,7 +660,7 @@ export default function TrollOfficerLounge() {
                   
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* VIDEO PREVIEW */}
-                    <div className={`lg:col-span-2 bg-black rounded-xl border ${trollCityTheme.borders.glass} aspect-video flex items-center justify-center relative overflow-hidden`}>
+                    <div className={`lg:col-span-2 bg-black rounded-xl border ${MaiTrollTheme.borders.glass} aspect-video flex items-center justify-center relative overflow-hidden`}>
                        <p className="text-gray-600 text-sm">Video Feed Preview</p>
                        {/* 
                           
@@ -669,13 +669,13 @@ export default function TrollOfficerLounge() {
                     </div>
 
                     {/* MOD ACTIONS */}
-                    <div className={`${trollCityTheme.backgrounds.card} rounded-xl border ${trollCityTheme.borders.glass} p-4 flex flex-col gap-3`}>
-                      <h4 className={`text-sm font-bold ${trollCityTheme.text.muted} uppercase tracking-wider mb-2`}>Quick Actions</h4>
+                    <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl border ${MaiTrollTheme.borders.glass} p-4 flex flex-col gap-3`}>
+                      <h4 className={`text-sm font-bold ${MaiTrollTheme.text.muted} uppercase tracking-wider mb-2`}>Quick Actions</h4>
                       <div className="space-y-2">
                         <input 
                           type="text" 
                           placeholder="Enter username to punish..." 
-                          className={`w-full ${trollCityTheme.backgrounds.glass} border ${trollCityTheme.borders.glass} rounded px-3 py-2 text-sm focus:border-red-500 outline-none transition`}
+                          className={`w-full ${MaiTrollTheme.backgrounds.glass} border ${MaiTrollTheme.borders.glass} rounded px-3 py-2 text-sm focus:border-red-500 outline-none transition`}
                           id="punish-input"
                         />
                         <div className="grid grid-cols-2 gap-2">
@@ -709,14 +709,14 @@ export default function TrollOfficerLounge() {
                         </button>
                       </div>
 
-                      <div className={`mt-4 border-t ${trollCityTheme.borders.glass} pt-4`}>
-                        <h4 className={`text-xs font-bold ${trollCityTheme.text.muted} uppercase mb-2`}>Stream Chat Log</h4>
-                        <div className={`h-40 overflow-y-auto bg-black/50 rounded border ${trollCityTheme.borders.glass} p-2 text-xs space-y-1`}>
-                          <div className={`${trollCityTheme.text.mutedDark} italic`}>Connecting to chat stream...</div>
+                      <div className={`mt-4 border-t ${MaiTrollTheme.borders.glass} pt-4`}>
+                        <h4 className={`text-xs font-bold ${MaiTrollTheme.text.muted} uppercase mb-2`}>Stream Chat Log</h4>
+                        <div className={`h-40 overflow-y-auto bg-black/50 rounded border ${MaiTrollTheme.borders.glass} p-2 text-xs space-y-1`}>
+                          <div className={`${MaiTrollTheme.text.mutedDark} italic`}>Connecting to chat stream...</div>
                           {selectedStream && (
-                            <div className={`${trollCityTheme.text.muted} text-xs italic`}>
+                            <div className={`${MaiTrollTheme.text.muted} text-xs italic`}>
                               Chat history monitoring for {selectedStream.title}
-                              <p className={`mt-2 text-[10px] ${trollCityTheme.text.mutedDark}`}>Live chat integration pending...</p>
+                              <p className={`mt-2 text-[10px] ${MaiTrollTheme.text.mutedDark}`}>Live chat integration pending...</p>
                             </div>
                           )}
                         </div>
@@ -734,9 +734,9 @@ export default function TrollOfficerLounge() {
                 <Users size={20} className="text-purple-500" />
                 Family Rankings
               </h2>
-              <div className={`${trollCityTheme.backgrounds.card} rounded-xl border ${trollCityTheme.borders.glass} overflow-hidden`}>
+              <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl border ${MaiTrollTheme.borders.glass} overflow-hidden`}>
                 <table className="w-full text-sm text-left">
-                  <thead className={`bg-white/5 ${trollCityTheme.text.muted} uppercase text-xs`}>
+                  <thead className={`bg-white/5 ${MaiTrollTheme.text.muted} uppercase text-xs`}>
                     <tr>
                       <th className="px-6 py-3">Rank</th>
                       <th className="px-6 py-3">Family Name</th>
@@ -748,7 +748,7 @@ export default function TrollOfficerLounge() {
                   <tbody className="divide-y divide-white/5">
                     {familiesList.map((family, index) => (
                       <tr key={family.id} className="hover:bg-white/5 transition">
-                        <td className={`px-6 py-4 font-bold ${trollCityTheme.text.mutedDark}`}>#{index + 1}</td>
+                        <td className={`px-6 py-4 font-bold ${MaiTrollTheme.text.mutedDark}`}>#{index + 1}</td>
                         <td className="px-6 py-4 font-bold text-white">{family.name}</td>
                         <td className="px-6 py-4 text-purple-400">{family.total_rep}</td>
                         <td className="px-6 py-4">{family.member_count}</td>
@@ -761,7 +761,7 @@ export default function TrollOfficerLounge() {
                     ))}
                     {familiesList.length === 0 && (
                       <tr>
-                        <td colSpan={5} className={`px-6 py-8 text-center ${trollCityTheme.text.mutedDark}`}>
+                        <td colSpan={5} className={`px-6 py-8 text-center ${MaiTrollTheme.text.mutedDark}`}>
                           No families established yet.
                         </td>
                       </tr>
@@ -777,9 +777,9 @@ export default function TrollOfficerLounge() {
                 <Phone size={20} className="text-yellow-500" />
                 Recent Calls
               </h2>
-              <div className={`${trollCityTheme.backgrounds.card} rounded-xl border ${trollCityTheme.borders.glass} overflow-hidden`}>
+              <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl border ${MaiTrollTheme.borders.glass} overflow-hidden`}>
                 <table className="w-full text-sm text-left">
-                  <thead className={`bg-white/5 ${trollCityTheme.text.muted} uppercase text-xs`}>
+                  <thead className={`bg-white/5 ${MaiTrollTheme.text.muted} uppercase text-xs`}>
                     <tr>
                       <th className="px-6 py-3">Started</th>
                       <th className="px-6 py-3">Caller</th>
@@ -791,7 +791,7 @@ export default function TrollOfficerLounge() {
                   <tbody className="divide-y divide-white/5">
                     {callsList.map((c) => (
                       <tr key={c.id} className="hover:bg-white/5 transition">
-                        <td className={`px-6 py-4 ${trollCityTheme.text.muted}`}>{new Date(c.created_at).toLocaleString()}</td>
+                        <td className={`px-6 py-4 ${MaiTrollTheme.text.muted}`}>{new Date(c.created_at).toLocaleString()}</td>
                         <td className="px-6 py-4 text-blue-400 font-semibold">{c.caller?.username || c.caller_id}</td>
                         <td className="px-6 py-4 text-purple-400 font-semibold">{c.receiver?.username || c.receiver_id}</td>
                         <td className="px-6 py-4">{c.type}</td>
@@ -800,7 +800,7 @@ export default function TrollOfficerLounge() {
                     ))}
                     {callsList.length === 0 && (
                       <tr>
-                        <td colSpan={5} className={`px-6 py-8 text-center ${trollCityTheme.text.mutedDark}`}>
+                        <td colSpan={5} className={`px-6 py-8 text-center ${MaiTrollTheme.text.mutedDark}`}>
                           No calls found.
                         </td>
                       </tr>
@@ -826,9 +826,9 @@ export default function TrollOfficerLounge() {
                 </button>
               </div>
               
-              <div className={`${trollCityTheme.backgrounds.card} rounded-xl border ${trollCityTheme.borders.glass} overflow-hidden`}>
+              <div className={`${MaiTrollTheme.backgrounds.card} rounded-xl border ${MaiTrollTheme.borders.glass} overflow-hidden`}>
                 <table className="w-full text-sm">
-                  <thead className={`bg-white/5 ${trollCityTheme.text.muted}`}>
+                  <thead className={`bg-white/5 ${MaiTrollTheme.text.muted}`}>
                     <tr>
                       <th className="px-4 py-3 text-left">Date Requested</th>
                       {canManageRequests && <th className="px-4 py-3 text-left">Officer</th>}
@@ -841,14 +841,14 @@ export default function TrollOfficerLounge() {
                   <tbody className="divide-y divide-white/5">
                     {requestsList.length === 0 ? (
                       <tr>
-                        <td colSpan={canManageRequests ? 6 : 5} className={`px-4 py-8 text-center ${trollCityTheme.text.mutedDark}`}>
+                        <td colSpan={canManageRequests ? 6 : 5} className={`px-4 py-8 text-center ${MaiTrollTheme.text.mutedDark}`}>
                           {canManageRequests ? 'No pending requests' : 'No request history'}
                         </td>
                       </tr>
                     ) : (
                       requestsList.map((req) => (
                         <tr key={req.id} className="hover:bg-white/5">
-                          <td className={`px-4 py-3 ${trollCityTheme.text.muted}`}>
+                          <td className={`px-4 py-3 ${MaiTrollTheme.text.muted}`}>
                             {new Date(req.created_at).toLocaleDateString()}
                           </td>
                           {canManageRequests && (
@@ -859,7 +859,7 @@ export default function TrollOfficerLounge() {
                           <td className="px-4 py-3 text-blue-400">
                             {new Date(req.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                           </td>
-                          <td className={`px-4 py-3 ${trollCityTheme.text.secondary} max-w-xs truncate`} title={req.reason}>
+                          <td className={`px-4 py-3 ${MaiTrollTheme.text.secondary} max-w-xs truncate`} title={req.reason}>
                             {req.reason}
                           </td>
                           <td className="px-4 py-3">
@@ -903,9 +903,9 @@ export default function TrollOfficerLounge() {
         </main>
 
         {/* RIGHT SIDEBAR - OFFICER CHAT */}
-        <aside className={`w-80 ${trollCityTheme.backgrounds.card} border-l ${trollCityTheme.borders.glass} flex flex-col`}>
-          <div className={`p-4 border-b ${trollCityTheme.borders.glass} ${trollCityTheme.backgrounds.glass}`}>
-            <h3 className={`font-bold text-sm ${trollCityTheme.text.secondary} flex items-center gap-2`}>
+        <aside className={`w-80 ${MaiTrollTheme.backgrounds.card} border-l ${MaiTrollTheme.borders.glass} flex flex-col`}>
+          <div className={`p-4 border-b ${MaiTrollTheme.borders.glass} ${MaiTrollTheme.backgrounds.glass}`}>
+            <h3 className={`font-bold text-sm ${MaiTrollTheme.text.secondary} flex items-center gap-2`}>
               <MessageSquare size={16} /> Officer Comms
             </h3>
           </div>
@@ -929,14 +929,14 @@ export default function TrollOfficerLounge() {
               ))
             )}
           </div>
-          <div className={`p-4 ${trollCityTheme.backgrounds.glass} border-t ${trollCityTheme.borders.glass}`}>
+          <div className={`p-4 ${MaiTrollTheme.backgrounds.glass} border-t ${MaiTrollTheme.borders.glass}`}>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={newOfficerMessage}
                 onChange={(e) => setNewOfficerMessage(e.target.value)}
                 placeholder="Secure channel..."
-                className={`flex-1 ${trollCityTheme.backgrounds.glass} border ${trollCityTheme.borders.glass} rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none transition`}
+                className={`flex-1 ${MaiTrollTheme.backgrounds.glass} border ${MaiTrollTheme.borders.glass} rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none transition`}
                 onKeyDown={(e) => e.key === 'Enter' && sendOfficerMessage()}
               />
               <button
@@ -954,35 +954,35 @@ export default function TrollOfficerLounge() {
       {/* Call Off Modal */}
       {showCallOffModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
-          <div className={`${trollCityTheme.backgrounds.modal} border ${trollCityTheme.borders.glass} rounded-xl p-6 w-full max-w-md`}>
+          <div className={`${MaiTrollTheme.backgrounds.modal} border ${MaiTrollTheme.borders.glass} rounded-xl p-6 w-full max-w-md`}>
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-yellow-500" />
               Request Time Off
             </h3>
             <div className="space-y-4">
               <div>
-                <label className={`block text-sm ${trollCityTheme.text.muted} mb-1`}>Date</label>
+                <label className={`block text-sm ${MaiTrollTheme.text.muted} mb-1`}>Date</label>
                 <input
                   type="date"
                   value={callOffDate}
                   onChange={(e) => setCallOffDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className={`w-full ${trollCityTheme.backgrounds.glass} border ${trollCityTheme.borders.glass} rounded-lg p-2 text-white`}
+                  className={`w-full ${MaiTrollTheme.backgrounds.glass} border ${MaiTrollTheme.borders.glass} rounded-lg p-2 text-white`}
                 />
               </div>
               <div>
-                <label className={`block text-sm ${trollCityTheme.text.muted} mb-1`}>Reason (Optional)</label>
+                <label className={`block text-sm ${MaiTrollTheme.text.muted} mb-1`}>Reason (Optional)</label>
                 <textarea
                   value={callOffReason}
                   onChange={(e) => setCallOffReason(e.target.value)}
-                  className={`w-full ${trollCityTheme.backgrounds.glass} border ${trollCityTheme.borders.glass} rounded-lg p-2 text-white h-24 resize-none`}
+                  className={`w-full ${MaiTrollTheme.backgrounds.glass} border ${MaiTrollTheme.borders.glass} rounded-lg p-2 text-white h-24 resize-none`}
                   placeholder="Why are you calling off?"
                 />
               </div>
               <div className="flex gap-3 justify-end mt-6">
                 <button
                   onClick={() => setShowCallOffModal(false)}
-                  className={`px-4 py-2 text-sm ${trollCityTheme.text.muted} hover:text-white`}
+                  className={`px-4 py-2 text-sm ${MaiTrollTheme.text.muted} hover:text-white`}
                 >
                   Cancel
                 </button>

@@ -212,7 +212,7 @@ export async function notifySurveyAvailable(userIds: string[], surveyTitle: stri
       userId,
       'survey',
       '📋 Weekly Survey Available',
-      `Share your feedback: "${surveyTitle}". Your input helps improve Troll City!`,
+      `Share your feedback: "${surveyTitle}". Your input helps improve Mai Troll!`,
       { survey_id: surveyId, action_url: `/survey/${surveyId}` }
     )
   }

@@ -1,4 +1,4 @@
-# Troll City Frontend Capacity Analysis
+# Mai Troll Frontend Capacity Analysis
 
 **Date:** 2026-06-08  
 **Current Users:** 41 registered  

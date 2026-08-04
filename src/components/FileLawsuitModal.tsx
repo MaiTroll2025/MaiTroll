@@ -116,7 +116,7 @@ export default function FileLawsuitModal({ isOpen, onClose, onSuccess }: FileLaw
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">File Civil Lawsuit</h2>
-              <p className="text-xs text-gray-400">Troll City Civil Court • Filing Fee: 500 Coins</p>
+              <p className="text-xs text-gray-400">Mai Troll Civil Court • Filing Fee: 500 Coins</p>
             </div>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">

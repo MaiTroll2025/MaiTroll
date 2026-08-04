@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Troll City Load Test - 1000 Concurrent Users
+ * Mai Troll Load Test - 1000 Concurrent Users
  * Tests frontend performance and realtime connections without database writes
  */
 
@@ -18,12 +18,12 @@ interface TestResult {
   renderTime: number;
 }
 
-class TrollCityLoadTester {
+class Mai TrollLoadTester {
   private results: TestResult[] = [];
   private baseUrl = 'http://localhost:5173'; // Adjust for your dev server
 
   async runLoadTest() {
-    console.log('🚀 Starting Troll City 1000 User Load Test');
+    console.log('🚀 Starting Mai Troll 1000 User Load Test');
     console.log('📊 Testing frontend performance without database writes');
 
     // Test different pages with increasing user counts
@@ -129,7 +129,7 @@ class TrollCityLoadTester {
 
       const context = await browser.newContext({
         viewport: { width: 1280, height: 720 },
-        userAgent: `TrollCity-LoadTest-User-${userIndex}`,
+        userAgent: `Mai Troll-LoadTest-User-${userIndex}`,
       });
 
       const page = await context.newPage();
@@ -137,7 +137,7 @@ class TrollCityLoadTester {
       // Mock Supabase to prevent database writes
       await page.addInitScript(() => {
         // Override Supabase client to prevent real database operations
-        window.__TROLLCITY_MOCK_SUPABASE__ = true;
+        window.__Mai Troll_MOCK_SUPABASE__ = true;
 
         // Mock fetch for Supabase calls
         const originalFetch = window.fetch;
@@ -202,7 +202,7 @@ class TrollCityLoadTester {
         ).length;
 
         // Count mock websockets (our simulated connections)
-        const mockConnections = (window as any).__TROLLCITY_MOCK_CONNECTIONS__ || 0;
+        const mockConnections = (window as any).__Mai Troll_MOCK_CONNECTIONS__ || 0;
 
         return {
           memoryUsage: memory ? memory.usedJSHeapSize : 0,
@@ -231,7 +231,7 @@ class TrollCityLoadTester {
 
   private printResults() {
     console.log('\n' + '='.repeat(80));
-    console.log('📊 TROLL CITY LOAD TEST RESULTS - 1000 USERS');
+    console.log('📊 Mai Troll LOAD TEST RESULTS - 1000 USERS');
     console.log('='.repeat(80));
 
     console.log('\n🎯 SUMMARY:');
@@ -310,7 +310,7 @@ class TrollCityLoadTester {
 
 // Run the test
 async function main() {
-  const tester = new TrollCityLoadTester();
+  const tester = new Mai TrollLoadTester();
   try {
     await tester.runLoadTest();
   } catch (error) {
@@ -323,4 +323,4 @@ if (require.main === module) {
   main();
 }
 
-export { TrollCityLoadTester };
+export { Mai TrollLoadTester };

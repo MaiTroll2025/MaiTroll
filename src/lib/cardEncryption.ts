@@ -1,4 +1,4 @@
-const ENCRYPTION_KEY = 'trollcity_card_secure_key_v1';
+const ENCRYPTION_KEY = 'MaiTroll_card_secure_key_v1';
 
 export interface CardData {
   cardNumber: string;

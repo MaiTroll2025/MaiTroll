@@ -15,7 +15,7 @@ async function handleAIEvent(eventType, payload) {
     if (!openai)
         return "AI not configured";
     const prompt = `
-  You are MAI, the AI host inside TrollCity Live Streams.
+  You are MAI, the AI host inside Mai Troll Live Streams.
   Event Type: ${eventType}
   Event Data: ${JSON.stringify(payload)}
 
@@ -221,7 +221,7 @@ wss.on("connection", (ws) => {
     });
 });
 app.get("/", (_req, res) => {
-    res.send("TrollCity Stream Engine (Mediasoup) is running");
+    res.send("Mai Troll Stream Engine (Mediasoup) is running");
 });
 server.listen(PORT, () => {
     console.log(`🚀 Stream engine listening on http://localhost:${PORT}`);

@@ -1,5 +1,5 @@
 -- ============================================================================
--- TROLL CITY COMPLETE JAIL, COURT, ATTORNEY, PROSECUTOR SYSTEM
+-- Mai Troll COMPLETE JAIL, COURT, ATTORNEY, PROSECUTOR SYSTEM
 -- ============================================================================
 -- This migration includes all features for:
 -- 1. Jail system with auto-release
@@ -1147,4 +1147,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================================
 -- COMPLETE
 -- ============================================================================
-SELECT 'Troll City Complete Jail, Court, Attorney, Prosecutor System Migration Complete' as result;
+SELECT 'Mai Troll Complete Jail, Court, Attorney, Prosecutor System Migration Complete' as result;

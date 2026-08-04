@@ -27,7 +27,7 @@ export default function SEOLayout({ children, title, description, keywords = [],
     const canonicalUrl = `${origin}${location.pathname}`
     const imageUrl = ogImage || `${origin}/images/mai-troll-city-preview.png`
 
-    document.title = `${title} | Troll City`
+    document.title = `${title} | Mai Troll`
 
     const setMeta = (property: string, content: string, isName = false) => {
       const selector = isName ? `meta[name="${property}"]` : `meta[property="${property}"]`
@@ -59,16 +59,16 @@ export default function SEOLayout({ children, title, description, keywords = [],
       setMeta('keywords', keywords.join(', '), true)
     }
 
-    setMeta('og:title', `${title} | Troll City`)
+    setMeta('og:title', `${title} | Mai Troll`)
     setMeta('og:description', description)
     setMeta('og:url', canonicalUrl)
     setMeta('og:type', 'website')
-    setMeta('og:site_name', 'Troll City')
+    setMeta('og:site_name', 'MaiTroll')
     setMeta('og:image', imageUrl)
-    setMeta('og:image:alt', `${title} | Troll City`)
+    setMeta('og:image:alt', `${title} | Mai Troll`)
 
     setMeta('twitter:card', 'summary_large_image', true)
-    setMeta('twitter:title', `${title} | Troll City`, true)
+    setMeta('twitter:title', `${title} | Mai Troll`, true)
     setMeta('twitter:description', description, true)
     setMeta('twitter:image', imageUrl, true)
 
@@ -85,7 +85,7 @@ export default function SEOLayout({ children, title, description, keywords = [],
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                 <Eye className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">Troll City</span>
+              <span className="text-xl font-bold text-white">Mai Troll</span>
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
@@ -181,7 +181,7 @@ export default function SEOLayout({ children, title, description, keywords = [],
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                 <Eye className="w-4 h-4 text-white" />
               </div>
-              <span className="text-slate-400">© 2026 Troll City (Mai Troll City). All rights reserved.</span>
+              <span className="text-slate-400">© 2026 Mai Troll (MaiMaiTroll). All rights reserved.</span>
               <Link
                 to="/admin"
                 className="ml-4 px-3 py-1 text-xs text-slate-500 hover:text-purple-400 transition-colors"

@@ -3,7 +3,7 @@ import { supabaseAdmin } from '../_shared/auth'
 
 export const runtime = 'edge'
 
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maitrollcity.com'
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maiMai Troll.com'
 
 async function fetchFont(weight: 'bold' | 'regular' = 'bold'): Promise<ArrayBuffer> {
   const family = weight === 'bold' ? 'Inter:wght@700' : 'Inter:wght@400'
@@ -347,7 +347,7 @@ export async function GET(request: Request) {
               )}
             </div>
 
-            {/* Troll City branding */}
+            {/* Mai Troll branding */}
             <div
               style={{
                 display: 'flex',
@@ -378,7 +378,7 @@ export async function GET(request: Request) {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Troll City
+                Mai Troll
               </span>
             </div>
           </div>
@@ -439,7 +439,7 @@ function renderFallbackOG(username: string) {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            Troll City
+            Mai Troll
           </span>
         </div>
       </div>

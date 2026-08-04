@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
 
     // Try to use Resend if available
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
-    const appEmailFrom = Deno.env.get('APP_EMAIL_FROM') || 'noreply@trollcity.app'
+    const appEmailFrom = Deno.env.get('APP_EMAIL_FROM') || 'noreply@Mai Troll.app'
 
     if (resendApiKey) {
       try {

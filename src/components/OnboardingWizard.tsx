@@ -9,7 +9,7 @@ const OnboardingWizard: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps: Step[] = [
-    { title: 'Welcome', content: 'Welcome to TrollCity! Let\'s get you started.' },
+    { title: 'Welcome', content: 'Welcome to Mai Troll! Let\'s get you started.' },
     { title: 'Profile Setup', content: 'Please set up your profile information.' },
     { title: 'Terms & Conditions', content: 'Review and accept our terms of service.' },
     { title: 'Complete', content: 'You\'re all set! Enjoy your experience.' }

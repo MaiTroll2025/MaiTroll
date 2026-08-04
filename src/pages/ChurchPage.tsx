@@ -55,12 +55,12 @@ export default function ChurchPage() {
   const navigate = useNavigate();
 
   useSEO({
-    title: 'Troll Church | Online Faith Community & Gatherings | Troll City',
-    description: 'Join Troll Church on Troll City for virtual faith community gatherings, live services, and spiritual connection. An inclusive online church experience for all.',
+    title: 'Troll Church | Online Faith Community & Gatherings | Mai Troll',
+    description: 'Join Troll Church on Mai Troll for virtual faith community gatherings, live services, and spiritual connection. An inclusive online church experience for all.',
     keywords: [
       'online church', 'virtual church', 'faith community', 'community gatherings',
       'Troll Church', 'online ministry', 'virtual services', 'spiritual community',
-      'faith platform', 'digital church', 'Troll City church'
+      'faith platform', 'digital church', 'MaiTroll church'
     ]
   });
 

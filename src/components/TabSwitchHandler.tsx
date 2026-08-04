@@ -26,7 +26,7 @@ export function TabSwitchHandler({
       // Tab became visible
       if (pauseOnHidden) {
         // Resume any paused activities
-        document.title = 'TrollCity';
+        document.title = 'MaiTroll';
 
         // Remove hidden class from body
         document.body.classList.remove('tab-hidden');
@@ -45,7 +45,7 @@ export function TabSwitchHandler({
         if (showWelcomeBack && timeHidden > 30000 && !hasShownWelcomeBack.current) {
           // Only show if hidden for more than 30 seconds
           requestAnimationFrame(() => {
-            toast.success('Welcome back to TrollCity!', {
+            toast.success('Welcome back to Mai Troll!', {
               duration: 3000,
               description: 'Your session has been maintained.'
             });
@@ -63,9 +63,9 @@ export function TabSwitchHandler({
   // Update document title to indicate visibility state (for debugging)
   useEffect(() => {
     if (!isVisible && process.env.NODE_ENV === 'development') {
-      document.title = '(Hidden) TrollCity';
+      document.title = '(Hidden) Mai Troll';
     } else {
-      document.title = 'TrollCity';
+      document.title = 'MaiTroll';
     }
   }, [isVisible]);
 

@@ -161,10 +161,10 @@
 ### Issue 17: CORS Allowed Origins May Be Incomplete
 - **File(s):** [`supabase/functions/_shared/cors.ts:22-36`](supabase/functions/_shared/cors.ts:22)
 - **Root cause:** Allowed origins list may not include all deployment URLs. Current list:
-  - `https://matrollcity.com`
-  - `https://www.matrollcity.com`
-  - `https://maitrollcity.com`
-  - `https://www.maitrollcity.com`
+  - `https://maMai Troll.com`
+  - `https://www.maMai Troll.com`
+  - `https://maiMai Troll.com`
+  - `https://www.maiMai Troll.com`
   - Various localhost ports
 - **Why it breaks:** If app is deployed to new domain, CORS will block requests.
 - **Exact fix required:** Use environment variable for allowed origins list.
@@ -197,7 +197,7 @@
 - **File(s):** `.env` and `src/lib/config.ts`
 - **Root cause:** 
   - `.env`: `VITE_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co`
-  - `.env`: `VITE_API_URL=https://mnaitrollcity.com`
+  - `.env`: `VITE_API_URL=https://mnaiMai Troll.com`
   - `.env`: `VITE_EDGE_FUNCTIONS_URL=https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1`
 - **Why it breaks:** Confusion about which URL to use where. Edge functions use Supabase URL but API uses different domain.
 - **Exact fix required:** Document the architecture or consolidate to single consistent URL pattern.

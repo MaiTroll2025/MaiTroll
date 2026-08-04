@@ -158,13 +158,13 @@ function TopPrideHero({
             </div>
             <div>
               <h1 className="text-4xl font-black leading-none text-white md:text-5xl">
-                Welcome to Troll City{' '}
+                Welcome to Mai Troll{' '}
                 <span className="bg-gradient-to-r from-pink-400 via-yellow-300 to-cyan-300 bg-clip-text text-transparent">
-                  (Mai Troll City)
+                  (MaiMaiTroll)
                 </span>
               </h1>
               <p className="mt-3 max-w-xl text-base font-medium text-slate-200">
-                Troll City is a social streaming platform for creators, streamers, gamers, and online communities. 
+                Mai Troll is a social streaming platform for creators, streamers, gamers, and online communities. 
                 Livestream, create communities, chat, and engage with content creators.
               </p>
             </div>
@@ -357,12 +357,12 @@ function CityAnnouncementCard() {
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-xl font-black text-white">City Announcement</h3>
-          <p className="mt-1 text-sm font-bold text-slate-200">Troll City Stands With You</p>
+          <p className="mt-1 text-sm font-bold text-slate-200">Mai Troll Stands With You</p>
         </div>
         <Shield className="h-11 w-11 text-cyan-300" />
       </div>
       <p className="mt-4 text-sm leading-relaxed text-slate-300">
-        We are a community that values respect, inclusion and equality. Thank you for making Troll City a place where everyone is seen, heard, and celebrated. 🏳️‍🌈
+        We are a community that values respect, inclusion and equality. Thank you for making Mai Troll a place where everyone is seen, heard, and celebrated. 🏳️‍🌈
       </p>
     </section>
   )
@@ -700,7 +700,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur">
           <div className="text-center">
             <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-purple-500/30 border-t-cyan-400" />
-            <p className="mt-6 text-slate-300 font-medium">Loading Troll City...</p>
+            <p className="mt-6 text-slate-300 font-medium">Loading Mai Troll...</p>
           </div>
         </div>
       )}

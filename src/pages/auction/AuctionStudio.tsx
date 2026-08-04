@@ -770,7 +770,7 @@ export default function AuctionStudio() {
                   <Gavel className="h-10 w-10 text-cyan-100 drop-shadow-[0_0_14px_rgba(34,211,238,0.55)]" />
                 )}
                 <div className="absolute -bottom-2 rounded-full border border-cyan-300/20 bg-[#081222] px-3 py-1 text-[9px] font-black uppercase tracking-[0.22em] text-cyan-200">
-                  Troll City
+                  Mai Troll
                 </div>
               </div>
 
@@ -1122,7 +1122,7 @@ export default function AuctionStudio() {
               className={cn(input, 'h-24 resize-none')}
               value={showForm.description}
               onChange={(e) => setShowForm({ ...showForm, description: e.target.value })}
-              placeholder="The best tech, gadgets, and live deals for Troll City viewers."
+              placeholder="The best tech, gadgets, and live deals for Mai Troll viewers."
             />
           </Field>
 
@@ -1517,7 +1517,7 @@ function NavigationRail({ activeTab, onTabChange }: { activeTab: string; onTabCh
         </div>
         <p className="text-lg font-black uppercase tracking-[0.18em] text-white">Auctioneer</p>
         <p className="text-sm font-black uppercase tracking-[0.28em] text-cyan-300">Studio</p>
-        <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Troll City</p>
+        <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Mai Troll</p>
       </div>
 
       <nav className="space-y-2">

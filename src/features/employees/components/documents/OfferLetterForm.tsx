@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I certify that I have read and accept this offer of employment with Troll City. The terms above are accurate as of my start date, and I understand my employment may be governed by applicable company policy. I acknowledge this electronic signature is legally binding.'
+  'I certify that I have read and accept this offer of employment with Mai Troll. The terms above are accurate as of my start date, and I understand my employment may be governed by applicable company policy. I acknowledge this electronic signature is legally binding.'
 
 export default function OfferLetterForm(props: DocumentFormProps) {
   return (

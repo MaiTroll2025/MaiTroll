@@ -1,5 +1,5 @@
 src/components/ui/badge.tsx(17,5): error TS2339: Property 'div' does not exist on type 'JSX.IntrinsicElements'.
-src/components/ui/button.tsx(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/TrollCity-main/node_modules/@types/react/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
+src/components/ui/button.tsx(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/Mai Troll-main/node_modules/@types/react/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
 src/components/ui/button.tsx(9,3): error TS2339: Property 'className' does not exist on type 'ButtonProps'.
 src/components/ui/button.tsx(12,3): error TS2339: Property 'children' does not exist on type 'ButtonProps'.
 src/components/ui/button.tsx(13,3): error TS2339: Property 'disabled' does not exist on type 'ButtonProps'.
@@ -23,7 +23,7 @@ src/components/ui/input.tsx(7,3): error TS2345: Argument of type '({ className, 
 src/components/ui/input.tsx(9,7): error TS2339: Property 'input' does not exist on type 'JSX.IntrinsicElements'.
 src/components/ui/label.tsx(7,37): error TS2322: Type 'Element' is not assignable to type 'ReactNode'.
 src/components/ui/label.tsx(8,3): error TS2339: Property 'label' does not exist on type 'JSX.IntrinsicElements'.
-src/components/ui/select.tsx(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/TrollCity-main/node_modules/@types/react/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
+src/components/ui/select.tsx(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/Mai Troll-main/node_modules/@types/react/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
 src/components/ui/select.tsx(2,36): error TS2792: Cannot find module 'lucide-react'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
 src/components/ui/select.tsx(27,7): error TS2339: Property 'div' does not exist on type 'JSX.IntrinsicElements'.
 src/components/ui/select.tsx(27,63): error TS2339: Property 'div' does not exist on type 'JSX.IntrinsicElements'.
@@ -61,11 +61,11 @@ src/lib/supabase.ts(953,60): error TS2304: Cannot find name '__BUILD_TIME__'.
 src/lib/supabase.ts(1466,23): error TS2304: Cannot find name 'profile'.
 src/lib/utils.tsx(1,39): error TS2792: Cannot find module 'clsx'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
 src/lib/utils.tsx(2,25): error TS2792: Cannot find module 'tailwind-merge'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
-src/lib/utils.tsx(3,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/TrollCity-main/node_modules/@types/react/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
+src/lib/utils.tsx(3,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/Mai Troll-main/node_modules/@types/react/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
 src/lib/utils.tsx(4,22): error TS2792: Cannot find module 'react-router-dom'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
 src/lib/utils.tsx(78,7): error TS2339: Property 'a' does not exist on type 'JSX.IntrinsicElements'.
 src/lib/utils.tsx(87,7): error TS2339: Property 'a' does not exist on type 'JSX.IntrinsicElements'.
-src/pages/NeighborhoodOnboarding.tsx(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/TrollCity-main/node_modules/@types/react/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
+src/pages/NeighborhoodOnboarding.tsx(1,8): error TS1259: Module '"C:/Users/kainm/Documents/troll/Mai Troll-main/node_modules/@types/react/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
 src/pages/NeighborhoodOnboarding.tsx(2,29): error TS2792: Cannot find module 'react-router-dom'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
 src/pages/NeighborhoodOnboarding.tsx(16,8): error TS2792: Cannot find module 'lucide-react'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
 src/pages/NeighborhoodOnboarding.tsx(19,23): error TS2792: Cannot find module 'sonner'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?

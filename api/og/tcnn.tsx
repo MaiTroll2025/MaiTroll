@@ -223,7 +223,7 @@ export async function GET(request: Request) {
                     TCNN
                   </span>
                   <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>
-                    TROLL CITY NEWS NETWORK
+                    Mai Troll NEWS NETWORK
                   </span>
                 </div>
               </div>
@@ -314,7 +314,7 @@ function renderFallbackOG() {
           TCNN
         </span>
         <span style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)' }}>
-          Troll City News Network
+          Mai Troll News Network
         </span>
       </div>
     ),

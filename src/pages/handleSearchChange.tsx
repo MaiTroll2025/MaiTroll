@@ -47,7 +47,7 @@ export default function AdminControlPanel() {
   const [searching, setSearching] = useState(false)
 
   // Verify admin status
-  const isAdmin = profile?.role === 'admin' || profile?.is_admin || (user?.email && user.email.toLowerCase() === 'trollcity2025@gmail.com')
+  const isAdmin = profile?.role === 'admin' || profile?.is_admin || (user?.email && user.email.toLowerCase() === 'Trollcity2025@gmail.com')
 
   const searchUsers = async (term?: string) => {
     const searchTerm = term !== undefined ? term : searchUsername

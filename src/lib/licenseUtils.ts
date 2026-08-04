@@ -10,7 +10,7 @@ export type LicenseStatus = typeof LICENSE_STATUSES[keyof typeof LICENSE_STATUSE
 
 export const DRIVER_TEST_QUESTIONS = [
   {
-    question: 'What is required to legally drive in Troll City?',
+    question: 'What is required to legally drive in Mai Troll?',
     options: ['Just a car', 'A license and registered vehicle', 'Coins only', 'Nothing'],
     correct: 1
   },
@@ -25,7 +25,7 @@ export const DRIVER_TEST_QUESTIONS = [
     correct: 1
   },
   {
-    question: 'What is required to broadcast in Troll City?',
+    question: 'What is required to broadcast in Mai Troll?',
     options: ['A vehicle only', 'Active license', 'Coins', 'Followers'],
     correct: 1
   },

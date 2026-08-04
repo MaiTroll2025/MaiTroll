@@ -56,7 +56,7 @@ export default function AgenciesPage() {
             Talent Offices
           </h1>
           <p className="text-slate-400">
-            Discover and join creator agencies in Troll City
+            Discover and join creator agencies in Mai Troll
           </p>
           {user && (
             <Button 

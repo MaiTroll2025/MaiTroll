@@ -11,7 +11,7 @@ VITE_BACKEND_URL=http://localhost:3001
 
 ### Production (.env.production)
 ```
-VITE_BACKEND_URL=https://maitrollcity.com
+VITE_BACKEND_URL=https://maiMai Troll.com
 ```
 
 ---
@@ -41,7 +41,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors()); // Allows requests from any origin
 ```
 
-**CORS is already enabled**, so both `localhost:3001` and `https://maitrollcity.com` will work.
+**CORS is already enabled**, so both `localhost:3001` and `https://maiMai Troll.com` will work.
 
 ---
 
@@ -51,7 +51,7 @@ app.use(cors()); // Allows requests from any origin
 
 **Terminal 1: Start Backend**
 ```bash
-cd TrollCity-main
+cd Mai Troll-main
 npm run dev
 # ✅ Backend listening on port 3001
 # ✅ Frontend configured to use http://localhost:3001
@@ -64,9 +64,9 @@ npm run dev
 
 ### Production Mode
 
-When deployed to `https://maitrollcity.com`:
+When deployed to `https://maiMai Troll.com`:
 - Frontend will automatically use `.env.production`
-- All backend calls will go to `https://maitrollcity.com/api/broadcasts/*`
+- All backend calls will go to `https://maiMai Troll.com/api/broadcasts/*`
 - No manual URL changes needed
 
 ---
@@ -118,9 +118,9 @@ grep VITE_BACKEND_URL .env.production
 ### Before Going to Production
 
 - [ ] `.env.production` file exists
-- [ ] `VITE_BACKEND_URL=https://maitrollcity.com` is set
+- [ ] `VITE_BACKEND_URL=https://maiMai Troll.com` is set
 - [ ] Backend is deployed and running
-- [ ] Backend is accessible from frontend at https://maitrollcity.com/api/broadcasts/
+- [ ] Backend is accessible from frontend at https://maiMai Troll.com/api/broadcasts/
 - [ ] SSL certificate is valid (HTTPS required for WebRTC)
 - [ ] CORS headers are returned by backend
 
@@ -128,10 +128,10 @@ grep VITE_BACKEND_URL .env.production
 
 ```bash
 # Test if backend is reachable
-curl https://maitrollcity.com/api/broadcasts/status
+curl https://maiMai Troll.com/api/broadcasts/status
 
 # Test CORS headers
-curl -i https://maitrollcity.com/api/broadcasts/status
+curl -i https://maiMai Troll.com/api/broadcasts/status
 
 # Should include:
 # Access-Control-Allow-Origin: *
@@ -144,14 +144,14 @@ curl -i https://maitrollcity.com/api/broadcasts/status
 
 1. `.env` - Added `VITE_BACKEND_URL=http://localhost:3001`
 2. `.env.local` - Added `VITE_BACKEND_URL=http://localhost:3001`
-3. `.env.production` - Created with `VITE_BACKEND_URL=https://maitrollcity.com`
+3. `.env.production` - Created with `VITE_BACKEND_URL=https://maiMai Troll.com`
 
 ---
 
 ## Summary
 
 ✅ **Development**: Frontend → localhost:3001  
-✅ **Production**: Frontend → maitrollcity.com  
+✅ **Production**: Frontend → maiMai Troll.com  
 ✅ **CORS**: Enabled globally on backend  
 ✅ **No manual URL changes needed** between environments  
 

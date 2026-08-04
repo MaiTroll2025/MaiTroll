@@ -54,7 +54,7 @@ async function createTestUsers(count) {
   const createdAt = Date.now();
 
   for (let i = 0; i < count; i++) {
-    const email = `test+full-${createdAt}-${i}@trollcity.local`;
+    const email = `test+full-${createdAt}-${i}@Mai Troll.local`;
     const password = `TestPass!${createdAt}`;
 
     const { data, error } = await adminClient.auth.admin.createUser({

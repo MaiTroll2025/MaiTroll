@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - DATABASE SERVICE
+// Mai Troll ACADEMY - DATABASE SERVICE
 // ============================================================
 
 import { supabase } from '@/lib/supabase';

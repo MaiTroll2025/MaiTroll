@@ -87,7 +87,7 @@ export default function DeleteAccount() {
                   <h2 className="font-bold text-lg">We're sorry to see you go</h2>
                   <p className="text-red-200/70 text-sm mt-1">
                     Before you leave, please tell us why you're deleting your account.
-                    This helps us improve Troll City.
+                    This helps us improve Mai Troll.
                   </p>
                 </div>
               </div>

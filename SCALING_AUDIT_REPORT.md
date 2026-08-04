@@ -1,4 +1,4 @@
-# TrollCity Scaling Audit Report — Before & After
+# Mai Troll Scaling Audit Report — Before & After
 
 **Date:** 2026-06-21
 **Build Status:** ✅ Passing (1m 20s)
@@ -262,7 +262,7 @@ realtime: {
 - No visibility into active channel count
 - No polling loop registry
 - No channel health indicators
-- Debug info only via `window.__TROLLCITY_REALTIME_MANAGER__` (raw stats)
+- Debug info only via `window.__Mai Troll_REALTIME_MANAGER__` (raw stats)
 
 ### AFTER
 **New `RealtimeDebugPanel`** — Dev-only floating overlay showing:
@@ -273,7 +273,7 @@ realtime: {
 - Per-polling details (label, interval, visibility-only flag)
 - Stream realtime state
 
-Accessible via `window.__TROLLCITY_REALTIME_MANAGER__` with new methods:
+Accessible via `window.__Mai Troll_REALTIME_MANAGER__` with new methods:
 - `subscribePageChannel()`, `removePageChannel()`
 - `getPageChannelStats()`, `getPollingRegistry()`
 - `registerPolling()`, `unregisterPolling()`

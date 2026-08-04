@@ -824,7 +824,7 @@ export default function LivingPage() {
         amenities: ['Basic Amenities'],
         description:
           adminPropertyForm.description ||
-          (isApartment ? 'A Troll City property available for rent.' : 'A Troll City property available for sale.'),
+          (isApartment ? 'A Mai Troll property available for rent.' : 'A Mai Troll property available for sale.'),
         image_url: '/api/placeholder/400/300',
       })
 
@@ -1253,7 +1253,7 @@ export default function LivingPage() {
                     <InfoCard
                       icon={<Home className="h-6 w-6 text-cyan-300" />}
                       title={myHouse.name || myHouse.address || 'Neighborhood House'}
-                      subtitle={myHouse.neighborhoods?.name || myNeighborhood?.name || 'Troll City Neighborhood'}
+                      subtitle={myHouse.neighborhoods?.name || myNeighborhood?.name || 'MaiTroll Neighborhood'}
                       rows={[
                         ['ZIP', myHouse.neighborhoods?.zip_code || myNeighborhood?.zip_code || 'N/A'],
                         ['Owner', myHouse.owner?.username || 'Available'],
@@ -1880,7 +1880,7 @@ function PropertySummary({ property }: { property: Property }) {
         </div>
         <div>
           <h3 className="text-lg font-black">{property.name}</h3>
-          <p className="text-sm text-slate-400">{property.description || 'Troll City property'}</p>
+          <p className="text-sm text-slate-400">{property.description || 'MaiTroll property'}</p>
         </div>
       </div>
     </div>

@@ -38,7 +38,7 @@ OR if there's an error:
 **Solution:**
 ```bash
 # Apply the existing RLS fix migration
-cd e:\trollcity-1
+cd e:\Mai Troll-1
 supabase db push
 ```
 

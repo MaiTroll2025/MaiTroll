@@ -210,8 +210,8 @@ function buildContractBody(template: ContractTemplate, recipient: TromailAccount
     '{{role_label}}': template.role_label || roleLabel(template.role_key),
     '{{start_date}}': custom.startDate || '',
     '{{pay_terms}}': custom.payTerms || '',
-    '{{admin_name}}': 'Troll City Administration',
-    '{{company_name}}': 'Troll City / MAI Corp',
+    '{{admin_name}}': 'MaiTroll Administration',
+    '{{company_name}}': 'MaiTroll / MAI Corp',
     '{{date}}': new Date().toLocaleDateString(),
     '{{duties_responsibilities}}': custom.duties || '',
     '{{confidentiality_clause}}': custom.confidentiality || '',
@@ -456,7 +456,7 @@ export default function TromailPage() {
 
   useEffect(() => {
     if (user && profile && !canAccessTromail(profile)) {
-      toast.error('Access denied. Tromail requires an approved Troll City role.')
+      toast.error('Access denied. Tromail requires an approved Mai Troll role.')
       navigate('/')
       return
     }
@@ -766,9 +766,9 @@ export default function TromailPage() {
       await sendTromailMessage({
         sender_user_id: user.id,
         sender_role: profileRole,
-        sender_tromail_address: senderAccount?.email_address || 'admin@tromail.trollcity',
+        sender_tromail_address: senderAccount?.email_address || 'admin@tromail.Mai Troll',
         subject: `Contract: ${contract.title}`,
-        body: `You received a Troll City contract for ${contract.role_label}. Please review it in Tromail Contracts.`,
+        body: `You received a Mai Troll contract for ${contract.role_label}. Please review it in Tromail Contracts.`,
         is_admin_email: true,
         is_important: true,
         recipient_user_ids: [contract.recipient_user_id],
@@ -947,7 +947,7 @@ export default function TromailPage() {
           <div className="mb-5 text-center">
             <Mail className="mx-auto mb-3 h-12 w-12 text-cyan-400" />
             <h2 className="text-xl font-bold text-white">Welcome to Tromail</h2>
-            <p className="text-sm text-slate-400">Create your official Troll City role email.</p>
+            <p className="text-sm text-slate-400">Create your official Mai Troll role email.</p>
           </div>
 
           <div className="space-y-4">
@@ -1056,7 +1056,7 @@ export default function TromailPage() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tight text-white">Tromail</h1>
-              <p className="text-xs text-cyan-300">{currentAccount?.email_address || 'Troll City internal mail'}</p>
+              <p className="text-xs text-cyan-300">{currentAccount?.email_address || 'MaiTroll internal mail'}</p>
             </div>
           </div>
 
@@ -1117,7 +1117,7 @@ export default function TromailPage() {
                         addRecipientEmail(recipientInput)
                       }
                     }}
-                    placeholder={recipients.length === 0 ? 'recipient@tromail.trollcity — press Enter' : ''}
+                    placeholder={recipients.length === 0 ? 'recipient@tromail.Mai Troll — press Enter' : ''}
                     className="min-w-[220px] flex-1 border-0 bg-transparent p-1 text-white outline-none placeholder:text-slate-500"
                   />
                 </div>

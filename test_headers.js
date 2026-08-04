@@ -1,7 +1,7 @@
 
 const requestHeaders = {
   'Content-Type': 'application/json',
-  'x-client-info': 'trollcity-web',
+  'x-client-info': 'Mai Troll-web',
   'apikey': 'some-anon-key'
 };
 

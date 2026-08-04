@@ -1,4 +1,4 @@
-# 🔍 TROLL CITY — FRONTEND CONCURRENCY AUDIT (2026-06-22)
+# 🔍 Mai Troll — FRONTEND CONCURRENCY AUDIT (2026-06-22)
 
 **Method:** Live code analysis of frontend hooks, components, and realtime subscriptions.
 

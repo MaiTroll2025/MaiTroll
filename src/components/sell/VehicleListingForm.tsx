@@ -241,7 +241,7 @@ export default function VehicleListingForm({ user, shopId, onListingCreated }: V
           check_engine_light: checkEngineLight,
           ceo_mechanic_verified: ceoMechanicVerified,
           ceo_mechanic_verification_statement: ceoMechanicVerified
-            ? 'The Troll City CEO is a mechanic and will personally verify this vehicle listing.'
+            ? 'The Mai Troll CEO is a mechanic and will personally verify this vehicle listing.'
             : null,
           city: city.trim() || null,
           state: state.trim() || null,
@@ -466,7 +466,7 @@ export default function VehicleListingForm({ user, shopId, onListingCreated }: V
                   className="mt-1 h-5 w-5 rounded bg-[#0D0D0D] border border-[#2C2C2C] text-purple-600 focus:ring-purple-500"
                 />
                 <span className="text-sm">
-                  I confirm the Troll City CEO is a mechanic and will verify this vehicle listing.
+                  I confirm the Mai Troll CEO is a mechanic and will verify this vehicle listing.
                 </span>
               </label>
               <p className="text-xs text-gray-500">
@@ -653,7 +653,7 @@ export default function VehicleListingForm({ user, shopId, onListingCreated }: V
             value={city}
             onChange={(e) => setCity(e.target.value)}
             className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2C2C2C] rounded-lg focus:border-purple-500 focus:outline-none text-white"
-            placeholder="e.g. Troll City"
+            placeholder="e.g. Mai Troll"
           />
         </div>
 

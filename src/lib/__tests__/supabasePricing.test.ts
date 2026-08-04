@@ -8,7 +8,7 @@ import {
 describe('supabase pricing utilities', () => {
   it('computes a monthly estimate from usage inputs', () => {
     const snapshot: SupabaseUsageSnapshot = {
-      projectKey: 'trollcity-prod',
+      projectKey: 'MaiTroll-prod',
       billingPeriodStart: '2026-07-01',
       billingPeriodEnd: '2026-07-31',
       databaseGbHours: 120,

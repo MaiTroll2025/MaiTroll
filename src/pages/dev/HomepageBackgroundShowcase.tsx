@@ -238,7 +238,7 @@ export default function HomepageBackgroundShowcase() {
                  <div className="flex items-center justify-between mb-8">
                    <div className="flex items-center gap-3">
                      <div className="w-12 h-12 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-xl" />
-                     <span className="text-xl font-bold">TrollCity</span>
+                     <span className="text-xl font-bold">Mai Troll</span>
                    </div>
                    <div className="flex gap-4">
                      <div className="w-8 h-8 bg-white/10 rounded-full" />

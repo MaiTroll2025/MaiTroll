@@ -172,13 +172,13 @@ export default function GovernmentPage() {
    const [votingLawId, setVotingLawId] = useState<string | null>(null)
 
   useSEO({
-    title: 'Government | Troll City - Digital Democracy & Community Leadership',
-    description: 'Participate in Troll City government. Vote for leaders, run for office, debate policies, and shape the future of our virtual nation. Digital democracy at its finest.',
+    title: 'Government | Mai Troll - Digital Democracy & Community Leadership',
+    description: 'Participate in Mai Troll government. Vote for leaders, run for office, debate policies, and shape the future of our virtual nation. Digital democracy at its finest.',
     keywords: [
       'online government', 'virtual government', 'community government',
       'digital leadership', 'online elections', 'virtual president',
       'community leadership', 'digital democracy', 'vote online',
-      'Troll City government', 'civic engagement', 'platform governance'
+      'MaiTroll government', 'civic engagement', 'platform governance'
     ]
   });
 
@@ -272,7 +272,7 @@ const currentTab = searchParams.get('tab') || 'laws'
             <h1 className="text-3xl font-black text-white">Restricted Access</h1>
 
             <p className="mt-3 text-sm leading-relaxed text-slate-400">
-              You must be signed in as a Troll City citizen to access government systems.
+              You must be signed in as a Mai Troll citizen to access government systems.
             </p>
 
             <button onClick={() => navigate('/auth')} className={cn(primaryButton, 'mt-6')}>
@@ -308,7 +308,7 @@ const currentTab = searchParams.get('tab') || 'laws'
 
               <div className="min-w-0">
                 <h1 className="bg-gradient-to-r from-cyan-200 via-blue-300 to-cyan-100 bg-clip-text text-3xl font-black tracking-tight text-transparent md:text-4xl">
-                  Troll City Government
+                  Mai Troll Government
                 </h1>
                 <p className="mt-1 text-sm text-slate-400">
                   Laws, voting, jail, protests, and officer operations.

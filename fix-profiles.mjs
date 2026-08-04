@@ -52,7 +52,7 @@ async function fixProfiles() {
         .insert([{
           id: user.id,
           username: username,
-          role: user.email === 'trollcity2025@gmail.com' ? 'admin' : 'user'
+          role: user.email === 'Mai Troll2025@gmail.com' ? 'admin' : 'user'
         }])
         .select()
         .single()

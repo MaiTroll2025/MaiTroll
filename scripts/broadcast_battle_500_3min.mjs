@@ -12,7 +12,7 @@ const CONFIG = {
   livekitUrl: process.env.VITE_LIVEKIT_URL,
   livekitApiKey: process.env.LIVEKIT_API_KEY,
   livekitApiSecret: process.env.LIVEKIT_API_SECRET,
-  loadTestSecret: process.env.LOAD_TEST_SECRET || 'trollcity_load_test_2026',
+  loadTestSecret: process.env.LOAD_TEST_SECRET || 'Mai Troll_load_test_2026',
   
   // Test Scenario
   totalConcurrentUsers: 500,
@@ -195,7 +195,7 @@ async function setupTestData() {
       
       users.push({
         id,
-        email: `load-${runId}-${t.type}-${i}@trollcity.local`,
+        email: `load-${runId}-${t.type}-${i}@Mai Troll.local`,
         username,
         type: t.type
       });

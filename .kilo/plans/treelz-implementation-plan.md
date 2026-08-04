@@ -1,7 +1,7 @@
 # Treelz Feature — Implementation Plan v2
 
 ## Overview
-TikTok/Reels-style short-form video feed for TrollCity. Horizontal swipe, double-tap to "troll", AI flagging with mod review, stream promotion, monetization analytics, and admin controls.
+TikTok/Reels-style short-form video feed for Mai Troll. Horizontal swipe, double-tap to "troll", AI flagging with mod review, stream promotion, monetization analytics, and admin controls.
 
 ---
 

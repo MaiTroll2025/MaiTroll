@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const WORKSPACE = 'c:\\Users\\kainm\\TC ONLY\\TrollCity';
+const WORKSPACE = 'c:\\Users\\kainm\\TC ONLY\\Mai Troll';
 
 // Read orphan tables from DATABASE_AUDIT_2026.md
 function readOrphanTables() {

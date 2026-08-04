@@ -1,4 +1,4 @@
-# Troll City LLM Documentation
+# Mai Troll LLM Documentation
 
 This project is a social streaming platform built with React, Supabase, and LiveKit.
 

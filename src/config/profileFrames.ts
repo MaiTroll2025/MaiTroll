@@ -1,6 +1,6 @@
 /**
  * Profile Frame System — Configuration & Types
- * Premium animated avatar frames for Troll City
+ * Premium animated avatar frames for Mai Troll
  */
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -369,7 +369,7 @@ export const LAUNCH_FRAMES: ProfileFrame[] = [
   },
   {
     id: 'troll_city_founder',
-    name: 'Troll City Founder',
+    name: 'MaiTroll Founder',
     description: 'Exclusive founder badge — only for the original trolls of the city',
     icon: '🧌',
     animationType: 'founder',

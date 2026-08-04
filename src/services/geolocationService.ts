@@ -1,5 +1,5 @@
 /**
- * Troll City IP Geolocation Service
+ * Mai Troll IP Geolocation Service
  * 
  * This service handles IP-based geolocation lookups for admin use only.
  * Location data is restricted to super admins and used only for emergency response.

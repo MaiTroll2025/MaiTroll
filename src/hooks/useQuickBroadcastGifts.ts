@@ -27,7 +27,7 @@ interface UseQuickBroadcastGiftsOptions {
  * 3. Return top N gifts for the quick row
  * 4. Update usage as real gifts arrive
  *
- * This is a unique Troll City feature: "live rotating quick gifts"
+ * This is a unique Mai Troll feature: "live rotating quick gifts"
  */
 export function useQuickBroadcastGifts({
   streamId,
@@ -59,7 +59,7 @@ export function useQuickBroadcastGifts({
           try {
             const { data, error: err } = await supabase
               .from(table)
-              .select('id, gift_id, name, gift_name, icon, icon_url, value, cost, price, coin_cost, category, slug, gift_slug')
+              .select('id, gift_id, name, gift_name, icon, icon_url, value, cost, price, coin_cost, category, gift_slug')
               .limit(200)
 
             if (!err && data && data.length > 0) {
@@ -88,7 +88,7 @@ export function useQuickBroadcastGifts({
           gift_id: g.gift_id || g.id || '',
           name: g.name || g.gift_name || 'Unknown Gift',
           icon: g.icon || g.icon_url || '🎁',
-          cost: g.value || g.cost || g.price || g.coin_cost || 0,
+          cost: g.coin_cost || g.value || g.cost || g.price || 0,
           category: g.category || 'general',
           slug: g.slug || g.gift_slug || (g.name || 'gift').toLowerCase().replace(/\s+/g, '-'),
           usage_count: 0,

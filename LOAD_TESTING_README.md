@@ -1,6 +1,6 @@
-# Troll City Load Testing
+# Mai Troll Load Testing
 
-This directory contains load testing scripts to ensure Troll City can handle 1000+ concurrent users safely.
+This directory contains load testing scripts to ensure Mai Troll can handle 1000+ concurrent users safely.
 
 ## Overview
 
@@ -86,7 +86,7 @@ Both tests cover these key pages:
 
 ### Example Output
 ```
-🚀 Starting Troll City 1000 User Load Test (Simple)
+🚀 Starting Mai Troll 1000 User Load Test (Simple)
 📊 Testing backend performance without database writes
 
 🧪 Testing Home Page with 100 users...

@@ -99,13 +99,13 @@ export default function HelpPage() {
       <section className="relative z-10 mx-auto max-w-3xl px-4 py-8 md:px-8">
         <header className="mb-8 rounded-[2rem] border border-cyan-400/20 bg-slate-950/75 p-6 shadow-[0_0_70px_rgba(34,211,238,0.12)] backdrop-blur-xl md:p-8">
           <h1 className="text-3xl font-black tracking-tight md:text-5xl">
-            Troll City
+            Mai Troll
             <span className="block bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-red-300 bg-clip-text text-transparent">
               Page Guide
             </span>
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">
-            A quick guide to every page in Troll City. Hover over tabs on web for quick hints, or browse this guide on mobile.
+            A quick guide to every page in Mai Troll. Hover over tabs on web for quick hints, or browse this guide on mobile.
           </p>
           {isAdmin && (
             <p className="mt-2 text-xs font-bold text-cyan-300">Role: Admin — all pages visible</p>

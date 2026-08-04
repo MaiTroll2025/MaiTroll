@@ -1,4 +1,4 @@
-# Troll City - All Endpoint URLs
+# Mai Troll - All Endpoint URLs
 
 **Generated:** $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 

@@ -1,4 +1,4 @@
-# Daily Reward System Implementation - Troll City
+# Daily Reward System Implementation - Mai Troll
 
 ## Overview
 
@@ -134,12 +134,12 @@ Users receive notifications when they receive rewards:
 **Broadcaster**:
 > 🎉 Creator Reward
 > You earned 25 coins for going live today!
-> Source: Troll City Public Pool
+> Source: Mai Troll Public Pool
 
 **Viewer**:
 > 🎉 Daily Reward
 > You earned 10 coins for joining a live!
-> Source: Troll City Public Pool
+> Source: Mai Troll Public Pool
 
 ## Database Schema
 

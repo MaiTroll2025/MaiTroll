@@ -78,7 +78,6 @@ export function useAdminDashboardMetrics() {
         .select('amount, coins_used, description, metadata, paypal_order_id')
         .or([
           'transaction_type.eq.purchase',
-          'type.eq.purchase',
           'description.ilike.%PayPal purchase%',
           'description.ilike.%coin%',
           'metadata->>paypal_capture_id.not.is.null',

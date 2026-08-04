@@ -47,7 +47,7 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
         const { data: giftItems, error: giftItemsError } = await supabase
           .from('gift_items')
           .select('*')
-          .order('value', { ascending: true });
+          .order('coin_cost', { ascending: true });
 
         if (giftItemsError) {
           throw giftItemsError;
@@ -58,7 +58,7 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
             id: g.id,
             name: g.name?.startsWith('gift_') ? g.name.replace('gift_', '') : g.name,
             icon: g.icon || '🎁',
-            coinCost: g.value || 0,
+            coinCost: g.coin_cost || g.value || 0,
             type: 'paid' as const,
             slug: g.gift_slug || g.name,
             animationKey: g.animation_key || g.animationKey || g.gift_slug || g.name,
@@ -111,14 +111,14 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
         const { data: giftItems } = await supabase
           .from('gift_items')
           .select('*')
-          .order('value', { ascending: true });
+          .order('coin_cost', { ascending: true });
         
         if (giftItems && giftItems.length > 0) {
           const mappedGifts = giftItems.map((g: any) => ({
             id: g.id,
             name: g.name?.startsWith('gift_') ? g.name.replace('gift_', '') : g.name,
             icon: g.icon || '🎁',
-            coinCost: g.value || 0,
+            coinCost: g.coin_cost || g.value || 0,
             type: 'paid' as const,
             slug: g.gift_slug || g.name,
             animationKey: g.animation_key || g.animationKey || g.gift_slug || g.name,

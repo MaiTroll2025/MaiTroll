@@ -41,7 +41,7 @@ export default function PinProductModal({
 
     const fetchUserShop = async () => {
       const { data, error } = await supabase
-        .from('trollcity_shops')
+        .from('MaiTroll_shops')
         .select('id')
         .eq('owner_id', user.id)
         .eq('is_active', true)
@@ -161,7 +161,7 @@ export default function PinProductModal({
               <div className="text-center py-8">
                 <ShoppingBag className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400">You need to create a shop first</p>
-                <p className="text-gray-500 text-sm mt-2">Go to Sell on Troll City to set up your shop</p>
+                <p className="text-gray-500 text-sm mt-2">Go to Sell on Mai Troll to set up your shop</p>
               </div>
             ) : isLoading ? (
               <div className="flex items-center justify-center py-12">

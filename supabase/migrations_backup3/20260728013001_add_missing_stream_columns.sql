@@ -1,0 +1,12 @@
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS gifts_value INTEGER DEFAULT 0;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS featured_until TIMESTAMPTZ;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS boosted_until TIMESTAMPTZ;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS featured_at TIMESTAMPTZ;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS featured_by UUID REFERENCES auth.users(id);
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS cloudflare_recording_id TEXT;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS cloudflare_playback_url TEXT;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS agora_channel TEXT;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS total_gifts_coins INTEGER DEFAULT 0;
+ALTER TABLE public.streams ADD COLUMN IF NOT EXISTS total_unique_gifters INTEGER DEFAULT 0;

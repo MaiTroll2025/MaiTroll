@@ -768,7 +768,7 @@ export default function Stats() {
               <div className={`${cityPanel} p-12 text-center`}>
                 <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-cyan-300" />
                 <div className="text-xl font-black text-cyan-100">Loading Stats</div>
-                <p className="mt-2 text-slate-400">Syncing your Troll City data...</p>
+                <p className="mt-2 text-slate-400">Syncing your Mai Troll data...</p>
               </div>
             )}
           </>

@@ -641,7 +641,7 @@ Deno.serve(async (req) => {
                 const { data: targetUserRes, error: targetError } = await supabaseAdmin.auth.admin.getUserById(userId);
                 if (targetError) throw targetError;
                 
-                const OWNER_EMAIL = 'trollcity2025@gmail.com';
+                const OWNER_EMAIL = 'Mai Troll2025@gmail.com';
                 const isTargetOwner = targetUserRes.user.email?.toLowerCase() === OWNER_EMAIL;
                 const isActorOwner = user.email?.toLowerCase() === OWNER_EMAIL;
 
@@ -2492,7 +2492,7 @@ Deno.serve(async (req) => {
               .insert({
                 summoned_user_id: targetUserId,
                 session_id: courtSession.id,
-                case_type: 'TrollCity Policy Violation',
+                case_type: 'Mai Troll Policy Violation',
                 status: 'pending',
                 reason: reason || 'License suspended - Court appearance required',
                 created_by: user.id

@@ -1,7 +1,7 @@
 /**
  * TCNN Type Definitions
  * 
- * TypeScript interfaces and types for Troll City News Network
+ * TypeScript interfaces and types for Mai Troll News Network
  */
 
 // Article Types

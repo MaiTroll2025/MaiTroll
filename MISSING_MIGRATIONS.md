@@ -106,7 +106,7 @@ Based on the console errors, these migrations exist but **haven't been run in yo
 ### Option 2: Supabase CLI
 ```bash
 # Make sure you're in the project root
-cd C:\Users\justk\Music\Trollcity2_chatgpt_edition_giftbox_admin_live_fix
+cd C:\Users\justk\Music\Mai Troll2_chatgpt_edition_giftbox_admin_live_fix
 
 # Link to your Supabase project (if not already linked)
 npx supabase link --project-ref yjxpwfalenorzrqxwmtr

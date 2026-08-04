@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Troll City Phase 2 Load Test - 1000 Users with Writes & Realtime
+ * Mai Troll Phase 2 Load Test - 1000 Users with Writes & Realtime
  * Comprehensive load test with database writes, realtime subscriptions, and full user interactions
  */
 
@@ -84,7 +84,7 @@ class Phase2LoadTester {
   }
 
   async runPhase2Test() {
-    console.log('🚀 Starting Troll City Phase 2 Load Test');
+    console.log('🚀 Starting Mai Troll Phase 2 Load Test');
     console.log('📊 Testing 1000 users with writes & realtime enabled');
     console.log('🎯 Target: 1000 concurrent users, 300 broadcast viewers, active interactions');
 
@@ -186,7 +186,7 @@ class Phase2LoadTester {
 
     const context = await browser.newContext({
       viewport: { width: 1280, height: 720 },
-      userAgent: 'TrollCity-LoadTest/1.0'
+      userAgent: 'Mai Troll-LoadTest/1.0'
     });
 
     const page = await context.newPage();
@@ -653,7 +653,7 @@ class Phase2LoadTester {
 
   analyzeResults() {
     console.log('\n' + '='.repeat(80));
-    console.log('📊 TROLL CITY PHASE 2 LOAD TEST RESULTS');
+    console.log('📊 Mai Troll PHASE 2 LOAD TEST RESULTS');
     console.log('='.repeat(80));
 
     console.log('\n🎯 TEST SUMMARY:');

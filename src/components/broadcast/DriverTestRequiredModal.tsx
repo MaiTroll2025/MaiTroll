@@ -32,7 +32,7 @@ export default function DriverTestRequiredModal({
         </div>
         
         <p className="text-slate-300 text-center">
-          You must have an active driver license to go live in Troll City.
+          You must have an active driver license to go live in Mai Troll.
           Please take the driver test first to get your license.
         </p>
         

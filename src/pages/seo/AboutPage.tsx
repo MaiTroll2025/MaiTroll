@@ -38,7 +38,7 @@ const features = [
     icon: Building2,
     title: 'Government System',
     description:
-      'Participate in Troll City democracy. Vote for leaders, run for office, and help shape the community.',
+      'Participate in Mai Troll democracy. Vote for leaders, run for office, and help shape the community.',
     slug: '/government',
   },
   {
@@ -66,7 +66,7 @@ const features = [
     icon: Gift,
     title: 'Virtual Economy',
     description:
-      'Participate in Troll City through virtual gifts, marketplace activity, property features, and digital rewards.',
+      'Participate in Mai Troll through virtual gifts, marketplace activity, property features, and digital rewards.',
     slug: '/marketplace',
   },
 ]
@@ -76,7 +76,7 @@ const howItWorks = [
     step: '1',
     title: 'Create Your Account',
     description:
-      'Sign up, choose your username, and customize your profile to begin your Troll City experience.',
+      'Sign up, choose your username, and customize your profile to begin your Mai Troll experience.',
   },
   {
     step: '2',
@@ -94,7 +94,7 @@ const howItWorks = [
     step: '4',
     title: 'Engage & Grow',
     description:
-      'Connect with viewers, receive gifts, grow your audience, and participate in Troll City features.',
+      'Connect with viewers, receive gifts, grow your audience, and participate in Mai Troll features.',
   },
 ]
 
@@ -155,12 +155,12 @@ const compatibilityFactors = [
 export default function AboutPage() {
   return (
     <SEOLayout
-      title="About Troll City | Social Streaming Platform"
-      description="Learn about Troll City (Mai Troll City), a social streaming platform for creators, streamers, gamers, and online communities. Review platform features, supported devices, browser compatibility, and live streaming requirements."
+      title="About Mai Troll | Social Streaming Platform"
+      description="Learn about Mai Troll (MaiMaiTroll), a social streaming platform for creators, streamers, gamers, and online communities. Review platform features, supported devices, browser compatibility, and live streaming requirements."
       keywords={[
-        'Troll City',
-        'Mai Troll City',
-        'about Troll City',
+        'MaiTroll',
+        'MaiMaiTroll',
+        'about Mai Troll',
         'social streaming platform',
         'live streaming',
         'go live',
@@ -175,7 +175,7 @@ export default function AboutPage() {
         'monetize content',
         'social streaming',
         'live entertainment',
-        'Troll City streaming',
+        'MaiTroll streaming',
         'supported devices',
         'browser compatibility',
         'Android streaming',
@@ -200,12 +200,12 @@ export default function AboutPage() {
             <h1 className="mb-6 text-4xl font-bold leading-tight text-white md:text-6xl lg:text-7xl">
               About{' '}
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                Troll City
+                Mai Troll
               </span>
             </h1>
 
             <p className="mx-auto max-w-3xl text-xl leading-relaxed text-slate-300">
-              Troll City, also known as Mai Troll City, is a social streaming
+              Mai Troll, also known as MaiMaiTroll, is a social streaming
               platform built for creators, streamers, gamers, and online
               communities. The platform combines livestreaming, real-time
               interaction, community participation, creator tools, and digital
@@ -223,7 +223,7 @@ export default function AboutPage() {
             </h2>
             <p className="mx-auto max-w-2xl text-lg text-slate-400">
               From live broadcasting and creator tools to communities and
-              platform participation, Troll City brings social entertainment
+              platform participation, Mai Troll brings social entertainment
               together in one place.
             </p>
           </div>
@@ -265,14 +265,14 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl">
             <h2 className="mb-6 text-3xl font-bold text-white md:text-4xl">
-              What Is Troll City?
+              What Is Mai Troll?
             </h2>
 
             <div className="space-y-6 text-lg leading-relaxed text-slate-300">
               <p>
-                <strong className="text-white">Troll City</strong> and{' '}
-                <strong className="text-white">Mai Troll City</strong> refer to
-                the same digital platform. Troll City is designed for live
+                <strong className="text-white">Mai Troll</strong> and{' '}
+                <strong className="text-white">MaiMaiTroll</strong> refer to
+                the same digital platform. Mai Troll is designed for live
                 entertainment, social interaction, creator content, and online
                 community participation.
               </p>
@@ -285,7 +285,7 @@ export default function AboutPage() {
 
               <p>
                 <strong className="text-white">
-                  Troll City is a social streaming platform.
+                  Mai Troll is a social streaming platform.
                 </strong>{' '}
                 It is not connected to a physical city, municipality, or
                 geographic location. The name represents a digital community
@@ -312,7 +312,7 @@ export default function AboutPage() {
             </h2>
 
             <p className="text-lg leading-relaxed text-slate-400">
-              Troll City is designed to work across modern phones, tablets,
+              Mai Troll is designed to work across modern phones, tablets,
               laptops, Chromebooks, and desktop computers. Actual performance
               can vary based on the age of the device, browser version,
               operating system, available memory, hardware video support, and
@@ -454,7 +454,7 @@ export default function AboutPage() {
       </section>
 
       <SEOContentSection
-        title="How Troll City Works"
+        title="How Mai Troll Works"
         description="Getting started is straightforward whether you want to watch, participate, or broadcast."
         icon={Zap}
       >
@@ -477,8 +477,8 @@ export default function AboutPage() {
       </SEOContentSection>
 
       <SEOContentSection
-        title="Why Choose Troll City?"
-        description="Troll City combines live entertainment, creator opportunities, and community participation in one platform."
+        title="Why Choose Mai Troll?"
+        description="Mai Troll combines live entertainment, creator opportunities, and community participation in one platform."
         icon={Star}
       >
         <div className="grid gap-6 md:grid-cols-2">
@@ -503,7 +503,7 @@ export default function AboutPage() {
               <div>
                 <h4 className="font-medium text-white">Creator Opportunities</h4>
                 <p className="text-sm text-slate-400">
-                  Creators can build audiences and participate in Troll City
+                  Creators can build audiences and participate in Mai Troll
                   monetization and gifting features.
                 </p>
               </div>
@@ -533,7 +533,7 @@ export default function AboutPage() {
                   Multi-Device Availability
                 </h4>
                 <p className="text-sm text-slate-400">
-                  Access Troll City from compatible mobile devices, tablets,
+                  Access Mai Troll from compatible mobile devices, tablets,
                   laptops, Chromebooks, and desktop computers.
                 </p>
               </div>
@@ -543,7 +543,7 @@ export default function AboutPage() {
       </SEOContentSection>
 
       <CTASection
-        title="Explore the Troll City Community"
+        title="Explore the Mai Troll Community"
         description="Discover live streams, creators, communities, and platform activity."
         primaryAction={{ label: 'Create Free Account', path: '/auth' }}
         secondaryAction={{ label: 'Explore Live Streams', path: '/explore' }}

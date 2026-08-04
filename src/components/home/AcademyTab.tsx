@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - HOMEPAGE TAB WIDGET
+// Mai Troll ACADEMY - HOMEPAGE TAB WIDGET
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
@@ -82,7 +82,7 @@ export default function AcademyTab() {
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-white">Troll City Academy</h2>
+              <h2 className="text-xl font-black text-white">Mai Troll Academy</h2>
               <p className="text-xs text-slate-400">Learn. Earn. Graduate.</p>
             </div>
           </div>
@@ -202,7 +202,7 @@ export default function AcademyTab() {
       {enrollments.length === 0 && courses.length === 0 && (
         <section className={`${glass} rounded-2xl p-8 text-center`}>
           <GraduationCap className="mx-auto h-16 w-16 text-emerald-400/50" />
-          <h3 className="mt-4 text-lg font-black text-white">Welcome to Troll City Academy</h3>
+          <h3 className="mt-4 text-lg font-black text-white">Welcome to Mai Troll Academy</h3>
           <p className="mt-2 text-sm text-slate-400">
             Browse courses, enroll, and start learning. Earn Troll Coins as you progress!
           </p>

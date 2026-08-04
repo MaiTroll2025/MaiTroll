@@ -1,4 +1,4 @@
-// Troll City - COMPREHENSIVE QA STRESS TEST
+// Mai Troll - COMPREHENSIVE QA STRESS TEST
 // Tests ALL pages, broadcast, battles, and fixes
 
 import { createClient } from '@supabase/supabase-js';
@@ -7,7 +7,7 @@ import axios from 'axios';
 const config = {
   supabaseUrl: 'https://yjxpwfalenorzrqxwmtr.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeHB3ZmFsZW5vcnpycXh3bXRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjkxMTcsImV4cCI6MjA3OTYwNTExN30.S5Vc1xpZoZ0aemtNFJGcPhL_zvgPA0qgZq8e8KigUx8',
-  baseUrl: 'https://maitrollcity.com',
+  baseUrl: 'https://maiMai Troll.com',
   testDuration: 15 * 60 * 1000,
   concurrentUsers: 20
 };
@@ -89,7 +89,7 @@ class QAUser {
     this.userId = userData.id;
     this.role = userData.role || 'user';
     this.username = userData.username;
-    this.email = `${userData.username}@trollcity.test`;
+    this.email = `${userData.username}@Mai Troll.test`;
     this.supabase = supabase;
     this.session = null;
     this.actions = 0;
@@ -390,7 +390,7 @@ class QAUser {
 
 async function runComprehensiveTest() {
   console.log('╔══════════════════════════════════════════════════════════════════════╗');
-  console.log('║  TROLL CITY - COMPREHENSIVE QA STRESS TEST                       ║');
+  console.log('║  Mai Troll - COMPREHENSIVE QA STRESS TEST                       ║');
   console.log('║  ALL PAGES | BROADCAST | BATTLES | DATABASE                     ║');
   console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
 

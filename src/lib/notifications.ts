@@ -245,7 +245,7 @@ export function buildNotificationContent(
   }
 
   return {
-    title: metadata.title ?? 'Troll City Notification',
+    title: metadata.title ?? 'MaiTroll Notification',
     message: metadata.message ?? '',
   }
 }

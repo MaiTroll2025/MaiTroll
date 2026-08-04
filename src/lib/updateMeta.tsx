@@ -93,8 +93,8 @@ export default function ArticleReader() {
   useEffect(() => {
     if (!article) return;
 
-    const title = `${article.headline} | TCNN | Troll City`;
-    const description = article.excerpt || article.headline || 'Read the latest TCNN story on Troll City.';
+    const title = `${article.headline} | TCNN | Mai Troll`;
+    const description = article.excerpt || article.headline || 'Read the latest TCNN story on Mai Troll.';
     const url = `${window.location.origin}/tcnn/article/${article.id}`;
     const ogImageUrl = buildOGImageUrl({ kind: 'tcnn', id: article.id });
 
@@ -117,7 +117,7 @@ export default function ArticleReader() {
     updateMeta('meta[property="og:description"]', 'content', description);
     updateMeta('meta[property="og:url"]', 'content', url);
     updateMeta('meta[property="og:type"]', 'content', 'article');
-    const fallback = 'https://maitrollcity.com/images/mai-troll-city-preview.png';
+    const fallback = 'https://maiMaiTroll.com/images/mai-troll-city-preview.png';
     updateMeta('meta[property="og:image"]', 'content', ogImageUrl || fallback);
     updateMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
     updateMeta('meta[name="twitter:title"]', 'content', title);

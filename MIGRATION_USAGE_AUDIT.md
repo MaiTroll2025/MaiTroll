@@ -45,7 +45,7 @@
 | `purchasable_items` | table | ACTIVE_DIRECT_USE | Gift Tray, Admin, edge functions | DANGEROUS_TO_REMOVE |
 | `marketplace_items` | table | ACTIVE_DIRECT_USE | Profile, Marketplace, Admin | SAFE |
 | `marketplace_purchases` | table | ACTIVE_DIRECT_USE | Seller, Auction | DANGEROUS_TO_REMOVE |
-| `trollcity_shops` | table | ACTIVE_DIRECT_USE | Marketplace, Sell | SAFE |
+| `Mai Troll_shops` | table | ACTIVE_DIRECT_USE | Marketplace, Sell | SAFE |
 | `shop_items` | table | ACTIVE_DIRECT_USE | Marketplace, Sell | SAFE |
 | `shop_transactions` | table | ACTIVE_DIRECT_USE | Sell | DANGEROUS_TO_REMOVE |
 | `business_profiles` | table | ACTIVE_DIRECT_USE | Marketplace, Sell | SAFE |

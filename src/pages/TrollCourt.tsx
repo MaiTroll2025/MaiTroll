@@ -24,7 +24,7 @@ import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 import useSEO from '@/hooks/useSEO';
 import { startCourtSession } from '../lib/courtSessions'
-import { trollCityTheme } from '../styles/trollCityTheme'
+import { MaiTrollTheme } from '../styles/trollCityTheme'
 import FileLawsuitModal from '../components/FileLawsuitModal'
 import JudgeRulingModal from '../components/JudgeRulingModal'
 import { UserSearchInput } from '../components/UserSearchDropdown'
@@ -45,7 +45,7 @@ const CASE_TYPE_MAP: Record<string, string> = {
   'Appeal Case': 'appeal_case',
   'Copyright / Content Claim': 'copyright_content_claim',
   'TrollCourt Civil Case': 'trollcourt_civil_case',
-  'TrollCity Policy Violation': 'trollcity_policy_violation',
+  'MaiTroll Policy Violation': 'MaiTroll_policy_violation',
 }
 
 const CASE_TYPES = [
@@ -63,7 +63,7 @@ const CASE_TYPES = [
   'Appeal Case',
   'Copyright / Content Claim',
   'TrollCourt Civil Case',
-  'TrollCity Policy Violation',
+  'MaiTroll Policy Violation',
 ]
 
 export default function TrollCourt() {
@@ -71,12 +71,12 @@ export default function TrollCourt() {
   const navigate = useNavigate()
 
   useSEO({
-    title: 'Troll Court | Community Court & Social Justice | Troll City',
-    description: 'Troll City Court is a community-driven social justice system. File cases, vote on rulings, and participate in virtual court proceedings. A unique online voting and justice experience.',
+    title: 'Troll Court | Community Court & Social Justice | Mai Troll',
+    description: 'MaiTroll Court is a community-driven social justice system. File cases, vote on rulings, and participate in virtual court proceedings. A unique online voting and justice experience.',
     keywords: [
       'community court', 'social justice game', 'virtual court', 'online voting system',
       'Troll Court', 'court system', 'community justice', 'vote on cases',
-      'online court', 'social court', 'Troll City court'
+      'online court', 'social court', 'MaiTroll court'
     ]
   });
 
@@ -377,7 +377,7 @@ export default function TrollCourt() {
 
     try {
       let activeSessionId = courtSession?.id
-      const dbCaseType = CASE_TYPE_MAP[selectedCaseType] || 'trollcity_policy_violation'
+      const dbCaseType = CASE_TYPE_MAP[selectedCaseType] || 'MaiTroll_policy_violation'
 
       if (!activeSessionId) {
         const newSessionId = generateUUID()
@@ -555,7 +555,7 @@ export default function TrollCourt() {
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="mb-4 flex flex-wrap items-center gap-2">
-                <CourtBadge icon={<Landmark size={14} />} label="Official Troll City Courthouse" />
+                <CourtBadge icon={<Landmark size={14} />} label="Official Mai Troll Courthouse" />
                 <CourtBadge icon={<Scale size={14} />} label={courtSession ? 'Court In Session' : 'Open For Filing'} />
               </div>
 
@@ -569,7 +569,7 @@ export default function TrollCourt() {
                     Troll Court
                   </h1>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-amber-100/70 md:text-base">
-                    Official hearings, civil lawsuits, summons, warrants, appeals, and public rulings for Troll City.
+                    Official hearings, civil lawsuits, summons, warrants, appeals, and public rulings for Mai Troll.
                   </p>
                 </div>
               </div>

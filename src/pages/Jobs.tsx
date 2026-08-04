@@ -85,7 +85,7 @@ const jobPositions: JobPosition[] = [
     id: 'prosecutor',
     title: 'Prosecutor',
     department: 'Troll Court',
-    description: 'Represents Troll City in court cases, reviews evidence, presents charges, and supports city justice.',
+    description: 'Represents Mai Troll in court cases, reviews evidence, presents charges, and supports city justice.',
     requirements: ['Understanding of court process', 'Strong presentation skills', 'Commitment to fair judgment'],
     benefits: ['Prosecutor badge', 'Access to case management', 'City-wide recognition'],
     icon: Gavel,
@@ -151,7 +151,7 @@ const jobPositions: JobPosition[] = [
     id: 'journalist',
     title: 'Journalist',
     department: 'TCNN',
-    description: 'Write articles, conduct investigations, and keep the city informed through Troll City News Network.',
+    description: 'Write articles, conduct investigations, and keep the city informed through Mai Troll News Network.',
     requirements: ['Strong writing skills', 'Ability to research and verify facts', 'Commitment to unbiased reporting'],
     benefits: ['Journalist badge', 'Access to TCNN content dashboard', 'Potential to advance to News Caster'],
     icon: Newspaper,
@@ -184,7 +184,7 @@ const jobPositions: JobPosition[] = [
     id: 'agency_hr_manager',
     title: 'Agency HR Manager',
     department: 'Agency HR',
-    description: 'Manage, approve, review, and settle issues for Troll City agencies.',
+    description: 'Manage, approve, review, and settle issues for Mai Troll agencies.',
     requirements: ['Attention to detail', 'Reliable communication', 'Ability to review agency applications'],
     benefits: ['Agency HR dashboard access', 'Oversees all agencies', 'Reports to admin dashboard'],
     icon: Building2,
@@ -206,7 +206,7 @@ const jobPositions: JobPosition[] = [
     id: 'agency_leader',
     title: 'Agency Leader',
     department: 'Agencies',
-    description: 'Lead a Troll City agency, recruit members, and grow creator talent.',
+    description: 'Lead a Mai Troll agency, recruit members, and grow creator talent.',
     requirements: ['Leadership skills', 'Recruitment ability', 'Strong community standing'],
     benefits: ['Agency dashboard access', 'Build creator teams', 'Potential weekly role perk from Treasury'],
     icon: Users,
@@ -274,9 +274,9 @@ export default function JobsPage() {
   const { profile, user } = useAuthStore()
 
   useSEO({
-    title: 'Jobs | Troll City - Join Our Team & Make Money Online',
-    description: 'Browse open positions at Troll City. Apply for roles in moderation, court, broadcasting, agency management, and executive support.',
-    keywords: ['jobs', 'careers', 'hiring', 'troll city jobs', 'online jobs', 'remote work'],
+    title: 'Jobs | Mai Troll - Join Our Team & Make Money Online',
+    description: 'Browse open positions at Mai Troll. Apply for roles in moderation, court, broadcasting, agency management, and executive support.',
+    keywords: ['jobs', 'careers', 'hiring', 'MaiTroll jobs', 'online jobs', 'remote work'],
   })
 
   const [query, setQuery] = useState('')
@@ -507,7 +507,7 @@ export default function JobsPage() {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-cyan-100">
                 <Sparkles className="h-4 w-4" />
-                Troll City Jobs
+                Mai Troll Jobs
               </div>
 
               <h1 className="max-w-4xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -518,7 +518,7 @@ export default function JobsPage() {
               </h1>
 
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-300 sm:text-lg">
-                Browse open positions at Troll City. Employee positions include payroll, onboarding, and employee tools.
+                Browse open positions at Mai Troll. Employee positions include payroll, onboarding, and employee tools.
                 Platform roles unlock department access after approval.
               </p>
 

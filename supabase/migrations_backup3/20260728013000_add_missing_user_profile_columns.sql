@@ -1,0 +1,16 @@
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS pronouns TEXT;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS country TEXT;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS join_date TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS banner_notifications_enabled BOOLEAN DEFAULT true;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS payout_paypal_email TEXT;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS payout_paypal_email_updated_at TIMESTAMPTZ;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS owned_vehicle_ids JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS entrance_audio_enabled BOOLEAN DEFAULT true;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS entrance_join_type TEXT DEFAULT 'effect' CHECK (entrance_join_type IN ('audio', 'voice', 'effect', 'none'));
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS active_entrance_audio_id UUID REFERENCES user_entrance_audio(id);
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS voice_announcement_enabled BOOLEAN DEFAULT true;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS crown_badge_count INTEGER DEFAULT 0;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS total_gifts_sent INTEGER DEFAULT 0;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS total_gifts_received INTEGER DEFAULT 0;

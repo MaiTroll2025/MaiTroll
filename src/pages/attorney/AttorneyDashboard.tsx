@@ -354,7 +354,7 @@ export default function AttorneyDashboard() {
 
               <div>
                 <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-cyan-100">
-                  Troll City Court Chamber
+                  Mai Troll Court Chamber
                 </div>
                 <h1 className="text-3xl font-black tracking-tight sm:text-5xl">
                   Attorney Dashboard

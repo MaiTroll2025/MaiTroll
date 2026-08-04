@@ -1,7 +1,7 @@
 /**
  * TCNNWidget Component
  * 
- * Live media player card for Troll City News Network
+ * Live media player card for Mai Troll News Network
  * Displayed on the Home page under Pods
  */
 import { useState, useEffect } from 'react';
@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Maximize2 
 } from 'lucide-react';
-import { trollCityTheme } from '@/styles/trollCityTheme';
+import { MaiTrollTheme } from '@/styles/trollCityTheme';
 
 interface TCNNStream {
   id: string;
@@ -147,10 +147,10 @@ export default function TCNNWidget({ onRequireAuth }: TCNNWidgetProps) {
 
   if (loading) {
     return (
-      <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-4`}>
+      <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-4`}>
         <div className="flex items-center gap-2 mb-3">
           <Radio className="h-5 w-5 text-red-500" />
-          <h3 className="text-lg font-semibold text-white">Troll City News Network</h3>
+          <h3 className="text-lg font-semibold text-white">Mai Troll News Network</h3>
         </div>
         <div className="space-y-2">
           <div className="h-32 rounded-xl bg-white/5 animate-pulse" />
@@ -160,7 +160,7 @@ export default function TCNNWidget({ onRequireAuth }: TCNNWidgetProps) {
   }
 
   return (
-    <div className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl p-4 overflow-hidden`}>
+    <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-4 overflow-hidden`}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <div className="relative">
@@ -169,7 +169,7 @@ export default function TCNNWidget({ onRequireAuth }: TCNNWidgetProps) {
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
           )}
         </div>
-        <h3 className="text-lg font-semibold text-white">Troll City News Network</h3>
+        <h3 className="text-lg font-semibold text-white">Mai Troll News Network</h3>
         {stream?.isLive && (
           <span className="ml-auto text-[10px] font-bold px-2 py-0.5 bg-red-500 text-white rounded animate-pulse">
             LIVE

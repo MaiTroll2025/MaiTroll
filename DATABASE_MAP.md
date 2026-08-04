@@ -1,4 +1,4 @@
-# 🗺️ TROLL CITY — DATABASE RELATIONSHIP MAP
+# 🗺️ Mai Troll — DATABASE RELATIONSHIP MAP
 
 **Audit Date:** 2026-06-13  
 **Database:** Supabase (PostgreSQL)  
@@ -348,9 +348,9 @@ user_profiles (id)
 │   ├── shops
 │   ├── store_items
 │   │   └── stores
-│   ├── trollcity_orders
-│   │   ├── trollcity_products
-│   │   └── trollcity_shops
+│   ├── Mai Troll_orders
+│   │   ├── Mai Troll_products
+│   │   └── Mai Troll_shops
 │   ├── seller_reliability
 │   ├── seller_tiers
 │   ├── business_profiles

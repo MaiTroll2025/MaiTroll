@@ -604,7 +604,7 @@ export default function FrontendStudioTab({
             </div>
 
             <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-400">
-              Create and manage Troll City page layouts using simple
+              Create and manage Mai Troll page layouts using simple
               controls. No coding, SQL, terminal, or system access is
               required.
             </p>
@@ -739,7 +739,7 @@ export default function FrontendStudioTab({
                   }
                   className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-sm text-white outline-none"
                 >
-                  <option value="dark">Troll City Dark</option>
+                  <option value="dark">Mai Troll Dark</option>
                   <option value="midnight">Midnight</option>
                   <option value="purple">Purple City</option>
                 </select>
@@ -780,7 +780,7 @@ export default function FrontendStudioTab({
             </div>
 
             <p className="mt-1 text-sm text-slate-500">
-              Choose which sections appear on the Troll City homepage.
+              Choose which sections appear on the Mai Troll homepage.
             </p>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">

@@ -608,7 +608,7 @@
   "EndColumn": 64,
   "Match": "authtoken: REDACTED\r",
   "Secret": "REDACTED",
-  "File": "trollcity-stream-engine/ngrok.yml",
+  "File": "Mai Troll-stream-engine/ngrok.yml",
   "SymlinkFile": "",
   "Commit": "",
   "Entropy": 4.849204,
@@ -617,7 +617,7 @@
   "Date": "",
   "Message": "",
   "Tags": [],
-  "Fingerprint": "trollcity-stream-engine/ngrok.yml:generic-api-key:3"
+  "Fingerprint": "Mai Troll-stream-engine/ngrok.yml:generic-api-key:3"
  },
  {
   "RuleID": "jwt",

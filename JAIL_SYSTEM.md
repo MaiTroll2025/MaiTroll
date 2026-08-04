@@ -1,8 +1,8 @@
-# TrollCity Jail System Implementation
+# Mai Troll Jail System Implementation
 
 ## Goal
 
-The user wants to implement a comprehensive jail system for TrollCity with the following features:
+The user wants to implement a comprehensive jail system for Mai Troll with the following features:
 - Inmates page showing all incarcerated users with grid view
 - Message minutes purchase system (10 TC per message)
 - Post bond functionality  
@@ -20,7 +20,7 @@ The user wants to implement a comprehensive jail system for TrollCity with the f
 - Admins cannot be arrested by staff
 - All new pages should go where jail is located in the sidebar
 - Only approved roles or admin can see new pages
-- Prosecutors work for Troll City, cannot be contacted by regular users, only attorneys
+- Prosecutors work for Mai Troll, cannot be contacted by regular users, only attorneys
 - Attorney can choose pro bono (200 TC/case) or set own fee
 - Message fees go to public pool, bond goes to admin, attorney fees go to attorney
 
@@ -67,25 +67,25 @@ The user wants to implement a comprehensive jail system for TrollCity with the f
 ## Relevant files / directories
 
 ### Created:
-- `E:\trollcity-1\create_jail_attorney_prosecutor_system.sql`
-- `E:\trollcity-1\jail_enhancements.sql`
-- `E:\trollcity-1\src\pages\InmatesPage.tsx`
-- `E:\trollcity-1\src\pages\JailPage.tsx`
-- `E:\trollcity-1\src\pages\AttorneyApplication.tsx`
-- `E:\trollcity-1\src\pages\attorney\AttorneyDashboard.tsx`
-- `E:\trollcity-1\src\pages\ProsecutorApplication.tsx`
-- `E:\trollcity-1\src\pages\prosecutor\ProsecutorDashboard.tsx`
-- `E:\trollcity-1\src\pages\JailAppealPage.tsx`
-- `E:\trollcity-1\src\components\jail\BondRequestModal.tsx`
-- `E:\trollcity-1\src\pages\admin\AdminJailManagement.tsx`
+- `E:\Mai Troll-1\create_jail_attorney_prosecutor_system.sql`
+- `E:\Mai Troll-1\jail_enhancements.sql`
+- `E:\Mai Troll-1\src\pages\InmatesPage.tsx`
+- `E:\Mai Troll-1\src\pages\JailPage.tsx`
+- `E:\Mai Troll-1\src\pages\AttorneyApplication.tsx`
+- `E:\Mai Troll-1\src\pages\attorney\AttorneyDashboard.tsx`
+- `E:\Mai Troll-1\src\pages\ProsecutorApplication.tsx`
+- `E:\Mai Troll-1\src\pages\prosecutor\ProsecutorDashboard.tsx`
+- `E:\Mai Troll-1\src\pages\JailAppealPage.tsx`
+- `E:\Mai Troll-1\src\components\jail\BondRequestModal.tsx`
+- `E:\Mai Troll-1\src\pages\admin\AdminJailManagement.tsx`
 
 ### Modified:
-- `E:\trollcity-1\src\App.tsx` - Added routes
-- `E:\trollcity-1\src\components\Sidebar.tsx` - Added sidebar items, AlertTriangle import
-- `E:\trollcity-1\src\pages\Application.tsx` - Added attorney/prosecutor types
-- `E:\trollcity-1\src\components\ClickableUsername.tsx` - Added arrest action
-- `E:\trollcity-1\src\components\JudgeRulingModal.tsx` - Added sentence to jail
-- `E:\trollcity-1\src\pages\Notifications.tsx` - Added jail notifications, court_summon routing
+- `E:\Mai Troll-1\src\App.tsx` - Added routes
+- `E:\Mai Troll-1\src\components\Sidebar.tsx` - Added sidebar items, AlertTriangle import
+- `E:\Mai Troll-1\src\pages\Application.tsx` - Added attorney/prosecutor types
+- `E:\Mai Troll-1\src\components\ClickableUsername.tsx` - Added arrest action
+- `E:\Mai Troll-1\src\components\JudgeRulingModal.tsx` - Added sentence to jail
+- `E:\Mai Troll-1\src\pages\Notifications.tsx` - Added jail notifications, court_summon routing
 
 ## Next Steps
 

@@ -9,7 +9,7 @@
 - Status badges (Live/Beta/Coming Soon)
 - External store links (Google Play / App Store)
 - Sign-in prompt for unauthenticated users
-- Platform-specific branding (Troll City neon, MaiPlay red/gold, MaiCorp slate)
+- Platform-specific branding (Mai Troll neon, MaiPlay red/gold, MaiCorp slate)
 
 **File location:** `src/components/mai-network/`
 
@@ -20,7 +20,7 @@
 ### Step 1: Copy Files
 
 ```bash
-# From Troll City project
+# From Mai Troll project
 cp -r src/components/mai-network /path/to/MaiPlay/src/components/
 ```
 
@@ -33,15 +33,15 @@ npm install framer-motion lucide-react
 
 ### Step 3: Add Supabase Auth (Shared Across MAI)
 
-**Use the SAME Supabase project as Troll City** for unified login.
+**Use the SAME Supabase project as Mai Troll** for unified login.
 
 In MaiPlay's `src/lib/supabase.ts`:
 
 ```typescript
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co'  // Same as Troll City
-const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY'                // Same as Troll City
+const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co'  // Same as Mai Troll
+const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY'                // Same as Mai Troll
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
@@ -54,7 +54,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 ### Step 4: Add Provider (if using Zustand)
 
-If MaiPlay uses Zustand (like Troll City):
+If MaiPlay uses Zustand (like Mai Troll):
 
 ```typescript
 // src/lib/store.ts
@@ -134,10 +134,10 @@ Or customize the CTA button color directly in your Home page using MaiPlay's bra
   apps={[
     {
       id: 'troll-city',
-      name: 'Troll City',
+      name: 'Mai Troll',
       tagline: 'Go live, earn coins',
       category: 'Live Social',
-      websiteUrl: 'https://maitrollcity.com',
+      websiteUrl: 'https://maiMai Troll.com',
       status: 'live',
       theme: 'city'
     },
@@ -158,10 +158,10 @@ All MAI apps must point to the **same Supabase project** and have these settings
 ### In Supabase Dashboard → Authentication → URL Configuration
 
 ```
-Site URL: https://maitrollcity.com  (or your primary domain)
+Site URL: https://maiMai Troll.com  (or your primary domain)
 
 Redirect URLs (add ALL):
-  https://maitrollcity.com/*
+  https://maiMai Troll.com/*
   https://maiplay.cloud/*
   https://maicorp.online/*
   https://udryveauto.com/*
@@ -175,7 +175,7 @@ Redirect URLs (add ALL):
 
 **Allowed CORS origins:**
 ```
-https://maitrollcity.com
+https://maiMai Troll.com
 https://maiplay.cloud
 https://maicorp.online
 https://udryveauto.com
@@ -190,7 +190,7 @@ https://maipay.app
 
 | Platform | `platformTheme` prop | Button Gradient | Accent |
 |----------|--------------------|-----------------|--------|
-| Troll City | `"troll-city"` | purple → pink → cyan | cyan |
+| Mai Troll | `"troll-city"` | purple → pink → cyan | cyan |
 | MaiPlay | `"maiplay"` | red → rose → gold | gold |
 | MaiCorp | `"maicorp"` | slate → zinc → neutral | slate |
 | UDryve Auto | `"default"` + auto theme cards | customizable | blue |
@@ -243,7 +243,7 @@ mai-network/
 ## 🐛 Troubleshooting
 
 **"Cannot find module '@/lib/store'"**
-→ MaiNetworkSwitcher tries to import Troll City's auth store. Pass `user` and `onSignIn` as props instead:
+→ MaiNetworkSwitcher tries to import Mai Troll's auth store. Pass `user` and `onSignIn` as props instead:
 ```tsx
 <MaiNetworkSwitcher user={user} onSignIn={signIn} ... />
 ```

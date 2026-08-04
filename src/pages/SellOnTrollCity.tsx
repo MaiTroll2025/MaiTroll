@@ -15,11 +15,11 @@ export default function SellOnTrollCity() {
   const navigate = useNavigate()
 
   useSEO({
-    title: 'Sell on Troll City | Become a Seller & Start Your Online Business',
-    description: 'Start selling on Troll City. Become a marketplace seller, list products, and earn money online. Join thousands of creators building their online business on Troll City.',
+    title: 'Sell on Mai Troll | Become a Seller & Start Your Online Business',
+    description: 'Start selling on Mai Troll. Become a marketplace seller, list products, and earn money online. Join thousands of creators building their online business on Mai Troll.',
     keywords: [
       'sell online', 'become a seller', 'online business', 'sell products online',
-      'marketplace seller', 'Troll City seller', 'start selling', 'ecommerce',
+      'marketplace seller', 'MaiTroll seller', 'start selling', 'ecommerce',
       'online store', 'sell goods', 'creator marketplace', 'make money selling'
     ]
   });
@@ -118,7 +118,7 @@ export default function SellOnTrollCity() {
     setExistingApplication(appData)
     
     const { data } = await supabase
-      .from('trollcity_shops')
+      .from('MaiTroll_shops')
       .select('*')
       .eq('owner_id', user!.id)
       .maybeSingle()
@@ -162,7 +162,7 @@ export default function SellOnTrollCity() {
   const createShop = async () => {
     if (!name.trim()) return toast.error('Enter a shop name')
     const { data, error } = await supabase
-      .from('trollcity_shops')
+      .from('MaiTroll_shops')
       .insert([{ owner_id: user!.id, name }])
       .select('*')
       .maybeSingle()
@@ -345,7 +345,7 @@ export default function SellOnTrollCity() {
     setDeletingShop(true)
     try {
       const { error } = await supabase
-        .from('trollcity_shops')
+        .from('MaiTroll_shops')
         .update({ is_active: false })
         .eq('id', shop.id)
         .eq('owner_id', user!.id)
@@ -381,7 +381,7 @@ export default function SellOnTrollCity() {
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-2 flex items-center justify-center gap-3">
             <Store className="w-8 h-8 text-purple-400" />
-            Sell on Troll City
+            Sell on Mai Troll
           </h1>
           <p className="text-gray-400">Create your shop, manage products, and track earnings</p>
         </div>
@@ -839,8 +839,8 @@ export default function SellOnTrollCity() {
                 <div>
                   <h3 className="font-semibold text-yellow-400 mb-1">Legal Disclaimer</h3>
                   <p className="text-gray-300 text-sm">
-                    Troll City does not verify packages or physical goods. Sellers are solely responsible for items shipped. 
-                    Illegal items are prohibited and may be reported to authorities. Troll City assumes no liability.
+                    Mai Troll does not verify packages or physical goods. Sellers are solely responsible for items shipped. 
+                    Illegal items are prohibited and may be reported to authorities. Mai Troll assumes no liability.
                   </p>
                 </div>
               </div>

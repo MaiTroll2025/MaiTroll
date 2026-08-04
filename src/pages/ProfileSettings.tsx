@@ -15,14 +15,14 @@ import { toast } from "sonner";
 
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "../lib/store";
-import { trollCityTheme } from "../styles/trollCityTheme";
+import { MaiTrollTheme } from "../styles/trollCityTheme";
 import UserInventory from "./UserInventory";
 import FamilyMinorSettings from "../components/profile/FamilyMinorSettings";
 import BatterySaverToggle from "@/components/BatterySaverToggle";
 
 const PLATFORM_OPTIONS = [
   { value: "", label: "Select platform" },
-  { value: "trollcity", label: "Troll City" },
+  { value: "Mai Troll", label: "Mai Troll" },
   { value: "tiktok", label: "TikTok" },
   { value: "liveme", label: "LiveMe" },
   { value: "bigo", label: "Bigo Live" },
@@ -202,55 +202,55 @@ export default function ProfileSettings() {
 
   return (
     <div
-      className={`min-h-screen ${trollCityTheme.backgrounds.primary} p-4 text-white sm:p-6 overflow-y-auto`}
+      className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} p-4 text-white sm:p-6 overflow-y-auto`}
     >
       <main className="mx-auto max-w-6xl space-y-6">
         <header className="flex items-center gap-3">
           <div
-            className={`flex h-12 w-12 items-center justify-center rounded-xl ${trollCityTheme.gradients.button}`}
+            className={`flex h-12 w-12 items-center justify-center rounded-xl ${MaiTrollTheme.gradients.button}`}
           >
             <Settings className="h-6 w-6" />
           </div>
           <div>
             <h1 className="text-3xl font-black">Account Settings</h1>
-            <p className={`text-sm ${trollCityTheme.text.muted}`}>
+            <p className={`text-sm ${MaiTrollTheme.text.muted}`}>
               Manage your profile, creator tools, preferences, and account
               access.
             </p>
           </div>
         </header>
 
-        <section className={`${trollCityTheme.components.card} space-y-5`}>
+        <section className={`${MaiTrollTheme.components.card} space-y-5`}>
           <div className="flex items-center gap-2">
             <UserRound className="h-5 w-5 text-cyan-300" />
             <div>
               <h2 className="text-xl font-semibold">Profile</h2>
-              <p className={`text-xs ${trollCityTheme.text.muted}`}>
-                Update the public details shown across Troll City.
+              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                Update the public details shown across Mai Troll.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-2">
-              <span className={`text-sm ${trollCityTheme.text.muted}`}>
+              <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
                 Full Name
               </span>
               <input
                 type="text"
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
-                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${trollCityTheme.components.input}`}
+                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${MaiTrollTheme.components.input}`}
                 placeholder="Your name"
                 maxLength={80}
               />
-              <span className={`block text-xs ${trollCityTheme.text.muted}`}>
+              <span className={`block text-xs ${MaiTrollTheme.text.muted}`}>
                 Used for account recovery and internal verification.
               </span>
             </label>
 
             <label className="space-y-2">
-              <span className={`text-sm ${trollCityTheme.text.muted}`}>
+              <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
                 Username
               </span>
               <input
@@ -259,44 +259,44 @@ export default function ProfileSettings() {
                 onChange={(event) =>
                   setUsername(event.target.value.replace(/[^a-zA-Z0-9_]/g, ""))
                 }
-                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${trollCityTheme.components.input}`}
+                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${MaiTrollTheme.components.input}`}
                 placeholder="username"
                 maxLength={20}
                 autoCapitalize="none"
                 autoCorrect="off"
               />
-              <span className={`block text-xs ${trollCityTheme.text.muted}`}>
+              <span className={`block text-xs ${MaiTrollTheme.text.muted}`}>
                 Two to twenty characters. Letters, numbers, and underscores
                 only.
               </span>
             </label>
 
             <label className="space-y-2 md:col-span-2">
-              <span className={`text-sm ${trollCityTheme.text.muted}`}>
+              <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
                 Bio
               </span>
               <textarea
                 value={bio}
                 onChange={(event) => setBio(event.target.value)}
-                className={`min-h-28 w-full resize-y rounded-xl px-4 py-3 text-white outline-none ${trollCityTheme.components.input}`}
-                placeholder="Tell Troll City who you are."
+                className={`min-h-28 w-full resize-y rounded-xl px-4 py-3 text-white outline-none ${MaiTrollTheme.components.input}`}
+                placeholder="Tell Mai Troll who you are."
                 maxLength={500}
               />
               <span
-                className={`block text-right text-xs ${trollCityTheme.text.muted}`}
+                className={`block text-right text-xs ${MaiTrollTheme.text.muted}`}
               >
                 {bio.length}/500
               </span>
             </label>
 
             <label className="space-y-2 md:col-span-2">
-              <span className={`text-sm ${trollCityTheme.text.muted}`}>
+              <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
                 Platform You Represent
               </span>
               <select
                 value={platform}
                 onChange={(event) => setPlatform(event.target.value)}
-                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${trollCityTheme.components.input}`}
+                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${MaiTrollTheme.components.input}`}
               >
                 {PLATFORM_OPTIONS.map((option) => (
                   <option
@@ -308,7 +308,7 @@ export default function ProfileSettings() {
                   </option>
                 ))}
               </select>
-              <span className={`block text-xs ${trollCityTheme.text.muted}`}>
+              <span className={`block text-xs ${MaiTrollTheme.text.muted}`}>
                 This may appear on your profile and in battle experiences.
               </span>
             </label>
@@ -319,7 +319,7 @@ export default function ProfileSettings() {
               type="button"
               onClick={handleSaveProfile}
               disabled={savingProfile}
-              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${trollCityTheme.gradients.button}`}
+              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${MaiTrollTheme.gradients.button}`}
             >
               <Save className="h-4 w-4" />
               {savingProfile ? "Saving..." : "Save Profile"}
@@ -327,23 +327,23 @@ export default function ProfileSettings() {
           </div>
         </section>
 
-        <section className={`${trollCityTheme.components.card} space-y-4`}>
+        <section className={`${MaiTrollTheme.components.card} space-y-4`}>
           <div className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-emerald-300" />
             <div>
               <h2 className="text-xl font-semibold">Creator Memberships</h2>
-              <p className={`text-xs ${trollCityTheme.text.muted}`}>
-                Let supporters subscribe to your Troll City content.
+              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                Let supporters subscribe to your Mai Troll content.
               </p>
             </div>
           </div>
 
           <div
-            className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass}`}
+            className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass}`}
           >
             <div>
               <p className="font-medium">Enable memberships</p>
-              <p className={`text-xs ${trollCityTheme.text.muted}`}>
+              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
                 Supporters can subscribe for recurring Troll Coin access.
               </p>
             </div>
@@ -357,7 +357,7 @@ export default function ProfileSettings() {
           </div>
 
           <label className="space-y-2">
-            <span className={`text-sm ${trollCityTheme.text.muted}`}>
+            <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
               Membership Price (Troll Coins)
             </span>
             <input
@@ -377,9 +377,9 @@ export default function ProfileSettings() {
                 )
               }
               disabled={!creatorSubscriptionEnabled}
-              className={`w-full rounded-xl px-4 py-3 text-white outline-none disabled:cursor-not-allowed disabled:opacity-50 ${trollCityTheme.components.input}`}
+              className={`w-full rounded-xl px-4 py-3 text-white outline-none disabled:cursor-not-allowed disabled:opacity-50 ${MaiTrollTheme.components.input}`}
             />
-            <span className={`block text-xs ${trollCityTheme.text.muted}`}>
+            <span className={`block text-xs ${MaiTrollTheme.text.muted}`}>
               Membership benefits can include a badge, seat discounts, and
               faster seat approval.
             </span>
@@ -390,7 +390,7 @@ export default function ProfileSettings() {
               type="button"
               onClick={handleSaveCreatorMemberships}
               disabled={savingSubscription}
-              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${trollCityTheme.gradients.button}`}
+              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${MaiTrollTheme.gradients.button}`}
             >
               <Save className="h-4 w-4" />
               {savingSubscription ? "Saving..." : "Save Memberships"}
@@ -398,15 +398,15 @@ export default function ProfileSettings() {
           </div>
         </section>
 
-        <section className={`${trollCityTheme.components.card} space-y-4`}>
+        <section className={`${MaiTrollTheme.components.card} space-y-4`}>
           <h2 className="text-xl font-semibold">Preferences</h2>
 
           <div
-            className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass}`}
+            className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass}`}
           >
             <div>
               <p className="font-medium">Global Pod Notifications</p>
-              <p className={`text-xs ${trollCityTheme.text.muted}`}>
+              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
                 Receive a banner when a Pod goes live.
               </p>
             </div>
@@ -418,17 +418,17 @@ export default function ProfileSettings() {
           </div>
 
           <div
-            className={`rounded-xl border p-4 ${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass}`}
+            className={`rounded-xl border p-4 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass}`}
           >
             <BatterySaverToggle />
           </div>
 
           <div
-            className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass}`}
+            className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass}`}
           >
             <div>
               <p className="font-medium">Minor Account</p>
-              <p className={`text-xs ${trollCityTheme.text.muted}`}>
+              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
                 Enable this only when the account belongs to someone under 18.
               </p>
             </div>
@@ -444,7 +444,7 @@ export default function ProfileSettings() {
               type="button"
               onClick={handleSaveProfile}
               disabled={savingProfile}
-              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${trollCityTheme.gradients.button}`}
+              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${MaiTrollTheme.gradients.button}`}
             >
               <Save className="h-4 w-4" />
               {savingProfile ? "Saving..." : "Save Preferences"}
@@ -453,7 +453,7 @@ export default function ProfileSettings() {
         </section>
 
         {profile && (
-          <section className={trollCityTheme.components.card}>
+          <section className={MaiTrollTheme.components.card}>
             <FamilyMinorSettings
               profile={profile as any}
               onUpdate={() => refreshProfile(true)}
@@ -461,49 +461,49 @@ export default function ProfileSettings() {
           </section>
         )}
 
-        <section className={trollCityTheme.components.card}>
+        <section className={MaiTrollTheme.components.card}>
           <div className="mb-4 flex items-center gap-2">
             <Boxes className="h-5 w-5 text-purple-300" />
             <div>
               <h2 className="text-xl font-semibold">Inventory</h2>
-              <p className={`text-xs ${trollCityTheme.text.muted}`}>
-                View and manage your Troll City items.
+              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                View and manage your Mai Troll items.
               </p>
             </div>
           </div>
           <UserInventory embedded />
         </section>
 
-        <section className={`${trollCityTheme.components.card} space-y-4`}>
+        <section className={`${MaiTrollTheme.components.card} space-y-4`}>
           <h2 className="text-xl font-semibold">Appearance</h2>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <Sparkles className="h-5 w-5 text-pink-400" />
               <div>
                 <h3 className="font-semibold">Avatar Studio</h3>
-                <p className={`text-xs ${trollCityTheme.text.muted}`}>
-                  Equip clothing and update your Troll City look.
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                  Equip clothing and update your Mai Troll look.
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => navigate("/avatar-customizer")}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${trollCityTheme.gradients.button}`}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${MaiTrollTheme.gradients.button}`}
             >
               Open Avatar Studio
             </button>
           </div>
         </section>
 
-        <section className={`${trollCityTheme.components.card} space-y-5`}>
+        <section className={`${MaiTrollTheme.components.card} space-y-5`}>
           <h2 className="text-xl font-semibold">Security</h2>
 
           <div className="flex items-start gap-3">
             <KeyRound className="mt-0.5 h-5 w-5 text-emerald-400" />
             <div>
               <h3 className="font-semibold">Password Reset</h3>
-              <p className={`text-xs ${trollCityTheme.text.muted}`}>
+              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
                 Use the Forgot Password link on the sign-in page to reset your
                 password by email.
               </p>
@@ -515,7 +515,7 @@ export default function ProfileSettings() {
               <Ban className="h-5 w-5 text-amber-400" />
               <div>
                 <h3 className="font-semibold">Blocked Users</h3>
-                <p className={`text-xs ${trollCityTheme.text.muted}`}>
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
                   Review and manage the people you have blocked.
                 </p>
               </div>
@@ -523,29 +523,29 @@ export default function ProfileSettings() {
             <button
               type="button"
               onClick={() => navigate("/blocked-users")}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${trollCityTheme.gradients.button}`}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${MaiTrollTheme.gradients.button}`}
             >
               Manage Blocked Users
             </button>
           </div>
         </section>
 
-        <section className={`${trollCityTheme.components.card} space-y-4`}>
-          <h2 className="text-xl font-semibold">Troll City Experience</h2>
+        <section className={`${MaiTrollTheme.components.card} space-y-4`}>
+          <h2 className="text-xl font-semibold">Mai Troll Experience</h2>
           <div className="flex flex-col gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <Sparkles className="h-5 w-5 text-emerald-400" />
               <div>
                 <h3 className="font-semibold">Grand Entrance</h3>
-                <p className={`text-xs ${trollCityTheme.text.muted}`}>
-                  Replay the cinematic Troll City welcome sequence.
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                  Replay the cinematic Mai Troll welcome sequence.
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => navigate("/?replay-entrance=1")}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${trollCityTheme.gradients.button}`}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${MaiTrollTheme.gradients.button}`}
             >
               Replay Grand Entrance
             </button>
@@ -553,7 +553,7 @@ export default function ProfileSettings() {
         </section>
 
         <section
-          className={`${trollCityTheme.components.card} border border-red-500/30`}
+          className={`${MaiTrollTheme.components.card} border border-red-500/30`}
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -562,7 +562,7 @@ export default function ProfileSettings() {
                 <h2 className="text-lg font-semibold text-red-400">
                   Danger Zone
                 </h2>
-                <p className={`text-xs ${trollCityTheme.text.muted}`}>
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
                   Permanently delete your account and associated data.
                 </p>
               </div>

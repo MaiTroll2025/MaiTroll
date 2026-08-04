@@ -152,7 +152,7 @@ async function persistSnapshot(snapshot) {
 function buildSnapshotPayload(snapshot) {
   const estimate = calculateSupabaseMonthlyEstimate(snapshot);
   return {
-    project_key: snapshot.projectKey || 'trollcity-prod',
+    project_key: snapshot.projectKey || 'Mai Troll-prod',
     billing_period_start: snapshot.billingPeriodStart || null,
     billing_period_end: snapshot.billingPeriodEnd || null,
     captured_at: new Date().toISOString(),
@@ -181,7 +181,7 @@ async function getSummary(req, res) {
   }
 
   const snapshot = {
-    projectKey: 'trollcity-prod',
+    projectKey: 'Mai Troll-prod',
     billingPeriodStart: '2026-07-01',
     billingPeriodEnd: '2026-07-31',
     databaseGbHours: 120,
@@ -205,7 +205,7 @@ async function getSummary(req, res) {
 
 async function getBreakdown(req, res) {
   const snapshot = {
-    projectKey: 'trollcity-prod',
+    projectKey: 'Mai Troll-prod',
     billingPeriodStart: '2026-07-01',
     billingPeriodEnd: '2026-07-31',
     databaseGbHours: 120,
@@ -221,7 +221,7 @@ async function getBreakdown(req, res) {
     source: 'estimated',
   };
   return res.status(200).json({
-    project_key: 'trollcity-prod',
+    project_key: 'Mai Troll-prod',
     items: calculateSupabaseMonthlyEstimate(snapshot).items,
   });
 }
@@ -236,7 +236,7 @@ async function getHistorical(req, res) {
 
 async function refreshSnapshot(req, res) {
   const snapshot = {
-    projectKey: 'trollcity-prod',
+    projectKey: 'Mai Troll-prod',
     billingPeriodStart: '2026-07-01',
     billingPeriodEnd: '2026-07-31',
     databaseGbHours: 120,

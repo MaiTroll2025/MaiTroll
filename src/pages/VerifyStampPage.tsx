@@ -45,7 +45,7 @@ export default function VerifyStampPage() {
           <div className="w-16 h-16 rounded-full bg-blue-600/20 flex items-center justify-center mx-auto mb-4">
             <Stamp className="w-8 h-8 text-blue-400" />
           </div>
-          <h1 className="text-2xl font-bold">Verify Troll City Document</h1>
+          <h1 className="text-2xl font-bold">Verify Mai Troll Document</h1>
           <p className="text-gray-400 text-sm mt-2">Enter a verification code to authenticate an official document</p>
         </div>
 
@@ -132,7 +132,7 @@ export default function VerifyStampPage() {
                 </div>
                 <div className="pt-3 border-t border-white/10 text-xs text-gray-500">
                   <Shield size={10} className="inline mr-1" />
-                  This document has been cryptographically verified by the Troll City Notary System.
+                  This document has been cryptographically verified by the Mai Troll Notary System.
                   The document content has not been altered since approval.
                 </div>
               </div>

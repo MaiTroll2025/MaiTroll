@@ -56,7 +56,7 @@ export async function initMobilePlatform() {
       // You can add custom logic here, e.g., close modals, navigate back, etc.
       if (!canGoBack) {
         // Ask user if they want to exit the app
-        const shouldExit = window.confirm('Exit Troll City?');
+        const shouldExit = window.confirm('Exit Mai Troll?');
         if (shouldExit) {
           CapApp.exitApp();
         }
@@ -152,8 +152,8 @@ export async function getAppInfo() {
     return await CapApp.getInfo();
   }
   return {
-    name: 'Troll City',
-    id: 'com.trollcity.app',
+    name: 'MaiTroll',
+    id: 'com.Mai Troll.app',
     build: '1',
     version: '1.0.0',
   };

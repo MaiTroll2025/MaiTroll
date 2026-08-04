@@ -29,7 +29,7 @@ export function useCityAnnouncements(limit = 8) {
         if (error) throw error
         const mapped: CityAnnouncement[] = (data || []).map((a: any) => ({
           id: a.id,
-          title: a.metadata?.title || 'Troll City Announcement',
+          title: a.metadata?.title || 'MaiTroll Announcement',
           content: a.content,
           type: a.metadata?.announcement_type || 'system',
           icon: a.metadata?.icon,

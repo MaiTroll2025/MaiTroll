@@ -197,7 +197,7 @@ export const GAME_METADATA: Record<string, { name: string; description: string; 
   },
   [GAME_TYPES.TROLLOPOLY]: {
     name: 'Trollopoly',
-    description: 'Monopoly-style board game with Troll City branding',
+    description: 'Monopoly-style board game with Mai Troll branding',
     minPlayers: 2,
     maxPlayers: 4
   }

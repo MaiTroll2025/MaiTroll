@@ -14,7 +14,7 @@ export async function initMaiRuntime() {
 
 export async function generateMaiResponse(payload: MaiRequestPayload) {
   // Use environment variable or fallback to production URL
-  const maiApiUrl = import.meta.env.VITE_MAI_API_URL || 'https://api.trollcity.app/api/generate'
+  const maiApiUrl = import.meta.env.VITE_MAI_API_URL || 'https://api.Mai Troll.app/api/generate'
   const res = await fetch(maiApiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

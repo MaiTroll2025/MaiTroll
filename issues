@@ -6848,14 +6848,14 @@
       "SECURITY"
     ],
     "description": "Detects cases where row level security (RLS) policies have been created, but RLS has not been enabled for the underlying table.",
-    "detail": "Table \\`public.trollcity_orders\\` has RLS policies but RLS is not enabled on the table. Policies include {deny_all}.",
+    "detail": "Table \\`public.Mai Troll_orders\\` has RLS policies but RLS is not enabled on the table. Policies include {deny_all}.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0007_policy_exists_rls_disabled",
     "metadata": {
-      "name": "trollcity_orders",
+      "name": "Mai Troll_orders",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "policy_exists_rls_disabled_public_trollcity_orders"
+    "cache_key": "policy_exists_rls_disabled_public_Mai Troll_orders"
   },
   {
     "name": "policy_exists_rls_disabled",
@@ -6866,14 +6866,14 @@
       "SECURITY"
     ],
     "description": "Detects cases where row level security (RLS) policies have been created, but RLS has not been enabled for the underlying table.",
-    "detail": "Table \\`public.trollcity_products\\` has RLS policies but RLS is not enabled on the table. Policies include {deny_all}.",
+    "detail": "Table \\`public.Mai Troll_products\\` has RLS policies but RLS is not enabled on the table. Policies include {deny_all}.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0007_policy_exists_rls_disabled",
     "metadata": {
-      "name": "trollcity_products",
+      "name": "Mai Troll_products",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "policy_exists_rls_disabled_public_trollcity_products"
+    "cache_key": "policy_exists_rls_disabled_public_Mai Troll_products"
   },
   {
     "name": "policy_exists_rls_disabled",
@@ -6884,14 +6884,14 @@
       "SECURITY"
     ],
     "description": "Detects cases where row level security (RLS) policies have been created, but RLS has not been enabled for the underlying table.",
-    "detail": "Table \\`public.trollcity_shops\\` has RLS policies but RLS is not enabled on the table. Policies include {auth_delete_own,auth_insert_own,auth_select_own,auth_update_own}.",
+    "detail": "Table \\`public.Mai Troll_shops\\` has RLS policies but RLS is not enabled on the table. Policies include {auth_delete_own,auth_insert_own,auth_select_own,auth_update_own}.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0007_policy_exists_rls_disabled",
     "metadata": {
-      "name": "trollcity_shops",
+      "name": "Mai Troll_shops",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "policy_exists_rls_disabled_public_trollcity_shops"
+    "cache_key": "policy_exists_rls_disabled_public_Mai Troll_shops"
   },
   {
     "name": "policy_exists_rls_disabled",
@@ -9224,14 +9224,14 @@
       "SECURITY"
     ],
     "description": "Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST",
-    "detail": "Table \\`public.trollcity_products\\` is public, but RLS has not been enabled.",
+    "detail": "Table \\`public.Mai Troll_products\\` is public, but RLS has not been enabled.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public",
     "metadata": {
-      "name": "trollcity_products",
+      "name": "Mai Troll_products",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "rls_disabled_in_public_public_trollcity_products"
+    "cache_key": "rls_disabled_in_public_public_Mai Troll_products"
   },
   {
     "name": "rls_disabled_in_public",
@@ -9242,14 +9242,14 @@
       "SECURITY"
     ],
     "description": "Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST",
-    "detail": "Table \\`public.trollcity_shops\\` is public, but RLS has not been enabled.",
+    "detail": "Table \\`public.Mai Troll_shops\\` is public, but RLS has not been enabled.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public",
     "metadata": {
-      "name": "trollcity_shops",
+      "name": "Mai Troll_shops",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "rls_disabled_in_public_public_trollcity_shops"
+    "cache_key": "rls_disabled_in_public_public_Mai Troll_shops"
   },
   {
     "name": "rls_disabled_in_public",
@@ -10088,14 +10088,14 @@
       "SECURITY"
     ],
     "description": "Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST",
-    "detail": "Table \\`public.trollcity_orders\\` is public, but RLS has not been enabled.",
+    "detail": "Table \\`public.Mai Troll_orders\\` is public, but RLS has not been enabled.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public",
     "metadata": {
-      "name": "trollcity_orders",
+      "name": "Mai Troll_orders",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "rls_disabled_in_public_public_trollcity_orders"
+    "cache_key": "rls_disabled_in_public_public_Mai Troll_orders"
   },
   {
     "name": "rls_disabled_in_public",

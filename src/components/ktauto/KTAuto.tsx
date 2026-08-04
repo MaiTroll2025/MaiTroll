@@ -147,7 +147,7 @@ export default function KTAuto() {
               <CarIcon className="text-blue-400" /> KTAuto Dealership
             </h2>
             <p className="text-blue-200/70 text-sm mt-1">
-              The premier destination for Troll City vehicles. All sales final. Coins only.
+              The premier destination for Mai Troll vehicles. All sales final. Coins only.
             </p>
           </div>
           <div className="flex gap-2">

@@ -23,7 +23,7 @@ const platformLinks = [
 
 const creatorLinks = [
   { path: '/jobs', label: 'Jobs', icon: DollarSign, description: 'Make money online' },
-  { path: '/sell', label: 'Sell on Troll City', icon: ShoppingCart, description: 'Become a seller' },
+  { path: '/sell', label: 'Sell on Mai Troll', icon: ShoppingCart, description: 'Become a seller' },
   { path: '/creators', label: 'Become a Creator', icon: Trophy, description: 'Start your journey' },
   { path: '/go-live', label: 'Go Live', icon: Radio, description: 'Start streaming now' },
 ]
@@ -32,7 +32,7 @@ export default function InternalLinkHub() {
   return (
     <div className="bg-slate-950 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-2xl font-bold text-white mb-2">Explore Troll City</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">Explore Mai Troll</h2>
         <p className="text-slate-400 mb-10">Discover all the features and communities on our platform</p>
 
         <div className="grid md:grid-cols-2 gap-10">
@@ -174,7 +174,7 @@ export function SEOFooter() {
             <ul className="space-y-2">
               <li><Link to="/creators" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Become a Creator</Link></li>
               <li><Link to="/go-live" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Go Live</Link></li>
-              <li><Link to="/sell" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Sell on Troll City</Link></li>
+              <li><Link to="/sell" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Sell on Mai Troll</Link></li>
               <li><Link to="/jobs" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Jobs</Link></li>
               <li><Link to="/legal/creator-earnings" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Earnings</Link></li>
             </ul>
@@ -205,7 +205,7 @@ export function SEOFooter() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
               <Home className="w-4 h-4 text-white" />
             </div>
-            <span className="text-slate-400 text-sm">© {currentYear} Troll City (Mai Troll City). All rights reserved.</span>
+            <span className="text-slate-400 text-sm">© {currentYear} Mai Troll (MaiMaiTroll). All rights reserved.</span>
           </div>
           <div className="flex items-center gap-6 text-slate-400 text-sm">
             <Link to="/sitemap.xml" className="hover:text-purple-300 transition-colors">Sitemap</Link>

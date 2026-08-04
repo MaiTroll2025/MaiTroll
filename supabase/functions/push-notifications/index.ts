@@ -138,7 +138,7 @@ serve(async (req) => {
     // Send Web Push notifications if VAPID is configured
     if (vapidPublicKey && vapidPrivateKey) {
       const vapidDetails = {
-        subject: 'mailto:admin@trollcity.com',
+        subject: 'mailto:admin@Mai Troll.com',
         publicKey: vapidPublicKey,
         privateKey: vapidPrivateKey,
       };

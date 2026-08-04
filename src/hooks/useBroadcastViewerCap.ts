@@ -3,9 +3,6 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { UserRole } from '@/lib/supabase';
 
-export const BETA_VIEWER_CAP_MAX = 20
-export const BETA_START_CAP_MAX = 25
-
 export interface BroadcastViewerCapState {
   // Viewer cap settings
   viewerCapEnabled: boolean;
@@ -23,10 +20,10 @@ export interface BroadcastViewerCapState {
 export function useBroadcastViewerCap() {
   const [state, setState] = useState<BroadcastViewerCapState>({
     viewerCapEnabled: false,
-    viewerCapMax: BETA_VIEWER_CAP_MAX,
+    viewerCapMax: 20,
     viewerCapHours: 24,
     startCapEnabled: false,
-    startCapMax: BETA_START_CAP_MAX,
+    startCapMax: 25,
     allRestrictionsDisabled: false,
     loading: true,
   });
@@ -90,10 +87,10 @@ export function useBroadcastViewerCap() {
         setState((prev) => ({
           ...prev,
           viewerCapEnabled: map.broadcast_viewer_cap_enabled?.enabled === true,
-          viewerCapMax: Math.min(BETA_VIEWER_CAP_MAX, Number(map.broadcast_viewer_cap_max?.value ?? BETA_VIEWER_CAP_MAX)),
+          viewerCapMax: Number(map.broadcast_viewer_cap_max?.value ?? 20),
           viewerCapHours: Number(map.broadcast_viewer_cap_hours?.value ?? 24),
           startCapEnabled: map.broadcast_start_cap_enabled?.enabled === true,
-          startCapMax: Math.min(BETA_START_CAP_MAX, Number(map.broadcast_start_cap_max?.value ?? BETA_START_CAP_MAX)),
+          startCapMax: Number(map.broadcast_start_cap_max?.value ?? 25),
           allRestrictionsDisabled: map.broadcast_all_restrictions_disabled?.enabled === true,
           loading: false,
         }));
@@ -170,7 +167,7 @@ export function useBroadcastViewerCap() {
           .eq('setting_key', 'broadcast_viewer_cap_max');
 
         if (error) throw error;
-        setState((prev) => ({ ...prev, viewerCapMax: Math.min(BETA_VIEWER_CAP_MAX, value) }));
+        setState((prev) => ({ ...prev, viewerCapMax: value }));
         return true;
       } catch (err) {
         console.error('[useBroadcastViewerCap] setViewerCapMax error:', err);
@@ -215,7 +212,7 @@ export function useBroadcastViewerCap() {
           .eq('setting_key', 'broadcast_start_cap_max');
 
         if (error) throw error;
-        setState((prev) => ({ ...prev, startCapMax: Math.min(BETA_START_CAP_MAX, value) }));
+        setState((prev) => ({ ...prev, startCapMax: value }));
         return true;
       } catch (err) {
         console.error('[useBroadcastViewerCap] setStartCapMax error:', err);

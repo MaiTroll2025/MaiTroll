@@ -31,6 +31,10 @@ export interface BroadcastStatus {
   roomName: string | null;
   startTime: string | null;
   endTime: string | null;
+  totalMinutesAllowed?: number;
+  minutesUsed?: number;
+  minutesRemaining?: number;
+  giftExtensionMinutes?: number;
 }
 
 const BROADCAST_API_BASE = process.env.VITE_BROADCAST_API_URL || 'http://localhost:3002/api';
@@ -85,6 +89,10 @@ export function useBroadcastStreaming(streamId: string) {
           roomName: data.roomName,
           startTime: new Date().toISOString(),
           endTime: null,
+          totalMinutesAllowed: data.totalMinutesAllowed || 360,
+          minutesUsed: data.minutesUsed || 0,
+          minutesRemaining: data.minutesRemaining || 360,
+          giftExtensionMinutes: data.giftExtensionMinutes || 0,
         });
 
         toast.success('Broadcast started successfully');
@@ -177,6 +185,10 @@ export function useBroadcastStreaming(streamId: string) {
         roomName: data.roomName,
         startTime: data.startTime,
         endTime: data.endTime,
+        totalMinutesAllowed: data.totalMinutesAllowed,
+        minutesUsed: data.minutesUsed,
+        minutesRemaining: data.minutesRemaining,
+        giftExtensionMinutes: data.giftExtensionMinutes,
       });
 
       return data;

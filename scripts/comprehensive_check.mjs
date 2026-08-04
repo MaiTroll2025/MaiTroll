@@ -20,8 +20,8 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY);
 
 const TIMESTAMP = Date.now();
-const USER_EMAIL = `test_user_${TIMESTAMP}@trollcity.com`;
-const ADMIN_EMAIL = `test_admin_${TIMESTAMP}@trollcity.com`;
+const USER_EMAIL = `test_user_${TIMESTAMP}@Mai Troll.com`;
+const ADMIN_EMAIL = `test_admin_${TIMESTAMP}@Mai Troll.com`;
 const PASSWORD = 'password123';
 
 const results = {

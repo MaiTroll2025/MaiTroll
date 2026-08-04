@@ -179,7 +179,7 @@ export default function ProsecutorDashboard() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">Prosecutor Dashboard</h1>
-              <p className="text-gray-400 text-sm">Working for Troll City</p>
+              <p className="text-gray-400 text-sm">Working for Mai Troll</p>
             </div>
           </div>
           

@@ -1,10 +1,10 @@
-# MaiTalent.fun integration request for Troll City promo redemption
+# MaiTalent.fun integration request for Mai Troll promo redemption
 
 Hi MaiTalent.fun team,
 
-We are integrating your promo redemption flow with Troll City. Below are the values we are providing from Troll City and the request contract your backend should implement.
+We are integrating your promo redemption flow with Mai Troll. Below are the values we are providing from Mai Troll and the request contract your backend should implement.
 
-## Troll City values to use
+## Mai Troll values to use
 
 - `TROLL_CITY_PROMO_VERIFY_URL`
   - `https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/redeem-maitalent-promo`
@@ -35,7 +35,7 @@ X-Client-Platform: maitalent.fun
 
 ### Request field definitions
 
-- `code` (string, required): the promo card code issued by Troll City
+- `code` (string, required): the promo card code issued by Mai Troll
 - `requestor.platform` (string, optional but recommended): should be `maitalent.fun`
 - `requestor.accountId` (string, optional): MaiTalent.fun user id for logging / reconciliation
 
@@ -57,7 +57,7 @@ X-Client-Platform: maitalent.fun
 - `success`: `true`
 - `code`: the redeemed promo code
 - `tokenAmount`: the trusted amount MaiTalent.fun should credit
-- `promoId`: Troll City internal promo identifier
+- `promoId`: Mai Troll internal promo identifier
 - `status`: `redeemed`
 - `redeemedAt`: ISO timestamp of redemption
 
@@ -88,7 +88,7 @@ Please provide the values you plan to use on your side for this promo integratio
 
 At minimum, send us these values:
 
-- `MAITALENT_PROMO_SECRET` (the secret you will store on the MaiTalent.fun backend for calling Troll City)
+- `MAITALENT_PROMO_SECRET` (the secret you will store on the MaiTalent.fun backend for calling Mai Troll)
 - `MAITALENT_PROMO_CLIENT_NAME` or `MAITALENT_PROMO_PLATFORM_ID` (your identifier for logging and audit)
 
 If you want to support webhook callbacks in the future, please also provide:

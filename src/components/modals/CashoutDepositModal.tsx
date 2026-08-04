@@ -155,7 +155,7 @@ return (
               You earned enough for {unlockedTier.label}.
             </p>
             <p className="mt-1 text-xs text-yellow-100/70">
-              Add {unlockedTier.coins.toLocaleString()} earned coins to your cashout balance for your next Friday payout?
+              Add {unlockedTier.coins.toLocaleString()} earned coins to your cashout balance for your next payout?
             </p>
           </div>
         )}

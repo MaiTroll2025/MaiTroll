@@ -136,15 +136,15 @@ export default function NeighborhoodMapHub() {
   const [legendOpen, setLegendOpen] = useState(false)
 
   useSEO({
-    title: 'Neighborhoods | Online Digital Communities & Social Groups | Troll City',
+    title: 'Neighborhoods | Online Digital Communities & Social Groups | Mai Troll',
     description:
-      'Explore Troll City neighborhoods. Join digital communities, own virtual property, participate in house raids, and connect with neighbors in our social metaverse.',
+      'Explore Mai Troll neighborhoods. Join digital communities, own virtual property, participate in house raids, and connect with neighbors in our social metaverse.',
     keywords: [
       'online neighborhoods',
       'digital communities',
       'social groups',
       'virtual property',
-      'Troll City neighborhoods',
+      'MaiTroll neighborhoods',
       'community map',
       'house raids',
       'virtual homes',
@@ -325,8 +325,8 @@ export default function NeighborhoodMapHub() {
       const isCurrentUser = houseRecord.owner_user_id === profile?.id
       const isOwnerAdmin = Boolean(owner?.is_admin || owner?.is_superadmin)
       const neighborhoodName = houseRecord.neighborhood_id
-        ? neighborhoodNames.get(houseRecord.neighborhood_id) || 'Troll City'
-        : 'Troll City'
+        ? neighborhoodNames.get(houseRecord.neighborhood_id) || 'MaiTroll'
+        : 'MaiTroll'
 
       let status: PropertyStatus = 'owned'
       if (houseRecord.is_reposessed) status = 'locked'
@@ -460,7 +460,7 @@ export default function NeighborhoodMapHub() {
       <div className="fixed inset-0 z-40 flex items-center justify-center overflow-hidden bg-[#020617] text-white">
         <div className="text-center">
           <div className="mx-auto mb-5 h-14 w-14 animate-spin rounded-full border-4 border-cyan-400/20 border-t-cyan-300" />
-          <p className="text-sm font-semibold text-cyan-100">Loading Troll City...</p>
+          <p className="text-sm font-semibold text-cyan-100">Loading Mai Troll...</p>
         </div>
       </div>
     )
@@ -486,7 +486,7 @@ export default function NeighborhoodMapHub() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border border-cyan-300/25 bg-cyan-400/10 text-cyan-100">
                 <MapPin className="mr-1 h-3.5 w-3.5" />
-                Troll City
+                Mai Troll
               </Badge>
               <Badge className="border border-red-300/25 bg-red-500/10 text-red-100">
                 <Coins className="mr-1 h-3.5 w-3.5" />

@@ -168,7 +168,7 @@ export default function MoreControlsDrawer({
           <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
-                Troll City Controls
+                Mai Troll Controls
               </p>
               <h3 className="mt-1 text-base font-black text-white">
                 More Options

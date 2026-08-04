@@ -107,7 +107,7 @@ export default function Leaderboard() {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
                 <Trophy className="h-4 w-4" />
-                Troll City Gift Rankings
+                Mai Troll Gift Rankings
               </div>
 
               <h1 className="text-4xl font-black tracking-tight md:text-6xl">

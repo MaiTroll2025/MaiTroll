@@ -2,14 +2,14 @@
 
 ## Overview
 
-The **Daily Login Wall** is a gamification feature that encourages users to visit Troll City daily by rewarding them for making a post to the community wall. Users earn **0-100 random Troll Coins** for each daily post.
+The **Daily Login Wall** is a gamification feature that encourages users to visit Mai Troll daily by rewarding them for making a post to the community wall. Users earn **0-100 random Troll Coins** for each daily post.
 
 ---
 
 ## 🎮 User Experience Flow
 
 ### Daily Login Process
-1. User navigates to **Troll City Wall** (`/wall`)
+1. User navigates to **Mai Troll Wall** (`/wall`)
 2. At the top, they see the **Daily Login Wall** section
 3. They write a post (max 500 characters)
 4. Upon submission, the post is created and they earn **random coins (0-100)**
@@ -159,7 +159,7 @@ export function useDailyLoginPost() {
 
 ## 📱 Integration Points
 
-### 1. **TrollCityWall Page** (`src/pages/TrollCityWall.tsx`)
+### 1. **Mai TrollWall Page** (`src/pages/Mai TrollWall.tsx`)
 ```tsx
 import DailyLoginWall from '../components/trollWall/DailyLoginWall'
 
@@ -338,7 +338,7 @@ src/
 │   └── hooks/
 │       └── useDailyLoginPost.ts (NEW - 160 lines)
 ├── pages/
-│   ├── TrollCityWall.tsx (MODIFIED - added import & component)
+│   ├── Mai TrollWall.tsx (MODIFIED - added import & component)
 │   └── Home.tsx (MODIFIED - added feature card)
 └── types/
     └── trollWall.ts (EXISTING - no changes)
@@ -371,7 +371,7 @@ Database:
 Components already created:
 - ✅ `DailyLoginWall.tsx`
 - ✅ `useDailyLoginPost.ts`
-- ✅ Updated `TrollCityWall.tsx`
+- ✅ Updated `Mai TrollWall.tsx`
 - ✅ Updated `Home.tsx`
 
 ### 3. Test Features

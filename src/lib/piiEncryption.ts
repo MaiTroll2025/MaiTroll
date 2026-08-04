@@ -4,7 +4,7 @@
 // Here we derive a key from a constant app secret + the user id via PBKDF2 and
 // encrypt with AES-GCM via Web Crypto. Only the last 4 of the SSN are stored in clear.
 
-const APP_SECRET = 'trollcity-demo-pii-secret-v1'
+const APP_SECRET = 'MaiTroll-demo-pii-secret-v1'
 
 function toBase64(bytes: Uint8Array): string {
   let binary = ''
@@ -35,7 +35,7 @@ async function deriveKey(userId: string): Promise<CryptoKey> {
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: enc.encode(`trollcity:${userId}`),
+      salt: enc.encode(`Mai Troll:${userId}`),
       iterations: 100_000,
       hash: 'SHA-256',
     },

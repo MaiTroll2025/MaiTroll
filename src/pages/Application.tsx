@@ -455,9 +455,9 @@ export default function Application() {
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/50 p-6 text-center">
             <UserIcon className="w-12 h-12 text-cyan-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">Create your Troll City account to apply</h2>
+            <h2 className="text-xl font-bold mb-2">Create your Mai Troll account to apply</h2>
             <p className="text-slate-400 mb-4">
-              You need a Troll City account to submit an employment application. Create one below and your application will be ready.
+              You need a Mai Troll account to submit an employment application. Create one below and your application will be ready.
             </p>
             <button
               onClick={() => navigate('/jobs/apply?position=' + position.id + '&signup=true')}
@@ -779,7 +779,7 @@ export default function Application() {
           )}
 
           <Section icon={FileSignature} title="12. WOTC Screening (Voluntary)">
-            <p className="text-xs text-slate-400">This helps determine if Troll City may qualify for Work Opportunity Tax Credits (IRS Form 8850). It is completely voluntary and will not affect your application.</p>
+            <p className="text-xs text-slate-400">This helps determine if Mai Troll may qualify for Work Opportunity Tax Credits (IRS Form 8850). It is completely voluntary and will not affect your application.</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {[
                 ['received_public_assistance', 'Received public assistance'],

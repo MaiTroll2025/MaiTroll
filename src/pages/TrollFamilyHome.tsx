@@ -1459,14 +1459,14 @@ function NotInFamilyPrompt({
             <Crown className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Troll Families</h1>
-          <p className="text-gray-400">Your home away from home in Troll City</p>
+          <p className="text-gray-400">Your home away from home in Mai Troll</p>
         </div>
 
         <div className="bg-slate-800/50 backdrop-blur rounded-2xl p-8 border border-white/10">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white mb-2">Join a Family or Create Your Own</h2>
             <p className="text-gray-400">
-              Families are your tribe in Troll City. Join an existing family or create your own legacy.
+              Families are your tribe in Mai Troll. Join an existing family or create your own legacy.
             </p>
           </div>
 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-interface TrollCityLoadingProps {
+interface Mai TrollLoadingProps {
   message?: string;
 }
 
 const ROTATING_MESSAGES = [
-  "Entering Troll City...",
+  "Entering Mai Troll...",
   "Connecting to the chaos...",
   "Broadcast initializing...",
   "Counting coins...",
@@ -15,7 +15,7 @@ const ROTATING_MESSAGES = [
   "Starting the engines...",
 ];
 
-const TrollCityLoading: React.FC<TrollCityLoadingProps> = ({ 
+const Mai TrollLoading: React.FC<Mai TrollLoadingProps> = ({ 
   message 
 }) => {
   const [progress, setProgress] = useState(0);
@@ -162,7 +162,7 @@ const TrollCityLoading: React.FC<TrollCityLoadingProps> = ({
         ))}
       </div>
 
-      {/* Neon TROLL CITY text with enhanced glow */}
+      {/* Neon Mai Troll text with enhanced glow */}
       <div className="relative z-10 mb-16 mt-8">
         <h1 
           className="text-7xl md:text-9xl font-black tracking-wider"
@@ -179,7 +179,7 @@ const TrollCityLoading: React.FC<TrollCityLoadingProps> = ({
             animation: 'neonPulse 2s ease-in-out infinite, neonFlicker 3s ease-in-out infinite',
           }}
         >
-          TROLL CITY
+          Mai Troll
         </h1>
         
         {/* Broadcasting subtitle */}
@@ -443,4 +443,4 @@ const TrollCityLoading: React.FC<TrollCityLoadingProps> = ({
   );
 };
 
-export default TrollCityLoading;
+export default Mai TrollLoading;

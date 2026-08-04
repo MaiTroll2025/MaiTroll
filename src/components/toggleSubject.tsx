@@ -1,5 +1,5 @@
 // ============================================================
-// TROLL CITY ACADEMY - TEACHER APPLICATION
+// Mai Troll ACADEMY - TEACHER APPLICATION
 // ============================================================
 
 import React, { useState } from 'react';
@@ -86,7 +86,7 @@ export default function TeacherApplyPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white">Become a Teacher</h1>
-            <p className="text-sm text-slate-400">Share your knowledge with Troll City</p>
+            <p className="text-sm text-slate-400">Share your knowledge with Mai Troll</p>
           </div>
         </div>
       </section>

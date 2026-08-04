@@ -1,5 +1,5 @@
 -- ============================================================================
--- TROLL CITY DATABASE BUG FIX MIGRATION - TRIGGERS & CONSTRAINTS
+-- Mai Troll DATABASE BUG FIX MIGRATION - TRIGGERS & CONSTRAINTS
 -- Generated from Bug Center Report Export (2026-06-29)
 -- Fixes: #1-6 (recipient_id trigger), #29 (ON CONFLICT constraint)
 -- Apply this if 20260627000001 was not fully applied or errors persist.

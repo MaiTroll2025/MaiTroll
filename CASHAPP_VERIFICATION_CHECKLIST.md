@@ -2,7 +2,7 @@
 
 **Status**: COMPLETE & READY FOR TESTING  
 **Date**: 2025-01-18  
-**System**: Trollcity Manual Coin Order (Cash App Payment)
+**System**: Mai Troll Manual Coin Order (Cash App Payment)
 
 ---
 
@@ -13,7 +13,7 @@ Users needed a way to purchase coins via Cash App instead of credit card (Stripe
 
 ### Solution Implemented
 Complete end-to-end system where:
-1. Users request coins via Cash App ($trollcity95)
+1. Users request coins via Cash App ($Mai Troll95)
 2. System generates unique payment reference (e.g., USER123-500)
 3. User sends Cash App payment with reference note
 4. Admin verifies payment in their Cash App account
@@ -30,7 +30,7 @@ Complete end-to-end system where:
 - **Status**: CREATED ✅
 - **Purpose**: 3-step payment flow UI
   - Step 1: Confirm amount
-  - Step 2: Show $trollcity95 + payment note
+  - Step 2: Show $Mai Troll95 + payment note
   - Step 3: Success confirmation
 - **Features**:
   - Copy buttons for address and note
@@ -244,7 +244,7 @@ Complete end-to-end system where:
 5. Click "📱 Cash App" tab
 6. Click "Send via Cash App" button
 7. Read instructions:
-   - Send Cash App to: `$trollcity95`
+   - Send Cash App to: `$Mai Troll95`
    - Include note: `USER123-500` (shown in modal)
 8. Confirm in modal
 9. Open Cash App on phone
@@ -257,7 +257,7 @@ Complete end-to-end system where:
 2. Go to Admin Dashboard
 3. Click "Manual Orders" tab
 4. Find pending order
-5. Verify payment in your Cash App $trollcity95 account
+5. Verify payment in your Cash App $Mai Troll95 account
 6. Check note matches (e.g., USER123-500)
 7. Check amount matches (e.g., $4.99)
 8. (Optional) Copy transaction ID from Cash App
@@ -425,7 +425,7 @@ The Cash App payment system is complete, tested, and ready for deployment.
 ### For Admin
 - See: CASHAPP_QUICK_REFERENCE.md - Admin Dashboard Section
 - Dashboard: Admin Panel → Manual Orders tab
-- Verify: Cash App account $trollcity95
+- Verify: Cash App account $Mai Troll95
 
 ### For Developers
 - See: CASHAPP_INTEGRATION_POINTS.md - Component Dependencies
@@ -466,7 +466,7 @@ Before going live, verify:
 **Status**: ✅ **COMPLETE - READY FOR PRODUCTION**
 
 **Last Verified**: 2025-01-18  
-**System**: Trollcity Cash App Manual Coin Order System  
+**System**: Mai Troll Cash App Manual Coin Order System  
 **Version**: 1.0.0-beta
 
 🎉 **The Cash App payment system is ready to go live!**

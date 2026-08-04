@@ -4,6 +4,7 @@ import type { LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTr
 import { supabase } from '../lib/supabase';
 import { getLiveKitRoomName } from '../lib/liveUtils';
 import { toast } from 'sonner';
+import { LIVEKIT_BETA_LIMITS, CAMERA_CAPTURE_OPTIONS, CAMERA_PUBLISH_OPTIONS } from '@/config/livekitBetaLimits';
 
 /**
  * Unified hook for LiveKit rooms
@@ -177,40 +178,89 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
     }
   }, [publish, roomType, identity]);
 
-  // Resolve video preset based on admin status
-  const videoPreset = isAdmin ? VideoPresets.h1080 : VideoPresets.h720;
+  // Resolve video preset — beta cap is always 720p regardless of admin status
+  const videoPreset = VideoPresets.h720;
 
-  // Create local tracks based on room type
+// Create local tracks based on room type
   const createLocalTracks = useCallback(async () => {
     try {
 // Audio track - always create for publishers
        const audioTrack = await createLocalAudioTrack();
-        setLocalAudioTrack(audioTrack);
-        localAudioTrackRef.current = audioTrack;
+         setLocalAudioTrack(audioTrack);
+         localAudioTrackRef.current = audioTrack;
 
        let videoTrack: LocalVideoTrack | null = null
 
-       // Video track - only create if not audio-only room
-       if (!audioOnly && roomType !== 'pod') {
-         try {
-           const { createLocalVideoTrack } = await import('livekit-client');
-           videoTrack = await createLocalVideoTrack({
-             ...videoPreset,
-             facingMode: 'user'
-           });
-           setLocalVideoTrack(videoTrack);
+// Video track - only create if not audio-only room
+        if (!audioOnly && roomType !== 'pod') {
+          try {
+            const { createLocalVideoTrack } = await import('livekit-client');
+            const track = await createLocalVideoTrack({
+              ...videoPreset,
+              facingMode: 'user'
+            });
+
+            // Validate actual outgoing track settings against beta caps
+            const mediaStreamTrack = track.mediaStreamTrack;
+            if (mediaStreamTrack) {
+              const settings = mediaStreamTrack.getSettings();
+              const exceedsWidth = settings.width && settings.width > LIVEKIT_BETA_LIMITS.camera.maxWidth;
+              const exceedsHeight = settings.height && settings.height > LIVEKIT_BETA_LIMITS.camera.maxHeight;
+              const exceedsFps = settings.frameRate && settings.frameRate > LIVEKIT_BETA_LIMITS.camera.maxFrameRate;
+
+              if (exceedsWidth || exceedsHeight || exceedsFps) {
+                console.warn('[useLiveKitRoom] Camera track exceeds beta caps, reapplying constraints:', settings);
+                try {
+                  track.stop();
+                } catch { /* ignore cleanup errors */ }
+
+                const constrainedTrack = await createLocalVideoTrack({
+                  ...videoPreset,
+                  facingMode: 'user',
+                  resolution: {
+                    width: LIVEKIT_BETA_LIMITS.camera.maxWidth,
+                    height: LIVEKIT_BETA_LIMITS.camera.maxHeight,
+                  },
+                  frameRate: LIVEKIT_BETA_LIMITS.camera.maxFrameRate,
+                });
+
+                const recheck = constrainedTrack.mediaStreamTrack;
+                if (recheck) {
+                  const recheckSettings = recheck.getSettings();
+                  const stillExceeds =
+                    (recheckSettings.width && recheckSettings.width > LIVEKIT_BETA_LIMITS.camera.maxWidth) ||
+                    (recheckSettings.height && recheckSettings.height > LIVEKIT_BETA_LIMITS.camera.maxHeight) ||
+                    (recheckSettings.frameRate && recheckSettings.frameRate > LIVEKIT_BETA_LIMITS.camera.maxFrameRate);
+
+                  if (stillExceeds) {
+                    try { constrainedTrack.stop(); } catch { /* ignore */ }
+                    setError('Camera device exceeds maximum allowed resolution (1280x720@30fps). Please use a compliant camera.');
+                    toast.error('Camera configuration error: device exceeds beta quality limits');
+                    return { audioTrack, videoTrack: null };
+                  }
+                }
+
+                videoTrack = constrainedTrack;
+              } else {
+                videoTrack = track;
+              }
+            } else {
+              videoTrack = track;
+            }
+
+            setLocalVideoTrack(videoTrack);
            localVideoTrackRef.current = videoTrack;
          } catch (videoErr) {
            console.warn('[useLiveKitRoom] Could not create video track:', videoErr);
          }
        }
 
-      return { audioTrack, videoTrack };
-    } catch (err) {
-      console.error(`[useLiveKitRoom] Error creating local tracks: ${safeStringify(err)}`);
-      throw err;
-    }
-  }, [audioOnly, roomType, videoPreset]);
+       return { audioTrack, videoTrack };
+     } catch (err) {
+       console.error(`[useLiveKitRoom] Error creating local tracks: ${safeStringify(err)}`);
+       throw err;
+     }
+   }, [audioOnly, roomType]);
 
   const getPublicationCount = (participant: any) => {
     const publications =

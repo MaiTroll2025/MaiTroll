@@ -20,7 +20,7 @@
 ┌─────────────────────────────────────┐
 │ Step 1: Confirm Amount              │
 │                                     │
-│ You'll send $4.99 to $trollcity95  │
+│ You'll send $4.99 to $Mai Troll95  │
 │                                     │
 │ [Continue]               [Cancel]   │
 └─────────────────────────────────────┘
@@ -29,7 +29,7 @@
 │ Step 2: Send Payment                │
 │                                     │
 │ Cash App Address:                   │
-│ $trollcity95 [Copy]                │
+│ $Mai Troll95 [Copy]                │
 │                                     │
 │ Payment Note:                       │
 │ USER123-500 [Copy]                 │
@@ -55,7 +55,7 @@
 ### Step 5: Send Cash App Payment
 1. Open Cash App on phone
 2. Tap "Send" button
-3. Enter `$trollcity95` as recipient
+3. Enter `$Mai Troll95` as recipient
 4. Enter `$4.99` amount
 5. In memo/note field, paste: `USER123-500`
 6. Tap "Confirm" → "Send"

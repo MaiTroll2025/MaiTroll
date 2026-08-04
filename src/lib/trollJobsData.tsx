@@ -184,7 +184,7 @@ export const jobPositions: JobPosition[] = [
     title: 'Journalist',
     department: 'TCNN - News',
     description:
-      'Content creator for Troll City News Network. Write articles, conduct investigations, and keep the city informed with accurate reporting.',
+      'Content creator for Mai Troll News Network. Write articles, conduct investigations, and keep the city informed with accurate reporting.',
     requirements: [
       'Strong writing and communication skills',
       'Ability to research and verify facts',
@@ -252,7 +252,7 @@ export const jobPositions: JobPosition[] = [
     title: 'Auctioneer',
     department: 'Live Auctions',
     description:
-      'Host live auction shows where users bid on items using Troll City coins. Create exciting 24/7 auction experiences and manage your own auction studio.',
+      'Host live auction shows where users bid on items using Mai Troll coins. Create exciting 24/7 auction experiences and manage your own auction studio.',
     requirements: [
       'Must be 18 years or older',
       'Good standing in community (no recent violations)',

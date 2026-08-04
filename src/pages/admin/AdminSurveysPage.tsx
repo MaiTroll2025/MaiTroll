@@ -46,7 +46,7 @@ export default function AdminSurveysPage() {
   const [loading, setLoading] = useState(false);
 
   // Create form
-  const [newTitle, setNewTitle] = useState('Weekly Troll City Survey');
+  const [newTitle, setNewTitle] = useState('Weekly Mai Troll Survey');
   const [newDescription, setNewDescription] = useState('');
   const [newWeekStart, setNewWeekStart] = useState('');
   const [newWeekEnd, setNewWeekEnd] = useState('');
@@ -98,7 +98,7 @@ export default function AdminSurveysPage() {
 
       if (result.success) {
         toast.success('Survey created successfully');
-        setNewTitle('Weekly Troll City Survey');
+        setNewTitle('Weekly Mai Troll Survey');
         setNewDescription('');
         setNewWeekStart('');
         setNewWeekEnd('');
@@ -199,9 +199,9 @@ export default function AdminSurveysPage() {
       const result = await sendTromailMessage({
         sender_user_id: user.id,
         sender_role: profile?.role || 'admin',
-        sender_tromail_address: senderAccount?.email_address || 'system@tromail.trollcity',
+        sender_tromail_address: senderAccount?.email_address || 'system@tromail.Mai Troll',
         subject: `📋 Weekly Survey: ${survey.title}`,
-        body: `A new weekly survey is available!\n\n${survey.title}\n${survey.description || ''}\n\nClick to take the survey: /survey/${survey.id}\n\nYour feedback helps improve Troll City!`,
+        body: `A new weekly survey is available!\n\n${survey.title}\n${survey.description || ''}\n\nClick to take the survey: /survey/${survey.id}\n\nYour feedback helps improve Mai Troll!`,
         is_admin_email: true,
         is_important: true,
         recipient_user_ids: targetUsers.map(a => a.user_id),
@@ -333,7 +333,7 @@ export default function AdminSurveysPage() {
               <form onSubmit={handleCreateSurvey} className="rounded-2xl border border-purple-500/20 bg-slate-950/60 p-6 space-y-4 max-w-2xl">
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wide text-slate-400">Survey Title</label>
-                  <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Weekly Troll City Survey" className="mt-1 border-purple-500/30 bg-slate-900/60 text-white" />
+                  <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Weekly Mai Troll Survey" className="mt-1 border-purple-500/30 bg-slate-900/60 text-white" />
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wide text-slate-400">Description</label>

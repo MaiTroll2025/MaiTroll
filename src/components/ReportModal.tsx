@@ -100,7 +100,7 @@ export default function ReportModal({
             </h2>
           </div>
           <p className="text-sm text-gray-400">
-            Help us keep Troll City safe by reporting inappropriate behavior
+            Help us keep Mai Troll safe by reporting inappropriate behavior
           </p>
         </div>
 

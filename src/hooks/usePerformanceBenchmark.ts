@@ -1,7 +1,7 @@
 /**
  * usePerformanceBenchmark
  *
- * Browser-side performance benchmarking hook for Troll City.
+ * Browser-side performance benchmarking hook for Mai Troll.
  *
  * Tracks:
  * - Network request count and transfer size
@@ -17,12 +17,12 @@
  *   usePerformanceBenchmark({ label: 'HomePage', trackNetwork: true });
  *
  *   // In DevTools Console:
- *   window.__TROLLCITY_BENCHMARK__.snapshot();
- *   window.__TROLLCITY_BENCHMARK__.report();
- *   window.__TROLLCITY_BENCHMARK__.reset();
- *   window.__TROLLCITY_BENCHMARK__.getIntervalReport();
- *   window.__TROLLCITY_BENCHMARK__.getRenderCounts();
- *   window.__TROLLCITY_BENCHMARK__.getLiveKitMetrics();
+ *   window.__MaiTroll_BENCHMARK__.snapshot();
+ *   window.__MaiTroll_BENCHMARK__.report();
+ *   window.__MaiTroll_BENCHMARK__.reset();
+ *   window.__MaiTroll_BENCHMARK__.getIntervalReport();
+ *   window.__MaiTroll_BENCHMARK__.getRenderCounts();
+ *   window.__MaiTroll_BENCHMARK__.getLiveKitMetrics();
  */
 
 import { useEffect, useRef, useCallback } from 'react';
@@ -146,11 +146,11 @@ interface BenchmarkAPI {
 
 declare global {
   interface Window {
-    __TROLLCITY_BENCHMARK__?: BenchmarkAPI;
-    __TROLLCITY_BENCHMARKS__?: Map<string, BenchmarkAPI>;
-    __TROLLCITY_INTERVAL_REGISTRY__?: Map<number, IntervalInfo>;
-    __TROLLCITY_RENDER_COUNTS__?: Map<string, number>;
-    __TROLLCITY_SETINTERVAL_PATCHED__?: boolean;
+    __MaiTroll_BENCHMARK__?: BenchmarkAPI;
+    __MaiTroll_BENCHMARKS__?: Map<string, BenchmarkAPI>;
+    __MaiTroll_INTERVAL_REGISTRY__?: Map<number, IntervalInfo>;
+    __MaiTroll_RENDER_COUNTS__?: Map<string, number>;
+    __MaiTroll_SETINTERVAL_PATCHED__?: boolean;
   }
 }
 
@@ -183,12 +183,12 @@ function gradeFromAbsolute(value: number, thresholds: { A: number; B: number; C:
 // ─── setInterval Monkey-Patch ────────────────────────────────────────────────
 
 function patchSetInterval(): void {
-  if (typeof window === 'undefined' || window.__TROLLCITY_SETINTERVAL_PATCHED__) return;
+  if (typeof window === 'undefined' || window.__MaiTroll_SETINTERVAL_PATCHED__) return;
 
   const originalSetInterval = window.setInterval;
   const registry = new Map<number, IntervalInfo>();
-  window.__TROLLCITY_INTERVAL_REGISTRY__ = registry;
-  window.__TROLLCITY_SETINTERVAL_PATCHED__ = true;
+  window.__MaiTroll_INTERVAL_REGISTRY__ = registry;
+  window.__MaiTroll_SETINTERVAL_PATCHED__ = true;
 
   window.setInterval = function (callback: TimerHandler, delay?: number, ...args: any[]): number {
     const id = originalSetInterval.call(this, callback, delay, ...args);
@@ -266,15 +266,15 @@ export function usePerformanceBenchmark(config: BenchmarkConfig): BenchmarkAPI {
     const current = componentRenderCountsRef.current.get(label) || 0;
     componentRenderCountsRef.current.set(label, current + 1);
     if (typeof window !== 'undefined') {
-      if (!window.__TROLLCITY_RENDER_COUNTS__) window.__TROLLCITY_RENDER_COUNTS__ = new Map();
-      window.__TROLLCITY_RENDER_COUNTS__.set(label, current + 1);
+      if (!window.__MaiTroll_RENDER_COUNTS__) window.__MaiTroll_RENDER_COUNTS__ = new Map();
+      window.__MaiTroll_RENDER_COUNTS__.set(label, current + 1);
     }
   });
 
   // LiveKit Metrics
   const getLiveKitMetrics = useCallback((): LiveKitSnapshot | null => {
     if (!trackLiveKit || typeof window === 'undefined') return null;
-    const lk = (window as any).__TROLLCITY_LIVEKIT__;
+    const lk = (window as any).__MaiTroll_LIVEKIT__;
     if (!lk) return { roomCount: 0, participantCount: 0, publishedTracks: 0, subscribedTracks: 0, screenShareTracks: 0, averageBitrate: null };
     const rooms: any[] = lk.rooms || (lk.room ? [lk.room] : []);
     let participantCount = 0, publishedTracks = 0, subscribedTracks = 0, screenShareTracks = 0, totalBitrate = 0, bitrateSamples = 0;
@@ -309,7 +309,7 @@ export function usePerformanceBenchmark(config: BenchmarkConfig): BenchmarkAPI {
 
     let realtime: RealtimeSnapshot | null = null;
     if (trackRealtime && typeof window !== 'undefined') {
-      const debug = (window as any).__TROLLCITY_SUPABASE_REALTIME_DEBUG__;
+      const debug = (window as any).__MaiTroll_SUPABASE_REALTIME_DEBUG__;
       if (debug) {
         const created = debug.created || 0, removed = debug.removed || 0, active = debug.active || 0;
         const leaked = created - removed - active;
@@ -329,8 +329,8 @@ export function usePerformanceBenchmark(config: BenchmarkConfig): BenchmarkAPI {
     const liveKit = getLiveKitMetrics();
 
     let activeIntervals = 0;
-    if (trackIntervals && typeof window !== 'undefined' && window.__TROLLCITY_INTERVAL_REGISTRY__) {
-      activeIntervals = window.__TROLLCITY_INTERVAL_REGISTRY__.size;
+    if (trackIntervals && typeof window !== 'undefined' && window.__MaiTroll_INTERVAL_REGISTRY__) {
+      activeIntervals = window.__MaiTroll_INTERVAL_REGISTRY__.size;
     }
 
     return { timestamp: now, elapsed, label, network, realtime, memory, liveKit, renderCount: renderCountRef.current, activeIntervals };
@@ -338,7 +338,7 @@ export function usePerformanceBenchmark(config: BenchmarkConfig): BenchmarkAPI {
 
   // Interval Report
   const getIntervalReport = useCallback((): IntervalReport => {
-    const registry = typeof window !== 'undefined' ? window.__TROLLCITY_INTERVAL_REGISTRY__ : null;
+    const registry = typeof window !== 'undefined' ? window.__MaiTroll_INTERVAL_REGISTRY__ : null;
     if (!registry) return { totalActive: 0, byFrequency: {}, intervals: [] };
     const intervals = Array.from(registry.values());
     const byFrequency: Record<string, number> = {};
@@ -353,8 +353,8 @@ export function usePerformanceBenchmark(config: BenchmarkConfig): BenchmarkAPI {
   const getRenderCounts = useCallback((): RenderReport => {
     const byComponent: Record<string, number> = {};
     let totalRenders = 0;
-    if (typeof window !== 'undefined' && window.__TROLLCITY_RENDER_COUNTS__) {
-      for (const [name, count] of window.__TROLLCITY_RENDER_COUNTS__.entries()) { byComponent[name] = count; totalRenders += count; }
+    if (typeof window !== 'undefined' && window.__MaiTroll_RENDER_COUNTS__) {
+      for (const [name, count] of window.__MaiTroll_RENDER_COUNTS__.entries()) { byComponent[name] = count; totalRenders += count; }
     }
     for (const [name, count] of componentRenderCountsRef.current.entries()) {
       if (!(name in byComponent)) { byComponent[name] = count; totalRenders += count; }
@@ -465,8 +465,8 @@ export function usePerformanceBenchmark(config: BenchmarkConfig): BenchmarkAPI {
     const current = componentRenderCountsRef.current.get(componentName) || 0;
     componentRenderCountsRef.current.set(componentName, current + 1);
     if (typeof window !== 'undefined') {
-      if (!window.__TROLLCITY_RENDER_COUNTS__) window.__TROLLCITY_RENDER_COUNTS__ = new Map();
-      window.__TROLLCITY_RENDER_COUNTS__.set(componentName, current + 1);
+      if (!window.__MaiTroll_RENDER_COUNTS__) window.__MaiTroll_RENDER_COUNTS__ = new Map();
+      window.__MaiTroll_RENDER_COUNTS__.set(componentName, current + 1);
     }
   }, []);
 
@@ -474,9 +474,9 @@ export function usePerformanceBenchmark(config: BenchmarkConfig): BenchmarkAPI {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if (!window.__TROLLCITY_BENCHMARKS__) window.__TROLLCITY_BENCHMARKS__ = new Map();
-      window.__TROLLCITY_BENCHMARKS__.set(label, api);
-      window.__TROLLCITY_BENCHMARK__ = api;
+      if (!window.__MaiTroll_BENCHMARKS__) window.__MaiTroll_BENCHMARKS__ = new Map();
+      window.__MaiTroll_BENCHMARKS__.set(label, api);
+      window.__MaiTroll_BENCHMARK__ = api;
     }
     snapshot();
     const interval = setInterval(() => snapshot(), snapshotInterval);
@@ -484,7 +484,7 @@ export function usePerformanceBenchmark(config: BenchmarkConfig): BenchmarkAPI {
       clearInterval(interval);
       snapshot();
       if (verbose) { console.log(`[Benchmark:${label}] Unmounted. Final report:`); report(); }
-      if (typeof window !== 'undefined') window.__TROLLCITY_BENCHMARKS__?.delete(label);
+      if (typeof window !== 'undefined') window.__MaiTroll_BENCHMARKS__?.delete(label);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [label, snapshotInterval]);
@@ -502,7 +502,7 @@ export function quickBenchmark(label: string): BenchmarkAPI {
   let renderCount = 0;
   let firstMemory: number | null = null;
 
-  if (typeof window !== 'undefined' && !window.__TROLLCITY_SETINTERVAL_PATCHED__) patchSetInterval();
+  if (typeof window !== 'undefined' && !window.__MaiTroll_SETINTERVAL_PATCHED__) patchSetInterval();
 
   const getNetwork = (): NetworkSnapshot | null => {
     const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
@@ -511,7 +511,7 @@ export function quickBenchmark(label: string): BenchmarkAPI {
   };
 
   const getRealtime = (): RealtimeSnapshot | null => {
-    const debug = (window as any).__TROLLCITY_SUPABASE_REALTIME_DEBUG__;
+    const debug = (window as any).__MaiTroll_SUPABASE_REALTIME_DEBUG__;
     if (!debug) return null;
     const created = debug.created || 0, removed = debug.removed || 0, active = debug.active || 0;
     const leaked = created - removed - active;
@@ -529,7 +529,7 @@ export function quickBenchmark(label: string): BenchmarkAPI {
 
   const getLiveKit = (): LiveKitSnapshot | null => {
     if (typeof window === 'undefined') return null;
-    const lk = (window as any).__TROLLCITY_LIVEKIT__;
+    const lk = (window as any).__MaiTroll_LIVEKIT__;
     if (!lk) return null;
     const rooms: any[] = lk.rooms || (lk.room ? [lk.room] : []);
     let participantCount = 0, publishedTracks = 0, subscribedTracks = 0, screenShareTracks = 0;
@@ -544,7 +544,7 @@ export function quickBenchmark(label: string): BenchmarkAPI {
   const buildSnap = (): BenchmarkSnapshot => {
     const elapsed = Date.now() - startTime;
     let activeIntervals = 0;
-    if (typeof window !== 'undefined' && window.__TROLLCITY_INTERVAL_REGISTRY__) activeIntervals = window.__TROLLCITY_INTERVAL_REGISTRY__.size;
+    if (typeof window !== 'undefined' && window.__MaiTroll_INTERVAL_REGISTRY__) activeIntervals = window.__MaiTroll_INTERVAL_REGISTRY__.size;
     return { timestamp: Date.now(), elapsed, label, network: getNetwork(), realtime: getRealtime(), memory: getMemory(), liveKit: getLiveKit(), renderCount, activeIntervals };
   };
 
@@ -586,7 +586,7 @@ export function quickBenchmark(label: string): BenchmarkAPI {
     startTimer: (name: string) => { timers.set(name, performance.now()); },
     endTimer: (name: string) => { const s = timers.get(name); if (s === undefined) return null; const d = performance.now() - s; timers.delete(name); return d; },
     getIntervalReport: () => {
-      const registry = typeof window !== 'undefined' ? window.__TROLLCITY_INTERVAL_REGISTRY__ : null;
+      const registry = typeof window !== 'undefined' ? window.__MaiTroll_INTERVAL_REGISTRY__ : null;
       if (!registry) return { totalActive: 0, byFrequency: {}, intervals: [] };
       const intervals = Array.from(registry.values());
       const byFrequency: Record<string, number> = {};

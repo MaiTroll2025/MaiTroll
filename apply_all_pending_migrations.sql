@@ -2,7 +2,7 @@
 -- COMPREHENSIVE PENDING MIGRATIONS SCRIPT
 -- ===================================================
 -- Date: 2025-12-09
--- This script applies all critical pending migrations for TrollCity2
+-- This script applies all critical pending migrations for Mai Troll2
 -- ===================================================
 
 -- ===================================================

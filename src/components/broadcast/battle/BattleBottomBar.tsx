@@ -29,7 +29,7 @@ export default function BattleBottomBar({
     try {
       const url = window.location.href;
       if (navigator.share) {
-        navigator.share({ title: 'Troll City Battle', url }).catch(() => {});
+        navigator.share({ title: 'MaiTroll Battle', url }).catch(() => {});
       } else if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(() => {
           setCopied(true);

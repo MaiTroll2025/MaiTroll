@@ -67,7 +67,7 @@ function removeAllJsonLd() {
 
 export default function useSEO(config: SEOConfig) {
   const location = useLocation()
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://maitrollcity.com'
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://maiMaiTroll.com'
   const canonicalUrl = config.canonical || `${origin}${location.pathname}`
   const imageUrl = config.ogImage || `${origin}/images/mai-troll-city-preview.png`
 
@@ -86,9 +86,9 @@ export default function useSEO(config: SEOConfig) {
     setMetaTag('og:description', config.description)
     setMetaTag('og:url', canonicalUrl)
     setMetaTag('og:type', config.ogType || 'website')
-    setMetaTag('og:site_name', 'Troll City')
+    setMetaTag('og:site_name', 'MaiTroll')
     setMetaTag('og:image', imageUrl)
-    setMetaTag('og:image:alt', `${config.title} - Troll City`)
+    setMetaTag('og:image:alt', `${config.title} - Mai Troll`)
     setMetaTag('og:image:width', '1200')
     setMetaTag('og:image:height', '630')
     setMetaTag('og:locale', 'en_US')
@@ -112,8 +112,8 @@ export default function useSEO(config: SEOConfig) {
     setMetaTag('twitter:title', config.title, true)
     setMetaTag('twitter:description', config.description, true)
     setMetaTag('twitter:image', imageUrl, true)
-    setMetaTag('twitter:image:alt', `${config.title} - Troll City`, true)
-    setMetaTag('twitter:site', '@trollcity', true)
+    setMetaTag('twitter:image:alt', `${config.title} - Mai Troll`, true)
+    setMetaTag('twitter:site', '@Mai Troll', true)
 
     setLinkTag('canonical', canonicalUrl)
 

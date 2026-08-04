@@ -1,5 +1,5 @@
 /**
- * Cloud Storage Plans — Troll City
+ * Cloud Storage Plans — Mai Troll
  *
  * Pricing based on actual infrastructure costs + 10% platform margin, rounded to nearest dollar.
  *

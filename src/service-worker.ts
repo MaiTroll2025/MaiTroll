@@ -10,7 +10,7 @@ declare const __APP_VERSION__: string;
 // ===== VERSION & CACHE CONFIGURATION =====
 const CACHE_VERSION = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'static-dev';
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';
-const CACHE_PREFIX = 'trollcity';
+const CACHE_PREFIX = 'MaiTroll';
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `${CACHE_PREFIX}-images-${CACHE_VERSION}`;
 const API_CACHE = `${CACHE_PREFIX}-api-${CACHE_VERSION}`;
@@ -35,7 +35,7 @@ const SYNC_QUEUES: Record<string, QueuedRequest[]> = {
 };
 
 // ===== INDEXEDDB QUEUE PERSISTENCE =====
-const QUEUE_DB_NAME = 'trollcity-sw-queues';
+const QUEUE_DB_NAME = 'MaiTroll-sw-queues';
 const QUEUE_DB_VERSION = 1;
 const QUEUE_STORE_NAME = 'sync-queues';
 
@@ -299,12 +299,12 @@ self.addEventListener('push', (event) => {
     }
   }
   
-  const title = notificationData.title || 'Troll City';
+  const title = notificationData.title || 'MaiTroll';
   
   // Build notification options with extended typing for PWA features
    
   const notificationOptions: any = {
-    body: notificationData.body || 'New update from Troll City!',
+    body: notificationData.body || 'New update from Mai Troll!',
     icon: notificationData.icon || '/icons/icon-192.png',
     badge: notificationData.badge || '/icons/icon-72.png',
     image: notificationData.image,
@@ -824,7 +824,7 @@ async function refreshCache() {
 }
 
 // Log successful registration
-console.log('[SW] Troll City Service Worker loaded successfully v' + APP_VERSION);
+console.log('[SW] Mai Troll Service Worker loaded successfully v' + APP_VERSION);
 
 // Export empty object to make this a module
 export {};

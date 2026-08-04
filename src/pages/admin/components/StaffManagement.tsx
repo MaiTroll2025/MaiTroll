@@ -32,7 +32,7 @@ const ROLE_LABELS: Record<string, string> = {
   ceo: 'CEO',
   secretary: 'Secretary',
   executive_secretary: 'Executive Secretary',
-  troll_city_secretary: 'Troll City Secretary',
+  troll_city_secretary: 'MaiTroll Secretary',
   lead_troll_officer: 'Lead Officer',
   troll_officer: 'Troll Officer',
   pastor: 'Pastor',

@@ -31,7 +31,7 @@ export default function TournamentTabs({ tournament }: TournamentTabsProps) {
                 <CardTitle className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-200 uppercase tracking-tight">About This Event</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-300 space-y-8 relative z-10">
-                <p className="text-lg leading-relaxed font-light text-gray-200">{(tournament.description || "No description provided.").replace(/Neon City/i, 'Troll City')}</p>
+                <p className="text-lg leading-relaxed font-light text-gray-200">{(tournament.description || "No description provided.").replace(/Neon City/i, 'MaiTroll')}</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-br from-purple-900/20 to-black p-6 rounded-2xl border border-purple-500/20 relative overflow-hidden group/card">
@@ -107,7 +107,7 @@ export default function TournamentTabs({ tournament }: TournamentTabsProps) {
               <CardTitle className="text-2xl font-black text-white">Rules & Rewards</CardTitle>
             </CardHeader>
             <CardContent className="text-gray-300 space-y-4 whitespace-pre-wrap leading-relaxed font-light">
-              {tournament.rules_text || "Standard Troll City tournament rules apply."}
+              {tournament.rules_text || "Standard Mai Troll tournament rules apply."}
             </CardContent>
           </Card>
         )

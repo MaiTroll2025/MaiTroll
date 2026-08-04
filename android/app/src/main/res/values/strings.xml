@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">trollcity</string>
-    <string name="title_activity_main">trollcity</string>
-    <string name="package_name">com.trollcity.app</string>
-    <string name="custom_url_scheme">com.trollcity.app</string>
+    <string name="app_name">Mai Troll</string>
+    <string name="title_activity_main">Mai Troll</string>
+    <string name="package_name">com.Mai Troll.app</string>
+    <string name="custom_url_scheme">com.Mai Troll.app</string>
 </resources>

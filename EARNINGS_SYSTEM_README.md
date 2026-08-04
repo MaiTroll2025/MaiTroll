@@ -1,7 +1,7 @@
 # Earnings System - Implementation Summary
 
 ## Overview
-Comprehensive earnings tracking and payout management system for TrollCity, including user-facing earnings dashboard, admin earnings dashboard, monthly breakdowns, payout history, IRS $600 threshold tracking, and CSV export functionality.
+Comprehensive earnings tracking and payout management system for Mai Troll, including user-facing earnings dashboard, admin earnings dashboard, monthly breakdowns, payout history, IRS $600 threshold tracking, and CSV export functionality.
 
 ## Database Structure
 

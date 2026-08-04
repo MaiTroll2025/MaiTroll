@@ -45,7 +45,7 @@ export default function OrganizationFiles({ organization, canManage = false }: {
             <select value={accessLevel} onChange={(event) => setAccessLevel(event.target.value as any)} className="mt-1 w-full rounded-md border border-purple-500/20 bg-black/30 px-3 py-2 text-white">
               <option value="org_staff">Org staff</option>
               <option value="org_admin">Org admins</option>
-              <option value="admin_only">Troll City admins only</option>
+              <option value="admin_only">Mai Troll admins only</option>
             </select>
           </label>
           <label className="block text-xs text-zinc-300">

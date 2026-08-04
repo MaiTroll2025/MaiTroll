@@ -24,7 +24,7 @@ export default function ShopDashboard() {
     try {
       // Load shop
       const { data: shopData } = await supabase
-        .from('trollcity_shops')
+        .from('MaiTroll_shops')
         .select('*')
         .eq('owner_id', user!.id)
         .maybeSingle()
@@ -34,7 +34,7 @@ export default function ShopDashboard() {
       if (shopData) {
         // Load products
         const { data: prodData } = await supabase
-          .from('trollcity_products')
+          .from('MaiTroll_products')
           .select('*')
           .eq('shop_id', shopData.id)
           .order('created_at', { ascending: false })
@@ -63,7 +63,7 @@ export default function ShopDashboard() {
       if (isEditing && editProduct) {
         // Update
         const { error } = await supabase
-          .from('trollcity_products')
+          .from('MaiTroll_products')
           .update({
             name: formData.name,
             description: formData.description,
@@ -77,7 +77,7 @@ export default function ShopDashboard() {
       } else {
         // Create
         const { error } = await supabase
-          .from('trollcity_products')
+          .from('MaiTroll_products')
           .insert([{
             shop_id: shop.id,
             name: formData.name,
@@ -111,7 +111,7 @@ export default function ShopDashboard() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this product?')) return
     try {
-      const { error } = await supabase.from('trollcity_products').delete().eq('id', id)
+      const { error } = await supabase.from('MaiTroll_products').delete().eq('id', id)
       if (error) throw error
       toast.success('Product deleted')
       loadData()

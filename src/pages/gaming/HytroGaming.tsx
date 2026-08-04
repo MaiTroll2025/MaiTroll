@@ -379,8 +379,8 @@ export default function HytroGaming() {
   }, [user?.id, profile?.role, (profile as any)?.troll_role]);
 
   useSEO({
-    title: 'HydroGaming | Live Game Streaming & Screen Sharing | Troll City',
-    description: 'Watch live gaming streams on HydroGaming by Troll City. Stream games online, share your screen, and join the ultimate gaming community. Live game broadcasts and esports.',
+    title: 'HydroGaming | Live Game Streaming & Screen Sharing | Mai Troll',
+    description: 'Watch live gaming streams on HydroGaming by Mai Troll. Stream games online, share your screen, and join the ultimate gaming community. Live game broadcasts and esports.',
     keywords: [
       'game streaming', 'screen sharing', 'live gaming', 'game broadcasts',
       'gaming community', 'stream games online', 'watch gamers live',

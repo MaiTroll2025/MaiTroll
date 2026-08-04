@@ -74,7 +74,7 @@
 | `shop_items` | 2 files | select, insert | Yes | Marketplace, Sell |
 | `shop_transactions` | 1 file | select | Yes | Sell |
 | `business_profiles` | 3 files | select, insert | Yes | Marketplace, Sell |
-| `trollcity_shops` | 2 files | select, insert | Yes | Marketplace, Sell |
+| `Mai Troll_shops` | 2 files | select, insert | Yes | Marketplace, Sell |
 
 ### Auctions
 

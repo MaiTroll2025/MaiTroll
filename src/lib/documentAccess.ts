@@ -1,6 +1,6 @@
 /**
  * Document access control, sensitivity classification, and PII masking helpers
- * for the Troll City employee Documents system.
+ * for the Mai Troll employee Documents system.
  *
  * These helpers back the UI-level RBAC that mirrors (and never replaces) the
  * server-side RLS. RLS remains the real enforcement; this module guarantees the

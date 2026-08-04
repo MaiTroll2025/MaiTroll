@@ -1,7 +1,7 @@
-# Troll City - System Requirements Specification
+# Mai Troll - System Requirements Specification
 
 ## Overview
-Troll City is a **web-based social streaming platform** that runs in modern web browsers. It's not a downloadable desktop game - users access it via a web browser at trollcity.com (or your deployed URL).
+Mai Troll is a **web-based social streaming platform** that runs in modern web browsers. It's not a downloadable desktop game - users access it via a web browser at Mai Troll.com (or your deployed URL).
 
 ---
 
@@ -122,7 +122,7 @@ Troll City is a **web-based social streaming platform** that runs in modern web 
 ---
 
 ## Notes
-- Troll City is a **Progressive Web App (PWA)** - can be installed on mobile devices
+- Mai Troll is a **Progressive Web App (PWA)** - can be installed on mobile devices
 - No download required - runs entirely in browser
 - Works on Chromebooks with limited functionality
 - 3D city features require WebGL-capable devices

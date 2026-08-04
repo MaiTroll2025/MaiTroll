@@ -1,6 +1,6 @@
 # 🛡️ Troll Officer Onboarding Kit
 
-Welcome to the team! As a Troll Officer, you are the first line of defense for Troll City. Your job is to keep the community safe, fun, and fair.
+Welcome to the team! As a Troll Officer, you are the first line of defense for Mai Troll. Your job is to keep the community safe, fun, and fair.
 
 ## 📋 Quick Start Checklist
 

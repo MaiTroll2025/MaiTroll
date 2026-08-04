@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Radio, Play, Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { MaiTrollTheme } from '../styles/trollCityTheme';
 import UserNameWithAge from '../components/UserNameWithAge';
 import { toast } from 'sonner';
 import { VirtuosoGrid } from 'react-virtuoso';
@@ -37,17 +37,17 @@ export default function ExploreFeed() {
   const [filter, setFilter] = useState<'all' | 'gaming' | 'irl'>('all');
 
   useSEO({
-    title: 'Explore Live Streams | Troll City - Watch Trending Content',
-    description: 'Explore trending live streams on Troll City. Watch gaming, music, podcasts, and more from creators worldwide. Discover viral content and join the community.',
+    title: 'Explore Live Streams | Mai Troll - Watch Trending Content',
+    description: 'Explore trending live streams on Mai Troll. Watch gaming, music, podcasts, and more from creators worldwide. Discover viral content and join the community.',
     keywords: [
       'explore live streams', 'trending streams', 'watch live', 'live streaming',
       'gaming streams', 'podcast streams', 'music streams', 'viral content',
-      'content discovery', 'live broadcasts', 'streaming platform', 'Troll City explore'
+      'content discovery', 'live broadcasts', 'streaming platform', 'MaiTroll explore'
     ],
     structuredData: collectionPageSchema({
-      name: 'Live Streams on Troll City',
+      name: 'Live Streams on Mai Troll',
       description: 'Discover and watch trending live streams from creators worldwide',
-      url: 'https://maitrollcity.com/explore'
+      url: 'https://maiMaiTroll.com/explore'
     })
   });
 
@@ -255,12 +255,12 @@ export default function ExploreFeed() {
   };
 
   return (
-    <div className={`min-h-screen w-full ${trollCityTheme.backgrounds.primary} relative overflow-x-hidden`}>
+    <div className={`min-h-screen w-full ${MaiTrollTheme.backgrounds.primary} relative overflow-x-hidden`}>
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute inset-0 ${trollCityTheme.overlays.radialPurple}`} />
-        <div className={`absolute inset-0 ${trollCityTheme.overlays.radialPink}`} />
-        <div className={`absolute inset-0 ${trollCityTheme.overlays.radialCyan}`} />
+        <div className={`absolute inset-0 ${MaiTrollTheme.overlays.radialPurple}`} />
+        <div className={`absolute inset-0 ${MaiTrollTheme.overlays.radialPink}`} />
+        <div className={`absolute inset-0 ${MaiTrollTheme.overlays.radialCyan}`} />
       </div>
 
       {/* Floating Particles */}
@@ -291,11 +291,11 @@ export default function ExploreFeed() {
         {/* Header */}
         <div className="mb-8 space-y-4">
           <div>
-            <h1 className={`text-4xl md:text-5xl font-black ${trollCityTheme.text.gradient} mb-2`}>
+            <h1 className={`text-4xl md:text-5xl font-black ${MaiTrollTheme.text.gradient} mb-2`}>
               Explore Live Streams
             </h1>
-            <p className={`text-lg ${trollCityTheme.text.secondary}`}>
-              Discover amazing live content from creators around Troll City
+            <p className={`text-lg ${MaiTrollTheme.text.secondary}`}>
+              Discover amazing live content from creators around Mai Troll
             </p>
           </div>
 
@@ -307,8 +307,8 @@ export default function ExploreFeed() {
                 onClick={() => setFilter(cat as typeof filter)}
                 className={`px-6 py-3 rounded-xl font-semibold capitalize transition-all duration-300 ${
                   filter === cat
-                    ? `${trollCityTheme.gradients.primary} text-white ${trollCityTheme.shadows.glow}`
-                    : `${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} ${trollCityTheme.text.secondary} hover:border-purple-500/30`
+                    ? `${MaiTrollTheme.gradients.primary} text-white ${MaiTrollTheme.shadows.glow}`
+                    : `${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} ${MaiTrollTheme.text.secondary} hover:border-purple-500/30`
                 }`}
               >
                 {cat}
@@ -317,17 +317,17 @@ export default function ExploreFeed() {
           </div>
 
           {/* Stats Bar */}
-          <div className={`flex flex-wrap items-center gap-6 p-4 ${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl`}>
+          <div className={`flex flex-wrap items-center gap-6 p-4 ${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl`}>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              <span className={trollCityTheme.text.primary}>
+              <span className={MaiTrollTheme.text.primary}>
                 <span className="font-bold">{broadcasts.filter(b => !b.is_ended).length}</span> Live Now
               </span>
             </div>
             <div className="w-px h-6 bg-white/10" />
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-cyan-400" />
-              <span className={trollCityTheme.text.secondary}>
+              <span className={MaiTrollTheme.text.secondary}>
                 {broadcasts.reduce((sum, b) => sum + (b.current_viewers || b.viewer_count || 0), 0).toLocaleString()} Total Viewers
               </span>
             </div>
@@ -336,7 +336,7 @@ export default function ExploreFeed() {
                 <div className="w-px h-6 bg-white/10" />
                 <div className="flex items-center gap-2">
                   <Play className="w-4 h-4 text-purple-400" />
-                  <span className={trollCityTheme.text.secondary}>
+                  <span className={MaiTrollTheme.text.secondary}>
                     <span className="font-bold">{broadcasts.filter(b => b.is_ended).length}</span> Replays Available
                   </span>
                 </div>
@@ -349,7 +349,7 @@ export default function ExploreFeed() {
         {loading && broadcasts.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl overflow-hidden animate-pulse`}>
+              <div key={i} className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl overflow-hidden animate-pulse`}>
                 <div className="aspect-video bg-slate-800/50" />
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-slate-800/50 rounded" />
@@ -359,10 +359,10 @@ export default function ExploreFeed() {
             ))}
           </div>
         ) : broadcasts.length === 0 ? (
-          <div className={`text-center py-20 ${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-3xl`}>
+          <div className={`text-center py-20 ${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-3xl`}>
             <Radio className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <h3 className={`text-2xl font-bold ${trollCityTheme.text.primary} mb-2`}>No one is live right now</h3>
-            <p className={trollCityTheme.text.muted}>Check back later to see who is streaming, or browse past broadcasts below.</p>
+            <h3 className={`text-2xl font-bold ${MaiTrollTheme.text.primary} mb-2`}>No one is live right now</h3>
+            <p className={MaiTrollTheme.text.muted}>Check back later to see who is streaming, or browse past broadcasts below.</p>
           </div>
         ) : (
           <VirtuosoGrid
@@ -373,7 +373,7 @@ export default function ExploreFeed() {
               <div
                 key={broadcast.id}
                 onClick={() => handleBroadcastClick(broadcast)}
-                className={`group cursor-pointer ${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} rounded-2xl overflow-hidden ${trollCityTheme.interactive.hover} ${trollCityTheme.borders.glassHover} ${trollCityTheme.shadows.card}`}
+                className={`group cursor-pointer ${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl overflow-hidden ${MaiTrollTheme.interactive.hover} ${MaiTrollTheme.borders.glassHover} ${MaiTrollTheme.shadows.card}`}
               >
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-gradient-to-br from-purple-900/20 via-pink-900/20 to-cyan-900/20 overflow-hidden">
@@ -412,7 +412,7 @@ export default function ExploreFeed() {
 
                   {/* Hover Play Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className={`w-16 h-16 ${trollCityTheme.gradients.primary} rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform`}>
+                    <div className={`w-16 h-16 ${MaiTrollTheme.gradients.primary} rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform`}>
                       <Play className="w-8 h-8 text-white ml-1" fill="white" />
                     </div>
                   </div>
@@ -432,7 +432,7 @@ export default function ExploreFeed() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className={`font-semibold ${trollCityTheme.text.primary} truncate`}>
+                      <div className={`font-semibold ${MaiTrollTheme.text.primary} truncate`}>
                         <UserNameWithAge 
                           user={{
                             username: broadcast.user_profiles?.username || 'Unknown',
@@ -447,7 +447,7 @@ export default function ExploreFeed() {
                             T League
                           </span>
                         )}
-                        <span className={trollCityTheme.text.muted}>
+                        <span className={MaiTrollTheme.text.muted}>
                           {getTimeSince(broadcast.started_at)}
                         </span>
                       </div>
@@ -455,13 +455,13 @@ export default function ExploreFeed() {
                   </div>
 
                   {/* Title */}
-                  <h3 className={`font-bold ${trollCityTheme.text.primary} line-clamp-2 group-hover:text-cyan-400 transition-colors`}>
+                  <h3 className={`font-bold ${MaiTrollTheme.text.primary} line-clamp-2 group-hover:text-cyan-400 transition-colors`}>
                      {broadcast.title || 'Untitled Stream'}
                   </h3>
 
                   {/* Category */}
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-3 py-1 ${trollCityTheme.backgrounds.glass} ${trollCityTheme.borders.glass} rounded-full ${trollCityTheme.text.muted} capitalize`}>
+                    <span className={`text-xs px-3 py-1 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass} rounded-full ${MaiTrollTheme.text.muted} capitalize`}>
                       {broadcast.category}
                     </span>
                   </div>
@@ -476,7 +476,7 @@ export default function ExploreFeed() {
           <div className="mt-12 flex justify-center">
             <button
               onClick={() => fetchBroadcasts(_page + 1, true)}
-              className={`px-8 py-3 rounded-xl font-bold text-white ${trollCityTheme.gradients.primary} ${trollCityTheme.shadows.glow} hover:scale-105 transition-transform duration-300`}
+              className={`px-8 py-3 rounded-xl font-bold text-white ${MaiTrollTheme.gradients.primary} ${MaiTrollTheme.shadows.glow} hover:scale-105 transition-transform duration-300`}
             >
               Load More Streams
             </button>

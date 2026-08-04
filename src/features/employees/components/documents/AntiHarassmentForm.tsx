@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I acknowledge that I have read and understand the Troll City Anti-Harassment and Workplace Respect Policy, including its reporting channels, and I agree to maintain a respectful workplace.'
+  'I acknowledge that I have read and understand the Mai Troll Anti-Harassment and Workplace Respect Policy, including its reporting channels, and I agree to maintain a respectful workplace.'
 
 export default function AntiHarassmentForm(props: DocumentFormProps) {
   return (

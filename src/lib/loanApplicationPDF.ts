@@ -22,7 +22,7 @@ export async function downloadLoanApplicationPDF(data: LoanApplicationPDFData): 
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(18);
-    doc.text('Troll City Academy Loan Application', 14, 24);
+    doc.text('MaiTroll Academy Loan Application', 14, 24);
 
     doc.setFontSize(11);
     doc.setTextColor(99, 110, 114);
@@ -94,7 +94,7 @@ export async function downloadLoanApplicationPDF(data: LoanApplicationPDFData): 
       doc.internal.pageSize.getHeight() - 10
     );
 
-    const filename = `TrollCity_LoanApplication_${data.studentUsername}_${new Date().toISOString().split('T')[0]}.pdf`;
+    const filename = `MaiTroll_LoanApplication_${data.studentUsername}_${new Date().toISOString().split('T')[0]}.pdf`;
     doc.save(filename);
 
     return doc.output('blob');

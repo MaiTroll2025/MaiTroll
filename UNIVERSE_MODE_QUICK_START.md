@@ -2,7 +2,7 @@
 
 ## What Is This?
 
-A new battle system for TrollCity that adds:
+A new battle system for Mai Troll that adds:
 - **Multi Battle**: 1v1, 2v2, 3v3, 4v4 team battles
 - **Troll Battle**: Fixed 4v4 competitive battles with crowns/bonuses
 

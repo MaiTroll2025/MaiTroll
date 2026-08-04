@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { DollarSign, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { trollCityTheme } from '../styles/trollCityTheme';
+import { MaiTrollTheme } from '../styles/trollCityTheme';
 
 interface HouseCatalogItem {
   id: string;
@@ -80,43 +80,43 @@ export default function RealEstateOffice() {
 
   const getTierColor = (tier: number) => {
     switch (tier) {
-      case 1: return `${trollCityTheme.text.muted} ${trollCityTheme.borders.glass} ${trollCityTheme.backgrounds.card}`;
+      case 1: return `${MaiTrollTheme.text.muted} ${MaiTrollTheme.borders.glass} ${MaiTrollTheme.backgrounds.card}`;
       case 2: return 'text-emerald-400 border-emerald-500/30 bg-emerald-900/20';
       case 3: return 'text-cyan-400 border-cyan-500/30 bg-cyan-900/20';
       case 4: return 'text-purple-400 border-purple-500/30 bg-purple-900/20';
       case 5: return 'text-yellow-400 border-yellow-500/30 bg-yellow-900/20';
-      default: return `${trollCityTheme.text.muted} ${trollCityTheme.borders.glass}`;
+      default: return `${MaiTrollTheme.text.muted} ${MaiTrollTheme.borders.glass}`;
     }
   };
 
-  if (loading) return <div className={`p-8 text-center ${trollCityTheme.text.muted}`}>Loading listings...</div>;
+  if (loading) return <div className={`p-8 text-center ${MaiTrollTheme.text.muted}`}>Loading listings...</div>;
 
   return (
-    <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} pt-20 pb-12 px-4 md:px-8`}>
-      <div className={`container mx-auto max-w-7xl space-y-8 ${trollCityTheme.text.primary}`}>
+    <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} pt-20 pb-12 px-4 md:px-8`}>
+      <div className={`container mx-auto max-w-7xl space-y-8 ${MaiTrollTheme.text.primary}`}>
         <div className="flex flex-col gap-2">
-        <h1 className={`text-3xl font-bold ${trollCityTheme.gradients.text}`}>
+        <h1 className={`text-3xl font-bold ${MaiTrollTheme.gradients.text}`}>
           Real Estate Office
         </h1>
-        <p className={trollCityTheme.text.muted}>
+        <p className={MaiTrollTheme.text.muted}>
           Invest in property to unlock power bands, influence, and rental income.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {houses.map(house => (
-          <Card key={house.id} className={`${trollCityTheme.components.card} flex flex-col !p-0`}>
+          <Card key={house.id} className={`${MaiTrollTheme.components.card} flex flex-col !p-0`}>
             <div className={`h-2 w-full ${house.tier >= 5 ? 'bg-gradient-to-r from-yellow-500 to-amber-500' : 
               house.tier >= 4 ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 
               house.tier >= 3 ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 
-              trollCityTheme.backgrounds.glass}`} />
+              MaiTrollTheme.backgrounds.glass}`} />
             
             <CardHeader>
               <div className="flex justify-between items-start mb-2">
                 <Badge variant="outline" className={`${getTierColor(house.tier)}`}>
                   Tier {house.tier}
                 </Badge>
-                <Badge variant="secondary" className={`${trollCityTheme.backgrounds.card} ${trollCityTheme.text.muted} border ${trollCityTheme.borders.glass}`}>
+                <Badge variant="secondary" className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.text.muted} border ${MaiTrollTheme.borders.glass}`}>
                   {house.power_band}
                 </Badge>
               </div>
@@ -129,14 +129,14 @@ export default function RealEstateOffice() {
 
             <CardContent className="space-y-4 flex-1">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className={`${trollCityTheme.backgrounds.card} p-3 rounded border ${trollCityTheme.borders.glass}`}>
-                  <div className={`${trollCityTheme.text.muted} text-xs mb-1`}>Daily Upkeep</div>
+                <div className={`${MaiTrollTheme.backgrounds.card} p-3 rounded border ${MaiTrollTheme.borders.glass}`}>
+                  <div className={`${MaiTrollTheme.text.muted} text-xs mb-1`}>Daily Upkeep</div>
                   <div className="font-mono text-red-400">
                     {((house.base_price * (house.daily_tax_rate_bps + house.maintenance_rate_bps)) / 10000).toLocaleString()} coins
                   </div>
                 </div>
-                <div className={`${trollCityTheme.backgrounds.card} p-3 rounded border ${trollCityTheme.borders.glass}`}>
-                  <div className={`${trollCityTheme.text.muted} text-xs mb-1`}>Influence</div>
+                <div className={`${MaiTrollTheme.backgrounds.card} p-3 rounded border ${MaiTrollTheme.borders.glass}`}>
+                  <div className={`${MaiTrollTheme.text.muted} text-xs mb-1`}>Influence</div>
                   <div className="font-mono text-purple-400">
                     +{house.influence_points} pts
                   </div>
@@ -144,14 +144,14 @@ export default function RealEstateOffice() {
               </div>
 
               <div className="space-y-2">
-                <div className={`text-xs font-medium ${trollCityTheme.text.muted} uppercase tracking-wider`}>Features</div>
+                <div className={`text-xs font-medium ${MaiTrollTheme.text.muted} uppercase tracking-wider`}>Features</div>
                 <ul className="space-y-1">
-                  <li className={`flex items-center text-sm ${trollCityTheme.text.secondary}`}>
+                  <li className={`flex items-center text-sm ${MaiTrollTheme.text.secondary}`}>
                     <Check className="w-4 h-4 mr-2 text-emerald-500" />
                     {house.rent_slots} Rental Slot{house.rent_slots !== 1 && 's'}
                   </li>
                   {Object.entries(house.feature_flags || {}).map(([key]) => (
-                    <li key={key} className={`flex items-center text-sm ${trollCityTheme.text.secondary}`}>
+                    <li key={key} className={`flex items-center text-sm ${MaiTrollTheme.text.secondary}`}>
                       <Check className="w-4 h-4 mr-2 text-emerald-500" />
                       {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </li>
@@ -160,9 +160,9 @@ export default function RealEstateOffice() {
               </div>
             </CardContent>
 
-            <CardFooter className={`pt-4 border-t ${trollCityTheme.borders.glass}`}>
+            <CardFooter className={`pt-4 border-t ${MaiTrollTheme.borders.glass}`}>
               <Button 
-                className={`w-full ${trollCityTheme.gradients.button} text-white`}
+                className={`w-full ${MaiTrollTheme.gradients.button} text-white`}
                 onClick={() => handlePurchase(house)}
                 disabled={purchasing === house.id || (profile?.troll_coins || 0) < house.base_price}
               >

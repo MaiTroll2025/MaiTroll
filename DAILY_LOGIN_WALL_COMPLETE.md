@@ -2,7 +2,7 @@
 
 ## 🎯 Feature Overview
 
-**Daily Login Wall** allows users to earn **0-100 random Troll Coins** by making a post once per day to the Troll City Wall community feed.
+**Daily Login Wall** allows users to earn **0-100 random Troll Coins** by making a post once per day to the Mai Troll Wall community feed.
 
 ---
 
@@ -38,7 +38,7 @@
    - `DAILY_LOGIN_WALL_SETUP.md` - Setup & deployment guide (~250 lines)
 
 ### Modified Files (2 files)
-1. **`src/pages/TrollCityWall.tsx`**
+1. **`src/pages/Mai TrollWall.tsx`**
    - Added import: `DailyLoginWall` component
    - Added component to JSX: `<DailyLoginWall onPostCreated={() => loadPosts()} />`
    - Positioned at top of wall feed
@@ -109,7 +109,7 @@ UNIQUE (user_id, DATE(posted_at)) -- One post per user per day
 
 ### Component Hierarchy
 ```
-TrollCityWall (page)
+Mai TrollWall (page)
 ├── DailyLoginWall (component)
 │   ├── useAuthStore (from context)
 │   └── useDailyLoginPost (custom hook)
@@ -292,7 +292,7 @@ GROUP BY DATE(posted_at);
 - [x] SQL migration created (`add_daily_login_posts.sql`)
 - [x] Component created (`DailyLoginWall.tsx`)
 - [x] Hook created (`useDailyLoginPost.ts`)
-- [x] TrollCityWall page modified
+- [x] Mai TrollWall page modified
 - [x] Home page feature card added
 - [x] TypeScript compilation passes
 - [x] ESLint checks pass
@@ -333,7 +333,7 @@ GROUP BY DATE(posted_at);
 - **Database**: `add_daily_login_posts.sql`
 
 ### Related Files
-- `src/pages/TrollCityWall.tsx` - Integration point
+- `src/pages/Mai TrollWall.tsx` - Integration point
 - `src/pages/Home.tsx` - Feature card
 - `src/lib/hooks/useCoins.ts` - Coin management
 - `src/types/trollWall.ts` - Type definitions

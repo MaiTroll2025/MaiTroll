@@ -1,4 +1,4 @@
-// Troll City - REAL QA Stress Test (Fixed)
+// Mai Troll - REAL QA Stress Test (Fixed)
 // 15+ minutes, 20 concurrent users, real actions every 2-5 seconds
 
 import { createClient } from '@supabase/supabase-js';
@@ -8,7 +8,7 @@ import axios from 'axios';
 const config = {
   supabaseUrl: 'https://yjxpwfalenorzrqxwmtr.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeHB3ZmFsZW5vcnpycXh3bXRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjkxMTcsImV4cCI6MjA3OTYwNTExN30.S5Vc1xpZoZ0aemtNFJGcPhL_zvgPA0qgZq8e8KigUx8',
-  baseUrl: 'https://maitrollcity.com',
+  baseUrl: 'https://maiMai Troll.com',
   apiUrl: 'https://yjxpwfalenorzrqxwmtr.supabase.co',
   concurrentUsers: 20,
   testDuration: 15 * 60 * 1000, // 15 minutes
@@ -118,7 +118,7 @@ class RealQAUser {
     this.userId = userData.id;
     this.role = userData.role || 'user';
     this.username = userData.username;
-    this.email = `${userData.username}@trollcity.test`;
+    this.email = `${userData.username}@Mai Troll.test`;
     this.supabase = supabase;
     this.session = null;
     this.actions = 0;
@@ -564,7 +564,7 @@ class RealQAUser {
 
 async function runRealStressTest() {
   console.log('╔══════════════════════════════════════════════════════════════════════╗');
-  console.log('║     TROLL CITY - REAL QA STRESS TEST (15+ Minutes)               ║');
+  console.log('║     Mai Troll - REAL QA STRESS TEST (15+ Minutes)               ║');
   console.log('║     20 Concurrent Users | Real Actions | 10,000+ Requests          ║');
   console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
 
@@ -685,7 +685,7 @@ function generateReport(users) {
     : 0;
 
   console.log('\n╔══════════════════════════════════════════════════════════════════════╗');
-  console.log('║              TROLL CITY - REAL QA STRESS TEST REPORT              ║');
+  console.log('║              Mai Troll - REAL QA STRESS TEST REPORT              ║');
   console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
 
   // Overview

@@ -2,7 +2,7 @@
 
 ## What Was Built
 
-You now have a **fully functional Daily Login Wall system** where users can earn **0-100 random Troll Coins** by making a post once per day to the Troll City Wall community feed.
+You now have a **fully functional Daily Login Wall system** where users can earn **0-100 random Troll Coins** by making a post once per day to the Mai Troll Wall community feed.
 
 ---
 
@@ -11,7 +11,7 @@ You now have a **fully functional Daily Login Wall system** where users can earn
 ### ✅ Code Components
 - [x] **DailyLoginWall.tsx** - React component with posting form
 - [x] **useDailyLoginPost.ts** - Custom hook for business logic
-- [x] **TrollCityWall.tsx** - Updated with Daily Login Wall integration
+- [x] **Mai TrollWall.tsx** - Updated with Daily Login Wall integration
 - [x] **Home.tsx** - Added feature card describing daily logins
 - [x] **All TypeScript compilation passes** - Zero errors
 - [x] **All ESLint checks pass** - Code quality verified
@@ -62,7 +62,7 @@ You now have a **fully functional Daily Login Wall system** where users can earn
 
 ### Step 2: Code Deployment (Already Done!)
 Code is already integrated:
-- ✅ Component imported in TrollCityWall.tsx
+- ✅ Component imported in Mai TrollWall.tsx
 - ✅ Hook created and ready to use
 - ✅ Home page feature card added
 - ✅ No additional code changes needed
@@ -166,7 +166,7 @@ Project Root/
     │   └── useDailyLoginPost.ts ← Hook (NEW)
     │
     └── pages/
-        ├── TrollCityWall.tsx ← Modified
+        ├── Mai TrollWall.tsx ← Modified
         └── Home.tsx ← Modified
 ```
 
@@ -270,7 +270,7 @@ ORDER BY COUNT(*) DESC;
 1. Clear browser cache
 2. Hard refresh (Ctrl+Shift+R)
 3. Check browser console for errors
-4. Verify imports in TrollCityWall.tsx
+4. Verify imports in Mai TrollWall.tsx
 
 ---
 

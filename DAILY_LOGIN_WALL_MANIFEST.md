@@ -45,7 +45,7 @@
 
 ## 📝 Files Modified
 
-### 1. **`src/pages/TrollCityWall.tsx`**
+### 1. **`src/pages/Mai TrollWall.tsx`**
 - **Change**: Added import and component integration
 - **Lines Added**: 2
 - **Lines Modified**: 1
@@ -322,7 +322,7 @@ Result: No linting issues
 
 ### Step 3: Testing
 ```
-1. Navigate to https://app.trollcity.com/wall
+1. Navigate to https://app.Mai Troll.com/wall
 2. Look for "Daily Login Post" section at top
 3. Write test post
 4. Click "Post & Earn Coins"

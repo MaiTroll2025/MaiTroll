@@ -13,7 +13,7 @@ import { generateUUID } from './uuid'
 import { globalRequestScheduler } from './requestScheduler'
 
 /**
- * Troll City Auth Store
+ * Mai Troll Auth Store
  * Clean replacement for the duplicate profile / duplicate coin refresh issue.
  *
  * Main protections:
@@ -95,6 +95,7 @@ const profilePatchKeys = [
   'ghost_mode_until',
   'account_state',
   'muted_until',
+  'celeb_role',
   'updated_at',
 ]
 

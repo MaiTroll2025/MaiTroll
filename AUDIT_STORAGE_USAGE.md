@@ -9,7 +9,7 @@
 
 | Bucket | Operations | File(s) | Trigger | Route |
 |--------|-----------|---------|---------|-------|
-| `post-images` | upload, getPublicUrl | pages/Trollifieds.tsx, pages/SellOnTrollCity.tsx | User action | Marketplace, Sell |
+| `post-images` | upload, getPublicUrl | pages/Trollifieds.tsx, pages/SellOnMai Troll.tsx | User action | Marketplace, Sell |
 | `auction-items` | upload, getPublicUrl | pages/auction/AuctionStudio.tsx, pages/auction/AuctionInventory.tsx | User action | Auctions |
 | `family-banners` | getPublicUrl | pages/FamilyProfilePage.tsx | Page load | Family |
 | `ad-assets` | getPublicUrl, remove | pages/admin/XAdsStudio.tsx | Admin action | Admin |

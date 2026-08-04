@@ -121,8 +121,8 @@ export const ContractCreator = () => {
         role_label: selectedTemplate.role_label,
         start_date: formData.start_date || '',
         pay_terms: formData.pay_terms || '',
-        admin_name: userAccount?.display_name || 'Troll City Administration',
-        company_name: 'Troll City / MAI Corp',
+        admin_name: userAccount?.display_name || 'MaiTroll Administration',
+        company_name: 'MaiTroll / MAI Corp',
         date: new Date().toLocaleDateString(),
         duties_responsibilities: formData.duties_responsibilities || '',
         confidentiality_clause: formData.confidentiality_clause || '',
@@ -247,7 +247,7 @@ export const ContractCreator = () => {
             <h3 className="text-lg font-semibold mb-2">Contract Preview</h3>
             <div className="p-4 bg-slate-800 rounded-lg">
               <p className="mb-2">Dear {preview.user_name},</p>
-              <p>You have been appointed as a {preview.role_label} for Troll City.</p>
+              <p>You have been appointed as a {preview.role_label} for Mai Troll.</p>
               <p className="mt-2">Pay Terms: {preview.pay_terms}</p>
               <p>Start Date: {preview.start_date}</p>
             </div>

@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '../_shared/auth'
 import { generateOGHTML, buildOGImageUrl } from '../_shared/og-html'
 
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maitrollcity.com'
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maiMai Troll.com'
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`
 
 export const runtime = 'edge'
@@ -75,8 +75,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     return new Response(
       generateOGHTML({
-        title: `${broadcaster?.username || 'Broadcaster'} is ${statusText} on Troll City`,
-        description: stream.title || 'Watch this live broadcast on Troll City',
+        title: `${broadcaster?.username || 'Broadcaster'} is ${statusText} on Mai Troll`,
+        description: stream.title || 'Watch this live broadcast on Mai Troll',
         image: previewImage,
         ogImageUrl: ogImage,
         url: `${APP_URL}/watch/${stream.id}`,
@@ -94,8 +94,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     return new Response(
       generateOGHTML({
-        title: 'Troll City - Live Streaming',
-        description: 'Join Troll City for live streaming and more.',
+        title: 'Mai Troll - Live Streaming',
+        description: 'Join Mai Troll for live streaming and more.',
         image: FALLBACK_PREVIEW_IMAGE,
         url: `${APP_URL}/watch/${broadcastId}`,
         type: 'website',

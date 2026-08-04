@@ -1,7 +1,7 @@
 /**
  * TCNNMainPage
  *
- * Official public Troll City News Network page.
+ * Official public Mai Troll News Network page.
  * Public users can view published news, breaking headlines, live TCNN broadcasts,
  * trending stories, latest articles, and journalist stats.
  *
@@ -254,7 +254,7 @@ export default function TCNNMainPage() {
                 TCNN
               </h1>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">
-                Official Troll City News
+                Official Mai Troll News
               </p>
             </div>
           </button>
@@ -282,14 +282,14 @@ export default function TCNNMainPage() {
               </div>
 
               <h2 className="text-4xl font-black tracking-tight md:text-7xl">
-                Troll City
+                Mai Troll
                 <span className="block bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-red-300 bg-clip-text text-transparent">
                   News Network
                 </span>
               </h2>
 
               <p className="mt-5 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
-                TCNN is the official public news hub for Troll City: breaking stories,
+                TCNN is the official public news hub for Mai Troll: breaking stories,
                 city updates, journalist articles, live broadcasts, and official coverage.
               </p>
             </div>

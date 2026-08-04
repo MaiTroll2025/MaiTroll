@@ -1,4 +1,4 @@
-# TrollCity Universe Battle - Quick Start Testing Guide
+# Mai Troll Universe Battle - Quick Start Testing Guide
 
 ## TEST ACCOUNTS
 - **Admin**: `8dff9f37-21b5-4b8e-adc2-b9286874be1a`

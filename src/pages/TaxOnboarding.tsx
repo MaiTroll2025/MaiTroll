@@ -223,7 +223,7 @@ export default function TaxOnboarding() {
                 <span className="text-gray-300 text-sm">
                   I certify that the information provided is true and correct.
                   I understand that false information may result in penalties under federal law.
-                  I authorize Troll City to report my earnings to the IRS.
+                  I authorize Mai Troll to report my earnings to the IRS.
                 </span>
               </label>
             </div>

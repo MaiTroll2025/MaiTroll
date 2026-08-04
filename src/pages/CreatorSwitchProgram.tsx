@@ -333,7 +333,7 @@ export default function CreatorSwitchProgram() {
 
       {/* Disclaimer */}
       <p className="text-center text-gray-600 text-sm">
-        Not affiliated with or endorsed by any platform. Troll City is an independent streaming community.
+        Not affiliated with or endorsed by any platform. Mai Troll is an independent streaming community.
       </p>
     </div>
   );

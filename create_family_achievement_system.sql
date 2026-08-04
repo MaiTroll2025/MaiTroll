@@ -357,7 +357,7 @@ INSERT INTO public.achievement_tiers (
      10000, 200, 200000, 200, 70, 70, 80, 60,
      5000, 2500, 60000, 30000, 10),
     
-    (12, 'Immortal', 'Forever in Troll City history', '#795548', '🌟',
+    (12, 'Immortal', 'Forever in Mai Troll history', '#795548', '🌟',
      15000, 300, 300000, 300, 100, 100, 100, 75,
      7500, 3750, 100000, 50000, 11),
     

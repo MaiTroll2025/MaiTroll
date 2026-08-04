@@ -1,4 +1,4 @@
-# Bug Fix Summary — Troll City
+# Bug Fix Summary — Mai Troll
 
 ## Frontend Fixes Applied (3 files)
 
@@ -41,7 +41,7 @@
 - Bug #9, #10: `User is not defined` — already imported in BugCenterPanel.tsx
 
 ## Not Fixable from Code (infrastructure)
-- Bug #7, #28-31: CORS/Network errors on `maitrollcity.com` — check Supabase CORS settings
+- Bug #7, #28-31: CORS/Network errors on `maiMai Troll.com` — check Supabase CORS settings
 - Bug #32, #33: Auth lock contention — client-side race condition
 - Bug #11: UUID `"null"` string — needs investigation of specific query
 - Bug #35: Refresh token not found — session expired, user needs to re-login

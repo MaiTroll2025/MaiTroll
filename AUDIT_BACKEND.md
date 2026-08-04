@@ -1,4 +1,4 @@
-# ⚙️ TROLL CITY — BACKEND AUDIT
+# ⚙️ Mai Troll — BACKEND AUDIT
 
 **Audit Date:** 2026-06-13  
 **Scope:** All Supabase tables, views, functions, RPCs, edge functions, triggers, policies, storage, realtime channels, cron jobs  
@@ -405,9 +405,9 @@
 | `shops` | Shop records |
 | `store_items` | Store items |
 | `stores` | Store records |
-| `trollcity_orders` | Troll City orders |
-| `trollcity_products` | Troll City products |
-| `trollcity_shops` | Troll City shops |
+| `Mai Troll_orders` | Mai Troll orders |
+| `Mai Troll_products` | Mai Troll products |
+| `Mai Troll_shops` | Mai Troll shops |
 | `seller_reliability` | Seller reliability |
 | `seller_tiers` | Seller tiers |
 | `business_profiles` | Business profiles |

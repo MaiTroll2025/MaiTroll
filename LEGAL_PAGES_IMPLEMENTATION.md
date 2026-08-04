@@ -66,7 +66,7 @@ All routes are added to `src/App.tsx`:
 
 ## 🎨 Design
 
-- Consistent dark theme matching Troll City branding
+- Consistent dark theme matching Mai Troll branding
 - Purple accent colors for highlights
 - Responsive sidebar navigation
 - Prose styling for readable legal content

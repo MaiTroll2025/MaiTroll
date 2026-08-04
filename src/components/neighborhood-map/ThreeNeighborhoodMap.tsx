@@ -34,7 +34,7 @@ function LoadingScreen() {
   return (
     <Html center>
       <div className="rounded-xl border border-cyan-400/30 bg-slate-950/90 px-5 py-3 text-sm text-cyan-100 shadow-xl backdrop-blur">
-        Loading Troll City…
+        Loading Mai Troll…
       </div>
     </Html>
   );
@@ -110,7 +110,7 @@ export default function ThreeNeighborhoodMap({
       </Canvas>
 
       <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-cyan-300/20 bg-black/55 px-3 py-1 text-xs text-slate-200 backdrop-blur">
-        Troll City Living Map
+        Mai Troll Living Map
       </div>
 
       <div className="pointer-events-none absolute bottom-4 right-4 rounded-lg border border-white/10 bg-black/55 px-3 py-2 text-[11px] text-slate-300 backdrop-blur">

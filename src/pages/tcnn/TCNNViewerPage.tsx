@@ -79,11 +79,11 @@ export default function TCNNViewerPage() {
   // Lower third
   const [lowerThird, setLowerThird] = useState<LowerThirdData>({
     headline: 'BREAKING NEWS',
-    subtext: 'TROLL CITY LAUNCHES \u2013 A NEW ERA OF LIVE STREAMING',
+    subtext: 'MaiTroll LAUNCHES \u2013 A NEW ERA OF LIVE STREAMING',
   });
 
   // Ticker
-  const tickerText = 'TCNN LIVE \u2022 Virtual City \u2022 Real Creators \u2022 Weekly Cashouts Friday \u2022 Powered by Kain, AI, VS Code';
+  const tickerText = 'TCNN LIVE \u2022 Virtual City \u2022 Real Creators \u2022 Weekly Cashouts via MAI Pay \u2022 Powered by Kain, AI, VS Code';
 
   // UI state
   const [controlsVisible, setControlsVisible] = useState(true);

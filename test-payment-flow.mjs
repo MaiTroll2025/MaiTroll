@@ -48,7 +48,7 @@ const log = {
 
 async function main() {
   console.log('\n' + '='.repeat(60))
-  console.log('PAYMENT FLOW TEST - Troll City')
+  console.log('PAYMENT FLOW TEST - Mai Troll')
   console.log('='.repeat(60) + '\n')
 
   // Step 1: Check Square environment

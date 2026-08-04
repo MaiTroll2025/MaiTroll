@@ -16,8 +16,8 @@ const mockAuctionShow = {
   status: 'live',
   currentLot: {
     id: 'lot-1',
-    title: 'Vintage 1985 Troll City Founder Edition Figure - Mint Condition',
-    description: 'Original founder edition figure from the launch of Troll City. Includes original packaging and certificate of authenticity.',
+    title: 'Vintage 1985 Mai Troll Founder Edition Figure - Mint Condition',
+    description: 'Original founder edition figure from the launch of Mai Troll. Includes original packaging and certificate of authenticity.',
     images: ['https://picsum.photos/seed/auction1/800/600'],
     startingBid: 5000,
     minIncrement: 100,

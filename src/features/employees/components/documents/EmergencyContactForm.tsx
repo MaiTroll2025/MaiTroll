@@ -2,7 +2,7 @@ import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
 
 const ATTESTATION =
-  'I certify that the emergency contact information provided is accurate and may be used by Troll City to reach my designated contact in case of an emergency.'
+  'I certify that the emergency contact information provided is accurate and may be used by Mai Troll to reach my designated contact in case of an emergency.'
 
 export default function EmergencyContactForm(props: DocumentFormProps) {
   return (

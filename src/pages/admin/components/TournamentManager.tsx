@@ -165,7 +165,7 @@ export default function TournamentManager() {
                 value={formData.title}
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
                 className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="e.g. Troll City Showdown"
+                placeholder="e.g. Mai Troll Showdown"
                 required
               />
             </div>

@@ -13,7 +13,7 @@
   <circle cx="600" cy="280" r="120" fill="url(#purple)" opacity="0.3"/>
   <circle cx="600" cy="280" r="80" fill="url(#purple)" opacity="0.5"/>
   <polygon points="560,240 560,320 640,280" fill="white"/>
-  <text x="600" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">TROLL CITY</text>
+  <text x="600" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">Mai Troll</text>
   <text x="600" y="480" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#a1a1aa" text-anchor="middle">Live Streaming & Battle Arena</text>
   <rect x="520" y="510" width="160" height="40" rx="8" fill="url(#purple)"/>
   <text x="600" y="537" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">WATCH NOW</text>

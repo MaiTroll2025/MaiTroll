@@ -2,7 +2,7 @@
 
 Please answer these questions for the sync issue we are investigating:
 
-1. What is the expected data flow for the sync between TrollCity and Maitalent.fun?
+1. What is the expected data flow for the sync between Mai Troll and Maitalent.fun?
 2. Are there any recent changes to the sync endpoint, webhook, API keys, or authentication flow?
 3. Is there any known issue with duplicate records, missing fields, or partial syncs?
 4. Can you confirm whether the sync is currently being triggered on create, update, and delete events?

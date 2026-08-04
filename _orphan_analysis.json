@@ -24746,7 +24746,7 @@
       ]
     },
     {
-      "table": "trollcity_orders",
+      "table": "Mai Troll_orders",
       "functions": [
         "public.increment_gift_vote_count"
       ],
@@ -24774,7 +24774,7 @@
       ]
     },
     {
-      "table": "trollcity_products",
+      "table": "Mai Troll_products",
       "functions": [
         "public.increment_gift_vote_count"
       ],

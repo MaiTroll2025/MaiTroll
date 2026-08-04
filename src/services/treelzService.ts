@@ -11,7 +11,7 @@ import type {
 const FEED_PAGE_SIZE = 10
 const DOWNLOAD_COST = 10
 
-// ─── Feed Algorithm (TrollCity-style) ───
+// ─── Feed Algorithm (Mai Troll-style) ───
 function calculateFeedScore(post: TreelzPost): number {
   const likes = post.likes_count || 0
   const comments = post.comments_count || 0

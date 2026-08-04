@@ -1,4 +1,4 @@
-# 🗺️ TROLL CITY — COMPLETE FEATURE TO MIGRATION MAPPING
+# 🗺️ Mai Troll — COMPLETE FEATURE TO MIGRATION MAPPING
 
 > Generated: 2026-06-22  
 > Comprehensive mapping of every frontend feature to its database migrations
@@ -245,7 +245,7 @@
 | /StateRankings | StateRankings.tsx | Unknown |
 | /StateDetail | StateDetail.tsx | Unknown |
 | /UserInventory | UserInventory.tsx | Unknown |
-| /TrollCityWall | TrollCityWall.tsx | Unknown |
+| /Mai TrollWall | Mai TrollWall.tsx | Unknown |
 | /tcnn/article/:id | ArticleReader.tsx | Unknown |
 | /Treelz | TreelzPage.tsx | Unknown |
 | /treelz/upload | TreelzUploadPage.tsx | Unknown |

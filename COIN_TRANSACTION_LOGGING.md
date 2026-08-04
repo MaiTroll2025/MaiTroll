@@ -1,7 +1,7 @@
 # Coin Transaction Logging System
 
 ## Overview
-Complete audit trail system for tracking all coin movements in Troll City. Provides full transparency, user transaction history, and admin audit capabilities.
+Complete audit trail system for tracking all coin movements in Mai Troll. Provides full transparency, user transaction history, and admin audit capabilities.
 
 ## Database Changes
 

@@ -1,6 +1,6 @@
 param(
   [int]$Port = 4173,
-  [string]$Root = "e:\trollcity-1\dist"
+  [string]$Root = "e:\Mai Troll-1\dist"
 )
 
 $ErrorActionPreference = 'Stop'

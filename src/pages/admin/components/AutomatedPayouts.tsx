@@ -83,7 +83,6 @@ export default function AutomatedPayouts() {
     setWindowLoading(true);
     try {
       // Payout window is now determined by user level in the backend
-      // Level 1-499: Fridays only, Level 500-999: Every 24hrs, Level 1000+: Every 30min
       setPayoutWindow({ enabled: true, min_coins: 7500 });
 
       // Load eligible users count (those with cashout_approved and enough escrow coins)
@@ -316,7 +315,7 @@ export default function AutomatedPayouts() {
           </h2>
           <p className="text-sm text-gray-400 mt-1">
             {payoutsEnabled 
-              ? "System is running normally. Scheduled payouts will execute on Fridays." 
+              ? "System is running normally. Payouts are processed on request." 
               : "System is on hold. No new payout runs will be generated."}
           </p>
         </div>

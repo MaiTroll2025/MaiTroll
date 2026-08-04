@@ -14,7 +14,7 @@ This document explains the Cash App payment flow for purchasing coins through ma
 
 ### 2. Payment Request Creation
 - User sees payment instructions:
-  - **Cash App**: $trollcity95
+  - **Cash App**: $Mai Troll95
   - **Amount**: e.g., $4.99
   - **Note**: e.g., `USER123-500` (auto-generated: username prefix + coin count)
 - User copies CashApp address and note
@@ -24,9 +24,9 @@ This document explains the Cash App payment flow for purchasing coins through ma
 
 ### 3. User Sends Cash App Payment
 - User opens Cash App app
-- Sends ${amount} to **$trollcity95**
+- Sends ${amount} to **$Mai Troll95**
 - Includes reference **note** in payment message
-- System admin (@trollcity95 owner) receives the payment
+- System admin (@Mai Troll95 owner) receives the payment
 
 ## Admin/Secretary Workflow
 
@@ -40,7 +40,7 @@ This document explains the Cash App payment flow for purchasing coins through ma
   - Forward request to Admin with verification message
 
 ### 5. Admin Verifies & Approves
-- Admin checks Cash App $trollcity95 account
+- Admin checks Cash App $Mai Troll95 account
 - Verifies payment was received with matching note
 - Goes to Admin Dashboard → **Manual Orders** tab
 - Finds the pending order
@@ -102,7 +102,7 @@ troll_coins       INTEGER (updated on order fulfillment)
   "orderId": "order-uuid",
   "instructions": {
     "provider": "cashapp",
-    "cashtag": "$trollcity95",
+    "cashtag": "$Mai Troll95",
     "note": "JOHND-500",
     "message": "Send Cash App payment, include note with your username prefix and coins..."
   }

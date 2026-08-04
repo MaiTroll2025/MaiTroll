@@ -1,7 +1,7 @@
-# 🎯 TROLL CITY — CONCURRENCY AUDIT (PLAIN ENGLISH)
+# 🎯 Mai Troll — CONCURRENCY AUDIT (PLAIN ENGLISH)
 
 **Date:** 2026-06-21  
-**What is this?** A plain-English explanation of how many people can use Troll City at the same time before things break.
+**What is this?** A plain-English explanation of how many people can use Mai Troll at the same time before things break.
 
 ---
 
@@ -187,7 +187,7 @@ If you want to support more users, these are the changes that would make the big
 
 ## 🎯 TL;DR (Too Long; Didn't Read)
 
-**Right now, Troll City can safely handle about 1,000 people using it at the same time.**
+**Right now, Mai Troll can safely handle about 1,000 people using it at the same time.**
 
 If you get to 3,000 people, things will start feeling slow and glitchy.
 

@@ -1,10 +1,10 @@
-# 🚀 Vercel Deployment Guide - Troll City
+# 🚀 Vercel Deployment Guide - Mai Troll
 
 ## ✅ Account Information Verification
 
 - **Vercel Account Email**: `kaintowns83@gmail.com` ✅
-- **Supabase Account Email**: `trollcity2025@gmail.com` ✅
-- **Admin Email**: `trollcity2025@gmail.com` ✅
+- **Supabase Account Email**: `Mai Troll2025@gmail.com` ✅
+- **Admin Email**: `Mai Troll2025@gmail.com` ✅
 
 ---
 
@@ -13,7 +13,7 @@
 ### ✅ Database Setup (Supabase)
 
 1. **Login to Supabase**: https://supabase.com
-   - Email: `trollcity2025@gmail.com`
+   - Email: `Mai Troll2025@gmail.com`
    - Project: `yjxpwfalenorzrqxwmtr`
 
 2. **Run Migrations** (if not already done):
@@ -78,7 +78,7 @@ VITE_SQUARE_LOCATION_ID=LC50JZXVG8F0M
 VITE_SQUARE_ENVIRONMENT=production
 
 # Admin Configuration
-VITE_ADMIN_EMAIL=trollcity2025@gmail.com
+VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com
 
 # IMPORTANT: Update after deployment
 VITE_API_URL=https://your-vercel-app.vercel.app
@@ -129,7 +129,7 @@ VITE_API_URL=https://your-vercel-app.vercel.app
 
 ### Step 2: Import Repository
 1. Connect your GitHub account
-2. Import repository: `kaintowns83-cmd/trollcity`
+2. Import repository: `kaintowns83-cmd/Mai Troll`
 3. Select the `main` branch
 
 ### Step 3: Configure Project
@@ -148,12 +148,12 @@ Install Command: npm install
 ### Step 5: Deploy
 1. Click "Deploy"
 2. Wait for build to complete (~2-3 minutes)
-3. Note your deployment URL (e.g., `trollcity.vercel.app`)
+3. Note your deployment URL (e.g., `Mai Troll.vercel.app`)
 
 ### Step 6: Update Dynamic URLs
 After deployment, go back to Environment Variables and update:
 ```env
-VITE_API_URL=https://trollcity.vercel.app
+VITE_API_URL=https://Mai Troll.vercel.app
 ```
 160. Then redeploy.
 
@@ -164,7 +164,7 @@ VITE_API_URL=https://trollcity.vercel.app
 ### 1. Square Webhook Setup
 1. Login to Square Developer Dashboard
 2. Go to Webhooks
-3. Add webhook URL: `https://trollcity.vercel.app/api/square/webhook`
+3. Add webhook URL: `https://Mai Troll.vercel.app/api/square/webhook`
 4. Subscribe to events:
    - `payment.created`
    - `payment.updated`
@@ -173,15 +173,15 @@ VITE_API_URL=https://trollcity.vercel.app
 
 ### 2. Custom Domain (Optional)
 1. Go to Vercel → Project → Settings → Domains
-2. Add custom domain: `trollcity.app`
+2. Add custom domain: `Mai Troll.app`
 3. Update DNS records as instructed
 4. Update env vars with new domain
 
 ### 3. Verify Deployment
 Test these endpoints:
-- ✅ https://trollcity.vercel.app (homepage)
-- ✅ https://trollcity.vercel.app/api/auth/admin-exists (should return JSON)
-- ✅ https://trollcity.vercel.app/auth (login page)
+- ✅ https://Mai Troll.vercel.app (homepage)
+- ✅ https://Mai Troll.vercel.app/api/auth/admin-exists (should return JSON)
+- ✅ https://Mai Troll.vercel.app/auth (login page)
 
 ---
 
@@ -190,7 +190,7 @@ Test these endpoints:
 ### For Testing Phase (First 15 Users):
 
 1. **Enable Testing Mode**:
-   - Login as admin (trollcity2025@gmail.com)
+   - Login as admin (Mai Troll2025@gmail.com)
    - Go to Admin Dashboard
    - Click "Enable Testing Mode"
    - Counter shows 0/15
@@ -303,8 +303,8 @@ npm run build
 ## 📞 Support Contacts
 
 - **Vercel Account**: kaintowns83@gmail.com
-- **Supabase Account**: trollcity2025@gmail.com
-- **Admin Login**: trollcity2025@gmail.com
+- **Supabase Account**: Mai Troll2025@gmail.com
+- **Admin Login**: Mai Troll2025@gmail.com
 
 ---
 

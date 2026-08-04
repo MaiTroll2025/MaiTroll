@@ -9,7 +9,7 @@ The complete Cash App manual coin order system has been successfully implemented
 ## What You Now Have
 
 ### 1. **User-Facing Features** ✅
-- Users can purchase coins via Cash App ($trollcity95)
+- Users can purchase coins via Cash App ($Mai Troll95)
 - 3-step payment flow with clear instructions
 - Auto-generated payment reference notes
 - Easy copy buttons for addresses and notes
@@ -46,7 +46,7 @@ The complete Cash App manual coin order system has been successfully implemented
 1. User clicks "Get Coins"
 2. Sees payment options: 💳 Card or 📱 Cash App
 3. Selects 📱 Cash App
-4. Sees instructions: Send ${amount} to $trollcity95 with note
+4. Sees instructions: Send ${amount} to $Mai Troll95 with note
 5. Copies address and note
 6. Opens Cash App and sends payment
 7. Admin verifies and approves
@@ -57,7 +57,7 @@ The complete Cash App manual coin order system has been successfully implemented
 ```
 1. User creates Cash App payment request
 2. Admin sees it in Admin Dashboard → Manual Orders
-3. Admin checks their Cash App $trollcity95 account
+3. Admin checks their Cash App $Mai Troll95 account
 4. Admin verifies payment was received with matching note
 5. Admin clicks "Mark Paid & Credit"
 6. Coins automatically granted to user ✅
@@ -369,5 +369,5 @@ Everything is documented, tested, and ready to deploy.
 ---
 
 **Last Updated**: 2025-01-18  
-**System**: Trollcity Cash App Manual Coin Order v1.0  
+**System**: Mai Troll Cash App Manual Coin Order v1.0  
 **Deployment Ready**: YES ✅

@@ -2,13 +2,13 @@
 
 ## What Was Created
 
-I've completely redesigned your Troll City landing page with a modern, feature-focused design that showcases what your platform offers. The new page uses your established neon theme (purple/cyan/pink) and is fully mobile-responsive with safe area support.
+I've completely redesigned your Mai Troll landing page with a modern, feature-focused design that showcases what your platform offers. The new page uses your established neon theme (purple/cyan/pink) and is fully mobile-responsive with safe area support.
 
 ## Preview the New Landing Page
 
 ### Option 1: Run Dev Server
 ```powershell
-cd e:\troll\trollcity-1
+cd e:\troll\Mai Troll-1
 npm run dev
 ```
 Then open: **https://localhost:5173/**
@@ -45,7 +45,7 @@ npm run preview
 ## Testing Checklist
 
 - [ ] Open https://localhost:5173/ in browser
-- [ ] Test as guest (should see "Join Troll City" and "Sign In" buttons)
+- [ ] Test as guest (should see "Join Mai Troll" and "Sign In" buttons)
 - [ ] Test as logged-in user (should see "Go Live Now" and "Explore Feed" buttons)
 - [ ] Click each feature card - hover effects work
 - [ ] Resize browser window - responsive breakpoints work
@@ -57,7 +57,7 @@ npm run preview
 If you want to go back to the old 3D city homepage:
 
 ```powershell
-cd e:\troll\trollcity-1
+cd e:\troll\Mai Troll-1
 Copy-Item "src\pages\Home.old.tsx" "src\pages\Home.tsx" -Force
 ```
 
@@ -99,7 +99,7 @@ The page uses your existing:
 - ✅ Mobile CSS classes (`min-h-dvh`, `safe-top`, `safe-bottom`)
 - ✅ Auth store (`useAuthStore`)
 - ✅ Navigation routes
-- ✅ Troll City color scheme
+- ✅ Mai Troll color scheme
 - ✅ Tailwind CSS utilities
 
 No new dependencies were added!

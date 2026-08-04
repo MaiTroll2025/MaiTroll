@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Calendar } from 'lucide-react'
 import { format12hr } from '../../utils/timeFormat'
-import { trollCityTheme as theme } from '../../styles/trollCityTheme'
+import { MaiTrollTheme as theme } from '../../styles/trollCityTheme'
 
 interface ShiftSlotRow {
   id: string

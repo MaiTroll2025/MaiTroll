@@ -1,4 +1,4 @@
-# TrollCity Universe Battle System - Complete Testing Guide
+# Mai Troll Universe Battle System - Complete Testing Guide
 
 ## Test Accounts
 - **Admin Account**: `8dff9f37-21b5-4b8e-adc2-b9286874be1a`

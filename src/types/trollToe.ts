@@ -1,5 +1,5 @@
 // src/types/trollToe.ts
-// Live Troll Toe game types for Troll City broadcast integration
+// Live Troll Toe game types for Mai Troll broadcast integration
 
 export type TrollToeTeam = 'broadcaster' | 'challenger';
 export type TrollToeSymbol = 'X' | 'O';

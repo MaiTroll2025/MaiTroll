@@ -1,5 +1,5 @@
 -- SQL Script to Identify and Delete Test Streams from Government/Broadcast Tables
--- Database: Supabase/PostgreSQL for TrollCity Project
+-- Database: Supabase/PostgreSQL for Mai Troll Project
 -- Date: 2026-02-05
 
 -- ============================================================================

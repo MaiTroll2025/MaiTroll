@@ -401,43 +401,35 @@ export default function MobileBottomNav() {
   return (
     <nav className={`tc-mobile-bottom-nav ${isOpen ? "tc-mobile-bottom-nav--open" : ""}`}>
       {/* Always-visible bottom tab bar */}
-      <div className="flex w-full items-center justify-around border-t border-white/10 bg-[#050715]/95 px-1 py-1.5 backdrop-blur-xl">
-        <NavLink to="/" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-0.5 px-0.5 ${isActive ? "text-cyan-400" : "text-slate-500"}`}>
-          <Home size={15} />
-          <span className="text-[7px] font-bold leading-none">Home</span>
+      <div className="flex w-full items-center justify-around border-t border-white/10 bg-[#050715]/95 px-1 py-2 backdrop-blur-xl">
+        <NavLink to="/" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Home</span>
         </NavLink>
-         <NavLink to="/broadcast/setup" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-0.5 px-0.5 ${isActive ? "text-cyan-400" : "text-slate-500"}`}>
-           <Radio size={15} />
-           <span className="text-[7px] font-bold leading-none">Go Live</span>
-         </NavLink>
-         <NavLink to="/high-bcasters" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-0.5 px-0.5 ${isActive ? "text-yellow-400" : "text-slate-500"}`}>
-           <Crown size={15} />
-           <span className="text-[7px] font-bold leading-none">Bcasters</span>
-         </NavLink>
-         <NavLink to="/store" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-0.5 px-0.5 ${isActive ? "text-cyan-400" : "text-slate-500"}`}>
-           <Coins size={15} />
-           <span className="text-[7px] font-bold leading-none">Coins</span>
-         </NavLink>
-        <NavLink to="/utromail" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-0.5 px-0.5 ${isActive ? "text-cyan-400" : "text-slate-500"}`}>
-          <MessageCircle size={15} />
-          <span className="text-[7px] font-bold leading-none">Chats</span>
+        <NavLink to="/broadcast/setup" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Go Live</span>
         </NavLink>
-        <NavLink to="/treelz" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-0.5 px-0.5 ${isActive ? "text-cyan-400" : "text-slate-500"}`}>
-          <Sparkles size={15} />
-          <span className="text-[7px] font-bold leading-none">Treelz</span>
+        <NavLink to="/high-bcasters" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-yellow-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Bcasters</span>
         </NavLink>
-        <NavLink to="/podcast" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-0.5 px-0.5 ${isActive ? "text-cyan-400" : "text-slate-500"}`}>
-          <Mic size={15} />
-          <span className="text-[7px] font-bold leading-none">Podcast</span>
+        <NavLink to="/store" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Coins</span>
+        </NavLink>
+        <NavLink to="/utromail" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Chats</span>
+        </NavLink>
+        <NavLink to="/treelz" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Treelz</span>
+        </NavLink>
+        <NavLink to="/podcast" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Podcast</span>
         </NavLink>
         <button
           type="button"
-          className="flex min-w-0 shrink flex-col items-center gap-0.5 px-0.5 text-slate-500"
+          className="flex min-w-0 shrink flex-col items-center gap-1 px-1 text-slate-400"
           onClick={() => setIsOpen((value) => !value)}
           aria-expanded={isOpen}
         >
-          {isOpen ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
-          <span className="text-[7px] font-bold leading-none">More</span>
+          <span className="text-xs font-black">{isOpen ? "Close" : "More"}</span>
         </button>
       </div>
 

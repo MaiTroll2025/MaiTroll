@@ -27,7 +27,7 @@ export default function AdminRFC() {
         </h1>
 
         <p className="text-gray-400 text-sm mb-10">
-          Internal document defining how Troll City handles pricing, payouts, moderation rewards, and platform fees.
+          Internal document defining how Mai Troll handles pricing, payouts, moderation rewards, and platform fees.
         </p>
 
         {/* COIN STORE */}

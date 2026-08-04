@@ -8,7 +8,7 @@ import type { AvatarConfig } from '../lib/hooks/useAvatar'
 import { validateFile, FILE_VALIDATION } from '../lib/fileValidation'
 import CropPhotoModal from '../components/CropPhotoModal'
 import { KeyRound } from 'lucide-react'
-import { trollCityTheme } from '../styles/trollCityTheme'
+import { MaiTrollTheme } from '../styles/trollCityTheme'
 
 const ProfileSetup = () => {
   const navigate = useNavigate()
@@ -411,7 +411,7 @@ const ProfileSetup = () => {
   }
 
   return (
-    <div className={`min-h-screen ${trollCityTheme.backgrounds.primary} text-white p-6`}>
+    <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white p-6`}>
       {/* Crop Photo Modal */}
       <CropPhotoModal
         isOpen={coverCropModalOpen}
@@ -450,7 +450,7 @@ const ProfileSetup = () => {
             type="button"
             onClick={() => coverInputRef.current?.click()}
             disabled={uploadingCover}
-            className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full ${trollCityTheme.backgrounds.card} ${trollCityTheme.borders.glass} text-white hover:bg-black/60 transition`}
+            className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full ${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} text-white hover:bg-black/60 transition`}
           >
             {uploadingCover ? 'Uploading...' : 'Change Cover Photo'}
           </button>
@@ -509,7 +509,7 @@ const ProfileSetup = () => {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className={`w-full px-4 py-2 rounded ${trollCityTheme.components.input} text-white focus:outline-none`}
+                  className={`w-full px-4 py-2 rounded ${MaiTrollTheme.components.input} text-white focus:outline-none`}
                   placeholder="e.g. John Doe"
                 />
               </div>
@@ -522,7 +522,7 @@ const ProfileSetup = () => {
                   type="text"
                   value={username}
                   onChange={(e) => handleUsernameChange(e.target.value)}
-                  className={`w-full px-4 py-2 rounded ${trollCityTheme.components.input} text-white focus:outline-none`}
+                  className={`w-full px-4 py-2 rounded ${MaiTrollTheme.components.input} text-white focus:outline-none`}
                 />
                 {usernameError && (
                   <p className="text-red-400 text-xs mt-1">{usernameError}</p>
@@ -536,7 +536,7 @@ const ProfileSetup = () => {
                   name="gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className={`w-full px-4 py-2 rounded ${trollCityTheme.components.input} text-white focus:outline-none`}
+                  className={`w-full px-4 py-2 rounded ${MaiTrollTheme.components.input} text-white focus:outline-none`}
                   required
                 >
                   <option value="">Select gender</option>
@@ -552,7 +552,7 @@ const ProfileSetup = () => {
                   name="bio"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className={`w-full px-4 py-2 rounded ${trollCityTheme.components.input} text-white focus:outline-none`}
+                  className={`w-full px-4 py-2 rounded ${MaiTrollTheme.components.input} text-white focus:outline-none`}
                   rows={4}
                 />
               </div>
@@ -565,7 +565,7 @@ const ProfileSetup = () => {
                     min="0"
                     value={messageCost}
                     onChange={(e) => setMessageCost(Number(e.target.value))}
-                    className={`w-full px-4 py-2 rounded ${trollCityTheme.components.input} text-white focus:outline-none`}
+                    className={`w-full px-4 py-2 rounded ${MaiTrollTheme.components.input} text-white focus:outline-none`}
                     placeholder="0"
                   />
                   <p className="text-xs text-gray-400 mt-1">Cost for users to message you (0 = Free)</p>
@@ -577,7 +577,7 @@ const ProfileSetup = () => {
                     min="0"
                     value={viewCost}
                     onChange={(e) => setViewCost(Number(e.target.value))}
-                    className={`w-full px-4 py-2 rounded ${trollCityTheme.components.input} text-white focus:outline-none`}
+                    className={`w-full px-4 py-2 rounded ${MaiTrollTheme.components.input} text-white focus:outline-none`}
                     placeholder="0"
                   />
                   <p className="text-xs text-gray-400 mt-1">Cost to view your full profile (0 = Free)</p>
@@ -587,7 +587,7 @@ const ProfileSetup = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full py-2 ${trollCityTheme.gradients.button} text-white rounded`}
+                className={`w-full py-2 ${MaiTrollTheme.gradients.button} text-white rounded`}
               >
                 {loading ? 'Saving…' : 'Save Profile'}
               </button>
@@ -597,34 +597,34 @@ const ProfileSetup = () => {
 
 
 
-        <details className={`${trollCityTheme.backgrounds.card} rounded-lg border ${trollCityTheme.borders.glass} mt-6`} open>
+        <details className={`${MaiTrollTheme.backgrounds.card} rounded-lg border ${MaiTrollTheme.borders.glass} mt-6`} open>
           <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
             <span className="font-semibold">PayPal Payout Settings</span>
-            <span className={`text-sm ${trollCityTheme.gradients.button} text-white px-3 py-1 rounded`}>Required</span>
+            <span className={`text-sm ${MaiTrollTheme.gradients.button} text-white px-3 py-1 rounded`}>Required</span>
           </summary>
 
           <div className="px-6 pb-6 space-y-3">
             <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-3">
               <h4 className="font-semibold text-blue-300 mb-2">📌 PayPal Account Required</h4>
               <p className="text-sm text-blue-200">
-                You must have a PayPal account to receive payouts. All payouts are processed via PayPal on <span className="text-white font-bold">Fridays only</span>.
+                You must have a PayPal account to receive payouts. All payouts are processed via PayPal through MAI Pay.
               </p>
             </div>
             <p className="text-sm text-gray-400">
-              Set your PayPal email address where you want to receive your Troll City payouts.
+              Set your PayPal email address where you want to receive your Mai Troll payouts.
             </p>
             <button
               type="button"
               onClick={() => navigate('/payouts/setup')}
-              className={`px-4 py-2 ${trollCityTheme.gradients.button} rounded-lg font-semibold text-sm text-white`}
+              className={`px-4 py-2 ${MaiTrollTheme.gradients.button} rounded-lg font-semibold text-sm text-white`}
             >
               Setup PayPal Payout Email
             </button>
             <p className="text-xs text-gray-500">
-              Payouts are sent to your PayPal account every Friday. Ensure your PayPal email is correct to avoid delays.
+              Payouts are sent to your PayPal account through MAI Pay. Ensure your PayPal email is correct to avoid delays.
             </p>
           </div>
-        <div className={`${trollCityTheme.backgrounds.card} rounded-lg border ${trollCityTheme.borders.glass} mt-6 px-6 py-4`}>
+        <div className={`${MaiTrollTheme.backgrounds.card} rounded-lg border ${MaiTrollTheme.borders.glass} mt-6 px-6 py-4`}>
           <div className="flex items-center justify-between">
             <span className="font-semibold flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-emerald-400" />
@@ -647,7 +647,7 @@ const ProfileSetup = () => {
               <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
                 <h3 className="font-semibold text-yellow-300 mb-2">📋 Important Notice</h3>
                 <p className="text-sm text-yellow-200 mb-3">
-                  To comply with our safety policies and prevent fraud, all users must upload a valid government-issued ID before gaining full access to Troll City features.
+                  To comply with our safety policies and prevent fraud, all users must upload a valid government-issued ID before gaining full access to Mai Troll features.
                 </p>
                 <p className="text-sm text-yellow-200">
                   Your ID will be securely stored and only accessible to administrators for verification purposes.
@@ -658,7 +658,7 @@ const ProfileSetup = () => {
                 <label className="block text-sm text-gray-300 mb-1">
                   Upload Government ID (Driver&apos;s License, Passport, or State ID)
                 </label>
-                <div className={`${trollCityTheme.components.input} border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-purple-400 transition-colors`}>
+                <div className={`${MaiTrollTheme.components.input} border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-purple-400 transition-colors`}>
                   <input
                     type="file"
                     accept="image/*,application/pdf"
@@ -771,7 +771,7 @@ const ProfileSetup = () => {
                 ) : (
                   <div className="bg-gray-800/30 rounded-lg p-3">
                     <p className="text-xs text-gray-400 text-center">
-                      No ID uploaded yet. Please upload your government-issued ID to gain full access to Troll City.
+                      No ID uploaded yet. Please upload your government-issued ID to gain full access to Mai Troll.
                     </p>
                   </div>
                 )}

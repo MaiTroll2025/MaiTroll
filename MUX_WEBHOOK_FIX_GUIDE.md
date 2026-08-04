@@ -1,4 +1,4 @@
-# TrollCity Webhook & Playback Issues - Complete Fix Guide
+# Mai Troll Webhook & Playback Issues - Complete Fix Guide
 
 ## Issues Identified
 

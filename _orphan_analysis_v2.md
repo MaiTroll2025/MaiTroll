@@ -3788,14 +3788,14 @@
 - **Functions:** public.increment_gift_vote_count
 - **Files:** .kilo\worktrees\checkered-slide\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\checkered-slide\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\gaming-battle-overlay\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\gaming-battle-overlay\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\gaming-gifts-chat\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\gaming-gifts-chat\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\gaming-obs-scenes\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\gaming-obs-scenes\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\gaming-recorder-pages\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\gaming-recorder-pages\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\lithe-planarian\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\lithe-planarian\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\rounded-dirt\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\rounded-dirt\supabase\migrations_backup\20230101000000_baseline.sql, supabase\migrations\20230101000000_baseline.sql, supabase\migrations_backup\20230101000000_baseline.sql
 
-### `trollcity_orders` — score: 5
+### `Mai Troll_orders` — score: 5
 
 **Categories:** IN_FUNCTION
 
 - **Functions:** public.increment_gift_vote_count
 - **Files:** .kilo\worktrees\checkered-slide\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\checkered-slide\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\gaming-battle-overlay\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\gaming-battle-overlay\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\gaming-gifts-chat\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\gaming-gifts-chat\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\gaming-obs-scenes\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\gaming-obs-scenes\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\gaming-recorder-pages\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\gaming-recorder-pages\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\lithe-planarian\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\lithe-planarian\supabase\migrations_backup\20230101000000_baseline.sql, .kilo\worktrees\rounded-dirt\supabase\migrations\20230101000000_baseline.sql, .kilo\worktrees\rounded-dirt\supabase\migrations_backup\20230101000000_baseline.sql, supabase\migrations\20230101000000_baseline.sql, supabase\migrations_backup\20230101000000_baseline.sql
 
-### `trollcity_products` — score: 5
+### `Mai Troll_products` — score: 5
 
 **Categories:** IN_FUNCTION
 

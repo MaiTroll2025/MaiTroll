@@ -1,4 +1,4 @@
-# 📊 TROLL CITY LEVEL SYSTEM - QUICK REFERENCE
+# 📊 Mai Troll LEVEL SYSTEM - QUICK REFERENCE
 
 ## 🎯 Main Level Progression (1-101)
 
@@ -33,7 +33,7 @@
 |-------|--------|--------|-------|-----------|
 | 80 | 90,000 | 99,999 | Troll Sovereign | Master streamer |
 | 90 | 100,000 | 109,999 | Chaos Deity | Legendary badge |
-| 100 | 110,000 | 110,999 | TROLL CITY IMMORTAL | God-mode effects |
+| 100 | 110,000 | 110,999 | Mai Troll IMMORTAL | God-mode effects |
 | 101 | 111,000+ | ∞ | SYSTEM OVERLORD | All perks (Admin) |
 
 ---
@@ -69,7 +69,7 @@
 | 3 | $50+ | Chaos Supporter |
 | 4 | $100+ | Troll Champion |
 | 5 | $300+ | Elite Troll Backer |
-| 6 | $700+ | Titan of Troll City |
+| 6 | $700+ | Titan of Mai Troll |
 | 7 | $1,500+ | Mythic Benefactor |
 | 8 | $3,000+ | Divine OverTroll |
 | 9 | $15,000+ | Ancient Elder Troll |
@@ -91,7 +91,7 @@
 | 7 | $1,200+ | Troll Master Broadcaster |
 | 8 | $2,400+ | Mischief Legend |
 | 9 | $6,000+ | Troll Star Icon |
-| 10 | $18,000+ | Troll City MEGASTAR |
+| 10 | $18,000+ | Mai Troll MEGASTAR |
 
 ---
 

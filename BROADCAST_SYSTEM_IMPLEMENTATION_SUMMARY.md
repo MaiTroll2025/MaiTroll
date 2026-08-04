@@ -1,7 +1,7 @@
 # BROADCAST SYSTEM IMPLEMENTATION SUMMARY
 
 ## Overview
-This document summarizes the broadcast system changes and fixes implemented for the TrollCity live-broadcasting platform.
+This document summarizes the broadcast system changes and fixes implemented for the Mai Troll live-broadcasting platform.
 
 ---
 

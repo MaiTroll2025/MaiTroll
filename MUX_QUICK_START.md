@@ -34,7 +34,7 @@
 ### 1. Start Backend Server
 
 ```bash
-cd TrollCity-main
+cd Mai Troll-main
 
 # Option A: Development mode
 npm run dev

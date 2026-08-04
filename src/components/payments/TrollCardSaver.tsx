@@ -12,7 +12,7 @@ interface TrollCardSaverProps {
 }
 
 /**
- * TrollCardSaver - Production-ready card saving component for Troll City
+ * TrollCardSaver - Production-ready card saving component for Mai Troll
  *
  * Features:
  * - Uses Square Web Payments SDK for secure tokenization
@@ -71,7 +71,7 @@ export default function TrollCardSaver({
           throw new Error('Square configuration missing')
         }
 
-        console.log('[TrollCardSaver] Initializing Square payments for Troll City')
+        console.log('[TrollCardSaver] Initializing Square payments for Mai Troll')
 
         const payments = window.Square.payments(appId, locationId)
         const card = await payments.card()
@@ -158,14 +158,14 @@ export default function TrollCardSaver({
     setIsLoading(true)
 
     try {
-      console.log('Troll City: Tokenizing card...')
+      console.log('MaiTroll: Tokenizing card...')
 
       // Step 1: Tokenize the card using Square Web Payments SDK
       const tokenizationResult = await cardInstance.tokenize()
 
       if (tokenizationResult.errors) {
         const error = tokenizationResult.errors[0]
-        console.error('Troll City: Tokenization failed:', error)
+        console.error('MaiTroll: Tokenization failed:', error)
         throw new Error(error.message || 'Invalid card information')
       }
 
@@ -173,7 +173,7 @@ export default function TrollCardSaver({
         throw new Error('Failed to secure card information')
       }
 
-      console.log('Troll City: Card tokenized successfully')
+      console.log('MaiTroll: Card tokenized successfully')
 
       // Step 2: Send tokenized card to our backend
       const { data, error } = await supabase.functions.invoke('save-card', {
@@ -184,23 +184,23 @@ export default function TrollCardSaver({
       })
 
       if (error) {
-        console.error('Troll City: Save card function error:', error)
+        console.error('MaiTroll: Save card function error:', error)
         throw error
       }
 
       if (!data?.success) {
-        console.error('Troll City: Save card failed:', data)
+        console.error('MaiTroll: Save card failed:', data)
         throw new Error(data?.error || 'Failed to save card')
       }
 
-      console.log('Troll City: Card saved successfully!')
+      console.log('MaiTroll: Card saved successfully!')
       toast.success('Card saved securely!')
 
       // Step 3: Notify parent component
       onCardSaved?.()
 
     } catch (error: any) {
-      console.error('Troll City: Save card error:', error)
+      console.error('MaiTroll: Save card error:', error)
 
       // Provide user-friendly error messages
       let errorMessage = 'Failed to save card. Please try again.'

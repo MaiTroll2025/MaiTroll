@@ -8,7 +8,7 @@ SELECT supabase.functions.invoke('push-notifications', {
     'notification', JSONB_BUILD_OBJECT(
       'type', 'TEST',
       'title', 'Test Notification',
-      'body', 'Hello from Troll City!',
+      'body', 'Hello from Mai Troll!',
       'url', '/'
     )
   )

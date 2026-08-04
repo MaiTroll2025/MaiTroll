@@ -9,15 +9,15 @@ This file documents the critical changes made to the codebase to resolve "Refere
 - **`src/pages/Profile.tsx`**:
   - **Change**: Replaced the single `profile_full` query with parallel queries to `user_profiles`, `user_perks`, `user_entrance_effects`, `call_minutes`, and `user_insurance`.
   - **Logic**: Implemented client-side merging for insurance plans (joining `user_insurance` entries with `insurance_plans` catalog).
-  - **Code Reference**: [Profile.tsx](file:///c:/Users/justk/Videos/2026/trollcity-1/src/pages/Profile.tsx)
+  - **Code Reference**: [Profile.tsx](file:///c:/Users/justk/Videos/2026/Mai Troll-1/src/pages/Profile.tsx)
 
 - **`src/lib/store.ts`**:
   - **Change**: Updated `refreshProfile` to query `user_profiles` instead of `profile_full`.
-  - **Code Reference**: [store.ts](file:///c:/Users/justk/Videos/2026/trollcity-1/src/lib/store.ts)
+  - **Code Reference**: [store.ts](file:///c:/Users/justk/Videos/2026/Mai Troll-1/src/lib/store.ts)
 
 - **`src/hooks/useBackgroundProfileRefresh.ts`**:
   - **Change**: Updated background polling to query `user_profiles`.
-  - **Code Reference**: [useBackgroundProfileRefresh.ts](file:///c:/Users/justk/Videos/2026/trollcity-1/src/hooks/useBackgroundProfileRefresh.ts)
+  - **Code Reference**: [useBackgroundProfileRefresh.ts](file:///c:/Users/justk/Videos/2026/Mai Troll-1/src/hooks/useBackgroundProfileRefresh.ts)
 
 ## 2. Bug Fixes & TypeScript Corrections
 **Goal**: Fix runtime crashes (LivePage) and compile-time errors (CoinStoreModal).
@@ -26,12 +26,12 @@ This file documents the critical changes made to the codebase to resolve "Refere
 - **`src/pages/LivePage.tsx`**:
   - **Fix**: Added missing state `entranceEffect` and imported `TrollLikeButton` to resolve `ReferenceError`.
   - **Fix**: Updated `handleSendCoins` signature to match usage.
-  - **Code Reference**: [LivePage.tsx](file:///c:/Users/justk/Videos/2026/trollcity-1/src/pages/LivePage.tsx)
+  - **Code Reference**: [LivePage.tsx](file:///c:/Users/justk/Videos/2026/Mai Troll-1/src/pages/LivePage.tsx)
 
 - **`src/components/broadcast/CoinStoreModal.tsx`**:
   - **Fix**: Imported `useAuthStore` to correctly access `profile`.
   - **Fix**: Changed `profile.coins` to `profile.troll_coins` to match the actual Supabase schema.
-  - **Code Reference**: [CoinStoreModal.tsx](file:///c:/Users/justk/Videos/2026/trollcity-1/src/components/broadcast/CoinStoreModal.tsx)
+  - **Code Reference**: [CoinStoreModal.tsx](file:///c:/Users/justk/Videos/2026/Mai Troll-1/src/components/broadcast/CoinStoreModal.tsx)
 
 - **`src/pages/BroadcastPage.tsx` & `WatchPage.tsx`**:
   - **Fix**: Passed required `streamId` prop to `ChatBox` component.

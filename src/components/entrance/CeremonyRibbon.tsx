@@ -19,7 +19,7 @@ export default function CeremonyRibbon({
     >
       <div className="gce-ribbon-half gce-ribbon-left" />
       <div className="gce-ribbon-half gce-ribbon-right" />
-      <span className="gce-ribbon-text">Troll City</span>
+      <span className="gce-ribbon-text">Mai Troll</span>
     </div>
   )
 }

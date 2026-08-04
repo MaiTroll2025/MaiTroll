@@ -1,0 +1,12 @@
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS plan_id TEXT;
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS coverage_type TEXT DEFAULT 'basic';
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS cost_paid INTEGER DEFAULT 0;
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS deductible INTEGER DEFAULT 25;
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS duration_hours INTEGER DEFAULT 720;
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS purchased_at TIMESTAMPTZ;
+ALTER TABLE public.homeowners_insurances ADD COLUMN IF NOT EXISTS claims_made INTEGER DEFAULT 0;
+ALTER TABLE public.court_sessions ADD COLUMN IF NOT EXISTS box_number INTEGER DEFAULT 2;
+ALTER TABLE public.stream_seat_sessions ADD COLUMN IF NOT EXISTS kick_reason TEXT;
+ALTER TABLE public.stream_seat_sessions ADD COLUMN IF NOT EXISTS price_paid INTEGER DEFAULT 0;

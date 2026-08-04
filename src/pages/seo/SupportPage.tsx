@@ -80,12 +80,12 @@ const helpCategories = [
 
 const popularArticles = [
   {
-    title: 'How do I get started on Troll City?',
+    title: 'How do I get started on Mai Troll?',
     excerpt: 'Create a free account, set up your profile, and start exploring live streams or go live yourself.',
     link: '/about'
   },
   {
-    title: 'How do I earn money on Troll City?',
+    title: 'How do I earn money on Mai Troll?',
     excerpt: 'Go live and receive virtual gifts from viewers. Gifts convert to Troll Coins that can be redeemed for cash payouts.',
     link: '/faq'
   },
@@ -114,10 +114,10 @@ const popularArticles = [
 export default function SupportPage() {
   return (
     <SEOLayout
-      title="Support & Help Center | Troll City"
-      description="Get help with Troll City (Mai Troll City). Find answers to common questions about your account, streaming, payments, safety, and more."
+      title="Support & Help Center | Mai Troll"
+      description="Get help with Mai Troll (MaiMaiTroll). Find answers to common questions about your account, streaming, payments, safety, and more."
       keywords={[
-        'Troll City help', 'Troll City support', 'Mai Troll City support',
+        'MaiTroll help', 'MaiTroll support', 'MaiMaiTroll support',
         'help center', 'FAQ', 'customer support', 'troubleshooting',
         'account help', 'payment support', 'report issue', 'bug report'
       ]}
@@ -231,7 +231,7 @@ export default function SupportPage() {
       >
         <div className="grid md:grid-cols-2 gap-6">
           <a
-            href="mailto:trollcity2025@gmail.com"
+            href="mailto:Mai Troll2025@gmail.com"
             className="p-6 bg-slate-900/50 border border-slate-800 hover:border-purple-500/30 rounded-xl transition-all flex items-center gap-4"
           >
             <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center flex-shrink-0">
@@ -239,7 +239,7 @@ export default function SupportPage() {
             </div>
             <div>
               <h4 className="text-white font-medium">Email Support</h4>
-              <p className="text-slate-400 text-sm">trollcity2025@gmail.com</p>
+              <p className="text-slate-400 text-sm">Mai Troll2025@gmail.com</p>
             </div>
           </a>
           <Link
@@ -259,7 +259,7 @@ export default function SupportPage() {
 
       <CTASection
         title="Ready to Get Started?"
-        description="Join Troll City today and become part of our growing community."
+        description="Join Mai Troll today and become part of our growing community."
         primaryAction={{ label: 'Create Free Account', path: '/auth' }}
         secondaryAction={{ label: 'Learn More', path: '/about' }}
       />

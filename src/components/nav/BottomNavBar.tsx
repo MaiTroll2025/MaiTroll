@@ -459,10 +459,16 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
            { label: 'Troll Court', icon: Scale, path: '/troll-court' },
            { label: 'Inmates', icon: Lock, path: '/inmates' },
            { label: 'City Laws & Fees', icon: FileText_M, path: '/home?tab=laws-fees' },
+           { label: 'Mayor Dashboard', icon: Crown, path: '/mayor' },
+           { label: 'Town Meeting', icon: Users, path: '/town-meeting' },
+           { label: 'City Government', icon: Landmark, path: '/city-government' },
            { label: 'President Candidates', icon: Vote, path: '/president' },
            { label: 'Elections', icon: ClipboardList, path: '/government' },
+           { label: 'Proposals', icon: ScrollText, path: '/government/proposals' },
+           { label: 'Openings', icon: Briefcase, path: '/government/openings' },
+           { label: 'Newspaper', icon: Newspaper, path: '/government/newspaper' },
           ...(isOfficer || isSecretary || isAdmin
-            ? [{ label: 'City Government', icon: Landmark as any, path: '/government' }]
+            ? [{ label: 'City Government (Staff)', icon: Landmark as any, path: '/government' }]
             : []),
           ...(isOfficer || isAdmin || isSecretary || isLead
             ? [
@@ -845,8 +851,9 @@ export default function BottomNavBar() {
                 <NavButton icon={Sparkles} label="Treelz" to="/treelz" active={isActive('/treelz')} size="large" />
                 <NavButton icon={Crown} label="High Bcasters" to="/high-bcasters" active={isActive('/high-bcasters')} size="large" />
                 <NavButton icon={Video} label="Go Live" to="/broadcast/setup" active={isActive('/broadcast')} size="large" />
-                 <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} size="large" />
-                 <NavButton icon={Newspaper} label="TCNN" to="/tcnn" active={isActive('/tcnn')} size="large" />
+                  <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} size="large" />
+                  <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} size="large" />
+                  <NavButton icon={Newspaper} label="TCNN" to="/tcnn" active={isActive('/tcnn')} size="large" />
                  <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} size="large" badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} size="large" badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Map} label="Neighborhood" to="/neighborhood-map" active={isActive('/neighborhood-map')} size="large" badge={badges.neighborhood} badgeKey="neighborhood" onBadgeDismiss={badges.dismiss} />
@@ -882,8 +889,9 @@ export default function BottomNavBar() {
                  <NavButton icon={Coins} label="Coins" to="/store" active={isActive('/store') || isActive('/coins')} badge={badges.coins} badgeKey="coins" onBadgeDismiss={badges.dismiss} />
                  <NavButton icon={Sparkles} label="Treelz" to="/treelz" active={isActive('/treelz')} />
                  <NavButton icon={Crown} label="High Bcasters" to="/high-bcasters" active={isActive('/high-bcasters')} />
-                 <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} />
-                 <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
+                  <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} />
+                  <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} />
+                  <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Map} label="Neighborhood" to="/neighborhood-map" active={isActive('/neighborhood-map')} badge={badges.neighborhood} badgeKey="neighborhood" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} />

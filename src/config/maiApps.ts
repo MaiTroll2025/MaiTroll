@@ -17,10 +17,10 @@ export interface MaiApp {
 export const MAI_APPS: MaiApp[] = [
   {
     id: 'troll-city',
-    name: 'Troll City',
+    name: 'MaiTroll',
     tagline: 'Go live, earn coins, enter the virtual city.',
     category: 'Live Social City',
-    websiteUrl: 'https://maitrollcity.com',
+    websiteUrl: 'https://maiMaiTroll.com',
     googlePlayUrl: '',
     appleStoreUrl: '',
     status: 'live',

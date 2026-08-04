@@ -41,7 +41,7 @@ stage_pass_denied: {
 
   battle_invite: {
     title: '⚔️ Battle Invite',
-    body: 'Someone invited you to battle on Troll City.',
+    body: 'Someone invited you to battle on Mai Troll.',
     type: 'battle_invite',
   },
 
@@ -71,19 +71,19 @@ stage_pass_denied: {
 
   jail_update: {
     title: '🚔 Jail Update',
-    body: 'Your jail status has changed. Open Troll City to review it.',
+    body: 'Your jail status has changed. Open Mai Troll to review it.',
     type: 'jail_update',
   },
 
   new_law: {
     title: '📜 New City Law',
-    body: 'A new Troll City law or rule update has been posted.',
+    body: 'A new Mai Troll law or rule update has been posted.',
     type: 'new_law',
   },
 
   church_notice: {
     title: '⛪ Church Notice',
-    body: 'A new church event or message is available in Troll City.',
+    body: 'A new church event or message is available in Mai Troll.',
     type: 'church_notice',
   },
 } as const
@@ -91,7 +91,7 @@ stage_pass_denied: {
 export const STAFF_OFFLINE_NOTIFICATIONS = {
   staff_assignment: {
     title: '📋 New Staff Assignment',
-    body: 'You have a new staff task waiting in Troll City.',
+    body: 'You have a new staff task waiting in Mai Troll.',
     type: 'staff_assignment',
   },
 
@@ -153,7 +153,7 @@ export const STAFF_OFFLINE_NOTIFICATIONS = {
 export const ADMIN_OFFLINE_NOTIFICATIONS = {
   new_signup: {
     title: '👤 New User Joined',
-    body: 'A new user signed up for Troll City.',
+    body: 'A new user signed up for Mai Troll.',
     type: 'new_signup',
   },
 
@@ -195,13 +195,13 @@ export const ADMIN_OFFLINE_NOTIFICATIONS = {
 
   app_health_alert: {
     title: '🧠 App Health Alert',
-    body: 'Troll City health monitoring detected something important.',
+    body: 'Mai Troll health monitoring detected something important.',
     type: 'app_health_alert',
   },
 
   ceo_priority: {
     title: '👑 CEO Priority Alert',
-    body: 'A high-priority Troll City event needs your attention.',
+    body: 'A high-priority Mai Troll event needs your attention.',
     type: 'ceo_priority',
   },
 

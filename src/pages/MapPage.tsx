@@ -14,7 +14,7 @@ export default function MapPage() {
             <MapPin className="w-4 h-4 text-violet-300" />
             Neighborhood Map
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">Troll City Streets</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Mai Troll Streets</h1>
           <p className="max-w-2xl mx-auto text-slate-400">
             Explore your neighborhood, manage your properties, and connect with family members across the city blocks.
           </p>

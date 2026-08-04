@@ -4,7 +4,7 @@ We are not shipping until the system is measurably scale-safe for 1,000+ concurr
 
 GOAL
 
-After these fixes, Troll City must:
+After these fixes, Mai Troll must:
 
 survive viewer spikes and “gift bombs” without DB locking/outage
 
@@ -16,7 +16,7 @@ have gifts settle reliably (scheduled batch)
 
 have leaderboards load instantly (no transaction scans)
 
-have HLS/Bunny viewer mode working under cdn.maitrollcity.com without external navigation
+have HLS/Bunny viewer mode working under cdn.maiMai Troll.com without external navigation
 
 provide measurable limits and first-failure points
 
@@ -135,7 +135,7 @@ Requirements
 
 Viewer mode uses HLS/LL-HLS URLs under:
 
-https://cdn.maitrollcity.com/.../*.m3u8
+https://cdn.maiMai Troll.com/.../*.m3u8
 
 No external navigation; broadcast page stays the same.
 
@@ -254,7 +254,7 @@ E) HLS/Bunny Tests (PASS/FAIL)
 
 Viewer opens broadcast page:
 
-plays HLS via cdn.maitrollcity.com
+plays HLS via cdn.maiMai Troll.com
 
 does NOT request LiveKit token
 

@@ -1,343 +1,798 @@
 import { handleCorsPreflight, withCors } from "../_shared/cors.ts";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import {
+  AccessToken,
+  type VideoGrant,
+} from "npm:livekit-server-sdk@2.17.0";
 
 /**
- * LiveKit Token Generator
- * Generates access tokens for LiveKit rooms
- * Supports modes: audience, publisher, xtrollz-preview, xtrollz-viewer, xtrollz-broadcaster, ghost
+ * LiveKit token generator
+ *
+ * Security:
+ * - Tokens are generated with LiveKit's official server SDK.
+ * - The authenticated Supabase user determines participant identity.
+ * - Client-supplied user IDs are not trusted.
+ * - Host/publisher access is checked server-side.
+ *
+ * Camera quality is capped at 720p (1280x720 @ 30fps, 2Mbps) for all participants.
+ * No viewer, participant, or broadcast-duration caps are enforced.
  */
 
-function base64Decode(str: string): Uint8Array {
-  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-  const padding = base64.length % 4;
-  const padded = padding ? base64 + '='.repeat(4 - padding) : base64;
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
+const TOKEN_TTL_SECONDS = 30 * 60;
+
+type ParticipantCategory =
+  | "host"
+  | "publisher"
+  | "seat"
+  | "moderator"
+  | "viewer"
+  | "preview"
+  | "ghost";
+
+interface TokenRequest {
+  room?: unknown;
+  roomName?: unknown;
+  channel?: unknown;
+
+  mode?: unknown;
+  role?: unknown;
+
+  identity?: unknown;
+  participantIdentity?: unknown;
+  participantName?: unknown;
+  userId?: unknown;
+  user_name?: unknown;
+
+  name?: unknown;
+  displayName?: unknown;
+
+  isHost?: unknown;
+  ghost?: unknown;
 }
 
-function base64Encode(buffer: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < buffer.length; i++) {
-    binary += String.fromCharCode(buffer[i]);
-  }
-  const base64 = btoa(binary);
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+interface ProfileRecord {
+  id?: string;
+  username?: string | null;
+  display_name?: string | null;
+  role?: string | null;
+  is_admin?: boolean | null;
+  is_banned?: boolean | null;
+  is_suspended?: boolean | null;
+  account_state?: string | null;
+  xtrollz_access_status?: string | null;
+  age_verified?: boolean | null;
+  identity_verified?: boolean | null;
 }
 
-// HMAC-SHA256 implementation
-async function hmacSha256(key: string, message: string): Promise<Uint8Array> {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(key);
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
+interface StreamRecord {
+  id?: string;
+  broadcaster_id?: string | null;
+  user_id?: string | null;
+  host_id?: string | null;
+  creator_id?: string | null;
+  status?: string | null;
+  is_live?: boolean | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  end_reason?: string | null;
+  minutes_remaining?: number | string | null;
+  total_minutes_allowed?: number | string | null;
+}
+
+function cleanString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeRoomName(value: string): string {
+  return value
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 128);
+}
+
+function normalizeIdentity(value: string): string {
+  return value
+    .trim()
+    .replace(/[^a-zA-Z0-9_:@.-]/g, "_")
+    .slice(0, 128);
+}
+
+function normalizeMode(value: unknown): string {
+  return cleanString(value).toLowerCase();
+}
+
+function normalizeRole(value: unknown): string {
+  return cleanString(value).toLowerCase();
+}
+
+function isTruthy(value: unknown): boolean {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
+function isRestrictedProfile(profile: ProfileRecord | null): boolean {
+  if (!profile) return false;
+
+  const accountState = cleanString(profile.account_state).toLowerCase();
+
+  return (
+    profile.is_banned === true ||
+    profile.is_suspended === true ||
+    ["banned", "suspended", "jailed", "blocked", "disabled"].includes(
+      accountState,
+    )
   );
-  const signature = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(message));
-  return new Uint8Array(signature);
 }
 
-// Create JWT-like token for LiveKit
-async function createLiveKitToken(params: {
+function isAdmin(profile: ProfileRecord | null): boolean {
+  if (!profile) return false;
+
+  const role = cleanString(profile.role).toLowerCase();
+
+  return (
+    profile.is_admin === true ||
+    ["admin", "super_admin", "platform_admin"].includes(role)
+  );
+}
+
+function getStreamOwnerId(stream: StreamRecord | null): string {
+  if (!stream) return "";
+
+  return cleanString(
+    stream.broadcaster_id ||
+      stream.user_id ||
+      stream.host_id ||
+      stream.creator_id,
+  );
+}
+
+function streamHasEnded(stream: StreamRecord | null): boolean {
+  if (!stream) return false;
+
+  const status = cleanString(stream.status).toLowerCase();
+
+  return (
+    Boolean(stream.ended_at) ||
+    ["ended", "failed", "cancelled", "canceled", "completed"].includes(status)
+  );
+}
+
+function streamIsLive(stream: StreamRecord | null): boolean {
+  if (!stream || streamHasEnded(stream)) return false;
+
+  const status = cleanString(stream.status).toLowerCase();
+
+  return stream.is_live === true || status === "live";
+}
+
+function getRequestedCategory(
+  body: TokenRequest,
+  mode: string,
+  role: string,
+): ParticipantCategory {
+  if (mode === "xtrollz-preview") return "preview";
+  if (mode === "xtrollz-viewer") return "viewer";
+  if (mode === "xtrollz-broadcaster") return "host";
+
+  if (role === "ghost" || isTruthy(body.ghost)) return "ghost";
+
+  if (isTruthy(body.isHost)) {
+    return "host";
+  }
+
+  if (
+    role === "host" ||
+    mode === "broadcaster"
+  ) {
+    return "host";
+  }
+
+  if (
+    role === "publisher" ||
+    mode === "publisher"
+  ) {
+    return "publisher";
+  }
+
+  if (
+    role === "seat" ||
+    role === "guest" ||
+    mode === "seat" ||
+    mode === "seat-publisher"
+  ) {
+    return "seat";
+  }
+
+  if (role === "moderator" || mode === "moderator") {
+    return "moderator";
+  }
+
+  return "viewer";
+}
+
+function categoryCanPublish(category: ParticipantCategory): boolean {
+  return category === "host" || category === "seat" || category === "publisher";
+}
+
+function categoryCanSubscribe(category: ParticipantCategory): boolean {
+  return category !== "ghost" || true;
+}
+
+async function getAuthenticatedUser(
+  req: Request,
+  supabaseUrl: string,
+  supabaseAnonKey: string,
+): Promise<{
+  userId: string;
+  email: string | null;
+  authorization: string;
+}> {
+  const authorization = req.headers.get("Authorization") || "";
+
+  if (!authorization.toLowerCase().startsWith("bearer ")) {
+    throw new Error("Missing authentication token");
+  }
+
+  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: authorization,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  const {
+    data: { user },
+    error,
+  } = await userClient.auth.getUser();
+
+  if (error || !user) {
+    console.warn("[livekit-token] Authentication failed", {
+      message: error?.message,
+    });
+
+    throw new Error("Invalid or expired authentication token");
+  }
+
+  return {
+    userId: user.id,
+    email: user.email || null,
+    authorization,
+  };
+}
+
+async function getProfile(
+  adminDb: SupabaseClient,
+  userId: string,
+): Promise<ProfileRecord | null> {
+  const { data, error } = await adminDb
+    .from("user_profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[livekit-token] Profile lookup failed", {
+      userId,
+      message: error.message,
+    });
+
+    return null;
+  }
+
+  return data as ProfileRecord | null;
+}
+
+async function getStream(
+  adminDb: SupabaseClient,
+  roomName: string,
+): Promise<StreamRecord | null> {
+  const { data, error } = await adminDb
+    .from("streams")
+    .select("*")
+    .eq("id", roomName)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[livekit-token] Stream lookup failed", {
+      roomName,
+      message: error.message,
+    });
+
+    return null;
+  }
+
+  return data as StreamRecord | null;
+}
+
+async function userHasStagePass(
+  adminDb: SupabaseClient,
+  roomName: string,
+  userId: string,
+): Promise<boolean> {
+  const { data, error } = await adminDb
+    .from("stream_stage_passes")
+    .select("status")
+    .eq("stream_id", roomName)
+    .eq("user_id", userId)
+    .in("status", ["approved", "live"])
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[livekit-token] Stage-pass lookup failed", {
+      roomName,
+      userId,
+      message: error.message,
+    });
+
+    return false;
+  }
+
+  return Boolean(data);
+}
+
+async function createToken(options: {
   apiKey: string;
   apiSecret: string;
   roomName: string;
+  identity: string;
   participantName: string;
-  isPublisher: boolean;
-  canPublish: boolean;
-  canSubscribe: boolean;
-  exp: number;
-  isGhost?: boolean;
-  ghostMetadata?: { role: string; hidden: boolean };
+  category: ParticipantCategory;
+  metadata: Record<string, unknown>;
 }): Promise<string> {
-  const { apiKey, apiSecret, roomName, participantName, isPublisher, canPublish, canSubscribe, exp, isGhost, ghostMetadata } = params;
+  const canPublish = categoryCanPublish(options.category);
+  const canSubscribe = categoryCanSubscribe(options.category);
+  const hidden = options.category === "ghost";
 
-  const now = Math.floor(Date.now() / 1000);
+  const token = new AccessToken(options.apiKey, options.apiSecret, {
+    identity: options.identity,
+    name: options.participantName,
+    metadata: JSON.stringify(options.metadata),
+    ttl: TOKEN_TTL_SECONDS,
+  });
 
-  const encoder = new TextEncoder();
-  
-  // JWT header
-  const header = { alg: 'HS256', typ: 'JWT' };
-  
-  // The audience should be the LiveKit server URL for proper token validation
-  const liveKitUrl = Deno.env.get('LIVEKIT_URL') || 'wss://troll-city-llc-4ixv208d.livekit.cloud';
-  
-  // Build metadata for ghost participants
-  const metadata = isGhost && ghostMetadata 
-    ? ghostMetadata 
-    : undefined;
-  
-  const payload = {
-    iss: apiKey,
-    sub: participantName,
-    aud: liveKitUrl,
-    exp: exp,
-    nbf: now,
-    iat: now,
-    video: {
-      room: roomName,
-      roomJoin: true,
-      canPublish: isPublisher || canPublish,
-      canSubscribe: canSubscribe,
-      canPublishData: isPublisher || canPublish,
-    },
-    metadata: metadata,
+  const grant: VideoGrant = {
+    roomJoin: true,
+    room: options.roomName,
+    canPublish,
+    canSubscribe,
+    canPublishData: canPublish,
+    hidden,
+
+    /*
+     * Restrict publishers to camera and microphone.
+     * This prevents LiveKit screen-share tracks from being authorized.
+     */
+    canPublishSources: canPublish
+      ? ([1, 2] as VideoGrant["canPublishSources"])
+      : undefined,
   };
 
-  // Create JWT-like token
-  const headerBase64 = base64Encode(encoder.encode(JSON.stringify(header)));
-  const payloadBase64 = base64Encode(encoder.encode(JSON.stringify(payload)));
-  
-  // Sign the token - use the secret string directly
-  const message = `${headerBase64}.${payloadBase64}`;
-  const signature = await hmacSha256(apiSecret, message);
-  const signatureBase64 = base64Encode(signature);
+  token.addGrant(grant);
 
-  return `${message}.${signatureBase64}`;
+  return await token.toJwt();
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  if (req.method === 'OPTIONS') return handleCorsPreflight(req);
+  if (req.method === "OPTIONS") {
+    return handleCorsPreflight(req);
+  }
+
+  if (req.method !== "POST") {
+    return withCors(
+      {
+        success: false,
+        error: "Method not allowed",
+        code: "method_not_allowed",
+      },
+      405,
+      req,
+    );
+  }
 
   try {
-    let body: Record<string, unknown> = {};
-    try {
-      body = await req.json();
-    } catch {
-      return withCors({
-        success: false,
-        error: 'Invalid JSON request body',
-        stage: 'livekit-token'
-      }, 400, req);
-    }
-
-    const roomName = String(body.room || body.roomName || body.channel || '');
-    const userId = String(body.userId || body.identity || body.participantIdentity || '');
-    const mode = String(body.mode || '').toLowerCase();
-    
-    // Guard: Check for missing room
-    if (!roomName) {
-      console.error('[livekit-token] Missing room name');
-      return withCors({
-        success: false,
-        error: 'Missing room name',
-        stage: 'livekit-token'
-      }, 400, req);
-    }
-
-    const participantName = String(
-      body.identity || body.participantIdentity || body.userId || body.user_name || body.participantName || 'participant'
+    const liveKitUrl = cleanString(Deno.env.get("LIVEKIT_URL"));
+    const liveKitApiKey = cleanString(Deno.env.get("LIVEKIT_API_KEY"));
+    const liveKitApiSecret = cleanString(
+      Deno.env.get("LIVEKIT_API_SECRET"),
     );
 
-    const apiKey = Deno.env.get('LIVEKIT_API_KEY');
-    const apiSecret = Deno.env.get('LIVEKIT_API_SECRET');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const supabaseUrl = cleanString(Deno.env.get("SUPABASE_URL"));
+    const supabaseAnonKey = cleanString(
+      Deno.env.get("SUPABASE_ANON_KEY"),
+    );
+    const supabaseServiceRoleKey = cleanString(
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+    );
 
-    // Guard: Check for missing environment variables
-    if (!apiKey || !apiSecret) {
-      console.error('[livekit-token] LiveKit credentials NOT configured env vars:', { apiKey: !!apiKey, apiSecret: !!apiSecret });
-      return withCors({
-        success: false,
-        error: 'LiveKit credentials not configured on server',
-        stage: 'livekit-token',
-        hint: 'Set LIVEKIT_API_KEY and LIVEKIT_API_SECRET in Supabase secrets'
-      }, 500, req);
+    const missingEnvironmentVariables: string[] = [];
+
+    if (!liveKitUrl) missingEnvironmentVariables.push("LIVEKIT_URL");
+    if (!liveKitApiKey) {
+      missingEnvironmentVariables.push("LIVEKIT_API_KEY");
+    }
+    if (!liveKitApiSecret) {
+      missingEnvironmentVariables.push("LIVEKIT_API_SECRET");
+    }
+    if (!supabaseUrl) missingEnvironmentVariables.push("SUPABASE_URL");
+    if (!supabaseAnonKey) {
+      missingEnvironmentVariables.push("SUPABASE_ANON_KEY");
+    }
+    if (!supabaseServiceRoleKey) {
+      missingEnvironmentVariables.push("SUPABASE_SERVICE_ROLE_KEY");
     }
 
-    // Determine token permissions based on mode
-    let isPublisher = false;
-    let canPublish = false;
-    let canSubscribe = true;
-    let tokenExpiry = 3600; // 1 hour default
-    let participantType = 'audience';
-    let isGhost = false;
-    let ghostMetadata: { role: string; hidden: boolean } | undefined;
+    if (missingEnvironmentVariables.length > 0) {
+      console.error("[livekit-token] Missing server configuration", {
+        missingEnvironmentVariables,
+      });
 
-    // Enforce viewer capacity limit for audience members (beta: 20 max per broadcast)
-    if (mode === 'audience' && roomName && supabaseUrl && supabaseServiceKey) {
-      try {
-        const { createClient } = await import('npm:@supabase/supabase-js@2');
-        const db = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } });
-        const { data: streamRow } = await db
-          .from('streams')
-          .select('current_viewers, viewer_count, is_live, status')
-          .eq('id', roomName)
-          .maybeSingle();
-
-        const viewerCount = Number(streamRow?.current_viewers || streamRow?.viewer_count || 0);
-        const isStreamLive = streamRow?.is_live === true && streamRow?.status === 'live';
-
-        if (isStreamLive && viewerCount >= 20) {
-          console.warn('[livekit-token] Viewer capacity limit reached:', { roomName, viewerCount, max: 20 });
-          return withCors({
-            success: false,
-            error: 'This broadcast has reached maximum viewer capacity.',
-            code: 'viewer_limit_reached',
-            viewerCount,
-            maxViewers: 20,
-          }, 403, req);
-        }
-      } catch (viewerErr) {
-        console.warn('[livekit-token] Viewer capacity check failed:', viewerErr);
-      }
+      return withCors(
+        {
+          success: false,
+          error: "LiveKit token service is not configured.",
+          code: "server_configuration_missing",
+          missingEnvironmentVariables,
+        },
+        500,
+        req,
+      );
     }
 
-    // XTrollz-specific modes
-    const isXtrPreview = mode === 'xtrollz-preview';
-    const isXtrViewer = mode === 'xtrollz-viewer';
-    const isXtrBroadcaster = mode === 'xtrollz-broadcaster';
+    let body: TokenRequest;
 
-    if (isXtrPreview || isXtrViewer || isXtrBroadcaster) {
-      // XTrollz tokens: verify approval in database
-      let xtrollzApproved = false;
-      if (userId && supabaseUrl && supabaseServiceKey) {
-        try {
-          const { createClient } = await import('npm:@supabase/supabase-js@2');
-          const db = createClient(supabaseUrl, supabaseServiceKey);
-          const { data: profile } = await db
-            .from('user_profiles')
-            .select('xtrollz_access_status, age_verified, identity_verified, is_banned, account_state')
-            .eq('id', userId)
-            .maybeSingle();
+    try {
+      body = (await req.json()) as TokenRequest;
+    } catch {
+      return withCors(
+        {
+          success: false,
+          error: "Invalid JSON request body",
+          code: "invalid_json",
+        },
+        400,
+        req,
+      );
+    }
 
-          xtrollzApproved = !!profile &&
-            profile.xtrollz_access_status === 'approved' &&
-            profile.age_verified === true &&
-            profile.identity_verified === true &&
-            profile.is_banned === false &&
-            !['banned', 'jailed'].includes(profile.account_state || '');
-        } catch (dbErr) {
-          console.warn('[livekit-token] XTrollz approval check failed:', dbErr);
-        }
-      }
+    const rawRoomName = cleanString(
+      body.room || body.roomName || body.channel,
+    );
+    const roomName = normalizeRoomName(rawRoomName);
+
+    if (!roomName) {
+      return withCors(
+        {
+          success: false,
+          error: "Missing room name",
+          code: "missing_room",
+        },
+        400,
+        req,
+      );
+    }
+
+    const authenticated = await getAuthenticatedUser(
+      req,
+      supabaseUrl,
+      supabaseAnonKey,
+    );
+
+    const userId = authenticated.userId;
+
+    /*
+     * Never trust body.userId/body.identity as the authoritative user ID.
+     */
+    const identity = normalizeIdentity(userId);
+
+    if (!identity) {
+      return withCors(
+        {
+          success: false,
+          error: "Unable to determine participant identity",
+          code: "invalid_identity",
+        },
+        400,
+        req,
+      );
+    }
+
+    const adminDb = createClient(
+      supabaseUrl,
+      supabaseServiceRoleKey,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+      },
+    );
+
+    const profile = await getProfile(adminDb, userId);
+
+    if (isRestrictedProfile(profile)) {
+      return withCors(
+        {
+          success: false,
+          error: "Your account is not permitted to join broadcasts.",
+          code: "account_restricted",
+        },
+        403,
+        req,
+      );
+    }
+
+    const mode = normalizeMode(body.mode);
+    const role = normalizeRole(body.role);
+
+    let category = getRequestedCategory(body, mode, role);
+
+    const stream = await getStream(adminDb, roomName);
+    const streamOwnerId = getStreamOwnerId(stream);
+
+    const userIsAdmin = isAdmin(profile);
+    const userOwnsStream = Boolean(
+      streamOwnerId && streamOwnerId === userId,
+    );
+
+    /*
+     * Ghost viewing is restricted to administrators.
+     */
+    if (category === "ghost" && !userIsAdmin) {
+      return withCors(
+        {
+          success: false,
+          error: "Ghost access is restricted to administrators.",
+          code: "ghost_access_denied",
+        },
+        403,
+        req,
+      );
+    }
+
+    /*
+     * XTrollz requires its additional approval fields.
+     */
+    if (
+      ["xtrollz-preview", "xtrollz-viewer", "xtrollz-broadcaster"].includes(
+        mode,
+      )
+    ) {
+      const xtrollzApproved =
+        profile?.xtrollz_access_status === "approved" &&
+        profile?.age_verified === true &&
+        profile?.identity_verified === true &&
+        !isRestrictedProfile(profile);
 
       if (!xtrollzApproved) {
-        return withCors({
+        return withCors(
+          {
+            success: false,
+            error: "XTrollz access is not approved.",
+            code: "xtrollz_access_denied",
+          },
+          403,
+          req,
+        );
+      }
+    }
+
+    /*
+     * Only the owner or an admin may receive a host token.
+     */
+    if (category === "host" && !userOwnsStream && !userIsAdmin) {
+      return withCors(
+        {
           success: false,
-          error: 'XTrollz access not approved',
-          stage: 'livekit-token'
-        }, 403, req);
-      }
+          error: "You are not authorized to host this broadcast.",
+          code: "host_access_denied",
+        },
+        403,
+        req,
+      );
+    }
 
-      if (isXtrPreview) {
-        canPublish = false;
-        canSubscribe = true;
-        tokenExpiry = 600; // 10 minutes for previews
-        participantType = 'preview';
-      } else if (isXtrViewer) {
-        canPublish = false;
-        canSubscribe = true;
-        tokenExpiry = 3600; // 1 hour
-        participantType = 'viewer';
-      } else if (isXtrBroadcaster) {
-        canPublish = true;
-        canSubscribe = true;
-        tokenExpiry = 7200; // 2 hours
-        participantType = 'broadcaster';
-        isPublisher = true;
-      }
-    } else {
-      // Existing logic for other modes (publisher, audience, ghost, etc.)
-      isPublisher = body.role === 'publisher' || body.role === 'host' || body.isHost === true;
-      
-      // Check if this is a ghost participant request
-      isGhost = body.role === 'ghost' || body.ghost === true;
-      ghostMetadata = isGhost ? { role: 'ghost', hidden: true } : undefined;
+    /*
+     * A requested seat token requires an active stage pass.
+     */
+    if (category === "seat" && !userOwnsStream && !userIsAdmin) {
+      const hasStagePass = await userHasStagePass(
+        adminDb,
+        roomName,
+        userId,
+      );
 
-      // If not auto-approved as publisher, verify Stage Pass in database
-      if (!isPublisher && userId && roomName && supabaseUrl && supabaseServiceKey) {
-        try {
-          const { createClient } = await import('npm:@supabase/supabase-js@2');
-          const db = createClient(supabaseUrl, supabaseServiceKey);
-          const { data: stagePass } = await db
-            .from('stream_stage_passes')
-            .select('status')
-            .eq('stream_id', roomName)
-            .eq('user_id', userId)
-            .in('status', ['approved', 'live'])
-            .maybeSingle();
-
-          if (stagePass) {
-            isPublisher = true;
-            console.log('[livekit-token] Stage Pass verified —', stagePass.status, '— publisher token granted');
-          }
-        } catch (dbErr) {
-          console.warn('[livekit-token] Stage Pass DB check failed (treated as audience):', dbErr);
-        }
+      if (!hasStagePass) {
+        return withCors(
+          {
+            success: false,
+            error: "You do not have an approved guest seat.",
+            code: "stage_pass_required",
+          },
+          403,
+          req,
+        );
       }
     }
 
-    // Resolve a server-authoritative quality cap (e.g. Azgora streams are
-    // locked to 720p even for admins). Client presets must honor this.
-    let qualityCap: '720p' | '1080p' = '1080p';
-    if (roomName && supabaseUrl && supabaseServiceKey) {
-      try {
-        const { createClient } = await import('npm:@supabase/supabase-js@2');
-        const db = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } });
-        const { data: streamRow } = await db
-          .from('streams')
-          .select('is_azgora, quality_cap')
-          .eq('id', roomName)
-          .maybeSingle();
-        if (streamRow?.is_azgora === true || streamRow?.quality_cap === '720p') {
-          qualityCap = '720p';
-        }
-      } catch (dbErr) {
-        console.warn('[livekit-token] quality cap lookup failed (default 1080p):', dbErr);
+    /*
+     * Preserve compatibility with old clients that request audience mode
+     * after receiving an approved stage pass.
+     */
+    if (
+      category === "viewer" &&
+      !userOwnsStream &&
+      !userIsAdmin
+    ) {
+      const hasStagePass = await userHasStagePass(
+        adminDb,
+        roomName,
+        userId,
+      );
+
+      if (hasStagePass) {
+        category = "seat";
       }
     }
 
-    console.log('[livekit-token] Generating token for room:', roomName, 'participant:', participantName, 'mode:', mode, 'isPublisher:', isPublisher, 'participantType:', participantType, 'qualityCap:', qualityCap);
+    if (streamHasEnded(stream)) {
+      return withCors(
+        {
+          success: false,
+          error: "This broadcast has ended.",
+          code: "broadcast_ended",
+        },
+        403,
+        req,
+      );
+    }
 
-    const token = await createLiveKitToken({
-      apiKey,
-      apiSecret,
-      roomName,
-      participantName,
-      isPublisher,
-      canPublish,
-      canSubscribe,
-      exp: tokenExpiry,
-      isGhost,
-      ghostMetadata,
-    });
+    const isLive = streamIsLive(stream);
 
-    console.log('[livekit-token] Token generated successfully for', participantName, 'mode:', mode, {
-      roomName,
-      hasToken: !!token,
-      tokenLength: token?.length,
-    });
+    if (isLive) {
+      const remainingMinutes = Number(stream?.minutes_remaining);
 
-    const liveKitUrl = Deno.env.get('LIVEKIT_URL') || Deno.env.get('VITE_LIVEKIT_URL') || 'wss://troll-city-llc-4ixv208d.livekit.cloud';
+      if (
+        Number.isFinite(remainingMinutes) &&
+        remainingMinutes <= 0
+      ) {
+        return withCors(
+          {
+            success: false,
+            error:
+              "This broadcast has reached its maximum allocated minutes.",
+            code: "minutes_limit_reached",
+            minutesRemaining: 0,
+            totalMinutesAllowed:
+              Number(stream?.total_minutes_allowed) ||
+              360,
+          },
+          403,
+          req,
+        );
+      }
+    }
 
-    return withCors({
-      success: true,
-      token,
-      url: liveKitUrl,
-      roomName,
-      participantIdentity: participantName,
-      participantName,
-      isPublisher,
-      isGhost,
-      participantType,
-      ghostMetadata: isGhost ? ghostMetadata : undefined,
+    const participantName =
+      cleanString(body.displayName || body.name || body.participantName) ||
+      cleanString(profile?.display_name) ||
+      cleanString(profile?.username) ||
+      "Participant";
+
+    const metadata = {
+      userId,
+      role: category,
       mode,
-      qualityCap,
-    }, 200, req);
+      hidden: category === "ghost",
+      qualityCap: "720p",
+    };
 
+    const token = await createToken({
+      apiKey: liveKitApiKey,
+      apiSecret: liveKitApiSecret,
+      roomName,
+      identity,
+      participantName,
+      category,
+      metadata,
+    });
+
+    if (!token || token.split(".").length !== 3) {
+      console.error("[livekit-token] SDK returned malformed token", {
+        roomName,
+        identity,
+        tokenLength: token?.length || 0,
+      });
+
+      return withCors(
+        {
+          success: false,
+          error: "Token generation failed.",
+          code: "token_generation_failed",
+        },
+        500,
+        req,
+      );
+    }
+
+    console.log("[livekit-token] Token generated", {
+      roomName,
+      identity,
+      participantName,
+      category,
+      mode,
+      canPublish: categoryCanPublish(category),
+      canSubscribe: categoryCanSubscribe(category),
+      tokenLength: token.length,
+    });
+
+    return withCors(
+      {
+        success: true,
+        token,
+        accessToken: token,
+
+        url: liveKitUrl,
+        serverUrl: liveKitUrl,
+        livekitUrl: liveKitUrl,
+
+        roomName,
+        room: roomName,
+
+        participantIdentity: identity,
+        participantName,
+
+        isPublisher: categoryCanPublish(category),
+        canPublish: categoryCanPublish(category),
+        canSubscribe: categoryCanSubscribe(category),
+
+        isGhost: category === "ghost",
+        participantType: category,
+        mode,
+        qualityCap: "720p",
+        expiresIn: TOKEN_TTL_SECONDS,
+
+        cameraLimits: {
+          maxWidth: 1280,
+          maxHeight: 720,
+          maxFrameRate: 30,
+          maxBitrate: 2_000_000,
+          screenShareAllowed: false,
+        },
+      },
+      200,
+      req,
+    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[livekit-token] Error generating token:', message);
-    return withCors({
-      success: false,
-      error: message,
-      stage: 'livekit-token'
-    }, 500, req);
+    const message =
+      error instanceof Error ? error.message : "Unknown error";
+
+    console.error("[livekit-token] Unhandled error", {
+      message,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    const authenticationError =
+      message === "Missing authentication token" ||
+      message === "Invalid or expired authentication token";
+
+    return withCors(
+      {
+        success: false,
+        error: message,
+        code: authenticationError
+          ? "authentication_required"
+          : "livekit_token_error",
+        stage: "livekit-token",
+      },
+      authenticationError ? 401 : 500,
+      req,
+    );
   }
 });

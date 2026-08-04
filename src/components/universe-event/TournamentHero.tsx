@@ -85,11 +85,11 @@ export default function TournamentHero({ tournament, participant, onJoin, loadin
           
           <div className="space-y-2">
             <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 tracking-tight uppercase drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">
-              {tournament.title.replace(/Neon City/i, 'Troll City')}
+              {tournament.title.replace(/Neon City/i, 'MaiTroll')}
             </h1>
             
             <p className="text-xl md:text-2xl text-purple-100/80 font-light max-w-xl leading-relaxed">
-              {(tournament.subtitle || "The ultimate citywide tournament series.").replace(/Neon City/i, 'Troll City')}
+              {(tournament.subtitle || "The ultimate citywide tournament series.").replace(/Neon City/i, 'MaiTroll')}
             </p>
           </div>
           

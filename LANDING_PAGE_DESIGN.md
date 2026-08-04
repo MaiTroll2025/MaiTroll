@@ -1,4 +1,4 @@
-# Troll City Landing Page - Visual Design
+# Mai Troll Landing Page - Visual Design
 
 ## 🎨 Color Palette
 
@@ -27,13 +27,13 @@ Gradients:
 │  ╔═══════════════════════════════════════╗ │
 │  ║         HERO SECTION                  ║ │
 │  ║                                       ║ │
-│  ║   Welcome to Troll City               ║ │
+│  ║   Welcome to Mai Troll               ║ │
 │  ║   (Gradient animated text: 7xl)       ║ │
 │  ║                                       ║ │
 │  ║   Stream, Play, Connect & Earn        ║ │
 │  ║   (2xl white text)                    ║ │
 │  ║                                       ║ │
-│  ║   [Join Troll City]  [Sign In]        ║ │
+│  ║   [Join Mai Troll]  [Sign In]        ║ │
 │  ║   (Gradient button)  (Border button)  ║ │
 │  ║                                       ║ │
 │  ║   [Free] [Earn Rewards] [Safe]        ║ │
@@ -74,7 +74,7 @@ Gradients:
 ```
 ┌─────────────────────────────────────────┐
 │                                         │
-│     Welcome to Troll City               │
+│     Welcome to Mai Troll               │
 │     ═══════════════════════             │
 │     (Gradient: Purple→Pink→Cyan)        │
 │     (Animated gradient shift)           │
@@ -84,7 +84,7 @@ Gradients:
 │                                         │
 │  ┌─────────────┐  ┌─────────────┐      │
 │  │  ✨ Join    │  │  Sign In    │      │
-│  │  Troll City →│  │             │      │
+│  │  Mai Troll →│  │             │      │
 │  └─────────────┘  └─────────────┘      │
 │  (Hover: scale-105 + glow)              │
 │                                         │
@@ -245,7 +245,7 @@ Gradients:
 
 The design follows modern SaaS landing page principles:
 
-1. **Clear Value Proposition**: Immediate understanding of what Troll City offers
+1. **Clear Value Proposition**: Immediate understanding of what Mai Troll offers
 2. **Social Proof**: Stats section showing active community
 3. **Feature Benefits**: Focus on user benefits, not technical specs
 4. **Multiple CTAs**: Different entry points for different user states

@@ -21,13 +21,13 @@ Scope: browser stream/idle behavior, Supabase clients, realtime channels, pollin
 In dev browser console, the app already exposes realtime channel counters:
 
 ```ts
-window.__TROLLCITY_SUPABASE_REALTIME_DEBUG__
+window.__Mai Troll_SUPABASE_REALTIME_DEBUG__
 ```
 
 Compare before and after opening/closing a stream:
 
 ```ts
-const before = window.__TROLLCITY_SUPABASE_REALTIME_DEBUG__;
+const before = window.__Mai Troll_SUPABASE_REALTIME_DEBUG__;
 setTimeout(() => console.log({
   created: before.created,
   removed: before.removed,
@@ -68,7 +68,7 @@ There is currently no active duplicate browser Supabase client in the app. A liv
 - active channel count
 - active channel identifiers
 
-This is exposed in dev as `window.__TROLLCITY_SUPABASE_REALTIME_DEBUG__` at `src/lib/supabase.ts:109-124`.
+This is exposed in dev as `window.__Mai Troll_SUPABASE_REALTIME_DEBUG__` at `src/lib/supabase.ts:109-124`.
 
 ### Stream pages
 

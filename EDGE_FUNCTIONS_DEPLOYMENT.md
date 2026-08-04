@@ -23,7 +23,7 @@ Open PowerShell and run:
 ```powershell
 ```
 
-This will open your browser. Log in with: **trollcity2025@gmail.com**
+This will open your browser. Log in with: **Mai Troll2025@gmail.com**
 
 ### 2. Link to Your Supabase Project
 
@@ -55,7 +55,7 @@ After deploying, set the required secrets for each function:
 # Set environment variables for all functions
 npx supabase secrets set SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
 npx supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
-npx supabase secrets set VITE_ADMIN_EMAIL=trollcity2025@gmail.com
+npx supabase secrets set VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com
 npx supabase secrets set PAYPAL_CLIENT_ID=<your-paypal-client-id>
 npx supabase secrets set PAYPAL_CLIENT_SECRET=<your-paypal-client-secret>
 npx supabase secrets set PAYPAL_MODE=live

@@ -40,7 +40,7 @@ export default function AdminPayoutDashboard() {
             <h3 className="text-lg font-bold text-white mb-2">Payout Processing Migrated</h3>
             <p className="text-sm text-slate-300 mb-3">
               All payout processing has been moved to MAI Pay on MAICorp.online.
-              Troll City no longer handles direct payout approvals or PayPal processing.
+              Mai Troll no longer handles direct payout approvals or PayPal processing.
             </p>
             <div className="flex items-center gap-2 text-sm text-cyan-400">
               <DollarSign className="h-4 w-4" />

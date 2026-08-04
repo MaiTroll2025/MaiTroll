@@ -34,7 +34,7 @@ type MobileMessage = {
 const sampleMessages: MobileMessage[] = [
   {
     id: "1",
-    from: "Troll City System",
+    from: "Mai Troll System",
     role: "system",
     subject: "Welcome to your mobile inbox",
     preview: "This is where app messages, role alerts, staff mail, and system updates will show.",

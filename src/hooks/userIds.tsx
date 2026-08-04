@@ -103,11 +103,11 @@ export default function TopCreatorsPage() {
 
   return (
     <SEOLayout
-      title="Top Creators on Troll City | Trending Streamers & Leaders"
-      description="Discover the top creators on Troll City. See the most-followed streamers, highest-earning creators, and trending live broadcasters on our social streaming platform."
+      title="Top Creators on Mai Troll | Trending Streamers & Leaders"
+      description="Discover the top creators on Mai Troll. See the most-followed streamers, highest-earning creators, and trending live broadcasters on our social streaming platform."
       keywords={[
-        'Troll City creators', 'top creators', 'trending streamers', 'Troll City leaders',
-        'best streamers', 'popular creators', 'Troll City rankings', 'top broadcasters',
+        'MaiTroll creators', 'top creators', 'trending streamers', 'MaiTroll leaders',
+        'best streamers', 'popular creators', 'MaiTroll rankings', 'top broadcasters',
         'social streaming platform', 'creator leaderboard'
       ]}
     >
@@ -124,11 +124,11 @@ export default function TopCreatorsPage() {
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Top Creators on{' '}
             <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 bg-clip-text text-transparent">
-              Troll City
+              Mai Troll
             </span>
           </h1>
           <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            Discover the most popular, highest-earning, and top-level creators on Troll City.
+            Discover the most popular, highest-earning, and top-level creators on Mai Troll.
             Follow your favorite streamers and watch them go live.
           </p>
         </div>
@@ -265,7 +265,7 @@ export default function TopCreatorsPage() {
                 <Flame className="w-6 h-6 text-red-400" />
                 Live Right Now
               </h2>
-              <p className="text-slate-400 text-sm mt-1">Creators currently streaming on Troll City</p>
+              <p className="text-slate-400 text-sm mt-1">Creators currently streaming on Mai Troll</p>
             </div>
             <Link to="/live-swipe" className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1">
               Browse All Live <ArrowRight className="w-4 h-4" />
@@ -303,7 +303,7 @@ export default function TopCreatorsPage() {
 
       <CTASection
         title="Want to Be on the Leaderboard?"
-        description="Start streaming on Troll City, build your audience, and climb the creator rankings."
+        description="Start streaming on Mai Troll, build your audience, and climb the creator rankings."
         primaryAction={{ label: 'Start Streaming', path: '/go-live' }}
         secondaryAction={{ label: 'Browse Categories', path: '/categories' }}
       />

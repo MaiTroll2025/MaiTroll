@@ -7,7 +7,7 @@
  * Also handles /:username routes for bot/crawler requests.
  */
 
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maitrollcity.com';
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maiMai Troll.com';
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`;
 
 /**
@@ -16,17 +16,17 @@ const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`;
 function generateProfileSEOHTML(profile, liveStream, baseUrl) {
   const username = profile.username || profile.display_name || 'User';
   const displayName = profile.display_name || profile.username || 'User';
-  const bio = profile.bio || `${displayName} on Mai Troll City`;
+  const bio = profile.bio || `${displayName} on Mai Mai Troll`;
   const avatarUrl = profile.avatar_url || FALLBACK_PREVIEW_IMAGE;
   const profileUrl = `${baseUrl}/${username}`;
 
   const isLive = !!liveStream;
   const title = isLive
-    ? `${displayName} (@${username}) LIVE | Mai Troll City`
-    : `${displayName} (@${username}) | Mai Troll City`;
+    ? `${displayName} (@${username}) LIVE | Mai Mai Troll`
+    : `${displayName} (@${username}) | Mai Mai Troll`;
 
   const description = isLive
-    ? `Watch ${displayName} live on Mai Troll City right now! ${liveStream.title || ''}`
+    ? `Watch ${displayName} live on Mai Mai Troll right now! ${liveStream.title || ''}`
     : bio;
 
   const ogImage = isLive && liveStream.thumbnail_url
@@ -71,7 +71,7 @@ function generateProfileSEOHTML(profile, liveStream, baseUrl) {
   <meta property="og:image:height" content="630">
   <meta property="og:url" content="${esc(profileUrl)}">
   <meta property="og:type" content="profile">
-  <meta property="og:site_name" content="Mai Troll City">
+  <meta property="og:site_name" content="Mai Mai Troll">
   <meta property="og:locale" content="en_US">
   <meta property="profile:username" content="${esc(username)}">
 
@@ -80,7 +80,7 @@ function generateProfileSEOHTML(profile, liveStream, baseUrl) {
   <meta name="twitter:title" content="${esc(title)}">
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${esc(ogImage)}">
-  <meta name="twitter:site" content="@trollcityapp">
+  <meta name="twitter:site" content="@Mai Trollapp">
 
   ${isLive ? `
   <!-- Live badge meta -->
@@ -132,8 +132,8 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
   const noindex = !isPublic || isBanned || stream.status === 'deleted';
 
   const description = isLive
-    ? `Watch ${displayName} live on Mai Troll City! ${title}`
-    : `Watch ${title} by ${displayName} on Mai Troll City.`;
+    ? `Watch ${displayName} live on Mai Mai Troll! ${title}`
+    : `Watch ${title} by ${displayName} on Mai Mai Troll.`;
 
   const previewImage = stream.thumbnail_url
     || broadcaster?.thumbnail_url
@@ -167,7 +167,7 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${esc(title)} | Mai Troll City</title>
+  <title>${esc(title)} | Mai Mai Troll</title>
   <meta name="description" content="${esc(description)}">
   <link rel="canonical" href="${esc(streamUrl)}">
 
@@ -182,7 +182,7 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
   <meta property="og:image:height" content="630">
   <meta property="og:url" content="${esc(streamUrl)}">
   <meta property="og:type" content="${isLive ? 'video.other' : 'website'}">
-  <meta property="og:site_name" content="Mai Troll City">
+  <meta property="og:site_name" content="Mai Mai Troll">
   <meta property="og:locale" content="en_US">
 
   <!-- Twitter Card -->
@@ -190,7 +190,7 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
   <meta name="twitter:title" content="${esc(title)}">
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${esc(previewImage)}">
-  <meta name="twitter:site" content="@trollcityapp">
+  <meta name="twitter:site" content="@Mai Trollapp">
 
   ${isLive ? '<meta property="og:live" content="true">' : ''}
 
@@ -286,7 +286,7 @@ async function handleProfileSEO(req, res) {
   } catch (error) {
     console.error('[ProfileSEO] Error:', error);
     const html = generateProfileSEOHTML(
-      { username, display_name: 'Mai Troll City' },
+      { username, display_name: 'Mai Mai Troll' },
       null,
       APP_URL
     );

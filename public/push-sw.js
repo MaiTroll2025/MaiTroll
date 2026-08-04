@@ -10,9 +10,9 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const title = data.title || 'Troll City Notification';
+  const title = data.title || 'Mai Troll Notification';
   const options = {
-    body: data.body || 'New update from Troll City!',
+    body: data.body || 'New update from Mai Troll!',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-72.png',
     data: data.url || '/',

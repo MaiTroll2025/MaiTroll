@@ -16,7 +16,7 @@ A complete, production-ready **Daily Login Wall** system where users earn **0-10
 
 ### Modified Code Files (2)
 ```
-✅ src/pages/TrollCityWall.tsx                     (added component)
+✅ src/pages/Mai TrollWall.tsx                     (added component)
 ✅ src/pages/Home.tsx                              (added feature card)
 ```
 
@@ -51,7 +51,7 @@ A complete, production-ready **Daily Login Wall** system where users earn **0-10
 #### Step 2️⃣ - Code Already Deployed ✅
 ```
 Components: Ready to use
-Integration: Already added to TrollCityWall.tsx
+Integration: Already added to Mai TrollWall.tsx
 Feature card: Already in Home.tsx
 No additional code needed!
 ```

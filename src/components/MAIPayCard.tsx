@@ -49,7 +49,7 @@ export default function MAIPayCard({ className, disableContinue = false }: MAIPa
     if (!user?.id) return
 
     const maiPayUrl = new URL('https://maicorp.online/mai-pay')
-    maiPayUrl.searchParams.set('platform', 'trollcity')
+    maiPayUrl.searchParams.set('platform', 'MaiTroll')
     maiPayUrl.searchParams.set('user_id', user.id)
     maiPayUrl.searchParams.set('available_balance', availableCoins.toString())
     maiPayUrl.searchParams.set('estimated_cashout_usd', cashoutEstimate.estimatedUsd.toString())
@@ -133,7 +133,7 @@ export default function MAIPayCard({ className, disableContinue = false }: MAIPa
 
       <div className="mb-4 rounded-xl border border-cyan-500/20 bg-cyan-950/30 p-3">
         <p className="text-center text-xs text-cyan-200/80">
-          Payouts processed every Friday • Estimated value is based on Troll City cashout tiers
+          Payouts processed on request • Estimated value is based on Mai Troll cashout tiers
         </p>
       </div>
 

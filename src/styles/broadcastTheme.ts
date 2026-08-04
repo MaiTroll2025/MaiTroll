@@ -1,9 +1,9 @@
 /**
- * Troll City Broadcast Theme Constants
+ * Mai Troll Broadcast Theme Constants
  * Neon City OS / Futuristic Cyber City theme
  */
 
-export const trollCityBroadcastTheme = {
+export const MaiTrollBroadcastTheme = {
   // Page shell
   pageShell: 'relative min-h-dvh overflow-hidden bg-slate-950 text-white',
   pageBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950',

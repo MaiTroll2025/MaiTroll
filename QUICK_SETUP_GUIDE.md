@@ -13,7 +13,7 @@
 ### 2. Add to Supabase (2 minutes)
 
 1. Go to: https://supabase.com/dashboard
-2. Select your project: **TrollCity**
+2. Select your project: **Mai Troll**
 3. Navigate to: **Settings** → **Edge Functions**
 4. Find "Secrets" section
 5. Click "Add new secret"
@@ -24,7 +24,7 @@
 ### 3. Deploy Edge Function (1 minute)
 
 ```bash
-cd e:\troll\trollcity-1\supabase
+cd e:\troll\Mai Troll-1\supabase
 npx supabase functions deploy gemini-verify-user
 ```
 

@@ -298,107 +298,125 @@ export function useCoins() {
 
     refreshCoins()
 
-    const coinChannel = supabase
-      .channel(`coin-balance-updates:${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'coin_transactions',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          refreshCoins()
-        }
-      )
-      .subscribe()
+    const coinChannelName = `coin-balance-updates:${user.id}`
+    const profileChannelName = `profile-balance-updates:${user.id}`
 
-    const profileChannel = supabase
-      .channel(`profile-balance-updates:${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'user_profiles',
-          filter: `id=eq.${user.id}`,
-        },
-        (payload) => {
-          const newProfileData = payload.new as any
-          const currentProfile = useAuthStore.getState().profile
-          if (currentProfile) {
-            const candidate =
-              typeof newProfileData.troll_coins === 'number'
-                ? newProfileData.troll_coins
-                : currentProfile.troll_coins
-            const shouldKeepOptimistic =
-              optimisticUntil &&
-              Date.now() < optimisticUntil &&
-              (optimisticTroll ?? balances.troll_coins) > candidate
-            const nextEarned =
-              typeof newProfileData.total_earned_coins === 'number'
-                ? newProfileData.total_earned_coins
-                : currentProfile.total_earned_coins
-            const nextSpent =
-              typeof newProfileData.total_spent_coins === 'number'
-                ? newProfileData.total_spent_coins
-                : currentProfile.total_spent_coins
-            const nextCrowns =
-              typeof newProfileData.battle_crowns === 'number'
-                ? newProfileData.battle_crowns
-                : currentProfile.battle_crowns
-            const nextHype =
-              typeof newProfileData.hype_coins === 'number'
-                ? newProfileData.hype_coins
-                : currentProfile.hype_coins
-            const updatedProfile: UserProfile = {
-              ...currentProfile,
-              troll_coins: shouldKeepOptimistic
-                ? (optimisticTroll ?? balances.troll_coins)
-                : Number(candidate ?? currentProfile.troll_coins),
-              total_earned_coins: nextEarned,
-              total_spent_coins: nextSpent,
-              battle_crowns: nextCrowns,
-              hype_coins: nextHype,
-            }
-            useAuthStore.getState().setProfile(updatedProfile)
-            setBalances((prev) => ({
-              paid_coins: prev.paid_coins,
-              troll_coins: shouldKeepOptimistic
-                ? (optimisticTroll ?? prev.troll_coins)
-                : (typeof updatedProfile.troll_coins === 'number'
-                    ? updatedProfile.troll_coins
-                    : prev.troll_coins),
-              total_earned_coins:
-                typeof updatedProfile.total_earned_coins === 'number'
-                  ? updatedProfile.total_earned_coins
-                  : prev.total_earned_coins,
-              total_spent_coins:
-                typeof updatedProfile.total_spent_coins === 'number'
-                  ? updatedProfile.total_spent_coins
-                  : prev.total_spent_coins,
-              battle_crowns:
-                typeof updatedProfile.battle_crowns === 'number'
-                  ? updatedProfile.battle_crowns
-                  : prev.battle_crowns,
-              hype_coins:
-                typeof updatedProfile.hype_coins === 'number'
-                  ? updatedProfile.hype_coins
-                  : prev.hype_coins,
-            }))
-            if (!shouldKeepOptimistic && optimisticUntil) {
-              setOptimisticUntil(null)
-              setOptimisticTroll(null)
+    const coinChannel = supabase.channel(coinChannelName)
+    const profileChannel = supabase.channel(profileChannelName)
+
+    // When multiple components use useCoins(), supabase.channel() returns the
+    // same RealtimeChannel instance. If it's already subscribed, calling .on()
+    // throws "cannot add postgres_changes callbacks after subscribe()".
+    const coinAlreadyActive = coinChannel.state === 'joined' || coinChannel.state === 'joining'
+    const profileAlreadyActive = profileChannel.state === 'joined' || profileChannel.state === 'joining'
+
+    if (!coinAlreadyActive) {
+      coinChannel
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'coin_transactions',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            refreshCoins()
+          }
+        )
+        .subscribe()
+    }
+
+    if (!profileAlreadyActive) {
+      profileChannel
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'user_profiles',
+            filter: `id=eq.${user.id}`,
+          },
+          (payload) => {
+            const newProfileData = payload.new as any
+            const currentProfile = useAuthStore.getState().profile
+            if (currentProfile) {
+              const candidate =
+                typeof newProfileData.troll_coins === 'number'
+                  ? newProfileData.troll_coins
+                  : currentProfile.troll_coins
+              const shouldKeepOptimistic =
+                optimisticUntil &&
+                Date.now() < optimisticUntil &&
+                (optimisticTroll ?? balances.troll_coins) > candidate
+              const nextEarned =
+                typeof newProfileData.total_earned_coins === 'number'
+                  ? newProfileData.total_earned_coins
+                  : currentProfile.total_earned_coins
+              const nextSpent =
+                typeof newProfileData.total_spent_coins === 'number'
+                  ? newProfileData.total_spent_coins
+                  : currentProfile.total_spent_coins
+              const nextCrowns =
+                typeof newProfileData.battle_crowns === 'number'
+                  ? newProfileData.battle_crowns
+                  : currentProfile.battle_crowns
+              const nextHype =
+                typeof newProfileData.hype_coins === 'number'
+                  ? newProfileData.hype_coins
+                  : currentProfile.hype_coins
+              const updatedProfile: UserProfile = {
+                ...currentProfile,
+                troll_coins: shouldKeepOptimistic
+                  ? (optimisticTroll ?? balances.troll_coins)
+                  : Number(candidate ?? currentProfile.troll_coins),
+                total_earned_coins: nextEarned,
+                total_spent_coins: nextSpent,
+                battle_crowns: nextCrowns,
+                hype_coins: nextHype,
+              }
+              useAuthStore.getState().setProfile(updatedProfile)
+              setBalances((prev) => ({
+                paid_coins: prev.paid_coins,
+                troll_coins: shouldKeepOptimistic
+                  ? (optimisticTroll ?? prev.troll_coins)
+                  : (typeof updatedProfile.troll_coins === 'number'
+                      ? updatedProfile.troll_coins
+                      : prev.troll_coins),
+                total_earned_coins:
+                  typeof updatedProfile.total_earned_coins === 'number'
+                    ? updatedProfile.total_earned_coins
+                    : prev.total_earned_coins,
+                total_spent_coins:
+                  typeof updatedProfile.total_spent_coins === 'number'
+                    ? updatedProfile.total_spent_coins
+                    : prev.total_spent_coins,
+                battle_crowns:
+                  typeof updatedProfile.battle_crowns === 'number'
+                    ? updatedProfile.battle_crowns
+                    : prev.battle_crowns,
+                hype_coins:
+                  typeof updatedProfile.hype_coins === 'number'
+                    ? updatedProfile.hype_coins
+                    : prev.hype_coins,
+              }))
+              if (!shouldKeepOptimistic && optimisticUntil) {
+                setOptimisticUntil(null)
+                setOptimisticTroll(null)
+              }
             }
           }
-        }
-      )
-      .subscribe()
+        )
+        .subscribe()
+    }
 
     return () => {
-      supabase.removeChannel(coinChannel)
-      supabase.removeChannel(profileChannel)
+      if (!coinAlreadyActive) {
+        supabase.removeChannel(coinChannel)
+      }
+      if (!profileAlreadyActive) {
+        supabase.removeChannel(profileChannel)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])

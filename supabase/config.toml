@@ -2,7 +2,7 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "yjxpwfalenorzrqxwmtr"
+project_id = "gejtbllazzighxwxudyu"
 
 [api]
 enabled = true
@@ -398,4 +398,19 @@ entrypoint = "./functions/get-how-to-video-url/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/moderation-actions/index.ts"
+
+[functions.signup]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/signup/index.ts"
+
+[functions.celeb-admin]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/celeb-admin/index.ts"
+
+[functions.celebrity]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/celebrity/index.ts"
 
