@@ -130,6 +130,11 @@ function GiftSystemProviderInner({
         return false
       }
 
+      if (user.id === targetReceiverId) {
+        toast.error('You cannot send gifts to yourself')
+        return false
+      }
+
       await unlockGiftAudio();
 
       // Note: trollmond deduction is now handled entirely by the RPC.

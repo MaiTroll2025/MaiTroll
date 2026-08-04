@@ -28,6 +28,11 @@ export const sendGift = async (
     return false;
   }
   
+  if (senderId === receiverId) {
+    toast.error('You cannot send gifts to yourself');
+    return false;
+  }
+  
   try {
     const { data, error } = await supabase.rpc('spend_coins', {
       p_sender_id: senderId,

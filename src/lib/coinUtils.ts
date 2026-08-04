@@ -202,6 +202,10 @@ export const sendGift = async (
   giftType: string,
   metadata?: Record<string, any>
 ): Promise<{ success: boolean; error?: string }> => {
+  if (senderId === receiverId) {
+    return { success: false, error: 'Cannot send gifts to yourself' }
+  }
+
   // Validate gift amount
   const validation = validateCoinAmount(amount, 'gift')
   if (!validation.isValid) {
