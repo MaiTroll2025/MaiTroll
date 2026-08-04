@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { supabase } from '../../lib/supabase'
-import { useAuthStore } from '../../lib/store'
+import { supabase } from '../lib/supabase'
+import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
 import { Crown, Wallet, TrendingUp, DollarSign, Clock, ShoppingBag, BarChart3 } from 'lucide-react'
-import { isCelebApproved } from '../../lib/staff'
+import { isCelebApproved } from '../lib/staff'
 
 interface CelebDashboardData {
   success: boolean
