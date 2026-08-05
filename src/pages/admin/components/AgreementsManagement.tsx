@@ -47,7 +47,7 @@ export default function AgreementsManagement({
   const [selectedAgreement, setSelectedAgreement] = useState<AgreementRecord | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const Mai TrollAgreement = `Mai Troll USER AGREEMENT & COMMUNITY CODE
+  const MaiTrollAgreement = `Mai Troll USER AGREEMENT & COMMUNITY CODE
 
 1. ACCEPTANCE OF TERMS
 By accessing or using Mai Troll, you agree to be bound by these Terms of Service and our Community Code of Conduct.
@@ -486,7 +486,7 @@ Last Updated: January 1, 2026`
 
       <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-6 max-h-[70vh] overflow-y-auto">
         <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
-          {Mai TrollAgreement}
+          {MaiTrollAgreement}
         </pre>
       </div>
     </div>

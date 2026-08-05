@@ -18,7 +18,7 @@ async function isCEO(userId: string): Promise<boolean> {
 
 export async function createGhostSession(req: VercelRequest, res: VercelResponse) {
   try {
-    const body = await req.json()
+    const body = req.body as { streamId?: string; userId?: string }
     const { streamId, userId } = body
 
     if (!streamId || !userId) {
@@ -86,7 +86,7 @@ export async function createGhostSession(req: VercelRequest, res: VercelResponse
 
 export async function leaveGhostSession(req: VercelRequest, res: VercelResponse) {
   try {
-    const body = await req.json()
+    const body = req.body as { streamId?: string; userId?: string }
     const { streamId, userId } = body
 
     if (!streamId || !userId) {

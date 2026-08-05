@@ -34,11 +34,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Only admins can create Mai Class' })
     }
 
-    const isAdmin = profile.role === 'admin' || profile.is_admin || profile.role === 'owner' || profile.role === 'ceo'
-    if (!isAdmin) {
-      return res.status(403).json({ error: 'Only admins can create Mai Class' })
-    }
-
     const { name, description, max_students_per_org } = req.body || {}
 
     // Create the class

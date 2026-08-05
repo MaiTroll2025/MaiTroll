@@ -79,6 +79,7 @@
     "@tsparticles/react": "^3.0.0",
     "@types/three": "^0.185.1",
     "@vercel/node": "^4.0.0",
+    "@vercel/og": "^1.0.0",
     "@zxing/library": "^0.21.3",
     "agora-rtc-sdk-ng": "^4.24.3",
     "agora-token": "^2.0.5",

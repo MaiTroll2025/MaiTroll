@@ -1,7 +1,7 @@
 import React from 'react'
 import { MessageSquare } from 'lucide-react'
 
-export default function Mai TrollWall() {
+export default function MaiTrollWall() {
   return (
     <div className="h-screen bg-gradient-to-br from-[#0A0814] via-[#0D0D1A] to-[#14061A] text-white flex flex-col pt-24 px-6 pb-6">
       <div className="max-w-3xl mx-auto w-full h-full flex flex-col space-y-6">

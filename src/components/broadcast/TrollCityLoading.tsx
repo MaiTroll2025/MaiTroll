@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-interface Mai TrollLoadingProps {
+interface MaiTrollLoadingProps {
   message?: string;
 }
 
@@ -15,7 +15,7 @@ const ROTATING_MESSAGES = [
   "Starting the engines...",
 ];
 
-const Mai TrollLoading: React.FC<Mai TrollLoadingProps> = ({ 
+const MaiTrollLoading: React.FC<MaiTrollLoadingProps> = ({ 
   message 
 }) => {
   const [progress, setProgress] = useState(0);
@@ -443,4 +443,4 @@ const Mai TrollLoading: React.FC<Mai TrollLoadingProps> = ({
   );
 };
 
-export default Mai TrollLoading;
+export default MaiTrollLoading;

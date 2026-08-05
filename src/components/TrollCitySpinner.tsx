@@ -1,11 +1,11 @@
 import React from 'react'
 
-interface Mai TrollSpinnerProps {
+interface MaiTrollSpinnerProps {
   text?: string
   subtext?: string
 }
 
-export const Mai TrollSpinner: React.FC<Mai TrollSpinnerProps> = ({ 
+export const MaiTrollSpinner: React.FC<MaiTrollSpinnerProps> = ({ 
   text = "Loading Mai Troll...", 
   subtext 
 }) => {

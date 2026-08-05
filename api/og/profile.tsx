@@ -337,10 +337,10 @@ export async function GET(request: Request) {
                   <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Podcasts</span>
                 </div>
               )}
-              {profile.total_achievements > 0 && (
+              {profile.total_achievement > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <span style={{ fontSize: '20px', fontWeight: 700, color: 'white' }}>
-                    {profile.total_achievements.toLocaleString()}
+                    {profile.total_achievement.toLocaleString()}
                   </span>
                   <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Achievements</span>
                 </div>
