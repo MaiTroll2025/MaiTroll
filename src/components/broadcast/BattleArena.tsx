@@ -338,9 +338,11 @@ interface BattleParticipantTileProps extends BattleParticipant {
 export const BattleVideoRenderer = ({
   videoTrack,
   isHost = false,
+  isLocal = false,
 }: {
   videoTrack?: LocalVideoTrack | RemoteVideoTrack;
   isHost?: boolean;
+  isLocal?: boolean;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -368,7 +370,7 @@ export const BattleVideoRenderer = ({
       videoRef.current = videoElement;
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
-      videoElement.style.objectFit = 'cover';
+      videoElement.style.objectFit = 'contain';
       videoElement.style.display = 'block';
       videoElement.style.backgroundColor = 'black';
       videoElement.autoplay = true;
@@ -381,9 +383,9 @@ export const BattleVideoRenderer = ({
       containerRef.current.appendChild(videoElement);
       const mediaTrack = videoTrack?.mediaStreamTrack;
       const trackSettings = mediaTrack ? (mediaTrack.getSettings?.() || {}) : {};
-      const isFrontCamera = (trackSettings as any).facingMode !== 'environment';
+      const shouldMirror = isLocal && (trackSettings as any).facingMode !== 'environment';
       if (containerRef.current) {
-        containerRef.current.style.transform = isFrontCamera ? 'scaleX(-1)' : '';
+        containerRef.current.style.transform = shouldMirror ? 'scaleX(-1)' : '';
       }
     } catch (err) {
       console.error('[BattleVideoRenderer] attach() threw error:', err);
@@ -407,7 +409,7 @@ export const BattleVideoRenderer = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full min-h-0 object-cover overflow-hidden"
+      className="relative w-full h-full min-h-0 object-contain overflow-hidden"
       style={{ minWidth: '100%', minHeight: '100%' }}
     />
   );
@@ -492,6 +494,7 @@ const BattleParticipantTile = ({
         <BattleVideoRenderer
           videoTrack={videoTrack}
           isHost={isHost}
+          isLocal={isLocal}
         />
       </div>
 

@@ -373,21 +373,8 @@ export default function MobileBroadcastLayout({
                 )}
               </button>
 
-              {/* Center: Mic & Camera - Compact Row */}
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  onClick={handleToggleMic}
-                  className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-all text-sm font-bold",
-                    !isMicEnabled 
-                      ? "bg-red-500/20 text-red-500 border border-red-500/30" 
-                      : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
-                  )}
-                  title={isMicEnabled ? 'Mute' : 'Unmute'}
-                >
-                  {!isMicEnabled ? '🔇' : '🎤'}
-                </button>
-                
+              {/* Center: Camera & Mic - Vertical Column */}
+              <div className="flex flex-col items-center justify-center gap-1">
                 <button
                   onClick={handleToggleCamera}
                   className={cn(
@@ -399,6 +386,18 @@ export default function MobileBroadcastLayout({
                   title={isCamEnabled ? 'Camera Off' : 'Camera On'}
                 >
                   {!isCamEnabled ? '📷' : '📹'}
+                </button>
+                <button
+                  onClick={handleToggleMic}
+                  className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-all text-sm font-bold",
+                    !isMicEnabled 
+                      ? "bg-red-500/20 text-red-500 border border-red-500/30" 
+                      : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
+                  )}
+                  title={isMicEnabled ? 'Mute' : 'Unmute'}
+                >
+                  {!isMicEnabled ? '🔇' : '🎤'}
                 </button>
               </div>
 

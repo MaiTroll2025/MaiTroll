@@ -301,7 +301,7 @@ function RemoteSeatSurface({
           onError={(event) =>
             console.error('[Seat Video] error', event)
           }
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="absolute inset-0 h-full w-full object-contain object-center"
         />
       ) : (
         <>{fallback}</>
@@ -7757,14 +7757,6 @@ const toggleMicrophone = useCallback(async () => {
                   </span>
                 </div>
 
-                {/* LIVE badge - top left */}
-                <div className="absolute left-3 top-3 z-30">
-                  <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-red-400/30 bg-red-500/20 px-2.5 text-[10px] font-black text-red-300 backdrop-blur-md">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-                    LIVE
-                  </span>
-                </div>
-
                 {/* MOBILE: Audience ticker with viewer count + collaboration controls */}
                 {isMobileHost && stream && (
                   <div className="absolute inset-x-0 top-0 z-20 flex items-start gap-2 px-3 pt-[44px]">
@@ -7892,19 +7884,7 @@ const toggleMicrophone = useCallback(async () => {
           
 
             {/* View mode toggle � desktop */}
-            {!isMobileViewer && (
-              <div className="absolute top-3 right-3 z-50">
-                <button
-                  onClick={() => setIsChatOpen(!isChatOpen)}
-                  className="rounded-lg bg-black/40 backdrop-blur border border-white/10 flex items-center gap-1.5 px-2.5 py-1.5 text-white/70 hover:text-white transition-all"
-                  title="Toggle Chat"
-                  aria-label="Toggle chat"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline text-[10px] font-bold">Chat</span>
-                </button>
-              </div>
-            )}
+
 
             {/* View mode toggle � mobile */}
             {isMobileViewer && (
@@ -8421,45 +8401,50 @@ const toggleMicrophone = useCallback(async () => {
                   />
                 )}
 
-              {/* Mobile host chat overlay */}
-              {isMobileHost && (
-                <>
-                  {/* Flying chat messages */}
-                  {floatingMessages.length > 0 && (
-                    <div
-                      className="fixed inset-x-0 z-30 pointer-events-none flex flex-col items-start justify-end overflow-hidden"
-                      style={{
-                        left: 0,
-                        right: '48px',
-                        bottom: '68px',
-                        top: 0,
-                      }}
+              {/* Mobile host chat bottom sheet */}
+              {isMobileHost && isChatOpen && (
+                <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl"
+                  style={{ maxHeight: '60vh' }}>
+                  <div className="flex items-center justify-between p-3 border-b border-white/10">
+                    <span className="text-sm font-bold text-white">Chat</span>
+                    <button
+                      onClick={() => setIsChatOpen(false)}
+                      className="p-1 text-white/60 hover:text-white transition-colors"
+                      aria-label="Close chat"
                     >
-                      <div className="flex flex-col-reverse items-start gap-1 px-3">
-                        {floatingMessages.slice(0, 6).map((msg, idx) => (
-                          <div
-                            key={msg.id}
-                            className="pointer-events-auto max-w-[80%] self-start rounded-xl border border-cyan-300/15 bg-black/50 px-2.5 py-1.5 backdrop-blur-md mobile-rise-chat"
-                            style={{ animationDelay: `${idx * 120}ms` }}
-                          >
-                            <button
-                              onClick={() => handleOpenFloatingChatUsername(msg.username)}
-                              className="text-[11px] font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer"
-                            >
-                              {msg.username}
-                            </button>
-                            <span className="mx-1 text-white/30 text-[11px]">:</span>
-                            <span className="text-[11px] text-white/80">{msg.content}</span>
-                          </div>
-                        ))}
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2 space-y-1.5">
+                    {floatingMessages.length === 0 && (
+                      <div className="flex h-full items-center justify-center text-white/25 text-sm font-bold">
+                        No messages yet — say something!
                       </div>
-                    </div>
-                  )}
-
-                  {/* Chat input */}
+                    )}
+                    {floatingMessages.slice(0, 50).map((msg, idx) => (
+                      <div
+                        key={msg.id}
+                        className="text-sm leading-relaxed break-words animate-in fade-in duration-200"
+                        style={{ animationDelay: `${idx * 120}ms` }}
+                      >
+                        <button
+                          onClick={() => handleOpenFloatingChatUsername(msg.username)}
+                          className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
+                          title={`View ${msg.username}'s profile`}
+                        >
+                          {msg.username}
+                          {subscriberUsernames?.has(msg.username) && (
+                            <Crown className="w-3 h-3 text-yellow-400" />
+                          )}
+                        </button>
+                        <span className="text-white/40 mx-1">:</span>
+                        <span className="text-white/90">{msg.content}</span>
+                      </div>
+                    ))}
+                  </div>
                   <div
-                    className="fixed inset-x-3 z-40 pointer-events-auto"
-                    style={{ bottom: `env(safe-area-inset-bottom)` }}
+                    className="border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
+                    style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + 12px)` }}
                   >
                     <form
                       onSubmit={async (e) => {
@@ -8468,9 +8453,9 @@ const toggleMicrophone = useCallback(async () => {
                         if (!text) return
                         const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
                         const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                          setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
-                          recentChatKeysRef.current.set(`${username}:${text}`, Date.now())
-                          setChatInput('')
+                        setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
+                        recentChatKeysRef.current.set(`${username}:${text}`, Date.now())
+                        setChatInput('')
                         setTimeout(() => {
                           setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
                         }, 3000)
@@ -8529,7 +8514,7 @@ const toggleMicrophone = useCallback(async () => {
                       </button>
                     </form>
                   </div>
-                </>
+                </div>
               )}
 
           </ErrorBoundary>
@@ -8762,7 +8747,7 @@ function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | nu
       try {
         const el = (track as any).attach();
         if (!el || !(el instanceof HTMLVideoElement)) return;
-        el.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:center;position:absolute;top:0;left:0;display:block;';
+        el.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center;position:absolute;top:0;left:0;display:block;background:#000;';
         // Un-mirror local front-facing camera so broadcaster sees natural movement
         el.style.transform = track instanceof LocalVideoTrack ? 'scaleX(-1)' : 'none';
         el.autoplay = true;
@@ -8795,7 +8780,7 @@ function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | nu
   return (
     <div
       ref={divRef}
-      className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
+      className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-contain"
     />
   );
 }

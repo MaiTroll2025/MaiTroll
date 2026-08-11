@@ -70,7 +70,7 @@ const LiveKitVideoPlayer = React.memo(function LiveKitVideoPlayer({
       const videoElement = videoTrack.attach() as HTMLVideoElement;
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
-      videoElement.style.objectFit = 'cover';
+      videoElement.style.objectFit = 'contain';
       videoElement.autoplay = true;
       videoElement.playsInline = true;
       if (isLocal) {

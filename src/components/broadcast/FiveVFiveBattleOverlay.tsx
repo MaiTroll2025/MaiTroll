@@ -64,7 +64,7 @@ function LiveKitVideoPlayer({
       const videoElement = videoTrack.attach() as HTMLVideoElement;
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
-      videoElement.style.objectFit = 'cover';
+      videoElement.style.objectFit = 'contain';
       videoElement.autoplay = true;
       videoElement.playsInline = true;
       if (isLocal) videoElement.muted = true;
@@ -89,8 +89,8 @@ function LiveKitVideoPlayer({
 
   const mediaTrack = videoTrack?.mediaStreamTrack;
   const trackSettings = mediaTrack ? (mediaTrack.getSettings?.() || {}) : {};
-  const isFrontCamera = (trackSettings as any).facingMode !== 'environment';
-  return <div ref={containerRef} className="absolute inset-0" style={isFrontCamera ? { transform: 'scaleX(-1)' } : undefined} />;
+  const shouldMirror = isLocal && (trackSettings as any).facingMode !== 'environment';
+  return <div ref={containerRef} className="absolute inset-0" style={shouldMirror ? { transform: 'scaleX(-1)' } : undefined} />;
 }
 
 // ─── PREMIUM BATTLE SLOT ───

@@ -291,12 +291,12 @@ function getAudioTrackFromParticipant(participant: any): any {
 
 const RemoteVideoSurface = memo(function RemoteVideoSurface({
   participant,
-  mirror = true,
+  mirror = false,
   className,
   fallback,
   onTap,
   room,
-  objectFit = 'cover',
+  objectFit = 'contain',
 }: {
   participant: any
   mirror?: boolean
@@ -471,7 +471,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
         controls={false}
         className={cn(
           'absolute inset-0 block h-full w-full bg-black object-center',
-          objectFit === 'contain' ? 'object-contain' : 'object-cover',
+          objectFit === 'contain' ? 'object-contain' : 'object-contain',
           shouldMirror && '-scale-x-100',
         )}
       />
@@ -551,7 +551,7 @@ function LocalVideoSurface({
             autoPlay
             playsInline
             muted={true}
-            className={cn('h-full w-full object-cover', mirror && '-scale-x-100')}
+            className={cn('h-full w-full object-contain', mirror && '-scale-x-100')}
           />
           <audio ref={audioRef} autoPlay />
         </>
@@ -3508,7 +3508,7 @@ useStreamRealtime(
                >
                 <RemoteVideoSurface
                   participant={broadcasterState.participant}
-                  mirror={true}
+                  mirror={false}
                   className="absolute inset-0"
                   onTap={handleLike}
                   room={liveKitRoom}
@@ -4021,10 +4021,10 @@ useStreamRealtime(
                       }
                     />
                   ) : seat.isOccupied ? (
-                    <RemoteVideoSurface
-                      participant={seatParticipant}
-                      mirror={true}
-                      className="absolute inset-0"
+                          <RemoteVideoSurface
+                            participant={seatParticipant}
+                            mirror={false}
+                            className="absolute inset-0"
                       room={liveKitRoom}
                       fallback={
                         <div className={cn(

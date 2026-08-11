@@ -226,7 +226,7 @@ function LiveKitVideoPlayer({
       // Configure video element for proper display
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
-      videoElement.style.objectFit = isScreenShare ? 'contain' : 'cover';
+      videoElement.style.objectFit = 'contain';
       videoElement.style.position = 'absolute';
       videoElement.style.top = '0';
       videoElement.style.left = '0';
@@ -241,13 +241,10 @@ function LiveKitVideoPlayer({
       containerRef.current.appendChild(videoElement);
       videoElementRef.current = videoElement;
       
-      // Mirror front-camera video for natural appearance (skip for screen share and rear camera).
-      // Front cameras are mirrored by the browser; apply CSS scaleX(-1) so both local self-view
-      // (double-mirrored = natural) and remote viewers (single mirror on mirrored stream = natural)
-      // see the correct orientation.
-      const isFrontCamera = !isScreenShare && (settings as any).facingMode !== 'environment';
+      // Mirror only local participant video (self-preview). Remote viewers get unmirrored video.
+      const shouldMirror = isLocal && !isScreenShare && (settings as any).facingMode !== 'environment';
       if (containerRef.current) {
-        containerRef.current.style.transform = isFrontCamera ? 'scaleX(-1)' : '';
+        containerRef.current.style.transform = shouldMirror ? 'scaleX(-1)' : '';
       }
 
       if (import.meta.env.DEV) if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] Video track attached successfully');
