@@ -4,6 +4,8 @@ import { Search, User, Radio, Play, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/lib/store';
+import { toast } from 'sonner';
 
 interface SearchResult {
   id: string;
@@ -38,6 +40,7 @@ const RGBSearchBar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user)
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Explore (discovery) panel state
@@ -173,6 +176,11 @@ const RGBSearchBar = () => {
 
   const handleStreamClick = (streamId: string) => {
     closePanel();
+    if (!user) {
+      toast.info('Sign in to watch.')
+      navigate('/auth')
+      return
+    }
     navigate(`/watch/${streamId}`);
   };
 

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Users, Radio, Star, TrendingUp, Zap } from 'lucide-react';
 import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail';
+import { toast } from 'sonner';
 
 interface Stream {
   id: string;
@@ -33,7 +34,14 @@ export default function HomeLiveGrid() {
   const [streams, setStreams] = useState<Stream[]>([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
-  const { profile } = useAuthStore()
+  const { user, profile } = useAuthStore()
+
+  const requireAuth = useCallback(() => {
+    if (user) return true
+    toast.info('Sign in to watch.')
+    navigate('/auth')
+    return false
+  }, [navigate, user])
 
   const fetchStreams = async () => {
     try {
@@ -191,7 +199,11 @@ export default function HomeLiveGrid() {
         {streams.map((stream) => (
           <div
             key={stream.id}
-            onClick={() => navigate(stream.agora_channel || stream.category === 'gaming' ? `/gaming/watch/${stream.id}` : `/watch/${stream.id}`)}
+            onClick={() => {
+              if (requireAuth()) {
+                navigate(stream.agora_channel || stream.category === 'gaming' ? `/gaming/watch/${stream.id}` : `/watch/${stream.id}`)
+              }
+            }}
             className="group cursor-pointer bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1"
           >
             <div className="relative aspect-video overflow-hidden">
@@ -203,7 +215,11 @@ export default function HomeLiveGrid() {
                 avatarUrl={stream.user_profiles?.avatar_url}
                 title={stream.title}
                 isLive={stream.status === 'live' || stream.is_live}
-                onClick={() => navigate(stream.agora_channel || stream.category === 'gaming' ? `/gaming/watch/${stream.id}` : `/watch/${stream.id}`)}
+                onClick={() => {
+                  if (requireAuth()) {
+                    navigate(stream.agora_channel || stream.category === 'gaming' ? `/gaming/watch/${stream.id}` : `/watch/${stream.id}`)
+                  }
+                }}
               />
 
               {stream.user_profiles?.featured_broadcaster_until && new Date(stream.user_profiles.featured_broadcaster_until) > new Date() && (

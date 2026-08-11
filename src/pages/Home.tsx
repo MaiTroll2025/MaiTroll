@@ -821,9 +821,16 @@ export default function Home() {
     },
     [navigate, user],
   )
-  const handleScrollItemClick = useCallback((id: string) => {
-     navigate(`/watch/${id}`)
-   }, [navigate])
+  const handleScrollItemClick = useCallback((id: string | LiveItem) => {
+     const targetId = typeof id === 'string' ? id : id?.id
+     if (!targetId) return
+     if (!user) {
+       toast.info('Sign in to watch.')
+       navigate('/auth')
+       return
+     }
+     navigate(`/watch/${targetId}`)
+   }, [navigate, user])
 
    const handleAuctionClick = useCallback((id: string) => {
      navigate(id ? `/auctions/${id}` : '/auctions')

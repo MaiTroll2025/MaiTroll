@@ -164,9 +164,17 @@ export function useStreamSeats(
   _broadcasterProfile?: any,
   _streamData?: any,
 ) {
-  const { user } = useAuthStore()
+  const { user, profile } = useAuthStore()
   const effectiveUserId = _userId || user?.id || null
   const streamId = String(_streamId || '').trim()
+
+  const isAdmin = Boolean(
+    profile?.is_admin ||
+    profile?.is_superadmin ||
+    profile?.role === 'admin' ||
+    profile?.role === 'superadmin' ||
+    profile?.role === 'ceo'
+  )
 
   const [seats, setSeats] = useState<Record<number, SeatSession>>({})
   const [mySeat, setMySeat] = useState<SeatSession | null>(null)
@@ -383,6 +391,17 @@ export function useStreamSeats(
       ) {
         toast.error('Leave your current seat before joining another one')
         return false
+      }
+
+      if (!isAdmin) {
+        const myActiveSeats = Object.values(seatsRef.current).filter((s) =>
+          isActiveSeatStatus(s.status) &&
+          (s.user_id === effectiveUserId || s.guest_id === effectiveUserId)
+        )
+        if (myActiveSeats.length >= 3) {
+          toast.error('You have reached the maximum of 3 seats per broadcast')
+          return false
+        }
       }
 
       safeSetJoiningSeatId(seatIndex)

@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { Stream } from '@/types/broadcast';
 import { User, Eye, Play } from 'lucide-react';
 import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail';
+import { useAuthStore } from '@/lib/store';
+import { toast } from 'sonner';
 
 interface FeaturedStream extends Stream {
   user_profiles?: {
@@ -16,6 +18,7 @@ export default function FeaturedBroadcasts() {
   const [streams, setStreams] = useState<FeaturedStream[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
 
   const fetchFeaturedStreams = async () => {
     try {
@@ -78,6 +81,11 @@ export default function FeaturedBroadcasts() {
 
   // Handle stream click - navigate to username-based stream URL for SEO
   const handleStreamClick = (streamId: string, username?: string) => {
+    if (!user) {
+      toast.info('Sign in to watch.')
+      navigate('/auth')
+      return
+    }
     if (username) {
       navigate(`/live/${encodeURIComponent(username)}`);
     } else {
