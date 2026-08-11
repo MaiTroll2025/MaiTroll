@@ -107,9 +107,6 @@ export default function PrayerFeed({ isOpen }: { isOpen: boolean }) {
 
     return () => {
       clearInterval(interval);
-      if (channelRef.current) {
-      channelRef.current.unsubscribe();
-    }
     };
   }, [fetchPrayers]);
 

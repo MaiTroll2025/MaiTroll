@@ -630,9 +630,9 @@ serve(async (req) => {
       let followerIds: string[] = [];
       if (broadcasterId) {
         const { data: followersData, error: followersError } = await supabase
-          .from("follows")
+          .from("user_follows")
           .select("follower_id")
-          .eq("followed_id", broadcasterId);
+          .eq("following_id", broadcasterId);
         
         if (!followersError && followersData) {
           followerIds = followersData.map((f: any) => f.follower_id);

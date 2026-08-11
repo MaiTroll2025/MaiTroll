@@ -3449,8 +3449,8 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
             supabase
               .from('user_follows')
               .select('follower_id')
-              .eq('followed_id', broadcasterProfile.id)
-              .eq('status', 'accepted'),
+               .eq('following_id', broadcasterProfile.id)
+               .eq('status', 'accepted'),
             Promise.resolve(
               Object.values(seats || {})
                 .filter((s: any) => s.user_id)

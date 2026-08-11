@@ -8,6 +8,7 @@ import { useAuthStore } from '../../lib/store'
 import { useSidebarStore } from '../../stores/useSidebarStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { isStandalone } from '../../pwa/install'
+import { useUcRedirect } from '../../hooks/usePageVisibility'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -34,21 +35,23 @@ export default function AppLayout({
   mobileBodyClassName = '',
   mobileShellClassName = '',
 }: AppLayoutProps) {
-  const location = useLocation();
-  const showLegacySidebar = useAuthStore((s) => s.showLegacySidebar)
-  const user = useAuthStore((s) => s.user)
-  const { isCollapsed } = useSidebarStore()
-  const { isMobileWidth } = useIsMobile()
-   const isAuthPage = location.pathname.startsWith('/auth');
-   const isLivePage = location.pathname.startsWith('/live/') || location.pathname.startsWith('/watch/') || location.pathname.startsWith('/gaming/watch/') || (location.pathname.startsWith('/broadcast/') && !location.pathname.startsWith('/broadcast/setup')) || location.pathname.startsWith('/stream/') || location.pathname === '/live-swipe';
-   const isTreelzPage = location.pathname.startsWith('/treelz');
-    const isUtromailPage = location.pathname.startsWith('/utromail') || location.pathname.startsWith('/tromail') || location.pathname.startsWith('/messages');
-    const isSingOffPage = location.pathname.startsWith('/mai-sing-off');
-    const normalizedPath = location.pathname.toLowerCase();
-   const isThemeExemptPage = normalizedPath.includes('court') || normalizedPath.startsWith('/church');
-   const isKeyboardVisible = false;
-   const isMobileLayout = isMobileWidth && !isAuthPage;
-   const [hytroSetupLive, setHytroSetupLive] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('tc_hytro_gaming_setup_live') === 'true')
+   const location = useLocation();
+   const showLegacySidebar = useAuthStore((s) => s.showLegacySidebar)
+   const user = useAuthStore((s) => s.user)
+   const { isCollapsed } = useSidebarStore()
+   const { isMobileWidth } = useIsMobile()
+    const isAuthPage = location.pathname.startsWith('/auth');
+    const isLivePage = location.pathname.startsWith('/live/') || location.pathname.startsWith('/watch/') || location.pathname.startsWith('/gaming/watch/') || (location.pathname.startsWith('/broadcast/') && !location.pathname.startsWith('/broadcast/setup')) || location.pathname.startsWith('/stream/') || location.pathname === '/live-swipe';
+    const isTreelzPage = location.pathname.startsWith('/treelz');
+     const isUtromailPage = location.pathname.startsWith('/utromail') || location.pathname.startsWith('/tromail') || location.pathname.startsWith('/messages');
+     const isSingOffPage = location.pathname.startsWith('/mai-sing-off');
+     const normalizedPath = location.pathname.toLowerCase();
+    const isThemeExemptPage = normalizedPath.includes('court') || normalizedPath.startsWith('/church');
+    const isKeyboardVisible = false;
+    const isMobileLayout = isMobileWidth && !isAuthPage;
+    const [hytroSetupLive, setHytroSetupLive] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('tc_hytro_gaming_setup_live') === 'true')
+
+   useUcRedirect();
 
    // New bottom nav bar is always shown (replaces sidebar on all screen sizes)
    // Hidden on live pages and treelz pages

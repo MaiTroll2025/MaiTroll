@@ -114,7 +114,7 @@ export default function BroadcastMessageModal({
             utromail_address
           )
         `)
-        .eq('followed_id', broadcasterId)
+        .eq('following_id', broadcasterId)
         .eq('status', 'accepted')
       if (error) throw error
       const followers = (data || []).map((row: any) => ({
@@ -137,8 +137,8 @@ export default function BroadcastMessageModal({
       const { data, error } = await supabase
         .from('user_follows')
         .select(`
-          followed_id,
-          user_profiles!user_follows_followed_id_fkey(
+          following_id,
+          user_profiles!user_follows_following_id_fkey(
             id,
             username,
             display_name,

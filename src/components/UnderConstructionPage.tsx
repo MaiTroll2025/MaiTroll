@@ -14,7 +14,7 @@ export default function UnderConstructionPage({ pageName, openingDate }: UnderCo
   const displayName = pageName || (path ? path.replace('/', '').replace(/-/g, ' ') : 'This page');
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black text-white gap-6 px-6">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black text-white gap-6 overflow-hidden px-6">
       <div className="relative">
         <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border-2 border-amber-500/30 flex items-center justify-center">
           <Construction size={48} className="text-amber-400 animate-pulse" />

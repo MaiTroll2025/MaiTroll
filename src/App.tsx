@@ -1549,8 +1549,8 @@ const handleVisibilityChange = async () => {
            <StaffWalkieTalkieProvider>
              <RTCAdminMonitor />
              {import.meta.env.DEV && (profile?.is_admin || profile?.is_superadmin || ['admin','ceo','superadmin'].includes(profile?.role || '')) }
-             <ErrorBoundary>
-               <Suspense fallback={null}>
+              <ErrorBoundary>
+                <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}>
                  <PageChannelProvider>
                  <Routes>
                  {/* Public Routes */}
