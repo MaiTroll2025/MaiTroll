@@ -53,10 +53,10 @@ Login to Supabase Dashboard (Mai Troll2025@gmail.com):
 3. **Configure Environment Variables**
    Add all variables from `.env`:
    ```
-   VITE_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+   VITE_SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
    VITE_SUPABASE_ANON_KEY=[from .env]
    VITE_API_URL=https://your-app.vercel.app
-   VITE_EDGE_FUNCTIONS_URL=https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1
+   VITE_EDGE_FUNCTIONS_URL=https://gejtbllazzighxwxudyu.supabase.co/functions/v1
    VITE_LIVEKIT_APP_ID=your_livekit_app_id
    VITE_BACKEND_TOKEN_SERVER_URL=https://your-app.vercel.app/api/livekit-token
    VITE_SQUARE_APPLICATION_ID=sq0idp-CrLUQ0nBsGw514BdmRCKcw
@@ -66,7 +66,7 @@ Login to Supabase Dashboard (Mai Troll2025@gmail.com):
    VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com
    
    # Backend variables
-   SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+   SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
    SUPABASE_SERVICE_ROLE_KEY=[from .env]
    SQUARE_ACCESS_TOKEN=[from .env]
    SQUARE_ENVIRONMENT=production

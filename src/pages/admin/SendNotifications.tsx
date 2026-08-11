@@ -61,7 +61,7 @@ export default function SendNotifications() {
 
       const functionsUrl = import.meta.env.VITE_SUPABASE_URL 
         ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
-        : 'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1';
+        : 'https://gejtbllazzighxwxudyu.supabase.co/functions/v1';
 
       const response = await fetch(`${functionsUrl}/send-bulk-notifications`, {
         method: 'POST',

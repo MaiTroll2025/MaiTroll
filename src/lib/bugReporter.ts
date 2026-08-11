@@ -300,7 +300,7 @@ async function sendBugReport(report: BugReport): Promise<void> {
     // supabase.rpc() failures get caught by the global fetch wrapper which
     // calls reportBug() -> sendBugReport() again. Direct fetch lets the
     // global wrapper's isBugReporterRequest() check skip it.
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://yjxpwfalenorzrqxwmtr.supabase.co';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://gejtbllazzighxwxudyu.supabase.co';
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
     await fetch(`${supabaseUrl}/rest/v1/rpc/log_app_bug_report`, {
       method: 'POST',

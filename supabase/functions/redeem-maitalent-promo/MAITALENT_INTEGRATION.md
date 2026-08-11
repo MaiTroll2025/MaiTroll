@@ -7,9 +7,9 @@ We are integrating your promo redemption flow with Mai Troll. Below are the valu
 ## Mai Troll values to use
 
 - `TROLL_CITY_PROMO_VERIFY_URL`
-  - `https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/redeem-maitalent-promo`
+  - `https://gejtbllazzighxwxudyu.supabase.co/functions/v1/redeem-maitalent-promo`
 - `TROLL_CITY_PROMO_REDEEM_URL`
-  - `https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/redeem-maitalent-promo`
+  - `https://gejtbllazzighxwxudyu.supabase.co/functions/v1/redeem-maitalent-promo`
 - `TROLL_CITY_PROMO_SECRET`
   - `gj3f29QZx4vHn6A8r5S2pL1u9Jd0Yc7F`
 
@@ -19,7 +19,7 @@ We are integrating your promo redemption flow with Mai Troll. Below are the valu
 
 ```http
 POST /functions/v1/redeem-maitalent-promo HTTP/1.1
-Host: yjxpwfalenorzrqxwmtr.supabase.co
+Host: gejtbllazzighxwxudyu.supabase.co
 Authorization: Bearer gj3f29QZx4vHn6A8r5S2pL1u9Jd0Yc7F
 Content-Type: application/json
 X-Client-Platform: maitalent.fun

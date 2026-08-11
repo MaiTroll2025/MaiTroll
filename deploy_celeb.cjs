@@ -28,7 +28,7 @@ async function tryHost(host) {
   const hosts = [
     'db.gejtbllazzighxwxudyu.supabase.co',
     'aws-0-us-east-1.pooler.supabase.com',
-    'db.yjxpwfalenorzrqxwmtr.supabase.co'
+    'db.gejtbllazzighxwxudyu.supabase.co'
   ];
 
   for (const host of hosts) {

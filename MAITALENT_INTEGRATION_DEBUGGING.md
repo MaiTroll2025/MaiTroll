@@ -39,13 +39,13 @@ SELECT id, email FROM user_profiles WHERE id = 'test_user_123';
 ### 2. Verify Service Role Key Permissions
 **Environment Variables** (from `env.example`):
 ```bash
-Mai Troll_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+Mai Troll_SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 Mai Troll_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeHB3ZmFsZW5vcnpycXh3bXRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDAyOTExNywiZXhwIjoyMDc5NjA1MTE3fQ.Ra1AhVwUYPxODzeFnCnWyurw8QiTzO0OeCo-sXzTVHo
 ```
 
 **Test Command:**
 ```bash
-curl -X GET "https://yjxpwfalenorzrqxwmtr.supabase.co/rest/v1/user_profiles?id=eq.test_user_123&select=id,email" \
+curl -X GET "https://gejtbllazzighxwxudyu.supabase.co/rest/v1/user_profiles?id=eq.test_user_123&select=id,email" \
   -H "Authorization: Bearer $Mai Troll_SERVICE_ROLE_KEY" \
   -H "apikey: $Mai Troll_SERVICE_ROLE_KEY"
 ```
@@ -87,7 +87,7 @@ The test user `test_user_123` with a valid email must exist in `user_profiles`.
 
 2. **Test service role key** with REST API:
    ```bash
-   curl -X GET "https://yjxpwfalenorzrqxwmtr.supabase.co/rest/v1/user_profiles?id=eq.test_user_123&select=id,email" \
+   curl -X GET "https://gejtbllazzighxwxudyu.supabase.co/rest/v1/user_profiles?id=eq.test_user_123&select=id,email" \
      -H "Authorization: Bearer [Mai Troll_SERVICE_ROLE_KEY]" \
      -H "apikey: [Mai Troll_SERVICE_ROLE_KEY]"
    ```
@@ -114,7 +114,7 @@ ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
 
 ### Mai Troll Side (env.example)
 ```bash
-Mai Troll_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+Mai Troll_SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 Mai Troll_SERVICE_ROLE_KEY=[service_role_key]
 TROLL_CITY_SYNC_URL=https://tovzpzpimvwaldqkkmmi.supabase.co/functions/v1/sync-mai-platform-user
 TROLL_CITY_SECRET=maicorp1336944428554803

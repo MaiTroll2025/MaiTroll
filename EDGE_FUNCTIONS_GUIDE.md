@@ -11,7 +11,7 @@ Your Mai Troll project now has full support for Supabase Edge Functions through 
 The API base URL is automatically loaded from your `.env` file:
 
 ```env
-VITE_API_URL=https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1
+VITE_API_URL=https://gejtbllazzighxwxudyu.supabase.co/functions/v1
 ```
 
 This works on both **localhost** and **production (Vercel)**.
@@ -20,7 +20,7 @@ This works on both **localhost** and **production (Vercel)**.
 
 If `VITE_API_URL` is not set, the helper defaults to:
 ```
-https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1
+https://gejtbllazzighxwxudyu.supabase.co/functions/v1
 ```
 
 ## Usage
@@ -222,7 +222,7 @@ The helper automatically uses `VITE_API_URL` from your `.env` file.
 ### Production (Vercel)
 Set `VITE_API_URL` in your Vercel environment variables:
 ```
-VITE_API_URL=https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1
+VITE_API_URL=https://gejtbllazzighxwxudyu.supabase.co/functions/v1
 ```
 
 ## Notes

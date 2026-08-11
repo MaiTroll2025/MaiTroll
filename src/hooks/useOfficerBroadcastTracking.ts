@@ -27,7 +27,7 @@ export function useOfficerBroadcastTracking({
   const getEdgeUrl = useCallback(() => { 
     return ( 
       import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-      "https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1" 
+      "https://gejtbllazzighxwxudyu.supabase.co/functions/v1" 
     ) 
   }, []) 
 

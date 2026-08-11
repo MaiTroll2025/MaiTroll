@@ -5,7 +5,7 @@
 ### 1. **Mux Webhook 401 Unauthorized Error** ⚠️ CRITICAL
 **Error:** 
 ```
-POST | 401 | https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/mux-webhook
+POST | 401 | https://gejtbllazzighxwxudyu.supabase.co/functions/v1/mux-webhook
 sb_error_code: UNAUTHORIZED_NO_AUTH_HEADER
 execution_time_ms: 131
 ```

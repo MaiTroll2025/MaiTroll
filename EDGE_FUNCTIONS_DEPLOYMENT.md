@@ -28,7 +28,7 @@ This will open your browser. Log in with: **Mai Troll2025@gmail.com**
 ### 2. Link to Your Supabase Project
 
 ```powershell
-npx supabase link --project-ref yjxpwfalenorzrqxwmtr
+npx supabase link --project-ref gejtbllazzighxwxudyu
 ```
 
 Enter your database password when prompted (from your Supabase project settings).
@@ -53,7 +53,7 @@ After deploying, set the required secrets for each function:
 
 ```powershell
 # Set environment variables for all functions
-npx supabase secrets set SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+npx supabase secrets set SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 npx supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 npx supabase secrets set VITE_ADMIN_EMAIL=Mai Troll2025@gmail.com
 npx supabase secrets set PAYPAL_CLIENT_ID=<your-paypal-client-id>
@@ -67,13 +67,13 @@ Test the deployed functions:
 
 ```powershell
 # Test wheel function
-curl -X POST https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/wheel/spin `
+curl -X POST https://gejtbllazzighxwxudyu.supabase.co/functions/v1/wheel/spin `
   -H "Authorization: Bearer <user-access-token>" `
   -H "Content-Type: application/json" `
   -d '{"userId":"<user-id>"}'
 
 # Test auth function
-curl -X GET https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/auth/admin-exists
+curl -X GET https://gejtbllazzighxwxudyu.supabase.co/functions/v1/auth/admin-exists
 ```
 
 ## 📝 Frontend Integration
@@ -93,7 +93,7 @@ await fetch('http://localhost:3001/api/wheel/spin', {
 
 #### After (Edge Functions):
 ```typescript
-await fetch('https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/wheel/spin', {
+await fetch('https://gejtbllazzighxwxudyu.supabase.co/functions/v1/wheel/spin', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${token}` },
   body: JSON.stringify({ userId })
@@ -124,7 +124,7 @@ await fetch('https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/wheel/spin', 
    
    Add to `.env`:
    ```
-   VITE_EDGE_FUNCTIONS_URL=https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1
+   VITE_EDGE_FUNCTIONS_URL=https://gejtbllazzighxwxudyu.supabase.co/functions/v1
    ```
 
 5. **Update API Config**
@@ -132,7 +132,7 @@ await fetch('https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/wheel/spin', 
    In `src/lib/config.ts`:
    ```typescript
    export const EDGE_FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-     'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1';
+     'https://gejtbllazzighxwxudyu.supabase.co/functions/v1';
    ```
 
 ## 🎯 Next Steps
@@ -148,7 +148,7 @@ await fetch('https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/wheel/spin', 
 
 3. **Update Vercel Environment Variables**:
    - Remove `VITE_API_URL` 
-   - Keep `VITE_EDGE_FUNCTIONS_URL=https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1`
+   - Keep `VITE_EDGE_FUNCTIONS_URL=https://gejtbllazzighxwxudyu.supabase.co/functions/v1`
    - Verify PayPal secrets (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_MODE=live`) are configured to match what the Supabase edge functions expect
 
 4. **Remove `api` folder from build**:
@@ -175,12 +175,12 @@ To complete the migration, you need to create edge functions for:
 
 After deployment, your functions will be available at:
 
-- **Wheel**: `https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/wheel/{endpoint}`
+- **Wheel**: `https://gejtbllazzighxwxudyu.supabase.co/functions/v1/wheel/{endpoint}`
   - `/spin` - Get a random prize
   - `/deduct` - Deduct coins for spinning
   - `/award` - Award prize to user
 
-- **Auth**: `https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/auth/{endpoint}`
+- **Auth**: `https://gejtbllazzighxwxudyu.supabase.co/functions/v1/auth/{endpoint}`
   - `/admin-create-user` - Create user with role
   - `/admin-exists` - Check if admin exists
   - `/whoami` - Get current user info

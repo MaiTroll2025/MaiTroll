@@ -168,7 +168,7 @@ Requirements
 
 .env must match:
 
-SUPABASE_URL = yjxpwfalenorzrqxwmtr.supabase.co
+SUPABASE_URL = gejtbllazzighxwxudyu.supabase.co
 
 SUPABASE_SERVICE_ROLE_KEY belonging to the SAME project
 

@@ -1067,7 +1067,8 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
     const livekitUrl = getLiveKitUrl()
     if (!livekitUrl) {
-      throw new Error('LiveKit URL not configured')
+      console.error('[BroadcastPage] LiveKit URL not configured, skipping connection')
+      return
     }
     console.log('[BroadcastPage] Connecting to LiveKit URL:', livekitUrl)
     await room.connect(livekitUrl, token)
@@ -4090,13 +4091,13 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           })
 
           if (error) {
-
-            throw error
+            console.error('[BroadcastPage] LiveKit token fetch error:', error)
+            return
           }
 
           if (!data?.token) {
-
-            throw new Error('LiveKit token response missing token')
+            console.error('[BroadcastPage] LiveKit token response missing token')
+            return
           }
 
           console.log('[BroadcastPage] ? LiveKit token received:', {
@@ -4239,13 +4240,13 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         })
 
         if (error) {
-
-          throw error
+          console.error('[BroadcastPage] Host LiveKit token fetch error:', error)
+          return
         }
 
         if (!data?.token) {
-
-          throw new Error('LiveKit token response missing token')
+          console.error('[BroadcastPage] Host LiveKit token response missing token')
+          return
         }
 
         console.log('[BroadcastPage] ? LiveKit token received for publisher:', {

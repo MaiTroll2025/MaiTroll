@@ -17,7 +17,7 @@ You need to set these variables for your Edge Functions. Run the following comma
 ```bash
 npx supabase secrets set S3_BUCKET=hls
 npx supabase secrets set S3_REGION=us-east-1
-npx supabase secrets set S3_ENDPOINT=https://yjxpwfalenorzrqxwmtr.supabase.co/storage/v1/s3
+npx supabase secrets set S3_ENDPOINT=https://gejtbllazzighxwxudyu.supabase.co/storage/v1/s3
 npx supabase secrets set S3_ACCESS_KEY=<YOUR_ACCESS_KEY_ID>
 npx supabase secrets set S3_SECRET_KEY=<YOUR_SECRET_ACCESS_KEY>
 ```

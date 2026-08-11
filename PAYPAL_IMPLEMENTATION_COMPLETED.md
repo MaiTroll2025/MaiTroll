@@ -22,7 +22,7 @@ I have successfully implemented the working PayPal integration code provided by 
 createOrder={async () => {
   setProcessingPackage(pkg.id);
   try {
-    const functionUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1';
+    const functionUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 'https://gejtbllazzighxwxudyu.supabase.co/functions/v1';
     const res = await fetch(`${functionUrl}/paypal-create-order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -70,7 +70,7 @@ async function runMigration(filePath) {
   } catch (err) {
     console.error('❌ Migration failed:', err.message)
     console.error('\n💡 Please run this SQL manually in Supabase Dashboard:')
-    console.error('   https://supabase.com/dashboard/project/yjxpwfalenorzrqxwmtr/sql/new')
+    console.error('   https://supabase.com/dashboard/project/gejtbllazzighxwxudyu/sql/new')
     process.exit(1)
   }
 }

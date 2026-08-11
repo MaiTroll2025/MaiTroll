@@ -66,7 +66,7 @@ The backend (Node.js server) must be running with:
 ```
 MUX_TOKEN_ID=a796ed09-0368-498e-ad3f-9523ad69a0d5
 MUX_TOKEN_SECRET=CfqzUp0nKTr1Ut3W9h8VNBKAiwAmRAI+HZC1dy9cGkZma+8mAl18BSjc/h2KV2kCIp1Ez4QA/HX
-SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 SUPABASE_SERVICE_KEY=eyJhbGc...
 ```
 

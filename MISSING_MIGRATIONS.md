@@ -109,7 +109,7 @@ Based on the console errors, these migrations exist but **haven't been run in yo
 cd C:\Users\justk\Music\Mai Troll2_chatgpt_edition_giftbox_admin_live_fix
 
 # Link to your Supabase project (if not already linked)
-npx supabase link --project-ref yjxpwfalenorzrqxwmtr
+npx supabase link --project-ref gejtbllazzighxwxudyu
 
 # Push all migrations
 npx supabase db push

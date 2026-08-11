@@ -5,7 +5,7 @@ import crypto from 'crypto';
 
 dotenv.config();
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://yjxpwfalenorzrqxwmtr.supabase.co';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://gejtbllazzighxwxudyu.supabase.co';
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SERVICE_KEY) {

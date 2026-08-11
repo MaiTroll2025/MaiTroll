@@ -17,7 +17,7 @@ INSERT INTO public.city_ads (
   'Welcome to Mai Troll!',
   'Join the Fun',
   'Get 5% bonus on all coin purchases!',
-  'https://yjxpwfalenorzrqxwmtr.supabase.co/storage/v1/object/public/city-ads/8dff9f37-21b5-4b8e-adc2-b9286874be1a/1774122673569.jpeg',
+  'https://gejtbllazzighxwxudyu.supabase.co/storage/v1/object/public/city-ads/8dff9f37-21b5-4b8e-adc2-b9286874be1a/1774122673569.jpeg',
   'left_sidebar_screensaver',
   true,
   NULL,

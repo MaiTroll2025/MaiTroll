@@ -33,7 +33,7 @@ export function useOfficerStreamTracking(streamId: string | undefined) {
       if (!token) return
 
       const edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-        'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1'
+        'https://gejtbllazzighxwxudyu.supabase.co/functions/v1'
 
       await fetch(`${edgeFunctionsUrl}/officer-touch-activity`, {
         method: 'POST',
@@ -65,7 +65,7 @@ export function useOfficerStreamTracking(streamId: string | undefined) {
         }
 
         const edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-          'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1'
+          'https://gejtbllazzighxwxudyu.supabase.co/functions/v1'
 
         const response = await fetch(`${edgeFunctionsUrl}/officer-join-stream`, {
           method: 'POST',
@@ -120,7 +120,7 @@ export function useOfficerStreamTracking(streamId: string | undefined) {
           if (!token) return
 
           const edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-            'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1'
+            'https://gejtbllazzighxwxudyu.supabase.co/functions/v1'
 
           await fetch(`${edgeFunctionsUrl}/officer-leave-stream`, {
             method: 'POST',
@@ -145,7 +145,7 @@ export function useOfficerStreamTracking(streamId: string | undefined) {
             const token = session.session?.access_token
             if (token) {
               const _edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-                'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1'
+                'https://gejtbllazzighxwxudyu.supabase.co/functions/v1'
               const _blob = new Blob([JSON.stringify({ streamId })], { type: 'application/json' })
               // Note: sendBeacon doesn't support custom headers, so we'll use a fallback
               // For now, just call trackLeave which uses fetch with headers
@@ -175,7 +175,7 @@ export function useOfficerStreamTracking(streamId: string | undefined) {
           if (!token) return
 
           const edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-            'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1'
+            'https://gejtbllazzighxwxudyu.supabase.co/functions/v1'
 
           // Use sendBeacon for reliability during page unload
           const blob = new Blob([JSON.stringify({ streamId })], { type: 'application/json' })

@@ -6,7 +6,7 @@ This document outlines all the fixes that need to be implemented in the codebase
 **File Created:** `supabase/functions/square-callback/index.ts`
 
 **Square Dashboard Configuration:**
-- Webhook Endpoint: `https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/square-callback`
+- Webhook Endpoint: `https://gejtbllazzighxwxudyu.supabase.co/functions/v1/square-callback`
 - Events to enable: `payment.created`, `payment.updated`, `payment.completed`
 
 **Deploy:**

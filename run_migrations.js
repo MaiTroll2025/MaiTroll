@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgres://postgres:HWyB3aYqOOZjr8jP@db.yjxpwfalenorzrqxwmtr.supabase.co:6543/postgres',
+  connectionString: process.env.DATABASE_URL || 'postgres://postgres:HWyB3aYqOOZjr8jP@db.gejtbllazzighxwxudyu.supabase.co:6543/postgres',
   ssl: { rejectUnauthorized: false }
 });
 

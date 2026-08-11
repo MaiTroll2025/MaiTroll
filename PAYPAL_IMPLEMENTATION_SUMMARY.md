@@ -103,7 +103,7 @@ FRONTEND_URL=https://your-domain.com
 
 ### Frontend Environment Variables (.env)
 ```
-VITE_EDGE_FUNCTIONS_URL=https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1
+VITE_EDGE_FUNCTIONS_URL=https://gejtbllazzighxwxudyu.supabase.co/functions/v1
 VITE_PAYPAL_CLIENT_ID=your_client_id (for frontend PayPal SDK if needed)
 ```
 

@@ -1010,7 +1010,7 @@ export default function AdminDashboard() {
 
       const functionsUrl =
         import.meta.env.VITE_EDGE_FUNCTIONS_URL ||
-        'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1'
+        'https://gejtbllazzighxwxudyu.supabase.co/functions/v1'
 
       const response = await fetch(`${functionsUrl}/streams-maintenance`, {
         method: 'POST',

@@ -589,7 +589,7 @@ All of the above PLUS:
 
 3. **No platform-wide rate limiting** — The `check_rate_limit` RPC exists but is not called from the frontend.
 
-4. **Supabase Pro plan limits** — The project URL (`yjxpwfalenorzrqxwmtr.supabase.co`) suggests a standard Supabase project. Pro plan typically supports:
+4. **Supabase Pro plan limits** — The project URL (`gejtbllazzighxwxudyu.supabase.co`) suggests a standard Supabase project. Pro plan typically supports:
    - ~500 concurrent Realtime connections
    - ~200-600 pooled database connections
    - ~5,000-10,000 rows/second read throughput

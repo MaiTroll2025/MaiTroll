@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 
 export const resetTestData = async () => {
   const edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-    'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1';
+    'https://gejtbllazzighxwxudyu.supabase.co/functions/v1';
   
   const session = await supabase.auth.getSession();
   const token = session.data.session?.access_token;
@@ -27,7 +27,7 @@ export const resetTestData = async () => {
 
 export const resetLiveStreams = async () => {
   const edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-    'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1';
+    'https://gejtbllazzighxwxudyu.supabase.co/functions/v1';
   
   const session = await supabase.auth.getSession();
   const token = session.data.session?.access_token;
@@ -49,7 +49,7 @@ export const resetLiveStreams = async () => {
 
 export const resetTrollcoinss = async () => {
   const edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-    'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1';
+    'https://gejtbllazzighxwxudyu.supabase.co/functions/v1';
   
   const session = await supabase.auth.getSession();
   const token = session.data.session?.access_token;

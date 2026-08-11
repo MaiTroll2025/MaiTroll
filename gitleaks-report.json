@@ -146,7 +146,7 @@
   "EndLine": 130,
   "StartColumn": 5,
   "EndColumn": 47,
-  "Match": "curl -X POST \"https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/livekit-token\" \\\r\n     -H \"Content-Type: application/json\" \\\r\n     -H \"Authorization: Bearer REDACTED\"",
+  "Match": "curl -X POST \"https://gejtbllazzighxwxudyu.supabase.co/functions/v1/livekit-token\" \\\r\n     -H \"Content-Type: application/json\" \\\r\n     -H \"Authorization: Bearer REDACTED\"",
   "Secret": "REDACTED",
   "File": "LIVEKIT_CONNECTION_FIX.md",
   "SymlinkFile": "",

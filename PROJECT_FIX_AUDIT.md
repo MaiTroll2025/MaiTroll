@@ -196,9 +196,9 @@
 ### Issue 20: Multiple Supabase URLs in Configuration
 - **File(s):** `.env` and `src/lib/config.ts`
 - **Root cause:** 
-  - `.env`: `VITE_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co`
+  - `.env`: `VITE_SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co`
   - `.env`: `VITE_API_URL=https://mnaiMai Troll.com`
-  - `.env`: `VITE_EDGE_FUNCTIONS_URL=https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1`
+  - `.env`: `VITE_EDGE_FUNCTIONS_URL=https://gejtbllazzighxwxudyu.supabase.co/functions/v1`
 - **Why it breaks:** Confusion about which URL to use where. Edge functions use Supabase URL but API uses different domain.
 - **Exact fix required:** Document the architecture or consolidate to single consistent URL pattern.
 

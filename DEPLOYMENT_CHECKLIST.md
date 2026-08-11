@@ -88,9 +88,9 @@ Ensure these are set in production:
 
 ```env
 # Supabase
-VITE_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+VITE_SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon_key>
-SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 
 # Square (PRODUCTION)

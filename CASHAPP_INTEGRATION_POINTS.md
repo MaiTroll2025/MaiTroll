@@ -143,7 +143,7 @@ const handleCoinsPurchased = (coins: number) => {
 
 **Environment Variables**:
 ```bash
-SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi... (admin key)
 MANUAL_ORDERS_ADMIN_KEY=optional-fallback-key
 ```

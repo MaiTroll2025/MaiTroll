@@ -1,4 +1,4 @@
-export const EDGE_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1'
+export const EDGE_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 'https://gejtbllazzighxwxudyu.supabase.co/functions/v1'
 
 export const AGORA_REGION = import.meta.env.VITE_AGORA_REGION || 'na'
 

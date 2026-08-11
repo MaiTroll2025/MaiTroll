@@ -87,7 +87,7 @@ export default function TermsAgreement() {
        }
 
        const supabaseUrl =
-         import.meta.env.VITE_SUPABASE_URL || 'https://yjxpwfalenorzrqxwmtr.supabase.co'
+         import.meta.env.VITE_SUPABASE_URL || 'https://gejtbllazzighxwxudyu.supabase.co'
 
        const functionUrl = new URL('/functions/v1/user-agreements', supabaseUrl)
        functionUrl.searchParams.set('action', 'accept_agreement')

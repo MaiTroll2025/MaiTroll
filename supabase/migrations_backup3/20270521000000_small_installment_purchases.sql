@@ -90,7 +90,7 @@ DO $$
 DECLARE
   v_proj_url  TEXT := COALESCE(
                        (SELECT setting_value FROM public.site_settings WHERE setting_key = 'supabase_url'),
-                       'https://yjxpwfalenorzrqxwmtr.supabase.co'
+                       'https://gejtbllazzighxwxudyu.supabase.co'
                      );
   v_service_key TEXT := current_setting('app.supabase_service_role_key', TRUE);
 BEGIN

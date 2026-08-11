@@ -2,7 +2,7 @@
 
 ## Option 1: Using Supabase Dashboard (RECOMMENDED)
 
-1. Go to https://supabase.com/dashboard/project/yjxpwfalenorzrqxwmtr
+1. Go to https://supabase.com/dashboard/project/gejtbllazzighxwxudyu
 2. Click on "SQL Editor" in the left sidebar
 3. Click "New Query"
 4. Copy the entire contents of `supabase/migrations/20251125_fix_user_signup_trigger.sql`

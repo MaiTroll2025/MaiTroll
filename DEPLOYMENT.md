@@ -14,7 +14,7 @@
 
 1. **Login to Supabase**: https://supabase.com
    - Email: `Mai Troll2025@gmail.com`
-   - Project: `yjxpwfalenorzrqxwmtr`
+   - Project: `gejtbllazzighxwxudyu`
 
 2. **Run Migrations** (if not already done):
    ```sql
@@ -56,9 +56,9 @@
 
 ```env
 # Supabase (CRITICAL - Already Configured)
-VITE_SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+VITE_SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 VITE_SUPABASE_ANON_KEY=[YOUR_ANON_KEY]
-SUPABASE_URL=https://yjxpwfalenorzrqxwmtr.supabase.co
+SUPABASE_URL=https://gejtbllazzighxwxudyu.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=[YOUR_SERVICE_ROLE_KEY]
 
 # LiveKit (CRITICAL - Required)

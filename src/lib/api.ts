@@ -6,7 +6,7 @@ import { trackEvent } from './telemetry'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Use Supabase edge functions URL for proper API routing
-const API_BASE_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1';
+const API_BASE_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 'https://gejtbllazzighxwxudyu.supabase.co/functions/v1';
 // Centralized API endpoint definitions
 export const API_ENDPOINTS = {
   auth: {

@@ -31,7 +31,7 @@ function loadEnv() {
 }
 
 const env = loadEnv()
-const supabaseUrl = env.VITE_SUPABASE_URL || 'https://yjxpwfalenorzrqxwmtr.supabase.co'
+const supabaseUrl = env.VITE_SUPABASE_URL || 'https://gejtbllazzighxwxudyu.supabase.co'
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!serviceKey) {

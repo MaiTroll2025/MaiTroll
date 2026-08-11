@@ -263,7 +263,7 @@ supabase functions deploy manual-coin-order
 supabase functions logs manual-coin-order --tail
 
 # Test endpoint
-curl -X OPTIONS https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/manual-coin-order
+curl -X OPTIONS https://gejtbllazzighxwxudyu.supabase.co/functions/v1/manual-coin-order
 
 # Check database
 SELECT * FROM manual_coin_orders ORDER BY created_at DESC LIMIT 10;

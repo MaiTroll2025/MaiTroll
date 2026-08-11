@@ -80,7 +80,7 @@ END $$;
 
 -- 3. HLS URL Correction (One-time Fix)
 UPDATE public.streams
-SET hls_url = REPLACE(hls_url, 'https://yjxpwfalenorzrqxwmtr.supabase.co/storage/v1/object/public/hls', 'https://cdn.maiMai Troll.com')
+SET hls_url = REPLACE(hls_url, 'https://gejtbllazzighxwxudyu.supabase.co/storage/v1/object/public/hls', 'https://cdn.maiMai Troll.com')
 WHERE hls_url LIKE '%supabase.co%';
 
 -- 4. Rate Limiting Support

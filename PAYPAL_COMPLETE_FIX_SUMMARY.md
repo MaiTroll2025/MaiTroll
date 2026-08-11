@@ -5,7 +5,7 @@
 ### 1. Frontend Fixes
 
 #### `src/pages/CoinStorePayPal.tsx`
-- ✅ Updated `handleCreateOrder` to use hardcoded URL: `https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/paypal-create-order`
+- ✅ Updated `handleCreateOrder` to use hardcoded URL: `https://gejtbllazzighxwxudyu.supabase.co/functions/v1/paypal-create-order`
 - ✅ Sends correct JSON body:
   ```json
   {
@@ -22,7 +22,7 @@
 - ✅ PayPal popup stays open (proper promise return)
 
 #### `src/pages/CoinStorePayPal.tsx` - Approve Handler
-- ✅ Updated `handleApprove` to use hardcoded URL: `https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1/paypal-complete-order`
+- ✅ Updated `handleApprove` to use hardcoded URL: `https://gejtbllazzighxwxudyu.supabase.co/functions/v1/paypal-complete-order`
 - ✅ Passes correct `orderID` from PayPal
 - ✅ Updates UI with success message
 - ✅ Refreshes profile to update coin balance

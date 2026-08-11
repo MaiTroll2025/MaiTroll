@@ -31,7 +31,7 @@ export default function VerificationComplete() {
         }
 
         const edgeFunctionsUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL || 
-          'https://yjxpwfalenorzrqxwmtr.supabase.co/functions/v1'
+          'https://gejtbllazzighxwxudyu.supabase.co/functions/v1'
 
         const response = await fetch(`${edgeFunctionsUrl}/verify-user-complete`, {
           method: 'POST',
