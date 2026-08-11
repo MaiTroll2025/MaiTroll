@@ -418,19 +418,9 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
           // For organization signup, use org credentials; otherwise use user-provided
            const finalEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
            const finalPassword = selectedRole === 'organization' ? orgPassword : password
-           const finalUsername = selectedRole === 'organization' ? orgName.trim() : username.trim()
+            const finalUsername = selectedRole === 'organization' ? orgName.trim() : username.trim()
 
-           // Canonical username safety check
-           if (finalUsername) {
-             const usernameCheck = await moderation.checkUsername(finalUsername);
-             if (!usernameCheck.safe) {
-               toast.error(usernameCheck.reason || 'This username is not allowed.');
-               setLoading(false);
-               return;
-             }
-           }
-
-           const signupData: any = {
+            const signupData: any = {
             email: finalEmail,
             password: finalPassword,
             username: finalUsername,

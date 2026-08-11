@@ -668,6 +668,7 @@ function AppContent() {
   const userIdRef = useRef<string | null>(null);
   const hasNavigatedRef = useRef(false);
   const lastVisibilityRefreshRef = useRef(0);
+  const hasBeenOnlineRef = useRef(false);
 
 
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
@@ -677,10 +678,12 @@ function AppContent() {
     if (typeof window === 'undefined') return
 
     const handleOffline = () => {
+      if (!hasBeenOnlineRef.current) return
       toast.error('You are offline', { duration: 4000 })
     }
 
     const handleOnline = () => {
+      hasBeenOnlineRef.current = true
       toast.success('Back online', { duration: 2500 })
     }
 
