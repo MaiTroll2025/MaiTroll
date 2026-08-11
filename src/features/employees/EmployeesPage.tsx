@@ -1,25 +1,20 @@
-import React, {
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  BriefcaseBusiness,
-  ChevronDown,
-  ChevronRight,
-  Loader2,
-  Menu,
-  ShieldCheck,
-  UserRound,
-  X,
+  AlertTriangle,
+  ArrowRight,
+  BadgeCheck,
+  CheckCircle2,
+  Clock3,
+  HandHeart,
+  Search,
+  Shield,
+  Users,
+  XCircle,
 } from 'lucide-react'
-
-import { useAuthStore } from '../../lib/store'
-import { supabase } from '../../lib/supabase'
-import { format12hr } from '../../utils/timeFormat'
-
+import { useAuthStore } from '@/lib/store'
+import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 import {
   getEmployeeTabs,
   isAdmin,
@@ -28,302 +23,212 @@ import {
   type EmployeeTabId,
 } from './permissions'
 
-import { OnlineEmployees } from './components/OnlineEmployees'
-
-/**
- * Lazy loading prevents the employee portal from loading every department
- * module before the employee actually opens it.
- */
-const HomeTab = lazy(() => import('./tabs/HomeTab'))
-const ClockTab = lazy(() => import('./tabs/ClockTab'))
-const ScheduleTab = lazy(() => import('./tabs/ScheduleTab'))
-const ChatTab = lazy(() => import('./tabs/ChatTab'))
-const TasksTab = lazy(() => import('./tabs/TasksTab'))
-const ReportsTab = lazy(() => import('./tabs/ReportsTab'))
-const AnnouncementsTab = lazy(() => import('./tabs/AnnouncementsTab'))
-const ChangeRequestsTab = lazy(() => import('./tabs/ChangeRequestsTab'))
-const FrontendStudioTab = lazy(() => import('./tabs/FrontendStudioTab'))
-const DepartmentToolsTab = lazy(() => import('./tabs/DepartmentToolsTab'))
-const ModerationTab = lazy(() => import('./tabs/ModerationTab'))
-const ModActionsTab = lazy(() => import('./tabs/ModActionsTab'))
-const ManagementTab = lazy(() => import('./tabs/ManagementTab'))
-const HiringTab = lazy(() => import('./tabs/HiringTab'))
-const AttendanceTab = lazy(() => import('./tabs/AttendanceTab'))
-const RecordsTab = lazy(() => import('./tabs/RecordsTab'))
-const PayrollTab = lazy(() => import('./tabs/PayrollTab'))
-const EmploymentVerificationTab = lazy(
-  () => import('./tabs/EmploymentVerificationTab'),
-)
-const DocumentsTab = lazy(
-  () => import('./tabs/DocumentsTab'),
-)
-
-type WorkSessionStatus = 'working' | 'break' | 'meal' | string
-
-interface ActiveWorkSession {
+type StaffRole = {
   id: string
-  officer_id: string
-  clock_in: string
-  clock_out: string | null
-  status: WorkSessionStatus | null
-  created_at?: string
-  updated_at?: string
+  roleKey: string
+  title: string
+  category: string
+  description: string
+  responsibilities: string[]
+  powers: string[]
+  requirements: string[]
+  activeCount: number
 }
 
-interface ClockStatusResult {
-  session: ActiveWorkSession | null
-  loading: boolean
-  error: string | null
+type StaffMember = {
+  id: string
+  username: string
+  display_name: string | null
+  avatar_url: string | null
+  role: string | null
+  troll_role: string | null
+  is_active: boolean | null
+  is_admin: boolean | null
+  created_at: string | null
 }
 
-interface EmployeeTabProps {
-  profile: EmployeeProfileLike | null
-  realProfile: EmployeeProfileLike
-  previewMode?: boolean
-}
-
-const TAB_COMPONENTS: Record<
-  EmployeeTabId,
-  React.ComponentType<EmployeeTabProps>
-> = {
-  home: HomeTab,
-  clock: ClockTab,
-  schedule: ScheduleTab,
-  chat: ChatTab,
-  tasks: TasksTab,
-  reports: ReportsTab,
-  announcements: AnnouncementsTab,
-  change_requests: ChangeRequestsTab,
-  frontend_studio: FrontendStudioTab,
-  department_tools: DepartmentToolsTab,
-  moderation: ModerationTab,
-  mod_actions: ModActionsTab,
-  management: ManagementTab,
-  hiring: HiringTab as React.ComponentType<EmployeeTabProps>,
-  attendance: AttendanceTab,
-  records: RecordsTab,
-  payroll: PayrollTab,
-  employment_verification: EmploymentVerificationTab,
-  documents: DocumentsTab,
-}
-
-const ADMIN_PREVIEW_ROLES = [
-  'troll_officer',
-  'lead_troll_officer',
-  'secretary',
-  'ceo_assistant',
-  'noah_assistant',
-] as const
-
-function formatRoleName(role?: string | null): string {
-  if (!role) return 'Employee'
-
-  return role
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (character) => character.toUpperCase())
-}
-
-function getSessionLabel(session: ActiveWorkSession | null): string {
-  if (!session) return 'Clocked Out'
-
-  switch (session.status) {
-    case 'break':
-      return 'On Break'
-    case 'meal':
-      return 'Meal Period'
-    default:
-      return 'Clocked In'
-  }
-}
-
-function getSessionStatusClasses(
-  session: ActiveWorkSession | null,
-): string {
-  if (!session) {
-    return 'border-slate-700 bg-slate-800/80 text-slate-300'
-  }
-
-  if (session.status === 'break' || session.status === 'meal') {
-    return 'border-amber-400/20 bg-amber-500/10 text-amber-200'
-  }
-
-  return 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'
-}
-
-function getSessionIndicatorClasses(
-  session: ActiveWorkSession | null,
-): string {
-  if (!session) return 'bg-slate-400'
-
-  if (session.status === 'break' || session.status === 'meal') {
-    return 'bg-amber-400'
-  }
-
-  return 'animate-pulse bg-emerald-400'
-}
-
-function useClockStatus(userId?: string | null): ClockStatusResult {
-  const [session, setSession] = useState<ActiveWorkSession | null>(null)
-  const [loading, setLoading] = useState(Boolean(userId))
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!userId) {
-      setSession(null)
-      setLoading(false)
-      setError(null)
-      return
-    }
-
-    let mounted = true
-
-    const loadActiveSession = async () => {
-      try {
-        const { data, error: queryError } = await supabase
-          .from('officer_work_sessions')
-          .select(
-            `
-              id,
-              officer_id,
-              clock_in,
-              clock_out,
-              status,
-              created_at,
-              updated_at
-            `,
-          )
-          .eq('officer_id', userId)
-          .is('clock_out', null)
-          .order('clock_in', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-
-        if (queryError) {
-          throw queryError
-        }
-
-        if (!mounted) return
-
-        setSession((data as ActiveWorkSession | null) ?? null)
-        setError(null)
-      } catch (loadError) {
-        console.error('Unable to load active employee work session:', loadError)
-
-        if (!mounted) return
-
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : 'Unable to load work status.',
-        )
-      } finally {
-        if (mounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    void loadActiveSession()
-
-    const channel = supabase
-      .channel(`employee-work-session:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'officer_work_sessions',
-          filter: `officer_id=eq.${userId}`,
-        },
-        () => {
-          void loadActiveSession()
-        },
-      )
-      .subscribe((status) => {
-        if (
-          status === 'CHANNEL_ERROR' ||
-          status === 'TIMED_OUT'
-        ) {
-          console.error(
-            `Employee work-session subscription failed: ${status}`,
-          )
-        }
-      })
-
-    return () => {
-      mounted = false
-      void supabase.removeChannel(channel)
-    }
-  }, [userId])
-
-  return {
-    session,
-    loading,
-    error,
-  }
-}
+const STAFF_ROLES: StaffRole[] = [
+  {
+    id: 'lead_troll_officer',
+    roleKey: 'lead_troll_officer',
+    title: 'Lead Troll Officer',
+    category: 'Enforcement',
+    description: 'Coordinate Troll Officers and support community safety actions across Mai Troll.',
+    responsibilities: [
+      'Guide Troll Officers',
+      'Assist with escalated community safety situations',
+      'Follow Mai Troll rules and internal procedures',
+    ],
+    powers: ['Role-based moderation and officer tools assigned by Mai Troll'],
+    requirements: ['Good judgment', 'Responsible use of platform powers', 'Ability to remain fair during disputes'],
+    activeCount: 0,
+  },
+  {
+    id: 'troll_officer',
+    roleKey: 'troll_officer',
+    title: 'Troll Officer',
+    category: 'Enforcement',
+    description: 'Help with community safety, reports, and role-specific enforcement tools inside Mai Troll.',
+    responsibilities: [
+      'Help respond to community issues',
+      'Use officer powers only for approved purposes',
+      'Document or escalate serious situations when required',
+    ],
+    powers: ['Officer tools and permissions assigned by Mai Troll'],
+    requirements: ['Fair judgment', 'Respect for users', 'Responsible use of platform permissions'],
+    activeCount: 0,
+  },
+  {
+    id: 'secretary',
+    roleKey: 'secretary',
+    title: 'Secretary',
+    category: 'Administration',
+    description: 'Help organize community information, notices, records, and role-related administrative tasks.',
+    responsibilities: ['Help organize notices and records', 'Support approved administrative workflows', 'Keep information accurate'],
+    powers: ['Secretary tools and permissions assigned by Mai Troll'],
+    requirements: ['Organization', 'Attention to detail', 'Good communication'],
+    activeCount: 0,
+  },
+  {
+    id: 'ceo_assistant',
+    roleKey: 'ceo_assistant',
+    title: 'CEO Assistant',
+    category: 'Executive Support',
+    description: 'Provide assistance with approved Mai Troll executive and platform support tasks.',
+    responsibilities: ['Help with approved support tasks', 'Keep assigned information organized', 'Follow platform instructions'],
+    powers: ['CEO Assistant permissions assigned by Mai Troll'],
+    requirements: ['Reliability', 'Organization', 'Discretion'],
+    activeCount: 0,
+  },
+  {
+    id: 'noah_assistant',
+    roleKey: 'noah_assistant',
+    title: 'Noah Assistant',
+    category: 'Executive Support',
+    description: 'Provide volunteer assistance with approved Noah-related Mai Troll support tasks.',
+    responsibilities: ['Help with approved assigned tasks', 'Keep information organized', 'Use permissions only as intended'],
+    powers: ['Noah Assistant permissions assigned by Mai Troll'],
+    requirements: ['Reliability', 'Organization', 'Discretion'],
+    activeCount: 0,
+  },
+  {
+    id: 'broadofficer',
+    roleKey: 'broadofficer',
+    title: 'Broadcast Officer',
+    category: 'Broadcast Operations',
+    description: 'Help manage approved broadcast streams and support broadcaster workflows.',
+    responsibilities: ['Support approved broadcast management', 'Follow broadcast rules', 'Use broadcast tools responsibly'],
+    powers: ['Broadcast officer permissions assigned by Mai Troll'],
+    requirements: ['Reliability', 'Good communication', 'Ability to follow broadcast procedures'],
+    activeCount: 0,
+  },
+  {
+    id: 'broadcaster',
+    roleKey: 'broadcaster',
+    title: 'Broadcaster',
+    category: 'Broadcast Operations',
+    description: 'Create and manage approved live broadcast content on Mai Troll.',
+    responsibilities: ['Follow broadcast guidelines', 'Engage community appropriately', 'Use broadcasting tools responsibly'],
+    powers: ['Broadcaster permissions assigned by Mai Troll'],
+    requirements: ['Good standing', 'Responsible conduct', 'Ability to follow platform rules'],
+    activeCount: 0,
+  },
+  {
+    id: 'prosecutor',
+    roleKey: 'prosecutor',
+    title: 'Prosecutor',
+    category: 'Troll Court',
+    description: 'Participate in Mai Troll court features as a prosecutor role.',
+    responsibilities: ['Review eligible Troll Court matters', 'Present the prosecution side', 'Follow Troll Court procedures'],
+    powers: ['Troll Court prosecutor permissions assigned by Mai Troll'],
+    requirements: ['Fairness', 'Clear communication', 'Ability to follow platform court procedures'],
+    activeCount: 0,
+  },
+  {
+    id: 'attorney',
+    roleKey: 'attorney',
+    title: 'Attorney',
+    category: 'Troll Court',
+    description: 'Participate in Mai Troll court features as an attorney role.',
+    responsibilities: ['Help users within Troll Court features', 'Present arguments in eligible cases', 'Follow Troll Court procedures'],
+    powers: ['Troll Court attorney permissions assigned by Mai Troll'],
+    requirements: ['Clear communication', 'Fairness', 'Ability to understand platform court rules'],
+    activeCount: 0,
+  },
+  {
+    id: 'judge',
+    roleKey: 'judge',
+    title: 'Judge',
+    category: 'Troll Court',
+    description: 'Help oversee eligible Troll Court proceedings and make platform decisions within the assigned court powers.',
+    responsibilities: ['Review eligible cases', 'Remain neutral', 'Apply Mai Troll court rules consistently'],
+    powers: ['Judge permissions within Troll Court assigned by Mai Troll'],
+    requirements: ['Strong judgment', 'Neutrality', 'Ability to make fair platform decisions'],
+    activeCount: 0,
+  },
+  {
+    id: 'pastor',
+    roleKey: 'pastor',
+    title: 'Pastor',
+    category: 'Community',
+    description: 'Support the voluntary community and church-style features available inside Mai Troll.',
+    responsibilities: ['Support approved community activities', 'Treat users respectfully', 'Follow platform rules'],
+    powers: ['Pastor/community permissions assigned by Mai Troll'],
+    requirements: ['Respectful communication', 'Community-minded behavior', 'Reliable conduct'],
+    activeCount: 0,
+  },
+  {
+    id: 'journalist',
+    roleKey: 'journalist',
+    title: 'Journalist',
+    category: 'News',
+    description: 'Help create and report community stories for approved Mai Troll news features.',
+    responsibilities: ['Cover approved community stories', 'Verify information before publishing', 'Follow news and platform rules'],
+    powers: ['Journalist publishing tools assigned by Mai Troll'],
+    requirements: ['Clear writing', 'Accuracy', 'Ability to separate facts from opinion'],
+    activeCount: 0,
+  },
+  {
+    id: 'auctioneer',
+    roleKey: 'auctioneer',
+    title: 'Auctioneer',
+    category: 'Marketplace',
+    description: 'Help host and manage approved auction activity inside Mai Troll.',
+    responsibilities: ['Help run approved auctions', 'Keep auction activity organized', 'Follow marketplace rules'],
+    powers: ['Auction tools and permissions assigned by Mai Troll'],
+    requirements: ['Clear speaking', 'Organization', 'Understanding of auction rules'],
+    activeCount: 0,
+  },
+]
 
 export default function EmployeesPage() {
+  const navigate = useNavigate()
   const { user, profile } = useAuthStore()
 
-  const employeeProfile =
-    profile as EmployeeProfileLike | null
+  const employeeProfile = profile as EmployeeProfileLike | null
+  const authorizedTabs = useMemo(() => getEmployeeTabs(employeeProfile), [employeeProfile])
 
-  /**
-   * Navigation permissions always come from the employee's real profile.
-   * Admin preview must never grant additional access.
-   */
-  const authorizedTabs = useMemo(
-    () => getEmployeeTabs(employeeProfile),
-    [employeeProfile],
-  )
-
-  const [activeTab, setActiveTab] =
-    useState<EmployeeTabId>('home')
-  const [previewRole, setPreviewRole] =
-    useState<string | null>(null)
-  const [mobileNavOpen, setMobileNavOpen] =
-    useState(false)
-
-  const {
-    session: activeSession,
-    loading: clockStatusLoading,
-    error: clockStatusError,
-  } = useClockStatus(user?.id)
-
-  const selectedTab = useMemo(
-    () =>
-      authorizedTabs.find((tab) => tab.id === activeTab) ??
-      authorizedTabs.find((tab) => tab.id === 'home') ??
-      authorizedTabs[0],
-    [activeTab, authorizedTabs],
-  )
+  const [activeTab, setActiveTab] = useState<EmployeeTabId>('home')
+  const [previewRole, setPreviewRole] = useState<string | null>(null)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [staffSearch, setStaffSearch] = useState('')
+  const [staffFilter, setStaffFilter] = useState('all')
+  const [selectedRole, setSelectedRole] = useState<StaffRole | null>(null)
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([])
+  const [loadingStaff, setLoadingStaff] = useState(true)
 
   const previewProfile = useMemo<EmployeeProfileLike | null>(() => {
     if (!employeeProfile) return null
     if (!previewRole) return employeeProfile
-
-    return {
-      ...employeeProfile,
-      role: previewRole,
-    }
+    return { ...employeeProfile, role: previewRole }
   }, [employeeProfile, previewRole])
 
   useEffect(() => {
     if (!authorizedTabs.length) return
-
-    const activeTabIsAuthorized = authorizedTabs.some(
-      (tab) => tab.id === activeTab,
-    )
-
+    const activeTabIsAuthorized = authorizedTabs.some((tab) => tab.id === activeTab)
     if (!activeTabIsAuthorized) {
-      const fallbackTab =
-        authorizedTabs.find((tab) => tab.id === 'home') ??
-        authorizedTabs[0]
-
-      if (fallbackTab) {
-        setActiveTab(fallbackTab.id)
-      }
+      const fallbackTab = authorizedTabs.find((tab) => tab.id === 'home') ?? authorizedTabs[0]
+      if (fallbackTab) setActiveTab(fallbackTab.id)
     }
   }, [activeTab, authorizedTabs])
 
@@ -337,706 +242,370 @@ export default function EmployeesPage() {
     }
   }, [employeeProfile])
 
+  useEffect(() => {
+    if (!user) return
+    let alive = true
+    ;(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id, username, display_name, avatar_url, role, troll_role, is_active, created_at')
+          .neq('role', null)
+          .order('created_at', { ascending: false })
+          .limit(200)
+
+        if (error) throw error
+        if (!alive) return
+
+        const rows = (data as StaffMember[]) || []
+        setStaffMembers(rows)
+
+        const counts: Record<string, number> = {}
+        rows.forEach((r) => {
+          const key = r.role || r.troll_role || ''
+          if (key) counts[key] = (counts[key] || 0) + 1
+        })
+        STAFF_ROLES.forEach((role) => {
+          role.activeCount = counts[role.roleKey] || 0
+        })
+      } catch (e) {
+        console.error('Failed to load staff directory:', e)
+      } finally {
+        if (alive) setLoadingStaff(false)
+      }
+    })()
+    return () => { alive = false }
+  }, [user])
+
+   const selectedStaffTab = useMemo(
+    () => authorizedTabs.find((tab) => tab.id === activeTab) ?? authorizedTabs[0],
+    [activeTab, authorizedTabs],
+  )
+
+  const categories = useMemo(
+    () => ['all', ...Array.from(new Set(STAFF_ROLES.map((role) => role.category)))],
+    [],
+  )
+
+  const filteredRoles = useMemo(() => {
+    const query = staffSearch.trim().toLowerCase()
+    return STAFF_ROLES.filter((role) => {
+      const matchesFilter = staffFilter === 'all' || role.category === staffFilter
+      const matchesSearch =
+        !query ||
+        role.title.toLowerCase().includes(query) ||
+        role.roleKey.toLowerCase().includes(query) ||
+        role.category.toLowerCase().includes(query) ||
+        role.description.toLowerCase().includes(query)
+      return matchesFilter && matchesSearch
+    })
+  }, [staffSearch, staffFilter])
+
+  const filteredStaff = useMemo(() => {
+    const query = staffSearch.trim().toLowerCase()
+    return staffMembers.filter((member) => {
+      const roleKey = member.role || member.troll_role || ''
+      const role = STAFF_ROLES.find((r) => r.roleKey === roleKey)
+      if (!role) return false
+      const matchesFilter = staffFilter === 'all' || role.category === staffFilter
+      const matchesSearch =
+        !query ||
+        member.username.toLowerCase().includes(query) ||
+        (member.display_name || '').toLowerCase().includes(query) ||
+        role.title.toLowerCase().includes(query)
+      return matchesFilter && matchesSearch
+    })
+  }, [staffMembers, staffSearch, staffFilter])
+
+  const activeStaffCount = useMemo(() => staffMembers.filter((m) => m.is_active !== false).length, [staffMembers])
+  const officerCount = useMemo(() => staffMembers.filter((m) => m.role === 'troll_officer' || m.role === 'lead_troll_officer').length, [staffMembers])
+  const adminCount = useMemo(() => staffMembers.filter((m) => m.role === 'secretary' || m.role === 'ceo_assistant' || m.role === 'noah_assistant' || m.is_admin === true).length, [staffMembers])
+  const broadcastCount = useMemo(() => staffMembers.filter((m) => m.role === 'broadcaster' || m.role === 'broadofficer').length, [staffMembers])
+
   if (!user) {
-    return <EmployeePortalLoading />
+    return <StaffPortalLoading />
   }
 
   if (!isEmployeeProfile(employeeProfile)) {
-    return <EmployeeAccessDenied />
+    return <StaffAccessDenied />
   }
 
-  if (!authorizedTabs.length || !selectedTab) {
-    return <NoEmployeeModules />
+  if (!authorizedTabs.length) {
+    return <NoStaffModules />
   }
-
-  const ActiveComponent =
-    TAB_COMPONENTS[selectedTab.id] ?? HomeTab
 
   const handleTabChange = (tabId: EmployeeTabId) => {
-    const hasAccess = authorizedTabs.some(
-      (tab) => tab.id === tabId,
-    )
-
+    const hasAccess = authorizedTabs.some((tab) => tab.id === tabId)
     if (!hasAccess) {
-      console.warn(
-        `Blocked unauthorized employee tab navigation: ${tabId}`,
-      )
+      console.warn(`Blocked unauthorized staff tab navigation: ${tabId}`)
       return
     }
-
     setActiveTab(tabId)
   }
 
   return (
     <div className="min-h-screen bg-[#080B12] text-white">
-      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 p-3 sm:p-4 md:flex-row md:gap-6 md:p-6">
-        <DesktopSidebar
-          profile={employeeProfile}
-          currentUserId={user.id}
-          tabs={authorizedTabs}
-          activeTab={selectedTab.id}
-          activeSession={activeSession}
-          clockStatusLoading={clockStatusLoading}
-          clockStatusError={clockStatusError}
-          onTabChange={handleTabChange}
-        />
-
-        <main className="min-w-0 flex-1">
-          <div className="space-y-4">
-            <MobileHeader
-              profile={employeeProfile}
-              activeSession={activeSession}
-              clockStatusLoading={clockStatusLoading}
-              mobileNavOpen={mobileNavOpen}
-              onToggleNavigation={() =>
-                setMobileNavOpen((current) => !current)
-              }
-            />
-
-            {mobileNavOpen && (
-              <MobileNavigation
-                tabs={authorizedTabs}
-                activeTab={selectedTab.id}
-                onTabChange={handleTabChange}
-                onClose={() => setMobileNavOpen(false)}
-              />
-            )}
-
-            {isAdmin(employeeProfile) && (
-              <AdminPreviewBar
-                previewRole={previewRole}
-                setPreviewRole={setPreviewRole}
-              />
-            )}
-
-            <EmployeePageHeading
-              title={selectedTab.label}
-              role={previewRole ?? employeeProfile.role}
-              previewMode={Boolean(previewRole)}
-            />
-
-            <Suspense
-              fallback={
-                <EmployeeModuleLoading
-                  moduleName={selectedTab.label}
-                />
-              }
-            >
-              <ActiveComponent
-                profile={previewProfile}
-                realProfile={employeeProfile}
-                previewMode={Boolean(previewRole)}
-              />
-            </Suspense>
-          </div>
-        </main>
-      </div>
-    </div>
-  )
-}
-
-interface DesktopSidebarProps {
-  profile: EmployeeProfileLike
-  currentUserId: string
-  tabs: ReturnType<typeof getEmployeeTabs>
-  activeTab: EmployeeTabId
-  activeSession: ActiveWorkSession | null
-  clockStatusLoading: boolean
-  clockStatusError: string | null
-  onTabChange: (tabId: EmployeeTabId) => void
-}
-
-function DesktopSidebar({
-  profile,
-  currentUserId,
-  tabs,
-  activeTab,
-  activeSession,
-  clockStatusLoading,
-  clockStatusError,
-  onTabChange,
-}: DesktopSidebarProps) {
-  return (
-    <aside className="hidden w-72 shrink-0 md:block">
-      <div className="sticky top-6 space-y-4">
-        <EmployeesHeader
-          profile={profile}
-          activeSession={activeSession}
-          clockStatusLoading={clockStatusLoading}
-          clockStatusError={clockStatusError}
-        />
-
-        <nav
-          aria-label="Employee portal navigation"
-          className="overflow-hidden rounded-2xl border border-white/10 bg-[#101520]/95 shadow-2xl shadow-black/20"
-        >
-          <div className="border-b border-white/10 px-4 py-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-              Employee Workspace
-            </p>
-          </div>
-
-          <div className="space-y-1 p-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              const tabIsActive = tab.id === activeTab
-
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  aria-current={
-                    tabIsActive ? 'page' : undefined
-                  }
-                  onClick={() => onTabChange(tab.id)}
-                  className={[
-                    'group flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition',
-                    tabIsActive
-                      ? 'bg-cyan-500/15 text-cyan-100 ring-1 ring-cyan-400/20'
-                      : 'text-slate-300 hover:bg-white/5 hover:text-white',
-                  ].join(' ')}
-                >
-                  <span className="flex min-w-0 items-center gap-3">
-                    <span
-                      className={[
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition',
-                        tabIsActive
-                          ? 'bg-cyan-400/15 text-cyan-300'
-                          : 'bg-white/5 text-slate-400 group-hover:text-white',
-                      ].join(' ')}
-                    >
-                      <Icon
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      />
-                    </span>
-
-                    <span className="truncate text-sm font-semibold">
-                      {tab.label}
-                    </span>
-                  </span>
-
-                  <ChevronRight
-                    className={[
-                      'h-4 w-4 shrink-0 transition',
-                      tabIsActive
-                        ? 'text-cyan-300'
-                        : 'text-slate-600 group-hover:text-slate-300',
-                    ].join(' ')}
-                    aria-hidden="true"
-                  />
-                </button>
-              )
-            })}
-          </div>
-        </nav>
-
-        <OnlineEmployees currentUserId={currentUserId} />
-      </div>
-    </aside>
-  )
-}
-
-interface MobileHeaderProps {
-  profile: EmployeeProfileLike
-  activeSession: ActiveWorkSession | null
-  clockStatusLoading: boolean
-  mobileNavOpen: boolean
-  onToggleNavigation: () => void
-}
-
-function MobileHeader({
-  profile,
-  activeSession,
-  clockStatusLoading,
-  mobileNavOpen,
-  onToggleNavigation,
-}: MobileHeaderProps) {
-  return (
-    <header className="rounded-2xl border border-white/10 bg-[#101520]/95 p-3 shadow-xl shadow-black/20 md:hidden">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300 ring-1 ring-cyan-400/20">
-            <BriefcaseBusiness
-              className="h-5 w-5"
-              aria-hidden="true"
-            />
-          </div>
-
-          <div className="min-w-0">
-            <p className="truncate text-sm font-black text-white">
-              Employee Operations
-            </p>
-
-            <p className="truncate text-xs text-slate-400">
-              {formatRoleName(profile.role)}
-            </p>
-
-            <div className="mt-1 flex items-center gap-1.5">
-              {clockStatusLoading ? (
-                <>
-                  <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
-                  <span className="text-[11px] text-slate-400">
-                    Checking status
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span
-                    className={`h-2 w-2 rounded-full ${getSessionIndicatorClasses(
-                      activeSession,
-                    )}`}
-                  />
-                  <span className="text-[11px] font-semibold text-slate-300">
-                    {getSessionLabel(activeSession)}
-                  </span>
-                </>
-              )}
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 rounded-3xl border border-white/10 bg-gradient-to-br from-[#180927] via-[#0A1222] to-[#111827] p-8 sm:p-10">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2">
+              <Shield className="h-4 w-4 text-cyan-400" />
+              <span className="text-sm font-bold uppercase tracking-[0.16em] text-cyan-300">Platform Staff</span>
             </div>
-          </div>
-        </div>
 
-        <button
-          type="button"
-          aria-label={
-            mobileNavOpen
-              ? 'Close employee navigation'
-              : 'Open employee navigation'
-          }
-          aria-expanded={mobileNavOpen}
-          onClick={onToggleNavigation}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-200 transition hover:bg-white/10"
-        >
-          {mobileNavOpen ? (
-            <X className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          )}
-        </button>
-      </div>
-    </header>
-  )
-}
-
-interface MobileNavigationProps {
-  tabs: ReturnType<typeof getEmployeeTabs>
-  activeTab: EmployeeTabId
-  onTabChange: (tabId: EmployeeTabId) => void
-  onClose: () => void
-}
-
-function MobileNavigation({
-  tabs,
-  activeTab,
-  onTabChange,
-  onClose,
-}: MobileNavigationProps) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-[#101520]/95 p-3 shadow-xl shadow-black/20 md:hidden">
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-          Employee Menu
-        </p>
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-xs font-semibold text-slate-400 hover:text-white"
-        >
-          Close
-        </button>
-      </div>
-
-      <nav
-        aria-label="Mobile employee portal navigation"
-        className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2"
-      >
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          const tabIsActive = tab.id === activeTab
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              aria-current={
-                tabIsActive ? 'page' : undefined
-              }
-              onClick={() => onTabChange(tab.id)}
-              className={[
-                'flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition',
-                tabIsActive
-                  ? 'border-cyan-400/20 bg-cyan-500/15 text-cyan-100'
-                  : 'border-white/5 bg-white/[0.03] text-slate-300 hover:bg-white/5',
-              ].join(' ')}
-            >
-              <Icon
-                className="h-4 w-4 shrink-0"
-                aria-hidden="true"
-              />
-              <span className="text-xs font-bold">
-                {tab.label}
+            <h1 className="mb-4 text-4xl font-black tracking-tight sm:text-5xl md:text-6xl">
+              <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-500 bg-clip-text text-transparent">
+                Mai Troll Staff
               </span>
-            </button>
-          )
-        })}
-      </nav>
-    </div>
-  )
-}
-
-interface EmployeesHeaderProps {
-  profile: EmployeeProfileLike
-  activeSession: ActiveWorkSession | null
-  clockStatusLoading: boolean
-  clockStatusError: string | null
-}
-
-function EmployeesHeader({
-  profile,
-  activeSession,
-  clockStatusLoading,
-  clockStatusError,
-}: EmployeesHeaderProps) {
-  const employeeName =
-    profile.username?.trim() ||
-    'Employee'
-
-  return (
-    <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#101520]/95 shadow-2xl shadow-black/20">
-      <div className="border-b border-white/10 bg-gradient-to-r from-cyan-500/10 via-transparent to-violet-500/10 p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300 ring-1 ring-cyan-400/20">
-            <UserRound
-              className="h-6 w-6"
-              aria-hidden="true"
-            />
-          </div>
-
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
-              Mai Troll Employee
-            </p>
-
-            <h1 className="mt-1 truncate text-lg font-black text-white">
-              {employeeName}
             </h1>
 
-            <p className="mt-0.5 text-xs font-semibold text-cyan-300">
-              {formatRoleName(profile.role)}
+            <p className="mx-auto max-w-3xl text-base leading-7 text-zinc-300 sm:text-lg">
+              Manage platform roles, responsibilities, permissions, and staff assignments.
             </p>
           </div>
         </div>
-      </div>
 
-      <div className="p-4">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-          Current Work Status
-        </p>
-
-        {clockStatusLoading ? (
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
-            <Loader2 className="h-4 w-4 animate-spin text-cyan-300" />
-            <span className="text-xs font-semibold text-slate-300">
-              Checking work session…
-            </span>
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-[#121212] p-5">
+            <Users className="mb-3 h-6 w-6 text-cyan-400" />
+            <div className="text-3xl font-black">{activeStaffCount}</div>
+            <div className="mt-1 text-sm text-zinc-500">Active Staff</div>
           </div>
-        ) : (
-          <div
-            className={`rounded-xl border px-3 py-2.5 ${getSessionStatusClasses(
-              activeSession,
-            )}`}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${getSessionIndicatorClasses(
-                  activeSession,
-                )}`}
+          <div className="rounded-2xl border border-white/10 bg-[#121212] p-5">
+            <Shield className="mb-3 h-6 w-6 text-amber-400" />
+            <div className="text-3xl font-black">{officerCount}</div>
+            <div className="mt-1 text-sm text-zinc-500">Platform Officers</div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-[#121212] p-5">
+            <BadgeCheck className="mb-3 h-6 w-6 text-violet-400" />
+            <div className="text-3xl font-black">{adminCount}</div>
+            <div className="mt-1 text-sm text-zinc-500">Administrative Staff</div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-[#121212] p-5">
+            <HandHeart className="mb-3 h-6 w-6 text-emerald-400" />
+            <div className="text-3xl font-black">{broadcastCount}</div>
+            <div className="mt-1 text-sm text-zinc-500">Broadcast Staff</div>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Search staff or roles..."
+                value={staffSearch}
+                onChange={(event) => setStaffSearch(event.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-[#121212] py-3 pl-12 pr-4 text-white placeholder-zinc-500 outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"
               />
-
-              <span className="text-xs font-bold">
-                {getSessionLabel(activeSession)}
-              </span>
             </div>
-
-            {activeSession?.clock_in && (
-              <p className="mt-1 pl-[18px] text-[11px] opacity-75">
-                Started at{' '}
-                {format12hr(
-                  new Date(activeSession.clock_in),
-                )}
-              </p>
-            )}
-          </div>
-        )}
-
-        {clockStatusError && (
-          <p className="mt-2 text-[11px] text-rose-300">
-            Work status may be temporarily unavailable.
-          </p>
-        )}
-      </div>
-    </section>
-  )
-}
-
-interface EmployeePageHeadingProps {
-  title: string
-  role?: string | null
-  previewMode: boolean
-}
-
-function EmployeePageHeading({
-  title,
-  role,
-  previewMode,
-}: EmployeePageHeadingProps) {
-  return (
-    <header className="rounded-2xl border border-white/10 bg-[#101520]/75 px-4 py-4 sm:px-5">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-            Employee Operations Portal
-          </p>
-
-          <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">
-            {title}
-          </h2>
-        </div>
-
-        <div className="flex items-center gap-2 self-start rounded-xl border border-white/10 bg-black/20 px-3 py-2 sm:self-auto">
-          {previewMode ? (
-            <ShieldCheck
-              className="h-4 w-4 text-amber-300"
-              aria-hidden="true"
-            />
-          ) : (
-            <BriefcaseBusiness
-              className="h-4 w-4 text-cyan-300"
-              aria-hidden="true"
-            />
-          )}
-
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-              {previewMode
-                ? 'Previewing Role'
-                : 'Assigned Role'}
-            </p>
-
-            <p className="text-xs font-bold text-slate-200">
-              {formatRoleName(role)}
-            </p>
-          </div>
-        </div>
-      </div>
-    </header>
-  )
-}
-
-interface AdminPreviewBarProps {
-  previewRole: string | null
-  setPreviewRole: (role: string | null) => void
-}
-
-function AdminPreviewBar({
-  previewRole,
-  setPreviewRole,
-}: AdminPreviewBarProps) {
-  const [expanded, setExpanded] = useState(
-    Boolean(previewRole),
-  )
-
-  useEffect(() => {
-    if (previewRole) {
-      setExpanded(true)
-    }
-  }, [previewRole])
-
-  return (
-    <section className="overflow-hidden rounded-2xl border border-amber-400/20 bg-amber-500/[0.06]">
-      <button
-        type="button"
-        aria-expanded={expanded}
-        onClick={() => setExpanded((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-300">
-            <ShieldCheck
-              className="h-4 w-4"
-              aria-hidden="true"
-            />
-          </div>
-
-          <div>
-            <p className="text-xs font-black text-amber-100">
-              Administrative Role Preview
-            </p>
-
-            <p className="mt-0.5 text-[11px] text-amber-100/60">
-              Preview employee-facing content without changing
-              account permissions.
-            </p>
-          </div>
-        </div>
-
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-amber-300 transition-transform ${
-            expanded ? 'rotate-180' : ''
-          }`}
-          aria-hidden="true"
-        />
-      </button>
-
-      {expanded && (
-        <div className="border-t border-amber-400/10 px-4 py-4">
-          <div className="flex flex-wrap gap-2">
-            {ADMIN_PREVIEW_ROLES.map((role) => {
-              const roleIsSelected =
-                previewRole === role
-
-              return (
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
                 <button
-                  key={role}
+                  key={category}
                   type="button"
-                  onClick={() =>
-                    setPreviewRole(
-                      roleIsSelected ? null : role,
-                    )
-                  }
-                  className={[
-                    'rounded-lg border px-3 py-2 text-xs font-bold transition',
-                    roleIsSelected
-                      ? 'border-amber-300/40 bg-amber-500/20 text-amber-100'
-                      : 'border-white/10 bg-black/10 text-slate-300 hover:border-amber-300/20 hover:text-white',
-                  ].join(' ')}
+                  onClick={() => setStaffFilter(category)}
+                  className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+                    staffFilter === category
+                      ? 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300'
+                      : 'border-white/10 bg-[#121212] text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                  }`}
                 >
-                  {formatRoleName(role)}
+                  {category === 'all' ? 'All Roles' : category}
                 </button>
-              )
-            })}
+              ))}
+            </div>
           </div>
+        </div>
 
-          {previewRole && (
-            <div className="mt-3 flex flex-col justify-between gap-2 rounded-xl border border-amber-400/10 bg-black/15 px-3 py-2.5 sm:flex-row sm:items-center">
-              <p className="text-xs text-amber-100/80">
-                Previewing content as{' '}
-                <span className="font-black text-amber-100">
-                  {formatRoleName(previewRole)}
-                </span>
-                . Your administrative permissions remain unchanged.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => setPreviewRole(null)}
-                className="self-start text-xs font-bold text-amber-300 underline decoration-amber-300/40 underline-offset-4 hover:text-amber-200 sm:self-auto"
+        <div className="space-y-5">
+          {filteredRoles.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-[#121212] py-14 text-center">
+              <Search className="mx-auto mb-4 h-10 w-10 text-zinc-700" />
+              <p className="text-zinc-500">No staff roles match your search.</p>
+            </div>
+          ) : (
+            filteredRoles.map((role) => (
+              <div
+                key={role.roleKey}
+                className="rounded-3xl border border-white/10 bg-[#121212] p-6 transition hover:border-cyan-500/30 sm:p-7"
               >
-                Exit preview
-              </button>
+                <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
+                  <div className="flex-1">
+                    <div className="mb-4 flex flex-wrap items-center gap-3">
+                      <h3 className="text-2xl font-black text-white">{role.title}</h3>
+                      <span className="rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-300">
+                        {role.category}
+                      </span>
+                      <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-300">
+                        {role.activeCount} Active
+                      </span>
+                    </div>
+
+                    <p className="max-w-4xl text-sm leading-6 text-zinc-400 sm:text-base">{role.description}</p>
+
+                    <div className="mt-6 grid gap-5 lg:grid-cols-3">
+                      <div>
+                        <div className="mb-2 flex items-center gap-2 text-sm font-bold text-white">
+                          <BadgeCheck className="h-4 w-4 text-cyan-400" />
+                          Responsibilities
+                        </div>
+                        <ul className="space-y-2 text-sm text-zinc-400">
+                          {role.responsibilities.map((item) => (
+                            <li key={item} className="flex gap-2">
+                              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div>
+                        <div className="mb-2 flex items-center gap-2 text-sm font-bold text-white">
+                          <Shield className="h-4 w-4 text-amber-400" />
+                          Permissions
+                        </div>
+                        <ul className="space-y-2 text-sm text-zinc-400">
+                          {role.powers.map((item) => (
+                            <li key={item} className="flex gap-2">
+                              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div>
+                        <div className="mb-2 flex items-center gap-2 text-sm font-bold text-white">
+                          <Users className="h-4 w-4 text-violet-400" />
+                          Requirements
+                        </div>
+                        <ul className="space-y-2 text-sm text-zinc-400">
+                          {role.requirements.map((item) => (
+                            <li key={item} className="flex gap-2">
+                              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="mt-10 rounded-3xl border border-white/10 bg-[#121212] p-6 sm:p-8">
+          <h2 className="mb-4 text-2xl font-black text-white">Staff Directory</h2>
+          {loadingStaff ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
+            </div>
+          ) : filteredStaff.length === 0 ? (
+            <div className="py-10 text-center text-zinc-500">No staff members match your search.</div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredStaff.map((member) => {
+                const role = STAFF_ROLES.find((r) => r.roleKey === (member.role || member.troll_role))
+                return (
+                  <div
+                    key={member.id}
+                    className="rounded-2xl border border-white/5 bg-white/5 p-4 transition hover:border-cyan-500/20"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-300 ring-1 ring-cyan-400/20">
+                        {member.avatar_url ? (
+                          <img src={member.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
+                        ) : (
+                          <Users className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-white">
+                          {member.display_name || member.username}
+                        </p>
+                        <p className="truncate text-xs text-zinc-400">@{member.username}</p>
+                        <p className="mt-0.5 text-xs font-semibold text-cyan-300">
+                          {role?.title || formatRoleName(member.role || member.troll_role)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className={`text-xs font-bold ${member.is_active !== false ? 'text-emerald-300' : 'text-rose-300'}`}>
+                        {member.is_active !== false ? 'Active' : 'Inactive'}
+                      </span>
+                      {member.created_at && (
+                        <span className="text-xs text-zinc-500">
+                          Joined {new Date(member.created_at).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
-      )}
-    </section>
-  )
-}
-
-function EmployeeModuleLoading({
-  moduleName,
-}: {
-  moduleName: string
-}) {
-  return (
-    <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-white/10 bg-[#101520]/75 p-8">
-      <div className="text-center">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-cyan-300" />
-
-        <p className="mt-4 text-sm font-bold text-slate-200">
-          Loading {moduleName}
-        </p>
-
-        <p className="mt-1 text-xs text-slate-500">
-          Preparing your employee workspace.
-        </p>
       </div>
     </div>
   )
 }
 
-function EmployeePortalLoading() {
+function formatRoleName(role?: string | null): string {
+  if (!role) return 'Staff Member'
+  return role.replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+function StaffPortalLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#080B12] px-4 text-white">
       <div className="text-center">
-        <Loader2 className="mx-auto h-9 w-9 animate-spin text-cyan-300" />
-
-        <h1 className="mt-4 text-xl font-black">
-          Employee Operations
-        </h1>
-
-        <p className="mt-1 text-sm text-slate-400">
-          Verifying your employee account.
-        </p>
+        <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
+        <h1 className="mt-4 text-xl font-black">Staff Operations</h1>
+        <p className="mt-1 text-sm text-slate-400">Verifying your staff account.</p>
       </div>
     </div>
   )
 }
 
-function EmployeeAccessDenied() {
+function StaffAccessDenied() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#080B12] px-4 py-10 text-white">
       <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#101520] p-6 text-center shadow-2xl shadow-black/30 sm:p-8">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-500/10 text-slate-300 ring-1 ring-white/10">
-          <BriefcaseBusiness
-            className="h-7 w-7"
-            aria-hidden="true"
-          />
+          <Shield className="h-7 w-7" />
         </div>
-
-        <h1 className="mt-5 text-2xl font-black">
-          Employee Access Required
-        </h1>
-
-        <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-400">
-          This portal is available only to approved Mai Troll
-          employees with an active employee role.
+        <h1 className="mt-5 text-2xl font-black">Staff Access Required</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-400">
+          This portal is available only to approved Mai Troll staff with an active platform role.
         </p>
-
         <div className="mt-6 rounded-xl border border-white/10 bg-black/20 p-4 text-left">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Interested in joining the team?
-          </p>
-
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Interested in joining the team?</p>
           <p className="mt-2 text-sm text-slate-300">
-            Review available positions and submit an official
-            employment application through the Jobs page.
+            Review available positions and submit an application through the Careers page.
           </p>
         </div>
-
         <a
-          href="/jobs"
+          href="/careers"
           className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-cyan-500 px-5 py-2.5 text-sm font-black text-slate-950 transition hover:bg-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-300"
         >
-          View Jobs
+          View Roles
         </a>
       </div>
     </div>
   )
 }
 
-function NoEmployeeModules() {
+function NoStaffModules() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#080B12] px-4 text-white">
       <div className="max-w-md rounded-2xl border border-rose-400/20 bg-rose-500/[0.06] p-6 text-center">
-        <h1 className="text-xl font-black text-rose-100">
-          Employee Role Configuration Required
-        </h1>
-
+        <h1 className="text-xl font-black text-rose-100">Staff Role Configuration Required</h1>
         <p className="mt-2 text-sm leading-6 text-rose-100/70">
-          Your employee account is active, but no portal modules
-          have been assigned to your role. Contact an administrator
-          or Human Resources for assistance.
+          Your staff account is active, but no portal modules have been assigned to your role. Contact an administrator for assistance.
         </p>
       </div>
     </div>

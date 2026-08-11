@@ -133,10 +133,10 @@ const ParticipantTile: React.FC<{
 
   const isMicOn = isLocal 
     ? participant.audioTrack?.enabled ?? true 
-    : participant.remoteUser?.audioTrack?.enabled ?? false;
+    : (participant.remoteUser?.audioTrack as any)?.enabled ?? false;
   const isCamOn = isLocal 
     ? participant.videoTrack?.enabled ?? true 
-    : participant.remoteUser?.videoTrack?.enabled ?? false;
+    : (participant.remoteUser?.videoTrack as any)?.enabled ?? false;
   const hasVideo = isCamOn && (isLocal ? participant.videoTrack : participant.remoteUser?.videoTrack);
 
   return (
@@ -268,7 +268,7 @@ export const TeamMeetingGrid: React.FC<TeamMeetingGridProps> = ({
     }
 
     remoteUsers.forEach(user => {
-      if (user.audioTrack?.enabled) {
+      if ((user.audioTrack as any)?.enabled) {
         newSpeakingUsers.add(user.uid);
       }
     });

@@ -7,6 +7,8 @@ import { useAuthStore } from '../../lib/store'
 import { useTrollFamilyActivity } from '@/hooks/useTrollFamilyActivity'
 import { unlockGiftAudio } from '../../components/broadcast/GiftVideoOverlay';
 
+import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
+
 export async function quietRefreshGiftProfile(userId: string) {
   const authStore = useAuthStore.getState();
   const currentProfile = authStore.profile;
@@ -35,6 +37,7 @@ export async function quietRefreshGiftProfile(userId: string) {
 export interface GiftItem {
   id: string
   name: string
+  description?: string
   icon?: string
   coinCost: number
   type: 'paid' | 'free'
@@ -166,6 +169,8 @@ function GiftSystemProviderInner({
         rarity: gift.rarity,
         tray_visual_url: gift.trayVisualUrl || null,
         tray_gradient: gift.trayGradient || null,
+        recipient_type: (options as any).recipient_type || 'broadcaster',
+        recipient_seat_index: (options as any).recipient_seat_index ?? null,
         ...options.metadata,
       }
 
@@ -226,6 +231,55 @@ function GiftSystemProviderInner({
               p_metadata: { stream_id: effectiveStreamId, gift_id: gift.id, sender_id: user.id, dedup_key: dedupKey },
             })
           } catch (e) { if (import.meta.env.DEV) console.warn('[GiftSystem] activity record failed:', e) }
+
+          const giftId = result?.stream_gift_id || result?.gift_transaction_id || result?.transaction_id
+          const normalizedPayload = {
+            id: giftId,
+            stream_gift_id: giftId,
+            gift_transaction_id: giftId,
+            transaction_id: giftId,
+            stream_id: effectiveStreamId,
+            gift_id: gift.id,
+            gift_name: gift.name,
+            gift_slug: gift.slug,
+            sender_id: user.id,
+            sender_name: profile?.username || user.email?.split('@')?.[0] || 'Someone',
+            receiver_id: targetReceiverId,
+            recipient_type: giftMetadata.recipient_type || 'broadcaster',
+            recipient_seat_index: giftMetadata.recipient_seat_index ?? null,
+            animation_type: gift.animationType || 'video',
+            animation_url: gift.animationUrl || gift.videoUrl || null,
+            animation_url_webm: gift.animationUrl?.endsWith('.webm') ? gift.animationUrl : null,
+            animation_url_mp4: gift.animationUrl?.endsWith('.mp4') ? gift.animationUrl : null,
+            animation_url_mov: gift.animationUrl?.endsWith('.mov') ? gift.animationUrl : null,
+            video_url: gift.videoUrl || gift.animationUrl || null,
+            sound_url: gift.soundUrl || null,
+            animation_duration_ms: gift.animationDurationMs || 7000,
+            quantity,
+            amount: totalCost,
+            created_at: new Date().toISOString(),
+            metadata: giftMetadata,
+          }
+
+          if (import.meta.env.DEV) {
+            console.info('[GiftPipeline] send success', normalizedPayload)
+          }
+
+          try {
+            window.dispatchEvent(
+              new CustomEvent('maitroll:gift-sent', {
+                detail: normalizedPayload,
+              }),
+            )
+          } catch (e) {
+            if (import.meta.env.DEV) console.warn('[GiftPipeline] local event dispatch failed', e)
+          }
+
+          try {
+            await sendStreamBroadcast(effectiveStreamId, 'gift_sent', normalizedPayload)
+          } catch (e) {
+            if (import.meta.env.DEV) console.warn('[GiftPipeline] broadcast send failed', e)
+          }
         })()
 
         return { success: true, bonus: result }

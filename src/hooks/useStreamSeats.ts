@@ -26,12 +26,28 @@ export interface SeatSession {
     username?: string | null
     display_name?: string | null
     avatar_url?: string | null
+    is_gold?: boolean | null
+    rgb_username_expires_at?: string | null
+    glowing_username_color?: string | null
+    role?: string | null
+    troll_role?: string | null
+    created_at?: string | null
+    troll_coins?: number | null
+    trollmonds_balance?: number | null
   } | null
   profile?: {
     id?: string
     username?: string | null
     display_name?: string | null
     avatar_url?: string | null
+    is_gold?: boolean | null
+    rgb_username_expires_at?: string | null
+    glowing_username_color?: string | null
+    role?: string | null
+    troll_role?: string | null
+    created_at?: string | null
+    troll_coins?: number | null
+    trollmonds_balance?: number | null
   } | null
 }
 

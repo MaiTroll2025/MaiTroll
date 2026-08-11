@@ -1,0 +1,66 @@
+﻿-- Function: remove_stream_broadofficer
+CREATE OR REPLACE FUNCTION public.remove_stream_broadofficer(
+    p_stream_id  uuid,
+    p_officer_id uuid
+) RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_actor   uuid := auth.uid();
+    v_owner   uuid;
+    v_deleted integer := 0;
+BEGIN
+    IF v_actor IS NULL THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Not authenticated');
+    END IF;
+
+    SELECT user_id INTO v_owner FROM public.streams WHERE id = p_stream_id;
+    IF v_owner IS NULL THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Stream not found');
+    END IF;
+
+    IF NOT public.is_stream_owner_or_admin(p_stream_id, v_actor) THEN
+        RETURN jsonb_build_object('success', false, 'error', 'You do not control this stream');
+    END IF;
+
+    DELETE FROM public.broadcast_officers
+        WHERE broadcaster_id = v_owner
+          AND officer_id = p_officer_id
+          AND stream_id = p_stream_id;
+    GET DIAGNOSTICS v_deleted = ROW_COUNT;
+
+    RETURN jsonb_build_object('success', true, 'removed', v_deleted > 0);
+END;
+$$;
+
+-- Function: rent_property
+CREATE OR REPLACE FUNCTION public.rent_property(p_user_house_id UUID)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_tenant_id UUID := auth.uid();
+    v_house RECORD;
+    v_rent_price BIGINT;
+    v_paid BOOLEAN;
+    v_rental_id UUID;
+BEGIN
+    SELECT * INTO v_house FROM public.user_houses WHERE id = p_user_house_id;
+    
+    IF NOT FOUND THEN RETURN jsonb_build_object('success', false, 'error', 'House not found'); END IF;
+    
+    -- Check if for rent
+    IF NOT (v_house.feature_flags->>'is_for_rent')::boolean THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Not for rent');
+    END IF;
+    
+    v_rent_price := (v_house.feature_flags->>'rent_price')::bigint;
+    
+    -- Pay first month
+    v_paid := public.try_pay_coins(v_tenant_id, v_rent_price, 'rent_payment', jsonb_build_object('house_id', p_user_house_id));
+    
+    IF v_paid THEN
+        -- Create Rental Record

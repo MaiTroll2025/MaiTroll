@@ -925,19 +925,18 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
                      {!isStaff && !isOwnProfile && currentUser && (
                        <>
                          <div className="border-t border-gray-800 my-1"></div>
-                         <SubscribeButton
-                           broadcasterId={targetUserId!}
-                           broadcasterUsername={username}
-                           currentSubscription={currentSubscription}
-                           onSubscribe={() => {
-                             setShowMenu(false);
-                             checkSubscription();
-                           }}
-                           onUnsubscribe={() => {
-                             setShowMenu(false);
-                             checkSubscription();
-                           }}
-                         />
+                          <SubscribeButton
+                            broadcasterId={targetUserId!}
+                            broadcasterUsername={username}
+                            onSubscribe={() => {
+                              setShowMenu(false);
+                              checkSubscription();
+                            }}
+                            onUnsubscribe={() => {
+                              setShowMenu(false);
+                              checkSubscription();
+                            }}
+                          />
                        </>
                      )}
 

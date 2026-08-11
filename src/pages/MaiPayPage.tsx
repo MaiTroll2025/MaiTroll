@@ -31,6 +31,7 @@ import { CASHOUT_TIERS as TIERS, type CashoutTier } from '../config/coinConfig';
 import type { CashoutRequest, PayoutMethod } from '../types/cashout';
 import FastPayProgram from '../components/FastPayProgram';
 import FastPayApplication from './FastPayApplication';
+import { WeeklyCashbackCard } from '@/components/supporter-economy/WeeklyCashbackCard';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -129,7 +130,7 @@ export default function MaiPayPage() {
 
   // ── Derived ──────────────────────────────────────────────────────────────
 
-  const eligibleCashoutCoins = Math.max(0, cashoutCoins - cashoutReservedCoins);
+  const eligibleCashoutCoins = Math.max(0, trollCoins - cashoutReservedCoins);
   const canConvertHype = hypeCoins > 0;
 
   const cashoutTiers = useMemo<CashoutTier[]>(
@@ -165,13 +166,12 @@ export default function MaiPayPage() {
       // Load profile balances
       const { data: profileData } = await supabase
         .from('user_profiles')
-        .select('troll_coins, paid_coins, hype_coins, cashout_coins, cashout_reserved_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method, mai_pay_plus')
+        .select('troll_coins, hype_coins, cashout_coins, cashout_reserved_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method, mai_pay_plus')
         .eq('id', user.id)
         .single();
 
       if (profileData) {
         setTrollCoins(profileData.troll_coins ?? 0);
-        setPaidCoins(profileData.paid_coins ?? 0);
         setHypeCoins(profileData.hype_coins ?? 0);
         setCashoutCoins(profileData.cashout_coins ?? 0);
         setCashoutReservedCoins(profileData.cashout_reserved_coins ?? 0);
@@ -577,11 +577,14 @@ export default function MaiPayPage() {
                   <span className="text-sm font-semibold">My Requests</span>
                 </button>
               </div>
-            </div>
-          </>
-        )}
+             </div>
 
-        {/* ─── Application Tab ────────────────────────────────────────────── */}
+             {/* Weekly Cashback Card */}
+             <WeeklyCashbackCard />
+           </>
+         )}
+
+         {/* ─── Application Tab ────────────────────────────────────────────── */}
         {activeTab === 'application' && (
           <FastPayApplication />
         )}

@@ -35,7 +35,6 @@ interface UserComprehensiveData {
     role: string
     level: number
     troll_coins: number
-    free_coin_balance: number
     created_at: string
     onboarding_completed: boolean
     terms_accepted?: boolean
@@ -443,7 +442,7 @@ export default function UserDetailsModal({ userId, username, onClose }: UserDeta
                 </div>
                 <div>
                   <div className="text-gray-400">Free Coins</div>
-                  <div className="text-green-400">{userData.profile.free_coin_balance?.toLocaleString() || 0}</div>
+                   <div className="text-green-400">{(userData.profile.troll_coins || 0).toLocaleString()}</div>
                 </div>
                 <div>
                   <div className="text-gray-400">Member Since</div>

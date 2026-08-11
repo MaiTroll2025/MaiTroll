@@ -68,7 +68,7 @@ export function useSubscriberUsernames(broadcasterId?: string) {
     }
 
     setLoading(true)
-    supabase
+    ;(supabase
       .from('user_subscriptions')
       .select(`
         subscriber_id,
@@ -76,23 +76,23 @@ export function useSubscriberUsernames(broadcasterId?: string) {
         tier:subscription_tiers (name, color_hex)
       `)
       .eq('broadcaster_id', broadcasterId)
-      .eq('is_active', true)
-      .then(({ data }) => {
-        if (data) {
-          const nameSet = new Set<string>()
-          data.forEach((row: any) => {
-            if (row.user_profiles?.username) {
-              nameSet.add(row.user_profiles.username)
-            }
-          })
-          setUsernames(nameSet)
-        }
-      })
-      .catch((err) => {
-        console.error('[useSubscriberUsernames] error:', err)
-        setUsernames(new Set())
-      })
-      .finally(() => setLoading(false))
+      .eq('is_active', true) as any
+    ).then(({ data }) => {
+      if (data) {
+        const nameSet = new Set<string>()
+        data.forEach((row: any) => {
+          if (row.user_profiles?.username) {
+            nameSet.add(row.user_profiles.username)
+          }
+        })
+        setUsernames(nameSet)
+      }
+    })
+    .then(undefined, (err) => {
+      console.error('[useSubscriberUsernames] error:', err)
+      setUsernames(new Set())
+    })
+    .finally(() => setLoading(false))
   }, [broadcasterId])
 
   return { subscriberUsernames: usernames, loading }
@@ -115,16 +115,16 @@ export function useSubscriberBadges(broadcasterId?: string) {
     }
 
     setLoading(true)
-    supabase
-      .from('user_subscriptions')
-      .select(`
-        subscriber_id,
-        user_profiles:subscriber_id (username),
-        tier:subscription_tiers (name, color_hex)
-      `)
-      .eq('broadcaster_id', broadcasterId)
-      .eq('is_active', true)
-      .then(({ data }) => {
+      ;(supabase
+        .from('user_subscriptions')
+        .select(`
+          subscriber_id,
+          user_profiles:subscriber_id (username),
+          tier:subscription_tiers (name, color_hex)
+        `)
+        .eq('broadcaster_id', broadcasterId)
+        .eq('is_active', true) as any
+      ).then(({ data }) => {
         const badgeMap = new Map<string, SubscriberBadge>()
         if (data) {
           data.forEach((row: any) => {
@@ -139,7 +139,7 @@ export function useSubscriberBadges(broadcasterId?: string) {
         }
         setBadges(badgeMap)
       })
-      .catch((err) => {
+      .then(undefined, (err) => {
         console.error('[useSubscriberBadges] error:', err)
         setBadges(new Map())
       })
@@ -173,22 +173,22 @@ export function useUserSubscriptionTier(userId?: string) {
       return
     }
     setLoading(true)
-    supabase
+    ;(supabase
       .from('user_subscriptions')
       .select('tier:subscription_tiers (id, name, color_hex, icon_name, sort_order)')
       .eq('subscriber_id', targetUserId)
       .eq('is_active', true)
       .order('sort_order', { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0 && data[0].tier) {
-          setHighestTier(data[0].tier as SubscriptionTierInfo)
-        } else {
-          setHighestTier(null)
-        }
-      })
-      .catch(() => setHighestTier(null))
-      .finally(() => setLoading(false))
+      .limit(1) as any
+    ).then(({ data }) => {
+      if (data && data.length > 0 && data[0].tier) {
+        setHighestTier(data[0].tier as SubscriptionTierInfo)
+      } else {
+        setHighestTier(null)
+      }
+    })
+    .then(undefined, () => setHighestTier(null))
+    .finally(() => setLoading(false))
   }, [targetUserId])
 
   return { highestTier, loading }

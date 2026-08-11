@@ -244,8 +244,7 @@ export default function TermsAgreement() {
             When you are banned, your account is <strong>completely reset</strong>. You will lose:
           </p>
           <ul className="list-disc list-inside mt-2 text-gray-200 space-y-1">
-            <li>All troll_coins (non-refundable)</li>
-            <li>All free coins</li>
+            <li>All coins</li>
             <li>All XP and levels (back to Level 1)</li>
             <li>All badges and achievements</li>
             <li>All earnings history</li>

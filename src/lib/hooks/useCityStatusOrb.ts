@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../supabase';
 import { useAuthStore } from '../store';
 import {
-  getTLeagueTier,
-  getTLeagueProgress,
   getSubTierFromScore,
   getSubTierProgress,
   getNextSubTier,
@@ -12,6 +10,7 @@ import {
   getNextLeagueLevel,
   getLeagueLevelProgress,
   getSubTierColor,
+  TLeagueTier,
 } from '../../config/T_LEAGUE_CONFIG';
 
 export interface CityStatusOrbData {
@@ -46,12 +45,13 @@ export interface CityStatusOrbData {
   total_gifts_sent: number;
 
   // Computed
-  tLeagueTier: ReturnType<typeof getTLeagueTier>;
+  tLeagueTier: TLeagueTier;
   leagueProgress: number;
-  nextTier: ReturnType<typeof getTLeagueTier> | null;
-  coinsToNextLeague: number;
+  nextTier?: TLeagueTier | null;
+  coinsToNextLeague?: number;
   subTierColor: string;
-  activeMissions: Array<{ id: string; title: string; progress: number; goal: number; reward: number }>;
+  activeMissions?: Array<{ id: string; title: string; progress: number; goal: number; reward: number }>;
+  recentlyRaided: boolean;
 }
 
 export interface CityStatusOrbOptions {
@@ -117,6 +117,19 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
 
       if (profileError) throw profileError;
 
+      // Check for recent raids on this user's house
+      let recentlyRaided = false;
+      if (profileData?.house_id) {
+        const { data: recentRaid } = await supabase
+          .from('house_raids')
+          .select('id')
+          .eq('house_id', profileData.house_id)
+          .gte('raided_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+          .limit(1)
+          .maybeSingle();
+        recentlyRaided = !!recentRaid;
+      }
+
       // Fetch broadcast league stats (current season)
       const seasonKey = new Date().toISOString().slice(0, 7); // YYYY-MM
       const { data: leagueData } = await supabase
@@ -166,6 +179,7 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         tLeagueTier,
         leagueProgress: getSubTierProgress(leagueScore),
         subTierColor: getSubTierColor(tLeagueTier.tier, subInfo.sub),
+        recentlyRaided,
       };
 
       // Calculate progress within sub-tier
@@ -220,6 +234,31 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
+
+  // Realtime subscription for raids on this user's house
+  useEffect(() => {
+    if (!options.userId || !profile?.house_id) return;
+
+    const channel = supabase
+      .channel(`city_status_orb_raids_${options.userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'house_raids',
+          filter: `house_id=eq.${profile.house_id}`,
+        },
+        () => {
+          fetchStatus();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [options.userId, profile?.house_id, fetchStatus]);
 
   // Determine role-based permissions
   const currentUserId = user?.id;

@@ -19,14 +19,16 @@ export default function Withdraw() {
   const loadBalance = useCallback(async () => {
     if (!user) return;
 
+    // Use cashout escrow columns; all troll coins are cashout-eligible
     const { data } = await supabase
       .from("user_profiles")
-      .select("cashout_coins, cashout_reserved_coins, paypal_email, cashapp_handle, venmo_handle, mai_pay_plus")
+      .select("troll_coins, cashout_coins, cashout_reserved_coins, paypal_email, cashapp_handle, venmo_handle, mai_pay_plus")
       .eq("id", user.id)
       .maybeSingle();
 
     if (data) {
-      setBalance(data?.cashout_coins || 0);
+      // troll_coins is the primary cashout-eligible balance
+      setBalance(data?.troll_coins ?? data?.cashout_coins ?? 0);
       setReservedCoins(data?.cashout_reserved_coins || 0);
       setIsMaiPayPlus(data?.mai_pay_plus === true);
       if (data.paypal_email) {

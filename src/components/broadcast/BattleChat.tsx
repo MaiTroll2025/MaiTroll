@@ -8,13 +8,14 @@ import { toast } from 'sonner';
 
 import { Send, Swords } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { moderation } from '@/services/maitrollModeration';
 
 interface ChatMessage {
   id: string;
   stream_id: string;
   user_id: string;
   username: string;
-  message: string;
+  content: string;
   created_at: string;
   avatar_url?: string;
 }
@@ -81,7 +82,7 @@ export default function BattleChat({
       stream_id: raw.stream_id,
       user_id: raw.user_id,
       username: resolvedUsername,
-      message: raw.message,
+      content: raw.content,
       created_at: raw.created_at,
       avatar_url: raw.avatar_url || profile?.avatar_url || undefined,
     };
@@ -118,7 +119,7 @@ export default function BattleChat({
       // First, fetch messages only (no join)
       const { data: messages, error } = await supabase
         .from('stream_chat')
-        .select('id, stream_id, user_id, username, message, created_at, avatar_url')
+        .select('id, stream_id, user_id, username, content, created_at, avatar_url')
         .in('stream_id', [challengerStream.id, opponentStream.id])
         .order('created_at', { ascending: false })
         .limit(50);
@@ -276,13 +277,9 @@ export default function BattleChat({
     // Check if user's chat is disabled by moderation action
     const canBypassModeration = isOfficer;
     if (!canBypassModeration) {
-      const { data: blocked, error: blockError } = await supabase.rpc('is_user_chat_blocked', {
-        p_user_id: currentUserId,
-        p_stream_id: challengerStream.id,
-      });
-
-      if (!blockError && blocked) {
-        toast.error('Your chat is disabled by moderation action.');
+      const modResult = await moderation.checkContent(currentUserId, newMessage.trim(), 'battle_chat');
+      if (!modResult.allowed) {
+        toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
         return;
       }
     }
@@ -302,7 +299,7 @@ export default function BattleChat({
       stream_id: battleId,
       user_id: currentUserId,
       username: senderUsername,
-      message: newMessage.trim(),
+      content: newMessage.trim(),
       created_at: new Date().toISOString(),
     };
 
@@ -324,13 +321,13 @@ export default function BattleChat({
         stream_id: challengerStream.id,
         user_id: currentUserId,
         username: senderUsername,
-        message: newMessage.trim(),
+        content: newMessage.trim(),
       }),
       supabase.from('stream_chat').insert({
         stream_id: opponentStream.id,
         user_id: currentUserId,
         username: senderUsername,
-        message: newMessage.trim(),
+        content: newMessage.trim(),
       }),
     ]);
 
@@ -415,7 +412,7 @@ export default function BattleChat({
                       <span className="text-[8px] bg-emerald-500/50 px-1 rounded">B</span>
                     )}
                   </div>
-                  <p className="text-sm leading-tight">{msg.message}</p>
+                  <p className="text-sm leading-tight">{msg.content}</p>
                 </div>
                 <span className="text-[9px] text-zinc-500 mt-0.5 px-1">
                   {formatTime(msg.created_at)}
@@ -434,7 +431,7 @@ export default function BattleChat({
           setShowModActions(false);
           setModActionTargetUser(null);
         }}
-        targetUser={modActionTargetUser}
+        targetUser={modActionTargetUser as any}
         targetUsername={modActionTargetUser?.username || ''}
         targetUserId={modActionTargetUser?.id || ''}
         streamId={currentStreamId}

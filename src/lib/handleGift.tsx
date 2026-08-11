@@ -38,6 +38,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
   const [affiliation, setAffiliation] = useState<UserAffiliation | null>(null);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportSubmitting, setReportSubmitting] = useState(false);
@@ -157,30 +158,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
     navigate(`/profile/${username}`);
     onClose();
   };
-
-  const [following, setFollowing] = useState(false);
-  const [followLoading, setFollowLoading] = useState(false);
-
-  const checkFollowing = async () => {
-    if (!user || !userId || isOwnProfile) return;
-    try {
-      const { data } = await supabase
-        .from('user_follows')
-        .select('id')
-        .eq('follower_id', user.id)
-        .eq('following_id', userId)
-        .maybeSingle();
-      setFollowing(!!data);
-    } catch (err) {
-      console.error('Error checking follow status:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (!loading) {
-      checkFollowing();
-    }
-  }, [loading, user?.id, userId]);
 
   const handleFollow = async () => {
     if (!user || !userId || isOwnProfile) return;
@@ -306,7 +283,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
                 <SubscribeButton
                   broadcasterId={userId}
                   broadcasterUsername={username}
-                  currentSubscription={subscription}
                 />
                 <button
                   onClick={handleFollow}

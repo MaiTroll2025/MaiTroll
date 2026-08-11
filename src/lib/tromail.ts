@@ -8,7 +8,8 @@ import {
   TromailContractTemplate, 
   OrganizationDocument,
   ContractFormData,
-  ContractPreviewData
+  ContractPreviewData,
+  ContractAuditEvent
 } from '../types/contracts'
 
 // Type definitions for Tromail

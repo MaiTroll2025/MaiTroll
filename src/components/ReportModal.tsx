@@ -45,7 +45,7 @@ export default function ReportModal({
 
     setLoading(true)
     try {
-      const response = await api.post('/moderation', {
+      const response = await api.post('/moderation-actions', {
         action: 'submit_report',
         reporter_id: user.id,
         target_user_id: targetUserId || null,

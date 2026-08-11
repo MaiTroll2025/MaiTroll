@@ -85,6 +85,18 @@ interface GamingSetupProps {
   streamId?: string | null
   userId?: string | null
   saveBroadcastButton?: React.ReactNode
+  rtmpUrl?: string | null
+  streamKey?: string | null
+  agoraChannel?: string | null
+  obsStatus?: any
+  isGeneratingCredentials?: boolean
+  isObsConnected?: boolean
+  bitrate?: string | number | null
+  streamHealth?: any
+  onGenerateCredentials?: () => void
+  onRegenerateCredentials?: () => void
+  onTestStream?: () => void
+  cameraPreview?: React.ReactNode
 }
 
 export function GamingSetup({

@@ -393,7 +393,7 @@ function Layout5_VerticalMobile() {
     <div className="flex justify-center bg-[#080808] rounded-2xl overflow-hidden border border-white/10 p-4">
       <div className="relative w-[280px] h-[500px] bg-black rounded-[2rem] overflow-hidden border-2 border-white/10 shadow-2xl">
         {/* Fullscreen video */}
-        <MockVideo className="absolute inset-0" label="VERTICAL VIDEO" gradient="from-amber-900/20 via-orange-900/10 to-black" rounded={false} />
+        <MockVideo className="absolute inset-0" label="VERTICAL VIDEO" gradient="from-amber-900/20 via-orange-900/10 to-black" />
 
         {/* Gradient overlays */}
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/30 via-transparent to-black/70" />

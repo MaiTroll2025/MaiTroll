@@ -428,7 +428,7 @@ export default function Sidebar() {
 
   const quickStatus = useMemo(() => {
     const coinBalance = Number((balances as any)?.troll_coins ?? (balances as any)?.balance ?? 0)
-    const cashBalance = Number((balances as any)?.cashout_coins ?? 0)
+    const cashBalance = Number((balances as any)?.troll_coins ?? 0)
     const cashValue = cashBalance * STORE_USD_PER_COIN
     return [
       { label: 'Level', value: String(level || 1) },
@@ -692,7 +692,6 @@ export default function Sidebar() {
               <SectionTitle title="Talent Offices" collapsed={isSidebarCollapsed} />
               <GridItem collapsed={isSidebarCollapsed} icon={Building2} label="Agencies" to="/agencies" active={isActive('/agencies')} highlight={isUpdated('/agencies')} onClick={() => markAsViewed('/agencies')} className="text-cyan-400" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Users} label="My Agency" to="/agency-dashboard" active={isActive('/agency-dashboard')} highlight={isUpdated('/agency-dashboard')} onClick={() => markAsViewed('/agency-dashboard')} className="text-cyan-400" tone="cyan" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Briefcase} label="Jobs" to="/jobs" active={isActive('/jobs')} highlight={isUpdated('/jobs')} onClick={() => markAsViewed('/jobs')} className="text-purple-400" tone="purple" />
               {canSeeAttorneyDashboard && (
                 <GridItem
                   collapsed={isSidebarCollapsed}

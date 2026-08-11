@@ -17,6 +17,18 @@ const mockStream: Stream = {
   viewer_count: 567,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
+  category: 'Gaming',
+  stream_type: 'regular',
+  seat_count: 6,
+  agora_channel: 'test-channel',
+  room_name: 'test-room',
+  current_viewers: 567,
+  layout_mode: 'grid',
+  started_at: new Date().toISOString(),
+  ended_at: null,
+  seat_price: 100,
+  are_seats_locked: false,
+  has_rgb_effect: false,
 };
 
 const mockBroadcasterProfile = {

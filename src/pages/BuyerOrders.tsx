@@ -35,6 +35,7 @@ type OrderStatus =
   | 'completed'
   | 'cancelled'
   | 'refunded'
+  | 'auction'
 
 type FulfillmentStatus =
   | 'pending'
@@ -117,6 +118,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: str
   completed: { label: 'Completed', color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
   cancelled: { label: 'Cancelled', color: 'text-red-400', bg: 'bg-red-400/10' },
   refunded: { label: 'Refunded', color: 'text-gray-400', bg: 'bg-gray-400/10' },
+  auction: { label: 'Auction', color: 'text-orange-400', bg: 'bg-orange-400/10' },
 }
 
 const TRACKING_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {

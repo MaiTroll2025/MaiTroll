@@ -1,0 +1,79 @@
+﻿-- Function: reset_user_permissions
+CREATE OR REPLACE FUNCTION public.reset_user_permissions(p_target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  PERFORM public.require_admin();
+
+  UPDATE user_profiles
+  SET
+    role = 'user',
+    is_troll_officer = false,
+    is_lead_officer = false,
+    is_prosecutor = false,
+    is_attorney = false,
+    is_secretary = false,
+    troll_role = NULL,
+    officer_level = 0,
+    updated_at = now()
+  WHERE id = p_target_user_id;
+END;
+$$;
+
+-- Function: resolve_security_event
+CREATE OR REPLACE FUNCTION public.resolve_security_event(
+            p_event_id uuid,
+            p_status text,
+            p_note text DEFAULT NULL
+        )
+        RETURNS void AS $$
+        DECLARE
+            v_metadata jsonb;
+        BEGIN
+            -- Get existing metadata
+            SELECT metadata INTO v_metadata
+            FROM public.security_events
+            WHERE id = p_event_id;
+
+            IF v_metadata IS NULL THEN
+                v_metadata := '{}'::jsonb;
+            END IF;
+
+            -- Update the event
+            UPDATE public.security_events
+            SET
+                status = p_status,
+                reviewed_by = auth.uid(), -- Assuming the caller is the admin performing the action
+                reviewed_at = now(),
+                resolved_at = CASE 
+                    WHEN p_status IN ('resolved', 'ignored', 'false_positive') THEN now()
+                    ELSE NULL
+                END,
+                metadata = jsonb_set(
+                    COALESCE(metadata, '{}'::jsonb),
+                    '{review_notes}',
+                    COALESCE(metadata->'review_notes', '[]'::jsonb) || to_jsonb(p_note)::jsonb,
+                    true
+                )
+            WHERE id = p_event_id;
+        END;
+        $$ LANGUAGE plpgsql SECURITY DEFINER;
+    END IF;
+END $$;
+
+-- Function: restore_banned_account
+CREATE OR REPLACE FUNCTION restore_banned_account()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id uuid := auth.uid();
+    v_coins bigint;
+    v_cost bigint := 2000;
+BEGIN
+    -- Get current coins
+    SELECT coins INTO v_coins

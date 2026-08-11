@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 
 interface Trollcoins {
   troll_coins: number
-  paid_coins: number
   hype_coins: number
   total_earned_coins: number
   total_spent_coins: number
@@ -38,7 +37,6 @@ export function useCoins() {
   const [error, setError] = useState<string | null>(null)
   const [balances, setBalances] = useState<Trollcoins>({
     troll_coins: profile?.troll_coins ?? 0,
-    paid_coins: profile?.paid_coins ?? 0,
     hype_coins: profile?.hype_coins ?? 0,
     total_earned_coins: profile?.total_earned_coins || 0,
     total_spent_coins: profile?.total_spent_coins || 0,
@@ -54,7 +52,6 @@ export function useCoins() {
     if (profile) {
       setBalances({
         troll_coins: profile.troll_coins ?? 0,
-        paid_coins: profile.paid_coins ?? 0,
         hype_coins: profile.hype_coins ?? 0,
         total_earned_coins: profile.total_earned_coins || 0,
         total_spent_coins: profile.total_spent_coins || 0,
@@ -63,7 +60,7 @@ export function useCoins() {
         cashout_reserved_coins: profile.cashout_reserved_coins ?? 0,
       })
     }
-  }, [profile, profile?.troll_coins, profile?.paid_coins, profile?.hype_coins, profile?.total_earned_coins, profile?.total_spent_coins, profile?.battle_crowns, profile?.cashout_coins, profile?.cashout_reserved_coins])
+  }, [profile, profile?.troll_coins, profile?.hype_coins, profile?.total_earned_coins, profile?.total_spent_coins, profile?.battle_crowns, profile?.cashout_coins, profile?.cashout_reserved_coins])
 
    /**
     * Refresh coin balances from database
@@ -95,7 +92,7 @@ export function useCoins() {
 
         const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
-          .select('troll_coins, paid_coins, hype_coins, total_earned_coins, total_spent_coins, battle_crowns, cashout_coins, cashout_reserved_coins')
+          .select('troll_coins, hype_coins, total_earned_coins, total_spent_coins, battle_crowns, cashout_coins, cashout_reserved_coins')
           .eq('id', user.id)
           .maybeSingle()
 
@@ -105,38 +102,31 @@ export function useCoins() {
 
        const currentProfile = useAuthStore.getState().profile
        // Get balance from database first, fall back to local store
-       const dbBalance = Number(profileData?.troll_coins ?? 0)
-       const localBalance = Number(currentProfile?.troll_coins ?? 0)
-       const dbPaidBalance = Number(profileData?.paid_coins ?? 0)
-       const localPaidBalance = Number(currentProfile?.paid_coins ?? 0)
-       const dbFreeBalance = Number(profileData?.free_coins ?? 0)
-       const localFreeBalance = Number(currentProfile?.free_coins ?? 0)
-       
-       const paidBalance = profileData?.paid_coins ?? currentProfile?.paid_coins ?? 0
-       
-       const mergedPaid =
-         optimisticUntil && Date.now() < optimisticUntil && (optimisticTroll ?? 0) > 0 && (optimisticTroll ?? 0) <= paidBalance
-           ? (optimisticTroll as number)
-           : profileData?.troll_coins ?? currentProfile?.troll_coins ?? 0
-       
-       if (import.meta.env.DEV) {
-         console.debug('[refreshCoins] Balance sync:', { dbBalance, localBalance, dbPaidBalance, localPaidBalance, dbFreeBalance, localFreeBalance, mergedPaid })
-       }
+        const dbBalance = Number(profileData?.troll_coins ?? 0)
+        const localBalance = Number(currentProfile?.troll_coins ?? 0)
 
-       const nextTotals = {
-         total_earned_coins:
-           profileData?.total_earned_coins ??
-           currentProfile?.total_earned_coins ??
-           0,
-         total_spent_coins:
-           profileData?.total_spent_coins ??
-           currentProfile?.total_spent_coins ??
-           0,
-       }
+        const mergedPaid =
+          optimisticUntil && Date.now() < optimisticUntil && (optimisticTroll ?? 0) > 0 && (optimisticTroll ?? 0) <= (profileData?.troll_coins ?? currentProfile?.troll_coins ?? 0)
+            ? (optimisticTroll as number)
+            : profileData?.troll_coins ?? currentProfile?.troll_coins ?? 0
+       
+        if (import.meta.env.DEV) {
+          console.debug('[refreshCoins] Balance sync:', { dbBalance, localBalance, mergedPaid })
+        }
 
-        const nextBalances = {
+        const nextTotals = {
+          total_earned_coins:
+            profileData?.total_earned_coins ??
+            currentProfile?.total_earned_coins ??
+            0,
+          total_spent_coins:
+            profileData?.total_spent_coins ??
+            currentProfile?.total_spent_coins ??
+            0,
+        }
+
+         const nextBalances = {
           troll_coins: mergedPaid,
-          paid_coins: profileData?.paid_coins ?? currentProfile?.paid_coins ?? 0,
           hype_coins: profileData?.hype_coins ?? currentProfile?.hype_coins ?? 0,
           total_earned_coins: nextTotals.total_earned_coins,
           total_spent_coins: nextTotals.total_spent_coins,
@@ -147,7 +137,6 @@ export function useCoins() {
 
         const balancesChanged =
           balances.troll_coins !== nextBalances.troll_coins ||
-          balances.paid_coins !== nextBalances.paid_coins ||
           balances.hype_coins !== nextBalances.hype_coins ||
           balances.total_earned_coins !== nextBalances.total_earned_coins ||
           balances.total_spent_coins !== nextBalances.total_spent_coins ||
@@ -156,42 +145,37 @@ export function useCoins() {
           balances.cashout_reserved_coins !== nextBalances.cashout_reserved_coins
 
        if (balancesChanged) {
-         setBalances(nextBalances)
-       }
+          setBalances(nextBalances)
+        }
 
        if (currentProfile) {
           const profileNeedsUpdate =
             currentProfile.troll_coins !== mergedPaid ||
-            currentProfile.paid_coins !== nextBalances.paid_coins ||
-            currentProfile.hype_coins !== nextBalances.hype_coins ||
-            currentProfile.free_coins !== Number(profileData?.free_coins ?? currentProfile.free_coins ?? 0)
+            currentProfile.hype_coins !== nextBalances.hype_coins
 
-         const sameCoins =
-           dbBalance === localBalance &&
-           dbPaidBalance === localPaidBalance &&
-           dbFreeBalance === localFreeBalance &&
-           !balancesChanged
+          const sameCoins =
+            dbBalance === localBalance &&
+            !balancesChanged
 
-         if (!profileNeedsUpdate || sameCoins) {
-           if (import.meta.env.DEV) {
-             console.debug('[refreshCoins] No coin state change, skipping auth update')
-           }
-         } else {
-            const updatedProfile: UserProfile = {
-              ...currentProfile,
-              troll_coins: mergedPaid as number,
-              paid_coins: nextBalances.paid_coins,
-              hype_coins: nextBalances.hype_coins,
-              total_earned_coins: nextTotals.total_earned_coins,
-              total_spent_coins: nextTotals.total_spent_coins,
-              battle_crowns: nextBalances.battle_crowns,
-              cashout_coins: nextBalances.cashout_coins,
-              cashout_reserved_coins: nextBalances.cashout_reserved_coins,
+          if (!profileNeedsUpdate || sameCoins) {
+            if (import.meta.env.DEV) {
+              console.debug('[refreshCoins] No coin state change, skipping auth update')
             }
+          } else {
+             const updatedProfile: UserProfile = {
+               ...currentProfile,
+               troll_coins: mergedPaid as number,
+               hype_coins: nextBalances.hype_coins,
+               total_earned_coins: nextTotals.total_earned_coins,
+               total_spent_coins: nextTotals.total_spent_coins,
+               battle_crowns: nextBalances.battle_crowns,
+               cashout_coins: nextBalances.cashout_coins,
+               cashout_reserved_coins: nextBalances.cashout_reserved_coins,
+             }
 
-           useAuthStore.getState().setProfile(updatedProfile)
-         }
-       }
+            useAuthStore.getState().setProfile(updatedProfile)
+          }
+        }
        if (optimisticUntil && Date.now() < optimisticUntil && (mergedPaid as number) >= (optimisticTroll ?? 0)) {
          setOptimisticUntil(null)
          setOptimisticTroll(null)
@@ -220,7 +204,7 @@ export function useCoins() {
     }
 
     // Calculate available coins (exclude cashout coins - those are locked for payout)
-    const availableForSpend = balances.troll_coins + balances.paid_coins
+    const availableForSpend = balances.troll_coins
 
     // Validate balance (cashout coins cannot be spent)
     if (availableForSpend < params.amount) {
@@ -290,7 +274,7 @@ export function useCoins() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, balances.troll_coins, balances.paid_coins, balances.cashout_coins, balances.cashout_reserved_coins, refreshCoins])
+  }, [user?.id, balances.troll_coins, balances.hype_coins, balances.cashout_coins, balances.cashout_reserved_coins, refreshCoins])
 
   // Set up real-time subscription for coin balance updates
   useEffect(() => {
@@ -377,7 +361,6 @@ export function useCoins() {
               }
               useAuthStore.getState().setProfile(updatedProfile)
               setBalances((prev) => ({
-                paid_coins: prev.paid_coins,
                 troll_coins: shouldKeepOptimistic
                   ? (optimisticTroll ?? prev.troll_coins)
                   : (typeof updatedProfile.troll_coins === 'number'
@@ -399,6 +382,14 @@ export function useCoins() {
                   typeof updatedProfile.hype_coins === 'number'
                     ? updatedProfile.hype_coins
                     : prev.hype_coins,
+                cashout_coins:
+                  typeof updatedProfile.cashout_coins === 'number'
+                    ? updatedProfile.cashout_coins
+                    : prev.cashout_coins,
+                cashout_reserved_coins:
+                  typeof updatedProfile.cashout_reserved_coins === 'number'
+                    ? updatedProfile.cashout_reserved_coins
+                    : prev.cashout_reserved_coins,
               }))
               if (!shouldKeepOptimistic && optimisticUntil) {
                 setOptimisticUntil(null)
@@ -457,12 +448,10 @@ export function useCoins() {
     setOptimisticUntil(Date.now() + 8000)
   }, [user?.id, balances.troll_coins])
 
-  const depositToCashout = useCallback(async (amount: number): Promise<boolean> => {
-    // Deposit to cashout escrow is now handled automatically by the system
-    // when coins are earned. This function is kept for backward compatibility
-    // but is a no-op.
-    toast.info('Coins are automatically added to your cashout escrow when earned.')
-    return true
+  const depositToCashout = useCallback(async (amount: number): Promise<{ success: boolean; error?: string }> => {
+    // All troll coins are now cashout-eligible. The deposit step is no longer needed.
+    toast.info('All troll coins are cashout-eligible. No deposit step needed.')
+    return { success: true }
   }, [])
 
   return {
@@ -476,7 +465,7 @@ export function useCoins() {
     depositToCashout,
     // Convenience getters
     troll_coins: balances.troll_coins,
-    paidBalance: balances.paid_coins,
+    paidBalance: balances.troll_coins,
     totalEarned: balances.total_earned_coins,
     totalSpent: balances.total_spent_coins,
     crowns: balances.battle_crowns,

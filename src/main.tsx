@@ -98,8 +98,8 @@ if (isMobilePlatform) {
 (function () {
   if (typeof navigator === 'undefined') return;
   const hasWebkit =
-    typeof navigator.webkitGetUserMedia === 'function' ||
-    typeof navigator.webkitGetDisplayMedia === 'function';
+    typeof (navigator as any).webkitGetUserMedia === 'function' ||
+    typeof (navigator as any).webkitGetDisplayMedia === 'function';
   const hasStandard =
     typeof navigator.mediaDevices !== 'undefined' &&
     !!navigator.mediaDevices.getUserMedia;
@@ -108,15 +108,15 @@ if (isMobilePlatform) {
     console.info('[iOS Guard] navigator.mediaDevices missing after bootstrap, rebuilding from webkit shims');
     const MD: any = {};
 
-    if (typeof navigator.webkitGetUserMedia === 'function') {
+    if (typeof (navigator as any).webkitGetUserMedia === 'function') {
       MD.getUserMedia = function (constraints: MediaStreamConstraints): Promise<MediaStream> {
-        return navigator.webkitGetUserMedia!(constraints);
+        return (navigator as any).webkitGetUserMedia!(constraints);
       };
     }
 
-    if (typeof navigator.webkitGetDisplayMedia === 'function') {
+    if (typeof (navigator as any).webkitGetDisplayMedia === 'function') {
       MD.getDisplayMedia = function (constraints: MediaStreamConstraints): Promise<MediaStream> {
-        return navigator.webkitGetDisplayMedia!(constraints);
+        return (navigator as any).webkitGetDisplayMedia!(constraints);
       };
     }
 
@@ -369,6 +369,17 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
       }
     };
 
+
+    // Clean up any stale service workers from previous builds that may
+    // intercept or block network requests (including edge function calls).
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        for (const r of regs) {
+          console.log('[main] Unregistering stale service worker:', r.active?.scriptURL)
+          r.unregister().catch(() => {})
+        }
+      }).catch(() => {})
+    }
 
    // Register service worker for PWA (only when PWA plugin is enabled)
    // @ts-ignore — PWA disabled during build

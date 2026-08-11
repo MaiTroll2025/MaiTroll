@@ -9,10 +9,8 @@ import {
   LogOut,
   Gift,
   Share2,
-  ShieldAlert,
   Ban,
   UserMinus,
-  UserCheck,
   Radio,
   Sparkles,
   X,
@@ -37,10 +35,10 @@ interface MoreControlsDrawerProps {
   onGift?: () => void
   onShare?: () => void
   onEndStream?: () => void
-  onToggleSeatsLock?: () => void
-  areSeatsLocked?: boolean
-  onManageStagePass?: () => void
-  openStagePassCount?: number
+  onToggleChatLock?: () => void
+  isChatLocked?: boolean
+  onOpenMessage?: () => void
+  unreadMessageCount?: number
 
   onAssignBroadofficer?: () => void
   onPayBroadOfficers?: () => void
@@ -71,10 +69,10 @@ export default function MoreControlsDrawer({
   onGift,
   onShare,
   onEndStream,
-  onToggleSeatsLock,
-  areSeatsLocked = false,
-  onManageStagePass,
-  openStagePassCount = 0,
+  onToggleChatLock,
+  isChatLocked = false,
+  onOpenMessage,
+  unreadMessageCount = 0,
   onToggleRGB,
   hasRgbEffect = false,
   onTextPopup,
@@ -240,20 +238,20 @@ export default function MoreControlsDrawer({
                     />
                   )}
 
-                  {isHost && onToggleSeatsLock && (
+                  {isHost && onToggleChatLock && (
                     <ControlButton
-                      icon={ShieldAlert}
-                      label={areSeatsLocked ? 'Unlock' : 'Lock Seats'}
-                      onClick={onToggleSeatsLock}
-                      active={areSeatsLocked}
+                      icon={MessageSquareOff}
+                      label={isChatLocked ? 'Unlock Chat' : 'Lock Chat'}
+                      onClick={onToggleChatLock}
+                      active={isChatLocked}
                     />
                   )}
 
-                  {(isHost || isOfficer) && onManageStagePass && (
+                  {(isHost || isOfficer) && onOpenMessage && (
                     <ControlButton
-                      icon={UserCheck}
-                      label={`Seats${openStagePassCount ? ` ${openStagePassCount}` : ''}`}
-                      onClick={onManageStagePass}
+                      icon={MessageSquare}
+                      label={`Messages${unreadMessageCount ? ` ${unreadMessageCount}` : ''}`}
+                      onClick={onOpenMessage}
                     />
                   )}
 
@@ -408,7 +406,7 @@ function ControlButton({
   onClick,
   danger,
 }: {
-  icon: React.ComponentType<{ size?: number; className?: string }>
+  icon: React.ComponentType<any>
   label: string
   active?: boolean
   onClick?: () => void

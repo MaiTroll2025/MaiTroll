@@ -3,6 +3,354 @@ import { toast } from 'sonner'
 import { xpService } from '../services/xpService'
 import { XP_RATES } from './xp'
 
+const GIFT_MEDIA_COLUMNS = [
+  'id',
+  'name',
+  'slug',
+  'gift_slug',
+  'icon',
+  'icon_url',
+  'tray_visual_url',
+  'animation_url',
+  'video_url',
+  'animation_type',
+  'animation_duration_ms',
+  'sound_url',
+  'coin_cost',
+  'metadata',
+].join(',')
+
+async function fetchGiftItemById(id: string, columns: string) {
+  return supabase
+    .from('gift_items')
+    .select(columns)
+    .eq('id', id)
+    .maybeSingle()
+}
+
+async function fetchGiftItemBySlug(slug: string, columns: string) {
+  return supabase
+    .from('gift_items')
+    .select(columns)
+    .or(`gift_slug.eq.${slug},slug.eq.${slug}`)
+    .maybeSingle()
+}
+
+async function fetchGiftItemByName(name: string, columns: string) {
+  return supabase
+    .from('gift_items')
+    .select(columns)
+    .eq('name', name)
+    .maybeSingle()
+}
+
+async function fetchPurchasableItemById(id: string, columns: string) {
+  return supabase
+    .from('purchasable_items')
+    .select(columns)
+    .eq('id', id)
+    .maybeSingle()
+}
+
+async function fetchPurchasableItemBySlug(slug: string, columns: string) {
+  return supabase
+    .from('purchasable_items')
+    .select(columns)
+    .or(`item_key.eq.${slug},slug.eq.${slug}`)
+    .maybeSingle()
+}
+
+async function fetchPurchasableItemByName(name: string, columns: string) {
+  return supabase
+    .from('purchasable_items')
+    .select(columns)
+    .eq('display_name', name)
+    .maybeSingle()
+}
+
+async function fetchLegacyGiftById(id: string, columns: string) {
+  return supabase
+    .from('gifts')
+    .select(columns)
+    .eq('id', id)
+    .maybeSingle()
+}
+
+async function fetchLegacyGiftBySlug(slug: string, columns: string) {
+  return supabase
+    .from('gifts')
+    .select(columns)
+    .eq('slug', slug)
+    .maybeSingle()
+}
+
+async function fetchLegacyGiftByName(name: string, columns: string) {
+  return supabase
+    .from('gifts')
+    .select(columns)
+    .eq('name', name)
+    .maybeSingle()
+}
+
+const PURCHASABLE_MEDIA_COLUMNS = [
+  'id',
+  'name',
+  'display_name',
+  'slug',
+  'item_key',
+  'icon',
+  'icon_url',
+  'metadata',
+  'coin_price',
+].join(',')
+
+const LEGACY_GIFT_COLUMNS = [
+  'id',
+  'name',
+  'slug',
+  'cost',
+].join(',')
+
+export async function hydrateGiftForOverlay(incomingGift: any) {
+  const metadata = incomingGift?.metadata || {}
+
+  const rawGiftIdentifier =
+    incomingGift?.gift_id ||
+    incomingGift?.gift_item_id ||
+    incomingGift?.giftId ||
+    incomingGift?.giftItemId ||
+    metadata?.gift_id ||
+    metadata?.gift_item_id ||
+    null
+
+  const giftSlug =
+    incomingGift?.gift_slug ||
+    incomingGift?.slug ||
+    metadata?.gift_slug ||
+    metadata?.slug ||
+    null
+
+  const giftName =
+    incomingGift?.gift_name ||
+    incomingGift?.name ||
+    metadata?.gift_name ||
+    metadata?.name ||
+    null
+
+  let giftItem: any = null
+  let lookupError: any = null
+
+  if (import.meta.env.DEV) {
+    console.error('[GIFT RAW EVENT DEBUG]', {
+      raw: incomingGift,
+      id: incomingGift?.id,
+      gift_id: incomingGift?.gift_id,
+      gift_item_id: incomingGift?.gift_item_id,
+      gift_slug: incomingGift?.gift_slug,
+      slug: incomingGift?.slug,
+      metadata: incomingGift?.metadata,
+      animation_url: incomingGift?.animation_url,
+      video_url: incomingGift?.video_url,
+      stream_id: incomingGift?.stream_id,
+      sender_id: incomingGift?.sender_id,
+      receiver_id: incomingGift?.receiver_id,
+    })
+  }
+
+  if (import.meta.env.DEV) {
+    console.error('[GIFT HYDRATE DEBUG]', {
+      giftItemId: rawGiftIdentifier,
+      incomingGift,
+    })
+  }
+
+  // 1. UUID lookup by gift_items.id
+  if (rawGiftIdentifier && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(rawGiftIdentifier))) {
+    const { data, error } = await fetchGiftItemById(rawGiftIdentifier, GIFT_MEDIA_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || null
+    }
+  }
+
+  // 2. Slug lookup
+  if (!giftItem && giftSlug) {
+    const { data, error } = await fetchGiftItemBySlug(giftSlug, GIFT_MEDIA_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || lookupError
+    }
+  }
+
+  // 3. Name lookup
+  if (!giftItem && giftName && giftName !== 'Gift') {
+    const { data, error } = await fetchGiftItemByName(giftName, GIFT_MEDIA_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || lookupError
+    }
+  }
+
+  // 4. Fallback: purchasable_items (for gifts loaded from the store catalog)
+  if (!giftItem && rawGiftIdentifier) {
+    const { data, error } = await fetchPurchasableItemById(rawGiftIdentifier, PURCHASABLE_MEDIA_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || lookupError
+    }
+  }
+
+  if (!giftItem && giftSlug) {
+    const { data, error } = await fetchPurchasableItemBySlug(giftSlug, PURCHASABLE_MEDIA_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || lookupError
+    }
+  }
+
+  if (!giftItem && giftName && giftName !== 'Gift') {
+    const { data, error } = await fetchPurchasableItemByName(giftName, PURCHASABLE_MEDIA_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || lookupError
+    }
+  }
+
+  // 5. Fallback: legacy gifts table (backward compat)
+  if (!giftItem && rawGiftIdentifier) {
+    const { data, error } = await fetchLegacyGiftById(rawGiftIdentifier, LEGACY_GIFT_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || lookupError
+    }
+  }
+
+  if (!giftItem && giftSlug) {
+    const { data, error } = await fetchLegacyGiftBySlug(giftSlug, LEGACY_GIFT_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || lookupError
+    }
+  }
+
+  if (!giftItem && giftName && giftName !== 'Gift') {
+    const { data, error } = await fetchLegacyGiftByName(giftName, LEGACY_GIFT_COLUMNS)
+    if (data) {
+      giftItem = data
+    } else {
+      lookupError = error || lookupError
+    }
+  }
+
+  if (import.meta.env.DEV) {
+    console.error('[GIFT ITEM LOOKUP RESULT]', {
+      giftItemId: rawGiftIdentifier,
+      giftSlug,
+      giftName,
+      giftItem,
+      error: lookupError,
+    })
+  }
+
+  if (!giftItem) {
+    console.warn('[GiftHydration] REAL GIFT NOT FOUND', {
+      rawGiftIdentifier,
+      giftSlug,
+      giftName,
+      incomingGift,
+    })
+    return incomingGift
+  }
+
+  const mergedMetadata = {
+    ...(giftItem.metadata || {}),
+    ...(metadata || {}),
+  }
+
+  const resolvedAnimationUrl =
+    incomingGift?.animation_url_webm ||
+    giftItem.animation_url_webm ||
+    incomingGift?.animation_url_mp4 ||
+    giftItem.animation_url_mp4 ||
+    incomingGift?.animation_url_mov ||
+    giftItem.animation_url_mov ||
+    incomingGift?.animation_url ||
+    giftItem.animation_url ||
+    incomingGift?.video_url ||
+    giftItem.video_url ||
+    null
+
+  const resolvedVideoUrl =
+    incomingGift?.video_url ||
+    incomingGift?.animation_url ||
+    giftItem.video_url ||
+    giftItem.animation_url ||
+    null
+
+  return {
+    ...giftItem,
+    ...incomingGift,
+    metadata: mergedMetadata,
+    gift_id: giftItem.id,
+    gift_name:
+      (incomingGift?.gift_name && incomingGift.gift_name !== 'Gift') ||
+      (metadata?.gift_name && metadata.gift_name !== 'Gift') ||
+      giftItem.name ||
+      'Gift',
+    slug:
+      giftItem.slug ||
+      giftItem.gift_slug ||
+      giftSlug,
+    gift_slug:
+      giftItem.gift_slug ||
+      giftItem.slug ||
+      giftSlug,
+    animation_url: resolvedAnimationUrl,
+    video_url: resolvedVideoUrl,
+    animation_url_webm:
+      incomingGift?.animation_url_webm ||
+      giftItem.animation_url_webm ||
+      null,
+    animation_url_mp4:
+      incomingGift?.animation_url_mp4 ||
+      giftItem.animation_url_mp4 ||
+      null,
+    animation_url_mov:
+      incomingGift?.animation_url_mov ||
+      giftItem.animation_url_mov ||
+      null,
+    animation_type:
+      incomingGift?.animation_type ||
+      giftItem.animation_type ||
+      'video',
+    animation_duration_ms:
+      incomingGift?.animation_duration_ms ||
+      giftItem.animation_duration_ms ||
+      giftItem.metadata?.animation_duration_ms ||
+      7000,
+    sound_url:
+      incomingGift?.sound_url ||
+      giftItem.sound_url ||
+      giftItem.metadata?.sound_url ||
+      null,
+    tray_visual_url:
+      incomingGift?.tray_visual_url ||
+      giftItem.tray_visual_url ||
+      giftItem.metadata?.tray_visual_url ||
+      null,
+    coin_cost:
+      giftItem.coin_cost || incomingGift?.coin_cost || incomingGift?.amount || null,
+  }
+}
+
 /**
  * Send a gift from one user to another
  * 

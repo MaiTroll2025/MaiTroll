@@ -1,28 +1,25 @@
 import type { ComponentType } from 'react'
 import {
-  LayoutDashboard, Clock, Calendar, MessagesSquare, ListTodo, FileText,
-  Megaphone, Lightbulb, Palette, Wrench, Shield, UserPlus, ClipboardCheck,
-  Users, BadgeCheck, AlertTriangle, WalletCards, ShieldAlert,
+  LayoutDashboard, MessagesSquare, ListTodo, FileText,
+  Megaphone, Palette, Wrench, Shield, UserPlus, Users, BadgeCheck, AlertTriangle, ShieldAlert,
 } from 'lucide-react'
 
 export type EmployeeAction =
-  | 'edit_payroll'
   | 'publish_frontend'
   | 'hire'
   | 'fire'
   | 'manage_reports'
   | 'manage_announcements'
-  | 'correct_attendance'
   | 'view_management'
   | 'admin_preview'
   | 'view_records'
   | 'assign_tasks'
 
 export type EmployeeTabId =
-  | 'home' | 'clock' | 'schedule' | 'chat' | 'tasks' | 'reports'
-  | 'announcements' | 'change_requests' | 'frontend_studio'
-  | 'department_tools' | 'moderation' | 'mod_actions' | 'management' | 'hiring' | 'attendance' | 'records'
-  | 'employment_verification' | 'documents' | 'payroll'
+  | 'home' | 'chat' | 'tasks' | 'reports'
+  | 'announcements' | 'frontend_studio'
+  | 'department_tools' | 'moderation' | 'mod_actions' | 'management' | 'hiring'
+  | 'employment_verification' | 'documents'
 
 export interface EmployeeTab {
   id: EmployeeTabId
@@ -96,8 +93,6 @@ export function canEmployee(p: EmployeeProfileLike | null | undefined, action: E
   if (!p) return false
   if (isAdmin(p)) return true
   switch (action) {
-    case 'edit_payroll':
-      return isSecretary(p) || p.role === 'ceo' || p.role === 'ceo_assistant' || p.role === 'noah_assistant'
     case 'publish_frontend':
       return p.role === 'secretary' || /dev|design|developer/i.test(p.role ?? '')
     case 'hire':
@@ -107,8 +102,6 @@ export function canEmployee(p: EmployeeProfileLike | null | undefined, action: E
       return isLead(p) || isAssistant(p)
     case 'manage_announcements':
       return isLead(p) || isSecretary(p) || p.role === 'ceo'
-    case 'correct_attendance':
-      return isLead(p)
     case 'view_management':
       return isLead(p) || isAssistant(p) || p.role === 'ceo'
     case 'admin_preview':
@@ -136,14 +129,11 @@ const canSeeModeration = (p: EmployeeProfileLike) => {
 }
 
 export const EMPLOYEE_TABS: EmployeeTab[] = [
-  { id: 'home', label: 'Office Home', icon: LayoutDashboard, show: all },
-  { id: 'clock', label: 'Clock In', icon: Clock, show: all },
-  { id: 'schedule', label: 'Schedule', icon: Calendar, show: all },
+  { id: 'home', label: 'Staff Home', icon: LayoutDashboard, show: all },
   { id: 'chat', label: 'Chat', icon: MessagesSquare, show: all },
   { id: 'tasks', label: 'Tasks', icon: ListTodo, show: all },
   { id: 'reports', label: 'Reports', icon: FileText, show: all },
   { id: 'announcements', label: 'Announcements', icon: Megaphone, show: all },
-  { id: 'change_requests', label: 'Change Requests', icon: Lightbulb, show: all },
   {
     id: 'frontend_studio', label: 'Frontend Studio', icon: Palette,
     show: (p) => canEmployee(p, 'publish_frontend') || isAdmin(p),
@@ -166,24 +156,12 @@ export const EMPLOYEE_TABS: EmployeeTab[] = [
     show: (p) => isLead(p) || isAssistant(p) || isAdmin(p),
   },
   {
-    id: 'attendance', label: 'Attendance', icon: ClipboardCheck,
-    show: (p) => isLead(p) || isAdmin(p),
-  },
-  {
-    id: 'records', label: 'Employee Records', icon: Users,
-    show: (p) => canEmployee(p, 'view_records'),
-  },
-  {
-    id: 'employment_verification', label: 'Employment Verification', icon: BadgeCheck,
+    id: 'employment_verification', label: 'Verification', icon: BadgeCheck,
     show: all,
   },
   {
     id: 'documents', label: 'Documents', icon: FileText,
     show: all,
-  },
-  {
-    id: 'payroll', label: 'Payroll', icon: WalletCards,
-    show: (p) => canEmployee(p, 'edit_payroll') || canEmployee(p, 'view_records') || isLead(p) || isAssistant(p) || isAdmin(p),
   },
 ]
 

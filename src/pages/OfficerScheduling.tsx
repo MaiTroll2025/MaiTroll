@@ -385,7 +385,7 @@ export default function OfficerScheduling() {
       if (error) throw error
 
       if (data?.success) {
-        toast.success(`Clocked out! Earned ${data.coins_earned?.toLocaleString()} free coins for ${data.hours_worked?.toFixed(2)} hours`)
+        toast.success(`Clocked out! Earned ${data.coins_earned?.toLocaleString()} coins for ${data.hours_worked?.toFixed(2)} hours`)
         await loadSlots()
       } else {
         toast.error(data?.error || 'Failed to clock out')
@@ -411,7 +411,7 @@ export default function OfficerScheduling() {
       if (data?.success) {
         const troll_coins = data.troll_coins_received?.toLocaleString() || '0'
         const usdAmount = data.usd_amount?.toFixed(2) || '0.00'
-        toast.success(`Cashout successful! Converted ${data.free_coins_redeemed?.toLocaleString()} free coins to ${troll_coins} troll_coins ($${usdAmount})`)
+        toast.success(`Cashout successful! Converted ${data.free_coins_redeemed?.toLocaleString()} coins to ${troll_coins} troll_coins ($${usdAmount})`)
         await loadSlots()
         // Refresh profile to update balances
         const { data: updatedProfile } = await supabase
@@ -659,7 +659,7 @@ export default function OfficerScheduling() {
                                     <span className="text-yellow-400 font-semibold">
                                       {slot.coins_earned.toLocaleString()}
                                     </span>{' '}
-                                    free coins earned
+                                    coins earned
                                   </div>
                                 )}
                                 {slot.shift_log_id && !slot.cashed_out && (

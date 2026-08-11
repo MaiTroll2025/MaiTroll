@@ -15,8 +15,7 @@ interface UserStats {
   xp: number
   totalXp: number
   nextLevelXp: number
-  troll_coins: number
-  paid_coins: number
+   troll_coins: number
   familyName?: string
   familyLevel?: number
   familyXp?: number
@@ -115,7 +114,6 @@ export default function ExpandedStatsPanel({ isOpen, onClose }: ExpandedStatsPan
           totalXp: xpTotal,
           nextLevelXp: xpToNext + xpTotal,
           troll_coins: profile?.troll_coins || 0,
-          paid_coins: profile?.paid_coins || 0,
           ...familyData,
           ...warStats,
           badges

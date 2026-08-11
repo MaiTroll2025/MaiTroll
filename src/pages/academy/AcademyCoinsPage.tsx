@@ -79,8 +79,8 @@ export default function AcademyCoinsPage() {
                   +{reward.coins_awarded}
                 </div>
               </div>
-              {reward.course?.name && (
-                <p className="mt-3 text-xs text-slate-400">Course: {reward.course.name}</p>
+              {(reward as any).course?.name && (
+                <p className="mt-3 text-xs text-slate-400">Course: {(reward as any).course.name}</p>
               )}
               <button onClick={() => navigate('/academy')} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-300 transition hover:bg-white/10">
                 <ChevronRight className="h-3.5 w-3.5" /> Back to Academy

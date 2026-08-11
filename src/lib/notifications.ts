@@ -144,6 +144,86 @@ export async function notifyProfileUpdated(userId: string) {
   )
 }
 
+export async function notifyFollowersOfProfilePictureUpdate(
+  userId: string,
+  username: string,
+  avatarUrl: string
+) {
+  try {
+    const { data: followers, error } = await supabase
+      .from('user_follows')
+      .select('follower_id')
+      .eq('following_id', userId)
+
+    if (error || !followers || followers.length === 0) {
+      return { success: true, notified: 0 }
+    }
+
+    const results = await Promise.allSettled(
+      followers.map((f: any) =>
+        createNotification(
+          f.follower_id,
+          'profile_picture_updated',
+          `📸 @${username} updated their profile picture`,
+          `@${username} just updated their profile picture. Check it out!`,
+          {
+            actor_id: userId,
+            actor_username: username,
+            actor_avatar_url: avatarUrl,
+            action_url: `/profile/${username}`,
+          }
+        )
+      )
+    )
+
+    const notified = results.filter((r) => r.status === 'fulfilled').length
+    return { success: true, notified }
+  } catch (err: any) {
+    console.error('Error notifying followers of profile picture update:', err)
+    return { success: false, error: err?.message || 'Unknown error' }
+  }
+}
+
+export async function notifyFollowersOfCoverPhotoUpdate(
+  userId: string,
+  username: string,
+  coverUrl: string
+) {
+  try {
+    const { data: followers, error } = await supabase
+      .from('user_follows')
+      .select('follower_id')
+      .eq('following_id', userId)
+
+    if (error || !followers || followers.length === 0) {
+      return { success: true, notified: 0 }
+    }
+
+    const results = await Promise.allSettled(
+      followers.map((f: any) =>
+        createNotification(
+          f.follower_id,
+          'cover_photo_updated',
+          `🖼️ @${username} updated their cover photo`,
+          `@${username} just updated their cover photo. Check it out!`,
+          {
+            actor_id: userId,
+            actor_username: username,
+            actor_avatar_url: coverUrl,
+            action_url: `/profile/${username}`,
+          }
+        )
+      )
+    )
+
+    const notified = results.filter((r) => r.status === 'fulfilled').length
+    return { success: true, notified }
+  } catch (err: any) {
+    console.error('Error notifying followers of cover photo update:', err)
+    return { success: false, error: err?.message || 'Unknown error' }
+  }
+}
+
 export async function notifyAccountWarning(userId: string, reason: string) {
   return createNotification(
     userId,

@@ -21,7 +21,7 @@ const createTimerAnimation = (container: HTMLDivElement, timeLeft: number, isSud
   container.appendChild(renderer.domElement);
 
   // Create 3D text geometry for the timer
-  const loader = new THREE.FontLoader();
+  const loader = (THREE as any).FontLoader ? new (THREE as any).FontLoader() : null;
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;

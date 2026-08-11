@@ -1,0 +1,57 @@
+﻿-- Table: streams
+CREATE TABLE IF NOT EXISTS public.streams (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  title TEXT,
+  status TEXT DEFAULT 'pending', -- pending, live, ended
+  box_count INTEGER DEFAULT 1,
+  seat_price INTEGER DEFAULT 0,
+  are_seats_locked BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  ended_at TIMESTAMPTZ,
+  end_time TIMESTAMPTZ
+);
+
+-- Table: court_dockets
+CREATE TABLE IF NOT EXISTS public.court_dockets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    court_date DATE NOT NULL,
+    max_cases INTEGER DEFAULT 20,
+    status TEXT DEFAULT 'open', -- open, full, closed, completed
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(court_date)
+);
+
+-- Table: jail
+CREATE TABLE IF NOT EXISTS public.jail (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL,
+    release_time timestamptz NOT NULL,
+    reason text,
+    created_at timestamptz DEFAULT now()
+);
+
+-- Table: beta_feedback
+CREATE TABLE IF NOT EXISTS public.beta_feedback (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_id text NOT NULL DEFAULT 'TC-BETA-' || nextval('public.beta_feedback_public_seq')::text,
+  user_id uuid NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+  category text NOT NULL,
+  title text NOT NULL,
+  description text NOT NULL,
+  affected_feature text,
+  affected_route text,
+  device_type text,
+  browser_name text,
+  user_agent text,
+  viewport_width integer,
+  viewport_height integer,
+  is_pwa boolean DEFAULT false,
+  app_version text,
+  screenshot_url text,
+  severity text,
+  priority text DEFAULT 'normal',
+  status text DEFAULT 'submitted',
+  assigned_to uuid REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+  duplicate_of uuid,
+  moderator_response text,

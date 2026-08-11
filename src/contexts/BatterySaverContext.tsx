@@ -163,7 +163,7 @@ export function BatterySaverProvider({ children }: { children: React.ReactNode }
   }, [])
 
   useEffect(() => {
-    if (!navigator?.getBattery) return undefined
+    if (!(navigator as any)?.getBattery) return undefined
     let cancelled = false
     let battery: any = null
     const handleBatteryUpdate = () => {
@@ -172,7 +172,7 @@ export function BatterySaverProvider({ children }: { children: React.ReactNode }
       setCharging(typeof battery.charging === 'boolean' ? battery.charging : null)
     }
 
-    navigator.getBattery().then((bat) => {
+    (navigator as any).getBattery().then((bat) => {
       if (cancelled) return
       battery = bat
       handleBatteryUpdate()

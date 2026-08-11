@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../lib/store";
 import { toast } from "sonner";
+import { moderation } from "@/services/maitrollModeration";
 import UserNameWithAge from "../components/UserNameWithAge";
 
 interface Comment {
@@ -60,6 +61,13 @@ const ReelComments: React.FC<ReelCommentsProps> = ({ postId, isVisible, onClose 
 
   const addComment = async () => {
     if (!user || !profile || !newComment.trim()) return;
+
+    // Canonical moderation check
+    const modResult = await moderation.checkContent(profile.id, newComment.trim(), 'comment');
+    if (!modResult.allowed) {
+      toast.error(modResult.message || 'That comment violates Mai Troll\'s chat rules and was not sent.');
+      return;
+    }
 
     try {
       setLoading(true);

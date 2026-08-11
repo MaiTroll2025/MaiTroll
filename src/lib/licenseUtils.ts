@@ -21,7 +21,7 @@ export const DRIVER_TEST_QUESTIONS = [
   },
   {
     question: 'What does an ACTIVE license mean?',
-    options: ['You can repair cars', 'You can drive and use vehicles', 'You get free coins', 'You own multiple cars'],
+    options: ['You can repair cars', 'You can drive and use vehicles', 'You get coins', 'You own multiple cars'],
     correct: 1
   },
   {

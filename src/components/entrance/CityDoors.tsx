@@ -1,5 +1,5 @@
 // src/components/entrance/CityDoors.tsx
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 
 function MaiTrollCrest() {
   return (
@@ -53,7 +53,20 @@ function MaiTrollCrest() {
   )
 }
 
-function Door({ side }: { side: 'left' | 'right' }) {
+function Door({ side, doorsOpening }: { side: 'left' | 'right'; doorsOpening: boolean }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (!doorsOpening) return
+
+    const audio = audioRef.current
+
+    if (audio) {
+      audio.currentTime = 0
+      audio.play().catch(() => {})
+    }
+  }, [doorsOpening])
+
   return (
     <div className={side === 'left' ? 'gce-door gce-door-left' : 'gce-door gce-door-right'}>
       <div className="gce-door-panel">
@@ -61,18 +74,26 @@ function Door({ side }: { side: 'left' | 'right' }) {
         <span className="gce-seam gce-seam-2" />
         <span className="gce-seam gce-seam-3" />
         <MaiTrollCrest />
-        <span className="gce-door-name">MAIMaiTroll</span>
+        <span className="gce-door-name">MAITROLL</span>
       </div>
       <span className="gce-handle" />
+      {doorsOpening && (
+        <audio
+          ref={audioRef}
+          src="/sounds/maitroll-track.wav"
+          autoPlay
+          className="gce-door-audio"
+        />
+      )}
     </div>
   )
 }
 
-export default function CityDoors() {
+export default function CityDoors({ doorsOpening = false }: { doorsOpening?: boolean }) {
   return (
     <div className="gce-doors" aria-hidden="true">
-      <Door side="left" />
-      <Door side="right" />
+      <Door side="left" doorsOpening={doorsOpening} />
+      <Door side="right" doorsOpening={doorsOpening} />
     </div>
   )
 }

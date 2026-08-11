@@ -54,7 +54,7 @@ export default function EntranceTitle({
       </div>
 
       <h1 className="gce-title-main" style={titleVisible ? undefined : { opacity: 0 }}>
-        MAIMaiTroll.COM
+        MAITROLL.COM
       </h1>
 
       <div

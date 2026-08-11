@@ -73,7 +73,7 @@ export default function AvatarWithFrame({
         setFrame(equippedFrame);
         pendingLookups.delete(userId);
       })
-      .catch(() => {
+      .then(undefined, () => {
         frameCache.set(userId, null);
         setFrame(null);
         pendingLookups.delete(userId);

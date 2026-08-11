@@ -13,6 +13,7 @@ import BroadcastOfficerModal from './BroadcastOfficerModal';
 import { useAuthStore } from '../../lib/store';
 import { PreflightStore } from '../../lib/preflightStore';
 import { useParticipantAttributes } from '../../hooks/useParticipantAttributes';
+import { useBroadcastViewerCap } from '../../hooks/useBroadcastViewerCap';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LocalVideoTrack, LocalAudioTrack } from 'livekit-client';
 import { MaiTrollTheme } from '../../styles/trollCityTheme';
@@ -137,8 +138,8 @@ function BroadcastControls({
       isCamOn,
       hasAudioTrack,
       hasVideoTrack,
-      (audioTrack as any)?.sid || (audioTrack as any)?.trackSid || audioTrack?.getTrackId?.(),
-      (videoTrack as any)?.sid || (videoTrack as any)?.trackSid || videoTrack?.getTrackId?.(),
+      (audioTrack as any)?.sid || (audioTrack as any)?.trackSid || (audioTrack as any)?.getTrackId?.(),
+      (videoTrack as any)?.sid || (videoTrack as any)?.trackSid || (videoTrack as any)?.getTrackId?.(),
       (audioTrack as any)?.enabled ?? audioTrack?.mediaStreamTrack?.enabled,
       (videoTrack as any)?.enabled ?? videoTrack?.mediaStreamTrack?.enabled,
       isOnStage,
@@ -255,6 +256,7 @@ function BroadcastControls({
   const attributes = useParticipantAttributes(user ? [user.id] : [], stream.id);
   const myAttributes = user ? attributes[user.id] : null;
   const activePerks = myAttributes?.activePerks || [];
+  const { seatCap } = useBroadcastViewerCap();
 
   const isTrueAdmin = isAdmin || profile?.troll_role === 'admin';
   const canManageStream = isHost || isTrueAdmin;
@@ -429,13 +431,14 @@ function BroadcastControls({
 
   const updateBoxCount = async (newCount: number) => {
     if (!canEditStream) return;
+    const effectiveMaxBoxes = seatCap.enabled ? Math.min(6, seatCap.max) : 6;
+    if (newCount > effectiveMaxBoxes) {
+      toast.error(seatCap.enabled ? `Maximum ${effectiveMaxBoxes} boxes allowed during capped period` : "Maximum 6 boxes allowed");
+      return;
+    }
     const minLimit = Math.max(1, requiredBoxes);
     if (newCount < minLimit) {
       toast.error("Cannot reduce boxes below occupied seats");
-      return;
-    }
-    if (newCount > 6) {
-      toast.error("Maximum 6 boxes allowed");
       return;
     }
     setBoxCount(newCount);

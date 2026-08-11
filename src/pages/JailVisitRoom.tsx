@@ -62,7 +62,7 @@ const JailVisitRoom: React.FC = () => {
                 setLocalAudioTrack(audioTrack);
                 setLocalVideoTrack(videoTrack);
 
-                await client.publish([audioTrack, videoTrack]);
+                await (client as any).publish([audioTrack, videoTrack]);
 
                 toast.success("Connected to visit.");
             } catch (error) {
@@ -75,7 +75,7 @@ const JailVisitRoom: React.FC = () => {
         };
 
         const handleUserPublished = async (user: IRemoteUser, mediaType: 'audio' | 'video') => {
-            await client.subscribe(user, mediaType);
+            await (client as any).subscribe(user, mediaType);
             setRemoteUser(user);
         };
 

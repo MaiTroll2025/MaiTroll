@@ -125,7 +125,6 @@ type TabId =
   | 'reports'
   | 'send_notifications'
   | 'applications'
-  | 'xtrollz_apps'
 
 interface TransactionRow {
   id: string
@@ -1173,7 +1172,6 @@ export default function AdminDashboard() {
   const handleOpenGrantCoins = () => navigate('/admin/grant-coins')
   const handleOpenFinanceDashboard = () => navigate('/admin/finance')
   const handleOpenCreateSchedule = () => navigate('/admin/create-schedule')
-  const handleOpenOfficerShifts = () => navigate('/admin/officer-shifts')
   const handleOpenResetPanel = () => navigate('/admin/reset-maintenance')
   const handleOpenEmpireApplications = () => navigate('/admin/empire-applications')
   const handleOpenReferralBonuses = () => navigate('/admin/referral-bonuses')
@@ -1218,7 +1216,6 @@ export default function AdminDashboard() {
          support_tickets: '/admin/support-tickets',
          customer_service: '/admin/customer-service',
           send_notifications: '/admin/send-notifications',
-          xtrollz_apps: '/admin/xtrollz-apps',
         }) as Partial<Record<TabId, string>>,
      []
    )
@@ -1363,7 +1360,6 @@ export default function AdminDashboard() {
               onOpenTrollmersTournament={handleOpenTrollmersTournament}
               onOpenFinanceDashboard={handleOpenFinanceDashboard}
               onOpenCreateSchedule={handleOpenCreateSchedule}
-              onOpenOfficerShifts={handleOpenOfficerShifts}
               onOpenResetPanel={handleOpenResetPanel}
               onOpenEmpireApplications={handleOpenEmpireApplications}
               onOpenReferralBonuses={handleOpenReferralBonuses}

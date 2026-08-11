@@ -550,8 +550,8 @@ export default function PastorDashboard() {
                             {isMicOn ? 'Mute Mic' : 'Unmute Mic'}
                           </button>
                           <button onClick={toggleCamera} className={`${brownButton} flex-1`}>
-                            {localVideoTrack?.isEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                            {localVideoTrack?.isEnabled ? 'Stop Camera' : 'Start Camera'}
+                            {(localVideoTrack as any)?.isEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                            {(localVideoTrack as any)?.isEnabled ? 'Stop Camera' : 'Start Camera'}
                           </button>
                         </div>
 

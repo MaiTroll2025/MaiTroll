@@ -714,9 +714,9 @@ export default function LiveAuctionRoom() {
     []
   )
 
-  const subscribeAndPlay = useCallback(async (remoteUser: IAgoraRTCRemoteUser, mediaType: 'audio' | 'video') => {
+  const subscribeAndPlay = useCallback(async (remoteUser: IAgoraRTCRemoteUser, mediaType: 'audio' | 'video' | 'datachannel') => {
     try {
-      await clientRef.current?.subscribe(remoteUser, mediaType)
+      await agoraClientRef.current?.subscribe(remoteUser, mediaType)
     } catch (err) {
       logAgoraError('subscribe failed', err)
       return
@@ -732,6 +732,23 @@ export default function LiveAuctionRoom() {
     }
   }, [])
 
+  const connectViewerAgoraRef = useRef<null | (() => Promise<void>)>(null)
+
+  const debugAgora = (...args: any[]) => {
+    console.log('[LiveAuctionRoom][AgoraDebug]', ...args)
+  }
+
+  const scheduleViewerReconnect = useCallback(() => {
+    if (retryTimerRef.current) return
+
+    retryTimerRef.current = window.setTimeout(() => {
+      retryTimerRef.current = null
+      if (!agoraClientRef.current && !agoraJoinedRef.current && !agoraConnectingRef.current) {
+        void connectViewerAgoraRef.current?.()
+      }
+    }, 900)
+  }, [])
+
   const buildAgoraClient = useCallback(() => {
     const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' })
 
@@ -743,10 +760,10 @@ export default function LiveAuctionRoom() {
     // Handle a host that was already live *before* this client finished
     // subscribing: catch any published tracks that the event missed.
     client.on('user-joined', (remoteUser: IAgoraRTCRemoteUser) => {
-      if (remoteUser.hasPublishedVideo || (remoteUser as any).videoTrack) {
+      if ((remoteUser as any).hasPublishedVideo || (remoteUser as any).videoTrack) {
         void subscribeAndPlay(remoteUser, 'video')
       }
-      if (remoteUser.hasPublishedAudio || (remoteUser as any).audioTrack) {
+      if ((remoteUser as any).hasPublishedAudio || (remoteUser as any).audioTrack) {
         void subscribeAndPlay(remoteUser, 'audio')
       }
     })
@@ -767,8 +784,8 @@ export default function LiveAuctionRoom() {
         setAgoraConnected(true)
         // A host that published while we were reconnecting: re-scan.
         client.remoteUsers.forEach((u) => {
-          if (u.hasPublishedVideo || (u as any).videoTrack) void subscribeAndPlay(u, 'video')
-          if (u.hasPublishedAudio || (u as any).audioTrack) void subscribeAndPlay(u, 'audio')
+          if ((u as any).hasPublishedVideo || (u as any).videoTrack) void subscribeAndPlay(u, 'video')
+          if ((u as any).hasPublishedAudio || (u as any).audioTrack) void subscribeAndPlay(u, 'audio')
         })
       }
     })
@@ -789,19 +806,6 @@ export default function LiveAuctionRoom() {
 
     return client
   }, [getAgoraChannelName, scheduleViewerReconnect, show, subscribeAndPlay, user?.id])
-
-  const scheduleViewerReconnect = useCallback(() => {
-    if (retryTimerRef.current) return
-
-    retryTimerRef.current = window.setTimeout(() => {
-      retryTimerRef.current = null
-      if (!agoraClientRef.current && !agoraJoinedRef.current && !agoraConnectingRef.current) {
-        void connectViewerAgoraRef.current?.()
-      }
-    }, 900)
-  }, [])
-
-  const connectViewerAgoraRef = useRef<null | (() => Promise<void>)>(null)
 
   const connectViewerAgora = useCallback(async () => {
     if (!showId || !user?.id || isAuctioneer) return
@@ -844,8 +848,8 @@ export default function LiveAuctionRoom() {
       // user-published event would have been missed otherwise, leaving viewers
       // stuck on "Waiting for Agora" forever.
       client.remoteUsers.forEach((u) => {
-        if (u.hasPublishedVideo || (u as any).videoTrack) void subscribeAndPlay(u, 'video')
-        if (u.hasPublishedAudio || (u as any).audioTrack) void subscribeAndPlay(u, 'audio')
+        if ((u as any).hasPublishedVideo || (u as any).videoTrack) void subscribeAndPlay(u, 'video')
+        if ((u as any).hasPublishedAudio || (u as any).audioTrack) void subscribeAndPlay(u, 'audio')
       })
     } catch (error: any) {
       const agoraErrorMessage = logAgoraError('Viewer Agora connection failed', error)
@@ -919,7 +923,7 @@ export default function LiveAuctionRoom() {
 
       const [micTrack, camTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
         { AEC: true, ANS: true, AGC: true },
-        { encoderConfig: '720p_2', facingMode: { ideal: 'environment' } }
+        { encoderConfig: '720p_2', facingMode: { ideal: 'environment' } as any }
       )
 
       localAudioTrackRef.current = micTrack

@@ -45,6 +45,7 @@ export default defineConfig(({ mode }) => {
       __BUILD_TIME__: JSON.stringify(buildTime),
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
+      'import.meta.env.VITE_EDGE_FUNCTIONS_URL': JSON.stringify(env.VITE_EDGE_FUNCTIONS_URL),
       // NOTE: VITE_SUPABASE_SERVICE_ROLE_KEY is intentionally NOT exposed to the client.
       // It should only be used in server-side code and edge functions.
     },
@@ -84,14 +85,72 @@ export default defineConfig(({ mode }) => {
         srcDir: 'src',
         filename: 'service-worker.ts',
         injectManifest: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-          globIgnores: ['index.html'],
-          maximumFileSizeToCacheInBytes: 10000000,
+          globPatterns: [
+            'index.html',
+            'assets/*.css',
+            'assets/*.{js,mjs}'
+          ],
+          globIgnores: [
+            '**/*.chunk.js',
+            '**/*.chunk.mjs',
+            '**/*-??-??-??.js',
+            '**/*-??-??-??.mjs'
+          ],
+          maximumFileSizeToCacheInBytes: 5000000,
         },
         workbox: {
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: false,
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/gejtbllazzighxwxudyu\.supabase\.co\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'supabase-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /\.(?:js|css|mjs)$/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'static-chunks',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                }
+              }
+            },
+            {
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'images',
+                expiration: {
+                  maxEntries: 60,
+                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/cdn\.maitroll\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'stream-assets',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 2 // 2 hours
+                }
+              }
+            }
+          ]
         },
       }),
     ],
@@ -120,7 +179,7 @@ export default defineConfig(({ mode }) => {
           },
         },
         '/streams': {
-          target: 'https://cdn.maiMai Troll.com',
+          target: 'https://cdn.maitroll.com',
           changeOrigin: true,
           secure: true,
           rewrite: (path) => path,
@@ -172,6 +231,27 @@ export default defineConfig(({ mode }) => {
               if (id.includes('@stripe') || id.includes('@paypal') || id.includes('stripe')) {
                 return 'vendor-payment'
               }
+              if (id.includes('cannon-es') || id.includes('@react-three/rapier')) {
+                return 'vendor-3d-physics'
+              }
+              if (id.includes('@react-three/fiber') || id.includes('@react-three/drei') || id.includes('@rive-app/react-canvas')) {
+                return 'vendor-3d-renderer'
+              }
+              if (id.includes('@mediapipe') || id.includes('face-api.js')) {
+                return 'vendor-face-api'
+              }
+              if (id.includes('@remotion')) {
+                return 'vendor-remotion'
+              }
+              if (id.includes('@tsparticles')) {
+                return 'vendor-particles'
+              }
+              if (id.includes('agora-rtc-sdk-ng') || id.includes('agora-token')) {
+                return 'vendor-agora'
+              }
+              if (id.includes('@ffmpeg')) {
+                return 'vendor-ffmpeg'
+              }
             }
             if (id.includes('src/pages/admin') || id.includes('src\\pages\\admin')) {
               return 'admin-core'
@@ -179,10 +259,25 @@ export default defineConfig(({ mode }) => {
             if (id.includes('src/components/broadcast') || id.includes('src\\components\\broadcast')) {
               return 'broadcast-components'
             }
+            if (id.includes('src/pages/auction') || id.includes('src\\pages\\auction')) {
+              return 'auction-pages'
+            }
+            if (id.includes('src/pages/gaming') || id.includes('src\\pages\\gaming')) {
+              return 'gaming-pages'
+            }
+            if (id.includes('src/pages/tcnn') || id.includes('src\\pages\\tcnn')) {
+              return 'tcnn-pages'
+            }
+            if (id.includes('src/pages/family') || id.includes('src\\pages\\family') || id.includes('src/pages/TrollFamily') || id.includes('src\\pages\\TrollFamily')) {
+              return 'family-pages'
+            }
+            if (id.includes('src/pages/MapPage') || id.includes('src\\pages\\MapPage') || id.includes('src/pages/CourtRoom') || id.includes('src\\pages\\CourtRoom')) {
+              return 'map-court-pages'
+            }
           },
         },
       },
-      chunkSizeWarningLimit: 1500,
+      chunkSizeWarningLimit: 800,
       reportCompressedSize: true,
     },
     resolve: {

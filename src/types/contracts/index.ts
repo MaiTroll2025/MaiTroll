@@ -78,6 +78,7 @@ export interface ContractAuditEvent {
 // Contract Form Types
 export interface ContractFormData {
   recipient_user_id: string
+  recipient_tromail_address?: string | null
   role_key: string
   pay_terms: string
   start_date: string

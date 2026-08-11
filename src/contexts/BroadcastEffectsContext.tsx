@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
-import { ActiveEffect, EffectType, GIFT_EFFECT_MAPPING, GiftEffectConfig } from '../types/broadcastEffects';
+import { ActiveEffect, EffectType, EffectTarget, GIFT_EFFECT_MAPPING, GiftEffectConfig } from '../types/broadcastEffects';
 
 interface EffectsState {
   activeEffects: ActiveEffect[];

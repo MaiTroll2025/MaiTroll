@@ -82,99 +82,154 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
   // Check if LiveKit is configured
   const isLiveKitConfigured = !!getLiveKitUrl() && !!getLiveKitApiKey();
 
-  // Fetch LiveKit token via edge function
+  // Fetch LiveKit token via edge function with retry and timeout
   // mode: 'broadcaster' | 'audience' | 'seat-publisher' | 'battle-watch'
   const fetchToken = useCallback(async (roomName: string, userId: string, userName?: string, isPublisherOverride?: boolean, metadataOverride?: string, mode?: string) => {
-    // Determine publish permission from explicit mode or override parameter.
-    // Broadcaster and seat-publisher get canPublish: true.
-    // Audience, battle-watch, and default get canPublish: false.
-    const canPublish = mode === 'broadcaster' || mode === 'seat-publisher' || (mode === undefined && (isPublisherOverride === true || publish === true));
-    const requestBody: Record<string, any> = {
-      room: roomName,
-      roomName,
-      identity: identity || userId,
-      name: userName || 'User',
-      role: canPublish ? 'publisher' : 'audience',
-      isHost: canPublish && roomType === 'pod' ? true: undefined,
-      canPublish,
-      canSubscribe: true,
-      mode: mode || (canPublish ? 'publisher' : 'audience'),
-    };
-    if (metadataOverride) {
-      requestBody.metadata = metadataOverride;
+    const MAX_RETRIES = 2
+    const RETRY_DELAYS = [1000, 2000]
+    const REQUEST_TIMEOUT = 15000
+
+    const getEdgeFunctionsUrl = () => {
+      const explicit = import.meta.env.VITE_EDGE_FUNCTIONS_URL
+      if (explicit && explicit.trim()) return explicit.trim()
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      return supabaseUrl ? `${supabaseUrl}/functions/v1` : ''
     }
 
-    const requestDetails = {
-      roomName,
-      userId,
-      role: canPublish ? 'publisher' : 'audience',
-      canPublish,
-      canSubscribe: true,
-      mode: mode || (canPublish ? 'publisher' : 'audience'),
-      isHost: canPublish && roomType === 'pod',
-    };
+    const fetchWithTimeout = async (url: string, options: RequestInit & { timeout?: number } = {}) => {
+      const { timeout = REQUEST_TIMEOUT, ...fetchOptions } = options
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeout)
+      try {
+        const response = await fetch(url, {
+          ...fetchOptions,
+          signal: controller.signal,
+        })
+        return response
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          throw new Error(`LiveKit token request timed out after ${timeout}ms`)
+        }
+        throw err
+      } finally {
+        clearTimeout(timeoutId)
+      }
+    }
+
+    const attemptFetch = async (attempt: number): Promise<string> => {
+      if (attempt > 0) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[attempt - 1] || 1000))
+      }
+
+      // Determine publish permission from explicit mode or override parameter.
+      // Broadcaster and seat-publisher get canPublish: true.
+      // Audience, battle-watch, and default get canPublish: false.
+      const canPublish = mode === 'broadcaster' || mode === 'seat-publisher' || (mode === undefined && (isPublisherOverride === true || publish === true));
+      const requestBody: Record<string, any> = {
+        room: roomName,
+        roomName,
+        identity: identity || userId,
+        name: userName || 'User',
+        role: canPublish ? 'publisher' : 'audience',
+        isHost: canPublish && roomType === 'pod' ? true: undefined,
+        canPublish,
+        canSubscribe: true,
+        mode: mode || (canPublish ? 'publisher' : 'audience'),
+      };
+      if (metadataOverride) {
+        requestBody.metadata = metadataOverride;
+      }
+
+      const requestDetails = {
+        roomName,
+        userId,
+        role: canPublish ? 'publisher' : 'audience',
+        canPublish,
+        canSubscribe: true,
+        mode: mode || (canPublish ? 'publisher' : 'audience'),
+        isHost: canPublish && roomType === 'pod',
+        attempt,
+      };
+
+      try {
+        const { data, error: tokenError } = await supabase.functions.invoke('livekit-token', {
+          body: requestBody,
+        });
+
+        if (tokenError) {
+          const statusCode = tokenError?.status || tokenError?.statusCode || tokenError?.status_code || null;
+          const bodyText = tokenError?.body || tokenError?.message || JSON.stringify(tokenError);
+          console.error(`[useLiveKitRoom] Error fetching token via Supabase functions.invoke (attempt ${attempt + 1}/${MAX_RETRIES + 1}): ${statusCode} ${safeStringify(bodyText)} ${safeStringify(requestDetails)}`);
+          throw new Error(`LiveKit audience token failed: ${statusCode ? statusCode + ' ' : ''}${String(bodyText)}`);
+        }
+
+        if (!data?.token) {
+          console.error(`[useLiveKitRoom] No token in response from edge function (attempt ${attempt + 1}/${MAX_RETRIES + 1}): ${safeStringify(data)} ${safeStringify(requestDetails)}`);
+          throw new Error(`LiveKit token response missing token: ${JSON.stringify(data)}`);
+        }
+
+        return data.token
+      } catch (err: any) {
+        console.warn(`[useLiveKitRoom] Token fetch attempt ${attempt + 1} failed:`, err?.message || String(err), requestDetails)
+
+        if (attempt < MAX_RETRIES) {
+          return attemptFetch(attempt + 1)
+        }
+
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseAnonKey) {
+          throw new Error(`LiveKit token fetch failed and Supabase env is not configured: ${err?.message || String(err)}`);
+        }
+
+        const edgeFunctionsUrl = getEdgeFunctionsUrl()
+        const tokenUrl = edgeFunctionsUrl
+          ? `${edgeFunctionsUrl}/livekit-token`
+          : `${supabaseUrl}/functions/v1/livekit-token`
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        const authToken = sessionData?.session?.access_token || supabaseAnonKey;
+        const response = await fetchWithTimeout(tokenUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: supabaseAnonKey,
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(requestBody),
+          timeout: REQUEST_TIMEOUT,
+        });
+
+        const responseText = await response.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(responseText);
+        } catch (parseErr) {
+          console.error(`[useLiveKitRoom] Failed parsing fallback token response (attempt ${attempt + 1}/${MAX_RETRIES + 1}): ${safeStringify(parseErr)} ${safeStringify(responseText)}`);
+          throw new Error(`LiveKit token fallback response parse failed: ${parseErr?.message || String(parseErr)}`);
+        }
+
+        if (!response.ok) {
+          console.error(`[useLiveKitRoom] Fallback token request failed (attempt ${attempt + 1}/${MAX_RETRIES + 1}): ${response.status} ${safeStringify(parsed)}`);
+          throw new Error(`LiveKit token fallback request failed (${response.status}): ${parsed?.error || JSON.stringify(parsed)}`);
+        }
+
+        if (!parsed?.token) {
+          console.error(`[useLiveKitRoom] Fallback token response missing token (attempt ${attempt + 1}/${MAX_RETRIES + 1}): ${safeStringify(parsed)}`);
+          throw new Error(`LiveKit token fallback response missing token: ${JSON.stringify(parsed)}`);
+        }
+
+        console.log('[useLiveKitRoom] Got token via fallback fetch, room:', roomName, 'attempt:', attempt + 1);
+        return parsed.token
+      }
+    }
 
     try {
-      const { data, error: tokenError } = await supabase.functions.invoke('livekit-token', {
-        body: requestBody,
-      });
-
-      if (tokenError) {
-        const statusCode = tokenError?.status || tokenError?.statusCode || tokenError?.status_code || null;
-        const bodyText = tokenError?.body || tokenError?.message || JSON.stringify(tokenError);
-        console.error(`[useLiveKitRoom] Error fetching token via Supabase functions.invoke: ${statusCode} ${safeStringify(bodyText)} ${safeStringify(requestDetails)}`);
-        throw new Error(`LiveKit audience token failed: ${statusCode ? statusCode + ' ' : ''}${String(bodyText)}`);
-      }
-
-      if (!data?.token) {
-        console.error(`[useLiveKitRoom] No token in response from edge function: ${safeStringify(data)} ${safeStringify(requestDetails)}`);
-        throw new Error(`LiveKit token response missing token: ${JSON.stringify(data)}`);
-      }
-
-
-      return data.token;
+      return await attemptFetch(0)
     } catch (err: any) {
-      console.warn('[useLiveKitRoom] Token fetch failed, falling back to raw Supabase Function fetch:', err, requestDetails);
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error(`LiveKit token fetch failed and Supabase env is not configured: ${err?.message || String(err)}`);
-      }
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const authToken = sessionData?.session?.access_token || supabaseAnonKey;
-      const response = await fetch(`${supabaseUrl}/functions/v1/livekit-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: supabaseAnonKey,
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const responseText = await response.text();
-      let parsed;
-      try {
-        parsed = JSON.parse(responseText);
-      } catch (parseErr) {
-        console.error(`[useLiveKitRoom] Failed parsing fallback token response: ${safeStringify(parseErr)} ${safeStringify(responseText)}`);
-        throw new Error(`LiveKit token fallback response parse failed: ${parseErr?.message || String(parseErr)}`);
-      }
-
-      if (!response.ok) {
-        console.error(`[useLiveKitRoom] Fallback token request failed: ${response.status} ${safeStringify(parsed)}`);
-        throw new Error(`LiveKit token fallback request failed (${response.status}): ${parsed?.error || JSON.stringify(parsed)}`);
-      }
-
-      if (!parsed?.token) {
-        console.error(`[useLiveKitRoom] Fallback token response missing token: ${safeStringify(parsed)}`);
-        throw new Error(`LiveKit token fallback response missing token: ${JSON.stringify(parsed)}`);
-      }
-
-      console.log('[useLiveKitRoom] Got token via fallback fetch, room:', roomName);
-      return parsed.token;
+      const rootMessage = err?.message || String(err) || 'Unknown token fetch error'
+      console.error(`[useLiveKitRoom] Token fetch failed after all retries for room ${roomName}: ${rootMessage}`)
+      throw new Error(`LiveKit token fetch failed: ${rootMessage}`)
     }
   }, [publish, roomType, identity]);
 

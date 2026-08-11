@@ -5,15 +5,14 @@ import { Flame, Radio, Users, Clock, X, Swords } from 'lucide-react';
 export interface ActiveBattle {
   id: string;
   status: string;
-  battle_mode: string | null;
   started_at: string | null;
   ends_at: string | null;
   score_challenger: number;
   score_opponent: number;
   challenger_stream_id: string | null;
   opponent_stream_id: string | null;
-  challenger?: { id: string; title: string | null; user_id: string; viewer_count?: number | null; is_live?: boolean } | null;
-  opponent?: { id: string; title: string | null; user_id: string; viewer_count?: number | null; is_live?: boolean } | null;
+  challenger?: { id: string; title: string | null; user_id: string; viewer_count?: number | null; is_live?: boolean; battle_mode?: string | null } | null;
+  opponent?: { id: string; title: string | null; user_id: string; viewer_count?: number | null; is_live?: boolean; battle_mode?: string | null } | null;
 }
 
 const ACTIVE_STATUSES = ['active', 'starting', 'ready'];
@@ -38,7 +37,7 @@ function BattleCard({
   onSelect: (b: ActiveBattle) => void;
 }) {
   const cViewers = (battle.challenger?.viewer_count || 0) + (battle.opponent?.viewer_count || 0);
-  const isRandom = battle.battle_mode === 'random_queue';
+  const isRandom = battle.challenger?.battle_mode === 'random_queue' || battle.opponent?.battle_mode === 'random_queue';
   return (
     <button
       type="button"
@@ -84,7 +83,7 @@ export function useActiveBattles(currentBattleId?: string | null) {
     try {
       const { data: rows, error } = await supabase
         .from('battles')
-        .select('id, status, battle_mode, started_at, ends_at, score_challenger, score_opponent, challenger_stream_id, opponent_stream_id')
+        .select('id, status, started_at, ends_at, score_challenger, score_opponent, challenger_stream_id, opponent_stream_id')
         .in('status', ACTIVE_STATUSES);
       if (error) {
         console.warn('[ActiveBattles] load error', error);
@@ -98,7 +97,7 @@ export function useActiveBattles(currentBattleId?: string | null) {
       if (streamIds.length > 0) {
         const { data: streams } = await supabase
           .from('streams')
-          .select('id, title, user_id, viewer_count, is_live')
+          .select('id, title, user_id, viewer_count, is_live, battle_mode')
           .in('id', streamIds);
         for (const s of streams || []) streamMap[s.id] = s;
       }

@@ -3,14 +3,43 @@ export const allowedOrigins = [
   'https://www.maitalent.fun',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'http://192.168.1.193:5178',
   'http://localhost:5178',
+  'http://127.0.0.1:5178',
+  'http://localhost:5179',
+  'http://127.0.0.1:5179',
+  'http://192.168.1.193:5178',
 ]
 
 export function resolveCorsOrigin(requestOrigin: string | null): string {
   if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
     return requestOrigin
   }
+
+  if (requestOrigin) {
+    try {
+      const originUrl = new URL(requestOrigin)
+      const hostname = originUrl.hostname
+      const isDevNetwork =
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname.startsWith('127.') ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('172.')
+
+      if (isDevNetwork) {
+        return requestOrigin
+      }
+
+      const isCloudflarePages = hostname.endsWith('.pages.dev')
+      if (isCloudflarePages) {
+        return requestOrigin
+      }
+    } catch {
+      // Invalid URL, fall through
+    }
+  }
+
   return allowedOrigins[0]
 }
 

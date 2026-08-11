@@ -137,17 +137,6 @@ const DEFAULT_MAI_APPS: MaiApp[] = [
     status: 'coming_soon',
     theme: 'payments',
   },
-  {
-    id: 'maitalent',
-    name: 'Mai Network',
-    tagline: 'Talent, creators, and the Mai Network community.',
-    category: 'Network',
-    websiteUrl: 'https://maitalent.fun',
-    googlePlayUrl: '',
-    appleStoreUrl: '',
-    status: 'live',
-    theme: 'default',
-  },
 ]
 
 const getPlatformTheme = (platform: PlatformTheme) => {

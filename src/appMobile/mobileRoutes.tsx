@@ -11,6 +11,7 @@ import {
   Lock,
   MessageCircle,
   Mic,
+  Music,
   PlayCircle,
   Radio,
   Scale,
@@ -27,6 +28,7 @@ import {
   Landmark,
   Gamepad2,
   DollarSign,
+  Newspaper,
 } from "lucide-react";
 
 import MobileHomePage from "./pages/MobileHomepage";
@@ -161,18 +163,6 @@ export const mobileRoutes: MobileRouteItem[] = [
     showInBottomBubble: true,
   },
   {
-    key: "jobs",
-    label: "Jobs",
-    path: "/jobs",
-    element: <HowToVideosPage />,
-    // NOTE: HowToVideosPage is now the Jobs how-to page
-    icon: PlayCircle,
-    priority: 55,
-    regular: true,
-    public: true,
-    showInBottomBubble: true,
-  },
-  {
     key: "treelz",
     label: "Treelz",
     path: "/treelz",
@@ -190,6 +180,17 @@ export const mobileRoutes: MobileRouteItem[] = [
     element: <MobilePodcastPage />,
     icon: Mic,
     priority: 62,
+    regular: true,
+    public: true,
+    showInBottomBubble: true,
+  },
+  {
+    key: "mai-record-label",
+    label: "MAI Record Label",
+    path: "/mai-record-label",
+    element: <MobilePlaceholder title="MAI Record Label" />,
+    icon: Music,
+    priority: 63,
     regular: true,
     public: true,
     showInBottomBubble: true,
@@ -482,6 +483,17 @@ export const mobileRoutes: MobileRouteItem[] = [
     icon: Wrench,
     priority: 200,
     roles: ["journalist", "news_caster", "chief_news_caster", "president", "ceo", "admin"],
+    showInBottomBubble: true,
+  },
+  {
+    key: "epaper",
+    label: "EPaper",
+    path: "/epaper",
+    element: <MobilePlaceholder title="EPaper" />,
+    icon: Newspaper,
+    priority: 201,
+    regular: true,
+    public: true,
     showInBottomBubble: true,
   },
   {

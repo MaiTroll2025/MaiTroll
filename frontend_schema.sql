@@ -23445,15 +23445,34 @@ END;
 $$;
 
 -- Function: increment_stream_likes
-CREATE OR REPLACE FUNCTION increment_stream_likes(stream_id UUID)
-RETURNS void
+CREATE OR REPLACE FUNCTION increment_stream_likes(
+  p_stream_id uuid,
+  p_like_count integer
+)
+RETURNS bigint
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
+DECLARE
+  v_new_total bigint;
 BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+
+  IF p_like_count < 1 OR p_like_count > 100 THEN
+    RAISE EXCEPTION 'Invalid like count';
+  END IF;
+
+  -- Consolidate likes per stream: bump the aggregate counter on the
+  -- streams row. No rows are inserted per like sent.
   UPDATE public.streams
-  SET total_likes = COALESCE(total_likes, 0) + 1
-  WHERE id = stream_id;
+  SET total_likes = COALESCE(total_likes, 0) + p_like_count
+  WHERE id = p_stream_id
+  RETURNING total_likes INTO v_new_total;
+
+  RETURN COALESCE(v_new_total, 0);
 END;
 $$;
 

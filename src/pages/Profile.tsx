@@ -26,7 +26,6 @@ import ProfileFeed from '../components/profile/ProfileFeed';
 import ProfileReplays from '../components/profile/ProfileReplays';
 import ProfileWatchlist from '../components/profile/ProfileWatchlist';
 import UserInventory from './UserInventory';
-import ProfileMaitalentPromos from './ProfileMaitalentPromos';
 import UserModActionsModal from '../components/profile/UserModActionsModal';
 import { useProfileFrameStore } from '../stores/useProfileFrameStore';
 import type { ProfileFrame as ProfileFrameType } from '../config/profileFrames';
@@ -136,6 +135,14 @@ function ProfileInner() {
                 return;
             }
 
+            console.log('[Profile Debug] Fetched profile:', {
+                id: data.id,
+                username: data.username,
+                cover_url: data.cover_url,
+                banner_url: data.banner_url,
+                avatar_url: data.avatar_url,
+            });
+
             prevProfileIdRef.current = data.id;
             initialLoadRef.current = false;
 
@@ -211,12 +218,12 @@ function ProfileInner() {
         if (activeTab !== 'badges' || !profile?.id) return;
         let isMounted = true;
         setBadgesLoading(true);
-        supabase
-            .rpc('get_user_featured_badges', { p_user_id: profile.id, p_limit: 12 })
-            .then(({ data }: any) => {
-                if (isMounted) setBadges(data || []);
-            })
-            .catch((err) => console.error('Failed to load badges', err))
+        (supabase
+            .rpc('get_user_featured_badges', { p_user_id: profile.id, p_limit: 12 }) as any
+        ).then(({ data }: any) => {
+            if (isMounted) setBadges(data || []);
+        })
+            .then(undefined, (err) => console.error('Failed to load badges', err))
             .finally(() => {
                 if (isMounted) setBadgesLoading(false);
             });
@@ -533,18 +540,7 @@ function ProfileInner() {
                     </div>
                 );
             case 'settings':
-                return (
-                    <div className="space-y-6">
-                        <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Account Settings</h3>
-                            <button onClick={() => navigate('/profile/settings')} className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 font-semibold text-white hover:bg-white/10 transition">
-                                Open Profile Settings
-                            </button>
-                        </div>
-                    </div>
-                );
-            case 'promos':
-                return <ProfileMaitalentPromos />;
+                return <ProfileSettings />;
             default:
                 return <ProfileFeed userId={profile.id} />;
         }
@@ -585,6 +581,8 @@ function ProfileInner() {
                     showModActionsStat={isStaffViewer}
                     onModActionsClick={handleOpenUserModActions}
                     isJailed={!!profile?.is_jailed}
+                    onAvatarEdit={() => navigate('/profile/settings')}
+                    onCoverEdit={() => navigate('/profile/settings', { state: { openCoverUpload: true } })}
                 />
 
                 {/* Role Cards */}

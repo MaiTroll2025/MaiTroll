@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { moderation } from '@/services/maitrollModeration';
 
 export function useJailMode(userId: string | undefined) {
   const [isJailed, setIsJailed] = useState(false);
   const [releaseTime, setReleaseTime] = useState<string | null>(null);
   const [jailTimeRemaining, setJailTimeRemaining] = useState<number | null>(null);
+  const [jailId, setJailId] = useState<string | null>(null);
+  const [disciplineLevel, setDisciplineLevel] = useState<number>(0);
+  const [bondAmount, setBondAmount] = useState<number>(0);
+  const [bondAllowed, setBondAllowed] = useState(false);
 
   useEffect(() => {
     if (!userId) {
@@ -13,33 +18,26 @@ export function useJailMode(userId: string | undefined) {
     }
 
     const checkJailStatus = async () => {
-      const { data, error } = await supabase
-        .from('jail')
-        .select('release_time, bond_posted')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (error) {
-        console.error('Error fetching jail status:', error);
-        setIsJailed(false);
-        return;
-      }
-
-      const jailRecord = data?.[0];
-
-      if (jailRecord && jailRecord.release_time && !jailRecord.bond_posted) {
-        const releaseDate = new Date(jailRecord.release_time);
-        if (releaseDate > new Date()) {
+      try {
+        const state = await moderation.getJailState(userId);
+        if (state.isJailed) {
           setIsJailed(true);
-          setReleaseTime(jailRecord.release_time);
+          setReleaseTime(state.scheduledReleaseAt || null);
+          setJailId(state.jailId || null);
+          setDisciplineLevel(state.disciplineLevel || 1);
+          setBondAmount(state.bondAmount || 0);
+          setBondAllowed(state.bondAllowed || false);
         } else {
           setIsJailed(false);
           setReleaseTime(null);
+          setJailId(null);
+          setDisciplineLevel(0);
+          setBondAmount(0);
+          setBondAllowed(false);
         }
-      } else {
+      } catch (err) {
+        console.error('Error fetching jail status:', err);
         setIsJailed(false);
-        setReleaseTime(null);
       }
     };
 
@@ -56,7 +54,6 @@ export function useJailMode(userId: string | undefined) {
           filter: `user_id=eq.${userId}`,
         },
         () => {
-          console.log('Jail status change detected, refetching...');
           checkJailStatus();
         }
       )
@@ -80,6 +77,7 @@ export function useJailMode(userId: string | undefined) {
           setJailTimeRemaining(0);
           setIsJailed(false);
           setReleaseTime(null);
+          setJailId(null);
           clearInterval(interval);
         }
       }, 1000);
@@ -88,5 +86,13 @@ export function useJailMode(userId: string | undefined) {
     }
   }, [isJailed, releaseTime]);
 
-  return { isJailed, jailTimeRemaining, releaseTime };
+  return { 
+    isJailed, 
+    jailTimeRemaining, 
+    releaseTime,
+    jailId,
+    disciplineLevel,
+    bondAmount,
+    bondAllowed
+  };
 }

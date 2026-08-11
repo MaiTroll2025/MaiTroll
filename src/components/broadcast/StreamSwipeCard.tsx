@@ -177,7 +177,7 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
       });
 
       // Apply current mute state to remote audio playback.
-      try { room.setAudioVolume?.(isMuted ? 0 : 100); } catch { /* noop */ }
+      try { (room as any).setAudioVolume?.(isMuted ? 0 : 100); } catch { /* noop */ }
 
       // Pick up any participants/tracks already present on connect.
       syncParticipants();
@@ -207,16 +207,16 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
     }
   }, [isActive, stream.id]);
   
-  // Handle mute state changes
-  useEffect(() => {
-    if (roomRef.current) {
-      if (isMuted) {
-        roomRef.current.setAudioVolume(0);
-      } else {
-        roomRef.current.setAudioVolume(100);
-      }
-    }
-  }, [isMuted]);
+   // Handle mute state changes
+   useEffect(() => {
+     if (roomRef.current) {
+       if (isMuted) {
+         (roomRef.current as any).setAudioVolume?.(0);
+       } else {
+         (roomRef.current as any).setAudioVolume?.(100);
+       }
+     }
+   }, [isMuted]);
   
   // Join/leave based on active state
   useEffect(() => {
@@ -264,8 +264,8 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
 
      setLikeCount((prev) => Number(prev || 0) + 2);
 
-     pendingLikesRef.current += 1;
-     if (pendingLikesRef.current >= 25) {
+      pendingLikesRef.current += 2;
+      if (pendingLikesRef.current >= 25) {
        flushLikes();
      }
    };
@@ -365,9 +365,9 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
             remoteUsers.length === 2 ? "grid grid-cols-2" :
             "grid grid-cols-2 gap-0.5"
           )}>
-            {remoteUsers.map((remoteUser) => {
-              const videoPub = Array.from(remoteUser.videoTrackPublications.values()).find((p) => p.track);
-              const trackKey = videoPub?.trackSid || 'novideo';
+             {remoteUsers.map((remoteUser: any) => {
+               const videoPub = Array.from(remoteUser.videoTrackPublications.values()).find((p: any) => p.track) as any;
+               const trackKey = videoPub?.trackSid || 'novideo';
               return (
                 <div key={remoteUser.identity} className="relative bg-black">
                   <RemoteMedia

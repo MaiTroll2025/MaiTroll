@@ -109,9 +109,10 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
   const getCameraUid = (uid: string): UID => getUserUid(`${uid}-camera`);
 
   const fetchToken = useCallback(async (channel: string, uid: UID): Promise<string> => {
-    const { data, err } = await supabase.functions.invoke('agora-token', {
+    const response = await supabase.functions.invoke('agora-token', {
       body: { channel, userId: uid.toString(), tokenType: 'rtc', role: 'publisher' },
     });
+    const { data, error: err } = response as any;
     if (err) throw new Error(`Token error: ${err.message}`);
     if (!data?.token) throw new Error('No token received');
     return data.token;

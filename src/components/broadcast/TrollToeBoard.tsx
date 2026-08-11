@@ -29,7 +29,7 @@ function LiveKitVideoPlayer({
     if (hasPlayedRef.current) return;
 
     try {
-      const el = videoTrack.attach();
+      const el = videoTrack.attach() as HTMLVideoElement;
       el.style.width = '100%';
       el.style.height = '100%';
       el.style.objectFit = 'cover';

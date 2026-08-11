@@ -119,17 +119,14 @@ export async function quietRefreshGiftProfile(userId: string) {
 }
 
 // Calculate discount based on trollmonds balance
-// 10% discount per 100 trollmonds (e.g., 200 trollmonds = 20% off)
+// Flat 10% discount when sender has >= 100 trollmonds
 export function getTrollmondDiscount(trollmonds: number): number {
-  // Every 100 trollmonds gives 10% discount
-  const discountPercent = Math.floor(trollmonds / 100) * 10;
-  // Cap at 100%
-  return Math.min(discountPercent, 100);
+  return trollmonds >= 100 ? 10 : 0;
 }
 
 // Calculate how many trollmonds will be deducted per gift
+// 100 trollmonds deducted per gift when sender has >= 100 trollmonds
 export function getTrollmondDeduction(trollmonds: number): number {
-  // 100 trollmonds deducted per gift sent (regardless of gift size)
   return trollmonds >= 100 ? 100 : 0;
 }
 
@@ -139,6 +136,12 @@ export function getDiscountedPrice(basePrice: number, discountPercent: number): 
 }
 
 export interface GiftItem {
+  animation_url: string;
+  videoUrl: any;
+  video_url: any;
+  animation_duration_ms: number;
+  sound_url: string;
+  is_fullscreen: boolean;
   id: string;
   name: string;
   icon: string;
@@ -354,15 +357,15 @@ const sendGift = useCallback(async (gift: GiftItem, options?: SendGiftOptions): 
        
        const totalGiftAmount = gift.coinCost * quantity;
 
-       if (import.meta.env.DEV) console.log('[useGiftSystem] About to call send_gift_in_stream RPC', {
-         p_sender_id: user.id,
-         p_receiver_id: finalRecipientId,
-         p_stream_id: streamId || null,
-         p_gift_id: gift.id,
-         p_quantity: quantity,
-         p_metadata: { txn_key: txnKey, trollmond_coins_back_enabled: TROLLMOND_CASHBACK_ENABLED },
-         finalGiftCoinAmount: totalGiftAmount
-       });
+        if (import.meta.env.DEV) console.log('[useGiftSystem] About to call send_gift_in_stream RPC', {
+          p_sender_id: user.id,
+          p_receiver_id: finalRecipientId,
+          p_stream_id: streamId || null,
+          p_gift_id: gift.id,
+          p_quantity: quantity,
+          p_metadata: { txn_key: txnKey, trollmond_coins_back_enabled: TROLLMOND_CASHBACK_ENABLED },
+          finalGiftCoinAmount: totalGiftAmount
+        });
 
         console.log('[GiftSystem] RPC call:', {
           p_sender_id: user.id,
@@ -500,7 +503,11 @@ const sendGift = useCallback(async (gift: GiftItem, options?: SendGiftOptions): 
               gift_slug: gift.slug,
               gift_name: gift.name,
               gift_icon: giftIcon,
-              animation_type: gift.animationType,
+                animation_type: gift.animationType,
+                animation_url: gift.animationUrl || gift.animation_url || gift.videoUrl || gift.video_url || null,
+                animation_duration_ms: gift.animationDurationMs || gift.animation_duration_ms || null,
+                sound_url: gift.soundUrl || gift.sound_url || null,
+                display_mode: (gift.isFullscreen || gift.is_fullscreen) ? 'full_screen' : 'recipient_box',
               amount: gift.coinCost * quantity,
               quantity: quantity,
               currency_used: data.currency_used,

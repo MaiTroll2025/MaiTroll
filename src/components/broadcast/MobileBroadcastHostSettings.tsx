@@ -9,7 +9,7 @@ import {
   Camera,
   Gift,
   Share2,
-  Ticket,
+  Mail,
   Power,
   Sparkles,
   Megaphone,
@@ -18,6 +18,7 @@ import {
   Coins,
   UserPlus,
   Circle,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -29,8 +30,8 @@ interface MobileBroadcastHostSettingsProps {
   isCamOn: boolean;
   isLive: boolean;
   hasRgbEffect: boolean;
-  areSeatsLocked: boolean;
-  openStagePassCount: number;
+  isChatLocked: boolean;
+  unreadMessageCount: number;
 
   // Actions
   onToggleMic: () => void;
@@ -38,7 +39,7 @@ interface MobileBroadcastHostSettingsProps {
   onFlipCamera: () => void;
   onGift: () => void;
   onShare: () => void;
-  onOpenSeats: () => void;
+  onOpenMessage: () => void;
   onEndStream: () => void;
   onOpenCoinStore: () => void;
   onInviteFollowers: () => void;
@@ -46,8 +47,7 @@ interface MobileBroadcastHostSettingsProps {
   onTextPopup?: () => void;
   onAssignOfficer?: () => void;
   onPayOfficers?: () => void;
-  onSeat?: () => void;
-  onToggleSeatsLock?: () => void;
+  onToggleChatLock?: () => void;
   isRecording?: boolean;
   onToggleRecord?: () => void;
 }
@@ -150,14 +150,14 @@ export default function MobileBroadcastHostSettings({
   isCamOn,
   isLive,
   hasRgbEffect,
-  areSeatsLocked,
-  openStagePassCount,
+  isChatLocked,
+  unreadMessageCount,
   onToggleMic,
   onToggleCamera,
   onFlipCamera,
   onGift,
   onShare,
-  onOpenSeats,
+  onOpenMessage,
   onEndStream,
   onOpenCoinStore,
   onInviteFollowers,
@@ -165,8 +165,7 @@ export default function MobileBroadcastHostSettings({
   onTextPopup,
   onAssignOfficer,
   onPayOfficers,
-  onSeat,
-  onToggleSeatsLock,
+  onToggleChatLock,
   isRecording = false,
   onToggleRecord,
 }: MobileBroadcastHostSettingsProps) {
@@ -229,13 +228,13 @@ export default function MobileBroadcastHostSettings({
       action: onShare,
     },
     {
-      id: 'seats',
-      label: 'Seats',
-      icon: Ticket,
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/15',
-      borderColor: 'border-purple-400/30',
-      action: () => setActivePopup('seats'),
+      id: 'message',
+      label: 'Messages',
+      icon: MessageSquare,
+      color: 'text-cyan-400',
+      bgColor: 'bg-cyan-500/15',
+      borderColor: 'border-cyan-400/30',
+      action: () => setActivePopup('message'),
       hasPopup: true,
     },
     {
@@ -407,12 +406,12 @@ export default function MobileBroadcastHostSettings({
                     <span className="text-[10px] font-bold text-white/80 leading-tight text-center">
                       {item.label}
                     </span>
-                    {/* Badge for seats count */}
-                    {item.id === 'seats' && openStagePassCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-purple-500 px-1 text-[8px] font-black text-white">
-                        {openStagePassCount}
-                      </span>
-                    )}
+                     {/* Badge for message count */}
+                     {item.id === 'message' && unreadMessageCount > 0 && (
+                       <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-500 px-1 text-[8px] font-black text-white">
+                         {unreadMessageCount}
+                       </span>
+                     )}
                   </button>
                 ))}
               </div>
@@ -455,34 +454,34 @@ export default function MobileBroadcastHostSettings({
         </SettingsSubPopup>
       )}
 
-      {/* Seats Popup */}
-      {activePopup === 'seats' && (
+      {/* Message Popup */}
+      {activePopup === 'message' && (
         <SettingsSubPopup
-          title="Seats"
-          icon={Ticket}
-          color="bg-purple-500/20"
+          title="Messages"
+          icon={Mail}
+          color="bg-cyan-500/20"
           onClose={closePopup}
         >
           <div className="space-y-3">
             <button
-              onClick={() => { onOpenSeats(); closePopup(); }}
-              className="flex w-full items-center gap-3 rounded-xl border border-purple-400/30 bg-purple-500/10 px-4 py-3 text-purple-300 transition-all active:scale-[0.98]"
+              onClick={() => { onOpenMessage(); closePopup(); }}
+              className="flex w-full items-center gap-3 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-3 text-cyan-300 transition-all active:scale-[0.98]"
             >
-              <Ticket className="h-5 w-5" />
-              <span className="text-sm font-bold">Manage Seats</span>
+              <Mail className="h-5 w-5" />
+              <span className="text-sm font-bold">Open Messages</span>
             </button>
-            {onToggleSeatsLock && (
+            {onToggleChatLock && (
               <button
-                onClick={() => { onToggleSeatsLock(); closePopup(); }}
+                onClick={() => { onToggleChatLock(); closePopup(); }}
                 className={cn(
                   'flex w-full items-center gap-3 rounded-xl border px-4 py-3 transition-all active:scale-[0.98]',
-                  areSeatsLocked
+                  isChatLocked
                     ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'
                     : 'border-amber-400/30 bg-amber-500/10 text-amber-300'
                 )}
               >
-                <Users className="h-5 w-5" />
-                <span className="text-sm font-bold">{areSeatsLocked ? 'Unlock Seats' : 'Lock Seats'}</span>
+                <ShieldCheck className="h-5 w-5" />
+                <span className="text-sm font-bold">{isChatLocked ? 'Unlock Chat' : 'Lock Chat'}</span>
               </button>
             )}
           </div>
@@ -541,15 +540,6 @@ export default function MobileBroadcastHostSettings({
               >
                 <Coins className="h-5 w-5" />
                 <span className="text-sm font-bold">Pay Broad Officers</span>
-              </button>
-            )}
-            {onSeat && (
-              <button
-                onClick={() => { onSeat(); closePopup(); }}
-                className="flex w-full items-center gap-3 rounded-xl border border-purple-400/30 bg-purple-500/10 px-4 py-3 text-purple-300 transition-all active:scale-[0.98]"
-              >
-                <Ticket className="h-5 w-5" />
-                <span className="text-sm font-bold">Seat</span>
               </button>
             )}
           </div>

@@ -62,6 +62,7 @@ export type CoinTransactionType =
   | 'reward'
   | 'lucky_gift_win'
   | 'troll_town_purchase'
+  | 'family_gift'
   | 'frame_purchase'
   | 'troll_town_sale'
   | 'troll_town_upgrade'

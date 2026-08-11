@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getContractTemplates } from '../lib/tromail';
+import { getContractTemplates, getContractTemplateById } from '../lib/tromail';
 
 export const useGetContractTemplates = () => {
   const queryClient = useQueryClient();

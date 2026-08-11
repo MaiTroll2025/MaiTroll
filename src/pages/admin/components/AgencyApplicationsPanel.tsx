@@ -152,9 +152,9 @@ export default function AgencyApplicationsPanel() {
 
   const handleApproveConfirm = async (notes: string) => {
     if (!modalState) return;
-    setProcessingId(modalState.application.id);
+    setProcessingId((modalState.application as any).id);
     try {
-      await approve(modalState.application.id, notes);
+      await approve((modalState.application as any).id, notes);
       toast.success('Application approved successfully');
       setModalState(null);
     } catch (err) {
@@ -166,9 +166,9 @@ export default function AgencyApplicationsPanel() {
 
   const handleRejectConfirm = async (reason: string) => {
     if (!modalState) return;
-    setProcessingId(modalState.application.id);
+    setProcessingId((modalState.application as any).id);
     try {
-      await reject(modalState.application.id, reason);
+      await reject((modalState.application as any).id, reason);
       toast.success('Application rejected');
       setModalState(null);
     } catch (err) {

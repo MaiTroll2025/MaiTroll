@@ -11,6 +11,9 @@ export interface BroadcastViewerCapState {
   // Start cap settings
   startCapEnabled: boolean;
   startCapMax: number;
+  // Seat cap settings
+  seatCapEnabled: boolean;
+  seatCapMax: number;
   // Master override
   allRestrictionsDisabled: boolean;
   // Loading
@@ -23,7 +26,9 @@ export function useBroadcastViewerCap() {
     viewerCapMax: 20,
     viewerCapHours: 24,
     startCapEnabled: false,
-    startCapMax: 25,
+    startCapMax: 2,
+    seatCapEnabled: true,
+    seatCapMax: 2,
     allRestrictionsDisabled: false,
     loading: true,
   });
@@ -70,6 +75,8 @@ export function useBroadcastViewerCap() {
           'broadcast_viewer_cap_hours',
           'broadcast_start_cap_enabled',
           'broadcast_start_cap_max',
+          'broadcast_seat_cap_enabled',
+          'broadcast_seat_cap_max',
           'broadcast_all_restrictions_disabled',
         ]);
 
@@ -90,7 +97,9 @@ export function useBroadcastViewerCap() {
           viewerCapMax: Number(map.broadcast_viewer_cap_max?.value ?? 20),
           viewerCapHours: Number(map.broadcast_viewer_cap_hours?.value ?? 24),
           startCapEnabled: map.broadcast_start_cap_enabled?.enabled === true,
-          startCapMax: Number(map.broadcast_start_cap_max?.value ?? 25),
+          startCapMax: Number(map.broadcast_start_cap_max?.value ?? 2),
+          seatCapEnabled: map.broadcast_seat_cap_enabled?.enabled === true,
+          seatCapMax: Number(map.broadcast_seat_cap_max?.value ?? 2),
           allRestrictionsDisabled: map.broadcast_all_restrictions_disabled?.enabled === true,
           loading: false,
         }));
@@ -113,7 +122,7 @@ export function useBroadcastViewerCap() {
           event: '*',
           schema: 'public',
           table: 'admin_settings',
-          filter: 'setting_key=in.(broadcast_viewer_cap_enabled,broadcast_viewer_cap_max,broadcast_viewer_cap_hours,broadcast_start_cap_enabled,broadcast_start_cap_max,broadcast_all_restrictions_disabled)',
+           filter: 'setting_key=in.(broadcast_viewer_cap_enabled,broadcast_viewer_cap_max,broadcast_viewer_cap_hours,broadcast_start_cap_enabled,broadcast_start_cap_max,broadcast_seat_cap_enabled,broadcast_seat_cap_max,broadcast_all_restrictions_disabled)',
         },
         () => {
           // Re-fetch all settings on any change
@@ -262,6 +271,54 @@ export function useBroadcastViewerCap() {
     [state.allRestrictionsDisabled, state.viewerCapEnabled, state.viewerCapMax],
   );
 
+  // Toggle seat cap
+  const setSeatCapEnabled = useCallback(
+    async (enabled: boolean) => {
+      if (!isAdmin) return false;
+      try {
+        const { error } = await supabase
+          .from('admin_settings')
+          .update({
+            setting_value: JSON.stringify({ enabled }),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('setting_key', 'broadcast_seat_cap_enabled');
+
+        if (error) throw error;
+        setState((prev) => ({ ...prev, seatCapEnabled: enabled }));
+        return true;
+      } catch (err) {
+        console.error('[useBroadcastViewerCap] setSeatCapEnabled error:', err);
+        return false;
+      }
+    },
+    [isAdmin],
+  );
+
+  // Set seat cap max
+  const setSeatCapMax = useCallback(
+    async (value: number) => {
+      if (!isAdmin) return false;
+      try {
+        const { error } = await supabase
+          .from('admin_settings')
+          .update({
+            setting_value: JSON.stringify({ value }),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('setting_key', 'broadcast_seat_cap_max');
+
+        if (error) throw error;
+        setState((prev) => ({ ...prev, seatCapMax: value }));
+        return true;
+      } catch (err) {
+        console.error('[useBroadcastViewerCap] setSeatCapMax error:', err);
+        return false;
+      }
+    },
+    [isAdmin],
+  );
+
   // Structured view of the start cap for UI display/early feedback.
   const startCap = useMemo(
     () => ({
@@ -271,14 +328,26 @@ export function useBroadcastViewerCap() {
     [state.startCapEnabled, state.allRestrictionsDisabled, state.startCapMax],
   );
 
+  // Structured view of the seat cap for UI display/early feedback.
+  const seatCap = useMemo(
+    () => ({
+      enabled: state.seatCapEnabled && !state.allRestrictionsDisabled,
+      max: state.seatCapMax,
+    }),
+    [state.seatCapEnabled, state.allRestrictionsDisabled, state.seatCapMax],
+  );
+
   return {
     ...state,
     startCap,
+    seatCap,
     isAdmin,
     setViewerCapEnabled,
     setViewerCapMax,
     setStartCapEnabled,
     setStartCapMax,
+    setSeatCapEnabled,
+    setSeatCapMax,
     setAllRestrictionsDisabled,
     isStreamViewerCapped,
   };

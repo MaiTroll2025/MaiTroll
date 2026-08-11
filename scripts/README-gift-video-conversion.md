@@ -60,11 +60,21 @@ Options:
 Uploads converted `.webm` files to Supabase Storage and updates `gift_items.animation_url`.
 
 ```bash
-node scripts/upload-gift-videos-to-supabase.js [--dry-run]
+node scripts/upload-gift-videos-to-supabase.js [--input-dir <path>] [--dry-run]
 ```
 
 Options:
+- `--input-dir <path>` - Read gift video files from a custom local directory instead of `public/gift-videos`
 - `--dry-run` - Preview what would be uploaded without making changes
+
+Environment variables:
+- `GIFT_VIDEO_INPUT_DIR` - Optional local directory path for gift videos
+
+Example (Windows local asset folder):
+
+```bash
+node scripts/upload-gift-videos-to-supabase.js --input-dir "C:\\Users\\kainm\\Videos\\Gifts" --dry-run
+```
 
 ## FFmpeg Settings
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Upload, Film, Type, Sparkles, AlertTriangle } from 'lucide-react'
 import { uploadTreelzVideo, checkUploadBan } from '@/services/treelzService'
 import { useAuthStore } from '@/lib/store'
+import { moderation } from '@/services/maitrollModeration'
 import { toast } from 'sonner'
 
 const MAX_FILE_SIZE = 250 * 1024 * 1024
@@ -64,6 +65,13 @@ export default function TreelzUploadPage() {
     setUploading(true)
     setProgress(0)
     try {
+      // Canonical moderation check for caption
+      const modResult = await moderation.checkContent(user.id, caption, 'treelz_caption');
+      if (!modResult.allowed) {
+        toast.error(modResult.message || 'That caption violates Mai Troll\'s chat rules and was not sent.');
+        setUploading(false)
+        return
+      }
       await uploadTreelzVideo(file, '', caption, user.id, setProgress)
       setUploadSuccess(true)
       toast.success('Treelz uploaded!')

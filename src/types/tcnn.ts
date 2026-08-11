@@ -11,6 +11,7 @@ export type ArticleCategory = 'news' | 'sports' | 'entertainment' | 'politics' |
 export interface TCNNArticle {
   id: string;
   title: string;
+  headline?: string;
   slug: string;
   excerpt: string;
   content: string;
@@ -26,6 +27,7 @@ export interface TCNNArticle {
   category: ArticleCategory;
   tags: string[];
   isBreaking: boolean;
+  is_featured?: boolean;
   viewCount: number;
   tipCount: number;
   tipTotalCoins: number;

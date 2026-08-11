@@ -187,8 +187,8 @@ export default function NightWatchDashboard() {
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: { frameRate: 30 },
           audio: true,
-          selfBrowserSurface: 'include',
-        })
+          ...('selfBrowserSurface' in (navigator.mediaDevices.getSupportedConstraints ? {} : {}) ? { selfBrowserSurface: 'include' } : {}),
+        } as any)
         return stream
       } catch (err: any) {
         console.warn('[NightWatch] Screen capture denied or failed:', err?.message)

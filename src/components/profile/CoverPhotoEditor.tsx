@@ -29,6 +29,42 @@ function createImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+// Convert canvas to a Blob, falling back to dataURL→Blob if toBlob returns null
+// (toBlob can return null in Safari / some mobile browsers, which previously
+// caused "Failed to create blob" errors).
+function canvasToBlobFallback(
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality: number
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (result) => {
+        if (result) {
+          resolve(result);
+          return;
+        }
+        try {
+          const dataUrl = canvas.toDataURL(type, quality);
+          const arr = dataUrl.split(',');
+          const mime = arr[0].match(/:(.*?);/)?.[1] || type;
+          const bstr = atob(arr[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+          }
+          resolve(new Blob([u8arr], { type: mime }));
+        } catch (err) {
+          reject(err instanceof Error ? err : new Error('Failed to create image blob'));
+        }
+      },
+      type,
+      quality
+    );
+  });
+}
+
 async function autoCropCover(
   file: File,
   targetWidth: number = DEFAULT_WIDTH,
@@ -78,21 +114,9 @@ async function autoCropCover(
       image,
       sx, sy, sWidth, sHeight,   // source rectangle (cropped)
       0, 0, targetWidth, targetHeight  // destination (full target size)
-    );
+);
 
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (result) => {
-          if (!result) {
-            reject(new Error('Failed to create image blob'));
-            return;
-          }
-          resolve(result);
-        },
-        OUTPUT_TYPE,
-        quality
-      );
-    });
+    const blob = await canvasToBlobFallback(canvas, OUTPUT_TYPE, quality);
 
     const outputFile = new File([blob], `cover-${Date.now()}.jpg`, {
       type: OUTPUT_TYPE,

@@ -3,6 +3,7 @@
 // ============================================================
 
 import { supabase } from '@/lib/supabase';
+import { moderation } from '@/services/maitrollModeration';
 import type {
   UtromailThread, UtromailMessage, UtromailAttachment, UtromailBlock,
   UtromailRequest, UtromailReport, UtromailNotification, UtromailAccount,
@@ -247,6 +248,33 @@ export const getThread = async (threadId: string): Promise<UtromailThread | null
 };
 
 // ============================================================
+export const findOrCreateDirectThread = async (userId: string, recipientId: string): Promise<UtromailThread> => {
+  const { data: existingThread } = await supabase.rpc('find_utromail_thread', {
+    user_a: userId,
+    user_b: recipientId,
+  });
+
+  if (existingThread) {
+    return getThread(existingThread) as Promise<UtromailThread>;
+  }
+
+  const { data: newThread, error: threadError } = await supabase
+    .from('utromail_threads')
+    .insert({ subject: 'MaiTroll System', created_by: userId })
+    .select('id')
+    .single();
+
+  if (threadError) throw threadError;
+
+  await supabase.from('utromail_thread_members').insert([
+    { thread_id: newThread.id, user_id: userId, folder: 'sent' },
+    { thread_id: newThread.id, user_id: userId, folder: 'inbox' },
+    { thread_id: newThread.id, user_id: recipientId, folder: 'inbox' },
+  ]);
+
+  return getThread(newThread.id) as Promise<UtromailThread>;
+};
+
 // MESSAGES
 // ============================================================
 export const getThreadMessages = async (threadId: string): Promise<UtromailMessage[]> => {
@@ -305,7 +333,7 @@ export const sendMessage = async (params: {
 
   if (import.meta.env.DEV) console.log('[sendMessage] params:', { senderId: params.senderId, recipientId: params.recipientId });
 
-  // Check permission
+   // Check permission
   if (params.recipientId) {
     const { data: canSend, error: rpcError } = await supabase.rpc('can_send_utromail', {
       sender_id: params.senderId,
@@ -315,6 +343,12 @@ export const sendMessage = async (params: {
     if (canSend === false) {
       throw new Error('You cannot send mail to this user. They may have blocked you or restricted their privacy settings.');
     }
+  }
+
+  // Canonical moderation check
+  const modResult = await moderation.checkContent(params.senderId, params.body, 'utromail');
+  if (!modResult.allowed) {
+    throw new Error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
   }
 
   // Find or create thread. Promo cards and system mail should reuse the same
@@ -614,3 +648,4 @@ export const reportMessage = async (reportedId: string, threadId: string, reason
   });
   if (error) throw error;
 };
+

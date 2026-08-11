@@ -28,6 +28,7 @@ export interface StorageUsage {
   tierEndGB: number
   monthlyFee: number
   percentage: number
+  storage_percentage?: number
   status: 'normal' | 'warning' | 'exceeded'
   plan: StoragePlan | null
   hasPlan: boolean

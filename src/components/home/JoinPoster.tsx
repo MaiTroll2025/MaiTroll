@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { X, Sparkles, Download } from 'lucide-react'
+import { X, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useInstallPrompt } from '../../pwa/useInstallPrompt'
-import { isStandalone, isIos } from '../../pwa/install'
-import IosInstallModal from '../IosInstallModal'
+import { isStandalone } from '../../pwa/install'
 
 export default function JoinPoster() {
   const [open, setOpen] = useState(false)
-  const [showIosInstallModal, setShowIosInstallModal] = useState(false)
   const navigate = useNavigate()
-  const { canPromptInstall, promptInstall } = useInstallPrompt()
-  const [isPwaInstalled, setIsPwaInstalled] = useState(false)
 
   useEffect(() => {
     try {
@@ -19,29 +14,15 @@ export default function JoinPoster() {
         sessionStorage.setItem('join_poster_seen', '1')
       }
     } catch {}
-
-    setIsPwaInstalled(isStandalone())
   }, [])
 
   useEffect(() => {
     if (isStandalone()) {
       setOpen(false)
     }
-  }, [isStandalone])
-
-  const handleInstall = async () => {
-    if (canPromptInstall) {
-      const result = await promptInstall()
-      if (result === 'accepted') {
-        setShowIosInstallModal(false)
-      }
-    } else if (isIos()) {
-      setShowIosInstallModal(true)
-    }
-  }
+  }, [])
 
   if (!open) {
-    const showInstallButton = !isPwaInstalled && (canPromptInstall || isIos());
     return (
       <button
         aria-label="Why Join"
@@ -50,9 +31,6 @@ export default function JoinPoster() {
       >
         <div className="relative">
           <Sparkles className="w-6 h-6" />
-          {showInstallButton && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full"></div>
-          )}
         </div>
       </button>
     )
@@ -96,24 +74,6 @@ export default function JoinPoster() {
               <li className="text-emerald-300 font-semibold">XXXX TROLL ON AND DONT GET ARRESTED XXXX</li>
             </ul>
 
-            {!isPwaInstalled && (
-              <div className="mt-4 p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
-                <div className="flex items-center gap-2 text-emerald-300 font-semibold text-sm mb-2">
-                  <Download className="w-4 h-4" />
-                  Install Official App
-                </div>
-                <p className="text-xs text-slate-300 mb-3">
-                  Get the Mai Troll app for the best experience with push notifications and instant loading.
-                </p>
-                <button
-                  onClick={handleInstall}
-                  className="w-full rounded-md bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-bold text-white hover:from-emerald-400 hover:to-teal-400 transition"
-                >
-                  {canPromptInstall ? 'Install App Now' : isIos() ? 'View Installation Instructions' : 'Get App'}
-                </button>
-              </div>
-            )}
-
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 onClick={() => navigate('/join')}
@@ -131,12 +91,6 @@ export default function JoinPoster() {
           </div>
         </div>
       </div>
-
-      <IosInstallModal 
-        isOpen={showIosInstallModal} 
-        onClose={() => setShowIosInstallModal(false)}
-        enableDontShowAgain={false}
-      />
     </div>
   )
 }

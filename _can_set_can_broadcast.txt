@@ -1,0 +1,131 @@
+﻿-- Function: can_set_to_user
+CREATE OR REPLACE FUNCTION public.can_set_to_user(
+  p_actor_id uuid,
+  p_target_id uuid
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_actor record;
+  v_target record;
+BEGIN
+  -- Allow service_role to bypass (used by edge functions)
+  IF auth.role() = 'service_role' THEN
+    RETURN jsonb_build_object('allowed', true);
+  END IF;
+
+  -- Load actor profile
+  SELECT role, is_admin, is_lead_officer, is_troll_officer, is_secretary
+  INTO v_actor
+  FROM user_profiles
+  WHERE id = p_actor_id;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('allowed', false, 'reason', 'Actor not found');
+  END IF;
+
+  -- Only Lead Troll Officer, Admin, or Secretary can set users to user role
+  IF NOT (
+    v_actor.is_admin = true
+    OR v_actor.role IN ('admin', 'superadmin', 'secretary')
+    OR v_actor.is_lead_officer = true
+    OR v_actor.role = 'lead_troll_officer'
+    OR v_actor.is_secretary = true
+  ) THEN
+    RETURN jsonb_build_object('allowed', false, 'reason', 'Unauthorized: Lead Officer, Admin, or Secretary role required');
+  END IF;
+
+  -- Load target profile
+  SELECT role, is_admin, is_lead_officer, is_troll_officer, is_secretary
+  INTO v_target
+  FROM user_profiles
+  WHERE id = p_target_id;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('allowed', false, 'reason', 'Target user not found');
+  END IF;
+
+  -- Cannot demote admin/CEO/owner
+  IF v_target.is_admin = true
+    OR v_target.role IN ('admin', 'superadmin', 'ceo', 'owner')
+    OR v_target.is_lead_officer = true
+    OR v_target.role = 'lead_troll_officer'
+  THEN
+    RETURN jsonb_build_object('allowed', false, 'reason', 'Cannot demote elevated staff roles');
+  END IF;
+
+  RETURN jsonb_build_object('allowed', true);
+END;
+$$;
+
+-- Function: can_user_broadcast
+CREATE OR REPLACE FUNCTION public.can_user_broadcast(p_user_id UUID)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_license_status TEXT;
+  v_has_restriction BOOLEAN;
+BEGIN
+  SELECT drivers_license_status INTO v_license_status
+  FROM public.user_profiles
+  WHERE id = p_user_id;
+
+  IF v_license_status IS NULL OR v_license_status = 'none' OR v_license_status = 'suspended' THEN
+    RETURN jsonb_build_object('can_broadcast', false);
+  END IF;
+
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_broadcast_restrictions
+    WHERE user_id = p_user_id AND status = 'active'
+  ) INTO v_has_restriction;
+
+  IF v_has_restriction THEN
+    RETURN jsonb_build_object('can_broadcast', false);
+  END IF;
+
+  RETURN jsonb_build_object('can_broadcast', true);
+END;
+$$;
+
+-- Function: cancel_battle_challenge
+CREATE OR REPLACE FUNCTION public.cancel_battle_challenge(
+    p_battle_id UUID,
+    p_user_id UUID
+) RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_battle RECORD;
+    v_challenger_owner UUID;
+    v_opponent_owner UUID;
+BEGIN
+    IF auth.uid() IS NULL OR auth.uid() <> p_user_id THEN
+        RETURN jsonb_build_object('success', false, 'message', 'Unauthorized');
+    END IF;
+
+    SELECT * INTO v_battle
+    FROM public.battles
+    WHERE id = p_battle_id;
+
+    IF v_battle IS NULL OR v_battle.status <> 'pending' THEN
+        RETURN jsonb_build_object('success', false, 'message', 'Battle not pending');
+    END IF;
+
+    SELECT user_id INTO v_challenger_owner FROM public.streams WHERE id = v_battle.challenger_stream_id;
+    SELECT user_id INTO v_opponent_owner FROM public.streams WHERE id = v_battle.opponent_stream_id;
+
+    IF p_user_id IS DISTINCT FROM v_challenger_owner AND p_user_id IS DISTINCT FROM v_opponent_owner THEN
+        RETURN jsonb_build_object('success', false, 'message', 'Not a participant');
+    END IF;
+
+    UPDATE public.battles
+    SET status = 'ended', ended_at = NOW()
+    WHERE id = p_battle_id;
+
+    RETURN jsonb_build_object('success', true);

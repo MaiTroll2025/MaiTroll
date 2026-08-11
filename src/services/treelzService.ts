@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { moderation } from '@/services/maitrollModeration'
 import type {
   TreelzPost,
   TreelzComment,
@@ -263,6 +264,14 @@ export async function uploadTreelzVideo(
     data: { publicUrl },
   } = supabase.storage.from('treelz-videos').getPublicUrl(path)
 
+  // Canonical moderation check for caption
+  if (caption.trim()) {
+    const modResult = await moderation.checkContent(userId, caption.trim(), 'treelz_caption');
+    if (!modResult.allowed) {
+      throw new Error(modResult.message || 'That caption violates Mai Troll\'s chat rules and was not sent.');
+    }
+  }
+
   const { data: post, error } = await supabase
     .from('treelz_posts')
     .insert({
@@ -458,8 +467,10 @@ export async function getTreelzAnalytics(postId: string): Promise<TreelzAnalytic
     .single()
 
   if (error) throw error
+  const d = data as any
   return {
-    post_id: data.id,
+    id: d.id,
+    post_id: d.id,
     views: data.views_count || 0,
     watch_time_seconds: data.watch_time_seconds || 0,
     completion_rate: data.completion_rate || 0,

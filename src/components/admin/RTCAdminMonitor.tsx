@@ -23,6 +23,7 @@ interface LiveStream {
   is_live: boolean | null;
   status: string | null;
   started_at: string | null;
+  ended_at: string | null;
   category: string | null;
   agora_channel: string | null;
 }
@@ -202,7 +203,25 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [monitorPos, setMonitorPos] = useState<{ top: number; left: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+  const dragMovedRef = useRef(false);
   const monitorPosLoadedRef = useRef(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Floating button drag state
+  const [floatBtnPos, setFloatBtnPos] = useState<{ top: number; left: number } | null>(null);
+  const [isFloatBtnDragging, setIsFloatBtnDragging] = useState(false);
+  const floatBtnDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+  const floatBtnDragMovedRef = useRef(false);
+  const floatBtnPosLoadedRef = useRef(false);
+  const floatBtnRef = useRef<HTMLDivElement>(null);
+
+  // Mobile mini bubble state
+  const [mobileMiniOpen, setMobileMiniOpen] = useState(false);
+  const [mobileMiniPos, setMobileMiniPos] = useState<{ top: number; left: number } | null>(null);
+  const [isMobileDragging, setIsMobileDragging] = useState(false);
+  const mobileDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+  const mobileDragMovedRef = useRef(false);
+  const mobilePosLoadedRef = useRef(false);
 
   const [stats, setStats] = useState<RTCStats>({
     totalMinutes: 0,
@@ -335,7 +354,6 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
   }, [now, stats.liveStreamDetails]);
 
   const totalViewers = useMemo(() => streamDetailsWithDuration.reduce((sum, s) => sum + s.viewers, 0), [streamDetailsWithDuration]);
-  const totalMinutes = useMemo(() => Math.floor(streamDetailsWithDuration.reduce((sum, s) => sum + (s.duration || 0), 0) / 60), [streamDetailsWithDuration]);
 
   const analyticsSummary = useMemo(() => {
     const base = streamAnalyticsRows.reduce(
@@ -373,16 +391,18 @@ const fetchRTCStats = useCallback(async () => {
      if (!isStaff) return;
      setIsLoading(true);
      try {
-       const { data: streams, error: streamsError } = await supabase
-         .from('streams')
-         .select('id, broadcaster_id, user_id, title, is_live, status, started_at, category, agora_channel')
-         .or('is_live.eq.true,status.eq.live')
-         .order('started_at', { ascending: false });
+        const { data: allStreamsData, error: streamsError } = await supabase
+          .from('streams')
+          .select('id, broadcaster_id, user_id, title, is_live, status, started_at, ended_at, category, agora_channel')
+          .order('started_at', { ascending: false });
 
-       if (streamsError) throw streamsError;
+        if (streamsError) throw streamsError;
 
-       const currentTime = Date.now();
-       const liveStreams = ((streams || []) as LiveStream[]).slice(0, 10);
+        const currentTime = Date.now();
+        const allStreams = ((allStreamsData || []) as LiveStream[]);
+        const liveStreams = allStreams
+          .filter(s => s.is_live || s.status === 'live')
+          .slice(0, 10);
 
        const streamDetails = await Promise.all(
          liveStreams.map(async (stream) => {
@@ -425,14 +445,16 @@ const fetchRTCStats = useCallback(async () => {
        const rtcSessions = (sessions || []) as RTSSession[];
        const resetTime = rtcMinutesResetAt ? rtcMinutesResetAt.getTime() : 0;
 
-       const totalSeconds = rtcSessions.reduce((sum, session) => {
-         const sessionStart = session.started_at ? new Date(session.started_at).getTime() : 0;
-         if (sessionStart < resetTime) return sum;
-         if (session.is_active && session.started_at) {
-           return sum + Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000);
-         }
-         return sum + Number(session.duration_seconds || 0);
-       }, 0);
+        const totalSeconds = allStreams.reduce((sum, stream) => {
+          const streamStart = stream.started_at ? new Date(stream.started_at).getTime() : 0;
+          if (streamStart < resetTime || streamStart <= 0) return sum;
+
+          const streamEnd = stream.ended_at ? new Date(stream.ended_at).getTime() : currentTime;
+          const durationMs = streamEnd - streamStart;
+          if (durationMs <= 0) return sum;
+
+          return sum + Math.floor(durationMs / 1000);
+        }, 0);
 
        const { count: totalUsers } = await supabase.from('user_profiles').select('id', { count: 'exact', head: true });
 
@@ -1415,25 +1437,39 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     }, [isOpen])
 
     // Drag handlers
-    const handleMonitorDragStart = useCallback((e: React.MouseEvent) => {
+    const getEventCoords = (e: MouseEvent | TouchEvent) => {
+      if ('touches' in e && e.touches.length > 0) {
+        return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }
+      }
+      if ('changedTouches' in e && e.changedTouches.length > 0) {
+        return { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY }
+      }
+      return { clientX: (e as MouseEvent).clientX, clientY: (e as MouseEvent).clientY }
+    }
+
+    const handleMonitorDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
       if ((e.target as HTMLElement).closest('button, [role="button"], input, select, textarea')) return
-      const panel = (e.currentTarget as HTMLElement).closest('[data-rtc-monitor-panel]') as HTMLElement | null
+      const panel = panelRef.current
       if (!panel) return
       const rect = panel.getBoundingClientRect()
+      const coords = 'touches' in e ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }
       dragOffsetRef.current = {
-        dx: e.clientX - rect.left,
-        dy: e.clientY - rect.top,
+        dx: coords.clientX - rect.left,
+        dy: coords.clientY - rect.top,
       }
+      dragMovedRef.current = false
       setIsDragging(true)
       e.preventDefault()
     }, [])
 
-    const handleMonitorDragMove = useCallback((e: MouseEvent) => {
+    const handleMonitorDragMove = useCallback((e: MouseEvent | TouchEvent) => {
       if (!isDragging) return
+      dragMovedRef.current = true
+      const { clientX, clientY } = getEventCoords(e)
       const { dx, dy } = dragOffsetRef.current
       setMonitorPos({
-        top: Math.max(0, e.clientY - dy),
-        left: Math.max(0, Math.min(window.innerWidth - 320, e.clientX - dx)),
+        top: Math.max(0, clientY - dy),
+        left: Math.max(0, Math.min(window.innerWidth - 320, clientX - dx)),
       })
     }, [isDragging])
 
@@ -1451,13 +1487,165 @@ const openAction = useCallback((user: UserListItem, action: string) => {
 
     useEffect(() => {
       if (!isDragging) return
-      window.addEventListener('mousemove', handleMonitorDragMove)
-      window.addEventListener('mouseup', handleMonitorDragEnd)
+      const onMove = (e: MouseEvent | TouchEvent) => handleMonitorDragMove(e)
+      const onEnd = () => handleMonitorDragEnd()
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('touchmove', onMove, { passive: false })
+      window.addEventListener('mouseup', onEnd)
+      window.addEventListener('touchend', onEnd)
       return () => {
-        window.removeEventListener('mousemove', handleMonitorDragMove)
-        window.removeEventListener('mouseup', handleMonitorDragEnd)
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('touchmove', onMove)
+        window.removeEventListener('mouseup', onEnd)
+        window.removeEventListener('touchend', onEnd)
       }
     }, [isDragging, handleMonitorDragMove, handleMonitorDragEnd])
+
+    // Mobile mini bubble drag handlers
+    const handleMobileDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+      if ((e.target as HTMLElement).closest('button, [role="button"], input, select, textarea')) return
+      const bubble = (e.currentTarget as HTMLElement).closest('[data-mobile-mini-bubble]') as HTMLElement | null
+      if (!bubble) return
+      const rect = bubble.getBoundingClientRect()
+      const coords = 'touches' in e ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }
+      mobileDragOffsetRef.current = {
+        dx: coords.clientX - rect.left,
+        dy: coords.clientY - rect.top,
+      }
+      mobileDragMovedRef.current = false
+      setIsMobileDragging(true)
+      e.preventDefault()
+    }, [])
+
+    const handleMobileDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+      if (!isMobileDragging) return
+      mobileDragMovedRef.current = true
+      const { clientX, clientY } = getEventCoords(e)
+      const { dx, dy } = mobileDragOffsetRef.current
+      setMobileMiniPos({
+        top: Math.max(0, Math.min(window.innerHeight - 60, clientY - dy)),
+        left: Math.max(0, Math.min(window.innerWidth - 60, clientX - dx)),
+      })
+    }, [isMobileDragging])
+
+    const handleMobileDragEnd = useCallback(() => {
+      if (!isMobileDragging) return
+      setIsMobileDragging(false)
+      if (mobileMiniPos) {
+        try {
+          sessionStorage.setItem('rtc-mobile-mini-pos', JSON.stringify(mobileMiniPos))
+        } catch {
+          // silent
+        }
+      }
+    }, [isMobileDragging, mobileMiniPos])
+
+    useEffect(() => {
+      if (!isMobileDragging) return
+      const onMove = (e: MouseEvent | TouchEvent) => handleMobileDragMove(e)
+      const onEnd = () => handleMobileDragEnd()
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('touchmove', onMove, { passive: false })
+      window.addEventListener('mouseup', onEnd)
+      window.addEventListener('touchend', onEnd)
+      return () => {
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('touchmove', onMove)
+        window.removeEventListener('mouseup', onEnd)
+        window.removeEventListener('touchend', onEnd)
+      }
+    }, [isMobileDragging, handleMobileDragMove, handleMobileDragEnd])
+
+    // Floating button drag handlers
+    const handleFloatBtnDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+      const btn = floatBtnRef.current
+      if (!btn) return
+      const rect = btn.getBoundingClientRect()
+      const coords = 'touches' in e ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }
+      floatBtnDragOffsetRef.current = {
+        dx: coords.clientX - rect.left,
+        dy: coords.clientY - rect.top,
+      }
+      floatBtnDragMovedRef.current = false
+      setIsFloatBtnDragging(true)
+    }, [])
+
+    const handleFloatBtnDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+      if (!isFloatBtnDragging) return
+      floatBtnDragMovedRef.current = true
+      const { clientX, clientY } = getEventCoords(e)
+      const { dx, dy } = floatBtnDragOffsetRef.current
+      const btnW = floatBtnRef.current?.offsetWidth || 80
+      const btnH = floatBtnRef.current?.offsetHeight || 80
+      setFloatBtnPos({
+        top: Math.max(0, Math.min(window.innerHeight - btnH, clientY - dy)),
+        left: Math.max(0, Math.min(window.innerWidth - btnW, clientX - dx)),
+      })
+    }, [isFloatBtnDragging])
+
+    const handleFloatBtnDragEnd = useCallback(() => {
+      if (!isFloatBtnDragging) return
+      setIsFloatBtnDragging(false)
+      if (floatBtnPos) {
+        try {
+          sessionStorage.setItem('rtc-float-btn-pos', JSON.stringify(floatBtnPos))
+        } catch {
+          // silent
+        }
+      }
+    }, [isFloatBtnDragging, floatBtnPos])
+
+    useEffect(() => {
+      if (!isFloatBtnDragging) return
+      const onMove = (e: MouseEvent | TouchEvent) => handleFloatBtnDragMove(e)
+      const onEnd = () => handleFloatBtnDragEnd()
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('touchmove', onMove, { passive: false })
+      window.addEventListener('mouseup', onEnd)
+      window.addEventListener('touchend', onEnd)
+      return () => {
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('touchmove', onMove)
+        window.removeEventListener('mouseup', onEnd)
+        window.removeEventListener('touchend', onEnd)
+      }
+    }, [isFloatBtnDragging, handleFloatBtnDragMove, handleFloatBtnDragEnd])
+
+    // Load saved floating button position
+    useEffect(() => {
+      if (!floatBtnPosLoadedRef.current) {
+        floatBtnPosLoadedRef.current = true
+        try {
+          const saved = sessionStorage.getItem('rtc-float-btn-pos')
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            if (parsed && typeof parsed.top === 'number' && typeof parsed.left === 'number') {
+              setFloatBtnPos({ top: parsed.top, left: parsed.left })
+            }
+          }
+        } catch {
+          // use default position
+        }
+      }
+    }, [])
+
+    // Load saved mobile mini position
+    useEffect(() => {
+      if (!mobilePosLoadedRef.current) {
+        mobilePosLoadedRef.current = true
+        try {
+          const saved = sessionStorage.getItem('rtc-mobile-mini-pos')
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            if (parsed && typeof parsed.top === 'number' && typeof parsed.left === 'number') {
+              setMobileMiniPos({ top: parsed.top, left: parsed.left })
+            }
+          }
+        } catch {
+          // use default position
+        }
+      }
+    }, [])
 
     // Auto-open monitor on first security-relevant event (channel/session changes)
     // Does not re-open if user manually closed the panel
@@ -1512,6 +1700,12 @@ const openAction = useCallback((user: UserListItem, action: string) => {
         setIsOpen(true)
       }
     }, [isOpen])
+
+    const handleFloatBtnClick = useCallback(() => {
+      if (!floatBtnDragMovedRef.current) {
+        handleFloatingButtonClick()
+      }
+    }, [handleFloatingButtonClick])
 
     // Close dropdown when clicking outside or scrolling/resizing
     useEffect(() => {
@@ -1574,10 +1768,25 @@ const renderFloatingButton = () => {
                 : '';
 
       return (
-         <div className="fixed bottom-[160px] right-4 z-[100] flex flex-col gap-2 md:bottom-[200px]">
-            <button
-              type="button"
-              onClick={handleFloatingButtonClick}
+         <div
+           ref={floatBtnRef}
+           onMouseDown={handleFloatBtnDragStart}
+           onTouchStart={handleFloatBtnDragStart}
+           style={{
+             position: 'fixed',
+             top: floatBtnPos?.top ?? 'auto',
+             left: floatBtnPos?.left ?? 'auto',
+             bottom: floatBtnPos ? 'auto' : '160px',
+             right: floatBtnPos ? 'auto' : '16px',
+             zIndex: 100,
+             cursor: isFloatBtnDragging ? 'grabbing' : 'pointer',
+             userSelect: isFloatBtnDragging ? 'none' : 'auto',
+           }}
+           className="flex flex-col gap-2 md:bottom-[200px]"
+         >
+             <button
+               type="button"
+               onClick={handleFloatBtnClick}
              className={`flex ${buttonSize} items-center justify-center gap-1.5 rounded-full px-2.5 shadow-lg transition-all hover:scale-105 ${flashClass}`}
               style={{
                 backgroundColor: showErrorFlash
@@ -1704,7 +1913,7 @@ const renderRtcTab = () => (
          <StatCard label="Sessions" value={stats.activeSessions} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Clock className="h-3 w-3" />} />
          <StatCard label="Online" value={onlineCount} tone="border-green-500/20 bg-green-500/10 text-green-400" icon={<Activity className="h-3 w-3" />} />
          <StatCard label="Users" value={stats.totalUsers} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Users className="h-3 w-3" />} />
-         <StatCard label="Minutes" value={totalMinutes.toLocaleString()} tone="border-blue-500/20 bg-blue-500/10 text-blue-400" icon={<Clock className="h-3 w-3" />} />
+          <StatCard label="Minutes" value={stats.totalMinutes.toLocaleString()} tone="border-blue-500/20 bg-blue-500/10 text-blue-400" icon={<Clock className="h-3 w-3" />} />
        </div>
 
       <div className="border-t border-white/10 pt-2">
@@ -2861,7 +3070,9 @@ return (
         }}
       >
         <div
-          data-rtc-monitor-panel
+          ref={panelRef}
+          onMouseDown={handleMonitorDragStart}
+          onTouchStart={handleMonitorDragStart}
           style={{
             ...panelStyle,
             position: 'fixed',
@@ -2869,12 +3080,12 @@ return (
             width: '100%',
             maxWidth: '420px',
             cursor: isDragging ? 'grabbing' : 'default',
+            userSelect: isDragging ? 'none' : 'auto',
           }}
           className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0A0814] shadow-2xl shadow-black/60"
         >
           {/* Header — drag handle */}
           <div
-            onMouseDown={handleMonitorDragStart}
             className="flex cursor-grab items-center justify-between border-b border-white/10 bg-gradient-to-r from-blue-900/45 to-purple-900/45 px-3 py-2 select-none"
           >
             <div className="min-w-0">
@@ -2914,9 +3125,100 @@ return (
     );
   };
 
+  const renderMobileMiniBubble = () => {
+    if (!isMobileWidth || !isStaff) return null;
+
+    const bubbleSize = mobileMiniOpen ? 'h-10 w-10' : 'h-12 w-12';
+
+    return (
+      <div
+        data-mobile-mini-bubble
+        style={{
+          position: 'fixed',
+          top: mobileMiniPos?.top ?? 'auto',
+          left: mobileMiniPos?.left ?? 'auto',
+          bottom: mobileMiniPos ? 'auto' : '20px',
+          right: mobileMiniPos ? 'auto' : '16px',
+          zIndex: 100,
+        }}
+        className="flex flex-col items-center"
+      >
+        {mobileMiniOpen && (
+          <div className="mb-2 w-64 rounded-xl border border-white/10 bg-[#0A0814] p-3 shadow-xl">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Radio className="h-3 w-3 text-blue-400" />
+                <span className="text-xs font-bold text-white">RTC Monitor</span>
+              </div>
+              <button
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => setMobileMiniOpen(false)}
+                className="rounded-full p-1 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+                title="Close"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded bg-white/5 p-2 text-center">
+                <div className="text-lg font-bold text-red-400">{stats.liveStreams}</div>
+                <div className="text-[10px] text-gray-400">Live</div>
+              </div>
+              <div className="rounded bg-white/5 p-2 text-center">
+                <div className="text-lg font-bold text-cyan-400">{onlineCount}</div>
+                <div className="text-[10px] text-gray-400">Online</div>
+              </div>
+              <div className="rounded bg-white/5 p-2 text-center">
+                <div className="text-lg font-bold text-yellow-400">{stats.activeSessions}</div>
+                <div className="text-[10px] text-gray-400">Sessions</div>
+              </div>
+              <div className="rounded bg-white/5 p-2 text-center">
+                <div className="text-lg font-bold text-blue-400">{stats.totalMinutes}</div>
+                <div className="text-[10px] text-gray-400">Minutes</div>
+              </div>
+            </div>
+            {stats.liveStreamDetails.length > 0 && (
+              <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
+                {stats.liveStreamDetails.slice(0, 3).map(stream => (
+                  <div key={stream.id} className="flex items-center justify-between rounded bg-white/5 px-2 py-1">
+                    <span className="truncate text-[11px] text-white">{stream.title}</span>
+                    <span className="text-[10px] text-gray-400">{stream.viewers} viewers</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onMouseDown={handleMobileDragStart}
+          onTouchStart={handleMobileDragStart}
+          onClick={() => {
+            if (!mobileDragMovedRef.current) {
+              setMobileMiniOpen(prev => !prev);
+            }
+          }}
+          className={`flex ${bubbleSize} items-center justify-center rounded-full bg-blue-600 shadow-lg`}
+          style={{ cursor: isMobileDragging ? 'grabbing' : 'pointer' }}
+        >
+          <Monitor className="h-5 w-5 text-white" />
+          {stats.liveStreams > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+              {stats.liveStreams}
+            </span>
+          )}
+        </button>
+      </div>
+    );
+  };
+
     return (
       <>
         {renderFloatingButton()}
+
+        {renderMobileMiniBubble()}
 
         {isOpen && renderFullPageModal()}
 

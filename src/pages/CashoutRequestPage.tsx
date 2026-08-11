@@ -129,8 +129,9 @@ export default function CashoutRequestPage() {
       try {
         setLoading(true);
 
-        // Use cashout escrow balance only; free or non-cashout coins do not qualify.
-        const eligibleTotal = Math.max(0, (profile.cashout_coins || 0) - (profile.cashout_reserved_coins || 0));
+        // All troll coins are cashout-eligible.
+        // Available = troll_coins - cashout_reserved_coins (coins already reserved for pending payouts)
+        const eligibleTotal = Math.max(0, (profile.troll_coins || 0) - (profile.cashout_reserved_coins || 0));
         setEligibleCoins(eligibleTotal);
 
         setIsMaiPayPlus(profile.mai_pay_plus === true);

@@ -121,7 +121,7 @@ export default function TCNNViewerPage() {
         ...data,
         broadcaster: broadcaster ? { username: broadcaster.username, avatar_url: broadcaster.avatar_url } : undefined,
       });
-      setViewerCount(data.current_viewers || data.viewer_count || 0);
+      setViewerCount((data as any).current_viewers || (data as any).viewer_count || 0);
       setTotalLikes(data.total_likes || 0);
       setIsLoading(false);
 
@@ -326,9 +326,9 @@ export default function TCNNViewerPage() {
        return;
      }
 
-     setTotalLikes((prev) => Number(prev || 0) + 1);
+      setTotalLikes((prev) => Number(prev || 0) + 2);
 
-     pendingLikesRef.current += 1;
+      pendingLikesRef.current += 2;
      if (pendingLikesRef.current >= 25) {
        flushLikes();
      }

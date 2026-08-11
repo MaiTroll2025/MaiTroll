@@ -52,12 +52,12 @@ export function useObsScenes(options: UseObsScenesOptions = {}): UseObsScenesRet
 
   const fetchStreamingStatus = useCallback(async (obs: OBSWebSocket) => {
     try {
-      const response = await obs.call('GetStreamingStatus')
+      const response = await obs.call('GetStreamingStatus' as any)
       const streaming = Boolean(
-        response?.streaming === true ||
-        response?.streamingActive === true ||
-        response?.outputActive === true ||
-        response?.isStreaming === true,
+        (response as any)?.streaming === true ||
+        (response as any)?.streamingActive === true ||
+        (response as any)?.outputActive === true ||
+        (response as any)?.isStreaming === true,
       )
       setIsStreaming(streaming)
     } catch (err: any) {
@@ -151,7 +151,7 @@ export function useObsScenes(options: UseObsScenesOptions = {}): UseObsScenesRet
   const stopStreaming = useCallback(async () => {
     if (!obsRef.current || !isConnected) return
     try {
-      await obsRef.current.call('StopStreaming')
+      await obsRef.current.call('StopStreaming' as any)
       setIsStreaming(false)
     } catch (err: any) {
       console.error('[useObsScenes] Failed to stop streaming:', err?.message)

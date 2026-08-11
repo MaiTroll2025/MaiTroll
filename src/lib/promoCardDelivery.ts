@@ -19,7 +19,6 @@ export async function sendPromoCardMailToUser(payload: PromoCardMailPayload): Pr
       `Expires: ${payload.expiresAt}`,
       `Reward: ${payload.rewardReason}`,
       '',
-      'Use this promo card only on MaiTalent.fun to redeem your tokens.',
       '— Mai Troll System',
     ].join('\n')
 

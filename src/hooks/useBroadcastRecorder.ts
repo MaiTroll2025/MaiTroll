@@ -164,8 +164,8 @@ export function useBroadcastRecorder(options: UseBroadcastRecorderOptions = {}):
           await video.play()
 
           const captureStream =
-            typeof video.captureStream === 'function'
-              ? video.captureStream()
+            typeof (video as any).captureStream === 'function'
+              ? (video as any).captureStream()
               : (video as HTMLVideoElement & { mozCaptureStream?: () => MediaStream }).mozCaptureStream?.()
 
           if (!captureStream) {

@@ -370,14 +370,12 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
            setShowCardPayment(false);
            setSelectedPack(null);
          }}
-        pkg={selectedPack}
-        userId={user?.id || ''}
-        profile={profile}
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentStart={() => { paymentInProgressRef.current = true; }}
-        onPaymentEnd={() => { paymentInProgressRef.current = false; }}
-        onSaveCard={true}
-      />
+         pkg={selectedPack}
+         userId={user?.id || ''}
+         profile={profile}
+         onPaymentSuccess={handlePaymentSuccess}
+         onSaveCard={true}
+       />
     </>
   );
 }

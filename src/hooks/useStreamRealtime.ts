@@ -34,6 +34,7 @@ export function useStreamRealtime(streamId?: string | null, handlers: UseStreamR
           current.onMessage?.(event)
           break
         case 'stream_gifts':
+        case 'broadcast:gift_sent':
           current.onGift?.(event)
           break
         case 'stream_participants':

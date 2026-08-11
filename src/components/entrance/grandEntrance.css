@@ -292,6 +292,29 @@
   opacity: 1;
 }
 
+/* Door video overlay - auto-plays during door opening */
+.gce-door-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Door audio - hidden off-screen */
+.gce-door-audio {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* -------------------------------------------------------------
    Title
    ------------------------------------------------------------- */

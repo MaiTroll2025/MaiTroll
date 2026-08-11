@@ -24,16 +24,14 @@ export default function CashoutDepositModal({
   const {
     depositToCashout,
     loading,
-    total_earned_coins,
+    totalEarned,
     cashout_reserved_coins,
     cashout_coins,
   } = useCoins()
 
   const [amount, setAmount] = useState('')
 
-  // ONLY earned coins can be moved into cashout.
-  // Do NOT use troll_coins + paid_coins here.
-  const earnedCoins = Number(total_earned_coins || 0)
+  const earnedCoins = Number(totalEarned || 0)
   const reservedCoins = Number(cashout_reserved_coins || cashout_coins || 0)
   const availableEarnedCoins = Math.max(0, earnedCoins - reservedCoins)
 

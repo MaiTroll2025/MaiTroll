@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
 import { 
-  AlertTriangle, ArrowLeft, BarChart3, Check, CheckCircle2, Clock, Eye, Gavel, Package, Settings, Users, X
+  AlertTriangle, ArrowLeft, BarChart3, Check, CheckCircle2, Clock, Eye, Gavel, Package, Settings, User, Users, X
 } from 'lucide-react';
 
 interface AuctionReport {

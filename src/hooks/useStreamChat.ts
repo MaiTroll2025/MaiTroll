@@ -7,6 +7,7 @@ import { useMissionProgress } from './useMissionProgress';
 import { useChatBlockStatus } from './useChatBlockStatus';
 import { isStaffProfile } from '../lib/staff';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../lib/broadcastModeration';
+import { moderation } from '@/services/maitrollModeration';
 
 export interface Message {
   id: string;
@@ -363,13 +364,10 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
 
     const canBypassModeration = isHost || isStaffProfile(profile);
     if (!canBypassModeration) {
-      const { data: blocked, error: blockError } = await supabase.rpc('is_user_chat_blocked', {
-        p_user_id: user.id,
-        p_stream_id: streamId,
-      });
-
-      if (!blockError && blocked) {
-        toast.error('Your chat is disabled by moderation action.');
+      // Canonical moderation check
+      const modResult = await moderation.checkContent(user.id, content, 'chat');
+      if (!modResult.allowed) {
+        toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
         return;
       }
     }

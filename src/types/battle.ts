@@ -69,7 +69,7 @@ export const BATTLE_EVENT_CONFIGS: Record<BattleEventType, BattleEventDisplayCon
     color: 'text-purple-400',
     bgGradient: 'from-purple-600/20 via-violet-600/10 to-fuchsia-600/20',
     borderColor: 'border-purple-500/50',
-    description: 'Send 1,000+ paid coins and BOTH hosts get double free bonus coins!',
+    description: 'Send 1,000+ troll_coins and BOTH hosts get double bonus coins!',
     durationLabel: '45 seconds',
   },
   ceo_mode: {

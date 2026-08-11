@@ -207,7 +207,7 @@ export default function UserManagementPanel({
 
   const handleEditUser = (user: UserProfile) => {
     setSelectedUser(user)
-    setEditingCoins({ paid: user.paid_coin_balance || 0, free: user.free_coin_balance || 0 })
+    setEditingCoins({ paid: user.troll_coins || 0 })
     setEditingLevel(user.level || 1)
     setEditingRole(user.role || 'user')
     setEditingBypassBroadcast(user.bypass_broadcast_restriction || false)
@@ -241,12 +241,12 @@ export default function UserManagementPanel({
     setSaving(true)
     try {
       // 1. Prepare data
-      const currentPaidCoins = selectedUser.paid_coin_balance || 0
+      const currentPaidCoins = selectedUser.troll_coins || 0
       const newPaidCoins = editingCoins.paid
       const delta = newPaidCoins - currentPaidCoins
 
       const updates: any = {
-        free_coin_balance: editingCoins.free,
+        troll_coins: editingCoins.paid,
         level: editingLevel,
         bypass_broadcast_restriction: editingBypassBroadcast
       }
@@ -552,8 +552,7 @@ export default function UserManagementPanel({
                     </span>
                   </td>
                   <td className="py-3 text-white">{user.level || 1}</td>
-                  <td className="py-3 text-purple-300">{user.paid_coin_balance?.toLocaleString() || 0}</td>
-                  <td className="py-3 text-green-300">{user.free_coin_balance?.toLocaleString() || 0}</td>
+                  <td className="py-3 text-purple-300">{user.troll_coins?.toLocaleString() || 0}</td>
                   <td className="py-3">
                     <button
                       onClick={() => handleEditUser(user)}

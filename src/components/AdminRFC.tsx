@@ -57,7 +57,7 @@ export default function AdminRFC() {
             ]}
           />
           <p className="text-gray-400 text-sm mt-2">
-            ⚠ troll_coins cannot be cashed out. Only free coins earned via streaming or gifting.
+             ⚠ troll_coins cannot be cashed out. Only coins earned via streaming or gifting.
           </p>
         </Section>
 

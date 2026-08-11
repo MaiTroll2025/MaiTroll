@@ -12,6 +12,7 @@ export interface UseTCNNRolesReturn {
   isChiefNewsCaster: boolean;
   hasAnyRole: boolean;
   canPublish: boolean;
+  canPublishArticles?: boolean;
   canApproveArticles: boolean;
   canApproveTickers: boolean;
   canManageRoles: boolean;

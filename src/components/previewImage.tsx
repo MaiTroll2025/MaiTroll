@@ -5,10 +5,10 @@ import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
-import { Stream } from '../../types/broadcast'
-import { BroadcastPage } from './BroadcastPage'
-import ViewerPage from './ViewerPage'
-import StreamEndedPage from './StreamEndedPage'
+import { Stream } from '../types/broadcast'
+import { BroadcastPage } from '../pages/broadcast/BroadcastPage'
+import ViewerPage from '../pages/broadcast/ViewerPage'
+import StreamEndedPage from '../pages/broadcast/StreamEndedPage'
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://Mai Troll.app'
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`

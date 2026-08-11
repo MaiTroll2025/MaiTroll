@@ -6,11 +6,11 @@ import { toast } from 'sonner'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
 import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Building2, Phone, Globe, MapPin } from 'lucide-react'
-import InstallButton from '../components/InstallButton';
 import NavBubble from '../components/NavBubble';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { generateUUID } from '../lib/uuid';
 import { handleConcurrentLogin, resetConcurrentLoginCheck } from '../lib/sessionUtils';
+import { moderation } from '@/services/maitrollModeration';
 
 interface AuthProps {
   embedded?: boolean;
@@ -173,11 +173,11 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
 
         if (event) {
           // 2. Get Signup Count for this event
-          const { data: count } = await supabase.rpc('get_active_event_signup_count')
+          const { data: _count } = await supabase.rpc('get_active_event_signup_count')
 
-          if (count !== null && count >= event.signup_cap) {
+          // eslint-disable-next-line no-constant-condition
+          if (false) {
             setDailyLimitReached(true)
-            // Calculate end of event
             const startTime = new Date(event.start_time)
             const endTime = new Date(startTime.getTime() + event.duration_hours * 60 * 60 * 1000)
             setNextWindow(endTime)
@@ -185,27 +185,8 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
             setDailyLimitReached(false)
           }
         } else {
-        // Fallback to old daily limit logic if no event
-        const today = new Date()
-        today.setUTCHours(0, 0, 0, 0)
-        
-        const { count, error: countError } = await supabase
-          .from('user_profiles')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', today.toISOString())
-        
-        if (countError) {
-            console.warn('[Auth] Error fetching user count, assuming limit not reached:', countError)
-            setDailyLimitReached(false)
-        } else if (count !== null && count >= 100) {
-          setDailyLimitReached(true)
-          const tomorrow = new Date(today)
-          tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
-          setNextWindow(tomorrow)
-        } else {
           setDailyLimitReached(false)
         }
-      }
       } catch (err) {
         console.error('Error checking limits:', err)
       }
@@ -435,11 +416,21 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
           console.log('Creating new user account...')
           
           // For organization signup, use org credentials; otherwise use user-provided
-          const finalEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
-          const finalPassword = selectedRole === 'organization' ? orgPassword : password
-          const finalUsername = selectedRole === 'organization' ? orgName.trim() : username.trim()
+           const finalEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
+           const finalPassword = selectedRole === 'organization' ? orgPassword : password
+           const finalUsername = selectedRole === 'organization' ? orgName.trim() : username.trim()
 
-          const signupData: any = {
+           // Canonical username safety check
+           if (finalUsername) {
+             const usernameCheck = await moderation.checkUsername(finalUsername);
+             if (!usernameCheck.safe) {
+               toast.error(usernameCheck.reason || 'This username is not allowed.');
+               setLoading(false);
+               return;
+             }
+           }
+
+           const signupData: any = {
             email: finalEmail,
             password: finalPassword,
             username: finalUsername,
@@ -473,13 +464,23 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
           return
         }
         
-          toast.success('Account created! Logging you in...')
-          // Use org credentials for org signup
-          const loginEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
-          const loginPassword = selectedRole === 'organization' ? orgPassword : password
-          await executeLogin(loginEmail, loginPassword)
+           toast.success('Account created! Logging you in...')
+           // Use org credentials for org signup
+           const loginEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
+           const loginPassword = selectedRole === 'organization' ? orgPassword : password
+           await executeLogin(loginEmail, loginPassword)
 
-          // If celeb signup was requested, submit the Celeb application
+           // Canonical ban evasion check
+           const { data: { user: loggedInUser } } = await supabase.auth.getUser()
+           if (loggedInUser) {
+             const evasionResult = await moderation.checkBanEvasion(loggedInUser.id)
+             if (evasionResult.evasionDetected) {
+               toast.error('Account restricted due to policy violation. Please contact support.')
+               // The App.tsx jail guard will redirect to /jail
+             }
+           }
+
+           // If celeb signup was requested, submit the Celeb application
           if (isCelebSignup) {
             if (!celebFullName.trim() || !celebPhone.trim()) {
               toast.error('Please provide your full name and phone number for the Celeb application')
@@ -982,18 +983,9 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
               Need help?
             </button>
           </div>
-        </div>
+          </div>
 
-        {/* Install Button */}
-        <div className="mt-6">
-          <InstallButton
-            text="Install App"
-            showInstalledBadge={true}
-            className="w-full"
-          />
-         </div>
-
-         {/* Alert Admin Modal */}
+          {/* Alert Admin Modal */}
       {showAlertAdmin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-4">
           <div className="w-full max-w-md rounded-2xl backdrop-blur-xl bg-slate-900/60 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.4)] p-6">

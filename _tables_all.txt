@@ -1,0 +1,79 @@
+﻿
+Path                                                                                                               LineNumber Line                                                           
+----                                                                                                               ---------- ----                                                           
+C:\Users\kainm\TC ONLY\TrollCity\complete_jail_court_attorney_prosecutor_system.sql                                       131 CREATE TABLE IF NOT EXISTS public.jail_ip_violations (         
+C:\Users\kainm\TC ONLY\TrollCity\complete_jail_court_attorney_prosecutor_system.sql                                       167 CREATE TABLE IF NOT EXISTS public.jail_appeals (               
+C:\Users\kainm\TC ONLY\TrollCity\complete_jail_court_attorney_prosecutor_system.sql                                       218 CREATE TABLE IF NOT EXISTS public.jail_transactions (          
+C:\Users\kainm\TC ONLY\TrollCity\complete_jail_court_attorney_prosecutor_system.sql                                       238 CREATE TABLE IF NOT EXISTS public.jail_notifications (         
+C:\Users\kainm\TC ONLY\TrollCity\complete_jail_court_attorney_prosecutor_system.sql                                       255 CREATE TABLE IF NOT EXISTS public.jail_security_violations (   
+C:\Users\kainm\TC ONLY\TrollCity\create_court_tables.sql                                                                   19 CREATE TABLE IF NOT EXISTS public.court_dockets (              
+C:\Users\kainm\TC ONLY\TrollCity\create_court_tables.sql                                                                   33 CREATE TABLE IF NOT EXISTS public.court_cases (                
+C:\Users\kainm\TC ONLY\TrollCity\create_jail_attorney_prosecutor_system.sql                                                97 CREATE TABLE IF NOT EXISTS public.jail_ip_violations (         
+C:\Users\kainm\TC ONLY\TrollCity\FIX_ENTRANCE_EFFECTS_INSURANCE_PERKS.sql                                                 116 CREATE TABLE user_insurances (                                 
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                      169 CREATE TABLE IF NOT EXISTS public.stream_messages (            
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                      510 CREATE TABLE IF NOT EXISTS public.user_driver_licenses (       
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     1368 CREATE TABLE IF NOT EXISTS public.chat_blocks (                
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     1390 CREATE TABLE IF NOT EXISTS broadcast_restrictions (            
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     2600 CREATE TABLE IF NOT EXISTS public.broadcast_mod_actions (      
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     2670 CREATE TABLE IF NOT EXISTS public.user_broadcast_restrictions (
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     2716 CREATE TABLE public.jail_transactions (                        
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     3933 CREATE TABLE IF NOT EXISTS public.stream_seat_sessions (       
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     4959 CREATE TABLE IF NOT EXISTS public.jail_notifications (         
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     6090 CREATE TABLE IF NOT EXISTS public.court_dockets (              
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     6100 CREATE TABLE IF NOT EXISTS public.jail (                       
+C:\Users\kainm\TC ONLY\TrollCity\frontend_schema.sql                                                                     6151 CREATE TABLE IF NOT EXISTS public.court_cases (                
+C:\Users\kainm\TC ONLY\TrollCity\jail_enhancements.sql                                                                     20 CREATE TABLE IF NOT EXISTS public.jail_appeals (               
+C:\Users\kainm\TC ONLY\TrollCity\jail_enhancements.sql                                                                     71 CREATE TABLE IF NOT EXISTS public.jail_transactions (          
+C:\Users\kainm\TC ONLY\TrollCity\jail_enhancements.sql                                                                     91 CREATE TABLE IF NOT EXISTS public.jail_notifications (         
+C:\Users\kainm\TC ONLY\TrollCity\jail_enhancements.sql                                                                    108 CREATE TABLE IF NOT EXISTS public.jail_security_violations (   
+C:\Users\kainm\TC ONLY\TrollCity\lead_officer_system.sql                                                                   67 create table if not exists public.troll_court_cases (          
+C:\Users\kainm\TC ONLY\TrollCity\MISSING_OBJECTS.sql                                                                      394 -- TODO: CREATE TABLE jail_appeals                             
+C:\Users\kainm\TC ONLY\TrollCity\MISSING_OBJECTS.sql                                                                      397 -- TODO: CREATE TABLE jail_ip_violations                       
+C:\Users\kainm\TC ONLY\TrollCity\MISSING_OBJECTS.sql                                                                      400 -- TODO: CREATE TABLE jail_security_violations                 
+C:\Users\kainm\TC ONLY\TrollCity\MISSING_OBJECTS.sql                                                                      658 -- TODO: CREATE TABLE stream_participants                      
+C:\Users\kainm\TC ONLY\TrollCity\MISSING_OBJECTS.sql                                                                      727 -- TODO: CREATE TABLE troll_court_cases                        
+C:\Users\kainm\TC ONLY\TrollCity\MISSING_OBJECTS.sql                                                                      835 -- TODO: CREATE TABLE user_insurances                          
+C:\Users\kainm\TC ONLY\TrollCity\MISSING_OBJECTS.sql                                                                      844 -- TODO: CREATE TABLE user_jails                               
+C:\Users\kainm\TC ONLY\TrollCity\MISSING_OBJECTS.sql                                                                      916 -- TODO: CREATE TABLE xtrollz_stream_messages                  
+C:\Users\kainm\TC ONLY\TrollCity\migrations\20260731_create_all_missing_tables.sql                                       3226 CREATE TABLE IF NOT EXISTS troll_stream_messages (             
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20250202100000_broadcast_overhaul.sql                         33 CREATE TABLE IF NOT EXISTS public.stream_messages (            
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260203202500_apply_tmv_rebuild.sql                         142 CREATE TABLE public.user_driver_licenses (                     
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260411000000_stream_moderation_and_court_tables.sql         19 CREATE TABLE IF NOT EXISTS chat_blocks (                       
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260411000000_stream_moderation_and_court_tables.sql         40 CREATE TABLE IF NOT EXISTS court_dockets (                     
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260411000000_stream_moderation_and_court_tables.sql         60 CREATE TABLE IF NOT EXISTS broadcast_restrictions (            
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260416000000_fix_court_type_mismatches.sql                  10 CREATE TABLE IF NOT EXISTS public.jail (                       
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260626000004_comprehensive_mod_actions_system.sql           22 CREATE TABLE IF NOT EXISTS public.broadcast_mod_actions (      
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260626000004_comprehensive_mod_actions_system.sql          323 CREATE TABLE IF NOT EXISTS public.user_broadcast_restrictions (
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260627000004_profile_system_overhaul.sql                   688         CREATE TABLE public.jail_transactions (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180001_initial_schema_part01.sql                     281 CREATE TABLE IF NOT EXISTS public.stream_messages (            
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180001_initial_schema_part01.sql                     622 CREATE TABLE IF NOT EXISTS public.user_driver_licenses (       
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180002_initial_schema_part02.sql                     415 CREATE TABLE IF NOT EXISTS public.chat_blocks (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180002_initial_schema_part02.sql                     437 CREATE TABLE IF NOT EXISTS broadcast_restrictions (            
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180003_initial_schema_part03.sql                     583 CREATE TABLE IF NOT EXISTS public.broadcast_mod_actions (      
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180003_initial_schema_part03.sql                     653 CREATE TABLE IF NOT EXISTS public.user_broadcast_restrictions (
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180003_initial_schema_part03.sql                     699 CREATE TABLE IF NOT EXISTS public.jail (                       
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180003_initial_schema_part03.sql                     708 CREATE TABLE IF NOT EXISTS public.jail_transactions (          
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180004_initial_schema_part04.sql                     757 CREATE TABLE IF NOT EXISTS public.stream_seat_sessions (       
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180004_initial_schema_part04.sql                     801 CREATE TABLE IF NOT EXISTS public.court_cases (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180005_initial_schema_part05.sql                     926 CREATE TABLE IF NOT EXISTS public.jail_notifications (         
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260727180006_initial_schema_part06.sql                    1068 CREATE TABLE IF NOT EXISTS public.court_dockets (              
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260729000000_add_missing_db_objects.sql                     74 CREATE TABLE IF NOT EXISTS public.user_insurances (            
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260729000000_add_missing_db_objects.sql                    168 CREATE TABLE IF NOT EXISTS public.troll_court_cases (          
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20260731000001_create_all_missing_tables.sql                3226 CREATE TABLE IF NOT EXISTS troll_stream_messages (             
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270120010000_court_dockets_and_pitch_status.sql              2 CREATE TABLE IF NOT EXISTS public.court_dockets (              
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270120010000_court_dockets_and_pitch_status.sql             12 CREATE TABLE IF NOT EXISTS public.court_cases (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270210000000_complete_fix_implementation.sql               139 CREATE TABLE IF NOT EXISTS public.court_cases (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270212000000_fix_jail_foreign_key.sql                        5 CREATE TABLE IF NOT EXISTS public.jail (                       
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270218140000_court_integration.sql                           4 CREATE TABLE IF NOT EXISTS public.court_dockets (              
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270218140000_court_integration.sql                          11 CREATE TABLE IF NOT EXISTS public.court_cases (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270302000000_tmv_rebuild.sql                               123 CREATE TABLE public.user_driver_licenses (                     
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270303000005_fix_drivers_test.sql                            6 CREATE TABLE IF NOT EXISTS public.user_driver_licenses (       
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270304000001_dual_path_streaming.sql                         8 CREATE TABLE IF NOT EXISTS public.stream_seat_sessions (       
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270304000001_dual_path_streaming.sql                        41 CREATE TABLE IF NOT EXISTS public.court_cases (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270305000000_fix_court_structure.sql                        20 CREATE TABLE IF NOT EXISTS public.court_dockets (              
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20270305000000_fix_court_structure.sql                        45 CREATE TABLE IF NOT EXISTS public.court_cases (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20280430000001_fix_broadcast_mod_actions.sql                   4 CREATE TABLE IF NOT EXISTS public.chat_blocks (                
+C:\Users\kainm\TC ONLY\TrollCity\supabase\migrations_backup3\20290604000001_fix_jail_notifications_rls.sql                 14 CREATE TABLE IF NOT EXISTS public.jail_notifications (         
+
+
+

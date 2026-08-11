@@ -144,7 +144,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
           const { data, error } = await supabase
             .from(table)
             .select('*')
-            .order('value', { ascending: true })
+            .order('coin_cost', { ascending: true })
             .limit(200);
 
           if (!error && data && data.length > 0) {
@@ -191,7 +191,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
         const id = g.id || String(g._id || g.gift_id || '');
         const name = g.name || g.gift_name || g.title || g.display_name || 'Unknown Gift';
         const icon = g.icon || g.icon_url || g.emoji || g.gift_icon || '🎁';
-        const coinCost = Number(g.coinCost ?? g.value ?? g.cost ?? g.price ?? g.coin_price ?? g.coins ?? g.amount ?? 0);
+        const coinCost = Number(g.coin_cost ?? g.coinCost ?? g.value ?? g.cost ?? g.price ?? g.coin_price ?? g.coins ?? g.amount ?? 0);
         const slug = g.slug || g.gift_slug || g.item_key || name.toLowerCase().replace(/\s+/g, '-');
         const animationType = g.animation_type || g.animationType || g.animation || undefined;
         const category = g.category || g.gift_category || g.metadata?.subcategory || undefined;
@@ -299,7 +299,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
     }
 
     try {
-      let success = false;
+      let success: boolean | { success: boolean; bonus?: any } = false;
 
       // AR gifts use a separate RPC
       if (activeTab === 'ar_gifts' && selectedGift) {
@@ -353,23 +353,23 @@ const GiftBoxModalComponent = function GiftBoxModal({
            toast.success(`Sent ${quantity}x ${selectedGift.name} to ${sentCount} users!`);
            onGiftSent?.(selectedGift, { type: 'all', quantity });
          }
-      } else if (giftTarget.type === 'broadcaster') {
-        success = await sendGift(selectedGift, { receiverId: broadcasterId, quantity });
-         if (success) {
-           toast.success(`Sent ${quantity}x ${selectedGift.name} to broadcaster!`);
-           onGiftSent?.(selectedGift, { type: 'broadcaster', userId: broadcasterId, quantity });
-         }
-      } else {
-        const targetId = giftTarget.userId || recipientId;
-        success = await sendGift(selectedGift, { receiverId: targetId, quantity });
-         if (success) {
+       } else if (giftTarget.type === 'broadcaster') {
+         success = await sendGift(selectedGift, { receiverId: broadcasterId, quantity });
+          if (Boolean(success)) {
+            toast.success(`Sent ${quantity}x ${selectedGift.name} to broadcaster!`);
+            onGiftSent?.(selectedGift, { type: 'broadcaster', userId: broadcasterId, quantity });
+          }
+       } else {
+         const targetId = giftTarget.userId || recipientId;
+         success = await sendGift(selectedGift, { receiverId: targetId, quantity });
+          if (Boolean(success)) {
            const targetName = userProfiles[targetId]?.username || 'user';
            toast.success(`Sent ${quantity}x ${selectedGift.name} to ${targetName}!`);
            onGiftSent?.(selectedGift, { type: 'specific', userId: targetId, username: targetName, quantity });
          }
       }
       
-      if (success) {
+      if (Boolean(success)) {
         onClose();
         setSelectedGift(null);
         setQuantity(1);
@@ -667,7 +667,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
                                 {gift.rarity}
                               </span>
                               <span className="text-[7px] text-slate-500 uppercase">
-                                {gift.trackingPoint.replace('_', ' ')}
+                                {gift.trackingPoint.replace(/_/g, ' ')}
                               </span>
                             </div>
                           </div>

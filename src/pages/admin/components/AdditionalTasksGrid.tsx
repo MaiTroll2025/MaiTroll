@@ -29,7 +29,8 @@ import {
   Shuffle,
   Vote,
   Mic,
-  FileText
+  FileText,
+  Trophy
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { systemManagementRoutes } from '../adminRoutes'
@@ -42,7 +43,6 @@ interface AdditionalTasksGridProps {
   onOpenGrantCoins?: () => void
   onOpenFinanceDashboard?: () => void
   onOpenCreateSchedule?: () => void
-  onOpenOfficerShifts?: () => void
   onOpenResetPanel?: () => void
   onOpenEmpireApplications?: () => void
   onOpenReferralBonuses?: () => void
@@ -71,7 +71,6 @@ export default function AdditionalTasksGrid({
   onOpenGrantCoins,
   onOpenFinanceDashboard,
   onOpenCreateSchedule,
-  onOpenOfficerShifts,
   onOpenResetPanel,
   onOpenEmpireApplications,
   onOpenReferralBonuses,
@@ -347,23 +346,15 @@ export default function AdditionalTasksGrid({
           color: 'text-orange-400',
           bgColor: 'bg-orange-500/20'
         },
-        {
-          icon: <Clock className="w-5 h-5" />,
-          label: 'Officer Shifts',
-          description: 'Manage shift schedules',
-          action: onOpenOfficerShifts,
-          color: 'text-cyan-400',
-          bgColor: 'bg-cyan-500/20'
-        },
-        {
-          icon: <Shield className="w-5 h-5" />,
-          label: 'Empire Applications',
-          description: 'Review empire partnerships',
-          action: onOpenEmpireApplications,
-          color: 'text-purple-400',
-          bgColor: 'bg-purple-500/20',
-          count: counts.empire_apps
-        },
+         {
+           icon: <Shield className="w-5 h-5" />,
+           label: 'Empire Applications',
+           description: 'Review empire partnerships',
+           action: onOpenEmpireApplications,
+           color: 'text-purple-400',
+           bgColor: 'bg-purple-500/20',
+           count: counts.empire_apps
+         },
         {
           icon: <FileText className="w-5 h-5" />,
           label: 'Applications',
@@ -374,10 +365,10 @@ export default function AdditionalTasksGrid({
           count: counts.applications
         },
         {
-          icon: <Shield className="w-5 h-5" />,
-          label: 'XTrollz Apps',
-          description: 'Review XTrollz applications',
-          action: () => navigate('/admin/xtrollz-apps'),
+          icon: <Trophy className="w-5 h-5" />,
+          label: 'Mai Sing Off Judges',
+          description: 'Review judge applications',
+          action: () => navigate('/admin/mai-singoff-judges'),
           color: 'text-pink-400',
           bgColor: 'bg-pink-500/20'
         },

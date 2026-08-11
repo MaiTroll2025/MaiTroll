@@ -571,7 +571,7 @@ function createProceduralGift(gift: ARGiftEffect): THREE.Object3D {
       group.add(jaw);
 
       for (let d = -1; d <= 1; d += 2) {
-        for (let fw = 0; f < 6; fw++) {
+        for (let fw = 0; fw < 6; fw++) {
           const wing = new THREE.Mesh(
             new THREE.PlaneGeometry(0.04, 0.1 + fw * 0.02),
             new THREE.MeshStandardMaterial({

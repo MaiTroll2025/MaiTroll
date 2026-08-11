@@ -255,7 +255,6 @@ function ChatDiamondAvatar({
     return (
       <div className="relative" style={{ width: 32, height: 32 }}>
         <AvatarWithFrame
-          userId={userId}
           avatarUrl={avatarUrl}
           username={username}
           size="xs"

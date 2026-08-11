@@ -94,6 +94,7 @@ interface StreamInfo {
   title: string;
   category: string;
   viewers: number;
+  isGaming?: boolean;
 }
 
 function TrendingStreamsSection() {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, Zap, Shield, Star, Crown, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -145,7 +145,7 @@ export default function BattleEventOverlay({ battleId, onClose }: BattleEventOve
                   GLOW MODE
                 </p>
                 <p className="text-xs text-white/60 mt-1">
-                  Send 1,000+ paid coins to earn double free bonus coins for both hosts!
+                   Send 1,000+ troll_coins to earn double bonus coins for both hosts!
                 </p>
               </div>
             )}

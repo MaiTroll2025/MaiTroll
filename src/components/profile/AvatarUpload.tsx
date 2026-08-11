@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { Upload, X, User } from 'lucide-react';
+import { notifyFollowersOfProfilePictureUpdate } from '@/lib/notifications';
 
 interface AvatarUploadProps {
     currentUrl: string | null;
@@ -29,6 +30,42 @@ export default function AvatarUpload({
         sm: 'w-16 h-16',
         md: 'w-24 h-24',
         lg: 'w-32 h-32',
+    };
+
+    // Convert canvas to a Blob, falling back to dataURL→Blob if toBlob returns null
+    // (toBlob can return null in Safari / some mobile browsers, which previously
+    // caused "Failed to create blob" errors).
+    const canvasToBlobFallback = (
+        canvas: HTMLCanvasElement,
+        type: string,
+        quality: number
+    ): Promise<Blob> => {
+        return new Promise((resolve, reject) => {
+            canvas.toBlob(
+                (blob) => {
+                    if (blob) {
+                        resolve(blob);
+                        return;
+                    }
+                    try {
+                        const dataUrl = canvas.toDataURL(type, quality);
+                        const arr = dataUrl.split(',');
+                        const mime = arr[0].match(/:(.*?);/)?.[1] || type;
+                        const bstr = atob(arr[1]);
+                        let n = bstr.length;
+                        const u8arr = new Uint8Array(n);
+                        while (n--) {
+                            u8arr[n] = bstr.charCodeAt(n);
+                        }
+                        resolve(new Blob([u8arr], { type: mime }));
+                    } catch (err) {
+                        reject(err instanceof Error ? err : new Error('Failed to create blob'));
+                    }
+                },
+                type,
+                quality
+            );
+        });
     };
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,13 +116,7 @@ export default function AvatarUpload({
 
             ctx.drawImage(img, sx, sy, min, min, 0, 0, outputSize, outputSize);
 
-            const blob = await new Promise<Blob>((resolve, reject) => {
-                canvas.toBlob(
-                    (b) => b ? resolve(b) : reject(new Error('Failed to create blob')),
-                    'image/jpeg',
-                    0.9
-                );
-            });
+            const blob = await canvasToBlobFallback(canvas, 'image/jpeg', 0.9);
 
             const filePath = `${user.id}/avatar-${Date.now()}.jpg`;
 
@@ -115,6 +146,25 @@ export default function AvatarUpload({
             onUploadComplete(publicUrl);
             setPreview(null);
             toast.success('Profile picture updated!');
+
+            const username = user.user_metadata?.username || 'Someone';
+            supabase
+              .from('troll_posts')
+              .insert({
+                user_id: user.id,
+                content: 'Updated my profile picture',
+                post_type: 'image',
+                image_url: publicUrl,
+              })
+              .then(({ error: postError }) => {
+                if (postError) {
+                  console.error('Auto-post error:', postError);
+                } else {
+                  notifyFollowersOfProfilePictureUpdate(user.id, username, publicUrl).catch((notifyErr) => {
+                    console.error('Follower notification error:', notifyErr);
+                  });
+                }
+              });
         } catch (err) {
             console.error('Upload error:', err);
             toast.error('Failed to upload profile picture');

@@ -29,6 +29,7 @@ import { RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack, RoomEvent } from
 import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
+import { moderation } from '@/services/maitrollModeration'
 import { useAuthStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { getLiveKitRoomName } from '@/lib/liveUtils'
@@ -582,6 +583,13 @@ export default function LiveKitGameViewer() {
     if (!trimmed || !user?.id || !channelName) return
     setSendingChat(true)
     try {
+      // Canonical moderation check
+      const modResult = await moderation.checkContent(user.id, trimmed, 'game_chat');
+      if (!modResult.allowed) {
+        toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
+        setSendingChat(false)
+        return
+      }
       const { error } = await supabase.from('stream_messages').insert({ stream_id: channelName, user_id: user.id, message: trimmed })
       if (error) throw error
       setChatInput('')

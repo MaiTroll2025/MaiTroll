@@ -4,6 +4,7 @@ import { useAuthStore } from '../../lib/store';
 import { Heart, MessageCircle, Gift, Share2, Trash2 } from 'lucide-react';
 
 import { toast } from 'sonner';
+import { moderation } from '@/services/maitrollModeration';
 import UserNameWithAge from '../UserNameWithAge';
 import GiftModal from '../trollWall/GiftModal';
 import { parseTextWithLinks } from '../../lib/utils';
@@ -155,6 +156,13 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
     if (!commentText.trim()) return;
     if (!user) {
       toast.error('Login to comment');
+      return;
+    }
+
+    // Canonical moderation check
+    const modResult = await moderation.checkContent(user.id, commentText.trim(), 'comment');
+    if (!modResult.allowed) {
+      toast.error(modResult.message || 'That comment violates Mai Troll\'s chat rules and was not sent.');
       return;
     }
 

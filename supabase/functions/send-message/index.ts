@@ -219,6 +219,71 @@ serve(async (req) => {
       });
     }
 
+    // 3. Canonical moderation checks (fail-closed)
+    // 3a. Check if user is currently jailed
+    const { data: jailData, error: jailError } = await supabase
+      .rpc('is_user_jailed', { p_user_id: user.id });
+
+    if (!jailError && jailData && Array.isArray(jailData) && jailData.length > 0 && jailData[0].is_jailed) {
+      const jailInfo = jailData[0];
+      return new Response(JSON.stringify({
+        error: "You are currently in jail.",
+        code: "USER_JAILED",
+        data: {
+          jail_id: jailInfo.jail_id,
+          discipline_level: jailInfo.discipline_level,
+          scheduled_release_at: jailInfo.scheduled_release_at,
+          bond_amount: jailInfo.bond_amount,
+          bond_allowed: jailInfo.bond_allowed,
+        }
+      }), {
+        status: 403,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
+    // 3b. Check chat restrictions (jail, blocks, mutes)
+    const { data: restrictionData, error: restrictionError } = await supabase
+      .rpc('check_user_chat_restriction', { p_user_id: user.id, p_stream_id: stream_id });
+
+    if (!restrictionError && restrictionData && restrictionData.restricted) {
+      const reasons = restrictionData.reasons || [];
+      const reason = reasons.includes('jailed') ? 'You are currently in jail.' :
+                     reasons.includes('chat_blocked') ? 'Your chat has been disabled by moderation.' :
+                     reasons.includes('muted') ? 'You are muted in this stream.' :
+                     'Your chat access is restricted.';
+      return new Response(JSON.stringify({
+        error: reason,
+        code: "USER_JAILED",
+        data: restrictionData
+      }), {
+        status: 403,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
+    // 3c. Content moderation (unicode + prohibited language)
+    if (type === 'chat' && data && typeof data.content === 'string') {
+      const { data: modData, error: modError } = await supabase
+        .rpc('moderate_user_content', {
+          p_user_id: user.id,
+          p_content: data.content,
+          p_source: 'send_message',
+          p_context: { stream_id }
+        });
+
+      if (!modError && modData && !modData.allowed) {
+        return new Response(JSON.stringify({
+          error: modData.message || 'That message violates Mai Troll\'s chat rules and was not sent.',
+          code: modData.code || 'PROHIBITED_LANGUAGE',
+          data: modData
+        }), {
+          status: 403,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // 2. Validate input
     const requiredFields = ['type', 'stream_id', 'txn_id', 'data'];
     const missingFields = requiredFields.filter(field => !(field in body));
@@ -503,14 +568,7 @@ serve(async (req) => {
         user_id: user.id,
         content: data.content,
         type: type,
-        txn_id: txn_id,
-        user_name: userProfile.username,
-        user_avatar: userProfile.avatar_url,
-        user_role: userProfile.role,
-        user_troll_role: userProfile.troll_role,
-        user_created_at: userProfile.created_at,
-        user_rgb_expires_at: userProfile.rgb_username_expires_at,
-        user_glowing_username_color: userProfile.glowing_username_color,
+        username: userProfile.username,
       })
       .select()
       .single();

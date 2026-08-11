@@ -92,7 +92,7 @@ export default function Support() {
     try {
       // If appeal, submit as moderation report
       if (category === 'appeal') {
-        const response = await api.post('/moderation', {
+        const response = await api.post('/moderation-actions', {
           action: 'submit_report',
           reporter_id: profile.id,
           target_user_id: null,

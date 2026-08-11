@@ -61,7 +61,7 @@ function LiveKitVideoPlayer({
     }
 
     try {
-      const videoElement = videoTrack.attach();
+      const videoElement = videoTrack.attach() as HTMLVideoElement;
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
       videoElement.style.objectFit = 'cover';
@@ -381,14 +381,14 @@ export default function FiveVFiveBattleOverlay({
     if (!participant) return false;
     const pubs = participant.videoTrackPublications as unknown as Map<string, { track?: RemoteVideoTrack }>;
     if (!pubs) return false;
-    return Array.from(pubs.values()).some(p => p.track?.kind === 'video' && p.track.isEnabled);
+    return Array.from(pubs.values()).some(p => p.track?.kind === 'video' && (p.track as any).isEnabled);
   }, []);
 
   const hasAudioEnabled = useCallback((participant: RemoteParticipant | undefined): boolean => {
     if (!participant) return false;
     const pubs = participant.audioTrackPublications as unknown as Map<string, { track?: RemoteAudioTrack }>;
     if (!pubs) return false;
-    return Array.from(pubs.values()).some(p => p.track?.kind === 'audio' && p.track.isEnabled);
+    return Array.from(pubs.values()).some(p => p.track?.kind === 'audio' && (p.track as any).isEnabled);
   }, []);
 
   if (phase === 'idle') return null;

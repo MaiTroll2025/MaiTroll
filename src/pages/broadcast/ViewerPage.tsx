@@ -41,10 +41,11 @@ import {
 import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import GiftBoxModal from '../../components/broadcast/GiftBoxModal'
-import GiftVideoOverlay from '../../components/broadcast/GiftVideoOverlay'
 import UserActionModal from '../../components/broadcast/UserActionModal'
 import ModActionsPopup from '../../components/broadcast/ModActionsPopup'
 import { getGiftVisualConfig } from '../../lib/giftVisuals'
+import { hydrateGiftForOverlay } from '../../lib/gifts'
+import { useTargetedGiftQueue, type StreamGiftEvent } from '../../hooks/useTargetedGiftQueue'
 
 
 import { GiftSystemProvider } from '../../lib/hooks/useGiftSystem'
@@ -80,13 +81,16 @@ import CityStatusPanel from '../../components/city/CityStatusPanel'
 import CityStatusOrb from '../../components/city/CityStatusOrb'
 import { useCityStatusOrb } from '../../lib/hooks/useCityStatusOrb'
 import SeatCityStatusOrb from '../../components/broadcast/SeatCityStatusOrb'
+import RaidPanel from '../../components/city/RaidPanel'
 import { useGhostMode } from '../../hooks/useGhostMode'
 import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
 import { sendChatThroughGate } from '../../lib/sendChatThroughGate'
 import { admitViewerToStream, releaseViewerSlot } from '@/lib/streamCapacity'
+import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
 
 // Import theme constants
 import { MaiTrollBroadcastTheme } from '../../styles/broadcastTheme'
+import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 
 const theme = MaiTrollBroadcastTheme
 
@@ -813,9 +817,10 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
    const [isGiftModalOpen, setIsGiftModalOpen] = useState(false)
    const [giftRecipientId, setGiftRecipientId] = useState<string | null>(null)
    const { myLeagues, myMemberships, leagueMissions, isLoading: isUserLeaguesLoading } = useUserLeagues()
-   const [recentGifts, setRecentGifts] = useState<BroadcastGift[]>([])
-   const [streamMods, setStreamMods] = useState<string[]>([])
-   const processedGiftIdsRef = useRef<Set<string>>(new Set())
+    const [recentGifts, setRecentGifts] = useState<BroadcastGift[]>([])
+    const [streamMods, setStreamMods] = useState<string[]>([])
+    const processedGiftIdsRef = useRef<Set<string>>(new Set())
+    const { enqueueGift } = useTargetedGiftQueue()
    // Floating chat
     interface FloatingMessage {
       id: string
@@ -831,7 +836,15 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
    const [hostChatDisabledByOfficerState, setHostChatDisabledByOfficerState] = useState(false)
    const [hostChatDisabledUntil, setHostChatDisabledUntil] = useState<string | null>(null)
    const [hostChatDisabledStreamId, setHostChatDisabledStreamId] = useState<string | null>(null)
-   const [hostChatDisableRemainingMs, setHostChatDisableRemainingMs] = useState(0)
+    const [hostChatDisableRemainingMs, setHostChatDisableRemainingMs] = useState(0)
+    const [isMessagePopupOpen, setIsMessagePopupOpen] = useState(false)
+    const [isNewMessageMode, setIsNewMessageMode] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [searchResults, setSearchResults] = useState<any[]>([])
+    const [recentThreads, setRecentThreads] = useState<any[]>([])
+    const [selectedThread, setSelectedThread] = useState<any | null>(null)
+    const [threadMessages, setThreadMessages] = useState<any[]>([])
+    const [messagesLoading, setMessagesLoading] = useState(false)
     const floatingChatContainerRef = useRef<HTMLDivElement>(null)
     const [blockedUsernames, setBlockedUsernames] = useState<Set<string>>(new Set())
     const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(user?.id, streamId);
@@ -929,6 +942,41 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       return () => window.clearInterval(interval)
     }, [hostChatDisabledUntil])
 
+   // Fetch recent utromail threads when message popup opens
+   useEffect(() => {
+     if (!isMessagePopupOpen || !user?.id) return;
+
+     const loadThreads = async () => {
+       try {
+         const threads = await getThreads(user.id, 'inbox');
+         setRecentThreads(threads.slice(0, 5));
+       } catch (err) {
+         console.error('[ViewerPage] Failed to load threads:', err);
+       }
+     };
+
+     void loadThreads();
+   }, [isMessagePopupOpen, user?.id]);
+
+   // Fetch messages when a thread is selected
+   useEffect(() => {
+     if (!selectedThread || !user?.id) return;
+
+     const loadMessages = async () => {
+       setMessagesLoading(true);
+       try {
+         const msgs = await getThreadMessages(selectedThread.id);
+         setThreadMessages(msgs);
+       } catch (err) {
+         console.error('[ViewerPage] Failed to load messages:', err);
+       } finally {
+         setMessagesLoading(false);
+       }
+     };
+
+     void loadMessages();
+   }, [selectedThread, user?.id]);
+
   // Desktop floating chat: always scroll to top so newest messages are visible
   useEffect(() => {
     const el = floatingChatContainerRef.current
@@ -947,6 +995,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     createdAt?: string
   } | null>(null)
   const [selectedSeatUserId, setSelectedSeatUserId] = useState<string | null>(null)
+  const [raidTarget, setRaidTarget] = useState<{ userId: string; houseId: string } | null>(null)
   const [viewerError, setViewerError] = useState<string | null>(null)
   const [retryAdmissionKey, setRetryAdmissionKey] = useState(0)
 
@@ -1120,105 +1169,75 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     )
   }, [])
 
-  const enrichGiftForOverlay = useCallback(async (incomingGift: any) => {
-    const giftItemId =
-      incomingGift?.gift_id ||
-      incomingGift?.gift_item_id ||
-      incomingGift?.giftId ||
-      incomingGift?.giftItemId ||
-      null
-
-    if (!giftItemId) {
-      return incomingGift
-    }
-
-    const { data: giftItem, error } = await supabase
-      .from('gift_items')
-      .select('id,name,gift_slug,icon,icon_url,animation_url,animation_type,coin_cost')
-      .eq('id', giftItemId)
-      .maybeSingle()
-
-    if (error || !giftItem) {
-      console.warn('[ViewerPage] Could not enrich gift overlay payload', {
-        giftItemId,
-        error,
-        incomingGift,
-      })
-      return incomingGift
-    }
-
-    const enrichedGift = {
-      ...incomingGift,
-      gift_name:
-        incomingGift.gift_name && incomingGift.gift_name !== 'Gift'
-          ? incomingGift.gift_name
-          : giftItem.name,
-      slug:
-        giftItem.slug ||
-        giftItem.gift_slug ||
-        incomingGift.slug ||
-        incomingGift.gift_slug ||
-        null,
-      gift_slug:
-        giftItem.gift_slug ||
-        giftItem.slug ||
-        incomingGift.gift_slug ||
-        incomingGift.slug ||
-        null,
-      gift_icon: incomingGift.gift_icon || giftItem.icon || null,
-      icon: incomingGift.icon || giftItem.icon || null,
-      icon_url: giftItem.icon_url || incomingGift.icon_url || null,
-      animation_url: giftItem.animation_url || incomingGift.animation_url || null,
-      animation_type: giftItem.animation_type || incomingGift.animation_type || 'video',
-      coin_cost:
-        giftItem.coin_cost || incomingGift.coin_cost || incomingGift.amount || null,
-    }
-
-    if (import.meta.env.DEV) {
-      console.info('[ViewerPage] Enriched gift overlay payload', {
-        gift_id: giftItemId,
-        gift_name: enrichedGift.gift_name,
-        slug: enrichedGift.slug,
-        gift_slug: enrichedGift.gift_slug,
-        animation_url: enrichedGift.animation_url,
-      })
-    }
-
-    return enrichedGift
-  }, [])
-
    const handleRemoveGiftOverlay = useCallback((giftId: string) => {
      setRecentGifts((current) => current.filter((gift) => gift.id !== giftId))
    }, [])
 
    const processGiftEvent = useCallback(async (giftData: any) => {
-    if (!giftData) return
+     if (!giftData) return
 
-    // Normalise to a stable animationId that is the same whether the event
-    // came from postgres_changes (event.new.id = row UUID) or from the
-    // broadcast channel (payload.id = same row UUID via transaction_id).
-    const animationId = String(giftData.id || giftData.stream_gift_id || giftData.gift_transaction_id || '')
-    if (!animationId) return
+     if (import.meta.env.DEV) {
+       console.error('[GIFT RAW EVENT DEBUG]', {
+         raw: giftData,
+         id: giftData?.id,
+         gift_id: giftData?.gift_id,
+         gift_item_id: giftData?.gift_item_id,
+         gift_slug: giftData?.gift_slug,
+         slug: giftData?.slug,
+         metadata: giftData?.metadata,
+         animation_url: giftData?.animation_url,
+         video_url: giftData?.video_url,
+         stream_id: giftData?.stream_id,
+         sender_id: giftData?.sender_id,
+         receiver_id: giftData?.receiver_id,
+       })
+     }
 
-    if (seenGiftAnimationIdsRef.current.has(animationId)) {
-      if (import.meta.env.DEV) console.log('[ViewerPage] Duplicate animation skipped', { animationId })
-      return
-    }
-    seenGiftAnimationIdsRef.current.add(animationId)
-    window.setTimeout(() => seenGiftAnimationIdsRef.current.delete(animationId), 12_000)
+     // Normalise to a stable animationId that is the same whether the event
+     // came from postgres_changes (event.new.id = row UUID) or from the
+     // broadcast channel (payload.id = same row UUID via transaction_id).
+     const animationId = String(giftData.id || giftData.stream_gift_id || giftData.gift_transaction_id || '')
+     if (!animationId) return
 
-    // Existing quick-dedupe (12 s window) for old-format giftIds too
-    const giftId = animationId
-    if (processedGiftIdsRef.current.has(giftId)) {
-      if (import.meta.env.DEV) console.log('[ViewerPage] Duplicate gift event skipped', giftId)
-      return
-    }
-    processedGiftIdsRef.current.add(giftId)
-    window.setTimeout(() => processedGiftIdsRef.current.delete(giftId), 12_000)
+     // Hydrate FIRST, then dedupe. A bad/incomplete local event must not
+     // block the later canonical stream_gifts event.
+     const enrichedGiftData = await hydrateGiftForOverlay(giftData)
 
-    const enrichedGiftData = await enrichGiftForOverlay(giftData)
-    const incomingStreamId = enrichedGiftData.streamId || enrichedGiftData.stream_id || enrichedGiftData.metadata?.streamId || enrichedGiftData.metadata?.stream_id
-    const receiverId = enrichedGiftData.receiver_id || enrichedGiftData.recipient_id || enrichedGiftData.receiverId || enrichedGiftData.recipientId || enrichedGiftData.metadata?.receiver_id || enrichedGiftData.metadata?.recipient_id
+     const resolvedMedia =
+       enrichedGiftData?.animation_url ||
+       enrichedGiftData?.video_url ||
+       enrichedGiftData?.metadata?.animation_url ||
+       enrichedGiftData?.metadata?.video_url
+
+     if (!resolvedMedia) {
+       if (import.meta.env.DEV) {
+         console.warn('[ViewerPage] Incomplete gift event ignored; waiting for canonical event', {
+           animationId,
+           giftData,
+           enrichedGiftData,
+         })
+       }
+       return
+     }
+
+     if (seenGiftAnimationIdsRef.current.has(animationId)) {
+       if (import.meta.env.DEV) console.log('[ViewerPage] Duplicate animation skipped', { animationId })
+       return
+     }
+     seenGiftAnimationIdsRef.current.add(animationId)
+     window.setTimeout(() => seenGiftAnimationIdsRef.current.delete(animationId), 12_000)
+
+     // Existing quick-dedupe (12 s window) for old-format giftIds too
+     const giftId = animationId
+     if (processedGiftIdsRef.current.has(giftId)) {
+       if (import.meta.env.DEV) console.log('[ViewerPage] Duplicate gift event skipped', giftId)
+       return
+     }
+     processedGiftIdsRef.current.add(giftId)
+     window.setTimeout(() => processedGiftIdsRef.current.delete(giftId), 12_000)
+
+     const incomingStreamId = enrichedGiftData.streamId || enrichedGiftData.stream_id || enrichedGiftData.metadata?.streamId || enrichedGiftData.metadata?.stream_id
+     const receiverId = enrichedGiftData.receiver_id || enrichedGiftData.recipient_id || enrichedGiftData.receiverId || enrichedGiftData.recipientId || enrichedGiftData.metadata?.receiver_id || enrichedGiftData.metadata?.recipient_id
 
     if (incomingStreamId && incomingStreamId !== streamId) {
       if (import.meta.env.DEV) console.log('[ViewerPage] ⚠️ Stream ID mismatch, skipping gift:', { incomingStreamId, currentStreamId: streamId })
@@ -1263,18 +1282,55 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       created_at: enrichedGiftData.timestamp || enrichedGiftData.created_at || new Date().toISOString(),
     } as BroadcastGift
 
-    setRecentGifts((prev) => {
-      if (prev.some((gift) => gift.id === giftId)) return prev
-      return [...prev, newGift].slice(-20)
-    })
+     setRecentGifts((prev) => {
+       if (prev.some((gift) => gift.id === giftId)) return prev
+       return [...prev, newGift].slice(-20)
+     })
 
-    const giftDurationMs = newGift.animation_duration_ms ?? getGiftVisualConfig(newGift).durationMs
-    window.setTimeout(() => {
-      setRecentGifts((prev) => prev.filter((gift) => gift.id !== giftId))
-    }, giftDurationMs + 150)
-  }, [enrichGiftForOverlay, resolveGiftAmount, resolveGiftName, streamId])
+     const streamGiftEvent: StreamGiftEvent = {
+       id: giftId,
+       stream_id: streamId,
+       gift_id: enrichedGiftData.gift_id || '',
+       gift_name: resolvedGiftName,
+       sender_user_id: enrichedGiftData.sender_id || '',
+      recipient_user_id: receiverId || stream?.user_id || '',
+      recipient_type: 'broadcaster',
+       recipient_seat_index: null,
+       animation_url: newGift.animation_url || null,
+       animation_url_webm: enrichedGiftData.animation_url_webm || null,
+       animation_url_mp4: enrichedGiftData.animation_url_mp4 || null,
+       animation_url_mov: enrichedGiftData.animation_url_mov || null,
+       animation_type: (newGift.animation_type || 'video') as StreamGiftEvent['animation_type'],
+       animation_duration_ms: newGift.animation_duration_ms || 7000,
+       sound_url: newGift.sound_url || null,
+       created_at: newGift.created_at,
+     }
 
-   const hasJoinedAudienceRef = useRef(false)
+     enqueueGift(streamGiftEvent)
+
+     const giftDurationMs = newGift.animation_duration_ms ?? getGiftVisualConfig(newGift).durationMs
+     window.setTimeout(() => {
+       setRecentGifts((prev) => prev.filter((gift) => gift.id !== giftId))
+     }, giftDurationMs + 150)
+    }, [hydrateGiftForOverlay, resolveGiftAmount, resolveGiftName, streamId, enqueueGift])
+
+  const processGiftEventRef = useRef(processGiftEvent)
+  useEffect(() => {
+    processGiftEventRef.current = processGiftEvent
+  }, [processGiftEvent])
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const payload = (event as CustomEvent).detail
+      if (payload) void processGiftEventRef.current(payload)
+    }
+    window.addEventListener('maitroll:gift-sent', handler)
+    return () => {
+      window.removeEventListener('maitroll:gift-sent', handler)
+    }
+  }, [])
+
+  const hasJoinedAudienceRef = useRef(false)
    const joiningAudienceRef = useRef(false)
    const audienceFailedUntilRef = useRef<number>(0)
    const audienceJoinAttemptedKeyRef = useRef<string | null>(null)
@@ -1412,6 +1468,9 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
 
     // Track whether we already processed a kick for this user to avoid double-processing
     const kickProcessedRef = useRef(false)
+
+   // Guard against double navigation when stream ends (realtime + polling)
+    const streamEndedRef = useRef(false)
 
      // Listen for seat_left broadcast events from broadcaster/officer removes
      // When the kicked user is the current viewer, run the same client-side
@@ -2152,39 +2211,11 @@ const isActive = isStreamActive(stream)
    }, [isModOrHigher])
 
   const refreshStream = useCallback(async () => {
-    if (!streamId) return
+    if (!streamId || streamEndedRef.current) return
 
     const { data, error } = await supabase
       .from('streams')
-      .select(
-        [
-          'id',
-          'status',
-          'is_live',
-          'started_at',
-          'ended_at',
-          'title',
-          'category',
-          'user_id',
-          'are_seats_locked',
-          'is_battle',
-          'total_likes',
-          'total_gifts_coins',
-          'box_count',
-          'seat_price',
-          'seat_prices',
-          'current_viewers',
-          'livekit_room_name',
-          'battle_id',
-          'battle_mode',
-          'battle_format',
-          'battle_status',
-          'battle_start_time',
-          'battle_end_time',
-            'side_a_score',
-            'side_b_score',
-          ].join(','),
-      )
+      .select('id, status, is_live, ended_at')
       .eq('id', streamId)
       .maybeSingle()
 
@@ -2196,17 +2227,14 @@ const isActive = isStreamActive(stream)
     if (!data) return
 
     if (isStreamEnded(data as unknown as Stream)) {
-      // Hard disconnect from LiveKit before navigating
+      streamEndedRef.current = true
       leaveLiveKitRoom().catch(() => {})
       hasJoinedAudienceRef.current = false
       joiningAudienceRef.current = false
       currentRoomKeyRef.current = null
-      navigate(`/broadcast/summary/${data.id}`, { replace: true })
+      navigate(`/broadcast/summary/${(data as any).id}`, { replace: true })
       return
     }
-
-    setStream(data as unknown as Stream)
-    setViewerCount(Number((data as any).current_viewers || 0))
   }, [streamId, navigate])
 
 const handleLeaveSeat = useCallback(async () => {
@@ -2446,7 +2474,8 @@ const handleLeaveSeat = useCallback(async () => {
       }
 
       if (isStreamEnded(data as unknown as Stream)) {
-        navigate(`/broadcast/summary/${data.id}`, { replace: true })
+        streamEndedRef.current = true
+        navigate(`/broadcast/summary/${(data as any).id}`, { replace: true })
         return
       }
 
@@ -2479,12 +2508,13 @@ const handleLeaveSeat = useCallback(async () => {
     }
   }, [streamId, navigate])
 
-  // TEMP DISABLED — replaced by useStreamRealtime subscription below
-  // useEffect(() => {
-  //   if (!streamId) return
-  //   const interval = window.setInterval(() => void refreshStream(), 30000)
-  //   return () => window.clearInterval(interval)
-  // }, [streamId, refreshStream])
+  // Poll for stream end as a fallback when realtime postgres_changes for the
+  // streams table is unavailable (e.g. table not in supabase_realtime publication).
+  useEffect(() => {
+    if (!streamId) return
+    const interval = window.setInterval(() => void refreshStream(), 10000)
+    return () => window.clearInterval(interval)
+  }, [streamId, refreshStream])
 
   // Canonical gift-animation source: stream_gifts postgres_changes received
   // via useStreamRealtime. event.new.id is the stream_gifts row UUID — the
@@ -2528,6 +2558,8 @@ useStreamRealtime(
           // When the stream ends, hard-disconnect from LiveKit and direct every
           // viewer to the stream summary page (no battle-state exceptions).
           if (isStreamEnded(next as Stream)) {
+            if (streamEndedRef.current) return
+            streamEndedRef.current = true
             // Hard disconnect from LiveKit before navigating
             leaveLiveKitRoom().catch(() => {})
             hasJoinedAudienceRef.current = false
@@ -3176,19 +3208,21 @@ useStreamRealtime(
     return (
       <ErrorBoundary>
         <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
-          <BattleView
-            key={activeBattleId}
-            battleId={stream.battle_id!}
-            currentStreamId={streamId}
-            viewerId={user?.id || stableAnonId}
-            remoteUsers={remoteUsers}
-            userIdToLiveKitIdentity={userIdToLiveKitIdentity}
-            onReturnToStream={() => {
-              refreshStream();
-            }}
-            onToggleCamera={handleToggleCamera}
-            onToggleMic={handleToggleMic}
-          />
+          <div className="relative flex h-dvh w-full flex-col overflow-hidden">
+            <BattleView
+              key={activeBattleId}
+              battleId={stream.battle_id!}
+              currentStreamId={streamId}
+              viewerId={user?.id || stableAnonId}
+              remoteUsers={remoteUsers}
+              userIdToLiveKitIdentity={userIdToLiveKitIdentity}
+              onReturnToStream={() => {
+                refreshStream();
+              }}
+              onToggleCamera={handleToggleCamera}
+              onToggleMic={handleToggleMic}
+             />
+          </div>
         </GiftSystemProvider>
       </ErrorBoundary>
     );
@@ -3501,10 +3535,20 @@ useStreamRealtime(
                             isMobileViewer ? 'h-6 w-6' : 'h-10 w-10'
                           )} />
                         )}
-                        <div className={cn(
-                          'font-black',
-                          isMobileViewer ? 'mt-1 text-[10px]' : 'mt-3 text-sm'
-                        )}>{hostName}</div>
+                        <button
+                          onClick={() => {
+                            setIsMessagePopupOpen(true)
+                            setIsNewMessageMode(true)
+                            setSearchQuery(broadcasterProfile?.username || '')
+                            setSelectedThread(null)
+                          }}
+                          className={cn(
+                            'font-black text-left',
+                            isMobileViewer ? 'mt-1 text-[10px]' : 'mt-3 text-sm'
+                          )}
+                        >
+                          {hostName}
+                        </button>
                         <div className={cn(
                           'text-slate-300',
                           isMobileViewer ? 'text-[8px]' : 'mt-1 text-xs'
@@ -3518,7 +3562,7 @@ useStreamRealtime(
 
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
 
-                {/* Host badge */}
+
                 <div className={cn(
                   'absolute z-10 flex items-center',
                   isMobileViewer ? 'left-1 top-1' : 'left-3 top-3 gap-1.5'
@@ -3569,9 +3613,16 @@ useStreamRealtime(
                   {broadcasterCityStatus.data && (
                     <CityStatusOrb
                       data={broadcasterCityStatus.data}
-                      permissions={{ isSelf: false, canCheckLicense: false, canRaid: false, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
+                      permissions={{ isSelf: false, canCheckLicense: false, canRaid: !!broadcasterCityStatus.data?.house_id, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
                       compact
-                      onHouseClick={() => setSelectedSeatUserId(hostId)}
+                      onHouseClick={() => {
+                        const targetUser = broadcasterCityStatus.data;
+                        if (targetUser?.house_id && targetUser.id !== user?.id) {
+                          setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
+                        } else {
+                          setSelectedSeatUserId(hostId);
+                        }
+                      }}
                     />
                   )}
                 </div>
@@ -3627,21 +3678,28 @@ useStreamRealtime(
 
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
 
-              {/* Desktop-only overlays */}
+
               {!isMobileViewer && (
                 <>
                   <div className="absolute left-5 top-5 z-20 flex flex-col gap-2">
                     {/* City Status Orb — compact inline (clickable) */}
-                    {broadcasterCityStatus.data && (
-                      <div className="pointer-events-auto">
-                        <CityStatusOrb
-                          data={broadcasterCityStatus.data}
-                          permissions={{ isSelf: false, canCheckLicense: false, canRaid: false, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
-                          compact
-                          onHouseClick={() => setSelectedSeatUserId(hostId)}
-                        />
-                      </div>
-                    )}
+                     {broadcasterCityStatus.data && (
+                       <div className="pointer-events-auto">
+                         <CityStatusOrb
+                           data={broadcasterCityStatus.data}
+                           permissions={{ isSelf: false, canCheckLicense: false, canRaid: !!broadcasterCityStatus.data?.house_id, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
+                           compact
+                           onHouseClick={() => {
+                             const targetUser = broadcasterCityStatus.data;
+                             if (targetUser?.house_id && targetUser.id !== user?.id) {
+                               setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
+                             } else {
+                               setSelectedSeatUserId(hostId);
+                             }
+                           }}
+                         />
+                       </div>
+                     )}
                   </div>
 
                   <div className="absolute right-5 top-5 z-20 flex items-center gap-2">
@@ -3867,13 +3925,13 @@ useStreamRealtime(
                                   className="rounded-lg border border-red-300/25 bg-red-500/15 px-2 py-1 text-[11px] font-black text-red-100"
                                 >
                                   Leave
-                                </button>
-                              )}
+                                 </button>
+                               )}
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )
+                           </div>
+                         )}
+                       </div>
+                     )
                   })}
                 </div>
               </aside>
@@ -4047,17 +4105,17 @@ useStreamRealtime(
                             )}
                           >
                             Leave
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                           </button>
+                         )}
+                        </div>
+                       </div>
+                     )}
+                   </div>
+                 )
+               })}
 
            {/* ── MOBILE PWA: Seats overlay on broadcaster video (split mode only) ── */}
-           {hasMounted && isMobileViewer && layoutMode === 'split' && seatCards.length > 0 && (
+           {hasMounted && isMobileViewer && effectiveBoxCount <= 6 && seatCards.length > 0 && (
              <div
                className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col"
                style={{
@@ -4149,13 +4207,13 @@ useStreamRealtime(
                           </button>
                         )}
 
-                        {/* Seat label overlay */}
-                        {seat.isOccupied && (
-                          <div className="absolute inset-x-0 bottom-0 px-1.5 py-0.5">
-                            <p className="truncate text-[9px] font-bold text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">{seat.displayName}</p>
-                          </div>
-                        )}
-                      </div>
+                         {/* Seat label overlay */}
+                         {seat.isOccupied && (
+                           <div className="absolute inset-x-0 bottom-0 px-1.5 py-0.5">
+                             <p className="truncate text-[9px] font-bold text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">{seat.displayName}</p>
+                           </div>
+                         )}
+                       </div>
                     )
                   })}
                 </div>
@@ -4164,7 +4222,7 @@ useStreamRealtime(
           )}
 
           {/* ── RIGHT: Desktop Chat Panel — same flow layout style as BroadcastPage ── */}
-          {!isMobileViewer && layoutMode === 'split' && (
+          {!isMobileViewer && effectiveBoxCount <= 6 && (
             <aside
               className={cn(
                 theme.chatPanel,
@@ -4352,7 +4410,7 @@ useStreamRealtime(
                              ? 'Chat disabled by officer control'
                              : userChatDisabled
                                ? 'Chat disabled'
-                               : 'Say something�'
+                               : 'Say something '
                          }
                          disabled={hostChatDisabledByOfficer || userChatDisabled}
                          readOnly={hostChatDisabledByOfficer || userChatDisabled}
@@ -4851,7 +4909,7 @@ useStreamRealtime(
                      ? 'Chat disabled by officer control'
                      : userChatDisabled
                        ? 'Chat disabled'
-                       : 'Say something�'
+                       : 'Say something '
                  }
                  disabled={hostChatDisabledByOfficer || userChatDisabled}
                  readOnly={hostChatDisabledByOfficer || userChatDisabled}
@@ -5063,17 +5121,15 @@ useStreamRealtime(
                     <MessageSquare className="h-10 w-10" />
                  </button>
                )}
-               <button
-                 onClick={() => setIsMobileChatOpen(v => !v)}
-                 className={cn(
-                    'inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold border transition',
-                    isMobileChatOpen
-                      ? 'border-cyan-400/40 bg-cyan-500/20 text-cyan-300'
-                      : 'border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]'
-                  )}
-                >
-                  <MessageSquare className="h-10 w-10" />
-               </button>
+                <button
+                  onClick={() => setIsMessagePopupOpen(true)}
+                  className={cn(
+                     'inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold border transition',
+                     'border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]'
+                   )}
+                 >
+                   <MessageSquare className="h-10 w-10" />
+                </button>
               <button
                 onClick={() => onGift(hostId)}
 className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold', theme.purpleButton)}
@@ -5126,8 +5182,14 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
       'border-t border-white/10'
     )}
   >
-     <div className="flex items-center justify-center gap-3 mx-auto max-w-7xl">
-       {isPaidChatEnabled && (
+      <div className="flex items-center justify-center gap-3 mx-auto max-w-7xl">
+        <button
+          onClick={() => setIsMessagePopupOpen(true)}
+          className={cn('inline-flex h-12 w-20 items-center justify-center rounded-xl text-sm font-bold', 'border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]')}
+        >
+           <MessageSquare className="h-5 w-5" />
+        </button>
+        {isPaidChatEnabled && (
          <button
            onClick={() => setIsPaidChatModalOpen(true)}
            className={cn('inline-flex h-12 w-20 items-center justify-center rounded-xl text-sm font-bold', 'border border-amber-400/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20')}
@@ -5237,6 +5299,31 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
                 isBroadOfficer={isOfficer || isStreamBroadofficer}
                 broadcasterId={hostId}
                 isSeatHolder={false}
+                onHouseClick={() => {
+                  const targetUser = broadcasterCityStatus.data;
+                  if (targetUser?.house_id && targetUser.id !== user?.id) {
+                    setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
+                  }
+                }}
+                onRaid={() => {
+                  const targetUser = broadcasterCityStatus.data;
+                  if (targetUser?.house_id && targetUser.id !== user?.id) {
+                    setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
+                  }
+                }}
+              />
+            )}
+
+            {/* Raid Panel */}
+            {raidTarget && (
+              <RaidPanel
+                targetUserId={raidTarget.userId}
+                targetHouseId={raidTarget.houseId}
+                isOpen={!!raidTarget}
+                onClose={() => setRaidTarget(null)}
+                onRaidComplete={() => {
+                  broadcasterCityStatus.refetch?.();
+                }}
               />
             )}
           </div>
@@ -5279,9 +5366,147 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
         />
       )}
 
+      {/* Mini Message Popup */}
+      <AnimatePresence>
+        {isMessagePopupOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="fixed bottom-24 right-4 z-[60] w-[360px] max-h-[480px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <h3 className="text-sm font-black text-white">Messages</h3>
+              <button
+                onClick={() => { setIsMessagePopupOpen(false); setSelectedThread(null) }}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-[420px] overflow-y-auto">
+              {!selectedThread ? (
+                <div className="p-2">
+                  {recentThreads.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-zinc-500">No messages yet</div>
+                  ) : (
+                    recentThreads.map((thread: any) => {
+                      const other = thread.other_username || 'Unknown'
+                      const last = thread.last_message?.body || 'No messages yet'
+                      const time = thread.last_message?.sent_at
+                        ? new Date(thread.last_message.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : ''
+                      return (
+                        <button
+                          key={thread.id}
+                          onClick={() => setSelectedThread(thread)}
+                          className="flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left hover:bg-white/5"
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300">
+                            <MessageSquare className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-bold text-white">{other}</p>
+                            <p className="truncate text-xs text-zinc-400">{last}</p>
+                            {time && <p className="mt-1 text-[10px] text-zinc-500">{time}</p>}
+                          </div>
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+              ) : (
+                <div className="flex h-[420px] flex-col">
+                  <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2">
+                    <button
+                      onClick={() => setSelectedThread(null)}
+                      className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                    <p className="truncate text-sm font-bold text-white">
+                      {selectedThread.other_username || 'Chat'}
+                    </p>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-3">
+                    {messagesLoading ? (
+                      <div className="py-8 text-center text-xs text-zinc-500">Loading...</div>
+                    ) : threadMessages.length === 0 ? (
+                      <div className="py-8 text-center text-xs text-zinc-500">No messages yet</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {threadMessages.map((msg: any) => (
+                          <div
+                            key={msg.id}
+                            className={`rounded-xl px-3 py-2 text-xs ${
+                              msg.sender_id === user?.id
+                                ? 'ml-8 bg-cyan-500/20 text-cyan-100'
+                                : 'mr-8 bg-white/5 text-zinc-200'
+                            }`}
+                          >
+                            <p className="mb-0.5 text-[10px] font-bold text-zinc-400">
+                              {msg.sender_username || 'Unknown'}
+                            </p>
+                            <p>{msg.body}</p>
+                            <p className="mt-1 text-[10px] text-zinc-500">
+                              {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault()
+                      const input = (e.target as any).message as HTMLInputElement
+                      const body = input.value.trim()
+                      if (!body || !selectedThread || !user?.id) return
+                      try {
+                        await sendMessage({
+                          senderId: user.id,
+                          senderMail: user.email || '',
+                          recipientId: selectedThread.other_user_id,
+                          body,
+                        })
+                        input.value = ''
+                        const msgs = await getThreadMessages(selectedThread.id)
+                        setThreadMessages(msgs)
+                      } catch (err) {
+                        console.error('[ViewerPage] send message error:', err)
+                        toast.error('Failed to send message')
+                      }
+                    }}
+                    className="flex gap-2 border-t border-white/10 p-3"
+                  >
+                    <input
+                      name="message"
+                      placeholder="Type a message..."
+                      className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:border-cyan-400/30 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      className="shrink-0 rounded-xl bg-cyan-500/20 px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-500/30"
+                    >
+                      Send
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </ErrorBoundary>
   </GiftSystemProvider>
 )
 }
 
 export default ViewerPage
+
+
+
+
+
+

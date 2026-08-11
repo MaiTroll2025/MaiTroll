@@ -20,6 +20,7 @@ interface StreamData {
   current_viewers?: number | null; started_at?: string | null
   ended_at?: string | null; created_at?: string | null
   user_id?: string | null; category?: string | null
+  game_title?: string | null
 }
 
 interface StreamHealth {

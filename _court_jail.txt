@@ -1,0 +1,132 @@
+﻿CREATE TABLE IF NOT EXISTS public.court_dockets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    court_date DATE NOT NULL,
+    max_cases INTEGER DEFAULT 20,
+    status TEXT DEFAULT 'open', -- open, full, closed, completed
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(court_date)
+);
+
+-- Table: jail
+CREATE TABLE IF NOT EXISTS public.jail (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL,
+    release_time timestamptz NOT NULL,
+    reason text,
+    created_at timestamptz DEFAULT now()
+);
+
+-- Table: beta_feedback
+CREATE TABLE IF NOT EXISTS public.beta_feedback (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_id text NOT NULL DEFAULT 'TC-BETA-' || nextval('public.beta_feedback_public_seq')::text,
+  user_id uuid NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+  category text NOT NULL,
+  title text NOT NULL,
+  description text NOT NULL,
+  affected_feature text,
+  affected_route text,
+  device_type text,
+  browser_name text,
+  user_agent text,
+  viewport_width integer,
+  viewport_height integer,
+  is_pwa boolean DEFAULT false,
+  app_version text,
+  screenshot_url text,
+  severity text,
+  priority text DEFAULT 'normal',
+  status text DEFAULT 'submitted',
+  assigned_to uuid REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+  duplicate_of uuid,
+  moderator_response text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  resolved_at timestamptz,
+  archived_at timestamptz
+);
+
+-- Table: career_positions
+CREATE TABLE IF NOT EXISTS public.career_positions (
+  id text PRIMARY KEY,
+  title text NOT NULL,
+  department text NOT NULL,
+  description text,
+  max_applications integer NOT NULL DEFAULT 10,
+  is_open boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Table: court_cases
+CREATE TABLE IF NOT EXISTS public.court_cases (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plaintiff_id UUID REFERENCES public.user_profiles(id), -- Landlord or System
+    defendant_id UUID REFERENCES public.user_profiles(id), -- Tenant
+    lease_id UUID REFERENCES public.leases(id),
+    case_type TEXT NOT NULL CHECK (case_type IN ('non_payment', 'eviction', 'lease_violation')),
+    status TEXT DEFAULT 'open' CHECK (status IN ('open', 'ruled', 'dismissed')),
+    details TEXT,
+    ruling TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: marketplace_items
+CREATE TABLE IF NOT EXISTS public.marketplace_items (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    seller_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    price_coins INTEGER,
+    price_usd NUMERIC,
+    category TEXT,
+    subcategory TEXT,
+    condition TEXT CHECK (condition IN ('new', 'like_new', 'good', 'fair', 'poor')),
+    delivery_type TEXT CHECK (delivery_type IN ('shipping', 'pickup', 'both')) DEFAULT 'both',
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    city TEXT,
+    state TEXT,
+    images JSONB DEFAULT '[]',
+    stock INTEGER DEFAULT 1,
+    status TEXT CHECK (status IN ('active', 'sold', 'hidden', 'flagged')) DEFAULT 'active',
+    is_vehicle BOOLEAN DEFAULT false,
+    views INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Table: president_candidates
+create table if not exists president_candidates (
+  id uuid primary key default gen_random_uuid(),
+  election_id uuid not null references president_elections(id) on delete cascade,
+  user_id uuid not null references user_profiles(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'withdrawn')),
+  banner_path text not null,
+  display_name text,
+  slogan text,
+  statement text,
+  created_at timestamptz not null default now(),
+  approved_by uuid references user_profiles(id),
+  approved_at timestamptz,
+  unique(election_id, user_id)
+);
+
+-- Table: user_leagues
+CREATE TABLE IF NOT EXISTS public.user_leagues (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT,
+    creator_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+    max_members INT DEFAULT 50,
+    is_active BOOLEAN DEFAULT true,
+    is_public BOOLEAN DEFAULT true,
+    league_type TEXT DEFAULT 'standard' CHECK (league_type IN ('standard', 'competitive', 'casual', 'tournament')),
+    icon_emoji TEXT DEFAULT 'ðŸ†',
+    color TEXT DEFAULT '#8b5cf6',
+    league_score BIGINT DEFAULT 0,
+    league_level INT DEFAULT 1,
+    member_count INT DEFAULT 1,
+    requirements JSONB DEFAULT '{"min_level": 0, "invite_only": false}'::jsonb,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),

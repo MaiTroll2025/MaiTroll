@@ -26,7 +26,7 @@ const TurnstileGate: React.FC<TurnstileGateProps> = ({
     }
 
     // Load the Turnstile script if not already loaded
-    if (!window.grecaptcha) {
+    if (!(window as any).grecaptcha) {
       const script = document.createElement('script');
       script.src = `https://challenges.cloudflare.com/turnstile/v0/${siteKey}?onload=onloadTurnstileCallback`;
       script.async = true;

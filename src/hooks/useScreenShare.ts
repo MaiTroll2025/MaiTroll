@@ -182,12 +182,15 @@ export function useScreenShare() {
         // Check if this is a real unmount or just tab/browser navigation
         // sessionStorage flag is set during screen share to preserve it across navigation
         const isScreenSharing = sessionStorage.getItem('tc_screen_share_active') === 'true';
-        
-        if (isUnmounting.current && document.visibilityState !== 'hidden' && !isScreenSharing) {
+        const isTransitioning = sessionStorage.getItem('tc_starting_stream') === 'true';
+
+        if (isUnmounting.current && document.visibilityState !== 'hidden' && !isScreenSharing && !isTransitioning) {
           console.log('[useScreenShare] Real unmount - stopping screen share');
           stopScreenShare();
         } else if (isScreenSharing) {
           console.log('[useScreenShare] Screen share in progress - preserving across navigation');
+        } else if (isTransitioning) {
+          console.log('[useScreenShare] Transition in progress - preserving screen share');
         } else {
           console.log('[useScreenShare] Tab switch detected - preserving screen share');
         }

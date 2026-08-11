@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Ticket,
-  Plus,
+  MessageSquare,
   Mic,
   MicOff,
   Video,
@@ -10,13 +9,11 @@ import {
   Share2,
   MoreHorizontal,
   Radio,
-  Power,
-  MicIcon,
-  Loader2,
   Gift,
   Sparkles,
   Skull,
   Bell,
+  Mail,
 } from 'lucide-react';
 import { LocalVideoTrack, LocalAudioTrack } from 'livekit-client';
 import { cn } from '../../lib/utils';
@@ -62,39 +59,39 @@ function HostActionButton({
   );
 }
 
-/** Seats action card — the large purple button in the bottom bar */
-export function OpenStagePassCard({ onClick, label = 'Seats' }: { onClick: () => void; label?: string }) {
+/** Message action card — the large green button in the bottom bar */
+export function OpenMessageCard({ onClick, label = 'Message' }: { onClick: () => void; label?: string }) {
   const theme = MaiTrollBroadcastTheme
   return (
     <button
       onClick={onClick}
-      className={cn('flex h-[86px] items-center justify-center gap-4 rounded-2xl border text-xl font-black text-white shadow-[0_0_35px_rgba(168,85,247,0.5)] hover:scale-[1.01] transition-transform', theme.primaryButton, 'border-purple-400/50 hover:shadow-[0_0_45px_rgba(168,85,247,0.60)]')}
+      className={cn('flex h-[86px] items-center justify-center gap-4 rounded-2xl border text-xl font-black text-white shadow-[0_0_35px_rgba(34,211,238,0.5)] hover:scale-[1.01] transition-transform', theme.primaryButton, 'border-cyan-400/50 hover:shadow-[0_0_45px_rgba(34,211,238,0.60)]')}
     >
-      <Ticket className="h-8 w-8" />
+      <Mail className="h-8 w-8" />
       {label}
     </button>
   );
 }
 
-/** Seats summary card — left card in the bottom bar */
-export function StagePassSummaryCard({
-  openPassCount,
+/** Message summary card — left card in the bottom bar */
+export function MessageSummaryCard({
+  unreadCount,
   onManage,
 }: {
-  openPassCount: number;
+  unreadCount: number;
   onManage: () => void;
 }) {
   const theme = MaiTrollBroadcastTheme
   return (
-    <div className={cn('flex h-[86px] items-center justify-between rounded-2xl border border-white/10 bg-white/[0.035] px-5 shadow-[0_0_18px_rgba(168,85,247,0.15)] backdrop-blur-2xl', theme.panel)}>
+    <div className={cn('flex h-[86px] items-center justify-between rounded-2xl border border-white/10 bg-white/[0.035] px-5 shadow-[0_0_18px_rgba(34,211,238,0.15)] backdrop-blur-2xl', theme.panel)}>
       <div className="flex items-center gap-4">
-        <div className="grid h-12 w-12 place-items-center rounded-xl bg-purple-500/20 text-purple-300">
-          <Ticket className="h-7 w-7" />
+        <div className="grid h-12 w-12 place-items-center rounded-xl bg-cyan-500/20 text-cyan-300">
+          <Mail className="h-7 w-7" />
         </div>
         <div>
-          <p className="text-base font-black text-white">Seats</p>
+          <p className="text-base font-black text-white">Messages</p>
           <p className="mt-1 text-sm font-black text-emerald-400">
-            {openPassCount} open
+            {unreadCount} unread
           </p>
         </div>
       </div>
@@ -102,7 +99,7 @@ export function StagePassSummaryCard({
         onClick={onManage}
         className={cn('rounded-xl px-5 py-2.5 text-sm font-bold text-white', theme.glassButton)}
       >
-        Edit
+        Open
       </button>
     </div>
   );
@@ -119,7 +116,7 @@ export function StagePassSummaryCard({
  * Handlers wired from BroadcastPage.tsx business logic.
  */
 export interface BroadcastBottomBarProps {
-  openPassCount: number;
+  unreadMessageCount: number;
   isMicOn: boolean;
   isCamOn: boolean;
   isLive: boolean;
@@ -134,8 +131,8 @@ export interface BroadcastBottomBarProps {
   onShare?: () => void;
   onOpenMoreMenu?: () => void;
   onEndStream: () => void;
-  onOpenStagePass: () => void;
-  onManageStagePass: () => void;
+  onOpenMessage: () => void;
+  onManageMessage: () => void;
   onOpenCoinStore?: () => void;
   onTroll?: () => void;
   isHost?: boolean;
@@ -144,7 +141,7 @@ export interface BroadcastBottomBarProps {
 }
 
 export default function BroadcastBottomBar({
-  openPassCount,
+  unreadMessageCount,
   isMicOn,
   isCamOn,
   isLive,
@@ -158,8 +155,8 @@ export default function BroadcastBottomBar({
   onShare,
   onOpenMoreMenu,
   onEndStream,
-  onOpenStagePass,
-  onManageStagePass,
+  onOpenMessage,
+  onManageMessage,
   onOpenCoinStore,
   onTroll,
   isHost = false,
@@ -173,10 +170,10 @@ export default function BroadcastBottomBar({
       <div className={bottomBarAmbient} />
 
       <div className="grid gap-4" style={{ gridTemplateColumns: '290px 1fr 360px' }}>
-        {/* Left: Seats summary */}
-        <StagePassSummaryCard
-          openPassCount={openPassCount}
-          onManage={onManageStagePass}
+        {/* Left: Messages summary */}
+        <MessageSummaryCard
+          unreadCount={unreadMessageCount}
+          onManage={onManageMessage}
         />
 
         {/* Center: host action buttons + live info */}
@@ -257,8 +254,8 @@ export default function BroadcastBottomBar({
           </div>
         </div>
 
-        {/* Right: large Seats action button */}
-        <OpenStagePassCard onClick={onOpenStagePass} />
+        {/* Right: large Message action button */}
+        <OpenMessageCard onClick={onOpenMessage} />
       </div>
     </div>
   );

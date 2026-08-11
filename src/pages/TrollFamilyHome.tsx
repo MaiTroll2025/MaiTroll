@@ -543,7 +543,7 @@ export default function TrollFamilyHome() {
             <QuickActions
               isLeader={isLeader}
               onChat={() => navigate(`/family/chat/${family.id}`)}
-              onBroadcast={() => handleStartBroadcast(family.id, user?.id || '', user?.display_name || 'A member')}
+               onBroadcast={() => handleStartBroadcast(family.id, user?.id || '', (user as any)?.display_name || 'A member')}
               onInvite={() => navigate('/family/invite')}
             />
             <LeaderboardPreview weeklyContribution={vault?.weekly_contribution || 0} />

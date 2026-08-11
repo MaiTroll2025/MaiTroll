@@ -164,9 +164,6 @@ export interface UserProfile {
   coin_multiplier?: number
   troll_coins: number
   hype_coins: number
-  paid_coin_balance?: number
-  paid_coins?: number
-  free_coin_balance?: number
   cashout_coins?: number
   cashout_reserved_coins?: number
   reserved_troll_coins?: number
@@ -564,6 +561,7 @@ export enum UserRole {
   OWNER = 'owner',
   AGENCY_HR_MANAGER = 'agency_hr_manager',
   HR_ADMIN = 'hr_admin',
+  HR_MANAGER = 'hr_manager',
   LEAD_TROLL_OFFICER = 'lead_troll_officer',
   TROLL_OFFICER = 'troll_officer',
   TROLL_FAMILY = 'troll_family',
@@ -584,6 +582,14 @@ export enum UserRole {
   ACADEMY_STUDENT = 'academy_student',
   ACADEMY_DIRECTOR = 'academy_director',
   ADMISSIONS_OFFICER = 'admissions_officer',
+  PASTOR = 'pastor',
+  AGENCY_LEADER = 'agency_leader',
+  ATTORNEY = 'attorney',
+  PROSECUTOR = 'prosecutor',
+  JOURNALIST = 'journalist',
+  AUCTIONEER = 'auctioneer',
+  CEO_ASSISTANT = 'ceo_assistant',
+  NOAH_ASSISTANT = 'noah_assistant',
 }
 
 export enum Permission {
@@ -815,6 +821,96 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   [UserRole.MARKETING_READONLY]: [
     // Marketing read-only: Can only view data, no write permissions
     Permission.VIEW_ONLY
+  ],
+  [UserRole.HR_MANAGER]: [
+    Permission.MANAGE_USERS,
+    Permission.MODERATE_CHAT,
+    Permission.MODERATE_STREAMS,
+    Permission.MANAGE_REPORTS,
+    Permission.ISSUE_WARNINGS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.PASTOR]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE,
+    Permission.MODERATE_CHAT
+  ],
+  [UserRole.AGENCY_LEADER]: [
+    Permission.MANAGE_USERS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.ATTORNEY]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.PROSECUTOR]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.JOURNALIST]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT
+  ],
+  [UserRole.AUCTIONEER]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.CEO_ASSISTANT]: [
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_CONTENT,
+    Permission.MANAGE_FINANCES,
+    Permission.MANAGE_SYSTEM,
+    Permission.MODERATE_CHAT,
+    Permission.MODERATE_STREAMS,
+    Permission.MANAGE_REPORTS,
+    Permission.ISSUE_WARNINGS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.NOAH_ASSISTANT]: [
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_CONTENT,
+    Permission.MANAGE_FINANCES,
+    Permission.MANAGE_SYSTEM,
+    Permission.MODERATE_CHAT,
+    Permission.MODERATE_STREAMS,
+    Permission.MANAGE_REPORTS,
+    Permission.ISSUE_WARNINGS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.ACADEMY_TEACHER]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.ACADEMY_STUDENT]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT
+  ],
+  [UserRole.ACADEMY_DIRECTOR]: [
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_CONTENT,
+    Permission.MANAGE_FINANCES,
+    Permission.MANAGE_SYSTEM,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.ADMISSIONS_OFFICER]: [
+    Permission.MANAGE_USERS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT
   ]
 }
 

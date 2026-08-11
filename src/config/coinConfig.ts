@@ -47,7 +47,6 @@ export const COINS_PER_USD = 100;
 // CASHOUT TIERS (Single Source of Truth)
 // ============================================================================
 export const CASHOUT_TIERS = [
-  { coins: 0, usd: 0, manualReview: false, name: 'Free Cashout', color: '#00ff00', label: '' },
   { coins: 2000, usd: 5, manualReview: false, name: 'Tier 1', color: '#cd7f32', label: '' },
   { coins: 7000, usd: 10, manualReview: false, name: 'Tier 2', color: '#c0c0c0', label: '' },
   { coins: 12000, usd: 30, manualReview: false, name: 'Tier 3', color: '#ffd700', label: '' },
@@ -76,7 +75,7 @@ export const TIERS = CASHOUT_TIERS;
 export type CashoutTier = typeof CASHOUT_TIERS[number];
 
 // Minimum coins required for any cashout
-export const MIN_CASHOUT_COINS = 0;
+export const MIN_CASHOUT_COINS = 2000;
 
 // ============================================================================
 // PLATFORM CAPACITY LIMITS
@@ -111,7 +110,6 @@ export function getRateForCoins(coins: number): number {
   if (coins >= 12000) return 30 / 12000;
   if (coins >= 7000) return 10 / 7000;
   if (coins >= 2000) return 5 / 2000;
-  if (coins >= 0) return 0;
   return 0;
 }
 

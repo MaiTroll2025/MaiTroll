@@ -125,6 +125,7 @@ export interface ARSettings {
   quality: 'low' | 'medium' | 'high' | 'ultra';
   smoothing: number;
   showDebugOverlay: boolean;
+  isOverlayVisible?: boolean;
 }
 
 export const DEFAULT_AR_SETTINGS: ARSettings = {

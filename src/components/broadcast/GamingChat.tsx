@@ -2,14 +2,12 @@ import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { Send, Smile, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
-import {
-  getAnonymousDisplayName,
-  reserveAnonymousChatSlot,
-} from '@/lib/anonymousIdentity'
+import { getAnonymousDisplayName } from '@/lib/anonymousIdentity'
 
 /** Small avatar for chat messages — extracts useUserFrame out of .map() */
 function ChatAvatar({ userId, avatarUrl, username }: { userId?: string; avatarUrl: string; username: string }) {
@@ -21,6 +19,7 @@ function ChatAvatar({ userId, avatarUrl, username }: { userId?: string; avatarUr
 
 interface ChatMessage {
   id: string
+  user_id?: string
   username: string
   content: string
   createdAt: number
@@ -30,20 +29,21 @@ interface ChatMessage {
 interface GamingChatProps {
   streamId: string
   className?: string
-  guestChatLimit?: number // if set, allows guest users to chat up to this limit
+  guestChatLimit?: number
+  canPinMessages?: boolean
+  hostId?: string
 }
 
-const MAX_GUEST_CHAT_DEFAULT = 5
 const MAX_MESSAGES = 100
 
-export function GamingChat({ streamId, className, guestChatLimit }: GamingChatProps) {
+export function GamingChat({ streamId, className }: GamingChatProps) {
   const { user, profile } = useAuthStore()
+  const navigate = useNavigate()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isVisible, setIsVisible] = useState(true)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const guestLimit = guestChatLimit ?? (user ? 0 : MAX_GUEST_CHAT_DEFAULT)
 
   useEffect(() => {
     const channel = supabase.channel(`floating-chat:${streamId}`)
@@ -87,17 +87,9 @@ export function GamingChat({ streamId, className, guestChatLimit }: GamingChatPr
     const text = input.trim()
     if (!text) return
 
-    // Guest chat limit check
     if (!user) {
-      if (guestLimit > 0) {
-        if (!reserveAnonymousChatSlot()) {
-          toast.error("You've used your 5 anonymous chats. Sign in to keep chatting.")
-          return
-        }
-      } else {
-        toast.error('Sign in to chat')
-        return
-      }
+      navigate('/auth?mode=login')
+      return
     }
 
     setInput('')
@@ -153,7 +145,7 @@ export function GamingChat({ streamId, className, guestChatLimit }: GamingChatPr
       console.error('[GamingChat] Send failed:', err)
       toast.error('Failed to send message')
     }
-  }, [input, user, profile, streamId])
+  }, [input, user, profile, streamId, navigate])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

@@ -384,10 +384,6 @@ entrypoint = "./functions/admin/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/admin/*.html" ]
 
-[functions.upload-to-r2]
-enabled = true
-verify_jwt = true
-entrypoint = "./functions/upload-to-r2/index.ts"
 
 [functions.get-how-to-video-url]
 enabled = true

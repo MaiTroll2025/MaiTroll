@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { CityAd } from '../../types/cityAds';
 import { supabase } from '../../lib/supabase';
 import { queueCityAdClick } from '../../lib/batchWrites';
-import { maitalentIntegrator } from '../../lib/maitalent';
 
 const AUTO_REDIRECT_DELAY = 3000;
 
@@ -33,12 +32,9 @@ export default function PromoAdCard({ ad, variant = 'sidebar', onClick }: PromoA
   const isRail = variant === 'rail';
 
   // Check if URL is internal (Mai Troll route) vs external
-  const isInternalLink = (url: string) => url.startsWith('/');
+   const isInternalLink = (url: string) => url.startsWith('/');
 
-  // Determine if this is a maitalent promo
-  const isMaitalent = !!ad.maitalent_platform;
-
-  // Perform redirect to CTA link
+   // Perform redirect to CTA link
   const performRedirect = () => {
     if (ad.cta_link) {
       if (isInternalLink(ad.cta_link)) {
@@ -104,12 +100,7 @@ export default function PromoAdCard({ ad, variant = 'sidebar', onClick }: PromoA
     }
 
     // Track click in background — batched to reduce DB writes
-    if (isMaitalent) {
-      // Track maitalent promo event via integration
-      await maitalentIntegrator.trackEvent('click', ad.id);
-    } else {
-      queueCityAdClick(ad.id);
-    }
+    queueCityAdClick(ad.id);
   };
 
   const closeLightbox = () => {

@@ -41,7 +41,7 @@ export default function FeaturedBroadcasts() {
         .limit(4);
 
       if (error) throw error;
-      setStreams((data as FeaturedStream[]) || []);
+      setStreams((data as any[] as FeaturedStream[]) || []);
     } catch (err) {
       console.error('Error fetching featured streams:', err);
     } finally {

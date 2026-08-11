@@ -15,6 +15,7 @@ type StreamRealtimeTable =
   | 'broadcast:seat_refreshed'
   | 'broadcast:box_count_changed'
   | 'broadcast:like_sent'
+  | 'broadcast:gift_sent'
   | 'broadcast:ping'
 
 type StreamRealtimeStatus = 'idle' | 'subscribing' | 'subscribed' | 'error' | 'closed'
@@ -66,7 +67,7 @@ function emitBroadcast(entry: StreamEntry, eventName: string, payload: any) {
   const key = `broadcast:${eventName}`
   entry.eventCounts[key] = (entry.eventCounts[key] || 0) + 1
   const event: StreamRealtimeEvent = {
-    table: `broadcast:${eventName}`,
+    table: `broadcast:${eventName}` as any,
     eventType: 'BROADCAST',
     new: payload,
     old: null,
@@ -82,6 +83,7 @@ function emitBroadcast(entry: StreamEntry, eventName: string, payload: any) {
 }
 
 function createEntry(streamId: string, battleId?: string | null): StreamEntry {
+  if (isDev()) console.debug('[streamRealtimeManager] resolved streamId', { streamId, battleId })
   const entry: StreamEntry = {
     streamId,
     battleId,
@@ -94,19 +96,23 @@ function createEntry(streamId: string, battleId?: string | null): StreamEntry {
   const channel = supabase
     .channel(`stream-realtime:${streamId}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'streams', filter: `id=eq.${streamId}` }, (payload) => emit(entry, 'streams', payload))
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stream_messages', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_messages', payload))
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stream_messages', filter: `stream_id=eq.${streamId}` }, (payload) => {
+      if (isDev()) console.debug('[streamRealtimeManager] stream_messages INSERT payload.new', { streamId, new: payload.new })
+      emit(entry, 'stream_messages', payload)
+    })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stream_gifts', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_gifts', payload))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'stream_participants', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_participants', payload))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'stream_seat_sessions', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_seat_sessions', payload))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'stream_audience_presence', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_audience_presence', payload))
-    .on('broadcast', { event: 'floating_chat' }, (payload) => emitBroadcast(entry, 'floating_chat', payload))
-    .on('broadcast', { event: 'seat_joined' }, (payload) => emitBroadcast(entry, 'seat_joined', payload))
-    .on('broadcast', { event: 'seat_live' }, (payload) => emitBroadcast(entry, 'seat_live', payload))
-    .on('broadcast', { event: 'seat_left' }, (payload) => emitBroadcast(entry, 'seat_left', payload))
-    .on('broadcast', { event: 'seat_refreshed' }, (payload) => emitBroadcast(entry, 'seat_refreshed', payload))
-    .on('broadcast', { event: 'box_count_changed' }, (payload) => emitBroadcast(entry, 'box_count_changed', payload))
-    .on('broadcast', { event: 'like_sent' }, (payload) => emitBroadcast(entry, 'like_sent', payload))
-    .on('broadcast', { event: 'ping' }, (payload) => emitBroadcast(entry, 'ping', payload))
+    .on('broadcast', { event: 'floating_chat' }, (message) => emitBroadcast(entry, 'floating_chat', message.payload))
+    .on('broadcast', { event: 'seat_joined' }, (message) => emitBroadcast(entry, 'seat_joined', message.payload))
+    .on('broadcast', { event: 'seat_live' }, (message) => emitBroadcast(entry, 'seat_live', message.payload))
+    .on('broadcast', { event: 'seat_left' }, (message) => emitBroadcast(entry, 'seat_left', message.payload))
+    .on('broadcast', { event: 'seat_refreshed' }, (message) => emitBroadcast(entry, 'seat_refreshed', message.payload))
+    .on('broadcast', { event: 'box_count_changed' }, (message) => emitBroadcast(entry, 'box_count_changed', message.payload))
+    .on('broadcast', { event: 'like_sent' }, (message) => emitBroadcast(entry, 'like_sent', message.payload))
+    .on('broadcast', { event: 'gift_sent' }, (message) => emitBroadcast(entry, 'gift_sent', message.payload))
+    .on('broadcast', { event: 'ping' }, (message) => emitBroadcast(entry, 'ping', message.payload))
 
   entry.channel = channel
 
@@ -116,9 +122,7 @@ function createEntry(streamId: string, battleId?: string | null): StreamEntry {
 
   channel.subscribe((status) => {
     entry.status = status === 'SUBSCRIBED' ? 'subscribed' : status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' ? 'error' : entry.status
-    if (isDev() && status !== 'SUBSCRIBED') {
-      console.debug('[streamRealtimeManager] status', { streamId, battleId, status })
-    }
+    if (isDev()) console.debug('[streamRealtimeManager] channel status', { streamId, battleId, status })
   })
 
   return entry
@@ -141,6 +145,7 @@ export function subscribeToStreamRealtime(streamId: string, handler: StreamRealt
     current.handlers.delete(handler)
     if (current.handlers.size === 0) {
       current.status = 'closed'
+      if (isDev()) console.debug('[streamRealtimeManager] channel cleanup', { streamId, battleId: current.battleId, remainingHandlers: current.handlers.size })
       supabase.removeChannel(current.channel)
       entries.delete(key)
     }

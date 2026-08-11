@@ -54,7 +54,7 @@ export default function OfficerStreamGrid() {
         .order('current_viewers', { ascending: false });
 
       if (error) throw error;
-      setStreams(data || []);
+      setStreams((data as any) || []);
     } catch (error) {
       console.error('Error fetching streams:', error);
     } finally {

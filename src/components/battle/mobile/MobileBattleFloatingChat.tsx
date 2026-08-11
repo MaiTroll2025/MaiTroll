@@ -11,7 +11,7 @@ interface ChatMessage {
   stream_id: string;
   user_id: string;
   username: string;
-  message: string;
+  content: string;
   created_at: string;
   avatar_url?: string;
 }
@@ -65,7 +65,7 @@ export default function MobileBattleFloatingChat({
       stream_id: raw.stream_id,
       user_id: raw.user_id,
       username: resolved,
-      message: raw.message,
+      content: raw.content,
       created_at: raw.created_at,
       avatar_url: raw.avatar_url || undefined,
     };
@@ -77,7 +77,7 @@ export default function MobileBattleFloatingChat({
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from("stream_chat")
-        .select("id, stream_id, user_id, username, message, created_at, avatar_url")
+        .select("id, stream_id, user_id, username, content, created_at, avatar_url")
         .in("stream_id", [challengerStream.id, opponentStream.id])
         .order("created_at", { ascending: false })
         .limit(20);
@@ -147,7 +147,7 @@ export default function MobileBattleFloatingChat({
       stream_id: battleId,
       user_id: currentUserId,
       username: senderUsername,
-      message: newMessage.trim(),
+      content: newMessage.trim(),
       created_at: new Date().toISOString(),
     };
 
@@ -166,13 +166,13 @@ export default function MobileBattleFloatingChat({
         stream_id: challengerStream.id,
         user_id: currentUserId,
         username: senderUsername,
-        message: newMessage.trim(),
+        content: newMessage.trim(),
       }),
       supabase.from("stream_chat").insert({
         stream_id: opponentStream.id,
         user_id: currentUserId,
         username: senderUsername,
-        message: newMessage.trim(),
+        content: newMessage.trim(),
       }),
     ]);
 
@@ -203,7 +203,7 @@ export default function MobileBattleFloatingChat({
                 className="max-w-[80%] rounded-2xl bg-black/55 px-2.5 py-1.5 backdrop-blur-sm"
               >
                 <span className="text-[10px] font-bold text-amber-300">{msg.username}</span>
-                <span className="ml-1.5 text-xs text-white">{msg.message}</span>
+                <span className="ml-1.5 text-xs text-white">{msg.content}</span>
               </motion.div>
             );
           })}

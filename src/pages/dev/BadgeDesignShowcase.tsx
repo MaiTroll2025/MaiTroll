@@ -227,7 +227,7 @@ const CardStyleDesign = ({ user }: { user: typeof mockUsers[0] }) => {
       <div className="flex items-center gap-3">
         <div className="relative">
           <img src={user.avatar} alt={user.username} className="w-12 h-12 rounded-full" />
-          {user.is_live && (
+          {(user as any).is_live && (
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse" />
           )}
         </div>

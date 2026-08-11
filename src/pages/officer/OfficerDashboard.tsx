@@ -8,7 +8,6 @@ import { format12hr, formatFullDateTime12hr } from '../../utils/timeFormat'
 import { Shield, Ghost, Clock, Award, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react'
 import { MaiTrollTheme } from '../../styles/trollCityTheme'
 import OfficerShiftCalendar from '../../components/officer/OfficerShiftCalendar'
-import OfficerClock from '../../components/officer/OfficerClock'
 
 interface WorkSession {
   id: string
@@ -206,8 +205,6 @@ export default function OfficerDashboard() {
       </div>
 
       <div className="mb-6 grid md:grid-cols-2 gap-6">
-        <OfficerClock onActionComplete={loadData} />
-        
         <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-lg p-6 flex flex-col justify-between`}>
           <div className="space-y-4">
             <div className="flex items-center gap-2">

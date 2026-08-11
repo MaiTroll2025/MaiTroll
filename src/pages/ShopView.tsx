@@ -292,8 +292,8 @@ export default function ShopView() {
                 created_at: new Date().toISOString(),
                 type: 'system',
                 user_profiles: {
-                  username: profile?.username || 'Guest',
-                  avatar_url: profile?.avatar_url || ''
+                  username: (profile as any)?.username || 'Guest',
+                  avatar_url: (profile as any)?.avatar_url || ''
                 }
               }
             })

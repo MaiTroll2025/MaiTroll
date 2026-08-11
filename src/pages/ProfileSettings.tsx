@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Ban,
   Boxes,
@@ -10,6 +10,7 @@ import {
   Sparkles,
   Trash2,
   UserRound,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,6 +20,8 @@ import { MaiTrollTheme } from "../styles/trollCityTheme";
 import UserInventory from "./UserInventory";
 import FamilyMinorSettings from "../components/profile/FamilyMinorSettings";
 import BatterySaverToggle from "@/components/BatterySaverToggle";
+import AvatarUpload from "../components/profile/AvatarUpload";
+import CoverPhotoUpload, { CoverPhotoUploadRef } from "../components/profile/CoverPhotoUpload";
 
 const PLATFORM_OPTIONS = [
   { value: "", label: "Select platform" },
@@ -61,6 +64,8 @@ function Toggle({
 export default function ProfileSettings() {
   const { user, profile, refreshProfile } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const coverUploadRef = useRef<CoverPhotoUploadRef>(null);
 
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
@@ -95,10 +100,16 @@ export default function ProfileSettings() {
     setCreatorSubscriptionEnabled(
       (profile as any).creator_subscription_enabled ?? false,
     );
-    setCreatorSubscriptionPrice(
-      (profile as any).creator_subscription_price_coins ?? 100,
-    );
   }, [profile]);
+
+  useEffect(() => {
+    const state = location.state as { openCoverUpload?: boolean } | null;
+    if (state?.openCoverUpload) {
+      setTimeout(() => {
+        coverUploadRef.current?.triggerFileSelect();
+      }, 300);
+    }
+  }, [location.state]);
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -326,6 +337,45 @@ export default function ProfileSettings() {
             </button>
           </div>
         </section>
+
+        {profile && (
+          <section className={`${MaiTrollTheme.components.card} space-y-6`}>
+            <div className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-pink-400" />
+              <div>
+                <h2 className="text-xl font-semibold">Profile Photos</h2>
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                  Update your profile picture and cover photo.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-white/80">Profile Picture</h3>
+                <AvatarUpload
+                  currentUrl={profile.avatar_url}
+                  onUploadComplete={async () => {
+                    await refreshProfile(true);
+                  }}
+                  size="lg"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-white/80">Cover Photo</h3>
+                <CoverPhotoUpload
+                  ref={coverUploadRef}
+                  currentCoverUrl={profile.cover_url}
+                  onUploadComplete={async () => {
+                    await refreshProfile(true);
+                  }}
+                  userId={user.id}
+                />
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className={`${MaiTrollTheme.components.card} space-y-4`}>
           <div className="flex items-center gap-2">

@@ -358,7 +358,7 @@ export default function CourtViewerPage() {
         uid: userId,
         videoTrack: remote?.videoTrack || null,
         audioTrack: remote?.audioTrack || null,
-        username: participant?.user_profiles?.username || role.label,
+        username: (participant?.user_profiles as any)?.username || role.label,
         role: role.key,
         isLocal: false,
       };

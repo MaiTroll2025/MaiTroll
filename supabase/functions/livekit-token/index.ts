@@ -59,7 +59,6 @@ interface ProfileRecord {
   is_banned?: boolean | null;
   is_suspended?: boolean | null;
   account_state?: string | null;
-  xtrollz_access_status?: string | null;
   age_verified?: boolean | null;
   identity_verified?: boolean | null;
 }
@@ -170,10 +169,6 @@ function getRequestedCategory(
   mode: string,
   role: string,
 ): ParticipantCategory {
-  if (mode === "xtrollz-preview") return "preview";
-  if (mode === "xtrollz-viewer") return "viewer";
-  if (mode === "xtrollz-broadcaster") return "host";
-
   if (role === "ghost" || isTruthy(body.ghost)) return "ghost";
 
   if (isTruthy(body.isHost)) {
@@ -330,6 +325,30 @@ async function userHasStagePass(
       message: error.message,
     });
 
+    return false;
+  }
+
+  return Boolean(data);
+}
+
+async function singoffValidateTokenAccess(
+  adminDb: SupabaseClient,
+  roomName: string,
+  userId: string,
+  mode: string,
+): Promise<boolean> {
+  const { data, error } = await adminDb.rpc("singoff_validate_token_access", {
+    p_room_name: roomName,
+    p_user_id: userId,
+    p_mode: mode,
+  });
+
+  if (error) {
+    console.warn("[livekit-token] Sing Off token validation failed", {
+      roomName,
+      userId,
+      message: error.message,
+    });
     return false;
   }
 
@@ -532,14 +551,139 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const role = normalizeRole(body.role);
 
     let category = getRequestedCategory(body, mode, role);
-
-    const stream = await getStream(adminDb, roomName);
-    const streamOwnerId = getStreamOwnerId(stream);
+    let isBattleRoom = false;
+    let battleBroadcaster = false;
+    let battleStatus = "";
 
     const userIsAdmin = isAdmin(profile);
-    const userOwnsStream = Boolean(
-      streamOwnerId && streamOwnerId === userId,
-    );
+
+    if (roomName.startsWith("battle-")) {
+      isBattleRoom = true;
+      const battleId = roomName.slice("battle-".length);
+
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(battleId)) {
+        return withCors(
+          {
+            success: false,
+            error: "Invalid battle room name.",
+            code: "invalid_battle_room",
+          },
+          403,
+          req,
+        );
+      }
+
+      const { data: battle, error: battleError } = await adminDb
+        .from("battles")
+        .select("id, challenger_stream_id, opponent_stream_id, status")
+        .eq("id", battleId)
+        .maybeSingle();
+
+      if (battleError || !battle) {
+        return withCors(
+          {
+            success: false,
+            error: "Battle not found.",
+            code: "battle_not_found",
+          },
+          403,
+          req,
+        );
+      }
+
+      battleStatus = cleanString(battle.status).toLowerCase();
+
+      if (["ended", "cancelled", "canceled"].includes(battleStatus)) {
+        return withCors(
+          {
+            success: false,
+            error: "This battle has ended.",
+            code: "battle_ended",
+          },
+          403,
+          req,
+        );
+      }
+
+      const { data: battleStreams, error: streamsError } = await adminDb
+        .from("streams")
+        .select("*")
+        .in("id", [
+          battle.challenger_stream_id,
+          battle.opponent_stream_id,
+        ]);
+
+      if (streamsError || !battleStreams || battleStreams.length !== 2) {
+        return withCors(
+          {
+            success: false,
+            error: "Battle streams not found.",
+            code: "battle_streams_not_found",
+          },
+          403,
+          req,
+        );
+      }
+
+      const challengerStream = battleStreams.find(
+        (s) => s.id === battle.challenger_stream_id,
+      );
+      const opponentStream = battleStreams.find(
+        (s) => s.id === battle.opponent_stream_id,
+      );
+
+      const challengerOwnerId = getStreamOwnerId(challengerStream);
+      const opponentOwnerId = getStreamOwnerId(opponentStream);
+
+      const userOwnsChallenger =
+        challengerOwnerId && challengerOwnerId === userId;
+      const userOwnsOpponent =
+        opponentOwnerId && opponentOwnerId === userId;
+      battleBroadcaster = userOwnsChallenger || userOwnsOpponent;
+
+      console.log("[livekit-token][battle]", {
+        battleId,
+        roomName,
+        userId,
+        challengerStreamId: battle.challenger_stream_id,
+        opponentStreamId: battle.opponent_stream_id,
+        challengerOwnerId,
+        opponentOwnerId,
+        resolvedParticipantType: battleBroadcaster
+          ? "broadcaster"
+          : "viewer",
+        canPublish: battleBroadcaster,
+        canSubscribe: true,
+      });
+
+      if (battleBroadcaster) {
+        category = "host";
+      } else if (
+        category === "host" ||
+        category === "publisher" ||
+        category === "seat"
+      ) {
+        return withCors(
+          {
+            success: false,
+            error: "You are not authorized to publish in this battle.",
+            code: "battle_publish_denied",
+          },
+          403,
+          req,
+        );
+      } else {
+        category = "viewer";
+      }
+    }
+
+    const stream = isBattleRoom ? null : await getStream(adminDb, roomName);
+    const streamOwnerId = isBattleRoom ? "" : getStreamOwnerId(stream);
+    const userOwnsStream = isBattleRoom
+      ? false
+      : Boolean(streamOwnerId && streamOwnerId === userId);
 
     /*
      * Ghost viewing is restricted to administrators.
@@ -557,36 +701,42 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     /*
-     * XTrollz requires its additional approval fields.
+     * Mai Sing Off rooms (mai-singoff-*) are not broadcast streams. Authorization
+     * is enforced server-side via the authoritative session/participant tables.
      */
-    if (
-      ["xtrollz-preview", "xtrollz-viewer", "xtrollz-broadcaster"].includes(
+    if (mode === "singoff-publisher" || mode === "singoff-viewer") {
+      const accessOk = await singoffValidateTokenAccess(
+        adminDb,
+        roomName,
+        userId,
         mode,
-      )
-    ) {
-      const xtrollzApproved =
-        profile?.xtrollz_access_status === "approved" &&
-        profile?.age_verified === true &&
-        profile?.identity_verified === true &&
-        !isRestrictedProfile(profile);
+      );
 
-      if (!xtrollzApproved) {
+      if (!accessOk) {
         return withCors(
           {
             success: false,
-            error: "XTrollz access is not approved.",
-            code: "xtrollz_access_denied",
+            error: "You are not authorized for this Mai Sing Off session.",
+            code: "singoff_access_denied",
           },
           403,
           req,
         );
       }
+
+      category = mode === "singoff-publisher" ? "publisher" : "viewer";
     }
 
     /*
      * Only the owner or an admin may receive a host token.
+     * Battle broadcasters are authorized server-side via the battle lookup above.
      */
-    if (category === "host" && !userOwnsStream && !userIsAdmin) {
+    if (
+      category === "host" &&
+      !userOwnsStream &&
+      !userIsAdmin &&
+      !(isBattleRoom && battleBroadcaster)
+    ) {
       return withCors(
         {
           success: false,
@@ -601,7 +751,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     /*
      * A requested seat token requires an active stage pass.
      */
-    if (category === "seat" && !userOwnsStream && !userIsAdmin) {
+    if (
+      category === "seat" &&
+      !userOwnsStream &&
+      !userIsAdmin &&
+      !(isBattleRoom && battleBroadcaster)
+    ) {
       const hasStagePass = await userHasStagePass(
         adminDb,
         roomName,
@@ -628,7 +783,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (
       category === "viewer" &&
       !userOwnsStream &&
-      !userIsAdmin
+      !userIsAdmin &&
+      !isBattleRoom
     ) {
       const hasStagePass = await userHasStagePass(
         adminDb,
@@ -641,43 +797,33 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    if (streamHasEnded(stream)) {
-      return withCors(
-        {
-          success: false,
-          error: "This broadcast has ended.",
-          code: "broadcast_ended",
-        },
-        403,
-        req,
-      );
-    }
-
-    const isLive = streamIsLive(stream);
-
-    if (isLive) {
-      const remainingMinutes = Number(stream?.minutes_remaining);
-
-      if (
-        Number.isFinite(remainingMinutes) &&
-        remainingMinutes <= 0
-      ) {
+    if (isBattleRoom) {
+      if (["ended", "cancelled", "canceled"].includes(battleStatus)) {
         return withCors(
           {
             success: false,
-            error:
-              "This broadcast has reached its maximum allocated minutes.",
-            code: "minutes_limit_reached",
-            minutesRemaining: 0,
-            totalMinutesAllowed:
-              Number(stream?.total_minutes_allowed) ||
-              360,
+            error: "This broadcast has ended.",
+            code: "broadcast_ended",
+          },
+          403,
+          req,
+        );
+      }
+    } else {
+      if (streamHasEnded(stream)) {
+        return withCors(
+          {
+            success: false,
+            error: "This broadcast has ended.",
+            code: "broadcast_ended",
           },
           403,
           req,
         );
       }
     }
+
+    const isLive = isBattleRoom ? true : streamIsLive(stream);
 
     const participantName =
       cleanString(body.displayName || body.name || body.participantName) ||

@@ -86,7 +86,6 @@ export interface UserEarningSummary {
   user_id: string
   total_earned_coins: number
   pending_coins: number
-  paid_coins: number
   week_earned_coins: number
   month_earned_coins: number
   last_paid_at: string | null

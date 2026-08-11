@@ -5,9 +5,9 @@ import { useGetContractById } from '../../hooks/useGetContractById';
 import { useGetUserTromailAccount } from '../../hooks/useGetUserTromailAccount';
 import { useSignContract } from '../../hooks/useSignContract';
 import { useRejectContract } from '../../hooks/useRejectContract';
-import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
-import { Textarea } from '../../ui/textarea';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 import { useGetTromailRoleDirectory } from '../../hooks/useGetTromailRoleDirectory';
 
 export const ContractViewer = () => {
@@ -31,8 +31,8 @@ export const ContractViewer = () => {
     isLoading: accountLoading
   } = useGetUserTromailAccount(user?.id);
 
-  const { signContractAsync } = useSignContract();
-  const { rejectContractAsync } = useRejectContract();
+  const signMutation = useSignContract();
+  const rejectMutation = useRejectContract();
 
   useEffect(() => {
     if (contractData) {
@@ -41,13 +41,13 @@ export const ContractViewer = () => {
     }
   }, [contractData]);
 
+  const userAccount = userAccountData;
+
   useEffect(() => {
     if (userAccount && contract) {
-      setLegalName(userAccount.display_name || userAccount.username || '');
+      setLegalName((userAccount as any).display_name || (userAccount as any).username || '');
     }
   }, [contract, userAccount]);
-
-  const userAccount = userAccountData;
 
   if (isLoading || contractLoading) {
     return <div className="p-4 text-white">Loading contract...</div>;
@@ -97,7 +97,7 @@ export const ContractViewer = () => {
     
     setIsSigning(true);
     try {
-      await signContractAsync({
+      await signMutation.mutateAsync({
         contractId,
         userId: userAccount.id,
         legalName,
@@ -117,7 +117,7 @@ export const ContractViewer = () => {
     
     setIsRejecting(true);
     try {
-      await rejectContractAsync({
+      await rejectMutation.mutateAsync({
         contractId,
         userId: userAccount.id,
         note: reason || ''
@@ -136,7 +136,7 @@ export const ContractViewer = () => {
       <h2 className="text-2xl font-bold mb-4">Review Contract: {contract.role_label}</h2>
       
       <div className="p-4 bg-slate-800 rounded-lg mb-4">
-        <p className="mb-2">Dear {userAccount?.display_name || userAccount?.username},</p>
+         <p className="mb-2">Dear {(userAccount as any)?.display_name || (userAccount as any)?.username},</p>
         <p>You have been appointed as a {contract.role_label} for Mai Troll.</p>
         <p className="mt-2">Please review all terms carefully before signing.</p>
       </div>

@@ -37,7 +37,7 @@ const LIVE_CITY_EVENTS: ActivityEvent[] = [
   { id: '2', type: 'gift',      message: '🎁 Tyson sent a 💎 Diamond — level up unlocked!', priority: 'medium', created_at: new Date(Date.now() - 60000).toISOString() },
   { id: '3', type: 'battle',    message: '⚔️ Universal Battle is underway — support your team!', priority: 'high',   created_at: new Date(Date.now() - 120000).toISOString(), metadata: { url: '/watch/demo3' } },
   { id: '4', type: 'tcnn_live', message: '📰 TCNN: Friday Battle Day is LIVE all across the city', priority: 'high',   created_at: new Date(Date.now() - 180000).toISOString(), metadata: { url: '/tcnn' } },
-  { id: '5', type: 'system',    message: '🏠 A new house hit the market in Platinum Ridge',    priority: 'medium', created_at: new Date(Date.now() - 240000).toISOString(), metadata: { url: '/neighborhood-map' } },
+  { id: '5', type: 'system',    message: '🏠 A new house hit the market in Platinum Ridge',    priority: 'medium', created_at: new Date(Date.now() - 240000).toISOString(), metadata: { url: '/neighborhood-setup' } },
   { id: '6', type: 'gift',      message: '🎁 StormRider dropped a 🚀 Rocket — coin store x2!', priority: 'medium', created_at: new Date(Date.now() - 300000).toISOString() },
 ]
 
@@ -165,7 +165,7 @@ interface ChecklistStep {
 function getDefaultSteps(): ChecklistStep[] {
   return [
     { step: 1, title: 'Create your city profile', description: 'Pick a username, avatar, and make your Mai Troll identity.', icon: <Users className="w-5 h-5" />, actionLabel: 'Set up profile →', actionPath: '/profile/setup' },
-    { step: 2, title: 'Pick your neighborhood', description: 'Choose a district and find a house to call home in the city.', icon: <HomeIcon className="w-5 h-5" />, actionLabel: 'Explore neighborhoods →', actionPath: '/neighborhood-map' },
+    { step: 2, title: 'Pick your neighborhood', description: 'Choose a district and find a house to call home in the city.', icon: <HomeIcon className="w-5 h-5" />, actionLabel: 'Explore neighborhoods →', actionPath: '/neighborhood-setup' },
     { step: 3, title: 'Watch a broadcast', description: 'See what city content is live. Click a stream and join the chat.', icon: <Play className="w-5 h-5" />, actionLabel: 'Watch a stream →', actionPath: '/live' },
     { step: 4, title: 'Send or earn coins', description: 'Top up at the Coin Store or earn coins by engaging with the city.', icon: <Coins className="w-5 h-5" />, actionLabel: 'Open Coin Store →', actionPath: '/coin-store' },
     { step: 5, title: 'Join a seat or battle', description: 'Enter a broadcast seat to be on camera, or jump into a Friday Battle.', icon: <Sword className="w-5 h-5" />, actionLabel: 'View battles →', actionPath: '/live' },
@@ -428,7 +428,7 @@ export default function CityMapGuidePreview() {
     battle:       { path: '/live',                         auth: false },
     court:        { path: '/troll-court',                  auth: false },
     utromail:     { path: '/utromail',                     auth: false },
-    neighborhood: { path: '/neighborhood-map',             auth: false },
+    neighborhood: { path: '/neighborhood-setup',             auth: false },
     coins:        { path: '/coin-store',                   auth: false },
     tcnn:         { path: '/tcnn',                         auth: false },
 
@@ -1376,3 +1376,4 @@ function CityTourOverlay({
     </div>
   )
 }
+

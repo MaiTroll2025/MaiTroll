@@ -167,7 +167,7 @@ const PayoutAdmin: React.FC = () => {
     try {
       setProcessing(targetUserId);
       const { data, error } = await supabase.functions.invoke('admin-actions', {
-        body: { action: 'verify_id', targetUserId, action }
+        body: { action: 'verify_id', targetUserId, verifyAction: action }
       });
 
       if (error) throw error;

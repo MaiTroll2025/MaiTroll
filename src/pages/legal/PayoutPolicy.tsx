@@ -184,7 +184,7 @@ export default function PayoutPolicy() {
         </p>
 
         <p>
-          Mai Troll may separate paid coins, gift-earned coins, promotional coins,
+          Mai Troll may separate troll_coins, gift-earned coins, promotional coins,
           Hype Coins, bonuses, credits, and other balances for review and payout
           eligibility.
         </p>

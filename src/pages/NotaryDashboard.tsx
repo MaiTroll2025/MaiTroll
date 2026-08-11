@@ -67,9 +67,9 @@ export default function NotaryDashboard() {
     if (!docId) return
     ;(async () => {
       try {
-        const { document } = await fetchDocumentById(docId)
-        if (document) {
-          setSelectedDoc(document)
+        const docResult = await fetchDocumentById(docId)
+        if (docResult) {
+          setSelectedDoc(docResult)
           setActiveTab('pending')
         }
       } catch {

@@ -18,22 +18,21 @@ export default function ModerationPanel({ targetUserId, roomId }: ModerationPane
   const [showIPBanModal, setShowIPBanModal] = useState(false);
   const [targetIP, setTargetIP] = useState<string | null>(null);
 
-  const handleBan = async () => {
-    const reason = window.prompt("Enter ban reason:");
+  const handleArrest = async () => {
+    const reason = window.prompt("Enter arrest reason:");
     if (!reason) return;
 
     try {
       await api.post(api.endpoints.moderation.takeAction, { 
         action: 'take_action',
-        action_type: 'ban_user',
+        action_type: 'arrest',
         target_user_id: targetUserId,
         reason,
         ban_duration_hours: 24 // Default to 24h
       });
-      // room?.disconnectParticipant(targetUserId);
     } catch (error) {
-      console.error("Ban failed:", error);
-      alert("Failed to ban user");
+      console.error("Arrest failed:", error);
+      alert("Failed to arrest user");
     }
   };
 
@@ -183,7 +182,7 @@ export default function ModerationPanel({ targetUserId, roomId }: ModerationPane
       {/* Actions */}
       {open && (
         <div className="mt-2 space-y-2 bg-[#0c0818] p-2 rounded-xl border border-purple-800">
-          <Action label="Ban User" color="bg-red-700" onClick={handleBan} />
+          <Action label="Arrest User" color="bg-red-700" onClick={handleArrest} />
           <Action label="Ban IP Address" color="bg-red-900" onClick={async () => {
             // Fetch IP first if possible
              const { data, error } = await supabase

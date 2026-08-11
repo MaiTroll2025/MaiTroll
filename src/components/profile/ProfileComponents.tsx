@@ -4,13 +4,15 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import {
     Gavel, FileText, Mic, Radio, ShoppingBag, Video,
     Star, Award, Users, TrendingUp, Clock, DollarSign, Eye,
     CheckCircle, Shield, Crown, Heart, MessageCircle, UserPlus,
     Settings, Package, History, Bookmark, Send, MoreHorizontal,
-    ShoppingCart, Hammer, BookOpen, Newspaper, Scale, Ticket, AlertTriangle, ShieldAlert
+    ShoppingCart, Hammer, BookOpen, Newspaper, Scale, Ticket, AlertTriangle, ShieldAlert,
+    Camera
 } from 'lucide-react';
 
 interface UserProfile {
@@ -29,6 +31,7 @@ interface UserProfile {
     posts_count: number;
     is_verified: boolean;
     is_live: boolean;
+    is_minor?: boolean;
     created_at: string;
     theme_color?: string;
     accent_color?: string;
@@ -50,6 +53,8 @@ interface ProfileHeaderProps {
     showModActionsStat?: boolean;
     onModActionsClick?: () => void;
     isJailed?: boolean;
+    onAvatarEdit?: () => void;
+    onCoverEdit?: () => void;
 }
 
 export function ProfileHeader({
@@ -68,25 +73,101 @@ export function ProfileHeader({
     showModActionsStat = false,
     onModActionsClick,
     isJailed = false,
+    onAvatarEdit,
+    onCoverEdit,
 }: ProfileHeaderProps) {
     const themeColor = profile.theme_color || '#9333ea';
     const accentColor = profile.accent_color || '#22d3ee';
     const avatarUrl = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`;
+    const [expandedCover, setExpandedCover] = useState(false);
+    const [countdown, setCountdown] = useState(5);
+
+    useEffect(() => {
+        if (!expandedCover) return;
+        const timer = setInterval(() => {
+            setCountdown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    setExpandedCover(false);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [expandedCover]);
 
     return (
         <section className="rounded-[2rem] border border-white/10 bg-slate-950/70 shadow-[0_0_60px_rgba(147,51,234,0.16)] backdrop-blur-2xl overflow-hidden">
             {/* Banner */}
             <div className="relative h-56 md:h-72 overflow-hidden">
                 {(profile.cover_url || profile.banner_url) ? (
-                    <img src={profile.cover_url || profile.banner_url} alt="Cover" className="w-full h-full object-cover" />
+                    <img
+                        src={profile.cover_url || profile.banner_url}
+                        alt="Cover"
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => setExpandedCover(true)}
+                        onLoad={() => console.log('[Cover Photo Debug] Image loaded:', profile.cover_url || profile.banner_url)}
+                        onError={(e) => console.error('[Cover Photo Debug] Image failed to load:', profile.cover_url || profile.banner_url, e)}
+                    />
                 ) : (
-                    <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${themeColor}60 0%, ${accentColor}40 50%, ${themeColor}30 100%)` }} />
+                    <div className="w-full h-full cursor-pointer" onClick={() => setExpandedCover(true)} style={{ background: `linear-gradient(135deg, ${themeColor}60 0%, ${accentColor}40 50%, ${themeColor}30 100%)` }} />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-black/45 to-black/10" />
-                <div className="absolute left-5 top-5 rounded-full border border-white/20 bg-slate-950/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/80 backdrop-blur-xl">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-black/45 to-black/10 pointer-events-none" />
+                {(() => {
+                    const coverSrc = profile.cover_url || profile.banner_url;
+                    console.log('[Cover Photo Debug]', {
+                        username: profile.username,
+                        hasCover: !!coverSrc,
+                        cover_url: profile.cover_url,
+                        banner_url: profile.banner_url,
+                        src: coverSrc,
+                    });
+                    return null;
+                })()}
+                <div className="absolute left-5 top-5 rounded-full border border-white/20 bg-slate-950/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/80 backdrop-blur-xl pointer-events-none">
                     Mai Troll Profile
                 </div>
+                {isOwnProfile && onCoverEdit && (
+                    <button
+                        onClick={onCoverEdit}
+                        className="absolute bottom-4 right-4 rounded-full bg-slate-950/80 border border-white/20 px-3 py-2 text-white hover:bg-slate-900 hover:border-white/40 transition flex items-center gap-1.5"
+                        title="Change cover photo"
+                    >
+                        <Camera className="h-4 w-4" />
+                        <span className="text-xs font-semibold">Change Cover</span>
+                    </button>
+                )}
             </div>
+
+            {expandedCover && createPortal(
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
+                    onClick={() => setExpandedCover(false)}
+                >
+                    <div
+                        className="relative max-w-[95vw] max-h-[95vh]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className="absolute top-2 right-2 z-20 rounded-full bg-slate-800/90 p-2 text-white hover:bg-slate-700 transition-colors"
+                            onClick={() => setExpandedCover(false)}
+                            aria-label="Close cover preview"
+                        >
+                            ✕
+                        </button>
+                        <img
+                            src={profile.cover_url || profile.banner_url}
+                            alt="Cover expanded"
+                            className="max-h-[90vh] w-auto object-contain"
+                        />
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/70 text-white text-sm">
+                            Auto-closing in {countdown}s
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
 
             {/* Profile Info */}
             <div className="relative px-5 pb-6 md:px-8">
@@ -96,6 +177,15 @@ export function ProfileHeader({
                         <div className={`relative h-44 w-44 shrink-0 rounded-full border-4 bg-black p-1 shadow-[0_0_50px_rgba(0,0,0,0.8)] ${profile.is_live ? 'border-red-400' : 'border-white/20'}`}
                             style={{ borderColor: profile.is_live ? undefined : themeColor }}>
                             <img src={avatarUrl} alt={profile.display_name} className="w-full h-full rounded-full object-cover" />
+                            {isOwnProfile && onAvatarEdit && (
+                                <button
+                                    onClick={onAvatarEdit}
+                                    className="absolute -bottom-1 -right-1 rounded-full bg-slate-950/80 border border-white/20 p-2 text-white hover:bg-slate-900 hover:border-white/40 transition"
+                                    title="Change profile picture"
+                                >
+                                    <Camera className="h-4 w-4" />
+                                </button>
+                            )}
                             {isJailed && (
                                 <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
                                     <div className="absolute inset-0 bg-black/40" />
@@ -387,7 +477,6 @@ export const PROFILE_TABS = [
     { key: 'badges', label: 'Badges', icon: Award },
     { key: 'inventory', label: 'Inventory & Perks', icon: Package },
     { key: 'purchases', label: 'Purchase History', icon: History },
-    { key: 'promos', label: 'MaiTalent Promos', icon: Ticket },
     { key: 'settings', label: 'Settings', icon: Settings }
 ];
 

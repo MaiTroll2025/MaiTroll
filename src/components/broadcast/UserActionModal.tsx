@@ -170,7 +170,7 @@ export default function UserActionModal({
         action_type: 'arrest',
         reason: 'Anon user arrested (90-day mandatory)',
         severity: 'high',
-      }).catch(() => {});
+      });
 
       toast.success(`Anon user ${username || anonFingerprint} arrested for 90 days`);
       onClose();

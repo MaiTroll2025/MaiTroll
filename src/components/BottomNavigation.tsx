@@ -59,7 +59,6 @@ import {
   Mail,
   Briefcase,
   Sparkles,
-  Zap,
   Smartphone,
   Wrench,
 } from 'lucide-react'
@@ -283,11 +282,10 @@ export default function BottomNavigation() {
       0,
   )
 
-  const hypeCoins = Number(
-    (balances as any)?.hype_coins ??
-      (balances as any)?.hypeCoins ??
-      (balances as any)?.broadcast_hype_coins ??
-      (profile as any)?.hype_coins ??
+  const trollmonds = Number(
+    (profile as any)?.trollmonds ??
+      (profile as any)?.trollmond_balance ??
+      (profile as any)?.trollmonds_balance ??
       0,
   )
 
@@ -629,7 +627,6 @@ export default function BottomNavigation() {
     () => [
       { category: 'Broadcasting', label: 'Go Live', icon: Video, path: '/broadcast/setup', show: !!user && canBroadcast() },
 
-      { category: 'Careers + Work', label: 'Jobs', icon: FileText, path: '/jobs' },
       { category: 'Careers + Work', label: 'My Earnings', icon: DollarSign, path: '/my-earnings' },
       { category: 'Careers + Work', label: 'My Orders', icon: ClipboardList, path: '/my-orders' },
       { category: 'Careers + Work', label: 'Hytro Gaming', icon: Gamepad2, path: '/hytrogaming' },
@@ -1152,10 +1149,10 @@ export default function BottomNavigation() {
                           <div className="text-lg font-black text-yellow-300">{trollCoins.toLocaleString()}</div>
                         </div>
 
-                        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
-                          <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Hype Coins</div>
-                          <div className="text-lg font-black text-cyan-300">{hypeCoins.toLocaleString()}</div>
-                        </div>
+                         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
+                           <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Trollmonds</div>
+                           <div className="text-lg font-black text-purple-300">{trollmonds.toLocaleString()}</div>
+                         </div>
 
                         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
                           <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Level</div>

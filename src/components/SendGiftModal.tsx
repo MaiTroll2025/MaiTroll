@@ -48,6 +48,18 @@ interface GiftItem {
   holiday_theme: string | null
   description?: string
   animation_type?: string
+  animationUrl?: string
+  animationType?: string
+  animationKey?: string
+  animationDurationMs?: number
+  soundUrl?: string
+  isFullscreen?: boolean
+  rarity?: string
+  trayVisualUrl?: string
+  trayGradient?: string
+  videoUrl?: string
+  slug?: string
+  gift_slug?: string
   currency?: 'troll_coins'
 }
 
@@ -91,7 +103,7 @@ export default function SendGiftModal({
         const query = supabase
           .from('gift_items')
           .select('*')
-          .order('value', { ascending: true })
+          .order('coin_cost', { ascending: true })
 
         const res = await query.is('holiday_theme', null)
         if (res.error) throw res.error
@@ -100,12 +112,24 @@ export default function SendGiftModal({
         const dbPayload = (data || []).map((item: any) => ({
           id: item.id,
           name: item.name,
-          icon: item.icon || '',
-          value: item.value,
+          icon: item.icon || item.icon_url || '',
+          value: item.coin_cost,
           category: item.category || 'Common',
           holiday_theme: item.holiday_theme || null,
           description: item.description || undefined,
           animation_type: item.animation_type || undefined,
+          animation_url: item.animation_url || null,
+          animation_key: item.animation_key || null,
+          animation_duration_ms: item.animation_duration_ms || null,
+          sound_url: item.sound_url || null,
+          is_fullscreen: item.is_fullscreen || null,
+          rarity: item.rarity || null,
+          tray_visual_url: item.tray_visual_url || null,
+          tray_gradient: item.tray_gradient || null,
+          gift_slug: item.gift_slug || null,
+          video_url: item.video_url || null,
+          icon_url: item.icon_url || null,
+          slug: item.gift_slug || item.slug || null,
           currency: item.currency || 'troll_coins'
         }))
 
@@ -116,9 +140,23 @@ export default function SendGiftModal({
             id: g.id,
             name: g.name,
             icon: (g as any).icon || '',
-            value: (g as any).coinCost || (g as any).value || 0,
+            value: (g as any).coinCost || 0,
             category: g.category || 'Common',
             holiday_theme: null,
+            description: undefined,
+            animation_type: undefined,
+            animation_url: null,
+            animation_key: null,
+            animation_duration_ms: null,
+            sound_url: null,
+            is_fullscreen: null,
+            rarity: null,
+            tray_visual_url: null,
+            tray_gradient: null,
+            gift_slug: null,
+            video_url: null,
+            icon_url: null,
+            slug: g.id,
             currency: 'troll_coins'
           }
         }
@@ -138,7 +176,7 @@ export default function SendGiftModal({
           id: g.id,
           name: g.name,
           icon: (g as any).icon || '',
-          value: (g as any).coinCost || (g as any).value || 0,
+          value: (g as any).coinCost || 0,
           category: g.category || 'Common',
           holiday_theme: null,
           currency: 'troll_coins' as const
@@ -196,9 +234,35 @@ export default function SendGiftModal({
         icon: item.icon,
         specialEffect: item.description,
         effect: item.description,
-        currency: item.currency || 'troll_coins'
+        currency: item.currency || 'troll_coins',
+        animationUrl: item.animationUrl,
+        animationType: item.animationType,
+        animationKey: item.animationKey,
+        slug: item.slug || item.id,
+        soundUrl: item.soundUrl,
+        isFullscreen: item.isFullscreen,
+        rarity: item.rarity,
+        trayVisualUrl: item.trayVisualUrl,
+        trayGradient: item.trayGradient,
+        animationDurationMs: item.animationDurationMs,
+        videoUrl: item.videoUrl,
       }))
-    : GIFT_ITEMS.map(gift => ({ ...gift, category: 'Common', currency: 'troll_coins' }))
+    : GIFT_ITEMS.map(gift => ({
+        ...gift,
+        category: 'Common',
+        currency: 'troll_coins',
+        animationUrl: undefined,
+        animationType: undefined,
+        animationKey: undefined,
+        slug: gift.id,
+        soundUrl: undefined,
+        isFullscreen: undefined,
+        rarity: undefined,
+        trayVisualUrl: undefined,
+        trayGradient: undefined,
+        animationDurationMs: undefined,
+        videoUrl: undefined,
+      }))
 
   const filteredGifts = displayGifts
 

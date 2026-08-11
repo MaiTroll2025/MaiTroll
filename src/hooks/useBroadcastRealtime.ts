@@ -1,6 +1,73 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { generateUUID } from '../lib/uuid';
+import type { GiftRarity } from '../types/gifts';
+
+export async function hydrateRealtimeGift(rawGift: any): Promise<BroadcastGift> {
+  let giftItem: any = null
+
+  if (rawGift?.gift_id) {
+    const { data } = await supabase
+      .from('gift_items')
+      .select(
+        'id,name,gift_slug,slug,animation_url,animation_type,animation_duration_ms,sound_url,tray_visual_url,icon,metadata'
+      )
+      .eq('id', rawGift.gift_id)
+      .maybeSingle()
+
+    giftItem = data
+  }
+
+  return {
+    ...rawGift,
+
+    gift_name:
+      rawGift?.gift_name ??
+      giftItem?.name ??
+      'Gift',
+
+    gift_slug:
+      rawGift?.gift_slug ??
+      giftItem?.gift_slug ??
+      giftItem?.slug ??
+      null,
+
+    animation_url:
+      rawGift?.animation_url ??
+      giftItem?.animation_url ??
+      null,
+
+    animation_type:
+      rawGift?.animation_type ??
+      giftItem?.animation_type ??
+      null,
+
+    animation_duration_ms:
+      rawGift?.animation_duration_ms ??
+      giftItem?.animation_duration_ms ??
+      null,
+
+    sound_url:
+      rawGift?.sound_url ??
+      giftItem?.sound_url ??
+      null,
+
+    tray_visual_url:
+      rawGift?.tray_visual_url ??
+      giftItem?.tray_visual_url ??
+      null,
+
+    gift_icon:
+      rawGift?.gift_icon ??
+      giftItem?.icon ??
+      null,
+
+    metadata: {
+      ...(giftItem?.metadata ?? {}),
+      ...(rawGift?.metadata ?? {}),
+    },
+  }
+}
 
 export interface BroadcastRealtimeState {
   stream: any | null;
@@ -100,6 +167,21 @@ export function useBroadcastRealtime({
   const MAX_MESSAGES = 100;
   const FLUSH_INTERVAL = 100;
 
+  const onGiftReceivedRef = useRef(onGiftReceived)
+  onGiftReceivedRef.current = onGiftReceived
+
+  const onStreamEndRef = useRef(onStreamEnd)
+  onStreamEndRef.current = onStreamEnd
+
+  const onMessageReceivedRef = useRef(onMessageReceived)
+  onMessageReceivedRef.current = onMessageReceived
+
+  const onParticipantJoinRef = useRef(onParticipantJoin)
+  onParticipantJoinRef.current = onParticipantJoin
+
+  const onParticipantLeaveRef = useRef(onParticipantLeave)
+  onParticipantLeaveRef.current = onParticipantLeave
+
   const cleanup = useCallback(() => {
     channelsRef.current.forEach(channel => {
       if (channel) {
@@ -136,7 +218,7 @@ export function useBroadcastRealtime({
           setState(prev => {
             if (newData.status === 'ended' || newData.is_live === false) {
               if (!prev.hasEnded) {
-                onStreamEnd?.();
+                onStreamEndRef.current?.();
               }
               return {
                 ...prev,
@@ -177,40 +259,46 @@ export function useBroadcastRealtime({
           };
 
           messageBufferRef.current.push(newMessage);
-          onMessageReceived?.(newMessage);
+          onMessageReceivedRef.current?.(newMessage);
         }
       )
       .on(
         'broadcast',
         { event: 'gift_sent' },
-        (payload) => {
+        async (payload) => {
           const envelope = payload.payload;
           if (envelope.v !== 1 || envelope.stream_id !== streamId) return;
 
-          const giftData = envelope.d;
+          const rawGift = envelope.d;
+          if (!rawGift) return;
 
-          const newGift = {
-            id: giftData.id,
-            gift_id: giftData.gift_id,
-            gift_name: giftData.gift_name,
-            gift_icon: giftData.gift_icon || '🎁',
-            gift_slug: giftData.gift_slug,
-            animation_type: giftData.animation_type,
-            amount: giftData.amount,
-            quantity: giftData.quantity || 1,
-            sender_id: giftData.sender_id,
-            sender_name: giftData.sender_name || 'Someone',
-            receiver_id: giftData.receiver_id,
-            receiver_name: giftData.receiver_name,
-            created_at: giftData.timestamp || new Date().toISOString(),
-          } as BroadcastGift;
+          const hydratedGift = await hydrateRealtimeGift(rawGift)
+
+          const newGift: BroadcastGift = {
+            id: hydratedGift.id || rawGift.id,
+            gift_id: hydratedGift.gift_id || rawGift.gift_id,
+            gift_name: hydratedGift.gift_name || rawGift.gift_name || 'Gift',
+            gift_icon: hydratedGift.gift_icon || rawGift.gift_icon || '🎁',
+            gift_slug: hydratedGift.gift_slug || rawGift.gift_slug || null,
+            animation_type: hydratedGift.animation_type || rawGift.animation_type || null,
+            animation_url: hydratedGift.animation_url || rawGift.animation_url || null,
+            animation_duration_ms: hydratedGift.animation_duration_ms || rawGift.animation_duration_ms || null,
+            sound_url: hydratedGift.sound_url || rawGift.sound_url || null,
+            amount: hydratedGift.amount || rawGift.amount || 0,
+            quantity: hydratedGift.quantity || rawGift.quantity || 1,
+            sender_id: hydratedGift.sender_id || rawGift.sender_id,
+            sender_name: hydratedGift.sender_name || rawGift.sender_name || 'Someone',
+            receiver_id: hydratedGift.receiver_id || rawGift.receiver_id,
+            receiver_name: hydratedGift.receiver_name || rawGift.receiver_name || null,
+            created_at: hydratedGift.created_at || rawGift.timestamp || new Date().toISOString(),
+          };
 
           setState(prev => ({
             ...prev,
             recentGifts: [...prev.recentGifts.slice(-19), newGift],
           }));
 
-          onGiftReceived?.(newGift);
+          onGiftReceivedRef.current?.(newGift);
         }
       )
       .on(
@@ -225,10 +313,10 @@ export function useBroadcastRealtime({
               totalLikes: likeData.total_likes,
             }));
           } else {
-            setState(prev => ({
-              ...prev,
-              totalLikes: prev.totalLikes + 1,
-            }));
+             setState(prev => ({
+               ...prev,
+               totalLikes: prev.totalLikes + 2,
+             }));
           }
         }
       )
@@ -261,7 +349,7 @@ export function useBroadcastRealtime({
             return prev;
           });
 
-          onParticipantJoin?.(participant);
+          onParticipantJoinRef.current?.(participant);
         });
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
@@ -278,7 +366,7 @@ export function useBroadcastRealtime({
             participants: prev.participants.filter(pa => pa.user_id !== participant.user_id),
           }));
 
-          onParticipantLeave?.(participant);
+          onParticipantLeaveRef.current?.(participant);
         });
       })
       .subscribe();
@@ -319,7 +407,7 @@ export function useBroadcastRealtime({
       clearInterval(flushInterval);
       cleanup();
     };
-  }, [streamId, userId, cleanup, onStreamEnd, onGiftReceived, onMessageReceived, onParticipantJoin, onParticipantLeave]);
+  }, [streamId, userId, cleanup]);
 
   const sendMessage = useCallback(async (content: string, userProfile: any) => {
     if (!userId || !content.trim()) return;
@@ -387,7 +475,7 @@ export function useBroadcastRealtime({
 
     setState(prev => ({
       ...prev,
-      totalLikes: prev.totalLikes + 1,
+      totalLikes: prev.totalLikes + 2,
     }));
   }, [streamId, userId]);
 

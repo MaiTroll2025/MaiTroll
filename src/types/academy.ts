@@ -44,6 +44,7 @@ export interface AcademyTeacher {
   specialties: string[];
   is_active: boolean;
   is_approved: boolean;
+  credentials_verified?: boolean;
   approved_by: string | null;
   approved_at: string | null;
   total_students: number;
@@ -51,6 +52,8 @@ export interface AcademyTeacher {
   total_certificates_issued: number;
   average_rating: number;
   total_ratings: number;
+  total_earnings: number;
+  pending_payout: number;
   created_at: string;
   updated_at: string;
   // Joined fields
@@ -129,6 +132,7 @@ export interface AcademyClassroom {
 export interface AcademyEnrollment {
   id: string;
   student_id: string;
+  student_name?: string;
   course_id: string;
   classroom_id: string | null;
   student_id_number: string | null;
@@ -176,6 +180,7 @@ export interface AcademySession {
   status: SessionStatus;
   created_at: string;
   updated_at: string;
+  academy_courses?: any;
 }
 
 export interface AcademyAttendance {
@@ -369,6 +374,8 @@ export interface AcademyCoinReward {
   reference_id: string | null;
   reference_type: string | null;
   created_at: string;
+  updated_at: string;
+  course?: any;
 }
 
 export interface AcademyStudentBan {

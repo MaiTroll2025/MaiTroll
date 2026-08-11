@@ -18,6 +18,8 @@ export default function BroadcastRestrictionControl() {
     viewerCapHours,
     startCapEnabled,
     startCapMax,
+    seatCapEnabled,
+    seatCapMax,
     allRestrictionsDisabled,
     loading,
     isAdmin,
@@ -25,6 +27,8 @@ export default function BroadcastRestrictionControl() {
     setViewerCapMax,
     setStartCapEnabled,
     setStartCapMax,
+    setSeatCapEnabled,
+    setSeatCapMax,
     setAllRestrictionsDisabled,
   } = useBroadcastViewerCap();
 
@@ -311,7 +315,7 @@ export default function BroadcastRestrictionControl() {
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 Max Broadcasters:
               </label>
-              {[5, 10, 15, 20, 25, 50].map((n) => (
+              {[2].map((n) => (
                 <button
                   key={n}
                   onClick={() => handleSetMax('start-cap-max', setStartCapMax, n)}
@@ -320,6 +324,98 @@ export default function BroadcastRestrictionControl() {
                     'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
                     startCapMax === n
                       ? 'bg-purple-500 text-white'
+                      : 'bg-white/5 text-slate-400 hover:bg-white/10',
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Broadcast Seat Cap */}
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-xl border transition-all duration-300',
+          seatCapEnabled
+            ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)]'
+            : 'bg-slate-900/50 border-white/10',
+        )}
+      >
+        <div className="p-5">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div
+                className={cn(
+                  'p-2.5 rounded-full',
+                  seatCapEnabled ? 'bg-cyan-500/20' : 'bg-slate-700/50',
+                )}
+              >
+                <Users
+                  className={cn(
+                    'w-5 h-5',
+                    seatCapEnabled ? 'text-cyan-400' : 'text-slate-400',
+                  )}
+                />
+              </div>
+              <div>
+                <h3
+                  className={cn(
+                    'text-base font-bold',
+                    seatCapEnabled ? 'text-cyan-400' : 'text-white',
+                  )}
+                >
+                  Seat Cap per Broadcast
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {seatCapEnabled
+                    ? `Limited to ${seatCapMax} total boxes per stream (temp 2-week limit).`
+                    : 'Limit total boxes per broadcast (including broadcaster).'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() =>
+                handleToggle(
+                  'seat-cap',
+                  setSeatCapEnabled,
+                  !seatCapEnabled,
+                )
+              }
+              disabled={updating !== null || allRestrictionsDisabled}
+              className={cn(
+                'px-5 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all',
+                seatCapEnabled
+                  ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-lg shadow-cyan-500/20'
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300',
+                (updating === 'seat-cap' || allRestrictionsDisabled) &&
+                  'opacity-50 cursor-not-allowed',
+              )}
+            >
+              {updating === 'seat-cap' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : null}
+              {seatCapEnabled ? 'Disable' : 'Enable'}
+            </button>
+          </div>
+
+          {seatCapEnabled && (
+            <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-white/10">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Max Boxes:
+              </label>
+              {[2, 3, 4, 5, 6].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => handleSetMax('seat-cap-max', setSeatCapMax, n)}
+                  disabled={updating !== null}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
+                    seatCapMax === n
+                      ? 'bg-cyan-500 text-white'
                       : 'bg-white/5 text-slate-400 hover:bg-white/10',
                   )}
                 >

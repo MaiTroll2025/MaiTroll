@@ -94,9 +94,9 @@ export const useSupportGoalReminder = () => {
         if (!profile) continue;
 
         // Calculate current cashout-eligible balance
-        const currentBalance = (profile.troll_coins || 0) + 
-                              (profile.cashout_coins || 0) - 
-                              (profile.cashout_reserved_coins || 0);
+        // All troll coins are cashout-eligible; subtract reserved coins for pending payouts
+        const currentBalance = (profile.troll_coins || 0) - 
+                               (profile.cashout_reserved_coins || 0);
 
         // Find next cashout tier
         let nextTier = tiersData[tiersData.length - 1]; // Default to highest tier

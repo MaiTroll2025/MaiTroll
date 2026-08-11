@@ -60,8 +60,8 @@ export function useStreamLikes(streamId: string, initialTotalLikes: number = 0) 
   const handleLike = useCallback(() => {
     if (!user) return
 
-    pendingLikesRef.current += 1
-    setDisplayedLikes((current) => current + 1)
+    pendingLikesRef.current += 2
+    setDisplayedLikes((current) => current + 2)
 
     if (pendingLikesRef.current >= 25) {
       flushLikes()

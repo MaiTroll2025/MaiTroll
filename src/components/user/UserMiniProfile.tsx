@@ -270,7 +270,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
                 <SubscribeButton
                   broadcasterId={userId}
                   broadcasterUsername={username}
-                  currentSubscription={subscription}
                 />
                 <button
                   onClick={handleFollow}

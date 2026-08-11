@@ -37,7 +37,7 @@ export async function getProfiles(userIds: string[]): Promise<Profile[]> {
       data.forEach(p => profileCache.set(p.id, p))
       return data as Profile[]
     })
-    .catch(() => {
+    .then(undefined, () => {
       inflightRequests.delete(cacheKey)
       return []
     })

@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileFrame from '@/components/profile/ProfileFrame';
@@ -10,7 +10,6 @@ import {
   Gavel,
   Scale,
   Scan,
-  Map,
   Gamepad2,
   GraduationCap,
   LayoutGrid,
@@ -44,7 +43,6 @@ import {
   LogOut,
   ChevronUp,
   X,
-  Zap,
   TrendingUp,
   Building2,
   Landmark,
@@ -57,6 +55,7 @@ import {
   Sparkles,
   Radio,
   RefreshCw,
+  Gem,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
@@ -66,7 +65,7 @@ import { supabase, UserRole } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavBadges } from '@/hooks/useNavBadges';
 
-/* ─── Role helpers (mirrored from Sidebar/BottomNav) ─── */
+/* --- Role helpers (mirrored from Sidebar/BottomNav) --- */
 function useRoleChecks(profile: any) {
   const role = String(profile?.role || '');
   const trollRole = String(profile?.troll_role || '');
@@ -208,20 +207,20 @@ function useRoleChecks(profile: any) {
   return { isAdmin, isSecretary, isLead, isOfficer, isPresident, isBroadcaster, isAgencyHR, isHRAdmin, isAgencyLeader, isAttorney, isProsecutor, isPastor, isJournalist, isNewsCaster, isChiefNewsCaster, isCEOAssistant, isNoahAssistant, isAuctioneer, isEmployee, role, trollRole };
 }
 
-/* ─── Format helpers ─── */
+/* --- Format helpers --- */
 function formatCoins(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
 }
 
-/* ─── Profile Module (left section) ─── */
+/* --- Profile Module (left section) --- */
 function ProfileModule({ collapsed }: { collapsed: boolean }) {
   const { user, profile } = useAuthStore();
   const { balances } = useCoins();
   const xpStore = useXPStore();
   const trollCoins = Number((balances as any)?.troll_coins ?? 0);
-  const hypeCoins = Number((balances as any)?.hype_coins ?? 0);
+  const trollmonds = Number((profile as any)?.trollmonds ?? 0);
   const crowns = Number((profile as any)?.crowns ?? 0);
   const trollmoods = Number((profile as any)?.trollmoods ?? 0);
   const currentLevel = xpStore.level;
@@ -288,8 +287,8 @@ function ProfileModule({ collapsed }: { collapsed: boolean }) {
           <span className="flex items-center gap-0.5 text-yellow-300">
             <Coins className="h-2.5 w-2.5" /> {formatCoins(trollCoins)}
           </span>
-          <span className="flex items-center gap-0.5 text-cyan-300">
-            <Zap className="h-2.5 w-2.5" /> {formatCoins(hypeCoins)}
+          <span className="flex items-center gap-0.5 text-purple-300">
+            <Gem className="h-2.5 w-2.5" /> {formatCoins(trollmonds)}
           </span>
           {crowns > 0 && (
             <span className="flex items-center gap-0.5 text-amber-300">
@@ -302,7 +301,7 @@ function ProfileModule({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-/* ─── Nav Button (center section) ─── */
+/* --- Nav Button (center section) --- */
 interface NavButtonProps {
   icon: React.ElementType;
   label: string;
@@ -376,7 +375,7 @@ function NavButton({ icon: Icon, label, to, active, highlight, onClick, size = '
   );
 }
 
-/* ─── More Pages Panel ─── */
+/* --- More Pages Panel --- */
 interface MorePagesPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -397,7 +396,7 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
   const navigate = useNavigate_fixed();
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const trollCoins = Number((balances as any)?.troll_coins ?? 0);
-  const hypeCoins = Number((balances as any)?.hype_coins ?? 0);
+  const trollmonds = Number((profile as any)?.trollmonds ?? 0);
   const crowns = Number((profile as any)?.crowns ?? 0);
   const currentLevel = xpStore.level;
   const displayName = profile?.display_name || profile?.username || 'Citizen';
@@ -439,7 +438,6 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
       {
         category: 'Community',
         items: [
-          { label: 'Neighborhood', icon: Map, path: '/neighborhood-map' },
           { label: 'HydroGaming', icon: Gamepad2, path: '/hytrogaming' },
           { label: 'Live Auctions', icon: Gavel, path: '/auctions' },
           { label: 'Agencies', icon: Building2, path: '/agencies' },
@@ -448,9 +446,10 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
           { label: 'Troll Church', icon: BookOpen, path: '/church' },
           { label: 'Troll Match', icon: Heart, path: '/match' },
           { label: 'Podcast Central', icon: Mic, path: '/podcast' },
-          { label: 'TCNN News', icon: Newspaper, path: '/tcnn' },
-          { label: 'Troll Wheel', icon: Shuffle, path: '/troll-wheel' },
-          { label: 'XTrollz', icon: Zap, path: '/xtrollz' },
+           { label: 'TCNN News', icon: Newspaper, path: '/tcnn' },
+           { label: 'EPaper', icon: Newspaper, path: '/epaper' },
+           { label: 'Troll Wheel', icon: Shuffle, path: '/troll-wheel' },
+           { label: 'Mai Sing Off', icon: Mic, path: '/mai-sing-off' },
         ],
       },
        {
@@ -692,8 +691,8 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
                       <span className="flex items-center gap-0.5 text-yellow-300">
                         <Coins className="h-2.5 w-2.5" /> {formatCoins(trollCoins)}
                       </span>
-                      <span className="flex items-center gap-0.5 text-cyan-300">
-                        <Zap className="h-2.5 w-2.5" /> {formatCoins(hypeCoins)}
+                      <span className="flex items-center gap-0.5 text-purple-300">
+                        <Gem className="h-2.5 w-2.5" /> {formatCoins(trollmonds)}
                       </span>
                       {crowns > 0 && (
                         <span className="flex items-center gap-0.5 text-amber-300">
@@ -775,7 +774,7 @@ function useNavigate_fixed() {
   return useNavigate();
 }
 
-/* ─── Main Bottom Navigation Bar ─── */
+/* --- Main Bottom Navigation Bar --- */
 export default function BottomNavBar() {
   const location = useLocation();
   const { user, profile } = useAuthStore();
@@ -843,7 +842,7 @@ export default function BottomNavBar() {
 
             {/* CENTER: Nav buttons */}
             {isMobile ? (
-              /* MOBILE: Scrollable row — Home → ... → Profile, More always at end */
+              /* MOBILE: Scrollable row � Home ? ... ? Profile, More always at end */
               <nav className="flex flex-1 items-center gap-3 overflow-x-auto scrollbar-hide px-2">
                 <NavButton icon={Home} label="Home" to="/home" active={isActive('/home') || isActive('/')} size="large" badge={badges.home} badgeKey="home" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={MessageCircle} label="Chats" to="/utromail" active={isActive('/utromail')} size="large" badge={badges.chats} badgeKey="chats" onBadgeDismiss={badges.dismiss} />
@@ -855,9 +854,8 @@ export default function BottomNavBar() {
                   <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} size="large" />
                   <NavButton icon={Newspaper} label="TCNN" to="/tcnn" active={isActive('/tcnn')} size="large" />
                  <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} size="large" badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} size="large" badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Map} label="Neighborhood" to="/neighborhood-map" active={isActive('/neighborhood-map')} size="large" badge={badges.neighborhood} badgeKey="neighborhood" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} size="large" />
+                 <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} size="large" badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
+                 <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} size="large" />
                 <NavButton icon={GraduationCap} label="Academy" to="/academy" active={isActive('/academy')} size="large" badge={badges.academy} badgeKey="academy" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={DollarSign} label="MAI Pay" to="/mai-pay" active={isActive('/mai-pay')} size="large" />
                 <NavButton icon={Trophy} label="Leaderboard" to="/leaderboard" active={isActive('/leaderboard')} size="large" />
@@ -893,7 +891,6 @@ export default function BottomNavBar() {
                   <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} />
                   <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Map} label="Neighborhood" to="/neighborhood-map" active={isActive('/neighborhood-map')} badge={badges.neighborhood} badgeKey="neighborhood" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} />
                 <NavButton icon={GraduationCap} label="Academy" to="/academy" active={isActive('/academy')} badge={badges.academy} badgeKey="academy" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={DollarSign} label="MAI Pay" to="/mai-pay" active={isActive('/mai-pay')} />
@@ -929,3 +926,4 @@ export default function BottomNavBar() {
     </>
   );
 }
+

@@ -75,7 +75,7 @@ export function normaliseGiftEvent(
 
   // row UUID — the single birthmark shared by both channels
   const rawId =
-    _firstStr(['id', 'stream_gift_id', 'gift_transaction_id'].map((k) => rawGift as any))
+    _firstStr(['id', 'stream_gift_id', 'gift_transaction_id', 'transaction_id'].map((k) => rawGift as any))
 
   // Sender field name varies across sources
   const senderId = _firstStr(

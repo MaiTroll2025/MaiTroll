@@ -31,6 +31,8 @@ interface CityStatusOrbProps {
   };
   /** Callback when user clicks the house icon */
   onHouseClick?: () => void;
+  /** Callback for raid action */
+  onRaid?: () => void;
   /** Callback for follow action */
   onFollow?: () => void;
   /** Callback for gift action */
@@ -78,6 +80,7 @@ export default function CityStatusOrb({
   data,
   permissions,
   onHouseClick,
+  onRaid,
   onFollow,
   onGift,
   onMessage,
@@ -118,13 +121,21 @@ export default function CityStatusOrb({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-700 bg-slate-900/95 shadow-2xl shadow-black/40 overflow-hidden w-full max-w-sm">
+    <div className={`rounded-2xl border bg-slate-900/95 shadow-2xl shadow-black/40 overflow-hidden w-full max-w-sm ${data.recentlyRaided ? 'border-red-500/80 animate-pulse shadow-red-500/20' : 'border-slate-700'}`}>
       {/* Header with avatar and basic info */}
       <div className="relative p-4 bg-gradient-to-br from-slate-800 to-slate-900">
         {/* T League badge - top right */}
         <div className={`absolute top-3 right-3 flex items-center gap-1 rounded-full px-2.5 py-1 bg-gradient-to-r ${data.subTierColor || data.tLeagueTier.color} shadow-lg`}>
           <span className="text-sm font-black text-white">{data.league_tier}{data.league_sub_tier || ''}</span>
         </div>
+
+        {/* Raid indicator */}
+        {data.recentlyRaided && (
+          <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-red-500/20 px-2.5 py-1 border border-red-500/30">
+            <AlertTriangle className="w-3 h-3 text-red-400" />
+            <span className="text-[10px] font-bold text-red-300 uppercase tracking-wider">Raided</span>
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           {/* Avatar */}
@@ -318,7 +329,13 @@ export default function CityStatusOrb({
       {data.house_id && (
         <div className="px-4 pb-3">
           <button
-            onClick={onHouseClick}
+            onClick={() => {
+              if (permissions.canRaid && !permissions.isSelf && onRaid) {
+                onRaid();
+              } else if (onHouseClick) {
+                onHouseClick();
+              }
+            }}
             className="w-full flex items-center justify-between rounded-xl bg-slate-800/60 border border-slate-700 px-3 py-2 hover:bg-slate-700/60 transition-colors"
           >
             <div className="flex items-center gap-2">

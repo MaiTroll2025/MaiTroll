@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Stream } from '../../types/broadcast';
-import { Swords, Loader2, SkipForward, Trophy, Crown, Shield, LightningBolt } from 'lucide-react';
+import { Swords, Loader2, SkipForward, Trophy, Crown, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import UserNameWithAge from '../UserNameWithAge';
 import { getCategoryConfig } from '../../config/broadcastCategories';

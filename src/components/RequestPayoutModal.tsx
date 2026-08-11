@@ -42,7 +42,7 @@ export default function RequestPayoutModal({
 
   const MINIMUM_COINS = CASHOUT_TIERS[0].coins // minimum cashout tier
   const estimateUsd = (coins: number) => {
-    let best = CASHOUT_TIERS[0];
+    let best: any = CASHOUT_TIERS[0];
     for (const tier of CASHOUT_TIERS) {
       if (coins >= tier.coins) best = tier;
     }

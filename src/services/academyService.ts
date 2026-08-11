@@ -756,7 +756,7 @@ export const awardAcademyCoins = async (
   // Update user's coin balance
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('troll_coins, free_coin_balance')
+    .select('troll_coins')
     .eq('id', studentId)
     .single();
 
@@ -765,7 +765,6 @@ export const awardAcademyCoins = async (
       .from('user_profiles')
       .update({
         troll_coins: (profile.troll_coins || 0) + coins,
-        free_coin_balance: (profile.free_coin_balance || 0) + coins,
       })
       .eq('id', studentId);
   }

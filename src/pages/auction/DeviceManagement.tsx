@@ -33,6 +33,7 @@ interface MobileScannerSession {
   connected_at: string | null
   last_seen_at: string
   created_at: string
+  auction_id?: string | null
 }
 
 interface Device {
@@ -110,7 +111,7 @@ export default function DeviceManagement() {
     try {
       const device = devices.find(d => d.id === id)
 
-      if (device?.connection_type === 'bluetooth' && device?.status === 'connected') {
+      if ((device as any)?.connection_type === 'bluetooth' && device?.status === 'connected') {
         if (bluetoothDeviceRef.current && bluetoothDeviceRef.current.gatt?.connected) {
           bluetoothDeviceRef.current.gatt.disconnect()
         }
@@ -137,19 +138,19 @@ export default function DeviceManagement() {
   }
 
   // ── Web Bluetooth connection state ──────────────────────────────────────
-  const bluetoothDeviceRef = useRef<BluetoothDevice | null>(null)
-  const bluetoothServerRef = useRef<BluetoothRemoteGATTServer | null>(null)
+  const bluetoothDeviceRef = useRef<any>(null)
+  const bluetoothServerRef = useRef<any>(null)
 
   const connectBluetoothDevice = async (device: Device): Promise<boolean> => {
     // Check if Web Bluetooth is supported
-    if (!navigator.bluetooth) {
+    if (!(navigator as any).bluetooth) {
       toast.error('Web Bluetooth is not supported in this browser. Use Chrome or Edge.')
       return false
     }
 
     try {
       // Request a Bluetooth device
-      const btDevice = await navigator.bluetooth.requestDevice({
+      const btDevice = await (navigator as any).bluetooth.requestDevice({
         // For printers, accept all devices; for scanners, filter by service
         filters: device.device_type === 'printer'
           ? [{ services: ['generic_access'] }]
@@ -218,12 +219,12 @@ export default function DeviceManagement() {
         .from('auction_devices')
         .update({
           status: newStatus,
-          last_connected_at: newStatus === 'connected' ? new Date().toISOString() : device.last_connected_at,
+          last_connected_at: (newStatus as any) === 'connected' ? new Date().toISOString() : device.last_connected_at,
         })
         .eq('id', device.id)
 
       if (newStatus === 'pairing') {
-        if (device.connection_type === 'bluetooth') {
+        if ((device as any).connection_type === 'bluetooth') {
           // Use Web Bluetooth API for Bluetooth devices
           const connected = await connectBluetoothDevice(device)
           if (connected) {
@@ -249,7 +250,7 @@ export default function DeviceManagement() {
             await fetchDevices()
           }, 2000)
         }
-      } else if (newStatus === 'disconnected' && device.connection_type === 'bluetooth') {
+      } else if (newStatus === 'disconnected' && (device as any).connection_type === 'bluetooth') {
         await disconnectBluetoothDevice(device)
       }
 
@@ -263,10 +264,10 @@ export default function DeviceManagement() {
     const results: string[] = []
     results.push(`[${new Date().toLocaleTimeString()}] Starting device diagnostics...`)
     results.push(`[${new Date().toLocaleTimeString()}] Scanning USB ports...`)
-    results.push(`[${new Date().toLocaleTimeString()}] Found ${devices.filter(d => d.connection_type === 'usb').length} USB device(s)`)
+    results.push(`[${new Date().toLocaleTimeString()}] Found ${devices.filter(d => (d as any).connection_type === 'usb').length} USB device(s)`)
     results.push(`[${new Date().toLocaleTimeString()}] Scanning Bluetooth...`)
-    results.push(`[${new Date().toLocaleTimeString()}] Web Bluetooth API: ${navigator.bluetooth ? 'Available' : 'Not available (use Chrome/Edge)'}`)
-    results.push(`[${new Date().toLocaleTimeString()}] Found ${devices.filter(d => d.connection_type === 'bluetooth').length} Bluetooth device(s)`)
+    results.push(`[${new Date().toLocaleTimeString()}] Web Bluetooth API: ${(navigator as any).bluetooth ? 'Available' : 'Not available (use Chrome/Edge)'}`)
+    results.push(`[${new Date().toLocaleTimeString()}] Found ${devices.filter(d => (d as any).connection_type === 'bluetooth').length} Bluetooth device(s)`)
     results.push(`[${new Date().toLocaleTimeString()}] Checking HID keyboard scanners...`)
     results.push(`[${new Date().toLocaleTimeString()}] HID scanners are detected automatically via keyboard input`)
     results.push(`[${new Date().toLocaleTimeString()}] Checking printer drivers...`)

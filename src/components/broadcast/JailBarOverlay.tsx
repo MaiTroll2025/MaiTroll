@@ -176,7 +176,7 @@ export default function JailBarOverlay({
     return { y: '100%' };
   }, [animState]);
 
-  const barGroupTransition = useMemo(() => {
+  const barGroupTransition = useMemo<{ duration: number; ease?: number[] }>(() => {
     if (animState === 'rising') {
       return { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] };
     }
@@ -216,7 +216,7 @@ export default function JailBarOverlay({
         className="jail-bars"
         initial={{ y: '100%' }}
         animate={barGroupAnimate}
-        transition={barGroupTransition}
+        transition={barGroupTransition as any}
       >
         {bars}
         {crossbars}

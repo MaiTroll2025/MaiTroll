@@ -3,16 +3,12 @@ import React, { useEffect, Suspense, useState, useRef } from "react";
 import TrollProvider from "./troll/TrollProvider";
 import { EffectsProvider } from "./contexts/BroadcastEffectsContext";
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import TreelzPage from "./pages/TreelzPage";
-import TreelzUploadPage from "./pages/TreelzUploadPage";
+const TreelzPage = lazyWithRetry(() => import("./pages/TreelzPage"));
+const TreelzUploadPage = lazyWithRetry(() => import("./pages/TreelzUploadPage"));
 import { useAuthStore } from "./lib/store";
-import XtrollzHome from "./pages/xtrollz/XtrollzHome";
-import XtrollzRulesPage from "./pages/xtrollz/XtrollzRulesPage";
-import XtrollzApplyPage from "./pages/xtrollz/XtrollzApplyPage";
-import XtrollzPaymentPage from "./pages/xtrollz/XtrollzPaymentPage";
-import XTrollzLiveViewer from "./pages/xtrollz/XtrollzLiveViewer";
-import XTrollzBroadcasterStudio from "./pages/xtrollz/XtrollzBroadcasterStudio";
-import XtrollzAdminDashboard from "./pages/admin/XtrollzAdminDashboard";
+const MaiSingOffPage = lazyWithRetry(() => import("./features/mai-sing-off/pages/MaiSingOffPage"));
+const MaiRecordLabelPage = lazyWithRetry(() => import("./pages/MaiRecordLabelPage"));
+import { SingOffJudgeApplicationsAdmin } from "./features/mai-sing-off/pages/SingOffJudgeApplicationsAdmin";
 import { GlobalEventProvider } from "./contexts/GlobalEventContext";
 import { BatterySaverProvider } from "./contexts/BatterySaverContext";
 import { ProfileFrameProvider } from "./contexts/ProfileFrameContext";
@@ -35,7 +31,6 @@ import { useBugAlertStore } from "./stores/useBugAlertStore";
 import DailyChurchNotification from "./components/church/DailyChurchNotification";
 import TeamMeetingNotification from "./components/TeamMeetingRoom/TeamMeetingNotification";
 import SurveyNotification from "./components/SurveyNotification";
-import GlobalPromoCardListener from "./components/promo/GlobalPromoCardListener";
 
 import { useGlobalApp } from "./contexts/GlobalAppContext";
 import { updateRoute } from "./utils/sessionStorage";
@@ -64,14 +59,14 @@ import AdminOfficerQuickMenu from "./components/AdminOfficerQuickMenu";
 import { PageChannelProvider } from "./contexts/PageChannelContext";
 import { StaffWalkieTalkieProvider } from "./components/StaffWalkieTalkieProvider";
 
-import AdminErrors from "./pages/admin/AdminErrors";
+const AdminErrors = lazyWithRetry(() => import("./pages/admin/AdminErrors"));
 import ProfileSetupModal from "./components/ProfileSetupModal";
 import RequireRole from "./components/RequireRole";
 import { RequireLeadOrOwner } from "./components/auth/RequireLeadOrOwner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GrandCityEntrance from "./components/entrance/GrandCityEntrance";
 import UnderConstructionPage from "./components/UnderConstructionPage";
-import CareersPage from "./pages/CareersPage";
+const CareersPage = lazyWithRetry(() => import("./pages/CareersPage"));
 
 // Agency Pages (lazy-loaded)
 const AgenciesPage = lazyWithRetry(() => import("./pages/agencies"));
@@ -79,8 +74,8 @@ const CreateAgencyPage = lazyWithRetry(() => import("./pages/agencies/CreateAgen
 const AgencyProfilePage = lazyWithRetry(() => import("./pages/agency/[agencyId]"));
 const AgencyApplyPage = lazyWithRetry(() => import("./pages/agency-apply/[agencyId]"));
 const AgencyDashboard = lazyWithRetry(() => import("./pages/agency-dashboard"));
-import HytroGamingApply from "./pages/gaming/HytroGamingApply";
-import HytroGamingContract from "./pages/gaming/HytroGamingContract";
+const HytroGamingApply = lazyWithRetry(() => import("./pages/gaming/HytroGamingApply"));
+const HytroGamingContract = lazyWithRetry(() => import("./pages/gaming/HytroGamingContract"));
 const AgencyHRDashboard = lazyWithRetry(() => import("./pages/agency-hr-dashboard"));
 const AttorneyDashboard = lazyWithRetry(() => import("./pages/attorney/AttorneyDashboard"));
 const ProsecutorDashboard = lazyWithRetry(() => import("./pages/prosecutor/ProsecutorDashboard"));
@@ -173,11 +168,6 @@ const SEOFAQPage = lazyWithRetry(() => import("./pages/seo/FAQPage"));
 const SEOPrivacyPage = lazyWithRetry(() => import("./pages/seo/PrivacyPage"));
 const SEOTermsPage = lazyWithRetry(() => import("./pages/seo/TermsPage"));
 
-const OfficerPayrollDashboard = lazyWithRetry(() => import("./pages/officer/OfficerPayrollDashboard"));
-const OfficerDashboard = lazyWithRetry(() => import("./pages/officer/OfficerDashboard"));
-const OfficerOWCDashboard = lazyWithRetry(() => import("./pages/OfficerOWCDashboard"));
-const OfficerVote = lazyWithRetry(() => import("./pages/OfficerVote"));
-const LeadOfficerDashboard = lazyWithRetry(() => import("./pages/lead-officer/LeadOfficerDashboard"));
 const EmployeesPage = lazyWithRetry(() => import("./features/employees/EmployeesPage"));
 const ReportDetailsPage = lazyWithRetry(() => import("./pages/ReportDetailsPage"));
 const PasswordReset = lazyWithRetry(() => import("./pages/PasswordReset"));
@@ -205,7 +195,6 @@ const PaymentLogs = lazyWithRetry(() => import("./pages/admin/PaymentLogs"));
 const StorePriceEditor = lazyWithRetry(() => import("./pages/admin/components/StorePriceEditor"));
 const AdminFinanceDashboard = lazyWithRetry(() => import("./pages/admin/AdminFinanceDashboard"));
 const CreateSchedule = lazyWithRetry(() => import("./pages/admin/CreateSchedule"));
-const OfficerShifts = lazyWithRetry(() => import("./pages/admin/OfficerShifts"));
 
 
 const ReferralBonuses = lazyWithRetry(() => import("./pages/admin/ReferralBonuses"));
@@ -252,7 +241,7 @@ const TrollmersTournament = lazyWithRetry(() => import("./pages/admin/TrollmersT
 const SupabaseUsageDashboard = lazyWithRetry(() => import("./pages/admin/SupabaseUsageDashboard"));
 const StateRankings = lazyWithRetry(() => import("./pages/StateRankings"));
 const StateDetail = lazyWithRetry(() => import("./pages/StateDetail"));
-import VerifiedBadgePage from "./pages/VerifiedBadgePage";
+const VerifiedBadgePage = lazyWithRetry(() => import("./pages/VerifiedBadgePage"));
 const TMFamilyInviteHandler = lazyWithRetry(() => import("./components/trollmatch/TMFamilyInviteHandler"));
 const EmbedPage = lazyWithRetry(() => import("./pages/broadcast/EmbedPage"));
 const HomepageBackgroundShowcase = lazyWithRetry(() => import("./pages/dev/HomepageBackgroundShowcase"));
@@ -365,7 +354,6 @@ const isPublicRoute = (pathname: string) => {
      const isLoading = useAuthStore((s) => s.isLoading);
      const isRefreshing = useAuthStore((s) => s.isRefreshing);
       const { isJailed } = useJailMode(user?.id);
-      const xtrollzDobMismatch = useAuthStore((s) => s.xtrollzDobMismatch);
       const location = useLocation();
      
      // Show loading overlay while auth is initializing, but keep children mounted behind it
@@ -432,18 +420,41 @@ const isPublicRoute = (pathname: string) => {
       return <Navigate to="/apply" replace />;
     }
 
-    if (xtrollzDobMismatch && location.pathname !== '/xtrollz/apply') {
-      return <Navigate to="/xtrollz/apply" replace />;
-    }
-
-    // Neighborhood setup guard - redirect users without neighborhood_id to setup
+      // Neighborhood setup guard - redirect users without neighborhood_id or incomplete onboarding to setup
     if (
       profile &&
-      !profile?.neighborhood_id &&
-      (location.pathname === "/map" || location.pathname === "/neighborhood-map") &&
+      location.pathname === "/map" &&
       !isPublicRoute(location.pathname)
     ) {
-      return <Navigate to="/neighborhood-setup" replace />;
+      const profileAny = profile as any
+      const hasNeighborhood = !!profileAny?.neighborhood_id
+      const hasHouse = !!profileAny?.house_id
+      const hasVehicle = !!profileAny?.vehicle_id
+      const carInsuranceValid = profileAny?.car_insurance_expiry
+        ? new Date(profileAny.car_insurance_expiry) > new Date()
+        : false
+      const homeInsuranceValid = profileAny?.homeowners_insurance_expiry
+        ? new Date(profileAny.homeowners_insurance_expiry) > new Date()
+        : false
+      const hasPlate = !!profileAny?.license_plate
+      const hasLicense =
+        profileAny?.license_status === 'active' ||
+        (profileAny?.license_status === 'suspended' &&
+          !!profileAny?.driver_test_passed_at &&
+          carInsuranceValid)
+
+      const isComplete =
+        hasNeighborhood &&
+        hasHouse &&
+        hasVehicle &&
+        carInsuranceValid &&
+        homeInsuranceValid &&
+        hasPlate &&
+        hasLicense
+
+      if (!isComplete) {
+        return <Navigate to="/neighborhood-setup" replace />
+      }
     }
 
     return (
@@ -480,127 +491,128 @@ const isPublicRoute = (pathname: string) => {
   }
 
 import { useSidebarStore } from './stores/useSidebarStore';
-import TCNNMainPage from "./pages/tcnn/TCNNMainPage.js";
-import ArticleReader from "./pages/tcnn/ArticleReader.js";
-import TCNNInternalDashboard from "./pages/tcnn/TCNNInternalDashboard.js";
-import TCNNSetupPage from "./pages/tcnn/TCNNSetupPage.js";
-import TCNNViewerPage from "./pages/tcnn/TCNNViewerPage.js";
-import TCNNBroadcasterPage from "./pages/tcnn/TCNNBroadcasterPage.js";
-import ShopView from "./pages/ShopView.js";
-import InmatesPage from "./pages/InmatesPage.js";
-import JailAppealPage from "./pages/JailAppealPage.js";
-import ProfileSetup from "./pages/ProfileSetup.js";
-import Profile from "./pages/Profile.js";
-import MapPage from "./pages/MapPage.js";
-import NeighborhoodMapHub from "./pages/NeighborhoodMapHub.js";
-import InsurancePage from "./pages/InsurancePage.js";
-import NeighborhoodOnboarding from "./pages/NeighborhoodOnboarding.js";
-import DriverTest from "./pages/DriverTest.js";
-import AdminManualOrders from "./pages/admin/AdminManualOrders.js";
-import OfficerManager from "./pages/admin/OfficerManager.js";
-import ThemePreviewPage from "./pages/dev/ThemePreviewPage.js";
-import ExecutiveIntake from "./pages/admin/ExecutiveIntake.js";
-import AdminCashoutDetailPage from "./pages/admin/CashoutDetailPage.js";
-import CashoutManager from "./pages/admin/CashoutManager.js";
-import CourtRoom from "./pages/CourtRoom.js";
-import CourtSummary from "./pages/CourtSummary.js";
-import TeamMeetingRoom from "./pages/TeamMeetingRoom";
-import CoinsComplete from "./pages/CoinsComplete.js";
+const TCNNMainPage = lazyWithRetry(() => import("./pages/tcnn/TCNNMainPage.js"));
+const ArticleReader = lazyWithRetry(() => import("./pages/tcnn/ArticleReader.js"));
+const TCNNInternalDashboard = lazyWithRetry(() => import("./pages/tcnn/TCNNInternalDashboard.js"));
+const TCNNSetupPage = lazyWithRetry(() => import("./pages/tcnn/TCNNSetupPage.js"));
+const TCNNViewerPage = lazyWithRetry(() => import("./pages/tcnn/TCNNViewerPage.js"));
+const TCNNBroadcasterPage = lazyWithRetry(() => import("./pages/tcnn/TCNNBroadcasterPage.js"));
+const EPaperPage = lazyWithRetry(() => import("./pages/epaper/EPaperPage.js"));
+const ShopView = lazyWithRetry(() => import("./pages/ShopView.js"));
+const InmatesPage = lazyWithRetry(() => import("./pages/InmatesPage.js"));
+const JailAppealPage = lazyWithRetry(() => import("./pages/JailAppealPage.js"));
+const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup.js"));
+const Profile = lazyWithRetry(() => import("./pages/Profile.js"));
+const MapPage = lazyWithRetry(() => import("./pages/MapPage.js"));
+const InsurancePage = lazyWithRetry(() => import("./pages/InsurancePage.js"));
+const NeighborhoodOnboarding = lazyWithRetry(() => import("./pages/NeighborhoodOnboarding.js"));
+const NewUserOnboarding = lazyWithRetry(() => import("./pages/NewUserOnboarding"));
+const DriverTest = lazyWithRetry(() => import("./pages/DriverTest.js"));
+const AdminManualOrders = lazyWithRetry(() => import("./pages/admin/AdminManualOrders.js"));
+const OfficerManager = lazyWithRetry(() => import("./pages/admin/OfficerManager.js"));
+const ThemePreviewPage = lazyWithRetry(() => import("./pages/dev/ThemePreviewPage.js"));
+const ExecutiveIntake = lazyWithRetry(() => import("./pages/admin/ExecutiveIntake.js"));
+const AdminCashoutDetailPage = lazyWithRetry(() => import("./pages/admin/CashoutDetailPage.js"));
+const CashoutManager = lazyWithRetry(() => import("./pages/admin/CashoutManager.js"));
+const CourtRoom = lazyWithRetry(() => import("./pages/CourtRoom.js"));
+const CourtSummary = lazyWithRetry(() => import("./pages/CourtSummary.js"));
+const TeamMeetingRoom = lazyWithRetry(() => import("./pages/TeamMeetingRoom"));
+const CoinsComplete = lazyWithRetry(() => import("./pages/CoinsComplete.js"));
 
-import StatsPage from "./pages/Stats";
-import Auth from "./pages/Auth.js";
-import AuthCallback from "./pages/AuthCallback.js";
-import ExitPage from "./pages/ExitPage.js";
-import FoundingOfficerTrial from "./pages/FoundingOfficerTrial.js";
-import AppLayout from "./components/layout/AppLayout.js";
-import ExploreFeed from "./pages/ExploreFeed.js";
-import HighBcastersPage from "./pages/HighBcasters";
-import ExploreSearchResults from "./pages/ExploreSearchResults.js";
-import StreamSwipePage from "./pages/StreamSwipePage.js";
-import ApplicationPage from "./pages/ApplicationPage.js";
-import JobsApplicationPage from "./pages/ApplicationPage.js";
-import JobsStatusPage from "./pages/Jobs.tsx";
-import SetupPage from "./pages/broadcast/SetupPage.js";
-import GamingSetupPage from "./pages/broadcast/GamingSetupPage.tsx";
-import GamingAnalytics from "./pages/broadcast/gaming/GamingAnalytics.tsx";
-import GamingCommunity from "./pages/broadcast/gaming/GamingCommunity.tsx";
-import GamingMonetization from "./pages/broadcast/gaming/GamingMonetization.tsx";
-import GamingStore from "./pages/broadcast/gaming/GamingStore.tsx";
-import BroadcastRouter from "./pages/broadcast/BroadcastRouter.js";
-import StreamSummary from "./pages/broadcast/StreamSummary.js";
-import ReplayPage from "./pages/broadcast/ReplayPage.tsx";
-import PresidentPage from "./pages/President.js";
-import PresidentDashboard from "./pages/president/PresidentDashboard.js";
-import SecretaryDashboard from "./pages/president/SecretaryDashboard.js";
-import TreasuryDashboard from "./pages/TreasuryDashboard";
-import MatchPage from "./pages/MatchPage";
-import CityRegistry from "./pages/CityRegistry";
-import AdvertisePage from "./pages/city-registry/AdvertisePage";
-import Following from "./pages/Following";
-import PublicPool from "./pages/PublicPool";
-import GiveawaysPage from "./pages/GiveawaysPage";
-import TrollWheel from "./pages/TrollWheel";
-import CarDealership from "./pages/CarDealership";
+const StatsPage = lazyWithRetry(() => import("./pages/Stats"));
+const Auth = lazyWithRetry(() => import("./pages/Auth.js"));
+const AuthCallback = lazyWithRetry(() => import("./pages/AuthCallback.js"));
+const ExitPage = lazyWithRetry(() => import("./pages/ExitPage.js"));
+const FoundingOfficerTrial = lazyWithRetry(() => import("./pages/FoundingOfficerTrial.js"));
+const AppLayout = lazyWithRetry(() => import("./components/layout/AppLayout.js"));
+const ExploreFeed = lazyWithRetry(() => import("./pages/ExploreFeed.js"));
+const HighBcastersPage = lazyWithRetry(() => import("./pages/HighBcasters"));
+const ExploreSearchResults = lazyWithRetry(() => import("./pages/ExploreSearchResults.js"));
+const StreamSwipePage = lazyWithRetry(() => import("./pages/StreamSwipePage.js"));
+const ApplicationPage = lazyWithRetry(() => import("./pages/ApplicationPage.js"));
+const JobsApplicationPage = lazyWithRetry(() => import("./pages/ApplicationPage.js"));
+const JobsStatusPage = lazyWithRetry(() => import("./pages/Jobs.tsx"));
+const SetupPage = lazyWithRetry(() => import("./pages/broadcast/SetupPage.js"));
+const GamingSetupPage = lazyWithRetry(() => import("./pages/broadcast/GamingSetupPage.tsx"));
+const GamingAnalytics = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingAnalytics.tsx"));
+const GamingCommunity = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingCommunity.tsx"));
+const GamingMonetization = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingMonetization.tsx"));
+const GamingStore = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingStore.tsx"));
+const BroadcastRouter = lazyWithRetry(() => import("./pages/broadcast/BroadcastRouter.js"));
+const StreamSummary = lazyWithRetry(() => import("./pages/broadcast/StreamSummary.js"));
+const ReplayPage = lazyWithRetry(() => import("./pages/broadcast/ReplayPage.tsx"));
+const PresidentPage = lazyWithRetry(() => import("./pages/President.js"));
+const PresidentDashboard = lazyWithRetry(() => import("./pages/president/PresidentDashboard.js"));
+const SecretaryDashboard = lazyWithRetry(() => import("./pages/president/SecretaryDashboard.js"));
+const TreasuryDashboard = lazyWithRetry(() => import("./pages/TreasuryDashboard"));
+const MatchPage = lazyWithRetry(() => import("./pages/MatchPage"));
+const CityRegistry = lazyWithRetry(() => import("./pages/CityRegistry"));
+const AdvertisePage = lazyWithRetry(() => import("./pages/city-registry/AdvertisePage"));
+const Following = lazyWithRetry(() => import("./pages/Following"));
+const PublicPool = lazyWithRetry(() => import("./pages/PublicPool"));
+const GiveawaysPage = lazyWithRetry(() => import("./pages/GiveawaysPage"));
+const TrollWheel = lazyWithRetry(() => import("./pages/TrollWheel"));
+const CarDealership = lazyWithRetry(() => import("./pages/CarDealership"));
 const GaragePage = lazyWithRetry(() => import("./pages/GaragePage"));
 const VehicleTransactionsPage = lazyWithRetry(() => import("./pages/VehicleTransactionsPage"));
-import UserInventory from "./pages/UserInventory";
-import Troting from "./pages/Troting";
-import ProfileSettings from "./pages/ProfileSettings";
-import DeleteAccount from "./pages/DeleteAccount";
-import TrollBank from "./pages/TrollBank";
-import Leaderboard from "./pages/Leaderboard";
-import WallPage from "./pages/WallPage";
-import WallPostPage from "./pages/WallPostPage";
+const UserInventory = lazyWithRetry(() => import("./pages/UserInventory"));
+const Troting = lazyWithRetry(() => import("./pages/Troting"));
+const ProfileSettings = lazyWithRetry(() => import("./pages/ProfileSettings"));
+const DeleteAccount = lazyWithRetry(() => import("./pages/DeleteAccount"));
+const TrollBank = lazyWithRetry(() => import("./pages/TrollBank"));
+const Leaderboard = lazyWithRetry(() => import("./pages/Leaderboard"));
+const WallPage = lazyWithRetry(() => import("./pages/WallPage"));
+const WallPostPage = lazyWithRetry(() => import("./pages/WallPostPage"));
 import LivingPage from "./pages/UnderConstructionPage";
-import ChurchPage from "./pages/ChurchPage";
-import PastorDashboard from "./pages/church/PastorDashboard";
+const ChurchPage = lazyWithRetry(() => import("./pages/ChurchPage"));
+const PastorDashboard = lazyWithRetry(() => import("./pages/church/PastorDashboard"));
 const ChurchLivePage = lazyWithRetry(() => import("./pages/church/ChurchLivePage.tsx"));
-import LiveCommandCenter from "./pages/live/LiveCommandCenter";
-import LiveStreamOverlay from "./pages/live/LiveStreamOverlay";
-import AudioSettings from "./pages/live/AudioSettings.js";
-import TrollCourt from "./pages/TrollCourt.js";
-import AuctionsPage from "./pages/AuctionsPage.js";
-import SearchPage from "./pages/SearchPage.tsx";
-import PodcastCentral from "./pages/PodcastCentral.js";
-import PodcastRoom from "./pages/PodcastRoom.js";
-import AuctionStudio from "./pages/auction/AuctionStudio.js";
-import AuctionStudioLots from "./pages/auction/AuctionStudioLots.js";
-import AuctioneerDashboard from "./pages/auction/AuctioneerDashboard.js";
-import MyAuctionShows from "./pages/auction/MyAuctionShows.js";
-import AuctionReports from "./pages/auction/AuctionReports.js";
-import AdminAuctionApps from "./pages/auction/AdminAuctionApps.js";
-import LiveAuctionRoom from "./pages/auction/LiveAuctionRoom.js";
-import AuctionWon from "./pages/auction/AuctionWon.js";
-import AuctionBidders from "./pages/auction/AuctionBidders.js";
-import AuctionSales from "./pages/auction/AuctionSales.js";
-import AuctionAnalytics from "./pages/auction/AuctionAnalytics.js";
-import AuctionSettings from "./pages/auction/AuctionSettings.js";
-import AuctionInventory from "./pages/auction/AuctionInventory.js";
-import AuctionOrderManagement from "./pages/auction/AuctionOrderManagement.js";
-import PackingStation from "./pages/auction/PackingStation.js";
-import DeviceManagement from "./pages/auction/DeviceManagement.js";
-import AuctioneerScanner from "./pages/auction/AuctioneerScanner.js";
-import AuctionApp from "./pages/auction/AuctionApp.js";
-import CoinStore from "./pages/CoinStore.jsx";
-import ProfileFrameStore from "./pages/ProfileFrameStore";
-import SellOnTrollCity from "./pages/SellOnTrollCity";
-import SellerOrders from "./pages/SellerOrders.js";
-import MyOrders from "./pages/MyOrders.js";
-import FamilyBrowse from "./pages/FamilyBrowse.js";
-import TrollFamilyCity from "./pages/TrollFamilyCity.js";
-import FamilyProfilePage from "./pages/FamilyProfilePage.js";
-import FamilyChatPage from "./pages/FamilyChatPage.js";
-import FamilyWarsPage from "./pages/FamilyChatPage.js";
-import TrollFamilyHome from "./pages/TrollFamilyHome.js";
-import FamilyWarsHub from "./pages/FamilyWarsHub.js";
-import FamilyLeaderboard from "./pages/FamilyLeaderboard.js";
-import FamilyShop from "./pages/FamilyShop.js";
-import TrollOfficerLounge from "./pages/TrollOfficerLounge.js";
-import OfficerModeration from "./pages/OfficerModeration.js";
-import HomeNotificationPrompt from "./components/HomeNotificationPrompt.js";
+const LiveCommandCenter = lazyWithRetry(() => import("./pages/live/LiveCommandCenter"));
+const LiveStreamOverlay = lazyWithRetry(() => import("./pages/live/LiveStreamOverlay"));
+const AudioSettings = lazyWithRetry(() => import("./pages/live/AudioSettings.js"));
+const TrollCourt = lazyWithRetry(() => import("./pages/TrollCourt.js"));
+const AuctionsPage = lazyWithRetry(() => import("./pages/AuctionsPage.js"));
+const SearchPage = lazyWithRetry(() => import("./pages/SearchPage.tsx"));
+const PodcastCentral = lazyWithRetry(() => import("./pages/PodcastCentral.js"));
+const PodcastRoom = lazyWithRetry(() => import("./pages/PodcastRoom.js"));
+const AuctionStudio = lazyWithRetry(() => import("./pages/auction/AuctionStudio.js"));
+const AuctionStudioLots = lazyWithRetry(() => import("./pages/auction/AuctionStudioLots.js"));
+const AuctioneerDashboard = lazyWithRetry(() => import("./pages/auction/AuctioneerDashboard.js"));
+const MyAuctionShows = lazyWithRetry(() => import("./pages/auction/MyAuctionShows.js"));
+const AuctionReports = lazyWithRetry(() => import("./pages/auction/AuctionReports.js"));
+const AdminAuctionApps = lazyWithRetry(() => import("./pages/auction/AdminAuctionApps.js"));
+const LiveAuctionRoom = lazyWithRetry(() => import("./pages/auction/LiveAuctionRoom.js"));
+const AuctionWon = lazyWithRetry(() => import("./pages/auction/AuctionWon.js"));
+const AuctionBidders = lazyWithRetry(() => import("./pages/auction/AuctionBidders.js"));
+const AuctionSales = lazyWithRetry(() => import("./pages/auction/AuctionSales.js"));
+const AuctionAnalytics = lazyWithRetry(() => import("./pages/auction/AuctionAnalytics.js"));
+const AuctionSettings = lazyWithRetry(() => import("./pages/auction/AuctionSettings.js"));
+const AuctionInventory = lazyWithRetry(() => import("./pages/auction/AuctionInventory.js"));
+const AuctionOrderManagement = lazyWithRetry(() => import("./pages/auction/AuctionOrderManagement.js"));
+const PackingStation = lazyWithRetry(() => import("./pages/auction/PackingStation.js"));
+const DeviceManagement = lazyWithRetry(() => import("./pages/auction/DeviceManagement.js"));
+const AuctioneerScanner = lazyWithRetry(() => import("./pages/auction/AuctioneerScanner.js"));
+const AuctionApp = lazyWithRetry(() => import("./pages/auction/AuctionApp.js"));
+const CoinStore = lazyWithRetry(() => import("./pages/CoinStore.jsx"));
+const ProfileFrameStore = lazyWithRetry(() => import("./pages/ProfileFrameStore"));
+const SellOnTrollCity = lazyWithRetry(() => import("./pages/SellOnTrollCity"));
+const SellerOrders = lazyWithRetry(() => import("./pages/SellerOrders.js"));
+const MyOrders = lazyWithRetry(() => import("./pages/MyOrders.js"));
+const FamilyBrowse = lazyWithRetry(() => import("./pages/FamilyBrowse.js"));
+const TrollFamilyCity = lazyWithRetry(() => import("./pages/TrollFamilyCity.js"));
+const FamilyProfilePage = lazyWithRetry(() => import("./pages/FamilyProfilePage.js"));
+const FamilyChatPage = lazyWithRetry(() => import("./pages/FamilyChatPage.js"));
+const FamilyWarsPage = lazyWithRetry(() => import("./pages/FamilyChatPage.js"));
+const TrollFamilyHome = lazyWithRetry(() => import("./pages/TrollFamilyHome.js"));
+const FamilyWarsHub = lazyWithRetry(() => import("./pages/FamilyWarsHub.js"));
+const FamilyLeaderboard = lazyWithRetry(() => import("./pages/FamilyLeaderboard.js"));
+const FamilyShop = lazyWithRetry(() => import("./pages/FamilyShop.js"));
+const TrollOfficerLounge = lazyWithRetry(() => import("./pages/TrollOfficerLounge.js"));
+const OfficerModeration = lazyWithRetry(() => import("./pages/OfficerModeration.js"));
+const HomeNotificationPrompt = lazyWithRetry(() => import("./components/HomeNotificationPrompt.js"));
 import { GhostDropInProvider } from "./context/GhostDropInContext";
-import GhostBanner from "./components/home/GhostBanner";
-import RTCAdminMonitor from "./components/admin/RTCAdminMonitor.tsx";
+const GhostBanner = lazyWithRetry(() => import("./components/home/GhostBanner"));
+const RTCAdminMonitor = lazyWithRetry(() => import("./components/admin/RTCAdminMonitor.tsx"));
 
 
 function AppContent() {
@@ -1035,14 +1047,16 @@ function AppContent() {
       const checkJailStatus = async () => {
         const { data } = await supabase
           .from('jail')
-          .select('id, reason, severity, bond_amount, arrested_by, release_time, bond_posted')
+          .select('id, reason, severity, bond_amount, scheduled_release_at, bond_paid, status, discipline_level')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .eq('status', 'jailed')
+          .gte('scheduled_release_at', new Date().toISOString())
+          .order('jailed_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        if (data && !data.bond_posted) {
-          const releaseTime = new Date(data.release_time);
+        if (data && !data.bond_paid) {
+          const releaseTime = new Date(data.scheduled_release_at);
           if (releaseTime > new Date() && !isCleanedUp) {
             navigate('/jail', { replace: true });
             return true;
@@ -1068,9 +1082,33 @@ function AppContent() {
           (payload) => {
             if (isCleanedUp) return;
             const data = (payload as any).new;
-            if (data && data.user_id === user.id) {
-              const releaseTime = new Date(data.release_time);
-              if (releaseTime > new Date()) {
+            if (data && data.user_id === user.id && data.status === 'jailed') {
+              const releaseTime = new Date(data.scheduled_release_at);
+              if (releaseTime > new Date() && !data.bond_paid) {
+                toast.error(`🚔 ARRESTED: ${data.reason || 'Violation of Mai Troll rules'}`, { duration: 5000 });
+                const onCourtSummary =
+                  location.pathname.startsWith('/court/') && location.pathname.endsWith('/summary');
+                if (!onCourtSummary) {
+                  navigate('/jail', { replace: true });
+                }
+              }
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'jail',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            if (isCleanedUp) return;
+            const data = (payload as any).new;
+            if (data && data.user_id === user.id && data.status === 'jailed') {
+              const releaseTime = new Date(data.scheduled_release_at);
+              if (releaseTime > new Date() && !data.bond_paid) {
                 toast.error(`🚔 ARRESTED: ${data.reason || 'Violation of Mai Troll rules'}`, { duration: 5000 });
                 const onCourtSummary =
                   location.pathname.startsWith('/court/') && location.pathname.endsWith('/summary');
@@ -1477,7 +1515,6 @@ const handleVisibilityChange = async () => {
       <GlobalPodBanner />
       <DailyChurchNotification />
       <SurveyNotification />
-      <GlobalPromoCardListener />
 
       {/* Global Loading Overlay */}
       <GlobalLoadingOverlay
@@ -1554,10 +1591,10 @@ const handleVisibilityChange = async () => {
                  <Route path="/live-swipe" element={<StreamSwipePage />} />
                 <Route path="/embed/:id" element={<EmbedPage />} />
                 <Route path="/jobs" element={<HowToVideosPage />} />
-                <Route path="/hytrogaming" element={<HytroGaming />} />
-                <Route path="/hytrogaming/apply" element={<HytroGamingApply />} />
-                <Route path="/hytrogaming/contract/:id" element={<HytroGamingContract />} />
-                <Route path="/hytro/:id" element={<HytroGamingViewer />} />
+                <Route path="/hytrogaming" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
+                <Route path="/hytrogaming/apply" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
+                <Route path="/hytrogaming/contract/:id" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
+                <Route path="/hytro/:id" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
                 <Route path="/dev/theme-preview" element={<ThemePreviewPage />} />
                 <Route path="/dev/homepage-preview" element={<HomepageBackgroundShowcase />} />
 
@@ -1597,9 +1634,9 @@ const handleVisibilityChange = async () => {
                 <Route path="/" element={<ErrorBoundary><AuthenticatedHome /></ErrorBoundary>} />
 
                 {/* 🎤 Live Auctions — Public browse/watch, studio gated below */}
-                <Route path="/auctions" element={<AuctionsPage />} />
-                <Route path="/auctions/:showId" element={<LiveAuctionRoom />} />
-                <Route path="/auctions/won/:showId" element={<AuctionWon />} />
+                <Route path="/auctions" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                <Route path="/auctions/:showId" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                <Route path="/auctions/won/:showId" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
                 <Route path="/treelz" element={<TreelzPage />} />
                 <Route path="/treelz/upload" element={<TreelzUploadPage />} />
 
@@ -1612,7 +1649,7 @@ const handleVisibilityChange = async () => {
                  <Route path="/replay/:streamId" element={<ReplayPage />} />
                  <Route path="/replay/id/:streamId" element={<ReplayPage />} />
 
-                 <Route path="/gaming/watch/:streamId" element={<HytroGamingViewer />} />
+                 <Route path="/gaming/watch/:streamId" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
                 {/* Username-based stream routes (SEO-friendly, e.g. /live/username) */}
                 <Route path="/live/:username" element={<BroadcastRouter />} />
                 <Route path="/stream/:username" element={<BroadcastRouter />} />
@@ -1775,19 +1812,19 @@ const handleVisibilityChange = async () => {
                    <Route path="/messages" element={<Navigate to="/utromail" replace />} />
 
                    {/* Dashboard redirects — commonly expected paths */}
-                   <Route path="/auction/dashboard" element={<Navigate to="/auctions/studio" replace />} />
-                   <Route path="/auction/studio" element={<Navigate to="/auctions/studio" replace />} />
-                   <Route path="/auction/studio/lots" element={<Navigate to="/auctions/studio/lots" replace />} />
-                   <Route path="/auction/my-shows" element={<Navigate to="/auctions/my-shows" replace />} />
-                   <Route path="/auction/bidders" element={<Navigate to="/auctions/bidders" replace />} />
-                   <Route path="/auction/sales" element={<Navigate to="/auctions/sales" replace />} />
-                   <Route path="/auction/reports" element={<Navigate to="/auctions/reports" replace />} />
-                   <Route path="/auction/analytics" element={<Navigate to="/auctions/analytics" replace />} />
-                   <Route path="/auction/settings" element={<Navigate to="/auctions/settings" replace />} />
-                   <Route path="/auction/inventory" element={<Navigate to="/auctions/inventory" replace />} />
-                   <Route path="/auction/orders" element={<Navigate to="/auctions/orders" replace />} />
-                   <Route path="/auction/packing" element={<Navigate to="/auctions/packing" replace />} />
-                   <Route path="/auction/devices" element={<Navigate to="/auctions/devices" replace />} />
+                    <Route path="/auction/dashboard" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/studio" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/studio/lots" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/my-shows" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/bidders" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/sales" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/reports" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/analytics" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/settings" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/inventory" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/orders" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/packing" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction/devices" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
                     <Route path="/tcnn/chief" element={<Navigate to="/tcnn/dashboard" replace />} />
                      {/* 🏢 Unified Employees Office — all non-admin employee roles use one page */}
                      <Route path="/Employees" element={<EmployeesPage />} />
@@ -1796,7 +1833,6 @@ const handleVisibilityChange = async () => {
                      <Route path="/officer" element={<Navigate to="/department-tools" replace />} />
                      <Route path="/officer/dashboard" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
                      <Route path="/officer/scheduling" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
-                     <Route path="/officer/payroll" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
                      <Route path="/officer/moderation" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
                      <Route path="/officer/lounge" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
                      <Route path="/officer/report/:id" element={<Navigate to="/Employees" replace />} />
@@ -1865,7 +1901,10 @@ const handleVisibilityChange = async () => {
                   }
                 />
                 <Route path="/tcnn/viewer/:streamId" element={<TCNNViewerPage />} />
-                
+
+                {/* EPaper - Supporter Economy Newspaper */}
+                <Route path="/epaper" element={<EPaperPage />} />
+
                 <Route path="/call/:roomId/:type/:userId" element={<Call />} />
                 <Route path="/interview/:interviewId" element={<InterviewPage />} />
                   <Route path="/notifications" element={<Notifications />} />
@@ -1902,13 +1941,13 @@ const handleVisibilityChange = async () => {
                   <Route path="/wall" element={<WallPage />} />
                   <Route path="/wall/:postId" element={<WallPostPage />} />
 <Route path="/profile/setup" element={<ProfileSetup />} />
-                   <Route path="/profile/settings" element={<ProfileSettings />} />
+                   <Route path="/onboarding" element={<NewUserOnboarding />} />
+                    <Route path="/profile/settings" element={<ProfileSettings />} />
                    <Route path="/profile/delete" element={<DeleteAccount />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/blocked-users" element={<BlockedUsers />} />
                    <Route path="/living" element={<LivingPage />} />
                     <Route path="/map" element={<MapPage />} />
-                    <Route path="/neighborhood-map" element={<NeighborhoodMapHub />} />
                     <Route path="/neighborhood-setup" element={<NeighborhoodOnboarding />} />
                     <Route path="/driver-test" element={<DriverTest />} />
                     <Route path="/insurance" element={<InsurancePage />} />
@@ -1972,128 +2011,23 @@ const handleVisibilityChange = async () => {
                    <Route path="/tromail/office" element={<TroMailOfficePage />} />
 
                    {/* 🎥 Team Meeting Room */}
-                   <Route
-                     path="/auctions/studio"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <AuctionStudio />
-                       </RequireRole>
-                     }
-                   />
-                   <Route
-                     path="/auctions/studio/:showId/lots"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <AuctionStudioLots />
-                       </RequireRole>
-                     }
-                   />
-                   <Route
-                     path="/auctions/studio/:showId/live"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <AuctioneerDashboard />
-                       </RequireRole>
-                     }
-                   />
-                   <Route
-                     path="/auctions/my-shows"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <MyAuctionShows />
-                       </RequireRole>
-                     }
-                   />
-                   <Route path="/auctions/reports" element={<AuctionReports />} />
-                   <Route path="/auctions/applications" element={<AdminAuctionApps />} />
-                   <Route
-                     path="/auctions/bidders"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <AuctionBidders />
-                       </RequireRole>
-                     }
-                   />
-                   <Route
-                     path="/auctions/sales"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <AuctionSales />
-                       </RequireRole>
-                     }
-                   />
-                   <Route
-                     path="/auctions/analytics"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <AuctionAnalytics />
-                       </RequireRole>
-                     }
-                   />
-                   <Route
-                     path="/auctions/settings"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <AuctionSettings />
-                       </RequireRole>
-                     }
-                   />
-                   <Route
-                     path="/auctions/inventory"
-                     element={
-                       <RequireRole roles={['auctioneer']}>
-                         <AuctionInventory />
-                        </RequireRole>
-                      }
-                    />
-                    <Route
-                      path="/auctions/orders"
-                      element={
-                        <RequireRole roles={['auctioneer']}>
-                          <AuctionOrderManagement />
-                        </RequireRole>
-                      }
-                    />
-                    <Route
-                      path="/auctions/packing"
-                      element={
-                        <RequireRole roles={['auctioneer']}>
-                          <PackingStation />
-                        </RequireRole>
-                      }
-                    />
-                    <Route
-                      path="/auctions/devices"
-                      element={
-                        <RequireRole roles={['auctioneer']}>
-                          <DeviceManagement />
-                        </RequireRole>
-                      }
-                    />
-                    <Route
-                      path="/auctioneer/scanner"
-                      element={
-                        <RequireRole roles={['auctioneer']}>
-                          <AuctioneerScanner />
-                        </RequireRole>
-                      }
-                    />
-                    <Route
-                      path="/auction-app"
-                      element={
-                        <RequireRole roles={['auctioneer']}>
-                          <AuctionApp />
-                        </RequireRole>
-                      }
-                    />
-                    <Route
-                      path="/auction-app/:showId"
-                      element={
-                        <RequireRole roles={['auctioneer']}>
-                          <AuctionApp />
-                        </RequireRole>
-                      }
-                    />
+                    <Route path="/auctions/studio" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/studio/:showId/lots" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/studio/:showId/live" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/my-shows" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/reports" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/applications" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/bidders" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/sales" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/analytics" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/settings" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/inventory" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/orders" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/packing" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctions/devices" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auctioneer/scanner" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction-app" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                    <Route path="/auction-app/:showId" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
 
 
                    
@@ -2538,14 +2472,14 @@ const handleVisibilityChange = async () => {
                          </RequireRole>
                        }
                      />
-                     <Route
-                       path="/admin/xtrollz-apps"
-                       element={
-                         <RequireRole roles={[UserRole.ADMIN]}>
-                           <XtrollzAdminDashboard />
-                         </RequireRole>
-                       }
-                     />
+                      <Route
+                        path="/admin/mai-singoff-judges"
+                        element={
+                          <RequireRole roles={[UserRole.ADMIN, UserRole.CEO]}>
+                            <SingOffJudgeApplicationsAdmin />
+                          </RequireRole>
+                        }
+                      />
 
                      <Route
                        path="/admin/export-data"
@@ -2684,14 +2618,10 @@ const handleVisibilityChange = async () => {
                         </RequireRole>
                       }
                     />
-                    <Route
-                      path="/admin/officer-shifts"
-                      element={
-                        <RequireRole roles={[UserRole.ADMIN]}>
-                          <OfficerShifts />
-                        </RequireRole>
-                      }
-                    />
+                     <Route
+                       path="/admin/officer-shifts"
+                       element={<Navigate to="/Employees" replace />}
+                     />
                                       <Route
                       path="/admin/referral-bonuses"
                       element={
@@ -2774,15 +2704,15 @@ const handleVisibilityChange = async () => {
                 </Route>
 
                 {/* 🎙️ Podcast Central — public, no sign-in required to listen */}
-                <Route path="/podcast" element={<PodcastCentral />} />
-                <Route path="/podcast/:id" element={<PodcastRoom />} />
+                <Route path="/podcast" element={<UnderConstructionPage pageName="Podcast" openingDate="Coming Soon" />} />
+                <Route path="/podcast/:id" element={<UnderConstructionPage pageName="Podcast" openingDate="Coming Soon" />} />
 
-                 {/* 🎥 XTrollz (secure 21+ area) */}
-                 <Route path="/xtrollz" element={<XtrollzHome />} />
-                 <Route path="/xtrollz/rules" element={<XtrollzRulesPage />} />
-                 <Route path="/xtrollz/apply" element={<XtrollzApplyPage />} />
-                 <Route path="/xtrollz/payment" element={<XtrollzPaymentPage />} />
-                 <Route path="/xtrollz/live/:streamId" element={<XTrollzLiveViewer />} />
+                 {/* 🎤 Mai Sing Off — live singing competition */}
+                 <Route path="/mai-sing-off/*" element={<MaiSingOffPage />} />
+                 <Route path="/xtrollz/*" element={<Navigate to="/mai-sing-off" replace />} />
+
+                 {/* 🎵 MAI Record Label — program preview */}
+                 <Route path="/mai-record-label" element={<MaiRecordLabelPage />} />
 
                 {/* 🔙 Catch-all - redirect username patterns to profile (PUBLIC ACCESS) */}
                  <Route path="/:username" element={<UsernameRedirect />} />
@@ -2920,9 +2850,10 @@ function UsernameRedirect() {
         if (cancelled) return;
         // Handle both the direct stream result and the chained promise result
         const liveStream = result?.data || result;
-        if (liveStream?.id) {
+        const liveStreamData = liveStream as { id?: string; category?: string } | undefined;
+        if (liveStreamData?.id) {
           // Gaming streams route to gaming viewer, others to username-based watch URL
-          const targetPath = liveStream.category === 'gaming' 
+          const targetPath = liveStreamData.category === 'gaming'
             ? `/gaming/watch/${username}` 
             : `/live/${encodeURIComponent(username)}`;
           navigate(targetPath, { replace: true });

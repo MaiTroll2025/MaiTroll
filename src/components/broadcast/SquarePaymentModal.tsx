@@ -48,6 +48,8 @@ export default function SquarePaymentModal({
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentResult, setPaymentResult] = useState<any>(null);
+  const [cardNonce, setCardNonce] = useState<string | null>(null);
+  const [paymentMethodError, setPaymentMethodError] = useState<string | null>(null);
   
   // Card input fields
   const [cardNumber, setCardNumber] = useState('');

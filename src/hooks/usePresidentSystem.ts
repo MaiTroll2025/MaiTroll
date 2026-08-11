@@ -45,6 +45,7 @@ export interface PresidentAppointment {
     username: string;
     avatar_url: string;
   };
+  avatar_url?: string;
 }
 
 export interface TreasuryEntry {

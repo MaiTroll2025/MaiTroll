@@ -113,6 +113,9 @@ export default function AuctioneerDashboard() {
   const [auctioneerCamOn, setAuctioneerCamOn] = useState(true)
   const [auctioneerConnecting, setAuctioneerConnecting] = useState(false)
   const [agoraConnected, setAgoraConnected] = useState(false)
+  const [scanInput, setScanInput] = useState('')
+  const [scanLoading, setScanLoading] = useState(false)
+  const [scanResult, setScanResult] = useState<any>(null)
 
   // Display text (announcement) state
   const [displayText, setDisplayText] = useState('')
@@ -273,7 +276,7 @@ export default function AuctioneerDashboard() {
       console.log('[Agora] Requesting camera + mic permissions...')
       const [micTrack, camTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
         { AEC: true, ANS: true, AGC: true },
-        { encoderConfig: '720p_2', facingMode: { ideal: 'environment' } }
+        { encoderConfig: '720p_2', facingMode: 'environment' as any }
       )
       console.log('[Agora] Camera + mic tracks created')
 
@@ -315,6 +318,35 @@ export default function AuctioneerDashboard() {
 
   const isInitialLoadRef = useRef(true)
 
+  const refreshCurrentBidMeta = useCallback(async () => {
+    const liveLot = lots.find((l) => l.status === 'live')
+    if (!liveLot) {
+      setCurrentBidderName(null)
+      setBidCount(0)
+      return
+    }
+    try {
+      const [{ count }, bidderRes] = await Promise.all([
+        supabase
+          .from('auction_bids')
+          .select('*', { count: 'exact', head: true })
+          .eq('lot_id', liveLot.id),
+        liveLot.current_highest_bidder_id
+          ? supabase
+              .from('user_profiles')
+              .select('username, display_name')
+              .eq('id', liveLot.current_highest_bidder_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+      setBidCount(Number(count || 0))
+      const p = bidderRes?.data as any
+      setCurrentBidderName(p?.display_name || p?.username || null)
+    } catch {
+      /* best-effort */
+    }
+  }, [lots])
+
   const fetchData = useCallback(async () => {
     if (!showId) return
     // Only show loading spinner on the initial load, not on background polling
@@ -350,37 +382,6 @@ export default function AuctioneerDashboard() {
     const interval = setInterval(fetchData, 3000)
     return () => clearInterval(interval)
   }, [fetchData])
-
-  // Resolve the current highest bidder's display name and the number of bids on
-  // the active lot so the auctioneer control room shows the live bid state.
-  const refreshCurrentBidMeta = useCallback(async () => {
-    const liveLot = lots.find((l) => l.status === 'live')
-    if (!liveLot) {
-      setCurrentBidderName(null)
-      setBidCount(0)
-      return
-    }
-    try {
-      const [{ count }, bidderRes] = await Promise.all([
-        supabase
-          .from('auction_bids')
-          .select('*', { count: 'exact', head: true })
-          .eq('lot_id', liveLot.id),
-        liveLot.current_highest_bidder_id
-          ? supabase
-              .from('user_profiles')
-              .select('username, display_name')
-              .eq('id', liveLot.current_highest_bidder_id)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-      ])
-      setBidCount(Number(count || 0))
-      const p = bidderRes?.data as any
-      setCurrentBidderName(p?.display_name || p?.username || null)
-    } catch {
-      /* best-effort */
-    }
-  }, [lots])
 
   // Realtime: keep the auctioneer's current-bid display instant. The DB is the
   // source of truth; subscriptions merely trigger a refresh of authoritative state.

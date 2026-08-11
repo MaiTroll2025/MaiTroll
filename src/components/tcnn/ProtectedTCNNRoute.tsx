@@ -23,13 +23,13 @@ export default function ProtectedTCNNRoute({
   requiredRole,
   requireAuth = true
 }: ProtectedTCNNRouteProps) {
-  const { user, loading: authLoading } = useAuthStore();
+  const { user, isLoading: authLoading } = useAuthStore();
   const location = useLocation();
   const { 
     isJournalist, 
     isNewsCaster, 
     isChiefNewsCaster, 
-    canPublishArticles, 
+    canPublish,
     loading: rolesLoading 
   } = useTCNNRoles(user?.id);
 

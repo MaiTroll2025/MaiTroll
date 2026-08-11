@@ -18,7 +18,7 @@ export default function ReportDetailsModal({
 }: ReportDetailsModalProps) {
   const navigate = useNavigate()
   const reportId = report.id || report.report_id
-  const [actionType, setActionType] = useState<'warn' | 'suspend_stream' | 'ban_user' | 'reject' | ''>('')
+  const [actionType, setActionType] = useState<'warn' | 'suspend_stream' | 'arrest' | 'reject' | ''>('')
   const [actionReason, setActionReason] = useState('')
   const [actionDetails, setActionDetails] = useState('')
   const [banDurationHours, setBanDurationHours] = useState<number | null>(null)
@@ -41,7 +41,7 @@ export default function ReportDetailsModal({
       // Handle reject separately
       setLoading(true)
       try {
-        const response = await api.post('/moderation', {
+        const response = await api.post('/moderation-actions', {
           action: 'reject_report',
           report_id: reportId
         })
@@ -63,9 +63,9 @@ export default function ReportDetailsModal({
 
     setLoading(true)
     try {
-      // Calculate ban expiry if temporary ban
+      // Calculate arrest expiry if temporary arrest
       let expiresAt = null
-      if (actionType === 'ban_user' && !isPermanentBan && banDurationHours) {
+      if (actionType === 'arrest' && !isPermanentBan && banDurationHours) {
         const expiryDate = new Date()
         expiryDate.setHours(expiryDate.getHours() + banDurationHours)
         expiresAt = expiryDate.toISOString()
@@ -73,7 +73,7 @@ export default function ReportDetailsModal({
 
       const payload: TakeActionPayload = {
         report_id: reportId,
-        action_type: actionType as 'warn' | 'suspend_stream' | 'ban_user',
+        action_type: actionType as 'warn' | 'suspend_stream' | 'arrest',
         target_user_id: report.target_user_id || null,
         stream_id: report.stream_id || null,
         reason: actionReason,
@@ -83,7 +83,7 @@ export default function ReportDetailsModal({
         honesty_message_shown: true
       }
 
-      const response = await api.post('/moderation', {
+      const response = await api.post('/moderation-actions', {
         action: 'take_action',
         ...payload
       })
@@ -226,15 +226,15 @@ export default function ReportDetailsModal({
               {report.target_user_id && (
                 <button
                   type="button"
-                  onClick={() => setActionType('ban_user')}
+                  onClick={() => setActionType('arrest')}
                   className={`p-3 rounded-lg border-2 transition ${
-                    actionType === 'ban_user'
+                    actionType === 'arrest'
                       ? 'border-red-500 bg-red-900/30'
                       : 'border-gray-700 hover:border-gray-600'
                   }`}
                 >
                   <Ban className="w-5 h-5 mx-auto mb-1 text-red-400" />
-                  <span className="text-xs font-semibold">Ban User</span>
+                  <span className="text-xs font-semibold">Arrest User</span>
                 </button>
               )}
 
@@ -267,19 +267,19 @@ export default function ReportDetailsModal({
                     className="w-full px-4 py-2 bg-zinc-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     required
                   />
-                  {(actionType === 'ban_user' || actionType === 'suspend_stream') && (
+                  {(actionType === 'arrest' || actionType === 'suspend_stream') && (
                     <p className="text-xs text-yellow-400 mt-2">
-                      ⚠️ Being honest about why you were banned/suspended will help you get back on the app. 
+                      ⚠️ Being honest about why you were arrested/suspended will help you get back on the app. 
                       Please provide a clear, honest reason.
                     </p>
                   )}
                 </div>
 
-                {/* Ban Duration (only for bans) */}
-                {actionType === 'ban_user' && (
+                {/* Arrest Duration */}
+                {actionType === 'arrest' && (
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-300">
-                      Ban Duration
+                      Arrest Duration
                     </label>
                     <div className="flex items-center gap-4 mb-2">
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -317,7 +317,7 @@ export default function ReportDetailsModal({
                         />
                         {banDurationHours && (
                           <p className="text-xs text-gray-400 mt-1">
-                            Ban will expire in {banDurationHours} hours ({Math.round(banDurationHours / 24)} days)
+                            Arrest will expire in {banDurationHours} hours ({Math.round(banDurationHours / 24)} days)
                           </p>
                         )}
                       </div>

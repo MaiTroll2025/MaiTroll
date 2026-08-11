@@ -136,22 +136,6 @@ export function useViewerTracking(streamId: string | null, isHost: boolean = fal
 
             void logStreamAnalyticsEvent(streamId, user.id, 'join');
 
-            try {
-              const session = await supabase.auth.getSession();
-              const token = session?.data?.session?.access_token;
-              if (token) {
-                await fetch('/api/maitalent/track-broadcast-view', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({ streamId, userId: user.id }),
-                });
-              }
-            } catch (error) {
-              console.warn('[MaiTalent Broadcast View] failed to notify server', error);
-            }
           }
         }
       })

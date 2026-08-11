@@ -24,7 +24,6 @@ const PAGE_GUIDE: Record<string, { label: string; icon: any; desc: string; roles
   '/podcast': { label: 'Podcast', icon: Mic, desc: 'Listen to audio shows and podcasts.' },
   '/auctions': { label: 'Live Auctions', icon: Gavel, desc: 'Bid on items in live auctions.' },
   '/troll-court': { label: 'Troll Court', icon: Scale, desc: 'Court sessions, cases, and appeals.' },
-  '/neighborhood-map': { label: 'Neighborhood', icon: Map, desc: 'City map, neighborhoods, and local activity.' },
   '/hytrogaming': { label: 'HydroGaming', icon: Gamepad2, desc: 'Gaming streams and community.' },
   '/academy': { label: 'Academy', icon: GraduationCap, desc: 'Courses, classes, and certifications.' },
   '/mai-pay': { label: 'MAI Pay', icon: DollarSign, desc: 'Payments, cashouts, and financial tools.' },
@@ -86,7 +85,7 @@ export default function HelpPage() {
     { title: 'Media & Social', paths: ['/broadcast/setup', '/treelz', '/podcast', '/utromail', '/family/home', '/match'] },
     { title: 'Economy', paths: ['/store', '/mai-pay', '/leaderboard', '/marketplace', '/inventory', '/auctions', '/troll-wheel'] },
     { title: 'Games & Learning', paths: ['/hytrogaming', '/academy', '/ktauto', '/jobs'] },
-    { title: 'City & Government', paths: ['/neighborhood-map', '/church', '/troll-court', '/government'] },
+    { title: 'City & Government', paths: ['/church', '/troll-court', '/government'] },
     { title: 'Staff & Admin', paths: ['/admin', '/admin/chat-moderation', '/admin/jail-management', '/admin/reports-queue', '/admin/stream-monitor', '/officer/dashboard', '/lead-officer', '/secretary', '/president'] },
   ]
 
@@ -161,3 +160,9 @@ export default function HelpPage() {
     </main>
   )
 }
+
+
+
+
+
+

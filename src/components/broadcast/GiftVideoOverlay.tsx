@@ -71,12 +71,12 @@ export const unlockGiftAudio = async (): Promise<void> => {
 const giftSoundEnabled = true
 
 async function playGiftVideo(video: HTMLVideoElement, giftId?: string, giftName?: string, resolvedUrl?: string): Promise<void> {
-  if (!video) return
+  if (!video || !resolvedUrl) return;
   try {
-    video.muted = false
-    video.defaultMuted = false
-    video.volume = giftSoundEnabled ? 1 : 0
-    video.currentTime = 0
+    video.muted = false;
+    video.defaultMuted = false;
+    video.volume = giftSoundEnabled ? 1 : 0;
+    video.currentTime = 0;
 
     if (import.meta.env.DEV) {
       console.log('[GiftVideoOverlay] attempting playback', {
@@ -89,20 +89,29 @@ async function playGiftVideo(video: HTMLVideoElement, giftId?: string, giftName?
         paused: video.paused,
         networkState: video.networkState,
         readyState: video.readyState,
-      })
+      });
     }
 
-    await video.play()
+    // Only reload if the media hasn't buffered enough yet; calling load()
+    // on an already-loaded element (e.g. inside a canplay handler) would
+    // restart loading and fire canplay again, creating a loop.
+    if (video.readyState < 2) {
+      video.load();
+    }
+    await video.play();
   } catch (error) {
     console.warn(
       '[GiftVideoOverlay] unmuted playback blocked; retrying muted',
       error
-    )
-    video.muted = true
+    );
+    video.muted = true;
     try {
-      await video.play()
+      if (video.readyState < 2) {
+        video.load();
+      }
+      await video.play();
     } catch (fallbackError) {
-      console.error('[GiftVideoOverlay] gift video playback failed', fallbackError)
+      console.error('[GiftVideoOverlay] gift video playback failed', fallbackError);
     }
   }
 }
@@ -234,15 +243,22 @@ function resolveOverlayUrl(gift: BroadcastGift, visual: GiftVisualConfig): Resol
 
   const animUrl = gift.animation_url || giftAny.animationUrl || null
   const videoUrl = gift.video_url || giftAny.videoUrl || null
+
+  // When the visual config resolved its URL from a local file fallback
+  // (e.g. /gift-videos/gift_boost.webm), those files do not always exist
+  // on disk. Skip them so we fall through to image/missing fallbacks
+  // instead of producing a demuxer error.
+  const skipLocalFallback = visualAny.resolvedSource === 'local_fallback'
+
   const animation = animUrl || videoUrl || firstUrl([
     [metadata.animation_url, 'metadata.animation_url'],
     [metadata.video_url, 'metadata.video_url'],
     [metadata.resolved_url, 'metadata.resolved_url'],
     [metadata.resolvedVideoUrl, 'metadata.resolvedVideoUrl'],
-    [visualAny.resolvedVideoUrl, 'visual.resolvedVideoUrl'],
-    [visualAny.resolvedUrl, 'visual.resolvedUrl'],
+    [skipLocalFallback ? null : visualAny.resolvedVideoUrl, 'visual.resolvedVideoUrl'],
+    [skipLocalFallback ? null : visualAny.resolvedUrl, 'visual.resolvedUrl'],
+    [skipLocalFallback ? null : visualAny.animationUrl, 'visual.animationUrl'],
     [visualAny.videoUrl, 'visual.videoUrl'],
-    [visualAny.animationUrl, 'visual.animationUrl'],
     [visualAny.url, 'visual.url'],
   ])
 
@@ -264,7 +280,7 @@ function resolveOverlayUrl(gift: BroadcastGift, visual: GiftVisualConfig): Resol
     [visualAny.trayVisualUrl, 'visual.trayVisualUrl'],
     [visualAny.iconUrl, 'visual.iconUrl'],
     [visualAny.imageUrl, 'visual.imageUrl'],
-    [visualAny.resolvedImageUrl, 'visual.resolvedImageUrl'],
+    [skipLocalFallback ? null : visualAny.resolvedImageUrl, 'visual.resolvedImageUrl'],
   ])
 
   if (imageResult?.url) {
@@ -366,9 +382,7 @@ function GiftPreview({
     if (!video.duration || !isFinite(video.duration)) return
     const ms = Math.round(video.duration * 1000)
 
-    if (!gift.animation_duration_ms) {
-      onDurationKnown?.(gift.id, ms)
-    }
+    onDurationKnown?.(gift.id, ms)
   }, [gift.id, gift.animation_duration_ms, label, onDurationKnown])
 
   useEffect(() => {
@@ -379,6 +393,27 @@ function GiftPreview({
     setVideoFailed(false)
     setImageFailed(false)
     triedPlayingRef.current = false
+  }, [resolved.url, gift.id])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !resolved.url) return
+
+    if (import.meta.env.DEV) {
+      console.debug('[GiftVideoOverlay] resetting video element for new URL', {
+        giftId: gift.id,
+        resolvedUrl: resolved.url,
+      })
+    }
+
+    // Pause and reload so the browser picks up the current src.
+    // The key={resolved.url} prop on <video> already guarantees a fresh
+    // DOM node when the URL changes, clearing any stale sources — so we
+    // must NOT call removeAttribute('src') here because it would briefly
+    // strip the src and fire onError, which sets videoFailed=true and
+    // switches the render to the image/missing fallback.
+    video.pause()
+    video.load()
   }, [resolved.url, gift.id])
 
   useEffect(() => {
@@ -459,17 +494,25 @@ function GiftPreview({
     return (
       <>
         <video
-          key={`${gift.id}-${resolved.url}`}
           ref={videoRef}
-          className="h-full w-full object-contain"
-          src={resolved.url}
-          autoPlay
-          muted={false}
+          src={resolved.url || undefined}
           playsInline
+          muted={false}
           preload="auto"
-          loop
+          disablePictureInPicture
+          controls={false}
+          className="h-full w-full bg-transparent object-contain"
           onLoadedMetadata={handleLoadedMetadata}
-          onCanPlay={handleCanPlay}
+          onEnded={() => {
+            if (import.meta.env.DEV) {
+              console.info('[GiftVideoOverlay] video playing ended', {
+                giftId: gift.id,
+                giftName: label,
+                resolvedUrl: resolved.url,
+              })
+            }
+            onVideoEnd?.()
+          }}
           onError={(event) => {
             const videoEl = event.currentTarget
             const mediaError = videoEl.error
@@ -616,16 +659,30 @@ export default function GiftVideoOverlay({
   const displayGifts = useMemo(() => {
     const seenIds = new Set<string>()
 
+    if (import.meta.env.DEV) {
+      console.debug('[GiftVideoOverlay] useMemo building displayGifts', { giftsLength: gifts.length })
+    }
+
     return gifts
       .slice(-3)
       .filter((gift) => {
-        if (!gift?.id) return false
-        if (seenIds.has(gift.id)) return false
+        if (!gift?.id) {
+          if (import.meta.env.DEV) {
+            console.debug('[GiftVideoOverlay] filtering gift without id', { gift })
+          }
+          return false
+        }
+        if (seenIds.has(gift.id)) {
+          if (import.meta.env.DEV) {
+            console.debug('[GiftVideoOverlay] filtering duplicate gift id', { giftId: gift.id })
+          }
+          return false
+        }
         seenIds.add(gift.id)
 
         const giftAny = gift as any
         const metadata = giftAny.metadata || {}
-        const slug = String(giftAny.slug || gift.gift_slug || '').trim()
+        const slug = String(giftAny.slug || gift.gift_slug || '').trim() || ''
 
         const hasAnyMedia =
           !!cleanString(giftAny.animationUrl) ||
@@ -646,6 +703,18 @@ export default function GiftVideoOverlay({
           !!cleanString(metadata.tray_visual_url)
 
         const isGenericBoostPlaceholder = slug === 'gift_boost' && !hasAnyMedia
+
+        if (import.meta.env.DEV && isGenericBoostPlaceholder) {
+          console.debug('[GiftVideoOverlay] filtering generic boost placeholder', {
+            giftId: gift.id,
+            slug,
+            hasAnyMedia,
+            animation_url: giftAny.animation_url,
+            video_url: giftAny.video_url,
+            icon_url: giftAny.icon_url,
+            metadata,
+          })
+        }
 
         return !isGenericBoostPlaceholder
       })
@@ -678,7 +747,9 @@ export default function GiftVideoOverlay({
       })
   }, [gifts])
 
-  if (!displayGifts.length) return null
+  if (!displayGifts.length) {
+    return null
+  }
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[80] flex items-center justify-center px-4 py-6">
@@ -694,7 +765,7 @@ export default function GiftVideoOverlay({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -24, scale: 0.95 }}
               transition={{ duration: 0.25 }}
-              className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-black/80 shadow-[0_0_40px_rgba(15,23,42,0.55)] backdrop-blur-xl"
+              className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-transparent bg-black/80 shadow-[0_0_40px_rgba(15,23,42,0.55)] backdrop-blur-xl"
             >
               <div className="relative aspect-[16/9] bg-slate-950">
                 <GiftPreview gift={gift} visual={visual} label={label} resolved={resolved} onVideoEnd={() => {

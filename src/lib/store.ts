@@ -64,8 +64,6 @@ const PROFILE_IGNORED_KEYS = new Set([
 
 const COIN_KEYS = new Set([
   'troll_coins',
-  'paid_coin_balance',
-  'free_coin_balance',
   'cashout_coins',
   'cashout_reserved_coins',
   'reserved_troll_coins',
@@ -74,8 +72,6 @@ const COIN_KEYS = new Set([
 
 const profilePatchKeys = [
   'troll_coins',
-  'paid_coin_balance',
-  'free_coin_balance',
   'cashout_coins',
   'cashout_reserved_coins',
   'reserved_troll_coins',
@@ -142,22 +138,9 @@ function toSafeNumber(value: any, fallback = 0) {
 function normalizeProfileCoins(profile: any) {
   const total = Math.max(0, Math.floor(toSafeNumber(profile.troll_coins, 0)))
 
-  let paid = Math.floor(toSafeNumber(profile.paid_coin_balance, 0))
-  let free = Math.floor(toSafeNumber(profile.free_coin_balance, 0))
-
-  paid = Math.max(0, paid)
-  free = Math.max(0, free)
-
-  if (paid + free !== total) {
-    paid = Math.min(paid, total)
-    free = Math.max(0, total - paid)
-  }
-
   return {
     ...profile,
     troll_coins: total,
-    paid_coin_balance: paid,
-    free_coin_balance: free,
     cashout_coins: Math.max(0, Math.floor(toSafeNumber(profile.cashout_coins, 0))),
     cashout_reserved_coins: Math.max(0, Math.floor(toSafeNumber(profile.cashout_reserved_coins, 0))),
     reserved_troll_coins: Math.max(0, Math.floor(toSafeNumber(profile.reserved_troll_coins, 0))),
@@ -203,8 +186,6 @@ const USER_PROFILE_SELECT = `
   is_org_student,
   organization_profile_visible,
   troll_coins,
-  paid_coin_balance,
-  free_coin_balance,
   cashout_coins,
   cashout_reserved_coins,
   reserved_troll_coins,
@@ -230,10 +211,6 @@ const USER_PROFILE_SELECT = `
   entrance_join_type,
   created_at,
   updated_at,
-  maitalent_link_status,
-  maitalent_link_platform,
-  maitalent_external_user_id,
-  maitalent_link_verified_at,
   neighborhood_id,
   house_id,
   vehicle_id,
@@ -243,6 +220,8 @@ const USER_PROFILE_SELECT = `
   car_insurance_expiry,
   drivers_license_expiry,
   driver_test_passed_at,
+  homeowners_insurance_expiry,
+  homeowners_insurance_deductible,
   insurance_required
 `
 
@@ -255,14 +234,12 @@ interface AuthState {
   isAdmin: boolean | null
   showLegacySidebar: boolean
   isRefreshing: boolean
-  xtrollzDobMismatch: boolean | null
 
   setAuth: (user: User | null, session: Session | null, sessionId?: string | null) => void
   setProfile: (profile: UserProfile | null, options?: { realtime?: boolean; force?: boolean }) => void
   setLoading: (loading: boolean) => void
   setAdmin: (isAdmin: boolean | null) => void
   setShowLegacySidebar: (value: boolean) => void
-  setXtrollzDobMismatch: (value: boolean | null) => void
   refreshProfile: (force?: boolean) => Promise<void>
   logout: () => Promise<void>
 }
@@ -376,12 +353,11 @@ function pickProfileComparable(profile: any) {
     troll_role: profile?.troll_role ?? null,
     troll_coins: toSafeNumber(profile?.troll_coins, 0),
     trollmonds: toSafeNumber(profile?.trollmonds, 0),
-    paid_coin_balance: toSafeNumber(profile?.paid_coin_balance, 0),
-    free_coin_balance: toSafeNumber(profile?.free_coin_balance, 0),
     credit_score: toSafeNumber(profile?.credit_score, 0),
     drivers_license_status: profile?.drivers_license_status ?? null,
     drivers_license_expiry: profile?.drivers_license_expiry ?? null,
     car_insurance_expiry: profile?.car_insurance_expiry ?? null,
+    homeowners_insurance_expiry: profile?.homeowners_insurance_expiry ?? null,
   }
 }
 
@@ -578,7 +554,6 @@ export const useAuthStore = create<AuthState>()(
       isAdmin: null,
       showLegacySidebar: true,
       isRefreshing: false,
-      xtrollzDobMismatch: null,
 
       setAuth: (user, session, sessionId = null) => {
         clearLogoutRequested()
@@ -691,7 +666,6 @@ setProfile: (profile, options = {}) => {
       setLoading: (loading) => set({ isLoading: loading }),
       setAdmin: (isAdmin) => set({ isAdmin }),
       setShowLegacySidebar: (value) => set({ showLegacySidebar: value }),
-      setXtrollzDobMismatch: (value) => set({ xtrollzDobMismatch: value }),
 
       refreshProfile: async (force = false) => {
         const state = get()
@@ -798,9 +772,6 @@ setProfile: (profile, options = {}) => {
 
             get().setProfile(finalProfile as UserProfile, { force })
 
-            if (finalProfile?.id) {
-              checkXtrollzDobMismatch(finalProfile.id, finalProfile.date_of_birth)
-            }
           } catch (error) {
             console.error('[authStore] refreshProfile failed:', error)
           } finally {
@@ -878,7 +849,6 @@ setProfile: (profile, options = {}) => {
           isLoading: false,
           isAdmin: null,
           isRefreshing: false,
-          xtrollzDobMismatch: null,
         })
 
         clearPersistedAuth()
@@ -971,8 +941,6 @@ export function setupProfileRealtime(userId: string) {
 
         const relevantKeys = [
           'troll_coins',
-          'paid_coin_balance',
-          'free_coin_balance',
           'credit_score',
           'username',
           'role',
@@ -996,8 +964,6 @@ export function setupProfileRealtime(userId: string) {
           console.debug('[ProfileRealtime] Applying profile patch:', {
             userId,
             troll_coins: normalized.troll_coins,
-            paid_coin_balance: normalized.paid_coin_balance,
-            free_coin_balance: normalized.free_coin_balance,
             credit_score: normalized.credit_score,
           })
         }
@@ -1086,29 +1052,6 @@ export function cleanupProfileRealtime() {
   subscribedUserId = null
   lastRealtimePatchHash = null
   lastRealtimeProfileAt = 0
-}
-
-async function checkXtrollzDobMismatch(userId: string, profileDob: string | undefined) {
-  try {
-    const { data, error } = await supabase
-      .from('xtrollz_applications')
-      .select('date_of_birth')
-      .eq('user_id', userId)
-      .eq('status', 'approved')
-      .maybeSingle()
-
-    if (error || !data?.date_of_birth) {
-      useAuthStore.getState().setXtrollzDobMismatch(false)
-      return
-    }
-
-    const appDob = data.date_of_birth
-    const mismatch = profileDob && profileDob !== appDob
-
-    useAuthStore.getState().setXtrollzDobMismatch(mismatch || false)
-  } catch {
-    useAuthStore.getState().setXtrollzDobMismatch(false)
-  }
 }
 
 async function acceptSession(session: Session, options: { register?: boolean; checkConcurrentLogin?: boolean; force?: boolean } = {}) {
@@ -1246,6 +1189,7 @@ export async function initAuthAndData() {
 
   return initPromise
 }
+
 
 
 

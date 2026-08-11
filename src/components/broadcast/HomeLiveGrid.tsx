@@ -18,6 +18,9 @@ interface Stream {
   is_rising?: boolean;
   is_trending?: boolean;
   momentum_level?: number;
+  agora_channel?: string;
+  category?: string;
+  is_live?: boolean;
   user_profiles?: {
     username: string;
     avatar_url: string;

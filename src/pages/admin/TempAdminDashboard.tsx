@@ -522,7 +522,7 @@ export default function TempAdminDashboard() {
                         onClick={() => {
                           supabase.rpc('ban_user', { p_user_id: selectedUser.id, p_reason: arrestReason || 'Admin ban' })
                             .then(() => toast.success(`${selectedUser.username} banned`))
-                            .catch(err => toast.error(err.message))
+                             .then(undefined, err => toast.error(err.message))
                         }}
                         className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2"
                       >
@@ -532,7 +532,7 @@ export default function TempAdminDashboard() {
                         onClick={() => {
                           supabase.rpc('kick_user_from_stream', { p_user_id: selectedUser.id, p_stream_id: 'all' })
                             .then(() => toast.success(`${selectedUser.username} kicked from all streams`))
-                            .catch(err => toast.error(err.message))
+                             .then(undefined, err => toast.error(err.message))
                         }}
                         className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2"
                       >

@@ -335,10 +335,10 @@ export default function UserProfileWidget() {
               </span>
 
               <span className="text-right font-mono text-[11px] font-black text-emerald-300">
-                {coinsLoading ? '...' : formatNumber(cashout_coins ?? 0)}
-                {(cashout_reserved_coins ?? 0) > 0 && (
-                  <span className="block text-[9px] text-emerald-400/80">
-                    +{formatNumber(cashout_reserved_coins)} reserved
+               {coinsLoading ? '...' : formatNumber(troll_coins ?? 0)}
+               {(cashout_reserved_coins ?? 0) > 0 && (
+                 <span className="block text-[9px] text-emerald-400/80">
+                   +{formatNumber(cashout_reserved_coins)} reserved
                   </span>
                 )}
               </span>

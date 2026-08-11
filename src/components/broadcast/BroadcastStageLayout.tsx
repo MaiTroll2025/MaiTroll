@@ -25,6 +25,7 @@ interface GuestMicCamState {
 
 interface BroadcastStageLayoutProps {
   // Host
+  hostName?: string
   hostAvatarUrl?: string | null
   hostIsMicOn: boolean
   hostIsCamOn: boolean
@@ -44,7 +45,7 @@ interface BroadcastStageLayoutProps {
   hasOpenPass: boolean
   currentUserPassStatus?: string | null
   onRequestPass: () => void
-  onOpenPassModal: () => void
+  onOpenPassModal?: () => void
 
   // Host actions
   onApproveStagePass?: (id: string) => void

@@ -48,7 +48,6 @@ const EventCountdown: React.FC = React.memo(() => {
   const [eventActive, setEventActive] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [signupsRemaining, setSignupsRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -56,11 +55,6 @@ const EventCountdown: React.FC = React.memo(() => {
       const event = eventData?.[0];
 
       if (event) {
-        const { data: count } = await supabase.rpc('get_active_event_signup_count');
-        if (count !== null) {
-          setSignupsRemaining(Math.max(0, event.signup_cap - count));
-        }
-
         const updateTimer = () => {
           const startTime = new Date(event.start_time).getTime();
           const durationMs = event.duration_hours * 60 * 60 * 1000;
@@ -133,11 +127,7 @@ const EventCountdown: React.FC = React.memo(() => {
             >
               {isActive ? '🐣 Happy Easter! Easter Event Active!' : '48 hrs til we are fully ready for public'}
             </h3>
-            <p className="text-purple-200/70 text-xs">
-              {signupsRemaining !== null && signupsRemaining > 0 
-                ? `${signupsRemaining} sign ups for early access` 
-                : 'Early access full - Remaining can join in:'}
-            </p>
+
           </div>
         </div>
 

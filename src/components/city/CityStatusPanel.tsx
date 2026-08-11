@@ -16,6 +16,8 @@ interface CityStatusPanelProps {
   broadcasterId?: string;
   /** Callback when house icon is clicked */
   onHouseClick?: () => void;
+  /** Callback when raid is triggered */
+  onRaid?: () => void;
 }
 
 export default function CityStatusPanel({
@@ -26,6 +28,7 @@ export default function CityStatusPanel({
   isSeatHolder = false,
   broadcasterId,
   onHouseClick,
+  onRaid,
 }: CityStatusPanelProps) {
   const { data, loading, permissions } = useCityStatusOrb({
     userId,
@@ -56,6 +59,10 @@ export default function CityStatusPanel({
             permissions={permissions}
             onHouseClick={() => {
               onHouseClick?.();
+              onClose();
+            }}
+            onRaid={() => {
+              onRaid?.();
               onClose();
             }}
           />

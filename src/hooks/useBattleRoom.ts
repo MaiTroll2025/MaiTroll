@@ -149,11 +149,10 @@ export function useBattleRoom({
 
       // Create new Room instance
       const room = new Room({
-        mode: 'rtc',
         codec: 'vp8',
         adaptiveStream: true,
         dynacast: true,
-      });
+      } as any);
 
       roomRef.current = room;
       
@@ -172,9 +171,9 @@ export function useBattleRoom({
       const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
       
       await room.connect(livekitUrl, data.token, {
-        name: roomId,
+        roomName: roomId,
         identity: currentUserId,
-      });
+      } as any);
 
       if (!mountedRef.current) {
         // Component unmounted during connection

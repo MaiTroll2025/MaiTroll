@@ -271,7 +271,8 @@ BEGIN
 
   UPDATE public.user_profiles
   SET troll_coins = COALESCE(troll_coins, 0) + v_recipient_share,
-      total_earned_coins = COALESCE(total_earned_coins, 0) + v_recipient_share
+      total_earned_coins = COALESCE(total_earned_coins, 0) + v_recipient_share,
+      cashout_coins = COALESCE(cashout_coins, 0) + v_recipient_share
   WHERE id = p_receiver_id;
 
   IF NOT FOUND THEN

@@ -244,7 +244,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
             facingMode: 'user'
           },
           audioCaptureDefaults: {
-            ...AudioPresets.audio,
+            ...(AudioPresets as any).audio,
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true
@@ -423,12 +423,12 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
       setIsCallStarted(true);
 
       // Create and publish local tracks
-      const audioTrack = await LocalAudioTrack.create(AudioPresets.audio);
+      const audioTrack = await (LocalAudioTrack as any).create((AudioPresets as any).audio);
       localAudioTrackRef.current = audioTrack;
       await roomRef.current.localParticipant.publishTrack(audioTrack);
 
       if (callType === 'video') {
-        const videoTrack = await LocalVideoTrack.create(VideoPresets.h720);
+        const videoTrack = await (LocalVideoTrack as any).create(VideoPresets.h720);
         localVideoTrackRef.current = videoTrack;
         await roomRef.current.localParticipant.publishTrack(videoTrack);
         
@@ -495,7 +495,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
         await roomRef.current.localParticipant.unpublishTrack(localAudioTrackRef.current);
         localAudioTrackRef.current.stop();
       } else {
-        const newTrack = await LocalAudioTrack.create(AudioPresets.audio);
+        const newTrack = await (LocalAudioTrack as any).create((AudioPresets as any).audio);
         localAudioTrackRef.current = newTrack;
         await roomRef.current.localParticipant.publishTrack(newTrack);
       }
@@ -513,7 +513,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
     
     try {
       if (shouldTurnOn) {
-        const newTrack = await LocalVideoTrack.create(VideoPresets.h720);
+        const newTrack = await (LocalVideoTrack as any).create(VideoPresets.h720);
         localVideoTrackRef.current = newTrack;
         await roomRef.current.localParticipant.publishTrack(newTrack);
         

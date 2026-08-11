@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { moderation } from '@/services/maitrollModeration'
 
 import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
@@ -286,6 +287,14 @@ export default function InmatesPage() {
 
     setSendingMessage(true)
     try {
+      // Canonical moderation check
+      const modResult = await moderation.checkContent(user.id, cleanMessage, 'inmate_message');
+      if (!modResult.allowed) {
+        toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
+        setSendingMessage(false)
+        return
+      }
+
       await deductCoins(MESSAGE_COST)
 
       const { error: messageError } = await supabase.from('inmate_messages').insert({

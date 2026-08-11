@@ -10,19 +10,18 @@ interface TargetUser {
   username: string
   role: string
   troll_coins: number
-  free_coin_balance: number
   is_banned?: boolean
   is_kicked?: boolean
 }
 
-type GrantType = 'paid' | 'free'
+type GrantType = 'paid'
 
 const GrantCoins: React.FC = () => {
   const { profile } = useAuthStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [loadingUser, setLoadingUser] = useState(false)
   const [targetUser, setTargetUser] = useState<TargetUser | null>(null)
-  const [grantType, setGrantType] = useState<GrantType>('free')
+  const [grantType, setGrantType] = useState<GrantType>('paid')
   const [amountInput, setAmountInput] = useState('')
   const [reason, setReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -37,7 +36,7 @@ const GrantCoins: React.FC = () => {
     const loadRecentUsers = async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('id, username, role, troll_coins, free_coin_balance, is_banned, is_kicked')
+        .select('id, username, role, troll_coins, is_banned, is_kicked')
         .order('created_at', { ascending: false })
         .limit(10)
       
@@ -103,7 +102,7 @@ const GrantCoins: React.FC = () => {
       
       let queryBuilder = supabase
         .from('user_profiles')
-        .select('id, username, role, troll_coins, free_coin_balance, is_banned, is_kicked')
+        .select('id, username, role, troll_coins, is_banned, is_kicked')
       
       if (isUuid) {
         // If it looks like a UUID, search by ID OR username
@@ -132,7 +131,6 @@ const GrantCoins: React.FC = () => {
         username: row.username,
         role: row.role,
         troll_coins: row.troll_coins || 0,
-        free_coin_balance: row.free_coin_balance || 0,
         is_banned: row.is_banned,
         is_kicked: row.is_kicked
       })
@@ -180,7 +178,7 @@ const GrantCoins: React.FC = () => {
         })
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to grant paid coins')
+          throw new Error(result.error || 'Failed to grant coins')
         }
 
         setTargetUser({
@@ -200,14 +198,14 @@ const GrantCoins: React.FC = () => {
 
         const { data, error: reloadError } = await supabase
           .from('user_profiles')
-          .select('free_coin_balance')
+          .select('troll_coins')
           .eq('id', targetUser.id)
           .single()
 
         if (!reloadError && data) {
           setTargetUser({
             ...targetUser,
-            free_coin_balance: data.free_coin_balance || 0
+            troll_coins: data.troll_coins || 0
           })
         }
       }
@@ -245,7 +243,7 @@ const GrantCoins: React.FC = () => {
               <Shield className="w-6 h-6 text-purple-400" />
             </h1>
             <p className="text-sm text-gray-400">
-              Safely grant free or paid coins to a user with full audit trail.
+              Safely grant coins to a user with full audit trail.
             </p>
           </div>
         </div>
@@ -293,7 +291,7 @@ const GrantCoins: React.FC = () => {
                       Paid: <span className="text-purple-300">{targetUser.troll_coins.toLocaleString()} coins</span>{' '}
                       • Free:{' '}
                       <span className="text-green-300">
-                        {targetUser.free_coin_balance.toLocaleString()} coins
+                        {(targetUser.troll_coins || 0).toLocaleString()} coins
                       </span>
                     </div>
                   </div>
@@ -360,22 +358,9 @@ const GrantCoins: React.FC = () => {
               <label className="block text-sm font-semibold text-gray-300">
                 Coin type
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <button
                   type="button"
-                  onClick={() => setGrantType('free')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium border ${
-                    grantType === 'free'
-                      ? 'bg-green-600/30 border-green-400 text-green-300'
-                      : 'bg-zinc-900 border-zinc-700 text-gray-300'
-                  }`}
-                >
-                  Free coins
-                  <span className="block text-[10px] opacity-60 font-normal">free_coin_balance</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setGrantType('paid')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium border ${
                     grantType === 'paid'
                       ? 'bg-purple-600/30 border-purple-400 text-purple-200'
@@ -383,7 +368,7 @@ const GrantCoins: React.FC = () => {
                   }`}
                 >
                   Paid coins
-                  <span className="block text-[10px] opacity-60 font-normal">troll_coins (DB Column)</span>
+                  <span className="block text-[10px] opacity-60 font-normal">troll_coins</span>
                 </button>
               </div>
               <p className="text-xs text-gray-400">

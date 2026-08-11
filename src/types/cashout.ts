@@ -3,7 +3,7 @@ import { UserProfile } from '../lib/supabase';
 
 export type PayoutMethod = 'cash_app' | 'paypal' | 'venmo' | 'ach' | 'check';
 
-export type CashoutStatus = 'pending' | 'processing' | 'approved' | 'completed' | 'denied' | 'submitted';
+export type CashoutStatus = 'pending' | 'processing' | 'approved' | 'completed' | 'denied' | 'submitted' | 'reviewed';
 
 export interface CashoutRequest {
   id: string;
@@ -31,6 +31,10 @@ export interface CashoutRequest {
   updated_at: string;
   processed_at: string | null;
   processed_by: string | null;
+  cash_amount: number | null;
+  coin_amount: number | null;
+  provider_type: string | null;
+  provider_username: string | null;
 }
 
 export interface CashoutDocument {

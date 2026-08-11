@@ -21,7 +21,7 @@ export interface ModerationReport {
 
 export interface ModerationAction {
   id: string
-  action_type: 'warn' | 'suspend_stream' | 'ban_user' | 'unban_user'
+  action_type: 'warn' | 'suspend_stream' | 'arrest' | 'release'
   target_user_id?: string | null
   target_username?: string | null
   stream_id?: string | null
@@ -45,7 +45,7 @@ export interface SubmitReportPayload {
 
 export interface TakeActionPayload {
   report_id?: string
-  action_type: 'warn' | 'suspend_stream' | 'ban_user' | 'unban_user'
+  action_type: 'warn' | 'suspend_stream' | 'arrest' | 'release'
   target_user_id?: string | null
   stream_id?: string | null
   reason: string

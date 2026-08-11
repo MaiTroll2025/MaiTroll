@@ -37,14 +37,6 @@ export interface CityAd {
   created_at: string;
   updated_at: string;
   isUserAd?: boolean;
-  // Maitalent integration fields (optional)
-  maitalent_campaign_id?: string;
-  maitalent_platform?: 'maitalent';
-  maitalent_target_audience?: {
-    platforms?: string[];
-    countries?: string[];
-    age_range?: [number, number];
-  };
 }
 
 /**

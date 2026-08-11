@@ -1,22 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, X, Download, Share2 } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { doesUserProfileExist, supabase } from '../lib/supabase';
-import { isIos } from '../pwa/install';
-import { useInstallPrompt } from '../pwa/useInstallPrompt';
-import { getInstallStatus } from '../pwa/install';
 
 const HomeNotificationPrompt: React.FC = () => {
   const { user } = useAuthStore();
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const { canPromptInstall, promptInstall, isInstalling } = useInstallPrompt();
 
   const isNotificationSupported = typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function';
   const isServiceWorkerSupported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
-
-  const installStatus = getInstallStatus(canPromptInstall);
 
   const safeSessionStorageGet = (key: string) => {
     try {
@@ -38,8 +31,6 @@ const HomeNotificationPrompt: React.FC = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    setIsIOS(isIos());
 
     if (!user) return;
     if (safeSessionStorageGet('homeNotificationPromptShown')) return;
@@ -190,28 +181,6 @@ const HomeNotificationPrompt: React.FC = () => {
     }
   };
 
-  const handleInstall = async () => {
-    // Use the proper PWA install prompt system
-    if (canPromptInstall) {
-      const outcome = await promptInstall();
-      if (outcome === 'accepted') {
-        alert('Install in progress! Add Mai Troll to your home screen for quick access.');
-      }
-      setShow(false);
-      safeSessionStorageSet('homeNotificationPromptShown', 'true');
-    } else if (isIOS()) {
-      // iOS: show manual instructions
-      alert('On iOS, use Safari\'s Share button → "Add to Home Screen" to install Mai Troll.');
-      setShow(false);
-      safeSessionStorageSet('homeNotificationPromptShown', 'true');
-    } else {
-      // Desktop or unsupported — try browser menu
-      alert('Look for the install icon ⊡ in Chrome/Edge menu (three dots) to install Mai Troll.');
-      setShow(false);
-      safeSessionStorageSet('homeNotificationPromptShown', 'true');
-    }
-  };
-
   const handleDismiss = () => {
     setShow(false);
     safeSessionStorageSet('homeNotificationPromptShown', 'true');
@@ -249,61 +218,6 @@ const HomeNotificationPrompt: React.FC = () => {
             <Bell className="w-5 h-5" />
             {loading ? 'Enabling...' : 'Enable Notifications'}
           </button>
-
-          {/* Android / Chrome: Show native install prompt button */}
-          {installStatus === 'prompt-available' ? (
-            <button
-              onClick={handleInstall}
-              disabled={isInstalling}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-lg shadow-purple-500/20"
-            >
-              {isInstalling ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Installing...
-                </>
-              ) : (
-                <>
-                  <Download className="w-5 h-5" />
-                  Install Mai Troll App
-                </>
-              )}
-            </button>
-          ) : installStatus === 'ios-manual' || (isIOS && installStatus !== 'prompt-available') ? (
-            <div className="bg-slate-800/50 border border-slate-600 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <Share2 className="w-5 h-5 text-cyan-400" />
-                <span className="font-semibold text-white">Save to Home Screen</span>
-              </div>
-              <p className="text-sm text-slate-300 mb-3">
-                iPhone and iPad install requires manual home screen saving from Safari.
-              </p>
-              <div className="flex items-start gap-3 bg-slate-900/70 rounded-lg p-3 mb-4">
-                <div className="flex flex-col items-center gap-1">
-                  <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-slate-400">
-                    <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M8 21h8" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M12 17v4" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
-                  <span className="text-xs text-slate-400">Safari</span>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    1. Tap the <span className="text-cyan-400">Share</span> icon. <br/>
-                    2. Choose <span className="text-cyan-400">Add to Home Screen</span>. <br/>
-                    3. Tap <span className="text-cyan-400">Add</span> to finish.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleInstall}
-                className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
-              >
-                <Share2 className="w-5 h-5" />
-                Show iOS Install Instructions
-              </button>
-            </div>
-          ) : null}
         </div>
 
         <p className="text-xs text-slate-500 text-center mt-4">

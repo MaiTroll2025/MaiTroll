@@ -51,6 +51,10 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ isOpen, onSubmit,
           <form
             onSubmit={e => {
               e.preventDefault();
+              if (!username.trim()) {
+                toast.error('Username is required');
+                return;
+              }
               onSubmit(username, bio, gender, platform);
             }}
             className="space-y-4"

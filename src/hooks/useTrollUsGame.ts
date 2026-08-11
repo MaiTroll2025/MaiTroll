@@ -382,6 +382,7 @@ export function useTrollUsGame({ streamId }: UseTrollUsGameProps) {
     startGame,
     submitVote,
     endRound,
-    endGame
+    endGame,
+    myRole
   }
 }

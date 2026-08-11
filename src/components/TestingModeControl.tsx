@@ -11,7 +11,6 @@ interface TestingModeData {
 }
 
 interface Benefits {
-  free_coins: number
   bypass_family_fee: boolean
   bypass_admin_message_fee: boolean
 }
@@ -23,7 +22,6 @@ export function TestingModeControl() {
     current_signups: 0
   })
   const [benefits, setBenefits] = useState<Benefits>({
-    free_coins: 5000,
     bypass_family_fee: true,
     bypass_admin_message_fee: true
   })
@@ -106,8 +104,8 @@ export function TestingModeControl() {
     }
   }
 
-  const signupsRemaining = testingMode.signup_limit - testingMode.current_signups
-  const progressPercent = (testingMode.current_signups / testingMode.signup_limit) * 100
+  // const signupsRemaining = testingMode.signup_limit - testingMode.current_signups
+  // const progressPercent = (testingMode.current_signups / testingMode.signup_limit) * 100
 
   return (
     <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-xl p-6 border border-purple-500/30">
@@ -142,12 +140,7 @@ export function TestingModeControl() {
           <p className="text-2xl font-bold text-white">
             {testingMode.current_signups} / {testingMode.signup_limit}
           </p>
-          <div className="mt-2 h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-purple-500 transition-all duration-300"
-              style={{ width: `${Math.min(progressPercent, 100)}%` }}
-            />
-          </div>
+          {/* Removed progress bar per user request */}
         </div>
 
         <div className="bg-pink-500/10 rounded-lg p-4 border border-pink-500/30 purple-neon">
@@ -165,7 +158,7 @@ export function TestingModeControl() {
             <p className="text-sm text-gray-400">Remaining</p>
           </div>
           <p className="text-2xl font-bold text-white">
-            {testingMode.enabled ? Math.max(0, signupsRemaining) : '∞'}
+            {testingMode.enabled ? Math.max(0, testingMode.signup_limit - testingMode.current_signups) : '∞'}
           </p>
           <p className="text-xs text-gray-400 mt-1">
             {testingMode.enabled ? 'slots available' : 'unlimited signups'}
@@ -177,7 +170,6 @@ export function TestingModeControl() {
       <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/30 purple-neon mb-6">
         <h3 className="text-sm font-semibold text-purple-400 mb-2">Test User Benefits:</h3>
         <ul className="text-sm text-gray-300 space-y-1">
-          <li>• {benefits.free_coins.toLocaleString()} free coins on signup</li>
           <li>• {benefits.bypass_family_fee ? 'No fee' : 'Fee required'} for Troll Family applications</li>
           <li>• {benefits.bypass_admin_message_fee ? 'Free' : 'Paid'} admin messaging</li>
           <li>• Admin searchable by @admin username</li>
@@ -216,13 +208,7 @@ export function TestingModeControl() {
         </button>
       </div>
 
-      {testingMode.enabled && signupsRemaining === 0 && (
-        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
-          <p className="text-red-400 text-sm font-medium">
-            ⚠️ Signup limit reached! New signups are currently blocked.
-          </p>
-        </div>
-      )}
+
     </div>
   )
 }

@@ -7,6 +7,8 @@ export type NotificationType =
   | 'password_changed'
   | 'email_changed'
   | 'profile_updated'
+  | 'profile_picture_updated'
+  | 'cover_photo_updated'
   | 'account_warning'
   | 'account_restriction_started'
   | 'account_restriction_expired'
@@ -172,7 +174,41 @@ export type NotificationType =
   | 'interview_started'
 
   // NEW USER SIGNUP (admin alerts)
-  | 'new_user_signup';
+  | 'new_user_signup'
+
+  // ADDITIONAL TYPES USED ACROSS APP
+  | 'message'
+  | 'stream_live'
+  | 'coin_gifted'
+  | 'coin_received'
+  | 'system_announcement'
+  | 'support_ticket'
+  | 'contract_signed'
+  | 'contract_rejected'
+  | 'moderation_action'
+  | 'officer_update'
+  | 'seller_tier_upgrade'
+  | 'seller_tier_downgrade'
+  | 'paid_message_received'
+  | 'join_approved'
+  | 'moderation_alert'
+  | 'new_follower'
+  | 'support_reply'
+  | 'payout_update'
+  | 'role_update'
+  | 'application_result'
+  | 'troll_drop'
+  | 'purchase'
+  | 'gift'
+  | 'chat'
+  | 'broadcast'
+  | 'create'
+  | 'delete'
+  | 'payment'
+  | 'withdraw'
+  | 'edit'
+  | 'any'
+  | 'report_filed';
 
 export interface Notification {
   id: string

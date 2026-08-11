@@ -97,7 +97,7 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
       0,
       Number(profile?.cashout_reserved_coins || profile?.reserved_troll_coins || 0)
     );
-    const cashoutBalance = Math.max(0, Number(profile?.cashout_coins || 0));
+    const cashoutBalance = Math.max(0, Number(profile?.troll_coins || 0));
     const eligibleBalance = Math.max(0, cashoutBalance - reserved);
 
     setTotalCoins(rawTotal);

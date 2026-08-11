@@ -184,6 +184,10 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
           const podStreams: StreamWithProfile[] = podsData.map((pod: any) => ({
             id: pod.id,
             user_id: pod.host_user_id,
+            stream_type: 'podcast',
+            seat_count: 1,
+            agora_channel: `podcast-${pod.id}`,
+            room_name: `podcast-${pod.id}`,
             title: pod.title,
             category: 'podcast',
             status: 'live' as const,
@@ -417,7 +421,7 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
                   isActive={isActive}
                   isMuted={isMuted && isActive}
                   onClose={handleClose}
-                  broadcasterCoins={stream.broadcaster?.troll_coins}
+                  broadcasterCoins={(stream.broadcaster as any)?.troll_coins}
                 />
               ) : (
                 <StreamSwipeCard
@@ -425,7 +429,7 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
                   isActive={isActive}
                   isMuted={isMuted && isActive}
                   onClose={handleClose}
-                  broadcasterCoins={stream.broadcaster?.troll_coins}
+                  broadcasterCoins={(stream.broadcaster as any)?.troll_coins}
                 />
               )}
             </div>

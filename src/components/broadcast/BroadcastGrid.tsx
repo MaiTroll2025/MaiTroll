@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect, useCallback, memo, type CSSProperties, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack } from 'livekit-client';
+import { LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack, Track } from 'livekit-client';
 import { StagePass, Stream } from '../../types/broadcast';
 import { User, Users, Coins, Plus, Minus, MicOff, VideoOff, Gift, Gem, Crown, Swords, Shield, Palette, X, Circle, Cloud } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -13,6 +13,8 @@ import { useAuthStore } from '../../lib/store';
 import { useStreamRealtime } from '../../hooks/useStreamRealtime';
 import { useParticipantAttributes } from '../../hooks/useParticipantAttributes';
 import { useStagePasses } from '../../hooks/useStagePasses';
+import { useProfileFrameStore } from '@/stores/useProfileFrameStore';
+import GiftAnimationLayer from '@/components/broadcast/GiftAnimationLayer';
 import { getAllPersistentGifts, type PersistentGift } from '../../lib/persistentGiftStore';
 import type { TrollToeMatch } from '../../types/trollToe';
 import BroadcastTicker from './BroadcastTicker';
@@ -22,6 +24,24 @@ import { SeatSession } from '@/hooks/useStreamSeats';
 import ProfileFrame from '@/components/profile/ProfileFrame';
 import { useUserFrame } from '@/hooks/useUserFrame';
 import UserMiniProfile from '@/components/user/UserMiniProfile';
+
+function getVideoTrackFromRemoteParticipant(participant: any): RemoteVideoTrack | null {
+  if (!participant) return null
+  const directCandidates = [
+    participant.videoTrack,
+    participant.cameraTrack,
+    participant.track,
+    participant.video,
+    participant.getTrackPublication?.(Track.Source.Camera)?.track,
+    participant.getTrackPublication?.(Track.Kind.Video)?.track,
+  ]
+  for (const candidate of directCandidates) {
+    if (candidate?.attach && (candidate?.kind === Track.Kind.Video || candidate?.mediaStreamTrack?.kind === 'video')) {
+      return candidate as RemoteVideoTrack
+    }
+  }
+  return null
+}
 
  // Battle Timer Display Component - Shows 3 minute countdown for standalone battles
 
@@ -177,7 +197,7 @@ function LiveKitVideoPlayer({
     try {
       if (import.meta.env.DEV) {
         if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] Attaching video track:', {
-          trackId: track.trackId,
+          trackId: (track as any).trackId,
           trackName: (track as any).name,
           isLocal,
           isScreenShare
@@ -201,7 +221,7 @@ function LiveKitVideoPlayer({
       containerRef.current.innerHTML = '';
 
       // Attach the track to create a video element
-      const videoElement = track.attach();
+      const videoElement = track.attach() as HTMLVideoElement;
       
       // Configure video element for proper display
       videoElement.style.width = '100%';
@@ -480,6 +500,7 @@ const BroadcastGridComponent = function BroadcastGrid({
     onCloseHostStats,
     onOpenModActions,
     onCloseModActions,
+    onOpenPassModal,
   }: BroadcastGridProps) {
    const renderCountRef = useRef(0);
    renderCountRef.current += 1;
@@ -499,6 +520,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : und
   const frameCacheRef = useRef<Map<string, import('@/config/profileFrames').ProfileFrame | null>>(new Map())
   const [, forceUpdate] = useState(0)
   const catalog = useProfileFrameStore((s: any) => s.catalog)
+  const seatAssignments = useMemo(() => Object.values(seats || {}), [seats])
 
   // Fetch frames for all seated users
   useEffect(() => {
@@ -779,7 +801,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : und
         localTracksLength: localTracks?.length ?? 0,
         localTracks0: localTracks?.[0]?.constructor?.name,
         localTracks1: localTracks?.[1]?.constructor?.name,
-        videoTrackId: videoTrack?.getTrackId?.(),
+        videoTrackId: (videoTrack as any)?.getTrackId?.(),
         videoEnabled: (videoTrack as any)?.enabled,
       });
       // For local participant, we create a dummy participant object
@@ -877,8 +899,8 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : und
           identity: participant.identity,
           hasVideoTrack: !!videoTrack,
           hasAudioTrack: !!audioTrack,
-          videoTrackId: videoTrack?.getTrackId?.(),
-          audioTrackId: audioTrack?.getTrackId?.(),
+          videoTrackId: (videoTrack as any)?.getTrackId?.(),
+          audioTrackId: (audioTrack as any)?.getTrackId?.(),
           videoPubsCount: videoPubs?.size || 0,
           allVideoPubsCount: allVideoPubs.length,
         });
@@ -1268,7 +1290,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : und
               hostIsMicOn={broadcasterTrackInfo.isMicOn}
               hostIsCamOn={broadcasterTrackInfo.isCamOn}
               hostIsScreenSharing={broadcasterTrackInfo.isScreenShare}
-              hostHasVideo={!!broadcasterTrackInfo.hasVideo}
+              hostHasVideo={!!(broadcasterTrackInfo as any).hasVideo}
               hostVideoNode={
                 (() => {
                   const videoTrack = isLocalHost
@@ -1308,7 +1330,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : und
                       }
                     }
               }
-              onOpenPassModal={isHost ? onOpenPassModal : undefined}
+              onOpenPassModal={isHost ? (onOpenPassModal as any) : (() => {})}
               onApproveStagePass={
                 isHost
                   ? (id: string) => {
@@ -1608,6 +1630,13 @@ boxClass,
               })()}
 
               {audioTrack && !isLocal && <LiveKitAudioPlayer audioTrack={audioTrack} />}
+
+              {/* Per-box gift animation layer (plays gifts sent to this user) */}
+              {userId && (
+                <div className="absolute inset-0 pointer-events-none z-30">
+                  <GiftAnimationLayer streamId={stream.id} recipientUserId={String(userId)} className="" />
+                </div>
+              )}
 
           {/* Empty Seat */}
           {!userId && (
@@ -1921,7 +1950,7 @@ boxClass,
                            videoTrack={getParticipantAndTracks(userId).videoTrack}
                            isLocal={false}
                            isScreenShare={false}
-                           broadcasterProfile={getParticipantAndTracks(userId).profile}
+                            broadcasterProfile={(getParticipantAndTracks(userId) as any).profile}
                          />
                        )
                      ) : (
@@ -1980,7 +2009,7 @@ boxClass,
                            videoTrack={getParticipantAndTracks(userId).videoTrack}
                            isLocal={false}
                            isScreenShare={false}
-                           broadcasterProfile={getParticipantAndTracks(userId).profile}
+                            broadcasterProfile={(getParticipantAndTracks(userId) as any).profile}
                          />
                        )
                      ) : (

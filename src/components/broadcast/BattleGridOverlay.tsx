@@ -67,7 +67,7 @@ const LiveKitVideoPlayer = React.memo(function LiveKitVideoPlayer({
     }
     
     try {
-      const videoElement = videoTrack.attach();
+      const videoElement = videoTrack.attach() as HTMLVideoElement;
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
       videoElement.style.objectFit = 'cover';
@@ -304,7 +304,7 @@ export default function BattleGridOverlay({
     if (!participant) return false;
     const pubs = participant.videoTrackPublications as unknown as Map<string, { track?: RemoteVideoTrack }>;
     if (!pubs) return false;
-    return Array.from(pubs.values()).some(p => p.track?.kind === 'video' && p.track.isEnabled);
+    return Array.from(pubs.values()).some(p => p.track?.kind === 'video' && (p.track as any).isEnabled);
   };
 
   // Helper function to check if audio is enabled
@@ -312,7 +312,7 @@ export default function BattleGridOverlay({
     if (!participant) return false;
     const pubs = participant.audioTrackPublications as unknown as Map<string, { track?: RemoteAudioTrack }>;
     if (!pubs) return false;
-    return Array.from(pubs.values()).some(p => p.track?.kind === 'audio' && p.track.isEnabled);
+    return Array.from(pubs.values()).some(p => p.track?.kind === 'audio' && (p.track as any).isEnabled);
   };
 
   // Memoized box creation for broadcaster

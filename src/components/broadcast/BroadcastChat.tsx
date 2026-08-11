@@ -20,6 +20,7 @@ import { shouldAutoHideMessage, canControlSlowMode, shouldShowGoldenBanner } fro
 import { useChatBlockStatus } from '../../hooks/useChatBlockStatus';
 import { useStreamRealtime } from '../../hooks/useStreamRealtime';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration';
+import { moderation } from '@/services/maitrollModeration';
 
 // Cap total messages in memory to prevent unbounded growth.
 // Used consistently by: initial history, realtime chat, gifts, system messages,
@@ -1307,15 +1308,10 @@ const fetchMessages = async () => {
     try {
       const canBypassModeration = isHost || isStaffProfile(profile);
       if (!canBypassModeration) {
-        const { data: blocked, error: blockError } = await supabase.rpc('is_user_chat_blocked', {
-          p_user_id: user.id,
-          p_stream_id: streamId,
-        });
-
-        if (blockError) {
-          console.error('[BroadcastChat] is_user_chat_blocked failed:', blockError);
-        } else if (blocked) {
-          toast.error('Your chat is disabled by moderation action.');
+        // Canonical moderation check
+        const modResult = await moderation.checkContent(user.id, content, 'chat');
+        if (!modResult.allowed) {
+          toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
           return;
         }
       }
@@ -1511,7 +1507,7 @@ const fetchMessages = async () => {
     setIsGiftModalOpen(true);
   };
 
-  const isOfficer = isStaffProfile(profile);
+  const isOfficer = isStaffProfile(profile) || isHost || isModerator;
 
   // Allow pin/unpin for broadcaster, broadofficer (moderator), admin, staff
   const canPinMessages = isHost || isModerator || isOfficer;

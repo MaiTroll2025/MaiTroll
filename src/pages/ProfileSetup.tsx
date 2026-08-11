@@ -9,6 +9,7 @@ import { validateFile, FILE_VALIDATION } from '../lib/fileValidation'
 import CropPhotoModal from '../components/CropPhotoModal'
 import { KeyRound } from 'lucide-react'
 import { MaiTrollTheme } from '../styles/trollCityTheme'
+import { moderation } from '@/services/maitrollModeration';
 
 const ProfileSetup = () => {
   const navigate = useNavigate()
@@ -109,6 +110,15 @@ const ProfileSetup = () => {
       toast.error('Use 2–20 letters, numbers, or underscores')
       return
     }
+
+    // Canonical username safety check
+    const usernameCheck = await moderation.checkUsername(uname, user.id)
+    if (!usernameCheck.safe) {
+      toast.error(usernameCheck.reason || 'This username is not allowed.')
+      setLoading(false)
+      return
+    }
+
     if (!fullName.trim()) {
       toast.error('Full name is required')
       return
@@ -348,6 +358,11 @@ const ProfileSetup = () => {
 
       console.log('Uploaded URL:', uploadedUrl)
       console.log('User ID:', user.id)
+      console.log('[ProfileSetup] Storage bucket: troll-city-assets, path:', name)
+
+      // Verify bucket is public
+      const { data: bucketData } = await supabase.storage.getBucket('troll-city-assets');
+      console.log('[ProfileSetup] Bucket info:', bucketData);
 
       // Update database with clean URL (without checking profile first to avoid RLS issues)
       const { error: updateErr } = await supabase

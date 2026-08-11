@@ -220,7 +220,7 @@ export default function QuizBuilderPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/20 text-[10px] font-black text-indigo-300">{idx + 1}</span>
-                    <select value={q.question_type} onChange={e => updateQuestion(q.id, { question_type: e.value as QuestionType })}
+                     <select value={q.question_type} onChange={e => updateQuestion(q.id, { question_type: (e.target as HTMLSelectElement).value as QuestionType })}
                       className="rounded-lg border border-white/10 bg-[#050710] px-2 py-1 text-[10px] text-white outline-none appearance-none">
                       {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.icon} {t.label}</option>)}
                     </select>

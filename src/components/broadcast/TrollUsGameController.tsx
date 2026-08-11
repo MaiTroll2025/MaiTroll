@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTrollUsGame, GamePlayer } from '@/hooks/useTrollUsGame'
+import { useAuthStore } from '@/lib/store'
 
 interface TrollUsGameControllerProps {
   streamId: string
@@ -24,8 +25,11 @@ export default function TrollUsGameController({
     startGame, 
     submitVote,
     endRound, 
-    endGame 
+    endGame,
+    myRole
   } = useTrollUsGame({ streamId })
+
+  const { user } = useAuthStore()
 
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null)
 

@@ -143,7 +143,7 @@ function canRoleStartCourt(role: CourtRole) {
 
 function canJoinBox(role: CourtRole, boxRole: CourtBoxRole) {
   if (boxRole === "audience") return true;
-  if (boxRole === "judge") return canRoleStartCourt(role) || role === "judge";
+  if (boxRole === "judge") return canRoleStartCourt(role) || (role as any) === "judge";
   if (boxRole === "prosecutor") return canRoleStartCourt(role) || role === "prosecutor";
   if (boxRole === "attorney") return canRoleStartCourt(role) || role === "attorney";
   if (boxRole === "witness") return true;

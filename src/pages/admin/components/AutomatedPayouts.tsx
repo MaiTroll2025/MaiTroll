@@ -31,13 +31,13 @@ interface PayoutItem {
 interface PayoutWindowStatus {
   enabled: boolean;
   min_coins: number;
-  special_tier_enabled: boolean;
-  special_tier_coins: number;
-  special_tier_usd: number;
-  duration_minutes: number;
+  special_tier_enabled?: boolean;
+  special_tier_coins?: number;
+  special_tier_usd?: number;
+  duration_minutes?: number;
   enabled_at?: string;
   expires_at?: string;
-  message: string;
+  message?: string;
   notified_users?: boolean;
 }
 

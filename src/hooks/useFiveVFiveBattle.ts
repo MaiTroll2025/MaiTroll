@@ -19,7 +19,7 @@ export interface BattleParticipant {
 export interface AbilityState {
   teamFreeze: { available: boolean; cooldownEndsAt: number; isActive: boolean; activeEndsAt: number };
   reverse: { available: boolean; cooldownEndsAt: number };
-  doubleXp: { available: boolean; cooldownEndsAt: number; isActive: number; activeEndsAt: number };
+  doubleXp: { available: boolean; cooldownEndsAt: number; isActive: boolean; activeEndsAt: number };
 }
 
 export interface FiveVFiveBattleState {
@@ -404,7 +404,6 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
       .update({ status: 'active', started_at: dbStartedAt })
       .eq('id', battleId)
       .then(() => {})
-      .catch(() => {});
 
     const startedAt = Date.now();
     let remaining = BATTLE_DURATION;

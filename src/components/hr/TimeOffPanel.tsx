@@ -9,6 +9,7 @@ interface TimeOffRequest {
   date: string
   end_date?: string | null
   reason: string | null
+  notes?: string | null
   status: string
   created_at: string
   reviewed_by?: string | null

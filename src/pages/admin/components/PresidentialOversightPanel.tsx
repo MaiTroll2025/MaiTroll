@@ -222,7 +222,7 @@ export default function PresidentialOversightPanel() {
         grantId: null,
         userId: presidentUserId,
         username: presidentUserId ? getUsernameFromUnknownRecord(currentPresident) : 'Vacant',
-        avatarUrl: currentPresident?.avatar_url || currentPresident?.user?.avatar_url || null,
+        avatarUrl: currentPresident?.avatar_url || null,
         grantedAt: null,
         expiresAt: currentElection?.ends_at || null,
         source: presidentUserId ? ('hook' as const) : ('empty' as const),

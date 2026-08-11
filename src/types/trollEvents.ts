@@ -7,7 +7,7 @@ export interface TrollEvent {
   expires_at: string;
   created_at: string;
   status?: 'active' | 'completed' | 'expired';
-  sourceEventId: string; // Unique identifier for MaiTalent sync
+  sourceEventId: string;
   metadata?: any;
 }
 

@@ -454,7 +454,7 @@ const resolveSupabaseStorageUrl = (value?: string | null): { url: string; type: 
 }
 
 const getLocalFallbackSlugs = (slug: string): string[] => {
-  const normalizedSlug = normalizeSlug(slug) || 'gift_boost'
+  const normalizedSlug = normalizeSlug(slug) || ''
   const strippedSlug = normalizedSlug.replace(/^gift[-_]/i, '')
   return Array.from(new Set([normalizedSlug, strippedSlug].filter(Boolean)))
 }
@@ -464,13 +464,14 @@ const buildLocalGiftCandidates = (slug: string, type: 'video' | 'image'): string
   if (type === 'image') {
     return slugs.map((candidate) => `/gift-images/${candidate}.png`)
   }
-  return slugs.flatMap((candidate) => [`/gift-videos/${candidate}.webm`, `/gift-animations/${candidate}.webm`])
+  return slugs.flatMap((candidate) => [`/gift-videos/${candidate}.webm`, `/gift-videos/${candidate}.mp4`, `/gift-animations/${candidate}.webm`, `/gift-animations/${candidate}.mp4`])
 }
 
 const debugGiftResolutionMap = new Map<string, Record<string, any>>()
 
 export function getGiftVisualConfig(gift: {
   id?: string;
+  gift_id?: string;
   name?: string;
   slug?: string;
   gift_slug?: string;
@@ -507,8 +508,8 @@ export function getGiftVisualConfig(gift: {
 }): GiftVisualConfig {
   const name = (gift.name || '').trim();
   const slug = normalizeSlug(
-    gift.slug || gift.gift_slug || gift.animationKey || gift.animation_key || gift.name || ''
-  ) || 'gift_boost';
+    gift.slug || gift.gift_slug || gift.gift_id || gift.animationKey || gift.animation_key || gift.name || ''
+  ) || '';
   const value = gift.coinCost ?? gift.value ?? gift.amount ?? 0;
   const animationKey = gift.animationKey || gift.animation_key || getAnimationKeyFromName(name, slug);
   const preset = PRESET_GIFT_CONFIG.find((entry) => entry.matcher(name.toLowerCase(), slug.toLowerCase()));

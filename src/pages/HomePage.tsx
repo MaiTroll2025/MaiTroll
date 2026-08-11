@@ -193,6 +193,32 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Mai Sing Off Featured Card */}
+      <section className="px-6 py-12">
+        <div className="mx-auto max-w-screen-2xl">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 p-6 md:p-10">
+            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-yellow-300/20 blur-3xl" />
+            <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <span className="inline-block rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-black">LIVE</span>
+                <h2 className="mt-3 text-3xl font-extrabold text-white md:text-4xl">Mai Sing Off</h2>
+                <p className="mt-2 max-w-lg text-sm text-zinc-100">
+                  The ultimate live singing competition. Perform on stage, judge with your voice, send gifts, and compete for the Mai Winner crown.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  window.location.href = '/mai-sing-off'
+                }}
+                className="rounded-full bg-white px-6 py-2.5 text-sm font-bold text-pink-700 shadow-xl hover:bg-yellow-300"
+              >
+                Enter the Stage
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Categories Section */}
       <section id="categories" className="px-6 py-16">
         <div className="mx-auto max-w-screen-2xl">

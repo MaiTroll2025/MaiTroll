@@ -45,9 +45,8 @@ interface UserStats {
   xp: number
   totalXp: number
   nextLevelXp: number
-  troll_coins: number
-  paid_coins: number
-  hype_coins: number
+   troll_coins: number
+   hype_coins: number
   cashout_coins: number
   cashout_reserved_coins: number
   familyName?: string
@@ -249,7 +248,7 @@ export default function Stats() {
       if (profile?.role === 'admin' || profile?.troll_role === 'admin') badges.push('🛡️ Admin')
       if (familyMember) badges.push('⚔️ Family War')
       if (currentXp.level >= 10) badges.push('👑 Top Rank')
-      if (balances.paid_coins > 1000) badges.push('💰 Big Spender')
+      if (balances.troll_coins > 1000) badges.push('💰 Big Spender')
 
       setStats({
         level: currentXp.level,
@@ -257,9 +256,8 @@ export default function Stats() {
         totalXp: currentXp.xpTotal,
         nextLevelXp: currentXp.xpToNext + currentXp.xpTotal,
         troll_coins: balances.troll_coins || 0,
-        paid_coins: balances.paid_coins || 0,
         hype_coins: balances.hype_coins || 0,
-        cashout_coins: balances.cashout_coins || 0,
+        cashout_coins: balances.troll_coins || 0,
         cashout_reserved_coins: balances.cashout_reserved_coins || 0,
         ...familyData,
         warWins: battleWins,
@@ -277,7 +275,6 @@ export default function Stats() {
     user?.id,
     profile,
     balances.troll_coins,
-    balances.paid_coins,
     balances.hype_coins,
     balances.cashout_coins,
     balances.cashout_reserved_coins,
@@ -691,7 +688,7 @@ export default function Stats() {
                     <div className="flex items-center justify-between rounded-2xl border border-emerald-300/10 bg-slate-950/60 p-4">
                       <span className="font-bold text-slate-100">💰 Gifted Coins</span>
                       <span className="text-xl font-black text-emerald-300">
-                        {stats.paid_coins.toLocaleString()}
+                        {stats.troll_coins.toLocaleString()}
                       </span>
                     </div>
 
@@ -721,10 +718,10 @@ export default function Stats() {
                       <div className="flex items-center justify-between">
                         <span className="text-slate-300">Total Coins Value</span>
                         <span className="text-lg font-black text-purple-300">
-                          ${(Math.round((stats.troll_coins + stats.paid_coins) / 300 * 100) / 100).toFixed(2)}
+                          ${(Math.round((stats.troll_coins) / 400 * 100) / 100).toFixed(2)}
                         </span>
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">300 coins = $1.00</div>
+                      <div className="mt-1 text-xs text-slate-500">400 coins = $1.00</div>
                     </div>
 
                     {(stats.cashout_coins > 0 || stats.cashout_reserved_coins > 0) && (
@@ -735,7 +732,7 @@ export default function Stats() {
                             Cashout Available
                           </span>
                           <span className="text-lg font-black text-emerald-300">
-                            ${(Math.min(stats.cashout_coins, stats.troll_coins + stats.paid_coins) / 300 * 100).toFixed(2)}
+                             ${(Math.min(stats.cashout_coins, stats.troll_coins) / 300 * 100).toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -796,7 +793,7 @@ export default function Stats() {
                   tone="yellow" />
                 <MetricBox
                   label="Paid"
-                  value={`${earningSummary?.paid_coins?.toLocaleString() || '0'} coins`}
+                  value={`${earningSummary?.total_earned_coins?.toLocaleString() || '0'} coins`}
                   tone="cyan" />
                 <MetricBox
                   label="This Week"

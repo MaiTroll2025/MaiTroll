@@ -35,7 +35,7 @@ const LiveKitViewerPlayer: React.FC<LiveKitViewerPlayerProps> = ({ streamId, bro
         const videoTrack = pub.track as RemoteVideoTrack;
         if (videoContainerRef.current) {
           console.log('[LiveKitViewerPlayer] Playing video track for:', participant.identity);
-          try { videoTrack.play(videoContainerRef.current); } catch (e) { console.warn('[LiveKitViewerPlayer] video play failed:', e); }
+          try { (videoTrack as any).play?.(videoContainerRef.current); } catch (e) { console.warn('[LiveKitViewerPlayer] video play failed:', e); }
         }
       }
     });
@@ -45,7 +45,7 @@ const LiveKitViewerPlayer: React.FC<LiveKitViewerPlayerProps> = ({ streamId, bro
       if (pub.track && typeof (pub.track as any).play === 'function' && pub.track.kind === 'audio') {
         const audioTrack = pub.track as RemoteAudioTrack;
         console.log('[LiveKitViewerPlayer] Playing audio track for:', participant.identity);
-        try { audioTrack.play(); } catch (e) { console.warn('[LiveKitViewerPlayer] audio play failed:', e); }
+          try { (audioTrack as any).play?.(); } catch (e) { console.warn('[LiveKitViewerPlayer] audio play failed:', e); }
       }
     });
   }, []);

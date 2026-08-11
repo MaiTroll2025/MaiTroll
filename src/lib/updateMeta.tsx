@@ -531,7 +531,7 @@ export default function ArticleReader() {
                           {related.headline}
                         </h4>
                         <p className="text-xs text-gray-500 mt-1">
-                          by {related.author?.username || related.author?.stage_name || 'Unknown'}
+                          by {(related.author as any)?.username || related.author?.stage_name || 'Unknown'}
                         </p>
                       </div>
                     </div>

@@ -253,7 +253,7 @@ const PayoutRequest: React.FC<PayoutRequestProps> = ({ onRequestComplete }) => {
   }
 
   const estimateUsd = (coins: number) => {
-    let best = CASHOUT_TIERS[0];
+    let best: any = CASHOUT_TIERS[0];
     for (const tier of CASHOUT_TIERS) {
       if (coins >= tier.coins) best = tier;
     }

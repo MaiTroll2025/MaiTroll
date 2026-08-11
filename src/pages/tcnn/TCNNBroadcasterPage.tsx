@@ -287,9 +287,9 @@ export default function TCNNBroadcasterPage() {
       }
 
       await room.connect(livekitUrl, tokenData.token, {
-        name: targetStreamId,
+        roomName: targetStreamId,
         identity: user.id,
-      });
+      } as any);
 
       console.log('[TCNNBroadcaster] Connected to LiveKit room:', targetStreamId);
 

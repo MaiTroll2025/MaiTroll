@@ -203,7 +203,7 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
       });
 
       // Apply current mute state to remote audio playback.
-      try { room.setAudioVolume?.(isMuted ? 0 : 100); } catch { /* noop */ }
+      try { (room as any).setAudioVolume?.(isMuted ? 0 : 100); } catch { /* noop */ }
 
        // Get existing participants
        const existingParticipants = Array.from(room.remoteParticipants?.values() || []);
@@ -264,8 +264,8 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
      const likeIncrement = 2;
      setLikeCount((prev) => Number(prev || 0) + likeIncrement);
 
-     pendingLikesRef.current += 1;
-     if (pendingLikesRef.current >= 25) {
+      pendingLikesRef.current += 2;
+      if (pendingLikesRef.current >= 25) {
        flushLikes();
      }
    };

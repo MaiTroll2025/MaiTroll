@@ -30,22 +30,30 @@ export default function BlockedUsers() {
 
     setLoading(true);
     try {
-      // Get all blocked relationships with user_profiles data
-      const { data, error } = await supabase
+      const { data: blocks, error: blocksError } = await supabase
         .from('user_blocks')
-        .select(`
-          id,
-          blocked_id,
-          created_at,
-          user_profiles!user_blocks_blocked_id_fkey(username, display_name, avatar_url)
-        `)
+        .select('id, blocked_id, created_at')
         .eq('blocker_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (blocksError) throw blocksError;
 
-      const mapped: BlockedUser[] = (data || []).map((row: any) => {
-        const profile = row.user_profiles || {};
+      const blockedIds = (blocks || []).map((row: any) => row.blocked_id).filter(Boolean);
+      let profiles: any[] = [];
+      if (blockedIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('user_profiles')
+          .select('id, username, display_name, avatar_url')
+          .in('id', blockedIds);
+
+        if (profilesError) throw profilesError;
+        profiles = profilesData || [];
+      }
+
+      const profileMap = new Map(profiles.map((p: any) => [p.id, p]));
+
+      const mapped: BlockedUser[] = (blocks || []).map((row: any) => {
+        const profile = profileMap.get(row.blocked_id) || {};
         return {
           id: row.id,
           blocked_id: row.blocked_id,
@@ -216,8 +224,8 @@ export default function BlockedUsers() {
             <div className="text-sm text-amber-200/80">
               <p className="font-bold text-amber-200">About Blocking</p>
               <p className="mt-1">
-                When you block someone, they can't see your posts, profile, or chat messages.
-                You won't see their content either. Blocking is private — the other user is not notified.
+                When you block someone, they can&apos;t see your posts, profile, or chat messages.
+                You won&apos;t see their content either. Blocking is private — the other user is not notified.
               </p>
             </div>
           </div>

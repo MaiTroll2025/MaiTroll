@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Flame, Users, Gift, Music, Trophy, DollarSign, X, Play, Square } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface SmokeEventControlsProps {
   streamId: string;
@@ -96,8 +97,8 @@ export default function SmokeEventControls({
       {/* Raffle */}
       {smokeEvent.raffle_enabled && (
         <button
-          onClick={() => {
-            const { data } = supabase.from('stream_raffles')
+          onClick={async () => {
+            const { data } = await supabase.from('stream_raffles')
               .select('id')
               .eq('stream_id', streamId)
               .eq('status', 'active')

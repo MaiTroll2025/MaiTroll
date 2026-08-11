@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import ThemeEffectLayer from './ThemeEffectLayer';
-import { getThemeEffectType, getThemeCssClass } from './themeEffectMap';
+import ThemeEffectLayer from './themes/ThemeEffectLayer';
+import { getThemeEffectType, getThemeCssClass } from './themes/themeEffectMap';
 
 export type BroadcastTheme = {
   id: string;

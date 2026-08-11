@@ -16,7 +16,6 @@ const platformLinks = [
   { path: '/troll-court', label: 'Troll Court', icon: Landmark, description: 'Community justice system' },
   { path: '/government', label: 'Government', icon: Building2, description: 'Digital democracy' },
   { path: '/family/city', label: 'Families', icon: Users, description: 'Join social communities' },
-  { path: '/neighborhood-map', label: 'Neighborhoods', icon: MapPin, description: 'Explore digital neighborhoods' },
   { path: '/garage', label: 'Garage', icon: Car, description: 'Virtual vehicle collection' },
   { path: '/church', label: 'Troll Church', icon: Church, description: 'Faith community' },
 ]
@@ -166,8 +165,7 @@ export function SEOFooter() {
               <li><Link to="/troll-court" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Troll Court</Link></li>
               <li><Link to="/government" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Government</Link></li>
               <li><Link to="/family/city" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Families</Link></li>
-              <li><Link to="/neighborhood-map" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Neighborhoods</Link></li>
-            </ul>
+                          </ul>
           </div>
           <div>
             <h3 className="text-white font-semibold mb-4">Creators</h3>
@@ -216,3 +214,5 @@ export function SEOFooter() {
     </footer>
   )
 }
+
+

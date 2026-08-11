@@ -14,6 +14,7 @@ import { useAuthStore } from '../lib/store';
 import { useCoins } from '../lib/hooks/useCoins';
 import { deductCoins, addCoins } from '../lib/coinTransactions';
 import { toast } from 'sonner';
+import { moderation } from '@/services/maitrollModeration';
 import { 
   Crown, Users, MessageSquare, Phone, Video, Send, 
   Circle, ChevronLeft, MoreVertical, Mic, MicOff,
@@ -743,6 +744,13 @@ export default function TrollFamilyChat() {
   const sendMessage = async () => {
     if (!messageInput.trim() || !familyId || !user) return;
 
+    // Canonical moderation check
+    const modResult = await moderation.checkContent(user.id, messageInput.trim(), 'family_chat');
+    if (!modResult.allowed) {
+      toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('family_chat_messages')
@@ -922,7 +930,7 @@ export default function TrollFamilyChat() {
             avatar_url: data?.avatar_url,
           };
 
-          setMessages(prev => [...prev, newMessage]);
+          setMessages(prev => [...prev, newMessage as ChatMessage]);
         }
       )
       .subscribe();

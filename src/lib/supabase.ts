@@ -158,11 +158,10 @@ export const PLATFORM_OPTIONS = [
 export type Platform = typeof PLATFORM_OPTIONS[number]['value'];
 
 export interface UserProfile {
-  [x: string]: boolean
   verification_expires_at: boolean
   verified_since: any
   trollmonds: number
-    display_name: string
+  display_name: string
   name: string
   is_agency_hr: boolean
   is_agency_hr_manager: any
@@ -187,13 +186,12 @@ export interface UserProfile {
   coin_multiplier?: number
   troll_coins: number
   hype_coins: number
-  paid_coin_balance?: number
-  paid_coins?: number
-  free_coin_balance?: number
   cashout_coins?: number
   cashout_reserved_coins?: number
   reserved_troll_coins?: number
   payout_method?: string
+  payout_methods?: any[]
+  payment_methods?: any[]
   payout_details?: string
   cashapp_handle?: string | null
   venmo_handle?: string | null
@@ -221,6 +219,7 @@ export interface UserProfile {
   ban_expires_at?: string | null
   has_active_warrant?: boolean
   terms_accepted?: boolean
+  music_contract_accepted?: boolean
   mai_pay_plus?: boolean
   badge?: string | null
   title?: string | null
@@ -231,12 +230,9 @@ export interface UserProfile {
   created_at: string
   updated_at: string
 
-  payment_methods?: Array<any>
-  payout_method?: string
-  payout_details?: string
-
   // Officer fields
   is_troll_officer?: boolean
+  is_lead_troll_officer?: boolean
   is_officer_active?: boolean
   is_lead_officer?: boolean
   is_pastor?: boolean
@@ -262,12 +258,14 @@ export interface UserProfile {
   // TrollTract fields
   is_trolltract?: boolean
   trolltract_activated_at?: string | null
+  is_mod?: boolean | null
 
   // Credit Card fields
   credit_limit?: number
   credit_used?: number
   credit_apr_fee_percent?: number
   credit_status?: string
+  battle_crowns?: number
 
   // Profile Costs
   
@@ -282,8 +280,24 @@ export interface UserProfile {
    church_notifications_enabled?: boolean
    announcements_enabled?: boolean
    push_notifications_enabled?: boolean
-   credit_score?: number
+  credit_score?: number
+  is_minor?: boolean
+  is_owner?: boolean
+  is_staff?: boolean
+  is_moderator?: boolean
+  is_background_jailed?: boolean
   troller_level?: number // 1=Basic Troller, 2=Chaos Agent, 3=Supreme Troll
+  is_troll_family?: boolean
+  is_troll_family_leader?: boolean
+  is_ceo_assistant?: boolean
+  is_noah_assistant?: boolean
+  is_noah_admin?: boolean
+  is_journalist?: boolean
+  is_news_caster?: boolean
+  is_chief_news_caster?: boolean
+  is_tcnn_news_caster?: boolean
+  is_tcnn_chief_news_caster?: boolean
+  referred_by_user_id?: string
 
   onboarding_completed?: boolean
 
@@ -306,10 +320,37 @@ export interface UserProfile {
   tax_classification?: 'individual' | 'business'
   w9_status?: 'pending' | 'submitted' | 'verified' | 'rejected'
 
-  // Kick/Ban fields
-  kick_count?: number
-  is_kicked?: boolean
+  // Attorney fields
+  is_pro_bono?: boolean
+  attorney_fee?: number
+  attorney_cases_count?: number
+
+  // Credit Card fields
+  credit_limit?: number
+  credit_used?: number
+  credit_apr_fee_percent?: number
+  credit_status?: string
+  stmt_apr_percent?: number
+  stmt_balance?: number
+  stmt_minimum_payment?: number
+  stmt_due_date?: string
+  stmt_statement_date?: string
+  stmt_past_due?: boolean
+  stmt_late_fees_accrued?: number
+  stmt_interest_accrued?: number
+  stmt_on_time_payments?: number
+  stmt_late_payments?: number
+
+  // Trollz fields
+  trollz_balance?: number
+  bonus_coin_balance?: number
+
+  // Car insurance fields
+  car_insurance_deductible?: number
+  broadcast_insurance_expiry?: string | null
   kicked_until?: string | null
+  is_kicked?: boolean
+  kick_count?: number
   account_deleted_at?: string | null
   account_deletion_cooldown_until?: string | null
   account_reset_after_ban?: boolean
@@ -347,9 +388,6 @@ export interface UserProfile {
 
   // Officer reputation
   officer_reputation_score?: number
-
-  // Ghost mode
-  is_ghost_mode?: boolean
 
   // PayPal payout
   payout_paypal_email?: string | null
@@ -404,6 +442,7 @@ export interface UserProfile {
   license_status?: 'none' | 'active' | 'suspended' | 'expired' | string
   homeowners_insurance_expiry?: string | null
   car_insurance_expiry?: string | null
+  broadcast_insurance_expiry?: string | null
 
   // License plate (display on profile)
   license_plate?: string | null
@@ -443,29 +482,45 @@ export interface Stream {
   id: string
   broadcaster_id: string
   title: string
+  description?: string | null
   category?: string
   status: StreamStatus
   start_time: string
   end_time: string | null
   current_viewers: number
-   total_gifts_coins: number
-   total_unique_gifters: number
-   stream_channel: string // LiveKit room name (database column 'agora_channel')
-   livekit_token: string | null // Database column 'agora_token'
-   multi_beam?: boolean
-   thumbnail_url?: string | null
-   is_live?: boolean
-   created_at: string
-   updated_at: string
+  viewer_count?: number | null
+  total_gifts_coins: number
+  total_unique_gifters: number
+  stream_channel: string
+  recording_url?: string | null
+  agora_channel?: string
+  room_name?: string
+  livekit_token?: string | null
+  agora_token?: string | null
+  multi_beam?: boolean
+  thumbnail_url?: string | null
+  is_live?: boolean
+  stream_type?: string
+  seat_count?: number
+  game_title?: string
+  layout_mode?: string
+  broadcaster?: any
+  created_at: string
+  updated_at: string
 }
 
 export interface Message {
   id: string
   stream_id: string
   user_id: string
+  recipient_id?: string | null
   content: string
   message_type: 'chat' | 'gift' | 'entrance'
   gift_amount: number | null
+  sender_id?: string | null
+  sent_at?: string | null
+  is_paid?: boolean
+  wired_amount?: number | null
   created_at: string
 }
 
@@ -866,6 +921,96 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   [UserRole.MARKETING_READONLY]: [
     // Marketing read-only: Can only view data, no write permissions
     Permission.VIEW_ONLY
+  ],
+  [UserRole.HR_MANAGER]: [
+    Permission.MANAGE_USERS,
+    Permission.MODERATE_CHAT,
+    Permission.MODERATE_STREAMS,
+    Permission.MANAGE_REPORTS,
+    Permission.ISSUE_WARNINGS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.PASTOR]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE,
+    Permission.MODERATE_CHAT
+  ],
+  [UserRole.AGENCY_LEADER]: [
+    Permission.MANAGE_USERS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.ATTORNEY]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.PROSECUTOR]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.JOURNALIST]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT
+  ],
+  [UserRole.AUCTIONEER]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.CEO_ASSISTANT]: [
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_CONTENT,
+    Permission.MANAGE_FINANCES,
+    Permission.MANAGE_SYSTEM,
+    Permission.MODERATE_CHAT,
+    Permission.MODERATE_STREAMS,
+    Permission.MANAGE_REPORTS,
+    Permission.ISSUE_WARNINGS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.NOAH_ASSISTANT]: [
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_CONTENT,
+    Permission.MANAGE_FINANCES,
+    Permission.MANAGE_SYSTEM,
+    Permission.MODERATE_CHAT,
+    Permission.MODERATE_STREAMS,
+    Permission.MANAGE_REPORTS,
+    Permission.ISSUE_WARNINGS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.ACADEMY_TEACHER]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.ACADEMY_STUDENT]: [
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT
+  ],
+  [UserRole.ACADEMY_DIRECTOR]: [
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_CONTENT,
+    Permission.MANAGE_FINANCES,
+    Permission.MANAGE_SYSTEM,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT,
+    Permission.MONETIZE
+  ],
+  [UserRole.ADMISSIONS_OFFICER]: [
+    Permission.MANAGE_USERS,
+    Permission.BROADCAST,
+    Permission.CREATE_CONTENT
   ]
 }
 

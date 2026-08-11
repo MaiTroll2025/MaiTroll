@@ -175,6 +175,16 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "get_payout_requests": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        let query = supabaseAdmin.from('payout_requests').select(`*, requester:user_profiles!payout_requests_user_id_fkey(username, email), admin:user_profiles!payout_requests_admin_id_fkey(username), processor:user_profiles!payout_requests_processed_by_fkey(username)`).order('created_at', { ascending: false });
+        if (params.statusFilter && params.statusFilter !== 'all') query = query.eq('status', params.statusFilter);
+        const { data: payouts, error } = await query;
+        if (error) throw error;
+        result = { payouts: payouts?.map((p: any) => ({ ...p, username: p.requester?.username || 'Unknown', email: p.requester?.email || 'Unknown', processed_by_username: p.processor?.username || null })) };
+        break;
+      }
+
       // --- ID Verification ---
       case "verify_id": {
         if (!isAdmin) throw new Error("Unauthorized");

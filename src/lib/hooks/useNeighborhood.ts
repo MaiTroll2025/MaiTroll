@@ -125,9 +125,9 @@ export function useNeighborhood() {
         return { success: false, error: 'You can only create 15 neighborhoods per month' }
       }
 
-      // Check credit score (must be >= 400)
-      if ((profile?.credit_score || 400) < 400) {
-        return { success: false, error: 'Credit score must be 400 or higher' }
+      // Check credit score (must be >= 300)
+      if ((profile?.credit_score || 300) < 300) {
+        return { success: false, error: 'Credit score must be 300 or higher' }
       }
 
       // Create neighborhood

@@ -66,7 +66,7 @@ export default function OfficerModeration() {
     if (!profile) return
     setLoadingReports(true)
     try {
-      const response = await api.post('/moderation', {
+      const response = await api.post('/moderation-actions', {
         action: 'list_reports',
         status_filter: statusFilter === 'all' ? null : statusFilter
       })
@@ -478,7 +478,7 @@ export default function OfficerModeration() {
                                 <td className="py-2 font-medium text-blue-400">{log.moderator_username}</td>
                                 <td className="py-2">
                                     <span className={`px-2 py-0.5 rounded text-xs border ${
-                                        log.action_type === 'ban' ? 'bg-red-900/30 border-red-500/30 text-red-400' :
+                                        log.action_type === 'arrest' ? 'bg-red-900/30 border-red-500/30 text-red-400' :
                                         log.action_type === 'kick' ? 'bg-orange-900/30 border-orange-500/30 text-orange-400' :
                                         log.action_type === 'rollback' ? 'bg-gray-800 border-gray-600 text-gray-400' :
                                         'bg-purple-900/30 border-purple-500/30 text-purple-400'
@@ -489,7 +489,7 @@ export default function OfficerModeration() {
                                 <td className="py-2 text-gray-300">{log.target_username}</td>
                                 <td className="py-2 text-gray-400 italic truncate max-w-[200px]">{log.reason}</td>
                                 <td className="py-2 text-right">
-                                    {(log.action_type === 'ban' || log.action_type === 'mute') && (
+                                    {(log.action_type === 'arrest' || log.action_type === 'mute') && (
                                         <button 
                                             onClick={() => handleRollback(log.id)}
                                             className="text-xs text-red-400 hover:text-red-300 underline"

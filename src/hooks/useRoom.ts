@@ -122,7 +122,7 @@ export function useRoom({ url, token, isAdmin = false, onConnected, onDisconnect
             facingMode: 'user'
           },
           audioCaptureDefaults: {
-            ...AudioPresets.audio,
+            ...(AudioPresets as any).audio,
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true
@@ -156,8 +156,8 @@ export function useRoom({ url, token, isAdmin = false, onConnected, onDisconnect
         onConnected?.(livekitRoom);
 
         // Create and publish local tracks
-        const audioTrack = await LocalAudioTrack.create(AudioPresets.audio);
-        const videoTrack = await LocalVideoTrack.create(videoPreset);
+        const audioTrack = await (LocalAudioTrack as any).create((AudioPresets as any).audio);
+        const videoTrack = await (LocalVideoTrack as any).create(videoPreset);
         
         await livekitRoom.localParticipant.publishTrack(audioTrack);
         await livekitRoom.localParticipant.publishTrack(videoTrack);
@@ -203,7 +203,7 @@ export function useRoom({ url, token, isAdmin = false, onConnected, onDisconnect
           await roomRef.current.localParticipant.unpublishTrack(localVideoTrack);
           localVideoTrack.stop();
         } else {
-          const newTrack = await LocalVideoTrack.create(videoPreset);
+          const newTrack = await (LocalVideoTrack as any).create(videoPreset);
           setLocalVideoTrack(newTrack);
           await roomRef.current.localParticipant.publishTrack(newTrack);
         }
@@ -221,7 +221,7 @@ export function useRoom({ url, token, isAdmin = false, onConnected, onDisconnect
           await roomRef.current.localParticipant.unpublishTrack(localAudioTrack);
           localAudioTrack.stop();
         } else {
-          const newTrack = await LocalAudioTrack.create(AudioPresets.audio);
+          const newTrack = await (LocalAudioTrack as any).create((AudioPresets as any).audio);
           setLocalAudioTrack(newTrack);
           await roomRef.current.localParticipant.publishTrack(newTrack);
         }

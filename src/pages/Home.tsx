@@ -10,6 +10,7 @@ import {
   Gavel,
   Heart,
   MessageCircle,
+  Music,
   PenSquare,
   Play,
   Radio,
@@ -57,7 +58,7 @@ import PromoSlot from '@/components/promo/PromoSlot'
 import PodcastCentral from '@/pages/PodcastCentral'
 import { HOME_PAGE_PROMO_PLACEMENTS } from '@/types/cityAds'
 
-type TabType = 'home' | 'live' | 'universe' | 'jobs' | 'podcast' | 'laws-fees' | 'leagues' | 'president' | 'academy' | 'wall'
+type TabType = 'home' | 'live' | 'universe' | 'jobs' | 'podcast' | 'laws-fees' | 'leagues' | 'president' | 'academy' | 'wall' | 'mai-record-label'
 
 const PWAInstallPrompt = lazyWithRetry(() => import('../components/PWAInstallPrompt'))
 const TCNNPopupWidget = lazyWithRetry(() => import('@/components/tcnn/TCNNPopupWidget'))
@@ -663,11 +664,12 @@ const MobileTabBar = React.memo(function MobileTabBar({
   battleCount: number
   wallNotificationCount: number
 }) {
-  const tabs: Array<{ id: TabType; label: string; icon: React.ElementType; count?: number }> = [
+  const tabs: Array<{ id: TabType; label: string; icon: React.ElementType; count?: number; onClick?: () => void }> = [
     { id: 'home', label: 'Home', icon: MessageCircle },
     { id: 'live', label: 'Live', icon: Radio, count: liveCount + battleCount },
     { id: 'universe', label: 'Battles', icon: Sparkles, count: battleCount },
     { id: 'leagues', label: 'Leagues', icon: Trophy },
+    { id: 'mai-record-label', label: 'MAI Record Label', icon: Music, onClick: () => navigate('/mai-record-label') },
     { id: 'laws-fees', label: 'Laws', icon: FileText },
     { id: 'academy', label: 'Academy', icon: BookOpen },
     { id: 'wall', label: 'Wall', icon: PenSquare, count: wallNotificationCount },
@@ -682,7 +684,7 @@ const MobileTabBar = React.memo(function MobileTabBar({
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => tab.onClick ? tab.onClick() : setActiveTab(tab.id)}
               className={`relative flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition-all ${
                 isActive
                   ? 'bg-cyan-500/15 text-cyan-300'
@@ -737,7 +739,7 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const tabParam = params.get('tab')
-    if (tabParam && ['home', 'live', 'universe', 'jobs', 'laws-fees', 'leagues', 'president', 'academy', 'wall'].includes(tabParam)) {
+    if (tabParam && ['home', 'live', 'universe', 'jobs', 'laws-fees', 'leagues', 'president', 'academy', 'wall', 'mai-record-label'].includes(tabParam)) {
       setActiveTab(tabParam as TabType)
     }
   }, [])

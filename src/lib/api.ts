@@ -51,14 +51,14 @@ export const API_ENDPOINTS = {
     ai: '/trollcourt-ai',
   },
   moderation: {
-    submitReport: '/moderation',
-    takeAction: '/moderation',
-    listReports: '/moderation',
+    submitReport: '/moderation-actions',
+    takeAction: '/moderation-actions',
+    listReports: '/moderation-actions',
     shadowBan: '/shadow-ban-user',
     logEvent: '/log-moderation-event',
-    giftFreeze: '/moderation', // Handled by take_action with type gift_freeze
-    chatPurge: '/moderation', // Handled by take_action with type chat_purge
-    disableStream: '/moderation', // Handled by take_action with type suspend_stream
+    giftFreeze: '/moderation-actions',
+    chatPurge: '/moderation-actions',
+    disableStream: '/moderation-actions',
   },
   officerVoting: {
     vote: '/officer-vote',
@@ -87,8 +87,51 @@ interface ApiResponse<T = any> {
   [key: string]: any;
 }
 
+const FETCH_TIMEOUT_MS = 15_000
+const MAX_RETRY_ATTEMPTS = 1
+
+async function fetchWithTimeoutAndRetry(
+  input: string,
+  init?: RequestInit & { _retryAttempt?: number },
+): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    // Retry once on transient network errors (TypeError: Failed to fetch)
+    // or on timeout (AbortError), which are often recoverable.
+    const isRetryable =
+      (error instanceof TypeError && error.message.includes('fetch')) ||
+      (error instanceof DOMException && error.name === 'AbortError')
+    if (isRetryable && (init?._retryAttempt ?? 0) < MAX_RETRY_ATTEMPTS) {
+      if (import.meta.env.DEV) {
+        console.warn('[API] Network error, retrying once...', {
+          url: input,
+          error: error?.message,
+          attempt: (init?._retryAttempt ?? 0) + 1,
+        })
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return fetchWithTimeoutAndRetry(input, {
+        ...init,
+        _retryAttempt: (init?._retryAttempt ?? 0) + 1,
+      })
+    }
+    throw error
+  }
+}
+
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;
+  _retryAttempt?: number;
 }
 
 async function request<T = any>(
@@ -244,7 +287,7 @@ async function request<T = any>(
       });
     }
 
-    let response = await fetch(url, {
+    let response = await fetchWithTimeoutAndRetry(url, {
       ...fetchOptions,
       headers: requestHeaders,
     })

@@ -251,7 +251,7 @@ export default function AcademyHomePage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-bold text-white">{session.title}</p>
-                      <p className="text-[10px] text-slate-400">{session.academy_courses?.name || 'Class'} • {session.start_time}</p>
+                      <p className="text-[10px] text-slate-400">{(session as any).academy_courses?.name || 'Class'} • {session.start_time}</p>
                     </div>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold ${session.status === 'live' ? 'bg-red-500/20 text-red-300' : 'bg-white/10 text-slate-400'}`}>
                       {session.status === 'live' ? '● LIVE' : session.status}

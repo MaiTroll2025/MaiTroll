@@ -1205,18 +1205,14 @@ export default function LivingPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {isAdmin && (
-                <button onClick={() => setShowAdminCreateProperty(true)} className={tcDanger}>
-                  <Building className="mr-2 inline h-4 w-4" />
-                  Create Property
-                </button>
-              )}
-
-              <button onClick={() => navigate('/neighborhood-map')} className={tcSecondary}>
-                View Neighborhoods
-              </button>
-            </div>
+             <div className="flex flex-wrap gap-2">
+               {isAdmin && (
+                 <button onClick={() => setShowAdminCreateProperty(true)} className={tcDanger}>
+                   <Building className="mr-2 inline h-4 w-4" />
+                   Create Property
+                 </button>
+               )}
+             </div>
           </div>
         </header>
 
@@ -1320,9 +1316,6 @@ export default function LivingPage() {
                 <StatCard label="Neighborhood Houses" value={neighborhoodHouses.length} />
                 <StatCard label="My Applications" value={myApplications.length} />
                 <StatCard label="Active Loans" value={myLoans.length} />
-                <button onClick={() => navigate('/neighborhood-map')} className={cn(tcPrimary, 'w-full')}>
-                  Open Full Map
-                </button>
               </div>
             </Panel>
           </section>

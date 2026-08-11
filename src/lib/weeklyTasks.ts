@@ -57,7 +57,8 @@ const handlers: Record<TrollEventType, InternalTaskHandler[]> = {
   economy_gain: [],
   pod_started: [],
   pod_listened: [],
-  utromail_message_sent: []
+  utromail_message_sent: [],
+  badge_progress: []
 };
 
 registerTaskHandler('pod_started', (event, task) => {

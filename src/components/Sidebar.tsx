@@ -28,9 +28,10 @@ import {
     List,
     Lock,
     Mail,
-    Megaphone,
-    MessageSquare,
-    Newspaper,
+     Megaphone,
+     MessageSquare,
+     Music,
+     Newspaper,
       Package,
       Phone,
       Radio,
@@ -434,10 +435,10 @@ export default function Sidebar() {
 
   const quickStatus = useMemo(() => {
     const coinBalance = Number((balances as any)?.troll_coins ?? (balances as any)?.balance ?? 0)
-    const cashBalance = Number((balances as any)?.cashout_coins ?? 0)
+    const cashBalance = Number((balances as any)?.troll_coins ?? 0)
     const cashValue = cashBalance * STORE_USD_PER_COIN
 
-    const items = [
+    const items: { label: string; value: string; subValue?: string | null }[] = [
       { label: 'Family', value: hasFamily ? 'Yes' : 'No' },
     ]
 
@@ -615,7 +616,8 @@ export default function Sidebar() {
               <GridItem collapsed={isSidebarCollapsed} icon={Scale} label="Troll Court" to="/troll-court" active={isActive('/troll-court')} highlight={isUpdated('/troll-court')} onClick={() => markAsViewed('/troll-court')} tone="purple" />
               <GridItem collapsed={isSidebarCollapsed} icon={Building2} label="Neighborhood" to="/neighborhood-setup" active={isActive('/neighborhood-setup')} highlight={isUpdated('/neighborhood-setup')} onClick={() => markAsViewed('/neighborhood-setup')} className="text-cyan-400" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Gamepad2} label="HytroGaming" to="/hytrogaming" active={isHytroGamingActive} highlight={isUpdated('/hytrogaming') || location.pathname.startsWith('/gaming/watch/')} onClick={() => markAsViewed('/hytrogaming')} className="text-purple-400" tone="purple" glow="pink" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Lock} label="XTrollz" to="/xtrollz" active={isActive('/xtrollz')} highlight={isUpdated('/xtrollz')} onClick={() => markAsViewed('/xtrollz')} className="text-pink-300" tone="pink" />
+              <GridItem collapsed={isSidebarCollapsed} icon={Trophy} label="Mai Sing Off" to="/mai-sing-off" active={isActive('/mai-sing-off')} highlight={isUpdated('/mai-sing-off')} onClick={() => markAsViewed('/mai-sing-off')} className="text-pink-300" tone="pink" />
+              <GridItem collapsed={isSidebarCollapsed} icon={Music} label="MAI Record Label" to="/mai-record-label" active={isActive('/mai-record-label')} highlight={isUpdated('/mai-record-label')} onClick={() => markAsViewed('/mai-record-label')} className="text-purple-300" tone="purple" />
 
 
               <SectionTitle title="Mai Troll Academy" collapsed={isSidebarCollapsed} />
@@ -716,7 +718,6 @@ export default function Sidebar() {
               <SectionTitle title="Talent Offices" collapsed={isSidebarCollapsed} />
               <GridItem collapsed={isSidebarCollapsed} icon={Building2} label="Agencies" to="/agencies" active={isActive('/agencies')} highlight={isUpdated('/agencies')} onClick={() => markAsViewed('/agencies')} className="text-cyan-400" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Users} label="My Agency" to="/agency-dashboard" active={isActive('/agency-dashboard')} highlight={isUpdated('/agency-dashboard')} onClick={() => markAsViewed('/agency-dashboard')} className="text-cyan-400" tone="cyan" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Briefcase} label="Jobs" to="/jobs" active={isActive('/jobs')} highlight={isUpdated('/jobs')} onClick={() => markAsViewed('/jobs')} className="text-purple-400" tone="purple" />
               {canSeeAttorneyDashboard && (
                 <GridItem
                   collapsed={isSidebarCollapsed}
@@ -791,7 +792,6 @@ export default function Sidebar() {
             <GridItem collapsed={isSidebarCollapsed} icon={Users} label="Verified Users" to="/admin/verified-users" active={isActive('/admin/verified-users')} highlight={isUpdated('/admin/verified-users')} onClick={() => markAsViewed('/admin/verified-users')} tone="purple" />
             <GridItem collapsed={isSidebarCollapsed} icon={FileText} label="Verification Review" to="/admin/verification" active={isActive('/admin/verification')} highlight={isUpdated('/admin/verification')} onClick={() => markAsViewed('/admin/verification')} tone="blue" />
             <GridItem collapsed={isSidebarCollapsed} icon={FileText} label="Applications" to="/admin/applications" active={isActive('/admin/applications')} highlight={isUpdated('/admin/applications')} onClick={() => markAsViewed('/admin/applications')} tone="cyan" />
-            <GridItem collapsed={isSidebarCollapsed} icon={Shield} label="XTrollz Apps" to="/admin/xtrollz-apps" active={isActive('/admin/xtrollz-apps')} highlight={isUpdated('/admin/xtrollz-apps')} onClick={() => markAsViewed('/admin/xtrollz-apps')} tone="pink" />
             <GridItem collapsed={isSidebarCollapsed} icon={FileText} label="Policy Docs" to="/admin/docs/policies" active={isActive('/admin/docs/policies')} highlight={isUpdated('/admin/docs/policies')} onClick={() => markAsViewed('/admin/docs/policies')} tone="blue" />
             <GridItem collapsed={isSidebarCollapsed} icon={ShoppingBag} label="Store Pricing" to="/admin/store-pricing" active={isActive('/admin/store-pricing')} highlight={isUpdated('/admin/store-pricing')} onClick={() => markAsViewed('/admin/store-pricing')} tone="green" />
             <GridItem collapsed={isSidebarCollapsed} icon={Lock} label="Cashout Manager" to="/admin/cashout-manager" active={isActive('/admin/cashout-manager')} highlight={isUpdated('/admin/cashout-manager')} onClick={() => markAsViewed('/admin/cashout-manager')} tone="red" />

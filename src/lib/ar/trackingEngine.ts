@@ -7,8 +7,8 @@ import type {
   BodyLandmarks,
   TrackingData,
   ARSettings,
-} from '../types/arGifts';
-import { DEFAULT_AR_SETTINGS } from '../types/arGifts';
+} from '@/types/arGifts';
+import { DEFAULT_AR_SETTINGS } from '@/types/arGifts';
 
 // Dynamic import for face-api.js to enable lazy loading
 let faceapi: any = null;

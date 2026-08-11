@@ -42,8 +42,9 @@ export default function AppLayout({
    const isAuthPage = location.pathname.startsWith('/auth');
    const isLivePage = location.pathname.startsWith('/live/') || location.pathname.startsWith('/watch/') || location.pathname.startsWith('/gaming/watch/') || (location.pathname.startsWith('/broadcast/') && !location.pathname.startsWith('/broadcast/setup')) || location.pathname.startsWith('/stream/') || location.pathname === '/live-swipe';
    const isTreelzPage = location.pathname.startsWith('/treelz');
-   const isUtromailPage = location.pathname.startsWith('/utromail') || location.pathname.startsWith('/tromail') || location.pathname.startsWith('/messages');
-   const normalizedPath = location.pathname.toLowerCase();
+    const isUtromailPage = location.pathname.startsWith('/utromail') || location.pathname.startsWith('/tromail') || location.pathname.startsWith('/messages');
+    const isSingOffPage = location.pathname.startsWith('/mai-sing-off');
+    const normalizedPath = location.pathname.toLowerCase();
    const isThemeExemptPage = normalizedPath.includes('court') || normalizedPath.startsWith('/church');
    const isKeyboardVisible = false;
    const isMobileLayout = isMobileWidth && !isAuthPage;
@@ -52,7 +53,7 @@ export default function AppLayout({
    // New bottom nav bar is always shown (replaces sidebar on all screen sizes)
    // Hidden on live pages and treelz pages
    const isHytroGamingSetupLivePage = location.pathname.startsWith('/broadcast/setup/gaming') && hytroSetupLive
-   const showNewBottomNavBar = !isAuthPage && !isLivePage && !isTreelzPage && !isHytroGamingSetupLivePage
+    const showNewBottomNavBar = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage
 
   // Setup global message notifications - opens chat bubble when message received
   useEffect(() => {
@@ -81,9 +82,9 @@ export default function AppLayout({
   }, [isThemeExemptPage]);
 
    const effectiveShowSidebar = false;
-   const effectiveShowHeader = showHeader && !isAuthPage && !isLivePage && !isTreelzPage && !isHytroGamingSetupLivePage;
+    const effectiveShowHeader = showHeader && !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage;
    const effectiveShowBottomNav = false;
-    const mainOverflowClass = isLivePage || isHytroGamingSetupLivePage ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto touch-pan-y scrollbar-thin scrollbar-thumb-purple-900/30 scrollbar-track-transparent';
+    const mainOverflowClass = isLivePage || isHytroGamingSetupLivePage || isSingOffPage ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto touch-pan-y scrollbar-thin scrollbar-thumb-purple-900/30 scrollbar-track-transparent';
    // The new bottom nav bar is ~64px tall on mobile (h-16) and ~144px tall on
    // desktop (md:h-36) plus the safe-area inset. The old 64px bottom padding
    // left the lower portion of every page hidden behind the fixed nav, so

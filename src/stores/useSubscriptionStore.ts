@@ -21,7 +21,7 @@ export interface Subscription {
   expires_at?: string;
   is_active: boolean;
   auto_renew: boolean;
-  total_paid_coins: number;
+  monthly_revenue_coins: number;
 }
 
 interface SubscriptionStore {

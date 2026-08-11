@@ -3,8 +3,8 @@
 // Handles stacking, expiration, and cleanup
 
 import { useEffect, useRef, useCallback } from 'react';
-import { useARGiftStore } from '../../stores/arGiftStore';
-import type { ARGiftInstance } from '../../types/arGifts';
+import { useARGiftStore } from '@/stores/arGiftStore';
+import type { ARGiftInstance } from '@/types/arGifts';
 
 interface ARGiftDurationManagerOptions {
   streamId: string;

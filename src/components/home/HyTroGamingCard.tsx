@@ -9,6 +9,7 @@ interface HyTroGamingCardProps {
     title: string
     game_title?: string | null
     thumbnail_url?: string | null
+    streamer_id?: string | null
     streamer_name: string
     streamer_avatar?: string | null
     viewer_count: number

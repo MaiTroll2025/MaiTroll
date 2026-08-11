@@ -34,7 +34,7 @@ export default function GamblingDisclosure() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">Age Restrictions</h2>
             <p className="text-gray-300 leading-relaxed">
-              Users must be 18+ to purchase coins or receive payouts. Users under 18 can use free coins only.
+               Users must be 18+ to purchase coins or receive payouts.
             </p>
           </section>
         </div>

@@ -55,21 +55,21 @@ export default function SidebarTopBroadcasters({ isCollapsed }: SidebarTopBroadc
         return;
       }
 
-      const topBroadcaster = data[0];
+      const topBroadcaster = (data as any)?.[0];
 
       const { data: streams } = await supabase
         .from('streams')
         .select('broadcaster_id, id, is_live')
-        .eq('broadcaster_id', topBroadcaster.user_profiles.id)
+        .eq('broadcaster_id', topBroadcaster?.user_profiles?.id)
         .eq('is_live', true);
 
       const liveStreamId = streams?.[0]?.id;
 
       setBroadcaster({
-        user_id: topBroadcaster.user_profiles.id,
-        username: topBroadcaster.user_profiles.username,
-        avatar_url: topBroadcaster.user_profiles.avatar_url,
-        total_gifts: topBroadcaster.total_gifts_all_time,
+        user_id: topBroadcaster?.user_profiles?.id,
+        username: topBroadcaster?.user_profiles?.username,
+        avatar_url: topBroadcaster?.user_profiles?.avatar_url,
+        total_gifts: topBroadcaster?.total_gifts_all_time,
         is_live: !!liveStreamId,
         stream_id: liveStreamId
       });

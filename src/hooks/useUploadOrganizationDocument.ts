@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { uploadOrganizationDocument } from '../lib/tromail';
+import type { OrganizationDocument } from '../types/contracts';
 
 export const useUploadOrganizationDocument = () => {
   const queryClient = useQueryClient();
@@ -8,13 +9,13 @@ export const useUploadOrganizationDocument = () => {
     mutationFn: (params: {
       user_id: string;
       uploaded_by: string | null;
-      document_type: string;
+      document_type: OrganizationDocument['document_type'];
       document_title: string;
       file_url: string;
       storage_path: string;
       source: string;
       related_contract_id: string | null;
-      visibility: string;
+      visibility: OrganizationDocument['visibility'];
       metadata?: Record<string, any>;
     }) => uploadOrganizationDocument(params),
     onSuccess: () => {

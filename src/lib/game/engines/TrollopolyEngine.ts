@@ -515,25 +515,27 @@ export class TrollopolyEngine implements InternetGameEngine<TrollopolyGameState>
         break;
       
       case 'pay':
-        if (card.action.target === 'bank') {
-          player.coins -= card.action.amount;
-        } else if (card.action.target === 'players') {
-          const total = card.action.amount * (state.players.length - 1);
+        const payAction = card.action as { type: 'pay'; amount: number; target?: 'bank' | 'players' };
+        if (payAction.target === 'bank') {
+          player.coins -= payAction.amount;
+        } else if (payAction.target === 'players') {
+          const total = payAction.amount * (state.players.length - 1);
           player.coins -= total;
           state.players.forEach(p => {
-            if (p.id !== player.id) p.coins += card.action!.amount;
+            if (p.id !== player.id) p.coins += payAction.amount;
           });
         }
         break;
       
       case 'receive':
-        if (card.action.from === 'bank') {
-          player.coins += card.action.amount;
-        } else if (card.action.from === 'players') {
+        const receiveAction = card.action as { type: 'receive'; amount: number; from?: 'bank' | 'players' };
+        if (receiveAction.from === 'bank') {
+          player.coins += receiveAction.amount;
+        } else if (receiveAction.from === 'players') {
           state.players.forEach(p => {
             if (p.id !== player.id) {
-              p.coins -= card.action!.amount;
-              player.coins += card.action!.amount;
+              p.coins -= receiveAction.amount;
+              player.coins += receiveAction.amount;
             }
           });
         }

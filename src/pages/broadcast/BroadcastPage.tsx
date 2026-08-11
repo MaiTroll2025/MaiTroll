@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Link,
   useParams,
@@ -12,7 +13,6 @@ import { supabase, UserProfile } from '../../lib/supabase'
 
 import { useAuthStore } from '../../lib/store'
 import { useStreamStore } from '../../lib/streamStore'
-import { useLiveTimer } from '../../hooks/useLiveTimer'
 import { cn } from '../../lib/utils'
 import { getLiveKitRoomName } from '../../lib/liveUtils'
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration'
@@ -25,7 +25,6 @@ import {
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useUserLeagues } from '../../hooks/useUserLeagues'
 import { useTrollFamilyActivity } from '../../hooks/useTrollFamilyActivity'
-import { usePromoCardWatchReward } from '../../hooks/usePromoCardWatchReward'
 import LeagueProgressPanel from '../../components/broadcast/LeagueProgressPanel'
 import FeedTheTroll from '../../components/feed-the-troll/FeedTheTroll'
 
@@ -39,10 +38,14 @@ import BroadcastOfficerModal from '../../components/broadcast/BroadcastOfficerMo
 import PayBroadOfficersModal from '../../components/broadcast/PayBroadOfficersModal'
 import MoreControlsDrawer from '../../components/broadcast/MoreControlsDrawer'
 import MobileBroadcastHostSettings from '../../components/broadcast/MobileBroadcastHostSettings'
-import { Settings } from 'lucide-react'
 import { useBroadcastFrame } from '../../hooks/useBroadcastFrame'
+import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
 import SaveBroadcastButton from '../../components/broadcast/SaveBroadcastButton'
 import BroadcastFrame from '../../components/broadcast/BroadcastFrame'
+import CollaborateButton from '../../components/collaboration/CollaborateButton'
+import CollaborationModal from '../../components/collaboration/CollaborationModal'
+import CollaborationRequestNotification from '../../components/collaboration/CollaborationRequestNotification'
+import { useStreamCollaboration } from '../../hooks/useStreamCollaboration'
 
 import { MaiTrollBroadcastTheme as theme } from '../../styles/broadcastTheme'
 
@@ -102,6 +105,15 @@ function normalizeLiveKitIdentity(value?: string | null) {
 
 function normalizeIdentityToken(value?: string | null): string {
   return normalizeLiveKitIdentity(value).replace(/^viewer-/, '').trim()
+}
+
+const isRoomUsable = (room: Room | null): room is Room => {
+  return Boolean(
+    room &&
+      room.state !== 'disconnected' &&
+      room.engine &&
+      !room.engine.isClosed,
+  )
 }
 
 type RemoteParticipantSnapshot = {
@@ -508,11 +520,13 @@ import { useSubscriberUsernames } from '@/hooks/useCreatorSubscription'
 import { useBroadcastShutdown } from '@/hooks/useBroadcastShutdown'
 import { DEFAULT_BATTLE_THEME_ID, normalizeBattleTheme } from '@/lib/battleThemes'
 import { emitEvent } from '@/lib/events'
+import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
+import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
-import { PreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords } from 'lucide-react'
+import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -520,6 +534,10 @@ import BroadcastAbilityEffects from '@/components/broadcast/BroadcastAbilityEffe
 import BroadcasterStatsModal from '@/components/broadcast/BroadcasterStatsModal'
 import CoinStoreModal from '@/components/broadcast/CoinStoreModal'
 import GiftBoxModal from '@/components/broadcast/GiftBoxModal'
+import GiftAnimationLayer from '@/components/broadcast/GiftAnimationLayer'
+import TargetedGiftOverlay from '@/components/broadcast/TargetedGiftOverlay'
+import { useTargetedGiftQueue, getGiftTargetKey, normalizeGiftRow, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
+import { useGiftAnimationPipeline } from '@/hooks/useGiftAnimationPipeline'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import PinProductModal from '@/components/broadcast/PinProductModal'
 import UserActionModal from '@/components/broadcast/UserActionModal'
@@ -528,6 +546,7 @@ import CityStatusPanel from '@/components/city/CityStatusPanel'
 import CityStatusOrb from '@/components/city/CityStatusOrb'
 import { useCityStatusOrb } from '@/lib/hooks/useCityStatusOrb'
 import SeatCityStatusOrb from '@/components/broadcast/SeatCityStatusOrb'
+import RaidPanel from '@/components/city/RaidPanel'
 import PaidChatSettingsModal from '@/components/broadcast/PaidChatSettingsModal'
 
 // Debug counters for broadcast stability verification
@@ -559,6 +578,16 @@ if (typeof window !== 'undefined') {
   ;(window as any).DEBUG_COUNTERS = DEBUG_COUNTERS;
 }
 
+const removeStreamChannels = async (streamId: string) => {
+  const matchingChannels = supabase
+    .getChannels()
+    .filter((channel) => channel.topic.includes(streamId))
+
+  await Promise.all(
+    matchingChannels.map((channel) => supabase.removeChannel(channel)),
+  )
+}
+
 /* ============================================================================
  * ???  CRITICAL STREAMING INFRASTRUCTURE - PROTECTED
  *
@@ -578,6 +607,59 @@ if (typeof window !== 'undefined') {
  * Broadcaster publishes via LiveKit RTC.
  * Participants join through LiveKit as audience members.
  */
+
+const SUPABASE_PUBLIC_PATH = '/storage/v1/object/public/'
+const SUPABASE_SIGN_PATH = '/storage/v1/object/sign/'
+
+function isPlayableUrl(url: unknown): boolean {
+  return (
+    typeof url === 'string' &&
+    url.trim().length > 0 &&
+    (
+      url.startsWith('https://') ||
+      url.startsWith('http://') ||
+      url.startsWith('/') ||
+      url.startsWith('blob:')
+    )
+  )
+}
+
+async function resolvePlayableStorageUrl(url: string | null | undefined): Promise<string | null> {
+  if (!url || typeof url !== 'string') return null
+  const trimmed = url.trim()
+  if (!trimmed) return null
+
+  if (trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('blob:') || trimmed.startsWith('/')) {
+    // Public Supabase storage URLs contain /storage/v1/object/public/ — these
+    // are directly accessible and need no signing.
+    if (trimmed.includes(SUPABASE_PUBLIC_PATH)) {
+      return trimmed
+    }
+
+    // Private storage URLs use /storage/v1/object/sign/ — generate a signed URL.
+    if (trimmed.includes(SUPABASE_SIGN_PATH)) {
+      const match = trimmed.match(new RegExp(`${SUPABASE_SIGN_PATH}([^/]+)/(.+)$`))
+      if (match) {
+        const bucket = match[1]
+        const path = decodeURIComponent(match[2])
+        try {
+          const { data: signed } = await supabase.storage.from(bucket).createSignedUrl(path, 3600)
+          return signed?.signedUrl || trimmed
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.warn('[BroadcastGiftVideo] failed to sign private storage URL', { bucket, path, err })
+          }
+          return trimmed
+        }
+      }
+    }
+
+    return trimmed
+  }
+
+  return trimmed
+}
+
 export function BroadcastPage() {
   const params = useParams()
   const navigate = useNavigate()
@@ -644,16 +726,13 @@ export function BroadcastPage() {
      const isHost = stream?.user_id === user?.id
     const isBroadcaster = isHost;
 
-    // Celeb stream: no seats, viewer-only participation with paid chat + products
-    const isCelebStream = stream?.stream_type === 'celeb_stream'
-    const isApprovedCeleb = !!(profile && profile.celeb_role === 'approved')
+     // Celeb stream: no seats, viewer-only participation with paid chat + products
+     const isCelebStream = stream?.stream_type === 'celeb_stream'
+     const isApprovedCeleb = !!(profile && profile.celeb_role === 'approved')
 
-   usePromoCardWatchReward(streamId, isHost, user?.id)
+     const isStreamLive = stream?.status === 'live' && stream?.is_live === true;
 
-    const isStreamLive = stream?.status === 'live' && stream?.is_live === true;
-   const liveTimer = useLiveTimer(stream?.started_at, isStreamLive);
-
-   // CityStatusOrb for broadcaster box display
+    // CityStatusOrb for broadcaster box display
    const broadcasterCityStatus = useCityStatusOrb({
      userId: stream?.user_id || '',
      broadcasterId: user?.id,
@@ -666,7 +745,13 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
     const [remoteParticipants, setRemoteParticipants] = useState<Map<string, RemoteParticipant>>(new Map())
     const [remoteParticipantSnapshots, setRemoteParticipantSnapshots] = useState<RemoteParticipantSnapshot[]>([])
+    const [showCollaborationModal, setShowCollaborationModal] = useState(false)
     const remoteUsers = useMemo(() => Array.from(remoteParticipants.values()), [remoteParticipants])
+    const collaboration = useStreamCollaboration({
+      currentUserId: user?.id,
+      currentStreamId: streamId,
+      currentPlatform: 'mai_troll_broadcast',
+    })
 
     const buildRemoteParticipantSnapshots = useCallback((room: Room) => {
       return Array.from(room.remoteParticipants.values()).map((participant) => {
@@ -972,6 +1057,11 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
   const connectRoom = async (room: Room, token: string) => {
     if (room.state === 'connected') {
+      return
+    }
+
+    if (room.state === 'connecting' || room.state === 'reconnecting') {
+      console.log('[BroadcastPage] Room is already connecting, skipping duplicate connect')
       return
     }
 
@@ -1427,15 +1517,29 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
   // logout, component unmount, and unexpected disconnect. `stopRtc` performs the
   // full LiveKit teardown (unpublish + disconnect + session end + PreflightStore reset),
   // which is the LiveKit equivalent of the Agora setEnabled/stop/close + leave steps.
+  // Detect whether this mount is a transition from SetupPage (room/tracks
+  // already exist in PreflightStore) or a fresh start. During a transition
+  // the unmount cleanup must NOT disconnect the adopted room or clear the
+  // PreflightStore.
+  const hasTransferSession = useMemo(() => {
+    const session = PreflightStore.getTransferSession()
+    return Boolean(session && session.room && session.room.state === 'connected')
+  }, [])
+
   const { endBroadcast: endBroadcastShutdown, endingBroadcastRef } = useBroadcastShutdown({
     streamId,
     userId: user?.id,
     isLive: stream?.status === 'live' && stream?.is_live === true,
+    isTransitioning: hasTransferSession,
     stopRtc: async () => {
       cleanupLocalMedia()
       setRemoteParticipants(new Map())
       disconnectLiveKitRoom()
       PreflightStore.clear()
+
+      if (streamId) {
+        void removeStreamChannels(streamId)
+      }
 
       try {
         await fetch('/api/broadcasts/stop-streaming', {
@@ -1656,14 +1760,8 @@ useEffect(() => {
   }, [streamId, seats]);
 
   // Tick every second to re-evaluate "Camera unavailable" 8s timeout
-  const [, setSeatTick] = useState(0)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (document.visibilityState !== 'visible') return
-      setSeatTick(t => t + 1)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+  // Removed setInterval to prevent full-page rerenders; timeout UI updates on natural rerenders from seat/participant changes
+  const seatTickRef = useRef(0)
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -1692,11 +1790,52 @@ useEffect(() => {
    const [selectedSeatIndex, setSelectedSeatIndex] = useState(0)
     const [isMoreControlsOpen, setIsMoreControlsOpen] = useState(false)
     const [isPaidChatModalOpen, setIsPaidChatModalOpen] = useState(false)
-     const [chatTab, setChatTab] = useState<'chat' | 'progress' | 'league' | 'gifts' | 'top-fans' | 'settings'>('chat')
+    const [isMessagePopupOpen, setIsMessagePopupOpen] = useState(false)
+    const [isNewMessageMode, setIsNewMessageMode] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [searchResults, setSearchResults] = useState<any[]>([])
+    const [recentThreads, setRecentThreads] = useState<any[]>([])
+    const [selectedThread, setSelectedThread] = useState<any | null>(null)
+    const [threadMessages, setThreadMessages] = useState<any[]>([])
+    const [messagesLoading, setMessagesLoading] = useState(false)
+    const [chatTab, setChatTab] = useState<'chat' | 'progress' | 'league' | 'gifts' | 'top-fans' | 'settings'>('chat')
    const [giftRecipientId, setGiftRecipientId] = useState<string | null>(null)
-   const [recentGifts, setRecentGifts] = useState<BroadcastGift[]>([])
-   const [giftNameMap, setGiftNameMap] = useState<Record<string, string>>({})
-   const {
+    const [recentGifts, setRecentGifts] = useState<BroadcastGift[]>([])
+    const [giftNameMap, setGiftNameMap] = useState<Record<string, string>>({})
+    const { queues: giftQueues, enqueueGift, removeGift } = useTargetedGiftQueue()
+    useEffect(() => {
+      if (!import.meta.env.DEV) return
+      console.debug('[BroadcastPage] recentGifts updated', {
+        streamId,
+        giftsLength: recentGifts.length,
+        giftIds: recentGifts.map((gift) => gift.id),
+      })
+    }, [recentGifts, streamId])
+
+    const visibleGiftTargets = useMemo(() => {
+      const targets = new Set<string>()
+      if (stream?.user_id) {
+        targets.add(`user:${stream.user_id}`)
+      }
+      Object.values(seats).forEach((seat) => {
+        if (seat.user_id) {
+          targets.add(`user:${seat.user_id}`)
+        }
+      })
+      return targets
+    }, [stream?.user_id, seats])
+
+    const participantToUserId = useMemo(() => {
+      const map = new Map<string, string>()
+      Object.values(seats).forEach((seat) => {
+        if (seat.livekit_participant_identity && seat.user_id) {
+          map.set(seat.livekit_participant_identity, seat.user_id)
+        }
+      })
+      return map
+    }, [seats])
+
+    const {
      myLeagues,
      myMemberships,
      leagueMissions,
@@ -1790,8 +1929,11 @@ const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
      const [hostChatDisabledUntil, setHostChatDisabledUntil] = useState<string | null>(null)
      const [hostChatDisabledStreamId, setHostChatDisabledStreamId] = useState<string | null>(null)
      const [hostChatDisableRemainingMs, setHostChatDisableRemainingMs] = useState(0)
-     const floatingChatContainerRef = useRef<HTMLDivElement>(null)
-     const chatContainerRef = useRef<HTMLDivElement>(null)
+      const floatingChatContainerRef = useRef<HTMLDivElement>(null)
+      const chatContainerRef = useRef<HTMLDivElement>(null)
+      const broadcastChatMessageIdsRef = useRef<Set<string>>(new Set())
+      const recentChatKeysRef = useRef<Map<string, number>>(new Map())
+      const CHAT_DEBOUNCE_MS = 5000
 
      const hostChatDisabledByOfficer = useMemo(
        () => isBroadcastChatLockActive({
@@ -1990,6 +2132,7 @@ const ranked = senderIds
     } | null>(null)
     // CityStatusPanel for clicking on seats / broadcaster orb
     const [selectedSeatUserId, setSelectedSeatUserId] = useState<string | null>(null)
+    const [raidTarget, setRaidTarget] = useState<{ userId: string; houseId: string } | null>(null)
   // Broadcast Abilities
   const {
     abilities: userAbilities,
@@ -2010,12 +2153,13 @@ const ranked = senderIds
     giftNameMapRef.current = giftNameMap;
   }, [giftNameMap]);
 
-const processedGiftIdsRef = useRef<Set<string>>(new Set())
-   // Per-page dedupe of gift animations used by processGiftEvent.
-   // Normalised animationId is always the stream_gifts row UUID, so whether the
-   // source is postgres_changes or the broadcast channel, the second arrival is
-   // caught here and skipped.
-   const seenGiftAnimationIdsRef = useRef<Set<string>>(new Set())
+ const processedGiftIdsRef = useRef<Set<string>>(new Set())
+  // Per-page dedupe of gift animations used by processGiftEvent.
+  // Normalised animationId is always the stream_gifts row UUID, so whether the
+  // source is postgres_changes or the broadcast channel, the second arrival is
+  // caught here and skipped.
+  const seenGiftAnimationIdsRef = useRef<Set<string>>(new Set())
+  const { processGiftEvent: pipelineProcessGiftEvent } = useGiftAnimationPipeline()
 
   // Acquire camera overlay stream when enabled for gaming mode
   useEffect(() => {
@@ -2149,239 +2293,196 @@ const processedGiftIdsRef = useRef<Set<string>>(new Set())
     );
   }, []);
 
-  const enrichGiftForOverlay = useCallback(async (incomingGift: any) => {
-    const giftItemId =
-      incomingGift?.gift_id ||
-      incomingGift?.gift_item_id ||
-      incomingGift?.giftId ||
-      incomingGift?.giftItemId ||
-      null;
-
-    if (!giftItemId) {
-      return incomingGift;
-    }
-
-    const { data: giftItem, error } = await supabase
-      .from('gift_items')
-      .select('id,name,gift_slug,icon,icon_url,animation_url,animation_type,coin_cost')
-      .eq('id', giftItemId)
-      .maybeSingle();
-
-    if (error || !giftItem) {
-      console.warn('[BroadcastPage] Could not enrich gift overlay payload', {
-        giftItemId,
-        error,
-        incomingGift,
-      });
-      return incomingGift;
-    }
-
-    const enrichedGift = {
-      ...incomingGift,
-      gift_name:
-        incomingGift.gift_name && incomingGift.gift_name !== 'Gift'
-          ? incomingGift.gift_name
-          : giftItem.name,
-      slug:
-        giftItem.slug ||
-        giftItem.gift_slug ||
-        incomingGift.slug ||
-        incomingGift.gift_slug ||
-        null,
-      gift_slug:
-        giftItem.gift_slug ||
-        giftItem.slug ||
-        incomingGift.gift_slug ||
-        incomingGift.slug ||
-        null,
-      gift_icon: incomingGift.gift_icon || giftItem.icon || null,
-      icon: incomingGift.icon || giftItem.icon || null,
-      icon_url: giftItem.icon_url || incomingGift.icon_url || null,
-      animation_url: giftItem.animation_url || incomingGift.animation_url || null,
-      animation_type: giftItem.animation_type || incomingGift.animation_type || 'video',
-      coin_cost:
-        giftItem.coin_cost || incomingGift.coin_cost || incomingGift.amount || null,
-    };
-
-    if (import.meta.env.DEV) {
-      console.info('[BroadcastPage] Enriched gift overlay payload', {
-        gift_id: giftItemId,
-        gift_name: enrichedGift.gift_name,
-        slug: enrichedGift.slug,
-        gift_slug: enrichedGift.gift_slug,
-        animation_url: enrichedGift.animation_url,
-      });
-    }
-
-    return enrichedGift;
-  }, []);
-
-   const processGiftEvent = useCallback(async (giftData: any) => {
-     if (!giftData) {
-
-       return;
-     }
-
-     // -- Stable animation-id -------------------------------------------------
-     const animationId = String(giftData.id || giftData.stream_gift_id || giftData.gift_transaction_id || '');
-     if (!animationId) return // noise: skip entirely
-     const giftId = animationId;
-
-     if (seenGiftAnimationIdsRef.current.has(animationId)) {
-
-       return;
-     }
-     seenGiftAnimationIdsRef.current.add(animationId);
-
-     // -- Enrich / validate ---------------------------------------------------
-     const enrichedGiftData = await enrichGiftForOverlay(giftData);
-
-     const incomingStreamId = enrichedGiftData.streamId || enrichedGiftData.stream_id || enrichedGiftData.metadata?.streamId || enrichedGiftData.metadata?.stream_id;
-     const receiverId = enrichedGiftData.receiver_id || enrichedGiftData.recipient_id || enrichedGiftData.receiverId || enrichedGiftData.recipientId || enrichedGiftData.metadata?.receiver_id || enrichedGiftData.metadata?.recipient_id;
-
-     if (incomingStreamId && incomingStreamId !== streamId) {
-
-       return;
-     }
-
-     const resolvedGiftAmount = resolveGiftAmount(enrichedGiftData);
-     const resolvedGiftName = resolveGiftName(enrichedGiftData);
-
-      const normalizedGift = {
-        ...enrichedGiftData,
-        ...giftData,
-        gift_id: giftData.gift_id || giftData.giftId || enrichedGiftData.gift_id,
-        id: giftData.gift_id || giftData.giftId || giftData.id || enrichedGiftData.gift_id || enrichedGiftData.id || giftId,
+  const processGiftEvent = useCallback(async (giftData: any) => {
+      if (import.meta.env.DEV) {
+        console.error('[GIFT RAW EVENT DEBUG]', {
+          raw: giftData,
+          id: giftData?.id,
+          gift_id: giftData?.gift_id,
+          gift_item_id: giftData?.gift_item_id,
+          gift_slug: giftData?.gift_slug,
+          slug: giftData?.slug,
+          metadata: giftData?.metadata,
+          animation_url: giftData?.animation_url,
+          video_url: giftData?.video_url,
+          stream_id: giftData?.stream_id,
+          sender_id: giftData?.sender_id,
+          receiver_id: giftData?.receiver_id,
+        })
       }
-
-      // -- Build state entry --------------------------------------------------
-      const newGift = {
-       id: normalizedGift.id,
-       gift_id: normalizedGift.gift_id,
-       gift_name: resolvedGiftName,
-       gift_icon: normalizedGift.gift_icon || normalizedGift.metadata?.gift_icon || '??',
-       gift_slug: normalizedGift.gift_slug || normalizedGift.metadata?.gift_slug,
-       animation_key: normalizedGift.animation_key || normalizedGift.metadata?.animation_key,
-       animation_type: normalizedGift.animation_type || normalizedGift.metadata?.animation_type,
-       animation_url:
-         normalizedGift.animation_url ||
-         normalizedGift.video_url ||
-         normalizedGift.metadata?.animation_url ||
-         normalizedGift.metadata?.video_url ||
-         undefined,
-       video_url:
-         normalizedGift.video_url ||
-         normalizedGift.animation_url ||
-         normalizedGift.metadata?.video_url ||
-         normalizedGift.metadata?.animation_url ||
-         undefined,
-       animation_duration_ms: normalizedGift.animation_duration_ms || normalizedGift.metadata?.animation_duration_ms,
-       sound_url: normalizedGift.sound_url || normalizedGift.metadata?.sound_url,
-       is_fullscreen: normalizedGift.is_fullscreen ?? normalizedGift.metadata?.is_fullscreen,
-       rarity: normalizedGift.rarity || normalizedGift.metadata?.rarity,
-       tray_visual_url: normalizedGift.tray_visual_url || normalizedGift.metadata?.tray_visual_url,
-       tray_gradient: normalizedGift.tray_gradient || normalizedGift.metadata?.tray_gradient,
-       amount: resolvedGiftAmount || normalizedGift.quantity || 1,
-       quantity: normalizedGift.quantity || 1,
-       sender_id: normalizedGift.sender_id,
-       sender_name: normalizedGift.sender_name || normalizedGift.metadata?.sender_name || 'Someone',
-       receiver_id: receiverId,
-       receiver_name: normalizedGift.receiver_name || normalizedGift.metadata?.receiver_name,
-       created_at: normalizedGift.timestamp || normalizedGift.created_at || new Date().toISOString(),
-     } as BroadcastGift;
-
-    // Show gift banner for ALL gifts to broadcaster
-    setRecentGifts((prev) => {
-      if (prev.some((g) => g.id === giftId)) {
-
-        return prev;
-      }
-      const updated = [...prev, newGift].slice(-20);
-
-      return updated;
-    });
-
-    // Auto-remove gift from recentGifts after the gift's animation duration so overlays play fully
-    const giftDurationMs = newGift.animation_duration_ms ?? getGiftVisualConfig(newGift).durationMs;
-    setTimeout(() => {
-      setRecentGifts(prev => prev.filter(g => g.id !== giftId));
-    }, giftDurationMs + 150);
-
-    const missingIds = [giftData.sender_id, receiverId].filter(
-      (id): id is string => !!id && !giftNameMapRef.current[id]
-    );
-
-    if (missingIds.length > 0) {
-      supabase
-        .from('user_profiles')
-        .select('id, username, display_name, email')
-        .in('id', Array.from(new Set(missingIds)))
-        .then(({ data }) => {
-          if (!data || data.length === 0) return;
-
-          const resolved = Object.fromEntries(
-            data
-              .filter((row: any) => row?.id)
-              .map((row: any) => [
-                row.id,
-                row.username || row.email?.split('@')?.[0] || 'Troll Citizen'
-              ])
-          );
-
-          if (Object.keys(resolved).length === 0) return;
-
-          setGiftNameMap((prev) => ({ ...prev, ...resolved }));
-          setRecentGifts((prev) =>
-            prev.map((gift) =>
-              gift.id === giftId
-                ? {
-                    ...gift,
-                    sender_name: gift.sender_name === 'Someone' ? (resolved[gift.sender_id] || gift.sender_name) : gift.sender_name,
-                    receiver_name: !gift.receiver_name ? resolved[gift.receiver_id] : gift.receiver_name,
-                  }
-                : gift
-            )
-          );
-        },
-        (err) => {
-
+      if (!giftData) {
+        if (import.meta.env.DEV) {
+          console.warn('[BroadcastGiftVideo] processGiftEvent called with no giftData');
         }
+        return;
+      }
+
+      const enrichedGiftData = await hydrateGiftForOverlay(giftData);
+      if (import.meta.env.DEV) {
+        console.debug('[BroadcastGiftVideo] enriched payload', enrichedGiftData);
+      }
+      const normalized = await pipelineProcessGiftEvent(enrichedGiftData);
+      if (!normalized) return;
+
+      if (import.meta.env.DEV) {
+        console.debug('[BroadcastGiftVideo] normalized payload', normalized);
+      }
+
+      const giftId = normalized.id;
+      const receiverId = normalized.receiver_id;
+      const resolvedGiftAmount = normalized.amount;
+      const resolvedGiftName = normalized.gift_name;
+
+      const newGift = {
+        id: giftId,
+        gift_id: normalized.gift_id,
+        gift_name: resolvedGiftName,
+        gift_icon: normalized.gift_slug ? (normalized.gift_slug as any)?.charAt(0)?.toUpperCase() || 'G' : 'G',
+        gift_slug: normalized.gift_slug,
+        animation_type: normalized.animation_type,
+        animation_url: normalized.animation_url || undefined,
+        video_url: normalized.video_url || normalized.animation_url || undefined,
+        animation_duration_ms: normalized.animation_duration_ms,
+        sound_url: normalized.sound_url,
+        amount: resolvedGiftAmount,
+        quantity: normalized.quantity,
+        sender_id: normalized.sender_id,
+        sender_name: normalized.sender_name,
+        receiver_id: receiverId,
+        receiver_name: normalized.receiver_name,
+        created_at: normalized.created_at,
+      } as BroadcastGift;
+
+      if (import.meta.env.DEV) {
+        console.debug('[BroadcastPage] processGiftEvent normalized newGift', {
+          giftId,
+          gift_name: newGift.gift_name,
+          animation_url: newGift.animation_url,
+          video_url: newGift.video_url,
+          animation_type: newGift.animation_type,
+          receiver_id: newGift.receiver_id,
+          receiver_name: newGift.receiver_name,
+          amount: newGift.amount,
+          quantity: newGift.quantity,
+        });
+      }
+
+      setRecentGifts((prev) => {
+        if (prev.some((g) => g.id === giftId)) {
+          if (import.meta.env.DEV) {
+            console.debug('[BroadcastPage] processGiftEvent gift already exists', { giftId });
+          }
+          return prev;
+        }
+        const updated = [...prev, newGift].slice(-20);
+        if (import.meta.env.DEV) {
+          console.debug('[BroadcastPage] processGiftEvent adding gift to recentGifts', { giftId, newGift });
+        }
+        return updated;
+      });
+
+      const giftDurationMs = newGift.animation_duration_ms ?? getGiftVisualConfig(newGift).durationMs;
+      setTimeout(() => {
+        setRecentGifts((prev) => prev.filter((g) => g.id !== giftId));
+      }, giftDurationMs + 150);
+
+      const streamGiftEvent: StreamGiftEvent = {
+        id: normalized.id,
+        stream_id: normalized.stream_id,
+        gift_id: normalized.gift_id || '',
+        gift_name: normalized.gift_name,
+        sender_user_id: normalized.sender_id || '',
+        recipient_user_id: normalized.receiver_id || stream?.user_id || '',
+        recipient_type: normalized.recipient_type,
+        recipient_seat_index: normalized.recipient_seat_index,
+        animation_url: normalized.animation_url || null,
+        animation_url_webm: normalized.animation_url_webm || null,
+        animation_url_mp4: normalized.animation_url_mp4 || null,
+        animation_url_mov: normalized.animation_url_mov || null,
+        animation_type: normalized.animation_type as StreamGiftEvent['animation_type'] || null,
+        animation_duration_ms: normalized.animation_duration_ms,
+        sound_url: normalized.sound_url,
+        created_at: normalized.created_at,
+      };
+
+      console.info('[GiftRouting] Target resolution', {
+        giftId: streamGiftEvent.id,
+        targetKey: getGiftTargetKey(streamGiftEvent),
+        targetExists: getGiftTargetKey(streamGiftEvent) ? giftQueues[getGiftTargetKey(streamGiftEvent)!] !== undefined : false,
+        visibleTargets: Array.from(new Set([
+          stream?.user_id ? `user:${stream.user_id}` : '',
+          ...Object.values(seats || {}).filter((s: any) => s.user_id).map((s: any) => `user:${s.user_id}`)
+        ])).filter(Boolean),
+      });
+
+      enqueueGift(streamGiftEvent);
+
+      const missingIds = [normalized.sender_id, receiverId].filter(
+        (id): id is string => !!id && !giftNameMapRef.current[id]
       );
-    }
 
-// Start animation via centralized store; all participants should see this.
-      // Update stream's total_gifts_coins only
-      // Broadcaster balance is handled by realtime user_profiles subscription
+      if (missingIds.length > 0) {
+        supabase
+          .from('user_profiles')
+          .select('id, username, display_name, email')
+          .in('id', Array.from(new Set(missingIds)))
+          .then(({ data }) => {
+            if (!data || data.length === 0) return;
+
+            const resolved = Object.fromEntries(
+              data
+                .filter((row: any) => row?.id)
+                .map((row: any) => [
+                  row.id,
+                  row.username || row.email?.split('@')?.[0] || 'Troll Citizen'
+                ])
+            );
+
+            if (Object.keys(resolved).length === 0) return;
+
+            setGiftNameMap((prev) => ({ ...prev, ...resolved }));
+            setRecentGifts((prev) =>
+              prev.map((gift) =>
+                gift.id === giftId
+                  ? {
+                      ...gift,
+                      sender_name: gift.sender_name === 'Someone' ? (resolved[gift.sender_id] || gift.sender_name) : gift.sender_name,
+                      receiver_name: !gift.receiver_name ? resolved[gift.receiver_id] : gift.receiver_name,
+                    }
+                  : gift
+              )
+            );
+          });
+      }
+
       if (receiverId === streamRef.current?.user_id && resolvedGiftAmount > 0) {
-       const giftAmount = Math.floor(resolvedGiftAmount);
+        const giftAmount = Math.floor(resolvedGiftAmount);
 
-       setStream((prev) => prev ? {
-         ...prev,
-         total_gifts_coins: (prev.total_gifts_coins || 0) + giftAmount,
-       } : prev);
-     }
+        setStream((prev) => prev ? {
+          ...prev,
+          total_gifts_coins: (prev.total_gifts_coins || 0) + giftAmount,
+        } : prev);
+      }
 
-     const levelGiftAmount = resolvedGiftAmount;
+      const levelGiftAmount = resolvedGiftAmount;
 
-     if (levelGiftAmount > 0 && receiverId === streamRef.current?.user_id) {
-       window.dispatchEvent(new CustomEvent('broadcast-gift-level', {
-         detail: {
-           giftId,
-           broadcasterId: streamRef.current?.user_id,
-           receiverId,
-           streamId,
-           amount: levelGiftAmount,
-           timestamp: Date.now(),
-         }
-       }));
-     }
+      if (levelGiftAmount > 0 && receiverId === streamRef.current?.user_id) {
+        window.dispatchEvent(new CustomEvent('broadcast-gift-level', {
+          detail: {
+            giftId,
+            broadcasterId: streamRef.current?.user_id,
+            receiverId,
+            streamId,
+            amount: levelGiftAmount,
+            timestamp: Date.now(),
+          }
+        }));
+      }
 
-// Dispatch balance update event for CityStatusPanel and auth store
-      // Use consistent snake_case field names
       window.dispatchEvent(new CustomEvent('broadcast-balance-update', {
         detail: {
-          sender_id: giftData.sender_id,
-          senderId: giftData.sender_id,
+          sender_id: normalized.sender_id,
+          senderId: normalized.sender_id,
           receiver_id: receiverId,
           receiverId: receiverId,
           amount: resolvedGiftAmount,
@@ -2390,8 +2491,50 @@ const processedGiftIdsRef = useRef<Set<string>>(new Set())
           giftId: giftId,
           timestamp: Date.now(),
         }
-       }));
-    }, [enrichGiftForOverlay, resolveGiftAmount, resolveGiftName, streamId, supabase]);
+      }));
+    }, [pipelineProcessGiftEvent, streamId, supabase, enqueueGift, removeGift, getGiftVisualConfig, stream, seats, giftQueues, hydrateGiftForOverlay]);
+
+  // Use a ref so the broadcast/window listeners always invoke the latest
+  // processGiftEvent without tearing down the supabase broadcast channel
+  // subscription whenever processGiftEvent is recreated (its deps include
+  // stream/seats which change frequently).
+  const processGiftEventRef = useRef(processGiftEvent)
+  useEffect(() => {
+    processGiftEventRef.current = processGiftEvent
+  }, [processGiftEvent])
+
+  useEffect(() => {
+    if (!streamId) return
+
+    const channel = supabase
+      .channel(`stream-gifts:${streamId}`)
+      .on(
+        'broadcast',
+        { event: 'gift_sent' },
+        ({ payload }) => {
+          if (!payload) return
+          void processGiftEventRef.current(payload)
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [streamId])
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const payload = (event as CustomEvent).detail
+      if (payload) void processGiftEventRef.current(payload)
+    }
+
+    window.addEventListener('maitroll:gift-sent', handler)
+
+    return () => {
+      window.removeEventListener('maitroll:gift-sent', handler)
+    }
+  }, [])
 
   const stopLocalTracks = useCallback(() => {
     if (localTracks) {
@@ -2700,9 +2843,14 @@ const processedGiftIdsRef = useRef<Set<string>>(new Set())
     // Clear PreflightStore
     PreflightStore.clear()
 
+    // Remove stream-specific realtime channels
+    if (streamId) {
+      void removeStreamChannels(streamId)
+    }
+
     // Navigate away
     navigate('/home', { replace: true })
-  }, [isHost, navigate, disconnectLiveKitRoom, stream, user?.id])
+  }, [isHost, navigate, disconnectLiveKitRoom, stream, streamId, user?.id])
   const handleToggleChat = useCallback(() => setIsChatOpen((prev) => !prev), [])
 const handleOpenShareModal = useCallback(() => setIsShareModalOpen(true), [])
     const handlePinProduct = useCallback(() => setIsPinProductModalOpen(true), [])
@@ -2850,6 +2998,13 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         seat_prices: nextSeatPrices,
       } : current)
 
+      // Broadcast immediate box_count change so viewers and mobile clients update instantly
+      try {
+        sendStreamBroadcast(streamId, 'box_count_changed', { box_count: desiredViewerSeats === 0 ? 1 : totalBoxes, stream_id: streamId })
+      } catch (err) {
+        console.warn('[BroadcastPage] sendStreamBroadcast box_count_changed failed:', err)
+      }
+
       toast.success(`Seats updated to ${desiredViewerSeats} viewer seat${desiredViewerSeats === 1 ? '' : 's'}`)
       setIsSeatsModalOpen(false)
     } catch (err: any) {
@@ -2901,16 +3056,30 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       // INSTANT JOIN: Set streamLoaded to false temporarily to show loading in header only
       setStreamLoaded(false)
       
-      // OPTIMIZED: Fetch stream and profile in PARALLEL for faster loading
-      const [streamResult, profileResult] = await Promise.all([
-        supabase
+      // Retry stream fetch to handle transient DB replication delays during SetupPage->BroadcastPage transition
+      const MAX_RETRIES = 3
+      const RETRY_DELAY_MS = 500
+      let streamResult: any = null
+      
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        if (attempt > 0) {
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS))
+        }
+        
+        streamResult = await supabase
           .from('streams')
           .select('*, total_likes, is_battle, battle_id, battle_mode, battle_format, battle_status, battle_start_time, battle_end_time, side_a_score, side_b_score')
           .eq('id', streamId)
-          .maybeSingle(),
-        // We'll get profile after we know the stream's user_id
-        Promise.resolve(null)
-      ])
+          .maybeSingle()
+        
+        if (streamResult.data) {
+          break
+        }
+        
+        if (streamResult.error && streamResult.error.code !== 'PGRST116') {
+          break
+        }
+      }
 
       const { data, error } = streamResult
 
@@ -3181,10 +3350,25 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
     // Record stream started event if transitioning from not live to live
     if (!wasLive && isNowLive && streamId) {
-      recordStreamStarted(streamId).catch(err => {
-        console.warn('[BroadcastPage] Failed to record stream started:', err)
-      })
-    }
+       recordStreamStarted(streamId).catch(err => {
+         console.warn('[BroadcastPage] Failed to record stream started:', err)
+       })
+        void Promise.resolve(
+          supabase.from('rtc_sessions').insert({
+            user_id: user?.id,
+            room_name: `stream-${nextStream.id || streamId}`,
+            started_at: new Date().toISOString(),
+            is_active: true,
+            duration_seconds: 0,
+          })
+       ).then(({ error: rtcErr }) => {
+         if (rtcErr) {
+           console.warn('[BroadcastPage] rtc_sessions insert failed:', rtcErr)
+         }
+       }).catch(rtcErr => {
+         console.warn('[BroadcastPage] rtc_sessions insert error:', rtcErr)
+       })
+     }
 
     if (((!wasInBattleMode && isNowInBattleMode) || (battleIdChanged && isNowInBattleMode))) {
       if (import.meta.env.DEV) console.debug('[BroadcastPage] Battle mode activated via stream realtime', {
@@ -3199,13 +3383,131 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       // Full LiveKit teardown: unpublish, detach handlers, disconnect
       disconnectLiveKitRoom();
       setRemoteParticipants(new Map());
+      void removeStreamChannels(streamId || nextStream.id || '')
       setTimeout(() => {
         navigate(`/broadcast/summary/${nextStream.id || streamId}`);
       }, 100);
     }
   }, [areStreamRealtimeUpdatesEqual, disconnectLiveKitRoom, navigate, recordStreamStarted, streamId, user?.id]);
 
-   useStreamRealtime(streamId, {
+  // Ensure rtc_sessions exists when stream is live (handles page load after stream already started)
+  useEffect(() => {
+    if (!streamId || !stream?.is_live || !user?.id || !stream?.id) return;
+
+    const ensureRtcSession = async () => {
+      const { data: existing } = await supabase
+        .from('rtc_sessions')
+        .select('id')
+        .eq('room_name', `stream-${stream.id}`)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('rtc_sessions').insert({
+          user_id: user.id,
+          room_name: `stream-${stream.id}`,
+          started_at: new Date().toISOString(),
+          is_active: true,
+          duration_seconds: 0,
+        });
+      }
+    };
+
+    void ensureRtcSession();
+   }, [streamId, stream?.is_live, stream?.id, user?.id]);
+
+   // Fetch recent utromail threads when message popup opens
+   useEffect(() => {
+    if (!isMessagePopupOpen || !user?.id) return;
+
+    const loadThreads = async () => {
+      try {
+        const threads = await getThreads(user.id, 'inbox');
+        setRecentThreads(threads.slice(0, 5));
+      } catch (err) {
+        console.error('[BroadcastPage] Failed to load threads:', err);
+      }
+    };
+
+    void loadThreads();
+  }, [isMessagePopupOpen, user?.id]);
+
+  // Search users when in new message mode
+  useEffect(() => {
+    if (!isNewMessageMode || !searchQuery.trim() || !user?.id) {
+      setSearchResults([]);
+      return;
+    }
+
+    const search = async () => {
+      try {
+        let results: any[] = [];
+
+        if (isHost && broadcasterProfile?.id) {
+          // Broadcaster: search followers + current seat occupants only
+          const [followersData, seatUserIds] = await Promise.all([
+            supabase
+              .from('user_follows')
+              .select('follower_id')
+              .eq('followed_id', broadcasterProfile.id)
+              .eq('status', 'accepted'),
+            Promise.resolve(
+              Object.values(seats || {})
+                .filter((s: any) => s.user_id)
+                .map((s: any) => s.user_id)
+            )
+          ]);
+
+          const followerIds = new Set((followersData.data || []).map((f: any) => f.follower_id));
+          const allowedIds = new Set([...Array.from(followerIds), ...seatUserIds]);
+
+          if (allowedIds.size > 0) {
+            const { data: profiles } = await supabase
+              .from('user_profiles')
+              .select('id, username, display_name, avatar_url, utromail_address')
+              .in('id', Array.from(allowedIds))
+              .ilike('username', `%${searchQuery.trim()}%`)
+              .limit(5);
+
+            results = (profiles || []).map((u: any) => ({
+              ...u,
+              is_staff: false,
+            }));
+          }
+        } else {
+          // Regular user: search all users
+          results = await searchUsers(searchQuery.trim());
+        }
+
+        setSearchResults(results.slice(0, 5));
+      } catch (err) {
+        console.error('[BroadcastPage] Failed to search users:', err);
+      }
+    };
+
+    void search();
+  }, [isNewMessageMode, searchQuery, user?.id, isHost, broadcasterProfile?.id, seats]);
+
+  // Fetch messages when a thread is selected
+  useEffect(() => {
+    if (!selectedThread || !user?.id) return;
+
+    const loadMessages = async () => {
+      setMessagesLoading(true);
+      try {
+        const msgs = await getThreadMessages(selectedThread.id);
+        setThreadMessages(msgs);
+      } catch (err) {
+        console.error('[BroadcastPage] Failed to load messages:', err);
+      } finally {
+        setMessagesLoading(false);
+      }
+    };
+
+    void loadMessages();
+  }, [selectedThread, user?.id]);
+
+    useStreamRealtime(streamId, {
       onStream: (event) => {
         const nextStream = event.new;
         // During an active battle, only sync critical properties to avoid remounts.
@@ -3216,6 +3518,14 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           (!nextStream.is_battle ||
             nextStream.battle_status === 'ended' ||
             nextStream.battle_status === 'waiting');
+
+        // Preserve local battle state during random battle countdown so the
+        // queue controller's optimistic phase/state isn't clobbered by the
+        // database 'waiting' snapshot that arrives with match creation.
+        const isInRandomBattleCountdown =
+          stream?.battle_mode === 'random_queue' &&
+          !!stream?.battle_id &&
+          (stream?.battle_status === 'starting' || stream?.battle_status === 'waiting');
 
         // When the battle is ending, apply the FULL payload so the battle flag
         // clears (is_battle=false, battle_id=null). Otherwise the queue controller
@@ -3229,17 +3539,85 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           // Only update battle-related properties during active battle
           if (nextStream.battle_status !== stream.battle_status ||
               nextStream.battle_end_time !== stream.battle_end_time) {
-            setStream((prev: any) => prev ? { ...prev, 
+            setStream((prev: any) => prev ? { ...prev,
               battle_status: nextStream.battle_status,
               battle_end_time: nextStream.battle_end_time
             } : prev);
           }
           return;
         }
+
+        if (isInRandomBattleCountdown) {
+          // Allow activation to sync through, but keep local is_battle/battle_status
+          // so the countdown UI and queue controller remain stable.
+          if (nextStream?.battle_status === 'active' || nextStream?.battle_status === 'ended') {
+            setStream((prev: any) => prev ? { ...prev,
+              battle_status: nextStream.battle_status,
+              is_battle: nextStream.is_battle,
+              battle_end_time: nextStream.battle_end_time,
+              battle_end_reason: nextStream.battle_end_reason,
+              battle_winner_id: nextStream.battle_winner_id,
+            } : prev);
+          }
+          return;
+        }
+
         // Normal stream updates for non-battle state
         handleStreamRealtimeUpdate(event.new);
       },
+      onMessage: (event) => {
+        const newRow = event?.new
+        if (!newRow) return
+        if (import.meta.env.DEV) {
+          console.debug('[BroadcastPage][stream_messages] INSERT payload.new', { streamId, new: newRow })
+        }
+        const msgId = String(newRow.id || newRow.txn_id || '')
+        if (!msgId) return
+        if (broadcastChatMessageIdsRef.current.has(msgId)) {
+          if (import.meta.env.DEV) {
+            console.debug('[BroadcastPage][stream_messages] deduplicated (db id)', { msgId, streamId })
+          }
+          return
+        }
+        const username = newRow.user_name || newRow.username || 'Viewer'
+        const content = newRow.content || ''
+        const chatKey = `${username}:${content}`
+        const now = Date.now()
+        const existingTs = recentChatKeysRef.current.get(chatKey)
+        if (existingTs !== undefined && now - existingTs < CHAT_DEBOUNCE_MS) {
+          if (import.meta.env.DEV) {
+            console.debug('[BroadcastPage][stream_messages] deduplicated (content match)', { msgId, chatKey, streamId })
+          }
+          return
+        }
+        if (newRow.user_id === user?.id) {
+          if (import.meta.env.DEV) {
+            console.debug('[BroadcastPage][stream_messages] skipping broadcaster own message (shown optimistically)', { msgId, streamId })
+          }
+          return
+        }
+        broadcastChatMessageIdsRef.current.add(msgId)
+        recentChatKeysRef.current.set(chatKey, now)
+        if (!content) return
+        const floatingMsg: FloatingMessage = {
+          id: msgId,
+          username,
+          content,
+          createdAt: new Date(newRow.created_at || Date.now()).getTime(),
+        }
+        setFloatingMessages(prev => [floatingMsg, ...prev].slice(0, 50))
+        if (import.meta.env.DEV) {
+          console.debug('[BroadcastPage][stream_messages] message appended', { msgId, username, streamId })
+        }
+        setTimeout(() => {
+          setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+        }, 30_000)
+      },
       onGift: (event) => {
+        if (event.table === 'stream_gifts') return
+        if (import.meta.env.DEV) {
+          console.debug('[BroadcastPage] useStreamRealtime.onGift', { event })
+        }
         const rawGift = event?.new ?? event
         if (rawGift) {
           void processGiftEvent(rawGift)
@@ -3406,7 +3784,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
               if (!prev) return prev;
               const newTotal = likeData.total_likes !== undefined
                 ? likeData.total_likes
-                : (prev.total_likes || 0) + 10;
+                : (prev.total_likes || 0) + 2;
               return { ...prev, total_likes: newTotal };
             });
           } catch (err) {
@@ -3466,45 +3844,67 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
   const floatingChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
    // -- Floating Chat: receive broadcasts ------------------------------------
- useEffect(() => {
-   if (!streamId) return;
+  useEffect(() => {
+    if (!streamId) return;
 
-   const timers = new Set<number>();
-   const channel = supabase.channel(`floating-chat:${streamId}`);
-   floatingChatChannelRef.current = channel;
+    const timers = new Set<number>();
+    const channel = supabase.channel(`floating-chat:${streamId}`);
+    floatingChatChannelRef.current = channel;
 
-   channel
-     .on('broadcast', { event: 'floating_chat' }, (payload: any) => {
-       const { username, content } = payload.payload || {};
-       if (!username || !content) return;
+    channel
+      .on('broadcast', { event: 'floating_chat' }, (payload: any) => {
+        const { username, content } = payload.payload || {};
+        if (!username || !content) return;
 
-      const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const chatKey = `${username}:${content}`;
+        const now = Date.now();
+        const existingTs = recentChatKeysRef.current.get(chatKey);
+        if (existingTs !== undefined && now - existingTs < CHAT_DEBOUNCE_MS) {
+          if (import.meta.env.DEV) {
+            console.debug('[BroadcastPage][floating_chat] deduplicated (content match)', { chatKey, streamId })
+          }
+          return;
+        }
+        recentChatKeysRef.current.set(chatKey, now);
 
-      setFloatingMessages(prev =>
-        [
-          {
-            id: msgId,
-            username,
-            content,
-            createdAt: Date.now(),
-          },
-          ...prev,
-        ].slice(0, 50)
-      );
+        const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-      if (!isHost) {
+        setFloatingMessages(prev =>
+          [
+            {
+              id: msgId,
+              username,
+              content,
+              createdAt: Date.now(),
+            } as FloatingMessage,
+            ...prev,
+          ].slice(0, 50)
+        );
+
+       if (!isHost) {
+       }
+
+       const timer = window.setTimeout(() => {
+         setFloatingMessages(prev => prev.filter(m => m.id !== msgId));
+         timers.delete(timer);
+       }, 30_000);
+
+        timers.add(timer);
+      })
+      .subscribe((status) => {
+        if (import.meta.env.DEV) {
+          console.debug('[BroadcastPage][floating_chat] channel status', { streamId, status })
+        }
+      });
+
+    if (import.meta.env.DEV) {
+      console.debug('[BroadcastPage] resolved streamId for floating-chat', { streamId })
+    }
+
+    return () => {
+      if (import.meta.env.DEV) {
+        console.debug('[BroadcastPage] floating-chat channel cleanup', { streamId })
       }
-
-      const timer = window.setTimeout(() => {
-        setFloatingMessages(prev => prev.filter(m => m.id !== msgId));
-        timers.delete(timer);
-      }, 30_000);
-
-      timers.add(timer);
-    })
-    .subscribe();
-
-   return () => {
       timers.forEach(timer => window.clearTimeout(timer));
       timers.clear();
       floatingChatChannelRef.current = null;
@@ -3512,13 +3912,14 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         supabase.removeChannel(channel);
       }
     };
- }, [streamId, supabase]);
+  }, [streamId, supabase]);
 
-  // ? Gift animations are now driven exclusively by useStreamRealtime.onGift
-  // (stream_gifts postgres_changes).  The broadcast gift_sent channel is no
-  // longer subscribed here � the postgres event fires once per INSERT and
-  // both channels resolved to the same animationId (stream_gifts row UUID).
-  // ? If you are building a minimal overlay or chat overlay that only shows
+  // Gift animations are driven by both the `stream-gifts:${streamId}` broadcast
+  // channel AND the stream_gifts postgres_changes (via useStreamRealtime.onGift).
+  // Both paths now route through processGiftEvent (via a ref), which calls the
+  // pipeline's internal dedup so each gift is added to recentGifts exactly once
+  // — the animationId is always the stream_gifts row UUID.
+  // If you are building a minimal overlay or chat overlay that only shows
   // the in-chat gift line, re-subscribe to `giftChannel` here instead.
 
   useEffect(() => {
@@ -3586,21 +3987,36 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     }
 
     // Only connect to LiveKit if the stream is actually live
-    // This prevents RTC session minutes from accumulating when there's no broadcast
+    // This prevents RTC session minutes from accumulating when there's no broadcast.
+    // However, the host must always be able to connect during a SetupPage->BroadcastPage
+    // transition even if the stream's database status is temporarily stale.
+    const hasTransfer = Boolean(
+      usePreflightStore.getState().room ||
+      PreflightStore.getLivekitRoom() ||
+      PreflightStore.getTransferSession()
+    )
+
     const isBroadcastActive = (s: any) => {
       if (!s) return false
       if (s.is_live === true) return true
       const status = String(s.status || '').toLowerCase()
-      return status === 'starting' || status === 'live'
+      if (status === 'starting' || status === 'live') return true
+      // During a transition the stream row may not yet reflect 'live'.
+      // Allow the host to connect if a transfer session exists.
+      if (isHost && hasTransfer && status !== 'ended' && status !== 'failed') return true
+      return false
     }
 
     const isBroadcastActiveResult = isBroadcastActive(stream)
 
     // Host/broadcaster must keep their LiveKit room through non-ended stream state transitions.
     // We only suppress LiveKit for ended/failed broadcasts where is_live is explicitly false.
+    // During a SetupPage->BroadcastPage transition the stream row may be stale,
+    // so we must not suppress the connection when a transfer session exists.
     const isHostEndedOrFailed =
       isHost && (stream?.is_live === false) &&
-      (String(stream?.status || '').toLowerCase() === 'ended' || String(stream?.status || '').toLowerCase() === 'failed')
+      (String(stream?.status || '').toLowerCase() === 'ended' || String(stream?.status || '').toLowerCase() === 'failed') &&
+      !hasTransfer
 
     console.log('[BroadcastStatusGuard] active check result', {
       streamId,
@@ -3609,6 +4025,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       streamIsLive: stream?.is_live,
       isBroadcastActive: isBroadcastActiveResult,
       isHostEndedOrFailed,
+      hasTransfer,
     })
 
     if (!isBroadcastActiveResult && !isHostEndedOrFailed) {
@@ -3616,7 +4033,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     }
 
     if (!isBroadcastActiveResult && isHostEndedOrFailed) {
-      console.log('[BroadcastPage] Stream is not live, skipping LiveKit connection')
+      console.log('[BroadcastPage] Stream is ended/failed and no transfer session — skipping LiveKit connection')
       return
     }
 
@@ -3728,6 +4145,79 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
       // OPTIMIZED: Don't block UI - connect in background
       try {
+        // Check for a transferred SetupPage room BEFORE fetching a new token.
+        // If SetupPage already connected a LiveKit room and published tracks,
+        // BroadcastPage must adopt that existing session instead of creating
+        // a second room, requesting a second token, and republishing tracks.
+        const transferSession = usePreflightStore.getState().transferSession || PreflightStore.getTransferSession()
+        const preflightRoom = usePreflightStore.getState().room || PreflightStore.getLivekitRoom()
+        const preflightRoomName = usePreflightStore.getState().roomName || transferSession?.roomName
+
+        if (preflightRoom && preflightRoom.state === 'connected' && preflightRoomName) {
+          console.log('[BroadcastPage] Adopting transferred SetupPage LiveKit room', {
+            roomName: preflightRoom.name,
+            roomState: preflightRoom.state,
+            streamId: stream?.id,
+            expectedRoomName: preflightRoomName,
+            ownership: transferSession?.ownership,
+            transitionInProgress: transferSession?.transitionInProgress,
+          })
+
+          roomRef.current = preflightRoom
+          attachLiveKitHandlers(preflightRoom)
+
+          // Read the room name directly from the connected room object
+          const adoptedRoomName = preflightRoom.name
+
+          // Read existing local track publications from the transferred room
+          const existingMicPublication = preflightRoom.localParticipant.getTrackPublication(Track.Source.Microphone)
+          const existingCamPublication = preflightRoom.localParticipant.getTrackPublication(Track.Source.Camera)
+          const existingScreenPublication = preflightRoom.localParticipant.getTrackPublication(Track.Source.ScreenShare)
+          const existingScreenAudioPublication = preflightRoom.localParticipant.getTrackPublication(Track.Source.ScreenShareAudio)
+
+          const activeAudioTrack = existingMicPublication?.track as LocalAudioTrack | null
+          const activeVideoTrack = existingCamPublication?.track as LocalVideoTrack | null
+          const activeScreenTrack = existingScreenPublication?.track as LocalVideoTrack | null
+          const activeScreenAudioTrack = existingScreenAudioPublication?.track as LocalAudioTrack | null
+
+          // Sync local track state
+          if (activeAudioTrack || activeVideoTrack) {
+            setLocalTracks([
+              activeAudioTrack || null,
+              activeVideoTrack || null,
+            ])
+          }
+
+          // Sync mute/camera state from the transferred tracks
+          if (activeVideoTrack) {
+            setCameraEnabled(Boolean(activeVideoTrack.mediaStreamTrack?.enabled))
+          }
+          if (activeAudioTrack) {
+            setMicEnabled(Boolean(activeAudioTrack.mediaStreamTrack?.enabled))
+          }
+
+          // Mark the transfer as adopted
+          if (transferSession) {
+            PreflightStore.adoptTransferSession(transferSession)
+          }
+
+          // Clear only the transition marker, not the active resources
+          usePreflightStore.getState().setTransferringToBroadcast(false)
+
+          isGoingLiveRef.current = true
+          hasJoinedRef.current = true
+          liveKitConnectionKeyRef.current = `${stream.id}:${userIdentity}:publisher`
+
+          console.log('[BroadcastPage] Transfer adopted successfully', {
+            roomName: adoptedRoomName,
+            hasAudio: !!activeAudioTrack,
+            hasVideo: !!activeVideoTrack,
+            hasScreen: !!activeScreenTrack,
+          })
+          return
+        }
+
+        // No valid transfer session — fetch a new token and connect normally
         const hostIdentity = userIdentity
         // OPTIMIZED: Fetch token without waiting for UI
         console.log('[BroadcastPage] ?? Fetching LiveKit token for publisher from Supabase Edge Function...', {
@@ -3766,7 +4256,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         });
 
         const expectedRoomName =
-          String(data.roomName || data.room_name || stream.id)
+          String(data.room || data.roomName || data.room_name || stream.id)
 
         console.log('[BroadcastPage] LiveKit token target', {
           streamId: stream.id,
@@ -3922,19 +4412,19 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
             pub?.track?.kind === 'video'
           )
 
-        const hasUsableVideo = Boolean(
-          videoTrackRef.current &&
-          videoTrackRef.current.mediaStreamTrack?.readyState === 'live'
-        )
-        const hasUsableAudio = Boolean(
-          audioTrackRef.current &&
-          audioTrackRef.current.mediaStreamTrack?.readyState === 'live'
-        )
+        const hasExistingCamera = Boolean(existingCameraPublication?.track)
+        const hasExistingMic = Boolean(existingMicPublication?.track)
 
-        if (!hasUsableVideo || !hasUsableAudio) {
+        const shouldRecreateTracks =
+          roomToUse.state === 'connected' &&
+          !hasExistingCamera &&
+          !hasExistingMic &&
+          !usePreflightStore.getState().transferringToBroadcast
+
+        if (shouldRecreateTracks) {
           console.log('[BroadcastPage] ?? Recreating host tracks after refresh', {
-            hasUsableVideo,
-            hasUsableAudio,
+            hasExistingCamera,
+            hasExistingMic,
             currentVideoReadyState: videoTrackRef.current?.mediaStreamTrack?.readyState,
             currentAudioReadyState: audioTrackRef.current?.mediaStreamTrack?.readyState,
           })
@@ -3994,6 +4484,13 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
           activeAudioTrack = freshTracks.find((track) => track.kind === Track.Kind.Audio) as LocalAudioTrack | undefined || null
           activeVideoTrack = freshTracks.find((track) => track.kind === Track.Kind.Video) as LocalVideoTrack | undefined || null
+        } else if (hasExistingCamera || hasExistingMic) {
+          console.log('[BroadcastPage] ?? Using existing host publications from transferred room', {
+            hasExistingCamera,
+            hasExistingMic,
+          })
+          activeAudioTrack = (existingMicPublication?.track as LocalAudioTrack | null) || preflightTracks?.audioTrack || null
+          activeVideoTrack = (existingCameraPublication?.track as LocalVideoTrack | null) || preflightTracks?.videoTrack || null
         } else if (preflightTracks?.videoTrack || preflightTracks?.audioTrack) {
           // ? Use preflight tracks from SetupPage
           console.log('[BroadcastPage] ? Using preflight tracks from SetupPage')
@@ -4034,6 +4531,13 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
         // ?? PUBLISH TRACKS TO ROOM
         console.log('[BroadcastPage] ?? Publishing tracks to room...')
+        
+        if (roomToUse.state !== 'connected') {
+          console.warn('[BroadcastPage] Cannot publish: room is not connected', {
+            state: roomToUse.state,
+          })
+          return
+        }
         
         if (activeVideoTrack) {
           // Check if already published to avoid duplicate
@@ -4877,11 +5381,11 @@ const toggleMicrophone = useCallback(async () => {
          return;
      }
 
-     pendingLikesRef.current += 1;
-     setStream((prev: any) => {
-       if (!prev) return prev;
-       return { ...prev, total_likes: (prev.total_likes || 0) + 1 };
-     });
+      pendingLikesRef.current += 2;
+      setStream((prev: any) => {
+        if (!prev) return prev;
+        return { ...prev, total_likes: (prev.total_likes || 0) + 2 };
+      });
 
       if (pendingLikesRef.current >= 25) {
         flushLikes();
@@ -5508,8 +6012,6 @@ const toggleMicrophone = useCallback(async () => {
   }
 
   if (shouldShowRandomBattleArena) {
-    // Allow partial tracks - audio-only or video-only should still work
-    // On mobile, video track might not be immediately available
     const battleLocalTracks =
       localTracks?.[0] || localTracks?.[1]
         ? ([localTracks?.[0], localTracks?.[1]] as [LocalAudioTrack | undefined, LocalVideoTrack | undefined])
@@ -5518,30 +6020,54 @@ const toggleMicrophone = useCallback(async () => {
     return (
       <ErrorBoundary>
         <GiftSystemProvider streamId={streamId} defaultReceiverId={stream?.user_id}>
-          <BattleView
-            key={activeBattleId}
-            battleId={stream.battle_id!}
-            currentStreamId={streamId || stream.id}
-            viewerId={memoizedViewerId}
-            localTracks={battleLocalTracks}
-            remoteUsers={remoteUsers}
-            userIdToLiveKitIdentity={userIdToLiveKitIdentity}
-            onReturnToStream={() => {
-              setStream((prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      is_battle: false,
-                      battle_id: null,
-                      battle_mode: 'none' as any,
-                      battle_status: 'waiting' as any,
-                    }
-                  : prev
-              );
-            }}
-            onToggleCamera={toggleCamera}
-            onToggleMic={toggleMicrophone}
-          />
+          <div className="relative flex h-dvh w-full flex-col overflow-hidden">
+            <BattleView
+              key={activeBattleId}
+              battleId={stream.battle_id!}
+              currentStreamId={streamId || stream.id}
+              viewerId={memoizedViewerId}
+              localTracks={battleLocalTracks}
+              remoteUsers={remoteUsers}
+              userIdToLiveKitIdentity={userIdToLiveKitIdentity}
+              onReturnToStream={() => {
+                setStream((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        is_battle: false,
+                        battle_id: null,
+                        battle_mode: 'none' as any,
+                        battle_status: 'waiting' as any,
+                      }
+                    : prev
+                );
+              }}
+              onToggleCamera={toggleCamera}
+              onToggleMic={toggleMicrophone}
+            />
+            <div className="pointer-events-none fixed inset-0 z-[250]">
+              <GiftVideoOverlay gifts={recentGifts} onFinish={handleRemoveGiftOverlay} />
+            </div>
+            {stream?.user_id && (
+              <TargetedGiftOverlay
+                targetKey={`user:${stream.user_id}`}
+                gifts={giftQueues[`user:${stream.user_id}`] ?? []}
+                onGiftComplete={removeGift}
+              />
+            )}
+            {Object.values(seats).map((seat: any) => {
+              const seatUserId = seat?.user_id || seat?.guest_id || null
+              if (!seatUserId) return null
+              return (
+                <TargetedGiftOverlay
+                  key={seatUserId}
+                  targetKey={`user:${seatUserId}`}
+                  gifts={giftQueues[`user:${seatUserId}`] ?? []}
+                  onGiftComplete={removeGift}
+                />
+              )
+            })}
+          </div>
         </GiftSystemProvider>
       </ErrorBoundary>
     );
@@ -5574,7 +6100,11 @@ const toggleMicrophone = useCallback(async () => {
               </div>
             )}
 
-{/* TOP HEADER */}
+            <div className="pointer-events-none fixed inset-0 z-[250]">
+              <GiftVideoOverlay gifts={recentGifts} onFinish={handleRemoveGiftOverlay} />
+            </div>
+
+            {/* TOP HEADER */}
 
             {/* --- HEADER --- */}
 {!isMobileViewer && (
@@ -5691,12 +6221,13 @@ const toggleMicrophone = useCallback(async () => {
               */}
               {layoutMode === 'grid' ? (
                 /* ===== GRID MODE: Broadcaster tile (same size as seat tiles) ===== */
-                <div
-                  className={cn(
-                    'relative min-h-0 overflow-hidden border border-cyan-400/30 bg-transparent',
-                    isMobileHost ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
-                  )}
-                >
+                 <div
+                   className={cn(
+                     'relative min-h-0 overflow-hidden border border-cyan-400/30 bg-transparent',
+                     isMobileHost ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
+                   )}
+                   data-gift-target={`user:${stream?.user_id || ''}`}
+                 >
                   {/* Camera starting fallback */}
                   {(() => {
                     const hostParticipant = hostParticipantRef.current
@@ -5751,6 +6282,12 @@ const toggleMicrophone = useCallback(async () => {
                       }
                       return null
                     })()}
+                  />
+
+                  <TargetedGiftOverlay
+                    targetKey={`user:${stream?.user_id || ''}`}
+                    gifts={giftQueues[`user:${stream?.user_id || ''}`] ?? []}
+                    onGiftComplete={removeGift}
                   />
 
                   {/* Gradient overlay */}
@@ -5828,19 +6365,20 @@ const toggleMicrophone = useCallback(async () => {
                 </div>
               ) : (
                 /* ===== SPLIT MODE: Large broadcaster panel ===== */
-              <section
-                className={cn(
-                  'relative min-h-0 overflow-hidden',
-                  isMobileHost
-                    ? 'flex-none rounded-none border-0'
-                    : theme.hostVideoPanel
-                )}
-                style={
-                  isMobileHost
-                    ? { height: 'calc(100dvh - 180px)', maxHeight: 'calc(100dvh - 180px)' }
-                    : undefined
-                }
-              >
+               <section
+                 className={cn(
+                   'relative min-h-0 overflow-hidden',
+                   isMobileHost
+                     ? 'flex-none rounded-none border-0'
+                     : theme.hostVideoPanel
+                 )}
+                 style={
+                   isMobileHost
+                     ? { height: 'calc(100dvh - 180px)', maxHeight: 'calc(100dvh - 180px)' }
+                     : undefined
+                 }
+                 data-gift-target={`user:${stream?.user_id || ''}`}
+               >
 
 {/* Camera starting fallback � shows when no video track is available */}
                 {(() => {
@@ -6125,18 +6663,19 @@ const toggleMicrophone = useCallback(async () => {
                           }
                         : undefined
 
-                    return (
-                     <div
-                       key={`seat-${streamId}-${seat.seatIndex}-${seat.seatSessionId || seat.seatUserId || 'empty'}`}
-                       className={cn(
-                         'group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-950/60 backdrop-blur-md transition-all duration-300',
-                         viewerSeatCards.length === 1 && 'h-full',
-                         seat.isOccupied
-                          ? 'border-emerald-400/40 shadow-[0_0_24px_rgba(16,185,129,0.12)] hover:border-emerald-300/60 hover:shadow-[0_0_32px_rgba(16,185,129,0.2)] hover:-translate-y-0.5'
-                          : 'border-cyan-400/30 shadow-[0_0_20px_rgba(15,23,42,0.25)] hover:border-cyan-300/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.15)] hover:-translate-y-0.5',
+                     return (
+                      <div
+                        key={`seat-${streamId}-${seat.seatIndex}-${seat.seatSessionId || seat.seatUserId || 'empty'}`}
+                        className={cn(
+                          'group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-950/60 backdrop-blur-md transition-all duration-300',
+                          viewerSeatCards.length === 1 && 'h-full',
+                          seat.isOccupied
+                           ? 'border-emerald-400/40 shadow-[0_0_24px_rgba(16,185,129,0.12)] hover:border-emerald-300/60 hover:shadow-[0_0_32px_rgba(16,185,129,0.2)] hover:-translate-y-0.5'
+                           : 'border-cyan-400/30 shadow-[0_0_20px_rgba(15,23,42,0.25)] hover:border-cyan-300/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.15)] hover:-translate-y-0.5',
                         canClickSeat ? 'cursor-pointer' : ''
                       )}
                       {...clickProps}
+                      data-gift-target={seat.seatUserId ? `user:${seat.seatUserId}` : ''}
                     >
                       {seat.isOccupied ? (
                         <>
@@ -6312,19 +6851,20 @@ const toggleMicrophone = useCallback(async () => {
                   : undefined
 
                  return (
-                   <div
-                     key={`grid-seat-${streamId}-${seat.seatIndex}-${seat.seatSessionId || seat.seatUserId || 'empty'}`}
-                     className={cn(
-                       'group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-950/60 backdrop-blur-md transition-all duration-300',
-                       isMobileHost ? 'rounded-lg' : '',
-                       seat.isOccupied
-                         ? 'border-emerald-400/40 shadow-[0_0_24px_rgba(16,185,129,0.12)] hover:border-emerald-300/60 hover:shadow-[0_0_32px_rgba(16,185,129,0.2)] hover:-translate-y-0.5'
-                         : 'border-cyan-400/30 shadow-[0_0_20px_rgba(15,23,42,0.25)] hover:border-cyan-300/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.15)] hover:-translate-y-0.5',
-                       canClickSeat ? 'cursor-pointer' : ''
-                     )}
-                     {...clickProps}
-                   >
-                       {seat.isOccupied ? (
+                    <div
+                      key={`grid-seat-${streamId}-${seat.seatIndex}-${seat.seatSessionId || seat.seatUserId || 'empty'}`}
+                      className={cn(
+                        'group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-950/60 backdrop-blur-md transition-all duration-300',
+                        isMobileHost ? 'rounded-lg' : '',
+                        seat.isOccupied
+                          ? 'border-emerald-400/40 shadow-[0_0_24px_rgba(16,185,129,0.12)] hover:border-emerald-300/60 hover:shadow-[0_0_32px_rgba(16,185,129,0.2)] hover:-translate-y-0.5'
+                          : 'border-cyan-400/30 shadow-[0_0_20px_rgba(15,23,42,0.25)] hover:border-cyan-300/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.15)] hover:-translate-y-0.5',
+                        canClickSeat ? 'cursor-pointer' : ''
+                      )}
+                      {...clickProps}
+                      data-gift-target={seat.seatUserId ? `user:${seat.seatUserId}` : ''}
+                    >
+                      {seat.isOccupied ? (
                         <>
                           <div className="absolute inset-0">
                             <RemoteSeatSurface
@@ -6341,6 +6881,15 @@ const toggleMicrophone = useCallback(async () => {
                               }
                             />
                           </div>
+
+                          {seat.seatUserId && (
+                            <TargetedGiftOverlay
+                              targetKey={`user:${seat.seatUserId}`}
+                              gifts={giftQueues[`user:${seat.seatUserId}`] ?? []}
+                              onGiftComplete={removeGift}
+                            />
+                          )}
+
                           <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-3">
                             <div className="flex flex-wrap items-center justify-center gap-1.5">
                               <span className="truncate text-xs font-black text-white">{participantDisplayName}</span>
@@ -6566,20 +7115,11 @@ const toggleMicrophone = useCallback(async () => {
                                   stream_id: streamId,
                                   data: { content: text },
                                 }),
-                              })
+                               })
+                             }
+                            } catch (err) {
+                              console.warn('[BroadcastPage] send-message failed:', err)
                             }
-                            // Broadcast to other viewers via Supabase channel
-                            const chatChannel = floatingChatChannelRef.current;
-                            if (chatChannel) {
-                              chatChannel.send({
-                                type: 'broadcast',
-                                event: 'floating_chat',
-                                payload: { username, content: text },
-                              }).catch(() => {})
-                            }
-                           } catch (err) {
-                             console.warn('[BroadcastPage] send-message failed:', err)
-                           }
                         }}
                         className="mt-auto border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
                       >
@@ -6844,12 +7384,13 @@ const toggleMicrophone = useCallback(async () => {
                            const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
                           const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
-                          setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
-                          setChatInput('')
+                           setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
+                           recentChatKeysRef.current.set(`${username}:${text}`, Date.now())
+                           setChatInput('')
 
-                          setTimeout(() => {
-                            setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                          }, 60_000)
+                           setTimeout(() => {
+                             setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                           }, 60_000)
 
                           try {
                             const { data: { session } } = await supabase.auth.getSession()
@@ -7053,19 +7594,20 @@ const toggleMicrophone = useCallback(async () => {
                               }
                             : undefined;
 
-                          return (
-                            <div
-                              key={`mobile-seat-${streamId}-${seat.seatIndex}-${seat.seatSessionId || seat.seatUserId || 'empty'}`}
-                               className={cn(
-                                 'group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-950/60 backdrop-blur-md transition-all duration-300',
-                                 viewerSeatCards.length === 1 ? 'w-full' : 'aspect-[4/3]',
-                                 seat.isOccupied
-                                  ? 'border-emerald-400/40 shadow-[0_0_24px_rgba(16,185,129,0.12)] hover:border-emerald-300/60 hover:shadow-[0_0_32px_rgba(16,185,129,0.2)] hover:-translate-y-0.5'
-                                  : 'border-cyan-400/30 shadow-[0_0_20px_rgba(15,23,42,0.25)] hover:border-cyan-300/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.15)] hover:-translate-y-0.5',
-                                canClickSeat ? 'cursor-pointer' : ''
-                              )}
-                              {...clickProps}
-                            >
+                           return (
+                             <div
+                               key={`mobile-seat-${streamId}-${seat.seatIndex}-${seat.seatSessionId || seat.seatUserId || 'empty'}`}
+                                className={cn(
+                                  'group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-950/60 backdrop-blur-md transition-all duration-300',
+                                  viewerSeatCards.length === 1 ? 'w-full' : 'aspect-[4/3]',
+                                  seat.isOccupied
+                                   ? 'border-emerald-400/40 shadow-[0_0_24px_rgba(16,185,129,0.12)] hover:border-emerald-300/60 hover:shadow-[0_0_32px_rgba(16,185,129,0.2)] hover:-translate-y-0.5'
+                                   : 'border-cyan-400/30 shadow-[0_0_20px_rgba(15,23,42,0.25)] hover:border-cyan-300/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.15)] hover:-translate-y-0.5',
+                                 canClickSeat ? 'cursor-pointer' : ''
+                               )}
+                               {...clickProps}
+                               data-gift-target={seat.seatUserId ? `user:${seat.seatUserId}` : ''}
+                             >
                               {seat.isOccupied ? (
                                 <div className="flex flex-1 flex-col items-center justify-center p-2 pt-8">
                           <div className="relative h-12 w-12">
@@ -7222,7 +7764,7 @@ const toggleMicrophone = useCallback(async () => {
                   </span>
                 </div>
 
-                {/* MOBILE: Audience ticker with viewer count + squared Random Battle button */}
+                {/* MOBILE: Audience ticker with viewer count + collaboration controls */}
                 {isMobileHost && stream && (
                   <div className="absolute inset-x-0 top-0 z-20 flex items-start gap-2 px-3 pt-[44px]">
                     <div className="pointer-events-auto flex-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-xl shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
@@ -7236,7 +7778,8 @@ const toggleMicrophone = useCallback(async () => {
                          onModerateUser={handleOpenUserAction}
                        />
                     </div>
-                    <div className="pointer-events-auto relative mt-0.5">
+                    <div className="pointer-events-auto relative mt-0.5 flex flex-col gap-2">
+                      <CollaborateButton compact onClick={() => setShowCollaborationModal(true)} />
                       <RandomBattleButton
                         phase={randomBattleQueue.phase}
                         isBroadcaster={isHost}
@@ -7255,8 +7798,8 @@ const toggleMicrophone = useCallback(async () => {
                     isCamOn={cameraEnabled}
                     isLive={stream.status === 'live'}
                     hasRgbEffect={!!stream?.has_rgb_effect}
-                    areSeatsLocked={!!stream?.are_seats_locked}
-                    openStagePassCount={currentViewerSeatCount}
+                    isChatLocked={!!stream?.is_chat_locked}
+                    unreadMessageCount={0}
                     onToggleMic={toggleMicrophone}
                     onToggleCamera={toggleCamera}
                     onFlipCamera={() => {
@@ -7270,44 +7813,49 @@ const toggleMicrophone = useCallback(async () => {
                     }}
                     onGift={handleGiftHost}
                     onShare={handleOpenShareModal}
-                    onOpenSeats={handleOpenSeatsModal}
-                    onEndStream={handleStreamEnd}
-                    onOpenCoinStore={user?.id ? handleOpenCoinStore : () => {}}
-                    onInviteFollowers={handleInviteFollowers}
-                    onToggleRGB={toggleStreamRgb}
-                    onTextPopup={() => {
-                      setIsTextPopupComposerOpen(true);
-                    }}
-                    onAssignOfficer={() => setIsAssignOfficerModalOpen(true)}
-                    onPayOfficers={() => setIsPayBroadOfficersModalOpen(true)}
-                    onSeat={handleOpenSeatsModal}
-                  />
+                      onOpenMessage={() => setIsMessagePopupOpen(true)}
+                     onEndStream={handleStreamEnd}
+                     onOpenCoinStore={user?.id ? handleOpenCoinStore : () => {}}
+                     onInviteFollowers={handleInviteFollowers}
+                     onToggleRGB={toggleStreamRgb}
+                     onTextPopup={() => {
+                       setIsTextPopupComposerOpen(true);
+                     }}
+                     onAssignOfficer={() => setIsAssignOfficerModalOpen(true)}
+                     onPayOfficers={() => setIsPayBroadOfficersModalOpen(true)}
+                     onToggleChatLock={() => {}}
+                   />
                 </div>
               </>
             )}
 
               {/* -- BOTTOM CONTROL BAR (desktop only) -- */}
               {!isMobileHost && <BroadcastBottomBar
-                openPassCount={currentViewerSeatCount}
+                unreadMessageCount={0}
                 isMicOn={micEnabled}
                 isCamOn={cameraEnabled}
                 isLive={stream.status === 'live'}
                 liveViewerCount={viewerCount}
-                 liveTimer={liveTimer}
                 isGiftTrayOpen={isGiftModalOpen}
                 isOfficerModalOpen={false}
                 onToggleMic={toggleMicrophone}
                 onToggleCam={toggleCamera}
                 onGift={handleGiftHost}
                 onShare={handleOpenShareModal}
-                onOpenStagePass={handleOpenSeatsModal}
-                onManageStagePass={handleOpenSeatsModal}
+                onOpenMessage={() => setIsMessagePopupOpen(true)}
+                onManageMessage={() => {}}
                 onOpenMoreMenu={handleOpenMoreMenu}
                 onEndStream={handleStreamEnd}
                 onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
                 isHost={isHost}
                 onInviteFollowers={handleInviteFollowers}
                />}
+
+              {!isMobileHost && (
+                <div className="absolute right-4 top-4 z-[40]">
+                  <CollaborateButton onClick={() => setShowCollaborationModal(true)} />
+                </div>
+              )}
 
               {/* Celeb Stream Toolbar — only for hosts of celeb_stream */}
               {isCelebStream && isHost && (
@@ -7402,7 +7950,7 @@ const toggleMicrophone = useCallback(async () => {
               )}
 
             </div>
-              <GiftVideoOverlay gifts={recentGifts} onFinish={handleRemoveGiftOverlay} nameMap={giftNameMap} />
+              <GiftAnimationLayer streamId={streamId} recipientUserId={stream?.user_id || ''} recipientType="broadcaster" className="" />
 
               {/* Feed the Troll — persistent companion for the broadcaster's troll */}
               {stream?.user_id && (
@@ -7667,6 +8215,18 @@ const toggleMicrophone = useCallback(async () => {
                   isBroadcaster={true}
                   isSeatHolder={showUserStats.isSeatUser}
                   broadcasterId={user?.id}
+                  onHouseClick={() => {
+                    const targetUser = broadcasterCityStatus.data;
+                    if (targetUser?.house_id && targetUser.id !== user?.id) {
+                      setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
+                    }
+                  }}
+                  onRaid={() => {
+                    const targetUser = broadcasterCityStatus.data;
+                    if (targetUser?.house_id && targetUser.id !== user?.id) {
+                      setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
+                    }
+                  }}
                 />
               )}
 
@@ -7679,6 +8239,31 @@ const toggleMicrophone = useCallback(async () => {
                   isBroadOfficer={isOfficer}
                   isSeatHolder={true}
                   broadcasterId={user?.id}
+                  onHouseClick={() => {
+                    const seatUser = broadcasterCityStatus.data;
+                    if (seatUser?.house_id && seatUser.id !== user?.id) {
+                      setRaidTarget({ userId: seatUser.id, houseId: seatUser.house_id });
+                    }
+                  }}
+                  onRaid={() => {
+                    const seatUser = broadcasterCityStatus.data;
+                    if (seatUser?.house_id && seatUser.id !== user?.id) {
+                      setRaidTarget({ userId: seatUser.id, houseId: seatUser.house_id });
+                    }
+                  }}
+                />
+              )}
+
+              {/* Raid Panel */}
+              {raidTarget && (
+                <RaidPanel
+                  targetUserId={raidTarget.userId}
+                  targetHouseId={raidTarget.houseId}
+                  isOpen={!!raidTarget}
+                  onClose={() => setRaidTarget(null)}
+                  onRaidComplete={() => {
+                    broadcasterCityStatus.refetch?.();
+                  }}
                 />
               )}
 
@@ -7733,9 +8318,10 @@ const toggleMicrophone = useCallback(async () => {
                     onGift={handleGiftHost}
                     onShare={handleOpenShareModal}
                     onEndStream={handleStreamEnd}
-                    areSeatsLocked={!!stream?.are_seats_locked}
-                    onManageStagePass={handleOpenSeatsModal}
-                    openStagePassCount={currentViewerSeatCount}
+                    isChatLocked={!!stream?.is_chat_locked}
+                    onToggleChatLock={() => {}}
+                      onOpenMessage={() => setIsMessagePopupOpen(true)}
+                     unreadMessageCount={0}
                     onAssignBroadofficer={handleAssignBroadofficer}
                     onPayBroadOfficers={handlePayBroadOfficers}
                      onMuteUser={handleMute}
@@ -7767,6 +8353,31 @@ const toggleMicrophone = useCallback(async () => {
                   onPayAll={handlePayBroadOfficers}
                 />
               )}
+
+              <CollaborationModal
+                open={showCollaborationModal}
+                onClose={() => setShowCollaborationModal(false)}
+                broadcasters={collaboration.activeBroadcasters}
+                loading={collaboration.loading}
+                onRequest={async (broadcaster) => {
+                  const result = await collaboration.sendRequest(broadcaster)
+                  if (result.ok) {
+                    await collaboration.refreshBroadcasters()
+                  }
+                  return result
+                }}
+              />
+
+              <CollaborationRequestNotification
+                request={collaboration.incomingRequests[0] || null}
+                onAccept={async (request) => {
+                  await collaboration.acceptRequest(request)
+                  setShowCollaborationModal(false)
+                }}
+                onDecline={async (request) => {
+                  await collaboration.declineRequest(request)
+                }}
+              />
 
               {isPayBroadOfficersModalOpen && stream?.id && stream?.user_id && (
                 <PayBroadOfficersModal
@@ -7856,8 +8467,9 @@ const toggleMicrophone = useCallback(async () => {
                         if (!text) return
                         const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
                         const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                        setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
-                        setChatInput('')
+                          setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
+                          recentChatKeysRef.current.set(`${username}:${text}`, Date.now())
+                          setChatInput('')
                         setTimeout(() => {
                           setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
                         }, 3000)
@@ -7919,8 +8531,189 @@ const toggleMicrophone = useCallback(async () => {
                 </>
               )}
 
-         </ErrorBoundary>
-      </GiftSystemProvider>
+          </ErrorBoundary>
+
+          <AnimatePresence>
+            {isMessagePopupOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="fixed bottom-24 right-4 z-[60] w-[360px] max-h-[480px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl"
+              >
+                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-black text-white">Messages</h3>
+                    {!selectedThread && (
+                      <button
+                        onClick={() => setIsNewMessageMode(!isNewMessageMode)}
+                        className="rounded-lg bg-cyan-500/20 px-2 py-0.5 text-[10px] font-bold text-cyan-300 hover:bg-cyan-500/30"
+                      >
+                        New
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => { setIsMessagePopupOpen(false); setSelectedThread(null); setIsNewMessageMode(false) }}
+                    className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="max-h-[420px] overflow-y-auto">
+                  {!selectedThread ? (
+                    <div className="p-2">
+                      {isNewMessageMode ? (
+                        <div>
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search users..."
+                            className="mb-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:border-cyan-400/30 focus:outline-none"
+                          />
+                          {searchResults.length === 0 ? (
+                            <div className="py-4 text-center text-xs text-zinc-500">No users found</div>
+                          ) : (
+                            searchResults.map((u: any) => (
+                              <button
+                                key={u.id}
+                                onClick={async () => {
+                                  try {
+                                    const thread = await findOrCreateDirectThread(user.id, u.id)
+                                    setSelectedThread(thread)
+                                    setIsNewMessageMode(false)
+                                    setSearchQuery('')
+                                    setSearchResults([])
+                                  } catch (err) {
+                                    console.error('[BroadcastPage] create thread error:', err)
+                                    toast.error('Failed to start conversation')
+                                  }
+                                }}
+                                className="flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left hover:bg-white/5"
+                              >
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300">
+                                  <MessageSquare className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-bold text-white">{u.username || u.display_name || 'User'}</p>
+                                  <p className="truncate text-xs text-zinc-400">{u.utromail_address}</p>
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      ) : recentThreads.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-zinc-500">No messages yet</div>
+                      ) : (
+                        recentThreads.map((thread: any) => {
+                          const other = thread.other_username || 'Unknown'
+                          const last = thread.last_message?.body || 'No messages yet'
+                          const time = thread.last_message?.sent_at
+                            ? new Date(thread.last_message.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : ''
+                          return (
+                            <button
+                              key={thread.id}
+                              onClick={() => setSelectedThread(thread)}
+                              className="flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left hover:bg-white/5"
+                            >
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300">
+                                <MessageSquare className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-bold text-white">{other}</p>
+                                <p className="truncate text-xs text-zinc-400">{last}</p>
+                                {time && <p className="mt-1 text-[10px] text-zinc-500">{time}</p>}
+                              </div>
+                            </button>
+                          )
+                        })
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex h-[420px] flex-col">
+                      <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2">
+                        <button
+                          onClick={() => setSelectedThread(null)}
+                          className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </button>
+                        <p className="truncate text-sm font-bold text-white">
+                          {selectedThread.other_username || 'Chat'}
+                        </p>
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-3">
+                        {messagesLoading ? (
+                          <div className="py-8 text-center text-xs text-zinc-500">Loading...</div>
+                        ) : threadMessages.length === 0 ? (
+                          <div className="py-8 text-center text-xs text-zinc-500">No messages yet</div>
+                        ) : (
+                          <div className="space-y-2">
+                            {threadMessages.map((msg: any) => (
+                              <div
+                                key={msg.id}
+                                className={`rounded-xl px-3 py-2 text-xs ${
+                                  msg.sender_id === user?.id
+                                    ? 'ml-8 bg-cyan-500/20 text-cyan-100'
+                                    : 'mr-8 bg-white/5 text-zinc-200'
+                                }`}
+                              >
+                                <p className="mb-0.5 text-[10px] font-bold text-zinc-400">
+                                  {msg.sender_username || 'Unknown'}
+                                </p>
+                                <p>{msg.body}</p>
+                                <p className="mt-1 text-[10px] text-zinc-500">
+                                  {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <form
+                        onSubmit={async (e) => {
+                          e.preventDefault()
+                          const input = (e.target as any).message as HTMLInputElement
+                          const body = input.value.trim()
+                          if (!body || !selectedThread || !user?.id) return
+                          try {
+                             await sendMessage({
+                               senderId: user.id,
+                               senderMail: user.email || '',
+                               recipientId: selectedThread.other_user_id,
+                               body,
+                             })
+                            input.value = ''
+                            const msgs = await getThreadMessages(selectedThread.id)
+                            setThreadMessages(msgs)
+                          } catch (err) {
+                            console.error('[BroadcastPage] send message error:', err)
+                            toast.error('Failed to send message')
+                          }
+                        }}
+                        className="flex gap-2 border-t border-white/10 p-3"
+                      >
+                        <input
+                          name="message"
+                          placeholder="Type a message..."
+                          className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:border-cyan-400/30 focus:outline-none"
+                        />
+                        <button
+                          type="submit"
+                          className="shrink-0 rounded-xl bg-cyan-500/20 px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-500/30"
+                        >
+                          Send
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+       </GiftSystemProvider>
     );
   }
 
@@ -7955,7 +8748,7 @@ function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | nu
     }
 
     const previousTrack = videoElRef.current?.srcObject
-    const previousTrackId = previousTrack?.mediaStreamTrack?.id || previousTrack?.sid || null
+    const previousTrackId = (previousTrack as any)?.mediaStreamTrack?.id || (previousTrack as any)?.sid || null
     const nextTrackId = (track as any)?.mediaStreamTrack?.id || (track as any)?.sid || null
 
     if (previousTrackId && nextTrackId && previousTrackId === nextTrackId) {
@@ -8005,3 +8798,11 @@ function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | nu
     />
   );
 }
+
+
+
+
+
+
+
+

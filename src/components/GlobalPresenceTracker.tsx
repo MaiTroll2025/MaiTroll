@@ -140,8 +140,8 @@ export default function GlobalPresenceTracker() {
             last_active: new Date().toISOString()
           })
           .eq('id', user.id)
-          .then(() => {})
-          .catch(() => {});
+           .then(() => {})
+           .then(undefined, () => {});
       }
     };
   }, [user?.id, profile?.id, setOnlineCount, setOnlineUserIds]);

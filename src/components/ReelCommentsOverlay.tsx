@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../lib/store";
 import { toast } from "sonner";
+import { moderation } from "@/services/maitrollModeration";
 import { X, Send } from "lucide-react";
 import UserNameWithAge from "./UserNameWithAge";
 
@@ -90,6 +91,15 @@ const ReelCommentsOverlay: React.FC<ReelCommentsOverlayProps> = ({
       setSending(true);
       const content = message.trim();
       setMessage("");
+
+      // Canonical moderation check
+      const modResult = await moderation.checkContent(profile.id, content, 'comment');
+      if (!modResult.allowed) {
+        toast.error(modResult.message || 'That comment violates Mai Troll\'s chat rules and was not sent.');
+        setMessage(message); // put it back
+        setSending(false);
+        return;
+      }
 
       const { error } = await supabase.from("troll_post_comments").insert([
         {

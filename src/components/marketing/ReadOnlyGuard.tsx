@@ -82,7 +82,7 @@ export function ReadOnlyOverlay({ message = 'Read-only access - View only' }: Re
 }
 
 interface ReadOnlyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  action?: 'broadcast' | 'gift' | 'chat' | 'payment' | 'purchase' | 'withdraw' | 'edit' | 'delete' | 'create'
+  action?: 'broadcast' | 'gift' | 'chat' | 'payment' | 'purchase' | 'withdraw' | 'edit' | 'delete' | 'create' | 'any'
   showBadge?: boolean
 }
 

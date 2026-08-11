@@ -19,6 +19,13 @@ export interface WallPost {
   is_admin?: boolean
   is_troll_officer?: boolean
   is_og_user?: boolean
+  is_verified?: boolean
+  is_gold?: boolean
+  officer_level?: number
+  troller_level?: number
+  is_troller?: boolean
+  username_style?: string
+  badge?: string | null
   user_created_at?: string
   is_pinned?: boolean
   post_type: WallPostType

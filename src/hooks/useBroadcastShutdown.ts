@@ -26,6 +26,8 @@ export interface BroadcastShutdownOptions {
    */
   getLocalStream?: () => MediaStream | null
   getLocalVideo?: () => HTMLVideoElement | null
+  /** When true, component unmount is a navigation transition, not a real exit. */
+  isTransitioning?: boolean
 }
 
 export interface BroadcastShutdownApi {
@@ -49,7 +51,7 @@ export interface BroadcastShutdownApi {
  * even when multiple triggers (pagehide + beforeunload + unmount) fire.
  */
 export function useBroadcastShutdown(options: BroadcastShutdownOptions): BroadcastShutdownApi {
-  const { streamId, userId, isLive = false, stopRtc, onEnded, getLocalStream, getLocalVideo } = options
+  const { streamId, userId, isLive = false, stopRtc, onEnded, getLocalStream, getLocalVideo, isTransitioning = false } = options
 
   const endingBroadcastRef = useRef(false)
   const localStreamRef = useRef<MediaStream | null>(null)
@@ -183,6 +185,10 @@ export function useBroadcastShutdown(options: BroadcastShutdownOptions): Broadca
     return () => {
       window.removeEventListener('pagehide', handlePageHide)
       window.removeEventListener('beforeunload', handleBeforeUnload)
+
+      if (isTransitioning) {
+        return
+      }
 
       // Media must still stop locally during component destruction even if
       // the async DB/realtime work cannot complete.

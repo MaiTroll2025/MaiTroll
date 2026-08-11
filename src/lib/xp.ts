@@ -158,7 +158,7 @@ export function getXPForNextLevel(currentXp: number): { current: number; needed:
 // ===========================
 
 /**
- * Award XP for spending paid coins (general)
+  * Award XP for spending troll_coins (general)
  * +1 XP per paid coin
  */
 export async function awardPaidCoinXP(userId: string, coinAmount: number, metadata: any = {}) {

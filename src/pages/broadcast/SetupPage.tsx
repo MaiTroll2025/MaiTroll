@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { PreflightStore } from '@/lib/preflightStore';
+import { PreflightStore, usePreflightStore } from '@/lib/preflightStore';
 import requestBroadcastMediaAccess from '@/lib/media/requestBroadcastMediaAccess';
 import { useStreamStore } from '@/lib/streamStore';
 import { LocalAudioTrack, LocalVideoTrack, AudioPresets, VideoPresets, Room, Track } from 'livekit-client';
@@ -14,7 +14,6 @@ import UniverseModeSetup from '../../components/broadcast/UniverseModeSetup';
 import { toast } from 'sonner';
 import { useBroadcastLockdown } from '@/hooks/useBroadcastLockdown';
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap';
-import { issuePromoCard } from '@/lib/issuePromoCard';
 import { startBroadcastWithCapacityCheck } from '@/lib/streamCapacity';
 import { generateUUID } from '../../lib/uuid';
 import { RANDOM_BATTLE_ENABLED } from '../../config/featureFlags';
@@ -230,7 +229,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const { isLocked: isBroadcastLocked, canBroadcast, isAdmin: isUserAdmin } = useBroadcastLockdown();
 
   // Broadcast restrictions from control panel
-  const { startCapEnabled, startCapMax, allRestrictionsDisabled } = useBroadcastViewerCap();
+  const { startCapEnabled, startCapMax, allRestrictionsDisabled, seatCap } = useBroadcastViewerCap();
 
   useEffect(() => {
     try {
@@ -620,44 +619,20 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
         return;
       }
 
-      // Get start of current week (Sunday)
-      const now = new Date();
-      const dayOfWeek = now.getDay();
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - dayOfWeek);
-      startOfWeek.setHours(0, 0, 0, 0);
-      const startOfWeekIso = startOfWeek.toISOString();
-
-      // Count unique broadcasters who have started a stream this week
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('streams')
-        .select('user_id, started_at')
-        .gte('started_at', startOfWeekIso)
-        .not('started_at', 'is', null)
-        .order('started_at', { ascending: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('is_live', true)
+        .eq('status', 'live');
 
       if (error) {
         console.error('Error checking broadcaster limit:', error);
         return;
       }
 
-      // Get unique user_ids in order of first broadcast (first-come-first-served)
-      const seen = new Set<string>();
-      const orderedBroadcasters: string[] = [];
-      for (const row of data || []) {
-        if (row.user_id && !seen.has(row.user_id)) {
-          seen.add(row.user_id);
-          orderedBroadcasters.push(row.user_id);
-        }
-      }
-      const currentCount = orderedBroadcasters.length;
-
+      const currentCount = count || 0;
       const maxLimit = startCapMax;
-
-      // Check if current user is already in the allowed broadcasters
-      const userPosition = orderedBroadcasters.indexOf(user.id);
-      const hasUserBroadcasted = userPosition !== -1;
-      const canStart = currentCount < maxLimit || (hasUserBroadcasted && userPosition < maxLimit);
+      const canStart = currentCount < maxLimit;
 
       setBroadcasterLimitInfo({
         current: currentCount,
@@ -1199,49 +1174,36 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     }
     getInitialMedia();
 
-     return () => {
-      isMounted.current = false;
-      
-      // Don't cleanup on tab switches - only on actual unmount or stream start
-      // Use the current ref value, not a captured one, to get latest state
-      // CRITICAL: Read isStartingStream.current AT THE START of cleanup to avoid race conditions
-      const amStartingStream = isStartingStream.current || sessionStorage.getItem('tc_starting_stream') === 'true';
-      const isScreenSharing = sessionStorage.getItem('tc_screen_share_active') === 'true';
-      console.log('[SetupPage] Cleanup: isStartingStream =', amStartingStream, ', isScreenSharing =', isScreenSharing);
-      
-      // Clean up LiveKit video track when component unmounts or re-renders
-      // This prevents duplicate video elements and memory leaks
-      // BUT: skip detachment if we're starting a stream (BroadcastPage will use the tracks from PreflightStore)
-      if (livekitTracks[1] && !amStartingStream) {
-        console.log('[SetupPage] Cleanup: Detaching LiveKit video track');
-        detachVideoTrack(livekitTracks[1]);
-      } else if (livekitTracks[1] && amStartingStream) {
-        console.log('[SetupPage] Cleanup: Preserving LiveKit tracks for BroadcastPage (stream start)');
-      }
-      
-        if (currentLocalStream) {
-          // Check if this is a tab switch (isTabSwitching will be true for 500ms after visibility change)
-          // Also preserve if screen share is in progress (user returning from screen picker)
-          if (isTabSwitching.current || !isPageVisible.current || isScreenSharing) {
-            console.log('[SetupPage] Cleanup: Tab switch or screen share picker - preserving media stream locally.');
-            // BroadcastPage reuses the connected room and tracks from PreflightStore during stream start.
-          } else if (!amStartingStream) {
-            // Only stop tracks if we're NOT starting the stream
-            // When starting stream, BroadcastPage reuses the connected room and tracks from PreflightStore.
-            console.log('[SetupPage] Cleanup: Cleaning up media stream on unmount (not starting stream).');
-            currentLocalStream.getTracks().forEach(track => track.stop());
-          } else {
-            console.log('[SetupPage] Cleanup: Starting stream - preserving tracks for BroadcastPage.');
-          }
-        } else if (amStartingStream && livekitTracks[0] && livekitTracks[1]) {
-          // Even if currentLocalStream is null, stream-start tracks are preserved through PreflightStore.
-          console.log('[SetupPage] Cleanup: Starting stream - preserving tracks for BroadcastPage.');
-        } else if (!amStartingStream) {
-          // Not starting stream and no local stream - just cleanup
-          console.log('[SetupPage] Cleanup: Not starting stream, no local stream to clean up.');
-        }
+      return () => {
+       isMounted.current = false;
+       
+       const amStartingStream = isStartingStream.current || sessionStorage.getItem('tc_starting_stream') === 'true';
+       const transferringToBroadcast = usePreflightStore.getState().transferringToBroadcast
+       const isScreenSharing = sessionStorage.getItem('tc_screen_share_active') === 'true';
+       console.log('[SetupPage] Cleanup: isStartingStream =', amStartingStream, ', transferringToBroadcast =', transferringToBroadcast, ', isScreenSharing =', isScreenSharing);
+       
+       if (transferringToBroadcast) {
+         console.log('[SetupPage] Transfer in progress; preserving room and tracks');
+         return
+       }
+       
+       const tracks = livekitTracksRef.current
+       if (tracks[1]) {
+         console.log('[SetupPage] Cleanup: Detaching LiveKit video track');
+         detachVideoTrack(tracks[1]);
+       }
+       
+       if (currentLocalStream) {
+         if (isTabSwitching.current || !isPageVisible.current || isScreenSharing) {
+           console.log('[SetupPage] Cleanup: Tab switch or screen share picker - preserving media stream locally.');
+         } else {
+           console.log('[SetupPage] Cleanup: Cleaning up media stream on unmount (not starting stream).');
+           currentLocalStream.getTracks().forEach(track => track.stop());
+         }
+       }
       };
-  }, [facingMode, isVideoEnabled, showPermissionPrompt, streamMode, screenTrack]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showPermissionPrompt]);
 
   // Toggle video - stop/start the track
   const toggleVideo = async () => {
@@ -1599,6 +1561,9 @@ const handleStartStream = async () => {
     if (!user) return;
     const agreementAcceptedAt = new Date().toISOString();
 
+    let audioTrack: LocalAudioTrack | null = null;
+    let videoTrack: LocalVideoTrack | null = null;
+
     try {
       const result = await requestBroadcastMediaAccess();
       if (result.status !== 'success') {
@@ -1632,8 +1597,6 @@ const handleStartStream = async () => {
       try { if (livekitTracksRef.current[0]) livekitTracksRef.current[0]?.stop(); } catch(e) {}
       try { if (livekitTracksRef.current[1]) livekitTracksRef.current[1]?.stop(); } catch(e) {}
 
-      let audioTrack: LocalAudioTrack | null = null;
-      let videoTrack: LocalVideoTrack | null = null;
       try {
         const at = mediaStream.getAudioTracks();
         if (at.length > 0) {
@@ -1828,23 +1791,53 @@ livekit_room_name: roomName,
              return
            }
 
-           // Mark stream as live now that LiveKit is connected and tracks are published
-           const { error: updateError } = await supabase
-            .from('streams')
-             .update({
-               status: 'live',
-               is_live: true,
-               started_at: new Date().toISOString(),
-               ...(randomBattleQueueEnabled && RANDOM_BATTLE_ENABLED && category === 'general' ? {
-                random_battle_queued_at: new Date().toISOString(),
-                battle_mode: 'random_queue',
-                ...(battleMode === 'state' ? {
-                  state_battle_mode: 'state',
-                  state_battle_state_code: userState,
-                } : {}),
-              } : {}),
-            })
-            .eq('id', data.id);
+            // Mark stream as live now that LiveKit is connected and tracks are published
+            const { error: updateError } = await supabase
+             .from('streams')
+              .update({
+                status: 'live',
+                is_live: true,
+                started_at: new Date().toISOString(),
+                ...(randomBattleQueueEnabled && RANDOM_BATTLE_ENABLED && category === 'general' ? {
+                 random_battle_queued_at: new Date().toISOString(),
+                 battle_mode: 'random_queue',
+                 ...(battleMode === 'state' ? {
+                   state_battle_mode: 'state',
+                   state_battle_state_code: userState,
+                 } : {}),
+               } : {}),
+             })
+             .eq('id', data.id);
+
+            if (updateError) {
+              console.error('[SetupPage] Failed to mark stream as live:', updateError);
+              toast.error('Failed to start broadcast: ' + updateError.message);
+              await markBroadcastStartFailed(data.id, 'stream live verification', updateError);
+              setLoading(false);
+              isStartingStream.current = false;
+              return;
+            }
+
+            // Verify stream is queryable before navigating.
+            // Handles DB replication delay where BroadcastPage could otherwise
+            // mount and miss the newly-live row on first attempt.
+            const verifyStream = async (): Promise<boolean> => {
+              for (let attempt = 0; attempt < 5; attempt++) {
+                const { data: verifyData } = await supabase
+                  .from('streams')
+                  .select('id, status')
+                  .eq('id', data.id)
+                  .maybeSingle();
+                if (verifyData?.status === 'live') return true;
+                await new Promise((resolve) => setTimeout(resolve, 400));
+              }
+              return false;
+            };
+
+            const streamVerified = await verifyStream();
+            if (!streamVerified) {
+              console.warn('[SetupPage] Stream not queryable after live update, navigating with fallback');
+            }
 
         // Create smoke event if enabled
         if (smokeEventEnabled) {
@@ -1860,63 +1853,8 @@ livekit_room_name: roomName,
           }
         }
 
-        if (updateError) {
-          console.error('[SetupPage] Failed to mark stream as live:', updateError);
-          toast.error('Failed to start broadcast: ' + updateError.message);
-          await markBroadcastStartFailed(data.id, 'stream live verification', updateError);
-          setLoading(false);
-          isStartingStream.current = false;
-          return;
-        }
-
         console.log('[SetupPage] Stream marked as live in database');
         broadcastStartLog('stream live verification', { streamId: data.id, status: 'live' });
-
-         try {
-            const result = await issuePromoCard({
-              user_id: user.id,
-              source_type: 'broadcast_start',
-              token_amount: 25,
-              metadata: {
-                streamId: data.id,
-                title: title || 'Live Stream',
-                category,
-                source: 'broadcast_start',
-              },
-            })
-
-            if (result.success && result.promo_card_id) {
-              window.dispatchEvent(
-                new CustomEvent('promo-card-issued', {
-                  detail: {
-                    promo_card_id: result.promo_card_id,
-                    code: result.code,
-                    token_amount: result.token_amount,
-                    expires_at: result.expires_at,
-                    source_type: 'broadcast_start',
-                  },
-                }),
-              )
-            }
-
-            if (!result.success && result.error === 'COOLDOWN_ACTIVE' && result.next_available_at) {
-              window.dispatchEvent(
-                new CustomEvent('promo-card-cooldown', {
-                  detail: {
-                    message: result.message || 'Cooldown active',
-                    next_available_at: result.next_available_at,
-                    source_type: 'broadcast_start',
-                  },
-                }),
-              )
-            }
-
-            if (!result.success && result.error && result.error !== 'COOLDOWN_ACTIVE') {
-              toast.error(`Promo card error: ${result.error}`)
-            }
-          } catch (err) {
-            console.error('[PromoCard] Broadcast start reward failed:', err)
-          }
 
         // Stream is now created, LiveKit is connected, tracks are published, and DB is updated.
         // Proceed to broadcast room.
@@ -1924,151 +1862,153 @@ livekit_room_name: roomName,
        // No delay - navigate immediately after LiveKit connection is established and stream metadata is persisted.
 
       // Ensure video state reflects actual track state before storing
-      const hasVideoTrack = livekitTracks[1] !== null;
-      const videoTrackEnabled = livekitTracks[1] ? true : false;
-      const actualVideoEnabled = isVideoEnabled && hasVideoTrack;
-      
-      console.log('[SetupPage] Storing track enabled states:', {
-        isVideoEnabled,
-        isAudioEnabled,
-        hasVideoTrack,
-        videoTrackEnabled,
-        actualVideoEnabled
-      });
-      
+       const publishedAudioTrack = livekitTracksRef.current[0] ?? audioTrack
+       const publishedVideoTrack = livekitTracksRef.current[1] ?? videoTrack
+       const hasVideoTrack = publishedVideoTrack !== null
+       const videoTrackEnabled = publishedVideoTrack ? true : false
+       const actualVideoEnabled = isVideoEnabled && hasVideoTrack
+
+       console.log('[SetupPage] Storing track enabled states:', {
+         isVideoEnabled,
+         isAudioEnabled,
+         hasVideoTrack,
+         videoTrackEnabled,
+         actualVideoEnabled
+       })
+
        // Store the actual state, not just the toggle state
-      PreflightStore.setTrackEnabledStates(actualVideoEnabled, isAudioEnabled);
-      // CRITICAL: Keep LiveKit tracks in PreflightStore for BroadcastPage to reuse
-      // Do NOT clear them here - they are valid and should be reused
-      console.log('[SetupPage] ✅ Preserving tracks in PreflightStore:', {
-        hasAudio: !!livekitTracks[0],
-        hasVideo: !!livekitTracks[1]
-      });
-      sessionStorage.setItem('tc_camera_facing_mode', facingMode);
-      sessionStorage.setItem('tc_video_enabled', isVideoEnabled ? 'true' : 'false');
-      sessionStorage.setItem('tc_audio_enabled', isAudioEnabled ? 'true' : 'false');
+       PreflightStore.setTrackEnabledStates(actualVideoEnabled, isAudioEnabled)
+       // CRITICAL: Keep LiveKit tracks in PreflightStore for BroadcastPage to reuse
+       // Do NOT clear them here - they are valid and should be reused
+       console.log('[SetupPage] Preserving tracks in PreflightStore:', {
+         hasAudio: !!publishedAudioTrack,
+         hasVideo: !!publishedVideoTrack
+       })
+       sessionStorage.setItem('tc_camera_facing_mode', facingMode)
+       sessionStorage.setItem('tc_video_enabled', isVideoEnabled ? 'true' : 'false')
+       sessionStorage.setItem('tc_audio_enabled', isAudioEnabled ? 'true' : 'false')
 
-      // CRITICAL: Ensure tracks exist before navigating to BroadcastPage
-      // If tracks are null, we need to wait for them or create them
-      // For gaming screen share mode, we only need audio (screen track is separate)
-      PreflightStore.setScreenShareMode(!!isScreenShareMode);
-      if (isScreenShareMode && screenTrack) {
-        PreflightStore.setScreenTrack(screenTrack);
-      }
+       // CRITICAL: Ensure tracks exist before navigating to BroadcastPage
+       // If tracks are null, we need to wait for them or create them
+       // For gaming screen share mode, we only need audio (screen track is separate)
+       PreflightStore.setScreenShareMode(!!isScreenShareMode)
+       if (isScreenShareMode && screenTrack) {
+         PreflightStore.setScreenTrack(screenTrack)
+       }
 
-        // Ensure required preflight tracks exist before streaming.
-        const tracksHaveAudio = !!livekitTracksRef.current[0] || !!livekitTracks[0] || (PreflightStore.getLivekitTracks?.()?.[0] ?? null);
-        const tracksHaveVideo = !!livekitTracksRef.current[1] || !!livekitTracks[1] || (PreflightStore.getLivekitTracks?.()?.[1] ?? null);
-
-
-      if (isScreenShareMode) {
-        // Screen share mode - only audio track required, screen track handled separately
-        if (!tracksHaveAudio) {
-          console.warn('[SetupPage] Audio track missing - attempting to recreate (screen share mode)');
-          toast.info('Preparing microphone...');
-
-          if (
-            !mountedRef.current ||
-            !room ||
-            room.state !== 'connected'
-          ) {
-            return
-          }
-
-          // Try to recreate tracks using the existing native capture flow
-          const mediaStream = await acquireMediaStream(facingMode, true);
-          if (!mediaStream) {
-            toast.error('Camera/microphone permission is required to go live. Please allow access and try again.');
-            await markBroadcastStartFailed(data.id, 'validation', 'Failed to acquire microphone for screen share mode');
-            setLoading(false);
-            isStartingStream.current = false;
-            return;
-          }
-
-          const [audioAfter, videoAfter] = livekitTracksRef.current;
-          PreflightStore.setLivekitTracks([audioAfter, videoAfter]);
-
-          if (!audioAfter) {
-            toast.error('Microphone not ready. Please wait a moment and try again.');
-            await markBroadcastStartFailed(data.id, 'validation', 'Audio track still not ready for screen share mode');
-            setLoading(false);
-            isStartingStream.current = false;
-            return;
-          }
-        }
-      } else {
-        // Normal mode - require both audio + video
-        if (!tracksHaveAudio || !tracksHaveVideo) {
-          console.warn('[SetupPage] Required tracks missing - attempting to recreate (normal mode)', {
-            tracksHaveAudio,
-            tracksHaveVideo,
-          });
-
-          toast.info('Preparing camera and microphone...');
-
-          if (
-            !mountedRef.current ||
-            !room ||
-            room.state !== 'connected'
-          ) {
-            return
-          }
-
-          // Try bounded retries: acquireMediaStream should set PreflightStore.setLivekitTracks synchronously (after async getUserMedia)
-          const MAX_RETRIES = 10;
-          const RETRY_DELAY_MS = 250;
-
-          let attempt = 0;
-          let audioOk = !!livekitTracksRef.current[0];
-          let videoOk = !!livekitTracksRef.current[1];
-
-          while (attempt < MAX_RETRIES && (!audioOk || !videoOk)) {
-            attempt += 1;
-
-            if (
-              !mountedRef.current ||
-              !room ||
-              room.state !== 'connected'
-            ) {
-              return
-            }
-
-            // Recreate tracks (native capture path)
-            const mediaStream = await acquireMediaStream(facingMode, true);
-            if (!mediaStream) break;
-
-            const [a, v] = livekitTracksRef.current;
-            audioOk = !!a;
-            videoOk = !!v;
-
-            if (!audioOk || !videoOk) {
-              await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-            }
-          }
-
-          const finalAudioOk = !!livekitTracksRef.current[0];
-          const finalVideoOk = !!livekitTracksRef.current[1];
-
-          PreflightStore.setLivekitTracks([livekitTracksRef.current[0], livekitTracksRef.current[1]]);
-
-          if (!finalAudioOk || !finalVideoOk) {
-            toast.error('Camera/microphone permission is required to go live. Please allow access and try again.');
-            await markBroadcastStartFailed(data.id, 'validation', 'Tracks still not ready after retries');
-            setLoading(false);
-            isStartingStream.current = false;
-            return;
-          }
-        }
-      }
+         // Ensure required preflight tracks exist before streaming.
+         const tracksHaveAudio = !!livekitTracksRef.current[0] || !!audioTrack || (PreflightStore.getLivekitTracks?.()?.[0] ?? null)
+         const tracksHaveVideo = !!livekitTracksRef.current[1] || !!videoTrack || (PreflightStore.getLivekitTracks?.()?.[1] ?? null)
 
 
-      console.log('[SetupPage] Tracks verified, storing for BroadcastPage:', {
-        hasAudio: !!livekitTracks[0],
-        hasVideo: !!livekitTracks[1]
-      });
+       if (isScreenShareMode) {
+         // Screen share mode - only audio track required, screen track handled separately
+         if (!tracksHaveAudio) {
+           console.warn('[SetupPage] Audio track missing - attempting to recreate (screen share mode)')
+           toast.info('Preparing microphone...')
 
-      // LiveKit is already connected in SetupPage and stored in PreflightStore for BroadcastPage.
-      console.log('[SetupPage] LiveKit connection ready - BroadcastPage will reuse existing room');
+           if (
+             !mountedRef.current ||
+             !room ||
+             room.state !== 'connected'
+           ) {
+             return
+           }
+
+           // Try to recreate tracks using the existing native capture flow
+           const mediaStream = await acquireMediaStream(facingMode, true)
+           if (!mediaStream) {
+             toast.error('Camera/microphone permission is required to go live. Please allow access and try again.')
+             await markBroadcastStartFailed(data.id, 'validation', 'Failed to acquire microphone for screen share mode')
+             setLoading(false)
+             isStartingStream.current = false
+             return
+           }
+
+           const [audioAfter, videoAfter] = livekitTracksRef.current
+           PreflightStore.setLivekitTracks([audioAfter, videoAfter])
+
+           if (!audioAfter) {
+             toast.error('Microphone not ready. Please wait a moment and try again.')
+             await markBroadcastStartFailed(data.id, 'validation', 'Audio track still not ready for screen share mode')
+             setLoading(false)
+             isStartingStream.current = false
+             return
+           }
+         }
+       } else {
+         // Normal mode - require both audio + video
+         if (!tracksHaveAudio || !tracksHaveVideo) {
+           console.warn('[SetupPage] Required tracks missing - attempting to recreate (normal mode)', {
+             tracksHaveAudio,
+             tracksHaveVideo,
+           })
+
+           toast.info('Preparing camera and microphone...')
+
+           if (
+             !mountedRef.current ||
+             !room ||
+             room.state !== 'connected'
+           ) {
+             return
+           }
+
+           // Try bounded retries: acquireMediaStream should set PreflightStore.setLivekitTracks synchronously (after async getUserMedia)
+           const MAX_RETRIES = 10
+           const RETRY_DELAY_MS = 250
+
+           let attempt = 0
+           let audioOk = !!livekitTracksRef.current[0]
+           let videoOk = !!livekitTracksRef.current[1]
+
+           while (attempt < MAX_RETRIES && (!audioOk || !videoOk)) {
+             attempt += 1
+
+             if (
+               !mountedRef.current ||
+               !room ||
+               room.state !== 'connected'
+             ) {
+               return
+             }
+
+             // Recreate tracks (native capture path)
+             const mediaStream = await acquireMediaStream(facingMode, true)
+             if (!mediaStream) break
+
+             const [a, v] = livekitTracksRef.current
+             audioOk = !!a
+             videoOk = !!v
+
+             if (!audioOk || !videoOk) {
+               await new Promise((r) => setTimeout(r, RETRY_DELAY_MS))
+             }
+           }
+
+           const finalAudioOk = !!livekitTracksRef.current[0]
+           const finalVideoOk = !!livekitTracksRef.current[1]
+
+           PreflightStore.setLivekitTracks([livekitTracksRef.current[0], livekitTracksRef.current[1]])
+
+           if (!finalAudioOk || !finalVideoOk) {
+             toast.error('Camera/microphone permission is required to go live. Please allow access and try again.')
+             await markBroadcastStartFailed(data.id, 'validation', 'Tracks still not ready after retries')
+             setLoading(false)
+             isStartingStream.current = false
+             return
+           }
+         }
+       }
+
+
+       console.log('[SetupPage] Tracks verified, storing for BroadcastPage:', {
+         hasAudio: !!publishedAudioTrack,
+         hasVideo: !!publishedVideoTrack
+       })
+
+       // LiveKit is already connected in SetupPage and stored in PreflightStore for BroadcastPage.
+       console.log('[SetupPage] LiveKit connection ready - BroadcastPage will reuse existing room')
 
       // Preserve stream while the route transition happens
       sessionStorage.setItem('tc_starting_stream', 'true');
@@ -2077,6 +2017,32 @@ livekit_room_name: roomName,
       }
       failureStage = 'redirecting/opening broadcast room';
       broadcastStartLog('redirecting/opening broadcast room', { streamId: data.id, roomName });
+      usePreflightStore.getState().setPreflightConnection({
+        room,
+        audioTrack: publishedAudioTrack ?? null,
+        videoTrack: publishedVideoTrack ?? null,
+        streamId: data.id,
+        roomName,
+      })
+
+      // Also store a detailed transfer session in the legacy PreflightStore for
+      // BroadcastPage to read the full ownership metadata.
+      PreflightStore.setTransferSession({
+        room,
+        roomName,
+        streamId: data.id,
+        participantIdentity: tokenData.participantIdentity,
+        cameraTrack: publishedVideoTrack,
+        microphoneTrack: publishedAudioTrack,
+        screenTrack: isScreenShareMode ? screenTrack : null,
+        screenAudioTrack: isScreenShareMode ? (livekitTracksRef.current[0] ?? null) : null,
+        mode: isScreenShareMode ? 'screen' : 'camera',
+        cameraOverlayEnabled,
+        transferredAt: Date.now(),
+        ownership: 'broadcast-page',
+        transitionInProgress: true,
+      })
+
       // Navigate to broadcast page
       navigate(`/broadcast/${data.id}`);
 
@@ -2423,129 +2389,55 @@ livekit_room_name: roomName,
             </div>
 
             {/* Admin-Only: Seat Count Selector (hidden for Celeb Streams) */}
-            {isStreamAdmin && !isCelebStream && (
-              <div className="flex-1 bg-zinc-900/80 rounded-xl border border-amber-500/20 p-3 flex flex-col justify-between">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Seats</span>
-                  <span className="text-[8px] font-bold text-amber-400/60 bg-amber-500/10 px-1.5 py-0.5 rounded-full">ADMIN</span>
-                </div>
-                <p className="text-[9px] text-slate-500 mb-2">Total boxes (broadcaster = box 1)</p>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSeatCount(Math.max(MIN_ADMIN_SEAT_COUNT, seatCount - 1))}
-                    disabled={seatCount <= MIN_ADMIN_SEAT_COUNT}
-                    className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    -
-                  </button>
-                  <div className="flex-1 text-center">
-                    <span className="text-2xl font-black text-amber-400">{seatCount}</span>
+            {isStreamAdmin && !isCelebStream && (() => {
+              const effectiveMaxSeats = seatCap.enabled ? Math.min(MAX_ADMIN_SEAT_COUNT, seatCap.max) : MAX_ADMIN_SEAT_COUNT;
+              return (
+                <div className="flex-1 bg-zinc-900/80 rounded-xl border border-amber-500/20 p-3 flex flex-col justify-between">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Seats</span>
+                    {seatCap.enabled && (
+                      <span className="text-[8px] font-bold text-amber-400/60 bg-amber-500/10 px-1.5 py-0.5 rounded-full">CAP {effectiveMaxSeats}</span>
+                    )}
+                    <span className="text-[8px] font-bold text-amber-400/60 bg-amber-500/10 px-1.5 py-0.5 rounded-full">ADMIN</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setSeatCount(Math.min(MAX_ADMIN_SEAT_COUNT, seatCount + 1))}
-                    disabled={seatCount >= MAX_ADMIN_SEAT_COUNT}
-                    className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-                <select
-                  value={seatCount}
-                  onChange={(e) => setSeatCount(Number(e.target.value))}
-                  className="mt-2 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
-                >
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
-                    <option key={n} value={n} className="bg-zinc-900 text-white">
-                      {n} {n === 1 ? 'seat' : 'seats'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Random Battle Queue Card (hidden for Celeb Streams) */}
-            {RANDOM_BATTLE_ENABLED && category === 'general' && !isCelebStream && (
-              <div className="flex-1 bg-zinc-900/80 rounded-xl border border-fuchsia-500/20 p-3 flex flex-col gap-2">
-                <div className="flex items-center gap-1.5">
-                  <Swords size={13} className="text-fuchsia-400" />
-                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">1v1 Battle</span>
-                </div>
-
-                {/* Battle Mode Dropdown */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">Battle Mode</label>
+                  <p className="text-[9px] text-slate-500 mb-2">Total boxes (broadcaster = box 1)</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSeatCount(Math.max(MIN_ADMIN_SEAT_COUNT, seatCount - 1))}
+                      disabled={seatCount <= MIN_ADMIN_SEAT_COUNT}
+                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      -
+                    </button>
+                    <div className="flex-1 text-center">
+                      <span className="text-2xl font-black text-amber-400">{Math.min(seatCount, effectiveMaxSeats)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSeatCount(Math.min(effectiveMaxSeats, seatCount + 1))}
+                      disabled={seatCount >= effectiveMaxSeats}
+                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
                   <select
-                    value={battleMode}
-                    onChange={(e) => {
-                      const mode = e.target.value as BattleModeType;
-                      setBattleMode(mode);
-                      if (mode === 'state' && !userState) {
-                        setShowStateDropdown(true);
-                      }
-                    }}
-                    className="w-full rounded-lg bg-black/50 border border-white/10 text-[11px] text-white px-2 py-1.5 outline-none focus:border-fuchsia-500/50 transition-colors"
+                    value={Math.min(seatCount, effectiveMaxSeats)}
+                    onChange={(e) => setSeatCount(Number(e.target.value))}
+                    className="mt-2 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
                   >
-                    <option value="world">🌎 World Battle</option>
-                    <option value="state">🏛️ State Battle</option>
+                    {Array.from({ length: effectiveMaxSeats }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={n} className="bg-zinc-900 text-white">
+                        {n} {n === 1 ? 'seat' : 'seats'}
+                      </option>
+                    ))}
                   </select>
                 </div>
+              );
+            })()}
 
-                {/* State Battle: show current state or prompt to select */}
-                {battleMode === 'state' && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">Your State</label>
-                    {userState ? (
-                      <div className="flex items-center justify-between rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/20 px-2 py-1.5">
-                        <span className="text-[11px] font-bold text-fuchsia-200">🏛️ {getStateName(userState)}</span>
-                        <button
-                          type="button"
-                          onClick={() => setShowStateDropdown(true)}
-                          className="text-[9px] text-fuchsia-400 hover:text-fuchsia-300 font-semibold uppercase"
-                        >
-                          Change
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setShowStateDropdown(true)}
-                        className="w-full rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200 px-2 py-1.5 font-semibold hover:bg-amber-500/20 transition-colors"
-                      >
-                        ⚠️ Select Your State
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Enable Toggle */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (battleMode === 'state' && !userState) {
-                      toast.error('Please select your state first');
-                      setShowStateDropdown(true);
-                      return;
-                    }
-                    setRandomBattleQueueEnabled((value) => !value);
-                  }}
-                  className={cn(
-                    "w-full py-1.5 rounded-lg text-[10px] font-bold transition-all border",
-                    randomBattleQueueEnabled
-                      ? "bg-fuchsia-500/15 border-fuchsia-500/30 text-fuchsia-300"
-                      : "bg-white/5 border-white/10 text-slate-500 hover:text-white hover:bg-white/10"
-                  )}
-                >
-                  {randomBattleQueueEnabled ? 'ON' : 'OFF'}
-                </button>
-                <p className="text-[10px] text-slate-400 leading-4">
-                  {battleMode === 'state'
-                    ? 'Represent your state! You will be matched against creators from other states.'
-                    : 'Enable this before you go live to join the random battle queue automatically.'}
-                </p>
-              </div>
-            )}
+            
 
             {/* State Selection Dropdown Modal */}
             {showStateDropdown && (

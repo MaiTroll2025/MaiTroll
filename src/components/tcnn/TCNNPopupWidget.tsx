@@ -42,8 +42,7 @@ export default function TCNNPopupWidget({ onRequireAuth }: TCNNPopupWidgetProps)
 
     const fetchTCNNStream = async () => {
       try {
-        // Use request scheduler to prevent lock conflicts (low priority)
-        const { data, error } = await globalRequestScheduler.schedule(
+        const scheduleResult = await globalRequestScheduler.schedule(
           async () => {
             return supabase
               .from('streams')
@@ -63,8 +62,10 @@ export default function TCNNPopupWidget({ onRequireAuth }: TCNNPopupWidgetProps)
               .limit(1)
               .maybeSingle()
           },
-          1 // Low priority - TCNN is less critical than core profile
+          1
         )
+        const data = (scheduleResult as any).data;
+        const error = (scheduleResult as any).error;
 
         if (error) throw error
 

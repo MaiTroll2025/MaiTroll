@@ -101,7 +101,7 @@ export async function hasEnoughCoins(giftPrice: number): Promise<boolean> {
   
   if (!profile) return false;
   
-  return profile.coins >= giftPrice;
+  return (profile as any).coins >= giftPrice || (profile as any).troll_coins >= giftPrice;
 }
 
 /**
@@ -122,11 +122,11 @@ export async function getCoinBalance(): Promise<number> {
     
     if (error) {
       console.error('Error fetching coin balance:', error);
-      return profile.coins || 0;
+      return (profile as any).coins || (profile as any).troll_coins || 0;
     }
     
     return data?.coins || 0;
   } catch {
-    return profile.coins || 0;
+    return (profile as any).coins || (profile as any).troll_coins || 0;
   }
 }

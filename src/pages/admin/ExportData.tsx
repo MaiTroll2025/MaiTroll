@@ -13,7 +13,6 @@ interface UserSearchResult {
   email: string
   full_name: string
   troll_coins: number
-  free_coin_balance: number
   level: number
   role: string
   id_verification_status: string
@@ -107,7 +106,7 @@ export default function ExportData() {
       const { data, error } = await supabase
         .from('user_profiles')
         .select(`
-          id, username, email, full_name, troll_coins, free_coin_balance,
+          id, username, email, full_name, troll_coins,
           level, role, id_verification_status, terms_accepted, created_at
         `)
         .or(`username.ilike.%${query}%,email.ilike.%${query}%,id.eq.${query}`)
@@ -197,7 +196,7 @@ export default function ExportData() {
           onboarding_completed: profileData.onboarding_completed || false,
           profile_complete: true, // simplified
           last_login: targetUser?.last_sign_in_at || null,
-          sessions_count: targetUser?.sessions?.length || 0
+          sessions_count: (targetUser as any)?.sessions?.length || 0
         })
       }
 
@@ -213,7 +212,6 @@ export default function ExportData() {
         email: (profileData as any)?.email || '',
         full_name: (profileData as any)?.full_name || '',
         troll_coins: (profileData as any)?.troll_coins || 0,
-        free_coin_balance: (profileData as any)?.free_coin_balance || 0,
         level: (profileData as any)?.level || 1,
         role: (profileData as any)?.role || 'user',
         id_verification_status: profileData?.id_verification_status || 'pending',
@@ -324,8 +322,7 @@ export default function ExportData() {
      sections.push(`Email,${selectedUser.email}`)
      sections.push(`Full Name,${selectedUser.full_name}`)
      sections.push(`Paid Coins,${selectedUser.troll_coins}`)
-     sections.push(`Free Coins,${selectedUser.free_coin_balance}`)
-     sections.push(`Total Coins,${Number(selectedUser.troll_coins) + Number(selectedUser.free_coin_balance)}`)
+      sections.push(`Total Coins,${selectedUser.troll_coins}`)
      sections.push(`Level,${selectedUser.level}`)
      sections.push(`Role,${selectedUser.role}`)
      sections.push(`ID Verification,${selectedUser.id_verification_status}`)
@@ -387,7 +384,7 @@ export default function ExportData() {
        lines.push('--- ALL USER PROFILES ---')
        const { data: allUsers, error: usersError } = await supabase
          .from('user_profiles')
-         .select('id, username, email, role, level, troll_coins, free_coin_balance, created_at')
+          .select('id, username, email, role, level, troll_coins, created_at')
          .order('created_at', { ascending: false })
          .limit(1000)
 
@@ -395,8 +392,8 @@ export default function ExportData() {
          lines.push(`Total Users (showing up to 1000): ${allUsers.length}`)
          lines.push(`ID,Username,Email,Role,Level,Paid Coins,Free Coins,Total Coins,Created At`)
          allUsers.forEach(u => {
-           const total = Number(u.troll_coins || 0) + Number(u.free_coin_balance || 0)
-           lines.push(`"${u.id}","${u.username}","${u.email}","${u.role}",${u.level},${u.troll_coins || 0},${u.free_coin_balance || 0},${total},"${u.created_at}"`)
+            const total = Number(u.troll_coins || 0)
+            lines.push(`"${u.id}","${u.username}","${u.email}","${u.role}",${u.level},${u.troll_coins || 0},${total},"${u.created_at}"`)
          })
        } else {
          lines.push(`Error loading users: ${usersError?.message || 'Unknown error'}`)
@@ -657,14 +654,10 @@ export default function ExportData() {
                       <span className="text-gray-400">Paid Coins:</span>
                       <div className="text-purple-300 font-semibold">{selectedUser.troll_coins?.toLocaleString()}</div>
                     </div>
-                    <div>
-                      <span className="text-gray-400">Free Coins:</span>
-                      <div className="text-green-300 font-semibold">{selectedUser.free_coin_balance?.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Level:</span>
-                      <div className="text-white">{selectedUser.level}</div>
-                    </div>
+                     <div>
+                       <span className="text-gray-400">Level:</span>
+                       <div className="text-white">{selectedUser.level}</div>
+                     </div>
                     <div>
                       <span className="text-gray-400">Role:</span>
                       <div className="text-white capitalize">{selectedUser.role}</div>
