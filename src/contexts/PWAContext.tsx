@@ -198,9 +198,9 @@ const isLocalhost =
      
      // In dev/localhost, skip SW registration to avoid noise
      // Only report failures in production
-     if (env.DEV || isLocalhost) {
-       return;
-     }
+    if (false && (env.DEV || isLocalhost)) {
+      return;
+    }
      
      const registerSW = async () => {
       try {
