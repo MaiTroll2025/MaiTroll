@@ -37,17 +37,17 @@ export default function ExploreFeed() {
   const [filter, setFilter] = useState<'all' | 'gaming' | 'irl'>('all');
 
   useSEO({
-    title: 'Explore Live Streams | Mai Troll - Watch Trending Content',
-    description: 'Explore trending live streams on Mai Troll. Watch gaming, music, podcasts, and more from creators worldwide. Discover viral content and join the community.',
+    title: 'Explore Live Streams | MaiTroll - Watch Trending Content',
+    description: 'Explore trending live streams on MaiTroll. Watch gaming, music, podcasts, and more from creators worldwide. Discover viral content and join the community.',
     keywords: [
       'explore live streams', 'trending streams', 'watch live', 'live streaming',
       'gaming streams', 'podcast streams', 'music streams', 'viral content',
       'content discovery', 'live broadcasts', 'streaming platform', 'MaiTroll explore'
     ],
     structuredData: collectionPageSchema({
-      name: 'Live Streams on Mai Troll',
+      name: 'Live Streams on MaiTroll',
       description: 'Discover and watch trending live streams from creators worldwide',
-      url: 'https://maiMaiTroll.com/explore'
+      url: 'https://www.maitroll.com/explore'
     })
   });
 

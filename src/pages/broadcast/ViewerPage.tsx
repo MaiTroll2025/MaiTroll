@@ -299,7 +299,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   objectFit = 'contain',
 }: {
   participant: any
-  mirror?: boolean
+  mirror?: false
   className?: string
   fallback: React.ReactNode
   onTap?: () => void
@@ -488,7 +488,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
 function LocalVideoSurface({
   videoTrack,
   audioTrack,
-  mirror = true,
+  mirror = false,
   className,
   fallback,
 }: {
@@ -908,6 +908,15 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       }
 
       let mounted = true
+      let channel: ReturnType<typeof supabase.channel> | null = null
+
+      const applyLockState = (data: any) => {
+        if (!mounted) return
+        setHostChatDisabledByOfficerState(!!data?.broadcast_chat_disabled)
+        setHostChatDisabledUntil(data?.broadcast_chat_disabled_until ?? null)
+        setHostChatDisabledStreamId(data?.broadcast_chat_disabled_stream_id ?? null)
+      }
+
       const fetchHostChatLock = async () => {
         const { data } = await supabase
           .from('user_profiles')
@@ -916,11 +925,20 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
           .maybeSingle()
 
         if (!mounted) return
-
-        setHostChatDisabledByOfficerState(!!data?.broadcast_chat_disabled)
-        setHostChatDisabledUntil(data?.broadcast_chat_disabled_until ?? null)
-        setHostChatDisabledStreamId(data?.broadcast_chat_disabled_stream_id ?? null)
+        applyLockState(data)
       }
+
+      channel = supabase
+        .channel(`broadcast-chat-lock:${streamId}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_profiles',
+          filter: `id=eq.${broadcasterId}`,
+        }, (payload) => {
+          applyLockState(payload.new)
+        })
+        .subscribe()
 
       void fetchHostChatLock()
       const interval = window.setInterval(fetchHostChatLock, 30_000)
@@ -928,6 +946,9 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       return () => {
         mounted = false
         window.clearInterval(interval)
+        if (channel) {
+          supabase.removeChannel(channel)
+        }
       }
     }, [streamId, stream?.user_id])
 
@@ -2145,6 +2166,22 @@ const isActive = isStreamActive(stream)
   }, [hostId])
 
   const handleOpenUserAction = useCallback((info: { userId: string; username?: string; role?: string; createdAt?: string }) => {
+    const normalizedUserId = info.userId
+    const normalizedUsername = info.username || ''
+    const isAnonUsername = isAnonymousDisplayName(normalizedUsername)
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedUserId)) {
+      if (isAnonUsername) {
+        setUserActionTarget({
+          userId: `anon-${normalizedUsername}`,
+          username: normalizedUsername,
+          role: 'anonymous',
+          createdAt: null,
+        })
+        return
+      }
+    }
+
     setUserActionTarget(info)
   }, [])
 
@@ -2208,7 +2245,76 @@ const isActive = isStreamActive(stream)
        console.error('[ViewerPage] Error opening user action:', err)
        toast.error('Failed to open user profile')
      }
-   }, [isModOrHigher])
+    }, [isModOrHigher])
+
+  const handleSendChat = useCallback(async (text: string, floatTimeout = CHAT_FLOAT_MS) => {
+    if (!text.trim()) return
+
+    if (hostChatDisabledByOfficer) {
+      toast.error(
+        hostChatDisableRemainingMs
+          ? `Chat is disabled by officer control. Try again in ${Math.ceil(hostChatDisableRemainingMs / 60000)} minute(s).`
+          : 'Chat is disabled by officer control'
+      )
+      return
+    }
+
+    if (userChatDisabled) {
+      toast.error(
+        chatDisabledRemainingMinutes
+          ? `Your chat is disabled. Try again in ${chatDisabledRemainingMinutes} minute${chatDisabledRemainingMinutes === 1 ? '' : 's'}.`
+          : 'Your chat has been permanently disabled in this stream.'
+      )
+      return
+    }
+
+    if (!user && !reserveAnonymousChatSlot()) {
+      toast.error("You've used your 5 anonymous chats. Sign in to keep chatting.")
+      navigate('/auth?mode=login')
+      return
+    }
+
+    const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
+    const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+    setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(0, 50))
+    setChatInput('')
+
+    window.setTimeout(() => {
+      setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+    }, floatTimeout)
+
+    try {
+      const result = await sendChatThroughGate({ streamId, content: text })
+      if (!result.ok) {
+        setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+        const errMsg = String(result.error || '').toLowerCase()
+        if (errMsg.includes('currently disabled') || (errMsg.includes('chat') && errMsg.includes('disabled'))) {
+          toast.error('Your chat is currently disabled.')
+        } else if (errMsg.includes('muted')) {
+          toast.error('You are muted in this stream.')
+        } else if (errMsg.includes('banned')) {
+          toast.error('You are banned from this stream.')
+        } else if (errMsg.includes('high traffic')) {
+          // High traffic sampling: silently drop optimistic message
+        } else if (result.error) {
+          toast.error(result.error)
+        }
+        return
+      }
+
+      const chatChannel = floatingChatChannelRef.current
+      if (chatChannel) {
+        chatChannel.send({
+          type: 'broadcast',
+          event: 'floating_chat',
+          payload: { username, content: text },
+        }).catch(() => {})
+      }
+    } catch (err) {
+      console.warn('[ViewerPage] floating chat broadcast failed:', err)
+    }
+  }, [streamId, hostChatDisabledByOfficer, hostChatDisableRemainingMs, userChatDisabled, chatDisabledRemainingMinutes, user, profile, navigate])
 
   const refreshStream = useCallback(async () => {
     if (!streamId || streamEndedRef.current) return
@@ -3018,49 +3124,36 @@ useStreamRealtime(
 
     let cancelled = false
 
-    // 1) Authoritative viewer-cap admission via the database. Must pass before
-    //    connecting to LiveKit. Frontend state is never trusted for capacity.
+    // Track viewer presence in stream_viewers for audience counting.
     Promise.resolve()
       .then(() => admitViewerToStream(
         streamId,
         user?.id ?? null,
         stableAnonId || null,
       ))
-      .then((admission) => {
+      .then(() => {
         if (cancelled) return
-        if (!admission.allowed) {
-          console.warn('[ViewerPage] join_stream_as_viewer rejected:', admission)
-          setViewerError('Unable to join this broadcast right now. Please try again shortly.')
-          audienceFailedUntilRef.current = Date.now() + 30000
-          return
-        }
 
-        // 2) Admitted — connect to LiveKit as audience.
-        // Regular viewers join with publishCapable: false so the token function
-        // issues a "viewer" category token (canSubscribe only). Stream owners who
-        // later join a seat will re-enter this flow with publishCapable: true.
+        // Join LiveKit as audience.
         return joinAsAudience({ userId: identityToUse, streamId, roomName: roomId, viewerIdentity: identityToUse, publishCapable: false })
           .then((res: any) => {
             if (cancelled) {
-              // Joined then immediately unmounted — release the reserved slot.
               void releaseViewerSlot(streamId, user?.id ?? null, stableAnonId || null)
               return
             }
              if (res && typeof res !== 'string') {
-               hasJoinedAudienceRef.current = true
-               setViewerError(null)
-               console.log('[ViewerPage] LiveKit audience joined:', { streamId, roomId })
-            } else {
-              const errorDetail = typeof res === 'string'
-                ? res
-                : 'LiveKit audience join failed'
-              console.warn(`[ViewerPage] joinAsAudience failed for stream ${streamId}: ${errorDetail}`)
-              setViewerError(errorDetail)
-              // LiveKit failed after the slot was reserved — release it so the
-              // capacity count does not stay artificially inflated.
-              void releaseViewerSlot(streamId, user?.id ?? null, stableAnonId || null)
-              audienceFailedUntilRef.current = Date.now() + 60000
-            }
+                hasJoinedAudienceRef.current = true
+                setViewerError(null)
+                console.log('[ViewerPage] LiveKit audience joined:', { streamId, roomId })
+             } else {
+                const errorDetail = typeof res === 'string'
+                  ? res
+                  : 'LiveKit audience join failed'
+                console.warn(`[ViewerPage] joinAsAudience failed for stream ${streamId}: ${errorDetail}`)
+                setViewerError(errorDetail)
+                void releaseViewerSlot(streamId, user?.id ?? null, stableAnonId || null)
+                audienceFailedUntilRef.current = Date.now() + 60000
+             }
           })
           .catch((err: any) => {
             const errorDetail = err?.message || err?.statusText || String(err) || 'LiveKit connection failed'
@@ -3071,10 +3164,8 @@ useStreamRealtime(
           })
       })
       .catch((err: any) => {
-        // Admission RPC itself failed — fail closed, do not connect.
-        const errorDetail = err?.message || err?.statusText || String(err) || 'Unable to join broadcast'
-        console.warn(`[ViewerPage] admitViewerToStream failed for stream ${streamId}: ${errorDetail}`)
-        setViewerError(errorDetail)
+        console.warn(`[ViewerPage] admitViewerToStream failed for stream ${streamId}: ${err?.message || err?.statusText || String(err) || 'Unable to join broadcast'}`)
+        setViewerError(err?.message || err?.statusText || String(err) || 'Unable to join broadcast')
         audienceFailedUntilRef.current = Date.now() + 30000
       })
       .finally(() => {
@@ -3648,7 +3739,7 @@ useStreamRealtime(
             >
               <RemoteVideoSurface
                 participant={broadcasterState.participant}
-                mirror={true}
+                mirror={false}
                 className="absolute inset-0"
                 onTap={handleLike}
                 room={liveKitRoom}
@@ -3868,7 +3959,7 @@ useStreamRealtime(
                         ) : seat.isOccupied ? (
                           <RemoteVideoSurface
                             participant={seatParticipant}
-                            mirror={true}
+                            mirror={false}
                             className="absolute inset-0"
                             room={liveKitRoom}
                             fallback={
@@ -4179,7 +4270,7 @@ useStreamRealtime(
                         ) : seat.isOccupied ? (
                           <RemoteVideoSurface
                             participant={seatParticipant}
-                            mirror={true}
+                            mirror={false}
                             className="absolute inset-0"
                             room={liveKitRoom}
                             fallback={
@@ -4328,79 +4419,15 @@ useStreamRealtime(
                       )}
                     </div>
 
-             <form
-               onSubmit={async (e) => {
-                 e.preventDefault()
-                 const text = chatInput.trim()
-                 if (!text) return
-
-                 if (hostChatDisabledByOfficer) {
-                   toast.error(
-                     hostChatDisableRemainingMs
-                       ? `Chat is disabled by officer control. Try again in ${Math.ceil(hostChatDisableRemainingMs / 60000)} minute(s).`
-                       : 'Chat is disabled by officer control'
-                   )
-                   return
-                 }
-
-                 if (userChatDisabled) {
-                   toast.error(
-                     chatDisabledRemainingMinutes
-                       ? `Your chat is disabled. Try again in ${chatDisabledRemainingMinutes} minute${chatDisabledRemainingMinutes === 1 ? '' : 's'}.`
-                       : 'Your chat has been permanently disabled in this stream.'
-                   )
-                   return
-                 }
-
-                 if (!user && !reserveAnonymousChatSlot()) {
-                          toast.error('You’ve used your 5 anonymous chats. Sign in to keep chatting.')
-                          navigate('/auth?mode=login')
-                          return
-                        }
-
-                         const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
-                        const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-                        setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(0, 50))
-                        setChatInput('')
-
-                        window.setTimeout(() => {
-                          setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                        }, CHAT_FLOAT_MS)
-
-                        try {
-                          const result = await sendChatThroughGate({ streamId, content: text })
-                          if (!result.ok) {
-                            setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                            const errMsg = String(result.error || '').toLowerCase()
-                            if (errMsg.includes('currently disabled') || (errMsg.includes('chat') && errMsg.includes('disabled'))) {
-                              toast.error('Your chat is currently disabled.')
-                            } else if (errMsg.includes('muted')) {
-                              toast.error('You are muted in this stream.')
-                            } else if (errMsg.includes('banned')) {
-                              toast.error('You are banned from this stream.')
-                            } else if (errMsg.includes('high traffic')) {
-                              // High traffic sampling: silently drop optimistic message
-                            } else if (result.error) {
-                              toast.error(result.error)
-                            }
-                            return
-                          }
-
-                          const chatChannel = floatingChatChannelRef.current;
-                          if (chatChannel) {
-                            chatChannel.send({
-                              type: 'broadcast',
-                              event: 'floating_chat',
-                              payload: { username, content: text },
-                            }).catch(() => { })
-                          }
-                        } catch (err) {
-                          console.warn('[ViewerPage] floating chat broadcast failed:', err)
-                        }
-                      } }
-                      className="shrink-0 border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
-                    >
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  const text = chatInput.trim()
+                  if (!text) return
+                  await handleSendChat(text, CHAT_FLOAT_MS)
+                }}
+                className="shrink-0 border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
+              >
                       <input
                         type="text"
                          value={chatInput}
@@ -4613,80 +4640,16 @@ useStreamRealtime(
                        )
                      ))}
                   </div>
-                  {/* Chat input */}
-                  <form
-                    onSubmit={async (e) => {
-                      e.preventDefault()
-                      const text = chatInput.trim()
-                      if (!text) return
-
-                      if (hostChatDisabledByOfficer) {
-                        toast.error(
-                          hostChatDisableRemainingMs
-                            ? `Chat is disabled by officer control. Try again in ${Math.ceil(hostChatDisableRemainingMs / 60000)} minute(s).`
-                            : 'Chat is disabled by officer control'
-                        )
-                        return
-                      }
-
-                      if (userChatDisabled) {
-                        toast.error(
-                          chatDisabledRemainingMinutes
-                            ? `Your chat is disabled. Try again in ${chatDisabledRemainingMinutes} minute${chatDisabledRemainingMinutes === 1 ? '' : 's'}.`
-                            : 'Your chat has been permanently disabled in this stream.'
-                        )
-                        return
-                      }
-
-                      if (!user && !reserveAnonymousChatSlot()) {
-                        toast.error("You've used your 5 anonymous chats. Sign in to keep chatting.")
-                        navigate('/auth?mode=login')
-                        return
-                      }
-
-                      const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
-                      const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-                      setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(0, 50))
-                      setChatInput('')
-
-                      setTimeout(() => {
-                        setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                      }, CHAT_FLOAT_MS)
-
-                      try {
-                        const result = await sendChatThroughGate({ streamId, content: text })
-                        if (!result.ok) {
-                          setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                          const errMsg = String(result.error || '').toLowerCase()
-                          if (errMsg.includes('currently disabled') || (errMsg.includes('chat') && errMsg.includes('disabled'))) {
-                            toast.error('Your chat is currently disabled.')
-                          } else if (errMsg.includes('muted')) {
-                            toast.error('You are muted in this stream.')
-                          } else if (errMsg.includes('banned')) {
-                            toast.error('You are banned from this stream.')
-                          } else if (errMsg.includes('high traffic')) {
-                            // High traffic sampling: silently drop optimistic message
-                          } else if (result.error) {
-                            toast.error(result.error)
-                          }
-                          return
-                        }
-
-                        const chatChannel = floatingChatChannelRef.current;
-                        if (chatChannel) {
-                          chatChannel.send({
-                            type: 'broadcast',
-                            event: 'floating_chat',
-                            payload: { username, content: text },
-                          }).catch(() => {})
-                        }
-                      } catch (err) {
-                        console.warn('[ViewerPage] floating chat broadcast failed:', err)
-                      }
-                    }}
-                    className="mt-auto border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
-                  >
+                   {/* Chat input */}
+                   <form
+                     onSubmit={async (e) => {
+                       e.preventDefault()
+                       const text = chatInput.trim()
+                       if (!text) return
+                       await handleSendChat(text, CHAT_FLOAT_MS)
+                     }}
+                     className="mt-auto border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
+                   >
                     <input
                       type="text"
                       value={chatInput}
@@ -4827,79 +4790,15 @@ useStreamRealtime(
             className="fixed inset-x-3 z-40 pointer-events-auto"
             style={{ bottom: `env(safe-area-inset-bottom)` }}
           >
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault()
-                  const text = chatInput.trim()
-                  if (!text) return
-
-                  if (hostChatDisabledByOfficer) {
-                    toast.error(
-                      hostChatDisableRemainingMs
-                        ? `Chat is disabled by officer control. Try again in ${Math.ceil(hostChatDisableRemainingMs / 60000)} minute(s).`
-                        : 'Chat is disabled by officer control'
-                    )
-                    return
-                  }
-
-                  if (userChatDisabled) {
-                    toast.error(
-                      chatDisabledRemainingMinutes
-                        ? `Your chat is disabled. Try again in ${chatDisabledRemainingMinutes} minute${chatDisabledRemainingMinutes === 1 ? '' : 's'}.`
-                        : 'Your chat has been permanently disabled in this stream.'
-                    )
-                    return
-                  }
-
-                  if (!user && !reserveAnonymousChatSlot()) {
-                    toast.error('You’ve used your 5 anonymous chats. Sign in to keep chatting.')
-                    navigate('/auth?mode=login')
-                    return
-                  }
-
-                const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
-                const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-                setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(0, 50))
-                setChatInput('')
-
-                window.setTimeout(() => {
-                  setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                }, 20000)
-
-                try {
-                  const result = await sendChatThroughGate({ streamId, content: text })
-                  if (!result.ok) {
-                    setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                    const errMsg = String(result.error || '').toLowerCase()
-                    if (errMsg.includes('currently disabled') || (errMsg.includes('chat') && errMsg.includes('disabled'))) {
-                      toast.error('Your chat is currently disabled.')
-                    } else if (errMsg.includes('muted')) {
-                      toast.error('You are muted in this stream.')
-                    } else if (errMsg.includes('banned')) {
-                      toast.error('You are banned from this stream.')
-                    } else if (errMsg.includes('high traffic')) {
-                      // High traffic sampling: silently drop optimistic message
-                    } else if (result.error) {
-                      toast.error(result.error)
-                    }
-                    return
-                  }
-
-                  const chatChannel = floatingChatChannelRef.current;
-                  if (chatChannel) {
-                    chatChannel.send({
-                      type: 'broadcast',
-                      event: 'floating_chat',
-                      payload: { username, content: text },
-                    }).catch(() => {})
-                  }
-                } catch {
-                  // keep local optimistic message visible
-                }
-              } }
-              className="flex gap-2 rounded-2xl border border-white/10 bg-black/45 p-2 shadow-[0_0_24px_rgba(34,211,238,0.16)] backdrop-blur-xl"
-            >
+               <form
+                 onSubmit={async (e) => {
+                   e.preventDefault()
+                   const text = chatInput.trim()
+                   if (!text) return
+                   await handleSendChat(text, 20000)
+                 }}
+                 className="flex gap-2 rounded-2xl border border-white/10 bg-black/45 p-2 shadow-[0_0_24px_rgba(34,211,238,0.16)] backdrop-blur-xl"
+               >
                <input
                  type="text"
                  value={chatInput}
@@ -5354,17 +5253,18 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
         />
       )}
 
-      {isPaidChatModalOpen && (
-        <PaidChatViewerModal
-          isOpen={isPaidChatModalOpen}
-          onClose={() => setIsPaidChatModalOpen(false)}
-          streamId={streamId}
-          hostId={hostId}
-          pricePerUser={paidChatPricePerUser}
-          pricePerChat={paidChatPricePerChat}
-          isChatEnabled={isPaidChatEnabled}
-        />
-      )}
+       {isPaidChatModalOpen && (
+         <PaidChatViewerModal
+           isOpen={isPaidChatModalOpen}
+           onClose={() => setIsPaidChatModalOpen(false)}
+           streamId={streamId}
+           hostId={hostId}
+           pricePerUser={paidChatPricePerUser}
+           pricePerChat={paidChatPricePerChat}
+           isChatEnabled={isPaidChatEnabled}
+           isChatLocked={hostChatDisabledByOfficer}
+         />
+       )}
 
       {/* Mini Message Popup */}
       <AnimatePresence>

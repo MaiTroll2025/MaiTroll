@@ -10,7 +10,7 @@ import { BroadcastPage } from '../pages/broadcast/BroadcastPage'
 import ViewerPage from '../pages/broadcast/ViewerPage'
 import StreamEndedPage from '../pages/broadcast/StreamEndedPage'
 
-const APP_URL = import.meta.env.VITE_APP_URL || 'https://Mai Troll.app'
+const APP_URL = import.meta.env.VITE_APP_URL || 'https://www.maitroll.com'
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`
 
 type BroadcasterMeta = {
@@ -139,8 +139,8 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
 
   const isLive = stream.status === 'live' || stream.is_live === true
   const statusText = isLive ? 'LIVE' : 'Ended'
-  const title = `${broadcaster?.username || 'Broadcaster'} is ${statusText} on Mai Troll`
-  const description = stream.title || 'Watch this live broadcast on Mai Troll'
+  const title = `${broadcaster?.username || 'Broadcaster'} is ${statusText} on MaiTroll`
+  const description = stream.title || 'Watch this live broadcast on MaiTroll'
   const canonicalUrl = `${APP_URL}/watch/${stream.id}`
   const previewImage =
     (stream as any).thumbnail_url ||
@@ -171,7 +171,7 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
   updateMetaTag('twitter:title', title, true)
   updateMetaTag('twitter:description', description, true)
   updateMetaTag('twitter:image', previewImage, true)
-  updateMetaTag('twitter:site', '@Mai Trollapp', true)
+
 
   if (isLive) {
     updateMetaTag('twitter:player', `${APP_URL}/embed/${stream.id}`, true)
@@ -204,7 +204,7 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
   schemaScript.textContent = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': isLive ? 'VideoObject' : 'VideoObject',
-    'name': stream.title || `${broadcasterName} on Mai Troll`,
+    'name': stream.title || `${broadcasterName} on MaiTroll`,
     'description': description,
     'thumbnailUrl': previewImage,
     'uploadDate': streamStart,

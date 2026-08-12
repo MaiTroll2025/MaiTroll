@@ -7,26 +7,46 @@
  * Also handles /:username routes for bot/crawler requests.
  */
 
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maiMai Troll.com';
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.maitroll.com';
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`;
+
+function escapeJsonLd(str) {
+  return String(str || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\b/g, '\\b')
+    .replace(/\f/g, '\\f')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u0062')
+    .replace(/&/g, '\\u0026');
+}
+
+function safeJsonLd(obj) {
+  const json = JSON.stringify(obj);
+  return json.replace(/</g, '\\u003c').replace(/>/g, '\\u0062').replace(/&/g, '\\u0026');
+}
 
 /**
  * Generate HTML with SEO meta tags for a profile page
  */
-function generateProfileSEOHTML(profile, liveStream, baseUrl) {
+function generateProfileSEOHTML(profile, liveStream, baseUrl, options = {}) {
+  const { isIndexed = true, isBanned = false, isPrivate = false } = options;
   const username = profile.username || profile.display_name || 'User';
   const displayName = profile.display_name || profile.username || 'User';
-  const bio = profile.bio || `${displayName} on Mai Mai Troll`;
+  const bio = profile.bio || `${displayName} on MaiTroll`;
   const avatarUrl = profile.avatar_url || FALLBACK_PREVIEW_IMAGE;
   const profileUrl = `${baseUrl}/${username}`;
 
   const isLive = !!liveStream;
   const title = isLive
-    ? `${displayName} (@${username}) LIVE | Mai Mai Troll`
-    : `${displayName} (@${username}) | Mai Mai Troll`;
+    ? `${displayName} (@${username}) LIVE | MaiTroll`
+    : `${displayName} (@${username}) | MaiTroll`;
 
   const description = isLive
-    ? `Watch ${displayName} live on Mai Mai Troll right now! ${liveStream.title || ''}`
+    ? `Watch ${displayName} live on MaiTroll right now! ${liveStream.title || ''}`
     : bio;
 
   const ogImage = isLive && liveStream.thumbnail_url
@@ -40,9 +60,10 @@ function generateProfileSEOHTML(profile, liveStream, baseUrl) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-  const jsonLd = JSON.stringify({
+  const jsonLd = safeJsonLd({
     "@context": "https://schema.org",
     "@type": "ProfilePage",
+    "url": profileUrl,
     "mainEntity": {
       "@type": "Person",
       "name": displayName,
@@ -53,6 +74,10 @@ function generateProfileSEOHTML(profile, liveStream, baseUrl) {
     }
   });
 
+  const robotsContent = (isBanned || isPrivate || !isIndexed)
+    ? 'noindex, nofollow'
+    : 'index, follow';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,6 +85,7 @@ function generateProfileSEOHTML(profile, liveStream, baseUrl) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}">
+  <meta name="robots" content="${robotsContent}">
   <link rel="canonical" href="${esc(profileUrl)}">
 
   <!-- Open Graph -->
@@ -71,7 +97,7 @@ function generateProfileSEOHTML(profile, liveStream, baseUrl) {
   <meta property="og:image:height" content="630">
   <meta property="og:url" content="${esc(profileUrl)}">
   <meta property="og:type" content="profile">
-  <meta property="og:site_name" content="Mai Mai Troll">
+  <meta property="og:site_name" content="MaiTroll">
   <meta property="og:locale" content="en_US">
   <meta property="profile:username" content="${esc(username)}">
 
@@ -80,7 +106,7 @@ function generateProfileSEOHTML(profile, liveStream, baseUrl) {
   <meta name="twitter:title" content="${esc(title)}">
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${esc(ogImage)}">
-  <meta name="twitter:site" content="@Mai Trollapp">
+  <meta name="twitter:image:alt" content="${esc(title)}">
 
   ${isLive ? `
   <!-- Live badge meta -->
@@ -132,8 +158,8 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
   const noindex = !isPublic || isBanned || stream.status === 'deleted';
 
   const description = isLive
-    ? `Watch ${displayName} live on Mai Mai Troll! ${title}`
-    : `Watch ${title} by ${displayName} on Mai Mai Troll.`;
+    ? `Watch ${displayName} live on MaiTroll right now! ${stream.title || ''}`
+    : `Watch ${stream.title || displayName + '\'s Stream'} on MaiTroll.`;
 
   const previewImage = stream.thumbnail_url
     || broadcaster?.thumbnail_url
@@ -147,7 +173,7 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-  const jsonLd = JSON.stringify({
+  const jsonLd = safeJsonLd({
     "@context": "https://schema.org",
     "@type": "BroadcastEvent",
     "name": title,
@@ -167,11 +193,11 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${esc(title)} | Mai Mai Troll</title>
+  <title>${esc(title)} | MaiTroll</title>
   <meta name="description" content="${esc(description)}">
   <link rel="canonical" href="${esc(streamUrl)}">
 
-  ${noindex ? '<!-- Noindex: content is private, banned, or deleted -->\n  <meta name="robots" content="noindex, nofollow">' : ''}
+  ${noindex ? '<!-- Noindex: content is private, banned, or deleted -->\n  <meta name="robots" content="noindex, nofollow">' : '<meta name="robots" content="index, follow">'}
 
   <!-- Open Graph -->
   <meta property="og:title" content="${esc(title)}">
@@ -182,7 +208,7 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
   <meta property="og:image:height" content="630">
   <meta property="og:url" content="${esc(streamUrl)}">
   <meta property="og:type" content="${isLive ? 'video.other' : 'website'}">
-  <meta property="og:site_name" content="Mai Mai Troll">
+  <meta property="og:site_name" content="MaiTroll">
   <meta property="og:locale" content="en_US">
 
   <!-- Twitter Card -->
@@ -190,7 +216,7 @@ function generateStreamSEOHTML(stream, broadcaster, baseUrl) {
   <meta name="twitter:title" content="${esc(title)}">
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${esc(previewImage)}">
-  <meta name="twitter:site" content="@Mai Trollapp">
+  <meta name="twitter:image:alt" content="${esc(title)}">
 
   ${isLive ? '<meta property="og:live" content="true">' : ''}
 
@@ -242,7 +268,7 @@ async function handleProfileSEO(req, res) {
     // Look up profile by username (case-insensitive)
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('id, username, display_name, avatar_url, bio, is_banned, is_profile_public, is_indexed')
+      .select('id, username, display_name, avatar_url, bio, is_banned')
       .ilike('username', username)
       .maybeSingle();
 
@@ -256,19 +282,23 @@ async function handleProfileSEO(req, res) {
       const html = generateProfileSEOHTML(
         { username, display_name: 'User Not Found', bio: 'This profile does not exist.' },
         null,
-        APP_URL
+        APP_URL,
+        { isIndexed: false }
       );
       return res.status(404).send(html);
     }
 
-    // Check if profile should be indexed
-    if (profile.is_banned || profile.is_profile_public === false) {
-      // Return noindex page
-      const html = `<!DOCTYPE html>
-<html><head><meta name="robots" content="noindex, nofollow">
-<title>Profile Not Available</title></head>
-<body><p>This profile is not available.</p></body></html>`;
-      return res.status(403).send(html);
+    const isPrivate = profile.account_status === 'suspended' || profile.account_state === 'suspended';
+    const isBanned = profile.is_banned === true;
+
+    if (isBanned || isPrivate) {
+      const html = generateProfileSEOHTML(
+        profile,
+        null,
+        APP_URL,
+        { isIndexed: false, isBanned, isPrivate: true }
+      );
+      return res.status(200).send(html);
     }
 
     // Check if user is currently live
@@ -280,17 +310,12 @@ async function handleProfileSEO(req, res) {
       .eq('is_public', true)
       .maybeSingle();
 
-    const html = generateProfileSEOHTML(profile, liveStream, APP_URL);
+    const html = generateProfileSEOHTML(profile, liveStream, APP_URL, { isIndexed: true, isBanned, isPrivate });
     res.status(200).send(html);
 
   } catch (error) {
     console.error('[ProfileSEO] Error:', error);
-    const html = generateProfileSEOHTML(
-      { username, display_name: 'Mai Mai Troll' },
-      null,
-      APP_URL
-    );
-    res.status(200).send(html);
+    return res.status(500).send('Error generating profile preview');
   }
 }
 
@@ -346,7 +371,7 @@ async function handleStreamSEO(req, res) {
 
   } catch (error) {
     console.error('[StreamSEO] Error:', error);
-    res.status(500).send('Error generating stream preview');
+    return res.status(500).send('Error generating stream preview');
   }
 }
 

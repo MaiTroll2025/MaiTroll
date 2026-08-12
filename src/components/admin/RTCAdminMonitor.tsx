@@ -1503,7 +1503,6 @@ const openAction = useCallback((user: UserListItem, action: string) => {
 
     // Mobile mini bubble drag handlers
     const handleMobileDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-      if ((e.target as HTMLElement).closest('button, [role="button"], input, select, textarea')) return
       const bubble = (e.currentTarget as HTMLElement).closest('[data-mobile-mini-bubble]') as HTMLElement | null
       if (!bubble) return
       const rect = bubble.getBoundingClientRect()
@@ -1514,7 +1513,6 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       }
       mobileDragMovedRef.current = false
       setIsMobileDragging(true)
-      e.preventDefault()
     }, [])
 
     const handleMobileDragMove = useCallback((e: MouseEvent | TouchEvent) => {
@@ -3133,6 +3131,8 @@ return (
     return (
       <div
         data-mobile-mini-bubble
+        onMouseDown={handleMobileDragStart}
+        onTouchStart={handleMobileDragStart}
         style={{
           position: 'fixed',
           top: mobileMiniPos?.top ?? 'auto',
@@ -3153,6 +3153,7 @@ return (
               <button
                 type="button"
                 onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 onClick={() => setMobileMiniOpen(false)}
                 className="rounded-full p-1 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
                 title="Close"
@@ -3193,8 +3194,6 @@ return (
 
         <button
           type="button"
-          onMouseDown={handleMobileDragStart}
-          onTouchStart={handleMobileDragStart}
           onClick={() => {
             if (!mobileDragMovedRef.current) {
               setMobileMiniOpen(prev => !prev);

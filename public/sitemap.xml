@@ -8,7 +8,7 @@
   <!-- HOMEPAGE                                                       -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/</loc>
+    <loc>https://www.maitroll.com/</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -18,25 +18,25 @@
   <!-- DISCOVERY & BROWSING (High Priority)                           -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/explore</loc>
+    <loc>https://www.maitroll.com/explore</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>always</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/live-swipe</loc>
+    <loc>https://www.maitroll.com/live-swipe</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>always</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/auctions</loc>
+    <loc>https://www.maitroll.com/auctions</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/marketplace</loc>
+    <loc>https://www.maitroll.com/marketplace</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -46,13 +46,13 @@
   <!-- GAMING & ENTERTAINMENT                                         -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/hytrogaming</loc>
+    <loc>https://www.maitroll.com/hytrogaming</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>always</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/troll-wheel</loc>
+    <loc>https://www.maitroll.com/troll-wheel</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -62,7 +62,7 @@
   <!-- PODCASTS                                                       -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/podcast</loc>
+    <loc>https://www.maitroll.com/podcast</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -72,43 +72,43 @@
   <!-- COMMUNITY & SOCIAL                                             -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/troll-court</loc>
+    <loc>https://www.maitroll.com/troll-court</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/church</loc>
+    <loc>https://www.maitroll.com/church</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/neighborhood-map</loc>
+    <loc>https://www.maitroll.com/neighborhood-map</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/garage</loc>
+    <loc>https://www.maitroll.com/garage</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/family/city</loc>
+    <loc>https://www.maitroll.com/family/city</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/family/wars</loc>
+    <loc>https://www.maitroll.com/family/wars</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/family/browse</loc>
+    <loc>https://www.maitroll.com/family/browse</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -118,13 +118,13 @@
   <!-- GOVERNMENT & POLITICS                                          -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/government</loc>
+    <loc>https://www.maitroll.com/government</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/seo-government</loc>
+    <loc>https://www.maitroll.com/seo-government</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -134,19 +134,19 @@
   <!-- CREATOR ECONOMY & PAYOUTS                                      -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/careers</loc>
+    <loc>https://www.maitroll.com/careers</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/sell</loc>
+    <loc>https://www.maitroll.com/sell</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/payouts/setup</loc>
+    <loc>https://www.maitroll.com/payouts/setup</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -156,19 +156,19 @@
   <!-- SEO CONTENT PAGES                                               -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/about</loc>
+    <loc>https://www.maitroll.com/about</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/broadcasting</loc>
+    <loc>https://www.maitroll.com/broadcasting</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories</loc>
+    <loc>https://www.maitroll.com/categories</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -176,61 +176,61 @@
 
   <!-- Individual Category Pages -->
   <url>
-    <loc>https://maiMai Troll.com/categories/gaming</loc>
+    <loc>https://www.maitroll.com/categories/gaming</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/just-chatting</loc>
+    <loc>https://www.maitroll.com/categories/just-chatting</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/music</loc>
+    <loc>https://www.maitroll.com/categories/music</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/art</loc>
+    <loc>https://www.maitroll.com/categories/art</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/food</loc>
+    <loc>https://www.maitroll.com/categories/food</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/sports</loc>
+    <loc>https://www.maitroll.com/categories/sports</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/education</loc>
+    <loc>https://www.maitroll.com/categories/education</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/entertainment</loc>
+    <loc>https://www.maitroll.com/categories/entertainment</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/politics</loc>
+    <loc>https://www.maitroll.com/categories/politics</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/categories/news</loc>
+    <loc>https://www.maitroll.com/categories/news</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -240,13 +240,13 @@
   <!-- CREATOR PAGES                                                   -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/creators</loc>
+    <loc>https://www.maitroll.com/creators</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/go-live</loc>
+    <loc>https://www.maitroll.com/go-live</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -256,7 +256,7 @@
   <!-- TCNN NEWS                                                       -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/tcnn</loc>
+    <loc>https://www.maitroll.com/tcnn</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.8</priority>
@@ -266,13 +266,13 @@
   <!-- ACADEMY                                                         -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/academy</loc>
+    <loc>https://www.maitroll.com/academy</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/academy/courses</loc>
+    <loc>https://www.maitroll.com/academy/courses</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -282,7 +282,7 @@
   <!-- AGENCIES                                                        -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/agencies</loc>
+    <loc>https://www.maitroll.com/agencies</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -292,13 +292,13 @@
   <!-- SAFETY & SUPPORT                                                -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/safety</loc>
+    <loc>https://www.maitroll.com/safety</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/support</loc>
+    <loc>https://www.maitroll.com/support</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -308,13 +308,13 @@
   <!-- TRENDING & LEADERBOARDS                                        -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/trending</loc>
+    <loc>https://www.maitroll.com/trending</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>always</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/top-creators</loc>
+    <loc>https://www.maitroll.com/top-creators</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -324,43 +324,43 @@
   <!-- LEGAL PAGES                                                     -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://maiMai Troll.com/legal/terms</loc>
+    <loc>https://www.maitroll.com/legal/terms</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/legal/privacy</loc>
+    <loc>https://www.maitroll.com/legal/privacy</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/legal/safety</loc>
+    <loc>https://www.maitroll.com/legal/safety</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/legal/creator-earnings</loc>
+    <loc>https://www.maitroll.com/legal/creator-earnings</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/legal/refunds</loc>
+    <loc>https://www.maitroll.com/legal/refunds</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/legal/payouts</loc>
+    <loc>https://www.maitroll.com/legal/payouts</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://maiMai Troll.com/legal/gambling-disclosure</loc>
+    <loc>https://www.maitroll.com/legal/gambling-disclosure</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

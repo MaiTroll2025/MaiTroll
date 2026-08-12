@@ -2,7 +2,7 @@ import { ImageResponse } from '@vercel/og'
 
 export const runtime = 'edge'
 
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://maiMai Troll.com'
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.maitroll.com'
 
 async function fetchFont(weight: 'bold' | 'regular' = 'bold'): Promise<ArrayBuffer> {
   const family = weight === 'bold' ? 'Inter:wght@700' : 'Inter:wght@400'
@@ -17,7 +17,7 @@ async function fetchFont(weight: 'bold' | 'regular' = 'bold'): Promise<ArrayBuff
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const title = url.searchParams.get('title') || 'Mai Troll'
+  const title = url.searchParams.get('title') || 'MaiTroll'
   const subtitle = url.searchParams.get('subtitle') || 'Social Streaming Platform'
 
   const [boldFont, regularFont] = await Promise.all([
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
             {subtitle}
           </div>
           <div style={{ fontSize: '18px', fontWeight: 400, color: '#94a3b8' }}>
-            Live creators, communities, and streamers on Mai Troll.
+            Live creators, communities, and streamers on MaiTroll.
           </div>
         </div>
       </div>

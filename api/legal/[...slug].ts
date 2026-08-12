@@ -3,8 +3,8 @@ const privacyPolicyHTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy - Mai Troll</title>
-  <link rel="canonical" href="https://maiMai Troll.com/legal/privacy">
+  <title>Privacy Policy - MaiTroll</title>
+  <link rel="canonical" href="https://www.maitroll.com/legal/privacy">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #e0e0e0; background: #05010a; }
     h1 { color: #f8f8f2; border-bottom: 1px solid #2c2c2c; padding-bottom: 10px; }
@@ -21,7 +21,7 @@ const privacyPolicyHTML = `<!DOCTYPE html>
     <p class="last-updated">Last updated: January 2026</p>
   </div>
 
-  <p><strong>Mai Troll</strong> (also referred to as "<strong>Mai Mai Troll</strong>") is a social streaming platform. This Privacy Policy explains how we collect, use, and protect your information when you use our app and services.</p>
+  <p><strong>MaiTroll</strong> (also referred to as "<strong>MaiMaiTroll</strong>") is a social streaming platform. This Privacy Policy explains how we collect, use, and protect your information when you use our app and services.</p>
 
   <h2>1. Information We Collect</h2>
   <p>We collect information you provide directly to us, such as when you create an account, verify your identity, request payouts, or contact support. This includes:</p>
@@ -63,7 +63,7 @@ const privacyPolicyHTML = `<!DOCTYPE html>
   <p>We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the new policy here.</p>
 
   <h2>8. Contact Information</h2>
-  <p>This app is operated by Mai Mai Troll. For privacy-related questions, please contact support through the app.</p>
+  <p>This app is operated by MaiTroll. For privacy-related questions, please contact support through the app.</p>
 </body>
 </html>`;
 
@@ -72,7 +72,7 @@ const termsOfServiceHTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms of Service - Mai Troll</title>
+  <title>Terms of Service - MaiTroll</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #e0e0e0; background: #05010a; }
     h1 { color: #f8f8f2; border-bottom: 1px solid #2c2c2c; padding-bottom: 10px; }
@@ -84,11 +84,11 @@ const termsOfServiceHTML = `<!DOCTYPE html>
 <body>
   <h1>Terms of Service</h1>
   <p class="last-updated">Last updated: January 2026</p>
-  <p>By accessing or using Mai Troll ("the App"), you agree to be bound by these Terms of Service.</p>
+  <p>By accessing or using MaiTroll ("the App"), you agree to be bound by these Terms of Service.</p>
   <h2>1. Acceptance of Terms</h2>
-  <p>These terms constitute a binding agreement between you and Mai Troll. If you do not agree to these terms, do not use the App.</p>
+  <p>These terms constitute a binding agreement between you and MaiTroll. If you do not agree to these terms, do not use the App.</p>
   <h2>2. License Grant</h2>
-  <p>We grant you a limited, non-exclusive, non-transferable license to use Mai Troll for personal, non-commercial purposes.</p>
+  <p>We grant you a limited, non-exclusive, non-transferable license to use MaiTroll for personal, non-commercial purposes.</p>
   <h2>3. User Responsibilities</h2>
   <ul>
     <li>You must be at least 18 years old to use this app.</li>
@@ -96,10 +96,10 @@ const termsOfServiceHTML = `<!DOCTYPE html>
     <li>You will not engage in harassment, abuse, or illegal activity.</li>
   </ul>
   <h2>4. Content Ownership</h2>
-  <p>You retain ownership of content you create. By posting, you grant Mai Troll a license to display and distribute your content within the platform.</p>
+  <p>You retain ownership of content you create. By posting, you grant MaiTroll a license to display and distribute your content within the platform.</p>
   <h2>5. Termination</h2>
   <p>We may terminate or suspend your account for violation of these terms.</p>
-  <p><em>Mai Troll is operated by Mai Mai Troll. These terms are governed by the laws of [Jurisdiction].</em></p>
+  <p><em>MaiTroll is operated by MaiTroll. These terms are governed by the laws of [Jurisdiction].</em></p>
 </body>
 </html>`;
 

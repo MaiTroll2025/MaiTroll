@@ -2,11 +2,13 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://maiMai Troll.com/sitemap.xml
-Sitemap: https://maiMai Troll.com/sitemap-dynamic.xml
+Sitemap: https://www.maitroll.com/sitemap.xml
+Sitemap: https://www.maitroll.com/sitemap-dynamic.xml
 
 # Block authentication
 Disallow: /auth/
+Disallow: /reset-password
+Disallow: /verification
 
 # Block account management
 Disallow: /profile/settings
@@ -18,6 +20,16 @@ Disallow: /admin/
 Disallow: /secretary/
 Disallow: /ceo-assistant-dashboard
 Disallow: /noah-assistant-dashboard
+Disallow: /department-tools
+Disallow: /Employees
+Disallow: /officer/
+Disallow: /hr-center
+Disallow: /agency-hr-dashboard
+Disallow: /agency-dashboard
+Disallow: /pastor
+Disallow: /attorney
+Disallow: /prosecutor
+Disallow: /notary
 
 # Block internal tools
 Disallow: /dev/
@@ -28,18 +40,70 @@ Disallow: /broadcast/setup
 Disallow: /broadcast/summary/
 Disallow: /live/command-center/
 Disallow: /live/overlay/
+Disallow: /settings/audio
 
 # Block one-time/internal pages
 Disallow: /exit
 Disallow: /stream-ended
+Disallow: /onboarding
+Disallow: /neighborhood-setup
+Disallow: /driver-test
+Disallow: /insurance
+Disallow: /tax-onboarding
+Disallow: /founding-officer-trial
 
-# Block internal API routes (allow public OG/sitemap endpoints)
+# Block private user areas
+Disallow: /messages
+Disallow: /utromail
+Disallow: /tromail
+Disallow: /call/
+Disallow: /interview/
+Disallow: /notifications
+Disallow: /following
+Disallow: /blocked-users
+Disallow: /jail
+Disallow: /inmates
+Disallow: /jail/appeal
+Disallow: /wall
+Disallow: /search
+Disallow: /beta-feedback
+Disallow: /survey/
+
+# Block internal API routes
 Disallow: /api/admin/
 Disallow: /api/broadcasts/
 Disallow: /api/telemetry
 Disallow: /api/health
 Disallow: /api/paypal/
 Disallow: /api/social/
+Disallow: /api/og/
+
+# Block private/economy pages
+Disallow: /bank
+Disallow: /credit-scores
+Disallow: /cashouts
+Disallow: /payouts/
+Disallow: /account/earnings
+Disallow: /shop/
+Disallow: /inventory
+Disallow: /garage
+Disallow: /ktauto
+Disallow: /vehicle-transactions
+Disallow: /troting
+Disallow: /marketplace/orders
+Disallow: /marketplace/sales
+Disallow: /auction/dashboard
+Disallow: /auction/studio
+Disallow: /tcnn/dashboard
+Disallow: /tcnn/setup
+Disallow: /tcnn/broadcaster
+Disallow: /universe-event
+Disallow: /universe/register
+Disallow: /universe/my-battles
+Disallow: /universe/live
+Disallow: /universe/history
+Disallow: /universe/champions
+Disallow: /city-registry/advertise
 
 # AI training crawlers (does NOT affect Google Search indexing)
 User-agent: GPTBot

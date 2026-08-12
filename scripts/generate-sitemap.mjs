@@ -1,5 +1,5 @@
 /**
- * Dynamic Sitemap Generator for Mai Troll
+ * Dynamic Sitemap Generator for MaiTroll
  * 
  * Generates sitemap-dynamic.xml with URLs for:
  * - User profiles (/profile/:username)
@@ -29,7 +29,7 @@ const __dirname = dirname(__filename)
 // Supabase configuration
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-const BASE_URL = process.env.SITEMAP_BASE_URL || 'https://maiMai Troll.com'
+const BASE_URL = process.env.SITEMAP_BASE_URL || 'https://www.maitroll.com'
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('❌ Missing Supabase credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')

@@ -26,6 +26,7 @@ import ProfileFeed from '../components/profile/ProfileFeed';
 import ProfileReplays from '../components/profile/ProfileReplays';
 import ProfileWatchlist from '../components/profile/ProfileWatchlist';
 import UserInventory from './UserInventory';
+import ProfileSettings from './ProfileSettings';
 import UserModActionsModal from '../components/profile/UserModActionsModal';
 import { useProfileFrameStore } from '../stores/useProfileFrameStore';
 import type { ProfileFrame as ProfileFrameType } from '../config/profileFrames';
@@ -306,9 +307,9 @@ function ProfileInner() {
         if (!profile?.username) return;
 
         const displayName = profile.display_name || profile.username;
-        const title = `${displayName} | Mai Troll`;
-        const description = profile.bio || `Check out ${displayName}'s profile on Mai Troll`;
-        const profileUrl = `${window.location.origin}/${encodeURIComponent(profile.username)}`;
+        const title = `${displayName} | MaiTroll`;
+        const description = profile.bio || `Check out ${displayName} on MaiTroll`;
+        const profileUrl = `https://www.maitroll.com/${encodeURIComponent(profile.username)}`;
         const ogImageUrl = buildOGImageUrl({ kind: 'profile', username: profile.username });
 
         document.title = title;
@@ -354,15 +355,28 @@ function ProfileInner() {
         const schemaScript = document.createElement('script');
         schemaScript.id = 'profile-schema';
         schemaScript.type = 'application/ld+json';
+        
+        const escapeJsonLd = (str: string) => String(str || '')
+          .replace(/\\/g, '\\\\')
+          .replace(/"/g, '\\"')
+          .replace(/\b/g, '\\b')
+          .replace(/\f/g, '\\f')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/\t/g, '\\t')
+          .replace(/</g, '\\u003c')
+          .replace(/>/g, '\\u0062')
+          .replace(/&/g, '\\u0026');
+        
         schemaScript.textContent = JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'ProfilePage',
-            name: `${displayName} on Mai Troll`,
-            description,
+            name: `${displayName} on MaiTroll`,
+            description: escapeJsonLd(description),
             url: profileUrl,
             mainEntity: {
                 '@type': 'Person',
-                name: displayName,
+                name: escapeJsonLd(displayName),
                 url: profileUrl,
                 image: profile.avatar_url || undefined
             }
@@ -401,7 +415,7 @@ function ProfileInner() {
 
     const handleShare = async () => {
         const shareData = {
-            title: `${profile.display_name} on Mai Troll`,
+            title: `${profile.display_name} on MaiTroll`,
             text: profile.bio || `Check out ${profile.display_name}'s profile`,
             url: window.location.href,
         };

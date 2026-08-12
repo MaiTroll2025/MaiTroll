@@ -96,7 +96,7 @@ if (supabaseServiceKey && supabaseServiceKey.startsWith('eyJ')) {
 }
 
 // App URL for canonical URLs
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://Mai Troll.app';
+const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.maitroll.com';
 
 // Default fallback image (used when no stream thumbnail available)
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`;
@@ -411,8 +411,8 @@ app.get('/api/social/:broadcastId', async (req, res) => {
     const playerUrl = `${APP_URL}/watch/${stream.id}`;
     
     const meta = generateSocialMetaHTML({
-      title: `${broadcaster?.username || 'Broadcaster'} is ${statusText} on Mai Troll`,
-      description: stream.title || `Watch this live broadcast on Mai Troll`,
+      title: `${broadcaster?.username || 'Broadcaster'} is ${statusText} on MaiTroll`,
+      description: stream.title || `Watch this live broadcast on MaiTroll`,
       image: previewImage,
       url: `${APP_URL}/watch/${stream.id}`,
       type: isLive ? 'video.other' : 'website',
@@ -423,8 +423,7 @@ app.get('/api/social/:broadcastId', async (req, res) => {
       twitterCard: isLive ? 'player' : 'summary_large_image',
       twitterPlayerUrl: isLive ? `${APP_URL}/embed/${stream.id}` : null,
       twitterPlayerWidth: 1280,
-      twitterPlayerHeight: 720,
-      site: '@Mai Trollapp'
+      twitterPlayerHeight: 720
     });
     
     res.status(200).send(meta);
@@ -432,8 +431,8 @@ app.get('/api/social/:broadcastId', async (req, res) => {
   } catch (error) {
     console.error('[SocialPreview] Error:', error);
     const meta = generateSocialMetaHTML({
-      title: 'Mai Troll - Live Streaming',
-      description: 'Join Mai Troll for live streaming and more.',
+      title: 'MaiTroll - Live Streaming',
+      description: 'Join MaiTroll for live streaming and more.',
       image: FALLBACK_PREVIEW_IMAGE,
       url: `${APP_URL}/watch/${broadcastId}`,
       type: 'website',
@@ -478,8 +477,8 @@ app.get('/embed/:broadcastId', async (req, res) => {
 // Helper: Generate Social Meta HTML with OG and Twitter Card tags
 function generateSocialMetaHTML(data) {
   const {
-    title = 'Mai Troll - Live Streaming',
-    description = 'Watch live streams on Mai Troll',
+    title = 'MaiTroll - Live Streaming',
+    description = 'Watch live streams on MaiTroll',
     image = FALLBACK_PREVIEW_IMAGE,
     url = APP_URL,
     type = 'website',
@@ -491,7 +490,7 @@ function generateSocialMetaHTML(data) {
     twitterPlayerUrl = null,
     twitterPlayerWidth = 1280,
     twitterPlayerHeight = 720,
-    site = '@Mai Trollapp'
+    site = null
   } = data;
   
   // Escape HTML entities to prevent XSS
@@ -519,7 +518,7 @@ function generateSocialMetaHTML(data) {
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:url" content="${esc(url)}">
   <meta property="og:image" content="${esc(image)}">
-  <meta property="og:site_name" content="Mai Troll">
+  <meta property="og:site_name" content="MaiTroll">
   
   ${videoUrl ? `
   <meta property="og:video" content="${esc(videoUrl)}">
@@ -534,7 +533,8 @@ function generateSocialMetaHTML(data) {
   <meta name="twitter:title" content="${esc(title)}">
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${esc(image)}">
-  <meta name="twitter:site" content="${esc(site)}">
+  <meta name="twitter:image:alt" content="${esc(title)}">
+  ${site ? `<meta name="twitter:site" content="${esc(site)}">` : ''}
   
   ${twitterPlayerUrl ? `
   <meta name="twitter:player" content="${esc(twitterPlayerUrl)}">
@@ -544,9 +544,9 @@ function generateSocialMetaHTML(data) {
   
   <!-- Additional Meta Tags -->
   <meta property="al:ios:app_store_id" content="6471861674">
-  <meta property="al:ios:app_name" content="Mai Troll">
-  <meta property="al:android:package" content="app.Mai Troll.app">
-  <meta property="al:android:app_name" content="Mai Troll">
+  <meta property="al:ios:app_name" content="MaiTroll">
+  <meta property="al:android:package" content="app.maitroll.app">
+  <meta property="al:android:app_name" content="MaiTroll">
   
   ${isLive ? `
   <meta property="og:live" content="true">
@@ -585,7 +585,7 @@ function generateEmbedHTML(broadcastId, appUrl) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Watch Stream | Mai Troll</title>
+  <title>Watch Stream | MaiTroll</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; background: #000; }
@@ -676,20 +676,13 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})$/, async (req, res, next) => {
 
   // Bot detected — return full SEO HTML
   try {
-    const html = profileSEO.generateProfileSEOHTML(
-      { username, display_name: username, bio: `View ${username}'s profile on Mai Mai Troll` },
-      null,
-      APP_URL
-    );
-
-    // Fetch real profile data
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('id, username, display_name, avatar_url, bio, is_banned, is_profile_public')
+      .select('id, username, display_name, avatar_url, bio, is_banned')
       .ilike('username', username)
       .maybeSingle();
 
-    if (profile && !profile.is_banned && profile.is_profile_public !== false) {
+    if (profile && !profile.is_banned && profile.account_status !== 'suspended' && profile.account_state !== 'suspended') {
       // Check if live
       const { data: liveStream } = await supabase
         .from('streams')
@@ -703,11 +696,19 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})$/, async (req, res, next) => {
       return res.status(200).send(seoHtml);
     }
 
-    // Profile not found or not public — serve SPA (React handles 404)
-    return next();
+    if (!profile) {
+      return res.status(404).send('Profile not found');
+    }
+
+    // Private, banned, or opted out of indexing — return noindex for bots
+    const noindexHtml = `<!DOCTYPE html>
+<html><head><meta name="robots" content="noindex, nofollow">
+<title>Profile Not Available</title></head>
+<body><p>This profile is not available.</p></body></html>`;
+    return res.status(200).send(noindexHtml);
   } catch (error) {
     console.error('[ProfileRouteSEO] Error:', error);
-    return next();
+    return res.status(500).send('Server error');
   }
 });
 
@@ -730,7 +731,11 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})\/live\/([a-zA-Z0-9_-]+)$/, async (req, res, ne
       .maybeSingle();
 
     if (!profile || profile.is_banned) {
-      return next();
+      const noindexHtml = `<!DOCTYPE html>
+<html><head><meta name="robots" content="noindex, nofollow">
+<title>Stream Not Available</title></head>
+<body><p>This stream is not available.</p></body></html>`;
+      return res.status(200).send(noindexHtml);
     }
 
     const { data: stream } = await supabase
@@ -742,14 +747,14 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})\/live\/([a-zA-Z0-9_-]+)$/, async (req, res, ne
       .maybeSingle();
 
     if (!stream) {
-      return next();
+      return res.status(404).send('Stream not found');
     }
 
     const seoHtml = profileSEO.generateStreamSEOHTML(stream, profile, APP_URL);
     return res.status(200).send(seoHtml);
   } catch (error) {
     console.error('[StreamRouteSEO] Error:', error);
-    return next();
+    return res.status(500).send('Error generating stream preview');
   }
 });
 

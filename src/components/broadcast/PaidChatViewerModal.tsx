@@ -11,6 +11,7 @@ interface PaidChatViewerModalProps {
   pricePerUser: number;
   pricePerChat: number;
   isChatEnabled: boolean;
+  isChatLocked?: boolean;
 }
 
 export default function PaidChatViewerModal({
@@ -21,6 +22,7 @@ export default function PaidChatViewerModal({
   pricePerUser,
   pricePerChat,
   isChatEnabled,
+  isChatLocked = false,
 }: PaidChatViewerModalProps) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -91,6 +93,10 @@ export default function PaidChatViewerModal({
     sendingRef.current = true;
     setSending(true);
     try {
+      if (isChatLocked) {
+        throw new Error('Chat is locked by broadcaster control.');
+      }
+
       if (!hasAccess && pricePerUser > 0) {
         // Deduct coins via try_pay_coins_secure (same as bottom nav bar)
         const { data: payResult, error: payError } = await supabase.rpc('try_pay_coins_secure', {
@@ -117,6 +123,14 @@ export default function PaidChatViewerModal({
           payment_type: 'per_user',
         });
 
+        // Credit broadcaster
+        const { error: creditUserError } = await supabase.rpc('credit_coins', {
+          p_user_id: hostId,
+          p_coins: pricePerUser,
+          p_reason: 'paid_chat_access',
+        });
+        if (creditUserError) console.error('[PaidChat] credit broadcaster failed:', creditUserError);
+
         setHasAccess(true);
         setUserBalance((prev) => prev - pricePerUser);
       }
@@ -140,6 +154,15 @@ export default function PaidChatViewerModal({
             payment_type: 'per_chat',
           });
         if (chatPaymentError) throw chatPaymentError;
+
+        // Credit broadcaster
+        const { error: creditChatError } = await supabase.rpc('credit_coins', {
+          p_user_id: hostId,
+          p_coins: pricePerChat,
+          p_reason: 'paid_chat_message',
+        });
+        if (creditChatError) console.error('[PaidChat] credit broadcaster failed:', creditChatError);
+
         setUserBalance((prev) => prev - pricePerChat);
       }
 
@@ -187,12 +210,16 @@ export default function PaidChatViewerModal({
           </button>
         </div>
 
-        {!isChatEnabled ? (
+        {!isChatEnabled || isChatLocked ? (
           <div className="rounded-2xl border border-slate-400/30 bg-slate-900/50 p-4 text-center">
             <Lock className="mx-auto mb-2 h-8 w-8 text-slate-400" />
-            <p className="text-sm font-bold text-slate-300">Paid Chat Not Available</p>
+            <p className="text-sm font-bold text-slate-300">
+              {isChatLocked ? 'Chat is Locked' : 'Paid Chat Not Available'}
+            </p>
             <p className="mt-1 text-xs text-slate-400">
-              The broadcaster has not enabled paid chat for this stream.
+              {isChatLocked
+                ? 'The broadcaster has locked chat for this stream.'
+                : 'The broadcaster has not enabled paid chat for this stream.'}
             </p>
           </div>
         ) : (

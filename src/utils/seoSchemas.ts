@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://maiMaiTroll.com'
+export const SITE_URL = 'https://www.maitroll.com'
 export const SITE_NAME = 'MaiTroll'
 export const SITE_ALT_NAME = 'MaiMaiTroll'
 
@@ -9,7 +9,7 @@ export function websiteSchema() {
     name: SITE_NAME,
     alternateName: SITE_ALT_NAME,
     url: SITE_URL,
-    description: 'MaiTroll is a social streaming platform for creators, streamers, gamers, and online communities.',
+    description: 'MaiTroll is a live social broadcasting platform where creators go live, battle, build communities, interact with viewers, send gifts and grow their audience.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -25,11 +25,11 @@ export function organizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: SITE_ALT_NAME,
-    alternateName: SITE_NAME,
+    name: SITE_NAME,
+    alternateName: SITE_ALT_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.png`,
-    description: 'MaiTroll (MaiMaiTroll) is a social streaming and content-sharing platform for creators, streamers, gamers, and online communities.',
+    description: 'MaiTroll (MaiMaiTroll) is a live social broadcasting and content-sharing platform for creators, streamers, gamers, and online communities.',
     sameAs: [SITE_URL],
     contactPoint: {
       '@type': 'ContactPoint',

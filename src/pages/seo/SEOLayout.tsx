@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Eye, Home, Mail, HelpCircle, Shield, FileText, MessageCircle, ChevronRight, Share2, Twitter, Facebook, Linkedin } from 'lucide-react'
+import { Eye, Home, Mail, HelpCircle, Shield, FileText, MessageCircle, ChevronRight, Share2 } from 'lucide-react'
 import useSEO from '@/hooks/useSEO'
 
 interface SEOPageProps {
@@ -22,21 +22,21 @@ export default function SEOLayout({ children, title, description, keywords = [],
   const location = useLocation()
 
   useSEO({
-    title: `${title} | Mai Troll`,
+    title: `${title} | MaiTroll`,
     description,
     keywords,
-    ogImage
+    ogImage,
+    robots: 'index, follow'
   })
 
   React.useEffect(() => {
     window.scrollTo(0, 0)
   }, [location.pathname])
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://maiMaiTroll.com'
-  const canonicalUrl = `${origin}${location.pathname}`
+  const canonicalUrl = `https://www.maitroll.com${location.pathname}`
 
   const handleShare = async () => {
-    const shareData = { title: `${title} | Mai Troll`, url: canonicalUrl }
+    const shareData = { title: `${title} | MaiTroll`, url: canonicalUrl }
     if (navigator.share) {
       try { await navigator.share(shareData) } catch {}
     } else {
@@ -53,7 +53,7 @@ export default function SEOLayout({ children, title, description, keywords = [],
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                 <Eye className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">Mai Troll</span>
+              <span className="text-xl font-bold text-white">MaiTroll</span>
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
@@ -120,7 +120,7 @@ export default function SEOLayout({ children, title, description, keywords = [],
               <ul className="space-y-2">
                 <li><Link to="/support" className="text-slate-400 hover:text-purple-300 transition-colors">Help Center</Link></li>
                 <li><Link to="/contact" className="text-slate-400 hover:text-purple-300 transition-colors">Submit a Ticket</Link></li>
-                <li><a href="mailto:Mai Troll2025@gmail.com" className="text-slate-400 hover:text-purple-300 transition-colors">Email Us</a></li>
+                <li><Link to="/contact" className="text-slate-400 hover:text-purple-300 transition-colors">Email Us</Link></li>
               </ul>
             </div>
             <div>
@@ -132,18 +132,14 @@ export default function SEOLayout({ children, title, description, keywords = [],
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">Follow Us</h3>
-              <div className="flex items-center gap-3">
-                <a href="https://twitter.com/Mai Troll" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-purple-300 hover:bg-slate-700 transition-colors" aria-label="Twitter">
-                  <Twitter className="w-5 h-5" />
-                </a>
-                <a href="https://facebook.com/Mai Troll" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-purple-300 hover:bg-slate-700 transition-colors" aria-label="Facebook">
-                  <Facebook className="w-5 h-5" />
-                </a>
-                <a href="https://linkedin.com/company/Mai Troll" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-purple-300 hover:bg-slate-700 transition-colors" aria-label="LinkedIn">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-              </div>
+              <h3 className="text-white font-semibold mb-4">Sitemap</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="/sitemap.xml" className="text-slate-400 hover:text-purple-300 transition-colors">
+                    XML Sitemap
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
           <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -151,12 +147,12 @@ export default function SEOLayout({ children, title, description, keywords = [],
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                 <Eye className="w-4 h-4 text-white" />
               </div>
-              <span className="text-slate-400">&copy; 2026 Mai Troll (MaiMaiTroll). All rights reserved.</span>
+              <span className="text-slate-400">&copy; 2026 MaiTroll. All rights reserved.</span>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/privacy" className="text-slate-500 hover:text-purple-400 text-sm transition-colors">Privacy</Link>
               <Link to="/terms" className="text-slate-500 hover:text-purple-400 text-sm transition-colors">Terms</Link>
-              <Link to="/sitemap.xml" className="text-slate-500 hover:text-purple-400 text-sm transition-colors">Sitemap</Link>
+              <a href="/sitemap.xml" className="text-slate-500 hover:text-purple-400 text-sm transition-colors">Sitemap</a>
             </div>
           </div>
         </div>

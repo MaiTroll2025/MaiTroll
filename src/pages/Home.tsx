@@ -719,14 +719,13 @@ export default function Home() {
   const { isMobile, isMobileWidth } = useIsMobile()
 
   useSEO({
-    title: 'MaiTroll | Social Streaming Platform - Livestream, Create, Connect',
-    description: 'MaiTroll (MaiMaiTroll) is a social streaming platform for creators, streamers, gamers, and online communities. Watch live streams, go live, join creator battles, spin the Troll Wheel, and connect with a global community.',
+    title: 'MaiTroll | Live Broadcasting, Battles & Social Community',
+    description: 'MaiTroll is a live social broadcasting platform where creators go live, battle, build communities, interact with viewers, send gifts and grow their audience.',
     keywords: [
-      'MaiTroll', 'MaiMaiTroll', 'social streaming platform', 'live streaming',
-      'go live', 'content creator', 'stream games online', 'watch live streams',
-      'creator economy', 'livestream', 'gaming community', 'online entertainment',
-      'social platform', 'streaming app', 'live broadcast', 'creator battles',
-      'online games', 'virtual community', 'trending streams', 'FYP'
+      'MaiTroll', 'live streaming', 'social broadcasting', 'creator platform',
+      'livestream battles', 'virtual gifts', 'creator community', 'live video',
+      'streaming app', 'social live stream', 'go live', 'watch live streams',
+      'creator battles', 'live broadcast', 'trending streams', 'online entertainment'
     ],
     structuredData: [websiteSchema(), organizationSchema()]
   })

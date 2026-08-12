@@ -5001,9 +5001,25 @@ const toggleMicrophone = useCallback(async () => {
 
    const handleGiftHost = useCallback(() => onGift(stream?.user_id || ''), [onGift, stream?.user_id])
 
-    const handleOpenUserAction = useCallback((info: { userId: string; username?: string; role?: string; createdAt?: string; seatSessionId?: string }) => {
-      setUserActionTarget(info)
-    }, [])
+     const handleOpenUserAction = useCallback((info: { userId: string; username?: string; role?: string; createdAt?: string; seatSessionId?: string }) => {
+       const normalizedUserId = info.userId
+       const normalizedUsername = info.username || ''
+       const isAnonUsername = /^anon\d{6}$/.test(normalizedUsername)
+
+       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedUserId)) {
+         if (isAnonUsername) {
+           setUserActionTarget({
+             userId: `anon-${normalizedUsername}`,
+             username: normalizedUsername,
+             role: 'anonymous',
+             createdAt: null,
+           })
+           return
+         }
+       }
+
+       setUserActionTarget(info)
+     }, [])
 
    const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
      if (!username || isAnonymousDisplayName(username)) return
@@ -5933,8 +5949,40 @@ const toggleMicrophone = useCallback(async () => {
              toast.error('Failed to disable chat')
            }
          }
-         void doDisable()
-       }
+          void doDisable()
+        }
+
+        const handleToggleChatLock = useCallback(async () => {
+          if (!streamId || !stream?.user_id) {
+            toast.error('Stream not found')
+            return
+          }
+
+          const currentlyLocked = hostChatDisabledByOfficer
+          const nextLocked = !currentlyLocked
+
+          try {
+            const { data, error } = await supabase.rpc('set_broadcaster_moderation_lock', {
+              p_broadcaster_id: stream.user_id,
+              p_chat_disabled: nextLocked,
+              p_mic_muted: null,
+              p_reason: nextLocked ? 'Chat locked by broadcaster' : 'Chat unlocked by broadcaster',
+              p_chat_disabled_until: nextLocked ? new Date(Date.now() + 60 * 60 * 1000).toISOString() : null,
+              p_chat_disable_strike_count: nextLocked ? 1 : 0,
+              p_chat_disabled_stream_id: nextLocked ? streamId : null,
+            })
+
+            if (error) throw error
+            if (data?.success === false) {
+              throw new Error(data.error || 'Failed to toggle chat lock')
+            }
+
+            toast.success(nextLocked ? 'Chat locked' : 'Chat unlocked')
+          } catch (err) {
+            console.error('[BroadcastPage] toggleChatLock error:', err)
+            toast.error('Failed to toggle chat lock')
+          }
+        }, [streamId, stream?.user_id, hostChatDisabledByOfficer])
 
   const [isAssignOfficerModalOpen, setIsAssignOfficerModalOpen] = useState(false)
   const [isPayBroadOfficersModalOpen, setIsPayBroadOfficersModalOpen] = useState(false)
@@ -7816,7 +7864,7 @@ const toggleMicrophone = useCallback(async () => {
                      }}
                      onAssignOfficer={() => setIsAssignOfficerModalOpen(true)}
                      onPayOfficers={() => setIsPayBroadOfficersModalOpen(true)}
-                     onToggleChatLock={() => {}}
+                      onToggleChatLock={handleToggleChatLock}
                    />
                 </div>
               </>
@@ -8300,8 +8348,7 @@ const toggleMicrophone = useCallback(async () => {
                     onShare={handleOpenShareModal}
                     onEndStream={handleStreamEnd}
                     isChatLocked={!!stream?.is_chat_locked}
-                    onToggleChatLock={() => {}}
-                      onOpenMessage={() => setIsMessagePopupOpen(true)}
+                     onToggleChatLock={handleToggleChatLock}
                      unreadMessageCount={0}
                     onAssignBroadofficer={handleAssignBroadofficer}
                     onPayBroadOfficers={handlePayBroadOfficers}
