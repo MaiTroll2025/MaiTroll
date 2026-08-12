@@ -44,9 +44,11 @@ function ProfileInner() {
     const { username, userId } = useParams();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { user: currentUser, profile: currentUserProfile } = useAuthStore();
+    const currentUser = useAuthStore((s) => s.user);
+    const currentUserProfile = useAuthStore((s) => s.profile);
     const refreshProfile = useAuthStore.getState().refreshProfile;
-    const { fetchXP, subscribeToXP, unsubscribe } = useXPStore();
+    const fetchXP = useXPStore((s) => s.fetchXP);
+    const subscribeToXP = useXPStore((s) => s.subscribeToXP);
     const { mySubscriberCount, myMonthlyRevenue, fetchMySubscriberStats } = useSubscriptionStore();
 
     const [profile, setProfile] = useState<any>(null);
@@ -72,6 +74,7 @@ function ProfileInner() {
     const tabDropdownRef = useRef<HTMLDivElement | null>(null);
     const initialLoadRef = useRef(true);
     const lastFetchKeyRef = useRef<string | null>(null);
+    const profileNotFoundRef = useRef(false);
 
     const isOwnProfile = currentUser?.id === profile?.id;
     const viewerRole = currentUserProfile?.troll_role || currentUserProfile?.role || 'user';
@@ -108,6 +111,10 @@ function ProfileInner() {
             else if (currentUser?.id && !username) targetId = currentUser.id;
 
             const fetchKey = `${userId || ''}|${username || ''}|${currentUser?.id || ''}`;
+            if (lastFetchKeyRef.current !== fetchKey) {
+                profileNotFoundRef.current = false;
+            }
+            if (profileNotFoundRef.current) return;
             if (!initialLoadRef.current && lastFetchKeyRef.current === fetchKey) return;
 
             const isDifferentProfile = prevProfileIdRef.current !== targetId && !username;
@@ -132,6 +139,7 @@ function ProfileInner() {
             const { data, error } = await query.maybeSingle();
             if (error || !data) {
                 console.error('Profile not found:', error);
+                profileNotFoundRef.current = true;
                 if (isMounted) setLoading(false);
                 return;
             }
@@ -281,17 +289,17 @@ function ProfileInner() {
     // Check follow status
     useEffect(() => {
         const checkFollowStatus = async () => {
-            if (!currentUser || !profile?.id || currentUser.id === profile.id) return;
+            if (!currentUser?.id || !profile?.id || currentUser.id === profile.id) return;
             const { data } = await supabase.from('user_follows').select('*').eq('follower_id', currentUser.id).eq('following_id', profile.id).maybeSingle();
             setIsFollowing(!!data);
         };
         checkFollowStatus();
-    }, [currentUser, profile?.id]);
+    }, [currentUser?.id, profile?.id]);
 
     // Check block status
     useEffect(() => {
         const checkBlockStatus = async () => {
-            if (!currentUser || !profile?.id || currentUser.id === profile.id) {
+            if (!currentUser?.id || !profile?.id || currentUser.id === profile.id) {
                 setIsBlocked(false);
                 return;
             }
@@ -300,7 +308,7 @@ function ProfileInner() {
             setIsBlocked(!!iBlocked || !!blockedMe);
         };
         checkBlockStatus();
-    }, [currentUser, profile?.id]);
+    }, [currentUser?.id, profile?.id]);
 
     // SEO metadata
     useEffect(() => {
@@ -309,7 +317,7 @@ function ProfileInner() {
         const displayName = profile.display_name || profile.username;
         const title = `${displayName} | MaiTroll`;
         const description = profile.bio || `Check out ${displayName} on MaiTroll`;
-        const profileUrl = `https://www.maitroll.com/${encodeURIComponent(profile.username)}`;
+        const profileUrl = `https://www.maitroll.com/profile/${encodeURIComponent(profile.username)}`;
         const ogImageUrl = buildOGImageUrl({ kind: 'profile', username: profile.username });
 
         document.title = title;
@@ -323,22 +331,30 @@ function ProfileInner() {
             document.head.appendChild(metaDesc);
         }
 
-        const updateOG = (prop: string, content: string) => {
-            let el = document.querySelector(`meta[property="og:${prop}"]`);
-            if (el) el.setAttribute('content', content);
+        const updateMeta = (selector: string, attribute: string, content: string) => {
+            let el = document.querySelector(selector);
+            if (el) el.setAttribute(attribute, content);
             else {
                 el = document.createElement('meta');
-                el.setAttribute('property', `og:${prop}`);
-                el.setAttribute('content', content);
+                if (selector.startsWith('meta[property="')) {
+                    el.setAttribute('property', selector.replace('meta[property="', '').replace('"]', ''));
+                } else if (selector.startsWith('meta[name="')) {
+                    el.setAttribute('name', selector.replace('meta[name="', '').replace('"]', ''));
+                }
+                el.setAttribute(attribute, content);
                 document.head.appendChild(el);
             }
         };
 
-        updateOG('title', title);
-        updateOG('description', description);
-        updateOG('url', profileUrl);
-        updateOG('type', 'profile');
-        updateOG('image', ogImageUrl);
+        updateMeta('meta[property="og:title"]', 'content', title);
+        updateMeta('meta[property="og:description"]', 'content', description);
+        updateMeta('meta[property="og:url"]', 'content', profileUrl);
+        updateMeta('meta[property="og:type"]', 'content', 'profile');
+        updateMeta('meta[property="og:image"]', 'content', ogImageUrl);
+        updateMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
+        updateMeta('meta[name="twitter:title"]', 'content', title);
+        updateMeta('meta[name="twitter:description"]', 'content', description);
+        updateMeta('meta[name="twitter:image"]', 'content', ogImageUrl);
 
         let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
         if (canonical) canonical.href = profileUrl;

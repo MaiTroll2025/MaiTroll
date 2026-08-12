@@ -198,7 +198,8 @@ const isLocalhost =
      
      // In dev/localhost, skip SW registration to avoid noise
      // Only report failures in production
-    if (false && (env.DEV || isLocalhost)) {
+    // PWA disabled — skip service worker registration entirely
+    if (env.DEV || isLocalhost || !env.PROD) {
       return;
     }
      
