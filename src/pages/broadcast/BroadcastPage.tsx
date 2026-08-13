@@ -40,7 +40,6 @@ import MoreControlsDrawer from '../../components/broadcast/MoreControlsDrawer'
 import MobileBroadcastHostSettings from '../../components/broadcast/MobileBroadcastHostSettings'
 import { useBroadcastFrame } from '../../hooks/useBroadcastFrame'
 import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
-import SaveBroadcastButton from '../../components/broadcast/SaveBroadcastButton'
 import BroadcastFrame from '../../components/broadcast/BroadcastFrame'
 import CollaborateButton from '../../components/collaboration/CollaborateButton'
 import CollaborationModal from '../../components/collaboration/CollaborationModal'
@@ -587,19 +586,6 @@ const removeStreamChannels = async (streamId: string) => {
     matchingChannels.map((channel) => supabase.removeChannel(channel)),
   )
 }
-
-/* ============================================================================
- * ???  CRITICAL STREAMING INFRASTRUCTURE - PROTECTED
- *
- * This file stops broadcast egress and MUST call /api/broadcasts/stop-streaming.
- * DO NOT change the API endpoint without updating:
- *   - server/index.js (route mapping)
- *   - server/api/broadcasts.js (handler)
- *   - SetupPage.tsx (start endpoint)
- *
- * PROTECTION: This file is monitored by pre-commit hook.
- * Any changes require explicit confirmation during commit.
- * ============================================================================ */
 
 /**
  * BroadcastPage
@@ -1540,16 +1526,6 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
       if (streamId) {
         void removeStreamChannels(streamId)
-      }
-
-      try {
-        await fetch('/api/broadcasts/stop-streaming', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ streamId: stream?.id }),
-        })
-      } catch (stopErr) {
-        console.warn('[BroadcastPage] stop-streaming error:', stopErr)
       }
 
       if (stream?.id) {
@@ -2785,28 +2761,14 @@ const ranked = senderIds
 
     // If host, mark stream as ended in the database
     if (isHost && stream) {
-      let backendStopped = false
-      try {
-        const stopResponse = await fetch('/api/broadcasts/stop-streaming', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ streamId: stream.id })
+      await supabase
+        .from('streams')
+        .update({
+          is_live: false,
+          status: 'ended',
+          ended_at: new Date().toISOString()
         })
-        if (stopResponse.ok) backendStopped = true
-      } catch (err) {
-        console.warn('[BroadcastPage] stop-streaming failed:', err)
-      }
-
-      if (!backendStopped) {
-        await supabase
-          .from('streams')
-          .update({
-            is_live: false,
-            status: 'ended',
-            ended_at: new Date().toISOString()
-          })
-          .eq('id', stream.id)
-      }
+        .eq('id', stream.id)
 
       try {
         const endTime = new Date().toISOString()
@@ -3093,7 +3055,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
             id: fallbackStream.id,
             title: fallbackStream.title,
             livekit_room_name: fallbackStream.livekit_room_name,
-            egress_id: fallbackStream.egress_id,
           });
           setStream(fallbackStream)
           setStreamLoaded(true)
@@ -3624,32 +3585,43 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           void processGiftEvent(rawGift)
         }
       },
-      onParticipant: (event: any) => {
-        if (event.eventType !== 'UPDATE' || !event.new || !streamId) return
-        const participant = event.new
-        if (participant.stream_id !== streamId || participant.removed !== true) return
+        onParticipant: (event: any) => {
+          if (event.eventType !== 'UPDATE' || !event.new || !streamId) return
+          const participant = event.new
+          if (participant.stream_id !== streamId || participant.removed !== true) return
 
-        const removedUserId = participant.user_id
-        if (!removedUserId) return
+          const removedUserId = participant.user_id
+          if (!removedUserId) return
 
-        removeSeatByUserId(removedUserId)
+          removeSeatByUserId(removedUserId)
 
-        setRemoteParticipants((prev) => {
-          const next = new Map(prev)
-          for (const [identity, p] of next) {
-            try {
-              const metadata = p?.metadata ? JSON.parse(p.metadata) : {}
-              if (metadata.user_id === removedUserId || metadata.userId === removedUserId) {
-                next.delete(identity)
+          setRemoteParticipants((prev) => {
+            const next = new Map(prev)
+            for (const [identity, p] of next) {
+              try {
+                const metadata = p?.metadata ? JSON.parse(p.metadata) : {}
+                if (metadata.user_id === removedUserId || metadata.userId === removedUserId) {
+                  next.delete(identity)
+                }
+              } catch {
+                // ignore malformed metadata
               }
-            } catch {
-              // ignore malformed metadata
             }
-          }
-          return next
-        })
-      },
-    });
+            return next
+          })
+        },
+        onPresenceBroadcast: (event) => {
+          if (event.table !== 'broadcast:like_sent') return
+          const likeData = event.new || event.raw?.payload || {}
+          if (likeData.user_id === user?.id) return
+          const newTotal = typeof likeData.total_likes === 'number' ? likeData.total_likes : null
+          if (newTotal === null) return
+          setStream((prev) => {
+            if (!prev) return prev
+            return { ...prev, total_likes: newTotal }
+          })
+        },
+      });
 
   useEffect(() => {
     if (!streamId) return;
@@ -4225,7 +4197,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           streamId: stream.id,
           hostIdentity,
           room: stream.livekit_room_name || stream.id,
-          egress_id: stream.egress_id,
         });
 
         const { data, error } = await supabase.functions.invoke('livekit-token', {
@@ -6412,22 +6383,17 @@ const toggleMicrophone = useCallback(async () => {
                     )}
                   </div>
                 </div>
-              ) : (
-                /* ===== SPLIT MODE: Large broadcaster panel ===== */
-               <section
-                 className={cn(
-                   'relative min-h-0 overflow-hidden',
-                   isMobileHost
-                     ? 'flex-none rounded-none border-0'
-                     : theme.hostVideoPanel
-                 )}
-                 style={
-                   isMobileHost
-                     ? { height: 'calc(100dvh - 180px)', maxHeight: 'calc(100dvh - 180px)' }
-                     : undefined
-                 }
-                 data-gift-target={`user:${stream?.user_id || ''}`}
-               >
+               ) : (
+                 /* ===== SPLIT MODE: Large broadcaster panel ===== */
+                <section
+                  className={cn(
+                    'relative min-h-0 overflow-hidden mobile-host-video',
+                    isMobileHost
+                      ? 'flex-none rounded-none border-0'
+                      : theme.hostVideoPanel
+                  )}
+                  data-gift-target={`user:${stream?.user_id || ''}`}
+                >
 
 {/* Camera starting fallback � shows when no video track is available */}
                 {(() => {
@@ -7441,33 +7407,33 @@ const toggleMicrophone = useCallback(async () => {
                              setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
                            }, 60_000)
 
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession()
-                            if (session) {
-                              await fetch(`${import.meta.env.VITE_EDGE_FUNCTIONS_URL}/send-message`, {
-                                method: 'POST',
-                                headers: {
-                                  Authorization: `Bearer ${session.access_token}`,
-                                  'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                  type: 'chat',
-                                  stream_id: streamId,
-                                  data: { content: text },
-                                }),
-                              })
-                            }
-                            const chatChannel = floatingChatChannelRef.current;
-                            if (chatChannel) {
-                              chatChannel.send({
-                                type: 'broadcast',
-                                event: 'floating_chat',
-                                payload: { username, content: text },
-                              }).catch(() => {})
+                           try {
+                             const { data: { session } } = await supabase.auth.getSession()
+                             if (session) {
+                               await fetch(`${import.meta.env.VITE_EDGE_FUNCTIONS_URL}/send-message`, {
+                                 method: 'POST',
+                                 headers: {
+                                   Authorization: `Bearer ${session.access_token}`,
+                                   'Content-Type': 'application/json',
+                                 },
+                                 body: JSON.stringify({
+                                   type: 'chat',
+                                   stream_id: streamId,
+                                   data: { content: text },
+                                 }),
+                               })
                              }
-                            } catch (err) {
-                            console.warn('[BroadcastPage] send-message failed:', err)
-                          }
+                             const chatChannel = floatingChatChannelRef.current;
+                             if (chatChannel) {
+                               chatChannel.send({
+                                 type: 'broadcast',
+                                 event: 'floating_chat',
+                                 payload: { username, content: text },
+                               }).catch(() => {})
+                              }
+                           } catch (err) {
+                           console.warn('[BroadcastPage] send-message failed:', err)
+                         }
                         }}
                         className="mt-auto border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
                       >
@@ -7805,19 +7771,19 @@ const toggleMicrophone = useCallback(async () => {
                   </span>
                 </div>
 
-                {/* MOBILE: Audience ticker with viewer count + collaboration controls */}
-                {isMobileHost && stream && (
-                  <div className="absolute inset-x-0 top-0 z-20 flex items-start gap-2 px-3 pt-[44px]">
+                 {/* MOBILE: Audience ticker with viewer count + collaboration controls */}
+                 {isMobileHost && stream && (
+                   <div className="mobile-audience-ticker absolute inset-x-0 top-0 z-20 flex items-start gap-2 px-3 pt-[44px]">
                     <div className="pointer-events-auto flex-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-xl shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
-                       <MobileAudienceTicker
-                         audience={audience}
-                         currentUserId={user?.id}
-                         hostUserId={stream?.user_id || stream?.broadcaster_id || undefined}
-                         viewerCount={liveViewerCount}
-                         likes={streamLayoutStats.likes}
-                         maxVisible={6}
-                         onModerateUser={handleOpenUserAction}
-                       />
+                        <MobileAudienceTicker
+                          audience={audienceWithAnon}
+                          currentUserId={user?.id}
+                          hostUserId={stream?.user_id || stream?.broadcaster_id || undefined}
+                          viewerCount={liveViewerCount}
+                          likes={streamLayoutStats.likes}
+                          maxVisible={6}
+                          onModerateUser={handleOpenUserAction}
+                        />
                     </div>
                     <div className="pointer-events-auto relative mt-0.5 flex flex-col gap-2">
                       <CollaborateButton compact onClick={() => setShowCollaborationModal(true)} />
@@ -7939,11 +7905,11 @@ const toggleMicrophone = useCallback(async () => {
               <div className="absolute bottom-3 left-3 z-50">
                 <button
                   onClick={() => setIsChatOpen((prev) => !prev)}
-                  className="rounded-lg bg-black/40 backdrop-blur border border-white/10 flex items-center gap-1.5 px-2.5 py-1.5 text-white/70 hover:text-white transition-all"
+                  className="rounded-md bg-black/40 backdrop-blur border border-white/10 flex items-center gap-1 px-1.5 py-1 text-white/70 hover:text-white transition-all"
                   title={isChatOpen ? 'Close Chat' : 'Open Chat'}
                   aria-label={isChatOpen ? 'Close chat' : 'Open chat'}
                 >
-                  <Maximize2 className="h-4 w-4" />
+                  <Maximize2 className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline text-[10px] font-bold">{isChatOpen ? 'Close' : 'Chat'}</span>
                 </button>
               </div>
@@ -7954,11 +7920,11 @@ const toggleMicrophone = useCallback(async () => {
               <div className="absolute bottom-3 left-3 z-50">
                 <button
                   onClick={() => setIsChatOpen((prev) => !prev)}
-                  className="rounded-lg bg-black/40 backdrop-blur border border-white/10 flex items-center gap-1.5 px-2.5 py-1.5 text-white/70 hover:text-white transition-all"
+                  className="rounded-md bg-black/40 backdrop-blur border border-white/10 flex items-center gap-1 px-1.5 py-1 text-white/70 hover:text-white transition-all"
                   title={isChatOpen ? 'Close Chat' : 'Open Chat'}
                   aria-label={isChatOpen ? 'Close chat' : 'Open chat'}
                 >
-                  <Maximize2 className="h-4 w-4" />
+                  <Maximize2 className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline text-[10px] font-bold">{isChatOpen ? 'Close' : 'Chat'}</span>
                 </button>
               </div>
@@ -8572,7 +8538,7 @@ const toggleMicrophone = useCallback(async () => {
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="fixed bottom-24 right-4 z-[60] w-[360px] max-h-[480px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl"
+                className="fixed bottom-20 right-4 z-[60] w-[360px] max-h-[480px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl max-md:right-2 max-md:left-2 max-md:w-auto max-md:bottom-[100px]"
               >
                 <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                   <div className="flex items-center gap-2">

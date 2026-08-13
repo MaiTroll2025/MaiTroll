@@ -58,8 +58,11 @@ export default function MobileAudienceTicker({
 
   const overflow = Math.max(0, audience.filter((m) => m.is_active && !m.left_at).length - maxVisible)
 
-  const canModerate = (m: StreamAudienceMember) =>
-    Boolean(hostUserId && (m.user_id === hostUserId || isStaff))
+  const canModerate = (m: StreamAudienceMember) => {
+    if (m.user_id === currentUserId) return false
+    if (!hostUserId) return false
+    return currentUserId === hostUserId || isStaff
+  }
 
   return (
     <div className={cn('flex w-full items-center gap-2', className)}>

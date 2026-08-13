@@ -237,13 +237,55 @@ Deno.serve(async (req) => {
     });
 
     // 4. Load actor's current DB profile and enforce role server-side
-    const { data: actorProfile, error: profileError } = await supabaseAdmin
+    let actorProfile = null as any
+    let profileError = null as any
+
+    const { data: fetchedProfile, error: fetchedError } = await supabaseAdmin
       .from("user_profiles")
       .select(
         "id, username, full_name, role, troll_role, is_admin, is_ceo, is_lead_officer, is_troll_officer, is_secretary, is_broadcaster, is_broadofficer, is_ceo_assistant, is_noah_assistant"
       )
       .eq("id", user.id)
       .maybeSingle();
+
+    if (fetchedError) {
+      profileError = fetchedError
+    } else if (!fetchedProfile) {
+      const baseUsername =
+        user.user_metadata?.username ||
+        user.email?.split("@")[0] ||
+        `user${user.id.slice(0, 8)}`
+
+      const { data: newProfile, error: createError } = await supabaseAdmin
+        .from("user_profiles")
+        .insert({
+          id: user.id,
+          username: baseUsername,
+          full_name: user.user_metadata?.full_name || baseUsername,
+          email: user.email,
+          role: "user",
+          tier: "Bronze",
+          troll_coins: 0,
+          total_earned_coins: 0,
+          total_spent_coins: 0,
+        })
+        .select(
+          "id, username, full_name, role, troll_role, is_admin, is_ceo, is_lead_officer, is_troll_officer, is_secretary, is_broadcaster, is_broadofficer, is_ceo_assistant, is_noah_assistant"
+        )
+        .single()
+
+      if (createError || !newProfile) {
+        return withCors(
+          fail("PROFILE_NOT_FOUND", "Profile not found and could not be created."),
+          403,
+          req
+        )
+      }
+
+      actorProfile = newProfile
+    } else {
+      actorProfile = fetchedProfile
+    }
 
     if (profileError || !actorProfile) {
       return withCors(fail("PROFILE_NOT_FOUND", "Profile not found."), 403, req);

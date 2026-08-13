@@ -153,10 +153,6 @@ export function AudienceBubbleTicker({
     return null
   }
 
-  if (displayAudience.length === 0 && overflowCount === 0) {
-    return null
-  }
-
   return (
     <div
       className={cn(
