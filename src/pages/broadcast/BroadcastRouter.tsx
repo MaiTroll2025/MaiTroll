@@ -10,7 +10,7 @@ import { BroadcastPage } from './BroadcastPage'
 import ViewerPage from './ViewerPage'
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://www.maitroll.com'
-const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`
+const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-preview.png`
 
 type BroadcasterMeta = {
   username: string

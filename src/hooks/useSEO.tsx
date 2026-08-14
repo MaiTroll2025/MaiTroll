@@ -68,7 +68,7 @@ function removeAllJsonLd() {
 export default function useSEO(config: SEOConfig) {
   const location = useLocation()
   const canonicalUrl = config.canonical || `https://www.maitroll.com${location.pathname}`
-  const imageUrl = config.ogImage || `https://www.maitroll.com/images/mai-troll-city-preview.png`
+  const imageUrl = config.ogImage || `https://www.maitroll.com/images/mai-troll-preview.png`
 
   const applySEO = useCallback(() => {
     document.title = config.title

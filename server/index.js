@@ -99,7 +99,7 @@ if (supabaseServiceKey && supabaseServiceKey.startsWith('eyJ')) {
 const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.maitroll.com';
 
 // Default fallback image (used when no stream thumbnail available)
-const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`;
+const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-preview.png`;
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public'), {

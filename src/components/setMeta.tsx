@@ -25,7 +25,7 @@ export default function SEOLayout({ children, title, description, keywords = [],
   React.useEffect(() => {
     const origin = window.location.origin
     const canonicalUrl = `${origin}${location.pathname}`
-    const imageUrl = ogImage || `${origin}/images/mai-troll-city-preview.png`
+    const imageUrl = ogImage || `${origin}/images/mai-troll-preview.png`
 
     document.title = `${title} | Mai Troll`
 

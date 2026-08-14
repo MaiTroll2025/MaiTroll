@@ -2,7 +2,7 @@ import { supabaseAdmin } from '../_shared/auth'
 import { generateOGHTML, buildOGImageUrl } from '../_shared/og-html'
 
 const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.maitroll.com'
-const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-city-preview.png`
+const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-preview.png`
 
 export const runtime = 'edge'
 

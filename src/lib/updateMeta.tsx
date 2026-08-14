@@ -117,7 +117,7 @@ export default function ArticleReader() {
     updateMeta('meta[property="og:description"]', 'content', description);
     updateMeta('meta[property="og:url"]', 'content', url);
     updateMeta('meta[property="og:type"]', 'content', 'article');
-    const fallback = 'https://www.maitroll.com/images/mai-troll-city-preview.png';
+    const fallback = 'https://www.maitroll.com/images/mai-troll-preview.png';
     updateMeta('meta[property="og:image"]', 'content', ogImageUrl || fallback);
     updateMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
     updateMeta('meta[name="twitter:title"]', 'content', title);

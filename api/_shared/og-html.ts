@@ -39,7 +39,7 @@ export function buildOGImageUrl(params: {
     if (params.slug) sp.set('slug', params.slug)
     return `${base}/academy?${sp.toString()}`
   }
-  return `${APP_URL}/images/mai-troll-city-preview.png`
+  return `${APP_URL}/images/mai-troll-preview.png`
 }
 
 function esc(str: string): string {
@@ -70,7 +70,7 @@ export function generateOGHTML(data: OGMetaOptions): string {
   } = data
 
   // Use explicit OG image URL, or the provided image, or fallback
-  const ogImage = ogImageUrl || image || `${APP_URL}/images/mai-troll-city-preview.png`
+  const ogImage = ogImageUrl || image || `${APP_URL}/images/mai-troll-preview.png`
 
   return `<!DOCTYPE html>
 <html lang="en">
