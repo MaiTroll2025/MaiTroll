@@ -84,6 +84,7 @@ export default function LeadOfficerDashboard() {
   const [empireApplications, setEmpireApplications] = useState<any[]>([])
   const [autoClockoutSessions, setAutoClockoutSessions] = useState<AutoClockoutSession[]>([])
   const [weeklyReports, setWeeklyReports] = useState<any[]>([])
+  const [pendingCareerApps, setPendingCareerApps] = useState(0)
 
   const [reason, setReason] = useState('')
   const [banReason, setBanReason] = useState('')
@@ -167,11 +168,11 @@ export default function LeadOfficerDashboard() {
   const loadApplicants = async () => {
     try {
       const { data, error } = await supabase
-        .from('applications')
+        .from('career_applications')
         .select(`
           id,
           user_id,
-          experience,
+          position_id,
           status,
           created_at,
           user_profiles!user_id (
@@ -182,9 +183,8 @@ export default function LeadOfficerDashboard() {
             is_officer_active
           )
         `)
-        .eq('type', 'troll_officer')
-        .eq('status', 'pending')
-        .neq('user_profiles.role', 'admin')
+        .is('lead_officer_approved', null)
+        .order('created_at', { ascending: false })
 
       if (error) throw error
 
@@ -303,6 +303,21 @@ export default function LeadOfficerDashboard() {
     }
   }
 
+  const loadPendingCareerApps = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('career_applications')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['pending', 'applied'])
+        .is('lead_officer_approved', null)
+
+      if (error) throw error
+      setPendingCareerApps(count || 0)
+    } catch (error) {
+      console.error('Error loading pending career apps:', error)
+    }
+  }
+
   const refreshAll = async () => {
     await Promise.all([
       loadApplicants(),
@@ -310,6 +325,7 @@ export default function LeadOfficerDashboard() {
       loadLogs(),
       loadEmpireApplications(),
       loadAutoClockouts(),
+      loadPendingCareerApps(),
     ])
   }
 
@@ -678,7 +694,7 @@ export default function LeadOfficerDashboard() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex gap-2 overflow-x-auto">
               <TabButton active={activeTab === 'dashboard'} icon={LayoutDashboard} label="Dashboard" onClick={() => setActiveTab('dashboard')} />
-              <TabButton active={activeTab === 'hr'} icon={User} label="HR & Personnel" onClick={() => setActiveTab('hr')} />
+              <TabButton active={activeTab === 'hr'} icon={User} label="HR & Personnel" onClick={() => setActiveTab('hr')} badge={pendingCareerApps > 0 ? pendingCareerApps : undefined} />
               <TabButton active={activeTab === 'empire'} icon={Crown} label="Empire" onClick={() => setActiveTab('empire')} />
               <TabButton active={activeTab === 'reports'} icon={FileText} label="Reports" onClick={() => setActiveTab('reports')} />
             </div>
@@ -909,11 +925,13 @@ function TabButton({
   icon: Icon,
   label,
   onClick,
+  badge,
 }: {
   active: boolean
   icon: any
   label: string
   onClick: () => void
+  badge?: number
 }) {
   return (
     <button
@@ -927,6 +945,11 @@ function TabButton({
     >
       <Icon className="h-4 w-4" />
       {label}
+      {badge !== undefined && badge > 0 && (
+        <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white">
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
     </button>
   )
 }

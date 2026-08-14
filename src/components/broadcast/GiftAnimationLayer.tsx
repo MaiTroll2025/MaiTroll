@@ -30,56 +30,23 @@ export default function GiftAnimationLayer({ streamId, recipientUserId, recipien
   const playingRef = useRef<boolean>(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const seen = useRef(new Set<string>())
-  const channelRef = useRef<any>(null)
 
   useEffect(() => {
     if (!streamId) return
 
-    const ch = supabase.channel(`stream-gifts:${streamId}`)
-    channelRef.current = ch
-    ch.subscribe()
-
-    ch.on('broadcast', { event: 'gift_sent' }, (payload: any) => {
-      try {
-        const ev: GiftEvent = payload?.payload || payload
-        if (import.meta.env.DEV) {
-          console.debug('[GiftAnimationLayer] received gift_sent', { payload: payload, giftEvent: ev, recipientUserId, recipientType })
-        }
-
-        // Filter by recipientUserId
-        if (!ev || !ev.receiver_id) {
-          if (import.meta.env.DEV) {
-            console.debug('[GiftAnimationLayer] skipping gift_sent without receiver_id', { ev })
-          }
-          return
-        }
-        if (ev.receiver_id !== recipientUserId) {
-          if (import.meta.env.DEV) {
-            console.debug('[GiftAnimationLayer] skipping gift_sent for different recipient', { receiver_id: ev.receiver_id, recipientUserId })
-          }
-          return
-        }
-
-        // Prevent duplicates
-        if (seen.current.has(ev.id)) {
-          if (import.meta.env.DEV) {
-            console.debug('[GiftAnimationLayer] skipping duplicate gift_sent', { giftId: ev.id })
-          }
-          return
-        }
-        seen.current.add(ev.id)
-
-        setQueue((q) => [...q, ev])
-      } catch (err) {
-        console.warn('[GiftAnimationLayer] failed to handle gift_sent payload', err)
-      }
-    })
-
-    return () => {
-      try {
-        if (ch) supabase.removeChannel(ch)
-      } catch {}
+    const handler = (event: Event) => {
+      const payload = (event as CustomEvent).detail
+      if (!payload) return
+      const ev: GiftEvent = payload?.payload || payload
+      if (!ev || !ev.receiver_id) return
+      if (ev.receiver_id !== recipientUserId) return
+      if (seen.current.has(ev.id)) return
+      seen.current.add(ev.id)
+      setQueue((q) => [...q, ev])
     }
+
+    window.addEventListener('broadcast-gift-received', handler as EventListener)
+    return () => window.removeEventListener('broadcast-gift-received', handler as EventListener)
   }, [streamId, recipientUserId])
 
   useEffect(() => {

@@ -739,9 +739,6 @@ export default function Sidebar() {
               {(isCEOAssistant || isAdmin || isCEO) && (
                 <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="CEO Assistant Dashboard" to="/ceo-assistant-dashboard" active={isActive('/ceo-assistant-dashboard')} highlight={isUpdated('/ceo-assistant-dashboard')} onClick={() => markAsViewed('/ceo-assistant-dashboard')} tone="cyan" />
               )}
-              {(isNoahAssistant || isAdmin || isNoahAdmin || isCEO) && (
-                <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="Noah Assistant Dashboard" to="/noah-assistant-dashboard" active={isActive('/noah-assistant-dashboard')} highlight={isUpdated('/noah-assistant-dashboard')} onClick={() => markAsViewed('/noah-assistant-dashboard')} tone="purple" />
-              )}
               {canSeeProsecutorDashboard && (
                 <GridItem collapsed={isSidebarCollapsed} icon={Gavel} label="Prosecutor Dashboard" to="/prosecutor" active={isActive('/prosecutor')} highlight={isUpdated('/prosecutor')} onClick={() => markAsViewed('/prosecutor')} className="text-red-400" tone="red" />
               )}
@@ -823,7 +820,6 @@ export default function Sidebar() {
             <GridItem collapsed={isSidebarCollapsed} icon={Briefcase} label="Agency HR Dashboard" to="/agency-hr-dashboard" active={isActive('/agency-hr-dashboard')} highlight={isUpdated('/agency-hr-dashboard')} onClick={() => markAsViewed('/agency-hr-dashboard')} tone="cyan" />
 
             <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="CEO Assistant Dashboard" to="/ceo-assistant-dashboard" active={isActive('/ceo-assistant-dashboard')} highlight={isUpdated('/ceo-assistant-dashboard')} onClick={() => markAsViewed('/ceo-assistant-dashboard')} tone="cyan" />
-            <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="Noah Assistant Dashboard" to="/noah-assistant-dashboard" active={isActive('/noah-assistant-dashboard')} highlight={isUpdated('/noah-assistant-dashboard')} onClick={() => markAsViewed('/noah-assistant-dashboard')} tone="purple" />
           </div>
         )}
       </div>

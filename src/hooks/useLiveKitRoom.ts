@@ -672,6 +672,8 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
     setError(null);
     localUserIdRef.current = userId;
 
+    const isMobileDevice = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
     let room: Room | null = null;
     let audioTrack: LocalAudioTrack | null = null;
     let videoTrack: LocalVideoTrack | null = null;
@@ -682,7 +684,8 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
         dynacast: true,
         videoCaptureDefaults: {
           ...videoPreset,
-          facingMode: 'user'
+          facingMode: 'user',
+          frameRate: isMobileDevice ? { ideal: 24, max: 30 } : undefined
         },
         audioCaptureDefaults: {
           echoCancellation: true,

@@ -243,11 +243,11 @@ Deno.serve(async (req) => {
         if (!isLeadOfficer) throw new Error("Unauthorized");
         const { applicationId } = params;
         const { error } = await supabaseAdmin
-          .from('applications')
+          .from('career_applications')
           .update({ 
-            status: 'approved',
-            reviewed_by: user.id,
-            reviewed_at: new Date().toISOString()
+            lead_officer_approved: true,
+            lead_officer_reviewed_by: user.id,
+            lead_officer_reviewed_at: new Date().toISOString()
           })
           .eq('id', applicationId);
         if (error) throw error;
@@ -259,11 +259,11 @@ Deno.serve(async (req) => {
         if (!isLeadOfficer) throw new Error("Unauthorized");
         const { applicationId } = params;
         const { error } = await supabaseAdmin
-          .from('applications')
+          .from('career_applications')
           .update({ 
-            status: 'rejected',
-            reviewed_by: user.id,
-            reviewed_at: new Date().toISOString()
+            lead_officer_approved: false,
+            lead_officer_reviewed_by: user.id,
+            lead_officer_reviewed_at: new Date().toISOString()
           })
           .eq('id', applicationId);
         if (error) throw error;

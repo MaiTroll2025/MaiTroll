@@ -7,9 +7,7 @@ import { useAuthStore } from '@/lib/store'
 import { generateUUID } from '@/lib/uuid'
 import { toast } from 'sonner'
 import { useObsHeartbeat } from '@/hooks/useObsHeartbeat'
-import { useBroadcastRecorder } from '@/hooks/useBroadcastRecorder'
 import GamingChat from '@/components/broadcast/GamingChat'
-import SaveBroadcastButton from '@/components/broadcast/SaveBroadcastButton'
 import { GamingStreamProvider, useSetGamingStreamId } from '@/contexts/GamingStreamContext'
 
 type ObsStatus = 'idle' | 'generating' | 'ready' | 'waiting' | 'signal_detected' | 'connected' | 'live' | 'ended' | 'error' | 'reconnecting'
@@ -75,7 +73,6 @@ function GamingSetupPageInner() {
   const reconnectAttempts = useRef(0)
   const healthCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isMountedRef = useRef(true)
-  const recorder = useBroadcastRecorder()
   const goLiveInProgressRef = useRef(false)
 
   // Heartbeat only when OBS is actually connected
@@ -437,9 +434,6 @@ function GamingSetupPageInner() {
   const handleEndStream = useCallback(async () => {
     if (!streamData?.id) { toast.error('No active stream to end'); return }
     try {
-      if (recorder.isRecording) {
-        try { await recorder.stopRecording() } catch (recErr) { console.warn('[update.tsx] Failed to stop recording:', recErr) }
-      }
       await supabase.functions.invoke('agora-stream', { body: { action: 'endStream', sessionId: agoraSessionId } })
       const { error } = await supabase.from('streams').update({ status: 'ended', is_live: false, ended_at: new Date().toISOString() }).eq('id', streamData.id)
       if (error) throw error
@@ -452,7 +446,7 @@ function GamingSetupPageInner() {
       console.error('[GamingSetupPage] End stream failed:', err)
       toast.error(err?.message || 'Failed to end stream')
     }
-  }, [streamData?.id, agoraSessionId, recorder])
+  }, [streamData?.id, agoraSessionId])
 
   const handleToggleCamera = useCallback(() => { setIsCameraEnabled(p => !p); setHasCameraTrack(true) }, [])
   const handleToggleMic = useCallback(() => { setIsMicEnabled(p => !p); setHasMicTrack(true) }, [])
@@ -492,20 +486,6 @@ function GamingSetupPageInner() {
       onEndStream={() => void handleEndStream()}
       chatPanel={streamData?.id ? <GamingChat streamId={streamData.id} /> : null}
       cameraPreview={undefined}
-      saveBroadcastButton={
-        streamData?.id ? (
-          <SaveBroadcastButton
-            isRecording={recorder.isRecording}
-            isUploading={recorder.isUploading}
-            recordingDuration={recorder.recordingDuration}
-            recordingSize={recorder.recordingSize}
-            streamId={streamData.id}
-            onStartRecording={recorder.startRecording}
-            onStopRecording={recorder.stopRecording}
-            onSaveClip={recorder.saveClip}
-          />
-        ) : undefined
-      }
     />
   )
 }

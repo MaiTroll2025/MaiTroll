@@ -18,13 +18,6 @@ interface UserStats {
   newFollowers: number;
 }
 
-interface ReplayInfo {
-  id: string;
-  replay_url: string;
-  thumbnail_url: string | null;
-  duration_seconds: number | null;
-}
-
 export default function StreamSummary() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,8 +32,6 @@ export default function StreamSummary() {
   });
   const [isBroadcaster, setIsBroadcaster] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [replay, setReplay] = useState<ReplayInfo | null>(null);
 
   useEffect(() => {
     if (!streamId) {
@@ -72,38 +63,6 @@ export default function StreamSummary() {
 
         const userIsBroadcaster = user?.id === broadcasterId;
         setIsBroadcaster(userIsBroadcaster);
-
-        const { data: replayData } = await supabase
-          .from('broadcast_replays')
-          .select('id, replay_url, thumbnail_url, duration_seconds, file_size_bytes')
-          .eq('stream_id', streamId)
-          .maybeSingle();
-
-        if (userIsBroadcaster && user?.id && streamId && !isSaved) {
-          try {
-            await supabase
-              .from('saved_streams')
-              .upsert({
-                user_id: user.id,
-                stream_id: streamId,
-                source: 'auto_stream_end',
-                storage_category: 'broadcast_recording',
-                file_size_bytes: replayData?.file_size_bytes || 0,
-                recording_duration: replayData?.duration_seconds || 0,
-              }, { onConflict: 'saved_streams_user_id_stream_id_key' });
-            setIsSaved(true);
-          } catch (err: any) {
-            if (err.code !== '23505') {
-              console.error('Error auto-saving stream:', err);
-            } else {
-              setIsSaved(true);
-            }
-          }
-        }
-
-        if (replayData) {
-          setReplay(replayData as ReplayInfo);
-        }
 
         let trollmondsSpent = 0;
         let giftsReceived = 0;
@@ -192,15 +151,6 @@ export default function StreamSummary() {
     return value.toLocaleString();
   };
 
-  const formatDuration = (seconds: number | null): string => {
-    if (!seconds) return '';
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    return `${m}:${String(s).padStart(2, '0')}`;
-  };
-
   return (
     <div className="h-screen bg-black text-white flex flex-col items-center p-4 overflow-y-auto">
       <div className="max-w-lg w-full bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-8 flex flex-col items-center text-center shadow-2xl my-auto shrink-0">
@@ -273,22 +223,7 @@ export default function StreamSummary() {
                 ) : (
                   'Not saved to profile'
                 )}
-              </div>
-            )}
-
-            {replay && (
-              <button
-                onClick={() => navigate(`/replay/${streamId}`)}
-                className="w-full p-2 sm:p-3 rounded-lg border text-xs sm:text-sm flex items-center justify-center gap-2 bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition"
-              >
-                <Play size={14} />
-                Watch Replay
-                {replay.duration_seconds && (
-                  <span className="text-emerald-500/70">({formatDuration(replay.duration_seconds)})</span>
-                )}
-              </button>
-            )}
-          </div>
+</div>
         )}
 
         <button

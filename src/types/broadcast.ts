@@ -40,7 +40,6 @@ export interface Stream {
   // Viewer playback goes through HLS; hosts and seat users stay on LiveKit RTC.
   hls_path?: string;
   hls_url?: string;
-  egress_id?: string | null;
   // Featured broadcast fields
   is_featured?: boolean;
   featured_at?: string | null;
@@ -50,34 +49,6 @@ export interface Stream {
   password_hash?: string;
   // Battle mode fields
   battle_enabled?: boolean;
-  battle_mode?: 'none' | 'universal' | 'troll' | 'manual' | 'random_queue';
-  battle_format?: '1v1' | '2v2' | '3v3' | '4v4' | '5v5';
-  battle_status?: 'waiting' | 'ready' | 'starting' | 'active' | 'ended';
-  battle_start_time?: string | null;
-  battle_end_time?: string | null;
-  random_battle_queue_enabled?: boolean;
-  random_battle_queued_at?: string | null;
-  random_battle_cooldown_until?: string | null;
-  battle_end_reason?: 'timer_expired' | 'broadcaster_left' | 'forfeit' | 'admin_ended' | 'disconnected' | null;
-  battle_winner_id?: string | null;
-  battle_forfeited_by?: string | null;
-  side_a_score?: number;
-  side_b_score?: number;
-  team_a_members?: string[];
-  team_b_members?: string[];
-  // State battle fields
-  state_battle_mode?: 'none' | 'state' | null;
-  state_battle_state_code?: string | null;
-  // Recording/VOD fields
-  thumbnail_url?: string | null;
-  recording_url?: string | null;
-  recording_storage_path?: string | null;
-  saved_to_admin_archive?: boolean;
-  saved_at?: string | null;
-  // Broadcast agreement acceptance (per-session)
-  broadcast_disclaimer_accepted?: boolean;
-  broadcast_disclaimer_accepted_at?: string | null;
-  broadcast_disclaimer_user_id?: string;
 }
 
 export interface StreamGuest {

@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
+import { sendStreamBroadcast } from '../lib/realtime/streamRealtimeManager'
 
 export function useStreamLikes(streamId: string, initialTotalLikes: number = 0) {
   const { user } = useAuthStore()
@@ -27,6 +28,11 @@ export function useStreamLikes(streamId: string, initialTotalLikes: number = 0) 
 
       if (typeof data === 'number') {
         setDisplayedLikes(data)
+        void sendStreamBroadcast(streamId, 'like_sent', {
+          user_id: user?.id,
+          stream_id: streamId,
+          total_likes: data,
+        })
       }
     } catch (error) {
       pendingLikesRef.current += batch
@@ -34,7 +40,7 @@ export function useStreamLikes(streamId: string, initialTotalLikes: number = 0) 
     } finally {
       flushInProgressRef.current = false
     }
-  }, [streamId])
+  }, [streamId, user?.id])
 
   useEffect(() => {
     const interval = window.setInterval(() => {

@@ -21,7 +21,6 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { useLiveKitRoom } from '@/hooks/useLiveKitRoom'
-import { useBroadcastRecorder } from '@/hooks/useBroadcastRecorder'
 import { getLiveKitRoomName } from '@/lib/liveUtils'
 
 const TABS = [
@@ -172,32 +171,10 @@ export default function NightWatchDashboard() {
   const [shiftStartedAt, setShiftStartedAt] = useState<string | null>(null)
 
   const [walkieActive, setWalkieActive] = useState(false)
-  const [recordingActive, setRecordingActive] = useState(false)
-  const [recordingSessionId, setRecordingSessionId] = useState<string | null>(null)
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [reports, setReports] = useState<PatrolReport[]>([])
-  const [recordings, setRecordings] = useState<PatrolRecording[]>([])
   const [liveKitError, setLiveKitError] = useState<string | null>(null)
-
-  // Full-screen auto-recording for Night Watch shifts
-  const recorder = useBroadcastRecorder({
-    sourceStream: async () => {
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: { frameRate: 30 },
-          audio: true,
-          ...('selfBrowserSurface' in (navigator.mediaDevices.getSupportedConstraints ? {} : {}) ? { selfBrowserSurface: 'include' } : {}),
-        } as any)
-        return stream
-      } catch (err: any) {
-        console.warn('[NightWatch] Screen capture denied or failed:', err?.message)
-        return null
-      }
-    },
-    replaySource: 'night_watch',
-    replayTitlePrefix: 'Night Watch',
-  })
 
   const selectedStreamId = selectedStream?.id || ''
 

@@ -457,7 +457,7 @@ interface CommentSheetProps {
 }
 
 export function CommentSheet({ post, isOpen, onClose }: CommentSheetProps) {
-  const { user } = useAuthStore()
+  const { user, isAdmin } = useAuthStore()
   const [comments, setComments] = useState<TreelzComment[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(false)
@@ -480,6 +480,22 @@ export function CommentSheet({ post, isOpen, onClose }: CommentSheetProps) {
       setComments(updated)
     } catch { /* ignore */ }
   }
+
+  const handleDeleteComment = useCallback(async (commentId: string, commentUserId: string) => {
+    if (!user) return
+    const isAuthor = commentUserId === user.id
+    const isOwner = post.user_id === user.id
+    if (!isAuthor && !isOwner && !isAdmin) return
+    if (!confirm('Delete this comment?')) return
+    try {
+      const { error } = await supabase.from('treelz_comments').delete().eq('id', commentId)
+      if (error) throw error
+      setComments((prev) => prev.filter((c) => c.id !== commentId))
+      toast.success('Comment deleted')
+    } catch {
+      toast.error('Failed to delete comment')
+    }
+  }, [user, post.user_id, isAdmin])
 
   if (!isOpen) return null
 
@@ -533,6 +549,16 @@ export function CommentSheet({ post, isOpen, onClose }: CommentSheetProps) {
                       <span className="truncate text-xs font-black text-cyan-100">@{c.author?.username || 'unknown'}</span>
                       <span className="h-1 w-1 rounded-full bg-white/25" />
                       <span className="text-[10px] font-bold text-white/35">now</span>
+                      {(user && (c.user_id === user.id || post.user_id === user.id || isAdmin)) && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteComment(c.id, c.user_id)}
+                          className="rounded p-0.5 text-red-300/70 transition hover:bg-red-500/10 hover:text-red-200"
+                          title="Delete comment"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
                     </div>
                     <p className="mt-1 text-sm leading-relaxed text-white/82">{c.content}</p>
                   </div>

@@ -45,6 +45,9 @@ const CEOAssistantDashboard = () => {
   const isCEOAssistant =
     String(profile?.role) === 'ceo_assistant' ||
     String(profile?.troll_role) === 'ceo_assistant'
+  const isNoahAssistant =
+    String(profile?.role) === 'noah_assistant' ||
+    String(profile?.troll_role) === 'noah_assistant'
   const isAdmin =
     String(profile?.role) === 'admin' ||
     String(profile?.troll_role) === 'admin' ||
@@ -56,7 +59,12 @@ const CEOAssistantDashboard = () => {
     !!(profile as { is_superadmin?: boolean })?.is_superadmin
   const isCEO = profile?.troll_role === 'ceo'
 
-  const canAccess = isCEOAssistant || isAdmin || isCEO
+  const canAccess = isCEOAssistant || isNoahAssistant || isAdmin || isCEO
+
+  const dashboardTitle = isNoahAssistant ? 'Noah Assistant Dashboard' : 'CEO Assistant Dashboard'
+  const dashboardRoleName = isNoahAssistant ? 'Noah Assistant' : 'CEO Assistant'
+  const assistantUsername = profile?.username || (isNoahAssistant ? 'noah_assistant' : 'ceo_assistant')
+  const reportsViewMode = isNoahAssistant ? 'noah_assistant' : 'ceo_assistant'
 
   if (!canAccess) {
     return (
@@ -64,10 +72,10 @@ const CEOAssistantDashboard = () => {
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-red-400/30 bg-red-500/10 p-8 shadow-2xl shadow-red-950/30">
           <div className="flex items-center gap-3 text-red-100">
             <ShieldAlert className="h-6 w-6" />
-            <h1 className="text-2xl font-black">CEO Assistant Dashboard access required</h1>
+            <h1 className="text-2xl font-black">{dashboardTitle} access required</h1>
           </div>
           <p className="mt-4 text-sm leading-7 text-red-100/90">
-            Your current role is {profile?.role || 'unknown'}. This page is restricted to CEO Assistant, Admin, and CEO roles.
+            Your current role is {profile?.role || 'unknown'}. This page is restricted to {dashboardRoleName}, Admin, and CEO roles.
           </p>
           <a href="/" className="mt-6 inline-flex rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black text-white">
             Return home
@@ -167,7 +175,13 @@ const CEOAssistantDashboard = () => {
       // Load audit logs data
       const { data: auditData } = await supabase
         .from('audit_logs')
-        .select('*, user_profiles(username, display_name)')
+        .select(`
+          *,
+          user_profiles:user_profiles!audit_logs_user_id_fkey(
+            username,
+            display_name
+          )
+        `)
         .eq('actor_id', profile?.id)
         .order('created_at', { ascending: false })
         .limit(50)
@@ -176,7 +190,13 @@ const CEOAssistantDashboard = () => {
       // Load recent activity (audit logs)
       const { data: activityData, error: activityError } = await supabase
         .from('audit_logs')
-        .select('*, user_profiles(username, display_name)')
+        .select(`
+          *,
+          user_profiles:user_profiles!audit_logs_user_id_fkey(
+            username,
+            display_name
+          )
+        `)
         .eq('actor_id', profile?.id)
         .order('created_at', { ascending: false })
         .limit(10)
@@ -184,7 +204,7 @@ const CEOAssistantDashboard = () => {
       if (activityError) throw activityError
       setRecentActivity(activityData || [])
     } catch (err: any) {
-      console.error('Failed to load CEO Assistant dashboard stats:', err)
+      console.error('Failed to load dashboard stats:', err)
       setError('Failed to load dashboard data. Please try again later.')
     } finally {
       setLoading(false)
@@ -245,7 +265,7 @@ const CEOAssistantDashboard = () => {
       const { data, error } = await supabase.rpc('assistant_forward_payout_batch', {
         p_payout_ids: Array.from(selectedPayoutIds),
         p_assistant_id: user?.id,
-        p_assistant_username: profile?.username || 'ceo_assistant',
+        p_assistant_username: assistantUsername,
         p_batch_label: batchLabel || undefined
       })
       if (error) throw error
@@ -287,7 +307,7 @@ const CEOAssistantDashboard = () => {
           <div className="max-w-3xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-cyan-100">
               <LayoutDashboard className="h-4 w-4" />
-              CEO Assistant Dashboard
+              {dashboardTitle}
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
               Operational Overview & Management Console
@@ -807,7 +827,7 @@ const CEOAssistantDashboard = () => {
             <p className="text-sm text-slate-400 mb-4">
               Reports submitted by Lead Troll Officers, Troll Officers, and Secretary.
             </p>
-            <ExecutiveReportsList viewMode="ceo_assistant" />
+            <ExecutiveReportsList viewMode={reportsViewMode} />
           </div>
         )}
 

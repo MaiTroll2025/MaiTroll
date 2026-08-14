@@ -32,10 +32,10 @@ import {
      MessageSquare,
      Music,
      Newspaper,
-      Package,
-      Phone,
-      Radio,
-      Scale,
+       Package,
+       Phone,
+       Radio,
+       Scale,
     Settings,
     Shield,
     ShoppingBag,
@@ -51,7 +51,9 @@ import {
      Waves,
      Zap,
      Wrench,
-   } from 'lucide-react'
+    Bell,
+    Mic2
+    } from 'lucide-react'
 
 import CourtEntryModal from './CourtEntryModal'
 import UserProfileWidget from './sidebar/UserProfileWidget'
@@ -149,6 +151,7 @@ export default function Sidebar() {
   const [isTeacher, setIsTeacher] = useState(false)
 
   const [showCourtModal, setShowCourtModal] = useState(false)
+  const [maiPendingCount, setMaiPendingCount] = useState(0)
 
   const { isCollapsed, setCollapsed, expandGroup } = useSidebarStore()
   const isSidebarCollapsed = isCollapsed
@@ -396,6 +399,40 @@ export default function Sidebar() {
   }, [profile?.id, profile, isAdmin])
 
   useEffect(() => {
+    if (!isAdmin) {
+      setMaiPendingCount(0)
+      return
+    }
+
+    let channel: any = null
+
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('record_label_applications')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending')
+      setMaiPendingCount(count || 0)
+    }
+
+    fetchCount()
+
+    channel = supabase
+      .channel('mai-record-label-pending')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'record_label_applications', filter: 'status=eq.pending' },
+        () => {
+          fetchCount()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [isAdmin])
+
+  useEffect(() => {
     const path = location.pathname
     if (path.startsWith('/pool')) {
       expandGroup('Social')
@@ -617,7 +654,7 @@ export default function Sidebar() {
               <GridItem collapsed={isSidebarCollapsed} icon={Building2} label="Neighborhood" to="/neighborhood-setup" active={isActive('/neighborhood-setup')} highlight={isUpdated('/neighborhood-setup')} onClick={() => markAsViewed('/neighborhood-setup')} className="text-cyan-400" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Gamepad2} label="HytroGaming" to="/hytrogaming" active={isHytroGamingActive} highlight={isUpdated('/hytrogaming') || location.pathname.startsWith('/gaming/watch/')} onClick={() => markAsViewed('/hytrogaming')} className="text-purple-400" tone="purple" glow="pink" />
               <GridItem collapsed={isSidebarCollapsed} icon={Trophy} label="Mai Sing Off" to="/mai-sing-off" active={isActive('/mai-sing-off')} highlight={isUpdated('/mai-sing-off')} onClick={() => markAsViewed('/mai-sing-off')} className="text-pink-300" tone="pink" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Music} label="MAI Record Label" to="/mai-record-label" active={isActive('/mai-record-label')} highlight={isUpdated('/mai-record-label')} onClick={() => markAsViewed('/mai-record-label')} className="text-purple-300" tone="purple" />
+              <GridItem collapsed={isSidebarCollapsed} icon={Music} label="MAI Record Label" to="/mai-record-label" active={isActive('/mai-record-label')} highlight={isUpdated('/mai-record-label')} onClick={() => markAsViewed('/mai-record-label')} className="text-purple-300" tone="purple" badge={isAdmin && maiPendingCount > 0 ? String(maiPendingCount) : undefined} />
 
 
               <SectionTitle title="Mai Troll Academy" collapsed={isSidebarCollapsed} />
@@ -765,9 +802,6 @@ export default function Sidebar() {
               {(isCEOAssistant || isAdmin || isCEO) && (
                 <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="CEO Assistant Dashboard" to="/ceo-assistant-dashboard" active={isActive('/ceo-assistant-dashboard')} highlight={isUpdated('/ceo-assistant-dashboard')} onClick={() => markAsViewed('/ceo-assistant-dashboard')} tone="cyan" />
               )}
-              {(isNoahAssistant || isAdmin || isNoahAdmin || isCEO) && (
-                <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="Noah Assistant Dashboard" to="/noah-assistant-dashboard" active={isActive('/noah-assistant-dashboard')} highlight={isUpdated('/noah-assistant-dashboard')} onClick={() => markAsViewed('/noah-assistant-dashboard')} tone="purple" />
-              )}
               {canSeeProsecutorDashboard && (
                 <GridItem collapsed={isSidebarCollapsed} icon={Gavel} label="Prosecutor Dashboard" to="/prosecutor" active={isActive('/prosecutor')} highlight={isUpdated('/prosecutor')} onClick={() => markAsViewed('/prosecutor')} className="text-red-400" tone="red" />
               )}
@@ -849,7 +883,6 @@ export default function Sidebar() {
             <GridItem collapsed={isSidebarCollapsed} icon={Briefcase} label="Agency HR Dashboard" to="/agency-hr-dashboard" active={isActive('/agency-hr-dashboard')} highlight={isUpdated('/agency-hr-dashboard')} onClick={() => markAsViewed('/agency-hr-dashboard')} tone="cyan" />
 
             <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="CEO Assistant Dashboard" to="/ceo-assistant-dashboard" active={isActive('/ceo-assistant-dashboard')} highlight={isUpdated('/ceo-assistant-dashboard')} onClick={() => markAsViewed('/ceo-assistant-dashboard')} tone="cyan" />
-            <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="Noah Assistant Dashboard" to="/noah-assistant-dashboard" active={isActive('/noah-assistant-dashboard')} highlight={isUpdated('/noah-assistant-dashboard')} onClick={() => markAsViewed('/noah-assistant-dashboard')} tone="purple" />
           </div>
         )}
       </div>

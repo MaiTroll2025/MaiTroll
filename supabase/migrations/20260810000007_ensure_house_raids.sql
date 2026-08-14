@@ -13,6 +13,7 @@ CREATE INDEX IF NOT EXISTS idx_house_raids_raided_at ON public.house_raids(raide
 
 ALTER TABLE public.house_raids ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view raids on their house" ON public.house_raids;
 CREATE POLICY "Users can view raids on their house"
   ON public.house_raids FOR SELECT
   USING (
@@ -23,6 +24,7 @@ CREATE POLICY "Users can view raids on their house"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert raids" ON public.house_raids;
 CREATE POLICY "Users can insert raids"
   ON public.house_raids FOR INSERT
   WITH CHECK (auth.uid() = raided_by_user_id);

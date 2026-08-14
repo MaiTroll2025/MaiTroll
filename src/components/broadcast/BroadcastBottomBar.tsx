@@ -59,27 +59,13 @@ function HostActionButton({
   );
 }
 
-/** Message action card — the large green button in the bottom bar */
-export function OpenMessageCard({ onClick, label = 'Message' }: { onClick: () => void; label?: string }) {
-  const theme = MaiTrollBroadcastTheme
-  return (
-    <button
-      onClick={onClick}
-      className={cn('flex h-[86px] items-center justify-center gap-4 rounded-2xl border text-xl font-black text-white shadow-[0_0_35px_rgba(34,211,238,0.5)] hover:scale-[1.01] transition-transform', theme.primaryButton, 'border-cyan-400/50 hover:shadow-[0_0_45px_rgba(34,211,238,0.60)]')}
-    >
-      <Mail className="h-8 w-8" />
-      {label}
-    </button>
-  );
-}
-
 /** Message summary card — left card in the bottom bar */
 export function MessageSummaryCard({
   unreadCount,
-  onManage,
+  onOpen,
 }: {
   unreadCount: number;
-  onManage: () => void;
+  onOpen: () => void;
 }) {
   const theme = MaiTrollBroadcastTheme
   return (
@@ -96,7 +82,7 @@ export function MessageSummaryCard({
         </div>
       </div>
       <button
-        onClick={onManage}
+        onClick={onOpen}
         className={cn('rounded-xl px-5 py-2.5 text-sm font-bold text-white', theme.glassButton)}
       >
         Open
@@ -132,13 +118,12 @@ export interface BroadcastBottomBarProps {
   onOpenMoreMenu?: () => void;
   onEndStream: () => void;
   onOpenMessage: () => void;
-  onManageMessage: () => void;
+  onManageMessage?: () => void;
   onOpenCoinStore?: () => void;
-  onTroll?: () => void;
-  isHost?: boolean;
-  onInviteFollowers?: () => void;
-  saveBroadcastButton?: React.ReactNode;
-}
+   onTroll?: () => void;
+   isHost?: boolean;
+   onInviteFollowers?: () => void;
+  }
 
 export default function BroadcastBottomBar({
   unreadMessageCount,
@@ -158,22 +143,21 @@ export default function BroadcastBottomBar({
   onOpenMessage,
   onManageMessage,
   onOpenCoinStore,
-  onTroll,
-  isHost = false,
-  onInviteFollowers,
-  saveBroadcastButton,
-}: BroadcastBottomBarProps) {
+onTroll,
+   isHost = false,
+   onInviteFollowers
+  }: BroadcastBottomBarProps) {
   const theme = MaiTrollBroadcastTheme
   return (
     <div className={cn(bottomBarShell, 'relative')}>
       {/* Ambient glow strip */}
       <div className={bottomBarAmbient} />
 
-      <div className="grid gap-4" style={{ gridTemplateColumns: '290px 1fr 360px' }}>
+      <div className="grid gap-4" style={{ gridTemplateColumns: '290px 1fr' }}>
         {/* Left: Messages summary */}
         <MessageSummaryCard
           unreadCount={unreadMessageCount}
-          onManage={onManageMessage}
+          onOpen={onOpenMessage}
         />
 
         {/* Center: host action buttons + live info */}
@@ -230,9 +214,6 @@ export default function BroadcastBottomBar({
               icon={MoreHorizontal}
               label="More"
             />
-            {isHost && saveBroadcastButton && (
-              <div className="flex items-center">{saveBroadcastButton}</div>
-            )}
             {!isHost && (
               <HostActionButton
                 active={false}
@@ -254,8 +235,7 @@ export default function BroadcastBottomBar({
           </div>
         </div>
 
-        {/* Right: large Message action button */}
-        <OpenMessageCard onClick={onOpenMessage} />
+        {/* Right: removed duplicate message button — use the Open button in Messages summary */}
       </div>
     </div>
   );

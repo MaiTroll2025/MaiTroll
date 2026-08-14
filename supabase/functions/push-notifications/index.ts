@@ -89,7 +89,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const vapidPublicKey = Deno.env.get('VITE_VAPID_PUBLIC_KEY') || Deno.env.get('VAPID_PUBLIC_KEY');
+    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
     const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
 
     if (!supabaseUrl || !supabaseServiceKey) {

@@ -11,7 +11,7 @@ import ParticipantStrip from './ParticipantStrip';
 import BroadcastControls from './BroadcastControls';
 import MoreControlsDrawer from './MoreControlsDrawer';
 import UserActionModal from './UserActionModal';
-import { MessageSquare, Bell } from 'lucide-react';
+import { MessageSquare, Bell, Swords } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface MobileBroadcastLayoutProps {
@@ -358,27 +358,44 @@ export default function MobileBroadcastLayout({
             )}
 
             {/* Compact Control Grid */}
-            <div className="flex items-center justify-between gap-2 px-2">
-              {/* Left: Chat Toggle - Compact */}
-              <button
-                onClick={() => setIsChatOpen(true)}
-                className="relative w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors flex-shrink-0"
-                title="Chat"
-              >
-                <MessageSquare size={16} />
-                {unreadMessages > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[8px] font-bold flex items-center justify-center text-white">
-                    {unreadMessages > 9 ? '9+' : unreadMessages}
-                  </span>
+            <div className="flex items-center justify-between gap-1.5 px-1.5">
+              {/* Left: Chat & Battle */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setIsChatOpen(true)}
+                  className="relative w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors flex-shrink-0"
+                  title="Chat"
+                >
+                  <MessageSquare size={14} />
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-[7px] font-bold flex items-center justify-center text-white">
+                      {unreadMessages > 9 ? '9+' : unreadMessages}
+                    </span>
+                  )}
+                </button>
+
+                {onStartBattle && (
+                  <button
+                    onClick={onStartBattle}
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0",
+                      isBattleActive
+                        ? "bg-fuchsia-600/30 text-fuchsia-300 border border-fuchsia-400/50"
+                        : "bg-black/40 backdrop-blur-md border border-white/10 text-white/80 hover:bg-white/10"
+                    )}
+                    title={isBattleActive ? 'Battle Active' : 'Random Battle'}
+                  >
+                    <Swords size={14} />
+                  </button>
                 )}
-              </button>
+              </div>
 
               {/* Center: Camera & Mic - Vertical Column */}
               <div className="flex flex-col items-center justify-center gap-1">
                 <button
                   onClick={handleToggleCamera}
                   className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-all text-sm font-bold",
+                    "w-8 h-8 rounded-full flex items-center justify-center transition-all text-xs font-bold",
                     !isCamEnabled 
                       ? "bg-red-500/20 text-red-500 border border-red-500/30" 
                       : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
@@ -390,7 +407,7 @@ export default function MobileBroadcastLayout({
                 <button
                   onClick={handleToggleMic}
                   className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-all text-sm font-bold",
+                    "w-8 h-8 rounded-full flex items-center justify-center transition-all text-xs font-bold",
                     !isMicEnabled 
                       ? "bg-red-500/20 text-red-500 border border-red-500/30" 
                       : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
@@ -402,10 +419,10 @@ export default function MobileBroadcastLayout({
               </div>
 
               {/* Right: Gift & Menu & Leave */}
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-1.5">
                 <button
                   onClick={handleGift}
-                  className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors flex-shrink-0 text-sm font-bold"
+                  className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors flex-shrink-0 text-xs font-bold"
                   title="Send Gift"
                 >
                   🎁
@@ -413,7 +430,7 @@ export default function MobileBroadcastLayout({
 
                 <button
                   onClick={() => setIsDrawerOpen(true)}
-                  className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors flex-shrink-0 text-sm"
+                  className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors flex-shrink-0 text-xs"
                   title="More Options"
                 >
                   ⋯
@@ -422,7 +439,7 @@ export default function MobileBroadcastLayout({
                 {isHost && (
                   <button
                     onClick={handleLeave}
-                    className="w-10 h-10 rounded-full bg-red-600/80 flex items-center justify-center text-white hover:bg-red-700 transition-colors flex-shrink-0 text-sm font-bold"
+                    className="w-8 h-8 rounded-full bg-red-600/80 flex items-center justify-center text-white hover:bg-red-700 transition-colors flex-shrink-0 text-xs font-bold"
                     title="End Stream"
                   >
                     ⏹
@@ -433,7 +450,7 @@ export default function MobileBroadcastLayout({
               {/* Minimize */}
               <button
                 onClick={() => setIsMinimized(true)}
-                className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors flex-shrink-0 text-sm font-bold ml-auto"
+                className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors flex-shrink-0 text-xs font-bold ml-auto"
                 title="Minimize"
               >
                 −

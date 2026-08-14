@@ -58,18 +58,6 @@ interface Podcast {
   created_at: string
   updated_at: string
   host_username?: string | null
-  recording_url?: string | null
-}
-
-interface PodcastEpisode {
-  id: string
-  podcast_id: string
-  title: string
-  description: string | null
-  duration_seconds: number | null
-  recorded_at: string | null
-  audio_url: string | null
-  listener_count: number | null
 }
 
 const LIVE_PODCAST_STATUSES: PodcastStatus[] = ['live', 'active']
@@ -138,8 +126,6 @@ export default function PodcastCentral() {
 
   const [livePodcasts, setLivePodcasts] = useState<Podcast[]>([])
   const [trendingPodcasts, setTrendingPodcasts] = useState<Podcast[]>([])
-  const [recentEpisodes, setRecentEpisodes] = useState<PodcastEpisode[]>([])
-  const [userHistory, setUserHistory] = useState<PodcastEpisode[]>([])
 
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -222,39 +208,6 @@ export default function PodcastCentral() {
     setTrendingPodcasts((data || []) as Podcast[])
   }, [])
 
-  const fetchRecentEpisodes = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('podcast_episodes')
-      .select('*')
-      .order('recorded_at', { ascending: false, nullsFirst: false })
-      .limit(9)
-
-    if (error) throw error
-    setRecentEpisodes((data || []) as PodcastEpisode[])
-  }, [])
-
-  const fetchUserHistory = useCallback(async () => {
-    if (!user?.id) {
-      setUserHistory([])
-      return
-    }
-
-    const { data, error } = await supabase
-      .from('podcast_episodes')
-      .select(
-        `
-        *,
-        podcasts!inner(host_user_id)
-      `
-      )
-      .eq('podcasts.host_user_id', user.id)
-      .order('recorded_at', { ascending: false, nullsFirst: false })
-      .limit(6)
-
-    if (error) throw error
-    setUserHistory((data || []) as PodcastEpisode[])
-  }, [user?.id])
-
   const loadPodcastData = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (mode === 'initial') {
@@ -267,8 +220,6 @@ export default function PodcastCentral() {
         await Promise.all([
           fetchLivePodcasts(),
           fetchTrendingPodcasts(),
-          fetchRecentEpisodes(),
-          fetchUserHistory(),
         ])
       } catch (err) {
         console.error('[PodcastCentral] Error loading podcast data:', err)
@@ -278,7 +229,7 @@ export default function PodcastCentral() {
         setRefreshing(false)
       }
     },
-    [fetchLivePodcasts, fetchTrendingPodcasts, fetchRecentEpisodes, fetchUserHistory]
+    [fetchLivePodcasts, fetchTrendingPodcasts]
   )
 
   useEffect(() => {
@@ -551,56 +502,9 @@ export default function PodcastCentral() {
             className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 via-cyan-500 to-pink-500 px-4 py-3 text-sm font-black text-white shadow-lg shadow-cyan-950/30 transition hover:scale-[1.02]"
           >
             <Play className="h-4 w-4" />
-            {isLive ? 'Listen Live' : 'Open Replay'}
-          </button>
+{isLive ? 'Listen Live' : 'Listen'}
+            </button>
         </div>
-      </article>
-    )
-  }
-
-  const EpisodeTile = ({
-    episode,
-    label = 'Play',
-  }: {
-    episode: PodcastEpisode
-    label?: string
-  }) => {
-    return (
-      <article className="group rounded-3xl border border-white/10 bg-white/[0.055] p-4 shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:border-cyan-300/30 hover:bg-white/[0.08]">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-600/35 to-purple-500/25">
-            <Volume2 className="h-6 w-6 text-cyan-200" />
-          </div>
-
-          <span className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-300">
-            Episode
-          </span>
-        </div>
-
-        <h3 className="line-clamp-2 font-black text-white">{episode.title}</h3>
-
-        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-            <p className="text-slate-400">Duration</p>
-            <p className="mt-1 font-black text-white">
-              {episode.duration_seconds ? formatTime(episode.duration_seconds) : 'Recorded'}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-            <p className="text-slate-400">Plays</p>
-            <p className="mt-1 font-black text-white">{episode.listener_count || 0}</p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => navigate(`/podcast/${episode.podcast_id}`)}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3 text-sm font-black text-cyan-100 transition hover:bg-cyan-400/20"
-        >
-          <Play className="h-4 w-4" />
-          {label}
-        </button>
       </article>
     )
   }
@@ -942,53 +846,9 @@ export default function PodcastCentral() {
                 <p className="text-sm text-slate-400">Recorded podcast cards</p>
               </div>
             </div>
-
-            {loading ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="h-48 animate-pulse rounded-3xl bg-white/5" />
-                ))}
-              </div>
-            ) : recentEpisodes.length === 0 ? (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] py-10 text-center">
-                <p className="text-sm text-slate-500">No episodes recorded yet.</p>
-              </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {recentEpisodes.slice(0, 6).map((episode) => (
-                  <EpisodeTile key={episode.id} episode={episode} label="Play" />
-                ))}
-              </div>
-            )}
           </section>
         </section>
 
-        {user?.id && (
-          <section className={cn(theme.panel, 'p-5')}>
-            <div className="mb-4">
-              <h2 className="text-xl font-black text-white">My Podcast History</h2>
-              <p className="text-sm text-slate-400">Your hosted podcast episodes in grid view</p>
-            </div>
-
-            {loading ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="h-48 animate-pulse rounded-3xl bg-white/5" />
-                ))}
-              </div>
-            ) : userHistory.length === 0 ? (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] py-10 text-center">
-                <p className="text-sm text-slate-500">No podcast history yet.</p>
-              </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {userHistory.map((episode) => (
-                  <EpisodeTile key={episode.id} episode={episode} label="Replay" />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
 
         <section className={cn(theme.panel, 'p-5')}>
           <div className="mb-4 flex items-center gap-3">

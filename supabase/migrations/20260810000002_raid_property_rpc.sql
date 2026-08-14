@@ -56,7 +56,7 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'code', 'HOUSE_NOT_FOUND', 'message', 'Property not found');
   END IF;
   IF v_house.owner_user_id != p_target_user_id THEN
-    RETURN jsonb_build_object('success', false, 'code', 'NOT_TARGET_HOUSE', 'message', 'You can only raid the target user\'s property');
+    RETURN jsonb_build_object('success', false, 'code', 'NOT_TARGET_HOUSE', 'message', 'You can only raid the target user''s property');
   END IF;
 
   -- 4. Check raid cooldown (prevent spam: 5 minutes)
@@ -152,7 +152,7 @@ BEGIN
       'repair_cost', v_repair_cost,
       'deductible', v_deductible,
       'user_pays', v_user_pays,
-      'insured', FOUND
+      'insured', v_active_insurance.id IS NOT NULL
     )
   );
 END;

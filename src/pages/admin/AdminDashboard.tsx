@@ -521,64 +521,91 @@ export default function AdminDashboard() {
 
   const { metrics: dashboardMetrics, refreshMetrics } = useAdminDashboardMetrics()
 
-  const stats: StatState = financeSummary
-    ? {
-        totalUsers: dashboardMetrics.totalUsers || financeSummary.users.totalUsers,
-        adminsCount: financeSummary.users.adminsCount,
-        pendingApps: 0,
-        pendingPayouts: financeSummary.users.pendingPayouts,
-        trollOfficers: dashboardMetrics.trollOfficers || financeSummary.users.trollOfficers,
-        aiFlags: financeSummary.users.aiFlags,
-        coinSalesRevenue: dashboardMetrics.coinRevenue || financeSummary.economy.coinSalesRevenue,
-        totalPayouts: financeSummary.economy.totalPayouts,
-        feesCollected: financeSummary.economy.feesCollected,
-        platformProfit: dashboardMetrics.platformProfit || financeSummary.economy.platformProfit,
-        purchasedCoins: dashboardMetrics.coinsSold || financeSummary.economy.purchasedCoins,
-        earnedCoins: financeSummary.economy.earnedCoins,
-        freeCoins: financeSummary.economy.freeCoins,
-        totalCoinsInCirculation: dashboardMetrics.coinsInCirculation || financeSummary.economy.totalCoinsInCirculation,
-        totalValue: financeSummary.economy.totalValue,
-        giftCoins: financeSummary.economy.giftCoins,
-        appSponsoredGifts: financeSummary.economy.appSponsoredGifts,
-        total_liability_coins: financeSummary.financial.total_liability_coins,
-        total_platform_profit_usd: financeSummary.financial.total_platform_profit_usd,
-        kick_ban_revenue: financeSummary.financial.kick_ban_revenue,
-      }
-    : {
-        totalUsers: dashboardMetrics.totalUsers,
-        adminsCount: 0,
-        pendingApps: 0,
-        pendingPayouts: 0,
-        trollOfficers: dashboardMetrics.trollOfficers,
-        aiFlags: 0,
-        coinSalesRevenue: dashboardMetrics.coinRevenue,
-        totalPayouts: 0,
-        feesCollected: 0,
-        platformProfit: dashboardMetrics.platformProfit,
-        totalCoinsInCirculation: dashboardMetrics.coinsInCirculation,
-        totalValue: 0,
-        purchasedCoins: dashboardMetrics.coinsSold,
-        earnedCoins: 0,
-        freeCoins: 0,
-        giftCoins: 0,
-        appSponsoredGifts: 0,
-        total_liability_coins: 0,
-        total_platform_profit_usd: 0,
-        kick_ban_revenue: 0,
-      }
+   const [coinPurchases, setCoinPurchases] = useState<CoinPurchaseRow[]>([])
+   const [coinPurchasesLoading, setCoinPurchasesLoading] = useState(false)
+   const [taskCounts, setTaskCounts] = useState({
+     taxReviews: 0,
+     supportTickets: 0,
+     alerts: 0,
+   })
+   const [careerAppsCount, setCareerAppsCount] = useState(0)
+   const [legacyAppsCount, setLegacyAppsCount] = useState(0)
 
-  const [activeTab, setActiveTab] = useState<TabId>('connections')
-  const [economySummary, setEconomySummary] = useState<EconomySummary | null>(null)
-  const [economyLoading, setEconomyLoading] = useState(false)
-  const [liveStreams, setLiveStreams] = useState<LiveStream[]>([])
-  const [streamsLoading, setStreamsLoading] = useState(false)
-  const [coinPurchases, setCoinPurchases] = useState<CoinPurchaseRow[]>([])
-  const [coinPurchasesLoading, setCoinPurchasesLoading] = useState(false)
-  const [taskCounts, setTaskCounts] = useState({
-    taxReviews: 0,
-    supportTickets: 0,
-    alerts: 0,
-  })
+   const stats: StatState = financeSummary
+     ? {
+         totalUsers: dashboardMetrics.totalUsers || financeSummary.users.totalUsers,
+         adminsCount: financeSummary.users.adminsCount,
+         pendingApps: careerAppsCount + legacyAppsCount,
+         pendingPayouts: financeSummary.users.pendingPayouts,
+         trollOfficers: dashboardMetrics.trollOfficers || financeSummary.users.trollOfficers,
+         aiFlags: financeSummary.users.aiFlags,
+         coinSalesRevenue: dashboardMetrics.coinRevenue || financeSummary.economy.coinSalesRevenue,
+         totalPayouts: financeSummary.economy.totalPayouts,
+         feesCollected: financeSummary.economy.feesCollected,
+         platformProfit: dashboardMetrics.platformProfit || financeSummary.economy.platformProfit,
+         purchasedCoins: dashboardMetrics.coinsSold || financeSummary.economy.purchasedCoins,
+         earnedCoins: financeSummary.economy.earnedCoins,
+         freeCoins: financeSummary.economy.freeCoins,
+         totalCoinsInCirculation: dashboardMetrics.coinsInCirculation || financeSummary.economy.totalCoinsInCirculation,
+         totalValue: financeSummary.economy.totalValue,
+         giftCoins: financeSummary.economy.giftCoins,
+         appSponsoredGifts: financeSummary.economy.appSponsoredGifts,
+         total_liability_coins: financeSummary.financial.total_liability_coins,
+         total_platform_profit_usd: financeSummary.financial.total_platform_profit_usd,
+         kick_ban_revenue: financeSummary.financial.kick_ban_revenue,
+       }
+     : {
+         totalUsers: dashboardMetrics.totalUsers,
+         adminsCount: 0,
+         pendingApps: careerAppsCount + legacyAppsCount,
+         pendingPayouts: 0,
+         trollOfficers: dashboardMetrics.trollOfficers,
+         aiFlags: 0,
+         coinSalesRevenue: dashboardMetrics.coinRevenue,
+         totalPayouts: 0,
+         feesCollected: 0,
+         platformProfit: dashboardMetrics.platformProfit,
+         totalCoinsInCirculation: dashboardMetrics.coinsInCirculation,
+         totalValue: 0,
+         purchasedCoins: dashboardMetrics.coinsSold,
+         earnedCoins: 0,
+         freeCoins: 0,
+         giftCoins: 0,
+         appSponsoredGifts: 0,
+         total_liability_coins: 0,
+         total_platform_profit_usd: 0,
+         kick_ban_revenue: 0,
+       }
+
+   const [activeTab, setActiveTab] = useState<TabId>('connections')
+   const [economySummary, setEconomySummary] = useState<EconomySummary | null>(null)
+   const [economyLoading, setEconomyLoading] = useState(false)
+   const [liveStreams, setLiveStreams] = useState<LiveStream[]>([])
+   const [streamsLoading, setStreamsLoading] = useState(false)
+
+  const loadCareerAppsCount = useCallback(async () => {
+    try {
+      const [careerRes, legacyRes] = await Promise.all([
+        supabase
+          .from('career_applications')
+          .select('*', { count: 'exact', head: true })
+          .in('status', ['pending', 'applied']),
+        supabase
+          .from('applications')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'deleted')
+          .eq('status', 'pending')
+      ])
+      
+      const careerCount = careerRes.count || 0
+      const legacyCount = legacyRes.count || 0
+      
+      setCareerAppsCount(careerCount)
+      setLegacyAppsCount(legacyCount)
+    } catch (err) {
+      console.error('Failed to load career apps count:', err)
+    }
+  }, [])
 
   useEffect(() => {
     if (['payouts', 'payout_queue', 'purchases', 'stream_monitor', 'send_notifications'].includes(activeTab)) {
@@ -987,16 +1014,18 @@ export default function AdminDashboard() {
     loadLiveStreams()
     loadTaskCounts()
     loadCoinPurchases()
+    loadCareerAppsCount()
 
     // SAFETY: removed 30s auto-refresh for money tables (transactions, coin_store_sales,
     // paypal_transactions). Admins can use the manual "Refresh Sales" button instead.
     // Only refresh lightweight task counts periodically.
     const interval = setInterval(() => {
       loadTaskCounts()
+      loadCareerAppsCount()
     }, 5 * 60 * 1000)
 
     return () => clearInterval(interval)
-  }, [isAuthorized, loadLiveStreams, loadTaskCounts, loadCoinPurchases])
+  }, [isAuthorized, loadLiveStreams, loadTaskCounts, loadCoinPurchases, loadCareerAppsCount])
 
   const endStreamById = async (id: string) => {
     try {
@@ -1372,6 +1401,7 @@ export default function AdminDashboard() {
                 alerts: taskCounts.alerts,
                 tax_reviews: taskCounts.taxReviews,
                 support: taskCounts.supportTickets,
+                applications: stats.pendingApps,
               }}
             />
           </ErrorBoundary>

@@ -64,40 +64,9 @@ interface GamingSetupProps {
   onUpdateTextOverlay?: (sceneId: string, overlayId: string, updates: Partial<SceneConfig['textOverlays'][0]>) => void
   onDeleteTextOverlay?: (sceneId: string, overlayId: string) => void
   onSetBackgroundImage?: (sceneId: string, imageUrl: string | null) => void
-  // Two-phase flow: preview → live
-  screenStream?: MediaStream | null
-  cameraStream?: MediaStream | null
-  micStream?: MediaStream | null
-  screenAudioTrack?: any | null
-  hasScreenAudioTrack?: boolean
-  isPreviewing?: boolean
-  isLive?: boolean
-  isConnecting?: boolean
-  hasCameraTrack?: boolean
-  isCameraEnabled?: boolean
-  onStartPreview?: () => void
-  onStopPreview?: () => void
-  onGoLive?: () => void
-  onEndStream?: () => void
-  onToggleCamera?: () => void
-  inlineAgreementChecked?: boolean
-  onInlineAgreementChange?: (checked: boolean) => void
-  streamId?: string | null
-  userId?: string | null
-  saveBroadcastButton?: React.ReactNode
-  rtmpUrl?: string | null
-  streamKey?: string | null
-  agoraChannel?: string | null
-  obsStatus?: any
-  isGeneratingCredentials?: boolean
-  isObsConnected?: boolean
-  bitrate?: string | number | null
-  streamHealth?: any
-  onGenerateCredentials?: () => void
-  onRegenerateCredentials?: () => void
-  onTestStream?: () => void
-  cameraPreview?: React.ReactNode
 }
+
+// Two-phase flow: preview → live
 
 export function GamingSetup({
   streamTitle = 'Ranked Grind to Top 1 | Mai Troll',
@@ -143,10 +112,9 @@ export function GamingSetup({
   onToggleCamera,
   inlineAgreementChecked = false,
   onInlineAgreementChange,
-  streamId,
-  userId,
-  saveBroadcastButton,
-}: GamingSetupProps) {
+streamId,
+  userId
+  }: GamingSetupProps) {
   const [showGameSearch, setShowGameSearch] = React.useState(false)
   const [gameSearchQuery, setGameSearchQuery] = React.useState('')
   const [selectedGame, setSelectedGame] = React.useState<string>('')
@@ -269,13 +237,7 @@ export function GamingSetup({
                   </button>
                 )}
 
-                {/* Recording control */}
-                {isLive && saveBroadcastButton && (
-                  <div className="mt-2">{saveBroadcastButton}</div>
-                )}
-              </div>
-
-              {/* Mic toggle */}
+                {/* Mic toggle */}
               <div className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
                 <div className="flex items-center gap-2">
                   {isMicEnabled ? <Mic className="h-4 w-4 text-emerald-300" /> : <MicOff className="h-4 w-4 text-red-300" />}
@@ -379,9 +341,8 @@ export function GamingSetup({
                 </div>
               )}
             </div>
+            </div>
           </Panel>
-
-          {/* Stream Settings */}
           <Panel>
             <PanelHeader icon={<Settings className="h-4 w-4" />} title="Stream Settings" />
             <div className="divide-y divide-white/10 p-4">
@@ -534,9 +495,6 @@ export function GamingSetup({
                 <StatusMetric label="Engine" value="Agora" icon={<Radio className="h-3 w-3" />} />
                 <StatusMetric label="Status" value={isLive ? 'LIVE' : isPreviewing ? 'Preview' : 'Ready'} good={isLive || isPreviewing} icon={<Eye className="h-3 w-3" />} />
               </div>
-              {saveBroadcastButton && (
-                <div className="border-t border-white/10 px-4 py-3">{saveBroadcastButton}</div>
-              )}
             </Panel>
           </div>
         </section>

@@ -47,10 +47,8 @@ interface MobileBroadcastHostSettingsProps {
   onTextPopup?: () => void;
   onAssignOfficer?: () => void;
   onPayOfficers?: () => void;
-  onToggleChatLock?: () => void;
-  isRecording?: boolean;
-  onToggleRecord?: () => void;
-}
+onToggleChatLock?: () => void;
+  }
 
 // ─── Grid Item Definition ────────────────────────────────────────────────────
 
@@ -165,10 +163,8 @@ export default function MobileBroadcastHostSettings({
   onTextPopup,
   onAssignOfficer,
   onPayOfficers,
-  onToggleChatLock,
-  isRecording = false,
-  onToggleRecord,
-}: MobileBroadcastHostSettingsProps) {
+onToggleChatLock,
+  }: MobileBroadcastHostSettingsProps) {
   const [isGridOpen, setIsGridOpen] = useState(false);
   const [activePopup, setActivePopup] = useState<string | null>(null);
 
@@ -286,18 +282,6 @@ export default function MobileBroadcastHostSettings({
       hasPopup: true,
     },
     {
-      id: 'record',
-      label: isRecording ? 'Stop Rec' : 'Record',
-      icon: Circle,
-      color: isRecording ? 'text-red-400' : 'text-red-400',
-      bgColor: isRecording ? 'bg-red-500/25' : 'bg-red-500/10',
-      borderColor: isRecording ? 'border-red-400/50' : 'border-red-400/20',
-      action: () => {
-        onToggleRecord?.();
-        closeGrid();
-      },
-    },
-    {
       id: 'end',
       label: 'End Stream',
       icon: Power,
@@ -338,10 +322,6 @@ export default function MobileBroadcastHostSettings({
         aria-label="Settings"
       >
         <Settings className="h-5 w-5" />
-        {/* Recording indicator dot */}
-        {isRecording && (
-          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-slate-950 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
-        )}
         {/* Live indicator dot */}
         {isLive && !isRecording && (
           <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-slate-950 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
@@ -388,20 +368,19 @@ export default function MobileBroadcastHostSettings({
             <div className="p-3 max-h-[60vh] overflow-y-auto">
               <div className="grid grid-cols-3 gap-2">
                 {gridItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleGridItemClick(item)}
-                    className={cn(
-                      'flex flex-col items-center justify-center gap-1.5',
-                      'rounded-xl border py-3 px-2 transition-all',
-                      'active:scale-95',
-                      item.bgColor,
-                      item.borderColor
-                    )}
-                  >
+                 <button
+                   key={item.id}
+                   onClick={() => handleGridItemClick(item)}
+                   className={cn(
+                     'settings-grid-item flex flex-col items-center justify-center gap-1.5',
+                     'rounded-xl border py-3 px-2 transition-all',
+                     'active:scale-95',
+                     item.bgColor,
+                     item.borderColor
+                   )}
+                 >
                     <item.icon
                       className={cn('h-5 w-5', item.color)}
-                      fill={item.id === 'record' && isRecording ? 'currentColor' : 'none'}
                     />
                     <span className="text-[10px] font-bold text-white/80 leading-tight text-center">
                       {item.label}

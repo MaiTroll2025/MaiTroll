@@ -37,7 +37,7 @@ interface PostItemProps {
 }
 
 export default function PostItem({ post, onDelete }: PostItemProps) {
-  const { user } = useAuthStore();
+  const { user, isAdmin } = useAuthStore();
   const [comments, setComments] = useState<Comment[]>([]);
   const [showComments, setShowComments] = useState(false);
   const [_loadingComments, setLoadingComments] = useState(false);
@@ -232,7 +232,32 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
     setShowGiftModal(false);
   };
 
-  const CommentNode = ({ comment, depth = 0 }: { comment: Comment, depth?: number }) => (
+  const handleDeleteComment = async (commentId: string, commentUserId: string) => {
+    if (!user) return
+    const isAuthor = commentUserId === user.id
+    const isOwner = post.user_id === user.id
+    if (!isAuthor && !isOwner && !isAdmin) return
+    if (!confirm('Delete this comment?')) return
+    try {
+      const { error } = await supabase.from('troll_post_comments').delete().eq('id', commentId)
+      if (error) throw error
+      setComments((prev) => {
+        const removeFromTree = (items: Comment[]): Comment[] => {
+          return items.filter((c) => {
+            if (c.id === commentId) return false
+            if (c.replies) c.replies = removeFromTree(c.replies)
+            return true
+          })
+        }
+        return removeFromTree(prev)
+      })
+      toast.success('Comment deleted')
+    } catch {
+      toast.error('Failed to delete comment')
+    }
+  };
+
+  const CommentNode = ({ comment, depth = 0, onDeleteComment }: { comment: Comment, depth?: number, onDeleteComment?: (id: string, userId: string) => void }) => (
     <div className={`flex gap-3 mb-4 ${depth > 0 ? 'ml-8 relative' : ''}`}>
       {depth > 0 && (
          <div className="absolute -left-4 top-0 bottom-0 w-0.5 bg-white/10 rounded-full" />
@@ -252,7 +277,7 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="bg-white/5 rounded-2xl px-4 py-2 inline-block max-w-full">
-            <div className="font-bold text-sm text-white block">
+            <div className="font-bold text-sm text-white block flex items-center gap-2">
               <UserNameWithAge 
                 user={{
                   username: comment.user_profiles?.username,
@@ -260,6 +285,16 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
                   ...comment.user_profiles
                 }}
               />
+              {(user && (comment.user_id === user.id || post.user_id === user.id || isAdmin)) && onDeleteComment && (
+                <button
+                  type="button"
+                  onClick={() => onDeleteComment(comment.id, comment.user_id)}
+                  className="rounded p-0.5 text-red-300/70 transition hover:bg-red-500/10 hover:text-red-200"
+                  title="Delete comment"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              )}
             </div>
             <p className="text-sm text-gray-200 break-words">{comment.content}</p>
         </div>
@@ -282,7 +317,7 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
         {comment.replies && comment.replies.length > 0 && (
             <div className="mt-3">
                 {comment.replies.map(reply => (
-                    <CommentNode key={reply.id} comment={reply} depth={depth + 1} />
+                    <CommentNode key={reply.id} comment={reply} depth={depth + 1} onDeleteComment={onDeleteComment} />
                 ))}
             </div>
         )}
@@ -432,7 +467,7 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
             {/* List */}
             <div className="space-y-4">
                 {comments.map(comment => (
-                    <CommentNode key={comment.id} comment={comment} />
+                    <CommentNode key={comment.id} comment={comment} onDeleteComment={handleDeleteComment} />
                 ))}
             </div>
         </div>

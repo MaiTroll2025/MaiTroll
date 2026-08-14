@@ -16,6 +16,7 @@ export interface NavBadges {
   shop: number;
   inventory: number;
   alerts: number;
+  careers: number;
 }
 
 // Track which tabs the user has clicked/visited since last notification
@@ -23,7 +24,7 @@ let dismissedTabs: Set<keyof NavBadges> = new Set();
 let lastBadgeCounts: NavBadges = {
   home: 0, chats: 0, coins: 0, auctions: 0, court: 0,
   neighborhood: 0, academy: 0, wallet: 0, family: 0,
-  shop: 0, inventory: 0, alerts: 0,
+  shop: 0, inventory: 0, alerts: 0, careers: 0,
 };
 const listeners: Set<() => void> = new Set();
 
@@ -210,12 +211,14 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
     shop: 0,
     inventory: 0,
     alerts: 0,
+    careers: 0,
   });
 
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const notifChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const coinPurchaseChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const signupAlertChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const careerAppChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isMountedRef = useRef(true);
   const profileRef = useRef(profile);
   profileRef.current = profile;
@@ -420,6 +423,33 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
 
     setupSignupAlertSubscription();
 
+    // Career applications realtime subscription for lead officers and admins
+    const setupCareerAppSubscription = async () => {
+      const profile = profileRef.current;
+      const role = String(profile?.role || '');
+      const isLeadOfficer = role === 'lead_troll_officer' || role === 'admin' || profile?.is_lead_officer === true || profile?.is_admin === true;
+
+      if (!isLeadOfficer) return;
+
+      careerAppChannelRef.current = supabase
+        .channel('nav-career-apps')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'career_applications',
+            filter: "status=eq.pending",
+          },
+          () => {
+            setBadgeCounts((prev) => ({ ...prev, careers: (prev.careers || 0) + 1 }));
+          },
+        )
+        .subscribe();
+    };
+
+    setupCareerAppSubscription();
+
     // Realtime subscription for chat messages
     const setupChatSubscription = async () => {
       const { data: memberships } = await supabase
@@ -475,6 +505,10 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
       if (signupAlertChannelRef.current) {
         supabase.removeChannel(signupAlertChannelRef.current);
         signupAlertChannelRef.current = null;
+      }
+      if (careerAppChannelRef.current) {
+        supabase.removeChannel(careerAppChannelRef.current);
+        careerAppChannelRef.current = null;
       }
     };
   }, [user?.id, fetchNotificationCounts, fetchUnreadMessages]);

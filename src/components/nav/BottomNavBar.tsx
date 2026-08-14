@@ -517,9 +517,6 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
           ...(isCEOAssistant || isAdmin
             ? [{ label: 'CEO Assistant', icon: Briefcase as any, path: '/ceo-assistant-dashboard' }]
             : []),
-          ...(isNoahAssistant || isAdmin
-            ? [{ label: 'Noah Assistant', icon: Briefcase as any, path: '/noah-assistant-dashboard' }]
-            : []),
            ...(isAuctioneer || isAdmin
               ? [
                   { label: 'Auctioneer', icon: Gavel as any, path: '/auctions/studio' },
@@ -851,7 +848,7 @@ export default function BottomNavBar() {
                 <NavButton icon={Crown} label="High Bcasters" to="/high-bcasters" active={isActive('/high-bcasters')} size="large" />
                 <NavButton icon={Video} label="Go Live" to="/broadcast/setup" active={isActive('/broadcast')} size="large" />
                   <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} size="large" />
-                  <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} size="large" />
+                  <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} size="large" badge={badges.careers} badgeKey="careers" onBadgeDismiss={badges.dismiss} />
                   <NavButton icon={Newspaper} label="TCNN" to="/tcnn" active={isActive('/tcnn')} size="large" />
                  <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} size="large" badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
                  <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} size="large" badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
@@ -888,7 +885,7 @@ export default function BottomNavBar() {
                  <NavButton icon={Sparkles} label="Treelz" to="/treelz" active={isActive('/treelz')} />
                  <NavButton icon={Crown} label="High Bcasters" to="/high-bcasters" active={isActive('/high-bcasters')} />
                   <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} />
-                  <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} />
+                   <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} badge={badges.careers} badgeKey="careers" onBadgeDismiss={badges.dismiss} />
                   <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} />

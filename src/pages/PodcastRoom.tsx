@@ -24,8 +24,6 @@ import { useIsMobile } from '@/hooks/useIsMobile'
 import { MaiTrollBroadcastTheme as theme } from '@/styles/broadcastTheme'
 import { usePodcastStore } from '@/stores/podcastStore'
 import { usePodcastAgora } from '@/hooks/usePodcastAgora'
-import { useBroadcastRecorder } from '@/hooks/useBroadcastRecorder'
-import SaveBroadcastButton from '@/components/broadcast/SaveBroadcastButton'
 import { cn } from '@/lib/utils'
 
 type PodcastStatus =
@@ -185,38 +183,6 @@ export default function PodcastRoom() {
   // Refs to hold Agora client/track references for merging audio into recording
   const agoraClientRef = useRef<any>(null)
   const localAudioTrackRef = useRef<any>(null)
-
-  // Use the same recorder as BroadcastPage — captures the entire screen
-  // (full Mai Troll UI) via getDisplayMedia, with Agora audio tracks merged in
-  // so the recording includes both the screen video AND the podcast audio (mic + remote users)
-  const recorder = useBroadcastRecorder({
-    sourceStream: () => {
-      const tracks: MediaStreamTrack[] = []
-
-      // Collect remote users' audio tracks from Agora
-      const client = agoraClientRef.current
-      if (client?.remoteUsers) {
-        client.remoteUsers.forEach((u: any) => {
-          if (u.audioTrack) {
-            const raw = u.audioTrack.mediaStreamTrack || u.audioTrack._track
-            if (raw && raw.readyState !== 'ended') tracks.push(raw)
-          }
-        })
-      }
-
-      // Local host microphone track
-      const localTrack = localAudioTrackRef.current
-      if (localTrack) {
-        const raw = localTrack.mediaStreamTrack || localTrack._track
-        if (raw && raw.readyState !== 'ended') tracks.push(raw)
-      }
-
-      if (tracks.length === 0) return null
-      return new MediaStream(tracks)
-    },
-    replaySource: 'broadcast',
-    replayTitlePrefix: 'Podcast',
-  })
 
   const fetchPodcast = useCallback(async () => {
     if (!id) return
@@ -532,22 +498,6 @@ export default function PodcastRoom() {
                     </div>
                   </div>
                 </div>
-
-                {/* Recording controls — same SaveBroadcastButton as BroadcastPage */}
-                {isHost && isLive && (
-                  <div className="mt-4">
-                    <SaveBroadcastButton
-                      isRecording={recorder.isRecording}
-                      isUploading={recorder.isUploading}
-                      recordingDuration={recorder.recordingDuration}
-                      recordingSize={recorder.recordingSize}
-                      streamId={podcast?.id ?? null}
-                      onStartRecording={recorder.startRecording}
-                      onStopRecording={recorder.stopRecording}
-                      onSaveClip={recorder.saveClip}
-                    />
-                  </div>
-                )}
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <button

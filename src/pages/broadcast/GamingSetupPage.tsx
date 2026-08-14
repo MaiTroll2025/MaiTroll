@@ -8,11 +8,9 @@ import { generateUUID } from '@/lib/uuid'
 import { toast } from 'sonner'
 import { useAgoraScreenShare } from '@/hooks/useAgoraScreenShare'
 import { useGamingHeartbeat } from '@/hooks/useGamingHeartbeat'
-import { useBroadcastRecorder } from '@/hooks/useBroadcastRecorder'
 import { useHytroGamingLockdown } from '@/hooks/useFeatureLockdown'
 import GamingChat from '@/components/broadcast/GamingChat'
 import TipBanner from '@/components/broadcast/TipBanner'
-import SaveBroadcastButton from '@/components/broadcast/SaveBroadcastButton'
 import { GamingStreamProvider, useSetGamingStreamId } from '@/contexts/GamingStreamContext'
 
 import {
@@ -71,14 +69,6 @@ function GamingSetupPageInner() {
 
   // HytroGaming lockdown check
   const { isLocked: isGamingLockedDown } = useHytroGamingLockdown();
-
-  // ── Recorder — captures the Agora screen share stream directly (no getDisplayMedia popup) ──
-  const recorder = useBroadcastRecorder({
-    sourceStream: agora.screenStream,
-    sourceStreamCleanup: false,
-    replaySource: 'hytro_gaming',
-    replayTitlePrefix: 'Hytro Gaming',
-  })
 
   // ── Scenes ──
   const [scenes, setScenes] = useState<SceneConfig[]>(DEFAULT_SCENES)
@@ -456,18 +446,6 @@ function GamingSetupPageInner() {
       chatPanel={streamData?.id ? <GamingChat streamId={streamData.id} /> : null}
       screenStream={agora.screenStream}
       cameraStream={agora.cameraStream}
-      saveBroadcastButton={
-        <SaveBroadcastButton
-          isRecording={recorder.isRecording}
-          isUploading={recorder.isUploading}
-          recordingDuration={recorder.recordingDuration}
-          recordingSize={recorder.recordingSize}
-          streamId={streamData?.id || null}
-          onStartRecording={(sid) => void recorder.startRecording(sid)}
-          onStopRecording={() => void recorder.stopRecording()}
-          onSaveClip={() => void recorder.saveClip()}
-        />
-      }
       micStream={agora.micStream}
       screenAudioTrack={agora.screenAudioTrack}
       hasScreenAudioTrack={Boolean(agora.screenAudioTrack)}

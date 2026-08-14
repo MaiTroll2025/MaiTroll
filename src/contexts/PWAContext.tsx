@@ -191,126 +191,192 @@ const isLocalhost =
      window.location.hostname === '127.0.0.1' ||
      window.location.hostname === '0.0.0.0'
 
-   // ===== SERVICE WORKER REGISTRATION =====
+  // ===== SERVICE WORKER REGISTRATION =====
+    
+   useEffect(() => {
+      if (!('serviceWorker' in navigator)) return;
+      
+      // In dev/localhost, skip SW registration to avoid noise
+      // Only report failures in production
+     // PWA disabled — skip service worker registration entirely
+     if (env.DEV || isLocalhost || !env.PROD) {
+       return;
+     }
+      
+      const registerSW = async () => {
+       try {
+         const registration = await navigator.serviceWorker.register('/service-worker.js', {
+           scope: '/'
+         });
+         
+         swRegistrationRef.current = registration;
+         
+         console.log('[PWA] Service Worker registered:', registration.scope);
+         
+         // Check for waiting worker
+         if (registration.waiting) {
+           setSwState(prev => ({
+             ...prev,
+             isUpdateAvailable: true,
+             waitingWorker: registration.waiting
+           }));
+         }
+         
+         // Listen for updates
+         registration.addEventListener('updatefound', () => {
+           const newWorker = registration.installing;
+           if (!newWorker) return;
+           
+           newWorker.addEventListener('statechange', () => {
+             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+               console.log('[PWA] Service Worker update found');
+               setSwState(prev => ({
+                 ...prev,
+                 isUpdateAvailable: true,
+                 waitingWorker: newWorker
+               }));
+             }
+           });
+         });
+         
+         // Listen for messages from SW
+         const handleSWMessage = (event: MessageEvent) => {
+           const { type, payload } = event.data || {};
+           
+           switch (type) {
+             case 'SW_UPDATED':
+               console.log('[PWA] Service Worker updated:', payload);
+               setSwState(prev => ({
+                 ...prev,
+                 version: payload?.version || null
+               }));
+               break;
+               
+             case 'SW_VERSION':
+               setSwState(prev => ({
+                 ...prev,
+                 isRegistered: true,
+                 version: payload?.version || null
+               }));
+               break;
+               
+             case 'OFFLINE_READY':
+               setSwState(prev => ({
+                 ...prev,
+                 isOfflineReady: true
+               }));
+               break;
+               
+             case 'SYNC_COMPLETE':
+               setPendingSyncItems(prev => ({
+                 ...prev,
+                 [payload.queueName]: 0
+               }));
+               break;
+               
+             case 'PUSH_RECEIVED':
+               window.dispatchEvent(new CustomEvent('pwa-push-received', { detail: payload }));
+               break;
+               
+             case 'NOTIFICATION_ACTION':
+               window.dispatchEvent(new CustomEvent('pwa-notification-action', { detail: payload }));
+               break;
+           }
+         };
+
+         navigator.serviceWorker.addEventListener('message', handleSWMessage);
+         
+         // Get SW version
+         if (registration.active) {
+           registration.active.postMessage({ type: 'GET_SW_VERSION' });
+         }
+         
+       } catch (error) {
+         // Only report SW registration failures in production
+         if (!env.DEV && !window.location.hostname.match(/(localhost|127\.0\.0\.1|0\.0\.0\.0)/)) {
+           console.error('[PWA] Service Worker registration failed:', error);
+         }
+       }
+     };
+     
+     registerSW();
+     
+     // Check for updates every hour
+     const interval = setInterval(() => {
+       swRegistrationRef.current?.update();
+     }, 60 * 60 * 1000);
+     
+     return () => {
+       clearInterval(interval);
+       navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+     };
+   }, []);
    
+   // ===== BUILD UPDATE DETECTION =====
+   
+   const RELOAD_GUARD_KEY = 'mt-build-reloaded';
+   
+   // Listen for controllerchange to reload once when new SW takes control
    useEffect(() => {
      if (!('serviceWorker' in navigator)) return;
      
-     // In dev/localhost, skip SW registration to avoid noise
-     // Only report failures in production
-    // PWA disabled — skip service worker registration entirely
-    if (env.DEV || isLocalhost || !env.PROD) {
-      return;
-    }
+     const handleControllerChange = () => {
+       if (sessionStorage.getItem(RELOAD_GUARD_KEY)) return;
+       sessionStorage.setItem(RELOAD_GUARD_KEY, 'true');
+       window.location.reload();
+     };
      
-     const registerSW = async () => {
-      try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js', {
-          scope: '/'
-        });
-        
-        swRegistrationRef.current = registration;
-        
-        console.log('[PWA] Service Worker registered:', registration.scope);
-        
-        // Check for waiting worker
-        if (registration.waiting) {
-          setSwState(prev => ({
-            ...prev,
-            isUpdateAvailable: true,
-            waitingWorker: registration.waiting
-          }));
-        }
-        
-        // Listen for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (!newWorker) return;
-          
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA] Service Worker update found');
-              setSwState(prev => ({
-                ...prev,
-                isUpdateAvailable: true,
-                waitingWorker: newWorker
-              }));
-            }
-          });
-        });
-        
-        // Listen for messages from SW
-        const handleSWMessage = (event: MessageEvent) => {
-          const { type, payload } = event.data || {};
-          
-          switch (type) {
-            case 'SW_UPDATED':
-              console.log('[PWA] Service Worker updated:', payload);
-              setSwState(prev => ({
-                ...prev,
-                version: payload?.version || null
-              }));
-              break;
-              
-            case 'SW_VERSION':
-              setSwState(prev => ({
-                ...prev,
-                isRegistered: true,
-                version: payload?.version || null
-              }));
-              break;
-              
-            case 'OFFLINE_READY':
-              setSwState(prev => ({
-                ...prev,
-                isOfflineReady: true
-              }));
-              break;
-              
-            case 'SYNC_COMPLETE':
-              setPendingSyncItems(prev => ({
-                ...prev,
-                [payload.queueName]: 0
-              }));
-              break;
-              
-            case 'PUSH_RECEIVED':
-              window.dispatchEvent(new CustomEvent('pwa-push-received', { detail: payload }));
-              break;
-              
-            case 'NOTIFICATION_ACTION':
-              window.dispatchEvent(new CustomEvent('pwa-notification-action', { detail: payload }));
-              break;
-          }
-        };
-
-        navigator.serviceWorker.addEventListener('message', handleSWMessage);
-        
-        // Get SW version
-        if (registration.active) {
-          registration.active.postMessage({ type: 'GET_SW_VERSION' });
-        }
-        
-      } catch (error) {
-        // Only report SW registration failures in production
-        if (!env.DEV && !window.location.hostname.match(/(localhost|127\.0\.0\.1|0\.0\.0\.0)/)) {
-          console.error('[PWA] Service Worker registration failed:', error);
-        }
-      }
-    };
-    
-    registerSW();
-    
-    // Check for updates every hour
-    const interval = setInterval(() => {
-      swRegistrationRef.current?.update();
-    }, 60 * 60 * 1000);
-    
-    return () => {
-      clearInterval(interval);
-      navigator.serviceWorker.removeEventListener('message', handleSWMessage);
-    };
-  }, []);
+     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+     
+     return () => {
+       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+     };
+   }, []);
+   
+   // Clear reload guard after page stabilizes to allow future updates
+   useEffect(() => {
+     const timer = setTimeout(() => {
+       sessionStorage.removeItem(RELOAD_GUARD_KEY);
+     }, 5000);
+     return () => clearTimeout(timer);
+   }, []);
+   
+   // Poll version.json to detect new builds
+   useEffect(() => {
+     if (!('serviceWorker' in navigator)) return;
+     
+     const checkForNewBuild = async () => {
+       try {
+         const response = await fetch('/version.json', { cache: 'no-store' });
+         if (!response.ok) return;
+         const data = await response.json();
+         const currentBuildTime = String(data.buildTime || '');
+         
+         const cachedBuildTime = sessionStorage.getItem('mt-build-time');
+         if (cachedBuildTime && currentBuildTime && cachedBuildTime !== currentBuildTime) {
+           // New build detected - trigger skip waiting on any waiting worker
+           const registration = await navigator.serviceWorker.getRegistration();
+           if (registration?.waiting) {
+             registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+           }
+           // If no waiting worker, the SW may already be installing/activating
+           // The controllerchange listener will handle the reload
+         }
+         
+         if (currentBuildTime) {
+           sessionStorage.setItem('mt-build-time', currentBuildTime);
+         }
+       } catch {
+         // Silently fail - version.json may not be available in all contexts
+       }
+     };
+     
+     // Check on mount and periodically
+     checkForNewBuild();
+     const interval = setInterval(checkForNewBuild, 5 * 60 * 1000);
+     
+     return () => clearInterval(interval);
+   }, []);
   
   // ===== NETWORK STATE MONITORING =====
   

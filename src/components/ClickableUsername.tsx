@@ -3,7 +3,7 @@ import VerifiedBadge from './VerifiedBadge'
 import OfficerTierBadge from './OfficerTierBadge'
 import { EmpireBadge } from './EmpireBadge'
 import { useNavigate } from 'react-router-dom'
-import { Shield, Crown, Skull, Star, UserX, Ban, MicOff, User, LogOut, ClipboardList, Gavel, Lock, Car, CreditCard, Heart } from 'lucide-react'
+import { Shield, Crown, Skull, Star, UserX, Ban, MicOff, User, LogOut, ClipboardList, Gavel, Lock, Car, CreditCard, Heart, Briefcase } from 'lucide-react'
 import { applyGlowingUsername, getGlowingTextStyle, getTrollSpellEffect } from '../lib/perkEffects'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
@@ -85,8 +85,8 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
 
   const isCurrentTempAdmin = currentUserProfile?.role === 'temp_city_admin';
 
-  const isPresident = currentUserProfile?.username_style === 'gold' || currentUserProfile?.badge === 'president';
-  const isTargetPresident = profile?.username_style === 'gold' || profile?.badge === 'president' || profile?.role === 'president';
+    const isPresident = currentUserProfile?.username_style === 'gold' || currentUserProfile?.badge === 'president';
+    const isTargetPresident = profile?.username_style === 'gold' || profile?.badge === 'president' || profile?.role === 'president';
 
   const canModerate = (isStaff || isPresident || isCurrentTempAdmin || ((isBroadcaster || isModerator) && streamId)) && currentUser?.id !== targetUserId
 
@@ -225,12 +225,44 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
   const isSecretary = !isAdmin && !isOfficer && (
     userProfile?.role === 'secretary'
   )
-  const isTroller = !isAdmin && !isOfficer && !isSecretary && (
-    userProfile?.is_troller || 
-    userProfile?.role === 'troller'
-  )
-  
-  const officerLevel = userProfile?.officer_level || 1
+   const isTroller = !isAdmin && !isOfficer && !isSecretary && (
+     userProfile?.is_troller || 
+     userProfile?.role === 'troller'
+   )
+
+   const isCareerRole = !isAdmin && !isOfficer && !isSecretary && !isTroller && (
+     profile?.role === 'attorney' || profile?.is_attorney ||
+     profile?.role === 'prosecutor' || profile?.is_prosecutor ||
+     profile?.role === 'judge' || profile?.is_judge ||
+     profile?.role === 'ceo_assistant' || profile?.is_ceo_assistant ||
+     profile?.role === 'noah_assistant' || profile?.is_noah_assistant ||
+     profile?.role === 'journalist' || profile?.is_journalist ||
+     profile?.role === 'tcnn_news_caster' || profile?.is_news_caster ||
+     profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
+     profile?.role === 'auctioneer' || profile?.is_auctioneer ||
+     profile?.role === 'pastor' || profile?.is_pastor ||
+     profile?.role === 'secretary' || profile?.is_secretary
+   )
+
+   const getCareerRoleLabel = (): string | null => {
+     if (!profile) return null
+     if (profile.role === 'attorney' || profile.is_attorney) return 'Attorney'
+     if (profile.role === 'prosecutor' || profile.is_prosecutor) return 'Prosecutor'
+     if (profile.role === 'judge' || profile.is_judge) return 'Judge'
+     if (profile.role === 'ceo_assistant' || profile.is_ceo_assistant) return 'CEO Asst'
+     if (profile.role === 'noah_assistant' || profile.is_noah_assistant) return 'Noah Asst'
+     if (profile.role === 'journalist' || profile.is_journalist) return 'Journalist'
+     if (profile.role === 'tcnn_news_caster' || profile.is_news_caster) return 'News Caster'
+     if (profile.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster) return 'Chief News'
+     if (profile.role === 'auctioneer' || profile.is_auctioneer) return 'Auctioneer'
+     if (profile.role === 'pastor' || profile.is_pastor) return 'Pastor'
+     if (profile.role === 'secretary' || profile.is_secretary) return 'Secretary'
+     return null
+   }
+
+   const careerRoleLabel = getCareerRoleLabel()
+   
+   const officerLevel = userProfile?.officer_level || 1
   const trollerLevel = userProfile?.troller_level || 1
 
   const officerRankTitles: Record<number, string> = {
@@ -839,15 +871,23 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
             </>
         )}
 
-        {/* Secretary Badge */}
-        {!isAdmin && !isOfficer && isSecretary && (
-            <span className="badge-icon" title="Secretary" style={{ color: '#F472B6' }}> {/* pink-400 */}
-                <ClipboardList size={16} />
-                <span className="badge-title">Secretary</span>
-            </span>
-        )}
+         {/* Secretary Badge */}
+         {!isAdmin && !isOfficer && isSecretary && (
+             <span className="badge-icon" title="Secretary" style={{ color: '#F472B6' }}> {/* pink-400 */}
+                 <ClipboardList size={16} />
+                 <span className="badge-title">Secretary</span>
+             </span>
+         )}
 
-        {/* Troller Badge (if not admin or officer) */}
+         {/* Career Role Badge */}
+         {!isAdmin && !isOfficer && !isSecretary && !isTroller && isCareerRole && careerRoleLabel && (
+             <span className="badge-icon" title={careerRoleLabel} style={{ color: '#A78BFA' }}> {/* violet-400 */}
+                 <Briefcase size={16} />
+                 <span className="badge-title">{careerRoleLabel}</span>
+             </span>
+         )}
+
+         {/* Troller Badge (if not admin or officer) */}
         {!isAdmin && !isOfficer && !isSecretary && isTroller && (
             <span className="badge-icon troller-badge" title={trollerTitles[trollerLevel] || 'Troller'}>
             <Skull size={16} />

@@ -340,6 +340,25 @@ export default function TrollWallPostModal({
     }
   }, [currentPost, user?.id, applyingBoost])
 
+  const handleDeleteReply = useCallback(async (replyId: string, replyUserId: string) => {
+    if (!user?.id) return
+    const isAuthor = replyUserId === user.id
+    const isPostOwner = currentPost?.user_id === user.id
+    if (!isAuthor && !isPostOwner && !isAdmin) return
+    if (!confirm('Delete this reply?')) return
+    try {
+      const { error } = await supabase
+        .from('troll_wall_posts')
+        .delete()
+        .eq('id', replyId)
+      if (error) throw error
+      setReplies((prev) => prev.filter((r) => r.id !== replyId))
+      toast.success('Reply deleted')
+    } catch {
+      toast.error('Failed to delete reply')
+    }
+  }, [currentPost?.user_id, user?.id, isAdmin])
+
   const handleDelete = useCallback(async () => {
     if (!currentPost || !user?.id) return
     if (!confirm('Delete this post?')) return
@@ -628,6 +647,16 @@ export default function TrollWallPostModal({
                         <span className="ml-auto text-[9px] text-white/30">
                           {new Date(reply.created_at).toLocaleString()}
                         </span>
+                        {(user && (reply.user_id === user.id || currentPost.user_id === user.id || isAdmin)) && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReply(reply.id, reply.user_id)}
+                            className="rounded p-1 text-red-300/70 transition hover:bg-red-500/10 hover:text-red-200"
+                            title="Delete reply"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                       <p className="mt-1.5 whitespace-pre-wrap break-words text-xs leading-5 text-white/70">
                         {parseTextWithLinks(reply.content)}

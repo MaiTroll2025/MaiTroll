@@ -1750,9 +1750,20 @@ boxClass,
                        <span className="text-xs font-bold text-white truncate max-w-[120px]">
                          {displayProfile.username}
                        </span>
-                       {((displayProfile as any).is_broadofficer || (displayProfile as any).is_broadcast_officer || (displayProfile as any).is_troll_officer || (displayProfile as any).is_lead_officer) && (
-                         <Shield size={12} className="text-cyan-300" />
-                       )}
+                        {((displayProfile as any).is_broadofficer || (displayProfile as any).is_broadcast_officer || (displayProfile as any).is_troll_officer || (displayProfile as any).is_lead_officer) && (
+                          <Shield size={12} className="text-cyan-300" />
+                        )}
+                        {(displayProfile as any).role === 'attorney' || (displayProfile as any).is_attorney ? <span className="text-[10px] font-bold text-violet-300">ATTORNEY</span> : null}
+                        {(displayProfile as any).role === 'prosecutor' || (displayProfile as any).is_prosecutor ? <span className="text-[10px] font-bold text-red-300">PROSECUTOR</span> : null}
+                        {(displayProfile as any).role === 'judge' || (displayProfile as any).is_judge ? <span className="text-[10px] font-bold text-amber-300">JUDGE</span> : null}
+                        {(displayProfile as any).role === 'ceo_assistant' || (displayProfile as any).is_ceo_assistant ? <span className="text-[10px] font-bold text-emerald-300">CEO ASST</span> : null}
+                        {(displayProfile as any).role === 'noah_assistant' || (displayProfile as any).is_noah_assistant ? <span className="text-[10px] font-bold text-sky-300">NOAH ASST</span> : null}
+                        {(displayProfile as any).role === 'journalist' || (displayProfile as any).is_journalist ? <span className="text-[10px] font-bold text-blue-300">JOURNALIST</span> : null}
+                        {(displayProfile as any).role === 'tcnn_news_caster' || (displayProfile as any).is_news_caster ? <span className="text-[10px] font-bold text-cyan-300">NEWS CASTER</span> : null}
+                        {(displayProfile as any).role === 'tcnn_chief_news_caster' || (displayProfile as any).is_chief_news_caster ? <span className="text-[10px] font-bold text-yellow-300">CHIEF NEWS</span> : null}
+                        {(displayProfile as any).role === 'auctioneer' || (displayProfile as any).is_auctioneer ? <span className="text-[10px] font-bold text-green-300">AUCTIONEER</span> : null}
+                        {(displayProfile as any).role === 'pastor' || (displayProfile as any).is_pastor ? <span className="text-[10px] font-bold text-pink-300">PASTOR</span> : null}
+                        {(displayProfile as any).role === 'secretary' || (displayProfile as any).is_secretary ? <span className="text-[10px] font-bold text-pink-300">SECRETARY</span> : null}
                        {licensePlate && (
                          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-100 bg-white/10 px-2 py-0.5 rounded-full">
                            {licensePlate}

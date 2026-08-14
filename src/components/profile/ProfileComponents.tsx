@@ -12,7 +12,7 @@ import {
     CheckCircle, Shield, Crown, Heart, MessageCircle, UserPlus,
     Settings, Package, History, Bookmark, Send, MoreHorizontal,
     ShoppingCart, Hammer, BookOpen, Newspaper, Scale, Ticket, AlertTriangle, ShieldAlert,
-    Camera
+    Camera, Music, Disc3, Mic2
 } from 'lucide-react';
 
 interface UserProfile {
@@ -35,6 +35,19 @@ interface UserProfile {
     created_at: string;
     theme_color?: string;
     accent_color?: string;
+    role?: string;
+    is_admin?: boolean;
+    is_attorney?: boolean;
+    is_judge?: boolean;
+    is_prosecutor?: boolean;
+    is_ceo_assistant?: boolean;
+    is_noah_assistant?: boolean;
+    is_journalist?: boolean;
+    is_news_caster?: boolean;
+    is_chief_news_caster?: boolean;
+    is_auctioneer?: boolean;
+    is_pastor?: boolean;
+    is_secretary?: boolean;
 }
 
 interface ProfileHeaderProps {
@@ -81,6 +94,24 @@ export function ProfileHeader({
     const avatarUrl = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`;
     const [expandedCover, setExpandedCover] = useState(false);
     const [countdown, setCountdown] = useState(5);
+
+    const getCareerRoleLabel = (): string | null => {
+        if (!profile) return null;
+        if (profile.role === 'attorney' || profile.is_attorney) return 'Attorney';
+        if (profile.role === 'prosecutor' || profile.is_prosecutor) return 'Prosecutor';
+        if (profile.role === 'judge' || profile.is_judge) return 'Judge';
+        if (profile.role === 'ceo_assistant' || profile.is_ceo_assistant) return 'CEO Assistant';
+        if (profile.role === 'noah_assistant' || profile.is_noah_assistant) return 'Noah Assistant';
+        if (profile.role === 'journalist' || profile.is_journalist) return 'Journalist';
+        if (profile.role === 'tcnn_news_caster' || profile.is_news_caster) return 'News Caster';
+        if (profile.role === 'tcnn_chief_news_caster' || profile.is_chief_news_caster) return 'Chief News Caster';
+        if (profile.role === 'auctioneer' || profile.is_auctioneer) return 'Auctioneer';
+        if (profile.role === 'pastor' || profile.is_pastor) return 'Pastor';
+        if (profile.role === 'secretary' || profile.is_secretary) return 'Secretary';
+        return null;
+    };
+
+    const careerRoleLabel = getCareerRoleLabel();
 
     useEffect(() => {
         if (!expandedCover) return;
@@ -229,7 +260,9 @@ export function ProfileHeader({
                                 {profile.display_name || profile.username}
                             </h1>
                             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-white/50">
-                                <span className="font-bold" style={{ color: accentColor }}>@{profile.username}</span>
+                                <span className="font-bold" style={{ color: accentColor }}>
+                                    {careerRoleLabel || `@${profile.username}`}
+                                </span>
                                 {profile.bio && <span className="text-white/40">•</span>}
                                 <span className="max-w-xs truncate">{profile.bio}</span>
                             </div>
@@ -477,7 +510,10 @@ export const PROFILE_TABS = [
     { key: 'badges', label: 'Badges', icon: Award },
     { key: 'inventory', label: 'Inventory & Perks', icon: Package },
     { key: 'purchases', label: 'Purchase History', icon: History },
-    { key: 'settings', label: 'Settings', icon: Settings }
+    { key: 'settings', label: 'Settings', icon: Settings },
+    { key: 'music', label: 'Music', icon: Music },
+    { key: 'albums', label: 'Albums', icon: Disc3 },
+    { key: 'tracks', label: 'Tracks', icon: Mic2 },
 ];
 
 export default ProfileComponents;

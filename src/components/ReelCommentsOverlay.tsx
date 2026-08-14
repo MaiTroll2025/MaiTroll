@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../lib/store";
 import { toast } from "sonner";
 import { moderation } from "@/services/maitrollModeration";
-import { X, Send } from "lucide-react";
+import { X, Send, Trash2 } from "lucide-react";
 import UserNameWithAge from "./UserNameWithAge";
 
 interface TrollComment {
@@ -20,15 +20,17 @@ interface TrollComment {
 }
 
 interface ReelCommentsOverlayProps {
-  postId: string;
-  onClose: () => void;
+  postId: string
+  postUserId: string
+  onClose: () => void
 }
 
 const ReelCommentsOverlay: React.FC<ReelCommentsOverlayProps> = ({
   postId,
+  postUserId,
   onClose,
 }) => {
-  const { user, profile } = useAuthStore();
+  const { user, profile, isAdmin } = useAuthStore();
   const [comments, setComments] = useState<TrollComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -92,11 +94,10 @@ const ReelCommentsOverlay: React.FC<ReelCommentsOverlayProps> = ({
       const content = message.trim();
       setMessage("");
 
-      // Canonical moderation check
       const modResult = await moderation.checkContent(profile.id, content, 'comment');
       if (!modResult.allowed) {
         toast.error(modResult.message || 'That comment violates Mai Troll\'s chat rules and was not sent.');
-        setMessage(message); // put it back
+        setMessage(message);
         setSending(false);
         return;
       }
@@ -110,16 +111,30 @@ const ReelCommentsOverlay: React.FC<ReelCommentsOverlayProps> = ({
       ]);
 
       if (error) throw error;
-
-      // local echo is handled by realtime listener
     } catch (err) {
       console.error("Error sending comment:", err);
       toast.error("Failed to send comment");
-      setMessage(message); // put it back
+      setMessage(message);
     } finally {
       setSending(false);
     }
   };
+
+  const handleDeleteComment = useCallback(async (commentId: string, commentUserId: string) => {
+    if (!user) return
+    const isAuthor = commentUserId === user.id
+    const isOwner = postUserId === user.id
+    if (!isAuthor && !isOwner && !isAdmin) return
+    if (!confirm('Delete this comment?')) return
+    try {
+      const { error } = await supabase.from("troll_post_comments").delete().eq("id", commentId)
+      if (error) throw error
+      setComments((prev) => prev.filter((c) => c.id !== commentId))
+      toast.success("Comment deleted")
+    } catch {
+      toast.error("Failed to delete comment")
+    }
+  }, [user, postUserId, isAdmin])
 
   return (
     <>
@@ -198,6 +213,16 @@ const ReelCommentsOverlay: React.FC<ReelCommentsOverlayProps> = ({
                     minute: "2-digit",
                   })}
                 </span>
+                {(user && (c.user_id === user.id || postUserId === user.id || isAdmin)) && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteComment(c.id, c.user_id)}
+                    className="rounded p-0.5 text-red-300/70 transition hover:bg-red-500/10 hover:text-red-200"
+                    title="Delete comment"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
               </div>
               <div className="text-[11px] text-gray-100 whitespace-pre-wrap">
                 {c.content}

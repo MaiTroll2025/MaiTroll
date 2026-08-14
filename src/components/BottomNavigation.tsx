@@ -803,11 +803,8 @@ export default function BottomNavigation() {
     if (isCEOAssistant || isAdmin) {
       pages.push({ category: 'Executive', label: 'CEO Assistant', icon: Briefcase, path: '/ceo-assistant-dashboard' })
     }
-    if (isNoahAssistant || isAdmin) {
-      pages.push({ category: 'Executive', label: 'Noah Assistant', icon: Briefcase, path: '/noah-assistant-dashboard' })
-    }
     return pages
-  }, [isCEOAssistant, isNoahAssistant, isAdmin])
+  }, [isCEOAssistant, isAdmin])
 
   const journalistPages: MenuOption[] = useMemo(() => {
     if (!isJournalist && !isNewsCaster && !isChiefNewsCaster && !isAdmin) return []

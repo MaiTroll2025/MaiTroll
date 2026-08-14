@@ -73,16 +73,6 @@ interface GamingSetupProps {
   onDeleteTextOverlay?: (sceneId: string, overlayId: string) => void
   onSetBackgroundImage?: (sceneId: string, imageUrl: string | null) => void
   screenStream?: MediaStream | null
-  cameraStream?: MediaStream | null
-  micStream?: MediaStream | null
-  isPreviewing?: boolean
-  hasCameraTrack?: boolean
-  isCameraEnabled?: boolean
-  onStartPreview?: () => void
-  onStopPreview?: () => void
-  onToggleCamera?: () => void
-  streamId?: string | null
-  saveBroadcastButton?: React.ReactNode
 }
 
 export function GamingSetup({
@@ -128,9 +118,8 @@ export function GamingSetup({
   hasCameraTrack = false,
   isCameraEnabled = false,
   onToggleCamera,
-  streamId = null,
-  saveBroadcastButton,
-}: GamingSetupProps) {
+streamId = null,
+  }: GamingSetupProps) {
   const [showGameSearch, setShowGameSearch] = React.useState(false)
   const [gameSearchQuery, setGameSearchQuery] = React.useState('')
   const [selectedGame, setSelectedGame] = React.useState<string>('')
@@ -277,19 +266,10 @@ export function GamingSetup({
                   )}
                 </div>
               )}
-            </div>
-          </Panel>
-
-          {streamId && saveBroadcastButton && (
-            <Panel>
-              <PanelHeader icon={<Save className="h-4 w-4" />} title="Recording" />
-              <div className="p-4 flex items-center justify-center">
-                {saveBroadcastButton}
-              </div>
+</div>
             </Panel>
-          )}
 
-          <Panel>
+            <Panel>
             <PanelHeader icon={<Settings className="h-4 w-4" />} title="Stream Settings" />
             <div className="divide-y divide-white/10 p-4">
               <div className="pb-4">
@@ -317,10 +297,9 @@ export function GamingSetup({
                   )}
                 </div>
               </div>
-              <SettingRow label="Engine" value="Browser MediaRecorder" />
-              <SettingRow label="Recording" value="Browser-native (no egress cost)" />
-            </div>
-          </Panel>
+<SettingRow label="Engine" value="Browser MediaRecorder" />
+              </div>
+            </Panel>
 
           {scenes && scenes.length > 0 && onSwitchScene && (
             <Panel>
@@ -437,20 +416,6 @@ export function GamingSetup({
           <Panel className="flex flex-col" style={{ maxHeight: 380 }}>
             <PanelHeader icon={<Mail className="h-4 w-4" />} title="Chat" right={<CounterBadge value={isLive ? 'Live' : 'Offline'} />} />
             <div className="min-h-0 flex-1 overflow-hidden p-2">{chatPanel || <p className="py-4 text-center text-xs text-slate-500">Start streaming to enable chat</p>}</div>
-          </Panel>
-
-          <Panel>
-            <PanelHeader icon={<ShieldCheck className="h-4 w-4" />} title="Recording" />
-            <div className="p-4 space-y-3">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <MonitorPlay className="h-3.5 w-3.5 text-cyan-300" />
-                <span>Browser-native recording via MediaRecorder API</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Radio className="h-3.5 w-3.5 text-purple-300" />
-                <span>Circular buffer for instant clips (F8)</span>
-              </div>
-            </div>
           </Panel>
         </section>
       </main>

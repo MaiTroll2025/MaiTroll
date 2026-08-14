@@ -6,11 +6,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useInRouterContext, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-    Bell, Ban, CheckCircle, ChevronDown, Coins, Crown,
+    Bell, Ban, CheckCircle, CheckCircle2, ChevronDown, Coins, Crown,
     FileText, Heart, Loader2, LogOut, MapPin, MessageCircle,
     Package, RefreshCw, Settings, Shield, ShoppingBag,
     Trash2, UserPlus, Users, Video, X, Zap, MoreHorizontal,
-    History, Award, Gavel, Scale, BookOpen, Newspaper
+    History, Award, Gavel, Scale, BookOpen, Newspaper, Music, Disc3, Mic2, LayoutDashboard, Play, Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,7 +23,6 @@ import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import SubscriptionTierSelector from '../components/user/SubscriptionTierSelector';
 import { ProfileHeader, RoleCard, ProfileTabs, PROFILE_TABS } from '../components/profile/ProfileComponents';
 import ProfileFeed from '../components/profile/ProfileFeed';
-import ProfileReplays from '../components/profile/ProfileReplays';
 import ProfileWatchlist from '../components/profile/ProfileWatchlist';
 import UserInventory from './UserInventory';
 import ProfileSettings from './ProfileSettings';
@@ -76,6 +75,11 @@ function ProfileInner() {
     const lastFetchKeyRef = useRef<string | null>(null);
     const profileNotFoundRef = useRef(false);
 
+    const [artistProfile, setArtistProfile] = useState<any>(null);
+    const [artistLoading, setArtistLoading] = useState(false);
+    const [artistTracks, setArtistTracks] = useState<any[]>([]);
+    const [artistAlbums, setArtistAlbums] = useState<any[]>([]);
+
     const isOwnProfile = currentUser?.id === profile?.id;
     const viewerRole = currentUserProfile?.troll_role || currentUserProfile?.role || 'user';
     const isAdminViewer = ['admin', 'troll_officer', 'lead_troll_officer'].includes(viewerRole);
@@ -84,6 +88,7 @@ function ProfileInner() {
 
     // Filter visible tabs based on roles and ownership
     const visibleTabs = useMemo(() => {
+        const isArtist = (profile as any)?.is_record_label_artist === true;
         return PROFILE_TABS.filter(tab => {
             if (tab.key === 'settings') return isOwnProfile;
             if (tab.key === 'purchases') return isOwnProfile;
@@ -96,9 +101,10 @@ function ProfileInner() {
             if (tab.key === 'agency') return activeRoles.some(r => ['agency_leader', 'agency_hr', 'agency_hr_manager', 'secretary'].includes(r.role_type)) || isOwnProfile;
             if (tab.key === 'church') return activeRoles.some(r => r.role_type === 'pastor') || isOwnProfile;
             if (tab.key === 'marketplace') return activeRoles.some(r => r.role_type === 'seller') || isOwnProfile;
+            if (tab.key === 'music' || tab.key === 'albums' || tab.key === 'tracks') return isArtist || isOwnProfile;
             return true;
         });
-    }, [activeRoles, isOwnProfile]);
+    }, [activeRoles, isOwnProfile, profile]);
 
     // Fetch profile data
     useEffect(() => {
@@ -126,7 +132,7 @@ function ProfileInner() {
                 subscribeToXP(currentUserId);
             }
 
-            const PROFILE_COLS = 'id,username,display_name,avatar_url,cover_url,banner_url,troll_coins,role,is_admin,level,xp,xp_to_next_level,created_at,updated_at,bio,city,country,website,pronouns,is_verified,is_broadcaster,is_minor';
+            const PROFILE_COLS = 'id,username,display_name,avatar_url,cover_url,banner_url,troll_coins,role,is_admin,level,xp,xp_to_next_level,created_at,updated_at,bio,city,country,website,pronouns,is_verified,is_broadcaster,is_minor,is_attorney,is_judge,is_prosecutor,is_ceo_assistant,is_noah_assistant,is_journalist,is_news_caster,is_chief_news_caster,is_auctioneer,is_pastor,is_secretary';
             let query = supabase.from('user_profiles').select(PROFILE_COLS);
             if (userId) query = query.eq('id', userId);
             else if (username) query = query.eq('username', username);
@@ -240,6 +246,46 @@ function ProfileInner() {
             isMounted = false;
         };
     }, [activeTab, profile?.id]);
+
+    // Fetch artist profile data when profile is an artist
+    useEffect(() => {
+        if (!profile?.id || !(profile as any)?.is_record_label_artist) {
+            setArtistProfile(null);
+            setArtistTracks([]);
+            setArtistAlbums([]);
+            return;
+        }
+
+        let isMounted = true;
+        setArtistLoading(true);
+
+        (async () => {
+            const { data: artist } = await supabase
+                .from('record_label_artist_profiles')
+                .select('*')
+                .eq('user_id', profile.id)
+                .maybeSingle();
+
+            if (!isMounted) return;
+            setArtistProfile(artist);
+
+            if (artist?.id) {
+                const [tracksRes, albumsRes] = await Promise.all([
+                    supabase.from('record_label_tracks').select('*').eq('artist_id', artist.id).order('created_at', { ascending: false }).limit(20),
+                    supabase.from('record_label_albums').select('*').eq('artist_id', artist.id).order('created_at', { ascending: false }).limit(20),
+                ]);
+
+                if (isMounted) {
+                    setArtistTracks(tracksRes.data || []);
+                    setArtistAlbums(albumsRes.data || []);
+                }
+            }
+
+            if (isMounted) setArtistLoading(false);
+        })();
+
+        return () => { isMounted = false; };
+    }, [profile?.id, (profile as any)?.is_record_label_artist]);
 
     const prevProfileIdRef = useRef<string | null>(null);
 
@@ -505,7 +551,7 @@ function ProfileInner() {
             case 'social':
                 return <ProfileFeed userId={profile.id} />;
             case 'broadcasts':
-                return <ProfileReplays userId={profile.id} />;
+                return null;
             case 'watchlist':
                 return <ProfileWatchlist userId={profile.id} />;
             case 'inventory':
@@ -571,6 +617,99 @@ function ProfileInner() {
                 );
             case 'settings':
                 return <ProfileSettings />;
+            case 'music':
+                return (
+                    <div className="space-y-6">
+                        <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
+                            <h3 className="text-lg font-bold text-white mb-4">Latest Track</h3>
+                            {artistLoading ? (
+                                <p className="text-white/50">Loading…</p>
+                            ) : artistTracks.length === 0 ? (
+                                <p className="text-white/50">No tracks published yet.</p>
+                            ) : (
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    {artistTracks.slice(0, 4).map((track: any) => (
+                                        <div key={track.id} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                                                {track.cover_url ? (
+                                                    <img src={track.cover_url} alt={track.title} className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center"><Music size={23} className="text-purple-300" /></div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate font-black text-white">{track.title}</p>
+                                                <p className="truncate text-xs text-slate-400">{artistProfile?.stage_name}</p>
+                                                <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
+                                                    <span className="flex items-center gap-1"><Heart size={12} />{track.like_count.toLocaleString()}</span>
+                                                    <span className="flex items-center gap-1"><Play size={12} />{track.play_count.toLocaleString()}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            case 'albums':
+                return (
+                    <div className="space-y-6">
+                        <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
+                            <h3 className="text-lg font-bold text-white mb-4">Albums</h3>
+                            {artistLoading ? (
+                                <p className="text-white/50">Loading…</p>
+                            ) : artistAlbums.length === 0 ? (
+                                <p className="text-white/50">No albums published yet.</p>
+                            ) : (
+                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    {artistAlbums.map((album: any) => (
+                                        <div key={album.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                                            {album.cover_url && <img src={album.cover_url} alt={album.title} className="w-full aspect-square object-cover rounded-xl mb-3" />}
+                                            <p className="font-black text-white truncate">{album.title}</p>
+                                            <p className="text-xs text-slate-400">{album.release_date || 'Draft'}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            case 'tracks':
+                return (
+                    <div className="space-y-6">
+                        <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
+                            <h3 className="text-lg font-bold text-white mb-4">Tracks</h3>
+                            {artistLoading ? (
+                                <p className="text-white/50">Loading…</p>
+                            ) : artistTracks.length === 0 ? (
+                                <p className="text-white/50">No tracks published yet.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {artistTracks.map((track: any) => (
+                                        <div key={track.id} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                                                {track.cover_url ? (
+                                                    <img src={track.cover_url} alt={track.title} className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center"><Music size={18} className="text-purple-300" /></div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate font-black text-white">{track.title}</p>
+                                                <p className="truncate text-xs text-slate-400">{track.genre || 'No genre'}</p>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-xs text-slate-500">
+                                                <span className="flex items-center gap-1"><Heart size={12} />{track.like_count.toLocaleString()}</span>
+                                                <span className="flex items-center gap-1"><Play size={12} />{track.play_count.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
             default:
                 return <ProfileFeed userId={profile.id} />;
         }
@@ -643,6 +782,68 @@ function ProfileInner() {
                                     }}
                                 />
                             ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* MAI Record Label Artist Section */}
+                {(profile as any)?.is_record_label_artist && (
+                    <section className="mt-6">
+                        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <Music className="w-5 h-5 text-purple-400" />
+                            MAI Record Label
+                        </h2>
+                        <div className="rounded-3xl border border-purple-500/20 bg-gradient-to-br from-purple-950/40 to-black/30 p-6">
+                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                                <span className="flex items-center gap-1 rounded-full border border-purple-400/30 bg-purple-400/10 px-3 py-1 text-xs font-bold text-purple-300">
+                                    <Music size={14} /> MAI Artist
+                                </span>
+                                {artistProfile?.verified && (
+                                    <span className="flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-bold text-cyan-300">
+                                        <CheckCircle size={14} /> Verified
+                                    </span>
+                                )}
+                                {artistProfile?.status === 'probation' && (
+                                    <span className="flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300">
+                                        <Clock size={14} /> Probation
+                                    </span>
+                                )}
+                                {artistProfile?.status === 'active' && (
+                                    <span className="flex items-center gap-1 rounded-full border border-green-400/30 bg-green-400/10 px-3 py-1 text-xs font-bold text-green-300">
+                                        <CheckCircle2 size={14} /> Approved
+                                    </span>
+                                )}
+                            </div>
+                            {artistProfile && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
+                                        <p className="text-white/50 text-xs">Stage Name</p>
+                                        <p className="text-sm font-black text-white truncate">{artistProfile.stage_name}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
+                                        <p className="text-white/50 text-xs">Genre</p>
+                                        <p className="text-sm font-black text-white truncate">{artistProfile.primary_genre || 'N/A'}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
+                                        <p className="text-white/50 text-xs">Joined</p>
+                                        <p className="text-sm font-black text-white truncate">{new Date(artistProfile.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
+                                        <p className="text-white/50 text-xs">Tracks</p>
+                                        <p className="text-sm font-black text-white truncate">{artistTracks.length}</p>
+                                    </div>
+                                </div>
+                            )}
+                            {isOwnProfile && (
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    <button onClick={() => navigate('/artist/dashboard')} className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-black text-white transition hover:bg-purple-500">
+                                        <LayoutDashboard size={16} /> Artist Dashboard
+                                    </button>
+                                    <button onClick={() => navigate('/artist/contract')} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/10">
+                                        <FileText size={16} /> Contract
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </section>
                 )}

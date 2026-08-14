@@ -111,8 +111,6 @@ serve(async (req) => {
         status: 'active',
         maximum_broadcasters: MAX_BROADCASTERS,
         maximum_guest_seats: MAX_GUEST_SEATS,
-        created_at: new Date().toISOString(),
-        started_at: new Date().toISOString(),
         metadata: { request_id: requestId },
       })
 

@@ -301,16 +301,15 @@ export default function CareersPage() {
     setIsSubmitting(true)
 
     try {
-      // Keep the existing career_applications backend contract unless/until the
-      // database schema is deliberately migrated. The role key is used as the
-      // position_id so existing application review flows continue to receive a
-      // stable identifier without inventing a new table or column here.
-      const { error } = await supabase.from('career_applications').insert({
-        user_id: user.id,
-        position_id: selectedRole.roleKey,
-        status: 'applied',
-        applied_at: new Date().toISOString(),
-      })
+      const { error } = await supabase
+        .from('career_applications')
+        .insert({
+          user_id: user.id,
+          position_id: selectedRole.roleKey,
+          status: 'pending',
+          application_data: {},
+          lead_officer_approved: null,
+        })
 
       if (error) throw error
 
@@ -558,7 +557,7 @@ export default function CareersPage() {
 
       {selectedRole && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-3xl border border-[#343434] bg-[#111111] shadow-2xl">
+          <div className="w-full max-w-2xl rounded-3xl border border-[#343434] bg-[#111111] shadow-2xl flex flex-col max-h-[90vh]">
             <div className="flex items-start justify-between gap-4 border-b border-white/10 p-6">
               <div>
                 <div className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">Volunteer Role Application</div>
@@ -574,7 +573,7 @@ export default function CareersPage() {
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="flex-1 overflow-y-auto p-6">
               <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5">
                 <div className="flex gap-3">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
@@ -603,8 +602,10 @@ export default function CareersPage() {
                   I understand that <strong>{selectedRole.title}</strong> is an unpaid volunteer role with no set hours and that any powers or permissions can be taken away.
                 </span>
               </label>
+            </div>
 
-              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <div className="sticky bottom-0 bg-[#111111] border-t border-white/10 p-6 rounded-b-3xl">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setSelectedRole(null)}

@@ -51,11 +51,9 @@ export interface BroadcastNeonHeaderProps {
    isLive: boolean
    streamStartedAt?: string | null
    handleLike: () => void
-   onLiveKitMicMute?: () => void
-   onLiveKitMicUnmute?: () => void
-   isRecording?: boolean
-   onToggleRecord?: () => void
-  }
+onLiveKitMicMute?: () => void
+    onLiveKitMicUnmute?: () => void
+   }
 
 function formatTimer(ms: number): string {
   const totalSec = Math.floor(ms / 1000)
@@ -81,11 +79,9 @@ export default function BroadcastNeonHeader({
    onOpenCoinStore,
    isLive,
    streamStartedAt,
-   onLiveKitMicMute,
-   onLiveKitMicUnmute,
-   isRecording = false,
-   onToggleRecord,
- }: BroadcastNeonHeaderProps) {
+onLiveKitMicMute,
+    onLiveKitMicUnmute,
+  }: BroadcastNeonHeaderProps) {
   const { profile } = useAuthStore()
   const navigate = useNavigate()
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -335,23 +331,6 @@ export default function BroadcastNeonHeader({
               LIVE
               <span className="tabular-nums text-red-300/80">{timerStr}</span>
             </span>
-          )}
-
-          {/* Record button - mobile only in header */}
-          {isHost && isMobile && onToggleRecord && (
-            <button
-              onClick={onToggleRecord}
-              className={cn(
-                "flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-black transition-colors",
-                isRecording
-                  ? "bg-red-500/30 text-red-300 border border-red-400/40"
-                  : "bg-white/10 text-white/70 border border-white/15"
-              )}
-              aria-label={isRecording ? "Stop recording" : "Start recording"}
-            >
-              <Circle className={cn("h-2.5 w-2.5", isRecording ? "fill-red-400 text-red-400" : "text-red-400")} />
-              {isRecording ? "Stop" : "Rec"}
-            </button>
           )}
 
           {/* Coins display */}

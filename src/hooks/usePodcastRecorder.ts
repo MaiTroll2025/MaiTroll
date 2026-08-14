@@ -215,19 +215,9 @@ export function usePodcastRecorder(): UsePodcastRecorderReturn {
                 recorded_at: new Date().toISOString(),
               })
 
-            // Also save to saved_streams for the user profile
-            await supabase
-              .from('saved_streams')
-              .upsert({
-                user_id: user.id,
-                stream_id: activePodcastId,
-                source: 'podcast_screen_recording',
-                storage_category: 'podcast_recording',
-                file_size_bytes: blob.size,
-              }, { onConflict: 'saved_streams_user_id_stream_id_key' })
+            toast.success('Podcast recording saved!')
           }
 
-          toast.success('Podcast recording saved!')
         } catch (err) {
           console.error('[usePodcastRecorder Upload Error]', err)
           toast.error('Failed to save podcast recording')

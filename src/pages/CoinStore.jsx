@@ -1200,6 +1200,60 @@ useEffect(() => {
     }
   };
 
+  const buyNoAdsSubscription = async () => {
+    if (!user?.id) {
+      toast.error('Sign in to purchase No Ads subscription.');
+      return;
+    }
+
+    const price = 500;
+    const durationDays = 30;
+
+    if (!useCredit && troll_coins < price) {
+      toast.error(`Not enough Troll Coins. Need ${price}, have ${troll_coins}`);
+      return;
+    }
+    if (useCredit && (creditInfo?.available || 0) < price) {
+      toast.error(`Not enough Credit. Need ${price}, available ${creditInfo?.available}`);
+      return;
+    }
+
+    try {
+      const { success, error: deductError } = await deductCoins({
+         userId: user.id,
+         amount: price,
+         type: 'perk_purchase',
+         description: 'Purchased No Ads Subscription (30 days)',
+         metadata: { perk_id: 'no_ads_subscription', duration_days: durationDays },
+         useCredit,
+         supabaseClient: supabase,
+      });
+
+      if (!success) throw new Error(deductError || 'Payment failed');
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60000).toISOString();
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ no_ads_until: expiresAt })
+        .eq('id', user.id);
+
+      if (error) {
+         throw error;
+      }
+
+      await refreshCoins();
+      await refreshProfile();
+      toast.success('No Ads subscription activated for 30 days!');
+      showPurchaseCompleteOverlay();
+      await loadWalletData(false);
+    } catch (err) {
+      console.error('No Ads subscription purchase error:', err);
+      toast.error(err.message || 'Failed to purchase No Ads subscription');
+    }
+  };
+
   const buyInsurance = async (plan) => {
     try {
       const basePrice = Number(plan.cost || 0);
@@ -2159,7 +2213,29 @@ useEffect(() => {
                    {perksNote}
                  </div>
               )}
-              
+
+              <div className="mb-6 rounded-xl border border-emerald-500/20 bg-black/25 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">No Ads Subscription</h3>
+                    <p className="text-xs text-gray-400">Enjoy the platform without any ads for 30 days.</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="text-right">
+                    <div className="text-sm font-black text-yellow-400">500</div>
+                    <div className="text-[10px] text-gray-500">Troll Coins / 30 days</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={buyNoAdsSubscription}
+                    className="rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-bold text-white transition hover:from-emerald-500 hover:to-teal-500"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+
               <div className="mb-6 rounded-xl border border-purple-500/20 bg-black/25 p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>

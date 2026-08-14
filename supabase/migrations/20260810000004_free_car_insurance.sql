@@ -65,7 +65,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.issue_free_car_insurance(uuid, uuid) TO authenticated;
 
--- Ensure car_insurances has required columns
-ALTER TABLE public.car_insurances
+-- Ensure underlying car_insurance_policies table has required columns
+ALTER TABLE public.car_insurance_policies
   ADD COLUMN IF NOT EXISTS is_free_issue boolean DEFAULT false,
   ADD COLUMN IF NOT EXISTS issued_at timestamptz DEFAULT now();

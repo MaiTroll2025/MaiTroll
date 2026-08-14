@@ -4,10 +4,11 @@ import { cn } from "../../lib/utils"
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "onChange"> {
   label?: React.ReactNode
   onChange?: React.ChangeEventHandler<HTMLInputElement>
+  onCheckedChange?: (checked: boolean) => void
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, label, id, name, checked, onChange, disabled, ...props }, ref) => {
+  ({ className, label, id, name, checked, onChange, onCheckedChange, disabled, ...props }, ref) => {
     const generatedId = React.useId()
     const inputId = id ?? `${name ?? "checkbox"}-${generatedId}`
 
@@ -19,7 +20,10 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           type="checkbox"
           name={name}
           checked={checked}
-          onChange={onChange}
+          onChange={(e) => {
+            onChange?.(e)
+            onCheckedChange?.(e.target.checked)
+          }}
           disabled={disabled}
           className={cn(
             "mt-1 h-4 w-4 rounded border border-slate-600 bg-slate-900 text-cyan-500 focus:ring-2 focus:ring-cyan-500/50",

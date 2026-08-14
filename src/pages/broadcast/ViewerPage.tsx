@@ -2631,42 +2631,76 @@ const handleLeaveSeat = useCallback(async () => {
 useStreamRealtime(
       streamId || '',
       {
+        onMessage: (event) => {
+          const newRow = event?.new
+          if (!newRow) return
+          const msgId = String(newRow.id || newRow.txn_id || '')
+          if (!msgId) return
+          if (processedMessageIdsRef.current.has(msgId)) return
+          processedMessageIdsRef.current.add(msgId)
+
+          const username = newRow.user_name || newRow.username || 'Viewer'
+          const content = newRow.content || ''
+          if (!content) return
+
+          const chatKey = `${username}:${content}`
+          const now = Date.now()
+          const existingTs = recentChatKeysRef.current.get(chatKey)
+          if (existingTs !== undefined && now - existingTs < CHAT_DEBOUNCE_MS) return
+          recentChatKeysRef.current.set(chatKey, now)
+
+          setFloatingMessages(prev =>
+            [{ id: msgId, username, content, createdAt: Date.now() }, ...prev].slice(-50)
+          )
+
+          setTimeout(() => {
+            setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+          }, CHAT_FLOAT_MS)
+        },
+        onPresenceBroadcast: (event) => {
+          if (event.table !== 'broadcast:like_sent') return
+          const likeData = event.new || event.raw?.payload || {}
+          if (likeData.user_id === user?.id) return
+          const newTotal = typeof likeData.total_likes === 'number' ? likeData.total_likes : null
+          if (newTotal === null) return
+          setStream((prev) => {
+            if (!prev) return prev
+            return { ...prev, total_likes: newTotal } as Stream
+          })
+        },
         onGift: (event) => {
           const rawGift = event?.new ?? event
           if (rawGift) {
             void processGiftEvent(rawGift)
           }
         },
-       onParticipant: (event: any) => {
-         if (event.eventType !== 'UPDATE' || !event.new || !user?.id) return
-         const participant = event.new
-         if (participant.user_id !== user.id || participant.removed !== true || participant.stream_id !== streamId) return
+        onParticipant: (event: any) => {
+          if (event.eventType !== 'UPDATE' || !event.new || !user?.id) return
+          const participant = event.new
+          if (participant.user_id !== user.id || participant.removed !== true || participant.stream_id !== streamId) return
 
-         kickProcessedRef.current = true
+          kickProcessedRef.current = true
 
-         const kickData = {
-           timestamp: Date.now(),
-           streamId,
-           reason: participant.removed_reason || 'Kicked by broadcaster',
-         }
+          const kickData = {
+            timestamp: Date.now(),
+            streamId,
+            reason: participant.removed_reason || 'Kicked by broadcaster',
+          }
 
-         localStorage.setItem(getKickStorageKey(streamId, user.id), JSON.stringify(kickData))
-         leaveLiveKitRoom().catch(() => {})
-         hasJoinedAudienceRef.current = false
-         joiningAudienceRef.current = false
-         currentRoomKeyRef.current = null
-         navigate(`/?kicked=${encodeURIComponent(kickData.reason)}`, { replace: true })
-       },
+          localStorage.setItem(getKickStorageKey(streamId, user.id), JSON.stringify(kickData))
+          leaveLiveKitRoom().catch(() => {})
+          hasJoinedAudienceRef.current = false
+          joiningAudienceRef.current = false
+          currentRoomKeyRef.current = null
+          navigate(`/?kicked=${encodeURIComponent(kickData.reason)}`, { replace: true })
+        },
         onStream: (event: any) => {
           const next = event?.new || event
           if (!next) return
 
-          // When the stream ends, hard-disconnect from LiveKit and direct every
-          // viewer to the stream summary page (no battle-state exceptions).
           if (isStreamEnded(next as Stream)) {
             if (streamEndedRef.current) return
             streamEndedRef.current = true
-            // Hard disconnect from LiveKit before navigating
             leaveLiveKitRoom().catch(() => {})
             hasJoinedAudienceRef.current = false
             joiningAudienceRef.current = false
@@ -2675,25 +2709,25 @@ useStreamRealtime(
             return
           }
 
-         setStream((prev) => {
-           if (!prev) return next as Stream
-           return {
-             ...(prev as any),
-             ...(next as any),
-             box_count: typeof next.box_count !== 'undefined' ? next.box_count : (prev as any).box_count,
-             seat_price: typeof next.seat_price !== 'undefined' ? next.seat_price : (prev as any).seat_price,
-             seat_prices: typeof next.seat_prices !== 'undefined' ? next.seat_prices : (prev as any).seat_prices,
-             total_likes: typeof next.total_likes !== 'undefined' ? next.total_likes : (prev as any).total_likes,
-           } as Stream
-         })
+          setStream((prev) => {
+            if (!prev) return next as Stream
+            return {
+              ...(prev as any),
+              ...(next as any),
+              box_count: typeof next.box_count !== 'undefined' ? next.box_count : (prev as any).box_count,
+              seat_price: typeof next.seat_price !== 'undefined' ? next.seat_price : (prev as any).seat_price,
+              seat_prices: typeof next.seat_prices !== 'undefined' ? next.seat_prices : (prev as any).seat_prices,
+              total_likes: typeof next.total_likes !== 'undefined' ? next.total_likes : (prev as any).total_likes,
+            } as Stream
+          })
 
-         if (typeof next.current_viewers !== 'undefined') {
-           setViewerCount(Number(next.current_viewers || 0))
-         }
-       },
-     } as any,
-     stream?.battle_id ?? null,
-   )
+          if (typeof next.current_viewers !== 'undefined') {
+            setViewerCount(Number(next.current_viewers || 0))
+          }
+        },
+      } as any,
+      stream?.battle_id ?? null,
+    )
 
   // Kick guard: check on page load if user was kicked from this broadcast
   useEffect(() => {

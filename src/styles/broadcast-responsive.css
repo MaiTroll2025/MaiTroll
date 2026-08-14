@@ -546,3 +546,74 @@
   animation: rgb-rotate 3s linear infinite;
   box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
 }
+
+/* ================== SMALL PHONE OVERRIDES ================== */
+
+/* Mobile host broadcast video - fullscreen on small phones */
+.mobile-host-video {
+  height: calc(100dvh - 180px);
+  max-height: calc(100dvh - 180px);
+}
+
+@media (max-width: 400px) {
+  .mobile-host-video {
+    height: calc(100dvh - 140px);
+    max-height: calc(100dvh - 140px);
+  }
+}
+
+/* Mobile host audience ticker - compact on small screens */
+.mobile-audience-ticker {
+  padding-top: 0.625rem;
+  padding-bottom: 0.25rem;
+}
+
+@media (max-width: 400px) {
+  .mobile-audience-ticker {
+    padding-top: 0.5rem;
+    padding-bottom: 0.125rem;
+  }
+
+  .mobile-audience-ticker .audience-avatar {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+
+  .mobile-audience-ticker .audience-chip {
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.125rem !important;
+    padding-left: 0.375rem !important;
+    padding-right: 0.375rem !important;
+    font-size: 0.625rem !important;
+  }
+}
+
+/* Mobile broadcast host settings - compact grid on small screens */
+@media (max-width: 400px) {
+  .settings-grid-item {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .settings-grid-item svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  .settings-grid-item span {
+    font-size: 0.65rem !important;
+  }
+}
+
+/* Mobile broadcast dock - smaller buttons on small screens */
+@media (max-width: 400px) {
+  .mobile-dock-btn {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  .mobile-dock-btn svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+  }
+}

@@ -381,23 +381,10 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
       }).catch(() => {})
     }
 
-   // Register service worker for PWA (only when PWA plugin is enabled)
-   // @ts-ignore — PWA disabled during build
-   if (false && 'serviceWorker' in navigator) {
-     navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(() => {});
-     navigator.serviceWorker.getRegistrations().then((regs) => {
-       for (const r of regs) {
-         if (r.active?.scriptURL.endsWith('/sw.js')) {
-           r.unregister().catch(() => {});
-         }
-       }
-     }).catch(() => {});
-   }
-
-  // Initialize offline notification system
-  // This will deliver queued notifications when user comes back online
-  // initializeOfflineNotifications()
-}
+   // Initialize offline notification system
+   // This will deliver queued notifications when user comes back online
+   // initializeOfflineNotifications()
+  }
 
 const rootElement = document.getElementById('root')
 
@@ -418,138 +405,16 @@ if (typeof window !== 'undefined') {
   const enableDevSw = env.DEV && localStorage.getItem('enable_sw_dev') === '1'
   const enableProdSw = env.PROD && (isHttps && (!isLocalhost || forceLocalhostSw))
 
-  // PWA disabled — skip service worker registration
-  if (false && (enableDevSw || enableProdSw || forceLocalhostSw)) {
-    // @ts-expect-error - Virtual module (PWA disabled)
-    import('virtual:pwa-register').then(({ registerSW }) => {
-      const updateSW = registerSW({
-        onNeedRefresh() {
-          console.log('[SW] update ready, dispatching in-app update event')
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('pwa-update-available'))
-          }
-        },
-        onOfflineReady() {
-          console.log('App ready to work offline')
-        }
-      })
+   // PWA registration is handled by vite-plugin-pwa via VitePWA in vite.config.ts
+   console.log('[SW] registration config', {
+     dev: !!env.DEV,
+     prod: !!env.PROD,
+     host: window.location.hostname,
+     protocol: window.location.protocol,
+   })
+  }
 
-      const checkForUpdate = () => {
-        if (typeof updateSW === 'function') {
-          void updateSW()
-        }
-      }
-
-      const runPeriodicUpdateCheck = () => {
-        if (typeof window === 'undefined') return
-
-        checkForUpdate()
-        const interval = window.setInterval(checkForUpdate, 1000 * 60 * 30)
-        window.addEventListener('beforeunload', () => {
-          window.clearInterval(interval)
-        })
-      }
-
-      runPeriodicUpdateCheck()
-    })
-
-    const urlBase64ToUint8Array = (base64String: string) => {
-      const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-      const rawData = window.atob(base64)
-      const outputArray = new Uint8Array(rawData.length)
-      for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i)
-      }
-      return outputArray
-    }
-
-     const initPushNotifications = async () => {
-       try {
-         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-           return
-         }
-
-         // Do not auto-prompt. The temporary admin/debug button runs the request flow manually.
-         if (Notification.permission === 'default') {
-           return
-         } else if (Notification.permission !== 'granted') {
-           return
-         }
-
-         const publicKey = env.VITE_VAPID_PUBLIC_KEY as string | undefined
-         if (!publicKey) {
-           console.warn('Missing VITE_VAPID_PUBLIC_KEY; push subscription skipped')
-           return
-         }
-
-         let registration: ServiceWorkerRegistration | undefined
-         try {
-           registration = await navigator.serviceWorker.ready
-         } catch (swErr) {
-           console.warn('No active service worker (push skip)', swErr)
-           return
-         }
-         const existing = await registration.pushManager.getSubscription()
-         const subscription =
-           existing ||
-           (await registration.pushManager.subscribe({
-             userVisibleOnly: true,
-             applicationServerKey: urlBase64ToUint8Array(publicKey),
-           }))
-
-         const { data: sessionData } = await supabase.auth.getSession()
-         const userId = sessionData?.session?.user?.id
-         if (!userId) {
-           return
-         }
-
-         if (!(await doesUserProfileExist(userId))) {
-           return
-         }
-
-         const subJson = subscription.toJSON() as any
-         const expiration =
-           (subscription as any).expirationTime
-             ? new Date((subscription as any).expirationTime).toISOString()
-             : null
-
-        await supabase
-          .from('web_push_subscriptions')
-          .upsert(
-            {
-              user_id: userId,
-              endpoint: subJson.endpoint,
-              p256dh_key: subJson.keys?.p256dh,
-              auth_key: subJson.keys?.auth,
-              expiration_time: expiration,
-              user_agent: navigator.userAgent,
-              is_active: true,
-            },
-            { onConflict: 'endpoint' }
-          )
-       } catch (err) {
-         console.warn('Push notification setup failed', err)
-       }
-     }
-
-     initPushNotifications()
-     supabase.auth.onAuthStateChange((_event, session) => {
-       if (session?.user) {
-         void initPushNotifications()
-       }
-     })
-   } else {
-     console.log('[SW] registration skipped', {
-       dev: !!env.DEV,
-       prod: !!env.PROD,
-       host: window.location.hostname,
-       protocol: window.location.protocol,
-     })
-   }
-}
-
-const queryClient = new QueryClient({
+ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes - balance between freshness and reduced fetches

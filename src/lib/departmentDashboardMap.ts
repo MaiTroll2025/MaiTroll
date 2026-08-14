@@ -5,7 +5,6 @@ import OfficerOWCDashboard from '@/pages/OfficerOWCDashboard'
 import OfficerVote from '@/pages/OfficerVote'
 import LeadOfficerDashboard from '@/pages/lead-officer/LeadOfficerDashboard'
 import CEOAssistantDashboard from '@/pages/ceo-assistant-dashboard'
-import NoahAssistantDashboard from '@/pages/noah-assistant-dashboard'
 import SecretaryConsole from '@/pages/secretary/SecretaryConsole'
 import PastorDashboard from '@/pages/church/PastorDashboard'
 import AttorneyDashboard from '@/pages/attorney/AttorneyDashboard'
@@ -59,7 +58,7 @@ export const DEPARTMENT_DASHBOARD_MAP: RoleDashboardEntry[] = [
   {
     role: 'noah_assistant',
     label: 'Noah Assistant',
-    component: NoahAssistantDashboard,
+    component: CEOAssistantDashboard,
   },
   {
     role: 'pastor',

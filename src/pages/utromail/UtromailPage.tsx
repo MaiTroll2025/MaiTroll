@@ -1072,7 +1072,7 @@ export default function UtromailPage() {
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)_280px]">
           {/* Conversation rail */}
           <aside
-            className={`${glass} min-h-0 overflow-hidden rounded-2xl border-white/[0.08] bg-[#070913]/95 ${showMobileChat ? "hidden lg:flex" : "flex"} flex-col`}
+            className={`${glass} min-h-0 overflow-hidden rounded-2xl border-white/[0.08] bg-[#070913]/95 ${showMobileChat ? "hidden lg:flex" : "flex"} flex-col pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-0`}
           >
             <div className="border-b border-white/[0.08] p-3.5">
               <div className="flex items-center justify-between gap-3">
@@ -1477,7 +1477,7 @@ export default function UtromailPage() {
 
       {/* Mobile chat overlay */}
       {showMobileChat && (
-        <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#050713] lg:hidden">
+        <div className="fixed inset-0 z-[200] flex flex-col overflow-hidden bg-[#050713] lg:hidden">
           {chatPanel}
         </div>
       )}

@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
       global: 'window',
       __APP_VERSION__: JSON.stringify(appVersion),
       __BUILD_TIME__: JSON.stringify(buildTime),
+      __APP_BUILD_ID__: JSON.stringify(buildTime),
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
       'import.meta.env.VITE_EDGE_FUNCTIONS_URL': JSON.stringify(env.VITE_EDGE_FUNCTIONS_URL),
@@ -101,7 +102,7 @@ export default defineConfig(({ mode }) => {
         workbox: {
           cleanupOutdatedCaches: true,
           clientsClaim: true,
-          skipWaiting: false,
+          skipWaiting: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/gejtbllazzighxwxudyu\.supabase\.co\/.*/i,

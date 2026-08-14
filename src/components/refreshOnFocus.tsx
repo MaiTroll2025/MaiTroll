@@ -7,9 +7,7 @@ import { useAuthStore } from '@/lib/store'
 import { generateUUID } from '@/lib/uuid'
 import { toast } from 'sonner'
 import { useObsHeartbeat } from '@/hooks/useObsHeartbeat'
-import { useBroadcastRecorder } from '@/hooks/useBroadcastRecorder'
 import GamingChat from '@/components/broadcast/GamingChat'
-import SaveBroadcastButton from '@/components/broadcast/SaveBroadcastButton'
 import {
   GamingStreamProvider,
   useSetGamingStreamId,
@@ -242,8 +240,6 @@ function GamingSetupPageInner() {
   const reconnectAttempts = useRef(0)
   const healthCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isMountedRef = useRef(true)
-
-  const recorder = useBroadcastRecorder()
   
   // Heartbeat is only enabled when OBS is actually detected as connected.
   // The health check interval (runHealthCheck) polls the backend to detect OBS.
@@ -1033,10 +1029,6 @@ function GamingSetupPageInner() {
     }
 
     try {
-      if (recorder.isRecording) {
-        try { await recorder.stopRecording() } catch (recErr) { console.warn('[refreshOnFocus] Failed to stop recording:', recErr) }
-      }
-
       const { error } = await supabase
         .from('streams')
         .update({
@@ -1129,18 +1121,6 @@ function GamingSetupPageInner() {
         ) : null
       }
       cameraPreview={undefined}
-      saveBroadcastButton={
-        <SaveBroadcastButton
-          isRecording={recorder.isRecording}
-          isUploading={recorder.isUploading}
-          recordingDuration={recorder.recordingDuration}
-          recordingSize={recorder.recordingSize}
-          streamId={streamData?.id || null}
-          onStartRecording={recorder.startRecording}
-          onStopRecording={recorder.stopRecording}
-          onSaveClip={recorder.saveClip}
-        />
-      }
     />
   )
 }

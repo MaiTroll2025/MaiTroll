@@ -170,21 +170,11 @@ const stopRecording = useCallback(async (): Promise<Blob | null> => {
 
       await supabase
         .from('streams')
-        .update({ 
+        .update({
           recording_url: recordingUrl,
           playback_url: recordingUrl,
         })
         .eq('id', streamId)
-
-      await supabase
-        .from('saved_streams')
-        .upsert({
-          user_id: user.id,
-          stream_id: streamId,
-          source: 'gaming_recording',
-          storage_category: 'gaming_recording',
-          file_size_bytes: blob.size,
-        }, { onConflict: 'saved_streams_user_id_stream_id_key' })
 
       toast.success('Recording saved to your profile')
       return recordingUrl

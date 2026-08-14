@@ -65,6 +65,23 @@ interface JobApplication {
   }
 }
 
+interface CareerApplication {
+  id: string
+  user_id: string
+  position_id: string | null
+  status: string
+  created_at: string
+  updated_at?: string
+  lead_officer_approved: boolean | null
+  lead_officer_reviewed_by?: string | null
+  lead_officer_reviewed_at?: string | null
+  application_data?: any
+  user_profiles?: {
+    username: string
+    email?: string
+  }
+}
+
 interface AttorneyApplication {
   id: string
   user_id: string
@@ -144,6 +161,7 @@ export default function AdminApplications() {
   const [auctioneerApps, setAuctioneerApps] = useState<AuctioneerApplication[]>([])
   const [fastPayApplications, setFastPayApplications] = useState<FastPayApplication[]>([])
   const [jobApplications, setJobApplications] = useState<JobApplication[]>([])
+  const [careerApplications, setCareerApplications] = useState<CareerApplication[]>([])
   const [loading, setLoading] = useState(false)
   const [positionFilled, setPositionFilled] = useState(false)
   const loadingRef = useRef(false)
@@ -163,14 +181,15 @@ export default function AdminApplications() {
     if (!skipLoadingState) setLoading(true)
 
     try {
-      const [appRes, appealRes, attorneyRes, prosecutorRes, auctioneerRes, fastPayRes, jobAppRes] = await Promise.all([
+      const [appRes, appealRes, attorneyRes, prosecutorRes, auctioneerRes, fastPayRes, jobAppRes, careerAppRes] = await Promise.all([
         supabase.functions.invoke('admin-actions', { body: { action: 'get_applications' } }),
         supabase.functions.invoke('admin-actions', { body: { action: 'get_seller_appeals' } }),
         supabase.from('attorney_applications').select('*').order('created_at', { ascending: false }),
         supabase.from('prosecutor_applications').select('*').order('created_at', { ascending: false }),
         supabase.from('auctioneer_applications').select('*').order('created_at', { ascending: false }),
         supabase.from('fast_pay_applications').select('*, user_profiles!user_id(username, email)').order('created_at', { ascending: false }),
-        supabase.from('job_applications').select('id, user_id, position_id, status, created_at, updated_at, reviewed_by, reviewed_at, user_profiles!user_id(username, email)').order('created_at', { ascending: false })
+        supabase.from('job_applications').select('id, user_id, position_id, status, created_at, updated_at, reviewed_by, reviewed_at, user_profiles!user_id(username, email)').order('created_at', { ascending: false }),
+        supabase.from('career_applications').select('*, user_profiles!user_id(username, email)').order('created_at', { ascending: false })
       ])
 
       const { data: appData, error: appError } = appRes
@@ -179,6 +198,7 @@ export default function AdminApplications() {
       const { data: prosecutorData, error: prosecutorError } = prosecutorRes
       const { data: auctioneerData, error: auctioneerError } = auctioneerRes
       const { data: fastPayData, error: fastPayError } = fastPayRes
+      const { data: careerAppData, error: careerAppError } = careerAppRes
 
       if (appError) throw appError
       if (appData?.error) throw new Error(appData.error)
@@ -265,6 +285,12 @@ export default function AdminApplications() {
       } else {
         setJobApplications([])
       }
+
+      if (!careerAppError && careerAppData) {
+        setCareerApplications(careerAppData as any)
+      } else {
+        setCareerApplications([])
+      }
     } catch (err: unknown) {
       toast.error("Failed to load applications")
       console.error(err)
@@ -290,6 +316,7 @@ export default function AdminApplications() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'attorney_applications' }, handleRealtimeUpdate)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prosecutor_applications' }, handleRealtimeUpdate)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'job_applications' }, handleRealtimeUpdate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'career_applications' }, handleRealtimeUpdate)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'fast_pay_applications' }, handleRealtimeUpdate)
       .subscribe()
 
@@ -907,9 +934,9 @@ export default function AdminApplications() {
 
 
   const counts = {
-    pending: applications.filter(a => a.status === 'pending').length + sellerAppeals.length,
-    approved: applications.filter(a => a.status === 'approved').length,
-    rejected: applications.filter(a => a.status === 'rejected').length,
+    pending: applications.filter(a => a.status === 'pending').length + sellerAppeals.length + careerApplications.filter(a => a.status === 'pending' || a.status === 'applied').length,
+    approved: applications.filter(a => a.status === 'approved').length + careerApplications.filter(a => a.status === 'approved').length,
+    rejected: applications.filter(a => a.status === 'rejected').length + careerApplications.filter(a => a.status === 'rejected').length,
   }
 
   const visibleApplications = applications.filter((a) => a.status === activeTab)
@@ -1344,10 +1371,87 @@ export default function AdminApplications() {
             </div>
           )}
 
+          {/* CAREER APPLICATIONS */}
+          {careerApplications.length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-emerald-400" />
+                Career Applications ({careerApplications.filter((app) => app.status === 'pending' || app.status === 'applied').length})
+              </h3>
+
+              {careerApplications.filter((app) => app.status === 'pending' || app.status === 'applied').map((careerApp) => (
+                <div key={careerApp.id} className="bg-[#1A1A1A] border border-emerald-500/30 rounded-lg p-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="text-white font-semibold">{careerApp.position_id ? careerApp.position_id.replace(/_/g, ' ').toUpperCase() : 'Career Application'}</p>
+                      <p className="text-sm text-gray-400">Applicant: {careerApp.user_profiles?.username || 'Unknown'}</p>
+                      <p className="text-sm text-gray-400">Email: {careerApp.user_profiles?.email || 'Not provided'}</p>
+                      <p className="mt-2 text-xs uppercase tracking-[0.25em] text-slate-400">Status: {careerApp.status.toUpperCase()}</p>
+                      {careerApp.lead_officer_approved === true && (
+                        <p className="text-xs text-emerald-400 mt-1">✓ Lead Officer Approved</p>
+                      )}
+                      {careerApp.lead_officer_approved === false && (
+                        <p className="text-xs text-red-400 mt-1">✗ Lead Officer Rejected</p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(careerApp.status === 'pending' || careerApp.status === 'applied') && (
+                        <>
+                          <button
+                            onClick={async () => {
+                              setLoading(true)
+                              try {
+                                const { error } = await supabase
+                                  .from('career_applications')
+                                  .update({ status: 'approved', reviewed_by: user.id, reviewed_at: new Date().toISOString() })
+                                  .eq('id', careerApp.id)
+                                if (error) throw error
+                                toast.success('Career application approved')
+                                await loadApplications()
+                              } catch (err: any) {
+                                toast.error(err.message || 'Failed to approve career application')
+                              } finally {
+                                setLoading(false)
+                              }
+                            }}
+                            className="px-3 py-2 bg-green-600 text-white text-xs rounded-lg"
+                          >
+                            APPROVE
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setLoading(true)
+                              try {
+                                const { error } = await supabase
+                                  .from('career_applications')
+                                  .update({ status: 'rejected', reviewed_by: user.id, reviewed_at: new Date().toISOString() })
+                                  .eq('id', careerApp.id)
+                                if (error) throw error
+                                toast.success('Career application rejected')
+                                await loadApplications()
+                              } catch (err: any) {
+                                toast.error(err.message || 'Failed to reject career application')
+                              } finally {
+                                setLoading(false)
+                              }
+                            }}
+                            className="px-3 py-2 bg-red-600 text-white text-xs rounded-lg"
+                          >
+                            REJECT
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* ATTORNEY APPLICATIONS */}
           {activeTab === 'attorney' && (
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-amber-400 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 ⚖️ Attorney Applications ({attorneyApps.length})
               </h3>
 

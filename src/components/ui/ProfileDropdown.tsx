@@ -20,7 +20,7 @@ export default function ProfileDropdown({ className }: ProfileDropdownProps) {
         to={`/profile/${profile.username}`}
         className="relative group outline-none"
       >
-        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-visible group-hover:scale-105 transition-transform duration-300">
+        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-visible flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
           <ProfileFrame
             frame={frame}
             avatarUrl={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username || 'user'}`}

@@ -255,6 +255,7 @@ export interface UserProfile {
 
   // Admin field
   is_admin?: boolean
+  no_ads_until?: string | null
   // TrollTract fields
   is_trolltract?: boolean
   trolltract_activated_at?: string | null

@@ -91,6 +91,7 @@ const ReelSlide: React.FC<{ post: any; isActive: boolean }> = ({
       {showComments && (
         <ReelCommentsOverlay
           postId={post.id}
+          postUserId={post.user_id}
           onClose={() => setShowComments(false)}
         />
       )}

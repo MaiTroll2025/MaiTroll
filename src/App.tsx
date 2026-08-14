@@ -8,6 +8,15 @@ const TreelzUploadPage = lazyWithRetry(() => import("./pages/TreelzUploadPage"))
 import { useAuthStore } from "./lib/store";
 const MaiSingOffPage = lazyWithRetry(() => import("./features/mai-sing-off/pages/MaiSingOffPage"));
 const MaiRecordLabelPage = lazyWithRetry(() => import("./pages/MaiRecordLabelPage"));
+const MaiRecordLabelApplyPage = lazyWithRetry(() => import("./pages/mai-record-label/MaiRecordLabelApplyPage"));
+const ArtistDashboardPage = lazyWithRetry(() => import("./pages/artist/ArtistDashboardPage"));
+const ArtistContractPage = lazyWithRetry(() => import("./pages/artist/ArtistContractPage"));
+const ArtistUploadTrackPage = lazyWithRetry(() => import("./pages/artist/UploadTrackPage"));
+const ArtistCreateAlbumPage = lazyWithRetry(() => import("./pages/artist/CreateAlbumPage"));
+const ArtistEarningsPage = lazyWithRetry(() => import("./pages/artist/ArtistEarningsPage"));
+const AdminMaiRecordLabel = lazyWithRetry(() => import("./pages/admin/AdminMaiRecordLabel"));
+const AlbumPage = lazyWithRetry(() => import("./pages/music/AlbumPage"));
+const TrackPage = lazyWithRetry(() => import("./pages/music/TrackPage"));
 import { SingOffJudgeApplicationsAdmin } from "./features/mai-sing-off/pages/SingOffJudgeApplicationsAdmin";
 import { GlobalEventProvider } from "./contexts/GlobalEventContext";
 import { BatterySaverProvider } from "./contexts/BatterySaverContext";
@@ -19,6 +28,7 @@ import { supabase, UserRole, reportError } from "./lib/supabase";
 import { NIGHT_WATCH_PATROL_ROLES } from "./lib/staff";
 import { Toaster, toast } from "sonner";
 import GlobalLoadingOverlay from "./components/GlobalLoadingOverlay";
+import MobileAdOverlay from "./components/ads/MobileAdOverlay";
 import GlobalErrorBanner from "./components/GlobalErrorBanner";
 import GlobalGiftBanner from "./components/GlobalGiftBanner";
 import BroadcastAnnouncement from "./components/BroadcastAnnouncement";
@@ -103,7 +113,6 @@ const AppealManagement = lazyWithRetry(() => import("./pages/admin/AppealManagem
 const AdminMeetingsDashboard = lazyWithRetry(() => import("./pages/admin/AdminMeetingsDashboard"));
 import { systemManagementRoutes } from "./pages/admin/adminRoutes";
 const CEOAssistantDashboard = lazyWithRetry(() => import("./pages/ceo-assistant-dashboard"));
-const NoahAssistantDashboard = lazyWithRetry(() => import("./pages/noah-assistant-dashboard"));
 
 const TaxOnboarding = lazyWithRetry(() => import("./pages/TaxOnboarding"));
 
@@ -539,8 +548,6 @@ const GamingCommunity = lazyWithRetry(() => import("./pages/broadcast/gaming/Gam
 const GamingMonetization = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingMonetization.tsx"));
 const GamingStore = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingStore.tsx"));
 const BroadcastRouter = lazyWithRetry(() => import("./pages/broadcast/BroadcastRouter.js"));
-const StreamSummary = lazyWithRetry(() => import("./pages/broadcast/StreamSummary.js"));
-const ReplayPage = lazyWithRetry(() => import("./pages/broadcast/ReplayPage.tsx"));
 const PresidentPage = lazyWithRetry(() => import("./pages/President.js"));
 const PresidentDashboard = lazyWithRetry(() => import("./pages/president/PresidentDashboard.js"));
 const SecretaryDashboard = lazyWithRetry(() => import("./pages/president/SecretaryDashboard.js"));
@@ -658,8 +665,6 @@ function AppContent() {
   const [isStandalone, setIsStandalone] = useState(false);
   const { isMobile, isMobileWidth } = useIsMobile();
   const isMobileUI = isMobileWidth || isStandalone;
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [waitingServiceWorker, setWaitingServiceWorker] = useState<ServiceWorker | null>(null);
   const [initialProfileLoaded, setInitialProfileLoaded] = useState(false);
   const [activeMeetingNotification, setActiveMeetingNotification] = useState<{
     meetingId: string;
@@ -817,68 +822,7 @@ function AppContent() {
     }
   }, [profile?.has_active_warrant, location.pathname, navigate]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!('serviceWorker' in navigator)) return;
-
-    const handleUpdateAvailable = async () => {
-      try {
-        const registration = await navigator.serviceWorker.getRegistration();
-        const waiting = registration?.waiting;
-        if (waiting) {
-          setWaitingServiceWorker(waiting);
-          setUpdateAvailable(true);
-        }
-      } catch {}
-    };
-
-    window.addEventListener('pwa-update-available', handleUpdateAvailable);
-
-    return () => {
-      window.removeEventListener('pwa-update-available', handleUpdateAvailable);
-    };
-  }, []);
-
-  // Show update toast when update is available
-  useEffect(() => {
-    if (!updateAvailable || !waitingServiceWorker) return;
-
-    // Don't auto-reload - let user click the toast action to update
-    // This prevents infinite reload loops in PWA mode
-    if (isStandalone) {
-      toast.info("New update available!", {
-        duration: Infinity,
-        description: "A new version of Mai Troll is available.",
-        action: {
-          label: "Update Now",
-          onClick: () => {
-            waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
-            setTimeout(() => {
-              window.location.reload();
-            }, 500);
-          }
-        },
-        onDismiss: () => {}
-      });
-      return;
-    }
-
-    toast.info("New update available!", {
-      duration: Infinity,
-      description: "A new version of Mai Troll is available.",
-      action: {
-        label: "Update Now",
-        onClick: () => {
-          waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
-        }
-      },
-      onDismiss: () => {}
-    });
-  }, [updateAvailable, waitingServiceWorker, isStandalone]);
-
+  // Warrant Access Restriction
   useEffect(() => {
     if (hasNavigatedRef.current) return;
     if (!userId || !isStandalone) return;
@@ -1481,26 +1425,8 @@ const handleVisibilityChange = async () => {
     })
   }, [location.pathname])
 
-  const handleUpdateClick = () => {
-    if (!waitingServiceWorker) return;
-    waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
-    setUpdateAvailable(false);
-  };
-
   const appShell = (
     <>
-      {updateAvailable && (
-        <div className="fixed top-0 inset-x-0 z-[60] flex items-center justify-between bg-purple-900 text-white px-4 py-2">
-          <span className="text-sm">A new version of Mai Troll is available.</span>
-          <button
-            type="button"
-            onClick={handleUpdateClick}
-            className="ml-4 rounded bg-purple-600 text-white text-sm font-semibold px-3 py-1 hover:bg-purple-500"
-          >
-            Update now
-          </button>
-        </div>
-      )}
       {/* Global Error Banner */}
       <GlobalErrorBanner />
 
@@ -1540,6 +1466,8 @@ const handleVisibilityChange = async () => {
         type="error"
         onRetry={retryLastAction}
       />
+
+      <MobileAdOverlay />
 
 <LiveContentProvider>
             <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true}>
@@ -1648,24 +1576,19 @@ const handleVisibilityChange = async () => {
                 <Route path="/profile/id/:userId" element={<Profile />} />
                 <Route path="/profile/:username" element={<Profile />} />
 
-                {/* Broadcast/Stream routes - public with password protection */}
-                 <Route path="/replay/:streamId" element={<ReplayPage />} />
-                 <Route path="/replay/id/:streamId" element={<ReplayPage />} />
+{/* Broadcast/Stream routes - public with password protection */}
+                  <Route path="/gaming/watch/:streamId" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
 
-                 <Route path="/gaming/watch/:streamId" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
-                {/* Username-based stream routes (SEO-friendly, e.g. /live/username) */}
+                  {/* Username-based stream routes (SEO-friendly, e.g. /live/username) */}
                 <Route path="/live/:username" element={<BroadcastRouter />} />
                 <Route path="/stream/:username" element={<BroadcastRouter />} />
                 {/* UUID-based stream routes (backwards compatibility) */}
                 <Route path="/broadcast/:id" element={<BroadcastRouter />} />
                 <Route path="/watch/:id" element={<BroadcastRouter />} />
                 <Route path="/live/:streamId" element={<BroadcastRouter />} />
-                 <Route path="/stream/:id" element={<BroadcastRouter />} />
+<Route path="/stream/:id" element={<BroadcastRouter />} />
 
-                 {/* Stream summary page (reached after a broadcast ends) */}
-                 <Route path="/broadcast/summary/:streamId" element={<StreamSummary />} />
-
-                 {/* 🏛️ State Battle Routes */}
+                  {/* 🏛️ State Battle Routes */}
                  <Route path="/state-rankings" element={<StateRankings />} />
                 <Route path="/state/:stateCode" element={<StateDetail />} />
 
@@ -1841,9 +1764,8 @@ const handleVisibilityChange = async () => {
                      <Route path="/officer/report/:id" element={<Navigate to="/Employees" replace />} />
                      <Route path="/lead-officer" element={<Navigate to="/department-tools?role=lead_troll_officer" replace />} />
                      <Route path="/secretary" element={<Navigate to="/department-tools?role=secretary" replace />} />
-                     <Route path="/ceo-assistant-dashboard" element={<Navigate to="/department-tools?role=ceo_assistant" replace />} />
-                     <Route path="/noah-assistant-dashboard" element={<Navigate to="/department-tools?role=noah_assistant" replace />} />
-                     <Route path="/hr-center" element={<Navigate to="/department-tools" replace />} />
+                      <Route path="/ceo-assistant-dashboard" element={<Navigate to="/department-tools?role=ceo_assistant" replace />} />
+                      <Route path="/hr-center" element={<Navigate to="/department-tools" replace />} />
                      <Route path="/agency-hr" element={<Navigate to="/agency-hr-dashboard" replace />} />
                     <Route path="/pastor" element={<Navigate to="/department-tools?role=pastor" replace />} />
                     <Route path="/church/pastor" element={<Navigate to="/department-tools?role=pastor" replace />} />
@@ -1985,16 +1907,8 @@ const handleVisibilityChange = async () => {
                         <CEOAssistantDashboard />
                       </RequireRole>
                     }
-                  />
-                  <Route
-                    path="/noah-assistant-dashboard"
-                    element={
-                      <RequireRole roles={['noah_assistant']}>
-                        <NoahAssistantDashboard />
-                      </RequireRole>
-                    }
-                  />
-                   {/* 📺 Live Streaming System */}
+                   />
+                    {/* 📺 Live Streaming System */}
                    <Route path="/live/command-center/:streamId" element={<LiveCommandCenter />} />
                    <Route path="/live/overlay/:streamId" element={<LiveStreamOverlay />} />
                    <Route path="/settings/audio" element={<AudioSettings />} />
@@ -2714,10 +2628,23 @@ const handleVisibilityChange = async () => {
                  <Route path="/mai-sing-off/*" element={<MaiSingOffPage />} />
                  <Route path="/xtrollz/*" element={<Navigate to="/mai-sing-off" replace />} />
 
-                 {/* 🎵 MAI Record Label — program preview */}
-                 <Route path="/mai-record-label" element={<MaiRecordLabelPage />} />
+                   {/* 🎵 MAI Record Label — program preview */}
+                   <Route path="/mai-record-label" element={<MaiRecordLabelPage />} />
+                   <Route path="/mai-record-label/apply" element={<MaiRecordLabelApplyPage />} />
+                   <Route path="/artist/dashboard" element={<ArtistDashboardPage />} />
+                   <Route path="/artist/contract" element={<ArtistContractPage />} />
+                   <Route path="/artist/upload-track" element={<ArtistUploadTrackPage />} />
+                   <Route path="/artist/create-album" element={<ArtistCreateAlbumPage />} />
+                   <Route path="/artist/earnings" element={<ArtistEarningsPage />} />
+                   <Route path="/admin/mai-record-label" element={
+                     <RequireRole roles={[UserRole.ADMIN]}>
+                       <AdminMaiRecordLabel />
+                     </RequireRole>
+                   } />
+                   <Route path="/music/album/:albumId" element={<AlbumPage />} />
+                   <Route path="/music/track/:trackId" element={<TrackPage />} />
 
-                {/* 🔙 Catch-all - redirect username patterns to profile (PUBLIC ACCESS) */}
+                 {/* 🔙 Catch-all - redirect username patterns to profile (PUBLIC ACCESS) */}
                  <Route path="/:username" element={<UsernameRedirect />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

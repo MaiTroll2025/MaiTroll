@@ -167,16 +167,15 @@ export function useStorageUsage(userId?: string | null) {
     }
   }, [userId])
 
-  useEffect(() => {
+   useEffect(() => {
     fetchStorageUsage()
     if (!userId) return
     const channel = supabase.channel(`user-storage-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'saved_streams', filter: `user_id=eq.${userId}` }, fetchStorageUsage)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_storage_usage', filter: `user_id=eq.${userId}` }, fetchStorageUsage)
       .subscribe()
-    return () => { 
+    return () => {
       if (channel) {
-        supabase.removeChannel(channel) 
+        supabase.removeChannel(channel)
       }
     };
   }, [userId, fetchStorageUsage])

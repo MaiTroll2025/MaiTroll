@@ -202,7 +202,7 @@ function getAudioTrackFromRemoteParticipant(participant: any): RemoteAudioTrack 
   return (audioPub?.track as RemoteAudioTrack) || null
 }
 
-function RemoteSeatSurface({
+const RemoteSeatSurface = React.memo(function RemoteSeatSurface({
   participant,
   cameraTrack: cameraTrackProp,
   fallback,
@@ -308,7 +308,7 @@ function RemoteSeatSurface({
       <audio ref={audioRef} autoPlay />
     </>
   )
-}
+})
 
 function normalizeUuid(value: unknown): string | null {
   const text = String(value || '').trim().toLowerCase()
@@ -469,7 +469,7 @@ function isGhostParticipant(participant: any): boolean {
 
 
 
-function GhostAudioTrack({ participant }: { participant: any }) {
+const GhostAudioTrack = React.memo(function GhostAudioTrack({ participant }: { participant: any }) {
   const audioEl = React.useRef<HTMLAudioElement | null>(null)
   const audioTrack = getAudioTrackFromRemoteParticipant(participant)
 
@@ -497,7 +497,7 @@ function GhostAudioTrack({ participant }: { participant: any }) {
       style={{ position: 'absolute', left: '-9999px' }}
     />
   )
-}
+})
 
 import ShareModal from '@/components/broadcast/ShareModal'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -716,9 +716,42 @@ export function BroadcastPage() {
      const isCelebStream = stream?.stream_type === 'celeb_stream'
      const isApprovedCeleb = !!(profile && profile.celeb_role === 'approved')
 
-     const isStreamLive = stream?.status === 'live' && stream?.is_live === true;
+      const isStreamLive = stream?.status === 'live' && stream?.is_live === true;
 
-    // CityStatusOrb for broadcaster box display
+      useEffect(() => {
+        if (!isStreamLive) return;
+
+        let wakeLock: any = null;
+
+        const requestWakeLock = async () => {
+          try {
+            if ('wakeLock' in navigator) {
+              wakeLock = await (navigator as any).wakeLock.request('screen');
+            }
+          } catch (err) {
+            console.warn('[BroadcastPage] Wake lock failed:', err);
+          }
+        };
+
+        void requestWakeLock();
+
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+            void requestWakeLock();
+          }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          if (wakeLock) {
+            wakeLock.release().catch(() => {});
+          }
+        };
+      }, [isStreamLive]);
+
+     // CityStatusOrb for broadcaster box display
    const broadcasterCityStatus = useCityStatusOrb({
      userId: stream?.user_id || '',
      broadcasterId: user?.id,
@@ -1013,24 +1046,45 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
   const localTrackPublishedCountRef = useRef(0)
   const cameraToggleQueueRef = useRef<Promise<unknown>>(Promise.resolve())
   const microphoneToggleQueueRef = useRef<Promise<unknown>>(Promise.resolve())
+  const timeoutsRef = useRef<Set<number>>(new Set())
+  const intervalsRef = useRef<Set<number>>(new Set())
   const [cameraEnabled, setCameraEnabled] = useState(true)
   const [micEnabled, setMicEnabled] = useState(true)
   const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user')
   const isGoingLiveRef = useRef(false)
 
-  useEffect(() => {
-    mountCountRef.current += 1
-    console.debug('[BroadcastPage] mount count', mountCountRef.current, 'render count', renderCountRef.current, 'streamId', streamId)
-    console.debug('[BroadcastPage] LiveKit debug counts', {
-      livekitRoomCreated: livekitRoomCreatedCountRef.current,
-      livekitRoomDisconnected: livekitRoomDisconnectedCountRef.current,
-      localTrackCreated: localTrackCreatedCountRef.current,
-      localTrackPublished: localTrackPublishedCountRef.current,
-    })
-    return () => {
-      console.debug('[BroadcastPage] BroadcastPage unmounted for streamId', streamId)
-    }
-  }, [streamId])
+  const trackedTimeout = (fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timeoutsRef.current.delete(id)
+      fn()
+    }, ms)
+    timeoutsRef.current.add(id)
+    return id
+  }
+
+  const trackedInterval = (fn: () => void, ms: number) => {
+    const id = window.setInterval(fn, ms)
+    intervalsRef.current.add(id)
+    return id
+  }
+
+   useEffect(() => {
+     mountCountRef.current += 1
+     console.debug('[BroadcastPage] mount count', mountCountRef.current, 'render count', renderCountRef.current, 'streamId', streamId)
+     console.debug('[BroadcastPage] LiveKit debug counts', {
+       livekitRoomCreated: livekitRoomCreatedCountRef.current,
+       livekitRoomDisconnected: livekitRoomDisconnectedCountRef.current,
+       localTrackCreated: localTrackCreatedCountRef.current,
+       localTrackPublished: localTrackPublishedCountRef.current,
+     })
+     return () => {
+       console.debug('[BroadcastPage] BroadcastPage unmounted for streamId', streamId)
+       timeoutsRef.current.forEach(id => clearTimeout(id))
+       intervalsRef.current.forEach(id => clearInterval(id))
+       timeoutsRef.current.clear()
+       intervalsRef.current.clear()
+     }
+   }, [streamId])
 
   const getLiveKitUrl = () => {
     const livekitUrl = import.meta.env.VITE_LIVEKIT_URL
@@ -1903,14 +1957,17 @@ const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
        })
        toast.success('Message unpinned')
      }, [])
-     const [hostChatDisabledUntil, setHostChatDisabledUntil] = useState<string | null>(null)
-     const [hostChatDisabledStreamId, setHostChatDisabledStreamId] = useState<string | null>(null)
-     const [hostChatDisableRemainingMs, setHostChatDisableRemainingMs] = useState(0)
-      const floatingChatContainerRef = useRef<HTMLDivElement>(null)
-      const chatContainerRef = useRef<HTMLDivElement>(null)
-      const broadcastChatMessageIdsRef = useRef<Set<string>>(new Set())
-      const recentChatKeysRef = useRef<Map<string, number>>(new Map())
-      const CHAT_DEBOUNCE_MS = 5000
+      const [hostChatDisabledUntil, setHostChatDisabledUntil] = useState<string | null>(null)
+      const [hostChatDisabledStreamId, setHostChatDisabledStreamId] = useState<string | null>(null)
+       const floatingChatContainerRef = useRef<HTMLDivElement>(null)
+       const chatContainerRef = useRef<HTMLDivElement>(null)
+       const broadcastChatMessageIdsRef = useRef<Set<string>>(new Set())
+       const recentChatKeysRef = useRef<Map<string, number>>(new Map())
+       const CHAT_DEBOUNCE_MS = 5000
+
+      const hostChatDisableRemainingMs = hostChatDisabledUntil
+        ? Math.max(0, getBroadcastChatLockRemainingMs(hostChatDisabledUntil))
+        : 0
 
      const hostChatDisabledByOfficer = useMemo(
        () => isBroadcastChatLockActive({
@@ -1953,20 +2010,9 @@ const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
          mounted = false
          window.clearInterval(interval)
        }
-     }, [streamId, stream?.user_id])
+      }, [streamId, stream?.user_id])
 
-     useEffect(() => {
-       const updateRemaining = () => {
-         setHostChatDisableRemainingMs(getBroadcastChatLockRemainingMs(hostChatDisabledUntil))
-       }
-
-       updateRemaining()
-       const interval = window.setInterval(updateRemaining, 1000)
-
-       return () => window.clearInterval(interval)
-     }, [hostChatDisabledUntil])
-
-   useEffect(() => {
+    useEffect(() => {
      const broadcasterId = stream?.user_id;
      if (!broadcasterId) {
        setAllTimeTopGifters([]);
@@ -2170,6 +2216,20 @@ const ranked = senderIds
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             throw new Error('Camera/microphone access is not available in this browser or context.');
           }
+
+          const existingVideoPub = roomRef.current?.localParticipant
+            ?.getTrackPublication?.(Track.Source.Camera)?.track
+            || roomRef.current?.localParticipant
+            ?.getTrackPublication?.(Track.Kind.Video)?.track;
+
+          if (existingVideoPub?.mediaStreamTrack?.readyState === 'live') {
+            const mediaTrack = existingVideoPub.mediaStreamTrack;
+            overlayStream = new MediaStream([mediaTrack]);
+            overlayTrack = new LocalVideoTrack(mediaTrack);
+            setCameraOverlayTrackState(overlayTrack);
+            return;
+          }
+
           overlayStream = await navigator.mediaDevices.getUserMedia({
             video: {
               width: { ideal: 640 },
@@ -2359,7 +2419,7 @@ const ranked = senderIds
       });
 
       const giftDurationMs = newGift.animation_duration_ms ?? getGiftVisualConfig(newGift).durationMs;
-      setTimeout(() => {
+      trackedTimeout(() => {
         setRecentGifts((prev) => prev.filter((g) => g.id !== giftId));
       }, giftDurationMs + 150);
 
@@ -2491,6 +2551,7 @@ const ranked = senderIds
         ({ payload }) => {
           if (!payload) return
           void processGiftEventRef.current(payload)
+          window.dispatchEvent(new CustomEvent('broadcast-gift-received', { detail: { payload } }))
         },
       )
       .subscribe()
@@ -2586,6 +2647,7 @@ const ranked = senderIds
   const streamRef = useRef(stream)
   const broadcasterProfileRef = useRef(broadcasterProfile)
   const profileRef = useRef(profile)
+  const streamRealtimeUpdateRef = useRef<number | null>(null)
 
   useEffect(() => {
     streamRef.current = stream
@@ -3280,6 +3342,25 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     const wasLive = streamRef.current?.status === 'live' || streamRef.current?.is_live;
     const isNowLive = nextStream.status === 'live' || nextStream.is_live;
 
+    const criticalChanged =
+      isNowLive !== wasLive ||
+      nextStream.status !== streamRef.current?.status ||
+      nextStream.is_battle !== streamRef.current?.is_battle ||
+      nextStream.battle_id !== streamRef.current?.battle_id ||
+      nextStream.battle_status !== streamRef.current?.battle_status;
+
+    const now = Date.now();
+    const lastUpdate = streamRealtimeUpdateRef.current;
+    const shouldThrottle = !criticalChanged && lastUpdate && now - lastUpdate < 2000;
+
+    streamRef.current = { ...streamRef.current, ...nextStream };
+
+    if (shouldThrottle) {
+      return;
+    }
+
+    streamRealtimeUpdateRef.current = now;
+
     setStream((prev: any) => {
       if (!prev) return prev;
       return {
@@ -3307,7 +3388,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         battle_winner_id: nextStream.battle_winner_id,
         side_a_score: nextStream.side_a_score,
          side_b_score: nextStream.side_b_score,
-       };
+      };
     });
 
     // Record stream started event if transitioning from not live to live
@@ -3346,7 +3427,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       disconnectLiveKitRoom();
       setRemoteParticipants(new Map());
       void removeStreamChannels(streamId || nextStream.id || '')
-      setTimeout(() => {
+      trackedTimeout(() => {
         navigate(`/broadcast/summary/${nextStream.id || streamId}`);
       }, 100);
     }
@@ -3571,7 +3652,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         if (import.meta.env.DEV) {
           console.debug('[BroadcastPage][stream_messages] message appended', { msgId, username, streamId })
         }
-        setTimeout(() => {
+        trackedTimeout(() => {
           setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
         }, 30_000)
       },
@@ -4438,8 +4519,8 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           const freshTracks = await createLocalTracks({
             audio: true,
             video: {
-              resolution: VideoPresets.h720.resolution,
-              facingMode: 'user',
+              resolution: videoPreset.resolution,
+              facingMode: isMobileDevice ? 'user' : undefined,
             },
           })
 
@@ -5608,7 +5689,7 @@ const toggleMicrophone = useCallback(async () => {
     } catch (err) {
 
     } finally {
-      window.setTimeout(() => {
+      trackedTimeout(() => {
         swipeNavigateLockRef.current = false;
       }, 400);
     }
@@ -6111,7 +6192,7 @@ const toggleMicrophone = useCallback(async () => {
             <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-cyan-300/65 to-transparent" />
 
             {/* RGB broadcast effect — only when enabled, rendered ABOVE the seat grid */}
-            {stream?.has_rgb_effect && (
+            {stream?.has_rgb_effect && !isMobileDevice && (
               <div className="pointer-events-none absolute inset-0 z-30 mix-blend-screen">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_20%_20%,rgba(147,51,234,0.35),transparent_42%)]" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(140%_140%_at_80%_0%,rgba(45,212,191,0.28),transparent_46%)]" />
@@ -7403,7 +7484,7 @@ const toggleMicrophone = useCallback(async () => {
                            recentChatKeysRef.current.set(`${username}:${text}`, Date.now())
                            setChatInput('')
 
-                           setTimeout(() => {
+                           trackedTimeout(() => {
                              setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
                            }, 60_000)
 
@@ -7774,7 +7855,7 @@ const toggleMicrophone = useCallback(async () => {
                  {/* MOBILE: Audience ticker with viewer count + collaboration controls */}
                  {isMobileHost && stream && (
                    <div className="mobile-audience-ticker absolute inset-x-0 top-0 z-20 flex items-start gap-2 px-3 pt-[44px]">
-                    <div className="pointer-events-auto flex-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-xl shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
+                     <div className="pointer-events-auto flex-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-sm shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
                         <MobileAudienceTicker
                           audience={audienceWithAnon}
                           currentUserId={user?.id}
@@ -7850,7 +7931,6 @@ const toggleMicrophone = useCallback(async () => {
                 onGift={handleGiftHost}
                 onShare={handleOpenShareModal}
                 onOpenMessage={() => setIsMessagePopupOpen(true)}
-                onManageMessage={() => {}}
                 onOpenMoreMenu={handleOpenMoreMenu}
                 onEndStream={handleStreamEnd}
                 onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
@@ -8416,7 +8496,7 @@ const toggleMicrophone = useCallback(async () => {
 
               {/* Mobile host chat bottom sheet */}
               {isMobileHost && isChatOpen && (
-                <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl"
+                 <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col bg-black/95 backdrop-blur-sm border-t border-white/10 rounded-t-2xl"
                   style={{ maxHeight: '60vh' }}>
                   <div className="flex items-center justify-between p-3 border-b border-white/10">
                     <span className="text-sm font-bold text-white">Chat</span>
@@ -8466,12 +8546,12 @@ const toggleMicrophone = useCallback(async () => {
                         if (!text) return
                         const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
                         const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                        setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
-                        recentChatKeysRef.current.set(`${username}:${text}`, Date.now())
-                        setChatInput('')
-                        setTimeout(() => {
-                          setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                        }, 3000)
+                         setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
+                         recentChatKeysRef.current.set(`${username}:${text}`, Date.now())
+                         setChatInput('')
+                         trackedTimeout(() => {
+                           setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                         }, 3000)
                         try {
                           const { data: { session } } = await supabase.auth.getSession()
                           if (session) {
@@ -8728,7 +8808,7 @@ function isStaffProfile(profile: any) {
  * Attaches the video element to a permanent div via `track.attach()` in a useEffect.
  * Mirrors spin-off from BroadcastGrid.tsx LiveKitVideoPlayer for minimal standalone use.
  */
-function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | null }) {
+const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | null }) {
   const divRef = React.useRef<HTMLDivElement>(null);
   const videoElRef = React.useRef<HTMLVideoElement | null>(null);
 
@@ -8796,7 +8876,7 @@ function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | nu
       className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-contain"
     />
   );
-}
+})
 
 
 
