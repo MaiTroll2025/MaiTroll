@@ -141,7 +141,7 @@ export default function SidebarTopBroadcasters({ isCollapsed }: SidebarTopBroadc
          {/* Live/Watch Button - Only visible when expanded */}
          {!isCollapsed && broadcaster.is_live && (
            <button
-              onClick={() => navigate(`/watch/${broadcaster.stream_id}`)}
+               onClick={() => navigate(`/live/${encodeURIComponent(broadcaster.username)}`)}
              className="p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn"
              title="Watch Live"
            >

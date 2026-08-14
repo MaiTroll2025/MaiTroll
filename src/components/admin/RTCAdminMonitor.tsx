@@ -438,33 +438,46 @@ const fetchRTCStats = useCallback(async () => {
          }),
        );
 
-       const { data: sessions } = await supabase
-         .from('rtc_sessions')
-         .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active');
+        const { data: sessions } = await supabase
+          .from('rtc_sessions')
+          .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active');
 
-       const rtcSessions = (sessions || []) as RTSSession[];
-       const resetTime = rtcMinutesResetAt ? rtcMinutesResetAt.getTime() : 0;
+        const rtcSessions = (sessions || []) as RTSSession[];
 
-        const totalSeconds = allStreams.reduce((sum, stream) => {
-          const streamStart = stream.started_at ? new Date(stream.started_at).getTime() : 0;
-          if (streamStart < resetTime || streamStart <= 0) return sum;
+        let totalMinutesFromDB: number | null = null;
+        try {
+          const { data: totalRow } = await supabase
+            .from('rtc_minute_totals')
+            .select('total_minutes')
+            .eq('id', 'global')
+            .maybeSingle();
+          totalMinutesFromDB = Number(totalRow?.total_minutes) || null;
+        } catch {
+          totalMinutesFromDB = null;
+        }
 
-          const streamEnd = stream.ended_at ? new Date(stream.ended_at).getTime() : currentTime;
-          const durationMs = streamEnd - streamStart;
-          if (durationMs <= 0) return sum;
+        const totalMinutes = totalMinutesFromDB !== null
+          ? totalMinutesFromDB
+          : Math.floor(
+              allStreams.reduce((sum, stream) => {
+                const streamStart = stream.started_at ? new Date(stream.started_at).getTime() : 0;
+                if (streamStart <= 0) return sum;
+                const streamEnd = stream.ended_at ? new Date(stream.ended_at).getTime() : currentTime;
+                const durationMs = streamEnd - streamStart;
+                if (durationMs <= 0) return sum;
+                return sum + Math.floor(durationMs / 1000);
+              }, 0) / 60
+            );
 
-          return sum + Math.floor(durationMs / 1000);
-        }, 0);
+        const { count: totalUsers } = await supabase.from('user_profiles').select('id', { count: 'exact', head: true });
 
-       const { count: totalUsers } = await supabase.from('user_profiles').select('id', { count: 'exact', head: true });
-
-       setStats({
-         totalMinutes: Math.floor(totalSeconds / 60),
-         activeSessions: rtcSessions.filter((s) => s.is_active).length,
-         liveStreams: streamDetails.length,
-         liveStreamDetails: streamDetails,
-         totalUsers: totalUsers || 0,
-       });
+        setStats({
+          totalMinutes,
+          activeSessions: rtcSessions.filter((s) => s.is_active).length,
+          liveStreams: streamDetails.length,
+          liveStreamDetails: streamDetails,
+          totalUsers: totalUsers || 0,
+        });
        setLastRefresh(new Date());
        setNow(Date.now());
        lastRtcFetchRef.current = Date.now();
@@ -1878,30 +1891,37 @@ const renderRtcTab = () => (
            {isLoading ? 'Refreshing...' : 'Refresh'}
          </button>
 
-         <button
-           type="button"
-           onClick={() => {
-             if (showRestartConfirm) {
-               setRtcMinutesResetAt(new Date());
-               setShowRestartConfirm(false);
-               toast.success('RTC minutes counter restarted');
-               fetchRTCStats();
-             } else {
-               setShowRestartConfirm(true);
-               setTimeout(() => setShowRestartConfirm(false), 5000);
-             }
-           }}
-           className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600/20 px-3 py-2 text-xs text-amber-400 transition-colors hover:bg-amber-600/30"
-           title="Manually restart the RTC minutes counter. Use this when upgrading your LiveKit plan."
-         >
-           <RefreshCw className="h-3 w-3" />
-           {showRestartConfirm ? 'Confirm Restart?' : 'Restart RTC Minutes'}
-         </button>
+          <button
+            type="button"
+            onClick={async () => {
+              if (showRestartConfirm) {
+                try {
+                  await supabase.rpc('reset_rtc_minute_totals');
+                  setRtcMinutesResetAt(new Date());
+                  setShowRestartConfirm(false);
+                  toast.success('RTC minutes counter reset in database');
+                  fetchRTCStats();
+                } catch (err) {
+                  console.error('[RTC Monitor] Reset failed:', err);
+                  toast.error('Failed to reset RTC minutes');
+                  setShowRestartConfirm(false);
+                }
+              } else {
+                setShowRestartConfirm(true);
+                setTimeout(() => setShowRestartConfirm(false), 5000);
+              }
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600/20 px-3 py-2 text-xs text-amber-400 transition-colors hover:bg-amber-600/30"
+            title="Permanently reset the RTC minutes counter to zero in the database."
+          >
+            <RefreshCw className="h-3 w-3" />
+            {showRestartConfirm ? 'Confirm Reset?' : 'Reset RTC Minutes'}
+          </button>
        </div>
 
        {rtcMinutesResetAt && (
          <div className="rounded border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[10px] text-amber-400">
-           RTC minutes counter reset at {rtcMinutesResetAt.toLocaleTimeString()}. Only minutes after this reset are counted.
+            RTC minutes counter reset at {rtcMinutesResetAt.toLocaleTimeString()}. Counter will continue from zero until next manual reset.
          </div>
        )}
 

@@ -141,7 +141,9 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
   const statusText = isLive ? 'LIVE' : 'Ended'
   const title = `${broadcaster?.username || 'Broadcaster'} is ${statusText} on MaiTroll`
   const description = stream.title || 'Watch this live broadcast on MaiTroll'
-  const canonicalUrl = `${APP_URL}/watch/${stream.id}`
+  const canonicalUrl = broadcaster?.username
+    ? `${APP_URL}/live/${encodeURIComponent(broadcaster.username)}`
+    : `${APP_URL}/watch/${stream.id}`
   const previewImage =
     (stream as any).thumbnail_url ||
     broadcaster?.thumbnail_url ||

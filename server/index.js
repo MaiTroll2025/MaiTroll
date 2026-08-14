@@ -399,22 +399,27 @@ app.get('/api/social/:broadcastId', async (req, res) => {
       });
       return res.status(404).send(meta);
     }
-    
-    // Check if live or ended
+
     const isLive = stream.status === 'live';
     const statusText = isLive ? 'LIVE' : 'Ended';
-    
-    // Get thumbnail or use broadcaster's avatar as fallback
+    const username = broadcaster?.username || null;
+
+    const streamUrl = username
+      ? `${APP_URL}/live/${encodeURIComponent(username)}`
+      : `${APP_URL}/watch/${stream.id}`;
+
     const previewImage = stream.thumbnail_url || broadcaster?.thumbnail_url || broadcaster?.avatar_url || FALLBACK_PREVIEW_IMAGE;
-    
-    // Generate player URL for Twitter/X cards
-    const playerUrl = `${APP_URL}/watch/${stream.id}`;
-    
+
+    const ogImageUrl = username
+      ? `${APP_URL}/api/og/profile?username=${encodeURIComponent(username)}`
+      : null;
+
     const meta = generateSocialMetaHTML({
-      title: `${broadcaster?.username || 'Broadcaster'} is ${statusText} on MaiTroll`,
+      title: `${username || 'Broadcaster'} is ${statusText} on MaiTroll`,
       description: stream.title || `Watch this live broadcast on MaiTroll`,
       image: previewImage,
-      url: `${APP_URL}/watch/${stream.id}`,
+      ogImageUrl,
+      url: streamUrl,
       type: isLive ? 'video.other' : 'website',
       isLive,
       videoUrl: isLive ? `${APP_URL}/embed/${stream.id}` : null,
@@ -490,8 +495,11 @@ function generateSocialMetaHTML(data) {
     twitterPlayerUrl = null,
     twitterPlayerWidth = 1280,
     twitterPlayerHeight = 720,
-    site = null
+    site = null,
+    ogImageUrl = null
   } = data;
+
+  const ogImage = ogImageUrl || image || FALLBACK_PREVIEW_IMAGE
   
   // Escape HTML entities to prevent XSS
   const esc = (str) => String(str)
@@ -517,9 +525,12 @@ function generateSocialMetaHTML(data) {
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:url" content="${esc(url)}">
-  <meta property="og:image" content="${esc(image)}">
+  <meta property="og:image" content="${esc(ogImage)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${esc(title)}">
   <meta property="og:site_name" content="MaiTroll">
-  
+
   ${videoUrl ? `
   <meta property="og:video" content="${esc(videoUrl)}">
   <meta property="og:video:secure_url" content="${esc(videoUrl)}">
@@ -532,7 +543,7 @@ function generateSocialMetaHTML(data) {
   <meta name="twitter:card" content="${esc(twitterCard)}">
   <meta name="twitter:title" content="${esc(title)}">
   <meta name="twitter:description" content="${esc(description)}">
-  <meta name="twitter:image" content="${esc(image)}">
+  <meta name="twitter:image" content="${esc(ogImage)}">
   <meta name="twitter:image:alt" content="${esc(title)}">
   ${site ? `<meta name="twitter:site" content="${esc(site)}">` : ''}
   

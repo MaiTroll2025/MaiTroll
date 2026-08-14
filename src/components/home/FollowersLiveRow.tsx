@@ -149,8 +149,8 @@ export default function FollowersLiveRow({ onCountChange }: { onCountChange?: (c
               onClick={() =>
                 navigate(
                   item.category === 'gaming'
-                    ? `/gaming/watch/${item.id}`
-                    : `/watch/${item.id}`
+                    ? `/gaming/live/${encodeURIComponent(item.streamerName)}`
+                    : `/live/${encodeURIComponent(item.streamerName)}`
                 )
               }
               className="group relative flex h-[220px] w-[180px] shrink-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080c1a]/95 text-left transition-all duration-200 hover:border-pink-400/30 hover:shadow-[0_0_24px_rgba(244,114,182,0.12)]"

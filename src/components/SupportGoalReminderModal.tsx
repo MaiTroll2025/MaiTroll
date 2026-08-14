@@ -30,7 +30,7 @@ const SupportGoalReminderModal: React.FC<SupportGoalReminderModalProps> = ({
 
   const handleWatchLive = async () => {
     if (broadcaster.stream_id) {
-      navigate(`/watch/${broadcaster.stream_id}`);
+      navigate(`/live/${encodeURIComponent(broadcaster.username)}`);
     }
     onClose();
     

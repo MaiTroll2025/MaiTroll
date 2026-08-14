@@ -68,6 +68,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const previewImage = stream.thumbnail_url || broadcaster?.thumbnail_url || broadcaster?.avatar_url || FALLBACK_PREVIEW_IMAGE
     const username = broadcaster?.username || null
 
+    const streamUrl = username
+      ? `${APP_URL}/live/${encodeURIComponent(username)}`
+      : `${APP_URL}/watch/${stream.id}`
+
     // Use dynamic profile OG image for the broadcaster
     const ogImage = username
       ? buildOGImageUrl({ kind: 'profile', username })
@@ -75,11 +79,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     return new Response(
       generateOGHTML({
-        title: `${broadcaster?.username || 'Broadcaster'} is ${statusText} on MaiTroll`,
+        title: `${username || 'Broadcaster'} is ${statusText} on MaiTroll`,
         description: stream.title || 'Watch this live broadcast on MaiTroll',
         image: previewImage,
         ogImageUrl: ogImage,
-        url: `${APP_URL}/watch/${stream.id}`,
+        url: streamUrl,
         type: isLive ? 'video.other' : 'website',
         isLive,
         videoUrl: isLive ? `${APP_URL}/embed/${stream.id}` : null,

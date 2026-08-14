@@ -277,7 +277,7 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
        return;
      }
      // Navigate to full stream view for gifting
-     navigate(`/watch/${stream.id}?from=swipe`);
+    navigate(isGaming ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`);
    };
    
    const flushLikes = useCallback(async () => {
@@ -344,7 +344,12 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
       navigate('/auth?mode=signup');
       return;
     }
-    navigate(`/watch/${stream.id}?from=swipe`);
+    const username = stream.broadcaster?.username
+    if (username) {
+      navigate(`/live/${encodeURIComponent(username)}?from=swipe`)
+    } else {
+      navigate(`/watch/${stream.id}?from=swipe`);
+    }
   };
   
   const broadcaster = stream.broadcaster;
@@ -453,7 +458,7 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
         
         {/* Comment button */}
         <button
-          onClick={(e) => { e.stopPropagation(); const g = stream.agora_channel || stream.category === 'gaming'; navigate(g ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`); }}
+          onClick={(e) => { e.stopPropagation(); const username = stream.broadcaster?.username; if (username) { navigate(`/live/${encodeURIComponent(username)}?from=swipe`) } else { const g = stream.agora_channel || stream.category === 'gaming'; navigate(g ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`) } }}
           className="flex flex-col items-center gap-1"
         >
           <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-white/20 transition-colors sm:w-12 sm:h-12">
@@ -521,7 +526,7 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         streamTitle={stream.title}
-        streamUrl={`${window.location.origin}/watch/${stream.id}`}
+        streamUrl={broadcaster?.username ? `${window.location.origin}/live/${encodeURIComponent(broadcaster.username)}` : `${window.location.origin}/watch/${stream.id}`}
         broadcasterName={broadcaster?.username}
       />
     </div>

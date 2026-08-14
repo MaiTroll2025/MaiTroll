@@ -201,7 +201,12 @@ export default function HomeLiveGrid() {
             key={stream.id}
             onClick={() => {
               if (requireAuth()) {
-                navigate(stream.agora_channel || stream.category === 'gaming' ? `/gaming/watch/${stream.id}` : `/watch/${stream.id}`)
+                const username = stream.user_profiles?.username
+                if (username) {
+                  navigate(stream.agora_channel || stream.category === 'gaming' ? `/gaming/live/${encodeURIComponent(username)}` : `/live/${encodeURIComponent(username)}`)
+                } else {
+                  navigate(stream.agora_channel || stream.category === 'gaming' ? `/gaming/watch/${stream.id}` : `/watch/${stream.id}`)
+                }
               }
             }}
             className="group cursor-pointer bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1"

@@ -174,14 +174,18 @@ const RGBSearchBar = () => {
     navigate(`/profile/id/${user.id}`);
   };
 
-  const handleStreamClick = (streamId: string) => {
+  const handleStreamClick = (streamId: string, username?: string | null) => {
     closePanel();
     if (!user) {
       toast.info('Sign in to watch.')
       navigate('/auth')
       return
     }
-    navigate(`/watch/${streamId}`);
+    if (username) {
+      navigate(`/live/${encodeURIComponent(username)}`)
+    } else {
+      navigate(`/watch/${streamId}`);
+    }
   };
 
   const handleUserClick = (user: ExploreUser) => {
@@ -258,7 +262,7 @@ const RGBSearchBar = () => {
                 exploreStreams.map((stream) => (
                   <button
                     key={stream.id}
-                    onClick={() => handleStreamClick(stream.id)}
+                    onClick={() => handleStreamClick(stream.id, stream.user_profiles?.username)}
                     className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-slate-700/50 transition-colors text-left"
                   >
                     <div className="relative w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0 flex items-center justify-center">

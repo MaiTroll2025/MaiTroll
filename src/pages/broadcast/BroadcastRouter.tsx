@@ -142,11 +142,7 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
   const title = `${broadcasterName} is ${statusText} on MaiTroll`
   const description = stream.title || 'Watch this live broadcast on MaiTroll'
 
-  // Use username-based canonical URL for SEO (e.g. /live/username instead of /watch/uuid)
-  const isUsernameRoute = currentPath && !currentPath.includes('/watch/') && !currentPath.includes('/broadcast/')
-  const canonicalUrl = isUsernameRoute && broadcasterName
-    ? `${APP_URL}/live/${encodeURIComponent(broadcasterName)}`
-    : `${APP_URL}/live/${encodeURIComponent(broadcasterName)}`
+  const canonicalUrl = `${APP_URL}/live/${encodeURIComponent(broadcasterName)}`
 
   const previewImage =
     (stream as any).thumbnail_url ||

@@ -344,7 +344,7 @@ export async function notifySomeoneYouFollowWentLive(
     broadcaster_avatar_url: broadcasterAvatarUrl,
     stream_id: streamId,
     stream_title: streamTitle,
-    action_url: `/watch/${streamId}`,
+    action_url: `/live/${encodeURIComponent(broadcasterUsername)}`,
   })
 
   return createNotification(
@@ -358,7 +358,7 @@ export async function notifySomeoneYouFollowWentLive(
       broadcaster_avatar_url: broadcasterAvatarUrl,
       stream_id: streamId,
       stream_title: streamTitle,
-      action_url: `/watch/${streamId}`,
+      action_url: `/live/${encodeURIComponent(broadcasterUsername)}`,
     }
   )
 }
@@ -399,7 +399,7 @@ export async function notifyInvitedToCohost(userId: string, hostUsername: string
     'invited_to_cohost',
     '🎤 Co-host Invite',
     `@${hostUsername} invited you to co-host their stream.`,
-    { host_username: hostUsername, stream_id: streamId, action_url: `/watch/${streamId}` }
+    { host_username: hostUsername, stream_id: streamId, action_url: `/live/${encodeURIComponent(hostUsername)}` }
   )
 }
 

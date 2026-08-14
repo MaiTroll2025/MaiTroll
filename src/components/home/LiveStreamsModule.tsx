@@ -135,9 +135,13 @@ export default function LiveStreamsModule({ onRequireAuth }: LiveStreamsModulePr
     }))
   }, [streams, sections])
 
-  const handleJoin = (streamId: string) => {
+  const handleJoin = (streamId: string, username?: string | null) => {
     if (!onRequireAuth('join live streams')) return
-    navigate(`/watch/${streamId}`)
+    if (username) {
+      navigate(`/live/${encodeURIComponent(username)}`)
+    } else {
+      navigate(`/watch/${streamId}`)
+    }
   }
 
   if (loading) {
@@ -213,7 +217,7 @@ export default function LiveStreamsModule({ onRequireAuth }: LiveStreamsModulePr
               {section.streams.map((stream) => (
                 <div
                   key={stream.id}
-                  onClick={() => handleJoin(stream.id)}
+                  onClick={() => handleJoin(stream.id, stream.user_profiles?.username)}
                   className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 ${
                     isSpecialSection && section.key === 'featured'
                       ? 'hover:border-yellow-400/40 hover:shadow-lg hover:shadow-yellow-500/10 border-2 border-yellow-500/30'

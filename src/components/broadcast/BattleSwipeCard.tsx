@@ -320,7 +320,12 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
    // Handle tap to view full stream
   const handleTap = () => {
     const isGaming = stream.agora_channel || stream.category === 'gaming';
-    navigate(isGaming ? `/gaming/watch/${stream.id}?from=swipe&battle=true` : `/watch/${stream.id}?from=swipe&battle=true`);
+    const username = stream.broadcaster?.username
+    if (username) {
+      navigate(isGaming ? `/gaming/live/${encodeURIComponent(username)}?from=swipe&battle=true` : `/live/${encodeURIComponent(username)}?from=swipe&battle=true`)
+    } else {
+      navigate(isGaming ? `/gaming/watch/${stream.id}?from=swipe&battle=true` : `/watch/${stream.id}?from=swipe&battle=true`);
+    }
   };
   
   const broadcaster = stream.broadcaster;
@@ -517,7 +522,7 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
         
         {/* Comment button */}
         <button
-          onClick={(e) => { e.stopPropagation(); const g = stream.agora_channel || stream.category === 'gaming'; navigate(g ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`); }}
+          onClick={(e) => { e.stopPropagation(); const username = stream.broadcaster?.username; if (username) { navigate(`/live/${encodeURIComponent(username)}?from=swipe`) } else { const g = stream.agora_channel || stream.category === 'gaming'; navigate(g ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`) } }}
           className="flex flex-col items-center gap-1"
         >
           <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-white/20 transition-colors sm:w-12 sm:h-12">
@@ -527,7 +532,7 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
         
         {/* Gift button */}
         <button
-          onClick={(e) => { e.stopPropagation(); const g = stream.agora_channel || stream.category === 'gaming'; navigate(g ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`); }}
+          onClick={(e) => { e.stopPropagation(); const username = stream.broadcaster?.username; if (username) { navigate(`/live/${encodeURIComponent(username)}?from=swipe`) } else { const g = stream.agora_channel || stream.category === 'gaming'; navigate(g ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`) } }}
           className="flex flex-col items-center gap-1"
         >
           <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-white/20 transition-colors sm:w-12 sm:h-12">
@@ -560,7 +565,7 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         streamTitle={stream.title}
-        streamUrl={`${window.location.origin}/watch/${stream.id}`}
+        streamUrl={stream.broadcaster?.username ? `${window.location.origin}/live/${encodeURIComponent(stream.broadcaster.username)}` : `${window.location.origin}/watch/${stream.id}`}
         broadcasterName={stream.broadcaster?.username}
       />
     </div>

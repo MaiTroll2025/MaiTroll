@@ -1585,8 +1585,6 @@ const handleVisibilityChange = async () => {
                 {/* UUID-based stream routes (backwards compatibility) */}
                 <Route path="/broadcast/:id" element={<BroadcastRouter />} />
                 <Route path="/watch/:id" element={<BroadcastRouter />} />
-                <Route path="/live/:streamId" element={<BroadcastRouter />} />
-<Route path="/stream/:id" element={<BroadcastRouter />} />
 
                   {/* 🏛️ State Battle Routes */}
                  <Route path="/state-rankings" element={<StateRankings />} />

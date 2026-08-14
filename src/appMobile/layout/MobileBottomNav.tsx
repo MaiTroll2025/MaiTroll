@@ -4,11 +4,9 @@ import {
   ChevronDown,
   ChevronUp,
   Coins,
-  Crown,
   Home,
   LogOut,
   MessageCircle,
-  Mic,
   Radio,
   Sparkles,
   Store,
@@ -408,20 +406,14 @@ export default function MobileBottomNav() {
         <NavLink to="/broadcast/setup" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
           <span className="text-xs font-black">Go Live</span>
         </NavLink>
-        <NavLink to="/high-bcasters" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-yellow-400" : "text-slate-400"}`}>
-          <span className="text-xs font-black">Bcasters</span>
+        <NavLink to="/utromail" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Chats</span>
         </NavLink>
         <NavLink to="/store" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
           <span className="text-xs font-black">Coins</span>
         </NavLink>
-        <NavLink to="/utromail" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
-          <span className="text-xs font-black">Chats</span>
-        </NavLink>
-        <NavLink to="/treelz" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
-          <span className="text-xs font-black">Treelz</span>
-        </NavLink>
-        <NavLink to="/podcast" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
-          <span className="text-xs font-black">Podcast</span>
+        <NavLink to="/profile" className={({ isActive }) => `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${isActive ? "text-cyan-400" : "text-slate-400"}`}>
+          <span className="text-xs font-black">Profile</span>
         </NavLink>
         <button
           type="button"
