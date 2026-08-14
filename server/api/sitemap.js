@@ -63,9 +63,7 @@ async function generateSitemap(supabase) {
       const { data: profiles, error: profileError } = await supabase
         .from('user_profiles')
         .select('username, updated_at')
-        .eq('is_profile_public', true)
         .eq('is_banned', false)
-        .eq('is_indexed', true)
         .not('username', 'is', null)
         .not('username', 'eq', '');
 
@@ -75,7 +73,7 @@ async function generateSitemap(supabase) {
             ? new Date(profile.updated_at).toISOString().split('T')[0]
             : now;
           urls.push(`  <url>
-    <loc>${escapeXml(`${APP_URL}/${profile.username}`)}</loc>
+    <loc>${escapeXml(`${APP_URL}/profile/${profile.username}`)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>

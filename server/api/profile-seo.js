@@ -33,12 +33,12 @@ function safeJsonLd(obj) {
  * Generate HTML with SEO meta tags for a profile page
  */
 function generateProfileSEOHTML(profile, liveStream, baseUrl, options = {}) {
-  const { isIndexed = true, isBanned = false, isPrivate = false } = options;
+  const { isIndexed = true, isBanned = false, isPrivate = false, isProfilePublic = true } = options;
   const username = profile.username || profile.display_name || 'User';
   const displayName = profile.display_name || profile.username || 'User';
   const bio = profile.bio || `${displayName} on MaiTroll`;
   const avatarUrl = profile.avatar_url || FALLBACK_PREVIEW_IMAGE;
-  const profileUrl = `${baseUrl}/${username}`;
+  const profileUrl = `${baseUrl}/profile/${username}`;
 
   const isLive = !!liveStream;
   const title = isLive
@@ -74,7 +74,7 @@ function generateProfileSEOHTML(profile, liveStream, baseUrl, options = {}) {
     }
   });
 
-  const robotsContent = (isBanned || isPrivate || !isIndexed)
+  const robotsContent = (isBanned || isPrivate || !isIndexed || !isProfilePublic)
     ? 'noindex, nofollow'
     : 'index, follow';
 
@@ -268,7 +268,7 @@ async function handleProfileSEO(req, res) {
     // Look up profile by username (case-insensitive)
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('id, username, display_name, avatar_url, bio, is_banned')
+      .select('id, username, display_name, avatar_url, bio, is_banned, account_state')
       .ilike('username', username)
       .maybeSingle();
 
@@ -283,12 +283,12 @@ async function handleProfileSEO(req, res) {
         { username, display_name: 'User Not Found', bio: 'This profile does not exist.' },
         null,
         APP_URL,
-        { isIndexed: false }
+        { isIndexed: false, isProfilePublic: false }
       );
       return res.status(404).send(html);
     }
 
-    const isPrivate = profile.account_status === 'suspended' || profile.account_state === 'suspended';
+    const isPrivate = profile.account_state === 'suspended' || profile.account_state === 'banned';
     const isBanned = profile.is_banned === true;
 
     if (isBanned || isPrivate) {
@@ -310,7 +310,7 @@ async function handleProfileSEO(req, res) {
       .eq('is_public', true)
       .maybeSingle();
 
-    const html = generateProfileSEOHTML(profile, liveStream, APP_URL, { isIndexed: true, isBanned, isPrivate });
+    const html = generateProfileSEOHTML(profile, liveStream, APP_URL, { isIndexed: true, isBanned, isPrivate, isProfilePublic: true });
     res.status(200).send(html);
 
   } catch (error) {

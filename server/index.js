@@ -650,12 +650,57 @@ app.use((err, req, res, _next) => {
 
 // ============================================================================
 // SERVER-SIDE SEO INJECTION FOR PROFILE & STREAM ROUTES
-// When a bot/crawler visits /:username or /:username/live/:slug,
+// When a bot/crawler visits /:username or /profile/:username or /:username/live/:slug,
 // we detect it and return full HTML with meta tags directly.
 // Regular users get the SPA (index.html) as usual.
 // ============================================================================
 
 const BOT_REGEX = /facebookexternalhit|twitterbot|bingbot|googlebot|slackbot|discordbot|telegrambot|whatsapp|metaexternalhit|linkedinbot|applebot|duckduckbot|baiduspider|yandexbot/i;
+
+// Profile route: /profile/:username (for bots only — humans get SPA)
+app.get(/^\/profile\/([a-zA-Z0-9_-]{2,30})$/, async (req, res, next) => {
+  const username = req.params[0];
+  const userAgent = req.headers['user-agent'] || '';
+  const isBot = BOT_REGEX.test(userAgent);
+
+  if (!isBot) {
+    return next();
+  }
+
+  try {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('id, username, display_name, avatar_url, bio, is_banned, account_state')
+      .ilike('username', username)
+      .maybeSingle();
+
+    if (!profile) {
+      return res.status(404).send('Profile not found');
+    }
+
+    if (profile.is_banned || profile.account_state === 'suspended' || profile.account_state === 'banned') {
+      const noindexHtml = `<!DOCTYPE html>
+<html><head><meta name="robots" content="noindex, nofollow">
+<title>Profile Not Available</title></head>
+<body><p>This profile is not available.</p></body></html>`;
+      return res.status(200).send(noindexHtml);
+    }
+
+    const { data: liveStream } = await supabase
+      .from('streams')
+      .select('id, title, slug, thumbnail_url, status')
+      .eq('user_id', profile.id)
+      .eq('status', 'live')
+      .eq('is_public', true)
+      .maybeSingle();
+
+    const seoHtml = profileSEO.generateProfileSEOHTML(profile, liveStream, APP_URL);
+    return res.status(200).send(seoHtml);
+  } catch (error) {
+    console.error('[ProfileRouteSEO] Error:', error);
+    return res.status(500).send('Server error');
+  }
+});
 
 // Profile route: /:username (for bots only — humans get SPA)
 app.get(/^\/([a-zA-Z0-9_-]{2,30})$/, async (req, res, next) => {
@@ -670,20 +715,17 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})$/, async (req, res, next) => {
   }
 
   if (!isBot) {
-    // Regular user — serve the SPA, client-side routing handles it
     return next();
   }
 
-  // Bot detected — return full SEO HTML
   try {
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('id, username, display_name, avatar_url, bio, is_banned')
+      .select('id, username, display_name, avatar_url, bio, is_banned, account_state')
       .ilike('username', username)
       .maybeSingle();
 
-    if (profile && !profile.is_banned && profile.account_status !== 'suspended' && profile.account_state !== 'suspended') {
-      // Check if live
+    if (profile && !profile.is_banned && profile.account_state !== 'suspended' && profile.account_state !== 'banned') {
       const { data: liveStream } = await supabase
         .from('streams')
         .select('id, title, slug, thumbnail_url, status')
@@ -700,7 +742,6 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})$/, async (req, res, next) => {
       return res.status(404).send('Profile not found');
     }
 
-    // Private, banned, or opted out of indexing — return noindex for bots
     const noindexHtml = `<!DOCTYPE html>
 <html><head><meta name="robots" content="noindex, nofollow">
 <title>Profile Not Available</title></head>
