@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS public.sla_metrics (
     uptime_pct NUMERIC(5,2) DEFAULT 100.0,
     peak_viewers INTEGER DEFAULT 0,
     quality_issues JSONB DEFAULT '[]'::jsonb,
+    quality_issues_count INTEGER DEFAULT 0,
     latency_samples JSONB DEFAULT '[]'::jsonb,
     bitrate_samples JSONB DEFAULT '[]'::jsonb,
     resolved BOOLEAN DEFAULT false,
@@ -301,9 +302,11 @@ DECLARE
     v_uptime_secs BIGINT;
     v_uptime_pct NUMERIC(5,2);
 BEGIN
-    -- When stream ends (is_live goes from true to false), calculate final SLA metrics
+    -- When stream ends, calculate final SLA metrics.
+    -- Handles both is_live boolean and status='live' column conventions.
     -- Uses BEFORE UPDATE so NEW values persist back to the row.
-    IF OLD.is_live = true AND NEW.is_live = false THEN
+    IF (OLD.is_live IS DISTINCT FROM NEW.is_live OR OLD.status IS DISTINCT FROM NEW.status)
+       AND NOT (NEW.is_live = true OR NEW.status = 'live') THEN
         IF NEW.sla_started_at IS NOT NULL THEN
             v_elapsed := EXTRACT(EPOCH FROM (NOW() - NEW.sla_started_at))::BIGINT;
 
@@ -807,10 +810,10 @@ BEGIN
         v_next_threshold := 0;
     ELSIF v_avg_uptime >= 99.9 THEN
         v_sla_tier := 'gold';
-        v_next_threshold := SELECT config_value::NUMERIC FROM public.sla_config WHERE config_key = 'platinum_uptime_threshold_pct';
+        v_next_threshold := (SELECT config_value::NUMERIC FROM public.sla_config WHERE config_key = 'platinum_uptime_threshold_pct');
     ELSIF v_avg_uptime >= 99.0 THEN
         v_sla_tier := 'silver';
-        v_next_threshold := SELECT config_value::NUMERIC FROM public.sla_config WHERE config_key = 'gold_uptime_threshold_pct';
+        v_next_threshold := (SELECT config_value::NUMERIC FROM public.sla_config WHERE config_key = 'gold_uptime_threshold_pct');
     ELSE
         v_sla_tier := 'bronze';
         v_next_threshold := 99.0;

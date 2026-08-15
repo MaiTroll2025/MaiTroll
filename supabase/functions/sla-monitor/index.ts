@@ -106,6 +106,8 @@ async function getActiveStreamsWithSla(
     sla_quality_guarantee: string | null;
     sla_min_bitrate_kbps: number | null;
     sla_max_latency_ms: number | null;
+    sla_uptime_seconds: number | null;
+    sla_downtime_seconds: number | null;
     current_viewers: number;
     viewer_count: number;
     agora_channel: string | null;
@@ -122,11 +124,13 @@ async function getActiveStreamsWithSla(
       started_at,
       sla_tier,
       sla_target_uptime_pct,
-      sla_started_at,
-      sla_quality_guarantee,
-      sla_min_bitrate_kbps,
-      sla_max_latency_ms,
-      current_viewers,
+       sla_started_at,
+       sla_quality_guarantee,
+       sla_min_bitrate_kbps,
+       sla_max_latency_ms,
+       sla_uptime_seconds,
+       sla_downtime_seconds,
+       current_viewers,
       viewer_count,
       agora_channel
     `,
@@ -481,12 +485,17 @@ serve(async (req) => {
         const healthSample = await checkStreamHealth(stream.id, stream.agora_channel);
 
         // Calculate uptime percentage
+        // During live streaming, sla_uptime_seconds is only updated when
+        // record_sla_metric_sample is called with 'uptime' samples.
+        // Calculate from elapsed time minus downtime for accuracy.
         let uptimePct = 100.0;
-        if (stream.sla_started_at && stream.sla_uptime_seconds !== undefined) {
-          const elapsed = Math.floor(
+        let elapsed = 0;
+        if (stream.sla_started_at) {
+          elapsed = Math.floor(
             (Date.now() - new Date(stream.sla_started_at).getTime()) / 1000,
           );
-          const uptimeSecs = stream.sla_uptime_seconds;
+          const downtimeSecs = (stream as any).sla_downtime_seconds || 0;
+          const uptimeSecs = Math.max(0, elapsed - downtimeSecs);
           if (elapsed > 0) {
             uptimePct = Math.max(
               0,
@@ -538,10 +547,11 @@ serve(async (req) => {
         // Update stream SLA fields
         await updateStreamSla(supabase, stream.id, {
           sla_tier: slaTier,
+          sla_uptime_seconds: Math.max(0, elapsed - (stream.sla_downtime_seconds || 0)),
           sla_actual_uptime_pct: Math.round(uptimePct * 100) / 100,
           sla_last_quality_check_at: new Date().toISOString(),
-          current_viewers: healthSample.viewerCount ?? stream.current_viewers,
-        });
+           current_viewers: healthSample.viewerCount ?? stream.current_viewers,
+         });
 
         // Check subscriber SLAs for this broadcaster
         await checkSubscriberSla(supabase, stream.broadcaster_id);

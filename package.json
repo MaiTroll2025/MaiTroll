@@ -82,6 +82,7 @@
     "jsbarcode": "^3.12.3",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.2",
+    "keytar": "^7.9.0",
     "leaflet": "^1.9.4",
     "livekit-client": "^2.17.3",
     "livekit-server-sdk": "^2.15.1",
