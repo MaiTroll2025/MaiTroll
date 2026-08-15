@@ -22,6 +22,7 @@ import {
 
 import { usePresenceStore } from '@/lib/presenceStore'
 import { useAuthStore } from '@/lib/store'
+import { supabase } from '@/lib/supabase'
 import * as recordLabelService from '@/services/maiRecordLabel'
 
 type ArtistProfile = {
@@ -110,6 +111,30 @@ export default function MaiRecordLabelPage() {
 
     return () => {
       active = false
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!user?.id) return
+
+    const channel = supabase
+      .channel('mai-record-label-my-application')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'record_label_applications' },
+        async () => {
+          const [{ data: appData }, { data: artistData }] = await Promise.all([
+            recordLabelService.getMyApplication(user.id),
+            recordLabelService.getArtistProfileByUserId(user.id),
+          ])
+          setApplication(appData ?? null)
+          setIsArtist(Boolean(artistData))
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
   }, [user?.id])
 

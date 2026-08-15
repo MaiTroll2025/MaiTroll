@@ -17,6 +17,7 @@ import {
   Megaphone,
   MessageSquareOff,
   MessageSquare,
+  Users,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
@@ -55,6 +56,7 @@ interface MoreControlsDrawerProps {
   onModGift?: (userId: string) => void
   userActionUserId?: string
   onPaidChat?: () => void
+  onOpenSeatsModal?: () => void
 }
 
 export default function MoreControlsDrawer({
@@ -87,6 +89,7 @@ export default function MoreControlsDrawer({
   onModGift,
   userActionUserId,
   onPaidChat,
+  onOpenSeatsModal,
 }: MoreControlsDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
 
@@ -213,21 +216,29 @@ export default function MoreControlsDrawer({
                 <SectionTitle label="Stream Controls" className="mt-5" />
 
                 <div className="grid grid-cols-3 gap-2">
-                  {onGift && (
-                    <ControlButton
-                      icon={Gift}
-                      label="Gift"
-                      onClick={onGift}
-                    />
-                  )}
+                   {onGift && (
+                     <ControlButton
+                       icon={Gift}
+                       label="Gift"
+                       onClick={onGift}
+                     />
+                   )}
 
-                  {onShare && (
-                    <ControlButton
-                      icon={Share2}
-                      label="Share"
-                      onClick={onShare}
-                    />
-                  )}
+                   {isHost && onOpenSeatsModal && (
+                     <ControlButton
+                       icon={Users}
+                       label="Seats"
+                       onClick={onOpenSeatsModal}
+                     />
+                   )}
+
+                   {onShare && (
+                     <ControlButton
+                       icon={Share2}
+                       label="Share"
+                       onClick={onShare}
+                     />
+                   )}
 
                   {isHost && onEndStream && (
                     <ControlButton

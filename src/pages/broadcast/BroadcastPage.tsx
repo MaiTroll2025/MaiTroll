@@ -8475,7 +8475,8 @@ const toggleMicrophone = useCallback(async () => {
                        handleCloseMoreMenu()
                        setIsPaidChatModalOpen(true)
                      }}
-                   />
+                     onOpenSeatsModal={handleOpenSeatsModal}
+                    />
                 </div>
               )}
 
