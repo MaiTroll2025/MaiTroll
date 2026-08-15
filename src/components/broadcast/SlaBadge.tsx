@@ -1,7 +1,7 @@
 import React from 'react'
 import { Shield, Check, TrendingUp } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import { SLA_TIER_CONFIG, SlaTierName, StreamSlaStatus } from '../hooks/useSlaStatus'
+import { SLA_TIER_CONFIG, SlaTierName, StreamSlaStatus } from '../../hooks/useSlaStatus'
 
 interface SlaBadgeProps {
   tier: SlaTierName
