@@ -8,6 +8,13 @@ export interface SubscriptionTierInfo {
   color_hex: string
   icon_name: string
   sort_order: number
+  price_coins?: number
+  benefits?: string[]
+  sla_uptime_guarantee_pct?: number
+  sla_quality_guarantee?: string
+  sla_chat_priority?: string
+  sla_support_response_secs?: number
+  sla_features?: string[]
 }
 
 export function useCreatorSubscription(broadcasterId?: string, userId?: string) {
@@ -30,7 +37,7 @@ export function useCreatorSubscription(broadcasterId?: string, userId?: string) 
     try {
       const { data } = await supabase
         .from('user_subscriptions')
-        .select('id, tier:subscription_tiers (id, name, color_hex, icon_name, sort_order)')
+        .select('id, tier:subscription_tiers (id, name, color_hex, icon_name, sort_order, price_coins, benefits, sla_uptime_guarantee_pct, sla_quality_guarantee, sla_chat_priority, sla_support_response_secs, sla_features)')
         .eq('subscriber_id', targetUserId)
         .eq('broadcaster_id', targetBroadcasterId)
         .eq('is_active', true)
@@ -102,6 +109,8 @@ export interface SubscriberBadge {
   username: string
   tierName: string
   tierColor: string
+  slaUptimeGuarantee?: number
+  slaQualityGuarantee?: string
 }
 
 export function useSubscriberBadges(broadcasterId?: string) {
@@ -120,7 +129,7 @@ export function useSubscriberBadges(broadcasterId?: string) {
         .select(`
           subscriber_id,
           user_profiles:subscriber_id (username),
-          tier:subscription_tiers (name, color_hex)
+          tier:subscription_tiers (name, color_hex, sla_uptime_guarantee_pct, sla_quality_guarantee)
         `)
         .eq('broadcaster_id', broadcasterId)
         .eq('is_active', true) as any
@@ -133,6 +142,8 @@ export function useSubscriberBadges(broadcasterId?: string) {
                 username: row.user_profiles.username,
                 tierName: row.tier?.name || 'Fan',
                 tierColor: row.tier?.color_hex || '#6B7280',
+                slaUptimeGuarantee: row.tier?.sla_uptime_guarantee_pct || undefined,
+                slaQualityGuarantee: row.tier?.sla_quality_guarantee || undefined,
               })
             }
           })
@@ -175,7 +186,7 @@ export function useUserSubscriptionTier(userId?: string) {
     setLoading(true)
     ;(supabase
       .from('user_subscriptions')
-      .select('tier:subscription_tiers (id, name, color_hex, icon_name, sort_order)')
+      .select('tier:subscription_tiers (id, name, color_hex, icon_name, sort_order, price_coins, benefits, sla_uptime_guarantee_pct, sla_quality_guarantee, sla_chat_priority, sla_support_response_secs, sla_features)')
       .eq('subscriber_id', targetUserId)
       .eq('is_active', true)
       .order('sort_order', { ascending: false })

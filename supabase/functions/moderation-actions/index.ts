@@ -240,13 +240,30 @@ Deno.serve(async (req) => {
     let actorProfile = null as any
     let profileError = null as any
 
-    const { data: fetchedProfile, error: fetchedError } = await supabaseAdmin
+    const profileColumns =
+      "id, username, full_name, role, troll_role, is_admin, is_ceo, is_lead_officer, is_troll_officer, is_secretary, is_broadcaster, is_ceo_assistant, is_noah_assistant"
+
+    let fetchedProfile = null as any
+    let fetchedError = null as any
+
+    const byId = await supabaseAdmin
       .from("user_profiles")
-      .select(
-        "id, username, full_name, role, troll_role, is_admin, is_ceo, is_lead_officer, is_troll_officer, is_secretary, is_broadcaster, is_broadofficer, is_ceo_assistant, is_noah_assistant"
-      )
+      .select(profileColumns)
       .eq("id", user.id)
-      .maybeSingle();
+      .maybeSingle()
+
+    if (byId.data) {
+      fetchedProfile = byId.data
+    } else if (user.email) {
+      const byEmail = await supabaseAdmin
+        .from("user_profiles")
+        .select(profileColumns)
+        .eq("email", user.email)
+        .maybeSingle()
+
+      fetchedProfile = byEmail.data
+      fetchedError = byEmail.error
+    }
 
     if (fetchedError) {
       profileError = fetchedError
@@ -269,9 +286,7 @@ Deno.serve(async (req) => {
           total_earned_coins: 0,
           total_spent_coins: 0,
         })
-        .select(
-          "id, username, full_name, role, troll_role, is_admin, is_ceo, is_lead_officer, is_troll_officer, is_secretary, is_broadcaster, is_broadofficer, is_ceo_assistant, is_noah_assistant"
-        )
+        .select(profileColumns)
         .single()
 
       if (createError || !newProfile) {
@@ -294,7 +309,17 @@ Deno.serve(async (req) => {
     const actorRole = String(actorProfile.role || "").toLowerCase();
     const actorTrollRole = String(actorProfile.troll_role || "").toLowerCase();
     const hasModRole =
-      MOD_ACTIONS_ROLES.has(actorRole) || MOD_ACTIONS_ROLES.has(actorTrollRole);
+      MOD_ACTIONS_ROLES.has(actorRole) ||
+      MOD_ACTIONS_ROLES.has(actorTrollRole) ||
+      actorProfile.is_admin === true ||
+      actorProfile.is_ceo === true ||
+      actorProfile.is_lead_officer === true ||
+      actorProfile.is_troll_officer === true ||
+      actorProfile.is_secretary === true ||
+      actorProfile.is_broadcaster === true ||
+      actorProfile.is_broadofficer === true ||
+      actorProfile.is_ceo_assistant === true ||
+      actorProfile.is_noah_assistant === true;
 
     if (!hasModRole) {
       return withCors(
@@ -926,7 +951,7 @@ Deno.serve(async (req) => {
         const { data, error } = await supabaseAdmin.rpc("modo_arrest", {
           p_stream_id: streamId || null,
           p_target_user_id: targetUserId,
-          p_reason,
+          reason,
           p_severity: severity,
         });
         if (error) {
@@ -946,7 +971,7 @@ Deno.serve(async (req) => {
         }
         const { data, error } = await supabaseAdmin.rpc("modo_suspend_license", {
           p_target_user_id: targetUserId,
-          p_reason,
+          reason,
           p_duration_hours: durationHours,
         });
         if (error) {

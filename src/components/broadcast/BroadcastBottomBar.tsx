@@ -14,6 +14,7 @@ import {
   Skull,
   Bell,
   Mail,
+  Users,
 } from 'lucide-react';
 import { LocalVideoTrack, LocalAudioTrack } from 'livekit-client';
 import { cn } from '../../lib/utils';
@@ -123,7 +124,10 @@ export interface BroadcastBottomBarProps {
    onTroll?: () => void;
    isHost?: boolean;
    onInviteFollowers?: () => void;
-  }
+   onOpenSeats?: () => void;
+   currentViewerSeatCount?: number;
+   seatCount?: number;
+}
 
 export default function BroadcastBottomBar({
   unreadMessageCount,
@@ -143,13 +147,16 @@ export default function BroadcastBottomBar({
   onOpenMessage,
   onManageMessage,
   onOpenCoinStore,
-onTroll,
-   isHost = false,
-   onInviteFollowers
-  }: BroadcastBottomBarProps) {
+ onTroll,
+    isHost = false,
+    onInviteFollowers,
+    onOpenSeats,
+    currentViewerSeatCount = 0,
+    seatCount = 0,
+   }: BroadcastBottomBarProps) {
   const theme = MaiTrollBroadcastTheme
   return (
-    <div className={cn(bottomBarShell, 'relative')}>
+    <div className={cn(bottomBarShell, 'relative overflow-hidden', 'bg-slate-950/95')}>
       {/* Ambient glow strip */}
       <div className={bottomBarAmbient} />
 
@@ -175,14 +182,22 @@ onTroll,
             </span>
           </div>
           {/* Host action buttons row */}
-          <div className="flex items-center gap-2">
-            <HostActionButton
-              active={isMicOn}
-              onClick={onToggleMic}
-              icon={isMicOn ? Mic : MicOff}
-              label={isMicOn ? 'Mute' : 'Unmute'}
-            />
-            <HostActionButton
+           <div className="flex items-center gap-2">
+             <HostActionButton
+               active={isMicOn}
+               onClick={onToggleMic}
+               icon={isMicOn ? Mic : MicOff}
+               label={isMicOn ? 'Mute' : 'Unmute'}
+             />
+             {isHost && onOpenSeats && (
+               <HostActionButton
+                 active={false}
+                 onClick={onOpenSeats}
+                 icon={Users}
+                 label={`Seats${seatCount > 0 ? ` ${currentViewerSeatCount}/${seatCount}` : ''}`}
+               />
+             )}
+             <HostActionButton
               active={isCamOn}
               onClick={onToggleCam}
               icon={isCamOn ? Video : VideoOff}

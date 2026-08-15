@@ -10,6 +10,7 @@ import {
   Flag,
   Heart,
   Circle,
+  Users,
 } from 'lucide-react'
 import { useAuthStore } from '../../lib/store'
 import { supabase } from '../../lib/supabase'
@@ -23,6 +24,10 @@ import StaffWalkieTalkieButton from '../StaffWalkieTalkieButton'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useStreamSlaStatus } from '../../hooks/useSlaStatus'
+import { SlaStatusIndicator } from './SlaBadge'
+import AudienceBubbleTicker from './AudienceBubbleTicker'
+import RandomBattleBanner from './RandomBattleBanner'
 
 const LIVE_DOT_CLASS = 'h-2 w-2 rounded-full bg-red-500 animate-pulse'
 
@@ -36,14 +41,17 @@ export interface BroadcastNeonHeaderProps {
      license_plate?: string
      battle_crowns?: number
      trollmonds?: number
+     level?: number
    } | null
    audience?: StreamAudienceMember[]
    audienceCurrentUserId?: string
+   audienceHostUserId?: string
    audienceMaxVisible?: number
    isHost: boolean
    liveViewerCount?: number
-   onGift: () => void
-   onShare?: () => void
+    onGift: () => void
+    onSubscribe?: () => void
+    onShare?: () => void
    onEndStream?: () => void
    onClose?: () => void
    coinBalance?: number
@@ -51,9 +59,19 @@ export interface BroadcastNeonHeaderProps {
    isLive: boolean
    streamStartedAt?: string | null
    handleLike: () => void
-onLiveKitMicMute?: () => void
-    onLiveKitMicUnmute?: () => void
+   onLiveKitMicMute?: () => void
+   onLiveKitMicUnmute?: () => void
+   onActiveViewersClick?: () => void
+   onGiftUser?: (userId: string) => void
+   onModerateUser?: (info: ModerateUserInfo) => void
+   randomBattleQueue?: {
+     phase: string
+     delayUntil?: number | null
+     isBusy?: boolean
+     startQueue: () => void
+     stopQueue: () => void
    }
+  }
 
 function formatTimer(ms: number): string {
   const totalSec = Math.floor(ms / 1000)
@@ -69,24 +87,34 @@ function formatTimer(ms: number): string {
 }
 
 export default function BroadcastNeonHeader({
-   stream,
-   broadcasterProfile,
-   isHost,
-   liveViewerCount,
-   handleLike,
-   onGift,
-   coinBalance,
-   onOpenCoinStore,
-   isLive,
-   streamStartedAt,
-onLiveKitMicMute,
+    stream,
+    broadcasterProfile,
+    isHost,
+    liveViewerCount,
+    handleLike,
+    onGift,
+    onSubscribe,
+    coinBalance,
+    onOpenCoinStore,
+    isLive,
+    streamStartedAt,
+    onLiveKitMicMute,
     onLiveKitMicUnmute,
+    onActiveViewersClick,
+    audience,
+    audienceCurrentUserId,
+    audienceHostUserId,
+    audienceMaxVisible = 8,
+    onGiftUser,
+    onModerateUser,
+    randomBattleQueue,
   }: BroadcastNeonHeaderProps) {
-  const { profile } = useAuthStore()
+   const { profile } = useAuthStore()
   const navigate = useNavigate()
-  const profileMenuRef = useRef<HTMLDivElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement | null>(null)
   const { isMobileWidth } = useIsMobile()
   const isMobile = isMobileWidth
+  const { slaStatus } = useStreamSlaStatus(stream?.id)
 
   const [now, setNow] = useState(Date.now())
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -308,30 +336,61 @@ onLiveKitMicMute,
           </div>
         </div>
 
-        {/* Right side actions */}
-        <div className={cn("flex shrink-0 items-center", isMobile ? "gap-1" : "gap-2")}>
-          {/* Staff walkie talkie - desktop only */}
-          {isHost && !isMobile && (
-            <div className="relative">
-              <StaffWalkieTalkieButton 
-                showFullControls={false} 
-                onLiveKitMicMute={onLiveKitMicMute}
-                onLiveKitMicUnmute={onLiveKitMicUnmute}
-              />
-            </div>
+         {/* Right side actions */}
+         <div className={cn("flex shrink-0 items-center", isMobile ? "gap-1" : "gap-2")}>
+           {/* Staff walkie talkie - desktop only */}
+           {isHost && !isMobile && (
+             <div className="relative">
+               <StaffWalkieTalkieButton 
+                 showFullControls={false} 
+                 onLiveKitMicMute={onLiveKitMicMute}
+                 onLiveKitMicUnmute={onLiveKitMicUnmute}
+               />
+             </div>
+           )}
+           
+           {/* Random battle banner - desktop only, next to walkie talkie */}
+           {isHost && !isMobile && randomBattleQueue && (
+             <RandomBattleBanner
+               phase={randomBattleQueue.phase}
+               delayUntil={randomBattleQueue.delayUntil ?? null}
+               isBroadcaster={isHost}
+               onStartQueue={randomBattleQueue.startQueue}
+               onStopQueue={randomBattleQueue.stopQueue}
+               isBusy={randomBattleQueue.isBusy}
+               mobileSafe={false}
+             />
+           )}
+           
+           {/* Active viewers - desktop only */}
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={onActiveViewersClick}
+              className="flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 shadow-[0_0_14px_rgba(34,211,238,0.15)] transition-all hover:bg-cyan-500/20 hover:border-cyan-400/50"
+            >
+              <Users className="h-3.5 w-3.5 text-cyan-300" />
+              <span className="tabular-nums text-[11px] font-black text-cyan-200">
+                {liveViewerCount ?? 0}
+              </span>
+            </button>
           )}
           
           {/* LIVE badge */}
-          {isLive && (
-            <span className={cn(
-              "flex items-center gap-1.5 rounded-lg bg-red-500/15 font-black text-red-400",
-              isMobile ? "px-1.5 py-1 text-[9px]" : "px-3 py-1.5 text-xs"
-            )}>
-              <span className={LIVE_DOT_CLASS} />
-              LIVE
-              <span className="tabular-nums text-red-300/80">{timerStr}</span>
-            </span>
-          )}
+           {isLive && (
+             <span className={cn(
+               "flex items-center gap-1.5 rounded-lg bg-red-500/15 font-black text-red-400",
+               isMobile ? "px-1.5 py-1 text-[9px]" : "px-3 py-1.5 text-xs"
+             )}>
+               <span className={LIVE_DOT_CLASS} />
+               LIVE
+               <span className="tabular-nums text-red-300/80">{timerStr}</span>
+             </span>
+           )}
+
+           {!isMobile && slaStatus && (
+             <SlaStatusIndicator slaStatus={slaStatus} />
+           )}
 
           {/* Coins display */}
           <div className={cn(
@@ -372,18 +431,32 @@ onLiveKitMicMute,
             <span className="tabular-nums">{stream.total_likes?.toLocaleString() || 0}</span>
           </button>
 
-          {/* Gift button */}
-          <button
-            onClick={onGift}
-            className={cn(
-              "flex items-center gap-1.5 rounded-2xl border border-fuchsia-400/50 bg-gradient-to-r from-purple-700/80 to-fuchsia-600/80 font-black uppercase text-white shadow-[0_0_22px_rgba(217,70,239,0.38)] transition-transform hover:scale-[1.02]",
-              isMobile ? "h-7 px-2.5 text-[10px]" : "h-11 px-5 text-sm"
-            )}
-          >
-            <Gift className={cn("text-yellow-300", isMobile ? "h-3 w-3" : "h-4 w-4")} />
-            {!isMobile && "Gift"}
-          </button>
-        </div>
+           {/* Gift button */}
+           <button
+             onClick={onGift}
+             className={cn(
+               "flex items-center gap-1.5 rounded-2xl border border-fuchsia-400/50 bg-gradient-to-r from-purple-700/80 to-fuchsia-600/80 font-black uppercase text-white shadow-[0_0_22px_rgba(217,70,239,0.38)] transition-transform hover:scale-[1.02]",
+               isMobile ? "h-7 px-2.5 text-[10px]" : "h-11 px-5 text-sm"
+             )}
+           >
+             <Gift className={cn("text-yellow-300", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+             {!isMobile && "Gift"}
+           </button>
+
+           {/* Subscribe button - viewer page only */}
+           {onSubscribe && !isMobile && (
+             <button
+               onClick={onSubscribe}
+               className={cn(
+                 "flex items-center gap-1.5 rounded-2xl border border-cyan-400/50 bg-gradient-to-r from-cyan-700/80 to-cyan-600/80 font-black uppercase text-white shadow-[0_0_22px_rgba(34,211,238,0.38)] transition-transform hover:scale-[1.02]",
+                 "h-11 px-5 text-sm"
+               )}
+             >
+               <Crown className={cn("text-cyan-200", "h-4 w-4")} />
+               Subscribe
+             </button>
+           )}
+         </div>
       </div>
     </header>
   )

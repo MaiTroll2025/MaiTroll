@@ -60,3 +60,12 @@ VALUES
   ('a0000000-0000-0000-0000-000000000001', 'system_init', '{"msg": "Test environment seeded"}', now())
 ON CONFLICT DO NOTHING;
 
+-- 6. Create Subscription Tiers
+INSERT INTO public.subscription_tiers (name, price_coins, benefits, color_hex, icon_name, sort_order, is_active)
+VALUES
+  ('Fan', 100, ARRAY['Subscriber-only chat', 'Special subscriber badge'], '#6B7280', 'Heart', 1, true),
+  ('VIP', 500, ARRAY['All Fan benefits', 'Custom emotes', 'Golden VIP badge', 'Auto-highlighted chat in all streams'], '#3B82F6', 'Crown', 2, true),
+  ('Elite', 2000, ARRAY['All VIP benefits', 'Priority chat', 'Elite badge', 'Monthly gift'], '#8B5CF6', 'Gem', 3, true),
+  ('Mythic', 10000, ARRAY['All Elite benefits', 'Monthly 1:1 shoutout', 'Mythic badge', 'Direct DM access'], '#F59E0B', 'Star', 4, true)
+ON CONFLICT (name) DO NOTHING;
+

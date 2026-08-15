@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
 import { Loader2, Check, Gem, Crown, Star, Heart, Zap } from 'lucide-react';
+import { SlaGuaranteesCard } from '../broadcast/SlaBadge';
 
 export interface SubscriptionTier {
   id: string;
@@ -11,6 +12,11 @@ export interface SubscriptionTier {
   benefits: string[];
   color_hex: string;
   icon_name: string;
+  sla_uptime_guarantee_pct?: number;
+  sla_quality_guarantee?: string;
+  sla_chat_priority?: string;
+  sla_support_response_secs?: number;
+  sla_features?: string[];
 }
 
 interface SubscriptionTierSelectorProps {
@@ -48,7 +54,14 @@ const SubscriptionTierSelector: React.FC<SubscriptionTierSelectorProps> = ({
     try {
       const { data } = await supabase
         .from('subscription_tiers')
-        .select('*')
+        .select(`
+          *,
+          sla_uptime_guarantee_pct,
+          sla_quality_guarantee,
+          sla_chat_priority,
+          sla_support_response_secs,
+          sla_features
+        `)
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
       
@@ -58,6 +71,7 @@ const SubscriptionTierSelector: React.FC<SubscriptionTierSelectorProps> = ({
       }
     } catch (error) {
       console.error('Error fetching tiers:', error);
+      setTiers([]);
     } finally {
       setLoading(false);
     }
@@ -103,9 +117,6 @@ const SubscriptionTierSelector: React.FC<SubscriptionTierSelectorProps> = ({
     }
   };
 
-  const selectedTierData = tiers.find(t => t.id === selectedTier);
-  const IconComponent = selectedTierData ? iconMap[selectedTierData.icon_name] || Heart : Heart;
-
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
@@ -119,6 +130,10 @@ const SubscriptionTierSelector: React.FC<SubscriptionTierSelectorProps> = ({
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+          </div>
+        ) : tiers.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            No subscription tiers available at this time.
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -175,6 +190,18 @@ const SubscriptionTierSelector: React.FC<SubscriptionTierSelectorProps> = ({
                       <p className="text-xs text-yellow-400">
                         Insufficient coins. Current: {(profile?.troll_coins || 0).toLocaleString()}
                       </p>
+                    )}
+
+                    {tier.sla_uptime_guarantee_pct !== undefined && (
+                      <SlaGuaranteesCard
+                        tierName={tier.name}
+                        uptimeGuarantee={tier.sla_uptime_guarantee_pct ?? 99.0}
+                        qualityGuarantee={tier.sla_quality_guarantee ?? '720p'}
+                        chatPriority={(tier.sla_chat_priority as 'standard' | 'priority' | 'vip_only') ?? 'standard'}
+                        supportResponseSecs={tier.sla_support_response_secs ?? 3600}
+                        features={tier.sla_features ?? []}
+                        className="mt-2"
+                      />
                     )}
                   </div>
                 </div>

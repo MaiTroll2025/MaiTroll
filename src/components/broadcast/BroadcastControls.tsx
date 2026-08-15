@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stream } from '../../types/broadcast';
 import { supabase } from '../../lib/supabase';
-import { Plus, Minus, LayoutGrid, Settings2, Coins, Lock, Unlock, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Sparkles, Palette, Gift, UserX, ImageIcon, LogOut, ChevronDown, ChevronUp, Share2, Package, Swords, Star, GripVertical, X, MoreHorizontal, Sliders, Shield, Gamepad2, PlusCircle, Users, Bell } from 'lucide-react';
+import { Plus, Minus, LayoutGrid, Settings2, Coins, Lock, Unlock, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Sparkles, Palette, Gift, UserX, ImageIcon, LogOut, ChevronDown, ChevronUp, Share2, Package, Swords, Star, GripVertical, X, MoreHorizontal, Sliders, Shield, Gamepad2, PlusCircle, Users, Bell, Crown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
 import { getCategoryConfig } from '../../config/broadcastCategories';
@@ -10,6 +10,7 @@ import BannedUsersList from './BannedUsersList';
 import ThemeSelector from './ThemeSelector';
 import BattleThemeSelector from './BattleThemeSelector';
 import BroadcastOfficerModal from './BroadcastOfficerModal';
+import SubscriberPerksPanel from './SubscriberPerksPanel';
 import { useAuthStore } from '../../lib/store';
 import { PreflightStore } from '../../lib/preflightStore';
 import { useParticipantAttributes } from '../../hooks/useParticipantAttributes';
@@ -185,6 +186,7 @@ function BroadcastControls({
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showBroadcastOfficer, setShowBroadcastOfficer] = useState(false);
   const [showPaidChatSettings, setShowPaidChatSettings] = useState(false);
+  const [showSubscriberPerks, setShowSubscriberPerks] = useState(false);
   const [likes, setLikes] = useState(0);
   const [isLiking, setIsLiking] = useState(false);
   const [isFeatureLoading, setIsFeatureLoading] = useState(false);
@@ -632,6 +634,14 @@ function BroadcastControls({
         </div>
       )}
 
+      {showSubscriberPerks && (
+        <SubscriberPerksPanel
+          broadcasterId={stream.broadcaster_id || stream.user_id || ''}
+          streamId={stream.id}
+          onClose={() => setShowSubscriberPerks(false)}
+        />
+      )}
+
       {/* Main action orbs - bottom center */}
       <div className="flex items-center gap-3">
         {/* Mic (stage only) */}
@@ -859,6 +869,13 @@ function BroadcastControls({
                   label="Paid Chat"
                   onClick={() => { setShowPaidChatSettings(true); setMenuOpen(false); }}
                   active={paidChatEnabled}
+                />
+              )}
+              {isHost && (
+                <MenuOrb
+                  icon={Crown}
+                  label="Subscriber Perks"
+                  onClick={() => { setShowSubscriberPerks(true); setMenuOpen(false); }}
                 />
               )}
               {isOfficerOrAdmin && (

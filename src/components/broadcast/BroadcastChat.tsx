@@ -21,6 +21,10 @@ import { useChatBlockStatus } from '../../hooks/useChatBlockStatus';
 import { useStreamRealtime } from '../../hooks/useStreamRealtime';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration';
 import { moderation } from '@/services/maitrollModeration';
+import { useUserSubscriptionTier } from '@/hooks/useCreatorSubscription';
+import { getEmotesForTier, parseEmotesInText, type SubscriberEmote } from '@/lib/subscriberEmotes';
+import { useSubscriberBadges } from '@/hooks/useCreatorSubscription';
+import { SUBSCRIBER_TIER_SLA } from '@/hooks/useSlaStatus';
 
 // Cap total messages in memory to prevent unbounded growth.
 // Used consistently by: initial history, realtime chat, gifts, system messages,
@@ -141,13 +145,54 @@ interface ChatMessageItemProps {
   onAcceptChallenge?: (challengeId: string, challengerId: string) => void;
   onDenyChallenge?: (challengeId: string) => void;
   onOpenMiniProfile?: (userId: string, username: string, avatarUrl?: string) => void;
+  subscriberTier?: string | null;
 }
 
-function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disappearingMessages, openModActionsForUser, openGiftForUser, deleteMessage, onPinMessage, onUnpinMessage, isPinned, canPinMessages, onAcceptChallenge, onDenyChallenge, onOpenMiniProfile }: ChatMessageItemProps) {
+function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disappearingMessages, openModActionsForUser, openGiftForUser, deleteMessage, onPinMessage, onUnpinMessage, isPinned, canPinMessages, onAcceptChallenge, onDenyChallenge, onOpenMiniProfile, subscriberTier }: ChatMessageItemProps) {
   const isSystem = msg.type === 'system';
   const isGift = msg.type === 'gift' || msg.content?.startsWith('GIFT_EVENT:');
   const isChallenge = msg.type === 'challenge';
   const userFrame = useUserFrame(msg.user_id);
+
+  const isPriority = subscriberTier === 'Elite' || subscriberTier === 'Mythic';
+
+  const { text: contentWithEmotes, emotes } = useMemo(() => {
+    if (isSystem || isGift || isChallenge) {
+      return { text: msg.content, emotes: [] as { start: number; end: number; emote: SubscriberEmote }[] }
+    }
+    return parseEmotesInText(msg.content)
+  }, [msg.content, isSystem, isGift, isChallenge]);
+
+  const renderContent = useCallback(() => {
+    if (isSystem || isGift || isChallenge || emotes.length === 0) {
+      return contentWithEmotes
+    }
+
+    const parts: React.ReactNode[] = []
+    let lastIndex = 0
+
+    for (const emoteMatch of emotes) {
+      if (emoteMatch.start > lastIndex) {
+        parts.push(contentWithEmotes.slice(lastIndex, emoteMatch.start))
+      }
+      parts.push(
+        <span
+          key={emoteMatch.start}
+          className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-md bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 text-[10px] font-black mx-0.5"
+          title={emoteMatch.emote.name}
+        >
+          {emoteMatch.emote.name}
+        </span>
+      )
+      lastIndex = emoteMatch.end
+    }
+
+    if (lastIndex < contentWithEmotes.length) {
+      parts.push(contentWithEmotes.slice(lastIndex))
+    }
+
+    return parts
+  }, [contentWithEmotes, emotes, isSystem, isGift, isChallenge]);
 
   if (isSystem) {
     return (
@@ -267,9 +312,15 @@ function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disap
 
 // Regular chat message
   return (
-    <div className={`flex items-center gap-2 bg-black/50 backdrop-blur-sm p-2 rounded-lg ${disappearingMessages.has(msg.id) ? 'opacity-50 transition-opacity' : ''} ${isPinned ? 'border-2 border-yellow-500/50 bg-yellow-500/10' : ''}`}>
+    <div className={`flex items-center gap-2 bg-black/50 backdrop-blur-sm p-2 rounded-lg ${disappearingMessages.has(msg.id) ? 'opacity-50 transition-opacity' : ''} ${isPinned ? 'border-2 border-yellow-500/50 bg-yellow-500/10' : ''} ${isPriority ? 'border border-purple-500/30 bg-purple-500/5' : ''}`}>
       {showGoldenBanner && msg.user_id === user?.id && (
         <span className="text-yellow-400 text-xs">👑</span>
+      )}
+      {isPriority && !isPinned && (
+        <span className="text-[10px] font-black uppercase tracking-wider text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded-full border border-purple-500/30"
+          title={`Subscriber SLA: ${SUBSCRIBER_TIER_SLA[subscriberTier || '']?.uptimeGuarantee ?? 99.0}% uptime guarantee, ${SUBSCRIBER_TIER_SLA[subscriberTier || '']?.qualityGuarantee ?? '720p'} quality`}>
+          {subscriberTier}
+        </span>
       )}
       {isPinned && (
         <Pin size={12} className="text-yellow-500 flex-shrink-0" fill="currentColor" />
@@ -307,7 +358,7 @@ function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disap
         >
           {msg.user_profiles?.username || 'User'}:
         </button>
-        <span className={`text-xs truncate ${isPinned ? 'text-yellow-100 font-semibold' : 'text-white'}`}>{msg.content}</span>
+        <span className={`text-xs truncate ${isPinned ? 'text-yellow-100 font-semibold' : 'text-white'}`}>{renderContent()}</span>
       </div>
       <div className="flex items-center gap-1">
         {canPinMessages && !isPinned && (
@@ -388,7 +439,7 @@ export default function BroadcastChat({
   }, []);
 
   // Reverse messages once for virtual list (newest first)
-  // Pinned messages appear first, then regular messages
+  // Pinned messages appear first, then priority messages, then regular messages
   const reversedMessages = useMemo(() => {
     const pinned = messages.filter(m => pinnedMessageIds.has(m.id));
     const unpinned = messages.filter(m => !pinnedMessageIds.has(m.id));
@@ -404,6 +455,11 @@ export default function BroadcastChat({
   const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(user?.id, streamId);
   const { trackChatMessage } = useMissionProgress(streamId);
   const { recordChatMessage } = useTrollFamilyActivity();
+  const { highestTier: viewerHighestTier } = useUserSubscriptionTier(user?.id);
+  const { badges: subscriberBadges } = useSubscriberBadges(hostId);
+
+  const [availableEmotes, setAvailableEmotes] = useState<SubscriberEmote[]>([]);
+  const [showEmotePicker, setShowEmotePicker] = useState(false);
 
   // Mini profile popup state
   const [miniProfile, setMiniProfile] = useState<{ userId: string; username: string; avatarUrl: string } | null>(null);
@@ -413,6 +469,22 @@ export default function BroadcastChat({
   const handleCloseMiniProfile = useCallback(() => {
     setMiniProfile(null);
   }, []);
+
+  useEffect(() => {
+    if (viewerHighestTier?.name) {
+      setAvailableEmotes(getEmotesForTier(viewerHighestTier.name))
+    } else {
+      setAvailableEmotes([])
+    }
+  }, [viewerHighestTier?.name]);
+
+  const insertEmote = useCallback((emoteName: string) => {
+    setInput(prev => {
+      const trimmed = prev.trim()
+      return trimmed ? `${trimmed} ${emoteName}` : emoteName
+    })
+    setShowEmotePicker(false)
+  }, [])
 
   const buildUserProfile = (source: any) => ({
     username:
@@ -1719,7 +1791,31 @@ const fetchMessages = async () => {
                   <Virtuoso
                     ref={virtuosoRef}
                     data={reversedMessages}
-                    itemContent={(index, msg) => <ChatMessageItem msg={msg} isHost={isHost} isOfficer={isOfficer} user={user} showGoldenBanner={showGoldenBanner} disappearingMessages={disappearingMessages} openModActionsForUser={openModActionsForUser} openGiftForUser={openGiftForUser} deleteMessage={deleteMessage} onPinMessage={pinMessage} onUnpinMessage={unpinMessage} isPinned={pinnedMessageIds.has(msg.id)} canPinMessages={canPinMessages} onAcceptChallenge={onAcceptChallenge} onDenyChallenge={onDenyChallenge} onOpenMiniProfile={handleOpenMiniProfile} />}
+                    itemContent={(index, msg) => {
+                      const senderName = msg.user_profiles?.username || msg.user_name || 'User'
+                      const subBadge = subscriberBadges.get(senderName)
+                      return (
+                        <ChatMessageItem
+                          msg={msg}
+                          isHost={isHost}
+                          isOfficer={isOfficer}
+                          user={user}
+                          showGoldenBanner={showGoldenBanner}
+                          disappearingMessages={disappearingMessages}
+                          openModActionsForUser={openModActionsForUser}
+                          openGiftForUser={openGiftForUser}
+                          deleteMessage={deleteMessage}
+                          onPinMessage={pinMessage}
+                          onUnpinMessage={unpinMessage}
+                          isPinned={pinnedMessageIds.has(msg.id)}
+                          canPinMessages={canPinMessages}
+                          onAcceptChallenge={onAcceptChallenge}
+                          onDenyChallenge={onDenyChallenge}
+                          onOpenMiniProfile={handleOpenMiniProfile}
+                          subscriberTier={subBadge?.tierName || null}
+                        />
+                      )
+                    }}
                     style={{ height: '100%', width: '100%' }}
                     overscan={20}
                     alignToBottom
@@ -1736,8 +1832,8 @@ const fetchMessages = async () => {
 
         <form onSubmit={sendMessage} className="p-4 border-t border-white/10 bg-transparent relative">
             <div className="relative w-full">
-                <input 
-                    type="text" 
+                <input
+                    type="text"
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onFocus={redirectGuestToAuth}
@@ -1758,14 +1854,45 @@ const fetchMessages = async () => {
                     className="w-full bg-white/10 border-none rounded-full px-4 py-2.5 focus:ring-2 focus:ring-yellow-500 text-white placeholder:text-zinc-400 text-sm"
                 />
 
-                <button
-                    type="submit"
-                    onClick={isGuest ? redirectGuestToAuth : undefined}
-                     disabled={hostChatDisabledByOfficer || streamEnded || userChatDisabled || (!isGuest && !input.trim())}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition"
-                >
-                    <Send size={16} />
-                </button>
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {availableEmotes.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setShowEmotePicker(prev => !prev)}
+                            className="text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition p-1"
+                            title="Subscriber emotes"
+                        >
+                            <span className="text-sm">😊</span>
+                        </button>
+                    )}
+                    <button
+                        type="submit"
+                        onClick={isGuest ? redirectGuestToAuth : undefined}
+                         disabled={hostChatDisabledByOfficer || streamEnded || userChatDisabled || (!isGuest && !input.trim())}
+                        className="text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition"
+                    >
+                        <Send size={16} />
+                    </button>
+                </div>
+
+                {showEmotePicker && availableEmotes.length > 0 && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto">
+                        <div className="text-xs font-bold text-slate-400 mb-2 px-1">Subscriber Emotes</div>
+                        <div className="grid grid-cols-4 gap-1">
+                            {availableEmotes.map(emote => (
+                                <button
+                                    key={emote.id}
+                                    type="button"
+                                    onClick={() => insertEmote(emote.name)}
+                                    className="flex items-center justify-center p-2 rounded-lg hover:bg-slate-700 transition text-xs font-bold text-white"
+                                    title={emote.name}
+                                >
+                                    {emote.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </form>
 

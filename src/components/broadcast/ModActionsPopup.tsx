@@ -6,6 +6,7 @@ import {
   Mic, MicOff, AlertCircle, MessageSquareOff, LogOut, Power,
   Search, Car
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
@@ -84,7 +85,8 @@ const ModActionsPopup = memo(function ModActionsPopup({
   onKickUser,
   onViewBackgroundCheck,
 }: ModActionsPopupProps) {
-  const { profile } = useAuthStore();
+  const { profile, user, isLoading } = useAuthStore();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('gift');
   const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
@@ -568,6 +570,11 @@ const handleEndStream = async () => {
   };
 
 // Deny popup access entirely for accounts without an authorized Mod Actions role.
+  if (isLoading) return null;
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
   if (!isOpen || (!hasModAccess && !isHost)) return null;
 
   return (

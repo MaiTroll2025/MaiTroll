@@ -38,6 +38,7 @@ import BroadcastOfficerModal from '../../components/broadcast/BroadcastOfficerMo
 import PayBroadOfficersModal from '../../components/broadcast/PayBroadOfficersModal'
 import MoreControlsDrawer from '../../components/broadcast/MoreControlsDrawer'
 import MobileBroadcastHostSettings from '../../components/broadcast/MobileBroadcastHostSettings'
+import BroadcasterControlsModal from '@/components/broadcast/BroadcasterControlsModal'
 import { useBroadcastFrame } from '../../hooks/useBroadcastFrame'
 import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
 import BroadcastFrame from '../../components/broadcast/BroadcastFrame'
@@ -596,6 +597,7 @@ const removeStreamChannels = async (streamId: string) => {
 
 const SUPABASE_PUBLIC_PATH = '/storage/v1/object/public/'
 const SUPABASE_SIGN_PATH = '/storage/v1/object/sign/'
+const DESKTOP_AUDIENCE_TICKER_HEIGHT = 56
 
 function isPlayableUrl(url: unknown): boolean {
   return (
@@ -1823,6 +1825,10 @@ useEffect(() => {
     const [isPaidChatModalOpen, setIsPaidChatModalOpen] = useState(false)
     const [isMessagePopupOpen, setIsMessagePopupOpen] = useState(false)
     const [isNewMessageMode, setIsNewMessageMode] = useState(false)
+    const [isBroadcasterControlsOpen, setIsBroadcasterControlsOpen] = useState(false)
+    const [messagePopupPosition, setMessagePopupPosition] = useState<{ x: number; y: number } | null>(null)
+    const [isDraggingMessagePopup, setIsDraggingMessagePopup] = useState(false)
+    const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState<any[]>([])
     const [recentThreads, setRecentThreads] = useState<any[]>([])
@@ -1834,6 +1840,40 @@ useEffect(() => {
     const [recentGifts, setRecentGifts] = useState<BroadcastGift[]>([])
     const [giftNameMap, setGiftNameMap] = useState<Record<string, string>>({})
     const { queues: giftQueues, enqueueGift, removeGift } = useTargetedGiftQueue()
+
+    const messagePopupRef = useRef<HTMLDivElement>(null)
+
+    const handleMessagePopupMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+      if ((e.target as HTMLElement).closest('button, input, a, [role="button"]')) return
+      setIsDraggingMessagePopup(true)
+      const startX = e.clientX
+      const startY = e.clientY
+      const startPos = messagePopupPosition || { x: 0, y: 0 }
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const dx = moveEvent.clientX - startX
+        const dy = moveEvent.clientY - startY
+        setMessagePopupPosition({
+          x: startPos.x + dx,
+          y: startPos.y + dy,
+        })
+      }
+
+      const handleMouseUp = () => {
+        setIsDraggingMessagePopup(false)
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }, [messagePopupPosition])
+
+    useEffect(() => {
+      if (isMessagePopupOpen && !messagePopupPosition) {
+        setMessagePopupPosition({ x: 0, y: 0 })
+      }
+    }, [isMessagePopupOpen, messagePopupPosition])
     useEffect(() => {
       if (!import.meta.env.DEV) return
       console.debug('[BroadcastPage] recentGifts updated', {
@@ -4841,6 +4881,35 @@ const toggleMicrophone = useCallback(async () => {
     return next
   }, [stream?.id, user?.id])
 
+  const handleBroadcasterBoxTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isHost) return
+
+    const now = Date.now()
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+
+    if (lastTapRef.current) {
+      const dx = clientX - lastTapRef.current.x
+      const dy = clientY - lastTapRef.current.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      if (now - lastTapRef.current.time < 350 && dist < 30) {
+        void toggleCamera()
+        lastTapRef.current = null
+        return
+      }
+    }
+
+    lastTapRef.current = { time: now, x: clientX, y: clientY }
+
+    setTimeout(() => {
+      if (lastTapRef.current && Date.now() - lastTapRef.current.time >= 350) {
+        setIsBroadcasterControlsOpen(true)
+        lastTapRef.current = null
+      }
+    }, 350)
+  }, [isHost, toggleCamera])
+
   const onLiveKitMicMute = useCallback(async () => {
     if (!roomRef.current?.localParticipant) return
     const wasMicEnabled = roomRef.current.localParticipant.isMicrophoneEnabled
@@ -6223,38 +6292,31 @@ const toggleMicrophone = useCallback(async () => {
                   streamStartedAt={stream.started_at}
                   onLiveKitMicMute={onLiveKitMicMute}
                   onLiveKitMicUnmute={onLiveKitMicUnmute}
-                />
-             )}
-
-              {/* Random Battle Banner — prominent notice for queue/active battle (desktop only; mobile uses the squared button in the ticker) */}
-              {stream && !isMobileHost && (
-                <RandomBattleBanner
-                  phase={randomBattleQueue.phase}
-                  delayUntil={randomBattleQueue.delayUntil}
-                  isBroadcaster={isHost}
-                  onStartQueue={randomBattleQueue.startQueue}
-                  onStopQueue={randomBattleQueue.stopQueue}
-                  isBusy={randomBattleQueue.isBusy}
-                  mobileSafe={isMobileWidth}
-                />
+                  randomBattleQueue={isHost ? randomBattleQueue : undefined}
+                 />
               )}
 
-
-             {/* --- AUDIENCE TICKER: full-width, neon style, always visible --- */}
-             <div className="w-full z-20 px-0 pt-1 pb-2 flex items-center justify-center bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 backdrop-blur-xl border-b border-cyan-400/10 shadow-[0_2px_32px_0_rgba(34,211,238,0.10)]">
-               <div className="w-full max-w-7xl mx-auto">
-                   <AudienceBubbleTicker
-                     streamId={streamId || ''}
-                     audience={audienceWithAnon}
-                     currentUserId={user?.id}
-                     hostUserId={stream?.user_id || stream?.broadcaster_id || undefined}
-                    maxVisible={8}
-                    className="relative z-0 hidden sm:flex pointer-events-none"
-                    onGiftUser={onGift}
-                    onModerateUser={handleOpenUserAction}
-                  />
-               </div>
-             </div>
+               {/* --- AUDIENCE TICKER: full-width, neon style, desktop/tablet only --- */}
+              <div
+                className="relative z-20 hidden w-full shrink-0 items-center justify-center border-b border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-0 backdrop-blur-xl shadow-[0_2px_32px_0_rgba(34,211,238,0.10)] sm:flex"
+                style={{
+                  height: `${DESKTOP_AUDIENCE_TICKER_HEIGHT}px`,
+                  minHeight: `${DESKTOP_AUDIENCE_TICKER_HEIGHT}px`,
+                }}
+              >
+                <div className="mx-auto flex h-full w-full max-w-7xl items-center overflow-hidden">
+                    <AudienceBubbleTicker
+                      streamId={streamId || ''}
+                      audience={audienceWithAnon}
+                      currentUserId={user?.id}
+                      hostUserId={stream?.user_id || stream?.broadcaster_id || undefined}
+                      maxVisible={8}
+                      className="relative z-0 flex w-full items-center"
+                      onGiftUser={onGift}
+                      onModerateUser={handleOpenUserAction}
+                    />
+                </div>
+              </div>
 
              {myLeagues.length > 0 && (
                <div className="w-full z-20 px-0 py-3 bg-black/10 border-b border-white/10">
@@ -6286,17 +6348,17 @@ const toggleMicrophone = useCallback(async () => {
                SPLIT MODE (<=6 total boxes):
                <main> is a 3-column grid: host video | seats sidebar | chat panel.
              */}
-             <main
-               className={cn(
-                 'flex min-h-0',
-                 isMobileHost
-                   ? layoutMode === 'grid'
-                     ? 'flex-1 grid overflow-hidden px-2 py-2 relative'
-                     : 'flex-1 flex-col overflow-hidden px-0 pt-0 relative'
-                   : 'flex-1 grid gap-4 px-5 py-4',
-                   // For >6 total seats, use a 2-row grid with combined layout
-                   !isMobileHost && layoutMode === 'grid' ? 'grid-rows-[1fr_1fr]' : ''
-               )}
+               <main
+                  className={cn(
+                    'flex min-h-0 pb-28',
+                    isMobileHost
+                      ? layoutMode === 'grid'
+                        ? 'flex-1 grid overflow-hidden px-2 py-2 relative'
+                        : 'flex-1 flex-col overflow-hidden px-0 pt-0 relative'
+                      : 'flex-1 grid gap-4 px-5 py-4 overflow-hidden',
+                     // For >6 total seats, use a 2-row grid with combined layout
+                     !isMobileHost && layoutMode === 'grid' ? 'grid-rows-[1fr_1fr]' : ''
+                 )}
                style={
                   isMobileHost && layoutMode === 'grid'
                     ? { gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', gap: viewerSeatCards.length >= 6 ? '2px' : '6px' }
@@ -6323,10 +6385,10 @@ const toggleMicrophone = useCallback(async () => {
               {layoutMode === 'grid' ? (
                 /* ===== GRID MODE: Broadcaster tile (same size as seat tiles) ===== */
                  <div
-                   className={cn(
-                     'relative min-h-0 overflow-hidden border border-cyan-400/30 bg-transparent',
-                     isMobileHost ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
-                   )}
+                    className={cn(
+                      'relative min-h-0 overflow-hidden border border-cyan-400/30 bg-transparent pb-4',
+                      isMobileHost ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
+                    )}
                    data-gift-target={`user:${stream?.user_id || ''}`}
                  >
                   {/* Camera starting fallback */}
@@ -6466,15 +6528,21 @@ const toggleMicrophone = useCallback(async () => {
                 </div>
                ) : (
                  /* ===== SPLIT MODE: Large broadcaster panel ===== */
-                <section
-                  className={cn(
-                    'relative min-h-0 overflow-hidden mobile-host-video',
-                    isMobileHost
-                      ? 'flex-none rounded-none border-0'
-                      : theme.hostVideoPanel
-                  )}
-                  data-gift-target={`user:${stream?.user_id || ''}`}
-                >
+                  <section
+                    className={cn(
+                      'relative min-h-0 overflow-hidden mobile-host-video pb-4 select-none',
+                      isMobileHost
+                        ? 'flex-none rounded-none border-0'
+                        : theme.hostVideoPanel
+                    )}
+                   data-gift-target={`user:${stream?.user_id || ''}`}
+                   onClick={handleBroadcasterBoxTap}
+                   onTouchEnd={(e) => {
+                     e.preventDefault()
+                     handleBroadcasterBoxTap(e)
+                   }}
+                   style={isHost ? { cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } : undefined}
+                 >
 
 {/* Camera starting fallback � shows when no video track is available */}
                 {(() => {
@@ -6619,7 +6687,7 @@ const toggleMicrophone = useCallback(async () => {
               {/* -- CENTER: Seats (desktop only - mobile seats overlay on video) -- */}
               {!isMobileHost && layoutMode === 'split' && <aside
                 className={cn(
-                  'flex h-auto min-h-0 flex-col overflow-hidden backdrop-blur-md shadow-[0_0_30px_rgba(45,212,191,0.10)]',
+                  'flex h-auto min-h-0 flex-col overflow-hidden backdrop-blur-md shadow-[0_0_30px_rgba(45,212,191,0.10)] pb-4',
                   viewerSeatCards.length === 1
                     ? 'rounded-[26px] border border-cyan-400/20 bg-slate-950'
                     : 'rounded-[28px] border border-cyan-300/20 bg-transparent p-4'
@@ -6947,11 +7015,11 @@ const toggleMicrophone = useCallback(async () => {
                   : undefined
 
                  return (
-                    <div
-                      key={`grid-seat-${streamId}-${seat.seatIndex}-${seat.seatSessionId || seat.seatUserId || 'empty'}`}
-                      className={cn(
-                        'group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-950/60 backdrop-blur-md transition-all duration-300',
-                        isMobileHost ? 'rounded-lg' : '',
+                     <div
+                       key={`grid-seat-${streamId}-${seat.seatIndex}-${seat.seatSessionId || seat.seatUserId || 'empty'}`}
+                       className={cn(
+                         'group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-950/60 backdrop-blur-md transition-all duration-300 pb-4',
+                         isMobileHost ? 'rounded-lg' : '',
                         seat.isOccupied
                           ? 'border-emerald-400/40 shadow-[0_0_24px_rgba(16,185,129,0.12)] hover:border-emerald-300/60 hover:shadow-[0_0_32px_rgba(16,185,129,0.2)] hover:-translate-y-0.5'
                           : 'border-cyan-400/30 shadow-[0_0_20px_rgba(15,23,42,0.25)] hover:border-cyan-300/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.15)] hover:-translate-y-0.5',
@@ -7078,9 +7146,9 @@ const toggleMicrophone = useCallback(async () => {
 
               {/* -- RIGHT: Chat Panel (desktop only - mobile chat is floating) -- */}
               {!isMobileHost && layoutMode === 'split' && <aside className={cn(
-    theme.chatPanel,
-    'flex min-h-0 flex-col overflow-hidden bg-black/20 border border-white/10 backdrop-blur-xl shadow-[0_0_28px_rgba(45,212,191,0.12)]'
-  )}>
+     theme.chatPanel,
+     'flex min-h-0 flex-col overflow-hidden bg-black/20 border border-white/10 backdrop-blur-xl shadow-[0_0_28px_rgba(45,212,191,0.12)] pb-4'
+   )}>
                 {/* Chat tabs */}
                 <div className="grid grid-cols-6 border-b border-white/10 bg-black/10">
                    {['Chat', 'Progress', 'League', 'Gifts', 'Top Fans', 'Settings'].map((tab) => {
@@ -7369,13 +7437,13 @@ const toggleMicrophone = useCallback(async () => {
               {/* In grid mode, chat panel is rendered below the grid further down */}
             </main>
 
-            {/* ===== GRID MODE: Chat panel below the seat grid (desktop only) ===== */}
-            {!isMobileHost && layoutMode === 'grid' && (
-              <aside className={cn(
-                theme.chatPanel,
-                'flex flex-col overflow-hidden bg-black/20 border border-white/10 backdrop-blur-xl shadow-[0_0_28px_rgba(45,212,191,0.12)]',
-                'h-[280px] shrink-0'
-              )}>
+             {/* ===== GRID MODE: Chat panel below the seat grid (desktop only) ===== */}
+             {!isMobileHost && layoutMode === 'grid' && (
+               <aside className={cn(
+                 theme.chatPanel,
+                 'flex flex-col overflow-hidden bg-black/20 border border-white/10 backdrop-blur-xl shadow-[0_0_28px_rgba(45,212,191,0.12)]',
+                 'h-[280px] shrink-0 pb-4'
+               )}>
                 {/* Chat tabs */}
                 <div className="grid grid-cols-6 border-b border-white/10 bg-black/10">
                   {['Chat', 'Progress', 'League', 'Gifts', 'Top Fans', 'Settings'].map((tab) => {
@@ -7866,16 +7934,9 @@ const toggleMicrophone = useCallback(async () => {
                           onModerateUser={handleOpenUserAction}
                         />
                     </div>
-                    <div className="pointer-events-auto relative mt-0.5 flex flex-col gap-2">
-                      <CollaborateButton compact onClick={() => setShowCollaborationModal(true)} />
-                      <RandomBattleButton
-                        phase={randomBattleQueue.phase}
-                        isBroadcaster={isHost}
-                        isBusy={randomBattleQueue.isBusy}
-                        onStartQueue={randomBattleQueue.startQueue}
-                        onStopQueue={randomBattleQueue.stopQueue}
-                      />
-                    </div>
+                     <div className="pointer-events-auto relative mt-0.5 flex flex-col gap-2">
+                       <CollaborateButton compact onClick={() => setShowCollaborationModal(true)} />
+                     </div>
                   </div>
                 )}
 
@@ -7912,31 +7973,31 @@ const toggleMicrophone = useCallback(async () => {
                      onAssignOfficer={() => setIsAssignOfficerModalOpen(true)}
                      onPayOfficers={() => setIsPayBroadOfficersModalOpen(true)}
                       onToggleChatLock={handleToggleChatLock}
-                   />
+                    />
                 </div>
-              </>
-            )}
 
-              {/* -- BOTTOM CONTROL BAR (desktop only) -- */}
-              {!isMobileHost && <BroadcastBottomBar
-                unreadMessageCount={0}
-                isMicOn={micEnabled}
-                isCamOn={cameraEnabled}
-                isLive={stream.status === 'live'}
-                liveViewerCount={viewerCount}
-                isGiftTrayOpen={isGiftModalOpen}
-                isOfficerModalOpen={false}
-                onToggleMic={toggleMicrophone}
-                onToggleCam={toggleCamera}
-                onGift={handleGiftHost}
-                onShare={handleOpenShareModal}
-                onOpenMessage={() => setIsMessagePopupOpen(true)}
-                onOpenMoreMenu={handleOpenMoreMenu}
-                onEndStream={handleStreamEnd}
-                onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
-                isHost={isHost}
-                onInviteFollowers={handleInviteFollowers}
-               />}
+               {/* -- BOTTOM CONTROL BAR (desktop only) -- */}
+               {!isMobileHost && <BroadcastBottomBar
+                 unreadMessageCount={0}
+                 isMicOn={micEnabled}
+                 isCamOn={cameraEnabled}
+                 isLive={stream.status === 'live'}
+                 liveViewerCount={viewerCount}
+                 isGiftTrayOpen={isGiftModalOpen}
+                 isOfficerModalOpen={false}
+                 onToggleMic={toggleMicrophone}
+                 onToggleCam={toggleCamera}
+                 onGift={handleGiftHost}
+                 onShare={handleOpenShareModal}
+                 onOpenMessage={() => setIsMessagePopupOpen(true)}
+                 onOpenMoreMenu={handleOpenMoreMenu}
+                 onEndStream={handleStreamEnd}
+                 onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
+                 isHost={isHost}
+                 onInviteFollowers={handleInviteFollowers}
+                />}
+              </>
+             )}
 
               {!isMobileHost && (
                 <div className="absolute right-4 top-4 z-[40]">
@@ -8612,14 +8673,27 @@ const toggleMicrophone = useCallback(async () => {
 
           </ErrorBoundary>
 
-          <AnimatePresence>
-            {isMessagePopupOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="fixed bottom-20 right-4 z-[60] w-[360px] max-h-[480px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl max-md:right-2 max-md:left-2 max-md:w-auto max-md:bottom-[100px]"
-              >
+           <AnimatePresence>
+             {isMessagePopupOpen && (
+               <motion.div
+                 ref={messagePopupRef}
+                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                 animate={{ 
+                   opacity: 1, 
+                   scale: 1, 
+                   y: 0,
+                   x: messagePopupPosition?.x || 0,
+                   top: messagePopupPosition?.y || undefined,
+                 }}
+                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                 onMouseDown={handleMessagePopupMouseDown}
+                 className="fixed z-[60] w-[360px] max-h-[480px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl max-md:right-2 max-md:left-2 max-md:w-auto max-md:bottom-[100px]"
+                 style={{
+                   right: messagePopupPosition ? undefined : '1rem',
+                   bottom: messagePopupPosition ? undefined : '5rem',
+                   cursor: isDraggingMessagePopup ? 'grabbing' : 'grab',
+                 }}
+               >
                 <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-black text-white">Messages</h3>
@@ -8791,10 +8865,29 @@ const toggleMicrophone = useCallback(async () => {
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
-       </GiftSystemProvider>
-    );
-  }
+           </AnimatePresence>
+
+          <BroadcasterControlsModal
+            isOpen={isBroadcasterControlsOpen}
+            onClose={() => setIsBroadcasterControlsOpen(false)}
+            isMicOn={micEnabled}
+            isCamOn={cameraEnabled}
+            isLive={stream.status === 'live'}
+            liveViewerCount={viewerCount}
+            isHost={isHost}
+            onToggleMic={toggleMicrophone}
+            onToggleCam={toggleCamera}
+            onGift={handleGiftHost}
+            onShare={handleOpenShareModal}
+            onOpenMessage={() => { setIsBroadcasterControlsOpen(false); setIsMessagePopupOpen(true) }}
+            onOpenMoreMenu={handleOpenMoreMenu}
+            onEndStream={handleStreamEnd}
+            onInviteFollowers={handleInviteFollowers}
+            onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
+          />
+        </GiftSystemProvider>
+     );
+   }
 
 function isStaffProfile(profile: any) {
   if (!profile) return false
@@ -8877,11 +8970,3 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
     />
   );
 })
-
-
-
-
-
-
-
-

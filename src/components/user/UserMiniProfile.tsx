@@ -61,6 +61,27 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
     }
   }, [loading, user?.id, userId]);
 
+  useEffect(() => {
+    if (!userId) return
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('avatar_url, cover_image_url, is_verified, level, monthly_subscriber_count, troll_coins, crowns, subscriber_badge_color_hex, can_message')
+          .eq('id', userId)
+          .maybeSingle()
+        if (mounted && data) setTargetProfile(data)
+      } catch {}
+    })()
+    return () => { mounted = false }
+  }, [userId])
+
+  useEffect(() => {
+    if (!user || !userId) return
+    checkSubscription()
+  }, [user?.id, userId])
+
   const handleFollow = async () => {
     if (!user || !userId || isOwnProfile) return;
     setFollowLoading(true);
@@ -372,7 +393,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
           {/* Subscriber badge if subscribed to this person */}
           {targetProfile?.subscriber_badge_color_hex && !isOwnProfile && (
             <div className="text-center">
-              <span 
+              <span
                 className="text-xs font-semibold px-2 py-1 rounded-full"
                 style={{
                   backgroundColor: targetProfile.subscriber_badge_color_hex + '20',
@@ -382,6 +403,22 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
                 <Crown className="w-3 h-3 inline mr-1" />
                 Official Supporter
               </span>
+              {subscription?.tier?.name === 'Mythic' && (
+                <div className="mt-1">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    title="Mythic SLA: 99.95% uptime, 4K quality, VIP-only chat, 10min support response">
+                    DM Access
+                  </span>
+                </div>
+              )}
+              {subscription?.tier?.sla_uptime_guarantee_pct !== undefined && (
+                <div className="mt-1">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                    title={`${subscription.tier.name} SLA: ${subscription.tier.sla_uptime_guarantee_pct}% uptime, ${subscription.tier.sla_quality_guarantee} quality`}>
+                    {subscription.tier.sla_uptime_guarantee_pct}% SLA
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

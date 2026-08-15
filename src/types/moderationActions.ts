@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../lib/store';
 
 /**
  * The ONLY roles allowed to use Mod Actions (frontend gating + backend).
@@ -121,12 +122,30 @@ export function hasModActionsAccess(profile: {
 export async function invokeModerationAction(
   payload: ModerationActionPayload
 ): Promise<ModerationActionResult> {
+  let session = useAuthStore.getState().session;
+
+  if (!session?.access_token) {
+    const { data } = await supabase.auth.getSession();
+    session = data.session;
+  }
+
+  if (!session?.access_token) {
+    return {
+      success: false,
+      code: 'UNAUTHENTICATED',
+      message: 'You must be signed in.',
+      data: null,
+    };
+  }
+
   const { data, error } = await supabase.functions.invoke('moderation-actions', {
     body: payload,
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
   });
 
   if (error) {
-    // If the function returned an HTTP error, surface a safe message.
     const raw = (error as any)?.context?.data;
     if (raw && typeof raw === 'object' && 'message' in raw) {
       return raw as ModerationActionResult;

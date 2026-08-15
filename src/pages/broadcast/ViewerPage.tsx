@@ -58,10 +58,11 @@ import BroadcastFrame from '@/components/broadcast/BroadcastFrame'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useUserLeagues } from '../../hooks/useUserLeagues'
 import LeagueProgressPanel from '../../components/broadcast/LeagueProgressPanel'
-import useLiveKitRoom from '../../hooks/useLiveKitRoom'
+import { useLiveKitRoom } from '../../hooks/useLiveKitRoom'
 import { useStreamRealtime } from '../../hooks/useStreamRealtime'
 import { useStreamSeats } from '../../hooks/useStreamSeats'
 import { useStreamAudiencePresence, StreamAudienceMember } from '../../hooks/useStreamAudiencePresence'
+import { useLiveStreams } from '../../hooks/useQueries'
 import FeedTheTroll from '../../components/feed-the-troll/FeedTheTroll'
 import { AudienceBubbleTicker } from '../../components/broadcast/AudienceBubbleTicker'
 import MobileAudienceTicker from '../../components/broadcast/MobileAudienceTicker'
@@ -71,6 +72,7 @@ import SubscriptionTierSelector from '../../components/user/SubscriptionTierSele
 import { useStreamTopGifters } from '../../hooks/useStreamTopGifters'
 import { resolveUsername, DEFAULT_USERNAME } from '../../lib/chatUtils'
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration'
+import { isValidUuid } from '../../lib/courtUtils'
 import { useTrollFamilyActivity } from '../../hooks/useTrollFamilyActivity'
 import { useBroadcastTextPopup } from '../../hooks/useBroadcastTextPopup'
 import { logActiveChannels } from '../../lib/realtimeChannelDiagnostics'
@@ -116,6 +118,7 @@ function isStreamEnded(stream: Stream | null): boolean {
 
 const KICK_BAN_DURATION_MS = 24 * 60 * 60 * 1000
 const MAX_TOTAL_BOXES = 8
+const CHAT_DEBOUNCE_MS = 1_500
 
 function getKickStorageKey(streamId: string, userId: string) {
   return `kick_${streamId}_${userId}`
@@ -295,6 +298,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   className,
   fallback,
   onTap,
+  onDoubleTap,
   room,
   objectFit = 'contain',
 }: {
@@ -303,11 +307,14 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   className?: string
   fallback: React.ReactNode
   onTap?: () => void
+  onDoubleTap?: () => void
   room?: any
   objectFit?: 'cover' | 'contain'
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const lastTapRef = useRef<number>(0)
+  const tapTimeoutRef = useRef<number | null>(null)
 
   // Track version tick — incremented on room events only.
   // LiveKit mutates RemoteParticipant objects in place, so the videoTrack
@@ -459,8 +466,29 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
 
    return (
     <div
-      onClick={() => onTap && onTap()}
-      className={cn('relative h-full w-full overflow-hidden bg-black', onTap && 'cursor-pointer', className)}
+      onClick={() => {
+        const now = Date.now()
+        const timeDiff = now - lastTapRef.current
+
+        if (timeDiff < 300 && timeDiff > 0) {
+          if (tapTimeoutRef.current) {
+            clearTimeout(tapTimeoutRef.current)
+            tapTimeoutRef.current = null
+          }
+          lastTapRef.current = 0
+          onDoubleTap?.()
+        } else {
+          lastTapRef.current = now
+          if (tapTimeoutRef.current) {
+            clearTimeout(tapTimeoutRef.current)
+          }
+          tapTimeoutRef.current = window.setTimeout(() => {
+            onTap?.()
+            tapTimeoutRef.current = null
+          }, 300)
+        }
+      }}
+      className={cn('relative h-full w-full overflow-hidden bg-black', (onTap || onDoubleTap) && 'cursor-pointer', className)}
     >
       <video
         ref={videoRef}
@@ -621,6 +649,7 @@ function ViewerPage() {
   const { isMobileWidth, hasMounted } = useIsMobile()
   const isMobileViewer = hasMounted && isMobileWidth
   const { recordWatchTime } = useTrollFamilyActivity()
+  const { data: liveStreamsData } = useLiveStreams()
 
   // Ghost drop-in mode: detect ?ghost=true from URL (set by GhostDropInRouter)
   const [isGhostDropIn, setIsGhostDropIn] = useState(false)
@@ -1370,6 +1399,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     const watchTimeIntervalRef = useRef<number | null>(null)
     const clickTimesRef = useRef<number[]>([])
     const blockedUntilRef = useRef<number | null>(null)
+    const processedMessageIdsRef = useRef<Set<string>>(new Set())
+    const recentChatKeysRef = useRef<Map<string, number>>(new Map())
 
    // Paid chat state for viewers
    const [isPaidChatModalOpen, setIsPaidChatModalOpen] = useState(false)
@@ -1446,10 +1477,10 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     return 1 // default: broadcaster only
   }, [stream, hookBoxCount])
 
-  // Layout mode: 'split' for <=6 total boxes, 'grid' for >6
-  const layoutMode = useMemo(() => {
-    return effectiveBoxCount <= 6 ? 'split' : 'grid'
-  }, [effectiveBoxCount])
+   // Layout mode: 'split' for <=7 total boxes, 'grid' for >7
+   const layoutMode = useMemo(() => {
+     return effectiveBoxCount <= 7 ? 'split' : 'grid'
+   }, [effectiveBoxCount])
 
     const {
       seats,
@@ -2165,12 +2196,12 @@ const isActive = isStreamActive(stream)
     setIsGiftModalOpen(true)
   }, [hostId])
 
-  const handleOpenUserAction = useCallback((info: { userId: string; username?: string; role?: string; createdAt?: string }) => {
+  const handleOpenUserAction = useCallback(async (info: { userId: string; username?: string; role?: string; createdAt?: string }) => {
     const normalizedUserId = info.userId
     const normalizedUsername = info.username || ''
     const isAnonUsername = isAnonymousDisplayName(normalizedUsername)
 
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedUserId)) {
+    if (!isValidUuid(normalizedUserId)) {
       if (isAnonUsername) {
         setUserActionTarget({
           userId: `anon-${normalizedUsername}`,
@@ -2180,9 +2211,40 @@ const isActive = isStreamActive(stream)
         })
         return
       }
+      toast.error('Invalid user identifier')
+      return
     }
 
-    setUserActionTarget(info)
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, username, role, troll_role, avatar_url')
+        .eq('id', normalizedUserId)
+        .maybeSingle()
+
+      if (error || !data?.id) {
+        console.error('[MOD TARGET RESOLUTION] Profile not found for UUID:', normalizedUserId, error)
+        toast.error('MaiTroll profile could not be resolved for this participant.')
+        return
+      }
+
+      console.error('[MOD TARGET RESOLUTION]', {
+        clickedUsername: normalizedUsername,
+        clickedProfileId: normalizedUserId,
+        resolvedProfileId: data.id,
+        resolvedUsername: data.username,
+      })
+
+      setUserActionTarget({
+        userId: data.id,
+        username: data.username || normalizedUsername,
+        role: data.role || data.troll_role || info.role,
+        createdAt: info.createdAt,
+      })
+    } catch (err) {
+      console.error('[MOD TARGET RESOLUTION] Error resolving profile:', err)
+      toast.error('Failed to resolve user profile')
+    }
   }, [])
 
   const pushFloatingSystemMessage = useCallback((content: string) => {
@@ -2211,36 +2273,36 @@ const isActive = isStreamActive(stream)
    const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
      if (!username) return
 
-     // For anonymous users: only mods/officers can click, open arrest dialog directly
-     if (isAnonymousDisplayName(username)) {
-       if (!isModOrHigher) return
-       handleOpenUserAction({
-         userId: `anon-${username}`,
-         username,
-         role: 'anonymous',
-         createdAt: null,
-       })
-       return
-     }
+      // For anonymous users: only mods/officers can click, open arrest dialog directly
+      if (isAnonymousDisplayName(username)) {
+        if (!isModOrHigher) return
+        await handleOpenUserAction({
+          userId: `anon-${username}`,
+          username,
+          role: 'anonymous',
+          createdAt: null,
+        })
+        return
+      }
 
-     try {
-       const { data, error } = await supabase
-         .from('user_profiles')
-         .select('id, username, created_at, role, troll_role')
-         .eq('username', username)
-         .maybeSingle()
-       
-       if (error || !data?.id) {
-         toast.error('User not found')
-         return
-       }
-       
-       handleOpenUserAction({
-         userId: data.id,
-         username: data.username || username,
-         role: data.role || data.troll_role,
-         createdAt: data.created_at,
-       })
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id, username, created_at, role, troll_role')
+          .eq('username', username)
+          .maybeSingle()
+        
+        if (error || !data?.id) {
+          toast.error('User not found')
+          return
+        }
+        
+        await handleOpenUserAction({
+          userId: data.id,
+          username: data.username || username,
+          role: data.role || data.troll_role,
+          createdAt: data.created_at,
+        })
      } catch (err) {
        console.error('[ViewerPage] Error opening user action:', err)
        toast.error('Failed to open user profile')
@@ -2452,6 +2514,17 @@ const handleLeaveSeat = useCallback(async () => {
       flushLikes();
     }
   }, [streamId, user?.id, stream])
+
+  const handleNextBroadcast = useCallback(() => {
+    if (!liveStreamsData || !Array.isArray(liveStreamsData)) return
+    const currentIndex = liveStreamsData.findIndex((s: any) => s.id === streamId)
+    if (currentIndex === -1) return
+    const nextIndex = currentIndex + 1
+    if (nextIndex >= liveStreamsData.length) return
+    const nextStream = liveStreamsData[nextIndex]
+    if (!nextStream?.id) return
+    navigate(`/broadcast/${nextStream.id}`)
+  }, [liveStreamsData, navigate, streamId])
 
   const handleLeave = useCallback(async () => {
     try {
@@ -3513,8 +3586,15 @@ useStreamRealtime(
                  isHost={false}
                  liveViewerCount={viewerCount}
                  handleLike={handleLike}
-                 onGift={() => onGift(hostId)}
-                 onShare={handleShare}
+                  onGift={() => onGift(hostId)}
+                  onSubscribe={() => {
+                    if (!user) {
+                      navigate('/auth?mode=login');
+                      return;
+                    }
+                    setShowSubscribeModal(true);
+                  }}
+                  onShare={handleShare}
                  onEndStream={handleLeave}
                  coinBalance={(profile as any)?.troll_coins ?? 0}
                  onOpenCoinStore={user?.id ? () => toast.info('Coin Store opens from the viewer action bar.') : undefined}
@@ -3596,12 +3676,12 @@ useStreamRealtime(
                            gridAutoRows: 'minmax(0, 1fr)',
                            gap: '12px',
                          }
-                       : {
-                           gridTemplateColumns:
-                             seatCards.length > 0
-                               ? 'minmax(430px, 1.05fr) minmax(360px, 1fr) 360px'
-                               : 'minmax(560px, 1fr) 360px',
-                         }
+                        : {
+                            gridTemplateColumns:
+                              seatCards.length > 0
+                                ? 'minmax(430px, 1.05fr) minmax(360px, 1fr) 360px'
+                                : 'minmax(560px, 1fr) 360px',
+                          }
                      : undefined
                }
              >
@@ -3631,13 +3711,14 @@ useStreamRealtime(
                     isMobileViewer ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
                   )}
                >
-                <RemoteVideoSurface
-                  participant={broadcasterState.participant}
-                  mirror={false}
-                  className="absolute inset-0"
-                  onTap={handleLike}
-                  room={liveKitRoom}
-                  fallback={
+                 <RemoteVideoSurface
+                   participant={broadcasterState.participant}
+                   mirror={false}
+                   className="absolute inset-0"
+                   onTap={handleLike}
+                   onDoubleTap={handleNextBroadcast}
+                   room={liveKitRoom}
+                   fallback={
                     <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_42%),#030611]">
                       <div className={cn(
                         'border border-cyan-400/20 bg-slate-950/70 text-center shadow-2xl shadow-cyan-500/10 backdrop-blur-xl',
@@ -3771,13 +3852,14 @@ useStreamRealtime(
                   : undefined
               }
             >
-              <RemoteVideoSurface
-                participant={broadcasterState.participant}
-                mirror={false}
-                className="absolute inset-0"
-                onTap={handleLike}
-                room={liveKitRoom}
-                fallback={
+               <RemoteVideoSurface
+                 participant={broadcasterState.participant}
+                 mirror={false}
+                 className="absolute inset-0"
+                 onTap={handleLike}
+                 onDoubleTap={handleNextBroadcast}
+                 room={liveKitRoom}
+                 fallback={
                   <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_42%),#030611]">
                     <div className="rounded-3xl border border-cyan-400/20 bg-slate-950/70 p-6 text-center shadow-2xl shadow-cyan-500/10 backdrop-blur-xl" style={{ overflow: 'visible' }}>
                       {broadcasterProfile?.avatar_url ? (
@@ -3861,40 +3943,11 @@ useStreamRealtime(
                     Retry
                   </button>
                 </div>
-              )}
+               )}
+              
+              </section>
 
-              {!isMobileViewer && (
-                <div className="absolute bottom-6 left-6 z-20 flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onGift(hostId)}
-                    className={cn('inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-black backdrop-blur-xl', theme.purpleButton)}
-                  >
-                    <Gift className="h-4 w-4" />
-                    Gift
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!user) {
-                        navigate('/auth?mode=login');
-                        return;
-                      }
-                      setShowSubscribeModal(true);
-                    }}
-                    className={cn('inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-black backdrop-blur-xl', theme.cyanButton)}
-                  >
-                    <Crown className="h-4 w-4" />
-                    Subscribe
-                  </button>
-                </div>
-              )}
-
-
-             </section>
-             )}
-
-            {/* ── CENTER: Seats belong beside the broadcaster, never over it ── */}
+              )/* ── CENTER: Seats belong beside the broadcaster, never over it ── */}
             {hasMounted && !isMobileViewer && layoutMode === 'split' && seatCards.length > 0 && (
               <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-cyan-300/25 bg-black/20 p-4 shadow-[0_0_28px_rgba(45,212,191,0.18)] backdrop-blur-xl">
                 <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
