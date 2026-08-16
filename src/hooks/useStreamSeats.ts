@@ -163,6 +163,7 @@ export function useStreamSeats(
   _userId?: string,
   _broadcasterProfile?: any,
   _streamData?: any,
+  _refreshStageConfig?: (() => void) | null,
 ) {
   const { user, profile } = useAuthStore()
   const effectiveUserId = _userId || user?.id || null
@@ -290,9 +291,11 @@ export function useStreamSeats(
       const seq = ++fetchSeqRef.current
 
       try {
-        const { data, error } = await supabase.rpc('get_stream_seats', {
-          p_stream_id: streamId,
-        })
+        const { data, error } = await supabase
+          .from('stream_seat_sessions')
+          .select('*')
+          .eq('stream_id', streamId)
+          .in('status', ['active', 'live', 'reserved', 'camera_starting'])
 
         if (error) {
           console.warn('[useStreamSeats] fetchSeats error:', { reason, error })
@@ -303,7 +306,7 @@ export function useStreamSeats(
           return { map: seatsRef.current, mine: mySeatRef.current }
         }
 
-        const rows = Array.isArray(data) ? data : data || []
+        const rows = Array.isArray(data) ? data : []
         const result = applySeatRows(rows)
 
         if (process.env.NODE_ENV !== 'production') {
@@ -319,6 +322,14 @@ export function useStreamSeats(
             streamId,
             count: seatDetails.length,
             seats: seatDetails,
+            rawRows: rows.map((r: any) => ({
+              id: r.id,
+              seat_index: r.seat_index,
+              status: r.status,
+              user_id: r.user_id,
+              guest_id: r.guest_id,
+              livekit_identity: r.livekit_participant_identity || r.livekit_identity || r.participant_identity,
+            })),
           })
         }
 
@@ -903,6 +914,84 @@ export function useStreamSeats(
     onSeatSession: handleSeatSession,
     onSeatEvent: handleSeatEvent,
   })
+
+  const prevStreamDataRef = useRef<_streamData | null>(null)
+
+  useEffect(() => {
+    const prev = prevStreamDataRef.current
+    const curr = _streamData
+    if (!curr) {
+      prevStreamDataRef.current = curr
+      return
+    }
+
+    const changed: string[] = []
+    if (prev?.box_count !== curr?.box_count) changed.push('box_count')
+    if (prev?.seat_count !== curr?.seat_count) changed.push('seat_count')
+    if (JSON.stringify(prev?.seat_prices) !== JSON.stringify(curr?.seat_prices)) changed.push('seat_prices')
+    if (prev?.are_seats_locked !== curr?.are_seats_locked) changed.push('are_seats_locked')
+
+    prevStreamDataRef.current = curr
+
+    if (changed.length > 0) {
+      scheduleRefresh(`stream-prop-update:${changed.join(',')}`, 0)
+    }
+  }, [_streamData, scheduleRefresh])
+
+  useEffect(() => {
+    if (!streamId) return
+    const channel = supabase
+      .channel(`stream-seats-config:${streamId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'streams',
+          filter: `id=eq.${streamId}`,
+        },
+        (payload) => {
+          const newRow = (payload as any).new
+          if (!newRow) return
+          const changed: string[] = []
+          if (newRow.seat_count !== undefined) changed.push('seat_count')
+          if (newRow.box_count !== undefined) changed.push('box_count')
+          if (newRow.seat_prices !== undefined) changed.push('seat_prices')
+          if (newRow.are_seats_locked !== undefined) changed.push('are_seats_locked')
+          if (changed.length === 0) return
+          scheduleRefresh(`stream-config-update:${changed.join(',')}`, 400)
+          if (typeof _refreshStageConfig === 'function') {
+            _refreshStageConfig()
+          }
+        }
+      )
+      .subscribe()
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [streamId, scheduleRefresh])
+
+  useEffect(() => {
+    if (!streamId) return
+    const channel = supabase
+      .channel(`stream-seat-sessions:${streamId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'stream_seat_sessions',
+          filter: `stream_id=eq.${streamId}`,
+        },
+        () => {
+          scheduleRefresh('seat-session-change', 0)
+        }
+      )
+      .subscribe()
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [streamId, scheduleRefresh])
 
   useEffect(() => {
     mountedRef.current = true

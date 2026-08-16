@@ -453,19 +453,20 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
         ],
       },
        {
-         category: 'Government',
-         items: [
-           { label: 'Troll Court', icon: Scale, path: '/troll-court' },
-           { label: 'Inmates', icon: Lock, path: '/inmates' },
-           { label: 'City Laws & Fees', icon: FileText_M, path: '/home?tab=laws-fees' },
-           { label: 'Mayor Dashboard', icon: Crown, path: '/mayor' },
-           { label: 'Town Meeting', icon: Users, path: '/town-meeting' },
-           { label: 'City Government', icon: Landmark, path: '/city-government' },
-           { label: 'President Candidates', icon: Vote, path: '/president' },
-           { label: 'Elections', icon: ClipboardList, path: '/government' },
-           { label: 'Proposals', icon: ScrollText, path: '/government/proposals' },
-           { label: 'Openings', icon: Briefcase, path: '/government/openings' },
-           { label: 'Newspaper', icon: Newspaper, path: '/government/newspaper' },
+          category: 'Government',
+          items: [
+            { label: 'Troll Court', icon: Scale, path: '/troll-court' },
+            { label: 'Inmates', icon: Lock, path: '/inmates' },
+            { label: 'City Laws & Fees', icon: FileText_M, path: '/home?tab=laws-fees' },
+            { label: 'Mayor Dashboard', icon: Crown, path: '/mayor' },
+            { label: 'Town Meeting', icon: Users, path: '/town-meeting' },
+            { label: 'City Government', icon: Landmark, path: '/city-government' },
+            { label: 'President Candidates', icon: Vote, path: '/president' },
+            { label: 'Elections', icon: ClipboardList, path: '/government' },
+            { label: 'Proposals', icon: ScrollText, path: '/government/proposals' },
+            { label: 'Openings', icon: Briefcase, path: '/government/openings' },
+            { label: 'Careers', icon: Briefcase, path: '/careers' },
+            { label: 'Newspaper', icon: Newspaper, path: '/government/newspaper' },
           ...(isOfficer || isSecretary || isAdmin
             ? [{ label: 'City Government (Staff)', icon: Landmark as any, path: '/government' }]
             : []),
@@ -771,6 +772,98 @@ function useNavigate_fixed() {
   return useNavigate();
 }
 
+/* --- Door Nav Button (desktop) --- */
+interface DoorNavButtonProps {
+  letter: string;
+  label: string;
+  to: string;
+  active: boolean;
+}
+
+function DoorNavButton({ letter, label, to, active }: DoorNavButtonProps) {
+  return (
+    <Link
+      to={to}
+      className="group relative flex flex-col items-center justify-end"
+      style={{ perspective: '600px' }}
+    >
+      {/* Door */}
+      <motion.div
+        animate={{
+          rotateY: active ? -25 : 0,
+          scale: active ? 1.05 : 1,
+        }}
+        transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+        className="relative"
+        style={{
+          width: 60,
+          height: 68,
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        {/* Door frame / back */}
+        <div
+          className="absolute inset-0 rounded-lg border-2"
+          style={{
+            borderColor: active ? '#5c3a1e' : 'rgba(255,255,255,0.08)',
+            background: active
+              ? 'linear-gradient(135deg, #5c3a1e44, #3d241244)'
+              : 'rgba(255,255,255,0.03)',
+            boxShadow: active ? '0 0 20px rgba(192,135,90,0.35)' : 'none',
+          }}
+        />
+
+        {/* Door panel */}
+        <motion.div
+          animate={{
+            rotateY: active ? -25 : 0,
+            originX: active ? 0 : 0.5,
+          }}
+          transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+          className="absolute inset-0 flex items-center justify-center rounded-md border"
+          style={{
+            borderColor: active ? '#6b3f22' : 'rgba(255,255,255,0.06)',
+            background: active
+              ? 'linear-gradient(180deg, #6b3f2266, #4a2a1566)'
+              : 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+            transformStyle: 'preserve-3d',
+            backfaceVisibility: 'hidden',
+          }}
+        >
+          <span
+            className="text-lg font-black select-none"
+            style={{
+              color: active ? '#fff' : 'rgba(255,255,255,0.5)',
+              textShadow: active ? '0 0 10px rgba(255,255,255,0.4)' : 'none',
+            }}
+          >
+            {letter}
+          </span>
+        </motion.div>
+
+        {/* Active glow underline */}
+        {active && (
+          <div
+            className="absolute -bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full"
+            style={{ background: '#c0875a', boxShadow: '0 0 8px rgba(192,135,90,0.6)' }}
+          />
+        )}
+      </motion.div>
+
+      {/* Label under door */}
+      <span
+        className="mt-1 text-[9px] font-bold leading-none transition-colors duration-200"
+        style={{
+          color: active ? '#fff' : 'rgba(255,255,255,0.4)',
+          textShadow: active ? '0 0 6px rgba(192,135,90,0.6)' : 'none',
+        }}
+      >
+        {label}
+      </span>
+    </Link>
+  );
+}
+
 /* --- Main Bottom Navigation Bar --- */
 export default function BottomNavBar() {
   const location = useLocation();
@@ -791,6 +884,20 @@ export default function BottomNavBar() {
     if (path === '/home') return location.pathname === '/home' || location.pathname === '/';
     return location.pathname.startsWith(path);
   };
+
+  // Desktop door tabs config
+  const desktopDoorTabs = [
+    { letter: 'H', label: 'Home', to: '/home', active: isActive('/home') || isActive('/') },
+    { letter: 'G', label: 'Go Live', to: '/broadcast/setup', active: isActive('/broadcast') },
+    { letter: 'M', label: 'MAI Pay', to: '/mai-pay', active: isActive('/mai-pay') },
+    { letter: 'C', label: 'Coins', to: '/store', active: isActive('/store') || isActive('/coins') },
+    { letter: 'C', label: 'Chats', to: '/utromail', active: isActive('/utromail') },
+    { letter: 'E', label: 'Explore', to: '/explore', active: isActive('/explore') || isActive('/live') },
+    { letter: 'T', label: 'Treelz', to: '/treelz', active: isActive('/treelz') },
+    { letter: 'H', label: 'High Bcasters', to: '/high-bcasters', active: isActive('/high-bcasters') },
+    { letter: 'A', label: 'Alerts', to: '/notifications', active: isActive('/notifications') },
+    { letter: 'B', label: 'Careers', to: '/careers', active: isActive('/careers') },
+  ];
 
   // Hide bottom nav on Treelz pages
   if (location.pathname.startsWith('/treelz')) return null;
@@ -816,24 +923,10 @@ export default function BottomNavBar() {
       >
         {/* Main bar with RGB pulsing border */}
         <div className="rgb-pulsing-nav-bar relative border-2 bg-[#050715]/95 backdrop-blur-xl" style={{ overflow: 'visible', zIndex: 100 }}>
-          <div className={`mx-auto flex items-center ${isMobile ? 'h-16 justify-around px-1' : 'h-20 max-w-[1920px] justify-between px-2 md:h-36 md:px-4'}`} style={{ overflow: 'visible' }}>
+          <div className={`mx-auto flex items-center ${isMobile ? 'h-16 justify-around px-1' : 'h-24 max-w-[1920px] justify-between px-2 md:h-28 md:px-6'}`} style={{ overflow: 'visible' }}>
 
-            {/* LEFT: Go Live + Profile Module (desktop only) */}
+            {/* LEFT: Profile Module (desktop only) */}
             <div className="hidden shrink-0 items-center gap-2 md:flex" style={{ overflow: 'visible' }}>
-              <Link
-                to="/broadcast/setup"
-                className={`group relative flex items-center justify-center gap-2 rounded-2xl transition-all duration-200 px-4 h-14 md:px-5 md:h-16 shrink-0 ${
-                  isActive('/broadcast')
-                    ? 'bg-gradient-to-br from-purple-500/40 to-cyan-500/40 text-white shadow-[0_0_24px_rgba(168,85,247,0.4)]'
-                    : 'bg-gradient-to-br from-purple-600 via-fuchsia-500 to-pink-500 text-white shadow-[0_0_24px_rgba(168,85,247,0.5)] hover:shadow-[0_0_32px_rgba(168,85,247,0.6)]'
-                }`}
-              >
-                <Video className="h-5 w-5 md:h-6 md:w-6 transition-transform duration-200 group-hover:scale-110" />
-                <span className="text-xs font-bold leading-none md:text-sm">Go Live</span>
-                {isActive('/broadcast') && (
-                  <span className="absolute -bottom-0.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-cyan-400" />
-                )}
-              </Link>
               <ProfileModule collapsed={false} />
             </div>
 
@@ -876,33 +969,20 @@ export default function BottomNavBar() {
                   showLevelOrb={isMobile}
                 />
               </nav>
-            ) : (
-              /* DESKTOP: Full nav row */
-              <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide md:gap-1.5 lg:gap-2">
-                 <NavButton icon={Home} label="Home" to="/home" active={isActive('/home') || isActive('/')} badge={badges.home} badgeKey="home" onBadgeDismiss={badges.dismiss} />
-                 <NavButton icon={MessageCircle} label="Chats" to="/utromail" active={isActive('/utromail')} badge={badges.chats} badgeKey="chats" onBadgeDismiss={badges.dismiss} />
-                 <NavButton icon={Coins} label="Coins" to="/store" active={isActive('/store') || isActive('/coins')} badge={badges.coins} badgeKey="coins" onBadgeDismiss={badges.dismiss} />
-                 <NavButton icon={Sparkles} label="Treelz" to="/treelz" active={isActive('/treelz')} />
-                 <NavButton icon={Crown} label="High Bcasters" to="/high-bcasters" active={isActive('/high-bcasters')} />
-                  <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} />
-                   <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} badge={badges.careers} badgeKey="careers" onBadgeDismiss={badges.dismiss} />
-                  <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} />
-                <NavButton icon={GraduationCap} label="Academy" to="/academy" active={isActive('/academy')} badge={badges.academy} badgeKey="academy" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={DollarSign} label="MAI Pay" to="/mai-pay" active={isActive('/mai-pay')} />
-                <NavButton icon={Trophy} label="Leaderboard" to="/leaderboard" active={isActive('/leaderboard')} />
-                <NavButton icon={Bell} label="Alerts" to="/notifications" active={isActive('/notifications')} badge={badges.alerts} badgeKey="alerts" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Search} label="Search" to="/search" active={isActive('/search')} />
-                <NavButton icon={User} label="Profile" to={profile?.username ? `/profile/${profile.username}` : '/profile'} active={isActive('/profile')} />
-                <NavButton icon={Users} label="Family" to="/family/home" active={isActive('/family')} badge={badges.family} badgeKey="family" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Store} label="Shop" to="/marketplace" active={isActive('/marketplace')} badge={badges.shop} badgeKey="shop" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Package} label="Inventory" to="/inventory" active={isActive('/inventory')} badge={badges.inventory} badgeKey="inventory" onBadgeDismiss={badges.dismiss} />
-                 <NavButton icon={BookOpen} label="Church" to="/church" active={isActive('/church')} />
-                 <NavButton icon={Shield} label="Safety" to="/safety" active={isActive('/safety')} />
-                 <NavButton icon={Compass} label="Explore" to="/explore" active={isActive('/explore') || isActive('/live')} />
-               </nav>
-             )}
+              ) : (
+                /* DESKTOP: Door-style nav — spread tabs */
+                <nav className="flex flex-1 items-center justify-around md:justify-around">
+                  {desktopDoorTabs.map((tab) => (
+                    <DoorNavButton
+                      key={tab.to}
+                      letter={tab.letter}
+                      label={tab.label}
+                      to={tab.to}
+                      active={tab.active}
+                    />
+                  ))}
+                </nav>
+              )}
 
              {/* RIGHT: Beta Feedback + More Pages (desktop only) */}
              <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 md:flex">

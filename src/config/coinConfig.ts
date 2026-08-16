@@ -47,25 +47,15 @@ export const COINS_PER_USD = 100;
 // CASHOUT TIERS (Single Source of Truth)
 // ============================================================================
 export const CASHOUT_TIERS = [
-  { coins: 2000, usd: 5, manualReview: false, name: 'Tier 1', color: '#cd7f32', label: '' },
-  { coins: 7000, usd: 10, manualReview: false, name: 'Tier 2', color: '#c0c0c0', label: '' },
-  { coins: 12000, usd: 30, manualReview: false, name: 'Tier 3', color: '#ffd700', label: '' },
-  { coins: 18000, usd: 50, manualReview: false, name: 'Tier 4', color: '#ff4dd2', label: '' },
-  { coins: 23000, usd: 85, manualReview: false, name: 'Tier 5', color: '#00ff00', label: '' },
-  { coins: 34000, usd: 115, manualReview: false, name: 'Tier 6', color: '#ff0000', label: '' },
-  { coins: 42000, usd: 150, manualReview: false, name: 'Tier 7', color: '#ff0000', label: '' },
-  { coins: 56000, usd: 215, manualReview: false, name: 'Tier 8', color: '#ff0000', label: '' },
-  { coins: 69000, usd: 300, manualReview: false, name: 'Tier 9', color: '#ff0000', label: '' },
-  { coins: 77000, usd: 350, manualReview: false, name: 'Tier 10', color: '#ff0000', label: '' },
-  { coins: 88000, usd: 415, manualReview: false, name: 'Tier 11', color: '#ff0000', label: '' },
-  { coins: 96000, usd: 475, manualReview: false, name: 'Tier 12', color: '#ff0000', label: '' },
-  { coins: 106000, usd: 600, manualReview: false, name: 'Tier 13', color: '#ff0000', label: '' },
-  { coins: 120000, usd: 700, manualReview: false, name: 'Tier 14', color: '#ff0000', label: '' },
-  { coins: 135000, usd: 800, manualReview: false, name: 'Tier 15', color: '#ff0000', label: '' },
-  { coins: 150000, usd: 950, manualReview: false, name: 'Tier 16', color: '#ff0000', label: '' },
-  { coins: 170000, usd: 1100, manualReview: false, name: 'Tier 17', color: '#ff0000', label: '' },
-  { coins: 190000, usd: 1300, manualReview: false, name: 'Tier 18', color: '#ff0000', label: '' },
-  { coins: 210000, usd: 1500, manualReview: false, name: 'Tier 19', color: '#ff0000', label: '' },
+  { coins: 4000, usd: 5, manualReview: false, name: 'Tier 1', color: '#cd7f32', label: '' },
+  { coins: 8000, usd: 10, manualReview: false, name: 'Tier 2', color: '#c0c0c0', label: '' },
+  { coins: 16000, usd: 20, manualReview: false, name: 'Tier 3', color: '#ffd700', label: '' },
+  { coins: 24000, usd: 30, manualReview: false, name: 'Tier 4', color: '#ff4dd2', label: '' },
+  { coins: 40000, usd: 50, manualReview: false, name: 'Tier 5', color: '#00ff00', label: '' },
+  { coins: 80000, usd: 100, manualReview: false, name: 'Tier 6', color: '#ff0000', label: '' },
+  { coins: 200000, usd: 250, manualReview: false, name: 'Tier 7', color: '#ff0000', label: '' },
+  { coins: 400000, usd: 500, manualReview: false, name: 'Tier 8', color: '#ff0000', label: '' },
+  { coins: 880000, usd: 1100, manualReview: false, name: 'Tier 9', color: '#ff0000', label: '' },
 ] as const;
 
 // Alias exports for backward compatibility with old payoutTiers imports
@@ -75,7 +65,7 @@ export const TIERS = CASHOUT_TIERS;
 export type CashoutTier = typeof CASHOUT_TIERS[number];
 
 // Minimum coins required for any cashout
-export const MIN_CASHOUT_COINS = 2000;
+export const MIN_CASHOUT_COINS = 4000;
 
 // ============================================================================
 // PLATFORM CAPACITY LIMITS
@@ -97,19 +87,15 @@ export const MAI_PAY_PLUS_ITEM_KEY = 'mai_pay_plus';
  * Get cashout rate (USD per coin) for a given coin amount
  */
 export function getRateForCoins(coins: number): number {
-  if (coins >= 106000) return 600 / 106000;
-  if (coins >= 96000) return 475 / 96000;
-  if (coins >= 88000) return 415 / 88000;
-  if (coins >= 77000) return 350 / 77000;
-  if (coins >= 69000) return 300 / 69000;
-  if (coins >= 56000) return 215 / 56000;
-  if (coins >= 42000) return 150 / 42000;
-  if (coins >= 34000) return 115 / 34000;
-  if (coins >= 23000) return 85 / 23000;
-  if (coins >= 18000) return 50 / 18000;
-  if (coins >= 12000) return 30 / 12000;
-  if (coins >= 7000) return 10 / 7000;
-  if (coins >= 2000) return 5 / 2000;
+  if (coins >= 880000) return 1100 / 880000;
+  if (coins >= 400000) return 500 / 400000;
+  if (coins >= 200000) return 250 / 200000;
+  if (coins >= 80000) return 100 / 80000;
+  if (coins >= 40000) return 50 / 40000;
+  if (coins >= 24000) return 30 / 24000;
+  if (coins >= 16000) return 20 / 16000;
+  if (coins >= 8000) return 10 / 8000;
+  if (coins >= 4000) return 5 / 4000;
   return 0;
 }
 

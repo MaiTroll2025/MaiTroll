@@ -3,7 +3,7 @@ import { X, Shield, Ban, EyeOff, AlertTriangle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { ModerationReport, TakeActionPayload } from '../types/moderation'
-import api from '../lib/api'
+import { rpcRejectReport, rpcTakeAction } from '../types/moderationActions'
 
 interface ReportDetailsModalProps {
   report: ModerationReport
@@ -38,19 +38,15 @@ export default function ReportDetailsModal({
     }
 
     if (actionType === 'reject') {
-      // Handle reject separately
       setLoading(true)
       try {
-        const response = await api.post('/moderation-actions', {
-          action: 'reject_report',
-          report_id: reportId
-        })
+        const response = await rpcRejectReport(reportId)
 
         if (response.success) {
           toast.success('Report rejected')
           onActionTaken()
         } else {
-          toast.error(response.error || 'Failed to reject report')
+          toast.error(response.message || 'Failed to reject report')
         }
       } catch (err: any) {
         console.error('Reject error:', err)
@@ -63,7 +59,6 @@ export default function ReportDetailsModal({
 
     setLoading(true)
     try {
-      // Calculate arrest expiry if temporary arrest
       let expiresAt = null
       if (actionType === 'arrest' && !isPermanentBan && banDurationHours) {
         const expiryDate = new Date()
@@ -71,28 +66,23 @@ export default function ReportDetailsModal({
         expiresAt = expiryDate.toISOString()
       }
 
-      const payload: TakeActionPayload = {
-        report_id: reportId,
-        action_type: actionType as 'warn' | 'suspend_stream' | 'arrest',
-        target_user_id: report.target_user_id || null,
-        stream_id: report.stream_id || null,
-        reason: actionReason,
-        action_details: actionDetails.trim() || null,
-        expires_at: expiresAt,
-        ban_duration_hours: banDurationHours,
-        honesty_message_shown: true
-      }
-
-      const response = await api.post('/moderation-actions', {
-        action: 'take_action',
-        ...payload
-      })
+      const response = await rpcTakeAction(
+        reportId,
+        actionType as 'warn' | 'suspend_stream' | 'arrest',
+        report.target_user_id || null,
+        report.stream_id || null,
+        actionReason,
+        actionDetails.trim() || null,
+        expiresAt,
+        banDurationHours || null,
+        true
+      )
 
       if (response.success) {
         toast.success(`Action taken: ${actionType}`)
         onActionTaken()
       } else {
-        toast.error(response.error || 'Failed to take action')
+        toast.error(response.message || 'Failed to take action')
       }
     } catch (err: any) {
       console.error('Action error:', err)

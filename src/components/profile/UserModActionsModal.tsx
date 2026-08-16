@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X, Loader2, Trash2, Mic, MicOff, AlertCircle, MessageSquareOff, LogOut, Ban, Shield, UserCheck, Car, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
+import { isProtectedPlatformRole } from '@/lib/protectedRoles'
 
 interface ModActionRow {
   id: string
@@ -57,6 +58,26 @@ export default function UserModActionsModal({ isOpen, onClose, userId, username,
   const [arrestSeverity, setArrestSeverity] = useState('moderate')
   const [actionReason, setActionReason] = useState('')
   const [disableKickDuration, setDisableKickDuration] = useState(24)
+  const [targetProfile, setTargetProfile] = useState<any>(null)
+
+  const loadTarget = async () => {
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('id, username, role, troll_role, is_admin')
+      .eq('id', userId)
+      .maybeSingle()
+    setTargetProfile(data || null)
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      void loadTarget()
+    }
+  }, [isOpen, userId])
+
+  const isTargetProtected = isProtectedPlatformRole(targetProfile)
+  const PROTECTED_ACTION_IDS = new Set(['mute', 'unmute', 'arrest', 'disable_chat', 'kick', 'ban', 'suspend_license', 'remove_officer', 'set_to_user'])
+  const filteredActions = isTargetProtected ? MOD_ACTIONS.filter((a) => !PROTECTED_ACTION_IDS.has(a.id)) : MOD_ACTIONS
 
   const load = async () => {
     setLoading(true)
@@ -462,7 +483,7 @@ export default function UserModActionsModal({ isOpen, onClose, userId, username,
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Perform Actions</h4>
               <div className="grid grid-cols-2 gap-2">
-                {MOD_ACTIONS.map((action) => {
+                {filteredActions.map((action) => {
                   const Icon = action.icon
                   const isLoading = actionLoading === action.id
                   const isArrest = action.id === 'arrest'

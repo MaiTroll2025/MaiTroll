@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { useXPStore } from '../stores/useXPStore'
+import { sendStreamBroadcast } from '../lib/realtime/streamRealtimeManager'
 import {
   T_LEAGUE_TIERS,
   LEAGUE_LEVELS,
@@ -34,6 +35,8 @@ export interface WeeklyGoalProgress {
 
 export interface LeagueProgressState {
   userId: string
+  streamId: string
+  username: string
   seasonKey: string
   leagueScore: number
   giftCoinsReceived: number
@@ -211,6 +214,8 @@ export function useLeagueProgress(streamId?: string | null) {
 
       const newState: LeagueProgressState = {
         userId,
+        streamId: streamId || '',
+        username: profile?.username || user?.email?.split('@')?.[0] || 'Broadcaster',
         seasonKey,
         leagueScore,
         giftCoinsReceived: Number(statsData?.gift_coins_received) || 0,
@@ -240,23 +245,58 @@ export function useLeagueProgress(streamId?: string | null) {
 
           if (curMainIdx > prevMainIdx) {
             const reward = getTierReward(mainTier, subTier)
-            setLevelUpEvent({ type: 'main_tier', previous: prevTierRef.current, current: currentFullTier, reward })
+            const event = { type: 'main_tier' as const, previous: prevTierRef.current, current: currentFullTier, reward }
+            setLevelUpEvent(event)
+            if (state) {
+              await distributeReward(reward, state.userId)
+              const tierLabel = T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.label || mainTier
+              void sendStreamBroadcast(state.streamId || '', 'league_level_up', {
+                user_id: state.userId,
+                username: state.username || 'Broadcaster',
+                type: 'main_tier',
+                previous: prevTierRef.current,
+                current: currentFullTier,
+                tierLabel,
+                icon: T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.icon || '⭐',
+              }).catch(() => {})
+            }
           } else {
             const reward = getTierReward(mainTier, subTier)
-            setLevelUpEvent({ type: 'sub_tier', previous: prevTierRef.current, current: currentFullTier, reward })
-          }
-
-          if (state) {
-            await distributeReward(reward, state.userId)
+            const event = { type: 'sub_tier' as const, previous: prevTierRef.current, current: currentFullTier, reward }
+            setLevelUpEvent(event)
+            if (state) {
+              await distributeReward(reward, state.userId)
+              const tierLabel = T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.label || mainTier
+              void sendStreamBroadcast(state.streamId || '', 'league_level_up', {
+                user_id: state.userId,
+                username: state.username || 'Broadcaster',
+                type: 'sub_tier',
+                previous: prevTierRef.current,
+                current: currentFullTier,
+                tierLabel,
+                icon: T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.icon || '⭐',
+              }).catch(() => {})
+            }
           }
         }
 
         if (prevLevelRef.current > 0 && leagueLevel > prevLevelRef.current) {
           const reward = getLeagueLevelReward(leagueLevel)
-          setLevelUpEvent({ type: 'league_level', previous: `Lv.${prevLevelRef.current}`, current: `Lv.${leagueLevel}`, reward })
+          const event = { type: 'league_level' as const, previous: `Lv.${prevLevelRef.current}`, current: `Lv.${leagueLevel}`, reward }
+          setLevelUpEvent(event)
 
           if (state) {
             await distributeReward(reward, state.userId)
+            const lvlInfo = LEAGUE_LEVELS.find(l => l.level === leagueLevel)
+            void sendStreamBroadcast(state.streamId || '', 'league_level_up', {
+              user_id: state.userId,
+              username: state.username || 'Broadcaster',
+              type: 'league_level',
+              previous: `Lv.${prevLevelRef.current}`,
+              current: `Lv.${leagueLevel}`,
+              tierLabel: lvlInfo?.label || `Level ${leagueLevel}`,
+              icon: lvlInfo?.icon || '🏆',
+            }).catch(() => {})
           }
         }
       }

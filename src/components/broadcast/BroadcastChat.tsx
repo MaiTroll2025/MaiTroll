@@ -20,6 +20,7 @@ import { shouldAutoHideMessage, canControlSlowMode, shouldShowGoldenBanner } fro
 import { useChatBlockStatus } from '../../hooks/useChatBlockStatus';
 import { useStreamRealtime } from '../../hooks/useStreamRealtime';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration';
+import { sendChatThroughGate } from '../../lib/sendChatThroughGate';
 import { moderation } from '@/services/maitrollModeration';
 import { useUserSubscriptionTier } from '@/hooks/useCreatorSubscription';
 import { getEmotesForTier, parseEmotesInText, type SubscriberEmote } from '@/lib/subscriberEmotes';
@@ -1510,29 +1511,8 @@ const fetchMessages = async () => {
 
     // 5. Save first so server-side moderation enforcement wins over realtime.
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('Not authenticated');
-
-        const response = await fetch(`${import.meta.env.VITE_EDGE_FUNCTIONS_URL}/send-message`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${session.access_token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: 'chat',
-                stream_id: streamId,
-                txn_id: txnId,
-                data: { content }
-            })
-        });
-
-        if (!response.ok) {
-            const rawText = await response.text();
-            throw new Error(rawText || response.statusText);
-        }
-
-        if (broadcastChannelRef.current) {
+        const result = await sendChatThroughGate({ streamId, content, txnId })
+        if (result.ok && broadcastChannelRef.current) {
             broadcastChannelRef.current.send({
                 type: 'broadcast',
                 event: 'chat',

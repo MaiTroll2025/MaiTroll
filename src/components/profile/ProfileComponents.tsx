@@ -12,7 +12,7 @@ import {
     CheckCircle, Shield, Crown, Heart, MessageCircle, UserPlus,
     Settings, Package, History, Bookmark, Send, MoreHorizontal,
     ShoppingCart, Hammer, BookOpen, Newspaper, Scale, Ticket, AlertTriangle, ShieldAlert,
-    Camera, Music, Disc3, Mic2
+    Camera, Music, Disc3, Mic2, Key
 } from 'lucide-react';
 
 interface UserProfile {
@@ -508,6 +508,7 @@ export const PROFILE_TABS = [
     { key: 'church', label: 'Church', icon: BookOpen },
     { key: 'subscriptions', label: 'Subscriptions', icon: Crown },
     { key: 'badges', label: 'Badges', icon: Award },
+    { key: 'keys', label: 'Keys', icon: Key },
     { key: 'inventory', label: 'Inventory & Perks', icon: Package },
     { key: 'purchases', label: 'Purchase History', icon: History },
     { key: 'settings', label: 'Settings', icon: Settings },

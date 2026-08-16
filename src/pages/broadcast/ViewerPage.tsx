@@ -87,6 +87,7 @@ import RaidPanel from '../../components/city/RaidPanel'
 import { useGhostMode } from '../../hooks/useGhostMode'
 import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
 import { sendChatThroughGate } from '../../lib/sendChatThroughGate'
+import { sendStreamBroadcast } from '../../lib/realtime/streamRealtimeManager'
 import { admitViewerToStream, releaseViewerSlot } from '@/lib/streamCapacity'
 import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
 
@@ -1445,42 +1446,73 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
 
   const { boxCount: hookBoxCount } = useBoxCount({
     streamId: streamId || '',
-    initialBoxCount: (stream as any)?.seat_count || (stream as any)?.box_count || defaultSeatCount || 1,
+    initialBoxCount: ((stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) + 1 : undefined) || (stream as any)?.box_count || defaultSeatCount || 1,
     isHost: false,
   })
 
-  const effectiveBoxCount = useMemo(() => {
-    // Celeb streams do not have guest seats — only the broadcaster tile.
-    if ((stream as any)?.stream_type === 'celeb_stream') return 1
+   const effectiveBoxCount = useMemo(() => {
+     // Celeb streams do not have guest seats — only the broadcaster tile.
+     if ((stream as any)?.stream_type === 'celeb_stream') return 1
 
-    // Prefer seat_count (new field), fall back to box_count, then seat_prices.
-    // The broadcaster occupies the first box, so we cap the total at 8 boxes (7 seats + host).
-    const seatCount = (stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) : undefined
-    if (seatCount !== undefined) {
-      if (seatCount === 0) return 1 // broadcaster only, 1 box
-      return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCount))
-    }
+     // box_count is the authoritative total-box count (including broadcaster).
+     // seat_count is guest-seat-only for new data, but old rows may equal box_count.
+     const boxCount = Number((stream as any)?.box_count ?? 0)
+     if (boxCount > 0) {
+       return Math.max(1, Math.min(MAX_TOTAL_BOXES, boxCount))
+     }
 
-    const boxCount = Number((stream as any)?.box_count ?? 0)
-    if (boxCount > 0) {
-      return Math.max(1, Math.min(MAX_TOTAL_BOXES, boxCount))
-    }
+     const seatCount = (stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) : undefined
+     if (seatCount !== undefined) {
+       if (seatCount === 0) return 1 // broadcaster only, 1 box
+       return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCount + 1))
+     }
 
-    const seatCountFromPrices = Array.isArray((stream as any)?.seat_prices)
-      ? Math.max(1, (stream as any).seat_prices.length)
-      : 0
+     const seatCountFromPrices = Array.isArray((stream as any)?.seat_prices)
+       ? Math.max(1, (stream as any).seat_prices.length)
+       : 0
 
-    if (seatCountFromPrices > 0) {
-      return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCountFromPrices))
-    }
+     if (seatCountFromPrices > 0) {
+       return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCountFromPrices))
+     }
 
-    return 1 // default: broadcaster only
-  }, [stream, hookBoxCount])
+     return 1 // default: broadcaster only
+   }, [stream, hookBoxCount])
 
-   // Layout mode: 'split' for <=7 total boxes, 'grid' for >7
    const layoutMode = useMemo(() => {
      return effectiveBoxCount <= 7 ? 'split' : 'grid'
    }, [effectiveBoxCount])
+
+    const refreshStageConfig = useCallback(async () => {
+     if (!streamId || streamEndedRef.current) return
+
+     const { data, error } = await supabase
+       .from('streams')
+       .select(
+         'id, status, is_live, ended_at, seat_count, box_count, seat_price, seat_prices, are_seats_locked',
+       )
+       .eq('id', streamId)
+       .maybeSingle()
+
+     if (error) {
+       console.warn('[ViewerPage] refreshStageConfig failed:', error)
+       return
+     }
+
+     if (!data) return
+
+     setStream((prev) => {
+       if (!prev) return data as unknown as Stream
+       return {
+         ...(prev as any),
+         ...(data as any),
+         seat_count: typeof data.seat_count !== 'undefined' ? data.seat_count : (prev as any).seat_count,
+         box_count: typeof data.box_count !== 'undefined' ? data.box_count : (prev as any).box_count,
+         seat_price: typeof data.seat_price !== 'undefined' ? data.seat_price : (prev as any).seat_price,
+         seat_prices: typeof data.seat_prices !== 'undefined' ? data.seat_prices : (prev as any).seat_prices,
+         are_seats_locked: typeof data.are_seats_locked !== 'undefined' ? data.are_seats_locked : (prev as any).are_seats_locked,
+       } as Stream
+     })
+   }, [streamId, setStream])
 
     const {
       seats,
@@ -1494,10 +1526,22 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       removeSeat,
       removeSeatByUserId,
       handleParticipantDisconnected,
-    } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any)
-   const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id)
+    } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any, refreshStageConfig)
+    const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id)
 
+   const [showViewerList, setShowViewerList] = useState(false)
+   const onActiveViewersClick = useCallback(() => {
+     setShowViewerList(prev => !prev)
+   }, [])
+
+   // Mirror active audience presence into viewerCount so the header ticker
+   // shows a live count even when streams.current_viewers has not been
+   // refreshed yet by the broadcaster-side RPC.
    useEffect(() => {
+     setViewerCount((prev) => Math.max(prev, activeAudience.length))
+   }, [activeAudience.length])
+
+    useEffect(() => {
      joinAudienceRef.current = joinAudience
    }, [joinAudience])
 
@@ -1595,6 +1639,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
   // Tracks whether the current user was muted by a moderator so they cannot
   // unmute themselves while the moderator mute is active.
   const isModeratorMutedRef = useRef(false)
+  const moderatorMuteTimestampRef = useRef(0)
+  const moderatorMuteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleStartSeatBattle = useCallback(async () => {
     if (!stream?.id || !user?.id || !isUserOnStage) return
@@ -1606,7 +1652,45 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
         p_captain_id: user.id,
       })
 
-      if (error) {
+   // ── Seat Debug Overlay (dev only) ──
+   const [seatDebugOpen, setSeatDebugOpen] = useState(false)
+   const [seatErrors, setSeatErrors] = useState<string[]>([])
+   const prevEffectiveBoxCountRef = useRef(effectiveBoxCount)
+   const prevSeatCountRef = useRef(Object.keys(seats).length)
+
+   useEffect(() => {
+     if (!import.meta.env.DEV) return
+     const changed: string[] = []
+     if (prevEffectiveBoxCountRef.current !== effectiveBoxCount) {
+       changed.push(`boxCount: ${prevEffectiveBoxCountRef.current} -> ${effectiveBoxCount}`)
+       prevEffectiveBoxCountRef.current = effectiveBoxCount
+     }
+     const seatCount = Object.keys(seats).length
+     if (prevSeatCountRef.current !== seatCount) {
+       changed.push(`seats: ${prevSeatCountRef.current} -> ${seatCount}`)
+       prevSeatCountRef.current = seatCount
+     }
+     if (changed.length > 0 && seatDebugOpen) {
+       setSeatErrors(prev => [...prev.slice(-50), `[${new Date().toLocaleTimeString()}] ${changed.join(', ')}`])
+     }
+   }, [effectiveBoxCount, seats, seatDebugOpen])
+
+   // Listen for useStreamSeats errors via console or add explicit error boundary
+   useEffect(() => {
+     if (!import.meta.env.DEV || !seatDebugOpen) return
+     const originalError = console.error
+     const handler = (...args: any[]) => {
+       const msg = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ')
+       if (msg.includes('seat') || msg.includes('Seat') || msg.includes('useStreamSeats')) {
+         setSeatErrors(prev => [...prev.slice(-50), `ERROR: ${msg}`])
+       }
+       originalError.apply(console, args)
+     }
+     console.error = handler
+     return () => { console.error = originalError }
+   }, [seatDebugOpen])
+
+   if (error) {
         console.error('[ViewerPage] captain_click_battle error:', error)
         toast.error('Failed to start battle')
         return
@@ -1698,10 +1782,12 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     }
     try {
       const currentBoxCount = Number((stream as any)?.box_count ?? effectiveBoxCount ?? 1)
+      const currentGuestSeats = Math.max(0, currentBoxCount - 1)
+      const desiredGuestSeats = Math.min(MAX_TOTAL_BOXES - 1, currentGuestSeats + 1)
+      const desiredBoxCount = desiredGuestSeats + 1
       const currentSeatPrices = Array.isArray((stream as any)?.seat_prices)
         ? (stream as any).seat_prices
         : []
-      const desiredBoxCount = Math.min(MAX_TOTAL_BOXES, currentBoxCount + 1)
       const newSeatPrices = [...currentSeatPrices]
       while (newSeatPrices.length < desiredBoxCount) {
         newSeatPrices.push(0)
@@ -1710,7 +1796,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
         .from('streams')
         .update({
           box_count: desiredBoxCount,
-          seat_count: desiredBoxCount,
+          seat_count: desiredGuestSeats,
           seat_prices: newSeatPrices,
         })
         .eq('id', streamId)
@@ -1718,7 +1804,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       setStream((current) => current ? {
         ...current,
         box_count: desiredBoxCount,
-        seat_count: desiredBoxCount,
+        seat_count: desiredGuestSeats,
         seat_prices: newSeatPrices,
       } : current)
       toast.success('Seat added to stage')
@@ -1932,8 +2018,12 @@ const isActive = isStreamActive(stream)
     if (!isUserOnStage) return
     const nextMicOn = !seatMicOn
     if (nextMicOn && isModeratorMutedRef.current) {
-      toast.error('You have been muted by a moderator.')
-      return
+      const elapsed = Date.now() - moderatorMuteTimestampRef.current
+      if (elapsed < 5000) {
+        const remaining = Math.ceil((5000 - elapsed) / 1000)
+        toast.error(`You have been muted by a moderator. Wait ${remaining}s to unmute.`)
+        return
+      }
     }
     const ok = await setMicEnabled(nextMicOn)
     if (ok) setSeatMicOn(nextMicOn)
@@ -2378,34 +2468,34 @@ const isActive = isStreamActive(stream)
     }
   }, [streamId, hostChatDisabledByOfficer, hostChatDisableRemainingMs, userChatDisabled, chatDisabledRemainingMinutes, user, profile, navigate])
 
-  const refreshStream = useCallback(async () => {
-    if (!streamId || streamEndedRef.current) return
+   const refreshStream = useCallback(async () => {
+     if (!streamId || streamEndedRef.current) return
 
-    const { data, error } = await supabase
-      .from('streams')
-      .select('id, status, is_live, ended_at')
-      .eq('id', streamId)
-      .maybeSingle()
+     const { data, error } = await supabase
+       .from('streams')
+       .select('id, status, is_live, ended_at')
+       .eq('id', streamId)
+       .maybeSingle()
 
-    if (error) {
-      console.warn('[ViewerPage] refreshStream failed:', error)
-      return
-    }
+     if (error) {
+       console.warn('[ViewerPage] refreshStream failed:', error)
+       return
+     }
 
-    if (!data) return
+     if (!data) return
 
-    if (isStreamEnded(data as unknown as Stream)) {
-      streamEndedRef.current = true
-      leaveLiveKitRoom().catch(() => {})
-      hasJoinedAudienceRef.current = false
-      joiningAudienceRef.current = false
-      currentRoomKeyRef.current = null
-      navigate(`/broadcast/summary/${(data as any).id}`, { replace: true })
-      return
-    }
-  }, [streamId, navigate])
+     if (isStreamEnded(data as unknown as Stream)) {
+       streamEndedRef.current = true
+       leaveLiveKitRoom().catch(() => {})
+       hasJoinedAudienceRef.current = false
+       joiningAudienceRef.current = false
+       currentRoomKeyRef.current = null
+       navigate(`/broadcast/summary/${(data as any).id}`, { replace: true })
+       return
+     }
+   }, [streamId, navigate])
 
-const handleLeaveSeat = useCallback(async () => {
+   const handleLeaveSeat = useCallback(async () => {
     try {
       await unpublishLocalTracks()
     } catch (err) {
@@ -2437,15 +2527,24 @@ const handleLeaveSeat = useCallback(async () => {
          p_like_count: batch,
        });
 
-       if (error) throw error;
+        if (error) throw error;
 
-       if (typeof data === 'number') {
-         setStream((prev: any) => {
-           if (!prev) return prev;
-           return { ...prev, total_likes: data };
-         });
-       }
-     } catch (error) {
+        if (typeof data === 'number') {
+          setStream((prev: any) => {
+            if (!prev) return prev;
+            return { ...prev, total_likes: data };
+          });
+          try {
+            void sendStreamBroadcast(streamId, 'like_sent', {
+              user_id: user?.id,
+              stream_id: streamId,
+              total_likes: data,
+            });
+          } catch (err) {
+            if (import.meta.env.DEV) console.warn('[ViewerPage] like broadcast failed:', err);
+          }
+        }
+      } catch (error) {
        pendingLikesRef.current += batch;
        console.error('Failed to flush likes:', error);
      } finally {
@@ -2627,6 +2726,7 @@ const handleLeaveSeat = useCallback(async () => {
             'total_likes',
             'total_gifts_coins',
             'box_count',
+            'seat_count',
             'seat_price',
             'seat_prices',
             'current_viewers',
@@ -2660,6 +2760,7 @@ const handleLeaveSeat = useCallback(async () => {
 
       setStream(data as unknown as Stream)
       setViewerCount(Number((data as any).current_viewers || 0))
+      void refreshStageConfig()
 
       if ((data as any).user_id) {
         const { data: hostProfile, error: hostProfileError } = await supabase
@@ -2686,14 +2787,6 @@ const handleLeaveSeat = useCallback(async () => {
       cancelled = true
     }
   }, [streamId, navigate])
-
-  // Poll for stream end as a fallback when realtime postgres_changes for the
-  // streams table is unavailable (e.g. table not in supabase_realtime publication).
-  useEffect(() => {
-    if (!streamId) return
-    const interval = window.setInterval(() => void refreshStream(), 10000)
-    return () => window.clearInterval(interval)
-  }, [streamId, refreshStream])
 
   // Canonical gift-animation source: stream_gifts postgres_changes received
   // via useStreamRealtime. event.new.id is the stream_gifts row UUID — the
@@ -2787,12 +2880,24 @@ useStreamRealtime(
             return {
               ...(prev as any),
               ...(next as any),
+              seat_count: typeof next.seat_count !== 'undefined' ? next.seat_count : (prev as any).seat_count,
               box_count: typeof next.box_count !== 'undefined' ? next.box_count : (prev as any).box_count,
+              are_seats_locked: typeof next.are_seats_locked !== 'undefined' ? next.are_seats_locked : (prev as any).are_seats_locked,
               seat_price: typeof next.seat_price !== 'undefined' ? next.seat_price : (prev as any).seat_price,
               seat_prices: typeof next.seat_prices !== 'undefined' ? next.seat_prices : (prev as any).seat_prices,
               total_likes: typeof next.total_likes !== 'undefined' ? next.total_likes : (prev as any).total_likes,
             } as Stream
           })
+
+          const hasStageConfigUpdate =
+            typeof next.seat_count !== 'undefined' ||
+            typeof next.box_count !== 'undefined' ||
+            typeof next.seat_prices !== 'undefined' ||
+            typeof next.are_seats_locked !== 'undefined'
+
+          if (hasStageConfigUpdate) {
+            void refreshStageConfig()
+          }
 
           if (typeof next.current_viewers !== 'undefined') {
             setViewerCount(Number(next.current_viewers || 0))
@@ -2955,6 +3060,7 @@ useStreamRealtime(
         void leaveAudienceRef.current?.()
         leaveLiveKitRoomRef.current?.().catch(() => {})
         void leaveSeatRef.current?.()
+        if (moderatorMuteTimerRef.current) clearTimeout(moderatorMuteTimerRef.current)
       }
     }, [])
 
@@ -2967,12 +3073,23 @@ useStreamRealtime(
     // the published track. This is what stops the user's mic from still working
     // after a moderator mute.
     const applyModeratorMute = useCallback(async () => {
+      moderatorMuteTimestampRef.current = Date.now()
       isModeratorMutedRef.current = true
+      if (moderatorMuteTimerRef.current) clearTimeout(moderatorMuteTimerRef.current)
+      moderatorMuteTimerRef.current = setTimeout(() => {
+        isModeratorMutedRef.current = false
+        moderatorMuteTimestampRef.current = 0
+        moderatorMuteTimerRef.current = null
+        toast.info('You can now unmute your microphone')
+      }, 5000)
       try { await localAudioTrackRef.current?.mute() } catch {}
       setSeatMicOn(false)
     }, [])
 
     const clearModeratorMute = useCallback(async () => {
+      if (moderatorMuteTimerRef.current) clearTimeout(moderatorMuteTimerRef.current)
+      moderatorMuteTimerRef.current = null
+      moderatorMuteTimestampRef.current = 0
       isModeratorMutedRef.current = false
       try { await localAudioTrackRef.current?.unmute() } catch {}
       setSeatMicOn(true)
@@ -3282,6 +3399,32 @@ useStreamRealtime(
     return () => { cancelled = true }
   }, [streamId, stream?.id, stream?.status, stream?.is_live, roomId, user?.id, joinAsAudience, stableAnonId, retryAdmissionKey])
 
+  // Transition watcher: when the user goes from off-stage to on-stage, the
+  // focused join effect above has already joined LiveKit as plain audience
+  // (publishCapable: false). Re-join with publishCapable: true so the
+  // publisher effect below can publish immediately without hitting a
+  // permission error and without ever tearing the room down.
+  const wasOnStageRef = useRef(isUserOnStage)
+  useEffect(() => {
+    if (wasOnStageRef.current) { wasOnStageRef.current = isUserOnStage; return }
+    wasOnStageRef.current = isUserOnStage
+    if (!isUserOnStage) return
+
+    joiningAudienceRef.current = false
+    hasJoinedAudienceRef.current = false
+    joiningAudienceRef.current = false
+    audienceJoinAttemptedKeyRef.current = null
+    currentRoomKeyRef.current = null
+
+    void joinAsAudience({
+      userId: viewerIdentityRef.current || viewerIdentity,
+      streamId,
+      roomName: roomId,
+      viewerIdentity: viewerIdentityRef.current || viewerIdentity,
+      publishCapable: true,
+    }).catch(() => {})
+  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience])
+
   const stageSlots = useMemo(() => {
     const liveSeats = activeSeats.slice(0, Math.max(0, effectiveBoxCount - 1))
     const emptyCount = Math.max(1, effectiveBoxCount - 1 - liveSeats.length)
@@ -3372,22 +3515,33 @@ useStreamRealtime(
     }
   }, [stream?.is_battle, stream?.battle_id, streamId]);
 
+  // ── Seat Debug Overlay (dev only) ──
+  const [seatDebugOpen, setSeatDebugOpen] = useState(false)
+  const prevEffectiveBoxCountRef = useRef(effectiveBoxCount)
+  const prevSeatCountRef = useRef(Object.keys(seats).length)
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !seatDebugOpen) return
+    const changed: string[] = []
+    if (prevEffectiveBoxCountRef.current !== effectiveBoxCount) {
+      changed.push(`effectiveBoxCount: ${prevEffectiveBoxCountRef.current} -> ${effectiveBoxCount}`)
+      prevEffectiveBoxCountRef.current = effectiveBoxCount
+    }
+    const seatCount = Object.keys(seats).length
+    if (prevSeatCountRef.current !== seatCount) {
+      changed.push(`seats: ${prevSeatCountRef.current} -> ${seatCount}`)
+      prevSeatCountRef.current = seatCount
+    }
+    if (changed.length > 0) {
+      console.log('[ViewerPage][SeatDebug]', changed.join(', '))
+    }
+  }, [effectiveBoxCount, seats, seatDebugOpen])
+
   if (error) {
     return (
       <div className={cn('flex flex-col items-center justify-center h-dvh text-white', theme.pageBg)}>
         <div className="rounded-3xl border border-red-400/30 bg-red-950/30 px-8 py-6 text-center shadow-[0_0_35px_rgba(239,68,68,0.2)] backdrop-blur-2xl">
           <p className="text-red-300 font-bold">{error}</p>
-        </div>
-      </div>
-    ) 
-  }
-
-  if (!stream || !streamLoaded) {
-    return (
-      <div className={cn('flex h-dvh items-center justify-center text-white', theme.pageBg)}>
-        <div className="rounded-3xl border border-cyan-400/20 bg-white/[0.035] px-8 py-6 text-center shadow-[0_0_35px_rgba(45,212,191,0.2)] backdrop-blur-2xl">
-          <div className="text-lg font-black">Loading broadcast…</div>
-          <div className="mt-2 text-sm text-cyan-100/60">Connecting to Mai Troll LiveKit.</div>
         </div>
       </div>
     )
@@ -3576,30 +3730,31 @@ useStreamRealtime(
                     </button>
                   </div>
                   <BroadcastNeonHeader
-                 stream={stream}
-                 broadcasterProfile={broadcasterProfile
-                   ? {
-                     username: broadcasterProfile.username,
-                     avatar_url: broadcasterProfile.avatar_url,
-                   }
-                   : null}
-                 isHost={false}
-                 liveViewerCount={viewerCount}
-                 handleLike={handleLike}
-                  onGift={() => onGift(hostId)}
-                  onSubscribe={() => {
-                    if (!user) {
-                      navigate('/auth?mode=login');
-                      return;
+                  stream={stream}
+                  broadcasterProfile={broadcasterProfile
+                    ? {
+                      username: broadcasterProfile.username,
+                      avatar_url: broadcasterProfile.avatar_url,
                     }
-                    setShowSubscribeModal(true);
-                  }}
-                  onShare={handleShare}
-                 onEndStream={handleLeave}
-                 coinBalance={(profile as any)?.troll_coins ?? 0}
-                 onOpenCoinStore={user?.id ? () => toast.info('Coin Store opens from the viewer action bar.') : undefined}
-                 isLive={isActive}
-                 streamStartedAt={(stream as any).started_at} />
+                    : null}
+                  isHost={false}
+                  liveViewerCount={viewerCount}
+                  handleLike={handleLike}
+                   onGift={() => onGift(hostId)}
+                   onSubscribe={() => {
+                     if (!user) {
+                       navigate('/auth?mode=login');
+                       return;
+                     }
+                     setShowSubscribeModal(true);
+                   }}
+                   onShare={handleShare}
+                  onEndStream={handleLeave}
+                  coinBalance={(profile as any)?.troll_coins ?? 0}
+                  onOpenCoinStore={user?.id ? () => toast.info('Coin Store opens from the viewer action bar.') : undefined}
+                  isLive={isActive}
+                  streamStartedAt={(stream as any)?.started_at}
+                  onActiveViewersClick={onActiveViewersClick} />
 {/* Audience Bubble Ticker and Top Subscribers Bar */}
                 <div className="w-full z-20 px-0 pt-1 pb-2 flex items-center justify-center bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 backdrop-blur-xl border-b border-cyan-400/10 shadow-[0_2px_32px_0_rgba(34,211,238,0.10)]">
                   <div className="w-full max-w-7xl mx-auto flex items-center gap-3 px-4 sm:px-0">
@@ -5323,24 +5478,54 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
         mobileSafe={isMobileViewer}
       />
 
-      {showSubscribeModal && hostId && broadcasterProfile && (
-        <SubscriptionTierSelector
-          broadcasterId={hostId}
-          broadcasterUsername={getDisplayName(broadcasterProfile, 'Broadcaster')}
-          onClose={() => setShowSubscribeModal(false)}
-          onSelect={(tierId) => {
-            setShowSubscribeModal(false)
-            const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
-            pushFloatingSystemMessage(`${username} subscribed to ${hostName}`)
-            setSubscriptionPopup({
-              visible: true,
-              broadcaster: hostName,
-            })
-          }}
-        />
-      )}
+       {showSubscribeModal && hostId && broadcasterProfile && (
+         <SubscriptionTierSelector
+           broadcasterId={hostId}
+           broadcasterUsername={getDisplayName(broadcasterProfile, 'Broadcaster')}
+           onClose={() => setShowSubscribeModal(false)}
+           onSelect={(tierId) => {
+             setShowSubscribeModal(false)
+             const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
+             pushFloatingSystemMessage(`${username} subscribed to ${hostName}`)
+             setSubscriptionPopup({
+               visible: true,
+               broadcaster: hostName,
+             })
+           }}
+         />
+       )}
 
-       {isPaidChatModalOpen && (
+       {showViewerList && (
+         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
+           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+             <div className="mb-4 flex items-center justify-between">
+               <h3 className="text-base font-black text-white">Active Viewers</h3>
+               <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
+                 <X size={18} />
+               </button>
+             </div>
+             <div className="max-h-80 overflow-y-auto space-y-2">
+               {audience.length === 0 ? (
+                 <p className="text-sm text-zinc-500">No active viewers</p>
+               ) : (
+                 audience.filter(m => m.is_active && !m.left_at).map(member => (
+                   <div key={member.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                     <div className="h-8 w-8 shrink-0 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
+                       {member.username?.charAt(0)?.toUpperCase() || '?'}
+                     </div>
+                     <div className="min-w-0 flex-1">
+                       <div className="truncate text-sm font-bold text-white">{member.username || 'Viewer'}</div>
+                       <div className="text-xs text-zinc-500">{member.role || 'audience'}</div>
+                     </div>
+                   </div>
+                 ))
+               )}
+             </div>
+           </div>
+         </div>
+       )}
+
+        {isPaidChatModalOpen && (
          <PaidChatViewerModal
            isOpen={isPaidChatModalOpen}
            onClose={() => setIsPaidChatModalOpen(false)}

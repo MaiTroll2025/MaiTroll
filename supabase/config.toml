@@ -392,7 +392,7 @@ entrypoint = "./functions/get-how-to-video-url/index.ts"
 
 [functions.moderation-actions]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 entrypoint = "./functions/moderation-actions/index.ts"
 
 [functions.signup]

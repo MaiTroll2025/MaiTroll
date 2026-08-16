@@ -21,6 +21,7 @@ interface AppLayoutProps {
   mobileFloatingActionButton?: ReactNode
   mobileBodyClassName?: string
   mobileShellClassName?: string
+  isJailed?: boolean
 }
 
 export default function AppLayout({ 
@@ -34,6 +35,7 @@ export default function AppLayout({
   mobileFloatingActionButton,
   mobileBodyClassName = '',
   mobileShellClassName = '',
+  isJailed = false,
 }: AppLayoutProps) {
    const location = useLocation();
    const showLegacySidebar = useAuthStore((s) => s.showLegacySidebar)
@@ -56,7 +58,7 @@ export default function AppLayout({
    // New bottom nav bar is always shown (replaces sidebar on all screen sizes)
    // Hidden on live pages and treelz pages
    const isHytroGamingSetupLivePage = location.pathname.startsWith('/broadcast/setup/gaming') && hytroSetupLive
-    const showNewBottomNavBar = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage
+    const showNewBottomNavBar = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed
 
   // Setup global message notifications - opens chat bubble when message received
   useEffect(() => {
@@ -85,14 +87,14 @@ export default function AppLayout({
   }, [isThemeExemptPage]);
 
    const effectiveShowSidebar = false;
-    const effectiveShowHeader = showHeader && !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage;
+    const effectiveShowHeader = showHeader && !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed;
    const effectiveShowBottomNav = false;
     const mainOverflowClass = isLivePage || isHytroGamingSetupLivePage || isSingOffPage ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto touch-pan-y scrollbar-thin scrollbar-thumb-purple-900/30 scrollbar-track-transparent';
    // The new bottom nav bar is ~64px tall on mobile (h-16) and ~144px tall on
    // desktop (md:h-36) plus the safe-area inset. The old 64px bottom padding
    // left the lower portion of every page hidden behind the fixed nav, so
    // content could never be scrolled fully into view. Pad past the tallest bar.
-    const mainPaddingClass = showNewBottomNavBar && !isLivePage && !isHytroGamingSetupLivePage
+    const mainPaddingClass = showNewBottomNavBar && !isLivePage && !isHytroGamingSetupLivePage && !isJailed
       ? 'pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-[calc(156px+env(safe-area-inset-bottom,0px))]'
       : '';
   const appThemeClass = isThemeExemptPage ? 'tc-theme-exempt' : 'tc-app-shell';

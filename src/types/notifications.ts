@@ -83,12 +83,23 @@ export type NotificationType =
   | 'wallet_adjustment'
   | 'refund_issued'
 
-  // HYPE COINS
-  | 'hype_coin_earned'
-  | 'hype_coin_daily_cap_reached'
-  | 'hype_coin_weekly_cap_reached'
-  | 'hype_coins_converted'
-  | 'hype_coin_adjustment'
+   // HYPE COINS
+   | 'hype_coin_earned'
+   | 'hype_coin_daily_cap_reached'
+   | 'hype_coin_weekly_cap_reached'
+   | 'hype_coins_converted'
+   | 'hype_coin_adjustment'
+
+   // KEYS TO THE CITY
+   | 'key_received'
+   | 'key_trade_request'
+   | 'key_trade_accepted'
+   | 'key_trade_declined'
+   | 'key_sale_listed'
+   | 'key_sale_completed'
+   | 'key_cashout_available'
+   | 'key_cashed_out'
+   | 'maitroll_set_completed'
 
   // COURT / CITY GOVERNANCE
   | 'court_case_opened'
@@ -305,15 +316,25 @@ export interface NotificationMetadata {
   get_out_of_jail_coin_id?: string
   get_out_of_jail_coin_balance?: number
 
-  // Auction/Marketplace
-  order_id?: string
-  listing_id?: string
-  bid_amount?: number
-  tracking_number?: string
-  dispute_id?: string
-  rating?: number
+   // Auction/Marketplace
+   order_id?: string
+   listing_id?: string
+   bid_amount?: number
+   tracking_number?: string
+   dispute_id?: string
+   rating?: number
 
-  // Family
+   // Keys to the City
+   key_instance_id?: string
+   key_letter?: string
+   key_rarity?: string
+   key_value?: number
+   is_key_to_city?: boolean
+   trade_request_id?: string
+   from_username?: string
+   to_username?: string
+
+   // Family
   family_id?: string
   role?: string
   xp_milestone?: number

@@ -34,6 +34,11 @@ export interface JailState {
   bondAmount?: number;
   bondAllowed?: boolean;
   reason?: string;
+  severity?: string;
+  jailedAt?: string;
+  arrestedBy?: string;
+  courtDate?: string;
+  caseId?: string;
 }
 
 export interface BondResult {
@@ -41,6 +46,7 @@ export interface BondResult {
   code?: string;
   message?: string;
   data?: {
+    [x: string]: string;
     jailId?: string;
     transactionId?: string;
     bondAmount?: number;
@@ -301,7 +307,12 @@ export const moderation = {
         scheduledReleaseAt: data.scheduled_release_at,
         bondAmount: data.bond_amount,
         bondAllowed: data.bond_allowed,
-        reason: data.reason
+        reason: data.reason,
+        severity: data.severity,
+        jailedAt: data.jailed_at,
+        arrestedBy: data.arrested_by,
+        courtDate: data.court_date,
+        caseId: data.case_id || data.jail_id
       };
     } catch (err) {
       console.error('Failed to get jail state:', err);

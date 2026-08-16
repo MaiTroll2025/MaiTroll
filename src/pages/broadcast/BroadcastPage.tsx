@@ -9,7 +9,7 @@ import { Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, RemoteParticipant, R
 
 import { isStaffUser } from '../../lib/userUtils'
 
-import { supabase, UserProfile } from '../../lib/supabase'
+import { supabase, UserProfile, getBlockedUserIds } from '../../lib/supabase'
 
 import { useAuthStore } from '../../lib/store'
 import { useStreamStore } from '../../lib/streamStore'
@@ -24,8 +24,11 @@ import {
 
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useUserLeagues } from '../../hooks/useUserLeagues'
+import { useLeagueProgress } from '../../hooks/useLeagueProgress'
 import { useTrollFamilyActivity } from '../../hooks/useTrollFamilyActivity'
+import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
 import LeagueProgressPanel from '../../components/broadcast/LeagueProgressPanel'
+import LeagueLevelUpBanner from '../../components/broadcast/LeagueLevelUpBanner'
 import FeedTheTroll from '../../components/feed-the-troll/FeedTheTroll'
 
 import { Stream } from '../../types/broadcast'
@@ -520,6 +523,7 @@ import { useSubscriberUsernames } from '@/hooks/useCreatorSubscription'
 import { useBroadcastShutdown } from '@/hooks/useBroadcastShutdown'
 import { DEFAULT_BATTLE_THEME_ID, normalizeBattleTheme } from '@/lib/battleThemes'
 import { emitEvent } from '@/lib/events'
+import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
@@ -1839,6 +1843,7 @@ useEffect(() => {
    const [giftRecipientId, setGiftRecipientId] = useState<string | null>(null)
     const [recentGifts, setRecentGifts] = useState<BroadcastGift[]>([])
     const [giftNameMap, setGiftNameMap] = useState<Record<string, string>>({})
+    const [streamSettings, setStreamSettings] = useState<{ paid_chat_enabled: boolean; paid_chat_type: string; paid_chat_price: number } | null>(null)
     const { queues: giftQueues, enqueueGift, removeGift } = useTargetedGiftQueue()
 
     const messagePopupRef = useRef<HTMLDivElement>(null)
@@ -1913,6 +1918,65 @@ useEffect(() => {
      isLoading: isUserLeaguesLoading,
    } = useUserLeagues()
 
+   const { levelUpEvent: broadcasterLevelUpEvent, dismissLevelUp: dismissBroadcasterLevelUp } = useLeagueProgress(streamId || null)
+
+   const [leagueBannerEvent, setLeagueBannerEvent] = useState<{
+     user_id: string
+     username: string
+     type: 'main_tier' | 'sub_tier' | 'league_level'
+     previous: string
+     current: string
+     tierLabel: string
+     icon: string
+   } | null>(null)
+
+   // Show league level-up banner when broadcaster levels up via useLeagueProgress
+   useEffect(() => {
+     if (!broadcasterLevelUpEvent) return
+     const tierLabel = broadcasterLevelUpEvent.type === 'league_level'
+       ? broadcasterLevelUpEvent.current
+       : broadcasterLevelUpEvent.current
+     const icon = broadcasterLevelUpEvent.type === 'main_tier'
+       ? '🏆'
+       : broadcasterLevelUpEvent.type === 'league_level'
+         ? '👑'
+         : '⭐'
+     setLeagueBannerEvent({
+       user_id: user?.id || '',
+       username: profile?.username || 'Broadcaster',
+       type: broadcasterLevelUpEvent.type,
+       previous: broadcasterLevelUpEvent.previous,
+       current: broadcasterLevelUpEvent.current,
+       tierLabel,
+       icon,
+     })
+      dismissBroadcasterLevelUp()
+    }, [broadcasterLevelUpEvent, dismissBroadcasterLevelUp, user?.id, profile?.username])
+
+    // Fetch stream settings (paid chat, etc.)
+    useEffect(() => {
+      if (!streamId) return
+      let cancelled = false
+      void (async () => {
+        const { data, error } = await supabase
+          .from('stream_settings')
+          .select('paid_chat_enabled, paid_chat_type, paid_chat_price')
+          .eq('stream_id', streamId)
+          .maybeSingle()
+        if (cancelled) return
+        if (!error && data) {
+          setStreamSettings({
+            paid_chat_enabled: Boolean(data.paid_chat_enabled),
+            paid_chat_type: data.paid_chat_type || 'per_user',
+            paid_chat_price: Number(data.paid_chat_price ?? 0),
+          })
+        } else {
+          setStreamSettings({ paid_chat_enabled: false, paid_chat_type: 'per_user', paid_chat_price: 0 })
+        }
+      })()
+      return () => { cancelled = true }
+    }, [streamId])
+
    useEffect(() => {
      setSeatModalPrices((current) => {
        const next = current.slice(0, seatModalCount)
@@ -1980,10 +2044,35 @@ const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
      const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([])
      const [pinnedMessageIds, setPinnedMessageIds] = useState<Set<string>>(new Set())
      const [messages, setMessages] = useState<Array<{id: string; username: string; content: string; createdAt: number}>>([])
-     const [chatInput, setChatInput] = useState('')
-     const [hostChatDisabledByOfficerState, setHostChatDisabledByOfficerState] = useState(false)
+      const [chatInput, setChatInput] = useState('')
+      const [hostChatDisabledByOfficerState, setHostChatDisabledByOfficerState] = useState(false)
+      const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(user?.id, streamId)
+      const [blockedUsernames, setBlockedUsernames] = useState<Set<string>>(new Set())
 
-     // Pin/unpin messages (host/broadofficer/staff only)
+      // Load blocked usernames for chat filtering
+      useEffect(() => {
+        if (!user?.id) {
+          setBlockedUsernames(new Set())
+          return
+        }
+        getBlockedUserIds().then(async (ids) => {
+          if (ids.length === 0) {
+            setBlockedUsernames(new Set())
+            return
+          }
+          const { data: profiles } = await supabase
+            .from('user_profiles')
+            .select('username, email')
+            .in('id', ids)
+          const names = new Set<string>()
+          profiles?.forEach((p: any) => {
+            if (p.username) names.add(p.username.toLowerCase())
+          })
+          setBlockedUsernames(names)
+        }).catch(() => {})
+      }, [user?.id])
+
+      // Pin/unpin messages (host/broadofficer/staff only)
      const canPinMessages = isHost || isCurrentUserBroadofficer || isOfficer
      const handlePinMessage = useCallback((messageId: string) => {
        setPinnedMessageIds(prev => new Set(prev).add(messageId))
@@ -2258,9 +2347,7 @@ const ranked = senderIds
           }
 
           const existingVideoPub = roomRef.current?.localParticipant
-            ?.getTrackPublication?.(Track.Source.Camera)?.track
-            || roomRef.current?.localParticipant
-            ?.getTrackPublication?.(Track.Kind.Video)?.track;
+            ?.getTrackPublication?.(Track.Source.Camera)?.track;
 
           if (existingVideoPub?.mediaStreamTrack?.readyState === 'live') {
             const mediaTrack = existingVideoPub.mediaStreamTrack;
@@ -3387,7 +3474,8 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       nextStream.status !== streamRef.current?.status ||
       nextStream.is_battle !== streamRef.current?.is_battle ||
       nextStream.battle_id !== streamRef.current?.battle_id ||
-      nextStream.battle_status !== streamRef.current?.battle_status;
+      nextStream.battle_status !== streamRef.current?.battle_status ||
+      nextStream.total_likes !== streamRef.current?.total_likes;
 
     const now = Date.now();
     const lastUpdate = streamRealtimeUpdateRef.current;
@@ -3682,6 +3770,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         broadcastChatMessageIdsRef.current.add(msgId)
         recentChatKeysRef.current.set(chatKey, now)
         if (!content) return
+        if (blockedUsernames.has(username.toLowerCase())) return
         const floatingMsg: FloatingMessage = {
           id: msgId,
           username,
@@ -3740,6 +3829,20 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           setStream((prev) => {
             if (!prev) return prev
             return { ...prev, total_likes: newTotal }
+          })
+        },
+        onLeagueLevelUp: (event) => {
+          const data = event.new || event.raw?.payload || {}
+          if (!data?.user_id) return
+          if (data.user_id === user?.id) return
+          setLeagueBannerEvent({
+            user_id: data.user_id,
+            username: data.username || 'Someone',
+            type: data.type || 'sub_tier',
+            previous: data.previous || '',
+            current: data.current || '',
+            tierLabel: data.tierLabel || data.current || 'New Level',
+            icon: data.icon || '⭐',
           })
         },
       });
@@ -5465,15 +5568,24 @@ const toggleMicrophone = useCallback(async () => {
          p_like_count: batch,
        });
 
-       if (error) throw error;
+        if (error) throw error;
 
-       if (typeof data === 'number') {
-         setStream((prev: any) => {
-           if (!prev) return prev;
-           return { ...prev, total_likes: data };
-         });
-       }
-     } catch (error) {
+        if (typeof data === 'number') {
+          setStream((prev: any) => {
+            if (!prev) return prev;
+            return { ...prev, total_likes: data };
+          });
+          try {
+            void sendStreamBroadcast(stream.id, 'like_sent', {
+              user_id: user?.id,
+              stream_id: stream.id,
+              total_likes: data,
+            });
+          } catch (err) {
+            if (import.meta.env.DEV) console.warn('[BroadcastPage] like broadcast failed:', err);
+          }
+        }
+      } catch (error) {
        pendingLikesRef.current += batch;
        console.error('Failed to flush likes:', error);
      } finally {
@@ -5866,6 +5978,11 @@ const toggleMicrophone = useCallback(async () => {
   const handleToggleBattleMode = useCallback(() => setIsBattleMode((active) => !active), [])
    const handleSwipeUp = useCallback(() => navigateToAdjacentStream('up'), [navigateToAdjacentStream])
 
+  const [showViewerList, setShowViewerList] = useState(false)
+  const onActiveViewersClick = useCallback(() => {
+    setShowViewerList(prev => !prev)
+  }, [])
+
   const shouldShowRandomBattleArena =
     stream?.battle_mode === 'random_queue' &&
     !!stream?.battle_id &&
@@ -6166,21 +6283,6 @@ const toggleMicrophone = useCallback(async () => {
     )
   }
 
-  // INSTANT JOIN: Show instant content while stream loads in background
-  // Use skeleton/placeholder instead of blocking with spinner
-  if (!stream) {
-    return (
-      <div className={cn('flex items-center justify-center h-dvh', theme.pageBg + ' text-white')}>
-        <div className="text-center">
-          <div className="animate-pulse">
-            <div className="h-4 bg-white/10 rounded w-48 mb-4"></div>
-            <div className="h-3 bg-white/[0.06] rounded w-32"></div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   if (shouldShowRandomBattleArena) {
     const battleLocalTracks =
       localTracks?.[0] || localTracks?.[1]
@@ -6256,9 +6358,15 @@ const toggleMicrophone = useCallback(async () => {
             )}
           >
 
-            {/* Background layers � identical to Sidebar ShellBackdrop */}
+            {/* Background layers — identical to Sidebar ShellBackdrop */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
             <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-cyan-300/65 to-transparent" />
+
+            {/* League level-up scrolling banner */}
+            <LeagueLevelUpBanner
+              event={leagueBannerEvent}
+              onDismiss={() => setLeagueBannerEvent(null)}
+            />
 
             {/* RGB broadcast effect — only when enabled, rendered ABOVE the seat grid */}
             {stream?.has_rgb_effect && !isMobileDevice && (
@@ -6288,12 +6396,14 @@ const toggleMicrophone = useCallback(async () => {
                   onEndStream={handleStreamEnd}
                   coinBalance={profile?.troll_coins ?? broadcasterProfile?.troll_coins ?? 0}
                   onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
-                  isLive={stream.status === 'live'}
-                  streamStartedAt={stream.started_at}
+                   isLive={stream?.status === 'live'}
+                   streamStartedAt={stream?.started_at}
                   onLiveKitMicMute={onLiveKitMicMute}
                   onLiveKitMicUnmute={onLiveKitMicUnmute}
                   randomBattleQueue={isHost ? randomBattleQueue : undefined}
-                 />
+                  liveViewerCount={liveViewerCount}
+                  onActiveViewersClick={onActiveViewersClick}
+                />
               )}
 
                {/* --- AUDIENCE TICKER: full-width, neon style, desktop/tablet only --- */}
@@ -6670,9 +6780,9 @@ const toggleMicrophone = useCallback(async () => {
                            ) : (
                              <div className="h-full w-full grid place-items-center text-violet-300">
                                <Ticket className="h-7 w-7" />
-                             </div>
-                           )}
-                         </div>
+                              </div>
+                        )}
+                      </div>
                          <div className="min-w-0">
                            <p className="text-sm font-bold text-white truncate">{title}</p>
                            <p className="mt-1 text-xs text-white/60">{priceVal.toLocaleString()} coins</p>
@@ -6948,8 +7058,9 @@ const toggleMicrophone = useCallback(async () => {
                     )
                   })}
                 </div>
-                )}
-              </aside>}
+                 )}
+                </aside>
+                }
 
                {/* -- GRID MODE: Individual seat tiles rendered as direct grid children -- */}
                {layoutMode === 'grid' && viewerSeatCards.map((seat) => {
@@ -7138,8 +7249,8 @@ const toggleMicrophone = useCallback(async () => {
                            isBroadOfficer={isOfficer}
                            onClick={() => setSelectedSeatUserId(seat.seatUserId)}
                          />
-                       </div>
-                     )}
+                     </div>
+                    )}
                   </div>
                 )
               })}
@@ -7264,26 +7375,21 @@ const toggleMicrophone = useCallback(async () => {
                             setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
                           }, 60_000)
 
-                          // Save to DB + broadcast to other viewers
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession()
-                            if (session) {
-                              await fetch(`${import.meta.env.VITE_EDGE_FUNCTIONS_URL}/send-message`, {
-                                method: 'POST',
-                                headers: {
-                                  Authorization: `Bearer ${session.access_token}`,
-                                  'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                  type: 'chat',
-                                  stream_id: streamId,
-                                  data: { content: text },
-                                }),
-                               })
+                           try {
+                             const result = await sendChatThroughGate({ streamId, content: text })
+                             if (result.ok) {
+                               const chatChannel = floatingChatChannelRef.current;
+                               if (chatChannel) {
+                                 chatChannel.send({
+                                   type: 'broadcast',
+                                   event: 'floating_chat',
+                                   payload: { username, content: text },
+                                 }).catch(() => {})
+                               }
                              }
-                            } catch (err) {
-                              console.warn('[BroadcastPage] send-message failed:', err)
-                            }
+                           } catch (err) {
+                             console.warn('[BroadcastPage] send-message failed:', err)
+                           }
                         }}
                         className="mt-auto border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
                       >
@@ -7425,15 +7531,83 @@ const toggleMicrophone = useCallback(async () => {
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="flex flex-col flex-1 min-h-0 items-center justify-center p-4 text-sm text-slate-500">
-                      <p className="mb-2 font-bold text-white">Settings</p>
-                      <p>Use broadcaster controls to update chat behavior and moderation.</p>
+                  ) : chatTab === 'settings' ? (
+                    <div className="flex flex-col flex-1 min-h-0 overflow-y-auto p-4 text-sm text-slate-200 space-y-4">
+                      <div className="mb-3 text-xs uppercase tracking-[0.25em] text-slate-400">Stream Settings</div>
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-black text-white">Lock Seats</p>
+                            <p className="text-xs text-slate-400">Prevent viewers from joining seats</p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={!isHost}
+                            onClick={async () => {
+                              if (!stream || !isHost) return
+                              const next = !stream.are_seats_locked
+                              const { error } = await supabase.from('streams').update({ are_seats_locked: next }).eq('id', stream.id)
+                              if (error) { toast.error('Failed to update seat lock'); return }
+                              setStream((prev: any) => prev ? { ...prev, are_seats_locked: next } : prev)
+                              toast.success(next ? 'Seats locked' : 'Seats unlocked')
+                            }}
+                            className={cn('relative h-8 w-14 shrink-0 rounded-full transition-colors', stream?.are_seats_locked ? 'bg-cyan-500' : 'bg-white/10')}
+                          >
+                            <span className={cn('absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform', stream?.are_seats_locked ? 'translate-x-7' : 'translate-x-1')} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-sm font-black text-white">Paid Chat</p>
+                            <p className="text-xs text-slate-400">Require payment to send chat messages</p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={!isHost}
+                            onClick={async () => {
+                              if (!streamId || !isHost) return
+                              const next = !streamSettings?.paid_chat_enabled
+                              const { error } = await supabase.from('stream_settings').upsert({ stream_id: streamId, paid_chat_enabled: next, updated_at: new Date().toISOString() }, { onConflict: 'stream_id' })
+                              if (error) { toast.error('Failed to update paid chat'); return }
+                              setStreamSettings((prev: any) => prev ? { ...prev, paid_chat_enabled: next } : { ...(prev || {}), paid_chat_enabled: next })
+                              toast.success(next ? 'Paid chat enabled' : 'Paid chat disabled')
+                            }}
+                            className={cn('relative h-8 w-14 shrink-0 rounded-full transition-colors', streamSettings?.paid_chat_enabled ? 'bg-cyan-500' : 'bg-white/10')}
+                          >
+                            <span className={cn('absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform', streamSettings?.paid_chat_enabled ? 'translate-x-7' : 'translate-x-1')} />
+                          </button>
+                        </div>
+                        {streamSettings?.paid_chat_enabled && (
+                          <div className="mt-3 space-y-2">
+                            <label className="text-xs text-slate-400">Price per message (coins)</label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={10000}
+                              value={streamSettings?.paid_chat_price ?? 0}
+                              onChange={(e) => {
+                                const val = Math.max(0, parseInt(e.target.value) || 0)
+                                setStreamSettings((prev: any) => prev ? { ...prev, paid_chat_price: val } : prev)
+                              }}
+                              onBlur={async () => {
+                                if (!streamId || !isHost) return
+                                const { error } = await supabase.from('stream_settings').upsert({ stream_id: streamId, paid_chat_price: streamSettings?.paid_chat_price ?? 0, updated_at: new Date().toISOString() }, { onConflict: 'stream_id' })
+                                if (error) toast.error('Failed to save price')
+                              }}
+                              className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none focus:border-cyan-400/40"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </aside>}
-              {/* In split mode, chat panel is the 3rd column inside <main> */}
+                     ): null
+                 }
+                  </div>
+                 </aside>
+              }
+                {/* In split mode, chat panel is the 3rd column inside <main> */}
               {/* In grid mode, chat panel is rendered below the grid further down */}
             </main>
 
@@ -7557,32 +7731,20 @@ const toggleMicrophone = useCallback(async () => {
                            }, 60_000)
 
                            try {
-                             const { data: { session } } = await supabase.auth.getSession()
-                             if (session) {
-                               await fetch(`${import.meta.env.VITE_EDGE_FUNCTIONS_URL}/send-message`, {
-                                 method: 'POST',
-                                 headers: {
-                                   Authorization: `Bearer ${session.access_token}`,
-                                   'Content-Type': 'application/json',
-                                 },
-                                 body: JSON.stringify({
-                                   type: 'chat',
-                                   stream_id: streamId,
-                                   data: { content: text },
-                                 }),
-                               })
+                             const result = await sendChatThroughGate({ streamId, content: text })
+                             if (result.ok) {
+                               const chatChannel = floatingChatChannelRef.current;
+                               if (chatChannel) {
+                                 chatChannel.send({
+                                   type: 'broadcast',
+                                   event: 'floating_chat',
+                                   payload: { username, content: text },
+                                 }).catch(() => {})
+                               }
                              }
-                             const chatChannel = floatingChatChannelRef.current;
-                             if (chatChannel) {
-                               chatChannel.send({
-                                 type: 'broadcast',
-                                 event: 'floating_chat',
-                                 payload: { username, content: text },
-                               }).catch(() => {})
-                              }
                            } catch (err) {
-                           console.warn('[BroadcastPage] send-message failed:', err)
-                         }
+                             console.warn('[BroadcastPage] send-message failed:', err)
+                           }
                         }}
                         className="mt-auto border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
                       >
@@ -7679,15 +7841,82 @@ const toggleMicrophone = useCallback(async () => {
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="flex flex-col flex-1 min-h-0 items-center justify-center p-4 text-sm text-slate-500">
-                      <p className="mb-2 font-bold text-white">Settings</p>
-                      <p>Use broadcaster controls to update chat behavior and moderation.</p>
-                    </div>
-                  )}
-                </div>
-              </aside>
-            )}
+                  ) : chatTab === 'settings' ? (
+                    <div className="flex flex-col flex-1 min-h-0 overflow-y-auto p-4 text-sm text-slate-200 space-y-4">
+                      <div className="mb-3 text-xs uppercase tracking-[0.25em] text-slate-400">Stream Settings</div>
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-black text-white">Lock Seats</p>
+                            <p className="text-xs text-slate-400">Prevent viewers from joining seats</p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={!isHost}
+                            onClick={async () => {
+                              if (!stream || !isHost) return
+                              const next = !stream.are_seats_locked
+                              const { error } = await supabase.from('streams').update({ are_seats_locked: next }).eq('id', stream.id)
+                              if (error) { toast.error('Failed to update seat lock'); return }
+                              setStream((prev: any) => prev ? { ...prev, are_seats_locked: next } : prev)
+                              toast.success(next ? 'Seats locked' : 'Seats unlocked')
+                            }}
+                            className={cn('relative h-8 w-14 shrink-0 rounded-full transition-colors', stream?.are_seats_locked ? 'bg-cyan-500' : 'bg-white/10')}
+                          >
+                            <span className={cn('absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform', stream?.are_seats_locked ? 'translate-x-7' : 'translate-x-1')} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-sm font-black text-white">Paid Chat</p>
+                            <p className="text-xs text-slate-400">Require payment to send chat messages</p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={!isHost}
+                            onClick={async () => {
+                              if (!streamId || !isHost) return
+                              const next = !streamSettings?.paid_chat_enabled
+                              const { error } = await supabase.from('stream_settings').upsert({ stream_id: streamId, paid_chat_enabled: next, updated_at: new Date().toISOString() }, { onConflict: 'stream_id' })
+                              if (error) { toast.error('Failed to update paid chat'); return }
+                              setStreamSettings((prev: any) => prev ? { ...prev, paid_chat_enabled: next } : { ...(prev || {}), paid_chat_enabled: next })
+                              toast.success(next ? 'Paid chat enabled' : 'Paid chat disabled')
+                            }}
+                            className={cn('relative h-8 w-14 shrink-0 rounded-full transition-colors', streamSettings?.paid_chat_enabled ? 'bg-cyan-500' : 'bg-white/10')}
+                          >
+                            <span className={cn('absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform', streamSettings?.paid_chat_enabled ? 'translate-x-7' : 'translate-x-1')} />
+                          </button>
+                        </div>
+                        {streamSettings?.paid_chat_enabled && (
+                          <div className="mt-3 space-y-2">
+                            <label className="text-xs text-slate-400">Price per message (coins)</label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={10000}
+                              value={streamSettings?.paid_chat_price ?? 0}
+                              onChange={(e) => {
+                                const val = Math.max(0, parseInt(e.target.value) || 0)
+                                setStreamSettings((prev: any) => prev ? { ...prev, paid_chat_price: val } : prev)
+                              }}
+                              onBlur={async () => {
+                                if (!streamId || !isHost) return
+                                const { error } = await supabase.from('stream_settings').upsert({ stream_id: streamId, paid_chat_price: streamSettings?.paid_chat_price ?? 0, updated_at: new Date().toISOString() }, { onConflict: 'stream_id' })
+                                if (error) toast.error('Failed to save price')
+                              }}
+                              className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none focus:border-cyan-400/40"
+                            />
+                          </div>
+                        )}
+                      </div>
+                     </div>
+                    ): null
+                 }
+                  </div>
+                 </aside>
+              )}
 
             {/* ═══ MOBILE HOST OVERLAYS ═══ */}
             {isMobileHost && (
@@ -7785,10 +8014,10 @@ const toggleMicrophone = useCallback(async () => {
                                          fallback={
                                            <div className="grid h-8 w-8 place-items-center rounded-lg border border-purple-300/30 bg-transparent">
                                              <Users className="h-4 w-4 text-purple-200/80" />
-                                           </div>
-                                         }
-                                       />
-                                     ) : isCameraUnavailable ? (
+                                              </div>
+                                          }
+                                        />
+                                      ) : isCameraUnavailable ? (
                                       <div className="flex h-8 w-8 items-center justify-center rounded-full border border-red-400/30 opacity-60">
                                         {seat.avatarUrl ? (
                                           <img src={seat.avatarUrl} alt={participantDisplayName} className="h-full w-full rounded-full object-cover" />
@@ -7945,7 +8174,7 @@ const toggleMicrophone = useCallback(async () => {
                   <MobileBroadcastHostSettings
                     isMicOn={micEnabled}
                     isCamOn={cameraEnabled}
-                    isLive={stream.status === 'live'}
+                    isLive={stream?.status === 'live'}
                     hasRgbEffect={!!stream?.has_rgb_effect}
                     isChatLocked={!!stream?.is_chat_locked}
                     unreadMessageCount={0}
@@ -7981,8 +8210,8 @@ const toggleMicrophone = useCallback(async () => {
                  unreadMessageCount={0}
                  isMicOn={micEnabled}
                  isCamOn={cameraEnabled}
-                 isLive={stream.status === 'live'}
-                 liveViewerCount={viewerCount}
+                  isLive={stream?.status === 'live'}
+                  liveViewerCount={viewerCount}
                  isGiftTrayOpen={isGiftModalOpen}
                  isOfficerModalOpen={false}
                  onToggleMic={toggleMicrophone}
@@ -8606,6 +8835,22 @@ const toggleMicrophone = useCallback(async () => {
                         e.preventDefault()
                         const text = chatInput.trim()
                         if (!text) return
+                        if (userChatDisabled) {
+                          toast.error(
+                            chatDisabledRemainingMinutes
+                              ? `Your chat is disabled by moderation action. Try again in ${chatDisabledRemainingMinutes} minute(s).`
+                              : 'Your chat is disabled by moderation action.'
+                          )
+                          return
+                        }
+                        if (hostChatDisabledByOfficer) {
+                          toast.error(
+                            hostChatDisableRemainingMs
+                              ? `Chat is disabled by officer control. Try again in ${Math.ceil(hostChatDisableRemainingMs / 60000)} minute(s).`
+                              : 'Chat is disabled by officer control'
+                          )
+                          return
+                        }
                         const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
                         const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
                          setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
@@ -8614,30 +8859,21 @@ const toggleMicrophone = useCallback(async () => {
                          trackedTimeout(() => {
                            setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
                          }, 3000)
-                        try {
-                          const { data: { session } } = await supabase.auth.getSession()
-                          if (session) {
-                            await fetch(`${import.meta.env.VITE_EDGE_FUNCTIONS_URL}/send-message`, {
-                              method: 'POST',
-                              headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                type: 'chat',
-                                stream_id: streamId,
-                                data: { content: text },
-                              }),
-                            })
+                          try {
+                            const result = await sendChatThroughGate({ streamId, content: text })
+                            if (result.ok) {
+                              const chatChannel = floatingChatChannelRef.current
+                              if (chatChannel) {
+                                chatChannel.send({
+                                  type: 'broadcast',
+                                  event: 'floating_chat',
+                                  payload: { username, content: text },
+                                }).catch(() => {})
+                              }
+                            }
+                          } catch (err) {
+                            console.warn('[BroadcastPage] send-message failed:', err)
                           }
-                          const chatChannel = floatingChatChannelRef.current
-                          if (chatChannel) {
-                            chatChannel.send({
-                              type: 'broadcast',
-                              event: 'floating_chat',
-                              payload: { username, content: text },
-                            }).catch(() => {})
-                          }
-                        } catch (err) {
-                          console.warn('[BroadcastPage] send-message failed:', err)
-                        }
                       }}
                       className="flex gap-2 rounded-2xl border border-white/10 bg-black/45 p-2 shadow-[0_0_24px_rgba(34,211,238,0.16)] backdrop-blur-xl"
                     >
@@ -8646,18 +8882,20 @@ const toggleMicrophone = useCallback(async () => {
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         placeholder={
-                          hostChatDisabledByOfficer
-                            ? 'Chat disabled by officer control'
-                            : 'Say something…'
+                          userChatDisabled
+                            ? 'Chat disabled by moderation'
+                            : hostChatDisabledByOfficer
+                              ? 'Chat disabled by officer control'
+                              : 'Say something…'
                         }
-                        disabled={hostChatDisabledByOfficer}
-                        readOnly={hostChatDisabledByOfficer}
+                        disabled={userChatDisabled || hostChatDisabledByOfficer}
+                        readOnly={userChatDisabled || hostChatDisabledByOfficer}
                         className="h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-black/35 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50"
                         maxLength={280}
                       />
                       <button
                         type="submit"
-                        disabled={!chatInput.trim() || hostChatDisabledByOfficer}
+                        disabled={!chatInput.trim() || userChatDisabled || hostChatDisabledByOfficer}
                         className={cn(
                           'inline-flex h-11 shrink-0 items-center justify-center rounded-xl px-4 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50',
                           chatInput.trim() && !hostChatDisabledByOfficer
@@ -8873,7 +9111,7 @@ const toggleMicrophone = useCallback(async () => {
             onClose={() => setIsBroadcasterControlsOpen(false)}
             isMicOn={micEnabled}
             isCamOn={cameraEnabled}
-            isLive={stream.status === 'live'}
+            isLive={stream?.status === 'live'}
             liveViewerCount={viewerCount}
             isHost={isHost}
             onToggleMic={toggleMicrophone}
@@ -8885,10 +9123,39 @@ const toggleMicrophone = useCallback(async () => {
             onEndStream={handleStreamEnd}
             onInviteFollowers={handleInviteFollowers}
             onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
-          />
+           />
+          {showViewerList && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
+              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-base font-black text-white">Active Viewers</h3>
+                  <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  {activeViewerProfiles.length === 0 ? (
+                    <p className="text-sm text-zinc-500">No active viewers</p>
+                  ) : (
+                    activeViewerProfiles.map(viewer => (
+                      <div key={viewer.user_id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
+                          {viewer.username?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-bold text-white">{viewer.username || 'Viewer'}</div>
+                          <div className="text-xs text-zinc-500">{viewer.role || 'viewer'}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </GiftSystemProvider>
-     );
-   }
+      );
+    }
 
 function isStaffProfile(profile: any) {
   if (!profile) return false

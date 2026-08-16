@@ -41,6 +41,8 @@ import { useBugAlertStore } from "./stores/useBugAlertStore";
 import DailyChurchNotification from "./components/church/DailyChurchNotification";
 import TeamMeetingNotification from "./components/TeamMeetingRoom/TeamMeetingNotification";
 import SurveyNotification from "./components/SurveyNotification";
+import KeyDiscovery from "./components/keys/KeyDiscovery";
+import { useKeyDiscoveryStore } from "./stores/useKeyDiscoveryStore";
 
 import { useGlobalApp } from "./contexts/GlobalAppContext";
 import { updateRoute } from "./utils/sessionStorage";
@@ -547,7 +549,7 @@ const GamingAnalytics = lazyWithRetry(() => import("./pages/broadcast/gaming/Gam
 const GamingCommunity = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingCommunity.tsx"));
 const GamingMonetization = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingMonetization.tsx"));
 const GamingStore = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingStore.tsx"));
-const BroadcastRouter = lazyWithRetry(() => import("./pages/broadcast/BroadcastRouter.js"));
+const BroadcastRouter = lazyWithRetry(() => import("./pages/broadcast/BroadcastRouter.tsx"));
 const PresidentPage = lazyWithRetry(() => import("./pages/President.js"));
 const PresidentDashboard = lazyWithRetry(() => import("./pages/president/PresidentDashboard.js"));
 const SecretaryDashboard = lazyWithRetry(() => import("./pages/president/SecretaryDashboard.js"));
@@ -641,7 +643,9 @@ function AppContent() {
   const isLeadOfficer = useAuthStore((s) => s.profile?.is_lead_officer);
   const isTrollOfficer = useAuthStore((s) => s.profile?.is_troll_officer);
   const isPastor = useAuthStore((s) => s.profile?.is_pastor);
-  const isJailed = useAuthStore((s) => (s.profile as any)?.is_jailed);
+  const { isJailed: isJailedFromHook } = useJailMode(userId);
+  const isJailedProfile = useAuthStore((s) => (s.profile as any)?.is_jailed);
+  const isJailed = isJailedFromHook || isJailedProfile;
   const isBanned = useAuthStore((s) => s.profile?.is_banned);
   const isKicked = useAuthStore((s) => s.profile?.is_kicked);
   const hasActiveWarrant = useAuthStore((s) => s.profile?.has_active_warrant);
@@ -821,6 +825,82 @@ function AppContent() {
        }
     }
   }, [profile?.has_active_warrant, location.pathname, navigate]);
+
+  // ============================================================
+  // GLOBAL JAIL GUARD
+  // Blocks ALL non-approved navigation for jailed users
+  // ============================================================
+  useEffect(() => {
+    if (!isJailed) return;
+
+    const path = location.pathname;
+
+    const isJailAllowedPath =
+      path === '/jail' ||
+      path === '/jail/appeal' ||
+      path.startsWith('/court') ||
+      path.startsWith('/troll-court') ||
+      path === '/support' ||
+      path.startsWith('/legal') ||
+      path.startsWith('/auth') ||
+      path === '/access-denied';
+
+    if (!isJailAllowedPath) {
+      navigate('/jail', { replace: true });
+    }
+  }, [isJailed, location.pathname, navigate]);
+
+  // Block keyboard shortcuts when jailed
+  useEffect(() => {
+    if (!isJailed) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      const blockedKeys = ['d', 'a', 't', 's', 'p', 'v', 'c', 'g', 'r'];
+      if (blockedKeys.includes(event.key.toLowerCase())) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [isJailed]);
+
+  // Block service worker navigation when jailed
+  useEffect(() => {
+    if (!isJailed) return;
+
+    const handleSWMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NAVIGATE' && event.data.url) {
+        const targetPath = new URL(event.data.url, window.location.origin).pathname;
+        const isAllowed =
+          targetPath === '/jail' ||
+          targetPath === '/jail/appeal' ||
+          targetPath.startsWith('/court') ||
+          targetPath.startsWith('/troll-court') ||
+          targetPath === '/support' ||
+          targetPath.startsWith('/legal') ||
+          targetPath.startsWith('/auth');
+
+        if (!isAllowed) {
+          event.preventDefault();
+          navigate('/jail', { replace: true });
+        }
+      }
+    };
+
+    navigator.serviceWorker?.addEventListener('message', handleSWMessage);
+    return () => navigator.serviceWorker?.removeEventListener('message', handleSWMessage);
+  }, [isJailed, navigate]);
 
   // Warrant Access Restriction
   useEffect(() => {
@@ -1445,6 +1525,9 @@ const handleVisibilityChange = async () => {
       <DailyChurchNotification />
       <SurveyNotification />
 
+      {/* Key Discovery Animation */}
+      <KeyDiscoveryOverlay />
+
       {/* Global Loading Overlay */}
       <GlobalLoadingOverlay
         isVisible={globalLoading}
@@ -1470,7 +1553,7 @@ const handleVisibilityChange = async () => {
       <MobileAdOverlay />
 
 <LiveContentProvider>
-            <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true}>
+            <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true} isJailed={isJailed}>
            <GlobalPresenceTracker />
            {user && <AdminOfficerQuickMenu />}
            {user && <ChatBubble />}
@@ -2840,4 +2923,11 @@ function MiniPodcastPlayerWrapper() {
       onExpand={handleExpand}
     />
   )
+}
+
+// Key Discovery Overlay
+function KeyDiscoveryOverlay() {
+  const { isOpen, keyData, closeDiscovery } = useKeyDiscoveryStore();
+
+  return <KeyDiscovery keyData={keyData} isOpen={isOpen} onClose={closeDiscovery} />;
 }

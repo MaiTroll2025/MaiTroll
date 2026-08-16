@@ -12,6 +12,7 @@ interface UseStreamRealtimeHandlers {
   onSeatEvent?: (event: StreamRealtimeEvent) => void
   onFloatingChat?: (event: StreamRealtimeEvent) => void
   onPresenceBroadcast?: (event: StreamRealtimeEvent) => void
+  onLeagueLevelUp?: (event: StreamRealtimeEvent) => void
 }
 
 export function useStreamRealtime(streamId?: string | null, handlers: UseStreamRealtimeHandlers = {}, battleId?: string | null) {
@@ -61,7 +62,8 @@ export function useStreamRealtime(streamId?: string | null, handlers: UseStreamR
         case 'broadcast:box_count_changed':
         case 'broadcast:like_sent':
         case 'broadcast:ping':
-          current.onPresenceBroadcast?.(event)
+        case 'broadcast:league_level_up':
+          current.onLeagueLevelUp?.(event)
           break
       }
     }, battleId)

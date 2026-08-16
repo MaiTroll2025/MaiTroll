@@ -3,7 +3,7 @@ import { X, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '../lib/store'
 import { notifyAdmins } from '../lib/notifications'
-import api from '../lib/api'
+import { rpcSubmitReport } from '../types/moderationActions'
 import { REPORT_REASONS, type ReportReason } from '../types/moderation'
 
 interface ReportModalProps {
@@ -45,17 +45,14 @@ export default function ReportModal({
 
     setLoading(true)
     try {
-      const response = await api.post('/moderation-actions', {
-        action: 'submit_report',
-        reporter_id: user.id,
-        target_user_id: targetUserId || null,
-        stream_id: streamId || null,
+      const response = await rpcSubmitReport(
+        targetUserId || null,
+        streamId || null,
         reason,
-        description: description.trim() || null
-      })
+        description.trim() || null
+      )
 
       if (response.success) {
-        // Notify admins
         await notifyAdmins(
           'New Report Filed',
           `Report filed against ${targetType === 'user' ? 'User' : 'Stream'} for ${reason}`,
@@ -69,7 +66,7 @@ export default function ReportModal({
         onSuccess?.()
         onClose()
       } else {
-        toast.error(response.error || 'Failed to submit report')
+        toast.error(response.message || 'Failed to submit report')
       }
     } catch (err: any) {
       console.error('Report submission error:', err)

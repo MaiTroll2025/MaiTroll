@@ -6,6 +6,12 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import api from "../lib/api";
+import {
+  rpcModoArrest,
+  rpcModeratorKickUser,
+  rpcModeratorMuteUser,
+  rpcTakeAction,
+} from "../types/moderationActions";
 import IPBanModal from "./officer/IPBanModal";
 
 interface ModerationPanelProps {
@@ -19,17 +25,23 @@ export default function ModerationPanel({ targetUserId, roomId }: ModerationPane
   const [targetIP, setTargetIP] = useState<string | null>(null);
 
   const handleArrest = async () => {
+    if (!targetUserId) {
+      alert("No target user selected");
+      return;
+    }
     const reason = window.prompt("Enter arrest reason:");
     if (!reason) return;
 
     try {
-      await api.post(api.endpoints.moderation.takeAction, { 
-        action: 'take_action',
-        action_type: 'arrest',
-        target_user_id: targetUserId,
+      const result = await rpcModoArrest(
+        roomId || '',
+        targetUserId,
         reason,
-        ban_duration_hours: 24 // Default to 24h
-      });
+        'moderate'
+      );
+      if (!result.success) {
+        alert(result.message || "Failed to arrest user");
+      }
     } catch (error) {
       console.error("Arrest failed:", error);
       alert("Failed to arrest user");
@@ -54,39 +66,41 @@ export default function ModerationPanel({ targetUserId, roomId }: ModerationPane
   };
 
   const handleKick = async () => {
+    if (!targetUserId || !roomId) {
+      alert("Missing target user or stream context");
+      return;
+    }
+
     const reason = window.prompt("Enter kick reason (optional):") || "Kicked by moderator";
-    
-    // Disconnect first for immediate effect
-    // room?.disconnectParticipant(targetUserId);
 
     try {
-        await api.post(api.endpoints.moderation.logEvent, {
-            actionType: 'kick',
-            targetUserId,
-            streamId: roomId,
-            reason
-        });
+      const result = await rpcModeratorKickUser(roomId, targetUserId, reason);
+      if (!result.success) {
+        alert(result.message || "Failed to kick user");
+      }
     } catch (error) {
-        console.error("Failed to log kick:", error);
+      console.error("Failed to kick user:", error);
+      alert("Failed to kick user");
     }
   };
 
   const handleMute = async () => {
-    // room?.localParticipant.setParticipantPermissions(targetUserId, {
-    //   canPublishAudio: false,
-    //   canPublishData: true,
-    //   canSubscribe: true
-    // });
-    
+    if (!targetUserId || !roomId) {
+      alert("Missing target user or stream context");
+      return;
+    }
+
+    const durationInput = window.prompt("Enter mute duration in minutes (default 5):", "5");
+    const duration = parseInt(durationInput || "5", 10) || 5;
+
     try {
-        await api.post(api.endpoints.moderation.logEvent, {
-            actionType: 'mute',
-            targetUserId,
-            streamId: roomId,
-            reason: "Muted by moderator"
-        });
+      const result = await rpcModeratorMuteUser(roomId, targetUserId, duration, `Muted for ${duration} minutes`);
+      if (!result.success) {
+        alert(result.message || "Failed to mute user");
+      }
     } catch (error) {
-        console.error("Failed to log mute:", error);
+      console.error("Failed to mute user:", error);
+      alert("Failed to mute user");
     }
   };
 
@@ -94,33 +108,13 @@ export default function ModerationPanel({ targetUserId, roomId }: ModerationPane
     const reason = window.prompt("Enter gift freeze reason:");
     if (!reason) return;
 
-    try {
-      await api.post(api.endpoints.moderation.takeAction, { 
-        action: 'take_action',
-        action_type: 'gift_freeze',
-        target_user_id: targetUserId,
-        reason
-      });
-    } catch (error) {
-      console.error("Gift freeze failed:", error);
-      alert("Failed to freeze gifts");
-    }
+    alert("Gift freeze requires a dedicated database RPC. Please use the Mod Actions popup for available moderation actions.");
   };
 
   const handleChatPurge = async () => {
     if (!window.confirm("Are you sure you want to purge chat?")) return;
 
-    try {
-      await api.post(api.endpoints.moderation.takeAction, { 
-        action: 'take_action',
-        action_type: 'chat_purge',
-        stream_id: roomId,
-        reason: 'Manual purge'
-      });
-    } catch (error) {
-      console.error("Chat purge failed:", error);
-      alert("Failed to purge chat");
-    }
+    alert("Chat purge requires a dedicated database RPC. Please use the Mod Actions popup for available moderation actions.");
   };
 
   const handleDisableStream = async () => {
@@ -128,13 +122,16 @@ export default function ModerationPanel({ targetUserId, roomId }: ModerationPane
     if (!reason) return;
 
     try {
-      await api.post(api.endpoints.moderation.takeAction, { 
-        action: 'take_action',
-        action_type: 'suspend_stream',
-        stream_id: roomId,
+      const result = await rpcTakeAction(
+        null,
+        'suspend_stream',
+        null,
+        roomId,
         reason
-      });
-      // room?.disconnect();
+      );
+      if (!result.success) {
+        alert(result.message || "Failed to disable stream");
+      }
     } catch (error) {
       console.error("Disable stream failed:", error);
       alert("Failed to disable stream");

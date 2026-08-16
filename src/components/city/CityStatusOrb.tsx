@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ShieldCheck,
   ShieldX,
@@ -14,9 +14,12 @@ import {
   AlertTriangle,
   Check,
   Badge as BadgeIcon,
+  Key,
 } from 'lucide-react';
 import { CityStatusOrbData, CityStatusOrbOptions } from '../../lib/hooks/useCityStatusOrb';
 import { TLeagueTier } from '../../config/T_LEAGUE_CONFIG';
+import { getUserKeysPublic, getUserKeysPrivate } from '../../services/keyService';
+import type { KeyInstance } from '../../types/keys';
 
 interface CityStatusOrbProps {
   data: CityStatusOrbData;
@@ -86,6 +89,12 @@ export default function CityStatusOrb({
   onMessage,
   compact = false,
 }: CityStatusOrbProps) {
+  const [activeTab, setActiveTab] = useState<'overview' | 'keys'>('overview');
+  const [publicKeys, setPublicKeys] = useState<KeyInstance[]>([]);
+  const [privateKeys, setPrivateKeys] = useState<KeyInstance[]>([]);
+  const [keysLoading, setKeysLoading] = useState(false);
+  const [showSafe, setShowSafe] = useState(false);
+
   const licenseDisplay = getLicenseStatusDisplay(data.license_status, data.drivers_license_expiry);
   const insuranceDisplay = getInsuranceStatusDisplay(data.homeowners_insurance_expiry);
   const LicenseIcon = licenseDisplay.icon;
@@ -94,6 +103,29 @@ export default function CityStatusOrb({
   const xpProgress = data.next_level_xp
     ? Math.min(100, Math.max(0, (data.xp / data.next_level_xp) * 100))
     : 0;
+
+  useEffect(() => {
+    if (!compact && activeTab === 'keys') {
+      setKeysLoading(true);
+      getUserKeysPublic(data.id)
+        .then(setPublicKeys)
+        .catch(() => setPublicKeys([]))
+        .finally(() => setKeysLoading(false));
+    }
+  }, [activeTab, data.id, compact]);
+
+  const openSafe = async () => {
+    setShowSafe(true);
+    setKeysLoading(true);
+    try {
+      const keys = await getUserKeysPrivate(data.id);
+      setPrivateKeys(keys);
+    } catch {
+      setPrivateKeys([]);
+    } finally {
+      setKeysLoading(false);
+    }
+  };
 
   if (compact) {
     return (
@@ -357,6 +389,71 @@ export default function CityStatusOrb({
         </div>
       )}
 
+      {/* Keys Tab */}
+      <div className="px-4 pb-2">
+        <div className="flex gap-1 border-b border-white/10">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-3 py-1.5 text-[11px] font-bold transition ${
+              activeTab === 'overview' ? 'text-purple-300 border-b-2 border-purple-500' : 'text-white/50 hover:text-white'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('keys')}
+            className={`px-3 py-1.5 text-[11px] font-bold transition flex items-center gap-1 ${
+              activeTab === 'keys' ? 'text-purple-300 border-b-2 border-purple-500' : 'text-white/50 hover:text-white'
+            }`}
+          >
+            <Key size={12} /> Keys
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'keys' && (
+        <div className="px-4 pb-3">
+          {keysLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-violet-500" />
+            </div>
+          ) : publicKeys.length === 0 ? (
+            <p className="text-[11px] text-white/50 text-center py-3">No keys collected yet.</p>
+          ) : (
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {publicKeys.map(key => (
+                <div key={key.id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-2.5 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-white">{key.key_letter}</span>
+                    <span className="text-[10px] font-bold text-white/60">{key.rarity.replace('_', ' ')}</span>
+                  </div>
+                  {key.is_key_to_city && (
+                    <span className="text-[9px] font-black text-yellow-300 bg-yellow-500/20 px-1.5 py-0.5 rounded">KEY TO THE CITY</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {permissions.isSelf && (
+            <button
+              onClick={openSafe}
+              className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-yellow-600 to-orange-600 px-3 py-2 text-[11px] font-black text-white hover:from-yellow-500 hover:to-orange-500"
+            >
+              🔐 OPEN SAFE
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Safe Box Modal for owner */}
+      {showSafe && (
+        <SafeBoxModal
+          keys={privateKeys}
+          loading={keysLoading}
+          onClose={() => setShowSafe(false)}
+        />
+      )}
+
       {/* Action buttons */}
       <div className="flex flex-wrap gap-1.5 px-4 pb-4">
         {!permissions.isSelf && (
@@ -392,6 +489,110 @@ export default function CityStatusOrb({
             <ShieldCheck className="w-3 h-3" /> Enforce
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// SAFE BOX MODAL
+// =========================================================================
+
+function SafeBoxModal({
+  keys,
+  loading,
+  onClose,
+}: {
+  keys: KeyInstance[];
+  loading: boolean;
+  onClose: () => void;
+}) {
+  const totalValue = keys.reduce((sum, k) => sum + k.value, 0);
+  const activeKeys = keys.filter(k => k.status === 'active');
+  const lockedKeys = keys.filter(k => k.status === 'active' && new Date(k.cashout_available_at) > new Date());
+  const availableKeys = keys.filter(k => k.status === 'active' && new Date(k.cashout_available_at) <= new Date());
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-sm rounded-3xl border border-yellow-500/30 bg-slate-900 shadow-2xl shadow-yellow-500/10 overflow-hidden">
+        <div className="bg-gradient-to-r from-yellow-600 to-orange-600 px-4 py-3 flex items-center justify-between">
+          <h3 className="font-black text-white flex items-center gap-2">🔐 MAITROLL CITY SAFE</h3>
+          <button onClick={onClose} className="text-white/80 hover:text-white text-lg font-bold">&times;</button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-6">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-yellow-500" />
+            </div>
+          ) : (
+            <>
+              {/* Summary */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
+                  <p className="text-[10px] text-white/50 uppercase tracking-wider">Total Value</p>
+                  <p className="text-lg font-black text-yellow-300">{totalValue.toLocaleString()} TC</p>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
+                  <p className="text-[10px] text-white/50 uppercase tracking-wider">Total Keys</p>
+                  <p className="text-lg font-black text-white">{activeKeys.length}</p>
+                </div>
+              </div>
+
+              {/* Available for cashout */}
+              <div>
+                <p className="text-[10px] font-bold text-green-400 uppercase tracking-wider mb-2">🟢 Cashout Available ({availableKeys.length})</p>
+                {availableKeys.length === 0 ? (
+                  <p className="text-[11px] text-white/40">None</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                    {availableKeys.map(key => (
+                      <div key={key.id} className="flex items-center justify-between rounded-lg bg-green-500/10 border border-green-500/20 px-2.5 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black text-white">{key.key_letter}</span>
+                          <span className="text-[10px] text-white/60">{key.rarity.replace('_', ' ')}</span>
+                        </div>
+                        <span className="text-xs font-bold text-green-300">{key.value.toLocaleString()} TC</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Locked */}
+              <div>
+                <p className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider mb-2">🔒 Locked ({lockedKeys.length})</p>
+                {lockedKeys.length === 0 ? (
+                  <p className="text-[11px] text-white/40">None</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                    {lockedKeys.map(key => {
+                      const daysLeft = Math.max(0, Math.ceil((new Date(key.cashout_available_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+                      return (
+                        <div key={key.id} className="flex items-center justify-between rounded-lg bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-white">{key.key_letter}</span>
+                            <span className="text-[10px] text-white/60">{key.rarity.replace('_', ' ')}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-bold text-yellow-300">{key.value.toLocaleString()} TC</span>
+                            <span className="text-[10px] text-white/40 block">{daysLeft}d left</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="border-t border-white/10 px-4 py-3">
+          <p className="text-[10px] text-white/40 text-center">
+            Only you can see these values. MaiTroll is not responsible for private agreements.
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -40,8 +40,8 @@ export const BADGE_TYPES = {
 
 // Economy Actions
 export const ECONOMY_XP = {
-  PAID_COIN_SPEND: 1,        // +1 XP per paid coin spent
-  LIVE_GIFT_BONUS: 1.1,      // +1.1 XP per coin (10% bonus) for live gifts
+  PAID_COIN_SPEND: 0.05,     // +0.05 XP per paid coin spent
+  LIVE_GIFT_BONUS: 0.055,    // +0.055 XP per coin (+10% bonus) for live gifts
   STORE_PURCHASE: 5,         // +5 XP per $1 spent in store
 }
 
@@ -57,7 +57,7 @@ export const ENGAGEMENT_XP = {
 export const STREAMING_XP = {
   GO_LIVE_BASE: 200,         // +200 XP for going live (10+ min)
   VIEWER_MINUTE: 1,          // +1 XP per viewer per minute
-  GIFT_RECEIVED_MULTIPLIER: 1.0, // +1 XP per coin received
+  GIFT_RECEIVED_MULTIPLIER: 0.05, // +0.05 XP per coin received
 }
 
 // Troll Court Actions
@@ -87,8 +87,8 @@ export const BADGE_THRESHOLDS = {
 
 // XP Multipliers per Coin (Legacy)
 export const XP_RATES = {
-  GIFTER: 0.25, // 25% of coins
-  STREAMER: 1.0, // 100% of coins
+  GIFTER: 0.05,  // 5% of coins
+  STREAMER: 0.05, // 5% of coins
   WAR: 5
 }
 
@@ -158,8 +158,8 @@ export function getXPForNextLevel(currentXp: number): { current: number; needed:
 // ===========================
 
 /**
-  * Award XP for spending troll_coins (general)
- * +1 XP per paid coin
+ * Award XP for spending troll_coins (general)
+ * +0.05 XP per paid coin
  */
 export async function awardPaidCoinXP(userId: string, coinAmount: number, metadata: any = {}) {
   const xpAmount = Math.floor(coinAmount * ECONOMY_XP.PAID_COIN_SPEND)
@@ -182,7 +182,7 @@ if (result.success) {
 
 /**
  * Award XP for live gift with 10% bonus
- * +1.1 XP per coin
+ * +0.055 XP per coin
  */
 export async function awardLiveGiftXP(userId: string, coinAmount: number, metadata: any = {}) {
    const xpAmount = Math.floor(coinAmount * ECONOMY_XP.LIVE_GIFT_BONUS)
@@ -331,6 +331,7 @@ export async function awardViewerMinuteXP(userId: string, viewerMinutes: number,
 /**
  * Award XP for receiving gifts as streamer
  * Base amount + bonus %
+ * +0.05 XP per coin received
  */
 export async function awardGiftReceivedXP(userId: string, coinAmount: number, streamId: string, metadata: any = {}) {
    const xpAmount = Math.floor(coinAmount * XP_RATES.STREAMER)

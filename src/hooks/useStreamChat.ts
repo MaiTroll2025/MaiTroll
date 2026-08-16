@@ -7,6 +7,7 @@ import { useMissionProgress } from './useMissionProgress';
 import { useChatBlockStatus } from './useChatBlockStatus';
 import { isStaffProfile } from '../lib/staff';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../lib/broadcastModeration';
+import { sendChatThroughGate } from '../lib/sendChatThroughGate';
 import { moderation } from '@/services/maitrollModeration';
 
 export interface Message {
@@ -404,31 +405,10 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
 
     let parsedBody: any;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const response = await fetch(`${import.meta.env.VITE_EDGE_FUNCTIONS_URL}/send-message`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'chat',
-          stream_id: streamId,
-          txn_id: txnId,
-          data: { content }
-        })
-      });
-
-      const contentType = response.headers.get('content-type') || '';
-      const rawText = await response.text();
-      const hasJsonBody = contentType.toLowerCase().includes('application/json') && rawText.trim().length > 0;
-      parsedBody = hasJsonBody ? JSON.parse(rawText) : undefined;
-
-      if (!response.ok) {
-        const msg = (parsedBody as any)?.error || (parsedBody as any)?.message || rawText || response.statusText;
-        throw new Error(`Failed to send message (${response.status}): ${msg}`);
+      const result = await sendChatThroughGate({ streamId, content })
+      parsedBody = result.envelope
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to send message')
       }
 
       const chatChannel = channelsRef.current[0];

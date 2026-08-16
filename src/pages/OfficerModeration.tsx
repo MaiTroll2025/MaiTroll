@@ -3,14 +3,19 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
-import { 
-  Shield, AlertTriangle, Eye, 
+import {
+  Shield, AlertTriangle, Eye,
   CheckCircle, XCircle, Clock, Search,
   Gavel, History, RotateCcw, Zap, Brain
 } from 'lucide-react'
 import { ModerationReport } from '../types/moderation'
 import ReportDetailsModal from '../components/ReportDetailsModal'
-import api from '../lib/api'
+import {
+  rpcListReports,
+  rpcRejectReport,
+  rpcTakeAction,
+  rpcSubmitReport,
+} from '../types/moderationActions'
 
 export default function OfficerModeration() {
   const { profile } = useAuthStore()
@@ -66,12 +71,12 @@ export default function OfficerModeration() {
     if (!profile) return
     setLoadingReports(true)
     try {
-      const response = await api.post('/moderation-actions', {
-        action: 'list_reports',
-        status_filter: statusFilter === 'all' ? null : statusFilter
-      })
+      const response = await rpcListReports(
+        statusFilter === 'all' ? null : statusFilter
+      )
       if (response.success) {
-        const normalizedReports = (response.reports || []).map((report: any) => ({
+        const rawReports = (response.data as any)?.reports || []
+        const normalizedReports = rawReports.map((report: any) => ({
           ...report,
           id: report.id || report.report_id,
           target_user_id: report.target_user_id || report.reported_user_id,
@@ -82,11 +87,10 @@ export default function OfficerModeration() {
         }))
         setReports(normalizedReports)
       } else {
-        toast.error(response.error || 'Failed to load reports')
+        toast.error(response.message || 'Failed to load reports')
       }
     } catch (err: any) {
       console.error('Error loading reports:', err)
-      // toast.error('Failed to load reports') 
     } finally {
       setLoadingReports(false)
     }

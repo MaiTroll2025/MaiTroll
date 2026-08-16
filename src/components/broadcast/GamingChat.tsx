@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 import { getAnonymousDisplayName } from '@/lib/anonymousIdentity'
+import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 
 /** Small avatar for chat messages — extracts useUserFrame out of .map() */
 function ChatAvatar({ userId, avatarUrl, username }: { userId?: string; avatarUrl: string; username: string }) {
@@ -111,35 +112,22 @@ export function GamingChat({ streamId, className }: GamingChatProps) {
     setMessages((prev) => [...prev, optimisticMsg])
 
     try {
-      const edgeUrl = import.meta.env.VITE_EDGE_FUNCTIONS_URL
-      if (edgeUrl) {
-        await fetch(`${edgeUrl}/send-message`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            streamId,
-            userId: user?.id || null,
-            username: displayName,
-            content: text,
-            type: 'chat',
-            isGuest: !user,
-          }),
-        })
-      }
-
-      const chatChannel = channelRef.current
-      if (chatChannel) {
-        chatChannel.send({
-          type: 'broadcast',
-          event: 'floating_chat',
-          payload: {
-            id: optimisticMsg.id,
-            username: displayName,
-            content: text,
-            createdAt: Date.now(),
-            avatarUrl: avatar,
-          },
-        })
+      const result = await sendChatThroughGate({ streamId, content: text })
+      if (result.ok) {
+        const chatChannel = channelRef.current
+        if (chatChannel) {
+          chatChannel.send({
+            type: 'broadcast',
+            event: 'floating_chat',
+            payload: {
+              id: optimisticMsg.id,
+              username: displayName,
+              content: text,
+              createdAt: Date.now(),
+              avatarUrl: avatar,
+            },
+          })
+        }
       }
     } catch (err: any) {
       console.error('[GamingChat] Send failed:', err)

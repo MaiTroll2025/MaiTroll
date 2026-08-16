@@ -46,13 +46,13 @@ const XPSimulatorPage = () => {
                 <h2 className="text-xl font-semibold">Actions</h2>
                 <div className="flex gap-2">
                     <button onClick={() => handleSimulateGift(100)} className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">
-                        Gift 100 Coins (+100 XP)
+                        Gift 100 Coins (+5 XP)
                     </button>
                     <button onClick={() => handleSimulateGift(500)} className="px-4 py-2 bg-purple-600 rounded hover:bg-purple-700">
-                        Gift 500 Coins (+500 XP)
+                        Gift 500 Coins (+25 XP)
                     </button>
                     <button onClick={() => handleSimulateGift(1000)} className="px-4 py-2 bg-yellow-600 rounded hover:bg-yellow-700">
-                        Gift 1000 Coins (+1k XP)
+                        Gift 1000 Coins (+50 XP)
                     </button>
                 </div>
             </div>

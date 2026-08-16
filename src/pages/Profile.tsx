@@ -26,6 +26,7 @@ import ProfileFeed from '../components/profile/ProfileFeed';
 import ProfileWatchlist from '../components/profile/ProfileWatchlist';
 import UserInventory from './UserInventory';
 import ProfileSettings from './ProfileSettings';
+import KeysPage from './KeysPage';
 import UserModActionsModal from '../components/profile/UserModActionsModal';
 import { useProfileFrameStore } from '../stores/useProfileFrameStore';
 import type { ProfileFrame as ProfileFrameType } from '../config/profileFrames';
@@ -617,6 +618,8 @@ function ProfileInner() {
                 );
             case 'settings':
                 return <ProfileSettings />;
+            case 'keys':
+                return <KeysPage profileId={profile.id} isOwnProfile={isOwnProfile} />;
             case 'music':
                 return (
                     <div className="space-y-6">

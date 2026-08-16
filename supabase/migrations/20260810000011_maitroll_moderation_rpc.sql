@@ -717,7 +717,11 @@ BEGIN
       'bond_allowed', v_jail.bond_allowed,
       'reason', v_jail.reason,
       'jailed_at', v_jail.jailed_at,
-      'release_type', v_jail.release_type
+      'release_type', v_jail.release_type,
+      'severity', v_jail.severity,
+      'arrested_by', v_jail.arrested_by,
+      'court_date', v_jail.court_date,
+      'case_id', v_jail.case_id
     );
   END IF;
 

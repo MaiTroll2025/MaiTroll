@@ -5,7 +5,7 @@ import { notifyAdmins } from '../lib/notifications'
 import { toast } from 'sonner'
 import { FileText, Send, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import api from '../lib/api'
+import { rpcSubmitReport } from '../types/moderationActions'
 
 interface UserTicket {
   id: string
@@ -92,14 +92,12 @@ export default function Support() {
     try {
       // If appeal, submit as moderation report
       if (category === 'appeal') {
-        const response = await api.post('/moderation-actions', {
-          action: 'submit_report',
-          reporter_id: profile.id,
-          target_user_id: null,
-          stream_id: null,
-          reason: 'appeal',
-          description: `Subject: ${subject}\n\nReport ID: ${reportId || 'N/A'}\n\nMessage: ${message}`
-        })
+        const response = await rpcSubmitReport(
+          null,
+          null,
+          'appeal',
+          `Subject: ${subject}\n\nReport ID: ${reportId || 'N/A'}\n\nMessage: ${message}`
+        )
 
         if (response.success) {
           toast.success('Appeal submitted. Our Troll Officers will review soon.')
@@ -108,7 +106,7 @@ export default function Support() {
           setReportId('')
           setCategory('general')
         } else {
-          toast.error(response.error || 'Failed to submit appeal')
+          toast.error(response.message || 'Failed to submit appeal')
         }
       } else {
         // Regular support ticket

@@ -1,16 +1,13 @@
 // ============================================================================
-// Moderation Actions — shared TypeScript types + Edge Function helper
-// Authorizes ONLY these roles for Mod Actions:
-//   ceo, admin, lead_troll_officer, troll_officer, secretary,
-//   broadcaster, broadofficer, ceo_assistant, noah_assistant
+// Moderation Actions — shared TypeScript types + secure RPC helpers
 // ============================================================================
 
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
+import type { Session } from '@supabase/supabase-js';
 
 /**
- * The ONLY roles allowed to use Mod Actions (frontend gating + backend).
- * Any account without one of these roles has NO access to Mod Actions.
+ * The ONLY roles allowed to use Mod Actions.
  */
 export const MOD_ACTIONS_ROLES = [
   'ceo',
@@ -22,13 +19,31 @@ export const MOD_ACTIONS_ROLES = [
   'broadofficer',
   'ceo_assistant',
   'noah_assistant',
+  'prosecutor',
+  'attorney',
+  'auctioneer',
+  'pastor',
+  'journalist',
+  'news_caster',
+  'chief_news_caster',
+  'agency_leader',
+  'agency_hr',
+  'agency_hr_manager',
+  'owner',
+  'superadmin',
+  'staff',
+  'moderator',
+  'judge',
+  'court_officer',
+  'president',
+  'vice_president',
+  'troller',
+  'hr_admin',
+  'officer',
 ] as const;
 
 export type ModActionsRole = (typeof MOD_ACTIONS_ROLES)[number];
 
-/**
- * Authorized action names accepted by the `moderation-actions` Edge Function.
- */
 export type ModerationActionType =
   | 'mute'
   | 'unmute'
@@ -41,28 +56,6 @@ export type ModerationActionType =
   | 'set_to_user'
   | 'end_stream';
 
-/**
- * Payload sent to the `moderation-actions` Edge Function.
- */
-export interface ModerationActionPayload {
-  action: ModerationActionType;
-  /** uuid or null — required for stream-scoped actions */
-  stream_id?: string | null;
-  /** uuid or guest identifier (guests supported for kick) */
-  target_user_id?: string | null;
-  /** mute / disable_chat / restriction duration in minutes */
-  duration_minutes?: number;
-  /** license suspension duration in hours */
-  duration_hours?: number;
-  /** reason text (required for arrest / suspend_license / end_stream) */
-  reason?: string;
-  /** arrest severity: minor | moderate | serious | severe */
-  severity?: 'minor' | 'moderate' | 'serious' | 'severe';
-}
-
-/**
- * Consistent result envelope returned by the Edge Function and the secure RPCs.
- */
 export interface ModerationActionResult {
   success: boolean;
   code: string;
@@ -72,7 +65,6 @@ export interface ModerationActionResult {
 
 /**
  * Check whether a profile has one of the authorized Mod Actions roles.
- * Normalizes role values and supports boolean flag equivalents.
  */
 export function hasModActionsAccess(profile: {
   role?: string | null;
@@ -100,7 +92,6 @@ export function hasModActionsAccess(profile: {
 
   if (roleMatch) return true;
 
-  // Boolean flag equivalents that map to the 9 authorized roles only.
   return Boolean(
     (profile.is_admin === true && normalizedRoles.includes('admin')) ||
       (profile.is_ceo === true && normalizedRoles.includes('ceo')) ||
@@ -115,57 +106,271 @@ export function hasModActionsAccess(profile: {
 }
 
 /**
- * Invoke the `moderation-actions` Edge Function with the given payload.
- * The Edge Function authenticates the caller (bearer token) and enforces
- * the role server-side. Returns a normalized ModerationActionResult.
+ * Returns true when the acting user is a broadcaster or broadofficer.
+ * These roles get mod actions but NOT the identity-management actions
+ * (suspend_license, grant_license, set_to_user).
  */
-export async function invokeModerationAction(
-  payload: ModerationActionPayload
+export function isBroadcasterOrBroadofficer(profile: {
+  role?: string | null;
+  troll_role?: string | null;
+  is_broadcaster?: boolean;
+  is_broadofficer?: boolean;
+} | null | undefined): boolean {
+  if (!profile) return false;
+  const role = String(profile.role || '').toLowerCase()
+  const trollRole = String(profile.troll_role || '').toLowerCase()
+  return (
+    role === 'broadcaster' ||
+    trollRole === 'broadcaster' ||
+    profile.is_broadcaster === true ||
+    role === 'broadofficer' ||
+    trollRole === 'broadofficer' ||
+    profile.is_broadofficer === true
+  )
+}
+
+// ============================================================================
+// Direct RPC wrappers
+// ============================================================================
+
+export async function rpcModeratorMuteUser(
+  streamId: string,
+  targetUserId: string,
+  durationMinutes: number,
+  reason?: string,
 ): Promise<ModerationActionResult> {
-  let session = useAuthStore.getState().session;
-
-  if (!session?.access_token) {
-    const { data } = await supabase.auth.getSession();
-    session = data.session;
-  }
-
-  if (!session?.access_token) {
-    return {
-      success: false,
-      code: 'UNAUTHENTICATED',
-      message: 'You must be signed in.',
-      data: null,
-    };
-  }
-
-  const { data, error } = await supabase.functions.invoke('moderation-actions', {
-    body: payload,
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-    },
+  const { data, error } = await supabase.rpc('moderator_mute_user', {
+    p_stream_id: streamId,
+    p_target_user_id: targetUserId,
+    p_duration_minutes: durationMinutes,
+    p_reason: reason || `Muted for ${durationMinutes} minutes`,
   });
 
   if (error) {
-    const raw = (error as any)?.context?.data;
-    if (raw && typeof raw === 'object' && 'message' in raw) {
-      return raw as ModerationActionResult;
-    }
-    return {
-      success: false,
-      code: 'FUNCTION_ERROR',
-      message: error.message || 'Moderation action failed. Please try again.',
-      data: null,
-    };
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
   }
+  return data as ModerationActionResult;
+}
 
-  if (!data || typeof data !== 'object') {
-    return {
-      success: false,
-      code: 'INVALID_RESPONSE',
-      message: 'The server returned an invalid response.',
-      data: null,
-    };
+export async function rpcModeratorUnmuteUser(
+  streamId: string,
+  targetUserId: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('moderator_unmute_user', {
+    p_stream_id: streamId,
+    p_target_user_id: targetUserId,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
   }
+  return data as ModerationActionResult;
+}
 
+export async function rpcModeratorDisableChat(
+  streamId: string,
+  targetUserId: string,
+  durationMinutes: number,
+  reason?: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('moderator_disable_chat', {
+    p_stream_id: streamId,
+    p_target_user_id: targetUserId,
+    p_duration_minutes: durationMinutes,
+    p_reason: reason || `Chat disabled for ${durationMinutes} minutes`,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcModeratorKickUser(
+  streamId: string,
+  targetUserId: string,
+  reason?: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('moderator_kick_user', {
+    p_stream_id: streamId,
+    p_target_user_id: targetUserId,
+    p_reason: reason || 'Kicked by moderator',
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcModoArrest(
+  streamId: string,
+  targetUserId: string,
+  reason: string,
+  severity: 'minor' | 'moderate' | 'serious' | 'severe',
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('modo_arrest', {
+    p_stream_id: streamId,
+    p_target_user_id: targetUserId,
+    p_reason: reason,
+    p_severity: severity,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcModoSuspendLicense(
+  targetUserId: string,
+  reason: string,
+  durationHours: number,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('modo_suspend_license', {
+    p_target_user_id: targetUserId,
+    p_reason: reason,
+    p_duration_hours: durationHours,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcModoGrantLicense(
+  targetUserId: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('modo_grant_license', {
+    p_target_user_id: targetUserId,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcRemoveStreamBroadofficer(
+  streamId: string,
+  officerId: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('remove_stream_broadofficer', {
+    p_stream_id: streamId,
+    p_officer_id: officerId,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcResetUserPermissions(
+  targetUserId: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('reset_user_permissions', {
+    p_target_user_id: targetUserId,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcModoEndStream(
+  streamId: string,
+  targetBroadcasterId?: string,
+  reason?: string,
+  restrictDurationMinutes: number = 60,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('modo_end_stream', {
+    p_stream_id: streamId,
+    p_target_broadcaster_id: targetBroadcasterId || null,
+    p_reason: reason || 'Ended by moderator',
+    p_restrict_duration_minutes: restrictDurationMinutes,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+// ============================================================================
+// Report RPC wrappers
+// ============================================================================
+
+export async function rpcSubmitReport(
+  targetUserId: string | null,
+  streamId: string | null,
+  reason: string,
+  description?: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('submit_report', {
+    p_target_user_id: targetUserId,
+    p_stream_id: streamId,
+    p_reason: reason,
+    p_description: description || null,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcListReports(
+  statusFilter?: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('list_reports', {
+    p_status_filter: statusFilter || null,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcRejectReport(
+  reportId: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('reject_report', {
+    p_report_id: reportId,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+  return data as ModerationActionResult;
+}
+
+export async function rpcTakeAction(
+  reportId: string | null,
+  actionType: 'warn' | 'suspend_stream' | 'arrest',
+  targetUserId: string | null,
+  streamId: string | null,
+  reason: string,
+  actionDetails?: string,
+  expiresAt?: string,
+  banDurationHours?: number,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('take_action', {
+    p_report_id: reportId,
+    p_action_type: actionType,
+    p_target_user_id: targetUserId,
+    p_stream_id: streamId,
+    p_reason: reason,
+    p_action_details: actionDetails || null,
+    p_expires_at: expiresAt || null,
+    p_ban_duration_hours: banDurationHours || null,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
   return data as ModerationActionResult;
 }

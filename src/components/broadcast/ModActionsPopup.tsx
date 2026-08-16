@@ -13,7 +13,21 @@ import { toast } from 'sonner';
 import GiftBoxModal from './GiftBoxModal';
 import BackgroundCheckView from './BackgroundCheckView';
 import { hasProtection } from '../../lib/insuranceSystem';
-import { hasModActionsAccess, invokeModerationAction } from '../../types/moderationActions';
+import {
+  hasModActionsAccess,
+  isBroadcasterOrBroadofficer,
+  rpcModeratorMuteUser,
+  rpcModeratorUnmuteUser,
+  rpcModoArrest,
+  rpcModeratorDisableChat,
+  rpcModeratorKickUser,
+  rpcModoSuspendLicense,
+  rpcModoGrantLicense,
+  rpcRemoveStreamBroadofficer,
+  rpcResetUserPermissions,
+  rpcModoEndStream,
+} from '../../types/moderationActions';
+import { isProtectedPlatformRole } from '../../lib/protectedRoles';
 
 interface UserProfile {
   id: string;
@@ -142,6 +156,14 @@ const ModActionsPopup = memo(function ModActionsPopup({
   const visibleActions = MOD_ACTIONS_LIST;
   const currentActorId = currentUserId || profile?.id;
   const isHost = currentActorId === hostId;
+  const isTargetProtected = isProtectedPlatformRole(targetUser as any);
+  const PROTECTED_ACTION_IDS = new Set(['mute', 'unmute', 'arrest', 'disable_chat', 'kick', 'suspend_license', 'remove_officer', 'set_to_user', 'end_stream']);
+  const isActorBroadcasterOrOfficer = isBroadcasterOrBroadofficer(profile);
+  const RESTRICTED_FOR_BROADCASTER_IDS = new Set(['suspend_license', 'grant_license', 'set_to_user']);
+  const baseActions = isTargetProtected ? visibleActions.filter((a) => !PROTECTED_ACTION_IDS.has(a.id)) : visibleActions;
+  const filteredActions = isActorBroadcasterOrOfficer
+    ? baseActions.filter((a) => !RESTRICTED_FOR_BROADCASTER_IDS.has(a.id))
+    : baseActions;
   const [effectiveStreamId, setEffectiveStreamId] = useState(streamId || '');
   const [effectiveHostId, setEffectiveHostId] = useState(hostId || '');
 
@@ -238,6 +260,10 @@ const ModActionsPopup = memo(function ModActionsPopup({
   };
 
 const handleMute = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId) return;
     if (!effectiveStreamId) {
       toast.error('Mutting requires an active stream context');
@@ -245,13 +271,12 @@ const handleMute = async () => {
     }
     setIsMuting(true);
     try {
-      const res = await invokeModerationAction({
-        action: 'mute',
-        stream_id: effectiveStreamId,
-        target_user_id: targetUserId,
-        duration_minutes: muteDuration,
-        reason: `Muted for ${muteDuration} minutes`,
-      });
+      const res = await rpcModeratorMuteUser(
+        effectiveStreamId,
+        targetUserId,
+        muteDuration,
+        `Muted for ${muteDuration} minutes`
+      );
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -267,18 +292,21 @@ const handleMute = async () => {
     }
   };
 
-const handleUnmute = async () => {
+  const handleUnmute = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId) return;
     if (!effectiveStreamId) {
       toast.error('Unmuting requires an active stream context');
       return;
     }
     try {
-      const res = await invokeModerationAction({
-        action: 'unmute',
-        stream_id: effectiveStreamId,
-        target_user_id: targetUserId,
-      });
+      const res = await rpcModeratorUnmuteUser(
+        effectiveStreamId,
+        targetUserId
+      );
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -292,17 +320,20 @@ const handleUnmute = async () => {
   };
 
 const handleArrest = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId || !arrestReason) return;
     setIsArresting(true);
 
     try {
-      const res = await invokeModerationAction({
-        action: 'arrest',
-        stream_id: effectiveStreamId || null,
-        target_user_id: targetUserId,
-        reason: arrestReason,
-        severity: arrestSeverity as 'minor' | 'moderate' | 'serious' | 'severe',
-      });
+      const res = await rpcModoArrest(
+        effectiveStreamId || '',
+        targetUserId,
+        arrestReason,
+        arrestSeverity as 'minor' | 'moderate' | 'serious' | 'severe'
+      );
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -327,6 +358,10 @@ const handleArrest = async () => {
   };
 
 const handleDisableChat = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId) return;
     if (!effectiveStreamId) {
       toast.error('Disabling chat requires an active stream context');
@@ -334,13 +369,12 @@ const handleDisableChat = async () => {
     }
     setIsDisablingChat(true);
     try {
-      const res = await invokeModerationAction({
-        action: 'disable_chat',
-        stream_id: effectiveStreamId,
-        target_user_id: targetUserId,
-        duration_minutes: chatDisableDuration,
-        reason: `Chat disabled for ${chatDisableDuration} minutes`,
-      });
+      const res = await rpcModeratorDisableChat(
+        effectiveStreamId,
+        targetUserId,
+        chatDisableDuration,
+        `Chat disabled for ${chatDisableDuration} minutes`
+      );
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -357,15 +391,18 @@ const handleDisableChat = async () => {
   };
 
 const handleSuspendLicense = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId || !licenseSuspendReason) return;
     setIsSuspendingLicense(true);
     try {
-      const res = await invokeModerationAction({
-        action: 'suspend_license',
-        target_user_id: targetUserId,
-        duration_hours: suspendLicenseDuration,
-        reason: licenseSuspendReason,
-      });
+      const res = await rpcModoSuspendLicense(
+        targetUserId,
+        licenseSuspendReason,
+        suspendLicenseDuration
+      );
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -383,13 +420,14 @@ const handleSuspendLicense = async () => {
   };
 
 const handleGrantLicense = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId) return;
     setIsGrantingLicense(true);
     try {
-      const res = await invokeModerationAction({
-        action: 'grant_license',
-        target_user_id: targetUserId,
-      });
+      const res = await rpcModoGrantLicense(targetUserId);
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -405,6 +443,10 @@ const handleGrantLicense = async () => {
   };
 
 const handleKick = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId) return;
 
     const isAdminOrLead = profile?.role === 'admin' ||
@@ -424,12 +466,11 @@ const handleKick = async () => {
 
     setIsKicking(true);
     try {
-      const res = await invokeModerationAction({
-        action: 'kick',
-        stream_id: effectiveStreamId,
-        target_user_id: targetUserId,
-        reason: 'Kicked by moderator',
-      });
+      const res = await rpcModeratorKickUser(
+        effectiveStreamId,
+        targetUserId,
+        'Kicked by moderator'
+      );
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -494,6 +535,10 @@ const handleKick = async () => {
   };
 
 const handleRemoveOfficer = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId) return;
 
     const sid = effectiveStreamId || streamId;
@@ -503,18 +548,20 @@ const handleRemoveOfficer = async () => {
     }
 
     try {
-      const res = await invokeModerationAction({
-        action: 'remove_officer',
-        stream_id: sid,
-        target_user_id: targetUserId,
-        reason: 'Broadofficer removed from stream',
-      });
+      const sid = effectiveStreamId || streamId;
+      if (!sid) {
+        toast.error('No active stream context for this action');
+        return;
+      }
+
+      const res = await rpcRemoveStreamBroadofficer(
+        sid,
+        targetUserId
+      );
       if (!res.success) {
         toast.error(res.message);
         return;
       }
-      // The RPC inserts exactly one stream_messages system row; the existing
-      // realtime subscription delivers it. No temporary realtime channel needed.
       toast.success(res.message || `${targetUsername} is no longer a Broadofficer`);
       onClose();
     } catch (error) {
@@ -524,14 +571,14 @@ const handleRemoveOfficer = async () => {
   };
 
 const handleSetToUser = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     if (!targetUserId) return;
 
     try {
-      // Actor is derived from auth.uid() server-side; no actor param is accepted.
-      const res = await invokeModerationAction({
-        action: 'set_to_user',
-        target_user_id: targetUserId,
-      });
+      const res = await rpcResetUserPermissions(targetUserId);
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -545,15 +592,18 @@ const handleSetToUser = async () => {
   };
 
 const handleEndStream = async () => {
+    if (!profile || isLoading) {
+      toast.error("Authentication data is still loading. Please try again.");
+      return;
+    }
     setIsEndingStream(true);
     try {
-      const res = await invokeModerationAction({
-        action: 'end_stream',
-        stream_id: effectiveStreamId || null,
-        target_user_id: targetUserId || null,
-        duration_minutes: restrictDuration,
-        reason: endStreamReason || 'Ended by moderator',
-      });
+      const res = await rpcModoEndStream(
+        effectiveStreamId || '',
+        targetUserId || undefined,
+        endStreamReason || 'Ended by moderator',
+        restrictDuration
+      );
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -681,8 +731,8 @@ const handleEndStream = async () => {
                  </button>
                </div>
                
-               <div className="grid grid-cols-2 gap-3">
-              {visibleActions.map((action) => {
+                <div className="grid grid-cols-2 gap-3">
+               {filteredActions.map((action) => {
                 const Icon = action.icon;
                 const isKickAction = action.id === 'kick';
                 const isDisabled = (isKickAction && hasInsuranceProtection && 

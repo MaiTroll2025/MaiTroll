@@ -17,6 +17,7 @@ type StreamRealtimeTable =
   | 'broadcast:like_sent'
   | 'broadcast:gift_sent'
   | 'broadcast:ping'
+  | 'broadcast:league_level_up'
 
 type StreamRealtimeStatus = 'idle' | 'subscribing' | 'subscribed' | 'error' | 'closed'
 
@@ -113,6 +114,7 @@ function createEntry(streamId: string, battleId?: string | null): StreamEntry {
     .on('broadcast', { event: 'like_sent' }, (message) => emitBroadcast(entry, 'like_sent', message.payload))
     .on('broadcast', { event: 'gift_sent' }, (message) => emitBroadcast(entry, 'gift_sent', message.payload))
     .on('broadcast', { event: 'ping' }, (message) => emitBroadcast(entry, 'ping', message.payload))
+    .on('broadcast', { event: 'league_level_up' }, (message) => emitBroadcast(entry, 'league_level_up', message.payload))
 
   entry.channel = channel
 

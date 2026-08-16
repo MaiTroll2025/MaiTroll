@@ -12,6 +12,7 @@ import {
   Radio, RefreshCw, Send, Pause, Search, Shield, ShieldAlert, TrendingUp,
   UserPlus, Users, X, Stamp, FileText, AlertTriangle, Gavel, Lock,
 } from 'lucide-react';
+import { isProtectedPlatformRole } from '@/lib/protectedRoles';
 import BugCenterPanel from './BugCenterPanel';
 import StaffWalkieTalkieButton from '../StaffWalkieTalkieButton';
 
@@ -235,6 +236,11 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [rtcMinutesResetAt, setRtcMinutesResetAt] = useState<Date | null>(null);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
 
+  // RTC minutes edit state
+  const [isEditingTotalMinutes, setIsEditingTotalMinutes] = useState(false);
+  const [editedTotalMinutes, setEditedTotalMinutes] = useState('');
+  const [savingTotalMinutes, setSavingTotalMinutes] = useState(false);
+
   // Track the last fetch time so live-creation events don't trigger a full counter reset
   const lastRtcFetchRef = useRef<number>(0);
 
@@ -286,6 +292,16 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [arrestSearchLoading, setArrestSearchLoading] = useState(false);
   const [arrestTabReason, setArrestTabReason] = useState('');
   const [arrestTabSeverity, setArrestTabSeverity] = useState('moderate');
+  const [courtSummonsDefendants, setCourtSummonsDefendants] = useState<any[]>([]);
+  const [courtSummonsSearch, setCourtSummonsSearch] = useState('');
+  const [courtSummonsResults, setCourtSummonsResults] = useState<any[]>([]);
+  const [courtSummonsLoading, setCourtSummonsLoading] = useState(false);
+  const [courtSummonsReason, setCourtSummonsReason] = useState('');
+  const [courtSummonsCaseType, setCourtSummonsCaseType] = useState('criminal');
+  const [courtSummonsSummary, setCourtSummonsSummary] = useState('');
+  const [courtSummonsEvidence, setCourtSummonsEvidence] = useState('');
+  const [courtSummonsRequestedAction, setCourtSummonsRequestedAction] = useState('summons');
+  const [courtSummonsSubmitting, setCourtSummonsSubmitting] = useState(false);
   const [arrestTabLoading, setArrestTabLoading] = useState(false);
   const [arrestLogs, setArrestLogs] = useState<any[]>([]);
   const [arrestLogsLoading, setArrestLogsLoading] = useState(false);
@@ -493,7 +509,34 @@ const fetchRTCStats = useCallback(async () => {
      } finally {
        setIsLoading(false);
      }
-   }, [isStaff, rtcMinutesResetAt]);
+    }, [isStaff, rtcMinutesResetAt]);
+
+  const handleSaveTotalMinutes = useCallback(async () => {
+    const parsed = parseInt(editedTotalMinutes, 10);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      toast.error('Enter a valid minute count');
+      return;
+    }
+
+    setSavingTotalMinutes(true);
+    try {
+      const { data, error } = await supabase.rpc('set_rtc_minute_total', {
+        p_minutes: parsed,
+      });
+
+      if (error) throw error;
+
+      toast.success(`RTC minutes set to ${parsed.toLocaleString()}`);
+      setIsEditingTotalMinutes(false);
+      setEditedTotalMinutes('');
+      fetchRTCStats();
+    } catch (err: any) {
+      console.error('[RTC Monitor] Set total minutes failed:', err);
+      toast.error(err?.message || 'Failed to update RTC minutes');
+    } finally {
+      setSavingTotalMinutes(false);
+    }
+  }, [editedTotalMinutes, fetchRTCStats]);
 
   const fetchSignupData = useCallback(async () => {
     if (!isStaff) return;
@@ -849,8 +892,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
 
          if (activeAction === 'arrest') {
              // Additional protected roles check (for non-admin officers)
-             const protectedRoles = ['admin', 'ceo', 'secretary', 'pastor', 'lead_troll_officer', 'troll_officer'];
-             if (protectedRoles.includes(actionTarget.role || '')) {
+             if (isProtectedPlatformRole(actionTarget)) {
                  toast.error(`Cannot arrest a user with role: ${actionTarget.role}`);
                  return;
              }
@@ -1062,6 +1104,15 @@ const openAction = useCallback((user: UserListItem, action: string) => {
 
   const summonFromStream = useCallback(async (userId: string, username: string) => {
     try {
+      const { data: targetProfile } = await supabase
+        .from('user_profiles')
+        .select('id, username, role, is_admin, is_superadmin, is_ceo, is_staff, is_troll_officer, is_lead_officer')
+        .eq('id', userId)
+        .maybeSingle();
+      if (isProtectedPlatformRole(targetProfile)) {
+        toast.error(`Cannot summon a user with protected role: ${targetProfile?.role || 'admin'}`);
+        return;
+      }
       const { error } = await supabase.rpc('summon_user_to_court', {
         p_defendant_id: userId,
         p_reason: streamActionReason || 'Summoned from stream via RTC Monitor',
@@ -1160,7 +1211,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
         }
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIPTION_ERROR') {
+        if (status === 'CHANNEL_ERROR') {
           console.warn('[RTCAdminMonitor] Tromail subscription error (lock contention) — will retry');
         }
       })
@@ -1254,7 +1305,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
         setTimeout(() => setShowSignupFlash(false), 15000);
       })
       .subscribe((status) => {
-        if (status === 'SUBSCRIPTION_ERROR') {
+        if (status === 'CHANNEL_ERROR') {
           console.warn('[RTCAdminMonitor] Live stream subscription error (lock contention) — will retry');
         }
       });
@@ -1360,7 +1411,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
         }
       })
       .subscribe((status) => {
-        if (status === 'SUBSCRIPTION_ERROR') {
+        if (status === 'CHANNEL_ERROR') {
           console.warn('[RTCAdminMonitor] Signup subscription error (lock contention) — will retry');
         }
       });
@@ -1689,7 +1740,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
           throttledAutoOpen()
         })
         .subscribe((status) => {
-          if (status === 'SUBSCRIPTION_ERROR') {
+          if (status === 'CHANNEL_ERROR') {
             console.warn('[RTCAdminMonitor] Session subscription error (lock contention) — will retry')
           }
         })
@@ -1925,14 +1976,56 @@ const renderRtcTab = () => (
          </div>
        )}
 
-       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-         <StatCard label="Streams" value={stats.liveStreams} tone="border-red-500/20 bg-red-500/10 text-red-400" icon={<Radio className="h-3 w-3" />} />
-         <StatCard label="Viewers" value={totalViewers} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<Users className="h-3 w-3" />} />
-         <StatCard label="Sessions" value={stats.activeSessions} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Clock className="h-3 w-3" />} />
-         <StatCard label="Online" value={onlineCount} tone="border-green-500/20 bg-green-500/10 text-green-400" icon={<Activity className="h-3 w-3" />} />
-         <StatCard label="Users" value={stats.totalUsers} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Users className="h-3 w-3" />} />
-          <StatCard label="Minutes" value={stats.totalMinutes.toLocaleString()} tone="border-blue-500/20 bg-blue-500/10 text-blue-400" icon={<Clock className="h-3 w-3" />} />
-       </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <StatCard label="Streams" value={stats.liveStreams} tone="border-red-500/20 bg-red-500/10 text-red-400" icon={<Radio className="h-3 w-3" />} />
+          <StatCard label="Viewers" value={totalViewers} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<Users className="h-3 w-3" />} />
+          <StatCard label="Sessions" value={stats.activeSessions} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Clock className="h-3 w-3" />} />
+          <StatCard label="Online" value={onlineCount} tone="border-green-500/20 bg-green-500/10 text-green-400" icon={<Activity className="h-3 w-3" />} />
+          <StatCard label="Users" value={stats.totalUsers} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Users className="h-3 w-3" />} />
+           <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-2">
+             <div className="mb-0.5 flex items-center gap-1 text-[9px] uppercase leading-none text-blue-400">
+               <Clock className="h-3 w-3" />
+               <span className="truncate">Minutes</span>
+             </div>
+             {isEditingTotalMinutes ? (
+               <div className="flex items-center gap-1">
+                 <input
+                   type="number"
+                   value={editedTotalMinutes}
+                   onChange={(e) => setEditedTotalMinutes(e.target.value)}
+                   className="w-full rounded border border-blue-400 bg-slate-950 px-1.5 py-0.5 text-sm font-bold text-white outline-none focus:border-cyan-400"
+                   autoFocus
+                   onKeyDown={(e) => {
+                     if (e.key === 'Enter') handleSaveTotalMinutes();
+                     if (e.key === 'Escape') {
+                       setIsEditingTotalMinutes(false);
+                       setEditedTotalMinutes('');
+                     }
+                   }}
+                 />
+                 <button
+                   type="button"
+                   onClick={handleSaveTotalMinutes}
+                   disabled={savingTotalMinutes}
+                   className="shrink-0 rounded bg-green-600 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-green-500 disabled:opacity-50"
+                 >
+                   {savingTotalMinutes ? '...' : 'Save'}
+                 </button>
+               </div>
+             ) : (
+               <div
+                 className="cursor-pointer text-base font-bold leading-tight text-white hover:text-blue-300"
+                 onClick={() => {
+                   setIsEditingTotalMinutes(true);
+                   setEditedTotalMinutes(String(stats.totalMinutes));
+                 }}
+                 title="Click to edit total RTC minutes"
+               >
+                 {stats.totalMinutes.toLocaleString()}
+               </div>
+             )}
+           </div>
+        </div>
 
       <div className="border-t border-white/10 pt-2">
         <div className="mb-2 flex items-center justify-between">
@@ -2608,10 +2701,105 @@ return (
       }
     }, [profile?.id, fetchCurrentInmates, fetchArrestLogs]);
 
+    const submitCourtSummons = useCallback(async () => {
+      if (!profile?.id) { toast.error('Missing auth'); return; }
+      if (courtSummonsDefendants.length === 0) { toast.error('Add at least one defendant'); return; }
+      if (!courtSummonsReason.trim()) { toast.error('Enter a reason'); return; }
+      setCourtSummonsSubmitting(true);
+      try {
+        const today = new Date();
+        const dow = today.getDay();
+        let nextCourtDate: Date;
+        if (dow === 0 || dow === 1) nextCourtDate = new Date(today.getTime() + ((2 - dow) * 86400000));
+        else if (dow === 2 || dow === 3) nextCourtDate = new Date(today.getTime() + ((4 - dow) * 86400000));
+        else if (dow === 4) nextCourtDate = today;
+        else nextCourtDate = new Date(today.getTime() + (((2 + 7 - dow) % 7) * 86400000));
+        const courtDateStr = nextCourtDate.toISOString().split('T')[0];
+
+        const { data: docket, error: docketError } = await supabase
+          .from('court_dockets')
+          .select('id, cases_count')
+          .eq('court_date', courtDateStr)
+          .maybeSingle();
+        if (docketError) throw docketError;
+
+        let docketId: string;
+        if (docket && docket.cases_count < 20) {
+          docketId = docket.id;
+          await supabase.from('court_dockets').update({ cases_count: (docket.cases_count || 0) + courtSummonsDefendants.length }).eq('id', docketId);
+        } else {
+          const { data: newDocket, error: insertError } = await supabase
+            .from('court_dockets')
+            .insert({ court_date: courtDateStr, max_cases: 20, cases_count: courtSummonsDefendants.length, status: 'open' })
+            .select().single();
+          if (insertError) throw insertError;
+          docketId = newDocket?.id;
+          if (!docketId) throw new Error('Failed to create court docket');
+        }
+
+        const caseInserts = courtSummonsDefendants.map((def) =>
+          supabase.from('court_cases').insert({
+            docket_id: docketId,
+            plaintiff_id: profile.id,
+            defendant_id: def.id,
+            reason: courtSummonsReason,
+            status: 'pending',
+            case_type: courtSummonsCaseType,
+          }).select('id')
+        );
+        const results = await Promise.all(caseInserts);
+        const caseErrors = results.filter((r) => r.error);
+        if (caseErrors.length > 0) throw caseErrors[0].error;
+
+        const caseIds = results.map((r) => r.data?.[0]?.id).filter((id): id is string => !!id);
+        const summonsInserts = caseIds.map((caseId) =>
+          supabase.from('court_summons').insert({
+            case_id: caseId,
+            served_to: courtSummonsDefendants[caseIds.indexOf(caseId)]?.id || courtSummonsDefendants[0].id,
+            served_by: profile.id,
+            status: 'pending',
+            notes: JSON.stringify({
+              summary: courtSummonsSummary,
+              evidence: courtSummonsEvidence,
+              requestedAction: courtSummonsRequestedAction,
+            }),
+          })
+        );
+        await Promise.all(summonsInserts);
+
+        for (const def of courtSummonsDefendants) {
+          await supabase.from('moderation_actions').insert({
+            actor_id: profile.id,
+            officer_id: profile.id,
+            target_user_id: def.id,
+            action: 'court_summons',
+            action_type: 'court_summons',
+            reason: courtSummonsReason,
+            details: `court_date:${courtDateStr}; case_type:${courtSummonsCaseType}; requested:${courtSummonsRequestedAction}`,
+            status: 'active',
+          }).then(() => undefined, () => undefined);
+        }
+
+        toast.success(`Court summons filed for ${courtSummonsDefendants.length} defendant(s)`);
+        setCourtSummonsDefendants([]);
+        setCourtSummonsSearch('');
+        setCourtSummonsResults([]);
+        setCourtSummonsReason('');
+        setCourtSummonsCaseType('criminal');
+        setCourtSummonsSummary('');
+        setCourtSummonsEvidence('');
+        setCourtSummonsRequestedAction('summons');
+      } catch (err: any) {
+        console.error('[RTCAdminMonitor] court summons error:', err);
+        toast.error(err?.message || 'Failed to submit summons');
+      } finally {
+        setCourtSummonsSubmitting(false);
+      }
+    }, [profile?.id, courtSummonsDefendants, courtSummonsReason, courtSummonsCaseType, courtSummonsSummary, courtSummonsEvidence, courtSummonsRequestedAction]);
+
     const executeArrestTab = useCallback(async (targetUser: any) => {
       if (!profile?.id) return;
-      const protectedRoles = ['admin', 'ceo', 'secretary', 'pastor', 'lead_troll_officer', 'troll_officer'];
-      if (protectedRoles.includes(targetUser.role || '') || targetUser.is_admin) {
+      if (isProtectedPlatformRole(targetUser)) {
         toast.error(`Cannot arrest a user with protected role: ${targetUser.role || 'admin'}`);
         return;
       }
@@ -2720,6 +2908,30 @@ return (
       }
     }, [isOpen, isStaff, activeMainTab, fetchArrestLogs, fetchCurrentInmates]);
 
+    useEffect(() => {
+      if (!courtSummonsSearch.trim()) {
+        setCourtSummonsResults([]);
+        return;
+      }
+      const timer = window.setTimeout(async () => {
+        setCourtSummonsLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select('id, username, avatar_url, role, is_admin')
+            .ilike('username', `%${courtSummonsSearch.trim()}%`)
+            .limit(10);
+          if (error) throw error;
+          setCourtSummonsResults(data || []);
+        } catch (err: any) {
+          toast.error(err?.message || 'Search failed');
+        } finally {
+          setCourtSummonsLoading(false);
+        }
+      }, 300);
+      return () => window.clearTimeout(timer);
+    }, [courtSummonsSearch]);
+
     const renderArrestTab = () => {
       const SEVERITY_OPTIONS = [
         { id: 'minor', label: 'Minor', color: 'text-yellow-400', bail: 100 },
@@ -2762,7 +2974,7 @@ return (
               <div className="space-y-1.5">
                 <div className="text-[10px] uppercase tracking-wide text-gray-500">{arrestSearchResults.length} result(s)</div>
                 {arrestSearchResults.map((user) => {
-                  const isProtected = ['admin', 'ceo', 'secretary', 'pastor', 'lead_troll_officer', 'troll_officer'].includes(user.role || '') || user.is_admin;
+                  const isProtected = isProtectedPlatformRole(user);
                   return (
                     <div key={user.id} className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.02] px-2.5 py-1.5">
                       <div className="flex items-center gap-2">
@@ -2850,9 +3062,142 @@ return (
                 )}
               </button>
             </div>
-          )}
+           )}
 
-          <div className="flex items-center justify-between">
+           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-cyan-400">
+             <Gavel className="h-4 w-4" />
+             <span>File Court Summons</span>
+           </div>
+
+           <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 space-y-3">
+             <div className="flex gap-2">
+               <div className="relative flex-1">
+                 <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-500" />
+                 <input
+                   type="text"
+                   value={courtSummonsSearch}
+                   onChange={(e) => setCourtSummonsSearch(e.target.value)}
+                   placeholder="Search defendants..."
+                   className="w-full rounded-md border border-slate-700 bg-slate-950 py-1.5 pl-7 pr-2 text-xs text-white placeholder:text-gray-600 focus:border-cyan-400 focus:outline-none"
+                 />
+               </div>
+             </div>
+
+             {courtSummonsDefendants.length > 0 && (
+               <div className="flex flex-wrap gap-1.5">
+                 {courtSummonsDefendants.map((def) => (
+                   <span key={def.id} className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] font-bold text-cyan-300">
+                     @{def.username}
+                     <button onClick={() => setCourtSummonsDefendants((prev) => prev.filter((d) => d.id !== def.id))} className="text-cyan-400 hover:text-white">
+                       <X className="h-3 w-3" />
+                     </button>
+                   </span>
+                 ))}
+               </div>
+             )}
+
+             {courtSummonsResults.length > 0 && (
+               <div className="max-h-32 overflow-y-auto space-y-1">
+                 {courtSummonsResults.map((user) => {
+                   const isProtected = isProtectedPlatformRole(user);
+                   const alreadyAdded = courtSummonsDefendants.some((d) => d.id === user.id);
+                   return (
+                     <div key={user.id} className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.02] px-2.5 py-1.5">
+                       <div className="flex items-center gap-2">
+                         <img src={user.avatar_url || '/default-avatar.png'} alt="" className="h-5 w-5 rounded-full object-cover" />
+                         <span className="text-xs font-semibold text-white">{user.username}</span>
+                       </div>
+                       {isProtected ? (
+                         <span className="text-[10px] text-yellow-500">Protected</span>
+                       ) : alreadyAdded ? (
+                         <span className="text-[10px] text-slate-500">Added</span>
+                       ) : (
+                         <button
+                           onClick={() => setCourtSummonsDefendants((prev) => [...prev, { id: user.id, username: user.username, avatar_url: user.avatar_url }])}
+                           className="rounded bg-cyan-600/80 px-2 py-0.5 text-[10px] font-bold text-white hover:bg-cyan-500"
+                         >
+                           Add
+                         </button>
+                       )}
+                     </div>
+                   );
+                 })}
+               </div>
+             )}
+
+             <div>
+               <label className="mb-1 block text-[10px] uppercase tracking-wide text-gray-400">Reason</label>
+               <input
+                 type="text"
+                 value={courtSummonsReason}
+                 onChange={(e) => setCourtSummonsReason(e.target.value)}
+                 placeholder="Enter summons reason..."
+                 className="w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white placeholder:text-gray-600 focus:border-cyan-400 focus:outline-none"
+               />
+             </div>
+
+             <div>
+               <label className="mb-1 block text-[10px] uppercase tracking-wide text-gray-400">Case Type</label>
+               <select
+                 value={courtSummonsCaseType}
+                 onChange={(e) => setCourtSummonsCaseType(e.target.value)}
+                 className="w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+               >
+                 <option value="criminal">Criminal</option>
+                 <option value="civil">Civil</option>
+                 <option value="administrative">Administrative</option>
+               </select>
+             </div>
+
+             <div>
+               <label className="mb-1 block text-[10px] uppercase tracking-wide text-gray-400">Summary</label>
+               <textarea
+                 value={courtSummonsSummary}
+                 onChange={(e) => setCourtSummonsSummary(e.target.value)}
+                 placeholder="Brief summary..."
+                 className="w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white placeholder:text-gray-600 focus:border-cyan-400 focus:outline-none"
+                 rows={2}
+               />
+             </div>
+
+             <div>
+               <label className="mb-1 block text-[10px] uppercase tracking-wide text-gray-400">Evidence References</label>
+               <input
+                 type="text"
+                 value={courtSummonsEvidence}
+                 onChange={(e) => setCourtSummonsEvidence(e.target.value)}
+                 placeholder="Stream IDs, report IDs, links..."
+                 className="w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white placeholder:text-gray-600 focus:border-cyan-400 focus:outline-none"
+               />
+             </div>
+
+             <div>
+               <label className="mb-1 block text-[10px] uppercase tracking-wide text-gray-400">Requested Action</label>
+               <select
+                 value={courtSummonsRequestedAction}
+                 onChange={(e) => setCourtSummonsRequestedAction(e.target.value)}
+                 className="w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+               >
+                 <option value="summons">Summons to Court</option>
+                 <option value="subpoena">Subpoena</option>
+                 <option value="warrant">Warrant</option>
+               </select>
+             </div>
+
+             <button
+               onClick={submitCourtSummons}
+               disabled={courtSummonsSubmitting || courtSummonsDefendants.length === 0 || !courtSummonsReason.trim()}
+               className="w-full rounded-md bg-cyan-600 py-2 text-xs font-bold uppercase text-white hover:bg-cyan-500 disabled:opacity-50"
+             >
+               {courtSummonsSubmitting ? (
+                 <span className="flex items-center justify-center gap-1"><RefreshCw className="h-3 w-3 animate-spin" /> Filing...</span>
+               ) : (
+                 <span className="flex items-center justify-center gap-1"><FileText className="h-3 w-3" /> File Summons ({courtSummonsDefendants.length} defendant{courtSummonsDefendants.length !== 1 ? 's' : ''})</span>
+               )}
+             </button>
+           </div>
+
+           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-yellow-400">
               <AlertTriangle className="h-4 w-4" />
               <span>Current Inmates</span>
@@ -3372,4 +3717,8 @@ function WalkieTalkieTab() {
       </div>
     </div>
   );
+}
+
+function checkNewOnlineUsers() {
+  throw new Error('Function not implemented.');
 }

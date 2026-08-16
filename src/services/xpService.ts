@@ -60,8 +60,8 @@ export const xpService = {
    * Simulate a gift event (for testing/dev tools)
    */
   simulateGift: async (userId: string, coinsSpent: number) => {
-    // Broadcaster gets 100% of coins as XP
-    // Sender gets 25% of coins as XP
+    // Broadcaster gets ~5% of coins as XP
+    // Sender gets ~5% of coins as XP
     // This function typically runs on server, but we simulate the call here.
     
     // In a real app, 'grant_xp' is called by the webhook or edge function handling the gift.
@@ -71,7 +71,7 @@ export const xpService = {
     
     return await xpService.grantXP(
       userId,
-      coinsSpent, // 1 XP per coin
+      coinsSpent, // ~0.05 XP per coin
       'gift_received',
       sourceId,
       { simulator: true }

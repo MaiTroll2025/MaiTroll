@@ -108,8 +108,8 @@ export default function BroadcastNeonHeader({
     onGiftUser,
     onModerateUser,
     randomBattleQueue,
-  }: BroadcastNeonHeaderProps) {
-   const { profile } = useAuthStore()
+}: BroadcastNeonHeaderProps) {
+    const { profile } = useAuthStore()
   const navigate = useNavigate()
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
   const { isMobileWidth } = useIsMobile()
@@ -123,8 +123,8 @@ export default function BroadcastNeonHeader({
   const broadcasterFrame = useUserFrame(stream?.user_id);
 
   const coinDisplay = coinBalance ?? profile?.troll_coins ?? 0
-  const streamTitle = stream.title || stream.category || 'Live'
-  const categoryConfig = getCategoryConfig(stream.category || 'general')
+  const streamTitle = stream?.title || stream?.category || 'Live'
+  const categoryConfig = getCategoryConfig(stream?.category || 'general')
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
@@ -208,7 +208,7 @@ export default function BroadcastNeonHeader({
     } finally {
       setFollowLoading(false)
     }
-  }, [isFollowing, broadcasterProfile, stream.user_id, navigate])
+  }, [isFollowing, broadcasterProfile, stream?.user_id, navigate])
 
   const handleMessage = useCallback(() => {
     if (!broadcasterProfile?.username) return
@@ -220,11 +220,13 @@ export default function BroadcastNeonHeader({
     )
 
     setProfileMenuOpen(false)
-  }, [broadcasterProfile, stream.user_id])
+  }, [broadcasterProfile, stream?.user_id])
 
   const handleReport = useCallback(() => {
     navigate(`/report?targetId=${stream.user_id}&targetType=user&streamId=${stream.id}`)
-  }, [navigate, stream.user_id, stream.id])
+  }, [navigate, stream?.user_id, stream?.id])
+
+  if (!stream) return null
 
   const formattedCoins =
     coinDisplay >= 1_000_000

@@ -5,6 +5,7 @@ import LiveStreamsModule from '@/components/home/LiveStreamsModule';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
 import FeaturedBroadcasts from '@/components/broadcast/FeaturedBroadcasts';
 import { cn } from '@/lib/utils';
+import { preloadStreamData, preloadBroadcasterProfile, preloadImage } from '@/lib/streamPreload'
 
 interface SwissMinimal2Props {
   liveItems: any[];
@@ -185,9 +186,34 @@ export default function DashboardGridLayout({
 }
 
 function StreamCard({ item, onClick, size = 'md', variant = 'default' }: any) {
+  const handlePointerDown = React.useCallback(async () => {
+    if (!item?.id) return
+    const data = await preloadStreamData(item.id)
+    if (data?.user_id) {
+      void preloadBroadcasterProfile(data.user_id)
+    }
+    if (data?.thumbnail_url) {
+      preloadImage(data.thumbnail_url)
+    }
+    if (data?.poster_url) {
+      preloadImage(data.poster_url)
+    }
+  }, [item?.id])
+
+  const handleMouseEnter = React.useCallback(async () => {
+    if (!item?.id) return
+    const data = await preloadStreamData(item.id)
+    if (data?.thumbnail_url) {
+      preloadImage(data.thumbnail_url)
+    }
+  }, [item?.id])
+
   return (
     <div
       onClick={onClick}
+      onPointerDown={handlePointerDown}
+      onMouseEnter={handleMouseEnter}
+      onFocus={handleMouseEnter}
       className={cn(
         "group relative cursor-pointer rounded-xl overflow-hidden border border-white/5 hover:border-cyan-400/30 transition-all duration-300 hover:-translate-y-0.5",
         size === 'sm' ? 'aspect-video' : 'aspect-video'

@@ -1,19 +1,16 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { moderation } from '@/services/maitrollModeration';
+import { moderation, type JailState } from '@/services/maitrollModeration';
 
 export function useJailMode(userId: string | undefined) {
   const [isJailed, setIsJailed] = useState(false);
-  const [releaseTime, setReleaseTime] = useState<string | null>(null);
+  const [jailState, setJailState] = useState<JailState | null>(null);
   const [jailTimeRemaining, setJailTimeRemaining] = useState<number | null>(null);
-  const [jailId, setJailId] = useState<string | null>(null);
-  const [disciplineLevel, setDisciplineLevel] = useState<number>(0);
-  const [bondAmount, setBondAmount] = useState<number>(0);
-  const [bondAllowed, setBondAllowed] = useState(false);
 
   useEffect(() => {
     if (!userId) {
       setIsJailed(false);
+      setJailState(null);
       return;
     }
 
@@ -22,22 +19,15 @@ export function useJailMode(userId: string | undefined) {
         const state = await moderation.getJailState(userId);
         if (state.isJailed) {
           setIsJailed(true);
-          setReleaseTime(state.scheduledReleaseAt || null);
-          setJailId(state.jailId || null);
-          setDisciplineLevel(state.disciplineLevel || 1);
-          setBondAmount(state.bondAmount || 0);
-          setBondAllowed(state.bondAllowed || false);
+          setJailState(state);
         } else {
           setIsJailed(false);
-          setReleaseTime(null);
-          setJailId(null);
-          setDisciplineLevel(0);
-          setBondAmount(0);
-          setBondAllowed(false);
+          setJailState(null);
         }
       } catch (err) {
         console.error('Error fetching jail status:', err);
         setIsJailed(false);
+        setJailState(null);
       }
     };
 
@@ -65,34 +55,34 @@ export function useJailMode(userId: string | undefined) {
   }, [userId]);
 
   useEffect(() => {
-    if (isJailed && releaseTime) {
-      const interval = setInterval(() => {
-        const now = new Date();
-        const release = new Date(releaseTime);
-        const remaining = release.getTime() - now.getTime();
-        
-        if (remaining > 0) {
-          setJailTimeRemaining(remaining);
-        } else {
-          setJailTimeRemaining(0);
-          setIsJailed(false);
-          setReleaseTime(null);
-          setJailId(null);
-          clearInterval(interval);
-        }
-      }, 1000);
-
-      return () => clearInterval(interval);
+    if (!isJailed || !jailState?.scheduledReleaseAt) {
+      if (isJailed && !jailState?.scheduledReleaseAt) {
+        setJailTimeRemaining(null);
+      }
+      return;
     }
-  }, [isJailed, releaseTime]);
 
-  return { 
-    isJailed, 
-    jailTimeRemaining, 
-    releaseTime,
-    jailId,
-    disciplineLevel,
-    bondAmount,
-    bondAllowed
+    const interval = setInterval(() => {
+      const now = new Date();
+      const release = new Date(jailState.scheduledReleaseAt);
+      const remaining = release.getTime() - now.getTime();
+
+      if (remaining > 0) {
+        setJailTimeRemaining(remaining);
+      } else {
+        setJailTimeRemaining(0);
+        setIsJailed(false);
+        setJailState(null);
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isJailed, jailState?.scheduledReleaseAt]);
+
+  return {
+    isJailed,
+    jailState,
+    jailTimeRemaining,
   };
 }
