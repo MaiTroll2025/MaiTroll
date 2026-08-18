@@ -1,7 +1,7 @@
 import React from 'react';
-import { supabase } from '../lib/supabase';
-import { useGiftSystem } from '../lib/hooks/useGiftSystem';
-import { useAuthStore } from '../lib/store';
+import { supabase } from '../../lib/supabase';
+import { useGiftSystem } from '../../lib/hooks/useGiftSystem';
+import { useAuthStore } from '../../lib/store';
 import { Loader2 } from 'lucide-react';
 
 export default function QuickGiftRow({ recipientId, streamId, battleId, onClose }: { recipientId: string; streamId: string; battleId?: string | null; onClose: () => void }) {

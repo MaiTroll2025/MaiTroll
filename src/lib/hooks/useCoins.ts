@@ -444,7 +444,6 @@ export function useCoins() {
     totalEarned: balances.total_earned_coins,
     totalSpent: balances.total_spent_coins,
     crowns: balances.battle_crowns,
-    troll_coins: balances.troll_coins,
     hype_coins: balances.hype_coins,
   }
 }
