@@ -7,7 +7,10 @@ import { Link } from 'react-router-dom';
 export default function OfficerAlertBanner() {
   const { profile } = useAuthStore();
   const [alerts, setAlerts] = useState<any[]>([]);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(() => {
+    const dismissed = localStorage.getItem('officerAlertDismissed');
+    return dismissed !== 'true';
+  });
 
   // Check if user is officer or admin
   const isOfficer = profile?.role === 'troll_officer' || profile?.role === 'admin' || profile?.is_troll_officer || profile?.is_admin;
@@ -37,7 +40,7 @@ export default function OfficerAlertBanner() {
         newAlerts.push({
           type: 'delay',
           message: `${stalledPayouts.length} payout(s) pending > 30 mins! Action required.`,
-          link: '/admin/cashout'
+          link: '/admin/cashout-manager'
         });
       }
 
@@ -45,7 +48,7 @@ export default function OfficerAlertBanner() {
         newAlerts.push({
           type: 'error',
           message: `${failedPayouts.length} payout(s) failed delivery! Check ASAP.`,
-          link: '/admin/cashout'
+          link: '/admin/cashout-manager'
         });
       }
 
@@ -70,7 +73,7 @@ export default function OfficerAlertBanner() {
               View Details
             </Link>
           </div>
-          <button onClick={() => setVisible(false)} className="p-1 hover:bg-red-700 rounded">
+          <button onClick={() => { setVisible(false); localStorage.setItem('officerAlertDismissed', 'true'); }} className="p-1 hover:bg-red-700 rounded">
             <X className="w-4 h-4" />
           </button>
         </div>

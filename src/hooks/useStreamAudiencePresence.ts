@@ -224,6 +224,26 @@ export function useStreamAudiencePresence(
           toast.error('Failed to join audience')
           return false
         }
+
+        const member: StreamAudienceMember = {
+          id: existingRow.id,
+          stream_id: streamId,
+          user_id: effectiveUserId,
+          username,
+          avatar_url: avatarUrl,
+          joined_at: new Date().toISOString(),
+          left_at: null,
+          is_active: true,
+          is_present: true,
+          gift_total: 0,
+          gift_score: 0,
+          seat_id: null,
+          seat_status: 'audience',
+          role: 'audience',
+          last_seen_at: now,
+          is_ghost_mode: currentProfile?.is_ghost_mode ?? false,
+        }
+        queueAudienceMutation(memberKey(member), member)
       } else {
         const { error: insertError } = await supabase
           .from('stream_audience_presence')
@@ -246,6 +266,26 @@ export function useStreamAudiencePresence(
           toast.error('Failed to join audience')
           return false
         }
+
+        const member: StreamAudienceMember = {
+          id: `${streamId}-${effectiveUserId}`,
+          stream_id: streamId,
+          user_id: effectiveUserId,
+          username,
+          avatar_url: avatarUrl,
+          joined_at: now,
+          left_at: null,
+          is_active: true,
+          is_present: true,
+          gift_total: 0,
+          gift_score: 0,
+          seat_id: null,
+          seat_status: 'audience',
+          role: 'audience',
+          last_seen_at: now,
+          is_ghost_mode: currentProfile?.is_ghost_mode ?? false,
+        }
+        queueAudienceMutation(memberKey(member), member)
       }
 
       return true
@@ -254,7 +294,7 @@ export function useStreamAudiencePresence(
       toast.error('Failed to join audience')
       return false
     }
-  }, [streamId, effectiveUserId])
+  }, [streamId, effectiveUserId, queueAudienceMutation])
 
   const leaveAudience = useCallback(async () => {
     if (!effectiveUserId || !streamId) return
@@ -275,6 +315,22 @@ export function useStreamAudiencePresence(
       if (error) {
         console.warn('[useStreamAudiencePresence] leaveAudience error', error)
       }
+
+      const key = memberKey({ stream_id: streamId, user_id: effectiveUserId })
+      setAudienceMap((prev) => {
+        const existing = prev[key]
+        if (!existing) return prev
+        return {
+          ...prev,
+          [key]: {
+            ...existing,
+            is_active: false,
+            left_at: now,
+            last_seen_at: now,
+            seat_id: null,
+          },
+        }
+      })
     } catch (err) {
       console.warn('[useStreamAudiencePresence] leaveAudience failed', err)
     }

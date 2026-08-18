@@ -16,7 +16,7 @@ interface RewardResult {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders() });
+    return new Response("ok", { headers: corsHeaders(req.headers.get("origin")) });
   }
 
   const supabaseClient = createClient(
@@ -58,7 +58,7 @@ serve(async (req) => {
           today: today.toISOString(),
           dayOfWeek: dayOfWeek,
         }),
-        { status: 200, headers: { ...corsHeaders(), "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders(req.headers.get("origin")), "Content-Type": "application/json" } }
       );
     }
 
@@ -110,7 +110,7 @@ serve(async (req) => {
     if (!openPeriods || openPeriods.length === 0) {
       return new Response(
         JSON.stringify({ success: true, message: "No open cashback period found for this week", processed: 0 }),
-        { status: 200, headers: { ...corsHeaders(), "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders(req.headers.get("origin")), "Content-Type": "application/json" } }
       );
     }
 
@@ -135,7 +135,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ success: true, message: "No eligible users this week", processed: 0 }),
-        { status: 200, headers: { ...corsHeaders(), "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders(req.headers.get("origin")), "Content-Type": "application/json" } }
       );
     }
 
@@ -245,13 +245,13 @@ serve(async (req) => {
         cashback_rate: cashbackRate,
         results,
       }),
-      { status: 200, headers: { ...corsHeaders(), "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders(req.headers.get("origin")), "Content-Type": "application/json" } }
     );
   } catch (error: any) {
     console.error("Friday Rewards Processing Failed:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      { status: 400, headers: { ...corsHeaders(), "Content-Type": "application/json" } }
+      { status: 400, headers: { ...corsHeaders(req.headers.get("origin")), "Content-Type": "application/json" } }
     );
   }
 });

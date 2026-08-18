@@ -90,7 +90,7 @@ export default function AutomatedPayouts() {
         .from('user_profiles')
         .select('id', { count: 'exact', head: true })
         .eq('cashout_approved', true)
-        .gte('cashout_coins', 7500);
+        .gte('troll_coins', 7500);
       setEligibleUsers(count || 0);
     } catch (err) {
       console.error('Error loading payout window:', err);

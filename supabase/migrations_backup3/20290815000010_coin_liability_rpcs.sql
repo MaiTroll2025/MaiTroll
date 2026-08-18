@@ -132,7 +132,6 @@ BEGIN
         AND (
             p_search IS NULL
             OR username ILIKE '%' || p_search || '%'
-            OR user_tag ILIKE '%' || p_search || '%'
             OR id::TEXT ILIKE '%' || p_search || '%'
         )
         AND (
@@ -170,7 +169,6 @@ BEGIN
             SELECT jsonb_agg(jsonb_build_object(
                 'user_id', user_id,
                 'username', username,
-                'user_tag', user_tag,
                 'role', role,
                 'is_active', is_active,
                 'cashable_coin_balance', cashable_coin_balance,
@@ -368,7 +366,7 @@ BEGIN
         'data', jsonb_build_object(
             'user_id', v_user.id,
             'username', v_user.username,
-            'cashable_coin_balance', COALESCE(v_user.cashout_coins, 0) - COALESCE(v_user.cashout_reserved_coins, 0),
+            'cashable_coin_balance', COALESCE(v_user.troll_coins, 0),
             'non_cashable_balance', COALESCE(v_user.promo_coins, 0),
             'purchased_coin_balance', COALESCE(v_user.purchased_coins, 0),
             'promotional_balance', COALESCE(v_user.promo_coins, 0),
@@ -376,7 +374,7 @@ BEGIN
             'lifetime_gifts_received', COALESCE(v_user.total_gifts_received, 0),
             'lifetime_coins_sent', COALESCE(v_user.total_coins_sent, 0),
             'lifetime_payout_amount', COALESCE(v_user.total_payout_amount, 0),
-            'estimated_liability', COALESCE(v_user.cashout_coins, 0) - COALESCE(v_user.cashout_reserved_coins, 0),
+            'estimated_liability', COALESCE(v_user.troll_coins, 0),
             'cashout_eligibility', COALESCE(v_user.cashout_approved, false),
             'available_tiers', v_tiers,
             'highest_eligible_tier', NULL,
@@ -385,7 +383,7 @@ BEGIN
             'estimated_remaining_after_tier', NULL,
             'identity_verification_required', NOT COALESCE(v_user.cashout_approved, false),
             'payout_method_present', v_user.payout_method IS NOT NULL,
-            'currently_eligible', COALESCE(v_user.cashout_coins, 0) - COALESCE(v_user.cashout_reserved_coins, 0) >= 2000
+            'currently_eligible', COALESCE(v_user.troll_coins, 0) >= 2000
         )
     ) INTO v_result;
 

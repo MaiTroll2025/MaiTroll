@@ -262,7 +262,14 @@ self.addEventListener('fetch', (event) => {
       url.pathname.includes('/rest/v1/troll_wall_') ||
       url.pathname.includes('/rest/v1/streams') ||
       url.pathname.includes('/rest/v1/chat_messages') ||
-      url.pathname.includes('/rest/v1/notifications');
+      url.pathname.includes('/rest/v1/notifications') ||
+      url.pathname.includes('/rest/v1/record_label_tracks') ||
+      url.pathname.includes('/rest/v1/record_label_albums') ||
+      url.pathname.includes('/rest/v1/record_label_artist_profiles') ||
+      url.pathname.includes('/rest/v1/record_label_applications') ||
+      url.pathname.includes('/rest/v1/record_label_contracts') ||
+      url.pathname.includes('/rest/v1/record_label_transactions') ||
+      url.pathname.includes('/rest/v1/record_label_track_likes');
     if (isFeedQuery) {
       return; // bypass SW cache entirely
     }
@@ -529,6 +536,8 @@ async function networkFirstWithOfflineFallback(request: Request): Promise<Respon
     // Preload not supported
   }
   
+  const isNavigation = request.mode === 'navigate';
+  
   try {
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
@@ -540,10 +549,35 @@ async function networkFirstWithOfflineFallback(request: Request): Promise<Respon
     throw new Error('Network response not ok');
   } catch (err) {
     const cache = await caches.open(STATIC_CACHE);
+    
+    // For navigation requests, retry once after a short delay to handle
+    // transient network failures in in-app browsers (Facebook, Instagram, WebViews)
+    if (isNavigation) {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const retryResponse = await fetch(request);
+        if (retryResponse.ok) {
+          cache.put(request, retryResponse.clone());
+          return retryResponse;
+        }
+      } catch (retryErr) {
+        // Retry failed, continue to cache fallback
+      }
+    }
+    
     const cached = await cache.match(request);
     
     if (cached) {
       return cached;
+    }
+    
+    // For SPA navigation, serve cached app shell instead of offline page
+    // This lets the React app bootstrap and handle connectivity itself
+    if (isNavigation) {
+      const appShell = await cache.match('/index.html');
+      if (appShell) {
+        return appShell;
+      }
     }
     
     // Return offline page for navigation

@@ -84,13 +84,11 @@ export default function CashoutRequestsList({ viewMode: _viewMode }: CashoutRequ
   const handleApprove = async (id: string) => {
     if (!user) return
     try {
-      const { data, error } = await supabase.rpc('admin_process_payout', {
-        p_payout_id: id,
-        p_admin_id: user.id,
-        p_action: 'approve',
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'approve_payout', requestId: id },
       })
       if (error) throw error
-      if (!data?.success) throw new Error(data?.error || 'Failed to approve')
+      if (data?.error) throw new Error(data.error)
       toast.success('Request approved')
       fetchRequests()
     } catch (error: any) {
@@ -103,15 +101,12 @@ export default function CashoutRequestsList({ viewMode: _viewMode }: CashoutRequ
     const reason = window.prompt('Rejection reason:')
     if (!reason) return
     try {
-      const { data, error } = await supabase.rpc('admin_process_payout', {
-        p_payout_id: id,
-        p_admin_id: user.id,
-        p_action: 'reject',
-        p_rejection_reason: reason,
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'reject_payout', requestId: id, reason },
       })
       if (error) throw error
-      if (!data?.success) throw new Error(data?.error || 'Failed to reject')
-      toast.success('Request rejected')
+      if (data?.error) throw new Error(data.error)
+      toast.success('Request rejected - coins returned to user')
       fetchRequests()
     } catch (error: any) {
       toast.error(error.message || 'Failed to reject')

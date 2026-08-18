@@ -95,7 +95,6 @@ export interface CashoutDetails {
     username: string;
     email?: string;
     troll_coins: number;
-    reserved_troll_coins: number;
     available_coins: number;
   };
   gift_breakdown: GiftBreakdown[];

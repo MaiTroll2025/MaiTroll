@@ -33,6 +33,7 @@ import CityAdsManager from './components/CityAdsManager'
 import SecretaryCalendar from './components/SecretaryCalendar'
 import SecretaryOwnDashboard from './components/SecretaryOwnDashboard'
 import SecretaryCrownRedemptions from './components/SecretaryCrownRedemptions'
+import SecretaryMaiRecordLabelContracts from './components/SecretaryMaiRecordLabelContracts'
 
 /* ================================
    Types
@@ -64,6 +65,7 @@ type View =
   | 'secretary_dashboard'
   | 'crown_redemptions'
   | 'coin_liability'
+  | 'mai_record_label_contracts'
 
 /* ================================
    Main Component
@@ -329,6 +331,9 @@ export default function ExecutiveOperationsConsole() {
       case 'coin_liability':
         navigate('/secretary/coin-liability')
         return null
+
+      case 'mai_record_label_contracts':
+        return <SecretaryMaiRecordLabelContracts />
 
       default:
         return null

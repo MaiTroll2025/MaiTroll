@@ -12,8 +12,7 @@ export default function PastorPayouts() {
 
   // Available balance
   const rawBalance = Number(profile?.troll_coins || 0);
-  const reserved = Number(profile?.reserved_troll_coins || 0);
-  const balance = Math.max(0, rawBalance - reserved);
+  const balance = Math.max(0, rawBalance);
 
   const handleRequestPayout = async () => {
     if (!profile || !selectedTier) return;

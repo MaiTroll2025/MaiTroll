@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { X, Radio, MessageCircle, Gift, Swords, Telescope, Map as MapIcon, Coins, Shield, Zap, Info } from 'lucide-react';
+import { X, Radio, MessageCircle, Gift, Swords, Telescope, Map as MapIcon, Coins, Shield, Zap, Info, DollarSign } from 'lucide-react';
 
 interface LearnAboutMaiTrollModalProps {
   isOpen: boolean;
@@ -241,25 +241,50 @@ export default function LearnAboutMaiTrollModal({ isOpen, onClose }: LearnAboutM
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="mb-4 text-2xl font-bold text-white sm:text-3xl">Built for People</h2>
             <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-              MaiTroll was built around people — not just numbers. The goal is simple: give people a place to connect, create, have fun, and build something together.
+              MaiTroll The first virtual city that allows everyone to have freedom, better than TikTok, Liveme, Bigo, we give you what you deserve
             </p>
           </div>
         </section>
 
-        {/* Troll Coins */}
-        <section className="border-t border-slate-800 bg-slate-900/30 px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-3xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15">
-                <Coins className="h-5 w-5 text-amber-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-white sm:text-3xl">Troll Coins</h2>
-            </div>
-            <p className="text-base leading-relaxed text-slate-300 sm:text-lg">
-              Troll Coins are MaiTroll&apos;s virtual currency. You can use them throughout the platform for supported community and creator experiences — like sending gifts, supporting broadcasters, and participating in creator economy features.
-            </p>
-          </div>
-        </section>
+         {/* Troll Coins */}
+         <section className="border-t border-slate-800 bg-slate-900/30 px-6 py-14 sm:px-10">
+           <div className="mx-auto max-w-3xl">
+             <div className="flex items-center gap-3 mb-4">
+               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15">
+                 <Coins className="h-5 w-5 text-amber-400" />
+               </div>
+               <h2 className="text-2xl font-bold text-white sm:text-3xl">Troll Coins</h2>
+             </div>
+             <p className="text-base leading-relaxed text-slate-300 sm:text-lg">
+               Troll Coins are MaiTroll&apos;s virtual currency. You can use them throughout the platform for supported community and creator experiences — like sending gifts, supporting broadcasters, and participating in creator economy features.
+             </p>
+           </div>
+         </section>
+
+         {/* Payouts */}
+         <section className="border-t border-slate-800 bg-slate-950 px-6 py-14 sm:px-10">
+           <div className="mx-auto max-w-3xl">
+             <div className="flex items-center gap-3 mb-4">
+               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
+                 <DollarSign className="h-5 w-5 text-emerald-400" />
+               </div>
+               <h2 className="text-2xl font-bold text-white sm:text-3xl">Payouts</h2>
+             </div>
+             <p className="text-base leading-relaxed text-slate-300 sm:text-lg mb-6">
+               Cash out your Troll Coins to real money. All users can cash out to PayPal for free — up to 10 times per week with no fees. For an extra $10 upgrade, you can cash out up to 20 times per week.
+             </p>
+             <div className="grid gap-4 sm:grid-cols-2">
+               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+                 <h3 className="text-lg font-semibold text-emerald-300 mb-1">Standard Cashout</h3>
+                 <p className="text-sm text-slate-300">10 cashouts per week via PayPal — no fees.</p>
+               </div>
+               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+                 <h3 className="text-lg font-semibold text-amber-300 mb-1">Premium Cashout</h3>
+                 <p className="text-sm text-slate-300">20 cashouts per week via PayPal — pay a one-time $10 upgrade.</p>
+               </div>
+             </div>
+           </div>
+         </section>
 
         {/* Accessibility */}
         <section className="border-t border-slate-800 bg-slate-950 px-6 py-14 sm:px-10">

@@ -153,14 +153,6 @@ export default function MobileBattleFloatingChat({
 
     setMessages((prev) => [...prev.slice(-19), chatMessage]);
 
-    if (channelRef.current) {
-      await channelRef.current.send({
-        type: "broadcast",
-        event: "chat_message",
-        payload: chatMessage,
-      });
-    }
-
     const [insertA, insertB] = await Promise.all([
       supabase.from("stream_chat").insert({
         stream_id: challengerStream.id,

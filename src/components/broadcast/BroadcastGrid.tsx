@@ -322,7 +322,7 @@ function LiveKitVideoPlayer({
       }
     };
 
-    const interval = setInterval(checkVideoPlaying, 2000);
+    const interval = setInterval(checkVideoPlaying, 5000);
     return () => clearInterval(interval);
   }, [videoTrack]);
 

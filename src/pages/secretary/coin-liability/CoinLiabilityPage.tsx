@@ -39,7 +39,6 @@ interface SummaryData {
 interface UserRow {
   user_id: string;
   username: string;
-  user_tag: string;
   role: string;
   is_active: boolean;
   cashable_coin_balance: number;
@@ -265,12 +264,11 @@ export default function CoinLiabilityPage() {
       if (error) throw error;
 
       const rows = data?.data?.data || [];
-      const headers = ['Username', 'User Tag', 'Cashable Balance', 'Non-Cashable Balance', 'Estimated Liability', 'Eligible Tier', 'Pending Payout', 'Last Transaction', 'Account Status', 'Review Status'];
+      const headers = ['Username', 'Cashable Balance', 'Non-Cashable Balance', 'Estimated Liability', 'Eligible Tier', 'Pending Payout', 'Last Transaction', 'Account Status', 'Review Status'];
       const csvContent = [
         headers.join(','),
         ...rows.map((u: any) => [
           u.username,
-          u.user_tag,
           u.cashable_coin_balance,
           u.non_cashable_coin_balance,
           u.estimated_payout_value,
@@ -472,7 +470,7 @@ export default function CoinLiabilityPage() {
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Search by username, tag, email, ID..."
+                  placeholder="Search by username, email, ID..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -545,7 +543,7 @@ export default function CoinLiabilityPage() {
                         </div>
                         <div>
                           <div className="text-white font-medium">{u.username}</div>
-                          <div className="text-xs text-slate-500">@{u.user_tag}</div>
+                          <div className="text-xs text-slate-500">@{u.username}</div>
                         </div>
                       </div>
                     </td>

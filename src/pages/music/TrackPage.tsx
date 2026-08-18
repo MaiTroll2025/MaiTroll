@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
 import * as recordLabelService from '@/services/maiRecordLabel'
 import { toast } from 'sonner'
 import { MaiTrollTheme } from '@/styles/trollCityTheme'
@@ -15,8 +16,11 @@ import {
   Loader2,
   Clock,
   Gift,
-  ThumbsUp,
+  Coins,
 } from 'lucide-react'
+import AudioPlayer from '@/components/media/AudioPlayer'
+import { useAuthStore } from '@/lib/store'
+import { Song, TIP_AMOUNTS } from '@/types/media'
 
 type Track = {
   id: string
@@ -59,13 +63,6 @@ type Track = {
   } | null
 }
 
-function formatDuration(seconds: number | null | undefined): string {
-  if (!seconds) return '0:00'
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
-
 function formatDate(dateStr?: string | null): string {
   if (!dateStr) return 'Unknown'
   return new Date(dateStr).toLocaleDateString('en-US', {
@@ -78,11 +75,50 @@ function formatDate(dateStr?: string | null): string {
 export default function TrackPage() {
   const { trackId } = useParams<{ trackId: string }>()
   const navigate = useNavigate()
+  const { profile } = useAuthStore()
 
   const [track, setTrack] = useState<Track | null>(null)
   const [loading, setLoading] = useState(true)
   const [isLiked, setIsLiked] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [queue, setQueue] = useState<Track[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [showPlayer, setShowPlayer] = useState(false)
+  const [showTipModal, setShowTipModal] = useState(false)
+  const [tipAmount, setTipAmount] = useState<number | null>(null)
+  const [isTipping, setIsTipping] = useState(false)
+
+  const getPurchasedKey = useCallback(() => {
+    if (!profile?.id) return ''
+    return `purchased_tracks_${profile.id}`
+  }, [profile?.id])
+
+  const hasPurchased = useCallback((id: string) => {
+    try {
+      const key = getPurchasedKey()
+      if (!key) return false
+      const raw = localStorage.getItem(key)
+      const list: string[] = raw ? JSON.parse(raw) : []
+      return list.includes(id)
+    } catch {
+      return false
+    }
+  }, [getPurchasedKey])
+
+  const markPurchased = useCallback((id: string) => {
+    try {
+      const key = getPurchasedKey()
+      if (!key) return
+      const raw = localStorage.getItem(key)
+      const list: string[] = raw ? JSON.parse(raw) : []
+      if (!list.includes(id)) {
+        list.push(id)
+        localStorage.setItem(key, JSON.stringify(list))
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [getPurchasedKey])
 
   useEffect(() => {
     if (!trackId) return
@@ -95,6 +131,10 @@ export default function TrackPage() {
 
         if (!active) return
         setTrack((data as Track | null) ?? null)
+        if (data) {
+          setQueue([data as Track])
+          setCurrentIndex(0)
+        }
       } catch (error) {
         console.error('[TrackPage] Failed to load:', error)
       } finally {
@@ -111,35 +151,215 @@ export default function TrackPage() {
 
   const handlePlay = async () => {
     if (!track || !trackId) return
-    setIsPlaying(true)
-    await recordLabelService.incrementTrackPlay(trackId)
-    toast.success(`Now Playing: ${track.title}`)
+
+    try {
+      if (!hasPurchased(trackId)) {
+        const { data, error } = await supabase.rpc('play_mai_track', {
+          p_track_id: trackId,
+        })
+
+        if (error) throw error
+        if (!data?.success) throw new Error(data?.error || 'Failed to play track')
+
+        const listenerPaid = data?.listener_paid || 0
+        if (listenerPaid > 0) {
+          markPurchased(trackId)
+          toast.success(`Now Playing: ${track.title} (${listenerPaid} Troll Coins used)`)
+        } else {
+          toast.success(`Now Playing: ${track.title}`)
+        }
+      } else {
+        toast.success(`Now Playing: ${track.title}`)
+      }
+
+      setIsPlaying(true)
+      setShowPlayer(true)
+    } catch (err: any) {
+      setIsPlaying(false)
+      toast.error(err?.message || 'Failed to play track')
+    }
   }
 
   const handleLike = async () => {
     if (!trackId) return
+
+    if (isLiked) {
+      toast.error("You can't like twice silly")
+      return
+    }
+
     try {
-      if (isLiked) {
-        await recordLabelService.unlikeTrack(trackId)
-        setIsLiked(false)
-        setTrack((prev) => (prev ? { ...prev, like_count: Math.max(0, prev.like_count - 1) } : null))
-      } else {
-        await recordLabelService.likeTrack(trackId)
-        setIsLiked(true)
-        setTrack((prev) => (prev ? { ...prev, like_count: prev.like_count + 1 } : null))
-      }
+      await recordLabelService.likeTrack(trackId)
+      setIsLiked(true)
+      setTrack((prev) => (prev ? { ...prev, like_count: prev.like_count + 1 } : null))
     } catch (error) {
       console.error('[TrackPage] Like error:', error)
-      toast.error('Failed to update like')
+      toast.error('You cant like twice silly lol')
     }
   }
 
   const handleTip = () => {
-    if (track?.artist?.user_profiles?.username) {
-      navigate(`/profile/${track.artist.user_profiles.username}`)
-    } else if (track?.artist_id) {
-      navigate(`/profile/${track.artist_id}`)
+    setShowTipModal(true)
+  }
+
+  const handleSendTip = async () => {
+    if (!tipAmount || !track?.artist_id || !profile?.id) return
+
+    setIsTipping(true)
+    try {
+      const { error } = await recordLabelService.tipArtist({
+        artistId: track.artist_id,
+        grossCoins: tipAmount,
+        payerUserId: profile.id,
+        trackId: track.id,
+      })
+
+      if (error) throw error
+      toast.success(`Sent ${tipAmount} Troll Coins!`)
+      setShowTipModal(false)
+      setTipAmount(null)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send tip')
+    } finally {
+      setIsTipping(false)
     }
+  }
+
+  const handleChangeSong = (index: number) => {
+    if (queue[index]) {
+      setCurrentIndex(index)
+      const newTrack = queue[index]
+      setTrack(newTrack)
+      const song = toSong(newTrack)
+      if (song.audio_url) {
+        setIsPlaying(true)
+      }
+    }
+  }
+
+  const handleIsPlayingChange = (playing: boolean) => {
+    setIsPlaying(playing)
+  }
+
+  const handleClosePlayer = () => {
+    setIsPlaying(false)
+  }
+
+  const toSong = (t: Track): Song =>
+    ({
+      id: t.id,
+      artist_id: t.artist_id,
+      user_id: t.artist_id,
+      album_id: t.album_id || undefined,
+      label_id: undefined,
+      title: t.title,
+      description: t.description || undefined,
+      audio_url: t.audio_url || '',
+      cover_url: t.cover_url || undefined,
+      duration: t.duration_seconds || undefined,
+      genre: t.genre || undefined,
+      bpm: undefined,
+      key_signature: undefined,
+      isrc_code: undefined,
+      track_number: undefined,
+      plays: t.play_count,
+      unique_plays: 0,
+      tips_total: t.tip_coins,
+      likes_count: t.like_count,
+      comments_count: 0,
+      shares_count: 0,
+      is_published: t.status === 'published',
+      is_explicit: t.explicit,
+      featured: false,
+      allow_tips: true,
+      allow_downloads: false,
+      metadata: {},
+      created_at: t.created_at,
+      updated_at: t.updated_at,
+      published_at: t.published_at || undefined,
+      is_liked: false,
+      artist: t.artist
+        ? {
+            id: t.artist.id,
+            user_id: t.artist_id,
+            artist_name: t.artist.stage_name,
+            bio: t.artist.bio || undefined,
+            profile_banner_url: undefined,
+            avatar_url: t.artist.user_profiles?.avatar_url || t.artist.artist_image_url || undefined,
+            verified: t.artist.verified,
+            followers_count: 0,
+            total_plays: 0,
+            total_tips: 0,
+            coins_earned: 0,
+            label_id: undefined,
+            genre: t.artist.primary_genre || undefined,
+            location: undefined,
+            website_url: undefined,
+            social_links: {},
+            is_active: true,
+            created_at: t.created_at,
+            updated_at: t.updated_at,
+          }
+        : undefined,
+      album: t.album
+        ? {
+            id: t.album.id,
+            artist_id: t.artist_id,
+            user_id: t.artist_id,
+            title: t.album.title,
+            description: undefined,
+            cover_url: t.album.cover_url || undefined,
+            release_type: 'single',
+            genre: undefined,
+            release_date: undefined,
+            total_tracks: 1,
+            total_plays: 0,
+            total_tips: 0,
+            is_published: t.album.status === 'published',
+            label_id: undefined,
+            featured: false,
+            created_at: t.created_at,
+            updated_at: t.updated_at,
+          }
+        : undefined,
+      label: undefined,
+    }) as Song
+
+  const songForPlayer: Song = track ? toSong(track) : {
+    id: '',
+    artist_id: '',
+    user_id: '',
+    album_id: undefined,
+    label_id: undefined,
+    title: '',
+    description: undefined,
+    audio_url: '',
+    cover_url: undefined,
+    duration: undefined,
+    genre: undefined,
+    bpm: undefined,
+    key_signature: undefined,
+    isrc_code: undefined,
+    track_number: undefined,
+    plays: 0,
+    unique_plays: 0,
+    tips_total: 0,
+    likes_count: 0,
+    comments_count: 0,
+    shares_count: 0,
+    is_published: false,
+    is_explicit: false,
+    featured: false,
+    allow_tips: false,
+    allow_downloads: false,
+    metadata: {},
+    created_at: '',
+    updated_at: '',
+    published_at: undefined,
+    is_liked: false,
+    artist: undefined,
+    album: undefined,
+    label: undefined,
   }
 
   if (loading) {
@@ -301,10 +521,13 @@ export default function TrackPage() {
             <Button
               onClick={handleTip}
               variant="outline"
-              className={`${MaiTrollTheme.components.buttonSecondary} bg-transparent`}
+              className={`${MaiTrollTheme.components.buttonSecondary} bg-transparent flex flex-col items-center gap-1 py-3 px-4 h-auto`}
             >
-              <Gift size={18} />
-              Tip Artist
+              <div className="flex items-center gap-1">
+                <Coins size={18} />
+                <span className="font-bold">{track.tip_coins.toLocaleString()}</span>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider opacity-70">Tip Artist</span>
             </Button>
           </div>
         </section>
@@ -324,6 +547,80 @@ export default function TrackPage() {
           </section>
         )}
       </div>
+
+      {showTipModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className={`${MaiTrollTheme.backgrounds.card} border ${MaiTrollTheme.borders.glass} rounded-2xl p-6 max-w-md w-full`}>
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Coins className="w-6 h-6 text-yellow-400" />
+              Tip the Artist
+            </h3>
+
+            <div className="flex items-center gap-3 mb-6 p-3 bg-white/5 rounded-xl">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                {track?.artist?.stage_name?.[0] || '?'}
+              </div>
+              <div>
+                <p className="font-medium text-white">{track?.title}</p>
+                <p className="text-sm text-gray-400">{track?.artist?.stage_name}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-400 mb-3">Select amount:</p>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {TIP_AMOUNTS.map((tip) => (
+                <button
+                  key={tip.amount}
+                  onClick={() => setTipAmount(tip.amount)}
+                  className={`p-3 rounded-xl border transition-all ${
+                    tipAmount === tip.amount
+                      ? 'border-yellow-400 bg-yellow-400/20 text-yellow-300'
+                      : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20'
+                  }`}
+                >
+                  {tip.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => { setShowTipModal(false); setTipAmount(null) }}
+                className="flex-1"
+                disabled={isTipping}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendTip}
+                disabled={!tipAmount || isTipping}
+                className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400"
+              >
+                {isTipping ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  `Tip ${tipAmount || 0} Coins`
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPlayer && (
+        <AudioPlayer
+          song={songForPlayer}
+          queue={queue.map(toSong)}
+          currentIndex={currentIndex}
+          isPlaying={isPlaying}
+          onIsPlayingChange={handleIsPlayingChange}
+          isMinimized={true}
+          onMinimizeToggle={() => setShowPlayer(false)}
+          onClose={() => { setShowPlayer(false); handleClosePlayer() }}
+          onChangeSong={handleChangeSong}
+        />
+      )}
     </div>
   )
 }

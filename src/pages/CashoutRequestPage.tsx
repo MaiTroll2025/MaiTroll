@@ -20,7 +20,7 @@ import type {
 } from '../types/cashout';
 import {
   TIERS,
-  DAILY_CASHOUT_LIMIT,
+  WEEKLY_CASHOUT_LIMIT,
   MIN_CASHOUT_COINS,
   type CashoutTier,
 } from '../config/coinConfig';
@@ -84,15 +84,15 @@ export default function CashoutRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [recentRequests, setRecentRequests] = useState<CashoutRequest[]>([]);
-  const [dailyCashoutCount, setDailyCashoutCount] = useState(0);
+  const [weeklyCashoutCount, setWeeklyCashoutCount] = useState(0);
   const [fastPayApproved, setFastPayApproved] = useState(false);
   const [isMaiPayPlus, setIsMaiPayPlus] = useState(false);
 
    // Derived state for display
-   const dailyLimit = isMaiPayPlus ? 20 : DAILY_CASHOUT_LIMIT;
+   const weeklyLimit = isMaiPayPlus ? 20 : WEEKLY_CASHOUT_LIMIT;
    const usdAmount = selectedTier ? selectedTier.usd : 0;
-   const dailyLimitReached = dailyCashoutCount >= dailyLimit;
-   const canRequest = eligibleCoins >= (selectedTier?.coins || 0) && providerUsername.trim() && userTag.trim() && !dailyLimitReached;
+   const weeklyLimitReached = weeklyCashoutCount >= weeklyLimit;
+   const canRequest = eligibleCoins >= (selectedTier?.coins || 0) && providerUsername.trim() && userTag.trim() && !weeklyLimitReached;
 
   // Load user's troll_coins balance and recent payout requests
   const getSavedPayoutUsername = useCallback((method: PayoutMethod) => {
@@ -115,6 +115,11 @@ export default function CashoutRequestPage() {
   }, [profile]);
 
   useEffect(() => {
+    if (!user?.id) return
+    refreshProfile?.()
+  }, [user?.id, refreshProfile])
+
+  useEffect(() => {
     if (!profile) return;
     if (providerUsername.trim()) return;
 
@@ -130,8 +135,7 @@ export default function CashoutRequestPage() {
         setLoading(true);
 
         // All troll coins are cashout-eligible.
-        // Available = troll_coins - cashout_reserved_coins (coins already reserved for pending payouts)
-        const eligibleTotal = Math.max(0, (profile.troll_coins || 0) - (profile.cashout_reserved_coins || 0));
+        const eligibleTotal = Math.max(0, (profile.troll_coins || 0));
         setEligibleCoins(eligibleTotal);
 
         setIsMaiPayPlus(profile.mai_pay_plus === true);
@@ -169,17 +173,17 @@ export default function CashoutRequestPage() {
         if (approvedApplicationError) throw approvedApplicationError;
         setFastPayApproved(Boolean(profile.cashout_approved || approvedApplicationData?.id));
 
-        // Count cashouts in the last 24h (rolling daily limit) — matches backend enforcement.
-        const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { count: dayCount, error: dayCountError } = await supabase
+        // Count cashouts in the last 7 days (rolling weekly limit) — matches backend enforcement.
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { count: weekCount, error: weekCountError } = await supabase
           .from('payout_requests')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', profile.id)
           .in('status', ['approved', 'paid', 'completed'])
-          .gte('created_at', dayAgo);
+          .gte('created_at', weekAgo);
 
-        if (dayCountError) throw dayCountError;
-        setDailyCashoutCount(dayCount || 0);
+        if (weekCountError) throw weekCountError;
+        setWeeklyCashoutCount(weekCount || 0);
 
         // Auto-select highest eligible tier based on the loaded balance.
         // MAI Pay Plus users require double the standard coin amount per tier.
@@ -247,8 +251,8 @@ export default function CashoutRequestPage() {
       return;
     }
 
-    if (dailyLimitReached) {
-      toast.error(`Daily cashout limit reached. You have used ${dailyCashoutCount} of ${DAILY_CASHOUT_LIMIT} cashouts in the last 24 hours.`);
+    if (weeklyLimitReached) {
+      toast.error(`Weekly cashout limit reached. You have used ${weeklyCashoutCount} of ${weeklyLimit} cashouts in the last 7 days.`);
       return;
     }
 
@@ -275,7 +279,7 @@ export default function CashoutRequestPage() {
         throw new Error(data.error || 'Cashout request failed');
       }
 
-      toast.success('Cashout request submitted! It will be reviewed and processed by the team.');
+      toast.success(`Cashout request submitted! ${selectedTier.coins.toLocaleString()} coins deducted.`);
 
       // Refresh profile to update balances
       await refreshProfile();
@@ -313,21 +317,21 @@ export default function CashoutRequestPage() {
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-extrabold text-white mb-2">Request Cashout</h1>
-              <p className="text-gray-300">
-                 Convert your eligible cashout coins into real payout requests. Only coins moved into Cashout Escrow are eligible for payout; free or non-cashout coins are excluded.
-                 You can request up to {dailyLimit} cashouts per rolling 24-hour period with no fees.
-              </p>
+           <p className="text-gray-300">
+              Convert your eligible cashout coins into real payout requests. All troll coins are cashout-eligible.
+              You can request up to {weeklyLimit} cashouts per rolling 7-day period with no fees.
+           </p>
             </div>
           </div>
 
-          {dailyLimitReached && (
+          {weeklyLimitReached && (
             <div className="mt-4 bg-amber-900/30 border border-amber-700 rounded-lg p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
-                <h4 className="font-bold text-amber-400">Daily Cashout Limit Reached</h4>
+                <h4 className="font-bold text-amber-400">Weekly Cashout Limit Reached</h4>
                 <p className="text-sm text-amber-300/80">
-                   You have used {dailyCashoutCount} of {dailyLimit} cashouts in the last 24 hours.
-                   Your limit resets 24 hours after your first cashout of the day.
+                   You have used {weeklyCashoutCount} of {weeklyLimit} cashouts in the last 7 days.
+                   Your limit resets 7 days after your first cashout of the week.
                 </p>
               </div>
             </div>
@@ -391,7 +395,7 @@ export default function CashoutRequestPage() {
               })}
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              * Cashout amounts are based on your eligible cashout escrow balance. Minimum cashout is {MIN_CASHOUT_COINS.toLocaleString()} coins.
+              * Cashout amounts are based on your troll coin balance. Minimum cashout is {MIN_CASHOUT_COINS.toLocaleString()} coins.
             </p>
           </div>
 
@@ -520,10 +524,10 @@ export default function CashoutRequestPage() {
                   <div className="w-5 h-5 border-2 border-t-troll-purple-900 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
                   Submitting...
                 </>
-              ) : dailyLimitReached ? (
+              ) : weeklyLimitReached ? (
                 <>
                   <AlertCircle className="w-5 h-5" />
-                  Daily Limit Reached ({dailyCashoutCount}/{DAILY_CASHOUT_LIMIT})
+                  Weekly Limit Reached ({weeklyCashoutCount}/{weeklyLimit})
                 </>
               ) : eligibleCoins < (selectedTier?.coins || 0) ? (
                <>
@@ -566,7 +570,7 @@ export default function CashoutRequestPage() {
                 >
                   <div>
                     <p className="font-semibold text-white">
-                      {req.coins_reserved?.toLocaleString() || 0} coins
+                      {req.coin_amount?.toLocaleString() || req.coins_reserved?.toLocaleString() || 0} coins
                     </p>
                     <p className="text-xs text-gray-400">
                       ${req.usd_amount?.toFixed(2) || '0.00'} • {new Date(req.created_at).toLocaleDateString()}

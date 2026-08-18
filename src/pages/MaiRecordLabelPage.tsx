@@ -38,6 +38,8 @@ type ArtistProfile = {
     display_name?: string | null
     avatar_url?: string | null
   } | null
+  track_count?: number
+  total_plays?: number
 }
 
 type Track = {
@@ -383,7 +385,7 @@ export default function MaiRecordLabelPage() {
                     }
                     className="group text-left"
                   >
-                    <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                    <div className="aspect-square overflow-hidden rounded-2xl border border-white/10 bg-white/5">
                       {avatar ? (
                         <img
                           src={avatar}
@@ -395,28 +397,38 @@ export default function MaiRecordLabelPage() {
                           <Mic2 size={34} className="text-purple-300" />
                         </div>
                       )}
+                    </div>
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="mt-2">
+                      <div className="flex items-center gap-1">
+                        <p className="truncate text-sm font-black text-white">
+                          {artist.stage_name}
+                        </p>
 
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <div className="flex items-center gap-1">
-                          <p className="truncate text-sm font-black text-white">
-                            {artist.stage_name}
-                          </p>
-
-                          {artist.verified && (
-                            <BadgeCheck
-                              size={14}
-                              className="shrink-0 text-cyan-400"
-                            />
-                          )}
-                        </div>
-
-                        {username && (
-                          <p className="truncate text-xs text-slate-300">
-                            @{username}
-                          </p>
+                        {artist.verified && (
+                          <BadgeCheck
+                            size={14}
+                            className="shrink-0 text-cyan-400"
+                          />
                         )}
+                      </div>
+
+                      {username && (
+                        <p className="truncate text-xs text-slate-300">
+                          @{username}
+                        </p>
+                      )}
+
+                      <div className="mt-1 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <Disc3 size={10} />
+                          {(artist.track_count ?? 0)} tracks
+                        </span>
+
+                        <span className="flex items-center gap-1">
+                          <Play size={10} />
+                          {(artist.total_plays ?? 0).toLocaleString()} plays
+                        </span>
                       </div>
                     </div>
                   </button>

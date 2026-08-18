@@ -9,8 +9,6 @@ interface Trollcoins {
   total_earned_coins: number
   total_spent_coins: number
   battle_crowns: number
-  cashout_coins: number
-  cashout_reserved_coins: number
 }
 
 interface SpendCoinsParams {
@@ -41,8 +39,6 @@ export function useCoins() {
     total_earned_coins: profile?.total_earned_coins || 0,
     total_spent_coins: profile?.total_spent_coins || 0,
     battle_crowns: profile?.battle_crowns ?? 0,
-    cashout_coins: profile?.cashout_coins ?? 0,
-    cashout_reserved_coins: profile?.cashout_reserved_coins ?? 0,
   })
   const [optimisticUntil, setOptimisticUntil] = useState<number | null>(null)
   const [optimisticTroll, setOptimisticTroll] = useState<number | null>(null)
@@ -56,11 +52,9 @@ export function useCoins() {
         total_earned_coins: profile.total_earned_coins || 0,
         total_spent_coins: profile.total_spent_coins || 0,
         battle_crowns: profile.battle_crowns ?? 0,
-        cashout_coins: profile.cashout_coins ?? 0,
-        cashout_reserved_coins: profile.cashout_reserved_coins ?? 0,
       })
     }
-  }, [profile, profile?.troll_coins, profile?.hype_coins, profile?.total_earned_coins, profile?.total_spent_coins, profile?.battle_crowns, profile?.cashout_coins, profile?.cashout_reserved_coins])
+  }, [profile, profile?.troll_coins, profile?.hype_coins, profile?.total_earned_coins, profile?.total_spent_coins, profile?.battle_crowns])
 
    /**
     * Refresh coin balances from database
@@ -90,11 +84,11 @@ export function useCoins() {
 
        await ensureSupabaseSession(supabase)
 
-        const { data: profileData, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('troll_coins, hype_coins, total_earned_coins, total_spent_coins, battle_crowns, cashout_coins, cashout_reserved_coins')
-          .eq('id', user.id)
-          .maybeSingle()
+         const { data: profileData, error: profileError } = await supabase
+           .from('user_profiles')
+           .select('troll_coins, hype_coins, total_earned_coins, total_spent_coins, battle_crowns')
+           .eq('id', user.id)
+           .maybeSingle()
 
        if (profileError) {
          console.error('Error loading profile balances:', profileError)
@@ -125,24 +119,20 @@ export function useCoins() {
             0,
         }
 
-         const nextBalances = {
-          troll_coins: mergedPaid,
-          hype_coins: profileData?.hype_coins ?? currentProfile?.hype_coins ?? 0,
-          total_earned_coins: nextTotals.total_earned_coins,
-          total_spent_coins: nextTotals.total_spent_coins,
-          battle_crowns: profileData?.battle_crowns ?? currentProfile?.battle_crowns ?? 0,
-          cashout_coins: profileData?.cashout_coins ?? currentProfile?.cashout_coins ?? 0,
-          cashout_reserved_coins: profileData?.cashout_reserved_coins ?? currentProfile?.cashout_reserved_coins ?? 0,
-        }
+          const nextBalances = {
+           troll_coins: mergedPaid,
+           hype_coins: profileData?.hype_coins ?? currentProfile?.hype_coins ?? 0,
+           total_earned_coins: nextTotals.total_earned_coins,
+           total_spent_coins: nextTotals.total_spent_coins,
+           battle_crowns: profileData?.battle_crowns ?? currentProfile?.battle_crowns ?? 0,
+         }
 
-        const balancesChanged =
-          balances.troll_coins !== nextBalances.troll_coins ||
-          balances.hype_coins !== nextBalances.hype_coins ||
-          balances.total_earned_coins !== nextBalances.total_earned_coins ||
-          balances.total_spent_coins !== nextBalances.total_spent_coins ||
-          balances.battle_crowns !== nextBalances.battle_crowns ||
-          balances.cashout_coins !== nextBalances.cashout_coins ||
-          balances.cashout_reserved_coins !== nextBalances.cashout_reserved_coins
+         const balancesChanged =
+           balances.troll_coins !== nextBalances.troll_coins ||
+           balances.hype_coins !== nextBalances.hype_coins ||
+           balances.total_earned_coins !== nextBalances.total_earned_coins ||
+           balances.total_spent_coins !== nextBalances.total_spent_coins ||
+           balances.battle_crowns !== nextBalances.battle_crowns
 
        if (balancesChanged) {
           setBalances(nextBalances)
@@ -162,16 +152,14 @@ export function useCoins() {
               console.debug('[refreshCoins] No coin state change, skipping auth update')
             }
           } else {
-             const updatedProfile: UserProfile = {
-               ...currentProfile,
-               troll_coins: mergedPaid as number,
-               hype_coins: nextBalances.hype_coins,
-               total_earned_coins: nextTotals.total_earned_coins,
-               total_spent_coins: nextTotals.total_spent_coins,
-               battle_crowns: nextBalances.battle_crowns,
-               cashout_coins: nextBalances.cashout_coins,
-               cashout_reserved_coins: nextBalances.cashout_reserved_coins,
-             }
+              const updatedProfile: UserProfile = {
+                ...currentProfile,
+                troll_coins: mergedPaid as number,
+                hype_coins: nextBalances.hype_coins,
+                total_earned_coins: nextTotals.total_earned_coins,
+                total_spent_coins: nextTotals.total_spent_coins,
+                battle_crowns: nextBalances.battle_crowns,
+              }
 
             useAuthStore.getState().setProfile(updatedProfile)
           }
@@ -203,18 +191,13 @@ export function useCoins() {
       return false
     }
 
-    // Calculate available coins (exclude cashout coins - those are locked for payout)
+    // Calculate available coins
     const availableForSpend = balances.troll_coins
 
-    // Validate balance (cashout coins cannot be spent)
+    // Validate balance
     if (availableForSpend < params.amount) {
       toast.error('Not enough coins!')
       return false
-    }
-
-    // Double-check cashout coins are not being spent
-    if (balances.cashout_coins > 0 || balances.cashout_reserved_coins > 0) {
-      console.log('[spendCoins] Note: Cashout coins are locked and not included in spendable balance')
     }
 
     setLoading(true)
@@ -274,7 +257,7 @@ export function useCoins() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, balances.troll_coins, balances.hype_coins, balances.cashout_coins, balances.cashout_reserved_coins, refreshCoins])
+  }, [user?.id, balances.troll_coins, balances.hype_coins, refreshCoins])
 
   // Set up real-time subscription for coin balance updates
   useEffect(() => {
@@ -345,52 +328,44 @@ export function useCoins() {
                 typeof newProfileData.battle_crowns === 'number'
                   ? newProfileData.battle_crowns
                   : currentProfile.battle_crowns
-              const nextHype =
-                typeof newProfileData.hype_coins === 'number'
-                  ? newProfileData.hype_coins
-                  : currentProfile.hype_coins
-              const updatedProfile: UserProfile = {
-                ...currentProfile,
-                troll_coins: shouldKeepOptimistic
-                  ? (optimisticTroll ?? balances.troll_coins)
-                  : Number(candidate ?? currentProfile.troll_coins),
-                total_earned_coins: nextEarned,
-                total_spent_coins: nextSpent,
-                battle_crowns: nextCrowns,
-                hype_coins: nextHype,
-              }
-              useAuthStore.getState().setProfile(updatedProfile)
-              setBalances((prev) => ({
-                troll_coins: shouldKeepOptimistic
-                  ? (optimisticTroll ?? prev.troll_coins)
-                  : (typeof updatedProfile.troll_coins === 'number'
-                      ? updatedProfile.troll_coins
-                      : prev.troll_coins),
-                total_earned_coins:
-                  typeof updatedProfile.total_earned_coins === 'number'
-                    ? updatedProfile.total_earned_coins
-                    : prev.total_earned_coins,
-                total_spent_coins:
-                  typeof updatedProfile.total_spent_coins === 'number'
-                    ? updatedProfile.total_spent_coins
-                    : prev.total_spent_coins,
-                battle_crowns:
-                  typeof updatedProfile.battle_crowns === 'number'
-                    ? updatedProfile.battle_crowns
-                    : prev.battle_crowns,
-                hype_coins:
-                  typeof updatedProfile.hype_coins === 'number'
-                    ? updatedProfile.hype_coins
-                    : prev.hype_coins,
-                cashout_coins:
-                  typeof updatedProfile.cashout_coins === 'number'
-                    ? updatedProfile.cashout_coins
-                    : prev.cashout_coins,
-                cashout_reserved_coins:
-                  typeof updatedProfile.cashout_reserved_coins === 'number'
-                    ? updatedProfile.cashout_reserved_coins
-                    : prev.cashout_reserved_coins,
-              }))
+               const nextHype =
+                 typeof newProfileData.hype_coins === 'number'
+                   ? newProfileData.hype_coins
+                   : currentProfile.hype_coins
+               const updatedProfile: UserProfile = {
+                 ...currentProfile,
+                 troll_coins: shouldKeepOptimistic
+                   ? (optimisticTroll ?? balances.troll_coins)
+                   : Number(candidate ?? currentProfile.troll_coins),
+                 total_earned_coins: nextEarned,
+                 total_spent_coins: nextSpent,
+                 battle_crowns: nextCrowns,
+                 hype_coins: nextHype,
+               }
+               useAuthStore.getState().setProfile(updatedProfile)
+               setBalances((prev) => ({
+                 troll_coins: shouldKeepOptimistic
+                   ? (optimisticTroll ?? prev.troll_coins)
+                   : (typeof updatedProfile.troll_coins === 'number'
+                       ? updatedProfile.troll_coins
+                       : prev.troll_coins),
+                 total_earned_coins:
+                   typeof updatedProfile.total_earned_coins === 'number'
+                     ? updatedProfile.total_earned_coins
+                     : prev.total_earned_coins,
+                 total_spent_coins:
+                   typeof updatedProfile.total_spent_coins === 'number'
+                     ? updatedProfile.total_spent_coins
+                     : prev.total_spent_coins,
+                 battle_crowns:
+                   typeof updatedProfile.battle_crowns === 'number'
+                     ? updatedProfile.battle_crowns
+                     : prev.battle_crowns,
+                 hype_coins:
+                   typeof updatedProfile.hype_coins === 'number'
+                     ? updatedProfile.hype_coins
+                     : prev.hype_coins,
+               }))
               if (!shouldKeepOptimistic && optimisticUntil) {
                 setOptimisticUntil(null)
                 setOptimisticTroll(null)
@@ -469,8 +444,7 @@ export function useCoins() {
     totalEarned: balances.total_earned_coins,
     totalSpent: balances.total_spent_coins,
     crowns: balances.battle_crowns,
-    cashout_coins: balances.cashout_coins,
-    cashout_reserved_coins: balances.cashout_reserved_coins,
+    troll_coins: balances.troll_coins,
     hype_coins: balances.hype_coins,
   }
 }

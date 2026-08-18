@@ -47,7 +47,7 @@ interface UseStreamChatProps {
 }
 
 const MAX_MESSAGES = 200;
-const AUTO_DELETE_INTERVAL = 5000;
+const AUTO_DELETE_INTERVAL = 15000;
 const MESSAGE_LIFETIME_MS = 30000;
 
 const getDisplayName = (profileLike: any): string => {

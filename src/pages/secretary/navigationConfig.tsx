@@ -1,4 +1,4 @@
-import { LayoutDashboard, ClipboardList, AlertTriangle, DollarSign, CreditCard, Shield, Landmark, Crown, FileText, Building2, Users, Bell, Briefcase, LogOut, ChevronRight, Activity, CalendarDays, CheckSquare, Coins } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, AlertTriangle, DollarSign, CreditCard, Shield, Landmark, Crown, FileText, Building2, Users, Bell, Briefcase, LogOut, ChevronRight, Activity, CalendarDays, CheckSquare, Coins, Music } from 'lucide-react'
 
 type Section =
   | 'dashboard'
@@ -24,6 +24,7 @@ type View =
   | 'secretary_dashboard'
   | 'crown_redemptions'
   | 'coin_liability'
+  | 'mai_record_label_contracts'
 
 interface NavigationItem {
   id: View
@@ -133,6 +134,11 @@ export const navigation: NavigationGroup[] = [
         id: 'staff',
         label: 'Staff Management',
         icon: <Users className="w-4 h-4" />
+      },
+      {
+        id: 'mai_record_label_contracts',
+        label: 'MAI Record Label',
+        icon: <Music className="w-4 h-4" />
       },
       {
         id: 'calendar',

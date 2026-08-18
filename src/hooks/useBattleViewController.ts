@@ -146,6 +146,7 @@ export function useBattleViewController({
   const [participantContributions, setParticipantContributions] = useState<Record<string, number>>({});
   const [arenaReadyAtMs, setArenaReadyAtMs] = useState<number | null>(null);
   const [arenaReady, setArenaReady] = useState(false);
+  const [preBattleCountdown, setPreBattleCountdown] = useState<number | null>(null);
   const hasHandledReturnRef = useRef(false);
   const [challengerCrownInfo, setChallengerCrownInfo] = useState<CrownInfo>({ crowns: 0, streak: 0, hasStreak: false });
   const [opponentCrownInfo, setOpponentCrownInfo] = useState<CrownInfo>({ crowns: 0, streak: 0, hasStreak: false });
@@ -758,7 +759,7 @@ export function useBattleViewController({
   useEffect(() => {
     const battle = battleViewStateRef.current.battle;
     if (!battle || !effectiveUserId) return;
-    if (battle.status !== 'active') return;
+    if (battle.status !== 'active' && battle.status !== 'starting') return;
     if (resolvedBattleRole === null) return;
 
     if (connectedBattleIdRef.current === battleId && battleRoomRef.current && battleRoomRef.current.state === 'connected') {
@@ -1095,6 +1096,28 @@ export function useBattleViewController({
       setArenaReadyAtMs(Date.now());
     }
   }, [battleRealtime.arenaReady]);
+
+  // Pre-battle countdown: show match found overlay during 'starting' phase
+  useEffect(() => {
+    if (!battle || battle.status !== 'starting') {
+      setPreBattleCountdown(null);
+      return;
+    }
+
+    setPreBattleCountdown(3);
+
+    const timer = setInterval(() => {
+      setPreBattleCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          setPreBattleCountdown(null);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [battle?.id, battle?.status]);
 
   // Arena readiness check
   useEffect(() => {
@@ -2243,6 +2266,7 @@ export function useBattleViewController({
     activeBattlesLoading,
     battleId,
     formatTime,
+    preBattleCountdown,
 
     // ── Actions ──
     handleGiftSelect,

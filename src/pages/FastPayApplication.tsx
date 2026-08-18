@@ -332,9 +332,9 @@ export default function FastPayApplication() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center">
             <Zap className="mx-auto mb-2 h-6 w-6 text-cyan-400" />
             <p className="text-lg font-black text-white">
-              {tier === 'instant' ? '20 Per Day' : '10 Per Day'}
+              {tier === 'instant' ? '20 Per Week' : '10 Per Week'}
             </p>
-            <p className="text-xs text-slate-500">Rolling 24-hour cashout limit</p>
+            <p className="text-xs text-slate-500">Rolling 7-day cashout limit</p>
           </div>
         </div>
 
@@ -637,7 +637,7 @@ export default function FastPayApplication() {
             </button>
 
             <p className="text-xs text-slate-500 text-center">
-              No application approval needed — reach a cashout tier and request a payout anytime (up to your rolling 24-hour limit).
+              No application approval needed — reach a cashout tier and request a payout anytime (up to your rolling 7-day limit).
             </p>
           </form>
         )}

@@ -104,16 +104,14 @@ export default function PayoutReview() {
   const updateStatus = async (requestId: string, action: 'approve' | 'reject', reason?: string) => {
     setProcessingId(requestId)
     try {
-      // Use the unified admin_process_payout RPC
-      const { data, error } = await supabase.rpc('admin_process_payout', {
-        p_payout_id: requestId,
-        p_admin_id: user?.id,
-        p_action: action,
-        p_rejection_reason: reason || null,
-      })
+      const actionType = action === 'approve' ? 'approve_payout' : 'reject_payout'
+      const body: any = { action: actionType, requestId }
+      if (action === 'reject' && reason) body.reason = reason
+      
+      const { data, error } = await supabase.functions.invoke('admin-actions', { body })
 
       if (error) throw error
-      if (!data?.success) throw new Error(data?.error || 'Failed to process payout')
+      if (data?.error) throw new Error(data.error)
 
       toast.success(data.message || `Request ${action}d`)
       fetchRequests()

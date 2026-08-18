@@ -61,14 +61,11 @@ export default function GiftCardFulfillmentList({ viewMode: _viewMode }: GiftCar
         toast.error('Enter a valid payment reference')
         return
       }
-      const { data, error } = await supabase.rpc('admin_process_payout', {
-        p_payout_id: id,
-        p_admin_id: (await supabase.auth.getUser()).data.user?.id,
-        p_action: 'pay',
-        p_payment_reference: paymentRef.trim(),
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'update_payout_status', payoutId: id, newStatus: 'paid', paymentReference: paymentRef.trim() },
       })
       if (error) throw error
-      if (!data?.success) throw new Error(data?.error || 'Failed to mark as paid')
+      if (data?.error) throw new Error(data.error)
       toast.success('Payout marked as paid')
       setEditingId(null)
       setPaymentRef('')
@@ -82,14 +79,11 @@ export default function GiftCardFulfillmentList({ viewMode: _viewMode }: GiftCar
   const handleReject = async (id: string) => {
     try {
       const reason = window.prompt('Enter rejection reason (optional):') || null
-      const { data, error } = await supabase.rpc('admin_process_payout', {
-        p_payout_id: id,
-        p_admin_id: (await supabase.auth.getUser()).data.user?.id,
-        p_action: 'reject',
-        p_rejection_reason: reason,
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'reject_payout', requestId: id, reason },
       })
       if (error) throw error
-      if (!data?.success) throw new Error(data?.error || 'Failed to reject')
+      if (data?.error) throw new Error(data.error)
       toast.success('Payout rejected')
       fetchPayouts()
     } catch (error: any) {

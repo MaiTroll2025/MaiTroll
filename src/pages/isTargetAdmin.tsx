@@ -484,13 +484,13 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
       const promoStart = '2026-05-01T21:00:00.000Z';
       const { data } = await supabase
         .from('user_profiles')
-        .select('id, username, avatar_url, created_at, troll_coins, reserved_troll_coins, total_earned_coins')
+        .select('id, username, avatar_url, created_at, troll_coins, total_earned_coins')
         .gte('created_at', promoStart)
         .order('created_at', { ascending: true })
         .limit(200);
 
       const rows = (data || []).map((user: any, index: number) => {
-        const availableCoins = Math.max(0, Number(user.troll_coins || 0) - Number(user.reserved_troll_coins || 0));
+        const availableCoins = Math.max(0, Number(user.troll_coins || 0));
         return {
           id: user.id,
           username: user.username || 'unknown',

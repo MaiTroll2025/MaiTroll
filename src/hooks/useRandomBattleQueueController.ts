@@ -13,8 +13,8 @@ interface Options {
   onStreamUpdate?: (patch: Partial<Stream>) => void;
 }
 
-const QUEUE_DELAY_MS = 10_000;
-const POLL_INTERVAL_MS = 30_000;
+const QUEUE_DELAY_MS = 3_000;
+const POLL_INTERVAL_MS = 3_000;
 
 export function useRandomBattleQueueController({
   stream,
@@ -34,6 +34,7 @@ export function useRandomBattleQueueController({
   const autoQueueTimerRef = useRef<number | null>(null);
   const shouldAutoQueueRef = useRef(false);
   const matchingRef = useRef(false);
+  const lastMatchErrorToastRef = useRef<number>(0);
 
   const isGeneralChat = stream?.category === 'general';
   const isQueueEnabled = !!stream?.random_battle_queue_enabled;
@@ -105,13 +106,16 @@ export function useRandomBattleQueueController({
     }
   }, []);
 
+  const MIN_PRE_BATTLE_DELAY_MS = 3_000;
+
   const scheduleBattleActivation = useCallback(async (battleId: string, battleStartTime: string) => {
     if (!battleId || !battleStartTime) return;
 
     const startMs = new Date(battleStartTime).getTime();
     if (Number.isNaN(startMs)) return;
 
-    const delayMs = Math.max(0, startMs - Date.now());
+    const nowMs = Date.now();
+    const delayMs = Math.max(MIN_PRE_BATTLE_DELAY_MS, startMs - nowMs);
 
     if (import.meta.env.DEV) {
       console.log('[RandomBattleActivation] scheduled', { battleId, startTime: battleStartTime, delayMs });
@@ -165,7 +169,14 @@ export function useRandomBattleQueueController({
         if (import.meta.env.DEV) console.debug('[RandomBattleQueue] MATCH FOUND:', data);
         clearActivationTimer();
         const battleId = data?.battle_id ?? data?.id ?? stream.battle_id;
-        const battleStartTime = data?.battle_started_at ?? data?.started_at ?? stream.battle_start_time;
+        let battleStartTime = data?.battle_started_at ?? data?.started_at ?? stream.battle_start_time;
+
+        const startMs = battleStartTime ? new Date(battleStartTime).getTime() : NaN;
+        const nowMs = Date.now();
+        if (!Number.isNaN(startMs) && startMs - nowMs < MIN_PRE_BATTLE_DELAY_MS) {
+          battleStartTime = new Date(nowMs + MIN_PRE_BATTLE_DELAY_MS).toISOString();
+        }
+
         onStreamUpdate?.({
           is_battle: true,
           battle_id: battleId,
@@ -190,6 +201,11 @@ export function useRandomBattleQueueController({
       }
     } catch (err: any) {
       console.error('[RandomBattleQueue] Matchmaking failed:', err);
+      const now = Date.now();
+      if (now - lastMatchErrorToastRef.current > 10_000) {
+        lastMatchErrorToastRef.current = now;
+        toast.error(err?.message || 'Matchmaking failed. Check console for details.');
+      }
     } finally {
       matchingRef.current = false;
     }

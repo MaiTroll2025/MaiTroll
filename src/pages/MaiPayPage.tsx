@@ -81,7 +81,6 @@ const PAYOUT_PROVIDERS: PayoutProvider[] = [
   { value: 'paypal', label: 'PayPal', icon: <WalletIcon className="w-5 h-5" /> },
   { value: 'venmo', label: 'Venmo', icon: <User className="w-5 h-5" /> },
   { value: 'ach', label: 'ACH / Bank Transfer', icon: <CreditCard className="w-5 h-5" /> },
-  { value: 'check', label: 'Check', icon: <FileText className="w-5 h-5" /> },
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -96,10 +95,7 @@ export default function MaiPayPage() {
 
   // Coin balances
   const [trollCoins, setTrollCoins] = useState(0);
-  const [paidCoins, setPaidCoins] = useState(0);
   const [hypeCoins, setHypeCoins] = useState(0);
-  const [cashoutCoins, setCashoutCoins] = useState(0);
-  const [cashoutReservedCoins, setCashoutReservedCoins] = useState(0);
   const [battleCrowns, setBattleCrowns] = useState(0);
 
   // Crown redemption
@@ -122,6 +118,9 @@ export default function MaiPayPage() {
   const [isMaiPayPlus, setIsMaiPayPlus] = useState(false);
   const [successfulCashoutsLast24Hours, setSuccessfulCashoutsLast24Hours] = useState(0);
   const [nextCashoutAvailableAt, setNextCashoutAvailableAt] = useState<string | null>(null);
+  const [achBankName, setAchBankName] = useState('');
+  const [achRoutingNumber, setAchRoutingNumber] = useState('');
+  const [achAccountNumber, setAchAccountNumber] = useState('');
 
   // Transactions
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
@@ -130,7 +129,7 @@ export default function MaiPayPage() {
 
   // ── Derived ──────────────────────────────────────────────────────────────
 
-  const eligibleCashoutCoins = Math.max(0, trollCoins - cashoutReservedCoins);
+  const eligibleCashoutCoins = trollCoins;
   const canConvertHype = hypeCoins > 0;
 
   const cashoutTiers = useMemo<CashoutTier[]>(
@@ -166,15 +165,13 @@ export default function MaiPayPage() {
       // Load profile balances
       const { data: profileData } = await supabase
         .from('user_profiles')
-        .select('troll_coins, hype_coins, cashout_coins, cashout_reserved_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method, mai_pay_plus')
+        .select('troll_coins, hype_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method, mai_pay_plus')
         .eq('id', user.id)
         .single();
 
       if (profileData) {
         setTrollCoins(profileData.troll_coins ?? 0);
         setHypeCoins(profileData.hype_coins ?? 0);
-        setCashoutCoins(profileData.cashout_coins ?? 0);
-        setCashoutReservedCoins(profileData.cashout_reserved_coins ?? 0);
         setBattleCrowns(profileData.battle_crowns ?? 0);
         setIsMaiPayPlus(profileData.mai_pay_plus === true);
 
@@ -360,21 +357,32 @@ export default function MaiPayPage() {
 
     setSubmittingCashout(true);
     try {
-      // The RPC now handles no-fee cashouts with a 10/24h rolling limit
+      let providerDetails = providerUsername.trim();
+      if (selectedProvider === 'ach') {
+        providerDetails = JSON.stringify({
+          bank_name: achBankName.trim(),
+          routing_number: achRoutingNumber.trim(),
+          account_number: achAccountNumber.trim(),
+        });
+      }
+
       const { data, error } = await supabase.rpc('request_cashout', {
         p_user_id: user?.id,
         p_coins_to_redeem: selectedTier.coins,
         p_provider_type: selectedProvider,
-        p_provider_username: providerUsername.trim(),
+        p_provider_username: providerDetails,
         p_user_tag: null,
         p_id_verification_url: null,
       });
       if (error) throw error;
       if (data?.success === false) throw new Error(data.error || 'Cashout request failed');
 
-      toast.success('Cashout request submitted! You can track its status in the Requests tab.');
+      toast.success(`Cashout request submitted! ${selectedTier.coins.toLocaleString()} coins = $${selectedTier.usd.toFixed(2)}`);
       setSelectedTier(null);
       setProviderUsername('');
+      setAchBankName('');
+      setAchRoutingNumber('');
+      setAchAccountNumber('');
       await loadAllData();
       refreshCashoutLimit();
       setActiveTab('requests');
@@ -383,7 +391,7 @@ export default function MaiPayPage() {
     } finally {
       setSubmittingCashout(false);
     }
-  }, [selectedTier, canRequestCashout, user?.id, selectedProvider, providerUsername, loadAllData]);
+  }, [selectedTier, canRequestCashout, user?.id, selectedProvider, providerUsername, achBankName, achRoutingNumber, achAccountNumber, loadAllData]);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -490,7 +498,7 @@ export default function MaiPayPage() {
                   <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Cashout Eligible</span>
                 </div>
                 <p className="text-2xl font-black text-green-400">{eligibleCashoutCoins.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">From purchased coins</p>
+                 <p className="text-xs text-gray-500 mt-1">Available for cashout</p>
               </div>
 
               <div className="bg-[#0E0A1A] rounded-xl border border-purple-500/20 p-5">
@@ -516,24 +524,6 @@ export default function MaiPayPage() {
                     Convert to Troll Coins
                   </button>
                 )}
-              </div>
-
-              <div className="bg-[#0E0A1A] rounded-xl border border-purple-500/20 p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Coins className="w-5 h-5 text-purple-400" />
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Paid Coins</span>
-                </div>
-                <p className="text-2xl font-black text-purple-400">{paidCoins.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Purchased coins received</p>
-              </div>
-
-              <div className="bg-[#0E0A1A] rounded-xl border border-purple-500/20 p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-5 h-5 text-orange-400" />
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Reserved</span>
-                </div>
-                <p className="text-2xl font-black text-orange-400">{cashoutReservedCoins.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Pending cashout</p>
               </div>
             </div>
 
@@ -772,7 +762,7 @@ export default function MaiPayPage() {
                 <span className="text-sm text-gray-400">Cashout Eligible Balance</span>
               </div>
               <p className="text-3xl font-black text-green-400">{eligibleCashoutCoins.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 mt-1">From purchased coins (excludes gifted & bonus coins)</p>
+               <p className="text-xs text-gray-500 mt-1">Available for cashout (excludes reserved coins)</p>
             </div>
 
             {/* No Fees Notice */}
@@ -781,7 +771,7 @@ export default function MaiPayPage() {
               <div>
                 <h3 className="text-sm font-bold text-green-300">No Cashout Fees</h3>
                 <p className="text-sm text-green-200/80">
-                  Mai Troll does not charge users to cash out their earnings. Select any tier and request up to {cashoutLimit} cashouts per rolling 24-hour period.{isMaiPayPlus ? ' MAI Pay Plus uses double coin requirements for the same cash payout.' : ''}
+                  Mai Troll does not charge users to cash out their earnings. Select any tier and request up to {cashoutLimit} cashouts per rolling 7-day period.{isMaiPayPlus ? ' MAI Pay Plus uses double coin requirements for the same cash payout.' : ''}
                 </p>
               </div>
             </div>
@@ -870,25 +860,61 @@ export default function MaiPayPage() {
                   </div>
                 </div>
 
-                {/* Provider Username */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {PAYOUT_PROVIDERS.find((p) => p.value === selectedProvider)?.label} Details
-                  </label>
-                  <input
-                    type="text"
-                    value={providerUsername}
-                    onChange={(e) => setProviderUsername(e.target.value)}
-                    placeholder={
-                      selectedProvider === 'cash_app' ? '$Cashtag' :
-                      selectedProvider === 'paypal' ? 'email@example.com' :
-                      selectedProvider === 'venmo' ? '@username' :
-                      selectedProvider === 'ach' ? 'Account number' :
-                      'Mailing address'
-                    }
-                    className="w-full bg-black/30 border border-purple-500/20 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500/50"
-                  />
-                </div>
+                 {/* Provider Username */}
+                 <div>
+                   <label className="block text-sm font-medium text-gray-300 mb-2">
+                     {PAYOUT_PROVIDERS.find((p) => p.value === selectedProvider)?.label} Details
+                   </label>
+                   <input
+                     type="text"
+                     value={providerUsername}
+                     onChange={(e) => setProviderUsername(e.target.value)}
+                     placeholder={
+                       selectedProvider === 'cash_app' ? '$Cashtag' :
+                       selectedProvider === 'paypal' ? 'email@example.com' :
+                       selectedProvider === 'venmo' ? '@username' :
+                       selectedProvider === 'ach' ? 'Account number' :
+                       'Mailing address'
+                     }
+                     className="w-full bg-black/30 border border-purple-500/20 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500/50"
+                   />
+                 </div>
+
+                 {/* ACH Bank Details */}
+                 {selectedProvider === 'ach' && (
+                   <div className="space-y-3">
+                     <div>
+                       <label className="block text-sm font-medium text-gray-300 mb-1">Bank Name</label>
+                       <input
+                         type="text"
+                         value={achBankName}
+                         onChange={(e) => setAchBankName(e.target.value)}
+                         placeholder="e.g. Chase Bank"
+                         className="w-full bg-black/30 border border-purple-500/20 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500/50"
+                       />
+                     </div>
+                     <div>
+                       <label className="block text-sm font-medium text-gray-300 mb-1">Routing Number</label>
+                       <input
+                         type="text"
+                         value={achRoutingNumber}
+                         onChange={(e) => setAchRoutingNumber(e.target.value)}
+                         placeholder="9-digit routing number"
+                         className="w-full bg-black/30 border border-purple-500/20 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500/50"
+                       />
+                     </div>
+                     <div>
+                       <label className="block text-sm font-medium text-gray-300 mb-1">Account Number</label>
+                       <input
+                         type="text"
+                         value={achAccountNumber}
+                         onChange={(e) => setAchAccountNumber(e.target.value)}
+                         placeholder="Bank account number"
+                         className="w-full bg-black/30 border border-purple-500/20 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500/50"
+                       />
+                     </div>
+                   </div>
+                 )}
 
                 {/* Submit */}
                 <button
@@ -952,11 +978,11 @@ export default function MaiPayPage() {
                       <span className="text-lg font-black text-green-400">${req.usd_amount?.toFixed(2) || '0.00'}</span>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                      <div>
-                        <p className="text-xs text-gray-500">Coins</p>
-                        <p className="font-mono text-white">{req.coins_reserved?.toLocaleString() || '—'}</p>
-                      </div>
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                       <div>
+                         <p className="text-xs text-gray-500">Coins</p>
+                         <p className="font-mono text-white">{req.coin_amount?.toLocaleString() || req.coins_reserved?.toLocaleString() || '—'}</p>
+                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Fee</p>
                         <p className="font-mono text-green-400">None</p>

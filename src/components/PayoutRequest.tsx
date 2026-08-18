@@ -109,8 +109,7 @@ const PayoutRequest: React.FC<PayoutRequestProps> = ({ onRequestComplete }) => {
         const s = data[0];
         if (profile) {
           const raw = profile.troll_coins || 0;
-          const reserved = profile.reserved_troll_coins || 0;
-          s.available_for_payout = Math.max(0, raw - reserved);
+          s.available_for_payout = Math.max(0, raw);
         }
         s.payout_threshold = CASHOUT_TIERS[0].coins;
         setStats(s);

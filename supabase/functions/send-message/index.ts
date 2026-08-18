@@ -477,8 +477,18 @@ serve(async (req) => {
           });
         }
       } catch (err) {
-        console.error(`[MONITOR] Rate limit check failed, allowing: ${err}`);
+        console.error(`[CRITICAL] Rate limit check failed, rejecting: ${err}`);
+        return new Response(JSON.stringify({ error: "Service temporarily unavailable", code: "RATE_LIMIT_UNAVAILABLE" }), {
+          status: 503,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
       }
+    } else {
+      console.warn(`[CRITICAL] Redis not configured, rejecting message for rate limiting`);
+      return new Response(JSON.stringify({ error: "Service temporarily unavailable", code: "RATE_LIMIT_UNAVAILABLE" }), {
+        status: 503,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
     }
 
     // 6. Enrich Data (Denormalize server-side for security)

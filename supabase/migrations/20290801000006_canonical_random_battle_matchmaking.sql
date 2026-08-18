@@ -31,8 +31,8 @@ DECLARE
   v_self public.streams%ROWTYPE;
   v_opponent public.streams%ROWTYPE;
   v_battle_id uuid;
-  v_started_at timestamptz := now() + interval '10 seconds';
-  v_ends_at timestamptz := now() + interval '3 minutes 10 seconds';
+  v_started_at timestamptz := now() + interval ' seconds';
+  v_ends_at timestamptz := now() + interval '3 minutes 0 seconds';
 BEGIN
   SELECT *
     INTO v_self

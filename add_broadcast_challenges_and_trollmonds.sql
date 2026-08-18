@@ -65,7 +65,7 @@ ALTER TABLE user_profiles
 -- SEND_CHALLENGE_GIFT FUNCTION
 -- ============================================================================
 -- Handles discounted gifting during challenges:
--- - Sender gets 10% discount (configurable)
+-- - Sender gets 1% discount (configurable)
 -- - Receiver gets full Trollmonds value
 -- - Deducted from receiver's Trollmonds balance
 
@@ -73,7 +73,7 @@ CREATE OR REPLACE FUNCTION send_challenge_gift(
     p_sender_id UUID,
     p_receiver_id UUID,
     p_gift_id UUID,
-    p_discount_percent DECIMAL DEFAULT 0.10
+    p_discount_percent DECIMAL DEFAULT 0.01
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -260,6 +260,36 @@ $$;
 -- SELECT cleanup_expired_challenges();
 
 -- ============================================================================
+-- RLS POLICIES FOR broadcast_challenges
+-- ============================================================================
+
+ALTER TABLE broadcast_challenges ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can view challenges" ON broadcast_challenges
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Authenticated users can create challenges" ON broadcast_challenges
+  FOR INSERT TO authenticated WITH CHECK ((auth.uid() = challenger_id));
+
+CREATE POLICY "Broadcasters can update challenges on their streams" ON broadcast_challenges
+  FOR UPDATE TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM streams
+      WHERE streams.id = broadcast_challenges.stream_id
+        AND (streams.broadcaster_id = auth.uid() OR streams.user_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Admins can manage all challenges" ON broadcast_challenges
+  FOR ALL TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.id = auth.uid()
+        AND (user_profiles.role = 'admin' OR user_profiles.is_admin = true)
+    )
+  );
+
+-- ============================================================================
 -- GRANTS (adjust as needed for your RLS policies)
 -- ============================================================================
 
@@ -281,7 +311,7 @@ COMMENT ON COLUMN broadcast_challenges.is_active IS 'Which challenge was accepte
 COMMENT ON TABLE user_profiles IS 'Added trollmonds_balance for Trollmonds currency';
 COMMENT ON COLUMN user_profiles.trollmonds_balance IS 'User''s Trollmonds currency balance';
 
-COMMENT ON FUNCTION send_challenge_gift IS 'Handles discounted gifting: sender gets 10% off, receiver gets full Trollmonds value';
+COMMENT ON FUNCTION send_challenge_gift IS 'Handles discounted gifting: sender gets 1% off, receiver gets full Trollmonds value';
 COMMENT ON FUNCTION award_challenge_crowns IS 'Awards 2 crowns to each participant on winning team';
 
 -- ============================================================================

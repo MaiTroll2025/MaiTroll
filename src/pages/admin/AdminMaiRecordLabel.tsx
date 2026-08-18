@@ -125,7 +125,7 @@ interface TransactionRow {
   artist?: { stage_name: string } | null
 }
 
-type TabId = 'overview' | 'applications' | 'artists' | 'contracts' | 'releases' | 'tracks' | 'earnings' | 'payouts'
+type TabId = 'overview' | 'applications' | 'artists' | 'contracts' | 'releases' | 'tracks' | 'earnings' | 'payouts' | 'staff'
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
@@ -194,11 +194,12 @@ export default function AdminMaiRecordLabel() {
   const [tracks, setTracks] = useState<TrackWithDetails[]>([])
   const [transactions, setTransactions] = useState<TransactionRow[]>([])
   const [earnings, setEarnings] = useState({ artist: 0, label: 0 })
+  const [staffMemberships, setStaffMemberships] = useState<any[]>([])
 
   const loadAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [statsRes, appsRes, artistsRes, contractsRes, albumsRes, tracksRes, txsRes] = await Promise.all([
+      const [statsRes, appsRes, artistsRes, contractsRes, albumsRes, tracksRes, txsRes, staffRes] = await Promise.all([
         recordLabelService.getAdminMaiStats(),
         recordLabelService.getApplications(),
         supabase
@@ -223,6 +224,10 @@ export default function AdminMaiRecordLabel() {
           .from('record_label_transactions')
           .select('*, artist:record_label_artist_profiles!inner(stage_name)')
           .order('created_at', { ascending: false }),
+        supabase
+          .from('artist_staff_memberships')
+          .select('*, artist:record_label_artist_profiles!inner(id, stage_name), employee:user_profiles!inner(username, display_name)')
+          .order('offered_at', { ascending: false }),
       ])
 
       if (statsRes.error) throw statsRes.error
@@ -252,6 +257,9 @@ export default function AdminMaiRecordLabel() {
         artist: txData.reduce((sum, t) => sum + (t.artist_coins || 0), 0),
         label: txData.reduce((sum, t) => sum + (t.label_coins || 0), 0),
       })
+
+      if (staffRes.error) throw staffRes.error
+      setStaffMemberships(staffRes.data || [])
     } catch (err: unknown) {
       console.error('Failed to load MAI Record Label admin data:', err)
       const message = err instanceof Error ? err.message : 'Failed to load data'
@@ -338,6 +346,7 @@ export default function AdminMaiRecordLabel() {
               <TabsTrigger value="tracks">Tracks</TabsTrigger>
               <TabsTrigger value="earnings">Earnings</TabsTrigger>
               <TabsTrigger value="payouts">Payouts</TabsTrigger>
+              <TabsTrigger value="staff">Artist Staff</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview">
@@ -824,6 +833,61 @@ export default function AdminMaiRecordLabel() {
                   <p className="text-sm mt-2">
                     Use the earnings ledger above to review transactions and balances.
                   </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="staff">
+              <Card className="bg-[#141414] border-[#2C2C2C]">
+                <CardHeader>
+                  <CardTitle>Artist Staff Memberships</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Artist</TableHead>
+                        <TableHead>Employee</TableHead>
+                        <TableHead>Position</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Pay</TableHead>
+                        <TableHead>Offered</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {staffMemberships.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-gray-400 py-8">
+                            No staff memberships found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        staffMemberships.map((staff: any) => (
+                          <TableRow key={staff.id}>
+                            <TableCell>{staff.artist?.stage_name || '—'}</TableCell>
+                            <TableCell>
+                              {staff.employee?.display_name || staff.employee?.username || '—'}
+                            </TableCell>
+                            <TableCell>{staff.position}</TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={STATUS_COLORS[staff.status] || 'border-gray-500 text-gray-300'}
+                              >
+                                {staff.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {staff.pay_amount.toLocaleString()} {staff.pay_currency} / {staff.pay_frequency}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(staff.offered_at), 'MMM d, yyyy')}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>

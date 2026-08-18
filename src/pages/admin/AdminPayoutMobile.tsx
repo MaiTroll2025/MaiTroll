@@ -55,56 +55,45 @@ const AdminPayoutMobile: React.FC = () => {
 
   const handleApprove = async (req: PayoutRequest) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const { data, error } = await supabase.rpc("admin_process_payout", {
-        p_payout_id: req.id,
-        p_admin_id: userData.user?.id,
-        p_action: "approve",
-      });
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'approve_payout', requestId: req.id },
+      })
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Failed to approve");
+      if (data?.error) throw new Error(data.error);
       toast.success(`Approved payout for ${req.username}`);
       loadRequests();
     } catch (err: any) {
-      toast.error(err.message || "Error approving payout");
+      toast.error(err.message || 'Error approving payout');
     }
   };
 
   const handlePay = async (req: PayoutRequest) => {
-    const ref = window.prompt("Enter payment reference (optional)") || null;
+    const ref = window.prompt('Enter payment reference (optional)') || null;
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const { data, error } = await supabase.rpc("admin_process_payout", {
-        p_payout_id: req.id,
-        p_admin_id: userData.user?.id,
-        p_action: "pay",
-        p_payment_reference: ref,
-      });
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'update_payout_status', payoutId: req.id, newStatus: 'paid', paymentReference: ref },
+      })
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Failed to mark as paid");
+      if (data?.error) throw new Error(data.error);
       toast.success(`Marked as paid for ${req.username}`);
       loadRequests();
     } catch (err: any) {
-      toast.error(err.message || "Error marking as paid");
+      toast.error(err.message || 'Error marking as paid');
     }
   };
 
   const handleReject = async (req: PayoutRequest) => {
-    const reason = window.prompt("Enter rejection reason:") || "Rejected by admin";
+    const reason = window.prompt('Enter rejection reason:') || 'Rejected by admin';
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const { data, error } = await supabase.rpc("admin_process_payout", {
-        p_payout_id: req.id,
-        p_admin_id: userData.user?.id,
-        p_action: "reject",
-        p_rejection_reason: reason,
-      });
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'reject_payout', requestId: req.id, reason },
+      })
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Failed to reject");
-      toast.success(`Rejected payout for ${req.username}`);
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Rejected payout for ${req.username} - coins returned`);
       loadRequests();
     } catch (err: any) {
-      toast.error(err.message || "Error rejecting payout");
+      toast.error(err.message || 'Error rejecting payout');
     }
   };
 

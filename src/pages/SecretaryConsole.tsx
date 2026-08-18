@@ -15,7 +15,8 @@ import {
   Home,
   Calendar,
   CreditCard,
-  Scale
+  Scale,
+  Music
 } from 'lucide-react'
 import OfficerShiftCalendar from '../components/officer/OfficerShiftCalendar'
 import ExecutiveIntakeList from './admin/components/shared/ExecutiveIntakeList'
@@ -24,8 +25,9 @@ import GiftCardFulfillmentList from './admin/components/shared/GiftCardFulfillme
 import CriticalAlertsList from './admin/components/shared/CriticalAlertsList'
 import ExecutiveReportsList from './admin/components/shared/ExecutiveReportsList'
 import ManualCoinOrdersList from './admin/components/shared/ManualCoinOrdersList'
+import SecretaryMaiRecordLabelContracts from './secretary/components/SecretaryMaiRecordLabelContracts'
 
-type TabId = 'intake' | 'cashouts' | 'giftcards' | 'alerts' | 'reports' | 'troll_town' | 'shifts' | 'manual_payments' | 'coin_sales' | 'appeals'
+type TabId = 'intake' | 'cashouts' | 'giftcards' | 'alerts' | 'reports' | 'troll_town' | 'shifts' | 'manual_payments' | 'coin_sales' | 'appeals' | 'mai_record_label_contracts'
 
 export default function SecretaryConsole() {
   const { user, profile } = useAuthStore()
@@ -43,7 +45,7 @@ export default function SecretaryConsole() {
 
   const fetchCounts = useCallback(async () => {
     try {
-        const [intakeRes, cashoutRes, alertsRes, manualRes] = await Promise.all([
+        const [intakeRes, cashoutRes, alertsRes, manualRes, coinSalesRes] = await Promise.all([
             supabase.from('executive_intake').select('id', { count: 'exact', head: true }).eq('status', 'new'),
             supabase.from('payout_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
             supabase.from('critical_alerts').select('id', { count: 'exact', head: true }).eq('resolved', false),
@@ -206,6 +208,12 @@ export default function SecretaryConsole() {
             icon={<Home className="w-5 h-5" />}
             label="Troll Town Deeds"
           />
+          <NavButton 
+            active={activeTab === 'mai_record_label_contracts'} 
+            onClick={() => setActiveTab('mai_record_label_contracts')}
+            icon={<Music className="w-5 h-5" />}
+            label="MAI Record Label"
+          />
         </nav>
 
         <div className="p-4 border-t border-slate-800">
@@ -248,6 +256,7 @@ export default function SecretaryConsole() {
             {activeTab === 'reports' && <ExecutiveReportsList viewMode="secretary" />}
             {activeTab === 'shifts' && <OfficerShiftCalendar title="All Officer Shifts" />}
             {activeTab === 'troll_town' && <SecretaryTrollTownDeeds />}
+            {activeTab === 'mai_record_label_contracts' && <SecretaryMaiRecordLabelContracts />}
         </div>
       </div>
     </div>

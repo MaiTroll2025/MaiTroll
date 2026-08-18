@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { DollarSign, ExternalLink } from 'lucide-react'
 import { useAuthStore } from '../lib/store'
+import { supabase } from '../lib/supabase'
 import { cn } from '../lib/utils'
 import { TIERS } from '../config/coinConfig'
 
@@ -36,10 +38,27 @@ function getCashoutEstimate(availableCoins: number) {
 
 export default function MAIPayCard({ className, disableContinue = false }: MAIPayCardProps) {
   const { user, profile } = useAuthStore() as any
+  const [dbCoins, setDbCoins] = useState<number | null>(null)
 
-  const rawCoins = Number(profile?.troll_coins || 0)
-  const reservedCoins = Number(profile?.cashout_reserved_coins || 0)
-  const availableCoins = Math.max(0, rawCoins - reservedCoins)
+  useEffect(() => {
+    async function load() {
+      if (!user?.id) return
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('troll_coins')
+          .eq('id', user.id)
+          .single()
+        setDbCoins(Number(data?.troll_coins ?? 0))
+      } catch (err) {
+        console.error('[MAIPayCard] Failed to load balances:', err)
+      }
+    }
+    load()
+  }, [user?.id])
+
+  const rawCoins = dbCoins ?? Number(profile?.troll_coins || 0)
+  const availableCoins = Math.max(0, rawCoins)
 
   const cashoutEstimate = useMemo(() => {
     return getCashoutEstimate(availableCoins)
@@ -79,29 +98,20 @@ export default function MAIPayCard({ className, disableContinue = false }: MAIPa
         </div>
       </div>
 
-      <div className="mb-6 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-slate-400">Available Payout Coins</span>
-          <span className="text-lg font-bold text-cyan-200">
-            {availableCoins.toLocaleString()}
-          </span>
-        </div>
+       <div className="mb-6 space-y-3">
+         <div className="flex items-center justify-between gap-3">
+           <span className="text-sm text-slate-400">Available Payout Coins</span>
+           <span className="text-lg font-bold text-cyan-200">
+             {availableCoins.toLocaleString()}
+           </span>
+         </div>
 
-        {reservedCoins > 0 && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-slate-500">Reserved Coins</span>
-            <span className="text-sm text-amber-400">
-              {reservedCoins.toLocaleString()}
-            </span>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-slate-400">Estimated Cashout</span>
-          <span className="text-lg font-bold text-green-400">
-            ${cashoutEstimate.estimatedUsd.toLocaleString()}
-          </span>
-        </div>
+         <div className="flex items-center justify-between gap-3">
+           <span className="text-sm text-slate-400">Estimated Cashout</span>
+           <span className="text-lg font-bold text-green-400">
+             ${cashoutEstimate.estimatedUsd.toLocaleString()}
+           </span>
+         </div>
 
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm text-slate-400">Eligible Tier</span>

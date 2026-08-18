@@ -669,6 +669,7 @@ export default function CoinStore() {
   const [loadingPackage, setLoadingPackage] = useState(null);
   const [tab, setTab] = useState('coins'); // Default to coins for main view
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [useCredit, setUseCredit] = useState(false);
   const [_applying, setApplying] = useState(false);
   
@@ -1502,8 +1503,7 @@ useEffect(() => {
                   {showStoreDropdown && (
                       <div className="absolute top-full right-0 mt-2 w-48 bg-zinc-900 border border-purple-500/30 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
                                <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='perks' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('perks'); setShowStoreDropdown(false); }}>Perks</button>
-                            <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='calls' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('calls'); setShowStoreDropdown(false); }}>Call Minutes</button>
-                            <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='insurance' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('insurance'); setShowStoreDropdown(false); }}>Insurance</button>
+                             <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='insurance' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('insurance'); setShowStoreDropdown(false); }}>Insurance</button>
                             <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='frames' ? 'text-pink-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('frames'); setShowStoreDropdown(false); }}>✨ Profile Frames</button>
                       </div>
                   )}
@@ -1538,8 +1538,7 @@ useEffect(() => {
                  <option value="bank">Bank</option>
                  <option value="market">Market</option>
                  <option value="portfolio">Portfolio</option>
-                 <option value="perks">Perks</option>
-                 <option value="calls">Call Minutes</option>
+                  <option value="perks">Perks</option>
                   <option value="insurance">Insurance</option>
                   <option value="storage">Storage</option>
                </select>
@@ -2144,58 +2143,97 @@ useEffect(() => {
                                  </div>
                                </div>
 
-                <div>
-                   <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                       <History className="w-5 h-5 text-gray-400" />
-                       Recent Transactions
-                   </h2>
-                   <div className="overflow-x-auto bg-black/20 rounded-xl border border-white/5">
-                       <table className="w-full text-left border-collapse">
-                       <thead>
-                           <tr className="text-[10px] text-gray-500 border-b border-white/5 uppercase tracking-wider">
-                           <th className="py-3 px-4">Date</th>
-                           <th className="py-3 px-4">Type</th>
-                           <th className="py-3 px-4">Source</th>
-                           <th className="py-3 px-4 text-right">Amount</th>
-                           </tr>
-                       </thead>
-                       <tbody className="text-sm">
-                           {ledger.map((entry) => (
-                           <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                               <td className="py-3 px-4 text-gray-400 text-xs">
-                               {new Date(entry.created_at).toLocaleDateString()}
-                               </td>
-                               <td className="py-3 px-4">
-                               <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                                   entry.bucket === 'repayment' ? 'bg-red-500/20 text-red-300' :
-                                   entry.bucket === 'loan' ? 'bg-purple-500/20 text-purple-300' :
-                                   entry.bucket === 'credit_spend' ? 'bg-blue-500/20 text-blue-300' :
-                                   'bg-gray-500/20 text-gray-300'
-                               }`}>
-                                   {entry.bucket === 'loan' ? 'CREDIT DRAW' : 
-                                    entry.bucket === 'credit_spend' ? 'CREDIT PURCHASE' :
-                                    entry.bucket.toUpperCase()}
-                               </span>
-                               </td>
-                               <td className="py-3 px-4 text-gray-400 text-xs">{entry.source}</td>
-                               <td className={`py-3 px-4 text-right font-mono font-medium ${
-                               entry.amount_delta > 0 ? 'text-green-400' : 'text-red-400'
-                               }`}>
-                               {entry.amount_delta > 0 ? '+' : ''}{entry.amount_delta}
-                               </td>
-                           </tr>
-                           ))}
-                           {ledger.length === 0 && (
-                           <tr>
-                               <td colSpan={4} className="py-8 text-center text-gray-500 text-xs">
-                               No transactions found.
-                               </td>
-                           </tr>
-                           )}
-                       </tbody>
-                       </table>
-                   </div>
-                </div>
+                 <div>
+                    <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                        <History className="w-5 h-5 text-gray-400" />
+                        Recent Transactions
+                    </h2>
+                    <div className="overflow-x-auto bg-black/20 rounded-xl border border-white/5">
+                        <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="text-[10px] text-gray-500 border-b border-white/5 uppercase tracking-wider">
+                            <th className="py-3 px-4">Date</th>
+                            <th className="py-3 px-4">Type</th>
+                            <th className="py-3 px-4">Source</th>
+                            <th className="py-3 px-4 text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-sm">
+                            {ledger.slice(0, 5).map((entry) => (
+                            <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="py-3 px-4 text-gray-400 text-xs">
+                                {new Date(entry.created_at).toLocaleDateString()}
+                                </td>
+                                <td className="py-3 px-4">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                                    entry.bucket === 'repayment' ? 'bg-red-500/20 text-red-300' :
+                                    entry.bucket === 'loan' ? 'bg-purple-500/20 text-purple-300' :
+                                    entry.bucket === 'credit_spend' ? 'bg-blue-500/20 text-blue-300' :
+                                    'bg-gray-500/20 text-gray-300'
+                                }`}>
+                                    {entry.bucket === 'loan' ? 'CREDIT DRAW' : 
+                                     entry.bucket === 'credit_spend' ? 'CREDIT PURCHASE' :
+                                     entry.bucket.toUpperCase()}
+                                </span>
+                                </td>
+                                <td className="py-3 px-4 text-gray-400 text-xs">{entry.source}</td>
+                                <td className={`py-3 px-4 text-right font-mono font-medium ${
+                                entry.amount_delta > 0 ? 'text-green-400' : 'text-red-400'
+                                }`}>
+                                {entry.amount_delta > 0 ? '+' : ''}{entry.amount_delta}
+                                </td>
+                            </tr>
+                            ))}
+                            {ledger.length === 0 && (
+                            <tr>
+                                <td colSpan={4} className="py-8 text-center text-gray-500 text-xs">
+                                No transactions found.
+                                </td>
+                            </tr>
+                            )}
+                        </tbody>
+                        </table>
+                        {ledger.length > 5 && (
+                            <button
+                                onClick={() => setShowAllTransactions(!showAllTransactions)}
+                                className="w-full py-2 text-xs text-gray-400 hover:text-white transition-colors border-t border-white/5"
+                            >
+                                {showAllTransactions ? 'Show Less' : `Show All (${ledger.length})`}
+                            </button>
+                        )}
+                        {showAllTransactions && ledger.length > 5 && (
+                            <table className="w-full text-left border-collapse">
+                                <tbody className="text-sm">
+                                    {ledger.slice(5).map((entry) => (
+                                    <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                        <td className="py-3 px-4 text-gray-400 text-xs">
+                                        {new Date(entry.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td className="py-3 px-4">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                                            entry.bucket === 'repayment' ? 'bg-red-500/20 text-red-300' :
+                                            entry.bucket === 'loan' ? 'bg-purple-500/20 text-purple-300' :
+                                            entry.bucket === 'credit_spend' ? 'bg-blue-500/20 text-blue-300' :
+                                            'bg-gray-500/20 text-gray-300'
+                                        }`}>
+                                            {entry.bucket === 'loan' ? 'CREDIT DRAW' : 
+                                             entry.bucket === 'credit_spend' ? 'CREDIT PURCHASE' :
+                                             entry.bucket.toUpperCase()}
+                                        </span>
+                                        </td>
+                                        <td className="py-3 px-4 text-gray-400 text-xs">{entry.source}</td>
+                                        <td className={`py-3 px-4 text-right font-mono font-medium ${
+                                        entry.amount_delta > 0 ? 'text-green-400' : 'text-red-400'
+                                        }`}>
+                                        {entry.amount_delta > 0 ? '+' : ''}{entry.amount_delta}
+                                        </td>
+                                    </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                 </div>
               </div>
           )}
 

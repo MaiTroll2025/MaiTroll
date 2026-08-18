@@ -2132,8 +2132,8 @@ const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
          setHostChatDisabledStreamId(data?.broadcast_chat_disabled_stream_id ?? null)
        }
 
-       void fetchHostChatLock()
-       const interval = window.setInterval(fetchHostChatLock, 30_000)
+        void fetchHostChatLock()
+        const interval = window.setInterval(fetchHostChatLock, 60_000)
 
        return () => {
          mounted = false
@@ -5593,10 +5593,10 @@ const toggleMicrophone = useCallback(async () => {
      }
    }, [stream?.id]);
 
-   useEffect(() => {
-     const interval = window.setInterval(() => {
-       flushLikes();
-     }, 2500);
+    useEffect(() => {
+      const interval = window.setInterval(() => {
+        flushLikes();
+      }, 5000);
 
      const handleVisibilityChange = () => {
        if (document.visibilityState === 'hidden') {
@@ -5810,7 +5810,7 @@ const toggleMicrophone = useCallback(async () => {
 
     checkAdjacentStreams();
 
-    const swipeTimer = window.setInterval(checkAdjacentStreams, 30000);
+    const swipeTimer = window.setInterval(checkAdjacentStreams, 60000);
 
     return () => {
       window.clearInterval(swipeTimer);
@@ -9124,35 +9124,45 @@ const toggleMicrophone = useCallback(async () => {
             onInviteFollowers={handleInviteFollowers}
             onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
            />
-          {showViewerList && (
-            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
-              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-base font-black text-white">Active Viewers</h3>
-                  <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
-                    <X size={18} />
-                  </button>
-                </div>
-                <div className="max-h-80 overflow-y-auto space-y-2">
-                  {activeViewerProfiles.length === 0 ? (
-                    <p className="text-sm text-zinc-500">No active viewers</p>
-                  ) : (
-                    activeViewerProfiles.map(viewer => (
-                      <div key={viewer.user_id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
-                          {viewer.username?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-bold text-white">{viewer.username || 'Viewer'}</div>
-                          <div className="text-xs text-zinc-500">{viewer.role || 'viewer'}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+           {showViewerList && (
+             <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
+               <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+                 <div className="mb-4 flex items-center justify-between">
+                   <h3 className="text-base font-black text-white">Active Viewers</h3>
+                   <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
+                     <X size={18} />
+                   </button>
+                 </div>
+                 <div className="max-h-80 overflow-y-auto space-y-2">
+                   {activeViewerProfiles.length === 0 ? (
+                     <p className="text-sm text-zinc-500">No active viewers</p>
+                   ) : (
+                     activeViewerProfiles.map(viewer => {
+                       const member = audience.find(m => m.user_id === viewer.user_id)
+                       const coins = member?.gift_score ?? member?.gift_total ?? 0
+                       const coinLabel = coins >= 1_000_000
+                         ? `${(coins / 1_000_000).toFixed(1)}M Coins`
+                         : coins >= 1_000
+                           ? `${(coins / 1_000).toFixed(1)}K Coins`
+                           : `${coins} Coins`
+                       return (
+                         <div key={viewer.user_id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                           <div className="h-8 w-8 shrink-0 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
+                             {viewer.username?.charAt(0)?.toUpperCase() || '?'}
+                           </div>
+                           <div className="min-w-0 flex-1">
+                             <div className="truncate text-sm font-bold text-white">{viewer.username || 'Viewer'}</div>
+                             <div className="text-xs text-zinc-500">{viewer.role || 'viewer'}</div>
+                             <div className="text-[11px] font-black text-cyan-300">{coinLabel}</div>
+                           </div>
+                         </div>
+                       )
+                     })
+                   )}
+                 </div>
+               </div>
+             </div>
+           )}
         </GiftSystemProvider>
       );
     }

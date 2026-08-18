@@ -66,5 +66,6 @@ export const US_STATES_MAP = new Map<string, string>(
 );
 
 export function getStateName(code: string): string {
+  if (typeof code !== 'string') return '';
   return US_STATES_MAP.get(code) ?? code;
 }

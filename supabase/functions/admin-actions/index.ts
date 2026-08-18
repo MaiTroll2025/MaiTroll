@@ -109,6 +109,26 @@ Deno.serve(async (req) => {
 
         const { data, error } = await supabaseAdmin
           .from("payout_requests")
+          .select("coin_amount, user_id, status")
+          .eq("id", requestId)
+          .single();
+
+        if (error) throw error;
+
+        if (data && data.status !== 'rejected' && data.status !== 'denied') {
+          const { error: denyError } = await supabaseAdmin.rpc("troll_bank_deny_cashout", {
+            p_request_id: requestId,
+            p_admin_id: user.id,
+            p_reason: reason || null,
+          });
+
+          if (denyError) {
+            console.error("[reject_payout] troll_bank_deny_cashout error", denyError);
+          }
+        }
+
+        const { data: updateData, error: updateError } = await supabaseAdmin
+          .from("payout_requests")
           .update({
             status: "rejected",
             rejected_reason: reason,
@@ -119,7 +139,7 @@ Deno.serve(async (req) => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (updateError) throw updateError;
 
         await supabaseAdmin.rpc("log_admin_action", {
           p_action_type: "reject_payout_request",
@@ -127,7 +147,7 @@ Deno.serve(async (req) => {
           p_details: { status: "rejected", reason: reason },
         });
 
-        result = data;
+        result = updateData;
         break;
       }
 

@@ -4,6 +4,8 @@ import { useAuthStore } from '@/lib/store'
 import * as recordLabelService from '@/services/maiRecordLabel'
 import { MaiTrollTheme } from '@/styles/trollCityTheme'
 import { toast } from 'sonner'
+import type { MaiRecordLabelAgreementData } from '@/services/maiRecordLabelAgreement'
+import { generateMaiRecordLabelAgreement } from '@/services/maiRecordLabelAgreement'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -19,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { supabase } from '@/lib/supabase'
 
 type ContractTier = 'probation' | 'standard' | 'tier_90_10' | 'tier_95_5'
 
@@ -28,32 +31,6 @@ const TIER_LABELS: Record<ContractTier, string> = {
   tier_90_10: '90/10 Tier',
   tier_95_5: '95/5 Tier',
 }
-
-const PLACEHOLDER_TERMS = `This agreement is entered into between MAI Record Label ("Label") and the Artist identified below. By accepting this contract, the Artist agrees to the following terms:
-
-1. The Artist grants the Label exclusive rights to distribute, promote, and monetize the Artist's original recordings submitted during the term of this agreement.
-2. Revenue generated from eligible streaming, downloads, and licensing activities shall be split according to the percentages specified in this contract.
-3. The Artist warrants that all submitted content is original and that the Artist holds all necessary rights and clearances.
-4. The Label shall provide marketing support, distribution infrastructure, and administrative services as outlined in the Artist responsibilities.
-5. Either party may terminate this agreement subject to the conditions described herein.`
-
-const ARTIST_RESPONSIBILITIES = [
-  'Deliver high-quality, mastered audio recordings in the formats specified by the Label.',
-  'Provide accurate metadata, artwork, and promotional materials for all releases.',
-  'Maintain original ownership of all content submitted and warrant against third-party claims.',
-  'Cooperate with the Label on marketing, promotional, and licensing opportunities.',
-  'Notify the Label promptly of any changes to contact information or payout details.',
-  'Abide by the Label\'s content guidelines and platform policies.',
-]
-
-const MAI_RESPONSIBILITIES = [
-  'Distribute submitted recordings to all major streaming and digital platforms.',
-  'Provide transparent monthly statements detailing streams, revenue, and splits.',
-  'Process artist payouts according to the schedule outlined in this agreement.',
-  'Offer marketing support and promotional placement opportunities where applicable.',
-  'Protect the Artist\'s content from unauthorized distribution through Label channels.',
-  'Maintain confidentiality of the Artist\'s personal and financial information.',
-]
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
@@ -76,6 +53,7 @@ export default function ArtistContractPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [legalName, setLegalName] = useState('')
   const [accepted, setAccepted] = useState(false)
+  const [agreementHTML, setAgreementHTML] = useState('')
 
   useEffect(() => {
     let active = true
@@ -89,9 +67,10 @@ export default function ArtistContractPage() {
       try {
         setLoading(true)
 
-        const [artistResult, contractResult] = await Promise.all([
+        const [artistResult, contractResult, appResult] = await Promise.all([
           recordLabelService.getArtistProfileByUserId(user.id),
           recordLabelService.getArtistContract(user.id),
+          recordLabelService.getMyApplication(user.id),
         ])
 
         if (!active) return
@@ -116,6 +95,84 @@ export default function ArtistContractPage() {
         if (contractData.status === 'active' && contractData.artist_signed_at) {
           setAccepted(true)
         }
+
+        const application = appResult.data
+        if (application) {
+          setLegalName(application.legal_name || '')
+        }
+
+        const [tracksRes, albumsRes, txRes] = await Promise.all([
+          recordLabelService.getArtistTracks(artist.id),
+          recordLabelService.getArtistAlbums(artist.id),
+          supabase
+            .from('record_label_transactions')
+            .select('id, transaction_type, gross_coins, artist_coins, label_coins, track_id, album_id, created_at, status')
+            .eq('artist_id', artist.id)
+            .order('created_at', { ascending: false })
+            .limit(20),
+        ])
+
+        const trackMap = new Map<string, string>()
+        const albumMap = new Map<string, string>()
+
+        for (const t of tracksRes.data || []) {
+          trackMap.set(t.id, t.title)
+        }
+        for (const a of albumsRes || []) {
+          albumMap.set(a.id, a.title)
+        }
+
+        const applicableTracks = (tracksRes.data || [])
+          .filter((t) => t.status === 'published' || t.status === 'processing')
+          .map((t) => ({
+            id: t.id,
+            title: t.title,
+            albumTitle: t.album_id ? albumMap.get(t.album_id) || null : null,
+          }))
+
+        const applicableAlbums = (albumsRes || [])
+          .filter((a) => a.status === 'published')
+          .map((a) => ({ id: a.id, title: a.title }))
+
+        const transactions = (txRes.data || []).map((tx) => {
+          const trackTitle = tx.track_id ? trackMap.get(tx.track_id) || null : null
+          const albumTitle = tx.album_id ? albumMap.get(tx.album_id) || null : null
+          return {
+            date: tx.created_at,
+            trackTitle: trackTitle || 'General',
+            albumTitle: albumTitle || '—',
+            artistName: artist.stage_name,
+            grossCoins: tx.gross_coins || 0,
+            artistCoins: tx.artist_coins || 0,
+            labelCoins: tx.label_coins || 0,
+            status: tx.status || 'pending',
+            transactionType: tx.transaction_type,
+          }
+        })
+
+        const agreementData: MaiRecordLabelAgreementData = {
+          artistLegalName: application?.legal_name || user?.user_metadata?.full_name || user?.email || '—',
+          artistStageName: artist.stage_name || artist.user_profiles?.display_name || 'Artist',
+          maiTrollUserId: user.id,
+          artistEmail: user?.email || '—',
+          contractId: contractData.id,
+          contractNumber: contractData.contract_number,
+          effectiveDate: contractData.effective_at,
+          agreementStatus: contractData.status,
+          termsVersion: contractData.terms_version,
+          tier: contractData.tier,
+          artistSplitBps: contractData.artist_split_bps,
+          labelSplitBps: contractData.label_split_bps,
+          probationEndsAt: contractData.probation_ends_at,
+          expiresAt: contractData.expires_at,
+          artistSignedAt: contractData.artist_signed_at,
+          maiAcceptedAt: contractData.mai_accepted_at,
+          applicableTracks,
+          applicableAlbums,
+          transactions,
+        }
+
+        setAgreementHTML(generateMaiRecordLabelAgreement(agreementData))
       } catch (error) {
         console.error('[ArtistContractPage] Failed to load:', error)
         toast.error('Failed to load contract details.')
@@ -129,7 +186,7 @@ export default function ArtistContractPage() {
     return () => {
       active = false
     }
-  }, [user?.id, navigate])
+  }, [user?.id, navigate, user])
 
   const handleAccept = async () => {
     if (!contract || !agreedToTerms) {
@@ -156,6 +213,31 @@ export default function ArtistContractPage() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handlePrintPDF = () => {
+    if (!agreementHTML) return
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(agreementHTML)
+      printWindow.document.close()
+      setTimeout(() => printWindow.print(), 500)
+    } else {
+      alert('Please allow popups to print this document.')
+    }
+  }
+
+  const handleDownloadHTML = () => {
+    if (!agreementHTML) return
+    const blob = new Blob([agreementHTML], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `MAI_Record_Label_Agreement_${contract?.contract_number || 'contract'}.html`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -235,6 +317,14 @@ export default function ArtistContractPage() {
               <p className={MaiTrollTheme.text.muted}>
                 Status: <span className="text-green-400 font-semibold capitalize">{contract.status.replace('_', ' ')}</span>
               </p>
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handlePrintPDF} className={MaiTrollTheme.components.buttonSecondary}>
+                  Print / Save as PDF
+                </Button>
+                <Button onClick={handleDownloadHTML} className={MaiTrollTheme.components.buttonSecondary}>
+                  Download HTML
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -287,61 +377,40 @@ export default function ArtistContractPage() {
               </CardContent>
             </Card>
 
-            {/* Terms */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileSignature className="h-5 w-5 text-purple-400" />
-                  Contract Terms
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
-                  {PLACEHOLDER_TERMS}
-                </pre>
-              </CardContent>
-            </Card>
-
-            {/* Responsibilities */}
-            <div className="grid gap-6 md:grid-cols-2">
+            {/* Full Agreement */}
+            {agreementHTML ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <UserCheck className="h-5 w-5 text-green-400" />
-                    Artist Responsibilities
+                  <CardTitle className="flex items-center gap-2">
+                    <FileSignature className="h-5 w-5 text-purple-400" />
+                    Full Agreement
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-3">
-                    {ARTIST_RESPONSIBILITIES.map((item, index) => (
-                      <li key={index} className="flex gap-3 text-sm text-slate-300">
-                        <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+                    <iframe
+                      title="MAI Record Label Artist Agreement"
+                      srcDoc={agreementHTML}
+                      className="h-[600px] w-full rounded border border-slate-700 bg-white"
+                    />
                 </CardContent>
+                <CardFooter>
+                  <div className="flex gap-3">
+                    <Button onClick={handlePrintPDF} className={MaiTrollTheme.components.buttonSecondary}>
+                      Print / Save as PDF
+                    </Button>
+                    <Button onClick={handleDownloadHTML} className={MaiTrollTheme.components.buttonSecondary}>
+                      Download HTML
+                    </Button>
+                  </div>
+                </CardFooter>
               </Card>
-
+            ) : (
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <ShieldCheck className="h-5 w-5 text-cyan-400" />
-                    MAI Responsibilities
-                  </CardTitle>
-                </CardHeader>
                 <CardContent>
-                  <ul className="space-y-3">
-                    {MAI_RESPONSIBILITIES.map((item, index) => (
-                      <li key={index} className="flex gap-3 text-sm text-slate-300">
-                        <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-slate-400">Loading agreement document...</p>
                 </CardContent>
               </Card>
-            </div>
+            )}
 
             {/* Acceptance Form */}
             {!accepted && (
@@ -361,7 +430,7 @@ export default function ArtistContractPage() {
                   />
 
                   <div className="space-y-2">
-                    <Label htmlFor="legal-name">Legal Name (optional)</Label>
+                    <Label htmlFor="legal-name">Legal Name</Label>
                     <Input
                       id="legal-name"
                       type="text"
@@ -370,7 +439,7 @@ export default function ArtistContractPage() {
                       onChange={(e) => setLegalName(e.target.value)}
                     />
                     <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
-                      Providing your legal name is optional but recommended for contract validity.
+                      Providing your legal name is recommended for contract validity.
                     </p>
                   </div>
                 </CardContent>

@@ -19,7 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   realtime: {
     params: {
-      eventsPerSecond: 50,
+      eventsPerSecond: 200,
     },
   },
 })
@@ -186,10 +186,8 @@ export interface UserProfile {
   coin_multiplier?: number
   troll_coins: number
   hype_coins: number
-  cashout_coins?: number
-  cashout_reserved_coins?: number
-  reserved_troll_coins?: number
-  payout_method?: string
+  has_paid?: boolean
+  total_earned_coins: number
   payout_methods?: any[]
   payment_methods?: any[]
   payout_details?: string
@@ -197,8 +195,6 @@ export interface UserProfile {
   venmo_handle?: string | null
   paypal_email?: string | null
   preferred_payout_method?: string | null
-  has_paid?: boolean
-  total_earned_coins: number
   total_spent_coins: number
   insurance_level: string | null
   insurance_expires_at: string | null

@@ -87,7 +87,7 @@ export default function ActiveUserStrip({ streamId, isHost, isModerator, onGift 
     };
 
     fetchViewers();
-    const interval = setInterval(fetchViewers, 30000); // Refresh every 30s
+    const interval = setInterval(fetchViewers, 60000); // Refresh every 60s
 
     // Note: We don't subscribe to realtime stream_viewers changes here because
     // it causes entrance effects to retrigger when users join guest seats.

@@ -77,8 +77,9 @@ export function useStateBattle({
       try {
         const state = await getUserStateRPC(userId!);
         if (!cancelled) {
-          setUserState(state);
-          if (!state) {
+          const normalizedState = typeof state === 'string' ? state : null;
+          setUserState(normalizedState);
+          if (!normalizedState) {
             setShowStateSelector(true);
           }
         }

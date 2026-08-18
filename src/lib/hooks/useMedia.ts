@@ -5,7 +5,45 @@ import type {
   Song, Album, ArtistProfile, RecordLabel, SongTip, 
   StudioProject, ChartEntry, ArtistFollower 
 } from '@/types/media';
+import type { RecordLabelTrack, RecordLabelArtistProfile, RecordLabelAlbum } from '@/services/maiRecordLabel';
 import { toast } from 'sonner';
+
+const toSong = (t: RecordLabelTrack): Song => ({
+  id: t.id,
+  artist_id: t.artist_id,
+  user_id: t.user_id || t.artist_id,
+  album_id: t.album_id || undefined,
+  label_id: undefined,
+  title: t.title,
+  description: t.description || undefined,
+  audio_url: t.audio_url || '',
+  cover_url: t.cover_url || undefined,
+  duration: t.duration_seconds || undefined,
+  genre: t.genre || undefined,
+  bpm: undefined,
+  key_signature: undefined,
+  isrc_code: undefined,
+  track_number: undefined,
+  plays: t.play_count,
+  unique_plays: 0,
+  tips_total: t.tip_coins,
+  likes_count: t.like_count,
+  comments_count: 0,
+  shares_count: 0,
+  is_published: t.status === 'published',
+  is_explicit: t.explicit,
+  featured: false,
+  allow_tips: true,
+  allow_downloads: false,
+  metadata: {},
+  created_at: t.created_at,
+  updated_at: t.updated_at,
+  published_at: t.published_at || undefined,
+  is_liked: false,
+  artist: undefined,
+  album: undefined,
+  label: undefined,
+});
 
 // Hook for fetching songs
 export function useSongs(filters?: { 
@@ -30,11 +68,11 @@ export function useSongs(filters?: {
       setLoading(true);
       try {
         let query = supabase
-          .from('songs')
+          .from('record_label_tracks')
           .select(`
             *,
-            artist:artist_profiles(*),
-            album:albums(*)
+            artist:record_label_artist_profiles(*),
+            album:record_label_albums(*)
           `)
           .eq('is_published', true);
 
@@ -67,7 +105,7 @@ export function useSongs(filters?: {
         const { data, error: fetchError } = await query;
 
         if (fetchError) throw fetchError;
-        if (mounted) setSongs(data as Song[] || []);
+        if (mounted) setSongs((data as RecordLabelTrack[] || []).map(toSong));
       } catch (err: any) {
         if (mounted) setError(err.message);
       } finally {
@@ -83,14 +121,14 @@ export function useSongs(filters?: {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('songs')
-        .select(`
-          *,
-          artist:artist_profiles(*),
-          album:albums(*)
-        `)
-        .eq('is_published', true);
+        let query = supabase
+          .from('record_label_tracks')
+          .select(`
+            *,
+            artist:record_label_artist_profiles(*),
+            album:record_label_albums(*)
+          `)
+          .eq('is_published', true);
 
       if (filters?.artistId) {
         query = query.eq('artist_id', filters.artistId);
@@ -119,7 +157,7 @@ export function useSongs(filters?: {
 
       const { data, error: fetchError } = await query;
       if (fetchError) throw fetchError;
-      setSongs(data as Song[] || []);
+      setSongs((data as RecordLabelTrack[] || []).map(toSong));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -149,11 +187,11 @@ export function useSong(songId?: string) {
       setLoading(true);
       try {
         const { data, error: fetchError } = await supabase
-          .from('songs')
+          .from('record_label_tracks')
           .select(`
             *,
-            artist:artist_profiles(*),
-            album:albums(*),
+            artist:record_label_artist_profiles(*),
+            album:record_label_albums(*),
             label:record_labels(*)
           `)
           .eq('id', songId)
@@ -161,19 +199,7 @@ export function useSong(songId?: string) {
 
         if (fetchError) throw fetchError;
 
-        // Check if user has liked this song
-        if (user && data) {
-          const { data: likeData } = await supabase
-            .from('song_likes')
-            .select('id')
-            .eq('song_id', songId)
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          (data as Song).is_liked = !!likeData;
-        }
-
-        if (mounted) setSong(data as Song);
+        if (mounted) setSong(data ? toSong(data as RecordLabelTrack) : null);
       } catch (err: any) {
         if (mounted) setError(err.message);
       } finally {
@@ -209,23 +235,19 @@ export function useSong(songId?: string) {
     }
 
     try {
-      if (song?.is_liked) {
-        await supabase
-          .from('song_likes')
-          .delete()
-          .eq('song_id', songId)
-          .eq('user_id', user.id);
-        setSong(prev => prev ? { ...prev, is_liked: false, likes_count: prev.likes_count - 1 } : null);
-      } else {
-        await supabase
-          .from('song_likes')
-          .insert({ song_id: songId, user_id: user.id });
-        setSong(prev => prev ? { ...prev, is_liked: true, likes_count: prev.likes_count + 1 } : null);
-      }
+      const isLiked = song?.is_liked;
+      const newCount = (song?.likes_count || 0) + (isLiked ? -1 : 1);
+
+      await supabase
+        .from('record_label_tracks')
+        .update({ like_count: Math.max(0, newCount) })
+        .eq('id', songId);
+
+      setSong(prev => prev ? { ...prev, is_liked: !isLiked, likes_count: Math.max(0, newCount) } : null);
     } catch (err: any) {
       toast.error(err.message);
     }
-  }, [songId, user?.id, song?.is_liked]);
+  }, [songId, user?.id, song?.is_liked, song?.likes_count]);
 
   // Send tip
   const sendTip = useCallback(async (amount: number, message?: string, isAnonymous = false) => {
@@ -281,7 +303,7 @@ export function useArtistProfile(userId?: string) {
       setLoading(true);
       try {
         const { data, error: fetchError } = await supabase
-          .from('artist_profiles')
+          .from('record_label_artist_profiles')
           .select(`
             *,
             label:record_labels(*)
@@ -307,7 +329,7 @@ export function useArtistProfile(userId?: string) {
 
     try {
       const { data, error } = await supabase
-        .from('artist_profiles')
+        .from('record_label_artist_profiles')
         .update(updates)
         .eq('id', profile.id)
         .select()
@@ -482,12 +504,12 @@ export function useAlbums(filters?: { artistId?: string; labelId?: string; limit
       setLoading(true);
       try {
         let query = supabase
-          .from('albums')
+          .from('record_label_tracks')
           .select(`
             *,
-            artist:artist_profiles(*)
+            artist:record_label_artist_profiles(*)
           `)
-          .eq('is_published', true);
+          .eq('status', 'published');
 
         if (filters?.artistId) {
           query = query.eq('artist_id', filters.artistId);
@@ -505,7 +527,7 @@ export function useAlbums(filters?: { artistId?: string; labelId?: string; limit
         const { data, error: fetchError } = await query;
 
         if (fetchError) throw fetchError;
-        if (mounted) setAlbums(data as Album[] || []);
+        if (mounted) setAlbums(data as RecordLabelAlbum[] || []);
       } catch (err: any) {
         if (mounted) setError(err.message);
       } finally {
@@ -521,10 +543,10 @@ export function useAlbums(filters?: { artistId?: string; labelId?: string; limit
     setLoading(true);
     try {
       let query = supabase
-        .from('albums')
+        .from('record_label_albums')
         .select(`
           *,
-          artist:artist_profiles(*)
+          artist:record_label_artist_profiles(*)
         `)
         .eq('is_published', true);
 
@@ -543,7 +565,7 @@ export function useAlbums(filters?: { artistId?: string; labelId?: string; limit
 
       const { data, error: fetchError } = await query;
       if (fetchError) throw fetchError;
-      setAlbums(data as Album[] || []);
+      setAlbums(data as RecordLabelAlbum[] || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -574,22 +596,22 @@ export function useAlbum(albumId?: string) {
       try {
         const [{ data: albumData, error: albumError }, { data: songsData, error: songsError }] = await Promise.all([
           supabase
-            .from('albums')
+            .from('record_label_albums')
             .select(`
               *,
-              artist:artist_profiles(*),
+              artist:record_label_artist_profiles(*),
               label:record_labels(*)
             `)
             .eq('id', albumId)
             .single(),
           supabase
-            .from('songs')
+            .from('record_label_tracks')
             .select(`
               *,
-              artist:artist_profiles(*)
+              artist:record_label_artist_profiles(*)
             `)
             .eq('album_id', albumId)
-            .eq('is_published', true)
+            .eq('status', 'published')
             .order('track_number', { ascending: true })
         ]);
 
@@ -597,8 +619,8 @@ export function useAlbum(albumId?: string) {
         if (songsError) throw songsError;
 
         if (mounted) {
-          setAlbum(albumData as Album);
-          setSongs(songsData as Song[] || []);
+          setAlbum(albumData as RecordLabelAlbum);
+          setSongs((songsData as RecordLabelTrack[] || []).map(toSong));
         }
       } catch (err: any) {
         if (mounted) setError(err.message);
@@ -627,13 +649,14 @@ export function useCharts(chartType: 'trending' | 'top_tipped' | 'new_releases' 
       setLoading(true);
       try {
         // Get songs based on chart type
-        let query = supabase
-          .from('songs')
-          .select(`
-            *,
-            artist:artist_profiles(*)
-          `)
-          .eq('is_published', true);
+      let query = supabase
+        .from('record_label_tracks')
+        .select(`
+          *,
+          artist:record_label_artist_profiles(*),
+          album:record_label_albums(*)
+        `)
+        .eq('is_published', true);
 
         if (chartType === 'trending') {
           query = query.order('plays', { ascending: false });
@@ -650,19 +673,19 @@ export function useCharts(chartType: 'trending' | 'top_tipped' | 'new_releases' 
         if (fetchError) throw fetchError;
         
         // Map to chart entries format
-        const chartEntries = (data as Song[] || []).map((song, index) => ({
-          id: `${chartType}-${song.id}`,
-          song_id: song.id,
-          artist_id: song.artist_id,
+        const chartEntries = (data as RecordLabelTrack[] || []).map((track, index) => ({
+          id: `${chartType}-${track.id}`,
+          song_id: track.id,
+          artist_id: track.artist_id,
           chart_type: chartType,
           position: index + 1,
-          plays_count: song.plays,
-          tips_count: song.tips_total,
+          plays_count: track.play_count,
+          tips_count: track.tip_coins,
           period_start: new Date().toISOString(),
           period_end: new Date().toISOString(),
-          created_at: song.created_at,
-          song,
-          artist: song.artist
+          created_at: track.created_at,
+          song: toSong(track),
+          artist: track.artist
         }));
 
         if (mounted) setEntries(chartEntries);
@@ -707,14 +730,14 @@ export function useMyUploads() {
       setLoading(true);
       try {
         const [{ data: songsData }, { data: albumsData }, { data: projectsData }] = await Promise.all([
-          supabase.from('songs').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-          supabase.from('albums').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('record_label_tracks').select('*').eq('artist_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('record_label_albums').select('*').eq('artist_id', user.id).order('created_at', { ascending: false }),
           supabase.from('studio_projects').select('*').eq('user_id', user.id).order('updated_at', { ascending: false })
         ]);
 
         if (mounted) {
-          setSongs(songsData as Song[] || []);
-          setAlbums(albumsData as Album[] || []);
+          setSongs((songsData as RecordLabelTrack[] || []).map(toSong));
+          setAlbums(albumsData as RecordLabelAlbum[] || []);
           setProjects(projectsData as StudioProject[] || []);
         }
       } catch (err) {
@@ -731,16 +754,16 @@ export function useMyUploads() {
   const publishSong = useCallback(async (songId: string) => {
     try {
       const { error } = await supabase
-        .from('songs')
-        .update({ is_published: true, published_at: new Date().toISOString() })
+        .from('record_label_tracks')
+        .update({ status: 'published', published_at: new Date().toISOString() })
         .eq('id', songId);
 
       if (error) throw error;
       toast.success('Song published!');
       // Refetch
       if (user) {
-        const { data } = await supabase.from('songs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-        setSongs(data as Song[] || []);
+        const { data } = await supabase.from('record_label_tracks').select('*').eq('artist_id', user.id).order('created_at', { ascending: false });
+        setSongs((data as RecordLabelTrack[] || []).map(toSong));
       }
     } catch (err: any) {
       toast.error(err.message);
@@ -749,7 +772,7 @@ export function useMyUploads() {
 
   const deleteSong = useCallback(async (songId: string) => {
     try {
-      const { error } = await supabase.from('songs').delete().eq('id', songId);
+      const { error } = await supabase.from('record_label_tracks').delete().eq('id', songId);
       if (error) throw error;
       toast.success('Song deleted');
       setSongs(prev => prev.filter(s => s.id !== songId));

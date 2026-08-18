@@ -327,7 +327,7 @@ export function useGiftSystem() {
 // Only applies discount if user has 100+ trollmonds
 export function getTrollmondDiscount(trollmonds: number): number {
   if (trollmonds >= 100) {
-    return 10
+    return 1
   }
   return 0
 }

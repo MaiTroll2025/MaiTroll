@@ -92,7 +92,7 @@ const STAFF_ROLES = [
 ];
 
 // Roles that can be promoted to lead officer by secretary
-const PROMOTABLE_ROLES = ['admin', 'troll_officer', 'moderator', 'troller'];
+const PROMOTABLE_ROLES = ['troll_officer', 'moderator', 'troller'];
 
 export default function StaffManagement() {
   const [loading, setLoading] = useState(true);
@@ -136,6 +136,14 @@ export default function StaffManagement() {
           member.is_noah_assistant;
       });
 
+      staffMembers.sort((a, b) => {
+        const aRole = a.role || a.troll_role || 'user';
+        const bRole = b.role || b.troll_role || 'user';
+        if (aRole === 'admin' && bRole !== 'admin') return -1;
+        if (bRole === 'admin' && aRole !== 'admin') return 1;
+        return a.username.localeCompare(b.username);
+      });
+
       setStaff(staffMembers);
     } catch (err) {
       console.error('Error loading staff:', err);
@@ -177,7 +185,7 @@ export default function StaffManagement() {
     }
   };
 
-  const changeRole = async (memberId: string, newRole: string) => {
+  const _changeRole = async (memberId: string, newRole: string) => {
     try {
       const { error } = await supabase.rpc('set_user_role', {
         target_user: memberId,
@@ -315,14 +323,6 @@ export default function StaffManagement() {
                             }`}
                           >
                             {member.is_lead_officer || effectiveRole === 'lead_troll_officer' ? 'Remove Lead' : 'Promote to Lead'}
-                          </button>
-                        )}
-                        {effectiveRole === 'admin' && (
-                          <button
-                            onClick={() => changeRole(member.id, 'troll_officer')}
-                            className="px-3 py-1 rounded text-xs font-medium transition-colors border bg-blue-900/20 border-blue-500/30 text-blue-400 hover:bg-blue-900/40"
-                          >
-                            Set Officer
                           </button>
                         )}
                       </div>

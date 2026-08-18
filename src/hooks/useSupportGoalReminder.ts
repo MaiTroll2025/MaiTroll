@@ -66,7 +66,7 @@ export const useSupportGoalReminder = () => {
       const broadcasterIds = liveStreamsData.map(stream => stream.broadcaster_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('user_profiles')
-        .select('id, username, avatar_url, full_name, troll_coins, cashout_coins, cashout_reserved_coins')
+        .select('id, username, avatar_url, full_name, troll_coins')
         .in('id', broadcasterIds);
 
       if (profilesError) throw profilesError;
@@ -95,8 +95,7 @@ export const useSupportGoalReminder = () => {
 
         // Calculate current cashout-eligible balance
         // All troll coins are cashout-eligible; subtract reserved coins for pending payouts
-        const currentBalance = (profile.troll_coins || 0) - 
-                               (profile.cashout_reserved_coins || 0);
+        const currentBalance = (profile.troll_coins || 0);
 
         // Find next cashout tier
         let nextTier = tiersData[tiersData.length - 1]; // Default to highest tier

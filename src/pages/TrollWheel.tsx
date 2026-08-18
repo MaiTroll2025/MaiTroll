@@ -40,8 +40,8 @@ interface BigWinner {
 
 const TROLLMOND_TIERS = [
   { trollmonds: 0, discount: 0, label: 'No discount' },
-  { trollmonds: 50, discount: 5, label: '5% off gifts' },
-  { trollmonds: 100, discount: 10, label: 'MAX 10% off gifts' },
+  { trollmonds: 50, discount: 0.5, label: '0.5% off gifts' },
+  { trollmonds: 100, discount: 1, label: 'MAX 1% off gifts' },
 ]
 
 const DAILY_MISSIONS = [

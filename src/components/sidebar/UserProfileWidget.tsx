@@ -67,8 +67,6 @@ export default function UserProfileWidget() {
   const {
     troll_coins,
     crowns,
-    cashout_coins,
-    cashout_reserved_coins,
     loading: coinsLoading,
   } = useCoins()
 
@@ -327,7 +325,7 @@ export default function UserProfileWidget() {
               type="button"
               onClick={() => setShowDepositModal(true)}
               className="group flex w-full items-center justify-between rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-2 text-left transition hover:border-emerald-300/40 hover:bg-emerald-400/15"
-              title="Click to deposit gifted coins into non-reversible cashout escrow"
+              title="All troll coins are cashout-eligible"
             >
               <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-emerald-300">
                 <Wallet size={12} />
@@ -335,12 +333,7 @@ export default function UserProfileWidget() {
               </span>
 
               <span className="text-right font-mono text-[11px] font-black text-emerald-300">
-               {coinsLoading ? '...' : formatNumber(troll_coins ?? 0)}
-               {(cashout_reserved_coins ?? 0) > 0 && (
-                 <span className="block text-[9px] text-emerald-400/80">
-                   +{formatNumber(cashout_reserved_coins)} reserved
-                  </span>
-                )}
+                {coinsLoading ? '...' : formatNumber(troll_coins ?? 0)}
               </span>
             </button>
           </div>

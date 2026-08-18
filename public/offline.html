@@ -397,11 +397,25 @@
     // Listen for online events
     window.addEventListener('online', updateOnlineStatus);
     
-    // Check if we came back online while on this page
-    if (navigator.onLine) {
-      // We might have just come back online, try to reload
-      tryReconnect();
+    // Only auto-reconnect after a delay to avoid false positives during initial page load
+    // in in-app browsers (Facebook, Instagram, WebViews) that may report uncertain network state
+    let hasCheckedInitialConnectivity = false;
+    function checkInitialConnectivity() {
+      if (hasCheckedInitialConnectivity) return;
+      hasCheckedInitialConnectivity = true;
+      
+      if (navigator.onLine) {
+        // Delay briefly to avoid race conditions during initial WebView load
+        setTimeout(() => {
+          if (navigator.onLine) {
+            tryReconnect();
+          }
+        }, 800);
+      }
     }
+    
+    // Check connectivity after a short delay instead of immediately
+    setTimeout(checkInitialConnectivity, 500);
   </script>
 </body>
 </html>

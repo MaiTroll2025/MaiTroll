@@ -83,6 +83,16 @@ Deno.serve(async (req) => {
       return withCors({ success: false, error: "PayPal order ID is required" }, 400, req)
     }
 
+    // Rate limit: max 10 payment verifications per minute per user
+    const rateLimitUserId = userIdBody || paypalOrderId;
+    const rateLimitKey = `paypal_verify_rate:${rateLimitUserId}:${Math.floor(Date.now() / 60000)}`;
+    const rateLimitCount = (globalThis as any).__paypalVerifyRateLimit?.[rateLimitKey] || 0;
+    if (rateLimitCount >= 10) {
+      return withCors({ success: false, error: "Too many payment verifications. Please wait a moment." }, 429, req)
+    }
+    if (!(globalThis as any).__paypalVerifyRateLimit) (globalThis as any).__paypalVerifyRateLimit = {};
+    (globalThis as any).__paypalVerifyRateLimit[rateLimitKey] = rateLimitCount + 1;
+
     const PAYPAL_CLIENT_ID = Deno.env.get("PAYPAL_CLIENT_ID")
     const PAYPAL_CLIENT_SECRET = Deno.env.get("PAYPAL_CLIENT_SECRET")
     const paypalMode = Deno.env.get("PAYPAL_MODE")

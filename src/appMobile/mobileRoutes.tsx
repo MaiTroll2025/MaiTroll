@@ -60,6 +60,11 @@ import ArtistContractPage from "../../pages/artist/ArtistContractPage";
 import ArtistUploadTrackPage from "../../pages/artist/UploadTrackPage";
 import ArtistCreateAlbumPage from "../../pages/artist/CreateAlbumPage";
 import ArtistEarningsPage from "../../pages/artist/ArtistEarningsPage";
+import ArtistStaffDashboardPage from "../../pages/artist/ArtistStaffDashboardPage";
+import ArtistStaffHirePage from "../../pages/artist/ArtistStaffHirePage";
+import ArtistStaffDetailPage from "../../pages/artist/ArtistStaffDetailPage";
+import ArtistStaffJobsPage from "../../pages/artist/ArtistStaffJobsPage";
+import ArtistStaffWorkspacePage from "../../pages/artist/ArtistStaffWorkspacePage";
 import AlbumPage from "../../pages/music/AlbumPage";
 import TrackPage from "../../pages/music/TrackPage";
 import AuctioneerScanner from "../pages/auction/AuctioneerScanner";
@@ -253,6 +258,36 @@ export const mobileRoutes: MobileRouteItem[] = [
     element: <ArtistEarningsPage />,
     icon: Coins,
     priority: 68,
+    regular: true,
+    public: false,
+  },
+  {
+    key: "artist-staff-dashboard",
+    label: "Artist Team",
+    path: "/artist/dashboard/staff",
+    element: <ArtistStaffDashboardPage />,
+    icon: Users,
+    priority: 69,
+    regular: true,
+    public: false,
+  },
+  {
+    key: "artist-staff-hire",
+    label: "Hire Staff",
+    path: "/artist/dashboard/staff/hire",
+    element: <ArtistStaffHirePage />,
+    icon: UserPlus,
+    priority: 70,
+    regular: true,
+    public: false,
+  },
+  {
+    key: "artist-staff-jobs",
+    label: "My Artist Jobs",
+    path: "/artist/staff",
+    element: <ArtistStaffJobsPage />,
+    icon: Briefcase,
+    priority: 71,
     regular: true,
     public: false,
   },

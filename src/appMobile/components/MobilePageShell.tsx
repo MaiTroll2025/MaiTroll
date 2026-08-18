@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 interface MobilePageShellProps {
@@ -19,6 +19,12 @@ export default function MobilePageShell({
   rightAction,
 }: MobilePageShellProps) {
   const navigate = useNavigate()
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    contentRef.current?.scrollTo(0, 0)
+  }, [])
 
   return (
     <div className="mobile-page-shell">
@@ -56,7 +62,7 @@ export default function MobilePageShell({
           )}
         </div>
       )}
-      <div className="mobile-page-shell__content">
+      <div ref={contentRef} className="mobile-page-shell__content">
         {children}
       </div>
     </div>

@@ -67,15 +67,26 @@ export default function AudioPlayer({
     }
 
     // Create new Howl instance
+    const getAudioUrl = (audioUrl: string) => {
+      if (!audioUrl) return '';
+      if (audioUrl.startsWith('http')) return audioUrl;
+      return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/record-label-tracks/${audioUrl}`;
+    };
+
+    const audioSrc = getAudioUrl(song.audio_url);
+    if (!audioSrc) {
+      setLoadError('No audio URL available');
+      setIsLoading(false);
+      return;
+    }
+
     const howl = new Howl({
-      src: [song.audio_url],
-      html5: true, // Force HTML5 Audio to support streaming
+      src: [audioSrc],
       volume: isMuted ? 0 : volume,
       preload: true,
       onload: () => {
         setIsLoading(false);
         setDuration(howl.duration());
-        // Auto-play when loaded if should be playing
         if (currentIsPlaying) {
           howl.play();
         }
@@ -111,21 +122,12 @@ export default function AudioPlayer({
     }
 
     return () => {
-      // Don't unload on component unmount, just stop
-      // howl.unload() is called when song changes
+      if (howlRef.current) {
+        howlRef.current.unload();
+        howlRef.current = null;
+      }
     };
   }, [song.id, song.audio_url]);
-
-  // Update play/pause state
-  useEffect(() => {
-    if (!howlRef.current) return;
-
-    if (currentIsPlaying && !howlRef.current.playing()) {
-      howlRef.current.play();
-    } else if (!currentIsPlaying && howlRef.current.playing()) {
-      howlRef.current.pause();
-    }
-  }, [currentIsPlaying]);
 
   // Update volume
   useEffect(() => {
@@ -212,7 +214,7 @@ export default function AudioPlayer({
 
   if (isMinimized) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 md:left-80 md:right-4 z-50">
+      <div className="fixed bottom-[calc(var(--bottom-nav-height,64px)+env(safe-area-inset-bottom,0px)+1rem)] left-4 right-4 md:left-80 md:right-4 z-50">
         <div className={`${MaiTrollTheme.backgrounds.card} border ${MaiTrollTheme.borders.glass} rounded-2xl p-3 shadow-2xl flex items-center gap-4`}>
           <img 
             src={song.cover_url || '/assets/default-cover.png'} 
@@ -222,10 +224,20 @@ export default function AudioPlayer({
           <div className="flex-1 min-w-0">
             <p className="font-medium text-white truncate">{song.title}</p>
             <p className="text-sm text-gray-400 truncate">{song.artist?.artist_name}</p>
+            <p className="text-xs text-gray-500">{formatTime(currentTime)} / {formatTime(duration)}</p>
           </div>
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => setCurrentIsPlaying(!currentIsPlaying)} 
+              onClick={() => {
+                if (!howlRef.current) return
+                if (currentIsPlaying) {
+                  setCurrentIsPlaying(false)
+                  howlRef.current.pause()
+                } else {
+                  setCurrentIsPlaying(true)
+                  howlRef.current.play()
+                }
+              }} 
               className="p-2 rounded-full bg-pink-500 hover:bg-pink-400 disabled:opacity-50"
               disabled={isLoading}
             >
@@ -248,7 +260,7 @@ export default function AudioPlayer({
 
   return (
     <>
-      <div className="fixed bottom-4 left-4 right-4 md:left-80 md:right-4 z-50">
+      <div className="fixed bottom-[calc(var(--bottom-nav-height,64px)+env(safe-area-inset-bottom,0px)+1rem)] left-4 right-4 md:left-80 md:right-4 z-50">
         <div className={`${MaiTrollTheme.backgrounds.card} border ${MaiTrollTheme.borders.glass} rounded-2xl shadow-2xl overflow-hidden`}>
           {/* Error/Loading Banner */}
           {loadError && (
@@ -318,7 +330,16 @@ export default function AudioPlayer({
                 </button>
 
                 <button 
-                  onClick={() => setCurrentIsPlaying(!currentIsPlaying)} 
+                  onClick={() => {
+                    if (!howlRef.current) return
+                    if (currentIsPlaying) {
+                      setCurrentIsPlaying(false)
+                      howlRef.current.pause()
+                    } else {
+                      setCurrentIsPlaying(true)
+                      howlRef.current.play()
+                    }
+                  }} 
                   className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 flex items-center justify-center transition-all disabled:opacity-50"
                   disabled={isLoading || !!loadError}
                 >

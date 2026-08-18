@@ -14,7 +14,9 @@ ALTER TABLE public.user_profiles
   ADD COLUMN IF NOT EXISTS troll_coins BIGINT DEFAULT 0,
   ADD COLUMN IF NOT EXISTS total_earned_coins BIGINT DEFAULT 0,
   ADD COLUMN IF NOT EXISTS total_spent_coins BIGINT DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS credit_score INTEGER DEFAULT 400 CHECK (credit_score >= 0 AND credit_score <= 800);
+  ADD COLUMN IF NOT EXISTS credit_score INTEGER DEFAULT 400 CHECK (credit_score >= 0 AND credit_score <= 800),
+  ADD COLUMN IF NOT EXISTS credit_limit BIGINT DEFAULT 250,
+  ADD COLUMN IF NOT EXISTS credit_used BIGINT DEFAULT 0;
 
 -- 2. Ensure user_credit table exists (trigger depends on this)
 CREATE TABLE IF NOT EXISTS public.user_credit (
@@ -85,6 +87,8 @@ BEGIN
       terms_accepted,
       onboarding_completed,
       credit_score,
+      credit_limit,
+      credit_used,
       created_at,
       updated_at
     ) VALUES (
@@ -99,11 +103,13 @@ BEGIN
       100,  -- Track the bonus
       0,
       v_email,
-      v_terms_accepted,
-      false,
-      400,  -- Default credit score (matches user_credit default)
-      NOW(),
-      NOW()
+        v_terms_accepted,
+       v_onboarding_completed,
+       400,  -- Default credit score (matches user_credit default)
+       250,  -- Default credit limit
+       0,    -- Default credit used
+       NOW(),
+       NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
       updated_at = NOW();
@@ -176,6 +182,18 @@ SELECT
   action_statement
 FROM information_schema.triggers
 WHERE trigger_name = 'on_auth_user_created';
+
+-- 11. Backfill existing users: ensure credit_score is 400 and credit_limit is 250
+UPDATE public.user_profiles
+SET credit_score = 400,
+    credit_limit = 250,
+    credit_used = 0
+WHERE credit_score IS NULL OR credit_score = 0 OR credit_score = 300
+   OR credit_limit IS NULL OR credit_limit = 0;
+
+UPDATE public.user_credit
+SET score = 400
+WHERE score IS NULL OR score = 0 OR score = 300;
 
 -- Success message
 SELECT 'Signup trigger fix applied successfully! The on_auth_user_created trigger is now attached to auth.users.' AS status;

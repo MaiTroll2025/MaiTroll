@@ -23,15 +23,15 @@ interface FastPayProgramProps {
 
   /**
    * Successful cashouts made by the current user during the
-   * rolling previous 24 hours.
+   * rolling previous 7 days.
    *
    * This value must come from server-validated cashout data.
    */
-  successfulCashoutsLast24Hours?: number;
+  successfulCashoutsLast7Days?: number;
 
   /**
    * Earliest time the user may submit another cashout after
-   * reaching the rolling 24-hour limit.
+   * reaching the rolling 7-day limit.
    */
   nextCashoutAvailableAt?: string | Date | null;
 
@@ -47,7 +47,7 @@ const MAI_PAY_PLUS_CASHOUT_LIMIT = 20;
 export default function FastPayProgram({
   compact = false,
   isMaiPayPlus = false,
-  successfulCashoutsLast24Hours = 0,
+  successfulCashoutsLast7Days = 0,
   nextCashoutAvailableAt = null,
   loading = false,
 }: FastPayProgramProps) {
@@ -59,7 +59,7 @@ export default function FastPayProgram({
 
   const completedCashouts = Math.min(
     cashoutLimit,
-    Math.max(0, Math.floor(successfulCashoutsLast24Hours))
+    Math.max(0, Math.floor(successfulCashoutsLast7Days))
   );
 
   const remainingCashouts = Math.max(
@@ -219,9 +219,9 @@ export default function FastPayProgram({
               </div>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-                {isMaiPayPlus
-                  ? 'MAI Pay Plus members receive double the daily cashout limit. Plus cashout tiers require double the standard coin amount.'
-                  : 'Verified users may cash out immediately after earning enough coins for a supported cashout amount.'}
+               {isMaiPayPlus
+                   ? 'MAI Pay Plus members receive double the weekly cashout limit. Plus cashout tiers require double the standard coin amount.'
+                   : 'Verified users may cash out immediately after earning enough coins for a supported cashout amount.'}
               </p>
             </div>
           </div>
@@ -267,13 +267,13 @@ export default function FastPayProgram({
                 <Gauge className="h-5 w-5" />
               )
             }
-            label="Rolling Limit"
-            value={`${cashoutLimit} per 24 hours`}
-            description={
-              isMaiPayPlus
-                ? 'MAI Pay Plus doubles the standard cashout limit.'
-                : 'Only successful cashouts count toward the limit.'
-            }
+             label="Rolling Limit"
+             value={`${cashoutLimit} per 7 days`}
+             description={
+               isMaiPayPlus
+                 ? 'MAI Pay Plus doubles the standard cashout limit.'
+                 : 'Only successful cashouts count toward the limit.'
+             }
             accentClassName={
               isMaiPayPlus
                 ? 'text-amber-300'
@@ -299,12 +299,12 @@ export default function FastPayProgram({
                   MAI Pay Plus Active
                 </h3>
 
-                <p className="mt-1 text-sm leading-6 text-slate-300">
-                  Your rolling cashout limit is increased from 10 to 20
-                  successful cashouts every 24 hours. Cashout options shown
-                  in the Select Cashout Tier section require double the
-                  standard coin amount while MAI Pay Plus is active.
-                </p>
+                 <p className="mt-1 text-sm leading-6 text-slate-300">
+                   Your rolling cashout limit is increased from 10 to 20
+                   successful cashouts every 7 days. Cashout options shown
+                   in the Select Cashout Tier section require double the
+                   standard coin amount while MAI Pay Plus is active.
+                 </p>
               </div>
             </div>
           </div>
@@ -346,16 +346,16 @@ export default function FastPayProgram({
                 <Gauge className="h-4 w-4" aria-hidden="true" />
               )}
 
-              <h3 className="text-sm font-black uppercase tracking-[0.16em]">
-                Rolling 24-Hour Limit
-              </h3>
+               <h3 className="text-sm font-black uppercase tracking-[0.16em]">
+                 Rolling 7-Day Limit
+               </h3>
             </div>
 
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              {isMaiPayPlus
-                ? 'A MAI Pay Plus member may complete up to 20 successful cashouts during any rolling 24-hour period.'
-                : 'A user may complete up to 10 successful cashouts during any rolling 24-hour period.'}
-            </p>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                {isMaiPayPlus
+                  ? 'A MAI Pay Plus member may complete up to 20 successful cashouts during any rolling 7-day period.'
+                  : 'A user may complete up to 10 successful cashouts during any rolling 7-day period.'}
+              </p>
 
             <div className="mt-5">
               <div className="flex items-end justify-between gap-4">
@@ -410,7 +410,7 @@ export default function FastPayProgram({
 
               <p className="mt-4 text-sm leading-6 text-slate-400">
                 Each successful cashout remains in the rolling count for
-                exactly 24 hours. Eligibility automatically returns as older
+                exactly 7 days. Eligibility automatically returns as older
                 cashouts fall outside that window.
               </p>
             </div>
@@ -506,9 +506,9 @@ function CashoutStatus({
             ? 'Checking Access'
             : !isVerified
               ? 'Verification Required'
-              : hasReachedCashoutLimit
-                ? 'Daily Limit Reached'
-                : isMaiPayPlus
+                 : hasReachedCashoutLimit
+                   ? 'Weekly Limit Reached'
+                 : isMaiPayPlus
                   ? 'MAI Pay Plus Active'
                   : 'Eligible to Cash Out'}
         </p>
@@ -521,7 +521,7 @@ function CashoutStatus({
             ? 'Complete account verification before requesting a cashout.'
             : hasReachedCashoutLimit
               ? nextCashoutWait
-              : `${remainingCashouts} of ${cashoutLimit} cashouts remain in your rolling 24-hour window.`}
+              : `${remainingCashouts} of ${cashoutLimit} cashouts remain in your rolling 7-day window.`}
       </p>
     </div>
   );
@@ -607,8 +607,8 @@ function EligibilityCard({
               ? 'Checking Cashout Access'
               : !isVerified
                 ? 'Verify Your Account'
-                : hasReachedCashoutLimit
-                  ? "You've reached today's cashout limit."
+                  : hasReachedCashoutLimit
+                    ? "You've reached this week's cashout limit."
                   : isMaiPayPlus
                     ? 'MAI Pay Plus Cashout Access'
                     : 'Cashout Access Available'}
@@ -620,7 +620,7 @@ function EligibilityCard({
               : !isVerified
                 ? 'Every verified user may cash out immediately after earning enough coins for a supported cashout tier.'
                 : hasReachedCashoutLimit
-                  ? 'You may cash out again after one of your previous cashouts becomes older than 24 hours.'
+                  ? 'You may cash out again after one of your previous cashouts becomes older than 7 days.'
                   : isMaiPayPlus
                     ? 'Select a MAI Pay Plus cashout tier below. Plus tiers use double the standard coin requirement.'
                     : 'Select a cashout tier below to continue.'}
@@ -688,7 +688,7 @@ function formatRemainingTime(
   availableAt: string | Date | null
 ): string {
   if (!availableAt) {
-    return 'Available after the oldest cashout becomes 24 hours old.';
+    return 'Available after the oldest cashout becomes 7 days old.';
   }
 
   const targetTime =
@@ -697,7 +697,7 @@ function formatRemainingTime(
       : new Date(availableAt).getTime();
 
   if (Number.isNaN(targetTime)) {
-    return 'Available after the oldest cashout becomes 24 hours old.';
+    return 'Available after the oldest cashout becomes 7 days old.';
   }
 
   const remainingMilliseconds = targetTime - Date.now();

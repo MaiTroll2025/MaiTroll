@@ -11,8 +11,7 @@ export default function PayoutRequest() {
     // Redirect to MAI Pay immediately
     if (user?.id) {
       const rawCoins = Number(profile?.troll_coins || 0)
-      const reservedCoins = Number(profile?.reserved_troll_coins || 0)
-      const availableCoins = Math.max(0, rawCoins - reservedCoins)
+      const availableCoins = Math.max(0, rawCoins)
 
       const maiPayUrl = new URL('https://maicorp.online/mai-pay')
       maiPayUrl.searchParams.set('platform', 'MaiTroll')

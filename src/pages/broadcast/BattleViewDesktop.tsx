@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Loader2, Coins, Crown, Flame, Skull, X, RefreshCw, LogOut } from "lucide-react";
+import { Loader2, Coins, Crown, Flame, Skull, X, RefreshCw, LogOut, MessageCircle, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useBattleViewController } from "../../hooks/useBattleViewController";
@@ -13,7 +13,9 @@ import BattleActivityFeed from "../../components/broadcast/battle/BattleActivity
 import BattleChat from "../../components/broadcast/BattleChat";
 import MuteHandler from "../../components/broadcast/MuteHandler";
 import GiftTray from "../../components/broadcast/GiftTray";
+import QuickGiftRow from "../../components/broadcast/QuickGiftRow";
 import { MemoBattleArena, BattleConnectionStatus } from "../../components/broadcast/BattleArena";
+import MatchFoundOverlay from "../../components/broadcast/MatchFoundOverlay";
 
 /**
  * Desktop BattleView — visually and functionally identical to the original
@@ -72,6 +74,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
     loading,
     error,
     handleSelectBattle,
+    preBattleCountdown,
   } = battleView;
 
   const navigate = useNavigate();
@@ -84,8 +87,9 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
         <span className="font-medium">{error}</span>
         <button
           onClick={() => navigate("/")}
-          className="mt-4 px-6 py-2 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-lg transition"
+          className="mt-4 px-6 py-2 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-lg transition inline-flex items-center gap-2"
         >
+          <Home size={16} />
           Return Home
         </button>
       </div>
@@ -105,12 +109,23 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
     );
   }
 
+  const showMatchOverlay = preBattleCountdown !== null && preBattleCountdown > 0;
+
   const totalScore = (battle?.score_challenger || 0) + (battle?.score_opponent || 0);
   const challengerPercent = totalScore === 0 ? 50 : Math.round((battle?.score_challenger / totalScore) * 100);
   const opponentPercent = 100 - challengerPercent;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black text-white md:flex-row">
+      {showMatchOverlay && (
+        <MatchFoundOverlay
+          challengerUserId={challengerStream.user_id}
+          opponentUserId={opponentStream.user_id}
+          challengerStateCode={challengerStream.state_battle_state_code || null}
+          opponentStateCode={opponentStream.state_battle_state_code || null}
+          countdown={preBattleCountdown}
+        />
+      )}
       {/* LEFT SIDEBAR — Active Battles + Viewer Status (desktop) */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-purple-500/20 bg-zinc-950/80 lg:flex">
         <ActiveBattlesPanel
@@ -429,7 +444,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
               className="flex flex-col items-center gap-1 text-white hover:text-blue-400 transition-colors"
             >
               <div className="relative">
-                💬
+                <MessageCircle size={20} />
                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
               </div>
               <span className="text-xs font-medium">Chat</span>
@@ -453,7 +468,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
           </div>
         </div>
 
-        {/* Mobile Gift Tray Overlay - only shown when a broadcaster box is clicked */}
+        {/* Mobile Quick Gift Popup - compact row that closes on send */}
         <AnimatePresence>
           {showMobileGiftTray && giftRecipientId && (
             <motion.div
@@ -471,11 +486,11 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
-                className="absolute bottom-0 left-0 right-0 bg-zinc-900 rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto"
+                className="absolute bottom-0 left-0 right-0 bg-zinc-900 rounded-t-2xl p-4"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white">Send Gift</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-white">Quick Gift</h3>
                   <button
                     onClick={() => {
                       setShowMobileGiftTray(false);
@@ -484,20 +499,18 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
                     }}
                     className="text-zinc-400 hover:text-white"
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
-
-                <GiftTray
-                  key={giftRecipientId}
-                  onClose={() => {
-                    setGiftRecipientId(null);
-                    setGiftStreamId(null);
-                    setShowMobileGiftTray(false);
-                  }}
+                <QuickGiftRow
                   recipientId={giftRecipientId}
                   streamId={giftStreamId || currentStreamId}
                   battleId={battleId}
+                  onClose={() => {
+                    setShowMobileGiftTray(false);
+                    setGiftRecipientId(null);
+                    setGiftStreamId(null);
+                  }}
                 />
               </motion.div>
             </motion.div>

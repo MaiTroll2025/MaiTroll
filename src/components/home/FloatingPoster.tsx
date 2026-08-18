@@ -42,7 +42,6 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
 
   // Wallet-style cashout state (mirrors Wallet.tsx)
   const [totalCoins, setTotalCoins] = useState(0);
-  const [reservedCoins, setReservedCoins] = useState(0);
   const [eligibleCoins, setEligibleCoins] = useState(0);
   const [weeklyEarnings, setWeeklyEarnings] = useState(0);
   const [loadingBalances, setLoadingBalances] = useState(true);
@@ -59,8 +58,8 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
   ]);
 
   const availableCoins = useMemo(() => {
-    return Math.max(0, totalCoins - reservedCoins);
-  }, [totalCoins, reservedCoins]);
+    return Math.max(0, totalCoins);
+  }, [totalCoins]);
 
   const tierList = useMemo(() => {
     const source = posterTiers.length > 0 ? posterTiers : CASHOUT_TIERS.map((tier) => ({
@@ -92,16 +91,35 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
   }, [eligibleCoins, nextTier]);
 
   useEffect(() => {
+    async function loadBalances() {
+      if (!user?.id) return
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('troll_coins')
+          .eq('id', user.id)
+          .single()
+
+        const rawTotal = Number(data?.troll_coins ?? 0)
+        const eligibleBalance = Math.max(0, rawTotal)
+
+        setTotalCoins(rawTotal)
+        setEligibleCoins(eligibleBalance)
+      } catch (err) {
+        console.error('[FloatingPoster] Failed to load balances:', err)
+      } finally {
+        setLoadingBalances(false)
+      }
+    }
+
+    loadBalances()
+  }, [user?.id])
+
+  useEffect(() => {
     const rawTotal = Number(profile?.troll_coins || 0);
-    const reserved = Math.max(
-      0,
-      Number(profile?.cashout_reserved_coins || profile?.reserved_troll_coins || 0)
-    );
-    const cashoutBalance = Math.max(0, Number(profile?.troll_coins || 0));
-    const eligibleBalance = Math.max(0, cashoutBalance - reserved);
+    const eligibleBalance = Math.max(0, rawTotal);
 
     setTotalCoins(rawTotal);
-    setReservedCoins(reserved);
     setEligibleCoins(eligibleBalance);
     setWeeklyEarnings(0);
     setLoadingBalances(false);

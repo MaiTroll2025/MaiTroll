@@ -127,7 +127,25 @@ export default function AlbumPage() {
 
   const handlePlay = async (track: Track) => {
     setPlayingTrackId(track.id)
-    toast.success(`Now Playing: ${track.title}`)
+
+    try {
+      const { data, error } = await supabase.rpc('play_mai_track', {
+        p_track_id: track.id,
+      })
+
+      if (error) throw error
+      if (!data?.success) throw new Error(data?.error || 'Failed to play track')
+
+      const listenerPaid = data?.listener_paid || 0
+      if (listenerPaid > 0) {
+        toast.success(`Now Playing: ${track.title} (${listenerPaid} Troll Coins used)`)
+      } else {
+        toast.success(`Now Playing: ${track.title}`)
+      }
+    } catch (err: any) {
+      setPlayingTrackId(null)
+      toast.error(err?.message || 'Failed to play track')
+    }
   }
 
   if (loading) {

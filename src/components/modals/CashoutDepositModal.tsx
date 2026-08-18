@@ -24,16 +24,13 @@ export default function CashoutDepositModal({
   const {
     depositToCashout,
     loading,
-    totalEarned,
-    cashout_reserved_coins,
-    cashout_coins,
+    troll_coins,
   } = useCoins()
 
   const [amount, setAmount] = useState('')
 
-  const earnedCoins = Number(totalEarned || 0)
-  const reservedCoins = Number(cashout_reserved_coins || cashout_coins || 0)
-  const availableEarnedCoins = Math.max(0, earnedCoins - reservedCoins)
+  const earnedCoins = Number(troll_coins || 0)
+  const availableEarnedCoins = Math.max(0, earnedCoins)
 
   const unlockedTier = useMemo(() => {
     return [...CASHOUT_TIERS]
@@ -161,16 +158,9 @@ return (
         <div className="space-y-4">
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
             <div className="flex justify-between text-sm">
-              <span className="text-zinc-400">Earned Coins Available</span>
+              <span className="text-zinc-400">Available Coins</span>
               <span className="font-mono font-bold text-green-300">
                 {availableEarnedCoins.toLocaleString()}
-              </span>
-            </div>
-
-            <div className="mt-2 flex justify-between text-sm">
-              <span className="text-zinc-400">Already Reserved</span>
-              <span className="font-mono text-yellow-300">
-                {reservedCoins.toLocaleString()}
               </span>
             </div>
 
@@ -182,7 +172,7 @@ return (
             </div>
 
             <p className="mt-3 text-xs text-zinc-500">
-              Purchased coins cannot be deposited to cashout. Cashouts have no platform fees.
+              All troll coins are cashout-eligible. Cashouts have no platform fees.
             </p>
           </div>
 

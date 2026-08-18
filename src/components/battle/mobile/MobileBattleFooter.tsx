@@ -1,5 +1,5 @@
 import React from "react";
-import { Share2, Radio } from "lucide-react";
+import { Share2, Radio, UserPlus } from "lucide-react";
 
 interface MobileBattleFooterProps {
   avatarUrl?: string | null;
@@ -68,6 +68,9 @@ export default function MobileBattleFooter({
           onClick={onFollow}
           className="
             flex-none
+            inline-flex
+            items-center
+            gap-1.5
             rounded-full
             bg-purple-600
             px-4
@@ -79,6 +82,7 @@ export default function MobileBattleFooter({
             active:scale-95
           "
         >
+          <UserPlus size={14} />
           Follow
         </button>
 

@@ -14,6 +14,11 @@ const ArtistContractPage = lazyWithRetry(() => import("./pages/artist/ArtistCont
 const ArtistUploadTrackPage = lazyWithRetry(() => import("./pages/artist/UploadTrackPage"));
 const ArtistCreateAlbumPage = lazyWithRetry(() => import("./pages/artist/CreateAlbumPage"));
 const ArtistEarningsPage = lazyWithRetry(() => import("./pages/artist/ArtistEarningsPage"));
+const ArtistStaffDashboardPage = lazyWithRetry(() => import("./pages/artist/ArtistStaffDashboardPage"));
+const ArtistStaffHirePage = lazyWithRetry(() => import("./pages/artist/ArtistStaffHirePage"));
+const ArtistStaffDetailPage = lazyWithRetry(() => import("./pages/artist/ArtistStaffDetailPage"));
+const ArtistStaffJobsPage = lazyWithRetry(() => import("./pages/artist/ArtistStaffJobsPage"));
+const ArtistStaffWorkspacePage = lazyWithRetry(() => import("./pages/artist/ArtistStaffWorkspacePage"));
 const AdminMaiRecordLabel = lazyWithRetry(() => import("./pages/admin/AdminMaiRecordLabel"));
 const AlbumPage = lazyWithRetry(() => import("./pages/music/AlbumPage"));
 const TrackPage = lazyWithRetry(() => import("./pages/music/TrackPage"));
@@ -2716,8 +2721,13 @@ const handleVisibilityChange = async () => {
                    <Route path="/artist/contract" element={<ArtistContractPage />} />
                    <Route path="/artist/upload-track" element={<ArtistUploadTrackPage />} />
                    <Route path="/artist/create-album" element={<ArtistCreateAlbumPage />} />
-                   <Route path="/artist/earnings" element={<ArtistEarningsPage />} />
-                   <Route path="/admin/mai-record-label" element={
+                    <Route path="/artist/earnings" element={<ArtistEarningsPage />} />
+                    <Route path="/artist/dashboard/staff" element={<ArtistStaffDashboardPage />} />
+                    <Route path="/artist/dashboard/staff/hire" element={<ArtistStaffHirePage />} />
+                    <Route path="/artist/dashboard/staff/:membershipId" element={<ArtistStaffDetailPage />} />
+                    <Route path="/artist/staff" element={<ArtistStaffJobsPage />} />
+                    <Route path="/artist/staff/workspace/:artistId" element={<ArtistStaffWorkspacePage />} />
+                    <Route path="/admin/mai-record-label" element={
                      <RequireRole roles={[UserRole.ADMIN]}>
                        <AdminMaiRecordLabel />
                      </RequireRole>

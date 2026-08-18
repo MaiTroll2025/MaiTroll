@@ -16,9 +16,18 @@ Deno.serve(async (req) => {
     return handleCorsPreflight(req)
   }
 
-  if (req.method !== 'POST') {
-    return withCors({ success: false, error: 'Method not allowed' }, 405, req)
+  if (req.method !== "POST") {
+    return withCors({ success: false, error: "Method not allowed" }, 405, req)
   }
+
+  // Rate limit: max 5 purchase orders per minute per user
+  const rateLimitKey = `paypal_order_rate:${userId}:${Math.floor(Date.now() / 60000)}`;
+  const rateLimitCount = (globalThis as any).__paypalOrderRateLimit?.[rateLimitKey] || 0;
+  if (rateLimitCount >= 5) {
+    return withCors({ success: false, error: "Too many purchase attempts. Please wait a moment." }, 429, req)
+  }
+  if (!(globalThis as any).__paypalOrderRateLimit) (globalThis as any).__paypalOrderRateLimit = {};
+  (globalThis as any).__paypalOrderRateLimit[rateLimitKey] = rateLimitCount + 1;
 
   try {
     const body = await req.json()

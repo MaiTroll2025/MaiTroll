@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
+import { supabase } from '@/lib/supabase'
 import * as recordLabelService from '@/services/maiRecordLabel'
 import { MaiTrollTheme } from '@/styles/trollCityTheme'
 import { toast } from 'sonner'
@@ -13,6 +14,7 @@ import {
   ImageIcon,
   Mic2,
   CheckCircle2,
+  X,
 } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,6 +36,13 @@ type TrackFormData = {
   album_id: string
 }
 
+type UploadState = {
+  file: File | null
+  uploading: boolean
+  progress: number
+  error: string | null
+}
+
 const EMPTY_FORM: TrackFormData = {
   title: '',
   description: '',
@@ -43,6 +52,13 @@ const EMPTY_FORM: TrackFormData = {
   duration_seconds: '',
   explicit: false,
   album_id: '',
+}
+
+const EMPTY_UPLOAD: UploadState = {
+  file: null,
+  uploading: false,
+  progress: 0,
+  error: null,
 }
 
 export default function UploadTrackPage() {
@@ -56,6 +72,7 @@ export default function UploadTrackPage() {
   const [form, setForm] = useState<TrackFormData>(EMPTY_FORM)
   const [errors, setErrors] = useState<Partial<Record<keyof TrackFormData, string>>>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [upload, setUpload] = useState<UploadState>(EMPTY_UPLOAD)
 
   const isArtist = (profile as any)?.is_record_label_artist === true
 
@@ -124,11 +141,62 @@ export default function UploadTrackPage() {
     }
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null
+    setUpload(prev => ({ ...prev, file, error: null }))
+    if (file) {
+      setForm(prev => ({ ...prev, audio_url: '' }))
+    }
+  }
+
+  const removeFile = () => {
+    setUpload(EMPTY_UPLOAD)
+  }
+
+  const uploadAudioFile = async (): Promise<string | null> => {
+    if (!upload.file || !user?.id) return null
+
+    setUpload(prev => ({ ...prev, uploading: true, progress: 0, error: null }))
+
+    try {
+      const fileExt = upload.file.name.split('.').pop() || 'mp3'
+      const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('record-label-tracks')
+        .upload(fileName, upload.file, {
+          cacheControl: '3600',
+          upsert: false,
+        })
+
+      if (uploadError) {
+        throw new Error(uploadError.message || 'Failed to upload audio file')
+      }
+
+      const { data: publicData } = supabase.storage
+        .from('record-label-tracks')
+        .getPublicUrl(uploadData.path)
+
+      return publicData.publicUrl
+    } catch (err: any) {
+      const message = err?.message || 'Failed to upload audio file'
+      setUpload(prev => ({ ...prev, error: message, uploading: false }))
+      toast.error(message)
+      return null
+    } finally {
+      setUpload(prev => ({ ...prev, uploading: false }))
+    }
+  }
+
   const validate = (): boolean => {
     const next: Partial<Record<keyof TrackFormData, string>> = {}
 
     if (!form.title.trim()) {
       next.title = 'Track title is required.'
+    }
+
+    if (!upload.file) {
+      next.audio_url = 'Upload an MP3 file from your computer.'
     }
 
     if (form.duration_seconds && Number(form.duration_seconds) < 0) {
@@ -156,14 +224,26 @@ export default function UploadTrackPage() {
     setSubmitError(null)
 
     try {
-      const status = form.audio_url.trim() ? 'processing' : 'draft'
+      let audioUrl = form.audio_url.trim() || undefined
+
+      if (upload.file) {
+        const uploadedUrl = await uploadAudioFile()
+        if (!uploadedUrl) {
+          toast.error('Failed to upload audio file.')
+          setSubmitting(false)
+          return
+        }
+        audioUrl = uploadedUrl
+      }
+
+      const status = audioUrl ? 'published' : 'draft'
 
       const { error } = await recordLabelService.createTrack({
         artist_id: artist.id,
         album_id: form.album_id || null,
         title: form.title.trim(),
         description: form.description.trim() || undefined,
-        audio_url: form.audio_url.trim() || undefined,
+        audio_url: audioUrl,
         cover_url: form.cover_url.trim() || undefined,
         genre: form.genre.trim() || undefined,
         duration_seconds: form.duration_seconds ? Number(form.duration_seconds) : undefined,
@@ -303,7 +383,7 @@ export default function UploadTrackPage() {
             </div>
           </div>
           <p className={`mt-2 text-sm ${MaiTrollTheme.text.muted}`}>
-            Add a new track to your catalog. You can save it as a draft or provide an audio URL to start processing immediately.
+            Add a new track to your catalog. Upload an MP3 file from your computer to start processing automatically.
           </p>
         </div>
 
@@ -354,21 +434,44 @@ export default function UploadTrackPage() {
                 />
               </div>
 
-              {/* Audio URL */}
+              {/* Audio File Upload */}
               <div className="space-y-2">
-                <Label htmlFor="audio_url" className="text-slate-200">
-                  Audio URL
+                <Label htmlFor="audio_file" className="text-slate-200">
+                  Audio File (MP3)
                 </Label>
                 <Input
-                  id="audio_url"
-                  type="url"
-                  placeholder="https://example.com/track.mp3"
-                  value={form.audio_url}
-                  onChange={(e) => updateField('audio_url', e.target.value)}
+                  id="audio_file"
+                  type="file"
+                  accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/flac,audio/m4a"
+                  onChange={handleFileChange}
+                  disabled={upload.uploading}
                   className={MaiTrollTheme.components.input}
                 />
+                {upload.file && (
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                    <Music size={16} className="text-purple-300 shrink-0" />
+                    <p className="flex-1 truncate text-xs text-slate-300">{upload.file.name}</p>
+                    <button
+                      type="button"
+                      onClick={removeFile}
+                      disabled={upload.uploading}
+                      className="shrink-0 rounded-full p-1 text-slate-400 hover:text-red-400 disabled:opacity-50"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+                {upload.error && (
+                  <p className="text-xs text-red-400">{upload.error}</p>
+                )}
+                {upload.uploading && (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-purple-300" />
+                    <span className="text-xs text-slate-400">Uploading audio...</span>
+                  </div>
+                )}
                 <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
-                  Providing an audio URL will set the track status to &quot;processing&quot; automatically.
+                  Upload an MP3 file from your computer. Providing audio will set the track status to &quot;processing&quot; automatically.
                 </p>
               </div>
 
@@ -499,7 +602,7 @@ export default function UploadTrackPage() {
                 <h3 className="text-sm font-bold text-white mb-1">Tips for a Great Upload</h3>
                 <ul className={`space-y-1 text-xs ${MaiTrollTheme.text.muted}`}>
                   <li>• Use high-quality cover art (minimum 1400x1400px recommended).</li>
-                  <li>• Provide an audio URL to automatically start processing and publishing.</li>
+                  <li>• Upload an MP3 file to automatically start processing and publishing.</li>
                   <li>• Mark as explicit if the track contains explicit language or content.</li>
                   <li>• Assign the track to an album to keep your catalog organized.</li>
                 </ul>

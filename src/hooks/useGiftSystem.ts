@@ -119,9 +119,9 @@ export async function quietRefreshGiftProfile(userId: string) {
 }
 
 // Calculate discount based on trollmonds balance
-// Flat 10% discount when sender has >= 100 trollmonds
+// Flat 1% discount when sender has >= 100 trollmonds
 export function getTrollmondDiscount(trollmonds: number): number {
-  return trollmonds >= 100 ? 10 : 0;
+  return trollmonds >= 100 ? 1 : 0;
 }
 
 // Calculate how many trollmonds will be deducted per gift

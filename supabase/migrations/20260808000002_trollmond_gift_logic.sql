@@ -1,4 +1,4 @@
--- Ensure trollmond gift logic: 10% discount and 100 trollmond deduction
+-- Ensure trollmond gift logic: 1% discount and 100 trollmond deduction
 -- only apply when the sender has >= 100 trollmonds.
 -- Without trollmonds, the gift proceeds at full price.
 
@@ -133,7 +133,7 @@ BEGIN
     v_trollmonds_to_deduct := 0;
     v_coins_back := 0;
   ELSE
-    v_coins_back := floor(v_total_cost * 0.10);
+    v_coins_back := floor(v_total_cost * 0.01);
   END IF;
 
   SELECT am.agency_id,

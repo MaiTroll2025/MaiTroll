@@ -2,7 +2,7 @@
 -- FIX: Trollmonds Gift Discount System
 -- ============================================================================
 -- This migration updates send_gift_in_stream to handle:
--- 1. Trollmonds discount: 10% off per 100 trollmonds (sender gets discount)
+-- 1. Trollmonds discount: 1% off per 100 trollmonds (sender gets discount)
 -- 2. Receiver gets FULL gift value (no discount for them)
 -- 3. Sender loses 100 trollmonds per gift sent (regardless of gift size)
 -- 4. Real-time balance updates via postgres_changes events
@@ -55,11 +55,11 @@ BEGIN
   FROM public.user_profiles 
   WHERE id = p_sender_id;
 
-  -- 3. Calculate trollmonds discount: 10% per 100 trollmonds
-  -- For every 100 trollmonds, sender gets 10% off
-  v_discount_percent := (v_sender_trollmonds / 100) * 10;
+  -- 3. Calculate trollmonds discount: 1% per 100 trollmonds
+  -- For every 100 trollmonds, sender gets 1% off
+  v_discount_percent := (v_sender_trollmonds / 100) * 1;
   
-  -- Cap discount at 100% (max 1000 trollmonds = 100% discount)
+  -- Cap discount at 100% (max 10000 trollmonds = 100% discount)
   IF v_discount_percent > 100 THEN
     v_discount_percent := 100;
   END IF;
@@ -186,11 +186,11 @@ BEGIN
   FROM public.user_profiles 
   WHERE id = p_sender_id;
 
-  -- 3. Calculate trollmonds discount: 10% per 100 trollmonds
-  -- For every 100 trollmonds, sender gets 10% off
-  v_discount_percent := (v_sender_trollmonds / 100) * 10;
+  -- 3. Calculate trollmonds discount: 1% per 100 trollmonds
+  -- For every 100 trollmonds, sender gets 1% off
+  v_discount_percent := (v_sender_trollmonds / 100) * 1;
   
-  -- Cap discount at 100% (max 1000 trollmonds = 100% discount)
+  -- Cap discount at 100% (max 10000 trollmonds = 100% discount)
   IF v_discount_percent > 100 THEN
     v_discount_percent := 100;
   END IF;

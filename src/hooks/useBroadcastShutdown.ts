@@ -135,6 +135,14 @@ export function useBroadcastShutdown(options: BroadcastShutdownOptions): Broadca
 
           if (error) throw error
 
+          try {
+            await supabase.functions.invoke('bunny-live-stop', {
+              body: { streamId: sid },
+            })
+          } catch (bunnyErr) {
+            console.warn('[useBroadcastShutdown] bunny-live-stop failed:', bunnyErr)
+          }
+
           // 5. Notify admin monitoring without waiting for polling.
           try {
             await supabase.channel('rtc-admin-monitor').send({

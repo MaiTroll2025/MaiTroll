@@ -1009,10 +1009,6 @@ const CEOAssistantDashboard = () => {
                               <div className="text-gray-400 text-xs">Available</div>
                               <div className="text-green-400 font-bold">{coinReviewData.user?.current_balance?.toLocaleString()}</div>
                             </div>
-                            <div>
-                              <div className="text-gray-400 text-xs">Reserved</div>
-                              <div className="text-amber-300 font-bold">{coinReviewData.user?.reserved_troll_coins?.toLocaleString()}</div>
-                            </div>
                           </div>
                         </div>
 

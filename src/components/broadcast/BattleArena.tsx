@@ -233,6 +233,7 @@ export interface BattleParticipant {
   profile?: any;
   trollCoins?: number;
   trollmonds?: number;
+  __remoteIdentity?: string;
 }
 
 export interface CrownInfo {
@@ -1413,7 +1414,14 @@ const BattleArena = ({
 
       if ((!hasChallengerHost || !hasOpponentHost) && remoteUsers.length > 0) {
         const usedIdentities = new Set(participantsData.map((p) => p.identity));
-        const remainingRemotes = remoteUsers.filter((u) => u?.identity && !usedIdentities.has(String(u.identity)));
+        const usedLiveKitIdentities = new Set(
+          remoteUsers
+            .filter((u) => participantsData.some((p) => (p as any).__remoteIdentity === u.identity))
+            .map((u) => u.identity)
+        );
+        const remainingRemotes = remoteUsers.filter(
+          (u) => u?.identity && !usedIdentities.has(String(u.identity)) && !usedLiveKitIdentities.has(u.identity)
+        );
 
         const buildHostFromRemote = (
           remote: RemoteParticipant,
@@ -1439,6 +1447,7 @@ const BattleArena = ({
             team,
             sourceStreamId: undefined,
             seatIndex: 0,
+            __remoteIdentity: remote.identity,
           });
         };
 
@@ -1483,6 +1492,7 @@ const BattleArena = ({
               team: 'challenger',
               sourceStreamId: undefined,
               seatIndex: 0,
+              __remoteIdentity: p.identity,
             } as any);
             assignedRemoteIdentities.add(p.identity);
             console.log('[BattleArena] ULTRA-FALLBACK: Assigned remote user to challenger slot', p.identity?.substring(0, 8));
@@ -1511,6 +1521,7 @@ const BattleArena = ({
               team: 'opponent',
               sourceStreamId: undefined,
               seatIndex: 0,
+              __remoteIdentity: p.identity,
             } as any);
             console.log('[BattleArena] ULTRA-FALLBACK: Assigned remote user to opponent slot', p.identity?.substring(0, 8));
           }

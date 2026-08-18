@@ -10,7 +10,7 @@ import {
     FileText, Heart, Loader2, LogOut, MapPin, MessageCircle,
     Package, RefreshCw, Settings, Shield, ShoppingBag,
     Trash2, UserPlus, Users, Video, X, Zap, MoreHorizontal,
-    History, Award, Gavel, Scale, BookOpen, Newspaper, Music, Disc3, Mic2, LayoutDashboard, Play, Clock
+    History, Award, Gavel, Scale, BookOpen, Newspaper, Music, Disc3, Mic2, LayoutDashboard, Play, Pause, Clock, Volume2, VolumeX
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,6 +20,7 @@ import { buildOGImageUrl } from '../lib/og';
 import { getLevelName } from '../lib/xp';
 import { useXPStore } from '@/stores/useXPStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
+import * as recordLabelService from '@/services/maiRecordLabel';
 import SubscriptionTierSelector from '../components/user/SubscriptionTierSelector';
 import { ProfileHeader, RoleCard, ProfileTabs, PROFILE_TABS } from '../components/profile/ProfileComponents';
 import ProfileFeed from '../components/profile/ProfileFeed';
@@ -80,6 +81,54 @@ function ProfileInner() {
     const [artistLoading, setArtistLoading] = useState(false);
     const [artistTracks, setArtistTracks] = useState<any[]>([]);
     const [artistAlbums, setArtistAlbums] = useState<any[]>([]);
+    const [deletingTrackId, setDeletingTrackId] = useState<string | null>(null);
+    const [deletingAlbumId, setDeletingAlbumId] = useState<string | null>(null);
+
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [volume, setVolume] = useState(0.8);
+    const [showVolume, setShowVolume] = useState(false);
+
+    const getTrackAudioUrl = (audioUrl: string) => {
+        if (!audioUrl) return '';
+        if (audioUrl.startsWith('http')) return audioUrl;
+        return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/record-label-tracks/${audioUrl}`;
+    };
+
+    const handlePlayTrack = (track: any) => {
+        if (!audioRef.current) return;
+        if (currentTrackId === track.id && isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+            return;
+        }
+        audioRef.current.src = getTrackAudioUrl(track.audio_url);
+        audioRef.current.volume = volume;
+        audioRef.current.play().then(() => {
+            setCurrentTrackId(track.id);
+            setIsPlaying(true);
+        }).catch((e) => console.error('Failed to play track:', e));
+    };
+
+    const handleStopTrack = () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        setIsPlaying(false);
+        setCurrentTrackId(null);
+    };
+
+    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newVolume = Number(e.target.value);
+        setVolume(newVolume);
+        if (audioRef.current) {
+            audioRef.current.volume = newVolume;
+        }
+    };
+
+    const currentTrack = artistTracks.find(t => t.id === currentTrackId) || null;
 
     const isOwnProfile = currentUser?.id === profile?.id;
     const viewerRole = currentUserProfile?.troll_role || currentUserProfile?.role || 'user';
@@ -281,13 +330,43 @@ function ProfileInner() {
                     setArtistAlbums(albumsRes.data || []);
                 }
             }
-
             if (isMounted) setArtistLoading(false);
         })();
 
-        return () => { isMounted = false; };
+        return () => {
+            isMounted = false;
+        };
     }, [profile?.id, (profile as any)?.is_record_label_artist]);
 
+    const handleDeleteTrack = async (trackId: string) => {
+        if (!confirm('Delete this track permanently? This cannot be undone.')) return;
+        setDeletingTrackId(trackId);
+        try {
+            const { error } = await recordLabelService.deleteTrack(trackId);
+            if (error) throw error;
+            setArtistTracks(prev => prev.filter(t => t.id !== trackId));
+            toast.success('Track deleted');
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to delete track');
+        } finally {
+            setDeletingTrackId(null);
+        }
+    };
+
+    const handleDeleteAlbum = async (albumId: string) => {
+        if (!confirm('Delete this album permanently? This cannot be undone.')) return;
+        setDeletingAlbumId(albumId);
+        try {
+            const { error } = await recordLabelService.deleteAlbum(albumId);
+            if (error) throw error;
+            setArtistAlbums(prev => prev.filter(a => a.id !== albumId));
+            toast.success('Album deleted');
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to delete album');
+        } finally {
+            setDeletingAlbumId(null);
+        }
+    };
     const prevProfileIdRef = useRef<string | null>(null);
 
     // Real-time profile updates
@@ -648,6 +727,29 @@ function ProfileInner() {
                                                     <span className="flex items-center gap-1"><Play size={12} />{track.play_count.toLocaleString()}</span>
                                                 </div>
                                             </div>
+                                            <button
+                                                onClick={() => handlePlayTrack(track)}
+                                                className="shrink-0 rounded-full p-2 text-slate-400 hover:text-purple-300 hover:bg-purple-500/20"
+                                            >
+                                                {currentTrackId === track.id && isPlaying ? (
+                                                    <Pause size={16} />
+                                                ) : (
+                                                    <Play size={16} />
+                                                )}
+                                            </button>
+                                            {isOwnProfile && (
+                                                <button
+                                                    onClick={() => handleDeleteTrack(track.id)}
+                                                    disabled={deletingTrackId === track.id}
+                                                    className="shrink-0 rounded-full p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                                                >
+                                                    {deletingTrackId === track.id ? (
+                                                        <Loader2 size={16} className="animate-spin" />
+                                                    ) : (
+                                                        <Trash2 size={16} />
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -669,7 +771,22 @@ function ProfileInner() {
                                     {artistAlbums.map((album: any) => (
                                         <div key={album.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
                                             {album.cover_url && <img src={album.cover_url} alt={album.title} className="w-full aspect-square object-cover rounded-xl mb-3" />}
-                                            <p className="font-black text-white truncate">{album.title}</p>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="font-black text-white truncate">{album.title}</p>
+                                                {isOwnProfile && (
+                                                    <button
+                                                        onClick={() => handleDeleteAlbum(album.id)}
+                                                        disabled={deletingAlbumId === album.id}
+                                                        className="shrink-0 rounded-full p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                                                    >
+                                                        {deletingAlbumId === album.id ? (
+                                                            <Loader2 size={14} className="animate-spin" />
+                                                        ) : (
+                                                            <Trash2 size={14} />
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
                                             <p className="text-xs text-slate-400">{album.release_date || 'Draft'}</p>
                                         </div>
                                     ))}
@@ -702,10 +819,33 @@ function ProfileInner() {
                                                 <p className="truncate font-black text-white">{track.title}</p>
                                                 <p className="truncate text-xs text-slate-400">{track.genre || 'No genre'}</p>
                                             </div>
+                                            <button
+                                                onClick={() => handlePlayTrack(track)}
+                                                className="shrink-0 rounded-full p-2 text-slate-400 hover:text-purple-300 hover:bg-purple-500/20"
+                                            >
+                                                {currentTrackId === track.id && isPlaying ? (
+                                                    <Pause size={16} />
+                                                ) : (
+                                                    <Play size={16} />
+                                                )}
+                                            </button>
                                             <div className="flex items-center gap-3 text-xs text-slate-500">
                                                 <span className="flex items-center gap-1"><Heart size={12} />{track.like_count.toLocaleString()}</span>
                                                 <span className="flex items-center gap-1"><Play size={12} />{track.play_count.toLocaleString()}</span>
                                             </div>
+                                            {isOwnProfile && (
+                                                <button
+                                                    onClick={() => handleDeleteTrack(track.id)}
+                                                    disabled={deletingTrackId === track.id}
+                                                    className="shrink-0 rounded-full p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                                                >
+                                                    {deletingTrackId === track.id ? (
+                                                        <Loader2 size={16} className="animate-spin" />
+                                                    ) : (
+                                                        <Trash2 size={16} />
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -888,6 +1028,55 @@ function ProfileInner() {
                     username={profile.username}
                     currentUserId={currentUser?.id}
                 />
+            )}
+
+            {/* Audio Player */}
+            <audio
+                ref={audioRef}
+                onEnded={() => { setIsPlaying(false); setCurrentTrackId(null); }}
+                onPause={() => setIsPlaying(false)}
+                onPlay={() => setIsPlaying(true)}
+            />
+
+            {/* Mini Player Bar */}
+            {(activeTab === 'music' || activeTab === 'tracks') && currentTrack && (
+                <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 w-full max-w-xl px-4">
+                    <div className="flex items-center gap-3 rounded-2xl border border-purple-400/30 bg-slate-950/95 p-3 shadow-2xl backdrop-blur">
+                        <button
+                            onClick={isPlaying ? handleStopTrack : () => currentTrack && handlePlayTrack(currentTrack)}
+                            className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 flex items-center justify-center"
+                        >
+                            {isPlaying ? (
+                                <Pause className="h-4 w-4 text-white" />
+                            ) : (
+                                <Play className="h-4 w-4 text-white" />
+                            )}
+                        </button>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-black text-white">{currentTrack.title}</p>
+                            <p className="truncate text-xs text-slate-400">{currentTrack.genre || 'Unknown genre'}</p>
+                        </div>
+                        <button
+                            onClick={() => setShowVolume(!showVolume)}
+                            className="shrink-0 rounded-full p-2 text-slate-400 hover:text-white"
+                        >
+                            {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                        </button>
+                        {showVolume && (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                    value={volume}
+                                    onChange={handleVolumeChange}
+                                    className="w-20 h-1 accent-purple-400"
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
             )}
         </div>
     );

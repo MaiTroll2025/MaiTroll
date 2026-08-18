@@ -40,8 +40,7 @@ interface PayoutDetails {
   payment_reference: string | null;
   rejection_reason: string | null;
   notes: string | null;
-  cashout_coins: number;
-  cashout_reserved_coins: number;
+  troll_coins: number;
 }
 
 export default function AdminCashoutDetailPage() {
@@ -67,7 +66,7 @@ export default function AdminCashoutDetailPage() {
         .from('payout_requests')
         .select(`
           *,
-          user_profiles!inner(username, email, cashout_coins, cashout_reserved_coins)
+          user_profiles!inner(username, email, troll_coins)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -95,8 +94,7 @@ export default function AdminCashoutDetailPage() {
           payment_reference: d.payment_reference,
           rejection_reason: d.rejection_reason,
           notes: d.notes,
-          cashout_coins: d.user_profiles?.cashout_coins || 0,
-          cashout_reserved_coins: d.user_profiles?.cashout_reserved_coins || 0,
+          troll_coins: d.user_profiles?.troll_coins || 0,
         });
       } else {
         toast.error('Payout request not found');
@@ -135,13 +133,11 @@ export default function AdminCashoutDetailPage() {
     if (!id || !profile) return;
     try {
       setProcessing(true);
-      const { data, error } = await supabase.rpc('admin_process_payout', {
-        p_payout_id: id,
-        p_admin_id: profile.id,
-        p_action: 'approve',
-      });
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'approve_payout', requestId: id },
+      })
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || 'Failed to approve');
+      if (data?.error) throw new Error(data.error);
       toast.success('Payout approved');
       await loadDetails();
     } catch (err: any) {
@@ -156,14 +152,11 @@ export default function AdminCashoutDetailPage() {
     const ref = window.prompt('Enter payment reference (optional)') || null;
     try {
       setProcessing(true);
-      const { data, error } = await supabase.rpc('admin_process_payout', {
-        p_payout_id: id,
-        p_admin_id: profile.id,
-        p_action: 'pay',
-        p_payment_reference: ref,
-      });
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'update_payout_status', payoutId: id, newStatus: 'paid', paymentReference: ref },
+      })
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || 'Failed to mark as paid');
+      if (data?.error) throw new Error(data.error);
       toast.success('Payout marked as paid');
       await loadDetails();
     } catch (err: any) {
@@ -180,15 +173,12 @@ export default function AdminCashoutDetailPage() {
     }
     try {
       setProcessing(true);
-      const { data, error } = await supabase.rpc('admin_process_payout', {
-        p_payout_id: id,
-        p_admin_id: profile.id,
-        p_action: 'reject',
-        p_rejection_reason: denialReason,
-      });
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'reject_payout', requestId: id, reason: denialReason },
+      })
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || 'Failed to deny');
-      toast.success('Payout denied');
+      if (data?.error) throw new Error(data.error);
+      toast.success('Payout denied - coins returned to user');
       setShowDenialModal(false);
       await loadDetails();
     } catch (err: any) {
@@ -273,8 +263,8 @@ export default function AdminCashoutDetailPage() {
     );
   }
 
-  const feeCoins = Math.ceil(details.coin_amount * 0.029 / 1.029);
-  const payoutCoins = details.coin_amount - feeCoins;
+  const feeCoins = 0;
+  const payoutCoins = details.coin_amount;
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -376,8 +366,7 @@ export default function AdminCashoutDetailPage() {
               <div className="space-y-2 text-sm">
                 <div><p className="text-slate-400">Username</p><p className="text-white font-medium">{details.username}</p></div>
                 <div><p className="text-slate-400">User ID</p><p className="font-mono text-slate-300">{details.user_id}</p></div>
-                <div><p className="text-slate-400">Cashout Escrow</p><p className="text-white">{details.cashout_coins?.toLocaleString()} coins</p></div>
-                <div><p className="text-slate-400">Reserved</p><p className="text-yellow-300">{details.cashout_reserved_coins?.toLocaleString()} coins</p></div>
+                <div><p className="text-slate-400">Cashout Eligible Balance</p><p className="text-white">{details.troll_coins?.toLocaleString()} coins</p></div>
               </div>
             </div>
 

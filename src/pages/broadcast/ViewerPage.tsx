@@ -1049,6 +1049,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
   const [raidTarget, setRaidTarget] = useState<{ userId: string; houseId: string } | null>(null)
   const [viewerError, setViewerError] = useState<string | null>(null)
   const [retryAdmissionKey, setRetryAdmissionKey] = useState(0)
+  const lastPermissionErrorRef = useRef<number>(0)
+  const PERMISSION_ERROR_COOLDOWN_MS = 5000
 
   // Stream-scoped broadofficer status (authoritative for current stream, realtime)
   const [isStreamBroadofficer, setIsStreamBroadofficer] = useState(false)
@@ -2665,6 +2667,12 @@ const isActive = isStreamActive(stream)
   }, [streamId, stream])
 
   const isStreamLive = isActive
+  const passiveBunnyPlaybackUrl = useMemo(() => {
+    const value = (stream as any)?.bunny_playback_url || (stream as any)?.playback_url || (stream as any)?.hls_url || (stream as any)?.stream_url
+    if (typeof value !== 'string') return ''
+    const trimmed = value.trim()
+    return trimmed || ''
+  }, [stream])
 
   useEffect(() => {
     if (!streamId || !user?.id || !isStreamLive || hostId === user.id) {
@@ -2731,6 +2739,9 @@ const isActive = isStreamActive(stream)
             'seat_prices',
             'current_viewers',
             'livekit_room_name',
+            'bunny_playback_url',
+            'delivery_provider',
+            'delivery_status',
             'battle_id',
             'battle_mode',
             'battle_format',
@@ -3244,6 +3255,16 @@ useStreamRealtime(
             const isPermissionError = /permission|insufficient|forbidden|not authorized|not permitted|403/i.test(errorDetail)
 
             if (isPermissionError && mySeat?.id && isUserOnStage) {
+              const now = Date.now()
+              if (now - lastPermissionErrorRef.current < PERMISSION_ERROR_COOLDOWN_MS) {
+                setViewerError(errorDetail)
+                if (mySeat?.id) {
+                  await leaveSeat()
+                }
+                return
+              }
+              lastPermissionErrorRef.current = now
+
               try {
                 setViewerError('Reconnecting with stage permissions...')
                 await leaveLiveKitRoom()
@@ -3321,6 +3342,13 @@ useStreamRealtime(
     const identityToUse = viewerIdentityRef.current || viewerIdentity
     if (!identityToUse) return
 
+    if (passiveBunnyPlaybackUrl && !isUserOnStage) {
+      hasJoinedAudienceRef.current = true
+      joiningAudienceRef.current = false
+      currentRoomKeyRef.current = null
+      return
+    }
+
     if (!streamId) {
       console.warn('[ViewerPage] Missing streamId from route before joinAsAudience', {
         pathname: typeof window !== 'undefined' ? window.location.pathname : null,
@@ -3397,7 +3425,7 @@ useStreamRealtime(
       })
 
     return () => { cancelled = true }
-  }, [streamId, stream?.id, stream?.status, stream?.is_live, roomId, user?.id, joinAsAudience, stableAnonId, retryAdmissionKey])
+  }, [streamId, stream?.id, stream?.status, stream?.is_live, roomId, user?.id, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage])
 
   // Transition watcher: when the user goes from off-stage to on-stage, the
   // focused join effect above has already joined LiveKit as plain audience
@@ -3866,6 +3894,20 @@ useStreamRealtime(
                     isMobileViewer ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
                   )}
                >
+                 {passiveBunnyPlaybackUrl && !isUserOnStage ? (
+                   <video
+                     key={passiveBunnyPlaybackUrl}
+                     src={passiveBunnyPlaybackUrl}
+                     autoPlay
+                     muted
+                     playsInline
+                     loop
+                     className="absolute inset-0 h-full w-full object-cover"
+                     onError={() => {
+                       console.warn('[ViewerPage] Bunny viewer playback failed to load', passiveBunnyPlaybackUrl)
+                     }}
+                   />
+                 ) : (
                  <RemoteVideoSurface
                    participant={broadcasterState.participant}
                    mirror={false}
@@ -3921,6 +3963,7 @@ useStreamRealtime(
                   }
                 />
 
+                )}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
 
 
@@ -4007,6 +4050,20 @@ useStreamRealtime(
                   : undefined
               }
             >
+               {passiveBunnyPlaybackUrl && !isUserOnStage ? (
+                 <video
+                   key={passiveBunnyPlaybackUrl}
+                   src={passiveBunnyPlaybackUrl}
+                   autoPlay
+                   muted
+                   playsInline
+                   loop
+                   className="absolute inset-0 h-full w-full object-cover"
+                   onError={() => {
+                     console.warn('[ViewerPage] Bunny viewer playback failed to load', passiveBunnyPlaybackUrl)
+                   }}
+                 />
+               ) : (
                <RemoteVideoSurface
                  participant={broadcasterState.participant}
                  mirror={false}
@@ -4038,6 +4095,7 @@ useStreamRealtime(
                 }
               />
 
+               )}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
 
 
@@ -5495,35 +5553,44 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
          />
        )}
 
-       {showViewerList && (
-         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
-           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
-             <div className="mb-4 flex items-center justify-between">
-               <h3 className="text-base font-black text-white">Active Viewers</h3>
-               <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
-                 <X size={18} />
-               </button>
-             </div>
-             <div className="max-h-80 overflow-y-auto space-y-2">
-               {audience.length === 0 ? (
-                 <p className="text-sm text-zinc-500">No active viewers</p>
-               ) : (
-                 audience.filter(m => m.is_active && !m.left_at).map(member => (
-                   <div key={member.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                     <div className="h-8 w-8 shrink-0 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
-                       {member.username?.charAt(0)?.toUpperCase() || '?'}
-                     </div>
-                     <div className="min-w-0 flex-1">
-                       <div className="truncate text-sm font-bold text-white">{member.username || 'Viewer'}</div>
-                       <div className="text-xs text-zinc-500">{member.role || 'audience'}</div>
-                     </div>
-                   </div>
-                 ))
-               )}
-             </div>
-           </div>
-         </div>
-       )}
+        {showViewerList && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
+            <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-black text-white">Active Viewers</h3>
+                <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="max-h-80 overflow-y-auto space-y-2">
+                {audience.length === 0 ? (
+                  <p className="text-sm text-zinc-500">No active viewers</p>
+                ) : (
+                  audience.filter(m => m.is_active && !m.left_at).map(member => {
+                    const coins = member.gift_total ?? 0
+                    const coinLabel = coins >= 1_000_000
+                      ? `${(coins / 1_000_000).toFixed(1)}M Coins`
+                      : coins >= 1_000
+                        ? `${(coins / 1_000).toFixed(1)}K Coins`
+                        : `${coins} Coins`
+                    return (
+                      <div key={member.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
+                          {member.username?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-bold text-white">{member.username || 'Viewer'}</div>
+                          <div className="text-xs text-zinc-500">{member.role || 'audience'}</div>
+                          <div className="text-[11px] font-black text-cyan-300">{coinLabel}</div>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {isPaidChatModalOpen && (
          <PaidChatViewerModal

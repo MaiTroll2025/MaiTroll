@@ -7,29 +7,24 @@ import { TIERS } from '../config/coinConfig';
 export default function Withdraw() {
   const { user } = useAuthStore();
   const [balance, setBalance] = useState(0);
-  const [reservedCoins, setReservedCoins] = useState(0);
   const [amount, setAmount] = useState("");
   const [payoutMethod, setPayoutMethod] = useState('paypal');
   const [providerUsername, setProviderUsername] = useState('');
   const [isMaiPayPlus, setIsMaiPayPlus] = useState(false);
 
-  // Available = cashout_coins - cashout_reserved_coins
-  const availableCoins = Math.max(0, balance - reservedCoins);
+  const availableCoins = balance;
 
   const loadBalance = useCallback(async () => {
     if (!user) return;
 
-    // Use cashout escrow columns; all troll coins are cashout-eligible
     const { data } = await supabase
       .from("user_profiles")
-      .select("troll_coins, cashout_coins, cashout_reserved_coins, paypal_email, cashapp_handle, venmo_handle, mai_pay_plus")
+      .select("troll_coins, paypal_email, cashapp_handle, venmo_handle, mai_pay_plus")
       .eq("id", user.id)
       .maybeSingle();
 
     if (data) {
-      // troll_coins is the primary cashout-eligible balance
-      setBalance(data?.troll_coins ?? data?.cashout_coins ?? 0);
-      setReservedCoins(data?.cashout_reserved_coins || 0);
+      setBalance(data?.troll_coins ?? 0);
       setIsMaiPayPlus(data?.mai_pay_plus === true);
       if (data.paypal_email) {
         setPayoutMethod('paypal');
@@ -130,14 +125,11 @@ export default function Withdraw() {
         <h2 className="text-2xl font-bold mb-4">Withdraw Earnings</h2>
 
         <div className="mb-3 rounded-lg border border-green-500/30 bg-green-900/10 px-3 py-2 text-xs text-green-200">
-          Mai Troll does not charge any cashout fees. Up to {isMaiPayPlus ? 20 : 10} cashouts per rolling 24 hours.
+          Mai Troll does not charge any cashout fees. Up to {isMaiPayPlus ? 20 : 10} cashouts per rolling 7 days.
         </div>
 
         <p className="mb-2">
           <strong>Available Balance:</strong> {availableCoins.toLocaleString()} coins
-          <span className="text-xs text-gray-400 ml-2">
-            ({balance.toLocaleString()} total, {reservedCoins.toLocaleString()} reserved)
-          </span>
         </p>
 
         <div className="mb-3">

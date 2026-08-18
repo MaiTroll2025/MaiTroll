@@ -115,6 +115,28 @@ async function requestLiveKitToken(roomName: string, userId: string): Promise<No
   return normalizeLiveKitTokenResponse(data, roomName, userId)
 }
 
+async function startBunnyDelivery(streamId: string, roomName: string) {
+  try {
+    const { data, error } = await supabase.functions.invoke('bunny-live-start', {
+      body: {
+        streamId,
+        roomName,
+      },
+    })
+
+    if (error) {
+      console.warn('[SetupPage] bunny-live-start returned an error:', error)
+      return null
+    }
+
+    console.log('[SetupPage] bunny-live-start response:', data)
+    return data
+  } catch (err) {
+    console.warn('[SetupPage] bunny-live-start failed:', err)
+    return null
+  }
+}
+
 async function markBroadcastStartFailed(streamId: string | null, stage: BroadcastStartStage, reason: unknown) {
   if (!streamId) return
   const shortReason = reason instanceof Error ? reason.message : String(reason || 'Unknown error')
@@ -138,24 +160,6 @@ async function markBroadcastStartFailed(streamId: string | null, stage: Broadcas
       supabaseMessage: error.message,
     })
   }
-}
-
-function getLiveKitRoomState(room: Room): string {
-  return String((room as any).connectionState || (room as any).state || '').toLowerCase()
-}
-
-async function waitForLiveKitConnected(room: Room, timeoutMs = 5000): Promise<void> {
-  const startedAt = Date.now()
-
-  while (Date.now() - startedAt < timeoutMs) {
-    const state = getLiveKitRoomState(room)
-    if (state === 'connected') {
-      return
-    }
-    await new Promise((resolve) => setTimeout(resolve, 100))
-  }
-
-  throw new Error(`LiveKit room did not reach connected state before publishing tracks. Current state: ${getLiveKitRoomState(room) || 'unknown'}`)
 }
 
 async function publishSetupTracksToRoom(
@@ -182,8 +186,6 @@ async function publishSetupTracksToRoom(
   if (!videoTrack) {
     throw new Error(useScreenShare ? 'Screen share track is not ready' : 'Camera track is not ready')
   }
-
-  await waitForLiveKitConnected(room)
 
   const existingAudio = Array.from(room.localParticipant.audioTrackPublications.values()).some(
     (publication: any) => !!publication?.track
@@ -256,7 +258,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     }
   }, [])
 
-  // Load user's assigned state
+   // Load user's assigned state
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -1685,7 +1687,7 @@ const handleStartStream = async () => {
             box_count: seatCount === 0 ? 1 : seatCount,
             seat_count: isCelebStream ? 0 : (seatCount === 0 ? 1 : seatCount),
            layout_mode: layoutMode,
-           random_battle_queue_enabled: RANDOM_BATTLE_ENABLED && category === 'general' && battleMode === 'world' ? randomBattleQueueEnabled : false,
+            random_battle_queue_enabled: RANDOM_BATTLE_ENABLED && category === 'general' && (battleMode === 'world' || battleMode === 'state') ? randomBattleQueueEnabled : false,
            random_battle_queued_at: null,
            state_battle_mode: RANDOM_BATTLE_ENABLED && category === 'general' && battleMode === 'state' && randomBattleQueueEnabled ? 'state' : 'none',
            state_battle_state_code: battleMode === 'state' ? userState : null,
@@ -1818,18 +1820,16 @@ livekit_room_name: roomName,
               return;
             }
 
-            // Verify stream is queryable before navigating.
-            // Handles DB replication delay where BroadcastPage could otherwise
-            // mount and miss the newly-live row on first attempt.
+            // Verify stream is queryable before navigating (fast retry).
             const verifyStream = async (): Promise<boolean> => {
-              for (let attempt = 0; attempt < 5; attempt++) {
+              for (let attempt = 0; attempt < 2; attempt++) {
                 const { data: verifyData } = await supabase
                   .from('streams')
                   .select('id, status')
                   .eq('id', data.id)
                   .maybeSingle();
                 if (verifyData?.status === 'live') return true;
-                await new Promise((resolve) => setTimeout(resolve, 400));
+                await new Promise((resolve) => setTimeout(resolve, 100));
               }
               return false;
             };
@@ -1855,6 +1855,8 @@ livekit_room_name: roomName,
 
         console.log('[SetupPage] Stream marked as live in database');
         broadcastStartLog('stream live verification', { streamId: data.id, status: 'live' });
+
+        await startBunnyDelivery(data.id, roomName).catch(() => null)
 
         // Stream is now created, LiveKit is connected, tracks are published, and DB is updated.
         // Proceed to broadcast room.
@@ -1954,37 +1956,37 @@ livekit_room_name: roomName,
              return
            }
 
-           // Try bounded retries: acquireMediaStream should set PreflightStore.setLivekitTracks synchronously (after async getUserMedia)
-           const MAX_RETRIES = 10
-           const RETRY_DELAY_MS = 250
+          // Bounded retries: attempt to acquire missing tracks, but fail fast
+          // instead of blocking broadcast start for several seconds.
+          const MAX_RETRIES = 3
+          const RETRY_DELAY_MS = 150
 
-           let attempt = 0
-           let audioOk = !!livekitTracksRef.current[0]
-           let videoOk = !!livekitTracksRef.current[1]
+          let attempt = 0
+          let audioOk = !!livekitTracksRef.current[0]
+          let videoOk = !!livekitTracksRef.current[1]
 
-           while (attempt < MAX_RETRIES && (!audioOk || !videoOk)) {
-             attempt += 1
+          while (attempt < MAX_RETRIES && (!audioOk || !videoOk)) {
+            attempt += 1
 
-             if (
-               !mountedRef.current ||
-               !room ||
-               room.state !== 'connected'
-             ) {
-               return
-             }
+            if (
+              !mountedRef.current ||
+              !room ||
+              room.state !== 'connected'
+            ) {
+              return
+            }
 
-             // Recreate tracks (native capture path)
-             const mediaStream = await acquireMediaStream(facingMode, true)
-             if (!mediaStream) break
+            const mediaStream = await acquireMediaStream(facingMode, true)
+            if (!mediaStream) break
 
-             const [a, v] = livekitTracksRef.current
-             audioOk = !!a
-             videoOk = !!v
+            const [a, v] = livekitTracksRef.current
+            audioOk = !!a
+            videoOk = !!v
 
-             if (!audioOk || !videoOk) {
-               await new Promise((r) => setTimeout(r, RETRY_DELAY_MS))
-             }
-           }
+            if (!audioOk || !videoOk) {
+              await new Promise((r) => setTimeout(r, RETRY_DELAY_MS))
+            }
+          }
 
            const finalAudioOk = !!livekitTracksRef.current[0]
            const finalVideoOk = !!livekitTracksRef.current[1]
@@ -2668,6 +2670,62 @@ livekit_room_name: roomName,
                  </button>
                </div>
              )}
+
+              {/* Random Battle Toggle (general category only) */}
+              {RANDOM_BATTLE_ENABLED && category === 'general' && (
+                <div className="shrink-0 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRandomBattleQueueEnabled(!randomBattleQueueEnabled)}
+                    className={cn(
+                      "w-full md:w-auto px-4 py-2.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-2",
+                      randomBattleQueueEnabled
+                        ? "bg-red-500/15 border-red-500/40 text-red-300"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
+                    )}
+                  >
+                    <Swords size={14} />
+                    Random Battle {randomBattleQueueEnabled ? 'ON' : 'OFF'}
+                  </button>
+
+                  {randomBattleQueueEnabled && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setBattleMode('world')}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border",
+                          battleMode === 'world'
+                            ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-300"
+                            : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                        )}
+                      >
+                        🌍 World
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBattleMode('state');
+                          if (!userState) setShowStateDropdown(true);
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border",
+                          battleMode === 'state'
+                            ? "bg-fuchsia-500/15 border-fuchsia-500/40 text-fuchsia-300"
+                            : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                        )}
+                      >
+                        🏛️ State
+                      </button>
+                      {battleMode === 'state' && typeof userState === 'string' && userState && (
+                        <span className="text-[10px] font-bold text-fuchsia-300 bg-fuchsia-500/10 px-2 py-1 rounded-lg border border-fuchsia-500/20">
+                          Repping: {getStateName(userState)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Celeb Stream Toggle (approved celebs only) */}
               {isApprovedCeleb && (

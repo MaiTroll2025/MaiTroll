@@ -306,15 +306,6 @@ export default function BattleChat({
     // IMMEDIATELY add sender's own message to local state so they can see it
     setMessages((prev) => [...prev.slice(-49), chatMessage]);
 
-    // First broadcast the message immediately for real-time delivery
-    if (channelRef.current) {
-      await channelRef.current.send({
-        type: 'broadcast',
-        event: 'chat_message',
-        payload: chatMessage,
-      });
-    }
-
     // Insert to BOTH streams' chat channels so all viewers see it
     const [insertA, insertB] = await Promise.all([
       supabase.from('stream_chat').insert({

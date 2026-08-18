@@ -39,6 +39,7 @@ import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
 import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
 import AcademyTab from '@/components/home/AcademyTab'
+import UnderConstructionPage from '@/components/UnderConstructionPage'
 import WallPage from '@/pages/WallPage'
 import LiveAuctionMiniWindow from '@/components/home/LiveAuctionMiniWindow'
 import SupportGoalReminderModal from '@/components/SupportGoalReminderModal'
@@ -70,12 +71,99 @@ const glass =
 const neonCard =
   'border border-cyan-400/20 bg-[#071020]/80 backdrop-blur-2xl shadow-[0_0_28px_rgba(34,211,238,0.08)]'
 
+const INTERACTION_COLORS = [
+  '#4f7cac',
+  '#59658f',
+  '#52796f',
+  '#806d85',
+  '#8a6f5a',
+  '#557a7c',
+  '#765f70',
+  '#6f7655',
+]
+
+type GridPulse = {
+  id: number
+  x: number
+  y: number
+  color: string
+}
+
+const InteractiveGrid = React.memo(() => {
+  const [pulses, setPulses] = useState<GridPulse[]>([])
+
+  const createPulse = useCallback((clientX: number, clientY: number) => {
+    const color =
+      INTERACTION_COLORS[
+        Math.floor(Math.random() * INTERACTION_COLORS.length)
+      ]
+
+    const id = Date.now() + Math.random()
+
+    setPulses((current) => [
+      ...current.slice(-4),
+      {
+        id,
+        x: clientX,
+        y: clientY,
+        color,
+      },
+    ])
+
+    window.setTimeout(() => {
+      setPulses((current) => current.filter((pulse) => pulse.id !== id))
+    }, 1800)
+  }, [])
+
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      createPulse(event.clientX, event.clientY)
+    },
+    [createPulse],
+  )
+
+  return (
+    <div
+      className="pointer-events-auto absolute inset-0 overflow-hidden"
+      onPointerDown={handlePointerDown}
+    >
+      <div
+        className="
+          absolute inset-0
+          opacity-[0.13]
+          [background-image:
+            linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),
+            linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)
+          ]
+          [background-size:58px_58px]
+        "
+      />
+
+      {pulses.map((pulse) => (
+        <span
+          key={pulse.id}
+          className="grid-pulse absolute pointer-events-none"
+          style={
+            {
+              left: pulse.x,
+              top: pulse.y,
+              '--pulse-color': pulse.color,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </div>
+  )
+})
+
+InteractiveGrid.displayName = 'InteractiveGrid'
+
 const OriginalBackground = React.memo(() => {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-[#050715]" />
       <div className="absolute inset-0 opacity-[0.20] [background:radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.25),transparent_32%),radial-gradient(circle_at_80%_5%,rgba(14,165,233,0.20),transparent_30%),radial-gradient(circle_at_50%_92%,rgba(99,102,241,0.18),transparent_36%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.055)_1px,transparent_1px)] bg-[length:58px_58px]" />
+      <InteractiveGrid />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_26%,rgba(3,7,18,0.72)_100%)]" />
       <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#050715] via-[#050715]/70 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#050715] via-[#050715]/70 to-transparent" />
@@ -658,12 +746,14 @@ const MobileTabBar = React.memo(function MobileTabBar({
   liveCount,
   battleCount,
   wallNotificationCount,
+  navigate,
 }: {
   activeTab: TabType
   setActiveTab: (tab: TabType) => void
   liveCount: number
   battleCount: number
   wallNotificationCount: number
+  navigate: ReturnType<typeof useNavigate>
 }) {
   const tabs: Array<{ id: TabType; label: string; icon: React.ElementType; count?: number; onClick?: () => void }> = [
     { id: 'home', label: 'Home', icon: MessageCircle },
@@ -880,6 +970,7 @@ export default function Home() {
             liveCount={allLiveItems.length}
             battleCount={battleItems.length}
             wallNotificationCount={wallNotificationCount}
+            navigate={navigate}
           />
         )}
 
@@ -1147,23 +1238,27 @@ export default function Home() {
            </div>
          )}
 
-          {activeTab === 'academy' && (
-            <div className="flex gap-4">
-              <LeftNavSidebar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                liveCount={allLiveItems.length}
-                battleCount={battleItems.length}
-                followersLiveCount={0}
-                presidentTabLabel={presidentTabLabel}
-                showPresidentTab={showPresidentTab}
-                wallNotificationCount={wallNotificationCount}
-              />
-              <div className="min-w-0 flex-1">
-                <AcademyTab />
-              </div>
-            </div>
-          )}
+           {activeTab === 'academy' && (
+             <div className="flex gap-4">
+               <LeftNavSidebar
+                 activeTab={activeTab}
+                 setActiveTab={setActiveTab}
+                 liveCount={allLiveItems.length}
+                 battleCount={battleItems.length}
+                 followersLiveCount={0}
+                 presidentTabLabel={presidentTabLabel}
+                 showPresidentTab={showPresidentTab}
+                 wallNotificationCount={wallNotificationCount}
+               />
+               <div className="min-w-0 flex-1">
+                 <section className={`${glass} rounded-2xl p-4`}>
+                   <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-300 border-t-transparent" /></div>}>
+                     <UnderConstructionPage pageName="Academy" openingDate="Oct 1, 2026" />
+                   </Suspense>
+                 </section>
+               </div>
+             </div>
+           )}
 
           {activeTab === 'wall' && (
             <div className="flex gap-4">
@@ -1195,6 +1290,45 @@ export default function Home() {
           broadcaster={supportGoalReminder}
         />
       )}
+      <style>{`
+        .grid-pulse {
+          width: 18px;
+          height: 18px;
+          transform: translate(-50%, -50%);
+          border-radius: 9999px;
+          background: var(--pulse-color);
+          opacity: 0;
+          box-shadow:
+            0 0 0 0 var(--pulse-color),
+            0 0 0 0 var(--pulse-color);
+          animation: mai-grid-pulse 1800ms cubic-bezier(0.16, 1, 0.3, 1)
+            forwards;
+        }
+
+        @keyframes mai-grid-pulse {
+          0% {
+            width: 12px;
+            height: 12px;
+            opacity: 0.28;
+            box-shadow:
+              0 0 0 0 var(--pulse-color),
+              0 0 18px 2px var(--pulse-color);
+          }
+
+          35% {
+            opacity: 0.16;
+          }
+
+          100% {
+            width: 900px;
+            height: 900px;
+            opacity: 0;
+            box-shadow:
+              0 0 0 1px transparent,
+              0 0 80px 20px transparent;
+          }
+        }
+      `}</style>
     </div>
   )
 }

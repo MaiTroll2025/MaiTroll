@@ -155,7 +155,7 @@ export default function BroadcastNeonHeader({
         .maybeSingle()
     }
 
-    const interval = window.setInterval(refresh, 15000)
+    const interval = window.setInterval(refresh, 30000)
 
     return () => {
       window.clearInterval(interval)

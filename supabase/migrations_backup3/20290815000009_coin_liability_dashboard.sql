@@ -34,14 +34,14 @@ CREATE OR REPLACE VIEW public.coin_liability_summary AS
 WITH cashable_breakdown AS (
     SELECT
         cl.user_id,
-        COALESCE(SUM(CASE WHEN cl.bucket = 'paid' AND cl.source != 'refund' AND cl.source != 'reversal' AND cl.source != 'fraud' AND cl.source != 'self_gift' AND cl.is_active = true THEN cl.delta ELSE 0 END), 0) AS cashable_earned,
-        COALESCE(SUM(CASE WHEN cl.bucket = 'paid' AND cl.source = 'coin_purchase' AND cl.is_active = true THEN cl.delta ELSE 0 END), 0) AS purchased_spending,
-        COALESCE(SUM(CASE WHEN cl.bucket = 'promo' AND cl.source NOT IN ('mayor_promo') AND cl.is_active = true THEN cl.delta ELSE 0 END), 0) AS promotional_coins,
-        COALESCE(SUM(CASE WHEN cl.bucket = 'promo' AND cl.source = 'mayor_promo' AND cl.is_active = true THEN cl.delta ELSE 0 END), 0) AS mayor_promo_coins,
-        COALESCE(SUM(CASE WHEN cl.bucket = 'test' AND cl.is_active = true THEN cl.delta ELSE 0 END), 0) AS test_coins,
-        COALESCE(SUM(CASE WHEN cl.is_active = false AND cl.delta > 0 THEN cl.delta ELSE 0 END), 0) AS pending_coins,
-        COALESCE(SUM(CASE WHEN cl.source IN ('refund', 'reversal', 'fraud') AND cl.is_active = false THEN cl.delta ELSE 0 END), 0) AS reversed_coins,
-        COALESCE(SUM(CASE WHEN cl.source = 'cashed_out' AND cl.is_active = false THEN cl.delta ELSE 0 END), 0) AS already_cashed_out
+        COALESCE(SUM(CASE WHEN cl.bucket = 'paid' AND cl.source != 'refund' AND cl.source != 'reversal' AND cl.source != 'fraud' AND cl.source != 'self_gift' THEN cl.delta ELSE 0 END), 0) AS cashable_earned,
+        COALESCE(SUM(CASE WHEN cl.bucket = 'paid' AND cl.source = 'coin_purchase' THEN cl.delta ELSE 0 END), 0) AS purchased_spending,
+        COALESCE(SUM(CASE WHEN cl.bucket = 'promo' AND cl.source NOT IN ('mayor_promo') THEN cl.delta ELSE 0 END), 0) AS promotional_coins,
+        COALESCE(SUM(CASE WHEN cl.bucket = 'promo' AND cl.source = 'mayor_promo' THEN cl.delta ELSE 0 END), 0) AS mayor_promo_coins,
+        COALESCE(SUM(CASE WHEN cl.bucket = 'test' THEN cl.delta ELSE 0 END), 0) AS test_coins,
+        COALESCE(SUM(CASE WHEN cl.delta > 0 THEN cl.delta ELSE 0 END), 0) AS pending_coins,
+        COALESCE(SUM(CASE WHEN cl.source IN ('refund', 'reversal', 'fraud') THEN cl.delta ELSE 0 END), 0) AS reversed_coins,
+        COALESCE(SUM(CASE WHEN cl.source = 'cashed_out' THEN cl.delta ELSE 0 END), 0) AS already_cashed_out
     FROM public.coin_ledger cl
     GROUP BY cl.user_id
 ),
@@ -49,7 +49,7 @@ gift_summary AS (
     SELECT
         gt.receiver_id AS user_id,
         COUNT(*) AS total_gifts_received,
-        SUM(gt.coins_spent * gt.quantity) AS total_gift_coins
+        SUM(gt.coins_spent) AS total_gift_coins
     FROM public.gift_transactions gt
     GROUP BY gt.receiver_id
 ),
@@ -84,7 +84,6 @@ payout_summary AS (
 SELECT
     up.id AS user_id,
     up.username,
-    up.user_tag,
     up.role,
     up.is_active,
     COALESCE(cb.cashable_earned, 0) AS cashable_earned_coins,
@@ -95,7 +94,7 @@ SELECT
     COALESCE(cb.pending_coins, 0) AS pending_coins,
     COALESCE(cb.reversed_coins, 0) AS reversed_coins,
     COALESCE(cb.already_cashed_out, 0) AS already_cashed_out_coins,
-    COALESCE(cb.cashable_earned, 0) - COALESCE(cb.already_cashed_out, 0) - COALESCE(cb.pending_coins, 0) AS cashable_coin_balance,
+    COALESCE(up.troll_coins, 0) AS cashable_coin_balance,
     COALESCE(cb.promotional_coins, 0) + COALESCE(cb.mayor_promo_coins, 0) + COALESCE(cb.test_coins, 0) AS non_cashable_coin_balance,
     COALESCE(gs.total_gifts_received, 0) AS total_gifts_received,
     COALESCE(ps.total_purchased_coins, 0) AS total_purchased_coins,

@@ -5,7 +5,7 @@ import { Coins, X, Swords, LogOut } from "lucide-react";
 import { useBattleViewController } from "../../hooks/useBattleViewController";
 import type { BattleViewController } from "../../hooks/useBattleViewController";
 import { getTrackPublications, safeParseMetadata } from "../../components/broadcast/BattleArena";
-import GiftTray from "../../components/broadcast/GiftTray";
+import QuickGiftRow from "../../components/broadcast/QuickGiftRow";
 import type { ActiveBattle } from "../../components/broadcast/battle/ActiveBattlesPanel";
 
 import MobileBattleHeader from "../../components/battle/mobile/MobileBattleHeader";
@@ -16,6 +16,7 @@ import MobileBattleFloatingChat from "../../components/battle/mobile/MobileBattl
 import MobileBattleShareSheet from "../../components/battle/mobile/MobileBattleShareSheet";
 import MobileBattleFooter from "../../components/battle/mobile/MobileBattleFooter";
 import type { MobileParticipantVM } from "../../components/battle/mobile/MobileBattleParticipant";
+import MatchFoundOverlay from "../../components/broadcast/MatchFoundOverlay";
 
 const STAFF_ROLES = new Set([
   "admin",
@@ -82,6 +83,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     loading,
     error,
     showResults,
+    preBattleCountdown,
   } = battleView;
 
   const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -249,6 +251,8 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     );
   }
 
+  const showMatchOverlay = preBattleCountdown !== null && preBattleCountdown > 0;
+
   // Winner determined from authoritative point totals (never crowns).
   let statusLabel = "";
   let statusTone: "default" | "sudden" | "blue" | "red" | "ended" = "default";
@@ -274,6 +278,15 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
 
   return (
     <div className="flex min-h-dvh flex-col overflow-hidden bg-black text-white">
+      {showMatchOverlay && (
+        <MatchFoundOverlay
+          challengerUserId={challengerStream.user_id}
+          opponentUserId={opponentStream.user_id}
+          challengerStateCode={challengerStream.state_battle_state_code || null}
+          opponentStateCode={opponentStream.state_battle_state_code || null}
+          countdown={preBattleCountdown}
+        />
+      )}
       <MobileBattleHeader
         viewerCount={viewerCount}
         viewers={viewers}
@@ -338,7 +351,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
         onShare={() => setShareSheetOpen(true)}
       />
 
-      {/* Gift tray overlay (reuses the shared gifting flow) */}
+      {/* Gift quick popup (reuses the shared gifting flow) */}
       <AnimatePresence>
         {showMobileGiftTray && giftRecipientId && (
           <motion.div
@@ -356,11 +369,11 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              className="absolute bottom-0 left-0 right-0 rounded-t-3xl bg-zinc-900 p-6"
+              className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-zinc-900 p-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white">Send Gift</h3>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white">Quick Gift</h3>
                 <button
                   onClick={() => {
                     setShowMobileGiftTray(false);
@@ -369,19 +382,18 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
                   }}
                   className="text-zinc-400 hover:text-white"
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
-              <GiftTray
-                key={giftRecipientId}
-                onClose={() => {
-                  setGiftRecipientId(null);
-                  setGiftStreamId(null);
-                  setShowMobileGiftTray(false);
-                }}
+              <QuickGiftRow
                 recipientId={giftRecipientId}
                 streamId={battleView.giftStreamId || currentStreamId}
                 battleId={battle.id}
+                onClose={() => {
+                  setShowMobileGiftTray(false);
+                  setGiftRecipientId(null);
+                  setGiftStreamId(null);
+                }}
               />
             </motion.div>
           </motion.div>

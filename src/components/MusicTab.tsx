@@ -125,7 +125,7 @@ export default function MusicTab() {
           audio_url: uploadData.path,
           duration: 0,
           tip_amount: 0,
-          status: 'active'
+          status: 'published'
         })
         .select()
         .single()

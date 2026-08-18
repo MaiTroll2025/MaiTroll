@@ -84,6 +84,17 @@ export async function assignUserToState(userId: string, stateCode: string): Prom
 export async function getUserStateRPC(userId: string): Promise<string | null> {
   const { data, error } = await supabase.rpc('get_user_state', { p_user_id: userId });
   if (error) throw error;
+
+  if (data && typeof data === 'object') {
+    if ('state_code' in data) {
+      return (data as any).state_code ?? null;
+    }
+    if ('state' in data) {
+      return (data as any).state ?? null;
+    }
+    return null;
+  }
+
   return data ?? null;
 }
 

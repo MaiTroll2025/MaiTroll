@@ -64,17 +64,11 @@ const PROFILE_IGNORED_KEYS = new Set([
 
 const COIN_KEYS = new Set([
   'troll_coins',
-  'cashout_coins',
-  'cashout_reserved_coins',
-  'reserved_troll_coins',
   'total_earned_coins',
 ])
 
 const profilePatchKeys = [
   'troll_coins',
-  'cashout_coins',
-  'cashout_reserved_coins',
-  'reserved_troll_coins',
   'total_earned_coins',
   'credit_score',
   'level',
@@ -141,9 +135,6 @@ function normalizeProfileCoins(profile: any) {
   return {
     ...profile,
     troll_coins: total,
-    cashout_coins: Math.max(0, Math.floor(toSafeNumber(profile.cashout_coins, 0))),
-    cashout_reserved_coins: Math.max(0, Math.floor(toSafeNumber(profile.cashout_reserved_coins, 0))),
-    reserved_troll_coins: Math.max(0, Math.floor(toSafeNumber(profile.reserved_troll_coins, 0))),
     total_earned_coins: Math.max(0, Math.floor(toSafeNumber(profile.total_earned_coins, 0))),
   }
 }
@@ -186,9 +177,6 @@ const USER_PROFILE_SELECT = `
   is_org_student,
   organization_profile_visible,
   troll_coins,
-  cashout_coins,
-  cashout_reserved_coins,
-  reserved_troll_coins,
   total_earned_coins,
   credit_score,
    credit_limit,

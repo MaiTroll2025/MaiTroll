@@ -89,18 +89,25 @@ async function flushCityAds() {
   for (const [adId, count] of adImpressionCounts.entries()) {
     const { error } = await supabase.rpc('increment_ad_impressions', { ad_id: adId, count })
     if (error) {
+      const msg = typeof error === 'string' ? error : error?.message || ''
+      if (msg.includes('not found', true)) {
+        adImpressionCounts.delete(adId)
+        continue
+      }
       console.warn('[cityAds] impression flush failed', error)
     }
   }
   for (const [adId, count] of adClickCounts.entries()) {
     const { error } = await supabase.rpc('increment_ad_clicks', { ad_id: adId, count })
     if (error) {
+      const msg = typeof error === 'string' ? error : error?.message || ''
+      if (msg.includes('not found', true)) {
+        adClickCounts.delete(adId)
+        continue
+      }
       console.warn('[cityAds] click flush failed', error)
     }
   }
-
-  adImpressionCounts.clear()
-  adClickCounts.clear()
 }
 
 function startCityAdsFlush() {
