@@ -615,6 +615,7 @@ function BroadcastRouter() {
       return <Navigate to="/government/streams" replace />
     }
 
+    console.log('[BroadcastRouter] Stream ended - redirecting to summary', { streamId: stream.id, streamStatus: stream.status })
     // When a stream has ended, direct everyone — host and all viewers — to the
     // stream summary page so every participant lands on the same final view.
     const summaryPath = `/broadcast/summary/${stream.id || streamId}`

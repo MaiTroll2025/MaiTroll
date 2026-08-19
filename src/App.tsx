@@ -555,6 +555,7 @@ const GamingCommunity = lazyWithRetry(() => import("./pages/broadcast/gaming/Gam
 const GamingMonetization = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingMonetization.tsx"));
 const GamingStore = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingStore.tsx"));
 const BroadcastRouter = lazyWithRetry(() => import("./pages/broadcast/BroadcastRouter.tsx"));
+const StreamSummary = lazyWithRetry(() => import("./pages/broadcast/StreamSummary.tsx"));
 const PresidentPage = lazyWithRetry(() => import("./pages/President.js"));
 const PresidentDashboard = lazyWithRetry(() => import("./pages/president/PresidentDashboard.js"));
 const SecretaryDashboard = lazyWithRetry(() => import("./pages/president/SecretaryDashboard.js"));
@@ -1670,9 +1671,10 @@ const handleVisibilityChange = async () => {
                   {/* Username-based stream routes (SEO-friendly, e.g. /live/username) */}
                 <Route path="/live/:username" element={<BroadcastRouter />} />
                 <Route path="/stream/:username" element={<BroadcastRouter />} />
-                {/* UUID-based stream routes (backwards compatibility) */}
-                <Route path="/broadcast/:id" element={<BroadcastRouter />} />
-                <Route path="/watch/:id" element={<BroadcastRouter />} />
+                 {/* UUID-based stream routes (backwards compatibility) */}
+                 <Route path="/broadcast/summary/:id" element={<StreamSummary />} />
+                 <Route path="/broadcast/:id" element={<BroadcastRouter />} />
+                 <Route path="/watch/:id" element={<BroadcastRouter />} />
 
                   {/* 🏛️ State Battle Routes */}
                  <Route path="/state-rankings" element={<StateRankings />} />

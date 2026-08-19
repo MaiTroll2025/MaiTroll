@@ -21,7 +21,7 @@ interface UserStats {
 export default function StreamSummary() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { streamId } = useParams();
+  const { id: streamId } = useParams<{ id?: string }>()
   const { user, profile } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [streamStats, setStreamStats] = useState<StreamStats | null>(null);
@@ -220,20 +220,22 @@ export default function StreamSummary() {
                     </svg>
                     Saved to Profile
                   </>
-                ) : (
-                  'Not saved to profile'
-                )}
-</div>
-        )}
+                 ) : (
+                   'Not saved to profile'
+                 )}
+               </div>
+             )}
+           </div>
+         )}
 
-        <button
-          onClick={() => navigate('/')}
-          className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition flex items-center justify-center gap-2"
-        >
-          <Home size={20} />
-          Back to Home
-        </button>
-      </div>
-    </div>
-  );
-}
+         <button
+           onClick={() => navigate('/')}
+           className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition flex items-center justify-center gap-2"
+         >
+           <Home size={20} />
+           Back to Home
+         </button>
+       </div>
+     </div>
+   );
+ }

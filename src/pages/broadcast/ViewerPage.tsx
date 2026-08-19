@@ -404,7 +404,8 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
        return
      }
 
-     let cancelled = false
+    let cancelled = false
+    let pollInterval: ReturnType<typeof setInterval> | null = null
 
      const attachAndPlay = async () => {
        try {
@@ -2715,6 +2716,7 @@ const isActive = isStreamActive(stream)
     }
 
     let cancelled = false
+    let pollInterval: number | null = null
 
     const run = async () => {
       setStreamLoaded(false)
@@ -2768,6 +2770,7 @@ const isActive = isStreamActive(stream)
 
       if (isStreamEnded(data as unknown as Stream)) {
         streamEndedRef.current = true
+        console.log('[ViewerPage] Stream ended - navigating to summary', { streamId: (data as any).id, streamStatus: (data as any).status })
         navigate(`/broadcast/summary/${(data as any).id}`, { replace: true })
         return
       }
@@ -2797,8 +2800,16 @@ const isActive = isStreamActive(stream)
 
     void run()
 
+    pollInterval = window.setInterval(() => {
+      void run()
+    }, 3000)
+
     return () => {
       cancelled = true
+      if (pollInterval) {
+        window.clearInterval(pollInterval)
+        pollInterval = null
+      }
     }
   }, [streamId, navigate])
 
@@ -2881,6 +2892,7 @@ useStreamRealtime(
           if (isStreamEnded(next as Stream)) {
             if (streamEndedRef.current) return
             streamEndedRef.current = true
+            console.log('[ViewerPage] Realtime stream ended - navigating to summary', { streamId: next.id, streamStatus: next.status })
             leaveLiveKitRoom().catch(() => {})
             hasJoinedAudienceRef.current = false
             joiningAudienceRef.current = false
