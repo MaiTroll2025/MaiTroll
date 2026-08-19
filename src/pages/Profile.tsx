@@ -29,6 +29,12 @@ import UserInventory from './UserInventory';
 import ProfileSettings from './ProfileSettings';
 import KeysPage from './KeysPage';
 import UserModActionsModal from '../components/profile/UserModActionsModal';
+import ProfilePurchases from '../components/profile/ProfilePurchases';
+import ProfileChurch from '../components/profile/ProfileChurch';
+import ProfileAgency from '../components/profile/ProfileAgency';
+import ProfileCourt from '../components/profile/ProfileCourt';
+import ProfileMarketplace from '../components/profile/ProfileMarketplace';
+import ProfileBroadcasts from '../components/profile/ProfileBroadcasts';
 import { useProfileFrameStore } from '../stores/useProfileFrameStore';
 import type { ProfileFrame as ProfileFrameType } from '../config/profileFrames';
 
@@ -631,7 +637,7 @@ function ProfileInner() {
             case 'social':
                 return <ProfileFeed userId={profile.id} />;
             case 'broadcasts':
-                return null;
+                return <ProfileBroadcasts userId={profile.id} />;
             case 'watchlist':
                 return <ProfileWatchlist userId={profile.id} />;
             case 'inventory':
@@ -853,6 +859,18 @@ function ProfileInner() {
                         </div>
                     </div>
                 );
+            case 'purchases':
+                return <ProfilePurchases userId={profile.id} />;
+            case 'church':
+                return <ProfileChurch userId={profile.id} />;
+            case 'agency':
+                return <ProfileAgency userId={profile.id} />;
+            case 'court':
+                return <ProfileCourt userId={profile.id} />;
+            case 'auctions':
+                return <ProfileWatchlist userId={profile.id} />;
+            case 'marketplace':
+                return <ProfileMarketplace userId={profile.id} />;
             default:
                 return <ProfileFeed userId={profile.id} />;
         }

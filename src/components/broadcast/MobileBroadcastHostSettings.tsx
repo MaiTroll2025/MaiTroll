@@ -323,7 +323,7 @@ onToggleChatLock,
       >
         <Settings className="h-5 w-5" />
         {/* Live indicator dot */}
-        {isLive && !isRecording && (
+        {isLive && (
           <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-slate-950 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
         )}
       </button>

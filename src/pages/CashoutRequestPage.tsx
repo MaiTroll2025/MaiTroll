@@ -138,7 +138,7 @@ export default function CashoutRequestPage() {
         const eligibleTotal = Math.max(0, (profile.troll_coins || 0));
         setEligibleCoins(eligibleTotal);
 
-        setIsMaiPayPlus(profile.mai_pay_plus === true);
+        setIsMaiPayPlus(profile.mai_pay_plus === true && (!profile.mai_pay_plus_expires_at || new Date(profile.mai_pay_plus_expires_at) > new Date()));
 
         // Load recent payout requests
         const { data: requestsData, error: requestsError } = await supabase
@@ -187,7 +187,7 @@ export default function CashoutRequestPage() {
 
         // Auto-select highest eligible tier based on the loaded balance.
         // MAI Pay Plus users require double the standard coin amount per tier.
-        const plusMultiplier = profile.mai_pay_plus === true ? 2 : 1;
+        const plusMultiplier = profile.mai_pay_plus === true && (!profile.mai_pay_plus_expires_at || new Date(profile.mai_pay_plus_expires_at) > new Date()) ? 2 : 1;
         const adjustedTiers = TIERS.map(
           (t) => ({ ...t, coins: t.coins * plusMultiplier } as CashoutTier)
         );

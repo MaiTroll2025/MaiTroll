@@ -216,6 +216,11 @@ export default function TrackPage() {
 
       if (error) throw error
       toast.success(`Sent ${tipAmount} Troll Coins!`)
+      setTrack((prev) => (prev ? { ...prev, tip_coins: prev.tip_coins + tipAmount } : null))
+      if (profile?.id) {
+        const { refreshProfile } = useAuthStore.getState()
+        refreshProfile?.()
+      }
       setShowTipModal(false)
       setTipAmount(null)
     } catch (err: any) {

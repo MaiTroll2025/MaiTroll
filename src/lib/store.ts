@@ -86,6 +86,7 @@ const profilePatchKeys = [
   'account_state',
   'muted_until',
   'celeb_role',
+  'is_broadcaster',
   'updated_at',
 ]
 
@@ -170,6 +171,7 @@ const USER_PROFILE_SELECT = `
   is_agency_leader,
   is_ceo_assistant,
   is_noah_assistant,
+  is_broadcaster,
   is_ghost_mode,
   ghost_mode_until,
   drivers_license_status,

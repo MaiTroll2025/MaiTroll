@@ -30,6 +30,7 @@ import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
 import LeagueProgressPanel from '../../components/broadcast/LeagueProgressPanel'
 import LeagueLevelUpBanner from '../../components/broadcast/LeagueLevelUpBanner'
 import FeedTheTroll from '../../components/feed-the-troll/FeedTheTroll'
+import { RoleInviteHandler } from '../../components/broadcast/RoleInviteHandler'
 
 import { Stream } from '../../types/broadcast'
 import BroadcastBottomBar from '../../components/broadcast/BroadcastBottomBar'
@@ -876,14 +877,12 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
   }
 
   const configuredViewerSeatCount = useMemo(() => {
-    const maxSeats = isOfficer ? 11 : 6
-    // Prefer seat_count (new field), fall back to box_count, then seat_prices
-    // seat_count = 0 means broadcaster only (no guest seats)
-    // seat_count > 0 means total boxes including broadcaster
+    const maxSeats = 6
+    // seat_count = guest seats only (broadcaster is NOT a seat)
     const seatCount = stream?.seat_count !== undefined ? Number(stream.seat_count) : undefined
     if (seatCount !== undefined) {
       if (seatCount === 0) return 0 // broadcaster only, no guest seats
-      return Math.max(0, Math.min(maxSeats, seatCount - 1)) // subtract 1 for broadcaster box
+      return Math.max(0, Math.min(maxSeats, seatCount))
     }
 
     const boxCount = Number(stream?.box_count ?? 0)
@@ -900,7 +899,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
     }
 
     return 0
-  }, [stream?.box_count, stream?.seat_count, stream?.seat_prices, isOfficer])
+  }, [stream?.box_count, stream?.seat_count, stream?.seat_prices])
 
   // Total boxes including broadcaster (for layout decisions)
   const totalBoxCount = useMemo(() => {
@@ -1830,6 +1829,8 @@ useEffect(() => {
     const [isMessagePopupOpen, setIsMessagePopupOpen] = useState(false)
     const [isNewMessageMode, setIsNewMessageMode] = useState(false)
     const [isBroadcasterControlsOpen, setIsBroadcasterControlsOpen] = useState(false)
+    const [isSeatControlsOpen, setIsSeatControlsOpen] = useState(false)
+    const [selectedSeatForControls, setSelectedSeatForControls] = useState<{ seatIndex: number; seatSessionId?: string } | null>(null)
     const [messagePopupPosition, setMessagePopupPosition] = useState<{ x: number; y: number } | null>(null)
     const [isDraggingMessagePopup, setIsDraggingMessagePopup] = useState(false)
     const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null)
@@ -3038,7 +3039,7 @@ const handleOpenShareModal = useCallback(() => setIsShareModalOpen(true), [])
        return ''
      })
 
-      setSeatModalCount(Math.max(0, Math.min(isOfficer ? 11 : 6, currentViewerSeatCount)))
+      setSeatModalCount(Math.max(0, Math.min(6, currentViewerSeatCount)))
      setSeatModalPrices(normalizedPrices)
      setSelectedSeatIndex(0)
      setIsSeatsModalOpen(true)
@@ -3086,7 +3087,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         return;
       }
 
-       const desiredViewerSeats = Math.max(0, Math.min(isOfficer ? 11 : 6, count));
+       const desiredViewerSeats = Math.max(0, Math.min(6, count));
       const totalBoxes = desiredViewerSeats + 1;
       const normalizedPrices = Array.from({ length: desiredViewerSeats }, (_, index) =>
         seatPriceToNumber(prices[index]),
@@ -3125,8 +3126,8 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       }
 
       // seat_count = 0 means broadcaster only (no guest seats)
-      // seat_count > 0 means total boxes including broadcaster
-      const nextSeatCount = desiredViewerSeats === 0 ? 0 : totalBoxes
+      // seat_count > 0 means guest seats only (broadcaster is NOT counted)
+      const nextSeatCount = desiredViewerSeats
 
       const { error: updateError } = await supabase
         .from('streams')
@@ -5225,25 +5226,48 @@ const toggleMicrophone = useCallback(async () => {
 
    const handleGiftHost = useCallback(() => onGift(stream?.user_id || ''), [onGift, stream?.user_id])
 
-     const handleOpenUserAction = useCallback((info: { userId: string; username?: string; role?: string; createdAt?: string; seatSessionId?: string }) => {
-       const normalizedUserId = info.userId
-       const normalizedUsername = info.username || ''
-       const isAnonUsername = /^anon\d{6}$/.test(normalizedUsername)
+        const handleOpenUserAction = useCallback((info: { userId: string; username?: string; role?: string; createdAt?: string; seatSessionId?: string }) => {
+          const normalizedUserId = info.userId
+          const normalizedUsername = info.username || ''
+          const isAnonUsername = /^anon\d{6}$/.test(normalizedUsername)
 
-       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedUserId)) {
-         if (isAnonUsername) {
-           setUserActionTarget({
-             userId: `anon-${normalizedUsername}`,
-             username: normalizedUsername,
-             role: 'anonymous',
-             createdAt: null,
-           })
-           return
-         }
-       }
+          if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedUserId)) {
+            if (isAnonUsername) {
+              setUserActionTarget({
+                userId: `anon-${normalizedUsername}`,
+                username: normalizedUsername,
+                role: 'anonymous',
+                createdAt: null,
+              })
+              return
+            }
+          }
 
-       setUserActionTarget(info)
-     }, [])
+          setUserActionTarget(info)
+        }, [])
+
+    const handleOpenSeatControls = useCallback((seatIndex: number, seatSessionId?: string) => {
+      setSelectedSeatForControls({ seatIndex, seatSessionId })
+      setIsSeatControlsOpen(true)
+    }, [])
+
+    const handleCloseSeatControls = useCallback(() => {
+      setIsSeatControlsOpen(false)
+      setSelectedSeatForControls(null)
+    }, [])
+
+    const handleLeaveSeatFromControls = useCallback(async () => {
+      if (!selectedSeatForControls?.seatSessionId) return
+      try {
+        const { error } = await supabase.rpc('leave_seat_atomic', { p_session_id: selectedSeatForControls.seatSessionId })
+        if (error) throw error
+        toast.success('Left seat')
+      } catch (err: any) {
+        toast.error(err?.message || 'Failed to leave seat')
+      } finally {
+        handleCloseSeatControls()
+      }
+    }, [selectedSeatForControls, handleCloseSeatControls])
 
    const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
      if (!username || isAnonymousDisplayName(username)) return
@@ -6346,7 +6370,8 @@ const toggleMicrophone = useCallback(async () => {
   }
 
   return (
-      <GiftSystemProvider streamId={streamId} defaultReceiverId={stream?.user_id}>
+      <>
+        <GiftSystemProvider streamId={streamId} defaultReceiverId={stream?.user_id}>
           <ErrorBoundary>
 
           {/* -- Outer layout: header + 3-column grid + bottom bar + footer -- */}
@@ -6492,15 +6517,21 @@ const toggleMicrophone = useCallback(async () => {
                 GRID MODE: broadcaster is a single equal-sized tile (first box).
                 SPLIT MODE: broadcaster is the large left panel.
               */}
-              {layoutMode === 'grid' ? (
-                /* ===== GRID MODE: Broadcaster tile (same size as seat tiles) ===== */
-                 <div
-                    className={cn(
-                      'relative min-h-0 overflow-hidden border border-cyan-400/30 bg-transparent pb-4',
-                      isMobileHost ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
-                    )}
-                   data-gift-target={`user:${stream?.user_id || ''}`}
-                 >
+               {layoutMode === 'grid' ? (
+                 /* ===== GRID MODE: Broadcaster tile (same size as seat tiles) ===== */
+                  <div
+                     className={cn(
+                       'relative min-h-0 overflow-hidden border border-cyan-400/30 bg-transparent pb-4',
+                       isMobileHost ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
+                     )}
+                    data-gift-target={`user:${stream?.user_id || ''}`}
+                    onClick={handleBroadcasterBoxTap}
+                    onTouchEnd={(e) => {
+                      e.preventDefault()
+                      handleBroadcasterBoxTap(e)
+                    }}
+                    style={isHost ? { cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } : undefined}
+                  >
                   {/* Camera starting fallback */}
                   {(() => {
                     const hostParticipant = hostParticipantRef.current
@@ -8153,15 +8184,16 @@ const toggleMicrophone = useCallback(async () => {
                  {isMobileHost && stream && (
                    <div className="mobile-audience-ticker absolute inset-x-0 top-0 z-20 flex items-start gap-2 px-3 pt-[44px]">
                      <div className="pointer-events-auto flex-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-sm shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
-                        <MobileAudienceTicker
-                          audience={audienceWithAnon}
-                          currentUserId={user?.id}
-                          hostUserId={stream?.user_id || stream?.broadcaster_id || undefined}
-                          viewerCount={liveViewerCount}
-                          likes={streamLayoutStats.likes}
-                          maxVisible={6}
-                          onModerateUser={handleOpenUserAction}
-                        />
+                         <MobileAudienceTicker
+                           audience={audienceWithAnon}
+                           currentUserId={user?.id}
+                           hostUserId={stream?.user_id || stream?.broadcaster_id || undefined}
+                           viewerCount={liveViewerCount}
+                           likes={streamLayoutStats.likes}
+                           maxVisible={6}
+                           onModerateUser={handleOpenUserAction}
+                           onViewerCountClick={onActiveViewersClick}
+                         />
                     </div>
                      <div className="pointer-events-auto relative mt-0.5 flex flex-col gap-2">
                        <CollaborateButton compact onClick={() => setShowCollaborationModal(true)} />
@@ -8386,11 +8418,11 @@ const toggleMicrophone = useCallback(async () => {
                             </button>
                             <div className="text-center">
                                <div className="text-5xl font-black text-white">{seatModalCount}</div>
-                               <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">Max {isOfficer ? 11 : 6}</div>
+                               <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">Max {6}</div>
                             </div>
                             <button
                               type="button"
-                               onClick={() => setSeatModalCount((value) => Math.min(isOfficer ? 11 : 6, value + 1))}
+                               onClick={() => setSeatModalCount((value) => Math.min(6, value + 1))}
                               className="grid h-12 w-12 place-items-center rounded-2xl border border-cyan-300/35 bg-cyan-500/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.18)] transition hover:bg-cyan-500/25"
                               aria-label="Add one seat"
                             >
@@ -8416,7 +8448,7 @@ const toggleMicrophone = useCallback(async () => {
                           </div>
 
                            <div className="mt-4 grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                             {Array.from({ length: isOfficer ? 11 : 6 }, (_, index) => {
+                             {Array.from({ length: 6 }, (_, index) => {
                                const active = index < seatModalCount
                                const selected = index === selectedSeatIndex
                                const price = seatModalPrices[index]
@@ -8520,22 +8552,23 @@ const toggleMicrophone = useCallback(async () => {
 
               {/* User Action Modal (for gifts, mod actions, etc.) */}
               {userActionTarget && (
-                showModActionMenu ? (
-                  <ModActionsPopup
-                    isOpen={true}
-                    onClose={handleCloseUserAction}
-                    targetUser={{
-                      id: userActionTarget.userId,
-                      username: userActionTarget.username || '',
-                      avatar_url: userProfiles?.[userActionTarget.userId]?.avatar_url || '',
-                      role: userActionTarget.role,
-                    } as any}
-                    targetUsername={userActionTarget.username || ''}
-                    targetUserId={userActionTarget.userId}
-                    streamId={streamId || ''}
-                    hostId={stream?.user_id || ''}
-                    currentUserId={user?.id}
-                  />
+                 showModActionMenu ? (
+                   <ModActionsPopup
+                     isOpen={true}
+                     onClose={handleCloseUserAction}
+                     targetUser={{
+                       id: userActionTarget.userId,
+                       username: userActionTarget.username || '',
+                       avatar_url: userProfiles?.[userActionTarget.userId]?.avatar_url || '',
+                       role: userActionTarget.role,
+                     } as any}
+                     targetUsername={userActionTarget.username || ''}
+                     targetUserId={userActionTarget.userId}
+                     streamId={streamId || ''}
+                     hostId={stream?.user_id || ''}
+                     currentUserId={user?.id}
+                     profile={profile as any}
+                   />
                 ) : (
                 <div className="pointer-events-auto">
                 <UserActionModal
@@ -9163,8 +9196,10 @@ const toggleMicrophone = useCallback(async () => {
                </div>
              </div>
            )}
-        </GiftSystemProvider>
-      );
+         </GiftSystemProvider>
+         <RoleInviteHandler />
+      </>
+    );
     }
 
 function isStaffProfile(profile: any) {

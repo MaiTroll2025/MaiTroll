@@ -115,9 +115,10 @@ export function useBoxCount({ streamId, initialBoxCount, isHost }: UseBoxCountOp
 
     // Update database in the background
     try {
+      const guestSeatCount = Math.max(0, clampedCount - 1)
       const { error } = await supabase
         .from('streams')
-        .update({ box_count: clampedCount, seat_count: clampedCount })
+        .update({ box_count: clampedCount, seat_count: guestSeatCount })
         .eq('id', streamId);
 
       if (error) {

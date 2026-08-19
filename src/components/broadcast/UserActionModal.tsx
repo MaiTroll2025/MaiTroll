@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Gift, MicOff, Ban, Shield, X, UserPlus, MessageSquare, Eye, AlertTriangle, Wand2, MessageSquareOff, Coins, Lock } from 'lucide-react';
+import { User, Gift, MicOff, Ban, Shield, X, UserPlus, MessageSquare, Eye, AlertTriangle, Wand2, MessageSquareOff, Coins, Lock, Crown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import UserNameWithAge from '../UserNameWithAge';
@@ -133,6 +133,29 @@ export default function UserActionModal({
   const isAnonTarget = role === 'anonymous' || isAnonymousDisplayName(username) || isAnonymousDisplayName(fetchedUsername);
   const navigate = useNavigate();
   const hasModActions = isHost || isModerator || isOfficer;
+
+  const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
+  const [showRoleInviteModal, setShowRoleInviteModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role, is_admin, troll_role')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+      setIsCurrentUserAdmin(
+        profile?.role === 'admin' ||
+        profile?.troll_role === 'admin' ||
+        profile?.is_admin === true
+      );
+    };
+    checkAdmin();
+  }, []);
 
   const handleArrestAnon = async () => {
     try {
@@ -541,7 +564,45 @@ export default function UserActionModal({
               created_at: new Date().toISOString(),
               type: 'system',
               user_profiles: { username: 'System', avatar_url: '' }
-          };
+   };
+
+  const handleRoleInvite = async () => {
+    if (!selectedRole) {
+      toast.error('Please select a role');
+      return;
+    }
+    setIsInviting(true);
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        navigate('/auth?mode=signup');
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('create_role_invite', {
+        p_inviter_id: currentUser.id,
+        p_invitee_id: userId,
+        p_role: selectedRole
+      });
+
+      if (error) throw error;
+
+      const result = data as any;
+      if (result?.success) {
+        const { notifyRoleInviteReceived } = await import('../../lib/notifications');
+        await notifyRoleInviteReceived(userId, displayName, selectedRole, result.invite_id);
+        toast.success(`Role invitation sent to ${displayName}`);
+        setShowRoleInviteModal(false);
+        setSelectedRole('');
+      } else {
+        toast.error(result?.error || 'Failed to send invite');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to send invite');
+    } finally {
+      setIsInviting(false);
+    }
+  };
 
           void supabase.from('stream_messages').insert({
               stream_id: streamId,
@@ -828,15 +889,22 @@ const handleViewProfile = () => {
                        <span>Arrest</span>
                     </button>
                   )}
-                  {canSummon && !isTargetStaff && (
-                    <button onClick={handleSummonToCourt} className="w-full flex items-center justify-center gap-2 p-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-lg transition-colors border border-red-500/20 mt-2">
-                       <AlertTriangle size={16} />
-                       <span>Summon to Court</span>
-                    </button>
-                  )}
-            </div>
-          ) : null}
-        </div>
+                   {canSummon && !isTargetStaff && (
+                     <button onClick={handleSummonToCourt} className="w-full flex items-center justify-center gap-2 p-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-lg transition-colors border border-red-500/20 mt-2">
+                        <AlertTriangle size={16} />
+                        <span>Summon to Court</span>
+                     </button>
+                   )}
+
+                   {isCurrentUserAdmin && !isTargetStaff && (
+                     <button onClick={() => setShowRoleInviteModal(true)} className="w-full flex items-center justify-center gap-2 p-2 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-400 rounded-lg transition-colors border border-emerald-500/20 mt-2">
+                        <Crown size={16} />
+                        <span>Invite to Role</span>
+                     </button>
+                   )}
+             </div>
+           ) : null}
+         </div>
 
       </div>
 
@@ -948,6 +1016,111 @@ const handleViewProfile = () => {
           avatarUrl={fetchedAvatar}
           onClose={() => setShowMiniProfile(false)}
         />
+      )}
+
+      {/* Role Invite Modal */}
+      {showRoleInviteModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => { e.stopPropagation(); setShowRoleInviteModal(false); }}
+        >
+          <div 
+            className="bg-zinc-900 border border-emerald-500/30 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl scale-100 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-emerald-900/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <Crown size={20} className="text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white">Invite to Role</h3>
+                  <p className="text-xs text-zinc-400">Invite {displayName} to become a new role</p>
+                </div>
+              </div>
+              <button type="button" onClick={(e) => { e.stopPropagation(); setShowRoleInviteModal(false); }} className="text-zinc-400 hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Select Role <span className="text-emerald-500">*</span>
+                </label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">Choose a role...</option>
+                  <option value="troll_officer">Troll Officer</option>
+                  <option value="lead_troll_officer">Lead Troll Officer</option>
+                  <option value="moderator">Moderator</option>
+                  <option value="secretary">Secretary</option>
+                  <option value="agency_hr">Agency HR</option>
+                  <option value="agency_hr_manager">Agency HR Manager</option>
+                  <option value="agency_leader">Agency Leader</option>
+                  <option value="attorney">Attorney</option>
+                  <option value="prosecutor">Prosecutor</option>
+                  <option value="pastor">Pastor</option>
+                  <option value="journalist">Journalist</option>
+                  <option value="auctioneer">Auctioneer</option>
+                  <option value="ceo_assistant">CEO Assistant</option>
+                  <option value="noah_assistant">Noah Assistant</option>
+                  <option value="empire_partner">Empire Partner</option>
+                  <option value="president">President</option>
+                  <option value="vice_president">Vice President</option>
+                  <option value="troll_city_secretary">Troll City Secretary</option>
+                  <option value="troll_city_treasurer">Troll City Treasurer</option>
+                  <option value="temp_city_admin">Temp City Admin</option>
+                  <option value="temp_admin">Temp Admin</option>
+                  <option value="executive_secretary">Executive Secretary</option>
+                  <option value="marketing_readonly">Marketing Read Only</option>
+                  <option value="superadmin">Super Admin</option>
+                  <option value="ceo">CEO</option>
+                  <option value="academy_teacher">Academy Teacher</option>
+                  <option value="academy_student">Academy Student</option>
+                  <option value="academy_director">Academy Director</option>
+                  <option value="admissions_officer">Admissions Officer</option>
+                </select>
+              </div>
+
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
+                <p className="text-xs text-emerald-300">
+                  The user will receive a notification and can accept or decline the invitation. If accepted, their role will be updated immediately.
+                </p>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setShowRoleInviteModal(false); }}
+                  className="flex-1 py-2.5 bg-zinc-700 text-white rounded-lg text-sm hover:bg-zinc-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleRoleInvite(); }}
+                  disabled={!selectedRole || isInviting}
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  {isInviting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Crown size={16} />
+                      Send Invitation
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

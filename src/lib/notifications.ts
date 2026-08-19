@@ -1024,6 +1024,36 @@ export async function notifyFamilyRoleChanged(userId: string, newRole: string) {
   )
 }
 
+export async function notifyRoleInviteReceived(userId: string, inviterUsername: string, role: string, inviteId: string) {
+  return createNotification(
+    userId,
+    'role_invite_received',
+    '🎖️ Role Invitation',
+    `@${inviterUsername} invited you to become ${role}.`,
+    { inviter_username: inviterUsername, role, invite_id: inviteId, action_url: '/notifications' }
+  )
+}
+
+export async function notifyRoleInviteAccepted(userId: string, targetUsername: string, role: string) {
+  return createNotification(
+    userId,
+    'role_invite_accepted',
+    '✅ Role Invite Accepted',
+    `@${targetUsername} accepted your invitation to become ${role}.`,
+    { target_username: targetUsername, role }
+  )
+}
+
+export async function notifyRoleInviteDeclined(userId: string, targetUsername: string, role: string) {
+  return createNotification(
+    userId,
+    'role_invite_declined',
+    '❌ Role Invite Declined',
+    `@${targetUsername} declined your invitation to become ${role}.`,
+    { target_username: targetUsername, role }
+  )
+}
+
 export async function notifyFamilyXPMilestone(userId: string, xp: number) {
   return createNotification(
     userId,

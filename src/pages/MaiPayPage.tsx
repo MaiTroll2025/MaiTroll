@@ -165,7 +165,7 @@ export default function MaiPayPage() {
       // Load profile balances
       const { data: profileData } = await supabase
         .from('user_profiles')
-        .select('troll_coins, hype_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method, mai_pay_plus')
+        .select('troll_coins, hype_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method, mai_pay_plus, mai_pay_plus_expires_at')
         .eq('id', user.id)
         .single();
 
@@ -173,7 +173,7 @@ export default function MaiPayPage() {
         setTrollCoins(profileData.troll_coins ?? 0);
         setHypeCoins(profileData.hype_coins ?? 0);
         setBattleCrowns(profileData.battle_crowns ?? 0);
-        setIsMaiPayPlus(profileData.mai_pay_plus === true);
+        setIsMaiPayPlus(profileData.mai_pay_plus === true && (!profileData.mai_pay_plus_expires_at || new Date(profileData.mai_pay_plus_expires_at) > new Date()));
 
         // Pre-fill provider username
         const preferred = profileData.preferred_payout_method as PayoutMethod | null;

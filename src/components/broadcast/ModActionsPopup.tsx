@@ -4,11 +4,12 @@ import {
   X, Gift, Shield, Gavel, Ban, Eye, Clock, UserCheck, User,
   AlertTriangle, Building2, Wallet, FileText, Users,
   Mic, MicOff, AlertCircle, MessageSquareOff, LogOut, Power,
-  Search, Car
+  Search, Car, UserPlus, MessageSquare, Flag, Crown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
+import { useChatStore } from '../../lib/chatStore';
 import { toast } from 'sonner';
 import GiftBoxModal from './GiftBoxModal';
 import BackgroundCheckView from './BackgroundCheckView';
@@ -60,7 +61,7 @@ interface ModActionsPopupProps {
   onViewBackgroundCheck?: (userId: string) => void;
 }
 
-type TabType = 'gift' | 'mod';
+type TabType = 'gift' | 'mod' | 'social';
 
 const MOD_ACTIONS_LIST = [
   { id: 'mute', label: 'Mute', icon: Mic, color: 'text-red-400', description: 'Mute user\'s microphone' },
@@ -74,6 +75,7 @@ const MOD_ACTIONS_LIST = [
   { id: 'set_to_user', label: 'Set to User', icon: User, color: 'text-gray-400', description: 'Remove all roles, set to user' },
   { id: 'end_stream', label: 'End Stream', icon: Power, color: 'text-red-500', description: 'End broadcast and restrict' },
   { id: 'background_check', label: 'Background', icon: FileText, color: 'text-blue-400', description: 'View user background' },
+  { id: 'invite_to_role', label: 'Invite to Role', icon: Crown, color: 'text-emerald-400', description: 'Invite user to a new role', adminOnly: true },
 ];
 
 const SEVERITY_LEVELS = [
@@ -99,9 +101,26 @@ const ModActionsPopup = memo(function ModActionsPopup({
   onKickUser,
   onViewBackgroundCheck,
 }: ModActionsPopupProps) {
-  const { profile, user, isLoading } = useAuthStore();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>('gift');
+   const { profile, user, isLoading } = useAuthStore();
+   const navigate = useNavigate();
+   const [activeTab, setActiveTab] = useState<TabType>('gift');
+
+   useEffect(() => {
+     if (!isOpen) return
+     console.debug('[ModActions][DEBUG] ModActionsPopup opened', {
+       actorId: user?.id,
+       actorProfileId: profile?.id,
+       actorRole: profile?.role,
+       actorTrollRole: profile?.troll_role,
+       isBroadcaster: profile?.is_broadcaster,
+       isAdmin: profile?.is_admin,
+       targetUserId,
+       targetUsername,
+       targetUserRole: targetUser?.role,
+       streamId,
+       hostId,
+     })
+   }, [isOpen, user?.id, profile?.id, profile?.role, profile?.troll_role, profile?.is_broadcaster, profile?.is_admin, targetUserId, targetUsername, targetUser?.role, streamId, hostId])
   const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   
@@ -150,6 +169,20 @@ const ModActionsPopup = memo(function ModActionsPopup({
   const [isEndingStream, setIsEndingStream] = useState(false);
   const [endStreamReason, setEndStreamReason] = useState('');
   
+  // Social state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showSocialReportModal, setShowSocialReportModal] = useState(false);
+  const [socialReportReason, setSocialReportReason] = useState('');
+  const [socialReportDescription, setSocialReportDescription] = useState('');
+  const [isSubmittingSocialReport, setIsSubmittingSocialReport] = useState(false);
+
+  // Role invite state
+  const [showRoleInviteModal, setShowRoleInviteModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
+
+  const openChatBubble = useChatStore((state) => state.openChatBubble);
+  
 // Strict Mod Actions access: only the 9 authorized roles may use Mod Actions.
   // Ordinary accounts get NO access (no Mod Actions tab, no buttons, no popup).
   const hasModAccess = hasModActionsAccess(profile);
@@ -159,11 +192,14 @@ const ModActionsPopup = memo(function ModActionsPopup({
   const isTargetProtected = isProtectedPlatformRole(targetUser as any);
   const PROTECTED_ACTION_IDS = new Set(['mute', 'unmute', 'arrest', 'disable_chat', 'kick', 'suspend_license', 'remove_officer', 'set_to_user', 'end_stream']);
   const isActorBroadcasterOrOfficer = isBroadcasterOrBroadofficer(profile);
-  const RESTRICTED_FOR_BROADCASTER_IDS = new Set(['suspend_license', 'grant_license', 'set_to_user']);
+  const isActorAdmin = profile?.role === 'admin' || profile?.troll_role === 'admin' || profile?.is_admin === true;
+  const RESTRICTED_FOR_BROADCASTER_IDS = new Set(['suspend_license', 'grant_license', 'set_to_user', 'arrest']);
+  const ADMIN_ONLY_IDS = new Set(['invite_to_role']);
   const baseActions = isTargetProtected ? visibleActions.filter((a) => !PROTECTED_ACTION_IDS.has(a.id)) : visibleActions;
+  const nonAdminFiltered = isActorAdmin ? baseActions : baseActions.filter((a) => !ADMIN_ONLY_IDS.has(a.id));
   const filteredActions = isActorBroadcasterOrOfficer
-    ? baseActions.filter((a) => !RESTRICTED_FOR_BROADCASTER_IDS.has(a.id))
-    : baseActions;
+    ? nonAdminFiltered.filter((a) => !RESTRICTED_FOR_BROADCASTER_IDS.has(a.id))
+    : nonAdminFiltered;
   const [effectiveStreamId, setEffectiveStreamId] = useState(streamId || '');
   const [effectiveHostId, setEffectiveHostId] = useState(hostId || '');
 
@@ -259,7 +295,7 @@ const ModActionsPopup = memo(function ModActionsPopup({
     }
   };
 
-const handleMute = async () => {
+  const handleMute = async () => {
     if (!profile || isLoading) {
       toast.error("Authentication data is still loading. Please try again.");
       return;
@@ -269,6 +305,15 @@ const handleMute = async () => {
       toast.error('Mutting requires an active stream context');
       return;
     }
+    console.debug('[ModActions][DEBUG] Mute clicked', {
+      actorId: profile?.id,
+      actorRole: profile?.role,
+      actorTrollRole: profile?.troll_role,
+      isBroadcaster: profile?.is_broadcaster,
+      targetUserId,
+      targetUsername,
+      streamId: effectiveStreamId,
+    });
     setIsMuting(true);
     try {
       const res = await rpcModeratorMuteUser(
@@ -277,6 +322,7 @@ const handleMute = async () => {
         muteDuration,
         `Muted for ${muteDuration} minutes`
       );
+      console.debug('[ModActions][DEBUG] Mute RPC result', res);
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -302,29 +348,51 @@ const handleMute = async () => {
       toast.error('Unmuting requires an active stream context');
       return;
     }
+    console.debug('[ModActions][DEBUG] Unmute clicked', {
+      actorId: profile?.id,
+      actorRole: profile?.role,
+      actorTrollRole: profile?.troll_role,
+      isBroadcaster: profile?.is_broadcaster,
+      targetUserId,
+      targetUsername,
+      streamId: effectiveStreamId,
+    });
     try {
       const res = await rpcModeratorUnmuteUser(
         effectiveStreamId,
         targetUserId
       );
+      console.debug('[ModActions][DEBUG] Unmute RPC result', res);
       if (!res.success) {
         toast.error(res.message);
         return;
       }
       toast.success(res.message || `${targetUsername} has been unmuted`);
+      setShowUnmuteModal(false);
       onUnmuteUser?.(targetUserId);
     } catch (error) {
-      console.error('Error unmuting user:', error);
+      console.error('[ModActions] Error unmuting user:', error);
       toast.error('Failed to unmute user');
+    } finally {
+      setIsUnmuting(false);
     }
   };
 
-const handleArrest = async () => {
+  const handleArrest = async () => {
     if (!profile || isLoading) {
       toast.error("Authentication data is still loading. Please try again.");
       return;
     }
     if (!targetUserId || !arrestReason) return;
+    console.debug('[ModActions][DEBUG] Arrest clicked', {
+      actorId: profile?.id,
+      actorRole: profile?.role,
+      actorTrollRole: profile?.troll_role,
+      isBroadcaster: profile?.is_broadcaster,
+      targetUserId,
+      targetUsername,
+      streamId: effectiveStreamId,
+    });
     setIsArresting(true);
 
     try {
@@ -334,6 +402,7 @@ const handleArrest = async () => {
         arrestReason,
         arrestSeverity as 'minor' | 'moderate' | 'serious' | 'severe'
       );
+      console.debug('[ModActions][DEBUG] Arrest RPC result', res);
       if (!res.success) {
         toast.error(res.message);
         return;
@@ -619,6 +688,110 @@ const handleEndStream = async () => {
     }
   };
 
+  const handleSocialFollow = async () => {
+    if (!user || !profile) {
+      navigate('/auth?mode=signup');
+      return;
+    }
+    if (isFollowing) {
+      const { error } = await supabase.from('user_follows').delete().eq('follower_id', user.id).eq('following_id', targetUserId);
+      if (!error) {
+        setIsFollowing(false);
+        toast.success(`Unfollowed ${targetUsername}`);
+      }
+    } else {
+      const { error } = await supabase.from('user_follows').insert({ follower_id: user.id, following_id: targetUserId });
+      if (!error) {
+        setIsFollowing(true);
+        toast.success(`Followed ${targetUsername}`);
+      }
+    }
+  };
+
+  const handleSocialMessage = () => {
+    if (!user) {
+      navigate('/auth?mode=signup');
+      return;
+    }
+    openChatBubble(targetUserId, targetUsername, targetUser?.avatar_url);
+    onClose();
+  };
+
+  const handleSocialReport = () => {
+    setShowSocialReportModal(true);
+  };
+
+  const submitSocialReport = async () => {
+    if (!socialReportReason || !user) return;
+    setIsSubmittingSocialReport(true);
+    try {
+      const { error } = await supabase.from('moderation_reports').insert({
+        reporter_id: user.id,
+        reported_user_id: targetUserId,
+        reason: socialReportReason,
+        description: socialReportDescription,
+        stream_id: effectiveStreamId || streamId,
+        status: 'pending'
+      });
+      if (error) throw error;
+      toast.success('Report submitted successfully');
+      setShowSocialReportModal(false);
+      setSocialReportReason('');
+      setSocialReportDescription('');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to submit report');
+    } finally {
+      setIsSubmittingSocialReport(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || !targetUserId) return;
+    const checkFollow = async () => {
+      const { data } = await supabase.from('user_follows').select('id').eq('follower_id', user.id).eq('following_id', targetUserId).maybeSingle();
+      setIsFollowing(!!data);
+    };
+    checkFollow();
+  }, [user, targetUserId]);
+
+  const handleModRoleInvite = async () => {
+    if (!selectedRole) {
+      toast.error('Please select a role');
+      return;
+    }
+    setIsInviting(true);
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        navigate('/auth?mode=signup');
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('create_role_invite', {
+        p_inviter_id: currentUser.id,
+        p_invitee_id: targetUserId,
+        p_role: selectedRole
+      });
+
+      if (error) throw error;
+
+      const result = data as any;
+      if (result?.success) {
+        const { notifyRoleInviteReceived } = await import('../../lib/notifications');
+        await notifyRoleInviteReceived(targetUserId, targetUsername, selectedRole, result.invite_id);
+        toast.success(`Role invitation sent to ${targetUsername}`);
+        setShowRoleInviteModal(false);
+        setSelectedRole('');
+      } else {
+        toast.error(result?.error || 'Failed to send invite');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to send invite');
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
 // Deny popup access entirely for accounts without an authorized Mod Actions role.
   if (isLoading) return null;
   if (!user) {
@@ -703,6 +876,17 @@ const handleEndStream = async () => {
             <Shield className="w-4 h-4 inline mr-2" />
             Mod Actions
           </button>
+          <button
+            onClick={() => setActiveTab('social')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'social' 
+                ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/10' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Users className="w-4 h-4 inline mr-2" />
+            Social
+          </button>
         </div>
 
 {/* Content */}
@@ -717,6 +901,24 @@ const handleEndStream = async () => {
                  <Gift className="w-5 h-5 inline mr-2" />
                  Open Gift Box
                </button>
+             </div>
+           ) : activeTab === 'social' ? (
+             <div className="space-y-4">
+               <p className="text-slate-400 text-center text-sm">Social actions for {targetUsername}</p>
+               <div className="grid grid-cols-3 gap-3">
+                 <button onClick={handleSocialFollow} className="flex flex-col items-center justify-center gap-1 p-3 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-xl transition-colors border border-white/5">
+                   <UserPlus size={20} />
+                   <span className="text-[10px] font-medium">Follow</span>
+                 </button>
+                 <button onClick={handleSocialMessage} className="flex flex-col items-center justify-center gap-1 p-3 bg-slate-800 hover:bg-slate-700 text-purple-400 rounded-xl transition-colors border border-white/5">
+                   <MessageSquare size={20} />
+                   <span className="text-[10px] font-medium">Message</span>
+                 </button>
+                 <button onClick={handleSocialReport} className="flex flex-col items-center justify-center gap-1 p-3 bg-slate-800 hover:bg-slate-700 text-yellow-500 rounded-xl transition-colors border border-white/5">
+                   <Flag size={20} />
+                   <span className="text-[10px] font-medium">Report</span>
+                 </button>
+               </div>
              </div>
            ) : (
              <>
@@ -1195,21 +1397,88 @@ const handleEndStream = async () => {
                   </div>
                 )}
 
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => setShowSearchModal(false)}
-                    className="flex-1 py-2 bg-slate-700 text-white rounded-lg text-sm hover:bg-slate-600"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
+                 <div className="flex gap-2 mt-4">
+                   <button
+                     onClick={() => setShowSearchModal(false)}
+                     className="flex-1 py-2 bg-slate-700 text-white rounded-lg text-sm hover:bg-slate-600"
+                   >
+                     Cancel
+                   </button>
+                 </div>
+               </div>
+             </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Role Invite Modal */}
+        <AnimatePresence>
+           {showRoleInviteModal && (
+             <motion.div
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               className="absolute inset-0 bg-slate-900/95 flex items-center justify-center p-4 z-50"
+             >
+               <div className="bg-slate-800 border border-emerald-500/30 rounded-xl p-4 w-full max-w-sm">
+                 <div className="flex items-center gap-2 mb-4">
+                   <Crown className="w-5 h-5 text-emerald-400" />
+                   <h3 className="text-white font-semibold">Invite {targetUsername} to Role</h3>
+                 </div>
+                 
+                 <div className="space-y-3">
+                   <div>
+                     <label className="text-sm text-slate-400 block mb-1">Select Role</label>
+                     <select
+                       value={selectedRole}
+                       onChange={(e) => setSelectedRole(e.target.value)}
+                       className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+                     >
+                       <option value="">Choose a role...</option>
+                       <option value="troll_officer">Troll Officer</option>
+                       <option value="lead_troll_officer">Lead Troll Officer</option>
+                       <option value="moderator">Moderator</option>
+                       <option value="secretary">Secretary</option>
+                       <option value="agency_hr">Agency HR</option>
+                       <option value="agency_hr_manager">Agency HR Manager</option>
+                       <option value="agency_leader">Agency Leader</option>
+                       <option value="attorney">Attorney</option>
+                       <option value="prosecutor">Prosecutor</option>
+                       <option value="pastor">Pastor</option>
+                       <option value="journalist">Journalist</option>
+                       <option value="auctioneer">Auctioneer</option>
+                       <option value="ceo_assistant">CEO Assistant</option>
+                       <option value="noah_assistant">Noah Assistant</option>
+                       <option value="empire_partner">Empire Partner</option>
+                       <option value="president">President</option>
+                       <option value="vice_president">Vice President</option>
+                       <option value="superadmin">Super Admin</option>
+                       <option value="ceo">CEO</option>
+                     </select>
+                   </div>
+                   
+                   <div className="flex gap-2 mt-4">
+                     <button
+                       onClick={() => setShowRoleInviteModal(false)}
+                       className="flex-1 py-2 bg-slate-700 text-white rounded-lg text-sm hover:bg-slate-600"
+                     >
+                       Cancel
+                     </button>
+                     <button
+                       onClick={handleModRoleInvite}
+                       disabled={!selectedRole || isInviting}
+                       className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-500 disabled:opacity-50"
+                     >
+                       {isInviting ? 'Sending...' : 'Send Invite'}
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </motion.div>
+           )}
+         </AnimatePresence>
+       </>
+   );
 });
 
 export default ModActionsPopup;

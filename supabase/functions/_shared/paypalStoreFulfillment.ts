@@ -161,7 +161,11 @@ export async function fulfillPaypalCoinStorePurchase(
 
     const { error: profileErr } = await supabase
       .from("user_profiles")
-      .update({ mai_pay_plus: true, updated_at: new Date().toISOString() })
+      .update({
+        mai_pay_plus: true,
+        mai_pay_plus_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date().toISOString()
+      })
       .eq("id", userId);
 
     if (profileErr) {

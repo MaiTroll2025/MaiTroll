@@ -32,6 +32,7 @@ import {
   MAX_ADMIN_SEAT_COUNT,
   MIN_ADMIN_SEAT_COUNT,
   DEFAULT_SEAT_COUNT,
+  MAX_GUEST_SEATS,
 } from '../../config/broadcastCategories';
 
 
@@ -1684,8 +1685,8 @@ const handleStartStream = async () => {
            status: 'starting',
            is_live: false,
            started_at: null,
-            box_count: seatCount === 0 ? 1 : seatCount,
-            seat_count: isCelebStream ? 0 : (seatCount === 0 ? 1 : seatCount),
+            box_count: seatCount === 0 ? 1 : seatCount + 1,
+            seat_count: isCelebStream ? 0 : (seatCount === 0 ? 0 : seatCount),
            layout_mode: layoutMode,
             random_battle_queue_enabled: RANDOM_BATTLE_ENABLED && category === 'general' && (battleMode === 'world' || battleMode === 'state') ? randomBattleQueueEnabled : false,
            random_battle_queued_at: null,
@@ -1842,10 +1843,10 @@ livekit_room_name: roomName,
         // Create smoke event if enabled
         if (smokeEventEnabled) {
           try {
-            await supabase.rpc('start_smoke_event', {
-              p_stream_id: data.id,
-              p_seat_count: seatCount,
-            });
+              await supabase.rpc('start_smoke_event', {
+                p_stream_id: data.id,
+                p_seat_count: seatCount === 0 ? 0 : seatCount,
+              });
             console.log('[SetupPage] Smoke event created for stream:', data.id);
           } catch (smokeErr) {
             console.warn('[SetupPage] Failed to create smoke event:', smokeErr);
@@ -2390,9 +2391,9 @@ livekit_room_name: roomName,
               </div>
             </div>
 
-            {/* Admin-Only: Seat Count Selector (hidden for Celeb Streams) */}
-            {isStreamAdmin && !isCelebStream && (() => {
-              const effectiveMaxSeats = seatCap.enabled ? Math.min(MAX_ADMIN_SEAT_COUNT, seatCap.max) : MAX_ADMIN_SEAT_COUNT;
+            {/* Seat Count Selector (hidden for Celeb Streams) */}
+            {!isCelebStream && (() => {
+              const effectiveMaxSeats = seatCap.enabled ? Math.min(MAX_GUEST_SEATS, seatCap.max) : MAX_GUEST_SEATS;
               return (
                 <div className="flex-1 bg-zinc-900/80 rounded-xl border border-amber-500/20 p-3 flex flex-col justify-between">
                   <div className="flex items-center gap-1.5 mb-1">
@@ -2400,9 +2401,8 @@ livekit_room_name: roomName,
                     {seatCap.enabled && (
                       <span className="text-[8px] font-bold text-amber-400/60 bg-amber-500/10 px-1.5 py-0.5 rounded-full">CAP {effectiveMaxSeats}</span>
                     )}
-                    <span className="text-[8px] font-bold text-amber-400/60 bg-amber-500/10 px-1.5 py-0.5 rounded-full">ADMIN</span>
                   </div>
-                  <p className="text-[9px] text-slate-500 mb-2">Total boxes (broadcaster = box 1)</p>
+                  <p className="text-[9px] text-slate-500 mb-2">Guest seats (host = box 1)</p>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"

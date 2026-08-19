@@ -138,6 +138,9 @@ export interface RecordLabelContract {
   terms_version: string
   artist_signed_at?: string | null
   mai_accepted_at?: string | null
+  document_id?: string | null
+  notarized_at?: string | null
+  notarized_by?: string | null
   created_by?: string | null
   terminated_at?: string | null
   termination_reason?: string | null
@@ -1138,6 +1141,66 @@ export async function acceptContract(
 
   return {
     data: data as RecordLabelContract | null,
+    error,
+  }
+}
+
+export async function signContractWithNotary(params: {
+  contractId: string
+  legalName: string
+  typedSignature: string
+}): Promise<{
+  data: { success: boolean; contract_id?: string } | null
+  error: any
+}> {
+  const userId = getCurrentUserId()
+
+  if (!userId) {
+    return {
+      data: null,
+      error: new Error('Not authenticated'),
+    }
+  }
+
+  const { data, error } = await supabase.rpc('accept_contract_with_notary', {
+    p_contract_id: params.contractId,
+    p_user_id: userId,
+    p_legal_name: params.legalName,
+    p_typed_signature: params.typedSignature,
+  })
+
+  return {
+    data: data as { success: boolean; contract_id?: string } | null,
+    error,
+  }
+}
+
+export async function notarizeContract(params: {
+  contractId: string
+  documentId: string
+  comments?: string
+}): Promise<{
+  data: { success: boolean } | null
+  error: any
+}> {
+  const userId = getCurrentUserId()
+
+  if (!userId) {
+    return {
+      data: null,
+      error: new Error('Not authenticated'),
+    }
+  }
+
+  const { data, error } = await supabase.rpc('notarize_contract_document', {
+    p_contract_id: params.contractId,
+    p_document_id: params.documentId,
+    p_notary_id: userId,
+    p_comments: params.comments || null,
+  })
+
+  return {
+    data: data as { success: boolean } | null,
     error,
   }
 }

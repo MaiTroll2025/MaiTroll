@@ -241,7 +241,7 @@ begin
   select * into v_contract
   from public.record_label_contracts
   where artist_id = p_artist_id
-    and status in ('pending_signature', 'active')
+    and status in ('pending_signature', 'pending_notarization', 'active')
   order by created_at desc
   limit 1
   for update;
@@ -284,6 +284,12 @@ begin
     lifetime_gross_coins = lifetime_gross_coins + p_gross_coins,
     updated_at = v_now
   where artist_id = p_artist_id;
+
+  -- Credit label (admin) balance
+  update public.admin_pool
+  set
+    trollcoins_balance = COALESCE(trollcoins_balance, 0) + v_label_coins,
+    updated_at = v_now;
 
   -- Update track tip total if applicable
   if p_track_id is not null then
@@ -329,6 +335,14 @@ begin
     )
   )
   returning id into v_transaction_id;
+
+  insert into public.admin_pool_ledger (amount, reason, ref_user_id, related_tx_id)
+  values (
+    v_label_coins,
+    format('MAI Record Label tip split - artist: %s, track: %s', p_artist_id, p_track_id),
+    p_artist_id,
+    v_transaction_id
+  );
 
   return jsonb_build_object(
     'success', true,
@@ -428,7 +442,7 @@ begin
       )
       from public.record_label_contracts
       where artist_id = v_artist_id
-        and status in ('pending_signature', 'active')
+        and status in ('pending_signature', 'pending_notarization', 'active')
       order by created_at desc
       limit 1
     )

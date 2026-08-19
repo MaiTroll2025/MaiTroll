@@ -17,6 +17,7 @@ interface TopLiveBarProps {
   viewerCount?: number;
   likeCount?: number;
   onLike?: () => void;
+  onViewerCountClick?: () => void;
 }
 
 export default function TopLiveBar({
@@ -32,6 +33,7 @@ export default function TopLiveBar({
   viewerCount,
   likeCount,
   onLike,
+  onViewerCountClick,
 }: TopLiveBarProps) {
   const displayViewerCount = viewerCount !== undefined ? viewerCount : (stream.current_viewers || stream.viewer_count || 0);
   const displayLikes = likeCount !== undefined ? likeCount : (stream.total_likes || 0);
@@ -58,7 +60,10 @@ export default function TopLiveBar({
               {hostName}
             </span>
             <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-zinc-400 flex items-center gap-0.5">
+              <span 
+                className="text-[9px] text-zinc-400 flex items-center gap-0.5 cursor-pointer hover:text-zinc-300 transition-colors"
+                onClick={onViewerCountClick}
+              >
                 <Users size={8} className="text-zinc-500" />
                 {displayViewerCount.toLocaleString()}
               </span>
@@ -106,7 +111,10 @@ export default function TopLiveBar({
             {hostName}
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-zinc-300 flex items-center gap-1">
+            <span 
+              className="text-[10px] text-zinc-300 flex items-center gap-1 cursor-pointer hover:text-zinc-200 transition-colors"
+              onClick={onViewerCountClick}
+            >
               <Users size={10} className="text-zinc-400" />
               {displayViewerCount.toLocaleString()}
             </span>

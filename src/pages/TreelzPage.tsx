@@ -44,6 +44,7 @@ import {
   downloadTreelzVideo,
 } from '@/services/treelzService'
 import { useAuthStore } from '@/lib/store'
+import { supabase } from '@/lib/supabase'
 import type { TreelzFeedCursor, TreelzPost } from '@/types/treelz'
 
 const CATEGORIES = [
@@ -86,6 +87,8 @@ export default function TreelzPage() {
   const [showMore, setShowMore] = useState(false)
 
   const [settings] = useState(loadTreelzSettings())
+
+  const [followedAuthors, setFollowedAuthors] = useState<Record<string, boolean>>({})
 
   const preloadPreviousRef = useRef<HTMLVideoElement>(null)
   const preloadNextRef = useRef<HTMLVideoElement>(null)
@@ -242,6 +245,62 @@ export default function TreelzPage() {
       toast.error('Unable to load this creator')
     }
   }, [currentPost?.author, user?.id])
+
+  const handleFollowAuthor = useCallback(async (authorId: string) => {
+    if (!user) {
+      toast.error('Please sign in to follow users')
+      return
+    }
+
+    const currentlyFollowing = !!followedAuthors[authorId]
+
+    try {
+      if (currentlyFollowing) {
+        const { error } = await supabase
+          .from('user_follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', authorId)
+        if (error) throw error
+        setFollowedAuthors((prev) => ({ ...prev, [authorId]: false }))
+        toast.success('Unfollowed')
+      } else {
+        const { error } = await supabase
+          .from('user_follows')
+          .insert({ follower_id: user.id, following_id: authorId })
+        if (error) throw error
+        setFollowedAuthors((prev) => ({ ...prev, [authorId]: true }))
+        toast.success('Following')
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update follow')
+    }
+  }, [user, followedAuthors])
+
+  useEffect(() => {
+    if (!currentPost?.author?.id || !user?.id) return
+
+    let cancelled = false
+
+    const checkFollow = async () => {
+      const { data } = await supabase
+        .from('user_follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', currentPost.author!.id)
+        .maybeSingle()
+
+      if (!cancelled) {
+        setFollowedAuthors((prev) => ({
+          ...prev,
+          [currentPost.author!.id]: !!data,
+        }))
+      }
+    }
+
+    checkFollow()
+    return () => { cancelled = true }
+  }, [currentPost?.author?.id, user?.id])
 
   return (
     <div className="fixed inset-0 flex h-[100dvh] w-full flex-col overflow-hidden bg-[#03050b] text-white">
@@ -696,10 +755,14 @@ function CreatorOverlay({
   post,
   onCreatorClick,
   onMore,
+  onFollow,
+  isFollowing,
 }: {
   post: TreelzPost
   onCreatorClick: () => void
   onMore: () => void
+  onFollow?: (authorId: string) => void
+  isFollowing?: boolean
 }) {
   return (
     <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between bg-gradient-to-b from-black/75 via-black/25 to-transparent p-4">

@@ -22,6 +22,7 @@ interface MobileAudienceTickerProps {
   likes?: number
   maxVisible?: number
   onModerateUser?: (info: { userId: string; username?: string; role?: string }) => void
+  onViewerCountClick?: () => void
   className?: string
 }
 
@@ -33,6 +34,7 @@ export default function MobileAudienceTicker({
   likes = 0,
   maxVisible = 8,
   onModerateUser,
+  onViewerCountClick,
   className = '',
 }: MobileAudienceTickerProps) {
   const isStaff = useMemo(() => {
@@ -67,10 +69,14 @@ export default function MobileAudienceTicker({
   return (
     <div className={cn('flex w-full items-center gap-2', className)}>
       {/* Viewer count chip */}
-      <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-black/40 px-2 py-1 text-[10px] font-bold text-white/80 backdrop-blur-md">
+      <button
+        type="button"
+        onClick={onViewerCountClick}
+        className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-black/40 px-2 py-1 text-[10px] font-bold text-white/80 backdrop-blur-md hover:bg-white/10 transition-colors"
+      >
         <Users className="h-3 w-3 text-cyan-300" />
         {viewerCount}
-      </div>
+      </button>
 
       {/* Likes chip */}
       {likes > 0 && (

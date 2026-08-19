@@ -54,7 +54,7 @@ begin
   select * into v_contract
   from public.record_label_contracts
   where artist_id = v_track.artist_id
-    and status in ('pending_signature', 'active')
+    and status in ('pending_signature', 'pending_notarization', 'active')
   order by created_at desc
   limit 1;
   if not found then

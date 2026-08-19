@@ -42,6 +42,7 @@ import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import GiftBoxModal from '../../components/broadcast/GiftBoxModal'
 import UserActionModal from '../../components/broadcast/UserActionModal'
+import ViewerUserActionModal from '../../components/broadcast/ViewerUserActionModal'
 import ModActionsPopup from '../../components/broadcast/ModActionsPopup'
 import { getGiftVisualConfig } from '../../lib/giftVisuals'
 import { hydrateGiftForOverlay } from '../../lib/gifts'
@@ -369,74 +370,78 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
    const videoTrackId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
    const audioTrackId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
 
-  // Use refs to track what we actually attached, so we only detach/reattach
-  // when the underlying track truly changes.
-  const attachedVideoTrackRef = useRef<RemoteVideoTrack | null>(null)
-  const attachedAudioIdRef = useRef<string | null>(null)
+   // Use refs to track what we actually attached, so we only detach/reattach
+   // when the underlying track truly changes.
+   const attachedVideoTrackRef = useRef<RemoteVideoTrack | null>(null)
+   const attachedAudioIdRef = useRef<string | null>(null)
 
    useEffect(() => {
-    const videoEl = videoRef.current
-    if (!videoEl) return
+     const videoEl = videoRef.current
+     if (!videoEl) return
 
-    const previousTrack = attachedVideoTrackRef.current
-    const previousTrackId = previousTrack?.mediaStreamTrack?.id || previousTrack?.sid || null
-    const nextTrackId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
+     const previousTrack = attachedVideoTrackRef.current
+     const previousTrackId = previousTrack?.mediaStreamTrack?.id || previousTrack?.sid || null
+     const nextTrackId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
 
-    if (previousTrackId && nextTrackId && previousTrackId === nextTrackId && previousTrack && videoTrack) {
-      return
-    }
+     if (previousTrackId && nextTrackId && previousTrackId === nextTrackId && previousTrack) {
+       return
+     }
 
-    if (previousTrack) {
-      try {
-        previousTrack.detach()
-      } catch {
-        // ignore
-      }
-      attachedVideoTrackRef.current = null
-    }
+     if (previousTrack) {
+       try {
+         previousTrack.detach()
+       } catch {
+         // ignore
+       }
+       attachedVideoTrackRef.current = null
+     }
 
-    if (!videoTrack) {
-      videoEl.srcObject = null
-      return
-    }
+     if (!videoTrack) {
+       if (previousTrack) {
+         return
+       }
+       videoEl.srcObject = null
+       return
+     }
 
-    let cancelled = false
+     let cancelled = false
 
-    const attachAndPlay = async () => {
-      try {
-        videoEl.autoplay = true
-        videoEl.playsInline = true
-        videoEl.muted = true
-        videoEl.setAttribute('playsinline', '')
-        videoEl.setAttribute('webkit-playsinline', '')
+     const attachAndPlay = async () => {
+       try {
+         videoEl.autoplay = true
+         videoEl.playsInline = true
+         videoEl.muted = true
+         videoEl.setAttribute('playsinline', '')
+         videoEl.setAttribute('webkit-playsinline', '')
 
-        videoTrack.attach(videoEl)
-        attachedVideoTrackRef.current = videoTrack
+         videoTrack.attach(videoEl)
+         attachedVideoTrackRef.current = videoTrack
 
-        if (!cancelled) {
-          await videoEl.play()
-        }
-      } catch (error) {
-        console.warn('[ViewerPage] Mobile remote video failed:', error)
-      }
-    }
+         if (!cancelled) {
+           await videoEl.play()
+         }
+       } catch (error) {
+         console.warn('[ViewerPage] Mobile remote video failed:', error)
+       }
+     }
 
-    void attachAndPlay()
+     void attachAndPlay()
 
-    return () => {
-      cancelled = true
+     return () => {
+       cancelled = true
 
-      try {
-        videoTrack.detach(videoEl)
-      } catch {
-        // ignore
-      }
+       try {
+         videoTrack.detach(videoEl)
+       } catch {
+         // ignore
+       }
 
-      if (attachedVideoTrackRef.current === videoTrack) {
-        attachedVideoTrackRef.current = null
-      }
-    }
-  }, [videoTrack, videoTrackId])
+       if (attachedVideoTrackRef.current === videoTrack) {
+         attachedVideoTrackRef.current = null
+       }
+     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [videoTrackId, trackTick])
 
   useEffect(() => {
     const audioEl = audioRef.current
@@ -1045,6 +1050,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     role?: string
     createdAt?: string
   } | null>(null)
+  const [showViewerAction, setShowViewerAction] = useState(false)
   const [selectedSeatUserId, setSelectedSeatUserId] = useState<string | null>(null)
   const [raidTarget, setRaidTarget] = useState<{ userId: string; houseId: string } | null>(null)
   const [viewerError, setViewerError] = useState<string | null>(null)
@@ -1446,27 +1452,22 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     ? (stream as any).seat_prices.length
     : 1
 
-  const { boxCount: hookBoxCount } = useBoxCount({
-    streamId: streamId || '',
-    initialBoxCount: ((stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) + 1 : undefined) || (stream as any)?.box_count || defaultSeatCount || 1,
-    isHost: false,
-  })
+   const { boxCount: hookBoxCount } = useBoxCount({
+     streamId: streamId || '',
+     initialBoxCount: ((stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) + 1 : undefined) || (stream as any)?.box_count || defaultSeatCount || 1,
+     isHost: false,
+   })
 
-   const effectiveBoxCount = useMemo(() => {
-     // Celeb streams do not have guest seats — only the broadcaster tile.
-     if ((stream as any)?.stream_type === 'celeb_stream') return 1
+    const effectiveBoxCount = useMemo(() => {
+      // Celeb streams do not have guest seats — only the broadcaster tile.
+      if ((stream as any)?.stream_type === 'celeb_stream') return 1
 
-     // box_count is the authoritative total-box count (including broadcaster).
-     // seat_count is guest-seat-only for new data, but old rows may equal box_count.
-     const boxCount = Number((stream as any)?.box_count ?? 0)
-     if (boxCount > 0) {
-       return Math.max(1, Math.min(MAX_TOTAL_BOXES, boxCount))
-     }
-
-     const seatCount = (stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) : undefined
-     if (seatCount !== undefined) {
-       if (seatCount === 0) return 1 // broadcaster only, 1 box
-       return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCount + 1))
+      // seat_count is guest-seat count (broadcaster is NOT a seat).
+      // Total boxes = guest seats + 1 broadcaster box.
+      const seatCount = (stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) : undefined
+      if (seatCount !== undefined) {
+        if (seatCount === 0) return 1 // broadcaster only, 1 box
+        return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCount + 1))
      }
 
      const seatCountFromPrices = Array.isArray((stream as any)?.seat_prices)
@@ -2301,6 +2302,7 @@ const isActive = isStreamActive(stream)
           role: 'anonymous',
           createdAt: null,
         })
+        setShowViewerAction(!isModOrHigher)
         return
       }
       toast.error('Invalid user identifier')
@@ -2333,11 +2335,12 @@ const isActive = isStreamActive(stream)
         role: data.role || data.troll_role || info.role,
         createdAt: info.createdAt,
       })
+      setShowViewerAction(!isModOrHigher)
     } catch (err) {
       console.error('[MOD TARGET RESOLUTION] Error resolving profile:', err)
       toast.error('Failed to resolve user profile')
     }
-  }, [])
+  }, [isModOrHigher])
 
   const pushFloatingSystemMessage = useCallback((content: string) => {
     const activeUsername = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
@@ -4214,11 +4217,33 @@ useStreamRealtime(
                       ? {
                           role: 'button' as const,
                           tabIndex: 0,
-                          onClick: () => setSelectedSeatUserId(seatUserId),
+                          onClick: () => {
+                            if (isModOrHigher) {
+                              setSelectedSeatUserId(seatUserId)
+                            } else {
+                              const seatUser = userProfiles?.[seatUserId]
+                              void handleOpenUserAction({
+                                userId: seatUserId,
+                                username: seat.displayName || seatUser?.username,
+                                role: seatUser?.role || seatUser?.troll_role,
+                                createdAt: seatUser?.created_at,
+                              })
+                            }
+                          },
                           onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
                             if (event.key === 'Enter' || event.key === ' ') {
                               event.preventDefault();
-                              setSelectedSeatUserId(seatUserId);
+                              if (isModOrHigher) {
+                                setSelectedSeatUserId(seatUserId)
+                              } else {
+                                const seatUser = userProfiles?.[seatUserId]
+                                void handleOpenUserAction({
+                                  userId: seatUserId,
+                                  username: seat.displayName || seatUser?.username,
+                                  role: seatUser?.role || seatUser?.troll_role,
+                                  createdAt: seatUser?.created_at,
+                                })
+                              }
                             }
                           },
                         }
@@ -4295,12 +4320,24 @@ useStreamRealtime(
                           <div className="absolute inset-x-3 bottom-3 z-20 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/55 px-3 py-2 backdrop-blur-md">
                             <div className="min-w-0 flex-1">
                               {seatUserId ? (
-                                <SeatCityStatusOrb
-                                  userId={seatUserId}
-                                  broadcasterId={hostId}
-                                  isBroadOfficer={isOfficer}
-                                  onClick={() => setSelectedSeatUserId(seatUserId)}
-                                />
+                                 <SeatCityStatusOrb
+                                   userId={seatUserId}
+                                   broadcasterId={hostId}
+                                   isBroadOfficer={isOfficer}
+                                   onClick={() => {
+                                     if (isModOrHigher) {
+                                       setSelectedSeatUserId(seatUserId)
+                                     } else {
+                                       const seatUser = userProfiles?.[seatUserId]
+                                       void handleOpenUserAction({
+                                         userId: seatUserId,
+                                         username: seat.displayName || seatUser?.username,
+                                         role: seatUser?.role || seatUser?.troll_role,
+                                         createdAt: seatUser?.created_at,
+                                       })
+                                     }
+                                   }}
+                                 />
                               ) : (
                                 <>
                                   <p className="truncate text-xs font-black text-white">Seat {seat.seatIndex}</p>
@@ -4362,11 +4399,33 @@ useStreamRealtime(
                 ? {
                     role: 'button' as const,
                     tabIndex: 0,
-                    onClick: () => setSelectedSeatUserId(seatUserId),
+                    onClick: () => {
+                      if (isModOrHigher) {
+                        setSelectedSeatUserId(seatUserId)
+                      } else {
+                        const seatUser = userProfiles?.[seatUserId]
+                        void handleOpenUserAction({
+                          userId: seatUserId,
+                          username: seat.displayName || seatUser?.username,
+                          role: seatUser?.role || seatUser?.troll_role,
+                          createdAt: seatUser?.created_at,
+                        })
+                      }
+                    },
                     onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        setSelectedSeatUserId(seatUserId);
+                        if (isModOrHigher) {
+                          setSelectedSeatUserId(seatUserId)
+                        } else {
+                          const seatUser = userProfiles?.[seatUserId]
+                          void handleOpenUserAction({
+                            userId: seatUserId,
+                            username: seat.displayName || seatUser?.username,
+                            role: seatUser?.role || seatUser?.troll_role,
+                            createdAt: seatUser?.created_at,
+                          })
+                        }
                       }
                     },
                   }
@@ -4473,12 +4532,24 @@ useStreamRealtime(
                     )}>
                       <div className="min-w-0 flex-1">
                         {seatUserId ? (
-                          <SeatCityStatusOrb
-                            userId={seatUserId}
-                            broadcasterId={hostId}
-                            isBroadOfficer={isOfficer}
-                            onClick={() => setSelectedSeatUserId(seatUserId)}
-                          />
+                           <SeatCityStatusOrb
+                             userId={seatUserId}
+                             broadcasterId={hostId}
+                             isBroadOfficer={isOfficer}
+                             onClick={() => {
+                               if (isModOrHigher) {
+                                 setSelectedSeatUserId(seatUserId)
+                               } else {
+                                 const seatUser = userProfiles?.[seatUserId]
+                                 void handleOpenUserAction({
+                                   userId: seatUserId,
+                                   username: seat.displayName || seatUser?.username,
+                                   role: seatUser?.role || seatUser?.troll_role,
+                                   createdAt: seatUser?.created_at,
+                                 })
+                               }
+                             }}
+                           />
                         ) : (
                           <>
                             <p className={cn('truncate font-black text-white', isMobileViewer ? 'text-[7px]' : 'text-xs')}>Seat {seat.seatIndex}</p>
@@ -5458,7 +5529,7 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
               showModActionMenu ? (
                 <ModActionsPopup
                   isOpen={true}
-                  onClose={() => setUserActionTarget(null)}
+                  onClose={() => { setUserActionTarget(null); setShowViewerAction(false) }}
                   targetUser={{
                     id: userActionTarget.userId,
                     username: userActionTarget.username || '',
@@ -5471,9 +5542,18 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
                   hostId={hostId}
                   currentUserId={user?.id}
                 />
+              ) : showViewerAction ? (
+                <ViewerUserActionModal
+                  isOpen={true}
+                  onClose={() => { setUserActionTarget(null); setShowViewerAction(false) }}
+                  userId={userActionTarget.userId}
+                  username={userActionTarget.username || ''}
+                  avatarUrl={userProfiles?.[userActionTarget.userId]?.avatar_url || null}
+                  streamId={streamId || ''}
+                />
               ) : (
                 <UserActionModal
-                  onClose={() => setUserActionTarget(null)}
+                  onClose={() => { setUserActionTarget(null); setShowViewerAction(false) }}
                   userId={userActionTarget.userId}
                   streamId={streamId || ''}
                   username={userActionTarget.username}

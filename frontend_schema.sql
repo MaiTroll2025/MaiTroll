@@ -2526,7 +2526,7 @@ CREATE TABLE IF NOT EXISTS public.stream_smoke_events (
   stream_id uuid NOT NULL REFERENCES public.streams(id) ON DELETE CASCADE,
   created_by uuid NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
   is_active boolean DEFAULT true,
-  seat_count integer DEFAULT 6 CHECK (seat_count >= 1 AND seat_count <= 12),
+  seat_count integer DEFAULT 6 CHECK (seat_count >= 0 AND seat_count <= 6),
   raffle_enabled boolean DEFAULT true,
   troll_drop_enabled boolean DEFAULT true,
   song_queue_enabled boolean DEFAULT true,
@@ -34163,7 +34163,7 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Only admin or stream host can start a smoke event');
   END IF;
 
-  p_seat_count := GREATEST(1, LEAST(12, p_seat_count));
+  p_seat_count := GREATEST(0, LEAST(6, p_seat_count));
 
   UPDATE public.stream_smoke_events
   SET is_active = false, ended_at = now(), updated_at = now()
@@ -35092,7 +35092,7 @@ CREATE TABLE IF NOT EXISTS public.stream_smoke_events (
   stream_id uuid NOT NULL REFERENCES public.streams(id) ON DELETE CASCADE,
   created_by uuid NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
   is_active boolean DEFAULT true,
-  seat_count integer DEFAULT 6 CHECK (seat_count >= 1 AND seat_count <= 12),
+  seat_count integer DEFAULT 6 CHECK (seat_count >= 0 AND seat_count <= 6),
   raffle_enabled boolean DEFAULT true,
   troll_drop_enabled boolean DEFAULT true,
   song_queue_enabled boolean DEFAULT true,

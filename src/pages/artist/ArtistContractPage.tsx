@@ -14,6 +14,7 @@ import {
   Music,
   ShieldCheck,
   UserCheck,
+  Download,
 } from 'lucide-react'
 
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
@@ -22,6 +23,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
+import { downloadPDF } from '@/services/notaryPDF'
+import type { NotaryDocument, DocumentSignature, DocumentStamp } from '@/types/notary'
 
 type ContractTier = 'probation' | 'standard' | 'tier_90_10' | 'tier_95_5'
 
@@ -197,21 +200,58 @@ export default function ArtistContractPage() {
     setSubmitting(true)
 
     try {
-      const { data, error } = await recordLabelService.acceptContract(contract.id)
+      const { data, error } = await supabase.rpc('accept_contract_with_notary', {
+        p_contract_id: contract.id,
+        p_user_id: user?.id,
+        p_legal_name: legalName || user?.user_metadata?.full_name || user?.email || 'Artist',
+        p_typed_signature: legalName || user?.user_metadata?.full_name || user?.email || 'Artist',
+      })
 
       if (error) throw error
+      if (!data?.success) throw new Error(data?.error || 'Failed to accept contract')
 
       setAccepted(true)
       toast.success('Contract accepted successfully! Welcome to MAI Record Label.')
 
-      if (data) {
-        setContract(data)
+      if (data?.contract_id) {
+        const refreshed = await recordLabelService.getArtistContract(user.id)
+        if (refreshed.data) {
+          setContract(refreshed.data)
+        }
       }
     } catch (error: any) {
       console.error('[ArtistContractPage] Accept contract failed:', error)
       toast.error(error?.message || 'Failed to accept contract. Please try again.')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleDownloadContract = async () => {
+    if (!contract?.document_id) return
+
+    try {
+      const [docRes, sigRes, stampRes] = await Promise.all([
+        supabase.from('documents').select('*').eq('id', contract.document_id).maybeSingle(),
+        supabase.from('document_signatures').select('*').eq('document_id', contract.document_id).order('signed_at', { ascending: false }),
+        supabase.from('document_stamps').select('*').eq('document_id', contract.document_id).eq('is_valid', true).maybeSingle(),
+      ])
+
+      if (docRes.error) throw docRes.error
+      if (!docRes.data) throw new Error('Document not found')
+
+      const doc = docRes.data as NotaryDocument
+      const sigs = (sigRes.data || []) as DocumentSignature[]
+      const stp = (stampRes.data || null) as DocumentStamp | null
+
+      downloadPDF({
+        document: doc,
+        signatures: sigs,
+        stamp: stp,
+      })
+    } catch (err: any) {
+      console.error('Failed to download contract:', err)
+      toast.error(err?.message || 'Failed to download contract')
     }
   }
 
@@ -314,6 +354,11 @@ export default function ArtistContractPage() {
               <p className={MaiTrollTheme.text.muted}>
                 Signed on: {formatDate(contract.artist_signed_at)}
               </p>
+              {contract.notarized_at && (
+                <p className={MaiTrollTheme.text.muted}>
+                  Notarized on: {formatDate(contract.notarized_at)}
+                </p>
+              )}
               <p className={MaiTrollTheme.text.muted}>
                 Status: <span className="text-green-400 font-semibold capitalize">{contract.status.replace('_', ' ')}</span>
               </p>
@@ -324,6 +369,12 @@ export default function ArtistContractPage() {
                 <Button onClick={handleDownloadHTML} className={MaiTrollTheme.components.buttonSecondary}>
                   Download HTML
                 </Button>
+                {contract.document_id && (
+                  <Button onClick={handleDownloadContract} className={MaiTrollTheme.components.buttonPrimary}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Notarized Contract
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

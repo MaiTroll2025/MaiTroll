@@ -197,7 +197,7 @@ create index if not exists idx_record_label_contract_status
 -- Only one current active/pending contract.
 create unique index if not exists uq_record_label_current_contract
   on public.record_label_contracts(artist_id)
-  where status in ('pending_signature', 'active');
+  where status in ('pending_signature', 'pending_notarization', 'active');
 
 -- ============================================================
 -- ARTIST BALANCES

@@ -84,6 +84,7 @@ export const WEEKLY_CASHOUT_LIMIT = 10;
 // Grants 20 rolling cashouts (vs 10) and double coin requirements per tier.
 export const MAI_PAY_PLUS_PRICE_USD = 9.99;
 export const MAI_PAY_PLUS_ITEM_KEY = 'mai_pay_plus';
+export const MAI_PAY_PLUS_COIN_COST = 999;
 
 // ============================================================================
 // HELPER FUNCTIONS

@@ -19,13 +19,13 @@ export default function Withdraw() {
 
     const { data } = await supabase
       .from("user_profiles")
-      .select("troll_coins, paypal_email, cashapp_handle, venmo_handle, mai_pay_plus")
+      .select("troll_coins, paypal_email, cashapp_handle, venmo_handle, mai_pay_plus, mai_pay_plus_expires_at")
       .eq("id", user.id)
       .maybeSingle();
 
     if (data) {
       setBalance(data?.troll_coins ?? 0);
-      setIsMaiPayPlus(data?.mai_pay_plus === true);
+      setIsMaiPayPlus(data?.mai_pay_plus === true && (!data?.mai_pay_plus_expires_at || new Date(data.mai_pay_plus_expires_at) > new Date()));
       if (data.paypal_email) {
         setPayoutMethod('paypal');
         setProviderUsername(data.paypal_email);

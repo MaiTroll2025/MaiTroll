@@ -104,16 +104,16 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.start_broadcast_with_capacity_check(uuid) TO authenticated, service_role;
 
--- 2. Set start cap to 2 broadcasters, enabled, restrictions not disabled
+-- 2. Set start cap to 10 broadcasters, enabled, restrictions not disabled
 INSERT INTO public.admin_settings (setting_key, setting_value, description, updated_at)
 VALUES (
   'broadcast_start_cap_max',
-  '{"value": 2}',
-  'Max concurrent broadcasters (temp 2-week limit)',
+  '{"value": 10}',
+  'Max concurrent broadcasters',
   NOW()
 )
 ON CONFLICT (setting_key) DO UPDATE SET
-  setting_value = '{"value": 2}',
+  setting_value = '{"value": 10}',
   updated_at = NOW();
 
 INSERT INTO public.admin_settings (setting_key, setting_value, description, updated_at)
@@ -172,16 +172,16 @@ BEGIN
   END IF;
 END $$;
 
--- 5. Set seat cap to 2 total boxes (1 broadcaster + 1 guest) for first 2 weeks
+-- 5. Set seat cap to 10 total boxes for broadcasts
 INSERT INTO public.admin_settings (setting_key, setting_value, description, updated_at)
 VALUES (
   'broadcast_seat_cap_max',
-  '{"value": 2}',
-  'Max total boxes per broadcast including broadcaster (temp 2-week limit)',
+  '{"value": 10}',
+  'Max total boxes per broadcast including broadcaster',
   NOW()
 )
 ON CONFLICT (setting_key) DO UPDATE SET
-  setting_value = '{"value": 2}',
+  setting_value = '{"value": 10}',
   updated_at = NOW();
 
 INSERT INTO public.admin_settings (setting_key, setting_value, description, updated_at)

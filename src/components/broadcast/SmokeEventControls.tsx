@@ -53,7 +53,7 @@ export default function SmokeEventControls({
             min={1}
             max={12}
             value={seatCount}
-            onChange={(e) => setSeatCount(Math.max(1, Math.min(12, parseInt(e.target.value) || 1)))}
+            onChange={(e) => setSeatCount(Math.max(1, Math.min(6, parseInt(e.target.value) || 1)))}
             className="w-12 bg-transparent text-white text-center text-sm outline-none"
           />
           <span className="text-xs text-zinc-400">seats</span>
