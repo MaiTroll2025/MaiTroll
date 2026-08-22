@@ -23,7 +23,6 @@
     "contentInset": "always",
     "allowMixedContent": false,
     "preferredContentMode": "mobile",
-    "scheme": "https",
     "hostname": "maitroll.com"
   },
   "plugins": {
