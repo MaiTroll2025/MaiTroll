@@ -1911,7 +1911,12 @@ export function useBattleViewController({
             onReturnToStream?.();
             return;
           }
-          navigateBackToOwnBroadcast();
+          if (winnerStreamId) {
+            navigate(`/stream/${winnerStreamId}`);
+            onReturnToStream?.();
+            return;
+          }
+          navigate('/');
           onReturnToStream?.();
         } else {
           navigateBackToOwnBroadcast();

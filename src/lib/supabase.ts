@@ -436,8 +436,10 @@ export interface UserProfile {
   drivers_test_passed?: boolean
   driver_test_passed_at?: string | null
   insurance_required?: boolean
-  license_status?: 'none' | 'active' | 'suspended' | 'expired' | string
-  homeowners_insurance_expiry?: string | null
+   license_status?: 'none' | 'active' | 'suspended' | 'expired' | string
+   license_suspended_at?: string | null
+   license_restored_at?: string | null
+   homeowners_insurance_expiry?: string | null
   car_insurance_expiry?: string | null
   broadcast_insurance_expiry?: string | null
 

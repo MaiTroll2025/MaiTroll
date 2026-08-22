@@ -5,6 +5,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { CityAd, AdPlacement } from '../../types/cityAds';
 import { supabase } from '../../lib/supabase';
+import { APP_DATA_REFETCH_EVENT_NAME } from '../../lib/appEvents';
 import { queueCityAdImpression } from '../../lib/batchWrites';
 import PromoAdCard from './PromoAdCard';
 
@@ -124,18 +125,29 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
     };
   }, [ads.length, isHovered, rotateToNext]);
 
-  // Fetch ads once per placement and avoid repeated fetches from rerenders
-  useEffect(() => {
-    if (fetchedPlacementRef.current !== placement) {
-      fetchedPlacementRef.current = placement
-      hasFetchedRef.current = false
-    }
+   // Fetch ads once per placement and avoid repeated fetches from rerenders
+   useEffect(() => {
+     if (fetchedPlacementRef.current !== placement) {
+       fetchedPlacementRef.current = placement
+       hasFetchedRef.current = false
+     }
 
-    if (!hasFetchedRef.current) {
-      fetchAds()
-      hasFetchedRef.current = true
-    }
-  }, [placement, fetchAds]);
+     if (!hasFetchedRef.current) {
+       fetchAds()
+       hasFetchedRef.current = true
+     }
+   }, [placement, fetchAds]);
+
+   // Refetch ads when the app comes back into focus
+   useEffect(() => {
+     const handleAppRefetch = () => {
+       hasFetchedRef.current = false
+       fetchAds()
+     }
+
+     window.addEventListener(APP_DATA_REFETCH_EVENT_NAME, handleAppRefetch)
+     return () => window.removeEventListener(APP_DATA_REFETCH_EVENT_NAME, handleAppRefetch)
+   }, [fetchAds])
 
   // Track impression for current ad when it changes
   useEffect(() => {

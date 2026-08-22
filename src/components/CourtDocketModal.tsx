@@ -10,11 +10,12 @@ interface CourtDocketModalProps {
   isOpen: boolean
   onClose: () => void
   onSelectCase?: (caseData: any) => void
+  onSentenceCase?: (caseData: any) => void
   isJudge: boolean
   courtId: string
 }
 
-export default function CourtDocketModal({ isOpen, onClose, onSelectCase, isJudge, courtId }: CourtDocketModalProps) {
+export default function CourtDocketModal({ isOpen, onClose, onSelectCase, onSentenceCase, isJudge, courtId }: CourtDocketModalProps) {
   const [dockets, setDockets] = useState<any[]>([])
   const [selectedDocketId, setSelectedDocketId] = useState<string | null>(null)
   const [cases, setCases] = useState<any[]>([])
@@ -35,7 +36,7 @@ export default function CourtDocketModal({ isOpen, onClose, onSelectCase, isJudg
     const { data, error } = await supabase
       .from('court_dockets')
       .select('*')
-      .order('court_date', { ascending: true })
+      .order('court_date', { ascending: false })
       .limit(10)
 
     if (error) {
@@ -155,6 +156,15 @@ export default function CourtDocketModal({ isOpen, onClose, onSelectCase, isJudg
         toast.error(data?.error || 'Failed to create case')
         return
       }
+
+      const { notifyAdminCourtStarted } = await import('../lib/notifications')
+      notifyAdminCourtStarted(
+        data?.case_id || '',
+        addDefendantId,
+        addUsername || 'Unknown',
+        addReason.trim(),
+        new Date().toLocaleDateString()
+      ).catch((e) => console.warn('[CourtDocketModal] Failed to notify admins:', e))
 
       toast.success(`Case opened against @${addUsername || 'defendant'}. Call them to stand to issue a ruling.`)
       setShowAddCase(false)
@@ -386,6 +396,16 @@ export default function CourtDocketModal({ isOpen, onClose, onSelectCase, isJudg
                             >
                               <Gavel size={14} />
                               Call to Stand
+                            </button>
+                          )}
+
+                          {onSentenceCase && (
+                            <button
+                              onClick={() => onSentenceCase(caseItem)}
+                              className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded flex items-center justify-center gap-2 transition-colors"
+                            >
+                              <Gavel size={14} />
+                              Issue Sentence
                             </button>
                           )}
                           

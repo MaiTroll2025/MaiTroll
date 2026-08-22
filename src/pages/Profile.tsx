@@ -913,6 +913,8 @@ function ProfileInner() {
                     isJailed={!!profile?.is_jailed}
                     onAvatarEdit={() => navigate('/profile/settings')}
                     onCoverEdit={() => navigate('/profile/settings', { state: { openCoverUpload: true } })}
+                    onFollowersClick={() => navigate(`/following/${profile.id}`)}
+                    onFollowingClick={() => navigate(`/following/${profile.id}`)}
                 />
 
                 {/* Role Cards */}

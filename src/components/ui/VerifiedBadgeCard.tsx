@@ -44,9 +44,11 @@ export default function VerifiedBadgeCard() {
 
       // Deduct coins
       const { error: deductError } = await supabase.rpc('spend_coins', {
-        p_user_id: user.id,
-        p_amount: VERIFICATION_COST_COINS,
-        p_description: 'Verified Badge Purchase',
+        p_sender_id: user.id,
+        p_receiver_id: user.id,
+        p_coin_amount: VERIFICATION_COST_COINS,
+        p_source: 'verified_badge',
+        p_item: 'Verified Badge Purchase',
       });
       if (deductError) throw deductError;
 

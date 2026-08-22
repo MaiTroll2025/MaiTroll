@@ -707,10 +707,11 @@ async function handleCheck(
     console.error("[sla-monitor] RPC get_stream_sla_status error:", streamError);
     return withCors(
       {
+        ok: false,
         error: "Failed to fetch SLA status",
         details: process.env.NODE_ENV === "development" ? streamError.message : undefined,
       },
-      500,
+      200,
       req,
     );
   }

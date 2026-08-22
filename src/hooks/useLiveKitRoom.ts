@@ -644,59 +644,63 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
     []
   );
 
-  // Join LiveKit as publisher
-  const joinAsPublisher = useCallback(async (userId: string, tokenOverride?: string | null) => {
-    // Guard: prevent multiple simultaneous connection attempts
-    if (joinedRef.current) {
-      console.warn('[useLiveKitRoom] Join prevented: already joined');
-      return roomRef.current;
-    }
+   // Join LiveKit as publisher
+   const joinAsPublisher = useCallback(async (userId: string, tokenOverride?: string | null) => {
+     const t0 = Date.now()
+     // Guard: prevent multiple simultaneous connection attempts
+     if (joinedRef.current) {
+       console.warn('[useLiveKitRoom] Join prevented: already joined');
+       return roomRef.current;
+     }
 
-    if (joiningRef.current) {
-      console.warn('[useLiveKitRoom] Join prevented: already joining');
-      let attempts = 0;
-      while (joiningRef.current && attempts < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-      }
-      return roomRef.current;
-    }
+     if (joiningRef.current) {
+       console.warn('[useLiveKitRoom] Join prevented: already joining');
+       let attempts = 0;
+       while (joiningRef.current && attempts < 50) {
+         await new Promise(resolve => setTimeout(resolve, 100));
+         attempts++;
+       }
+       return roomRef.current;
+     }
 
-    if (!roomId || !userId) {
-      console.warn('[useLiveKitRoom] Join prevented: missing params');
-      return;
-    }
+     if (!roomId || !userId) {
+       console.warn('[useLiveKitRoom] Join prevented: missing params');
+       return;
+     }
 
-    joiningRef.current = true;
-    setIsJoining(true);
-    setError(null);
-    localUserIdRef.current = userId;
+     joiningRef.current = true;
+     setIsJoining(true);
+     setError(null);
+     localUserIdRef.current = userId;
 
-    const isMobileDevice = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+     const isMobileDevice = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    let room: Room | null = null;
-    let audioTrack: LocalAudioTrack | null = null;
-    let videoTrack: LocalVideoTrack | null = null;
+     let room: Room | null = null;
+     let audioTrack: LocalAudioTrack | null = null;
+     let videoTrack: LocalVideoTrack | null = null;
 
-    try {
-      room = new Room({
-        adaptiveStream: true,
-        dynacast: true,
-        videoCaptureDefaults: {
-          ...videoPreset,
-          facingMode: 'user',
-          frameRate: isMobileDevice ? { ideal: 24, max: 30 } : undefined
-        },
-        audioCaptureDefaults: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
+     try {
+       const tRoomCreate = Date.now()
+       room = new Room({
+         adaptiveStream: true,
+         dynacast: true,
+         videoCaptureDefaults: {
+           ...videoPreset,
+           facingMode: 'user',
+           frameRate: isMobileDevice ? { ideal: 24, max: 30 } : undefined
+         },
+         audioCaptureDefaults: {
+           echoCancellation: true,
+           noiseSuppression: true,
+           autoGainControl: true
+         }
+       });
 
-      roomRef.current = room;
+       roomRef.current = room;
 
-room.on(RoomEvent.ParticipantConnected, handleParticipantJoined);
+       console.log(`[useLiveKitRoom] Room created in ${Date.now() - tRoomCreate}ms`)
+
+       room.on(RoomEvent.ParticipantConnected, handleParticipantJoined);
        room.on(RoomEvent.ParticipantDisconnected, handleParticipantLeft);
        room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
        room.on(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed);
@@ -723,57 +727,62 @@ room.on(RoomEvent.ParticipantConnected, handleParticipantJoined);
         }
       });
 
-      const roomName = getLiveKitRoomName(roomId);
-      const token = tokenOverride || await fetchToken(roomName, userId, userName, true, undefined, 'broadcaster');
-      const url = getLiveKitUrl();
-      const apiKey = getLiveKitApiKey();
+       const roomName = getLiveKitRoomName(roomId);
+       const tToken = Date.now()
+       const token = tokenOverride || await fetchToken(roomName, userId, userName, true, undefined, 'broadcaster');
+       console.log(`[useLiveKitRoom] Token fetched in ${Date.now() - tToken}ms`)
+       const url = getLiveKitUrl();
+       const apiKey = getLiveKitApiKey();
 
-      if (!url || !apiKey) {
-        console.error(`[useLiveKitRoom] Missing LiveKit config: hasUrl=${!!url} hasApiKey=${!!apiKey}`);
-        throw new Error(`Missing LiveKit env vars: VITE_LIVEKIT_URL=${url ? 'set' : 'MISSING'}, VITE_LIVEKIT_API_KEY=${apiKey ? 'set' : 'MISSING'}`);
-      }
+       if (!url || !apiKey) {
+         console.error(`[useLiveKitRoom] Missing LiveKit config: hasUrl=${!!url} hasApiKey=${!!apiKey}`);
+         throw new Error(`Missing LiveKit env vars: VITE_LIVEKIT_URL=${url ? 'set' : 'MISSING'}, VITE_LIVEKIT_API_KEY=${apiKey ? 'set' : 'MISSING'}`);
+       }
 
-      if (!token) {
-        throw new Error('Failed to get LiveKit token from server');
-      }
+       if (!token) {
+         throw new Error('Failed to get LiveKit token from server');
+       }
 
-      audioTrack = prewarmedAudioTrackRef.current || await createLocalAudioTrack();
-      prewarmedAudioTrackRef.current = null;
-      if (!initialAudioEnabled) {
-        await audioTrack.mute();
-      }
+       const tTrackCreate = Date.now()
+       audioTrack = prewarmedAudioTrackRef.current || await createLocalAudioTrack();
+       prewarmedAudioTrackRef.current = null;
+       if (!initialAudioEnabled) {
+         await audioTrack.mute();
+       }
 
-      if (!audioOnly) {
-        if (prewarmedVideoTrackRef.current) {
-          videoTrack = prewarmedVideoTrackRef.current;
-          prewarmedVideoTrackRef.current = null;
-        } else {
-          const { createLocalVideoTrack } = await import('livekit-client');
-          videoTrack = await createLocalVideoTrack({
-            ...videoPreset,
-            facingMode: 'user'
-          });
-        }
-      }
+       if (!audioOnly) {
+         if (prewarmedVideoTrackRef.current) {
+           videoTrack = prewarmedVideoTrackRef.current;
+           prewarmedVideoTrackRef.current = null;
+         } else {
+           const { createLocalVideoTrack } = await import('livekit-client');
+           videoTrack = await createLocalVideoTrack({
+             ...videoPreset,
+             facingMode: 'user'
+           });
+         }
+       }
+       console.log(`[useLiveKitRoom] Tracks created in ${Date.now() - tTrackCreate}ms`)
 
-      setLocalAudioTrack(audioTrack);
-      setLocalVideoTrack(videoTrack);
-      localAudioTrackRef.current = audioTrack;
-      localVideoTrackRef.current = videoTrack;
+       setLocalAudioTrack(audioTrack);
+       setLocalVideoTrack(videoTrack);
+       localAudioTrackRef.current = audioTrack;
+       localVideoTrackRef.current = videoTrack;
 
-      await room.connect(url, token);
-      await waitForRoomConnected(room, 10000);
+       const tConnect = Date.now()
+       await room.connect(url, token);
+       await waitForRoomConnected(room, 10000);
+       console.log(`[useLiveKitRoom] Room connected in ${Date.now() - tConnect}ms`)
 
-      await room.localParticipant.publishTrack(audioTrack);
-      if (videoTrack) {
-        await room.localParticipant.publishTrack(videoTrack);
-      }
+       const tPublish = Date.now()
+       await room.localParticipant.publishTrack(audioTrack);
+       if (videoTrack) {
+         await room.localParticipant.publishTrack(videoTrack);
+       }
+       console.log(`[useLiveKitRoom] Tracks published in ${Date.now() - tPublish}ms`)
 
-      // Small delay to ensure tracks are fully published before marking connected
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      setIsConnected(true);
-      setIsPublishing(true);
+       setIsConnected(true);
+       setIsPublishing(true);
 
       const existingParticipants = room.remoteParticipants ? Array.from(room.remoteParticipants.values()) : [];
       console.log('[useLiveKitRoom] Existing participants after connect:', existingParticipants.map((p: any) => ({
@@ -899,6 +908,7 @@ room.on(RoomEvent.ParticipantConnected, handleParticipantJoined);
     localUserIdRef.current = userId;
 
     try {
+      const t0 = Date.now()
       const room = new Room({
         adaptiveStream: true,
         dynacast: true
@@ -912,7 +922,7 @@ room.on(RoomEvent.ParticipantConnected, handleParticipantJoined);
       room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
       room.on(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed);
       
-// Handle disconnection events to reset state
+      // Handle disconnection events to reset state
       room.on(RoomEvent.Disconnected, () => {
         console.log('[useLiveKitRoom] Room disconnected');
         joinedRef.current = false;
@@ -957,7 +967,9 @@ room.on(RoomEvent.ParticipantConnected, handleParticipantJoined);
         setLastJoinDebug((prev: any) => ({ ...(prev || {}), pre }));
       }
 
+      const tToken = Date.now()
       const token = await fetchToken(roomName, userId, userName, publishCapable, providedStreamId ? JSON.stringify({ streamId: providedStreamId }) : undefined, publishCapable ? 'seat-publisher' : 'audience');
+      console.log(`[useLiveKitRoom] Audience token fetched in ${Date.now() - tToken}ms`)
       const url = getLiveKitUrl();
       const apiKey = getLiveKitApiKey();
 
@@ -983,8 +995,10 @@ room.on(RoomEvent.ParticipantConnected, handleParticipantJoined);
       }
 
       // Connect to room
+      const tConnect = Date.now()
       await room.connect(url, token);
       await waitForRoomConnected(room, 10000);
+      console.log(`[useLiveKitRoom] Audience room connected in ${Date.now() - tConnect}ms`)
 
        // Get existing participants - guard against undefined
        const existingParticipants = room.remoteParticipants ? Array.from(room.remoteParticipants.values()) : [];

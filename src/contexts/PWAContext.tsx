@@ -154,7 +154,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
   const [connectionHealth, setConnectionHealth] = useState<'healthy' | 'degraded' | 'disconnected'>('healthy');
   const [lastRealtimeActivity, setLastRealtimeActivity] = useState(Date.now());
   
-  // Refs
+   // Refs
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const reconnectAttempts = useRef(0);
   
@@ -316,22 +316,20 @@ const isLocalhost =
    
    const RELOAD_GUARD_KEY = 'mt-build-reloaded';
    
-   // Listen for controllerchange to reload once when new SW takes control
-   useEffect(() => {
-     if (!('serviceWorker' in navigator)) return;
-     
-     const handleControllerChange = () => {
-       if (sessionStorage.getItem(RELOAD_GUARD_KEY)) return;
-       sessionStorage.setItem(RELOAD_GUARD_KEY, 'true');
-       window.location.reload();
-     };
-     
-     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
-     
-     return () => {
-       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
-     };
-   }, []);
+    // Listen for controllerchange to notify rather than force reload
+    useEffect(() => {
+      if (!('serviceWorker' in navigator)) return;
+      
+      const handleControllerChange = () => {
+        console.log('[PWA] Service worker updated — user can manually refresh if needed');
+      };
+      
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+      
+      return () => {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      };
+    }, []);
    
    // Clear reload guard after page stabilizes to allow future updates
    useEffect(() => {
@@ -475,55 +473,39 @@ const isLocalhost =
     return () => window.removeEventListener('supabase-realtime-activity', handleRealtimeActivity);
   }, [connectionHealth]);
   
-  // ===== VISIBILITY CHANGE — AUTO UPDATE AFTER INACTIVITY =====
+   // ===== VISIBILITY CHANGE — AUTO UPDATE AFTER INACTIVITY =====
   
-  useEffect(() => {
-    let lastHiddenTime = 0;
-    const INACTIVITY_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-    
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        lastHiddenTime = Date.now();
-      } else if (document.visibilityState === 'visible' && lastHiddenTime > 0) {
-        const awayTime = Date.now() - lastHiddenTime;
-        
-        // If the app was backgrounded for more than the threshold, check for updates
-        if (awayTime > INACTIVITY_THRESHOLD_MS) {
-          console.log(`[PWA] App returned after ${Math.round(awayTime / 1000)}s inactivity, checking for updates`);
-          
-          // Check for service worker updates
-          if (swRegistrationRef.current) {
-            swRegistrationRef.current.update().catch(() => {});
-            
-            // If there's already a waiting worker, auto-activate it
-            if (swRegistrationRef.current.waiting) {
-              console.log('[PWA] Update found after inactivity, auto-activating...');
-              swRegistrationRef.current.waiting.postMessage({ type: 'SKIP_WAITING' });
-              // Small delay to let the new SW activate, then reload
-              setTimeout(() => window.location.reload(), 300);
-            }
-          }
-          
-          // Also dispatch a reconnect event for realtime subscriptions
-          window.dispatchEvent(new CustomEvent('pwa-returned-from-inactivity'));
-        }
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+   useEffect(() => {
+     let lastHiddenTime = 0;
+     const INACTIVITY_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+     
+     const handleVisibilityChange = () => {
+       if (document.visibilityState === 'hidden') {
+         lastHiddenTime = Date.now();
+       } else if (document.visibilityState === 'visible' && lastHiddenTime > 0) {
+         const awayTime = Date.now() - lastHiddenTime;
+         
+         if (awayTime > INACTIVITY_THRESHOLD_MS) {
+           console.log(`[PWA] App returned after ${Math.round(awayTime / 1000)}s inactivity — idle prompt will handle session state`);
+           
+           if (swRegistrationRef.current) {
+             swRegistrationRef.current.update().catch(() => {});
+           }
+           
+           window.dispatchEvent(new CustomEvent('pwa-returned-from-inactivity'));
+         }
+       }
+     };
+     
+     document.addEventListener('visibilitychange', handleVisibilityChange);
+     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+   }, []);
   
   // ===== ACTIONS =====
   
-  const updateApp = useCallback(() => {
+   const updateApp = useCallback(() => {
     if (swState.waitingWorker) {
-      swState.waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-      
-      // Reload after a short delay to allow SW to activate
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      console.log('[PWA] App update available — user can manually refresh');
     }
   }, [swState.waitingWorker]);
   

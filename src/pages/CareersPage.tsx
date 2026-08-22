@@ -29,6 +29,31 @@ interface VolunteerRole {
 
 const volunteerRoles: VolunteerRole[] = [
   {
+    id: 'broadcaster',
+    roleKey: 'broadcaster',
+    title: 'Broadcaster',
+    category: 'Broadcasting',
+    description:
+      'Start your own live broadcast, stream to viewers, and moderate your own channel. Broadcasters are instantly approved to go live and can use Mod Actions.',
+    responsibilities: [
+      'Start and manage live broadcasts on Mai Troll',
+      'Moderate your own broadcast channel',
+      'Engage with your viewers during streams',
+      'Follow Mai Troll community rules',
+    ],
+    powers: [
+      'Go Live broadcasting',
+      'Channel moderation tools',
+      'Use Mod Actions in your own streams',
+      'Invite guests to your broadcast',
+    ],
+    requirements: [
+      'A verified Mai Troll account',
+      'Agreement to follow community guidelines',
+      'Adherence to platform rules',
+    ],
+  },
+  {
     id: 'lead_troll_officer',
     roleKey: 'lead_troll_officer',
     title: 'Lead Troll Officer',
@@ -301,20 +326,43 @@ export default function CareersPage() {
     setIsSubmitting(true)
 
     try {
+      const isBroadcasterRole = selectedRole.roleKey === 'broadcaster'
+
       const { error } = await supabase
         .from('career_applications')
         .insert({
           user_id: user.id,
           position_id: selectedRole.roleKey,
-          status: 'pending',
+          status: isBroadcasterRole ? 'approved' : 'pending',
           application_data: {},
-          lead_officer_approved: null,
+          lead_officer_approved: isBroadcasterRole ? true : null,
         })
 
       if (error) throw error
 
+      // Broadcasters are instantly approved and granted broadcaster status.
+      if (isBroadcasterRole) {
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .update({ is_broadcaster: true, updated_at: new Date().toISOString() })
+          .eq('id', user.id)
+
+        if (profileError) throw profileError
+
+        const currentProfile = useAuthStore.getState().profile
+        if (currentProfile) {
+          useAuthStore.getState().setProfile(
+            { ...currentProfile, is_broadcaster: true },
+            { force: true },
+          )
+        }
+
+        toast.success('You are now approved as a Broadcaster! You can use Mod Actions.')
+      } else {
+        toast.success(`Application submitted for ${selectedRole.title}.`)
+      }
+
       setAppliedIds((previous) => new Set(previous).add(selectedRole.roleKey))
-      toast.success(`Application submitted for ${selectedRole.title}.`)
       setSelectedRole(null)
       setAcknowledged(false)
     } catch (error) {

@@ -1005,6 +1005,25 @@ button:focus-visible {
    PAGE TRANSITIONS
    ============================================ */
 
+/* Route swipe animations */
+@keyframes routeSlideLeft {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes routeSlideRight {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 /* Fade transition */
 .page-enter {
   opacity: 0;

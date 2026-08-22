@@ -110,9 +110,9 @@ const CEOAssistantDashboard = () => {
           .select('id', { count: 'exact', head: true })
           .eq('status', 'pending'),
 
-        // Applications (role requests)
+        // Applications (career applications)
         supabase
-          .from('role_requests')
+          .from('career_applications')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'pending'),
 
@@ -165,8 +165,8 @@ const CEOAssistantDashboard = () => {
 
       // Load applications data
       const { data: applicationsData } = await supabase
-        .from('role_requests')
-        .select('*, user_profiles!role_requests_user_id_fkey(username, display_name)')
+        .from('career_applications')
+        .select('*, user_profiles!user_id(username, display_name)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(50)
@@ -730,7 +730,7 @@ const CEOAssistantDashboard = () => {
               </button>
             </div>
             {applicationsList.length === 0 ? (
-              <p className="text-center text-slate-400 py-8">No pending role requests.</p>
+              <p className="text-center text-slate-400 py-8">No pending career applications.</p>
             ) : (
               <div className="space-y-3">
                 {applicationsList.map((app) => (
@@ -740,7 +740,7 @@ const CEOAssistantDashboard = () => {
                       onClick={() => setExpandedApplication(expandedApplication === app.id ? null : app.id)}
                     >
                       <div>
-                        <p className="font-black text-white text-sm">Role: {app.role_requested || 'Unknown Role'}</p>
+                         <p className="font-black text-white text-sm">Role: {app.position_id ? app.position_id.replace(/_/g, ' ').toUpperCase() : 'Career Application'}</p>
                         <p className="text-xs text-slate-400 mt-1">
                           Applicant: {app.user_profiles?.display_name || app.user_profiles?.username || 'Unknown'} • {new Date(app.created_at).toLocaleDateString()}
                         </p>
@@ -750,12 +750,11 @@ const CEOAssistantDashboard = () => {
                         {expandedApplication === app.id ? <ChevronUp className="text-slate-400 h-5 w-5" /> : <ChevronDown className="text-slate-400 h-5 w-5" />}
                       </div>
                     </div>
-                    {expandedApplication === app.id && (
-                      <div className="p-4 border-t border-white/10 bg-black/30">
-                        {app.message && <p className="text-sm text-slate-300 whitespace-pre-wrap mb-3">{app.message}</p>}
-                        <div className="flex gap-2 justify-end">
-                          <button onClick={(e) => { e.stopPropagation(); supabase.from('role_requests').update({ status: 'approved' }).eq('id', app.id).then(() => { setExpandedApplication(null); loadDashboardStats(); }); }} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded text-xs font-bold hover:bg-emerald-500/20">Approve</button>
-                          <button onClick={(e) => { e.stopPropagation(); supabase.from('role_requests').update({ status: 'rejected' }).eq('id', app.id).then(() => { setExpandedApplication(null); loadDashboardStats(); }); }} className="px-3 py-1.5 bg-red-500/10 text-red-400 rounded text-xs font-bold hover:bg-red-500/20">Reject</button>
+                      {expandedApplication === app.id && (
+                        <div className="p-4 border-t border-white/10 bg-black/30">
+                          <div className="flex gap-2 justify-end">
+                           <button onClick={(e) => { e.stopPropagation(); supabase.from('career_applications').update({ status: 'approved' }).eq('id', app.id).then(() => { setExpandedApplication(null); loadDashboardStats(); }); }} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded text-xs font-bold hover:bg-emerald-500/20">Approve</button>
+                           <button onClick={(e) => { e.stopPropagation(); supabase.from('career_applications').update({ status: 'rejected' }).eq('id', app.id).then(() => { setExpandedApplication(null); loadDashboardStats(); }); }} className="px-3 py-1.5 bg-red-500/10 text-red-400 rounded text-xs font-bold hover:bg-red-500/20">Reject</button>
                         </div>
                       </div>
                     )}

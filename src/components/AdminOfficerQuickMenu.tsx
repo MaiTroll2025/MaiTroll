@@ -83,8 +83,8 @@ const AdminOfficerQuickMenu: React.FC = () => {
 
   const getDashboardPath = () => {
     if (isAdmin) return '/admin';
-    if (isLeadOfficer) return '/Employees';
-    if (isOfficer) return '/Employees';
+    if (isLeadOfficer) return '/department-tools';
+    if (isOfficer) return '/department-tools';
     if (isHR) return '/admin/hr';
     return '/';
   };

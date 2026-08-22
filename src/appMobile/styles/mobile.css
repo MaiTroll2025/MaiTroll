@@ -564,3 +564,52 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ========================================
+   MOBILE VIEWER PAGE - SEATS
+   ======================================== */
+
+.tc-mobile-viewer__seat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 12px;
+}
+
+.tc-mobile-viewer__seat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tc-mobile-viewer__seat-card:hover:not(:disabled) {
+  border-color: rgba(34, 211, 238, 0.4);
+  background: rgba(34, 211, 238, 0.08);
+}
+
+.tc-mobile-viewer__seat-card--locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tc-mobile-viewer__seat-card strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tc-mobile-viewer__seat-card span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: capitalize;
+}

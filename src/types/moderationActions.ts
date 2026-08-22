@@ -219,6 +219,20 @@ export async function rpcModoArrest(
   if (error) {
     return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
   }
+
+  if (data && typeof data === 'object' && data.success) {
+    const targetUsername = (data as any).target_username || 'User'
+    const arrestedBy = (data as any).arrested_by_username || 'Staff'
+    const { notifyAdminUserArrested } = await import('../lib/notifications')
+    notifyAdminUserArrested(
+      targetUserId,
+      targetUsername,
+      reason,
+      severity,
+      arrestedBy
+    ).catch((e) => console.warn('[moderationActions] Failed to notify admins of arrest:', e))
+  }
+
   return data as ModerationActionResult;
 }
 

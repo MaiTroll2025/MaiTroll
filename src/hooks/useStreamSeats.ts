@@ -419,25 +419,24 @@ export function useStreamSeats(
 
       const broadcasterId = _streamData?.user_id || _broadcasterProfile?.id || _broadcasterProfile?.user_id
       let finalPrice = safeNumber(price, 0)
+      let discountApplied = false
 
-      if (broadcasterId && effectiveUserId !== broadcasterId) {
-        const isSubscribed = await checkIsSubscribedToBroadcaster(effectiveUserId, broadcasterId)
-
-        if (isSubscribed && finalPrice > 0) {
-          const discountedPrice = Math.max(
-            0,
-            Math.floor(finalPrice * (1 - SUBSCRIBER_DISCOUNT_PERCENT)),
-          )
-
-          if (discountedPrice !== finalPrice) {
-            console.log(
-              `[useStreamSeats] Subscriber discount applied: ${finalPrice} -> ${discountedPrice} coins`,
+      // Check subscription discount in parallel with optimistic UI — don't block the visual feedback
+      const discountPromise = (async () => {
+        if (broadcasterId && effectiveUserId !== broadcasterId) {
+          const isSubscribed = await checkIsSubscribedToBroadcaster(effectiveUserId, broadcasterId)
+          if (isSubscribed && finalPrice > 0) {
+            const discountedPrice = Math.max(
+              0,
+              Math.floor(finalPrice * (1 - SUBSCRIBER_DISCOUNT_PERCENT)),
             )
+            if (discountedPrice !== finalPrice) {
+              discountApplied = true
+              finalPrice = discountedPrice
+            }
           }
-
-          finalPrice = discountedPrice
         }
-      }
+      })()
 
       const optimisticSeat: SeatSession = {
         id: `optimistic-${Date.now()}`,
@@ -476,12 +475,17 @@ export function useStreamSeats(
       safeSetSeatVersion(v => v + 1)
 
       try {
+        // Wait for discount check to complete before RPC so we send the correct price
+        await discountPromise
+
+        const tRpc = Date.now()
         const { data, error } = await supabase.rpc('join_seat_atomic', {
           p_stream_id: streamId,
           p_seat_index: seatIndex,
           p_price: finalPrice,
           p_user_id: effectiveUserId,
         })
+        console.log(`[useStreamSeats] join_seat_atomic RPC completed in ${Date.now() - tRpc}ms`)
 
         if (error) {
           console.warn('[useStreamSeats] joinSeat rpc error:', error)
@@ -564,24 +568,27 @@ export function useStreamSeats(
       return
     }
 
-    safeSetLeavingSeatId(seatIndex)
+     safeSetLeavingSeatId(seatIndex)
+     const t0 = Date.now()
 
-    const previousSeat = { ...seatsRef.current }
-    const previousMySeat = mySeatRef.current
+     const previousSeat = { ...seatsRef.current }
+     const previousMySeat = mySeatRef.current
 
-    safeSetSeats(prev => { const n = { ...prev }; delete n[seatIndex]; return n })
-    if (mySeatRef.current?.seat_index === seatIndex) {
-      safeSetMySeat(null)
-      mySeatRef.current = null
-    }
-    seatsRef.current = { ...seatsRef.current }
-    delete seatsRef.current[seatIndex]
-    safeSetSeatVersion(v => v + 1)
+     safeSetSeats(prev => { const n = { ...prev }; delete n[seatIndex]; return n })
+     if (mySeatRef.current?.seat_index === seatIndex) {
+       safeSetMySeat(null)
+       mySeatRef.current = null
+     }
+     seatsRef.current = { ...seatsRef.current }
+     delete seatsRef.current[seatIndex]
+     safeSetSeatVersion(v => v + 1)
 
-    try {
-      const { data, error } = await supabase.rpc('leave_seat_atomic', {
-        p_session_id: currentSeat.id,
-      })
+     try {
+       const tRpc = Date.now()
+       const { data, error } = await supabase.rpc('leave_seat_atomic', {
+         p_session_id: currentSeat.id,
+       })
+       console.log(`[useStreamSeats] leave_seat_atomic RPC completed in ${Date.now() - tRpc}ms`)
 
       if (error) {
         console.warn('[useStreamSeats] leaveSeat rpc error:', error)
@@ -915,7 +922,7 @@ export function useStreamSeats(
     onSeatEvent: handleSeatEvent,
   })
 
-  const prevStreamDataRef = useRef<_streamData | null>(null)
+  const prevStreamDataRef = useRef<any | null>(null)
 
   useEffect(() => {
     const prev = prevStreamDataRef.current

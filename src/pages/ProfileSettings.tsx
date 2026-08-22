@@ -473,33 +473,6 @@ export default function ProfileSettings() {
             <BatterySaverToggle />
           </div>
 
-          <div
-            className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass}`}
-          >
-            <div>
-              <p className="font-medium">Minor Account</p>
-              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
-                Enable this only when the account belongs to someone under 18.
-              </p>
-            </div>
-            <Toggle
-              checked={isMinor}
-              onChange={() => setIsMinor((current) => !current)}
-              label="Minor account"
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleSaveProfile}
-              disabled={savingProfile}
-              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${MaiTrollTheme.gradients.button}`}
-            >
-              <Save className="h-4 w-4" />
-              {savingProfile ? "Saving..." : "Save Preferences"}
-            </button>
-          </div>
         </section>
 
         {profile && (
@@ -524,27 +497,6 @@ export default function ProfileSettings() {
           <UserInventory embedded />
         </section>
 
-        <section className={`${MaiTrollTheme.components.card} space-y-4`}>
-          <h2 className="text-xl font-semibold">Appearance</h2>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <Sparkles className="h-5 w-5 text-pink-400" />
-              <div>
-                <h3 className="font-semibold">Avatar Studio</h3>
-                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
-                  Equip clothing and update your Mai Troll look.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/avatar-customizer")}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${MaiTrollTheme.gradients.button}`}
-            >
-              Open Avatar Studio
-            </button>
-          </div>
-        </section>
 
         <section className={`${MaiTrollTheme.components.card} space-y-5`}>
           <h2 className="text-xl font-semibold">Security</h2>
@@ -580,27 +532,6 @@ export default function ProfileSettings() {
           </div>
         </section>
 
-        <section className={`${MaiTrollTheme.components.card} space-y-4`}>
-          <h2 className="text-xl font-semibold">Mai Troll Experience</h2>
-          <div className="flex flex-col gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <Sparkles className="h-5 w-5 text-emerald-400" />
-              <div>
-                <h3 className="font-semibold">Grand Entrance</h3>
-                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
-                  Replay the cinematic Mai Troll welcome sequence.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/?replay-entrance=1")}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${MaiTrollTheme.gradients.button}`}
-            >
-              Replay Grand Entrance
-            </button>
-          </div>
-        </section>
 
         <section
           className={`${MaiTrollTheme.components.card} border border-red-500/30`}

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Coins, X, Swords, LogOut } from "lucide-react";
+import { Track } from "livekit-client";
 
 import { useBattleViewController } from "../../hooks/useBattleViewController";
 import type { BattleViewController } from "../../hooks/useBattleViewController";
@@ -155,6 +156,8 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     const audioPubs = getTrackPublications(resolvedRemote, "audio");
 
     const videoTrack =
+      videoPubs.find((p: any) => p.isSubscribed && p.track && p.source === Track.Source.Camera)?.track ||
+      videoPubs.find((p: any) => p.track && p.source === Track.Source.Camera)?.track ||
       videoPubs.find((p: any) => p.isSubscribed && p.track)?.track ||
       videoPubs.find((p: any) => p.track)?.track ||
       (isMobileDevice ? videoPubs.find((p: any) => p.track)?.track : undefined);

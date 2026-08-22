@@ -149,6 +149,9 @@ export default function CourtViewerPage() {
   const [chatInput, setChatInput] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
   const [isClickBlocked, setIsClickBlocked] = useState(false);
+  const [activeCase, setActiveCase] = useState<any>(null);
+  const [showImHere, setShowImHere] = useState(false);
+  const [attendanceDeadline, setAttendanceDeadline] = useState<number | null>(null);
 
   const clientRef = useRef<IAgoraRTCClient | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -198,10 +201,79 @@ export default function CourtViewerPage() {
     }
   }, [cleanSessionId]);
 
+  const loadActiveCase = useCallback(async () => {
+    if (!cleanSessionId) {
+      setActiveCase(null);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_active_court_case', {
+        p_session_id: cleanSessionId,
+      });
+
+      if (!error && data?.active_case) {
+        setActiveCase(data.active_case);
+        return;
+      }
+    } catch {
+      // no-op, fall through to direct query
+    }
+
+    try {
+      const { data: session } = await supabase
+        .from('court_sessions')
+        .select('case_id')
+        .eq('id', cleanSessionId)
+        .maybeSingle();
+
+      if (session?.case_id) {
+        const { data: caseData } = await supabase
+          .from('court_cases')
+          .select('*')
+          .eq('id', session.case_id)
+          .eq('status', 'in_session')
+          .maybeSingle();
+
+        setActiveCase(caseData || null);
+      } else {
+        setActiveCase(null);
+      }
+    } catch (err) {
+      console.error('Failed to load active case:', err);
+      setActiveCase(null);
+    }
+  }, [cleanSessionId]);
+
   useEffect(() => {
     loadSession();
     loadParticipants();
-  }, [loadSession, loadParticipants]);
+    loadActiveCase();
+  }, [loadSession, loadParticipants, loadActiveCase]);
+
+  useEffect(() => {
+    if (!cleanSessionId) return;
+
+    const channel = supabase
+      .channel(`court_viewer_session_${cleanSessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'court_sessions',
+          filter: `id=eq.${cleanSessionId}`,
+        },
+        () => {
+          loadActiveCase();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadActiveCase, cleanSessionId]);
 
   useEffect(() => {
     if (!courtSession?.id || !agoraChannel) return;
@@ -422,6 +494,61 @@ export default function CourtViewerPage() {
     }
   }, [user, profile, cleanSessionId, isClickBlocked]);
 
+  const handleImHere = useCallback(async () => {
+    if (!activeCase?.id) return;
+
+    try {
+      const { data, error } = await supabase.rpc('record_defendant_attendance', {
+        p_case_id: activeCase.id,
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setShowImHere(false);
+        setAttendanceDeadline(null);
+        toast.success('Attendance recorded. You are present.');
+      } else if (data?.expired) {
+        setShowImHere(false);
+        setAttendanceDeadline(null);
+        toast.error('Attendance window expired.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to record attendance');
+    }
+  }, [activeCase?.id]);
+
+  useEffect(() => {
+    if (!activeCase?.id || !user?.id) {
+      setShowImHere(false);
+      return;
+    }
+
+    if (activeCase.defendant_id === user.id && activeCase.status === 'in_session') {
+      setShowImHere(true);
+      setAttendanceDeadline(Date.now() + 30_000);
+    } else {
+      setShowImHere(false);
+    }
+  }, [activeCase, user?.id]);
+
+  useEffect(() => {
+    if (!showImHere || !attendanceDeadline || !activeCase?.id) return;
+
+    const timer = window.setTimeout(async () => {
+      setShowImHere(false);
+      setAttendanceDeadline(null);
+      try {
+        await supabase.rpc('mark_failure_to_appear', { p_case_id: activeCase.id });
+      } catch {
+        // no-op
+      }
+      toast.error('Failure to appear recorded.');
+    }, Math.max(0, attendanceDeadline - Date.now()));
+
+    return () => window.clearTimeout(timer);
+  }, [showImHere, attendanceDeadline, activeCase?.id]);
+
   if (isLoading) {
     return (
       <div className="h-screen w-full bg-[#0a0a0a] flex items-center justify-center">
@@ -539,6 +666,23 @@ export default function CourtViewerPage() {
           </div>
         </div>
       </div>
+
+      {showImHere && user?.id && activeCase?.defendant_id === user.id && attendanceDeadline && (
+        <div className="absolute inset-x-4 top-20 z-50 rounded-2xl border border-green-400/40 bg-black/85 p-4 shadow-[0_0_40px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm font-black text-green-300">CASE CALLED — YOU ARE THE DEFENDANT</p>
+            <button
+              onClick={handleImHere}
+              className="rounded-xl bg-green-500 px-6 py-3 font-black text-white shadow-[0_0_30px_rgba(34,197,94,0.35)] hover:bg-green-400"
+            >
+              I'M HERE
+            </button>
+            <p className="text-xs text-green-200/70">
+              You have 30 seconds to confirm your appearance.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Like Button */}
       <div className="absolute bottom-24 right-4 z-30">

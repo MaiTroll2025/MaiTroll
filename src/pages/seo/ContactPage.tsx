@@ -13,10 +13,10 @@ const contactMethods = [
   },
   {
     icon: MessageSquare,
-    title: 'Support Ticket',
-    description: 'Submit a support ticket for account or technical issues.',
-    action: 'Open a Ticket',
-    link: '/support'
+    title: 'Contact Form',
+    description: 'Fill out the form below and we\'ll get back to you as soon as possible.',
+    action: 'Go to Form',
+    link: '#contact-form'
   },
   {
     icon: Users,

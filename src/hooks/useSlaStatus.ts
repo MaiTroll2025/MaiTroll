@@ -1,6 +1,40 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+async function invokeSlaMonitor(body: Record<string, unknown>): Promise<{ ok: boolean; data?: unknown; error?: string }> {
+  if (!SUPABASE_URL) {
+    return { ok: false, error: 'Missing VITE_SUPABASE_URL' }
+  }
+
+  const { data: sessionData } = await supabase.auth.getSession()
+  const accessToken = sessionData?.session?.access_token
+  const url = `${SUPABASE_URL}/functions/v1/sla-monitor`
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_ANON_KEY,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify(body),
+  })
+
+  const responseData = await res.json().catch(() => null)
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      error: (responseData as any)?.error || `Edge Function returned ${res.status}`,
+    }
+  }
+
+  return { ok: true, data: responseData }
+}
+
 export type SlaTierName = 'none' | 'bronze' | 'silver' | 'gold' | 'platinum'
 
 export interface StreamSlaStatus {
@@ -136,19 +170,18 @@ export function useStreamSlaStatus(streamId?: string) {
 
     setLoading(true)
     try {
-      const { data, error } = await supabase.functions.invoke('sla-monitor', {
-        body: { action: 'check', streamId },
-      })
+      const result = await invokeSlaMonitor({ action: 'check', streamId })
 
-      if (error || !data?.ok) {
-        console.error('[useStreamSlaStatus] Error:', error || data?.error)
+      if (!result.ok || !result.data?.ok) {
+        const errMsg = (result.data as any)?.error || result.error || 'Failed to fetch SLA status'
+        console.warn('[useStreamSlaStatus]', errMsg)
         setSlaStatus(null)
         return
       }
 
-      setSlaStatus(data.slaStatus as StreamSlaStatus)
+      setSlaStatus((result.data as any).slaStatus as StreamSlaStatus)
     } catch (err) {
-      console.error('[useStreamSlaStatus] Exception:', err)
+      console.warn('[useStreamSlaStatus] Exception:', err)
       setSlaStatus(null)
     } finally {
       setLoading(false)
@@ -174,18 +207,18 @@ export function useBroadcasterSlaSummary(broadcasterId?: string) {
 
     setLoading(true)
     try {
-      const { data, error } = await supabase.functions.invoke('sla-monitor', {
-        body: { action: 'broadcaster', broadcasterId },
-      })
+      const result = await invokeSlaMonitor({ action: 'broadcaster', broadcasterId })
 
-      if (error || !data?.ok) {
+      if (!result.ok || !result.data?.ok) {
+        const errMsg = (result.data as any)?.error || result.error || 'Failed to fetch broadcaster SLA summary'
+        console.warn('[useBroadcasterSlaSummary]', errMsg)
         setSummary(null)
         return
       }
 
-      setSummary(data.slaSummary as BroadcasterSlaSummary)
+      setSummary((result.data as any).slaSummary as BroadcasterSlaSummary)
     } catch (err) {
-      console.error('[useBroadcasterSlaSummary] Exception:', err)
+      console.warn('[useBroadcasterSlaSummary] Exception:', err)
       setSummary(null)
     } finally {
       setLoading(false)
@@ -211,18 +244,18 @@ export function useSlaViolations(broadcasterId?: string) {
 
     setLoading(true)
     try {
-      const { data, error } = await supabase.functions.invoke('sla-monitor', {
-        body: { action: 'broadcaster', broadcasterId },
-      })
+      const result = await invokeSlaMonitor({ action: 'broadcaster', broadcasterId })
 
-      if (error || !data?.ok) {
+      if (!result.ok || !result.data?.ok) {
+        const errMsg = (result.data as any)?.error || result.error || 'Failed to fetch SLA violations'
+        console.warn('[useSlaViolations]', errMsg)
         setViolations([])
         return
       }
 
-      setViolations((data.violations || []) as SlaViolation[])
+      setViolations(((result.data as any).violations || []) as SlaViolation[])
     } catch (err) {
-      console.error('[useSlaViolations] Exception:', err)
+      console.warn('[useSlaViolations] Exception:', err)
       setViolations([])
     } finally {
       setLoading(false)
@@ -248,18 +281,18 @@ export function useSubscriptionSlaStatus(subscriptionId?: string) {
 
     setLoading(true)
     try {
-      const { data, error } = await supabase.functions.invoke('sla-monitor', {
-        body: { action: 'subscription', subscriptionId },
-      })
+      const result = await invokeSlaMonitor({ action: 'subscription', subscriptionId })
 
-      if (error || !data?.ok) {
+      if (!result.ok || !result.data?.ok) {
+        const errMsg = (result.data as any)?.error || result.error || 'Failed to fetch subscription SLA status'
+        console.warn('[useSubscriptionSlaStatus]', errMsg)
         setSlaStatus(null)
         return
       }
 
-      setSlaStatus(data.slaStatus as SubscriptionSlaStatus)
+      setSlaStatus((result.data as any).slaStatus as SubscriptionSlaStatus)
     } catch (err) {
-      console.error('[useSubscriptionSlaStatus] Exception:', err)
+      console.warn('[useSubscriptionSlaStatus] Exception:', err)
       setSlaStatus(null)
     } finally {
       setLoading(false)

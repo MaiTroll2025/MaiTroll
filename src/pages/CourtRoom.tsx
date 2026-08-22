@@ -27,6 +27,7 @@ import { supabase, UserRole } from '../lib/supabase'
 import RequireRole from '../components/RequireRole'
 import CourtChat from '../components/CourtChat'
 import CourtDocketModal from '../components/CourtDocketModal'
+import JudgeSentencingModal from '../components/JudgeSentencingModal'
 import { Button } from '../components/ui/button'
 
 
@@ -278,6 +279,9 @@ function CourtStudioTile({
   canEnterSpot,
   isJoiningSpot,
   onEnterSpot,
+  isJudge,
+  isMutedByJudge,
+  onToggleMute,
 }: {
   spot: CourtStudioSpot
   userTrack?: AgoraCourtTrack
@@ -285,6 +289,9 @@ function CourtStudioTile({
   canEnterSpot?: boolean
   isJoiningSpot?: boolean
   onEnterSpot?: () => void
+  isJudge?: boolean
+  isMutedByJudge?: boolean
+  onToggleMute?: () => void
 }) {
   const videoContainerRef = useRef<HTMLDivElement>(null)
   const videoTrack = userTrack?.videoTrack || null
@@ -372,6 +379,23 @@ function CourtStudioTile({
         }
       }}
     >
+      {isJudge && userTrack && !isLocal && onToggleMute && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            onToggleMute()
+          }}
+          className={`absolute top-2 right-2 z-30 flex h-7 w-7 items-center justify-center rounded-full border ${
+            isMutedByJudge
+              ? 'border-red-400 bg-red-600 text-white'
+              : 'border-white/20 bg-black/60 text-white/70 hover:text-white'
+          }`}
+        >
+          {isMutedByJudge ? <MicOff size={12} /> : <Mic size={12} />}
+        </button>
+      )}
       {videoTrack ? (
         <div ref={videoContainerRef} className="h-full w-full rounded-full overflow-hidden" />
       ) : (
@@ -462,15 +486,19 @@ function StudioControls({
           </Button>
         )}
 
-        <Button onClick={onToggleMic} variant="outline" disabled={!canUseMicCamera}>
-          {micOn ? <Mic className="mr-2 h-4 w-4" /> : <MicOff className="mr-2 h-4 w-4" />}
-          {micOn ? 'Mute' : 'Unmute'}
-        </Button>
+        {canUseMicCamera && (
+          <>
+            <Button onClick={onToggleMic} variant="outline">
+              {micOn ? <Mic className="mr-2 h-4 w-4" /> : <MicOff className="mr-2 h-4 w-4" />}
+              {micOn ? 'Mute' : 'Unmute'}
+            </Button>
 
-        <Button onClick={onToggleCamera} variant="outline" disabled={!canUseMicCamera}>
-          {cameraOn ? <Video className="mr-2 h-4 w-4" /> : <VideoOff className="mr-2 h-4 w-4" />}
-          {cameraOn ? 'Camera Off' : 'Camera On'}
-        </Button>
+            <Button onClick={onToggleCamera} variant="outline">
+              {cameraOn ? <Video className="mr-2 h-4 w-4" /> : <VideoOff className="mr-2 h-4 w-4" />}
+              {cameraOn ? 'Camera Off' : 'Camera On'}
+            </Button>
+          </>
+        )}
 
         <Button onClick={onDocket} variant="outline">
           <FileText className="mr-2 h-4 w-4" />
@@ -505,6 +533,12 @@ export default function CourtRoom() {
   const [isJoining, setIsJoining] = useState(false)
   const [showDocketModal, setShowDocketModal] = useState(false)
   const [showChat, setShowChat] = useState(false)
+  const [activeCase, setActiveCase] = useState<any>(null)
+  const [showImHere, setShowImHere] = useState(false)
+  const [attendanceDeadline, setAttendanceDeadline] = useState<number | null>(null)
+  const [selectedCaseForSentencing, setSelectedCaseForSentencing] = useState<any>(null)
+  const [calledDefendantId, setCalledDefendantId] = useState<string | null>(null)
+  const [judgeMutedUsers, setJudgeMutedUsers] = useState<Record<string, boolean>>({})
 
    const [agoraJoined, setAgoraJoined] = useState(false)
    const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([])
@@ -517,14 +551,19 @@ export default function CourtRoom() {
    const localVideoRef = useRef<ICameraVideoTrack | null>(null)
    const agoraClientRef = useRef<IAgoraRTCClient | null>(null)
    const joinedRef = useRef(false)
+   const judgeMutedUsersRef = useRef<Record<string, boolean>>({})
     const autoEnterRef = useRef(false)
     const enterCourtroomRef = useRef<((forcedSpot?: CourtStudioSpot) => void) | null>(null)
 
-    useEffect(() => {
-      enterCourtroomRef.current = enterCourtroom
-    })
+   useEffect(() => {
+     enterCourtroomRef.current = enterCourtroom
+   })
 
-  const effectiveRole = useMemo(() => normalizeCourtRole(profile), [profile])
+   useEffect(() => {
+     judgeMutedUsersRef.current = judgeMutedUsers
+   }, [judgeMutedUsers])
+
+   const effectiveRole = useMemo(() => normalizeCourtRole(profile), [profile])
   const autoSpot = useMemo(() => getAutoStudioSpot(effectiveRole), [effectiveRole])
 
   const canUseMicCamera = canPublishFromSpot(activeSpot)
@@ -593,6 +632,18 @@ export default function CourtRoom() {
       try {
         await client.subscribe(remoteUser, mediaType)
 
+        if (mediaType === 'audio') {
+          if (judgeMutedUsersRef.current[remoteUser.uid]) {
+            try {
+              remoteUser.audioTrack?.stop()
+            } catch {
+              // no-op
+            }
+          } else {
+            remoteUser.audioTrack?.play()
+          }
+        }
+
         setRemoteUsers((prev) => {
           const exists = prev.some((item) => String(item.uid) === String(remoteUser.uid))
           if (exists) {
@@ -600,10 +651,6 @@ export default function CourtRoom() {
           }
           return [...prev, remoteUser]
         })
-
-        if (mediaType === 'audio') {
-          remoteUser.audioTrack?.play()
-        }
       } catch (error) {
         console.error('[CourtRoom:Agora] subscribe failed', error)
       }
@@ -841,6 +888,20 @@ export default function CourtRoom() {
 
     try {
       const spot = forcedSpot || autoSpot
+      const previousSpot = activeSpot
+
+      if (previousSpot && previousSpot !== spot) {
+        await leaveAgora()
+        if (courtId && user?.id) {
+          await supabase
+            .from('court_participants')
+            .delete()
+            .eq('court_session_id', courtId)
+            .eq('user_id', user.id)
+        }
+        setActiveSpot(null)
+        await fetchCourtParticipants()
+      }
 
       await upsertParticipantRole(spot)
       await joinAgora(spot)
@@ -861,6 +922,25 @@ export default function CourtRoom() {
           judge_username: profile?.username || user.email || 'Judge',
           status: prev?.status === 'waiting' ? 'active' : prev?.status || 'active',
         }))
+      }
+
+      if (spot === 'defendant' && previousSpot === 'audience' && calledDefendantId === user?.id) {
+        if (localAudioRef.current) {
+          await localAudioRef.current.setEnabled(false)
+          setMicOn(false)
+        }
+        if (localVideoRef.current) {
+          await localVideoRef.current.setEnabled(true)
+          setCameraOn(true)
+        }
+
+        if (activeCase?.id) {
+          try {
+            await supabase.rpc('record_defendant_attendance', { p_case_id: activeCase.id })
+          } catch {
+            // no-op
+          }
+        }
       }
 
       setActiveSpot(spot)
@@ -903,6 +983,74 @@ export default function CourtRoom() {
     }
   }
 
+  const handleSelectCase = async (caseItem: any) => {
+    if (!courtId || !user?.id) return
+    try {
+      const { data, error } = await supabase.rpc('set_active_case', {
+        p_case_id: caseItem.id,
+        p_session_id: courtId,
+      })
+
+      if (error) throw error
+
+      if (data?.success) {
+        setActiveCase(caseItem)
+        setShowDocketModal(false)
+        toast.success(`Case #${caseItem.id.slice(0, 8)} is now in session`)
+
+        if (caseItem.defendant_id) {
+          setShowImHere(true)
+          setAttendanceDeadline(Date.now() + 30_000)
+          setCalledDefendantId(caseItem.defendant_id)
+        } else {
+          setShowImHere(false)
+          setAttendanceDeadline(null)
+          setCalledDefendantId(null)
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to call case')
+    }
+  }
+
+  const handleImHere = async () => {
+    if (!activeCase?.id) return
+    try {
+      const { data, error } = await supabase.rpc('record_defendant_attendance', {
+        p_case_id: activeCase.id,
+      })
+
+      if (error) throw error
+
+      if (data?.success) {
+        setShowImHere(false)
+        setAttendanceDeadline(null)
+        toast.success('Attendance recorded. You are present.')
+      } else if (data?.expired) {
+        setShowImHere(false)
+        setAttendanceDeadline(null)
+        toast.error('Attendance window expired.')
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to record attendance')
+    }
+  }
+
+  useEffect(() => {
+    if (!showImHere || !attendanceDeadline || !activeCase?.id) return
+    const timer = window.setTimeout(async () => {
+      setShowImHere(false)
+      setAttendanceDeadline(null)
+      try {
+        await supabase.rpc('mark_failure_to_appear', { p_case_id: activeCase.id })
+      } catch {
+        // no-op
+      }
+      toast.error('Failure to appear recorded.')
+    }, Math.max(0, attendanceDeadline - Date.now()))
+    return () => window.clearTimeout(timer)
+  }, [showImHere, attendanceDeadline, activeCase?.id])
+
   const safeToggleMic = async () => {
     if (!canUseMicCamera) {
       toast.error('Enter a speaking spot before using mic.')
@@ -942,6 +1090,37 @@ export default function CourtRoom() {
       toast.error(error?.message || 'Failed to toggle camera.')
     }
   }
+
+  const toggleJudgeMute = useCallback(async (userId: string) => {
+    setJudgeMutedUsers((prev) => {
+      const next = { ...prev }
+      const isMuting = !next[userId]
+      if (isMuting) {
+        next[userId] = true
+      } else {
+        delete next[userId]
+      }
+
+      const remoteUser = remoteUsers.find((u) => String(u.uid) === String(userId))
+      if (remoteUser?.audioTrack) {
+        if (isMuting) {
+          try {
+            remoteUser.audioTrack.stop()
+          } catch {
+            // no-op
+          }
+        } else {
+          try {
+            remoteUser.audioTrack.play()
+          } catch {
+            // no-op
+          }
+        }
+      }
+
+      return next
+    })
+  }, [remoteUsers])
 
   const handleEndCourt = async () => {
     if (!canEnd) {
@@ -1084,11 +1263,20 @@ export default function CourtRoom() {
   ])
 
   const canEnterSpecificSpot = (spot: CourtStudioSpot) => {
-    if (activeSpot || isJoining) return false
+    if (isJoining) return false
+
+    if (activeSpot) {
+      if (activeSpot === 'audience' && spot === 'defendant' && calledDefendantId === user?.id) {
+        return true
+      }
+      if (activeSpot === 'defendant' && spot === 'audience') {
+        return true
+      }
+      return false
+    }
+
     if (spot === 'audience') return autoSpot === 'audience'
-
     if (autoSpot === spot) return true
-
     if (canJudge(effectiveRole) && spot === 'judge') return true
 
     return false
@@ -1108,6 +1296,23 @@ export default function CourtRoom() {
         />
 
         <div className="absolute inset-0 bg-black/15" />
+
+        {showImHere && user?.id && activeCase?.defendant_id === user.id && attendanceDeadline && (
+          <div className="absolute inset-x-4 top-4 z-50 rounded-2xl border border-green-400/40 bg-black/85 p-4 shadow-[0_0_40px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-black text-green-300">CASE CALLED — YOU ARE THE DEFENDANT</p>
+              <button
+                onClick={handleImHere}
+                className="rounded-xl bg-green-500 px-6 py-3 font-black text-white shadow-[0_0_30px_rgba(34,197,94,0.35)] hover:bg-green-400"
+              >
+                I'M HERE
+              </button>
+              <p className="text-xs text-green-200/70">
+                You have 30 seconds to confirm your appearance.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="absolute left-4 top-4 z-30 rounded-2xl border border-amber-300/25 bg-black/70 px-4 py-3 shadow-[0_0_26px_rgba(0,0,0,0.6)] backdrop-blur-md">
           <div className="flex items-center gap-3">
@@ -1132,6 +1337,9 @@ export default function CourtRoom() {
           canEnterSpot={canEnterSpecificSpot('judge')}
           isJoiningSpot={isJoining && autoSpot === 'judge'}
           onEnterSpot={() => enterCourtroom('judge')}
+          isJudge={canJudge(effectiveRole)}
+          isMutedByJudge={!!judgeMutedUsers[String(spotUsers.judge?.uid || '')]}
+          onToggleMute={spotUsers.judge?.uid && String(spotUsers.judge?.uid) !== user?.id ? () => toggleJudgeMute(String(spotUsers.judge?.uid)) : undefined}
         />
 
         <CourtStudioTile
@@ -1141,6 +1349,9 @@ export default function CourtRoom() {
           canEnterSpot={canEnterSpecificSpot('prosecutor')}
           isJoiningSpot={isJoining && autoSpot === 'prosecutor'}
           onEnterSpot={() => enterCourtroom('prosecutor')}
+          isJudge={canJudge(effectiveRole)}
+          isMutedByJudge={!!judgeMutedUsers[String(spotUsers.prosecutor?.uid || '')]}
+          onToggleMute={spotUsers.prosecutor?.uid && String(spotUsers.prosecutor?.uid) !== user?.id ? () => toggleJudgeMute(String(spotUsers.prosecutor?.uid)) : undefined}
         />
 
         <CourtStudioTile
@@ -1150,6 +1361,9 @@ export default function CourtRoom() {
           canEnterSpot={canEnterSpecificSpot('attorney')}
           isJoiningSpot={isJoining && autoSpot === 'attorney'}
           onEnterSpot={() => enterCourtroom('attorney')}
+          isJudge={canJudge(effectiveRole)}
+          isMutedByJudge={!!judgeMutedUsers[String(spotUsers.attorney?.uid || '')]}
+          onToggleMute={spotUsers.attorney?.uid && String(spotUsers.attorney?.uid) !== user?.id ? () => toggleJudgeMute(String(spotUsers.attorney?.uid)) : undefined}
         />
 
         <CourtStudioTile
@@ -1159,6 +1373,9 @@ export default function CourtRoom() {
           canEnterSpot={canEnterSpecificSpot('witness')}
           isJoiningSpot={isJoining && autoSpot === 'witness'}
           onEnterSpot={() => enterCourtroom('witness')}
+          isJudge={canJudge(effectiveRole)}
+          isMutedByJudge={!!judgeMutedUsers[String(spotUsers.witness?.uid || '')]}
+          onToggleMute={spotUsers.witness?.uid && String(spotUsers.witness?.uid) !== user?.id ? () => toggleJudgeMute(String(spotUsers.witness?.uid)) : undefined}
         />
 
         <CourtStudioTile
@@ -1168,6 +1385,9 @@ export default function CourtRoom() {
           canEnterSpot={canEnterSpecificSpot('defendant')}
           isJoiningSpot={isJoining && autoSpot === 'defendant'}
           onEnterSpot={() => enterCourtroom('defendant')}
+          isJudge={canJudge(effectiveRole)}
+          isMutedByJudge={!!judgeMutedUsers[String(spotUsers.defendant?.uid || '')]}
+          onToggleMute={spotUsers.defendant?.uid && String(spotUsers.defendant?.uid) !== user?.id ? () => toggleJudgeMute(String(spotUsers.defendant?.uid)) : undefined}
         />
 
         <CourtStudioTile
@@ -1222,8 +1442,17 @@ export default function CourtRoom() {
         <CourtDocketModal
           isOpen={showDocketModal}
           onClose={() => setShowDocketModal(false)}
+          onSelectCase={handleSelectCase}
+          onSentenceCase={setSelectedCaseForSentencing}
           courtId={courtId || ''}
           isJudge={canJudge(effectiveRole)}
+        />
+
+        <JudgeSentencingModal
+          isOpen={!!selectedCaseForSentencing}
+          caseData={selectedCaseForSentencing}
+          onClose={() => setSelectedCaseForSentencing(null)}
+          onSuccess={() => setSelectedCaseForSentencing(null)}
         />
       </div>
     </RequireRole>

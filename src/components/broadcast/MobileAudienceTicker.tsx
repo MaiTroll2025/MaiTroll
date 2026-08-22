@@ -58,6 +58,22 @@ export default function MobileAudienceTicker({
       .slice(0, maxVisible)
   }, [audience, maxVisible])
 
+  if (import.meta.env.DEV) {
+    console.log('[MobileAudienceTicker]', {
+      audienceLength: audience.length,
+      sortedLength: sorted.length,
+      sample: sorted.slice(0, 3).map(m => ({
+        id: m.id,
+        user_id: m.user_id,
+        username: m.username,
+        role: m.role,
+        is_active: m.is_active,
+        left_at: m.left_at,
+        avatar_url: m.avatar_url,
+      }))
+    })
+  }
+
   const overflow = Math.max(0, audience.filter((m) => m.is_active && !m.left_at).length - maxVisible)
 
   const canModerate = (m: StreamAudienceMember) => {

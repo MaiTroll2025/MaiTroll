@@ -305,7 +305,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   objectFit = 'contain',
 }: {
   participant: any
-  mirror?: false
+  mirror?: boolean
   className?: string
   fallback: React.ReactNode
   onTap?: () => void
@@ -349,8 +349,8 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
     const stream = videoTrack?.mediaStreamTrack || (videoTrack as any)?._mediaStreamTrack
     const settings = stream?.getSettings?.() || {}
     const facing = (settings as any).facingMode
-    if (facing && facing !== 'environment') return false
-    return true
+    if (facing === 'user') return true
+    return false
   }, [videoTrack, mirror])
 
   // Dev logging for track detection on mobile/PWA
@@ -1463,24 +1463,30 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       // Celeb streams do not have guest seats — only the broadcaster tile.
       if ((stream as any)?.stream_type === 'celeb_stream') return 1
 
+      // Prefer the real-time box count from useBoxCount (broadcast channel)
+      // over the possibly-stale stream object so newly added seats appear
+      // immediately on the viewer side.
+      const fromHook = Math.max(1, Math.min(MAX_TOTAL_BOXES, hookBoxCount))
+
       // seat_count is guest-seat count (broadcaster is NOT a seat).
       // Total boxes = guest seats + 1 broadcaster box.
       const seatCount = (stream as any)?.seat_count !== undefined ? Number((stream as any).seat_count) : undefined
       if (seatCount !== undefined) {
-        if (seatCount === 0) return 1 // broadcaster only, 1 box
-        return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCount + 1))
-     }
+        if (seatCount === 0) return fromHook // broadcaster only, fall back to hook
+        const fromStream = Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCount + 1))
+        return Math.max(fromStream, fromHook)
+      }
 
-     const seatCountFromPrices = Array.isArray((stream as any)?.seat_prices)
-       ? Math.max(1, (stream as any).seat_prices.length)
-       : 0
+      const seatCountFromPrices = Array.isArray((stream as any)?.seat_prices)
+        ? Math.max(1, (stream as any).seat_prices.length)
+        : 0
 
-     if (seatCountFromPrices > 0) {
-       return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCountFromPrices))
-     }
+      if (seatCountFromPrices > 0) {
+        return Math.max(1, Math.min(MAX_TOTAL_BOXES, seatCountFromPrices, fromHook))
+      }
 
-     return 1 // default: broadcaster only
-   }, [stream, hookBoxCount])
+      return fromHook
+    }, [stream, hookBoxCount])
 
    const layoutMode = useMemo(() => {
      return effectiveBoxCount <= 7 ? 'split' : 'grid'
@@ -2262,7 +2268,7 @@ const isActive = isStreamActive(stream)
   }, [activeSeats, hostId])
 
   const userProfiles = useMemo(() => {
-    const profiles: Record<string, { username: string; avatar_url?: string }> = {}
+    const profiles: Record<string, { username: string; avatar_url?: string; role?: string; troll_role?: string; created_at?: string }> = {}
 
     if (hostId && broadcasterProfile) {
       profiles[hostId] = {
@@ -2776,7 +2782,6 @@ const isActive = isStreamActive(stream)
       }
 
       setStream(data as unknown as Stream)
-      setViewerCount(Number((data as any).current_viewers || 0))
       void refreshStageConfig()
 
       if ((data as any).user_id) {
@@ -2840,9 +2845,9 @@ useStreamRealtime(
           if (existingTs !== undefined && now - existingTs < CHAT_DEBOUNCE_MS) return
           recentChatKeysRef.current.set(chatKey, now)
 
-          setFloatingMessages(prev =>
-            [{ id: msgId, username, content, createdAt: Date.now() }, ...prev].slice(-50)
-          )
+           setFloatingMessages(prev =>
+             [{ id: msgId, username, content, createdAt: Date.now() }, ...prev].slice(0, 50)
+           )
 
           setTimeout(() => {
             setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
@@ -2923,10 +2928,6 @@ useStreamRealtime(
 
           if (hasStageConfigUpdate) {
             void refreshStageConfig()
-          }
-
-          if (typeof next.current_viewers !== 'undefined') {
-            setViewerCount(Number(next.current_viewers || 0))
           }
         },
       } as any,
@@ -3065,7 +3066,7 @@ useStreamRealtime(
         // Filter out messages from blocked users
         if (blockedUsernames.has(username.toLowerCase())) return
         const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-        setFloatingMessages(prev => [{ id: msgId, username, content, createdAt: Date.now(), isSystem }, ...prev].slice(-50))
+        setFloatingMessages(prev => [{ id: msgId, username, content, createdAt: Date.now(), isSystem }, ...prev].slice(0, 50))
 
         setTimeout(() => {
           setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
@@ -4589,7 +4590,7 @@ useStreamRealtime(
                })}
 
            {/* ── MOBILE PWA: Seats overlay on broadcaster video (split mode only) ── */}
-           {hasMounted && isMobileViewer && effectiveBoxCount <= 6 && seatCards.length > 0 && (
+            {hasMounted && isMobileViewer && seatCards.length > 0 && (
              <div
                className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col"
                style={{
@@ -4696,7 +4697,7 @@ useStreamRealtime(
           )}
 
           {/* ── RIGHT: Desktop Chat Panel — same flow layout style as BroadcastPage ── */}
-          {!isMobileViewer && effectiveBoxCount <= 6 && (
+          {!isMobileViewer && effectiveBoxCount <= 7 && (
             <aside
               className={cn(
                 theme.chatPanel,

@@ -6,9 +6,7 @@ import {
   BookOpen,
   Crown,
   FileText,
-  Flame,
   Gavel,
-  Heart,
   MessageCircle,
   Music,
   PenSquare,
@@ -17,13 +15,10 @@ import {
   Scale,
   Shield,
   Sparkles,
-  Star,
   Trophy,
   Tv,
   Users,
-  Vote,
   X,
-  Zap,
 } from 'lucide-react'
 
 import { useAuthStore } from '@/lib/store'
@@ -49,6 +44,7 @@ import { useWallNotifications } from '@/hooks/useWallNotifications'
 import LeftNavSidebar from '@/components/home/LeftNavSidebar'
 import UniverseBattlesPage from '@/pages/UniverseBattlesPage'
 import HowToVideosPage from '@/pages/JobsHowToPage'
+import DynamicWeatherBackground from '@/components/home/DynamicWeatherBackground'
 import FeaturedBroadcastersRow from '@/components/home/FeaturedBroadcastersRow'
 import HyTroGamingRow from '@/components/home/HyTroGamingRow'
 import PodcastRow from '@/components/home/PodcastRow'
@@ -68,109 +64,6 @@ const FeaturedBroadcasts = lazyWithRetry(() => import('@/components/broadcast/Fe
 
 const glass =
   'border border-white/10 bg-[#070b19]/70 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]'
-const neonCard =
-  'border border-cyan-400/20 bg-[#071020]/80 backdrop-blur-2xl shadow-[0_0_28px_rgba(34,211,238,0.08)]'
-
-const INTERACTION_COLORS = [
-  '#4f7cac',
-  '#59658f',
-  '#52796f',
-  '#806d85',
-  '#8a6f5a',
-  '#557a7c',
-  '#765f70',
-  '#6f7655',
-]
-
-type GridPulse = {
-  id: number
-  x: number
-  y: number
-  color: string
-}
-
-const InteractiveGrid = React.memo(() => {
-  const [pulses, setPulses] = useState<GridPulse[]>([])
-
-  const createPulse = useCallback((clientX: number, clientY: number) => {
-    const color =
-      INTERACTION_COLORS[
-        Math.floor(Math.random() * INTERACTION_COLORS.length)
-      ]
-
-    const id = Date.now() + Math.random()
-
-    setPulses((current) => [
-      ...current.slice(-4),
-      {
-        id,
-        x: clientX,
-        y: clientY,
-        color,
-      },
-    ])
-
-    window.setTimeout(() => {
-      setPulses((current) => current.filter((pulse) => pulse.id !== id))
-    }, 1800)
-  }, [])
-
-  const handlePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      createPulse(event.clientX, event.clientY)
-    },
-    [createPulse],
-  )
-
-  return (
-    <div
-      className="pointer-events-auto absolute inset-0 overflow-hidden"
-      onPointerDown={handlePointerDown}
-    >
-      <div
-        className="
-          absolute inset-0
-          opacity-[0.13]
-          [background-image:
-            linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),
-            linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)
-          ]
-          [background-size:58px_58px]
-        "
-      />
-
-      {pulses.map((pulse) => (
-        <span
-          key={pulse.id}
-          className="grid-pulse absolute pointer-events-none"
-          style={
-            {
-              left: pulse.x,
-              top: pulse.y,
-              '--pulse-color': pulse.color,
-            } as React.CSSProperties
-          }
-        />
-      ))}
-    </div>
-  )
-})
-
-InteractiveGrid.displayName = 'InteractiveGrid'
-
-const OriginalBackground = React.memo(() => {
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[#050715]" />
-      <div className="absolute inset-0 opacity-[0.20] [background:radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.25),transparent_32%),radial-gradient(circle_at_80%_5%,rgba(14,165,233,0.20),transparent_30%),radial-gradient(circle_at_50%_92%,rgba(99,102,241,0.18),transparent_36%)]" />
-      <InteractiveGrid />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_26%,rgba(3,7,18,0.72)_100%)]" />
-      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#050715] via-[#050715]/70 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#050715] via-[#050715]/70 to-transparent" />
-    </div>
-  )
-})
-OriginalBackground.displayName = 'OriginalBackground'
 
 const LiveGrid = React.memo(function LiveGrid({
    liveItems,
@@ -938,8 +831,10 @@ export default function Home() {
    const showPresidentTab = currentElection?.status === 'open'
 
   return (
-    <div className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-hidden text-white">
-      <OriginalBackground />
+    <div
+      className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-hidden text-white"
+    >
+        <DynamicWeatherBackground />
 
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050715]/85 backdrop-blur-md">
@@ -1305,30 +1200,30 @@ export default function Home() {
             forwards;
         }
 
-        @keyframes mai-grid-pulse {
-          0% {
-            width: 12px;
-            height: 12px;
-            opacity: 0.28;
-            box-shadow:
-              0 0 0 0 var(--pulse-color),
-              0 0 18px 2px var(--pulse-color);
-          }
+         @keyframes mai-grid-pulse {
+           0% {
+             width: 12px;
+             height: 12px;
+             opacity: 0.28;
+             box-shadow:
+               0 0 0 0 var(--pulse-color),
+               0 0 18px 2px var(--pulse-color);
+           }
 
-          35% {
-            opacity: 0.16;
-          }
+           35% {
+             opacity: 0.16;
+           }
 
-          100% {
-            width: 900px;
-            height: 900px;
-            opacity: 0;
-            box-shadow:
-              0 0 0 1px transparent,
-              0 0 80px 20px transparent;
-          }
-        }
-      `}</style>
-    </div>
-  )
-}
+           100% {
+             width: 900px;
+             height: 900px;
+             opacity: 0;
+             box-shadow:
+               0 0 0 1px transparent,
+               0 0 80px 20px transparent;
+           }
+         }
+        `}</style>
+      </div>
+    )
+  }

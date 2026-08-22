@@ -731,9 +731,6 @@ export default function Sidebar() {
                 <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="Secretary" to="/secretary" active={location.pathname.startsWith('/secretary')} highlight={isUpdated('/secretary')} onClick={() => markAsViewed('/secretary')} className="text-cyan-200" tone="cyan" />
               )}
               {(canSeeOfficer || isLead || canSeeSecretary || isAdmin || profile?.role === UserRole.CEO_ASSISTANT || profile?.role === UserRole.NOAH_ASSISTANT || profile?.role === UserRole.HR_ADMIN || profile?.role === UserRole.HR_MANAGER) && (
-                <GridItem collapsed={isSidebarCollapsed} icon={Briefcase} label="Employees" to="/Employees" active={location.pathname.startsWith('/Employees')} highlight={isUpdated('/Employees')} onClick={() => markAsViewed('/Employees')} className="text-fuchsia-200" tone="purple" />
-              )}
-              {(canSeeOfficer || isLead || canSeeSecretary || isAdmin || profile?.role === UserRole.CEO_ASSISTANT || profile?.role === UserRole.NOAH_ASSISTANT || profile?.role === UserRole.HR_ADMIN || profile?.role === UserRole.HR_MANAGER) && (
                 <GridItem collapsed={isSidebarCollapsed} icon={Wrench} label="Department Tools" to="/department-tools" active={location.pathname.startsWith('/department-tools')} highlight={isUpdated('/department-tools')} onClick={() => markAsViewed('/department-tools')} className="text-amber-200" tone="orange" />
               )}
               {isAdmin && (

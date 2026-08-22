@@ -3,6 +3,8 @@ import React, { useEffect, Suspense, useState, useRef } from "react";
 import TrollProvider from "./troll/TrollProvider";
 import { EffectsProvider } from "./contexts/BroadcastEffectsContext";
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
+import { SwipeNavigationProvider } from "./contexts/SwipeNavigationContext";
+
 const TreelzPage = lazyWithRetry(() => import("./pages/TreelzPage"));
 const TreelzUploadPage = lazyWithRetry(() => import("./pages/TreelzUploadPage"));
 import { useAuthStore } from "./lib/store";
@@ -61,6 +63,7 @@ import TabSwitchHandler from "./components/TabSwitchHandler";
 import { initTelemetry } from "./lib/telemetry";
 import GlobalPresenceTracker from "./components/GlobalPresenceTracker";
 import ChatBubble from "./components/ChatBubble";
+import IdleSessionPrompt from "./components/IdleSessionPrompt";
 import { useChatStore } from "./lib/chatStore";
 import { useUserPresenceRoute } from "./hooks/useUserPresenceRoute";
 import { useIsMobile } from "./hooks/useIsMobile";
@@ -184,7 +187,6 @@ const SEOFAQPage = lazyWithRetry(() => import("./pages/seo/FAQPage"));
 const SEOPrivacyPage = lazyWithRetry(() => import("./pages/seo/PrivacyPage"));
 const SEOTermsPage = lazyWithRetry(() => import("./pages/seo/TermsPage"));
 
-const EmployeesPage = lazyWithRetry(() => import("./features/employees/EmployeesPage"));
 const ReportDetailsPage = lazyWithRetry(() => import("./pages/ReportDetailsPage"));
 const PasswordReset = lazyWithRetry(() => import("./pages/PasswordReset"));
 const CreditScorePage = lazyWithRetry(() => import("./pages/CreditScorePage"));
@@ -974,17 +976,17 @@ function AppContent() {
         return
       }
 
-      // 't' -> Employees Office (officer / lead officer)
+      // 't' -> Department Tools (officer / lead officer)
       if (event.key === 't' || event.key === 'T') {
         if (profile?.is_lead_officer || profile?.is_troll_officer) {
-          navigate('/Employees', { replace: true })
+          navigate('/department-tools', { replace: true })
           return
         }
       }
 
-      // 's' -> Employees Office (secretary)
+      // 's' -> Department Tools (secretary)
       if ((event.key === 's' || event.key === 'S') && profile?.role === 'secretary') {
-        navigate('/Employees', { replace: true })
+        navigate('/department-tools', { replace: true })
         return
       }
 
@@ -1556,9 +1558,13 @@ const handleVisibilityChange = async () => {
         onRetry={retryLastAction}
       />
 
-      <MobileAdOverlay />
+       <MobileAdOverlay />
 
-<LiveContentProvider>
+       {/* Idle Session Prompt */}
+       <IdleSessionPrompt />
+
+       <SwipeNavigationProvider>
+      <LiveContentProvider>
             <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true} isJailed={isJailed}>
            <GlobalPresenceTracker />
            {user && <AdminOfficerQuickMenu />}
@@ -1841,15 +1847,13 @@ const handleVisibilityChange = async () => {
                     <Route path="/auction/devices" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
                     <Route path="/tcnn/chief" element={<Navigate to="/tcnn/dashboard" replace />} />
                      {/* 🏢 Unified Employees Office — all non-admin employee roles use one page */}
-                     <Route path="/Employees" element={<EmployeesPage />} />
-                     <Route path="/employees" element={<Navigate to="/Employees" replace />} />
                      <Route path="/department-tools" element={<DepartmentToolsPage />} />
                      <Route path="/officer" element={<Navigate to="/department-tools" replace />} />
                      <Route path="/officer/dashboard" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
                      <Route path="/officer/scheduling" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
                      <Route path="/officer/moderation" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
                      <Route path="/officer/lounge" element={<Navigate to="/department-tools?role=troll_officer" replace />} />
-                     <Route path="/officer/report/:id" element={<Navigate to="/Employees" replace />} />
+                     <Route path="/officer/report/:id" element={<Navigate to="/department-tools" replace />} />
                      <Route path="/lead-officer" element={<Navigate to="/department-tools?role=lead_troll_officer" replace />} />
                      <Route path="/secretary" element={<Navigate to="/department-tools?role=secretary" replace />} />
                       <Route path="/ceo-assistant-dashboard" element={<Navigate to="/department-tools?role=ceo_assistant" replace />} />
@@ -1944,7 +1948,7 @@ const handleVisibilityChange = async () => {
                   <Route path="/bank" element={<TrollBank />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/credit-scores" element={<CreditScorePage />} />
-                  <Route path="/support" element={<Support />} />
+                   <Route path="/support" element={<SEOSupportPage />} />
             <Route path="/beta-feedback" element={<BetaFeedback />} />
                   <Route path="/survey/:surveyId" element={<SurveyPage />} />
                   <Route path="/under-construction" element={<UnderConstructionPage />} />
@@ -2623,10 +2627,7 @@ const handleVisibilityChange = async () => {
                         </RequireRole>
                       }
                     />
-                     <Route
-                       path="/admin/officer-shifts"
-                       element={<Navigate to="/Employees" replace />}
-                     />
+                     <Route path="/admin/officer-shifts" element={<Navigate to="/department-tools" replace />} />
                                       <Route
                       path="/admin/referral-bonuses"
                       element={
@@ -2747,8 +2748,9 @@ const handleVisibilityChange = async () => {
           </StaffWalkieTalkieProvider>
            <GlobalPodBanner />
            <BugAlertPopup />
-          </AppLayout>
-        </LiveContentProvider>
+           </AppLayout>
+         </LiveContentProvider>
+       </SwipeNavigationProvider>
 
         {/* Grand City Entrance — cinematic first-visit reveal.
             Null fallback guarantees a render failure never blocks the home page. */}

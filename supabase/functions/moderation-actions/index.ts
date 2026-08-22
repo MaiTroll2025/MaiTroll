@@ -2066,7 +2066,7 @@ async function executeDirectAction(
         },
       );
 
-    if (error) {
+     if (error) {
       console.error(
         "[moderation-actions] suspend_license RPC:",
         error.message,
@@ -2077,6 +2077,19 @@ async function executeDirectAction(
         "Failed to suspend license.",
       );
     }
+
+    // Suspend broadcast privileges for the target user.
+    await supabaseAdmin
+      .from("user_profiles")
+      .update({
+        is_broadcaster: false,
+        license_status: "suspended",
+        license_suspended_at:
+          new Date().toISOString(),
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq("id", targetUserId);
 
     return normalizeRpcResult(
       data,
@@ -2114,6 +2127,19 @@ async function executeDirectAction(
         "Failed to grant license.",
       );
     }
+
+    // Restore broadcast privileges for the target user.
+    await supabaseAdmin
+      .from("user_profiles")
+      .update({
+        is_broadcaster: true,
+        license_status: "active",
+        license_restored_at:
+          new Date().toISOString(),
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq("id", targetUserId);
 
     return normalizeRpcResult(
       data,

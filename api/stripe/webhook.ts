@@ -99,6 +99,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (creditError) {
         console.error('[stripe webhook] credit_coins failed', creditError)
       }
+
+      // Notify admins of the coin purchase
+      try {
+        const { data: buyer } = await supabaseAdmin
+          .from('user_profiles')
+          .select('username')
+          .eq('id', order.user_id)
+          .single()
+
+        const { data: admins } = await supabaseAdmin
+          .from('user_profiles')
+          .select('id')
+          .or('role.eq.admin,is_admin.eq.true,role.eq.superadmin,role.eq.owner')
+
+        if (admins && admins.length > 0) {
+          const notifications = admins.map((admin: any) => ({
+            user_id: admin.id,
+            type: 'coin_purchase_admin_alert',
+            title: '💰 Coin Purchase',
+            message: `@${buyer?.username || 'User'} purchased ${order.coins} coins. Order ID: ${order.id}`,
+            metadata: {
+              purchase_user_id: order.user_id,
+              purchase_username: buyer?.username,
+              amount: order.coins,
+              order_id: order.id,
+              action_url: '/admin/payments'
+            },
+            is_read: false
+          }))
+
+          await supabaseAdmin.from('notifications').insert(notifications)
+        }
+      } catch (notifyError) {
+        console.warn('[stripe webhook] failed to notify admins:', notifyError)
+      }
     }
 
     return res.status(200).json({ received: true })

@@ -179,7 +179,7 @@ export async function addTreelzComment(userId: string, postId: string, content: 
     content: content.trim(),
   })
   if (error) throw error
-  await supabase.rpc('increment_treelz_comments', { post_id: postId })
+  await supabase.rpc('increment_treelz_comments', { p_post_id: postId })
 }
 
 // ─── Tips ───
@@ -209,12 +209,12 @@ export async function toggleTreelzSave(userId: string, postId: string): Promise<
 
   if (existing) {
     await supabase.from('treelz_saves').delete().eq('id', existing.id)
-    await supabase.rpc('decrement_treelz_saves', { post_id: postId })
+    await supabase.rpc('decrement_treelz_saves', { p_post_id: postId })
     return false
   }
 
   await supabase.from('treelz_saves').insert({ user_id: userId, post_id: postId })
-  await supabase.rpc('increment_treelz_saves', { post_id: postId })
+  await supabase.rpc('increment_treelz_saves', { p_post_id: postId })
   return true
 }
 
@@ -225,7 +225,7 @@ export async function recordTreelzShare(userId: string, postId: string, platform
     post_id: postId,
     platform,
   })
-  await supabase.rpc('increment_treelz_shares', { post_id: postId })
+  await supabase.rpc('increment_treelz_shares', { p_post_id: postId })
 }
 
 // ─── Views ───

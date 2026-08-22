@@ -816,32 +816,25 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
       if (!remoteUsers?.length) return audience
 
       const hostId = String(stream?.user_id || '').trim()
-      const anonMembers: StreamAudienceMember[] = remoteUsers
+      const syntheticMembers: StreamAudienceMember[] = remoteUsers
         .filter((participant: any) => {
           if (!participant?.identity) return false
           if (isGhostParticipant(participant)) return false
 
           const metadata = getRemoteParticipantMetadata(participant)
-          // Skip the host and anyone sitting in a seat (they have their own tiles).
           if (metadata?.role === 'broadcaster') return false
           if (metadata?.seat_index || metadata?.seatIndex) return false
           if (metadata?.user_id === hostId || metadata?.userId === hostId) return false
 
-          const username = String(metadata?.username || participant?.name || '')
-          const identity = getRemoteParticipantIdentity(participant)
-          if (isAnonymousDisplayName(username)) return true
-          return (
-            identity.includes('guest-viewer:') ||
-            identity.includes('anon-viewer:')
-          )
+          return true
         })
         .map((participant: any) => {
           const metadata = getRemoteParticipantMetadata(participant)
           const identity = getRemoteParticipantIdentity(participant)
           const userId = String(metadata?.user_id || metadata?.userId || identity)
-          const username = String(metadata?.username || participant?.name || 'anon')
+          const username = String(metadata?.username || participant?.name || 'Viewer')
           return {
-            id: `anon:${userId}`,
+            id: `remote:${userId}`,
             stream_id: streamId || '',
             user_id: userId,
             username,
@@ -860,9 +853,9 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
           }
         })
 
-      if (anonMembers.length === 0) return audience
+      if (syntheticMembers.length === 0) return audience
       const existingIds = new Set(audience.map((m) => m.user_id))
-      const filtered = anonMembers.filter((m) => !existingIds.has(m.user_id))
+      const filtered = syntheticMembers.filter((m) => !existingIds.has(m.user_id))
       return [...filtered, ...audience]
     }, [audience, remoteUsers, stream?.user_id, streamId])
 
@@ -3153,9 +3146,14 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
       // Broadcast immediate box_count change so viewers and mobile clients update instantly
       try {
-        sendStreamBroadcast(streamId, 'box_count_changed', { box_count: desiredViewerSeats === 0 ? 1 : totalBoxes, stream_id: streamId })
+        const boxCountChannel = supabase.channel(`stream:${streamId}`)
+        await boxCountChannel.send({
+          type: 'broadcast',
+          event: 'box_count_changed',
+          payload: { box_count: desiredViewerSeats === 0 ? 1 : totalBoxes, stream_id: streamId },
+        })
       } catch (err) {
-        console.warn('[BroadcastPage] sendStreamBroadcast box_count_changed failed:', err)
+        console.warn('[BroadcastPage] box_count_changed broadcast failed:', err)
       }
 
       toast.success(`Seats updated to ${desiredViewerSeats} viewer seat${desiredViewerSeats === 1 ? '' : 's'}`)
@@ -5974,9 +5972,17 @@ const toggleMicrophone = useCallback(async () => {
   // Mobile host: broadcaster on mobile/PWA needs a completely different layout
   const isMobileHost = hasMounted && isMobileWidth && isHost;
 
+  const activeAudienceWithAnon = useMemo(() => {
+    return audienceWithAnon.filter((m) => {
+      if (!m.is_active || m.left_at) return false
+      if (m.user_id === user?.id) return false
+      return true
+    })
+  }, [audienceWithAnon, user?.id])
+
   const audienceViewerCount = useMemo(() => activeAudience.filter((m) => m.user_id !== user?.id).length, [activeAudience, user?.id])
   const streamLayoutStats = useMemo(() => ({
-    viewers: viewerCount > 0 ? viewerCount : (audienceViewerCount > 0 ? audienceViewerCount : Number(stream?.current_viewers ?? stream?.viewer_count ?? remoteParticipants.size ?? 0)),
+    viewers: viewerCount > 0 ? viewerCount : (audienceViewerCount > 0 ? audienceViewerCount : Number(stream?.current_viewers ?? stream?.viewer_count ?? Math.max(remoteParticipants.size, activeAudienceWithAnon.length) ?? 0)),
     likes: Number((stream as any)?.total_likes ?? (stream as any)?.like_count ?? 0),
     coinsEarned: Number((stream as any)?.total_gifts_coins ?? (stream as any)?.coin_earnings ?? 0),
     onStage: 0,
@@ -5990,8 +5996,9 @@ const toggleMicrophone = useCallback(async () => {
     (stream as any)?.total_gifts_coins,
     (stream as any)?.coin_earnings,
     remoteParticipants.size,
+    activeAudienceWithAnon.length,
   ])
-  const liveViewerCount = viewerCount > 0 ? viewerCount : (audienceViewerCount > 0 ? audienceViewerCount : remoteParticipants.size)
+  const liveViewerCount = viewerCount > 0 ? viewerCount : (audienceViewerCount > 0 ? audienceViewerCount : Math.max(remoteParticipants.size, activeAudienceWithAnon.length))
   const visibleViewerCount = Math.max(viewerCount, activeViewerProfiles.length)
   const viewerBubbleProfiles = useMemo(() => activeViewerProfiles.map((viewer) => ({
     id: viewer.user_id,
@@ -8243,7 +8250,7 @@ const toggleMicrophone = useCallback(async () => {
                  isMicOn={micEnabled}
                  isCamOn={cameraEnabled}
                   isLive={stream?.status === 'live'}
-                  liveViewerCount={viewerCount}
+                   liveViewerCount={liveViewerCount}
                  isGiftTrayOpen={isGiftModalOpen}
                  isOfficerModalOpen={false}
                  onToggleMic={toggleMicrophone}
@@ -9145,7 +9152,7 @@ const toggleMicrophone = useCallback(async () => {
             isMicOn={micEnabled}
             isCamOn={cameraEnabled}
             isLive={stream?.status === 'live'}
-            liveViewerCount={viewerCount}
+            liveViewerCount={liveViewerCount}
             isHost={isHost}
             onToggleMic={toggleMicrophone}
             onToggleCam={toggleCamera}
@@ -9157,45 +9164,78 @@ const toggleMicrophone = useCallback(async () => {
             onInviteFollowers={handleInviteFollowers}
             onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
            />
-           {showViewerList && (
-             <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
-               <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
-                 <div className="mb-4 flex items-center justify-between">
-                   <h3 className="text-base font-black text-white">Active Viewers</h3>
-                   <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
-                     <X size={18} />
-                   </button>
-                 </div>
-                 <div className="max-h-80 overflow-y-auto space-y-2">
-                   {activeViewerProfiles.length === 0 ? (
-                     <p className="text-sm text-zinc-500">No active viewers</p>
-                   ) : (
-                     activeViewerProfiles.map(viewer => {
-                       const member = audience.find(m => m.user_id === viewer.user_id)
-                       const coins = member?.gift_score ?? member?.gift_total ?? 0
-                       const coinLabel = coins >= 1_000_000
-                         ? `${(coins / 1_000_000).toFixed(1)}M Coins`
-                         : coins >= 1_000
-                           ? `${(coins / 1_000).toFixed(1)}K Coins`
-                           : `${coins} Coins`
-                       return (
-                         <div key={viewer.user_id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                           <div className="h-8 w-8 shrink-0 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
-                             {viewer.username?.charAt(0)?.toUpperCase() || '?'}
-                           </div>
-                           <div className="min-w-0 flex-1">
-                             <div className="truncate text-sm font-bold text-white">{viewer.username || 'Viewer'}</div>
-                             <div className="text-xs text-zinc-500">{viewer.role || 'viewer'}</div>
-                             <div className="text-[11px] font-black text-cyan-300">{coinLabel}</div>
-                           </div>
-                         </div>
-                       )
-                     })
-                   )}
-                 </div>
-               </div>
-             </div>
-           )}
+            {showViewerList && (
+              <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
+                <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-base font-black text-white">Active Viewers</h3>
+                    <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
+                      <X size={18} />
+                    </button>
+                  </div>
+                   {(() => {
+                     const viewers = audience.length > 0
+                       ? audience
+                       : activeViewerProfiles.length > 0
+                         ? activeViewerProfiles.map(v => ({
+                             id: v.user_id,
+                             user_id: v.user_id,
+                             username: v.username,
+                             avatar_url: v.avatar_url,
+                             role: v.role || 'audience',
+                             gift_total: 0,
+                           }))
+                         : activeAudienceWithAnon
+
+                     const activeViewers = viewers.filter(m => m.is_active && !m.left_at)
+
+                     if (import.meta.env.DEV) {
+                       console.log('[BroadcastPage][ActiveViewersModal]', {
+                         audienceLength: audience.length,
+                         activeViewerProfilesLength: activeViewerProfiles.length,
+                         activeAudienceWithAnonLength: activeAudienceWithAnon.length,
+                         viewersSource: audience.length > 0 ? 'audience' : activeViewerProfiles.length > 0 ? 'activeViewerProfiles' : 'activeAudienceWithAnon',
+                         activeViewersCount: activeViewers.length,
+                         sample: activeViewers.slice(0, 3).map(m => ({
+                           id: m.id,
+                           user_id: m.user_id,
+                           username: m.username,
+                           role: m.role,
+                           is_active: m.is_active,
+                           left_at: m.left_at,
+                           avatar_url: m.avatar_url,
+                         }))
+                       })
+                     }
+
+                     if (activeViewers.length === 0) {
+                       return <p className="text-sm text-zinc-500">No active viewers</p>
+                     }
+
+                     return activeViewers.map(member => {
+                      const coins = member.gift_total ?? 0
+                      const coinLabel = coins >= 1_000_000
+                        ? `${(coins / 1_000_000).toFixed(1)}M Coins`
+                        : coins >= 1_000
+                          ? `${(coins / 1_000).toFixed(1)}K Coins`
+                          : `${coins} Coins`
+                      return (
+                        <div key={member.id || member.user_id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                          <div className="h-8 w-8 shrink-0 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
+                            {member.username?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-bold text-white">{member.username || 'Viewer'}</div>
+                            <div className="text-xs text-zinc-500">{member.role || 'audience'}</div>
+                            <div className="text-[11px] font-black text-cyan-300">{coinLabel}</div>
+                          </div>
+                        </div>
+                      )
+                    })
+                  })()}
+                </div>
+              </div>
+            )}
          </GiftSystemProvider>
          <RoleInviteHandler />
       </>

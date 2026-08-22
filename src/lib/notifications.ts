@@ -26,7 +26,8 @@ export async function notifyAdmins(
   title: string,
   message: string,
   type: NotificationType,
-  metadata: NotificationMetadata = {}
+  metadata: NotificationMetadata = {},
+  targetRoles?: string[]
 ): Promise<{ success: boolean; error?: string }[]> {
   try {
     const { data: admins, error } = await supabase
@@ -44,22 +45,53 @@ export async function notifyAdmins(
       return [{ success: false, error: 'No admin users found' }]
     }
 
-    const results = await Promise.all(
-      admins.map(async (admin: any) => {
-        if (!admin?.id) {
-          return { success: false, error: 'Invalid admin id' }
-        }
-        try {
-          await sendNotification(admin.id, type, title, message, metadata)
-          return { success: true }
-        } catch (sendErr: any) {
-          console.warn('[notifyAdmins] Failed to notify admin:', admin.id, sendErr)
-          return { success: false, error: sendErr?.message || 'Notification send failed' }
-        }
-      })
-    )
+    const adminIds = admins.map(a => a.id).filter(Boolean)
 
-    return results
+    if (adminIds.length === 0) {
+      return [{ success: false, error: 'No valid admin IDs' }]
+    }
+
+    // Use the centralized edge function for admin notifications
+    // This ensures online admins only get in-app notifications,
+    // while offline admins get both in-app and push notifications
+    const edgeResult = await supabase.functions.invoke('notify-admin-event', {
+      body: {
+        type,
+        title,
+        message,
+        metadata: {
+          ...metadata,
+          audience: 'admin'
+        },
+        targetRoles: targetRoles || [
+          'admin', 'superadmin', 'owner', 'ceo', 'lead_troll_officer',
+          'troll_officer', 'moderator', 'staff', 'secretary',
+          'executive_secretary', 'troll_city_secretary'
+        ]
+      }
+    })
+
+    if (edgeResult.error) {
+      console.warn('[notifyAdmins] Edge function failed, falling back to direct notifications:', edgeResult.error)
+      
+      const results = await Promise.all(
+        admins.map(async (admin: any) => {
+          if (!admin?.id) {
+            return { success: false, error: 'Invalid admin id' }
+          }
+          try {
+            await sendNotification(admin.id, type, title, message, { ...metadata, audience: 'admin' })
+            return { success: true }
+          } catch (sendErr: any) {
+            console.warn('[notifyAdmins] Failed to notify admin:', admin.id, sendErr)
+            return { success: false, error: sendErr?.message || 'Notification send failed' }
+          }
+        })
+      )
+      return results
+    }
+
+    return adminIds.map(() => ({ success: true }))
   } catch (err: any) {
     console.error('[notifyAdmins] Unexpected error:', err)
     return [{ success: false, error: err?.message || 'Unknown error' }]
@@ -1302,6 +1334,122 @@ export async function notifyNewUserSignup(
       signup_username: username,
       action_url: `/profile/${username}`,
       audience: 'admin',
+    }
+  )
+}
+
+// ==========================================
+// ADMIN ACTION NOTIFICATIONS
+// ==========================================
+
+export async function notifyAdminUserKicked(
+  kickedUserId: string,
+  kickedUsername: string,
+  streamId: string,
+  duration: string,
+  kickedBy: string
+): Promise<void> {
+  await notifyAdmins(
+    '👢 User Kicked from Stream',
+    `@${kickedUsername} was kicked from a stream for ${duration} by @${kickedBy}.`,
+    'user_kicked',
+    {
+      kicked_user_id: kickedUserId,
+      kicked_username: kickedUsername,
+      stream_id: streamId,
+      duration,
+      kicked_by: kickedBy,
+      action_url: `/watch/${streamId}`,
+    }
+  )
+}
+
+export async function notifyAdminUserArrested(
+  arrestedUserId: string,
+  arrestedUsername: string,
+  reason: string,
+  severity: string,
+  arrestedBy: string
+): Promise<void> {
+  await notifyAdmins(
+    '⚖️ User Arrested',
+    `@${arrestedUsername} was arrested by @${arrestedBy}. Reason: ${reason}. Severity: ${severity}`,
+    'user_arrested',
+    {
+      arrested_user_id: arrestedUserId,
+      arrested_username: arrestedUsername,
+      reason,
+      severity,
+      arrested_by: arrestedBy,
+      action_url: '/jail',
+    }
+  )
+}
+
+export async function notifyAdminCourtStarted(
+  caseId: string,
+  defendantId: string,
+  defendantUsername: string,
+  reason: string,
+  courtDate: string
+): Promise<void> {
+  await notifyAdmins(
+    '⚖️ Court Case Started',
+    `Court case opened for @${defendantUsername}. Reason: ${reason}. Court date: ${courtDate}`,
+    'court_started',
+    {
+      case_id: caseId,
+      defendant_id: defendantId,
+      defendant_username: defendantUsername,
+      reason,
+      court_date: courtDate,
+      action_url: '/court',
+    }
+  )
+}
+
+export async function notifyAdminCoinPurchase(
+  userId: string,
+  username: string,
+  amount: number,
+  orderId: string
+): Promise<void> {
+  await notifyAdmins(
+    '💰 Coin Purchase',
+    `@${username} purchased ${amount.toLocaleString()} coins. Order ID: ${orderId}`,
+    'coin_purchase_admin_alert',
+    {
+      purchase_user_id: userId,
+      purchase_username: username,
+      amount,
+      order_id: orderId,
+      action_url: '/admin/payments',
+    }
+  )
+}
+
+export async function notifyAdminReportFiled(
+  reportId: string,
+  reporterId: string,
+  reporterUsername: string,
+  targetUserId: string,
+  targetUsername: string,
+  reason: string,
+  streamId?: string
+): Promise<void> {
+  await notifyAdmins(
+    '⚠️ Report Filed',
+    `@${reporterUsername} reported @${targetUsername}: ${reason}`,
+    'report_filed',
+    {
+      report_id: reportId,
+      reporter_id: reporterId,
+      reporter_username: reporterUsername,
+      target_user_id: targetUserId,
+      target_username: targetUsername,
+      reason,
+      stream_id: streamId,
+      action_url: '/admin/reports',
     }
   )
 }

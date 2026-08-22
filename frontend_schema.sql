@@ -26367,8 +26367,8 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Unauthorized');
   END IF;
 
-  INSERT INTO public.stream_kicks (stream_id, user_id, kicked_by, created_by, reason)
-  VALUES (p_stream_id, p_target_user_id, v_actor_id, v_actor_id, COALESCE(p_reason, 'Kicked by moderator'));
+  INSERT INTO public.stream_kicks (stream_id, user_id, kicked_by, created_by, reason, created_at)
+  VALUES (p_stream_id, p_target_user_id, v_actor_id, v_actor_id, COALESCE(p_reason, 'Kicked by moderator'), now());
 
   UPDATE public.stream_bans
   SET banned_by = v_actor_id,
@@ -26395,7 +26395,13 @@ BEGIN
       OR guest_id = v_identity_text
     );
 
-  -- Remove participant rows from legacy presence table.
+  -- Set removed flag so realtime onParticipant handler catches the kick instantly,
+  -- then delete legacy presence rows.
+  UPDATE public.stream_participants
+  SET status = 'kicked', removed = true, left_at = now()
+  WHERE stream_id = p_stream_id
+    AND user_id = p_target_user_id;
+
   DELETE FROM public.stream_participants
   WHERE stream_id = p_stream_id
     AND user_id = p_target_user_id;

@@ -137,6 +137,23 @@ export function AudienceBubbleTicker({
     return [...visible, ...leavingExtras]
   }, [sortedAudience, leavingAudienceArray, maxVisible, leavingAudience])
 
+  if (import.meta.env.DEV) {
+    console.log('[AudienceBubbleTicker]', {
+      audienceLength: audience.length,
+      activeAudienceLength: activeAudience.length,
+      displayAudienceLength: displayAudience.length,
+      sample: displayAudience.slice(0, 3).map(m => ({
+        id: m.id,
+        user_id: m.user_id,
+        username: m.username,
+        role: m.role,
+        is_active: m.is_active,
+        left_at: m.left_at,
+        avatar_url: m.avatar_url,
+      }))
+    })
+  }
+
   const overflowCount = Math.max(0, sortedAudience.length - maxVisible)
 
   const canModerateMember = (member: StreamAudienceMember) => {

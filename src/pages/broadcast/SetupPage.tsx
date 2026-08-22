@@ -11,6 +11,7 @@ import { cn } from '../../lib/utils';
 import { useScreenShare, StreamMode, canScreenShare } from '../../hooks/useScreenShare';
 import { DraggableCameraOverlay } from '../../components/broadcast/DraggableCameraOverlay';
 import UniverseModeSetup from '../../components/broadcast/UniverseModeSetup';
+import LicenseRecoveryModal from '../../components/LicenseRecoveryModal';
 import { toast } from 'sonner';
 import { useBroadcastLockdown } from '@/hooks/useBroadcastLockdown';
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap';
@@ -20,6 +21,7 @@ import { RANDOM_BATTLE_ENABLED } from '../../config/featureFlags';
 import { US_STATES, getStateName } from '../../config/usStates';
 import type { BattleModeType } from '../../types/stateBattle';
 import { getUserStateRPC, assignUserToState } from '../../services/stateBattleService';
+import { isMobilePlatform } from '../../lib/mobilePlatform';
 import {
   BROADCAST_CATEGORIES,
   getCategoryConfig,
@@ -323,6 +325,8 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const [streamId] = useState(() => generateUUID());
   // Pre-fetch LiveKit token in background once we have user
   const [prefetchedToken, setPrefetchedToken] = useState<string | null>(null);
+  // License recovery modal
+  const [showLicenseRecovery, setShowLicenseRecovery] = useState(false);
    // Pre-fetch LiveKit token once user is available
   useEffect(() => {
     if (!user?.id || prefetchedToken) return;
@@ -703,7 +707,11 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       
       if (err.name === 'NotAllowedError') {
         setPermissionStatus('denied');
-        toast.error('Camera permission denied. Please allow access in your browser settings.');
+        if (isMobilePlatform) {
+          toast.error('Camera/microphone permission denied. Please enable it in your device app settings and try again.');
+        } else {
+          toast.error('Camera permission denied. Please allow access in your browser settings.');
+        }
       } else if (err.name === 'NotFoundError') {
         toast.error('No camera or microphone found. Please check your devices.');
       } else if (err.name === 'NotReadableError') {
@@ -930,20 +938,35 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
           }
           nativeStream = await navigator.mediaDevices.getUserMedia(constraints);
         } catch (err: any) {
-        if (err.name === 'OverconstrainedError' || err.name === 'NotReadableError' || err.name === 'NotFoundError') {
-          console.warn('[acquireMediaStream] Advanced video constraints failed, retrying with minimal constraints', err);
-          nativeStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true
-            },
-            video: enableVideo ? { facingMode: videoFacingMode } : false
-          });
-        } else {
-          throw err;
+          if (err.name === 'NotAllowedError' && isMobilePlatform) {
+            console.warn('[acquireMediaStream] Permission denied on mobile, retrying after short delay', err);
+            await new Promise(resolve => setTimeout(resolve, 600));
+            try {
+              nativeStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                  autoGainControl: true
+                },
+                video: enableVideo ? { facingMode: videoFacingMode } : false
+              });
+            } catch (retryErr) {
+              throw retryErr;
+            }
+          } else if (err.name === 'OverconstrainedError' || err.name === 'NotReadableError' || err.name === 'NotFoundError') {
+            console.warn('[acquireMediaStream] Advanced video constraints failed, retrying with minimal constraints', err);
+            nativeStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+              },
+              video: enableVideo ? { facingMode: videoFacingMode } : false
+            });
+          } else {
+            throw err;
+          }
         }
-      }
       console.log('[acquireMediaStream] Native stream acquired');
 
        // Wrap audio track in LiveKit LocalAudioTrack
@@ -1505,8 +1528,8 @@ const handleStartStream = async () => {
       toast.error('Broadcasting is currently disabled by admin. No one can go live while lockdown is active.');
       return;
     }
-    if (profile?.drivers_license_status === 'suspended') {
-      toast.error('Your driver license is currently suspended. You cannot go live.');
+    if (profile?.drivers_license_status === 'suspended' || profile?.license_status === 'suspended') {
+      setShowLicenseRecovery(true);
       return;
     }
     if (!title.trim()) {
@@ -1650,6 +1673,7 @@ const handleStartStream = async () => {
     setLoading(true);
     let createdStreamId: string | null = null;
     let failureStage: BroadcastStartStage = 'validation';
+    const tStart = Date.now()
     try {
       broadcastStartLog('clicked', {
         userId: user.id,
@@ -1692,18 +1716,18 @@ const handleStartStream = async () => {
            random_battle_queued_at: null,
            state_battle_mode: RANDOM_BATTLE_ENABLED && category === 'general' && battleMode === 'state' && randomBattleQueueEnabled ? 'state' : 'none',
            state_battle_state_code: battleMode === 'state' ? userState : null,
-livekit_room_name: roomName,
+      livekit_room_name: roomName,
             agora_channel: roomName,
             broadcast_disclaimer_accepted: true,
             broadcast_disclaimer_accepted_at: agreementAcceptedAt,
              broadcast_disclaimer_user_id: user.id,
              ...(category === 'spiritual' && { selected_religion: selectedReligion }),
-           ...(category === 'battle' && { 
-             battle_format: universeBattleMode === 'multi' ? selectedMultiBattleFormat : '4v4',
-             battle_mode: universeBattleMode === 'multi' ? 'universal' : 'troll',
-             universe_mode: true,
-             battle_status: 'waiting'
-           }),
+            ...(category === 'battle' && { 
+              battle_format: universeBattleMode === 'multi' ? selectedMultiBattleFormat : '4x4',
+              battle_mode: universeBattleMode === 'multi' ? 'universal' : 'troll',
+              universe_mode: true,
+              battle_status: 'waiting'
+            }),
             ...(randomBattleQueueEnabled && RANDOM_BATTLE_ENABLED && category === 'general' ? { battle_mode: battleMode === 'state' ? 'random_queue' : 'random_queue' } : {}),
             ...(battleMode === 'state' && randomBattleQueueEnabled && category === 'general' ? { state_battle_mode: 'state' } : {}),
           };
@@ -1711,153 +1735,145 @@ livekit_room_name: roomName,
       // Add password protection if enabled
       if (isProtected && broadcastPassword.length >= 4) {
         insertData.is_protected = true;
-        // Hash password using PostgreSQL crypt - the password will be sent as plaintext
-        // and hashed server-side (we need to call an RPC to hash it)
         const { data: hashData, error: hashError } = await supabase.rpc('crypt_password', {
           p_password: broadcastPassword
         });
-        
-        // If RPC fails, the stream creation will fail (which is the expected behavior)
-        // Otherwise use the hashed password
         insertData.password_hash = hashError ? null : hashData;
       } else {
         insertData.is_protected = false;
         insertData.password_hash = null;
       }
 
-
+      const tDbInsert = Date.now()
       const { data, error } = await supabase
         .from('streams')
         .insert(insertData)
         .select()
         .maybeSingle();
 
-        if (error) throw error;
-        createdStreamId = data.id;
-        failureStage = 'stream row created';
-        broadcastStartLog('stream row created', { streamId: data.id, roomName });
+      if (error) throw error;
+      createdStreamId = data.id;
+      failureStage = 'stream row created';
+      console.log(`[SetupPage] Stream row created in ${Date.now() - tDbInsert}ms`, { streamId: data.id, roomName });
+      broadcastStartLog('stream row created', { streamId: data.id, roomName });
 
-        failureStage = 'requesting livekit token';
-        broadcastStartLog('requesting livekit token', { streamId: data.id, roomName });
-        const tokenData = await requestLiveKitToken(roomName, user.id);
-        failureStage = 'token response normalized';
-        broadcastStartLog('token response normalized', {
-          streamId: data.id,
-          roomName: tokenData.roomName,
-          participantIdentity: tokenData.participantIdentity,
-          hasToken: !!tokenData.token,
+      // FAST CAPACITY CHECK: run before expensive LiveKit work
+      failureStage = 'capacity check';
+      const startCap = await startBroadcastWithCapacityCheck(data.id)
+      if (!startCap.allowed) {
+        console.warn('[SetupPage] Broadcast start rejected by capacity check:', startCap.reason, {
+          active_broadcasts: startCap.active_broadcasts,
+          start_cap: startCap.start_cap,
+        })
+        toast.error('The platform has reached its current live broadcast capacity. Please try starting your broadcast again shortly.')
+        await markBroadcastStartFailed(data.id, 'start capacity reached', startCap.reason)
+        setLoading(false)
+        return
+      }
+      console.log(`[SetupPage] Capacity check passed in ${Date.now() - tDbInsert}ms`)
+
+      failureStage = 'requesting livekit token';
+      broadcastStartLog('requesting livekit token', { streamId: data.id, roomName });
+      
+      // Use prefetched token if available, otherwise fetch
+      let tokenData
+      if (prefetchedToken) {
+        tokenData = { token: prefetchedToken, roomName, participantIdentity: user.id }
+        console.log('[SetupPage] Using prefetched token')
+      } else {
+        const tToken = Date.now()
+        tokenData = await requestLiveKitToken(roomName, user.id);
+        console.log(`[SetupPage] Token fetched in ${Date.now() - tToken}ms`)
+      }
+      failureStage = 'token response normalized';
+      broadcastStartLog('token response normalized', {
+        streamId: data.id,
+        roomName: tokenData.roomName,
+        participantIdentity: tokenData.participantIdentity,
+        hasToken: !!tokenData.token,
+      });
+
+      const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
+      const tRoomCreate = Date.now()
+      const room = new Room({
+        audioCaptureOptions: { echoCancellation: true, noiseSuppression: true },
+        videoCaptureOptions: { facingMode: 'user' },
+        dynacast: true,
+      } as any);
+      console.log(`[SetupPage] Room created in ${Date.now() - tRoomCreate}ms`)
+
+      failureStage = 'connecting LiveKit room';
+      broadcastStartLog('connecting LiveKit room', { streamId: data.id, roomName: tokenData.roomName });
+      const tConnect = Date.now()
+      await room.connect(livekitUrl, tokenData.token);
+      console.log(`[SetupPage] LiveKit connected in ${Date.now() - tConnect}ms`)
+      failureStage = 'LiveKit connected';
+      broadcastStartLog('LiveKit connected', { streamId: data.id, roomName: tokenData.roomName });
+
+      livekitRoomRef.current = room;
+      setLivekitRoom(room);
+      PreflightStore.setLivekitRoom(room);
+
+       const isScreenShareMode = category === 'gaming' && streamMode === 'screen' && !!screenTrack;
+       failureStage = 'publishing LiveKit tracks';
+       broadcastStartLog('publishing LiveKit tracks', {
+         streamId: data.id,
+         roomName: tokenData.roomName,
+         isScreenShareMode,
+         hasAudio: !!livekitTracksRef.current[0],
+         hasCamera: !!livekitTracksRef.current[1],
+         hasScreen: !!screenTrack,
         });
+       const tPublish = Date.now()
+       await publishSetupTracksToRoom(room, livekitTracksRef.current, screenTrack, isScreenShareMode);
+       console.log(`[SetupPage] Tracks published in ${Date.now() - tPublish}ms`)
 
-        const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
-        const room = new Room({
-          audioCaptureOptions: { echoCancellation: true, noiseSuppression: true },
-          videoCaptureOptions: { facingMode: 'user' },
-          dynacast: true,
-        } as any);
+      // Mark stream as live now that LiveKit is connected and tracks are published
+      const { error: updateError } = await supabase
+       .from('streams')
+        .update({
+          status: 'live',
+          is_live: true,
+          started_at: new Date().toISOString(),
+          ...(randomBattleQueueEnabled && RANDOM_BATTLE_ENABLED && category === 'general' ? {
+           random_battle_queued_at: new Date().toISOString(),
+           battle_mode: 'random_queue',
+           ...(battleMode === 'state' ? {
+             state_battle_mode: 'state',
+             state_battle_state_code: userState,
+           } : {}),
+         } : {}),
+         })
+         .eq('id', data.id);
 
-        failureStage = 'connecting LiveKit room';
-        broadcastStartLog('connecting LiveKit room', { streamId: data.id, roomName: tokenData.roomName });
-        await room.connect(livekitUrl, tokenData.token);
-        failureStage = 'LiveKit connected';
-        broadcastStartLog('LiveKit connected', { streamId: data.id, roomName: tokenData.roomName });
+      if (updateError) {
+        console.error('[SetupPage] Failed to mark stream as live:', updateError);
+        toast.error('Failed to start broadcast: ' + updateError.message);
+        await markBroadcastStartFailed(data.id, 'stream live verification', updateError);
+        setLoading(false);
+        isStartingStream.current = false;
+        return;
+      }
 
-        livekitRoomRef.current = room;
-        setLivekitRoom(room);
-        PreflightStore.setLivekitRoom(room);
+      console.log(`[SetupPage] Stream marked live in ${Date.now() - tStart}ms`)
 
-         const isScreenShareMode = category === 'gaming' && streamMode === 'screen' && !!screenTrack;
-         failureStage = 'publishing LiveKit tracks';
-         broadcastStartLog('publishing LiveKit tracks', {
-           streamId: data.id,
-           roomName: tokenData.roomName,
-           isScreenShareMode,
-           hasAudio: !!livekitTracksRef.current[0],
-           hasCamera: !!livekitTracksRef.current[1],
-           hasScreen: !!screenTrack,
-          });
-         await publishSetupTracksToRoom(room, livekitTracksRef.current, screenTrack, isScreenShareMode);
-
-           // Authoritative start-capacity check. Counts currently active
-           // broadcasts under a row lock and atomically transitions this owned
-           // stream to live when allowed. Reconnecting to an already-live owned
-           // stream returns allowed=true (reason 'already_live') and is NOT
-           // blocked. This is the single source of truth for the start cap.
-           const startCap = await startBroadcastWithCapacityCheck(data.id)
-           if (!startCap.allowed) {
-             console.warn('[SetupPage] Broadcast start rejected by capacity check:', startCap.reason, {
-               active_broadcasts: startCap.active_broadcasts,
-               start_cap: startCap.start_cap,
-             })
-             toast.error('The platform has reached its current live broadcast capacity. Please try starting your broadcast again shortly.')
-             await markBroadcastStartFailed(data.id, 'start capacity reached', startCap.reason)
-             setLoading(false)
-             return
-           }
-
-            // Mark stream as live now that LiveKit is connected and tracks are published
-            const { error: updateError } = await supabase
-             .from('streams')
-              .update({
-                status: 'live',
-                is_live: true,
-                started_at: new Date().toISOString(),
-                ...(randomBattleQueueEnabled && RANDOM_BATTLE_ENABLED && category === 'general' ? {
-                 random_battle_queued_at: new Date().toISOString(),
-                 battle_mode: 'random_queue',
-                 ...(battleMode === 'state' ? {
-                   state_battle_mode: 'state',
-                   state_battle_state_code: userState,
-                 } : {}),
-               } : {}),
-             })
-             .eq('id', data.id);
-
-            if (updateError) {
-              console.error('[SetupPage] Failed to mark stream as live:', updateError);
-              toast.error('Failed to start broadcast: ' + updateError.message);
-              await markBroadcastStartFailed(data.id, 'stream live verification', updateError);
-              setLoading(false);
-              isStartingStream.current = false;
-              return;
-            }
-
-            // Verify stream is queryable before navigating (fast retry).
-            const verifyStream = async (): Promise<boolean> => {
-              for (let attempt = 0; attempt < 2; attempt++) {
-                const { data: verifyData } = await supabase
-                  .from('streams')
-                  .select('id, status')
-                  .eq('id', data.id)
-                  .maybeSingle();
-                if (verifyData?.status === 'live') return true;
-                await new Promise((resolve) => setTimeout(resolve, 100));
-              }
-              return false;
-            };
-
-            const streamVerified = await verifyStream();
-            if (!streamVerified) {
-              console.warn('[SetupPage] Stream not queryable after live update, navigating with fallback');
-            }
-
-        // Create smoke event if enabled
-        if (smokeEventEnabled) {
-          try {
-              await supabase.rpc('start_smoke_event', {
-                p_stream_id: data.id,
-                p_seat_count: seatCount === 0 ? 0 : seatCount,
-              });
-            console.log('[SetupPage] Smoke event created for stream:', data.id);
-          } catch (smokeErr) {
-            console.warn('[SetupPage] Failed to create smoke event:', smokeErr);
-            // Don't fail the stream start if smoke event creation fails
-          }
+      // Create smoke event if enabled
+      if (smokeEventEnabled) {
+        try {
+            await supabase.rpc('start_smoke_event', {
+              p_stream_id: data.id,
+              p_seat_count: seatCount === 0 ? 0 : seatCount,
+            });
+          console.log('[SetupPage] Smoke event created for stream:', data.id);
+        } catch (smokeErr) {
+          console.warn('[SetupPage] Failed to create smoke event:', smokeErr);
         }
+      }
 
-        console.log('[SetupPage] Stream marked as live in database');
-        broadcastStartLog('stream live verification', { streamId: data.id, status: 'live' });
+      console.log('[SetupPage] Stream marked as live in database');
+      broadcastStartLog('stream live verification', { streamId: data.id, status: 'live' });
 
-        await startBunnyDelivery(data.id, roomName).catch(() => null)
+      await startBunnyDelivery(data.id, roomName).catch(() => null)
 
         // Stream is now created, LiveKit is connected, tracks are published, and DB is updated.
         // Proceed to broadcast room.
@@ -2789,6 +2805,12 @@ livekit_room_name: roomName,
           <p className="text-red-400 text-xs text-center">A rear camera is required for this category but none was detected.</p>
         )}
       </div>
+
+      <LicenseRecoveryModal
+        open={showLicenseRecovery}
+        onClose={() => setShowLicenseRecovery(false)}
+        onRecovered={() => setShowLicenseRecovery(false)}
+      />
     </div>
   );
 }

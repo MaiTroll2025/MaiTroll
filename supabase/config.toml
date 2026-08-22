@@ -410,3 +410,18 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/celebrity/index.ts"
 
+[functions.push-notifications]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/push-notifications/index.ts"
+
+[functions.notify-stream-live]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/notify-stream-live/index.ts"
+
+[functions.notify-admin-event]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/notify-admin-event/index.ts"
+

@@ -16,7 +16,7 @@
     "run:migrations": "node ./scripts/run_migrations.js",
     "run:migration:file": "node ./scripts/run_migrations.js",
     "check:sounds": "node ./scripts/check_sounds.js",
-    "cap:init": "cap init Mai Troll com.Mai Troll.app --web-dir=dist",
+    "cap:init": "cap init Maitroll com.maitroll.app --web-dir=dist",
     "cap:add:android": "cap add android",
     "cap:sync": "npm run build && cap sync",
     "cap:sync:android": "npm run build && cap sync android",

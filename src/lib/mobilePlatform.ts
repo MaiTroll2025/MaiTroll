@@ -153,7 +153,7 @@ export async function getAppInfo() {
   }
   return {
     name: 'MaiTroll',
-    id: 'com.Mai Troll.app',
+    id: 'com.maitroll.app',
     build: '1',
     version: '1.0.0',
   };

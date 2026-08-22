@@ -222,7 +222,11 @@ export type NotificationType =
   | 'withdraw'
   | 'edit'
   | 'any'
-  | 'report_filed';
+  | 'report_filed'
+  | 'user_kicked'
+  | 'user_arrested'
+  | 'court_started'
+  | 'coin_purchase_admin_alert';
 
 export interface Notification {
   id: string

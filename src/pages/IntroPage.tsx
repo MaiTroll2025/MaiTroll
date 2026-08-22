@@ -2,9 +2,18 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../lib/store';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const INTRO_VIDEO_PATH = 'troll intro.mp4';
+
+function getIntroVideoUrl(): string {
+  if (!SUPABASE_URL) return '/assets/troll intro.mp4';
+  return `${SUPABASE_URL.replace(/\/+$/g, '')}/storage/v1/object/public/troll-city-assets/${INTRO_VIDEO_PATH.replace(/^\/+/, '')}`;
+}
+
 export default function IntroPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const introVideoUrl = getIntroVideoUrl();
 
   // Synchronous check: skip if authenticated or already seen intro
   const introSeen = sessionStorage.getItem('trollIntroSeen') === 'true';
@@ -53,7 +62,7 @@ export default function IntroPage() {
           display: 'block',
         }}
       >
-        <source src="/assets/troll intro.mp4" type="video/mp4" />
+        <source src={introVideoUrl} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 

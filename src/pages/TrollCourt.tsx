@@ -14,6 +14,7 @@ import {
   Scale,
   Search,
   Shield,
+  ShieldAlert,
   Stamp,
   Users,
   X,
@@ -27,25 +28,26 @@ import { startCourtSession } from '../lib/courtSessions'
 import { MaiTrollTheme } from '../styles/trollCityTheme'
 import FileLawsuitModal from '../components/FileLawsuitModal'
 import JudgeRulingModal from '../components/JudgeRulingModal'
+import PayWarrantModal from '../components/PayWarrantModal'
 import { UserSearchInput } from '../components/UserSearchDropdown'
 import { generateUUID } from '../lib/uuid'
 
 const CASE_TYPE_MAP: Record<string, string> = {
-  'Harassment / Threats': 'harassment_threats',
-  'Hate Speech / Discrimination': 'hate_speech_discrimination',
-  'Nudity / Sexual Content': 'nudity_sexual_content',
-  'Doxxing / Personal Info': 'doxxing_personal_info',
-  'Scamming / Fraud': 'scamming_fraud',
-  'Chargeback / Payment Abuse': 'chargeback_payment_abuse',
-  'Gift Manipulation / Fake gifting': 'gift_manipulation',
-  'Ban Evasion': 'ban_evasion',
-  'Family War Dispute': 'family_war_dispute',
-  'Streamer Misconduct': 'streamer_misconduct',
-  'Officer Misconduct': 'officer_misconduct',
-  'Appeal Case': 'appeal_case',
-  'Copyright / Content Claim': 'copyright_content_claim',
-  'TrollCourt Civil Case': 'trollcourt_civil_case',
-  'MaiTroll Policy Violation': 'MaiTroll_policy_violation',
+  'Harassment / Threats': 'criminal',
+  'Hate Speech / Discrimination': 'criminal',
+  'Nudity / Sexual Content': 'criminal',
+  'Doxxing / Personal Info': 'criminal',
+  'Scamming / Fraud': 'criminal',
+  'Chargeback / Payment Abuse': 'civil',
+  'Gift Manipulation / Fake gifting': 'civil',
+  'Ban Evasion': 'criminal',
+  'Family War Dispute': 'civil',
+  'Streamer Misconduct': 'criminal',
+  'Officer Misconduct': 'criminal',
+  'Appeal Case': 'civil',
+  'Copyright / Content Claim': 'civil',
+  'TrollCourt Civil Case': 'civil',
+  'MaiTroll Policy Violation': 'criminal',
 }
 
 const CASE_TYPES = [
@@ -90,6 +92,7 @@ export default function TrollCourt() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isFileLawsuitModalOpen, setIsFileLawsuitModalOpen] = useState(false)
+  const [showPayWarrantModal, setShowPayWarrantModal] = useState(false)
   const [_userList, setUserList] = useState<any[]>([])
   const [selectedUser, setSelectedUser] = useState<any>(null)
   const [_isSearchingUsers, setIsSearchingUsers] = useState(false)
@@ -105,31 +108,34 @@ export default function TrollCourt() {
 
   const canSummonUser =
     profile?.is_admin === true ||
+    profile?.is_judge === true ||
     profile?.is_lead_officer === true ||
     profile?.is_secretary === true ||
     profile?.is_troll_officer === true ||
-    ['admin', 'lead_troll_officer', 'secretary', 'troll_officer'].includes(String(profile?.role || '')) ||
-    ['admin', 'lead_troll_officer', 'secretary', 'troll_officer'].includes(String(profile?.troll_role || ''))
+    ['admin', 'judge', 'lead_troll_officer', 'secretary', 'troll_officer'].includes(String(profile?.role || '')) ||
+    ['admin', 'judge', 'lead_troll_officer', 'secretary', 'troll_officer'].includes(String(profile?.troll_role || ''))
 
   const canAddCase =
     profile?.is_admin === true ||
+    profile?.is_judge === true ||
     profile?.is_lead_officer === true ||
     profile?.is_secretary === true ||
-    ['admin', 'lead_troll_officer', 'secretary'].includes(String(profile?.role || '')) ||
-    ['admin', 'lead_troll_officer', 'secretary'].includes(String(profile?.troll_role || ''))
+    ['admin', 'judge', 'lead_troll_officer', 'secretary'].includes(String(profile?.role || '')) ||
+    ['admin', 'judge', 'lead_troll_officer', 'secretary'].includes(String(profile?.troll_role || ''))
 
   const canStartCourt =
     profile?.is_admin === true ||
+    profile?.is_judge === true ||
     profile?.is_lead_officer === true ||
     profile?.is_troll_officer === true ||
-    ['admin', 'lead_troll_officer', 'troll_officer'].includes(String(profile?.role || '')) ||
-    ['admin', 'lead_troll_officer', 'troll_officer'].includes(String(profile?.troll_role || ''))
+    ['admin', 'judge', 'lead_troll_officer', 'troll_officer'].includes(String(profile?.role || '')) ||
+    ['admin', 'judge', 'lead_troll_officer', 'troll_officer'].includes(String(profile?.troll_role || ''))
 
   useEffect(() => {
     const fetchCases = async () => {
       const { data } = await supabase
         .from('court_cases')
-        .select('*, defendant:defendant_id(username), plaintiff:plaintiff_id(username)')
+        .select('*, defendant:defendant_id!left(username, avatar_url), plaintiff:plaintiff_id!left(username, avatar_url)')
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(5)
@@ -146,16 +152,16 @@ export default function TrollCourt() {
     const fetchMyCivilCases = async () => {
       const { data } = await supabase
         .from('troll_court_cases')
-        .select('*, defendant:defendant_id(username), plaintiff:plaintiff_id(username)')
+        .select('*, defendant:defendant_id!left(username, avatar_url), plaintiff:plaintiff_id!left(username, avatar_url)')
         .or(`plaintiff_id.eq.${user.id},defendant_id.eq.${user.id}`)
         .order('created_at', { ascending: false })
 
       if (data) setMyCivilCases(data)
 
-      if (profile?.role === 'admin' || profile?.role === 'lead_troll_officer') {
+      if (profile?.role === 'admin' || profile?.role === 'lead_troll_officer' || profile?.role === 'judge') {
         const { data: assigned } = await supabase
           .from('troll_court_cases')
-          .select('*, defendant:defendant_id(username), plaintiff:plaintiff_id(username)')
+          .select('*, defendant:defendant_id!left(username, avatar_url), plaintiff:plaintiff_id!left(username, avatar_url)')
           .eq('assigned_judge_id', user.id)
           .neq('status', 'ruled')
           .neq('status', 'dismissed')
@@ -175,7 +181,14 @@ export default function TrollCourt() {
 
     const { data } = await supabase
       .from('court_dockets')
-      .select('*, court_cases!inner(*, defendant:defendant_id(username), plaintiff:plaintiff_id(username))')
+      .select(`
+        *,
+        court_cases!court_cases_docket_id_fkey(
+          *,
+          defendant:defendant_id!left(username, avatar_url),
+          plaintiff:plaintiff_id!left(username, avatar_url)
+        )
+      `)
       .gte('court_date', startStr)
       .lte('court_date', endStr)
       .is('court_cases.deleted_at', null)
@@ -194,7 +207,14 @@ export default function TrollCourt() {
 
       const { data: docketData } = await supabase
         .from('court_dockets')
-        .select('*, court_cases(*, defendant:defendant_id(username), plaintiff:plaintiff_id(username))')
+        .select(`
+          *,
+          court_cases!court_cases_docket_id_fkey(
+            *,
+            defendant:defendant_id!left(username, avatar_url),
+            plaintiff:plaintiff_id!left(username, avatar_url)
+          )
+        `)
         .eq('court_date', selectedCalendarDate)
 
       if (docketData) {
@@ -242,7 +262,7 @@ export default function TrollCourt() {
   const loadPublicCourtState = useCallback(async () => {
     const { data: recent } = await supabase
       .from('court_cases')
-      .select('*, defendant:defendant_id(username), plaintiff:plaintiff_id(username)')
+      .select('*, defendant:defendant_id!left(username, avatar_url), plaintiff:plaintiff_id!left(username, avatar_url)')
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(5)
@@ -302,9 +322,10 @@ export default function TrollCourt() {
           .from('court_summons')
           .select(`
             *,
-            court_cases!inner(
+            served_to_user:served_to(username, avatar_url),
+            court_cases!court_cases_docket_id_fkey(
               docket_id,
-              court_dockets!inner(court_date)
+            court_dockets!court_dockets_case_id_fkey!inner(court_date)
             )
           `)
           .eq('summoned_user_id', user.id)
@@ -315,6 +336,8 @@ export default function TrollCourt() {
           .from('court_cases')
           .select(`
             *,
+            defendant_user:defendant_id(username, avatar_url),
+            plaintiff_user:plaintiff_id(username, avatar_url),
             court_dockets!inner(court_date)
           `)
           .eq('defendant_id', user.id)
@@ -327,6 +350,7 @@ export default function TrollCourt() {
           reason: s.reason,
           court_date: s.court_cases?.court_dockets?.court_date || s.scheduled_for || null,
           source: 'summons',
+          summoned_user: s.served_to_user,
         }))
 
         const transformedCases = (cases || []).map((c: any) => ({
@@ -334,6 +358,8 @@ export default function TrollCourt() {
           reason: c.reason,
           court_date: c.court_dockets?.court_date || null,
           source: 'case',
+          defendant: c.defendant_user,
+          plaintiff: c.plaintiff_user,
         }))
 
         setPendingSummons([...transformedSummons, ...transformedCases])
@@ -377,7 +403,7 @@ export default function TrollCourt() {
 
     try {
       let activeSessionId = courtSession?.id
-      const dbCaseType = CASE_TYPE_MAP[selectedCaseType] || 'MaiTroll_policy_violation'
+      const dbCaseType = CASE_TYPE_MAP[selectedCaseType]
 
       if (!activeSessionId) {
         const newSessionId = generateUUID()
@@ -409,7 +435,7 @@ export default function TrollCourt() {
         } else {
           const { data: newCase } = await supabase
             .from('court_cases')
-            .select('id')
+            .select('id, defendant_id, reason, court_date')
             .eq('court_session_id', activeSessionId)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -420,6 +446,15 @@ export default function TrollCourt() {
               .from('court_sessions')
               .update({ case_id: newCase.id })
               .eq('id', activeSessionId)
+
+            const { notifyAdminCourtStarted } = await import('../lib/notifications')
+            notifyAdminCourtStarted(
+              newCase.id,
+              newCase.defendant_id || selectedUser.id,
+              selectedUser.username,
+              newCase.reason || 'Court case opened',
+              newCase.court_date ? new Date(newCase.court_date).toLocaleDateString() : 'TBD'
+            ).catch((e) => console.warn('[TrollCourt] Failed to notify admins:', e))
           }
 
           toast.success(courtSession ? 'Summons issued to current session' : 'Court session opened and case docketed')
@@ -600,6 +635,9 @@ export default function TrollCourt() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <CourtActionButton icon={<Users size={17} />} label="Enter Courtroom" onClick={() => navigate(`/court/${courtSession.id}`)} />
                   <CourtActionButton icon={<Gavel size={17} />} label="File Civil Lawsuit" onClick={() => setIsFileLawsuitModalOpen(true)} tone="red" />
+                  {profile?.has_active_warrant && (
+                    <CourtActionButton icon={<ShieldAlert size={17} />} label="Pay Warrant" onClick={() => setShowPayWarrantModal(true)} tone="gold" />
+                  )}
                   {canSummonUser && <CourtActionButton icon={<Stamp size={17} />} label="Issue Summons" onClick={openCreateModal} tone="gold" />}
                   {canSummonUser && <CourtActionButton icon={<X size={17} />} label="Adjourn Court" onClick={handleEndCourtSession} tone="danger" />}
                 </div>
@@ -629,6 +667,9 @@ export default function TrollCourt() {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <CourtActionButton icon={<Gavel size={17} />} label="File Civil Lawsuit" onClick={() => setIsFileLawsuitModalOpen(true)} tone="red" />
+                  {profile?.has_active_warrant && (
+                    <CourtActionButton icon={<ShieldAlert size={17} />} label="Pay Warrant" onClick={() => setShowPayWarrantModal(true)} tone="gold" />
+                  )}
                   {canStartCourt && courtSession && ['active', 'live'].includes(courtSession.status) && (
                     <CourtActionButton icon={<Eye size={17} />} label="Watch Live Court" onClick={() => navigate(`/troll-court/watch/${courtSession.id}`)} tone="green" />
                   )}
@@ -886,6 +927,11 @@ export default function TrollCourt() {
         isOpen={isFileLawsuitModalOpen}
         onClose={() => setIsFileLawsuitModalOpen(false)}
         onSuccess={() => {}}
+      />
+
+      <PayWarrantModal
+        isOpen={showPayWarrantModal}
+        onClose={() => setShowPayWarrantModal(false)}
       />
 
       <JudgeRulingModal

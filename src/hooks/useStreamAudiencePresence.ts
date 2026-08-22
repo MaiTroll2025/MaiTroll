@@ -31,7 +31,7 @@ function normalizeAudienceMember(row: any): StreamAudienceMember {
   const giftTotal = Number(row?.gift_total ?? row?.gift_score ?? row?.gift_total_coins ?? 0)
   const seatStatus = normalizeSeatStatus(row?.seat_status)
 
-  return {
+  const member = {
     id: row?.id ?? `${row?.stream_id ?? 'stream'}-${row?.user_id ?? 'viewer'}`,
     stream_id: row?.stream_id ?? '',
     user_id: row?.user_id ?? '',
@@ -49,6 +49,21 @@ function normalizeAudienceMember(row: any): StreamAudienceMember {
     last_seen_at: row?.last_seen_at ?? row?.joined_at ?? new Date().toISOString(),
     is_ghost_mode: row?.is_ghost_mode ?? false,
   }
+
+  if (import.meta.env.DEV) {
+    const usernameChanged = row?.username !== member.username || row?.display_name !== member.username
+    if (usernameChanged || !member.username || member.username === 'Viewer') {
+      console.log('[normalizeAudienceMember] username resolution', {
+        row_username: row?.username,
+        row_display_name: row?.display_name,
+        resolved_username: member.username,
+        user_id: member.user_id,
+        id: member.id,
+      })
+    }
+  }
+
+  return member
 }
 
 // Stable key for one audience member: stream_id:user_id.
@@ -131,19 +146,35 @@ export function useStreamAudiencePresence(
 
   // Recompute derived arrays from the normalized map. Runs only when the map
   // changes (and we control those changes), not per realtime event.
-  useEffect(() => {
-    const list = Object.values(audienceMap)
-    setActiveAudience(list.filter((m) => m.is_active && !m.left_at))
-    setTopAudience(
-      [...list].sort((a, b) => {
-        if (b.gift_total !== a.gift_total) return b.gift_total - a.gift_total
-        return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
-      })
-    )
-    if (effectiveUserId) {
-      setMyPresence(list.find((m) => m.user_id === effectiveUserId) || null)
-    }
-  }, [audienceMap, effectiveUserId])
+   useEffect(() => {
+     const list = Object.values(audienceMap)
+     setActiveAudience(list.filter((m) => m.is_active && !m.left_at))
+     setTopAudience(
+       [...list].sort((a, b) => {
+         if (b.gift_total !== a.gift_total) return b.gift_total - a.gift_total
+         return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
+       })
+     )
+     if (effectiveUserId) {
+       setMyPresence(list.find((m) => m.user_id === effectiveUserId) || null)
+     }
+
+     if (import.meta.env.DEV) {
+       console.log('[useStreamAudiencePresence] audienceMap updated', {
+         totalMembers: list.length,
+         activeMembers: list.filter(m => m.is_active && !m.left_at).length,
+         sample: list.slice(0, 5).map(m => ({
+           id: m.id,
+           user_id: m.user_id,
+           username: m.username,
+           role: m.role,
+           is_active: m.is_active,
+           left_at: m.left_at,
+           avatar_url: m.avatar_url,
+         }))
+       })
+     }
+   }, [audienceMap, effectiveUserId])
 
   const fetchAudience = useCallback(async () => {
     if (!streamId) return
@@ -159,6 +190,25 @@ export function useStreamAudiencePresence(
       if (error) {
         console.warn('[useStreamAudiencePresence] fetchAudience error', error)
         return
+      }
+
+      if (import.meta.env.DEV) {
+        console.log('[useStreamAudiencePresence] fetchAudience raw data', {
+          count: data?.length || 0,
+          sample: (data || []).slice(0, 5).map(row => ({
+            id: row.id,
+            stream_id: row.stream_id,
+            user_id: row.user_id,
+            username: row.username,
+            display_name: row.display_name,
+            avatar_url: row.avatar_url,
+            is_active: row.is_active,
+            left_at: row.left_at,
+            gift_total: row.gift_total,
+            role: row.role,
+            is_ghost_mode: row.is_ghost_mode,
+          }))
+        })
       }
 
       // Full normalization is acceptable on initial load / explicit resync.
@@ -430,6 +480,31 @@ export function useStreamAudiencePresence(
             const evt = (payload as any).eventType || '*'
             const newRow = (payload as any).new
             const oldRow = (payload as any).old
+
+            if (import.meta.env.DEV) {
+              console.log('[useStreamAudiencePresence] realtime event', {
+                eventType: evt,
+                newRow: newRow ? {
+                  id: newRow.id,
+                  stream_id: newRow.stream_id,
+                  user_id: newRow.user_id,
+                  username: newRow.username,
+                  display_name: newRow.display_name,
+                  avatar_url: newRow.avatar_url,
+                  is_active: newRow.is_active,
+                  left_at: newRow.left_at,
+                  gift_total: newRow.gift_total,
+                  role: newRow.role,
+                  is_ghost_mode: newRow.is_ghost_mode,
+                } : null,
+                oldRow: oldRow ? {
+                  id: oldRow.id,
+                  user_id: oldRow.user_id,
+                  username: oldRow.username,
+                  is_active: oldRow.is_active,
+                } : null,
+              })
+            }
 
             if (evt === 'DELETE') {
               if (oldRow?.user_id) {

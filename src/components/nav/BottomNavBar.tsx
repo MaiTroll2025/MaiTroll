@@ -485,9 +485,6 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
           ...(isLead
             ? [{ label: 'Lead HQ', icon: Star as any, path: '/lead-officer' }]
             : []),
-          ...(isOfficer || isLead || isSecretary || isAdmin || isCEOAssistant || isNoahAssistant || isHRAdmin || isEmployee
-            ? [{ label: 'Employees', icon: Briefcase as any, path: '/Employees' }]
-            : []),
           ...(isSecretary || isAdmin
             ? [{ label: 'Secretary Console', icon: ScrollText as any, path: '/secretary' }]
             : []),
@@ -778,9 +775,41 @@ interface DoorNavButtonProps {
   label: string;
   to: string;
   active: boolean;
+  variant?: 'default' | 'goLive';
 }
 
-function DoorNavButton({ letter, label, to, active }: DoorNavButtonProps) {
+function DoorNavButton({ letter, label, to, active, variant = 'default' }: DoorNavButtonProps) {
+  const isGoLive = variant === 'goLive';
+  const frameBorder = active
+    ? (isGoLive ? '#ef4444' : '#5c3a1e')
+    : (isGoLive ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)');
+  const frameBg = active
+    ? (isGoLive ? 'linear-gradient(135deg, #ef444444, #b91c1c44)' : 'linear-gradient(135deg, #5c3a1e44, #3d241244)')
+    : (isGoLive ? 'rgba(239,68,68,0.06)' : 'rgba(255,255,255,0.03)');
+  const frameShadow = active
+    ? (isGoLive ? '0 0 28px rgba(239,68,68,0.55), 0 0 56px rgba(239,68,68,0.25)' : '0 0 20px rgba(192,135,90,0.35)')
+    : (isGoLive ? '0 0 14px rgba(239,68,68,0.18)' : 'none');
+  const panelBorder = active
+    ? (isGoLive ? '#f87171' : '#6b3f22')
+    : (isGoLive ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)');
+  const panelBg = active
+    ? (isGoLive ? 'linear-gradient(180deg, #ef444466, #b91c1c66)' : 'linear-gradient(180deg, #6b3f2266, #4a2a1566)')
+    : (isGoLive ? 'linear-gradient(180deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04))' : 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))');
+  const letterColor = active ? '#fff' : (isGoLive ? 'rgba(239,68,68,0.7)' : 'rgba(255,255,255,0.5)');
+  const letterShadow = active
+    ? (isGoLive ? '0 0 18px rgba(239,68,68,0.9)' : '0 0 10px rgba(255,255,255,0.4)')
+    : (isGoLive ? '0 0 8px rgba(239,68,68,0.25)' : 'none');
+  const underlineBg = active
+    ? (isGoLive ? '#ef4444' : '#c0875a')
+    : (isGoLive ? 'rgba(239,68,68,0.4)' : 'transparent');
+  const underlineShadow = active
+    ? (isGoLive ? '0 0 10px rgba(239,68,68,0.8)' : '0 0 8px rgba(192,135,90,0.6)')
+    : (isGoLive ? '0 0 6px rgba(239,68,68,0.25)' : 'none');
+  const labelColor = active ? '#fff' : (isGoLive ? 'rgba(239,68,68,0.8)' : 'rgba(255,255,255,0.4)');
+  const labelShadow = active
+    ? (isGoLive ? '0 0 10px rgba(239,68,68,0.7)' : '0 0 6px rgba(192,135,90,0.6)')
+    : (isGoLive ? '0 0 5px rgba(239,68,68,0.2)' : 'none');
+
   return (
     <Link
       to={to}
@@ -805,11 +834,9 @@ function DoorNavButton({ letter, label, to, active }: DoorNavButtonProps) {
         <div
           className="absolute inset-0 rounded-lg border-2"
           style={{
-            borderColor: active ? '#5c3a1e' : 'rgba(255,255,255,0.08)',
-            background: active
-              ? 'linear-gradient(135deg, #5c3a1e44, #3d241244)'
-              : 'rgba(255,255,255,0.03)',
-            boxShadow: active ? '0 0 20px rgba(192,135,90,0.35)' : 'none',
+            borderColor: frameBorder,
+            background: frameBg,
+            boxShadow: frameShadow,
           }}
         />
 
@@ -822,10 +849,8 @@ function DoorNavButton({ letter, label, to, active }: DoorNavButtonProps) {
           transition={{ type: 'spring', damping: 20, stiffness: 200 }}
           className="absolute inset-0 flex items-center justify-center rounded-md border"
           style={{
-            borderColor: active ? '#6b3f22' : 'rgba(255,255,255,0.06)',
-            background: active
-              ? 'linear-gradient(180deg, #6b3f2266, #4a2a1566)'
-              : 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+            borderColor: panelBorder,
+            background: panelBg,
             transformStyle: 'preserve-3d',
             backfaceVisibility: 'hidden',
           }}
@@ -833,8 +858,8 @@ function DoorNavButton({ letter, label, to, active }: DoorNavButtonProps) {
           <span
             className="text-lg font-black select-none"
             style={{
-              color: active ? '#fff' : 'rgba(255,255,255,0.5)',
-              textShadow: active ? '0 0 10px rgba(255,255,255,0.4)' : 'none',
+              color: letterColor,
+              textShadow: letterShadow,
             }}
           >
             {letter}
@@ -842,20 +867,18 @@ function DoorNavButton({ letter, label, to, active }: DoorNavButtonProps) {
         </motion.div>
 
         {/* Active glow underline */}
-        {active && (
-          <div
-            className="absolute -bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full"
-            style={{ background: '#c0875a', boxShadow: '0 0 8px rgba(192,135,90,0.6)' }}
-          />
-        )}
+        <div
+          className="absolute -bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full"
+          style={{ background: underlineBg, boxShadow: underlineShadow }}
+        />
       </motion.div>
 
       {/* Label under door */}
       <span
         className="mt-1 text-[9px] font-bold leading-none transition-colors duration-200"
         style={{
-          color: active ? '#fff' : 'rgba(255,255,255,0.4)',
-          textShadow: active ? '0 0 6px rgba(192,135,90,0.6)' : 'none',
+          color: labelColor,
+          textShadow: labelShadow,
         }}
       >
         {label}
@@ -880,6 +903,12 @@ export default function BottomNavBar() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const openMore = () => setMorePagesOpen(true);
+    window.addEventListener('open-more-panel', openMore);
+    return () => window.removeEventListener('open-more-panel', openMore);
+  }, []);
+
   const isActive = (path: string) => {
     if (path === '/home') return location.pathname === '/home' || location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -888,7 +917,7 @@ export default function BottomNavBar() {
   // Desktop door tabs config
   const desktopDoorTabs = [
     { letter: 'H', label: 'Home', to: '/home', active: isActive('/home') || isActive('/') },
-    { letter: 'G', label: 'Go Live', to: '/broadcast/setup', active: isActive('/broadcast') },
+    { letter: 'G', label: 'Go Live', to: '/broadcast/setup', active: isActive('/broadcast'), variant: 'goLive' as const },
     { letter: 'M', label: 'MAI Pay', to: '/mai-pay', active: isActive('/mai-pay') },
     { letter: 'C', label: 'Coins', to: '/store', active: isActive('/store') || isActive('/coins') },
     { letter: 'C', label: 'Chats', to: '/utromail', active: isActive('/utromail') },
@@ -923,16 +952,25 @@ export default function BottomNavBar() {
       >
         {/* Main bar with RGB pulsing border */}
         <div className="rgb-pulsing-nav-bar relative border-2 bg-[#050715]/95 backdrop-blur-xl" style={{ overflow: 'visible', zIndex: 100 }}>
-          <div className={`mx-auto flex items-center ${isMobile ? 'h-16 justify-around px-1' : 'h-24 max-w-[1920px] justify-between px-2 md:h-28 md:px-6'}`} style={{ overflow: 'visible' }}>
-
-            {/* LEFT: Profile Module (desktop only) */}
-            <div className="hidden shrink-0 items-center gap-2 md:flex" style={{ overflow: 'visible' }}>
+          <div
+            className={`mx-auto flex items-center ${
+              isMobile
+                ? 'h-16 justify-around px-1'
+                : 'h-24 max-w-[1920px] px-2 md:h-28 md:px-6'
+            }`}
+            style={{ overflow: 'visible' }}
+          >
+            {/* LEFT: Profile Module */}
+            <div
+              className="hidden shrink-0 items-center md:flex"
+              style={{ overflow: 'visible' }}
+            >
               <ProfileModule collapsed={false} />
             </div>
 
-            {/* CENTER: Nav buttons */}
+
+            {/* CENTER: Desktop navigation gets ALL remaining space */}
             {isMobile ? (
-              /* MOBILE: Scrollable row — Home ? ... ? Profile, More always at end */
               <nav className="flex flex-1 items-center gap-3 overflow-x-auto scrollbar-hide px-2">
                 <NavButton icon={Home} label="Home" to="/home" active={isActive('/home') || isActive('/')} size="large" badge={badges.home} badgeKey="home" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={MessageCircle} label="Chats" to="/utromail" active={isActive('/utromail')} size="large" badge={badges.chats} badgeKey="chats" onBadgeDismiss={badges.dismiss} />
@@ -969,31 +1007,39 @@ export default function BottomNavBar() {
                   showLevelOrb={isMobile}
                 />
               </nav>
-              ) : (
-                /* DESKTOP: Door-style nav — spread tabs */
-                <nav className="flex flex-1 items-center justify-around md:justify-around">
-                  {desktopDoorTabs.map((tab) => (
-                    <DoorNavButton
-                      key={tab.to}
-                      letter={tab.letter}
-                      label={tab.label}
-                      to={tab.to}
-                      active={tab.active}
-                    />
-                  ))}
-                </nav>
-              )}
+            ) : (
+              <nav className="flex min-w-0 flex-1 items-center justify-around px-4">
+                {desktopDoorTabs.map((tab) => (
+                  <DoorNavButton
+                    key={tab.to}
+                    letter={tab.letter}
+                    label={tab.label}
+                    to={tab.to}
+                    active={tab.active}
+                    variant={tab.variant}
+                  />
+                ))}
+              </nav>
+            )}
 
-             {/* RIGHT: Beta Feedback + More Pages (desktop only) */}
-             <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 md:flex">
-               <NavButton icon={ClipboardList} label="Beta Feedback" to="/beta-feedback" active={isActive('/beta-feedback')} />
-               <NavButton
-                 icon={LayoutGrid}
-                 label="More"
-                 onClick={() => setMorePagesOpen(true)}
-                 active={morePagesOpen}
-               />
-             </div>
+
+            {/* RIGHT: fixed-size utility buttons */}
+            <div className="hidden shrink-0 items-center gap-2 md:flex">
+              <NavButton
+                icon={ClipboardList}
+                label="Beta Feedback"
+                to="/beta-feedback"
+                active={isActive('/beta-feedback')}
+              />
+
+
+              <NavButton
+                icon={LayoutGrid}
+                label="More"
+                onClick={() => setMorePagesOpen(true)}
+                active={morePagesOpen}
+              />
+            </div>
           </div>
         </div>
       </div>

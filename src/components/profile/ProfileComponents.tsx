@@ -68,6 +68,8 @@ interface ProfileHeaderProps {
     isJailed?: boolean;
     onAvatarEdit?: () => void;
     onCoverEdit?: () => void;
+    onFollowersClick?: () => void;
+    onFollowingClick?: () => void;
 }
 
 export function ProfileHeader({
@@ -88,6 +90,8 @@ export function ProfileHeader({
     isJailed = false,
     onAvatarEdit,
     onCoverEdit,
+    onFollowersClick,
+    onFollowingClick,
 }: ProfileHeaderProps) {
     const themeColor = profile.theme_color || '#9333ea';
     const accentColor = profile.accent_color || '#22d3ee';
@@ -310,11 +314,11 @@ export function ProfileHeader({
                 {/* Stats */}
                 <div className="mt-6 grid grid-cols-3 gap-2 md:max-w-xl md:gap-3">
                     {[
-                        { label: 'Followers', value: profile.followers_count },
-                        { label: 'Following', value: profile.following_count },
-                        ...(showModActionsStat ? [{ label: 'Mod Actions', value: modActionsCount, clickable: true }] : []),
+                        { label: 'Followers', value: profile.followers_count, clickable: !!onFollowersClick, onClick: onFollowersClick },
+                        { label: 'Following', value: profile.following_count, clickable: !!onFollowingClick, onClick: onFollowingClick },
+                        ...(showModActionsStat ? [{ label: 'Mod Actions', value: modActionsCount, clickable: true, onClick: onModActionsClick }] : []),
                     ].map(stat => (
-                        <div key={stat.label} className={`rounded-2xl border border-white/10 bg-black/40 p-3 text-center transition ${stat.clickable ? 'cursor-pointer hover:-translate-y-0.5 hover:border-rose-400/40 hover:bg-rose-500/5' : 'hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/5'}`} onClick={stat.clickable && onModActionsClick ? onModActionsClick : undefined}>
+                        <div key={stat.label} className={`rounded-2xl border border-white/10 bg-black/40 p-3 text-center transition ${stat.clickable ? 'cursor-pointer hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-cyan-500/5' : 'hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/5'}`} onClick={stat.clickable ? stat.onClick : undefined}>
                             <div className="text-sm font-black text-white sm:text-2xl">{stat.value.toLocaleString()}</div>
                             <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50 sm:text-xs sm:tracking-[0.25em]">{stat.label}</div>
                         </div>

@@ -1367,7 +1367,9 @@ const BattleArena = ({
         });
         if (!remote) return;
 
-        const videoPub = getTrackPublications(remote, 'video').find((p) => p.isSubscribed && p.track)
+        const videoPub = getTrackPublications(remote, 'video').find((p) => p.isSubscribed && p.track && p.source === Track.Source.Camera)
+            || getTrackPublications(remote, 'video').find((p) => p.track && p.source === Track.Source.Camera)
+            || getTrackPublications(remote, 'video').find((p) => p.isSubscribed && p.track)
             || getTrackPublications(remote, 'video').find((p) => p.track);
         const audioPub = getTrackPublications(remote, 'audio').find((p) => p.isSubscribed && p.track)
             || getTrackPublications(remote, 'audio').find((p) => p.track);
@@ -1429,7 +1431,9 @@ const BattleArena = ({
           team: 'challenger' | 'opponent',
           label: string
         ) => {
-          const videoPub = getTrackPublications(remote, 'video').find((p) => p.isSubscribed && p.track)
+          const videoPub = getTrackPublications(remote, 'video').find((p) => p.isSubscribed && p.track && p.source === Track.Source.Camera)
+            || getTrackPublications(remote, 'video').find((p) => p.track && p.source === Track.Source.Camera)
+            || getTrackPublications(remote, 'video').find((p) => p.isSubscribed && p.track)
             || getTrackPublications(remote, 'video').find((p) => p.track);
           const audioPub = getTrackPublications(remote, 'audio').find((p) => p.isSubscribed && p.track)
             || getTrackPublications(remote, 'audio').find((p) => p.track);

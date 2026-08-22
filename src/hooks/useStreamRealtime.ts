@@ -59,8 +59,10 @@ export function useStreamRealtime(streamId?: string | null, handlers: UseStreamR
         case 'broadcast:seat_refreshed':
           current.onSeatEvent?.(event)
           break
-        case 'broadcast:box_count_changed':
         case 'broadcast:like_sent':
+          current.onPresenceBroadcast?.(event)
+          break
+        case 'broadcast:box_count_changed':
         case 'broadcast:ping':
         case 'broadcast:league_level_up':
           current.onLeagueLevelUp?.(event)

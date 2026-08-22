@@ -152,6 +152,37 @@ CREATE POLICY "Staff manage summons" ON public.court_summons FOR ALL USING (
 -- 6. HELPER FUNCTIONS
 -- ============================================================================
 
+-- Function to calculate the next valid court day (Tuesday / Thursday)
+CREATE OR REPLACE FUNCTION public.next_court_day(p_from_date DATE)
+RETURNS DATE
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+DECLARE
+    v_dow INT;
+    v_date DATE;
+BEGIN
+    v_dow := EXTRACT(ISODOW FROM p_from_date)::INT;
+    v_date := p_from_date;
+
+    IF v_dow = 1 OR v_dow = 2 THEN      -- Mon / Tue -> Thu
+        v_date := p_from_date + (4 - v_dow);
+    ELSIF v_dow = 3 THEN                 -- Wed -> Thu
+        v_date := p_from_date + 1;
+    ELSIF v_dow = 4 THEN                 -- Thu -> today
+        v_date := p_from_date;
+    ELSIF v_dow = 5 THEN                 -- Fri -> Tue
+        v_date := p_from_date + 4;
+    ELSIF v_dow = 6 THEN                 -- Sat -> Tue
+        v_date := p_from_date + 3;
+    ELSE                                 -- Sun -> Tue
+        v_date := p_from_date + 2;
+    END IF;
+
+    RETURN v_date;
+END;
+$$;
+
 -- Function to get or create next available docket
 CREATE OR REPLACE FUNCTION public.get_or_create_next_docket(p_from_date DATE DEFAULT CURRENT_DATE)
 RETURNS UUID
@@ -162,7 +193,7 @@ DECLARE
     v_docket_id UUID;
     v_date DATE;
 BEGIN
-    -- Find the earliest open docket with space
+    -- Find the earliest open docket with space on or after p_from_date
     SELECT d.id INTO v_docket_id
     FROM public.court_dockets d
     LEFT JOIN public.court_cases c ON c.docket_id = d.id
@@ -176,13 +207,19 @@ BEGIN
         RETURN v_docket_id;
     END IF;
 
-    -- Otherwise, create a new docket for the next available date
-    SELECT COALESCE(MAX(court_date), CURRENT_DATE) + 1 INTO v_date FROM public.court_dockets;
-    
+    -- Otherwise, create a new docket for the next available court day (Tue / Thu)
+    SELECT public.next_court_day(GREATEST(COALESCE(MAX(court_date), p_from_date), p_from_date))
+    INTO v_date
+    FROM public.court_dockets;
+
+    WHILE EXISTS (SELECT 1 FROM public.court_dockets WHERE court_date = v_date) LOOP
+        v_date := public.next_court_day(v_date + 1);
+    END LOOP;
+
     INSERT INTO public.court_dockets (court_date, max_cases, status)
     VALUES (v_date, 20, 'open')
     RETURNING id INTO v_docket_id;
-    
+
     RETURN v_docket_id;
 END;
 $$;

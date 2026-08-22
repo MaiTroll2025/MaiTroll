@@ -191,15 +191,20 @@ const ModActionsPopup = memo(function ModActionsPopup({
   const isHost = currentActorId === hostId;
   const isTargetProtected = isProtectedPlatformRole(targetUser as any);
   const PROTECTED_ACTION_IDS = new Set(['mute', 'unmute', 'arrest', 'disable_chat', 'kick', 'suspend_license', 'remove_officer', 'set_to_user', 'end_stream']);
-  const isActorBroadcasterOrOfficer = isBroadcasterOrBroadofficer(profile);
-  const isActorAdmin = profile?.role === 'admin' || profile?.troll_role === 'admin' || profile?.is_admin === true;
-  const RESTRICTED_FOR_BROADCASTER_IDS = new Set(['suspend_license', 'grant_license', 'set_to_user', 'arrest']);
-  const ADMIN_ONLY_IDS = new Set(['invite_to_role']);
-  const baseActions = isTargetProtected ? visibleActions.filter((a) => !PROTECTED_ACTION_IDS.has(a.id)) : visibleActions;
-  const nonAdminFiltered = isActorAdmin ? baseActions : baseActions.filter((a) => !ADMIN_ONLY_IDS.has(a.id));
-  const filteredActions = isActorBroadcasterOrOfficer
-    ? nonAdminFiltered.filter((a) => !RESTRICTED_FOR_BROADCASTER_IDS.has(a.id))
-    : nonAdminFiltered;
+   const isActorBroadcasterOrOfficer = isBroadcasterOrBroadofficer(profile);
+   const isActorAdmin = profile?.role === 'admin' || profile?.troll_role === 'admin' || profile?.is_admin === true;
+   const isAuthorizedRole = isActorAdmin ||
+     profile?.role === 'judge' || profile?.troll_role === 'judge' ||
+     profile?.role === 'lead_troll_officer' || profile?.troll_role === 'lead_troll_officer' || profile?.is_lead_officer === true ||
+     profile?.role === 'secretary' || profile?.troll_role === 'secretary' || profile?.is_secretary === true ||
+     profile?.role === 'troll_officer' || profile?.troll_role === 'troll_officer' || profile?.is_troll_officer === true;
+   const RESTRICTED_FOR_BROADCASTER_IDS = new Set(['suspend_license', 'grant_license', 'set_to_user', 'arrest']);
+   const ADMIN_ONLY_IDS = new Set(['invite_to_role']);
+   const baseActions = isTargetProtected ? visibleActions.filter((a) => !PROTECTED_ACTION_IDS.has(a.id)) : visibleActions;
+   const nonAdminFiltered = isActorAdmin ? baseActions : baseActions.filter((a) => !ADMIN_ONLY_IDS.has(a.id));
+   const filteredActions = (isActorBroadcasterOrOfficer && !isAuthorizedRole)
+     ? nonAdminFiltered.filter((a) => !RESTRICTED_FOR_BROADCASTER_IDS.has(a.id))
+     : nonAdminFiltered;
   const [effectiveStreamId, setEffectiveStreamId] = useState(streamId || '');
   const [effectiveHostId, setEffectiveHostId] = useState(hostId || '');
 
