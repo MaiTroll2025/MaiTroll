@@ -4,9 +4,7 @@
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
-    "androidScheme": "https",
-    "hostname": "maitroll.com",
-    "iosScheme": "https"
+    "hostname": "maitroll.com"
   },
   "android": {
     "buildOptions": {
