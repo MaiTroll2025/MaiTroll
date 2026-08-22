@@ -23,7 +23,8 @@
     "contentInset": "always",
     "allowMixedContent": false,
     "preferredContentMode": "mobile",
-    "hostname": "maitroll.com"
+    "hostname": "maitroll.com",
+    "devices": ["iphone"]
   },
   "plugins": {
     "SplashScreen": {
