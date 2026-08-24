@@ -6,7 +6,6 @@ import { useXPStore } from '../stores/useXPStore';
 import { toast } from 'sonner';
 import {
   Zap,
-  Crown,
   Clock,
   CheckCircle2,
   XCircle,
@@ -18,8 +17,6 @@ import {
   Building,
   Loader2,
 } from 'lucide-react';
-import PayPalPaymentModal from '../components/broadcast/PayPalPaymentModal';
-import { MAI_PAY_PLUS_PRICE_USD, MAI_PAY_PLUS_ITEM_KEY, MAI_PAY_PLUS_COIN_COST } from '../config/coinConfig';
 
 type ApplicationStatus = 'not_applied' | 'pending' | 'under_review' | 'approved' | 'rejected';
 
@@ -75,12 +72,6 @@ export default function FastPayApplication() {
   const [idFile, setIdFile] = useState<File | null>(null);
   const [idUploading, setIdUploading] = useState(false);
   const [idUrl, setIdUrl] = useState<string | null>(null);
-
-  // Plan selection: Standard (free) or MAI Pay Plus (paid one-time upgrade)
-  const [selectedPlan, setSelectedPlan] = useState<'standard' | 'plus'>('standard');
-  const [plusPaymentMethod, setPlusPaymentMethod] = useState<'paypal' | 'coins'>('paypal');
-  const [paypalModalOpen, setPaypalModalOpen] = useState(false);
-  const isPlusActive = Boolean((profile as any)?.mai_pay_plus) && (!(profile as any)?.mai_pay_plus_expires_at || new Date((profile as any).mai_pay_plus_expires_at) > new Date());
 
   const userLevel = Number(xpStore.level || 1);
   const tier = userLevel >= 1000 ? 'instant' : userLevel >= 500 ? 'fast_pay' : 'standard';
@@ -251,30 +242,6 @@ export default function FastPayApplication() {
       setExistingApp(data);
       setAppStatus('pending');
       toast.success('Cashout profile saved.');
-
-      // MAI Pay Plus: if selected and not already active, collect the one-time
-      // upgrade payment. The server sets mai_pay_plus on successful capture.
-      if (selectedPlan === 'plus' && !isPlusActive) {
-        setSubmitting(false);
-        if (plusPaymentMethod === 'coins') {
-          try {
-            const { data, error } = await supabase.rpc('purchase_mai_pay_plus_with_coins', {
-              p_user_id: profile.id,
-            });
-            if (error) throw error;
-            if (!data?.success) throw new Error(data?.error || 'Failed to purchase MAI Pay Plus');
-            toast.success('MAI Pay Plus activated with coins! Enjoy 20 rolling cashouts and double coin tiers.');
-            setSelectedPlan('plus');
-            const { refreshProfile } = useAuthStore.getState();
-            refreshProfile?.();
-          } catch (err: any) {
-            toast.error(err?.message || 'Failed to purchase MAI Pay Plus with coins');
-          }
-        } else {
-          setPaypalModalOpen(true);
-        }
-        return;
-      }
     } catch (err: any) {
       console.error('Error submitting Fast Pay application:', err);
       toast.error(err?.message || 'Failed to submit application');
@@ -323,7 +290,7 @@ export default function FastPayApplication() {
           <div className="text-center">
             <div className={`inline-flex items-center gap-3 rounded-2xl border ${style.border} bg-slate-950/70 px-6 py-4`}>
               <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${style.gradient}`}>
-                {tier === 'instant' ? <Crown className={`h-6 w-6 text-white`} /> : <Zap className={`h-6 w-6 text-white`} />}
+                <Zap className={`h-6 w-6 text-white`} />
               </div>
               <div className="text-left">
                 <h1 className="text-2xl font-black text-white">Cashout Profile</h1>
@@ -343,15 +310,13 @@ export default function FastPayApplication() {
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center">
             <DollarSign className="mx-auto mb-2 h-6 w-6 text-cyan-400" />
-            <p className="text-lg font-black text-white">0% fee</p>
+            <p className="text-lg font-black text-white">$0.25 (PayPal) • 5% (Venmo/CashApp)</p>
             <p className="text-xs text-slate-500">Cashout Fee</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center">
             <Zap className="mx-auto mb-2 h-6 w-6 text-cyan-400" />
-            <p className="text-lg font-black text-white">
-              {tier === 'instant' ? '20 Per Week' : '10 Per Week'}
-            </p>
-            <p className="text-xs text-slate-500">Rolling 7-day cashout limit</p>
+            <p className="text-lg font-black text-white">1 Per Day</p>
+            <p className="text-xs text-slate-500">Daily cashout limit</p>
           </div>
         </div>
 
@@ -419,79 +384,6 @@ export default function FastPayApplication() {
         {/* Application form */}
         {showApplicationForm && (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Plan selection */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <h3 className="mb-4 text-sm font-bold text-slate-400 uppercase tracking-wider">Choose Your Cashout Plan</h3>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlan('standard')}
-                  className={`rounded-xl border p-4 text-left transition-all ${
-                    selectedPlan === 'standard'
-                      ? 'border-cyan-400/50 bg-cyan-500/10'
-                      : 'border-white/10 bg-white/[0.02] hover:border-white/20'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-black text-white">Standard</span>
-                    <span className="text-xs font-bold text-slate-300">Free</span>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-400">
-                     10 rolling cashouts / 7-day period. Standard coin requirements per tier.
-                   </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlan('plus')}
-                  disabled={isPlusActive}
-                  className={`rounded-xl border p-4 text-left transition-all ${
-                    selectedPlan === 'plus'
-                      ? 'border-amber-400/50 bg-amber-500/10'
-                      : 'border-white/10 bg-white/[0.02] hover:border-white/20'
-                  } ${isPlusActive ? 'opacity-60 cursor-not-allowed' : ''}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-sm font-black text-amber-300">
-                      <Crown className="h-4 w-4" /> MAI Pay Plus
-                    </span>
-                    <span className="text-xs font-bold text-amber-200">${MAI_PAY_PLUS_PRICE_USD}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {isPlusActive
-                      ? 'Active — 20 cashouts / 7-day period, 2× coin requirements.'
-                      : '20 rolling cashouts / 7-day period. Double coin requirements per tier.'}
-                  </p>
-                  {!isPlusActive && selectedPlan === 'plus' && (
-                    <div className="mt-3 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setPlusPaymentMethod('paypal'); }}
-                        className={`flex-1 rounded-lg border px-2 py-1.5 text-xs font-bold transition-all ${
-                          plusPaymentMethod === 'paypal'
-                            ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
-                            : 'border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20'
-                        }`}
-                      >
-                        PayPal
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setPlusPaymentMethod('coins'); }}
-                        className={`flex-1 rounded-lg border px-2 py-1.5 text-xs font-bold transition-all ${
-                          plusPaymentMethod === 'coins'
-                            ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
-                            : 'border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20'
-                        }`}
-                      >
-                        {MAI_PAY_PLUS_COIN_COST.toLocaleString()} Coins
-                      </button>
-                    </div>
-                  )}
-                </button>
-              </div>
-            </div>
-
             {unmetRequirements.length > 0 && (
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
                 <div className="flex items-start gap-3">
@@ -672,44 +564,16 @@ export default function FastPayApplication() {
               ) : (
                 <>
                   <Zap className="h-4 w-4" />
-                  {selectedPlan === 'plus' && !isPlusActive
-                    ? plusPaymentMethod === 'coins'
-                      ? `Upgrade MAI Pay Plus (${MAI_PAY_PLUS_COIN_COST.toLocaleString()} Coins)`
-                      : `Save Profile & Upgrade MAI Pay Plus ($${MAI_PAY_PLUS_PRICE_USD})`
-                    : 'Save Cashout Profile'}
+                  Save Cashout Profile
                 </>
               )}
             </button>
 
             <p className="text-xs text-slate-500 text-center">
-              No application approval needed — reach a cashout tier and request a payout anytime (up to your rolling 7-day limit).
+              Cash out anytime once you reach a cashout tier. Daily cashout limit applies.
             </p>
           </form>
         )}
-
-        {/* MAI Pay Plus upgrade checkout */}
-        <PayPalPaymentModal
-          isOpen={paypalModalOpen}
-          onClose={() => setPaypalModalOpen(false)}
-          userId={profile?.id}
-          profile={profile}
-          pkg={{
-            id: MAI_PAY_PLUS_ITEM_KEY,
-            name: 'MAI Pay Plus Upgrade',
-            price_usd: MAI_PAY_PLUS_PRICE_USD,
-            coins: 0,
-            purchaseType: 'mai_pay_plus',
-          }}
-          requireCoins={false}
-          onPaymentSuccess={async () => {
-            toast.success('MAI Pay Plus activated! Enjoy 20 rolling cashouts and double coin tiers.');
-            setPaypalModalOpen(false);
-            setSelectedPlan('plus');
-            try {
-              await (useAuthStore.getState() as any).refreshProfile?.();
-            } catch { /* noop */ }
-          }}
-        />
       </div>
     </div>
   );

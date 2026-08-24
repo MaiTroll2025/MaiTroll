@@ -270,19 +270,15 @@ export default function LearnAboutMaiTrollModal({ isOpen, onClose }: LearnAboutM
                </div>
                <h2 className="text-2xl font-bold text-white sm:text-3xl">Payouts</h2>
              </div>
-             <p className="text-base leading-relaxed text-slate-300 sm:text-lg mb-6">
-               Cash out your Troll Coins to real money. All users can cash out to PayPal for free — up to 10 times per week with no fees. For an extra $10 upgrade, you can cash out up to 20 times per week.
-             </p>
-             <div className="grid gap-4 sm:grid-cols-2">
-               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-                 <h3 className="text-lg font-semibold text-emerald-300 mb-1">Standard Cashout</h3>
-                 <p className="text-sm text-slate-300">10 cashouts per week via PayPal — no fees.</p>
-               </div>
-               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
-                 <h3 className="text-lg font-semibold text-amber-300 mb-1">Premium Cashout</h3>
-                 <p className="text-sm text-slate-300">20 cashouts per week via PayPal — pay a one-time $10 upgrade.</p>
-               </div>
-             </div>
+               <p className="text-base leading-relaxed text-slate-300 sm:text-lg mb-6">
+                  Cash out your Troll Coins to real money. PayPal has a $0.25 fee (50 coins). Venmo and Cash App charge 5% in coins. 1 cashout per day. Minimum cashout is $10 USD.
+               </p>
+              <div className="grid gap-4 sm:grid-cols-1">
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+                  <h3 className="text-lg font-semibold text-emerald-300 mb-1">Daily Cashout</h3>
+                   <p className="text-sm text-slate-300">PayPal: $0.25 fee (50 coins). Venmo & Cash App: 5% fee in coins. 1 cashout per day. Minimum $10 USD.</p>
+                </div>
+              </div>
            </div>
          </section>
 

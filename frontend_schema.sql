@@ -30760,7 +30760,11 @@ BEGIN
     END IF;
 
     v_cash_amount := v_tier.cash_amount;
-    v_fee_amount := ROUND(p_coins_to_redeem * 0.029, 0);
+    v_fee_amount := CASE
+        WHEN LOWER(p_provider_type) IN ('venmo', 'cash_app') THEN ROUND(p_coins_to_redeem * 0.05)
+        WHEN LOWER(p_provider_type) = 'paypal' THEN 50
+        ELSE 0
+    END;
     v_net_amount := v_cash_amount;
 
     UPDATE public.user_profiles
@@ -30773,6 +30777,7 @@ BEGIN
         coin_amount,
         cash_amount,
         net_amount,
+        fee_coins,
         status,
         provider_type,
         provider_username,
@@ -30786,6 +30791,7 @@ BEGIN
         p_coins_to_redeem,
         v_cash_amount,
         v_net_amount,
+        v_fee_amount,
         'pending',
         p_provider_type,
         p_provider_username,
@@ -30801,8 +30807,9 @@ BEGIN
         'success', true,
         'payout_id', v_payout_id,
         'coins_reserved', p_coins_to_redeem,
-        'usd_amount', v_cash_amount,
         'fee_coins', v_fee_amount,
+        'total_coins_charged', p_coins_to_redeem + v_fee_amount,
+        'usd_amount', v_cash_amount,
         'status', 'pending'
     );
 END;

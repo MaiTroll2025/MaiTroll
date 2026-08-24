@@ -45,7 +45,7 @@ export default function CashoutRequestsList({ viewMode: _viewMode }: CashoutRequ
         .from('payout_requests')
         .select(`
           *,
-          user_profiles!inner(username, email)
+          user_profiles!payout_requests_user_id_fkey(username, email)
         `)
         .order('created_at', { ascending: false })
         .limit(100)

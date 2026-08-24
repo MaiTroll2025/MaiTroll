@@ -102,27 +102,27 @@ const faqData = [
       },
       {
         question: 'What percentage do creators keep?',
-        answer: 'Creators keep 100% of gift earnings. A 0%payout processing fee applies when cashing out.'
+        answer: 'Creators keep 100% of gift earnings. A $0.25 PayPal fee (50 coins) or 5% Venmo/Cash App fee applies when cashing out.'
       },
-      {
-        question: 'When do payouts happen?',
-        answer: 'Payouts are processed on request through MAI Pay.'
-      },
-      {
-        question: 'What is the minimum cashout amount?',
-        answer: 'The minimum cashout is 7,500 Troll Coins, which equals $25 USD.'
-      },
-      {
-        question: 'What is the maximum cashout amount?',
-        answer: 'The highest available payout tier is 3,000,000 Troll Coins, which equals $15,000 USD.'
-      },
+        {
+          question: 'When do payouts happen?',
+          answer: 'Payouts are processed once per day through MAI Pay.'
+        },
+        {
+          question: 'What is the minimum cashout amount?',
+          answer: 'The minimum cashout is 2,000 Troll Coins, which equals $10 USD.'
+        },
+        {
+          question: 'What is the maximum cashout amount?',
+          answer: 'The highest available payout tier is 1,000,000 Troll Coins, which equals $5,000 USD.'
+        },
       {
         question: 'How long do payouts take?',
         answer: 'Processing times vary depending on verification status and payment method.'
       },
       {
         question: 'Are there payout fees?',
-        answer: 'Yes. A 0%payout processing fee applies.'
+        answer: 'PayPal has a $0.25 fee (50 coins). Venmo and Cash App charge a 5% fee (in coins). Other providers are free.'
       },
       {
         question: 'Do I need verification to cash out?',

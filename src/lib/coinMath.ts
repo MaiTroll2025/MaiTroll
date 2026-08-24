@@ -50,19 +50,7 @@ export function calculateTotalCoins(coins: number, reserved: number = 0): number
  * Get cashout rate (USD per coin) for a given coin amount
  */
 export function getRateForCoins(coins: number): number {
-  if (coins >= 106000) return 600 / 106000;
-  if (coins >= 96000) return 475 / 96000;
-  if (coins >= 88000) return 415 / 88000;
-  if (coins >= 77000) return 350 / 77000;
-  if (coins >= 69000) return 300 / 69000;
-  if (coins >= 56000) return 215 / 56000;
-  if (coins >= 42000) return 150 / 42000;
-  if (coins >= 34000) return 115 / 34000;
-  if (coins >= 23000) return 85 / 23000;
-  if (coins >= 18000) return 50 / 18000;
-  if (coins >= 12000) return 30 / 12000;
-  if (coins >= 7000) return 10 / 7000;
-  if (coins >= 2000) return 5 / 2000;
+  if (coins >= 2000) return 0.005;
   return 0;
 }
 

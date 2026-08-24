@@ -26,8 +26,8 @@ export default function CreatorEarnings() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">Payouts</h2>
             <p className="text-gray-300 leading-relaxed">
-              Creators can request payouts when they reach the minimum threshold (12,000 coins ≈ $36).
-              Payouts are processed manually and subject to platform fees (5% commission).
+              Creators can request payouts when they reach the minimum threshold (2,000 coins = $10 USD).
+              Payouts are processed daily with no platform fees.
             </p>
           </section>
 

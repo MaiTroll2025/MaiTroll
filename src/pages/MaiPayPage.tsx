@@ -115,7 +115,6 @@ export default function MaiPayPage() {
   const [providerUsername, setProviderUsername] = useState('');
   const [submittingCashout, setSubmittingCashout] = useState(false);
   const [cashoutRequests, setCashoutRequests] = useState<CashoutRequest[]>([]);
-  const [isMaiPayPlus, setIsMaiPayPlus] = useState(false);
   const [successfulCashoutsLast24Hours, setSuccessfulCashoutsLast24Hours] = useState(0);
   const [nextCashoutAvailableAt, setNextCashoutAvailableAt] = useState<string | null>(null);
   const [achBankName, setAchBankName] = useState('');
@@ -133,17 +132,21 @@ export default function MaiPayPage() {
   const canConvertHype = hypeCoins > 0;
 
   const cashoutTiers = useMemo<CashoutTier[]>(
-    () =>
-      TIERS.map((tier) =>
-        ({ ...tier, coins: isMaiPayPlus ? tier.coins * 2 : tier.coins } as CashoutTier)
-      ),
-    [isMaiPayPlus]
+    () => TIERS.map((tier) => ({ ...tier } as CashoutTier)),
+    []
   );
 
-  const cashoutLimit = isMaiPayPlus ? 20 : 10;
+  const cashoutLimit = 1;
+
+  const hasFeeProvider = selectedProvider === 'venmo' || selectedProvider === 'cash_app';
+  const isPayPalProvider = selectedProvider === 'paypal';
+  const feeCoins = selectedTier
+    ? (hasFeeProvider ? Math.round(selectedTier.coins * 0.05) : isPayPalProvider ? 50 : 0)
+    : 0;
+  const totalCoinsNeeded = selectedTier ? selectedTier.coins + feeCoins : 0;
 
   const canRequestCashout = selectedTier
-    ? eligibleCashoutCoins >= selectedTier.coins && providerUsername.trim().length > 0
+    ? eligibleCashoutCoins >= totalCoinsNeeded && providerUsername.trim().length > 0
     : false;
 
   const filteredGiftedUsers = useMemo(() => {
@@ -165,7 +168,7 @@ export default function MaiPayPage() {
       // Load profile balances
       const { data: profileData } = await supabase
         .from('user_profiles')
-        .select('troll_coins, hype_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method, mai_pay_plus, mai_pay_plus_expires_at')
+        .select('troll_coins, hype_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method')
         .eq('id', user.id)
         .single();
 
@@ -173,7 +176,6 @@ export default function MaiPayPage() {
         setTrollCoins(profileData.troll_coins ?? 0);
         setHypeCoins(profileData.hype_coins ?? 0);
         setBattleCrowns(profileData.battle_crowns ?? 0);
-        setIsMaiPayPlus(profileData.mai_pay_plus === true && (!profileData.mai_pay_plus_expires_at || new Date(profileData.mai_pay_plus_expires_at) > new Date()));
 
         // Pre-fill provider username
         const preferred = profileData.preferred_payout_method as PayoutMethod | null;
@@ -195,9 +197,8 @@ export default function MaiPayPage() {
     loadAllData();
   }, [loadAllData]);
 
-  // ── Rolling 24h cashout count ──────────────────────────────────────────
-  // Server-validated count of successful cashouts in the last 24h, used to
-  // drive the MAI Pay Plus / standard rolling-limit progress in FastPayProgram.
+  // ── Daily cashout count ──────────────────────────────────────────
+  // Server-validated count of successful cashouts in the last 24h.
   const loadCashoutLimit = useCallback(async () => {
     if (!user?.id) return;
     try {
@@ -215,8 +216,7 @@ export default function MaiPayPage() {
       const rows = (data || []) as { created_at: string }[];
       setSuccessfulCashoutsLast24Hours(rows.length);
 
-      // Earliest successful cashout determines when a slot frees up (24h later).
-      const limit = isMaiPayPlus ? 20 : 10;
+      const limit = 1;
       if (rows.length >= limit && rows[0]) {
         setNextCashoutAvailableAt(
           new Date(new Date(rows[0].created_at).getTime() + 24 * 60 * 60 * 1000).toISOString()
@@ -227,7 +227,7 @@ export default function MaiPayPage() {
     } catch (err) {
       console.error('[MaiPay] Failed to load cashout limit:', err);
     }
-  }, [user?.id, isMaiPayPlus]);
+  }, [user?.id]);
 
   useEffect(() => {
     loadCashoutLimit();
@@ -377,7 +377,7 @@ export default function MaiPayPage() {
       if (error) throw error;
       if (data?.success === false) throw new Error(data.error || 'Cashout request failed');
 
-      toast.success(`Cashout request submitted! ${selectedTier.coins.toLocaleString()} coins = $${selectedTier.usd.toFixed(2)}`);
+      toast.success(`Cashout request submitted! ${selectedTier.coins.toLocaleString()} coins = $${selectedTier.usd.toFixed(2)}${feeCoins > 0 ? ` (+ ${feeCoins.toLocaleString()} coin fee)` : ''}`);
       setSelectedTier(null);
       setProviderUsername('');
       setAchBankName('');
@@ -750,7 +750,6 @@ export default function MaiPayPage() {
         {activeTab === 'cashout' && (
           <>
             <FastPayProgram
-              isMaiPayPlus={isMaiPayPlus}
               successfulCashoutsLast24Hours={successfulCashoutsLast24Hours}
               nextCashoutAvailableAt={nextCashoutAvailableAt}
             />
@@ -765,13 +764,13 @@ export default function MaiPayPage() {
                <p className="text-xs text-gray-500 mt-1">Available for cashout (excludes reserved coins)</p>
             </div>
 
-            {/* No Fees Notice */}
+            {/* Cashout Fee Notice */}
             <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4 flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
               <div>
-                <h3 className="text-sm font-bold text-green-300">No Cashout Fees</h3>
+                <h3 className="text-sm font-bold text-green-300">Cashout Fee</h3>
                 <p className="text-sm text-green-200/80">
-                  Mai Troll does not charge users to cash out their earnings. Select any tier and request up to {cashoutLimit} cashouts per rolling 7-day period.{isMaiPayPlus ? ' MAI Pay Plus uses double coin requirements for the same cash payout.' : ''}
+                  PayPal and ACH have no cashout fee. Venmo and Cash App charge a 5% fee (in coins) per cashout. Select any tier and request 1 cashout per day.
                 </p>
               </div>
             </div>
@@ -780,11 +779,6 @@ export default function MaiPayPage() {
             <div className="bg-[#0E0A1A] rounded-xl border border-purple-500/20 p-6">
               <div className="flex items-center justify-between gap-3 mb-4">
                 <h3 className="text-lg font-bold">Select Cashout Tier</h3>
-                {isMaiPayPlus && (
-                  <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-black text-amber-300">
-                    MAI Pay Plus
-                  </span>
-                )}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {cashoutTiers.map((tier) => {
@@ -828,10 +822,28 @@ export default function MaiPayPage() {
                       <span className="text-gray-400">Cashout Amount</span>
                       <span className="text-white font-mono">{selectedTier.coins.toLocaleString()} coins</span>
                     </div>
+                <div className="flex justify-between">
+                      <span className="text-gray-400">Processing Fee</span>
+                      <span className="text-red-400 font-mono">
+                        {selectedProvider === 'venmo' || selectedProvider === 'cash_app'
+                          ? `${Math.round(selectedTier.coins * 0.05).toLocaleString()} coins (5%)`
+                          : selectedProvider === 'paypal'
+                          ? `50 coins ($0.25)`
+                          : '$0.00'}
+                      </span>
+                    </div>
                     <div className="flex justify-between pt-2 border-t border-purple-500/20">
                       <span className="text-white font-bold">You Receive</span>
                       <span className="text-green-400 font-bold">${selectedTier.usd.toFixed(2)}</span>
                     </div>
+                    {(selectedProvider === 'venmo' || selectedProvider === 'cash_app' || selectedProvider === 'paypal') && (
+                      <div className="flex justify-between pt-1">
+                        <span className="text-gray-400">Total Charged</span>
+                        <span className="text-white font-mono">
+                          {(selectedTier.coins + (selectedProvider === 'venmo' || selectedProvider === 'cash_app' ? Math.round(selectedTier.coins * 0.05) : selectedProvider === 'paypal' ? 50 : 0)).toLocaleString()} coins
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -931,7 +943,7 @@ export default function MaiPayPage() {
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Submitting...
                     </>
-                  ) : eligibleCashoutCoins < (selectedTier?.coins || 0) ? (
+                  )                   : eligibleCashoutCoins < (totalCoinsNeeded) ? (
                     <>
                       <AlertCircle className="w-5 h-5" />
                       Insufficient Coins

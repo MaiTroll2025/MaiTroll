@@ -54,7 +54,7 @@ const DEFAULT_USER: MobileUserCard = {
   trollmonds: 0,
 };
 
-const PAYOUT_TIERS = [5000, 15000, 30000, 60000, 120000, 200000];
+const PAYOUT_TIERS = [2000, 4000, 10000, 20000, 30000, 50000, 100000, 200000, 500000, 1000000];
 
 function numberFormat(value: number): string {
   return new Intl.NumberFormat("en-US").format(Number(value || 0));

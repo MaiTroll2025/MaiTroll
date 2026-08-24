@@ -61,13 +61,13 @@ export default function JoinPoster() {
             <p className="mt-2 text-sm text-slate-300">Fast facts to get you started — no barriers, lots of rewards.</p>
 
             <ul className="mt-3 space-y-2 text-sm text-slate-200">
-              <li>• Weekly payouts — 97% retained in cashouts</li>
+              <li>• Daily payouts — 97% retained in cashouts</li>
               <li>• 100% coins are yours to keep</li>
               <li>• Create agencies without high level requirements</li>
               <li>• Work for Mai Troll and earn real rewards</li>
               <li>• Battle from day one — jump in immediately</li>
               <li>• Goo Live by Clicking Go live in sidebar</li>
-              <li>• Cashout 1x per week</li>
+              <li>• 1 cashout per day, minimum $10</li>
               <li>• Cashout any day of the week</li>
               <li>• Go live without thousands of followers</li>
               <li>• Violations are handled seriously — not just bans</li>

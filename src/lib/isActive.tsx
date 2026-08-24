@@ -637,7 +637,6 @@ export default function Sidebar() {
 
               <SectionTitle title="Social + Life" collapsed={isSidebarCollapsed} />
               <GridItem collapsed={isSidebarCollapsed} icon={Mail} label="UTroMail" to="/utromail" active={isActivePath('/utromail')} highlight={isUpdated('/utromail')} onClick={() => markAsViewed('/utromail')} className="text-emerald-400" tone="green" glow="green" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Radio} label="Podcast" to="/podcast" active={isActive('/podcast')} highlight={isUpdated('/podcast')} onClick={() => markAsViewed('/podcast')} className="text-purple-400" tone="purple" glow="purple" />
               <GridItem collapsed={isSidebarCollapsed} icon={Shield} label="Insurance" to="/insurance" active={isActive('/insurance')} highlight={isUpdated('/insurance')} onClick={() => markAsViewed('/insurance')} className="text-cyan-300" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Package} label="Inventory" to="/inventory" active={isActive('/inventory')} highlight={isUpdated('/inventory')} onClick={() => markAsViewed('/inventory')} tone="purple" />
               <GridItem collapsed={isSidebarCollapsed} icon={Users} label="Troll Family" to="/family/browse" active={isActive('/family/browse')} highlight={isUpdated('/family/browse')} onClick={() => markAsViewed('/family/browse')} className="text-pink-400" tone="pink" />

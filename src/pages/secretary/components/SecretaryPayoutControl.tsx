@@ -36,7 +36,7 @@ export default function SecretaryPayoutControl() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [duration, setDuration] = useState(20);
-  const [minCoins, setMinCoins] = useState(5000);
+  const [minCoins, setMinCoins] = useState(2000);
   const [specialUsd, setSpecialUsd] = useState(1);
   const [eligibleUsers, setEligibleUsers] = useState<number>(0);
   const [sendingNotification, setSendingNotification] = useState(false);
@@ -48,9 +48,9 @@ export default function SecretaryPayoutControl() {
     setLoading(true);
     try {
       // Payout window is now determined by user level in the backend RPC
-      setStatus({ enabled: true, duration_minutes: 20, min_coins: 7500, special_tier_usd: 1 });
+      setStatus({ enabled: true, duration_minutes: 20, min_coins: 2000, special_tier_usd: 1 });
       setDuration(20);
-      setMinCoins(7500);
+      setMinCoins(2000);
       setSpecialUsd(1);
     } catch (err) {
       console.error('Error loading payout window status:', err);
@@ -323,7 +323,7 @@ export default function SecretaryPayoutControl() {
               disabled={isWindowActive}
               className="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500 disabled:opacity-50"
             />
-            <p className="text-xs text-slate-500 mt-1">$1 = 5000 coins (special rate)</p>
+             <p className="text-xs text-slate-500 mt-1">$1 = 200 coins (special rate)</p>
           </div>
         </div>
 
@@ -406,8 +406,8 @@ export default function SecretaryPayoutControl() {
           <div>
             <h4 className="font-bold text-blue-400">How It Works</h4>
             <ul className="text-sm text-slate-300 mt-1 space-y-1">
-              <li>• When enabled, all users with {minCoins.toLocaleString()}+ coins can cash out at the special rate</li>
-              <li>• The 5000 coin tier will pay ${specialUsd} instead of the normal rate</li>
+               <li>• When enabled, all users with {minCoins.toLocaleString()}+ coins can cash out at the special rate</li>
+               <li>• The {minCoins.toLocaleString()} coin tier will pay ${specialUsd} instead of the normal rate</li>
               <li>• Users will receive in-app notifications about the payout window</li>
               <li>• The window automatically closes after {duration} minutes</li>
               <li>• Since all coins are purchased, all cashouts are pure profit!</li>

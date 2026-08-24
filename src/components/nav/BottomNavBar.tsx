@@ -214,93 +214,6 @@ function formatCoins(n: number): string {
   return n.toLocaleString();
 }
 
-/* --- Profile Module (left section) --- */
-function ProfileModule({ collapsed }: { collapsed: boolean }) {
-  const { user, profile } = useAuthStore();
-  const { balances } = useCoins();
-  const xpStore = useXPStore();
-  const trollCoins = Number((balances as any)?.troll_coins ?? 0);
-  const trollmonds = Number((profile as any)?.trollmonds ?? 0);
-  const crowns = Number((profile as any)?.crowns ?? 0);
-  const trollmoods = Number((profile as any)?.trollmoods ?? 0);
-  const currentLevel = xpStore.level;
-  const currentXp = xpStore.xpTotal ?? profile?.xp ?? profile?.total_xp ?? 0;
-  const nextXp = xpStore.xpToNext ?? profile?.next_level_xp ?? 1;
-  const progress = xpStore.progress ?? (nextXp > 0 ? Math.min((currentXp / nextXp) * 100, 100) : 0);
-
-  useEffect(() => {
-    if (user?.id) {
-      xpStore.fetchXP(user.id);
-      xpStore.subscribeToXP(user.id);
-      return () => {
-        if (xpStore.unsubscribe) {
-          xpStore.unsubscribe();
-        }
-      };
-    }
-  }, [user?.id]);
-  const displayName = profile?.display_name || profile?.username || 'Citizen';
-  const avatarUrl = profile?.avatar_url;
-  const equippedFrame = useUserFrame(user?.id);
-
-  if (collapsed) {
-    return (
-      <div className="flex items-center gap-2 px-2" style={{ overflow: 'visible' }}>
-        <div className="relative h-10 w-10 flex items-center justify-center" style={{ overflow: 'visible' }}>
-          {avatarUrl ? (
-            <ProfileFrame frame={equippedFrame} avatarUrl={avatarUrl} username={displayName} size="sm" />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-cyan-400/50 bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-black text-white">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-2 px-2 py-1.5" style={{ overflow: 'visible' }}>
-      {/* Avatar */}
-      <div className="relative shrink-0 h-12 w-12 md:h-14 md:w-14 flex items-start justify-start" style={{ overflow: 'visible' }}>
-        {avatarUrl ? (
-          <ProfileFrame
-            frame={equippedFrame}
-            avatarUrl={avatarUrl}
-            username={displayName}
-            size="sm"
-            fillParent
-          />
-        ) : (
-          <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-sm font-black text-white ring-2 md:h-14 md:w-14 ring-cyan-400/50`}>
-            {displayName.charAt(0).toUpperCase()}
-          </div>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="min-w-0 flex flex-col gap-0.5">
-        <p className="truncate text-[11px] font-black leading-tight text-white md:text-xs max-w-[120px]">{displayName}</p>
-        <p className="text-[9px] font-bold text-cyan-300/80 md:text-[10px]">City Rank Lv. {currentLevel}</p>
-        {/* Balances */}
-        <div className="flex items-center gap-2 text-[9px] font-bold md:text-[10px]">
-          <span className="flex items-center gap-0.5 text-yellow-300">
-            <Coins className="h-2.5 w-2.5" /> {formatCoins(trollCoins)}
-          </span>
-          <span className="flex items-center gap-0.5 text-purple-300">
-            <Gem className="h-2.5 w-2.5" /> {formatCoins(trollmonds)}
-          </span>
-          {crowns > 0 && (
-            <span className="flex items-center gap-0.5 text-amber-300">
-              <Crown className="h-2.5 w-2.5" /> {crowns}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* --- Nav Button (center section) --- */
 interface NavButtonProps {
   icon: React.ElementType;
@@ -331,8 +244,8 @@ function NavButton({ icon: Icon, label, to, active, highlight, onClick, size = '
     group relative flex flex-col items-center justify-center gap-0.5 rounded-xl transition-all duration-200
     ${isLarge ? 'h-14 w-14 md:h-20 md:w-20' : 'h-11 w-11 md:h-14 md:w-14'}
     ${active
-      ? 'text-cyan-300'
-      : 'text-slate-400 hover:text-white'
+      ? 'text-cyan-400'
+      : 'text-slate-500 hover:text-slate-200'
     }
     ${highlight
       ? 'text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]'
@@ -632,7 +545,7 @@ function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[210] max-h-[85vh] overflow-hidden rounded-t-3xl border-t border-white/10 bg-[#070b19]/95 backdrop-blur-2xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[210] max-h-[85vh] overflow-hidden rounded-t-3xl border-t border-white/10 bg-transparent backdrop-blur-2xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)]"
           >
             {/* Handle bar */}
             <div className="flex justify-center pt-3 pb-1">
@@ -795,7 +708,7 @@ function DoorNavButton({ letter, label, to, active, variant = 'default' }: DoorN
   const panelBg = active
     ? (isGoLive ? 'linear-gradient(180deg, #ef444466, #b91c1c66)' : 'linear-gradient(180deg, #6b3f2266, #4a2a1566)')
     : (isGoLive ? 'linear-gradient(180deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04))' : 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))');
-  const letterColor = active ? '#fff' : (isGoLive ? 'rgba(239,68,68,0.7)' : 'rgba(255,255,255,0.5)');
+  const letterColor = active ? '#fff' : (isGoLive ? 'rgba(239,68,68,0.6)' : 'rgba(148,163,184,0.6)');
   const letterShadow = active
     ? (isGoLive ? '0 0 18px rgba(239,68,68,0.9)' : '0 0 10px rgba(255,255,255,0.4)')
     : (isGoLive ? '0 0 8px rgba(239,68,68,0.25)' : 'none');
@@ -805,7 +718,7 @@ function DoorNavButton({ letter, label, to, active, variant = 'default' }: DoorN
   const underlineShadow = active
     ? (isGoLive ? '0 0 10px rgba(239,68,68,0.8)' : '0 0 8px rgba(192,135,90,0.6)')
     : (isGoLive ? '0 0 6px rgba(239,68,68,0.25)' : 'none');
-  const labelColor = active ? '#fff' : (isGoLive ? 'rgba(239,68,68,0.8)' : 'rgba(255,255,255,0.4)');
+  const labelColor = active ? '#fff' : (isGoLive ? 'rgba(239,68,68,0.7)' : 'rgba(148,163,184,0.7)');
   const labelShadow = active
     ? (isGoLive ? '0 0 10px rgba(239,68,68,0.7)' : '0 0 6px rgba(192,135,90,0.6)')
     : (isGoLive ? '0 0 5px rgba(239,68,68,0.2)' : 'none');
@@ -931,27 +844,15 @@ export default function BottomNavBar() {
   // Hide bottom nav on Treelz pages
   if (location.pathname.startsWith('/treelz')) return null;
 
-  return (
-    <>
-      <style>{`
-        @keyframes rgbPulse {
-          0% { border-color: rgb(255, 0, 0); }
-          25% { border-color: rgb(0, 255, 0); }
-          50% { border-color: rgb(0, 0, 255); }
-          75% { border-color: rgb(255, 0, 255); }
-          100% { border-color: rgb(255, 0, 0); }
-        }
-        .rgb-pulsing-nav-bar {
-          animation: rgbPulse 3s infinite;
-        }
-      `}</style>
-      {/* Bottom Navigation Bar */}
-      <div
-        className={`fixed inset-x-0 bottom-0 z-[100] transition-all duration-300`}
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
-        {/* Main bar with RGB pulsing border */}
-        <div className="rgb-pulsing-nav-bar relative border-2 bg-[#050715]/95 backdrop-blur-xl" style={{ overflow: 'visible', zIndex: 100 }}>
+   return (
+     <>
+       {/* Bottom Navigation Bar */}
+       <div
+         className={`fixed inset-x-0 bottom-0 z-[100] transition-all duration-300`}
+         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+       >
+         {/* Main bar */}
+          <div className="relative bg-transparent" style={{ overflow: 'visible', zIndex: 100 }}>
           <div
             className={`mx-auto flex items-center ${
               isMobile
@@ -960,15 +861,6 @@ export default function BottomNavBar() {
             }`}
             style={{ overflow: 'visible' }}
           >
-            {/* LEFT: Profile Module */}
-            <div
-              className="hidden shrink-0 items-center md:flex"
-              style={{ overflow: 'visible' }}
-            >
-              <ProfileModule collapsed={false} />
-            </div>
-
-
             {/* CENTER: Desktop navigation gets ALL remaining space */}
             {isMobile ? (
               <nav className="flex flex-1 items-center gap-3 overflow-x-auto scrollbar-hide px-2">
@@ -986,7 +878,15 @@ export default function BottomNavBar() {
                  <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} size="large" />
                 <NavButton icon={GraduationCap} label="Academy" to="/academy" active={isActive('/academy')} size="large" badge={badges.academy} badgeKey="academy" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={DollarSign} label="MAI Pay" to="/mai-pay" active={isActive('/mai-pay')} size="large" />
-                <NavButton icon={Trophy} label="Leaderboard" to="/leaderboard" active={isActive('/leaderboard')} size="large" />
+                <NavButton
+                  icon={LayoutGrid}
+                  label="More"
+                  onClick={() => setMorePagesOpen(true)}
+                  active={morePagesOpen}
+                  size="large"
+                  level={xpStore.level}
+                  showLevelOrb={isMobile}
+                />
                 <NavButton icon={Bell} label="Alerts" to="/notifications" active={isActive('/notifications')} size="large" badge={badges.alerts} badgeKey="alerts" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Search} label="Search" to="/search" active={isActive('/search')} size="large" />
                 <NavButton icon={Users} label="Family" to="/family/home" active={isActive('/family')} size="large" badge={badges.family} badgeKey="family" onBadgeDismiss={badges.dismiss} />
@@ -997,15 +897,6 @@ export default function BottomNavBar() {
                 <NavButton icon={Compass} label="Explore" to="/explore" active={isActive('/explore') || isActive('/live')} size="large" />
                 <NavButton icon={ClipboardList} label="Beta" to="/beta-feedback" active={isActive('/beta-feedback')} size="large" />
                 <NavButton icon={User} label="Profile" to={profile?.username ? `/profile/${profile.username}` : '/profile'} active={isActive('/profile')} size="large" />
-                <NavButton
-                  icon={LayoutGrid}
-                  label="More"
-                  onClick={() => setMorePagesOpen(true)}
-                  active={morePagesOpen}
-                  size="large"
-                  level={xpStore.level}
-                  showLevelOrb={isMobile}
-                />
               </nav>
             ) : (
               <nav className="flex min-w-0 flex-1 items-center justify-around px-4">
@@ -1023,21 +914,13 @@ export default function BottomNavBar() {
             )}
 
 
-            {/* RIGHT: fixed-size utility buttons */}
+             {/* RIGHT: fixed-size utility buttons */}
             <div className="hidden shrink-0 items-center gap-2 md:flex">
               <NavButton
                 icon={ClipboardList}
                 label="Beta Feedback"
                 to="/beta-feedback"
                 active={isActive('/beta-feedback')}
-              />
-
-
-              <NavButton
-                icon={LayoutGrid}
-                label="More"
-                onClick={() => setMorePagesOpen(true)}
-                active={morePagesOpen}
               />
             </div>
           </div>

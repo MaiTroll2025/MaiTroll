@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   CheckCircle2,
   Clock3,
-  Crown,
   Gauge,
   ShieldCheck,
   Sparkles,
@@ -17,21 +16,16 @@ interface FastPayProgramProps {
   compact?: boolean;
 
   /**
-   * Whether the current user has an active MAI Pay Plus membership.
-   */
-  isMaiPayPlus?: boolean;
-
-  /**
    * Successful cashouts made by the current user during the
-   * rolling previous 7 days.
+   * previous 24 hours.
    *
    * This value must come from server-validated cashout data.
    */
-  successfulCashoutsLast7Days?: number;
+  successfulCashoutsLast24Hours?: number;
 
   /**
    * Earliest time the user may submit another cashout after
-   * reaching the rolling 7-day limit.
+   * reaching the daily limit.
    */
   nextCashoutAvailableAt?: string | Date | null;
 
@@ -41,25 +35,21 @@ interface FastPayProgramProps {
   loading?: boolean;
 }
 
-const STANDARD_CASHOUT_LIMIT = 10;
-const MAI_PAY_PLUS_CASHOUT_LIMIT = 20;
+const DAILY_CASHOUT_LIMIT = 1;
 
 export default function FastPayProgram({
   compact = false,
-  isMaiPayPlus = false,
-  successfulCashoutsLast7Days = 0,
+  successfulCashoutsLast24Hours = 0,
   nextCashoutAvailableAt = null,
   loading = false,
 }: FastPayProgramProps) {
   const { profile } = useAuthStore();
 
-  const cashoutLimit = isMaiPayPlus
-    ? MAI_PAY_PLUS_CASHOUT_LIMIT
-    : STANDARD_CASHOUT_LIMIT;
+  const cashoutLimit = DAILY_CASHOUT_LIMIT;
 
   const completedCashouts = Math.min(
     cashoutLimit,
-    Math.max(0, Math.floor(successfulCashoutsLast7Days))
+    Math.max(0, Math.floor(successfulCashoutsLast24Hours))
   );
 
   const remainingCashouts = Math.max(
@@ -90,33 +80,23 @@ export default function FastPayProgram({
       <div
         className={cn(
           'rounded-2xl border bg-slate-950/75 p-4 backdrop-blur-xl',
-          isMaiPayPlus
-            ? 'border-amber-400/25 shadow-[0_0_30px_rgba(251,191,36,0.1)]'
-            : 'border-cyan-400/20 shadow-[0_0_30px_rgba(34,211,238,0.08)]'
+          'border-cyan-400/20 shadow-[0_0_30px_rgba(34,211,238,0.08)]'
         )}
       >
         <div className="flex items-center gap-3">
           <div
             className={cn(
               'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border',
-              isMaiPayPlus
-                ? 'border-amber-400/25 bg-amber-400/10 text-amber-300'
-                : 'border-cyan-400/20 bg-cyan-400/10 text-cyan-300'
+              'border-cyan-400/20 bg-cyan-400/10 text-cyan-300'
             )}
           >
-            {isMaiPayPlus ? (
-              <Crown className="h-5 w-5" aria-hidden="true" />
-            ) : (
-              <WalletCards className="h-5 w-5" aria-hidden="true" />
-            )}
+            <WalletCards className="h-5 w-5" aria-hidden="true" />
           </div>
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <p className="truncate text-sm font-black text-white">
-                {isMaiPayPlus
-                  ? 'MAI Pay Plus'
-                  : 'MaiTroll Cashouts'}
+                MaiTroll Cashouts
               </p>
 
               {!loading && mayCashOut && (
@@ -134,7 +114,7 @@ export default function FastPayProgram({
                   ? 'Account verification required'
                   : hasReachedCashoutLimit
                     ? `Limit reached • ${nextCashoutWait}`
-                    : `${remainingCashouts} of ${cashoutLimit} cashouts remaining`}
+                    : `${remainingCashouts} of ${cashoutLimit} cashout remaining today`}
             </p>
           </div>
         </div>
@@ -146,34 +126,26 @@ export default function FastPayProgram({
     <section
       className={cn(
         'overflow-hidden rounded-[2rem] border bg-slate-950/80 shadow-2xl backdrop-blur-2xl',
-        isMaiPayPlus
-          ? 'border-amber-400/20'
-          : 'border-white/10'
+        'border-white/10'
       )}
     >
       <header
         className={cn(
           'relative overflow-hidden border-b px-5 py-6 sm:px-7',
-          isMaiPayPlus
-            ? 'border-amber-400/15 bg-gradient-to-r from-amber-950 via-slate-950 to-orange-950'
-            : 'border-white/10 bg-gradient-to-r from-cyan-950 via-slate-950 to-blue-950'
+          'border-white/10 bg-gradient-to-r from-cyan-950 via-slate-950 to-blue-950'
         )}
       >
         <div
           className={cn(
             'pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl',
-            isMaiPayPlus
-              ? 'bg-amber-400/10'
-              : 'bg-cyan-400/10'
+            'bg-cyan-400/10'
           )}
         />
 
         <div
           className={cn(
             'pointer-events-none absolute -bottom-24 left-10 h-64 w-64 rounded-full blur-3xl',
-            isMaiPayPlus
-              ? 'bg-orange-500/10'
-              : 'bg-blue-500/10'
+            'bg-blue-500/10'
           )}
         />
 
@@ -182,25 +154,17 @@ export default function FastPayProgram({
             <div
               className={cn(
                 'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border',
-                isMaiPayPlus
-                  ? 'border-amber-300/20 bg-amber-400/10 text-amber-300 shadow-[0_0_24px_rgba(251,191,36,0.14)]'
-                  : 'border-cyan-300/20 bg-cyan-400/10 text-cyan-300 shadow-[0_0_24px_rgba(34,211,238,0.14)]'
+                'border-cyan-300/20 bg-cyan-400/10 text-cyan-300 shadow-[0_0_24px_rgba(34,211,238,0.14)]'
               )}
             >
-              {isMaiPayPlus ? (
-                <Crown className="h-7 w-7" aria-hidden="true" />
-              ) : (
-                <WalletCards className="h-7 w-7" aria-hidden="true" />
-              )}
+              <WalletCards className="h-7 w-7" aria-hidden="true" />
             </div>
 
             <div>
               <p
                 className={cn(
                   'text-xs font-black uppercase tracking-[0.22em]',
-                  isMaiPayPlus
-                    ? 'text-amber-300'
-                    : 'text-cyan-300'
+                  'text-cyan-300'
                 )}
               >
                 Mai Troll Earnings
@@ -210,18 +174,10 @@ export default function FastPayProgram({
                 <h2 className="text-2xl font-black text-white sm:text-3xl">
                   Cashout Program
                 </h2>
-
-                {isMaiPayPlus && (
-                  <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-300">
-                    MAI Pay Plus
-                  </span>
-                )}
               </div>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-               {isMaiPayPlus
-                   ? 'MAI Pay Plus members receive double the weekly cashout limit. Plus cashout tiers require double the standard coin amount.'
-                   : 'Verified users may cash out immediately after earning enough coins for a supported cashout amount.'}
+                Verified users may cash out once per day after earning enough coins for a supported cashout amount.
               </p>
             </div>
           </div>
@@ -234,7 +190,6 @@ export default function FastPayProgram({
             remainingCashouts={remainingCashouts}
             cashoutLimit={cashoutLimit}
             nextCashoutWait={nextCashoutWait}
-            isMaiPayPlus={isMaiPayPlus}
           />
         </div>
       </header>
@@ -253,62 +208,23 @@ export default function FastPayProgram({
           <SummaryCard
             icon={<Sparkles className="h-5 w-5" />}
             label="Cashout Fees"
-            value="$0"
-            description="Mai Troll absorbs all payout processing costs."
+            value="$0 / 5%"
+            description="PayPal: $0.25 flat (50 coins). Venmo & Cash App: 5% fee."
             accentClassName="text-cyan-300"
             iconClassName="bg-cyan-400/10 text-cyan-300"
           />
 
           <SummaryCard
             icon={
-              isMaiPayPlus ? (
-                <Crown className="h-5 w-5" />
-              ) : (
-                <Gauge className="h-5 w-5" />
-              )
+              <Gauge className="h-5 w-5" />
             }
-             label="Rolling Limit"
-             value={`${cashoutLimit} per 7 days`}
-             description={
-               isMaiPayPlus
-                 ? 'MAI Pay Plus doubles the standard cashout limit.'
-                 : 'Only successful cashouts count toward the limit.'
-             }
-            accentClassName={
-              isMaiPayPlus
-                ? 'text-amber-300'
-                : 'text-violet-300'
-            }
-            iconClassName={
-              isMaiPayPlus
-                ? 'bg-amber-400/10 text-amber-300'
-                : 'bg-violet-400/10 text-violet-300'
-            }
+             label="Daily Limit"
+             value={`${cashoutLimit} per day`}
+             description={'Only successful cashouts count toward the limit.'}
+            accentClassName="text-violet-300"
+            iconClassName="bg-violet-400/10 text-violet-300"
           />
         </div>
-
-        {isMaiPayPlus && (
-          <div className="rounded-2xl border border-amber-400/20 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent p-5">
-            <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300">
-                <Crown className="h-5 w-5" aria-hidden="true" />
-              </div>
-
-              <div>
-                <h3 className="text-base font-black text-amber-300">
-                  MAI Pay Plus Active
-                </h3>
-
-                 <p className="mt-1 text-sm leading-6 text-slate-300">
-                   Your rolling cashout limit is increased from 10 to 20
-                   successful cashouts every 7 days. Cashout options shown
-                   in the Select Cashout Tier section require double the
-                   standard coin amount while MAI Pay Plus is active.
-                 </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="rounded-2xl border border-emerald-400/20 bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-transparent p-5">
           <div className="flex items-start gap-4">
@@ -316,17 +232,16 @@ export default function FastPayProgram({
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             </div>
 
-            <div>
-              <h3 className="text-base font-black text-emerald-300">
-                No Cashout Fees
-              </h3>
+             <div>
+               <h3 className="text-base font-black text-emerald-300">
+                 Cashout Fee
+               </h3>
 
-              <p className="mt-1 text-sm leading-6 text-slate-300">
-                Mai Troll does not charge users to cash out their earnings.
-                The amount shown for the selected cashout tier is the exact
-                amount the user receives.
-              </p>
-            </div>
+               <p className="mt-1 text-sm leading-6 text-slate-300">
+                 A $0.25 processing fee applies per cashout.
+                 The net amount is paid out to you.
+               </p>
+             </div>
           </div>
         </div>
 
@@ -335,27 +250,19 @@ export default function FastPayProgram({
             <div
               className={cn(
                 'flex items-center gap-2',
-                isMaiPayPlus
-                  ? 'text-amber-300'
-                  : 'text-cyan-300'
+                'text-cyan-300'
               )}
             >
-              {isMaiPayPlus ? (
-                <Crown className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Gauge className="h-4 w-4" aria-hidden="true" />
-              )}
+              <Gauge className="h-4 w-4" aria-hidden="true" />
 
-               <h3 className="text-sm font-black uppercase tracking-[0.16em]">
-                 Rolling 7-Day Limit
-               </h3>
+                <h3 className="text-sm font-black uppercase tracking-[0.16em]">
+                  Daily Cashout Limit
+                </h3>
             </div>
 
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                {isMaiPayPlus
-                  ? 'A MAI Pay Plus member may complete up to 20 successful cashouts during any rolling 7-day period.'
-                  : 'A user may complete up to 10 successful cashouts during any rolling 7-day period.'}
-              </p>
+               <p className="mt-1 text-sm leading-6 text-slate-500">
+                  A user may complete up to {cashoutLimit} successful cashout(s) per day.
+                </p>
 
             <div className="mt-5">
               <div className="flex items-end justify-between gap-4">
@@ -378,9 +285,7 @@ export default function FastPayProgram({
                     'text-right text-sm font-black',
                     hasReachedCashoutLimit
                       ? 'text-amber-300'
-                      : isMaiPayPlus
-                        ? 'text-amber-300'
-                        : 'text-cyan-300'
+                      : 'text-cyan-300'
                   )}
                 >
                   {hasReachedCashoutLimit
@@ -395,9 +300,7 @@ export default function FastPayProgram({
                     'h-full rounded-full transition-[width] duration-500',
                     hasReachedCashoutLimit
                       ? 'bg-gradient-to-r from-amber-400 to-orange-500'
-                      : isMaiPayPlus
-                        ? 'bg-gradient-to-r from-amber-300 to-orange-500'
-                        : 'bg-gradient-to-r from-cyan-400 to-blue-500'
+                      : 'bg-gradient-to-r from-cyan-400 to-blue-500'
                   )}
                   style={{
                     width: `${Math.min(
@@ -410,7 +313,7 @@ export default function FastPayProgram({
 
               <p className="mt-4 text-sm leading-6 text-slate-400">
                 Each successful cashout remains in the rolling count for
-                exactly 7 days. Eligibility automatically returns as older
+                exactly 24 hours. Eligibility automatically returns as older
                 cashouts fall outside that window.
               </p>
             </div>
@@ -421,7 +324,6 @@ export default function FastPayProgram({
             isVerified={isVerified}
             hasReachedCashoutLimit={hasReachedCashoutLimit}
             nextCashoutWait={nextCashoutWait}
-            isMaiPayPlus={isMaiPayPlus}
           />
         </div>
       </div>
@@ -437,7 +339,6 @@ function CashoutStatus({
   remainingCashouts,
   cashoutLimit,
   nextCashoutWait,
-  isMaiPayPlus,
 }: {
   loading: boolean;
   isVerified: boolean;
@@ -446,7 +347,6 @@ function CashoutStatus({
   remainingCashouts: number;
   cashoutLimit: number;
   nextCashoutWait: string;
-  isMaiPayPlus: boolean;
 }) {
   return (
     <div
@@ -455,9 +355,7 @@ function CashoutStatus({
         loading
           ? 'border-slate-700/60 bg-slate-900/60'
           : mayCashOut
-            ? isMaiPayPlus
-              ? 'border-amber-400/25 bg-amber-400/5'
-              : 'border-emerald-400/25 bg-emerald-400/5'
+            ? 'border-emerald-400/25 bg-emerald-400/5'
             : 'border-amber-400/25 bg-amber-400/5'
       )}
     >
@@ -472,17 +370,10 @@ function CashoutStatus({
             aria-hidden="true"
           />
         ) : mayCashOut ? (
-          isMaiPayPlus ? (
-            <Crown
-              className="h-5 w-5 text-amber-400"
-              aria-hidden="true"
-            />
-          ) : (
-            <BadgeCheck
-              className="h-5 w-5 text-emerald-400"
-              aria-hidden="true"
-            />
-          )
+          <BadgeCheck
+            className="h-5 w-5 text-emerald-400"
+            aria-hidden="true"
+          />
         ) : (
           <XCircle
             className="h-5 w-5 text-amber-400"
@@ -496,9 +387,7 @@ function CashoutStatus({
             loading
               ? 'text-slate-300'
               : mayCashOut
-                ? isMaiPayPlus
-                  ? 'text-amber-300'
-                  : 'text-emerald-300'
+                ? 'text-emerald-300'
                 : 'text-amber-300'
           )}
         >
@@ -507,10 +396,8 @@ function CashoutStatus({
             : !isVerified
               ? 'Verification Required'
                  : hasReachedCashoutLimit
-                   ? 'Weekly Limit Reached'
-                 : isMaiPayPlus
-                  ? 'MAI Pay Plus Active'
-                  : 'Eligible to Cash Out'}
+                   ? 'Daily Limit Reached'
+                   : 'Eligible to Cash Out'}
         </p>
       </div>
 
@@ -521,7 +408,7 @@ function CashoutStatus({
             ? 'Complete account verification before requesting a cashout.'
             : hasReachedCashoutLimit
               ? nextCashoutWait
-              : `${remainingCashouts} of ${cashoutLimit} cashouts remain in your rolling 7-day window.`}
+               : `${remainingCashouts} of ${cashoutLimit} cashout(s) remain today.`}
       </p>
     </div>
   );
@@ -532,13 +419,11 @@ function EligibilityCard({
   isVerified,
   hasReachedCashoutLimit,
   nextCashoutWait,
-  isMaiPayPlus,
 }: {
   loading: boolean;
   isVerified: boolean;
   hasReachedCashoutLimit: boolean;
   nextCashoutWait: string;
-  isMaiPayPlus: boolean;
 }) {
   const available =
     !loading &&
@@ -555,9 +440,7 @@ function EligibilityCard({
             ? 'border-amber-400/25 bg-amber-400/5'
             : hasReachedCashoutLimit
               ? 'border-red-400/25 bg-red-400/5'
-              : isMaiPayPlus
-                ? 'border-amber-400/25 bg-amber-400/5'
-                : 'border-emerald-400/25 bg-emerald-400/5'
+              : 'border-emerald-400/25 bg-emerald-400/5'
       )}
     >
       <div className="flex items-start gap-3">
@@ -570,19 +453,13 @@ function EligibilityCard({
                 ? 'bg-amber-400/10 text-amber-300'
                 : hasReachedCashoutLimit
                   ? 'bg-red-400/10 text-red-300'
-                  : isMaiPayPlus
-                    ? 'bg-amber-400/10 text-amber-300'
-                    : 'bg-emerald-400/10 text-emerald-300'
+                  : 'bg-emerald-400/10 text-emerald-300'
           )}
         >
           {loading ? (
             <Clock3 className="h-5 w-5" aria-hidden="true" />
           ) : available ? (
-            isMaiPayPlus ? (
-              <Crown className="h-5 w-5" aria-hidden="true" />
-            ) : (
-              <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-            )
+            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
           ) : (
             <XCircle className="h-5 w-5" aria-hidden="true" />
           )}
@@ -598,9 +475,7 @@ function EligibilityCard({
                   ? 'text-amber-300'
                   : hasReachedCashoutLimit
                     ? 'text-red-300'
-                    : isMaiPayPlus
-                      ? 'text-amber-300'
-                      : 'text-emerald-300'
+                    : 'text-emerald-300'
             )}
           >
             {loading
@@ -608,9 +483,7 @@ function EligibilityCard({
               : !isVerified
                 ? 'Verify Your Account'
                   : hasReachedCashoutLimit
-                    ? "You've reached this week's cashout limit."
-                  : isMaiPayPlus
-                    ? 'MAI Pay Plus Cashout Access'
+                    ? "You've reached today's cashout limit."
                     : 'Cashout Access Available'}
           </h3>
 
@@ -620,10 +493,8 @@ function EligibilityCard({
               : !isVerified
                 ? 'Every verified user may cash out immediately after earning enough coins for a supported cashout tier.'
                 : hasReachedCashoutLimit
-                  ? 'You may cash out again after one of your previous cashouts becomes older than 7 days.'
-                  : isMaiPayPlus
-                    ? 'Select a MAI Pay Plus cashout tier below. Plus tiers use double the standard coin requirement.'
-                    : 'Select a cashout tier below to continue.'}
+                  ? 'You may cash out again after 24 hours have passed since your last cashout.'
+                  : 'Select a cashout tier below to continue.'}
           </p>
 
           {hasReachedCashoutLimit && (
@@ -688,7 +559,7 @@ function formatRemainingTime(
   availableAt: string | Date | null
 ): string {
   if (!availableAt) {
-    return 'Available after the oldest cashout becomes 7 days old.';
+    return 'Available after 24 hours have passed since your last cashout.';
   }
 
   const targetTime =
@@ -697,7 +568,7 @@ function formatRemainingTime(
       : new Date(availableAt).getTime();
 
   if (Number.isNaN(targetTime)) {
-    return 'Available after the oldest cashout becomes 7 days old.';
+    return 'Available after 24 hours have passed since your last cashout.';
   }
 
   const remainingMilliseconds = targetTime - Date.now();

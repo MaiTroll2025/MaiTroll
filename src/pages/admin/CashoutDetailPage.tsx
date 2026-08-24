@@ -28,6 +28,7 @@ interface PayoutDetails {
   coin_amount: number;
   cash_amount: number;
   net_amount: number;
+  fee_coins: number;
   status: string;
   provider_type: string;
   provider_username: string;
@@ -66,7 +67,7 @@ export default function AdminCashoutDetailPage() {
         .from('payout_requests')
         .select(`
           *,
-          user_profiles!inner(username, email, troll_coins)
+          user_profiles!payout_requests_user_id_fkey(username, email, troll_coins)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -92,7 +93,7 @@ export default function AdminCashoutDetailPage() {
           approved_by: d.approved_by,
           paid_at: d.paid_at,
           payment_reference: d.payment_reference,
-          rejection_reason: d.rejection_reason,
+           fee_coins: d.fee_coins || 0,
           notes: d.notes,
           troll_coins: d.user_profiles?.troll_coins || 0,
         });
@@ -263,7 +264,7 @@ export default function AdminCashoutDetailPage() {
     );
   }
 
-  const feeCoins = 0;
+  const feeCoins = details.fee_coins || 0;
   const payoutCoins = details.coin_amount;
 
   return (
@@ -330,7 +331,7 @@ export default function AdminCashoutDetailPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div><p className="text-sm text-slate-400">User</p><p className="font-bold text-white">{details.username}</p></div>
                 <div><p className="text-sm text-slate-400">Payout Coins</p><p className="font-bold text-troll-gold">{payoutCoins.toLocaleString()}</p></div>
-                <div><p className="text-sm text-slate-400">Fee (0%)</p><p className="font-bold text-red-300">-{feeCoins.toLocaleString()}</p></div>
+                <div><p className="text-sm text-slate-400">Fee</p><p className="font-bold text-red-300">-{feeCoins.toLocaleString()} coins</p></div>
                 <div><p className="text-sm text-slate-400">Cash Amount</p><p className="font-bold text-white">${details.cash_amount?.toFixed(2)}</p></div>
               </div>
               <div className="mt-4 pt-4 border-t border-slate-700 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -343,7 +344,7 @@ export default function AdminCashoutDetailPage() {
                     ) : 'Not uploaded'}
                   </p>
                 </div>
-                <div><p className="text-sm text-slate-400">Total Reserved</p><p className="font-mono text-white">{details.coin_amount?.toLocaleString()}</p></div>
+                <div><p className="text-sm text-slate-400">Total Charged</p><p className="font-mono text-white">{(details.coin_amount || 0) + feeCoins} coins</p></div>
               </div>
               {details.rejection_reason && (
                 <div className="mt-4 p-3 bg-red-900/20 border border-red-700 rounded-lg">

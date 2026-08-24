@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
+import LevelStatusCard from '@/components/home/LevelStatusCard';
 import {
     Gavel, FileText, Mic, Radio, ShoppingBag, Video,
     Star, Award, Users, TrendingUp, Clock, DollarSign, Eye,
@@ -310,6 +311,9 @@ export function ProfileHeader({
                         )}
                     </div>
                 </div>
+
+                {/* Level System — moved from home left nav sidebar; shown next to Mod Actions */}
+                <LevelStatusCard />
 
                 {/* Stats */}
                 <div className="mt-6 grid grid-cols-3 gap-2 md:max-w-xl md:gap-3">

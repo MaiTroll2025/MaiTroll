@@ -120,7 +120,7 @@ const AdminPayoutMobile: React.FC = () => {
             <span className="text-green-400">${req.cash_amount?.toFixed(2) || "0.00"}</span>
           </p>
           <p className="text-xs text-gray-400">
-            Coins: {req.coin_amount?.toLocaleString() || 0} (includes 0% fee)
+            Coins: {req.coin_amount?.toLocaleString() || 0} ($0.25 fee applies)
           </p>
           <p className="text-xs text-gray-400">
             Method: {req.provider_type?.replace("_", " ") || "N/A"} → {req.provider_username || "N/A"}

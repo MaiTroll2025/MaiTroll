@@ -9,7 +9,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 begin
-  insert into public.user_profiles (id, user_id, email)
+  insert into public.user_profiles (id, email)
   values (new.id, new.id, new.email)
   on conflict (id) do update set email = excluded.email;
   return new;
@@ -25,9 +25,9 @@ SET search_path = public, extensions
 AS $$
 BEGIN
   INSERT INTO public.user_profiles (id, user_id, troll_coins)
-  VALUES (NEW.id, NEW.id, 500)
+  VALUES (NEW.id, NEW.id, 0)
   ON CONFLICT (id)
-  DO UPDATE SET troll_coins = COALESCE(user_profiles.troll_coins, 500);
+  DO UPDATE SET troll_coins = COALESCE(user_profiles.troll_coins, 0);
 
   RETURN NEW;
 END;
@@ -61,7 +61,7 @@ BEGIN
   v_email := COALESCE(NEW.email, '');
   
   -- Set role based on email (admin check)
-  IF v_email = 'Mai Troll2025@gmail.com' THEN
+  IF v_email = 'Troll2025@gmail.com' THEN
     v_role := 'admin';
   ELSE
     v_role := 'user';
@@ -91,34 +91,22 @@ BEGIN
     'New troll in the city!',
     v_role,
     'Bronze',
-    0,
-    100,
-    100,
-    0,
-    v_email,
-    false,
-    NOW(),
-    NOW()
-  )
-  ON CONFLICT (id) DO NOTHING;
-
-  -- Create welcome coin transaction
-  INSERT INTO public.coin_transactions (user_id, type, amount, description, created_at)
-  VALUES (NEW.id, 'purchase', 100, 'Welcome bonus coins!', NOW())
-  ON CONFLICT DO NOTHING;
+     0,
+     0,
+     0,
+     v_email,
+     false,
+     NOW(),
+     NOW()
+   )
+   ON CONFLICT (id) DO NOTHING;
 
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
-  -- Log error but don't fail auth user creation
   RAISE WARNING 'Error in handle_user_signup for %: %', NEW.id, SQLERRM;
   RETURN NEW;
 END;
 $$;
-
--- 4. Update existing user_profiles to set user_id where it's NULL
-UPDATE public.user_profiles
-SET user_id = id
-WHERE user_id IS NULL;
 
 -- 5. Ensure triggers are properly attached
 DROP TRIGGER IF EXISTS on_auth_user_created_profile ON auth.users;
@@ -143,3 +131,4 @@ CREATE TRIGGER on_auth_user_created
 GRANT EXECUTE ON FUNCTION public.handle_new_user_profile() TO service_role, authenticated;
 GRANT EXECUTE ON FUNCTION public.handle_new_user_troll_coins() TO service_role, authenticated;
 GRANT EXECUTE ON FUNCTION public.handle_user_signup() TO service_role, authenticated;
+

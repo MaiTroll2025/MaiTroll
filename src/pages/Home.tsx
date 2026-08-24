@@ -15,6 +15,7 @@ import {
   Scale,
   Shield,
   Sparkles,
+  Sun,
   Trophy,
   Tv,
   Users,
@@ -25,6 +26,7 @@ import { useAuthStore } from '@/lib/store'
 import useSEO from '@/hooks/useSEO'
 import { websiteSchema, organizationSchema } from '@/utils/seoSchemas'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { useTheme } from '@/hooks/useTheme'
 import { useLiveContent, type AuctionShow, type LiveItem } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
@@ -55,8 +57,7 @@ import PromoSlot from '@/components/promo/PromoSlot'
 import PodcastCentral from '@/pages/PodcastCentral'
 import { HOME_PAGE_PROMO_PLACEMENTS } from '@/types/cityAds'
 import LearnAboutMaiTrollBanner from '@/components/learn-about/LearnAboutMaiTrollBanner'
-
-type TabType = 'home' | 'live' | 'universe' | 'jobs' | 'podcast' | 'laws-fees' | 'leagues' | 'president' | 'academy' | 'wall' | 'mai-record-label'
+import type { TabType } from '@/types/homeTabs'
 
 const PWAInstallPrompt = lazyWithRetry(() => import('../components/PWAInstallPrompt'))
 const TCNNPopupWidget = lazyWithRetry(() => import('@/components/tcnn/TCNNPopupWidget'))
@@ -491,64 +492,6 @@ const CareerBroadcastRow = React.memo(function CareerBroadcastRow({
   )
 })
 
-/* Troll Court & TCNN — shown as 2 rows because only approved career
-   applications can host these experiences. */
-const CareerAppsGrid = React.memo(function CareerAppsGrid({
-  onOpen,
-}: {
-  onOpen: (path: string) => void
-}) {
-  const tiles = [
-    {
-      path: '/troll-court',
-      title: 'Troll Court',
-      desc: 'Watch court sessions and legal proceedings',
-      icon: Gavel,
-      gradient: 'from-amber-900/40 to-yellow-950/40',
-    },
-    {
-      path: '/tcnn',
-      title: 'TCNN',
-      desc: 'Live news, updates, and community broadcasts',
-      icon: Radio,
-      gradient: 'from-red-900/40 to-rose-950/40',
-    },
-  ]
-
-  return (
-    <div className={`${glass} rounded-2xl p-4`}>
-      <h2 className="flex items-center gap-2 text-xl font-black text-white">
-        <Shield className="h-5 w-5 text-emerald-300" />
-        Troll Court & TCNN
-      </h2>
-      <p className="mt-1 text-xs font-bold text-slate-400">
-        Tune in to court sessions and live news broadcasts
-      </p>
-
-      <div className="mt-4 grid grid-cols-1 gap-3">
-        {tiles.map((tile) => {
-          const Icon = tile.icon
-          return (
-            <button
-              key={tile.path}
-              onClick={() => onOpen(tile.path)}
-              className={`flex items-center gap-4 rounded-2xl border border-white/10 bg-gradient-to-r ${tile.gradient} p-4 text-left transition hover:border-emerald-300/50`}
-            >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-black/30">
-                <Icon className="h-6 w-6 text-white/80" />
-              </div>
-              <div>
-                <p className="text-base font-black text-white">{tile.title}</p>
-                <p className="text-xs font-bold text-slate-300">{tile.desc}</p>
-              </div>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-})
-
 const BattleGrid = React.memo(function BattleGrid({ items, onClickItem }: { items: LiveItem[]; onClickItem: (item: LiveItem) => void }) {
   return (
     <div className={`${glass} rounded-2xl p-4`}>
@@ -701,6 +644,7 @@ export default function Home() {
   const user = useAuthStore((state) => state.user)
   const isLoading = useAuthStore((state) => state.isLoading)
   const { isMobile, isMobileWidth } = useIsMobile()
+  const { theme, toggleTheme } = useTheme()
 
   useSEO({
     title: 'MaiTroll | Live Broadcasting, Battles & Social Community',
@@ -834,7 +778,7 @@ export default function Home() {
     <div
       className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-hidden text-white"
     >
-        <DynamicWeatherBackground />
+          <DynamicWeatherBackground isDark={theme === 'dark'} showWalker={!!user} />
 
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050715]/85 backdrop-blur-md">
@@ -853,330 +797,235 @@ export default function Home() {
         <PWAInstallPrompt />
       </Suspense>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-[1520px] flex-col gap-3 px-3 pb-8 pt-3 md:px-5">
-        {/* Mobile Global Ticker */}
-        {isMobile && <MobileGlobalTicker />}
-
-        {/* Mobile Tab Bar */}
-        {isMobile && (
-          <MobileTabBar
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            liveCount={allLiveItems.length}
-            battleCount={battleItems.length}
-            wallNotificationCount={wallNotificationCount}
-            navigate={navigate}
-          />
-        )}
-
-        {kickedReason && (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-red-500/30 bg-red-950/60 px-4 py-3 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500/20">
-                <X className="h-4 w-4 text-red-400" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-red-300">You&apos;ve been kicked</p>
-                <p className="text-xs text-red-400/80">{kickedReason}</p>
-              </div>
-            </div>
+      <div className="relative z-10 flex w-full">
+        <LeftNavSidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          liveCount={allLiveItems.length}
+          battleCount={battleItems.length}
+          followersLiveCount={0}
+          presidentTabLabel={presidentTabLabel}
+          showPresidentTab={showPresidentTab}
+          wallNotificationCount={wallNotificationCount}
+        />
+        
+        <main className="flex-1 min-w-0">
+          <div className="mx-auto max-w-[1920px] px-3 pb-8 pt-3 md:px-5">
+            {/* Theme Toggle */}
             <button
-              onClick={() => setKickedReason(null)}
-              className="shrink-0 rounded-lg p-1 text-red-400/60 transition hover:bg-red-500/10 hover:text-red-300"
+              onClick={toggleTheme}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-white/80 hover:bg-white/10 hover:text-white transition-all"
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              <X size={16} />
+              <Sun className="h-4 w-4" />
+              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </button>
-          </div>
-        )}
 
-        {/* Sign In / Sign Up prompt for non-authenticated users */}
-        {!user && (
-          <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-gradient-to-r from-purple-900/40 via-slate-900/60 to-cyan-900/40 backdrop-blur-xl p-4 sm:p-5">
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-              <div className="flex-1 text-center sm:text-left">
-                <h3 className="text-base sm:text-lg font-bold text-white">Welcome to Mai Troll!</h3>
-                <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                  Sign in to join the community, go live, send gifts, and more.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
+            {/* Mobile Global Ticker */}
+            {isMobile && <MobileGlobalTicker />}
+
+            {/* Mobile Tab Bar — hidden on the home tab because the clickable
+                city buildings already act as the primary navigation there */}
+            {isMobile && activeTab !== 'home' && (
+              <MobileTabBar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                liveCount={allLiveItems.length}
+                battleCount={battleItems.length}
+                wallNotificationCount={wallNotificationCount}
+                navigate={navigate}
+              />
+            )}
+
+            {kickedReason && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-red-500/30 bg-red-950/60 px-4 py-3 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500/20">
+                    <X className="h-4 w-4 text-red-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-red-300">You&apos;ve been kicked</p>
+                    <p className="text-xs text-red-400/80">{kickedReason}</p>
+                  </div>
+                </div>
                 <button
-                  onClick={() => navigate('/auth?mode=login')}
-                  className="px-4 py-2 text-sm font-semibold text-slate-200 border border-white/15 rounded-xl hover:bg-white/10 transition-all duration-200"
-                  type="button"
+                  onClick={() => setKickedReason(null)}
+                  className="shrink-0 rounded-lg p-1 text-red-400/60 transition hover:bg-red-500/10 hover:text-red-300"
                 >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => navigate('/auth?mode=signup')}
-                  className="px-5 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 rounded-xl shadow-[0_0_20px_rgba(147,51,234,0.25)] hover:shadow-[0_0_30px_rgba(147,51,234,0.4)] transition-all duration-300 hover:scale-[1.03] active:scale-95 text-white"
-                  type="button"
-                >
-                  Sign Up
+                  <X size={16} />
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-{activeTab === 'home' && (
-           <section className="flex gap-4">
-             <LeftNavSidebar
-               activeTab={activeTab}
-               setActiveTab={setActiveTab}
-               liveCount={allLiveItems.length}
-               battleCount={battleItems.length}
-               followersLiveCount={0}
-               presidentTabLabel={presidentTabLabel}
-               showPresidentTab={showPresidentTab}
-               wallNotificationCount={wallNotificationCount}
-             />
-              <div className="min-w-0 flex-1 space-y-4">
-                <FeaturedBroadcastersRow onItemClick={handleScrollItemClick} />
-                <PodcastRow />
-                <HyTroGamingRow onItemClick={handleScrollItemClick} />
-
-                <AuctionsRow auctions={liveAuctions} onClickAuction={handleAuctionClick} isMobileWidth={isMobileWidth} />
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <CareerBroadcastRow
-                    title="Troll Court"
-                    icon={Scale}
-                    items={trollCourtItems}
-                    onClickItem={handleTrollCourtClick}
-                    emptyTitle="No Court Sessions"
-                    emptySubtitle="Court sessions will appear here!"
-                    isMobileWidth={isMobileWidth}
-                  />
-                  <CareerBroadcastRow
-                    title="TCNN"
-                    icon={Tv}
-                    items={tcnnItems}
-                    onClickItem={handleTcnnClick}
-                    emptyTitle="No TCNN Broadcasts"
-                    emptySubtitle="News broadcasts will appear here!"
-                    isMobileWidth={isMobileWidth}
-                  />
+            {/* Sign In / Sign Up prompt for non-authenticated users */}
+            {!user && (
+              <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-gradient-to-r from-purple-900/40 via-slate-900/60 to-cyan-900/40 backdrop-blur-xl p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+                  <div className="flex-1 text-center sm:text-left">
+                    <h3 className="text-base sm:text-lg font-bold text-white">Welcome to Mai Troll!</h3>
+                    <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                      Sign in to join the community, go live, send gifts, and more.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => navigate('/auth?mode=login')}
+                      className="px-4 py-2 text-sm font-semibold text-slate-200 border border-white/15 rounded-xl hover:bg-white/10 transition-all duration-200"
+                      type="button"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => navigate('/auth?mode=signup')}
+                      className="px-5 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 rounded-xl shadow-[0_0_20px_rgba(147,51,234,0.25)] hover:shadow-[0_0_30px_rgba(147,51,234,0.4)] transition-all duration-300 hover:scale-[1.03] active:scale-95 text-white"
+                      type="button"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
                 </div>
               </div>
-             <aside className="hidden xl:flex xl:flex-col xl:gap-3 xl:w-[320px] xl:shrink-0 xl:sticky xl:top-3 xl:self-start">
-                <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[0]} variant="featured" />
-                <LearnAboutMaiTrollBanner />
-                <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[1]} variant="featured" />
-              </aside>
-           </section>
-         )}
+            )}
 
-{activeTab === 'live' && (
-            <div className="flex gap-4">
-              <LeftNavSidebar
-               activeTab={activeTab}
-               setActiveTab={setActiveTab}
-               liveCount={allLiveItems.length}
-               battleCount={battleItems.length}
-               followersLiveCount={0}
-               presidentTabLabel={presidentTabLabel}
-               showPresidentTab={showPresidentTab}
-               wallNotificationCount={wallNotificationCount}
-             />
-             <div className="min-w-0 flex-1 space-y-4">
-                 <LiveGrid
-                   liveItems={liveItems.slice(0, 4)}
-                   loadingLive={loadingLive}
-                   totalViewers={totalViewers}
-                   onlineUsers={onlineUsers}
-                   showLiveGrid={showLiveGrid}
-                   setShowLiveGrid={setShowLiveGrid}
-                   onClickItem={handleScrollItemClick}
-                   user={user}
-                   navigate={navigate}
-                 />
-                 <HomeAuctionGrid
-                   auctions={liveAuctions}
-                   onClickAuction={(id) => navigate(id ? `/auctions/${id}` : '/auctions')}
-                 />
-                 <CareerAppsGrid onOpen={(path) => navigate(path)} />
-                 <NewStreamersRow onClickItem={handleScrollItemClick} />
-                 <BestTrollersRow onClickItem={handleScrollItemClick} />
-                 <HyTroGamingRow onItemClick={handleScrollItemClick} />
-               </div>
-            </div>
-           )}
+            {activeTab === 'home' && (
+              <section className="flex gap-4">
+                <div className="min-w-0 flex-1 space-y-4">
+                  <FeaturedBroadcastersRow onItemClick={handleScrollItemClick} />
+                  <PodcastRow />
+                  <HyTroGamingRow onItemClick={handleScrollItemClick} />
 
-          {activeTab === 'universe' && (
-            <div className="flex gap-4">
-              <LeftNavSidebar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                liveCount={allLiveItems.length}
-                battleCount={battleItems.length}
-                followersLiveCount={battleItems.length}
-                presidentTabLabel={presidentTabLabel}
-                showPresidentTab={showPresidentTab}
-                wallNotificationCount={wallNotificationCount}
-              />
-              <div className="min-w-0 flex-1">
-                <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-fuchsia-300 border-t-transparent" /></div>}>
-                  <UniverseBattlesPage />
-                </Suspense>
-              </div>
-            </div>
-          )}
+                  <AuctionsRow auctions={liveAuctions} onClickAuction={handleAuctionClick} isMobileWidth={isMobileWidth} />
+                </div>
+              </section>
+            )}
 
-         {activeTab === 'jobs' && (
-            <div className="flex gap-4">
-              <LeftNavSidebar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                liveCount={allLiveItems.length}
-                battleCount={battleItems.length}
-                followersLiveCount={0}
-                presidentTabLabel={presidentTabLabel}
-                showPresidentTab={showPresidentTab}
-                wallNotificationCount={wallNotificationCount}
-              />
-              <div className="min-w-0 flex-1">
-                <section className={`${glass} rounded-2xl p-4`}>
-                  <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" /></div>}>
-                    <HowToVideosPage />
+            {activeTab === 'live' && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1 space-y-4">
+                    <LiveGrid
+                      liveItems={liveItems.slice(0, 4)}
+                      loadingLive={loadingLive}
+                      totalViewers={totalViewers}
+                      onlineUsers={onlineUsers}
+                      showLiveGrid={showLiveGrid}
+                      setShowLiveGrid={setShowLiveGrid}
+                      onClickItem={handleScrollItemClick}
+                      user={user}
+                      navigate={navigate}
+                    />
+                    <HomeAuctionGrid
+                      auctions={liveAuctions}
+                      onClickAuction={(id) => navigate(id ? `/auctions/${id}` : '/auctions')}
+                    />
+                    <NewStreamersRow onClickItem={handleScrollItemClick} />
+                    <BestTrollersRow onClickItem={handleScrollItemClick} />
+                    <HyTroGamingRow onItemClick={handleScrollItemClick} />
+                  </div>
+                </div>
+            )}
+
+            {activeTab === 'universe' && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1">
+                  <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-fuchsia-300 border-t-transparent" /></div>}>
+                    <UniverseBattlesPage />
                   </Suspense>
-                </section>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-         {activeTab === 'podcast' && (
-           <div className="flex gap-4">
-             <LeftNavSidebar
-               activeTab={activeTab}
-               setActiveTab={setActiveTab}
-               liveCount={allLiveItems.length}
-               battleCount={battleItems.length}
-               followersLiveCount={0}
-               presidentTabLabel={presidentTabLabel}
-               showPresidentTab={showPresidentTab}
-               wallNotificationCount={wallNotificationCount}
-             />
-             <div className="min-w-0 flex-1">
-               <section className={`${glass} rounded-2xl p-4`}>
-                 <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-300 border-t-transparent" /></div>}>
-                   <PodcastCentral />
-                 </Suspense>
-               </section>
-             </div>
-           </div>
-         )}
-
-{activeTab === 'laws-fees' && (
-            <div className="flex gap-4">
-             <LeftNavSidebar
-               activeTab={activeTab}
-               setActiveTab={setActiveTab}
-               liveCount={allLiveItems.length}
-               battleCount={battleItems.length}
-               followersLiveCount={0}
-               presidentTabLabel={presidentTabLabel}
-               showPresidentTab={showPresidentTab}
-               wallNotificationCount={wallNotificationCount}
-             />
-             <div className="min-w-0 flex-1">
-               <section className={`${glass} rounded-2xl p-4`}>
-                 <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" /></div>}>
-                   <CityLawsFeesTab />
-                 </Suspense>
-               </section>
-             </div>
-           </div>
-         )}
-
-{activeTab === 'leagues' && (
-            <div className="flex gap-4">
-             <LeftNavSidebar
-               activeTab={activeTab}
-               setActiveTab={setActiveTab}
-               liveCount={allLiveItems.length}
-               battleCount={battleItems.length}
-               followersLiveCount={0}
-               presidentTabLabel={presidentTabLabel}
-               showPresidentTab={showPresidentTab}
-               wallNotificationCount={wallNotificationCount}
-             />
-             <div className="min-w-0 flex-1">
-               <section className={`${glass} rounded-2xl p-4`}>
-                 <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-300 border-t-transparent" /></div>}>
-                   <LeaguesTab />
-                 </Suspense>
-               </section>
-             </div>
-           </div>
-         )}
-
-         {activeTab === 'president' && showPresidentTab && (
-           <div className="flex gap-4">
-             <LeftNavSidebar
-               activeTab={activeTab}
-               setActiveTab={setActiveTab}
-               liveCount={allLiveItems.length}
-               battleCount={battleItems.length}
-               followersLiveCount={0}
-               presidentTabLabel={presidentTabLabel}
-               showPresidentTab={showPresidentTab}
-               wallNotificationCount={wallNotificationCount}
-             />
-             <div className="min-w-0 flex-1">
-               <section className={`${glass} rounded-2xl p-4`}>
-                 <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-300 border-t-transparent" /></div>}>
-                   <PresidentCandidatesTab />
-                 </Suspense>
-               </section>
-             </div>
-           </div>
-         )}
-
-           {activeTab === 'academy' && (
-             <div className="flex gap-4">
-               <LeftNavSidebar
-                 activeTab={activeTab}
-                 setActiveTab={setActiveTab}
-                 liveCount={allLiveItems.length}
-                 battleCount={battleItems.length}
-                 followersLiveCount={0}
-                 presidentTabLabel={presidentTabLabel}
-                 showPresidentTab={showPresidentTab}
-                 wallNotificationCount={wallNotificationCount}
-               />
-               <div className="min-w-0 flex-1">
-                 <section className={`${glass} rounded-2xl p-4`}>
-                   <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-300 border-t-transparent" /></div>}>
-                     <UnderConstructionPage pageName="Academy" openingDate="Oct 1, 2026" />
-                   </Suspense>
-                 </section>
-               </div>
-             </div>
-           )}
-
-          {activeTab === 'wall' && (
-            <div className="flex gap-4">
-              <LeftNavSidebar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                liveCount={allLiveItems.length}
-                battleCount={battleItems.length}
-                followersLiveCount={0}
-                presidentTabLabel={presidentTabLabel}
-                showPresidentTab={showPresidentTab}
-                wallNotificationCount={wallNotificationCount}
-              />
-              <div className="min-w-0 flex-1">
-                <section className={`${glass} rounded-2xl p-4`}>
-                  <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-pink-300 border-t-transparent" /></div>}>
-                    <WallPage />
-                  </Suspense>
-                </section>
+            {activeTab === 'jobs' && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1">
+                  <section className={`${glass} rounded-2xl p-4`}>
+                    <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" /></div>}>
+                      <HowToVideosPage />
+                    </Suspense>
+                  </section>
+                </div>
               </div>
-            </div>
-          )}
-       </main>
+            )}
+
+            {activeTab === 'podcast' && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1">
+                  <section className={`${glass} rounded-2xl p-4`}>
+                    <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-300 border-t-transparent" /></div>}>
+                      <PodcastCentral />
+                    </Suspense>
+                  </section>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'laws-fees' && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1">
+                  <section className={`${glass} rounded-2xl p-4`}>
+                    <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" /></div>}>
+                      <CityLawsFeesTab />
+                    </Suspense>
+                  </section>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'leagues' && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1">
+                  <section className={`${glass} rounded-2xl p-4`}>
+                    <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-300 border-t-transparent" /></div>}>
+                      <LeaguesTab />
+                    </Suspense>
+                  </section>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'president' && showPresidentTab && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1">
+                  <section className={`${glass} rounded-2xl p-4`}>
+                    <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-300 border-t-transparent" /></div>}>
+                      <PresidentCandidatesTab />
+                    </Suspense>
+                  </section>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'academy' && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1">
+                  <section className={`${glass} rounded-2xl p-4`}>
+                    <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-300 border-t-transparent" /></div>}>
+                      <UnderConstructionPage pageName="Academy" openingDate="Oct 1, 2026" />
+                    </Suspense>
+                  </section>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'wall' && (
+              <div className="flex gap-4">
+                <div className="min-w-0 flex-1">
+                  <section className={`${glass} rounded-2xl p-4`}>
+                    <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-pink-300 border-t-transparent" /></div>}>
+                      <WallPage />
+                    </Suspense>
+                  </section>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+        
+        <aside className="hidden xl:flex xl:flex-col xl:gap-4 xl:w-[320px] xl:shrink-0 xl:sticky xl:top-3 xl:self-start">
+          <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[0]} variant="featured" />
+          <LearnAboutMaiTrollBanner />
+          <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[1]} variant="featured" />
+        </aside>
+      </div>
 
       {supportGoalReminder && !reminderLoading && (
         <SupportGoalReminderModal
@@ -1208,22 +1057,22 @@ export default function Home() {
              box-shadow:
                0 0 0 0 var(--pulse-color),
                0 0 18px 2px var(--pulse-color);
-           }
+          }
 
-           35% {
+            35% {
              opacity: 0.16;
            }
 
-           100% {
+            100% {
              width: 900px;
              height: 900px;
              opacity: 0;
              box-shadow:
                0 0 0 1px transparent,
                0 0 80px 20px transparent;
-           }
-         }
+          }
+        }
         `}</style>
-      </div>
-    )
-  }
+    </div>
+  )
+}

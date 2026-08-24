@@ -107,6 +107,78 @@ body {
     linear-gradient(135deg, #020617 0%, #0f172a 46%, #020617 100%);
 }
 
+html.light {
+  color-scheme: light;
+  color: rgba(0, 0, 0, 0.9);
+  background-color: #f1f5f9;
+}
+
+html.light,
+html.light body,
+html.light #root {
+  background: #f1f5f9;
+}
+
+html.light body {
+  background:
+    radial-gradient(120% 120% at 20% 20%, rgba(147, 51, 234, 0.08), transparent 42%),
+    radial-gradient(140% 140% at 80% 0%, rgba(45, 212, 191, 0.06), transparent 46%),
+    radial-gradient(140% 140% at 95% 88%, rgba(236, 72, 153, 0.06), transparent 44%),
+    linear-gradient(120deg, rgba(109, 40, 217, 0.04) 0%, rgba(14, 165, 233, 0.03) 44%, rgba(236, 72, 153, 0.04) 100%),
+    linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 46%, #f1f5f9 100%);
+  background-attachment: fixed;
+}
+
+html.light .tc-app-shell {
+  background:
+    radial-gradient(120% 120% at 20% 20%, rgba(147, 51, 234, 0.08), transparent 42%),
+    radial-gradient(140% 140% at 80% 0%, rgba(45, 212, 191, 0.06), transparent 46%),
+    radial-gradient(140% 140% at 95% 88%, rgba(236, 72, 153, 0.06), transparent 44%),
+    linear-gradient(120deg, rgba(109, 40, 217, 0.04) 0%, rgba(14, 165, 233, 0.03) 44%, rgba(236, 72, 153, 0.04) 100%),
+    linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 46%, #f1f5f9 100%);
+}
+
+html.light .tc-page-surface {
+  background:
+    radial-gradient(120% 120% at 20% 20%, rgba(147, 51, 234, 0.08), transparent 42%),
+    radial-gradient(140% 140% at 80% 0%, rgba(45, 212, 191, 0.06), transparent 46%),
+    radial-gradient(140% 140% at 95% 88%, rgba(236, 72, 153, 0.06), transparent 44%),
+    linear-gradient(120deg, rgba(109, 40, 217, 0.04) 0%, rgba(14, 165, 233, 0.03) 44%, rgba(236, 72, 153, 0.04) 100%),
+    linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 46%, #f1f5f9 100%);
+}
+
+html.light .tc-theme-exempt,
+html.light .tc-theme-exempt .tc-page-surface {
+  background: #f1f5f9;
+}
+
+html.light body.tc-theme-exempt-body {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+}
+
+html.light.tc-battery-ultra body,
+html.light.tc-battery-ultra .tc-app-shell,
+html.light.tc-battery-ultra .tc-page-surface {
+  background: #f1f5f9 !important;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+@media (prefers-color-scheme: light) {
+  html.light {
+    color: rgba(0, 0, 0, 0.9);
+    background-color: #f1f5f9;
+  }
+  html.light a:hover {
+    color: #7c3aed;
+  }
+  html.light button {
+    background-color: #f1f5f9;
+  }
+}
+
 .tc-app-shell::before {
   content: '';
   position: fixed;

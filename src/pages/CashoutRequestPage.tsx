@@ -20,7 +20,6 @@ import type {
 } from '../types/cashout';
 import {
   TIERS,
-  WEEKLY_CASHOUT_LIMIT,
   MIN_CASHOUT_COINS,
   type CashoutTier,
 } from '../config/coinConfig';
@@ -70,6 +69,7 @@ function getPreferredPayoutMethod(rawProfile: any): PayoutMethod {
 
 export default function CashoutRequestPage() {
   const authStore = useAuthStore() as any;
+  const user = authStore.user as any;
   const profile = authStore.profile as any;
   const refreshProfile = authStore.refreshProfile as any;
   const navigate = useNavigate();
@@ -84,26 +84,29 @@ export default function CashoutRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [recentRequests, setRecentRequests] = useState<CashoutRequest[]>([]);
-  const [weeklyCashoutCount, setWeeklyCashoutCount] = useState(0);
+  const [dailyCashoutCount, setDailyCashoutCount] = useState(0);
   const [fastPayApproved, setFastPayApproved] = useState(false);
-  const [isMaiPayPlus, setIsMaiPayPlus] = useState(false);
 
    // Derived state for display
-   const weeklyLimit = isMaiPayPlus ? 20 : WEEKLY_CASHOUT_LIMIT;
    const usdAmount = selectedTier ? selectedTier.usd : 0;
-   const weeklyLimitReached = weeklyCashoutCount >= weeklyLimit;
-   const canRequest = eligibleCoins >= (selectedTier?.coins || 0) && providerUsername.trim() && userTag.trim() && !weeklyLimitReached;
+   const dailyLimitReached = dailyCashoutCount >= 1;
+   const isFeeProvider = payoutMethod === 'venmo' || payoutMethod === 'cash_app';
+   const isPayPal = payoutMethod === 'paypal';
+   const feeCoins = selectedTier
+     ? (isFeeProvider ? Math.round(selectedTier.coins * 0.05) : isPayPal ? 50 : 0)
+     : 0;
+   const totalCoinsNeeded = selectedTier ? selectedTier.coins + (feeCoins || 0) : 0;
+   const canRequest = eligibleCoins >= totalCoinsNeeded && providerUsername.trim() && userTag.trim();
 
   // Load user's troll_coins balance and recent payout requests
   const getSavedPayoutUsername = useCallback((method: PayoutMethod) => {
     return getSavedPayoutUsernameForProfile(profile, method);
   }, [profile]);
 
-  // MAI Pay Plus users require double the standard coin amount per tier.
-  const plusMultiplier = isMaiPayPlus ? 2 : 1;
-  const displayTiers = TIERS.map(
-    (t) => ({ ...t, coins: t.coins * plusMultiplier } as CashoutTier)
-  );
+   // Display tiers
+   const displayTiers = TIERS.map(
+     (t) => ({ ...t } as CashoutTier)
+   );
 
   useEffect(() => {
     if (!profile) return;
@@ -138,8 +141,6 @@ export default function CashoutRequestPage() {
         const eligibleTotal = Math.max(0, (profile.troll_coins || 0));
         setEligibleCoins(eligibleTotal);
 
-        setIsMaiPayPlus(profile.mai_pay_plus === true && (!profile.mai_pay_plus_expires_at || new Date(profile.mai_pay_plus_expires_at) > new Date()));
-
         // Load recent payout requests
         const { data: requestsData, error: requestsError } = await supabase
           .from('payout_requests')
@@ -173,25 +174,20 @@ export default function CashoutRequestPage() {
         if (approvedApplicationError) throw approvedApplicationError;
         setFastPayApproved(Boolean(profile.cashout_approved || approvedApplicationData?.id));
 
-        // Count cashouts in the last 7 days (rolling weekly limit) — matches backend enforcement.
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        const { count: weekCount, error: weekCountError } = await supabase
+        // Count cashouts in the last 24 hours (daily limit) — matches backend enforcement.
+        const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { count: dayCount, error: dayCountError } = await supabase
           .from('payout_requests')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', profile.id)
           .in('status', ['approved', 'paid', 'completed'])
-          .gte('created_at', weekAgo);
+          .gte('created_at', dayAgo);
 
-        if (weekCountError) throw weekCountError;
-        setWeeklyCashoutCount(weekCount || 0);
+        if (dayCountError) throw dayCountError;
+        setDailyCashoutCount(dayCount || 0);
 
         // Auto-select highest eligible tier based on the loaded balance.
-        // MAI Pay Plus users require double the standard coin amount per tier.
-        const plusMultiplier = profile.mai_pay_plus === true && (!profile.mai_pay_plus_expires_at || new Date(profile.mai_pay_plus_expires_at) > new Date()) ? 2 : 1;
-        const adjustedTiers = TIERS.map(
-          (t) => ({ ...t, coins: t.coins * plusMultiplier } as CashoutTier)
-        );
-        const eligibleTier = [...adjustedTiers].reverse().find(t => t.coins <= eligibleTotal) || adjustedTiers[0];
+        const eligibleTier = [...TIERS].reverse().find(t => t.coins <= eligibleTotal) || TIERS[0];
         if (eligibleTier) setSelectedTier(eligibleTier);
       } catch (err: any) {
         console.error('Failed to load cashout data:', err);
@@ -251,8 +247,8 @@ export default function CashoutRequestPage() {
       return;
     }
 
-    if (weeklyLimitReached) {
-      toast.error(`Weekly cashout limit reached. You have used ${weeklyCashoutCount} of ${weeklyLimit} cashouts in the last 7 days.`);
+    if (dailyLimitReached) {
+      toast.error(`Daily cashout limit reached. You have used ${dailyCashoutCount} cashout(s) in the last 24 hours.`);
       return;
     }
 
@@ -279,7 +275,7 @@ export default function CashoutRequestPage() {
         throw new Error(data.error || 'Cashout request failed');
       }
 
-      toast.success(`Cashout request submitted! ${selectedTier.coins.toLocaleString()} coins deducted.`);
+      toast.success(`Cashout request submitted! ${selectedTier.coins.toLocaleString()} coins${feeCoins > 0 ? ` + ${feeCoins.toLocaleString()} fee` : ''} deducted.`);
 
       // Refresh profile to update balances
       await refreshProfile();
@@ -317,22 +313,22 @@ export default function CashoutRequestPage() {
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-extrabold text-white mb-2">Request Cashout</h1>
-           <p className="text-gray-300">
-              Convert your eligible cashout coins into real payout requests. All troll coins are cashout-eligible.
-              You can request up to {weeklyLimit} cashouts per rolling 7-day period with no fees.
-           </p>
+             <p className="text-gray-300">
+                Convert your eligible cashout coins into real payout requests. All troll coins are cashout-eligible.
+                You can request 1 cashout per day. PayPal and ACH have no fee. Venmo and Cash App charge a 5% fee (in coins).
+             </p>
             </div>
           </div>
 
-          {weeklyLimitReached && (
+           {dailyLimitReached && (
             <div className="mt-4 bg-amber-900/30 border border-amber-700 rounded-lg p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
-                <h4 className="font-bold text-amber-400">Weekly Cashout Limit Reached</h4>
-                <p className="text-sm text-amber-300/80">
-                   You have used {weeklyCashoutCount} of {weeklyLimit} cashouts in the last 7 days.
-                   Your limit resets 7 days after your first cashout of the week.
-                </p>
+                 <h4 className="font-bold text-amber-400">Daily Cashout Limit Reached</h4>
+                 <p className="text-sm text-amber-300/80">
+                    You have used {dailyCashoutCount} cashout(s) in the last 24 hours.
+                    Your limit resets 24 hours after your first cashout of the day.
+                 </p>
               </div>
             </div>
           )}
@@ -360,14 +356,9 @@ export default function CashoutRequestPage() {
 
           {/* Tier Selection */}
           <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Select Cashout Tier
-                {isMaiPayPlus && (
-                  <span className="ml-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-black text-amber-300">
-                    MAI Pay Plus · 2× coins
-                  </span>
-                )}
-              </label>
+               <label className="block text-sm font-medium text-gray-300 mb-2">
+                 Select Cashout Tier
+               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {displayTiers.map((tier) => {
                   const isDisabled = eligibleCoins < tier.coins;
@@ -399,13 +390,13 @@ export default function CashoutRequestPage() {
             </p>
           </div>
 
-          {/* No Fees Notice */}
+          {/* Cashout Fee Notice */}
           <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4 flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
             <div>
-              <h3 className="text-sm font-bold text-green-300">No Cashout Fees</h3>
+            <h3 className="text-sm font-bold text-green-300">Cashout Fee</h3>
               <p className="text-sm text-green-200/80">
-                Mai Troll does not charge users to cash out their earnings. The full USD value of your selected tier is paid out.
+                PayPal and ACH have no cashout fee. Venmo and Cash App charge a 5% fee (in coins) per cashout. The full cash amount is paid out to you.
               </p>
             </div>
           </div>
@@ -419,10 +410,26 @@ export default function CashoutRequestPage() {
                    <span className="text-gray-400">Requested Amount</span>
                    <span className="text-white font-mono">{selectedTier.coins.toLocaleString()} coins</span>
                  </div>
-                <div className="flex justify-between text-troll-gold font-bold pt-2 border-t border-purple-700/30">
-                  <span>You Receive</span>
-                  <span>{selectedTier.coins.toLocaleString()} coins (${usdAmount.toFixed(2)})</span>
-                </div>
+                <div className="flex justify-between">
+                    <span className="text-gray-400">Processing Fee</span>
+                    <span className="text-red-400 font-mono">
+                      {isFeeProvider
+                        ? `${feeCoins.toLocaleString()} coins (5%)`
+                        : '$0.00'}
+                    </span>
+                  </div>
+                 <div className="flex justify-between text-troll-gold font-bold pt-2 border-t border-purple-700/30">
+                   <span>You Receive</span>
+                   <span>${usdAmount.toFixed(2)}</span>
+                 </div>
+                 {isFeeProvider && feeCoins > 0 && (
+                   <div className="flex justify-between pt-1">
+                     <span className="text-gray-400">Total Charged</span>
+                     <span className="text-white font-mono">
+                       {totalCoinsNeeded.toLocaleString()} coins
+                     </span>
+                   </div>
+                 )}
               </div>
             </div>
           )}
@@ -524,27 +531,22 @@ export default function CashoutRequestPage() {
                   <div className="w-5 h-5 border-2 border-t-troll-purple-900 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
                   Submitting...
                 </>
-              ) : weeklyLimitReached ? (
+              ) : eligibleCoins < (selectedTier?.coins || 0) ? (
                 <>
                   <AlertCircle className="w-5 h-5" />
-                  Weekly Limit Reached ({weeklyCashoutCount}/{weeklyLimit})
+                  Insufficient Eligible Coins
                 </>
-              ) : eligibleCoins < (selectedTier?.coins || 0) ? (
-               <>
-                 <AlertCircle className="w-5 h-5" />
-                 Insufficient Eligible Coins
-               </>
-             ) : !providerUsername.trim() ? (
-               <>
-                 <AlertCircle className="w-5 h-5" />
-                 Enter Payout Details
-               </>
-             ) : (
-               <>
-                 <DollarSign className="w-5 h-5" />
-                 Request Payout
-               </>
-             )}
+              ) : !providerUsername.trim() ? (
+                <>
+                  <AlertCircle className="w-5 h-5" />
+                  Enter Payout Details
+                </>
+              ) : (
+                <>
+                  <DollarSign className="w-5 h-5" />
+                  Request Payout
+                </>
+              )}
           </button>
 
           <p className="text-xs text-gray-500 text-center">

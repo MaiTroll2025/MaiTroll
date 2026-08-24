@@ -44,7 +44,7 @@ export default function PayoutReview() {
         .from('payout_requests')
         .select(`
           *,
-          user_profiles!inner(username, avatar_url)
+          user_profiles!payout_requests_user_id_fkey(username, avatar_url)
         `)
         .in('status', ['pending', 'reviewed'])
         .order('created_at', { ascending: false })

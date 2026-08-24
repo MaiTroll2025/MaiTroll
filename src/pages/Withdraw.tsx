@@ -10,22 +10,29 @@ export default function Withdraw() {
   const [amount, setAmount] = useState("");
   const [payoutMethod, setPayoutMethod] = useState('paypal');
   const [providerUsername, setProviderUsername] = useState('');
-  const [isMaiPayPlus, setIsMaiPayPlus] = useState(false);
 
   const availableCoins = balance;
+
+  const isFeeProvider = payoutMethod === 'venmo' || payoutMethod === 'cash_app';
+  const isPayPal = payoutMethod === 'paypal';
+  const getFeeCoins = (coins: number) => {
+    if (isFeeProvider) return Math.round(coins * 0.05);
+    if (isPayPal) return 50;
+    return 0;
+  };
+  const getTotalCoins = (coins: number) => coins + getFeeCoins(coins);
 
   const loadBalance = useCallback(async () => {
     if (!user) return;
 
     const { data } = await supabase
       .from("user_profiles")
-      .select("troll_coins, paypal_email, cashapp_handle, venmo_handle, mai_pay_plus, mai_pay_plus_expires_at")
+      .select("troll_coins, paypal_email, cashapp_handle, venmo_handle")
       .eq("id", user.id)
       .maybeSingle();
 
     if (data) {
       setBalance(data?.troll_coins ?? 0);
-      setIsMaiPayPlus(data?.mai_pay_plus === true && (!data?.mai_pay_plus_expires_at || new Date(data.mai_pay_plus_expires_at) > new Date()));
       if (data.paypal_email) {
         setPayoutMethod('paypal');
         setProviderUsername(data.paypal_email);
@@ -50,17 +57,18 @@ export default function Withdraw() {
     }
 
     const coinAmount = parseInt(amount, 10);
+    const validCoins = new Set(TIERS.map(t => t.coins));
 
-    const plusMultiplier = isMaiPayPlus ? 2 : 1;
-    const validCoins = new Set(TIERS.flatMap(t => [t.coins, t.coins * plusMultiplier]));
-
-    if (!validCoins.has(coinAmount)) {
-      toast.error(`Select a valid Cashout tier: ${TIERS.map(t => ((t.coins * plusMultiplier) / 1000).toFixed(1) + 'k').join(', ')}`);
+    if (!validCoins.has(coinAmount as any)) {
+      toast.error(`Select a valid Cashout tier: ${TIERS.map(t => (t.coins / 1000).toFixed(1) + 'k').join(', ')}`);
       return;
     }
 
-    if (coinAmount > availableCoins) {
-      toast.error(`Insufficient balance. You need ${coinAmount.toLocaleString()} coins but only have ${availableCoins.toLocaleString()} available.`);
+    const feeCoins = getFeeCoins(coinAmount);
+    const totalNeeded = coinAmount + feeCoins;
+
+    if (totalNeeded > availableCoins) {
+      toast.error(`Insufficient balance. You need ${totalNeeded.toLocaleString()} coins (including ${feeCoins} fee) but only have ${availableCoins.toLocaleString()} available.`);
       return;
     }
 
@@ -125,7 +133,7 @@ export default function Withdraw() {
         <h2 className="text-2xl font-bold mb-4">Withdraw Earnings</h2>
 
         <div className="mb-3 rounded-lg border border-green-500/30 bg-green-900/10 px-3 py-2 text-xs text-green-200">
-          Mai Troll does not charge any cashout fees. Up to {isMaiPayPlus ? 20 : 10} cashouts per rolling 7 days.
+           PayPal and ACH have no cashout fee. Venmo and Cash App charge a 5% fee (in coins) per cashout. 1 cashout per day.
         </div>
 
         <p className="mb-2">
@@ -165,10 +173,9 @@ export default function Withdraw() {
           >
             <option value="">Select a tier...</option>
             {TIERS.map(t => {
-              const coins = t.coins * (isMaiPayPlus ? 2 : 1);
               return (
-                <option key={coins} value={coins}>
-                  {coins.toLocaleString()} coins → ${t.usd} ({t.name})
+                <option key={t.coins} value={t.coins}>
+                  {t.coins.toLocaleString()} coins → ${t.usd} ({t.name})
                 </option>
               );
             })}
@@ -177,15 +184,20 @@ export default function Withdraw() {
 
         {selectedTier && (
           <div className="mb-3 rounded-lg border border-green-500/30 bg-green-900/10 px-3 py-2 text-xs text-green-200">
-            <div>You receive: ${selectedTier.usd}</div>
-            <div>No cashout fees</div>
+            <div>You receive: ${selectedTier.usd.toFixed(2)}</div>
+            {getFeeCoins(selectedTier.coins) > 0 && (
+              <>
+                <div>Fee: {getFeeCoins(selectedTier.coins).toLocaleString()} coins{isFeeProvider && ' (5%)'}</div>
+                <div>Total: {getTotalCoins(selectedTier.coins).toLocaleString()} coins charged</div>
+              </>
+            )}
           </div>
         )}
 
         <button
           onClick={requestPayout}
           className="bg-green-500 hover:bg-green-600 w-full mt-3 py-2 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={!amount || !selectedTier || selectedTier.coins > availableCoins || !providerUsername.trim()}
+          disabled={!amount || !selectedTier || getTotalCoins(selectedTier.coins) > availableCoins || !providerUsername.trim()}
         >
           Request Cashout
         </button>
