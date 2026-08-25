@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import LevelStatusCard from '@/components/home/LevelStatusCard';
+import { useTheme } from '@/hooks/useTheme'
 import {
     Gavel, FileText, Mic, Radio, ShoppingBag, Video,
     Star, Award, Users, TrendingUp, Clock, DollarSign, Eye,
@@ -94,6 +95,7 @@ export function ProfileHeader({
     onFollowersClick,
     onFollowingClick,
 }: ProfileHeaderProps) {
+    const { theme } = useTheme()
     const themeColor = profile.theme_color || '#9333ea';
     const accentColor = profile.accent_color || '#22d3ee';
     const avatarUrl = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`;
@@ -161,7 +163,7 @@ export function ProfileHeader({
                     });
                     return null;
                 })()}
-                <div className="absolute left-5 top-5 rounded-full border border-white/20 bg-slate-950/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/80 backdrop-blur-xl pointer-events-none">
+                <div className={`absolute left-5 top-5 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] backdrop-blur-xl pointer-events-none ${theme === 'light' ? 'border-gray-300 bg-white/80 text-gray-900' : 'border-white/20 bg-slate-950/60 text-white/80'}`}>
                     Mai Troll Profile
                 </div>
                 {isOwnProfile && onCoverEdit && (
@@ -252,7 +254,7 @@ export function ProfileHeader({
                                         Minor Account
                                     </span>
                                 )}
-                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-bold text-white/70">
+                                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${theme === 'light' ? 'border-gray-300 bg-gray-100 text-gray-700' : 'border-white/10 bg-white/5 text-white/70'}`}>
                                     Level {profile.level}
                                 </span>
                                 {subscriberCount > 0 && (
@@ -261,15 +263,15 @@ export function ProfileHeader({
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
+                            <h1 className={`text-3xl font-black tracking-tight md:text-5xl ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
                                 {profile.display_name || profile.username}
                             </h1>
-                            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-white/50">
+                            <div className={`mt-2 flex flex-wrap items-center gap-3 text-sm ${theme === 'light' ? 'text-gray-500' : 'text-white/50'}`}>
                                 <span className="font-bold" style={{ color: accentColor }}>
                                     {careerRoleLabel || `@${profile.username}`}
                                 </span>
-                                {profile.bio && <span className="text-white/40">•</span>}
-                                <span className="max-w-xs truncate">{profile.bio}</span>
+                                {profile.bio && <span className={theme === 'light' ? 'text-gray-400' : 'text-white/40'}>•</span>}
+                                <span className={`max-w-xs truncate ${theme === 'light' ? 'text-gray-600' : ''}`}>{profile.bio}</span>
                             </div>
                         </div>
                     </div>

@@ -37,6 +37,7 @@ export interface TromailRoleAccount {
 }
 
 export interface UtromailThread {
+  [x: string]: any;
   id: string;
   subject: string | null;
   is_group: boolean;

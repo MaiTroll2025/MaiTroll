@@ -10,6 +10,7 @@ interface HorizontalScrollRowProps {
   onViewAll?: () => void
   className?: string
   right?: React.ReactNode
+  theme?: string
 }
 
 export default function HorizontalScrollRow({
@@ -20,6 +21,7 @@ export default function HorizontalScrollRow({
   onViewAll,
   right,
   className = '',
+  theme = 'dark',
 }: HorizontalScrollRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const { isMobileWidth } = useIsMobile()
@@ -47,8 +49,8 @@ export default function HorizontalScrollRow({
         <div className="flex items-center gap-2">
           {icon && <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06]">{icon}</div>}
           <div>
-            <h3 className="text-sm font-black text-white">{title}</h3>
-            {subtitle && <p className="text-[10px] font-bold text-white/30">{subtitle}</p>}
+             <h3 className={`text-sm font-black ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{title}</h3>
+             {subtitle && <p className={`text-[10px] font-bold ${theme === 'light' ? 'text-gray-500' : 'text-white/30'}`}>{subtitle}</p>}
           </div>
         </div>
         <div className="flex items-center gap-1.5">

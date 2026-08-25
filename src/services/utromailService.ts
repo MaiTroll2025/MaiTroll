@@ -627,7 +627,17 @@ export const moveThreadToFolder = async (threadId: string, userId: string, folde
 };
 
 export const deleteThread = async (threadId: string, userId: string): Promise<void> => {
-  await moveThreadToFolder(threadId, userId, 'trash');
+  await moveThreadToFolder(threadId, userId, 'trash')
+};
+
+export const getOtherParticipant = (thread: UtromailThread, userId: string) => {
+  return {
+    id: thread.other_user_id || null,
+    username: thread.other_username || null,
+    display_name: thread.other_display_name || null,
+    avatar_url: thread.other_avatar_url || null,
+    utromail_address: thread.other_utromail_address || null,
+  }
 };
 
 export const starMessage = async (messageId: string, starred: boolean): Promise<void> => {

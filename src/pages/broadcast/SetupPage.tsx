@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useBroadcastLockdown } from '@/hooks/useBroadcastLockdown';
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap';
 import { startBroadcastWithCapacityCheck } from '@/lib/streamCapacity';
+import { requestLiveKitToken, normalizeLiveKitTokenResponse, type NormalizedLiveKitToken } from '@/lib/livekitToken';
 import { generateUUID } from '../../lib/uuid';
 import { RANDOM_BATTLE_ENABLED } from '../../config/featureFlags';
 import { US_STATES, getStateName } from '../../config/usStates';
@@ -57,65 +58,12 @@ type BroadcastStartStage =
   | 'stream live verification'
   | 'redirecting/opening broadcast room'
 
-type NormalizedLiveKitToken = {
-  token: string
-  roomName: string
-  participantIdentity: string
-}
-
 function broadcastStartLog(message: string, details?: Record<string, unknown>) {
   console.info(`[BroadcastStart] ${message}`, details || {})
 }
 
 function broadcastStartError(stage: BroadcastStartStage, details?: Record<string, unknown>) {
   console.error(`[BroadcastStart] FAILED at stage: ${stage}`, details || {})
-}
-
-function normalizeLiveKitTokenResponse(raw: any, expectedRoomName: string, expectedIdentity: string): NormalizedLiveKitToken {
-  const token = raw?.token
-  const roomName = raw?.roomName || raw?.room || raw?.livekit_room || expectedRoomName
-  const participantIdentity = raw?.participantIdentity || raw?.identity || raw?.participantName || expectedIdentity
-
-  if (!raw?.success && raw?.success !== undefined) {
-    throw new Error(raw?.error || 'LiveKit token request failed')
-  }
-  if (!token || typeof token !== 'string') {
-    throw new Error('LiveKit token response missing token')
-  }
-  if (!roomName || typeof roomName !== 'string') {
-    throw new Error('LiveKit token response missing roomName')
-  }
-  if (!participantIdentity || typeof participantIdentity !== 'string') {
-    throw new Error('LiveKit token response missing participantIdentity')
-  }
-
-  return { token, roomName, participantIdentity }
-}
-
-async function requestLiveKitToken(roomName: string, userId: string): Promise<NormalizedLiveKitToken> {
-  const { data, error } = await supabase.functions.invoke('livekit-token', {
-    body: {
-      room: roomName,
-      userId,
-      identity: userId,
-      role: 'publisher',
-      isHost: true,
-    },
-  })
-
-  if (error) {
-    const statusCode = error?.status || error?.statusCode || error?.status_code || null
-    const bodyText = error?.body || error?.message || JSON.stringify(error)
-    throw new Error(`LiveKit token request failed${statusCode ? ` (${statusCode})` : ''}: ${bodyText}`)
-  }
-
-  broadcastStartLog('token response received', {
-    status: 200,
-    ok: true,
-    preview: JSON.stringify(data || {}).slice(0, 180),
-  })
-
-  return normalizeLiveKitTokenResponse(data, roomName, userId)
 }
 
 async function startBunnyDelivery(streamId: string, roomName: string) {

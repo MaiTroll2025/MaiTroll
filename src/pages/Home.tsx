@@ -76,6 +76,7 @@ const LiveGrid = React.memo(function LiveGrid({
    onClickItem,
    user,
    navigate,
+   theme,
  }: {
    liveItems: LiveItem[]
    loadingLive: boolean
@@ -86,6 +87,7 @@ const LiveGrid = React.memo(function LiveGrid({
    onClickItem: (item: LiveItem) => void
    user: { id: string } | null
    navigate: (path: string) => void
+   theme: string
  }) {
     const visible = showLiveGrid ?? true
     const [showOnlineUsers, setShowOnlineUsers] = React.useState(false)
@@ -142,19 +144,19 @@ const LiveGrid = React.memo(function LiveGrid({
      void fetchOnlineUsers()
    }, [showOnlineUsers, onlineUserIds])
 
-  return (
-    <div className="space-y-4">
-      <div className={`${glass} rounded-2xl p-4`}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="flex items-center gap-2 text-xl font-black text-white">
-              <Radio className="h-5 w-5 text-red-400" />
-              Live Now
-            </h2>
-           <p className="mt-1 text-xs font-bold text-slate-400">
-              {liveItems.length} broadcasting • {totalViewers.toLocaleString()} watching now • <button onClick={() => setShowOnlineUsers(!showOnlineUsers)} className="text-emerald-300 hover:text-emerald-200 underline">{onlineUsers.toLocaleString()} online</button>
-            </p>
-          </div>
+   return (
+     <div className="space-y-4">
+       <div className={`${glass} rounded-2xl p-4`}>
+         <div className="flex flex-wrap items-center justify-between gap-3">
+           <div>
+             <h2 className={`flex items-center gap-2 text-xl font-black ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+               <Radio className="h-5 w-5 text-red-400" />
+               Live Now
+             </h2>
+            <p className={`mt-1 text-xs font-bold ${theme === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>
+               {liveItems.length} broadcasting • {totalViewers.toLocaleString()} watching now • <button onClick={() => setShowOnlineUsers(!showOnlineUsers)} className="text-emerald-300 hover:text-emerald-200 underline">{onlineUsers.toLocaleString()} online</button>
+             </p>
+           </div>
           {liveItems.length > 0 && (
             <button
               onClick={() => setShowLiveGrid(visible ? false : true)}
@@ -198,7 +200,7 @@ const LiveGrid = React.memo(function LiveGrid({
             ) : (
               visibleGroupKeys.map((groupKey) => (
                 <div key={groupKey}>
-                  <h3 className="text-sm font-black uppercase tracking-[0.14em] text-slate-300 mb-2">
+                  <h3 className={`text-sm font-black uppercase tracking-[0.14em] mb-2 ${theme === 'light' ? 'text-gray-600' : 'text-slate-300'}`}>
                     {groupLabels[groupKey] || groupKey}
                   </h3>
                   <div className="grid grid-cols-4 gap-2 md:grid-cols-6">
@@ -206,9 +208,9 @@ const LiveGrid = React.memo(function LiveGrid({
                       <button
                         key={item.id}
                         onClick={() => onClickItem(item)}
-                        className="group relative aspect-square overflow-hidden rounded-xl border border-white/10 bg-slate-900 text-left transition hover:border-cyan-300/60"
+                        className={`group relative aspect-square overflow-hidden rounded-xl border text-left transition ${theme === 'light' ? 'border-gray-300 bg-white hover:border-cyan-300/60' : 'border-white/10 bg-slate-900 hover:border-cyan-300/60'}`}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/70 via-slate-950 to-cyan-900/50" />
+                        <div className={`absolute inset-0 ${theme === 'light' ? 'bg-gradient-to-br from-purple-100/70 via-gray-50 to-cyan-100/50' : 'bg-gradient-to-br from-purple-900/70 via-slate-950 to-cyan-900/50'}`} />
                         {item.type === 'auction' ? (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <Gavel className="h-8 w-8 text-cyan-300/40" />
@@ -219,12 +221,12 @@ const LiveGrid = React.memo(function LiveGrid({
                           <Play className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-white/20" />
                         )}
                         <div className="absolute left-1.5 top-1.5 rounded-md bg-red-600 px-1.5 py-0.5 text-[8px] font-black text-white">LIVE</div>
-                        <div className="absolute right-1.5 top-1.5 rounded-md bg-black/50 px-1.5 py-0.5 text-[8px] font-black text-white">
+                        <div className={`absolute right-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[8px] font-black ${theme === 'light' ? 'bg-gray-200 text-gray-700' : 'bg-black/50 text-white'}`}>
                           👁 {item.viewerCount}
                         </div>
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-2">
-                          <p className="truncate text-[10px] font-black text-white">{item.title}</p>
-                          <p className="truncate text-[8px] font-bold text-slate-300">{item.streamerName}</p>
+                        <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t p-2 ${theme === 'light' ? 'from-white via-white/70 to-transparent' : 'from-black via-black/70 to-transparent'}`}>
+                          <p className={`truncate text-[10px] font-black ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{item.title}</p>
+                          <p className={`truncate text-[8px] font-bold ${theme === 'light' ? 'text-gray-600' : 'text-slate-300'}`}>{item.streamerName}</p>
                         </div>
                       </button>
                     ))}
@@ -302,19 +304,21 @@ const LiveGrid = React.memo(function LiveGrid({
 const HomeAuctionGrid = React.memo(function HomeAuctionGrid({
   auctions,
   onClickAuction,
+  theme,
 }: {
   auctions: AuctionShow[]
   onClickAuction: (id: string) => void
+  theme: string
 }) {
   return (
     <div className={`${glass} rounded-2xl p-4`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-xl font-black text-white">
+          <h2 className={`flex items-center gap-2 text-xl font-black ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
             <Gavel className="h-5 w-5 text-cyan-300" />
             Live Auctions
           </h2>
-          <p className="mt-1 text-xs font-bold text-slate-400">
+          <p className={`mt-1 text-xs font-bold ${theme === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>
             {auctions.length} auction{auctions.length === 1 ? '' : 's'} live now
           </p>
         </div>
@@ -329,31 +333,31 @@ const HomeAuctionGrid = React.memo(function HomeAuctionGrid({
       {auctions.length === 0 ? (
         <button
           onClick={() => onClickAuction('')}
-          className="mt-4 w-full rounded-2xl border border-dashed border-cyan-500/30 bg-cyan-500/[0.04] py-10 text-center transition hover:border-cyan-400/50 hover:bg-cyan-500/[0.08]"
+          className={`mt-4 w-full rounded-2xl border border-dashed border-cyan-500/30 bg-cyan-500/[0.04] py-10 text-center transition hover:border-cyan-400/50 hover:bg-cyan-500/[0.08]`}
         >
           <Gavel className="mx-auto h-10 w-10 text-cyan-500/50" />
           <p className="mt-3 text-sm font-bold text-cyan-300/70">No auctions live right now</p>
         </button>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
-          {auctions.map((auction) => (
-            <button
-              key={auction.id}
-              onClick={() => onClickAuction(auction.id)}
-              className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 text-left transition hover:border-cyan-300/60"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/70 via-slate-950 to-purple-900/50" />
-              <Gavel className="absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 text-cyan-300/40" />
-              <div className="absolute right-2 top-2 rounded-lg bg-red-600 px-2 py-1 text-[10px] font-black text-white">
-                LIVE
-              </div>
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-3">
-                <p className="truncate text-sm font-black text-white">{auction.title}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+           {auctions.map((auction) => (
+             <button
+               key={auction.id}
+               onClick={() => onClickAuction(auction.id)}
+               className={`group relative aspect-[4/3] overflow-hidden rounded-2xl border text-left transition ${theme === 'light' ? 'border-gray-300 bg-white hover:border-cyan-300/60' : 'border-white/10 bg-slate-900 hover:border-cyan-300/60'}`}
+             >
+               <div className={`absolute inset-0 ${theme === 'light' ? 'bg-gradient-to-br from-cyan-100/70 via-gray-50 to-purple-100/50' : 'bg-gradient-to-br from-cyan-900/70 via-slate-950 to-purple-900/50'}`} />
+               <Gavel className={`absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 ${theme === 'light' ? 'text-cyan-600/40' : 'text-cyan-300/40'}`} />
+               <div className="absolute right-2 top-2 rounded-lg bg-red-600 px-2 py-1 text-[10px] font-black text-white">
+                 LIVE
+               </div>
+               <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t p-3 ${theme === 'light' ? 'from-white via-white/70 to-transparent' : 'from-black via-black/70 to-transparent'}`}>
+                 <p className={`truncate text-sm font-black ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{auction.title}</p>
+               </div>
+             </button>
+           ))}
+         </div>
+       )}
     </div>
   )
 })
@@ -366,6 +370,7 @@ const LiveNowTile = React.memo(function LiveNowTile({
   fallbackIcon: Icon,
   onClick,
   isMobileWidth,
+  theme,
 }: {
   title: string
   subtitle?: string | null
@@ -373,13 +378,14 @@ const LiveNowTile = React.memo(function LiveNowTile({
   fallbackIcon: React.ElementType
   onClick: () => void
   isMobileWidth: boolean
+  theme: string
 }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative flex shrink-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080c1a]/95 text-left transition-all duration-200 hover:border-cyan-300/40 ${isMobileWidth ? 'h-[120px] w-full' : 'h-[180px] w-[150px]'}`}
+      className={`group relative flex shrink-0 flex-col overflow-hidden rounded-2xl border text-left transition-all duration-200 hover:border-cyan-300/40 ${isMobileWidth ? 'h-[120px] w-full' : 'h-[180px] w-[150px]'} ${theme === 'light' ? 'border-gray-300 bg-white' : 'border-white/[0.08] bg-[#080c1a]/95'}`}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/70 via-slate-950 to-cyan-900/50" />
+      <div className={`absolute inset-0 ${theme === 'light' ? 'bg-gradient-to-br from-purple-100/70 via-gray-50 to-cyan-100/50' : 'bg-gradient-to-br from-purple-900/70 via-slate-950 to-cyan-900/50'}`} />
       {imageUrl ? (
         <img
           src={imageUrl}
@@ -388,16 +394,16 @@ const LiveNowTile = React.memo(function LiveNowTile({
           className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-[1.06]"
         />
       ) : (
-        <Icon className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 text-white/20" />
+        <Icon className={`absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 ${theme === 'light' ? 'text-gray-400/40' : 'text-white/20'}`} />
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#080c1a]/95" />
+      <div className={`absolute inset-0 bg-gradient-to-b ${theme === 'light' ? 'from-white/20 via-transparent to-white' : 'from-black/20 via-transparent to-[#080c1a]/95'}`} />
       <div className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-red-600 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
         LIVE
       </div>
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-2.5">
-        <p className="truncate text-[11px] font-black text-white">{title}</p>
-        {subtitle ? <p className="truncate text-[8px] font-bold text-slate-300">{subtitle}</p> : null}
+      <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t p-2.5 ${theme === 'light' ? 'from-white via-white/70 to-transparent' : 'from-black via-black/70 to-transparent'}`}>
+        <p className={`truncate text-[11px] font-black ${theme === 'light' ? 'tile-text' : 'text-white'}`}>{title}</p>
+        {subtitle ? <p className={`truncate text-[8px] font-bold ${theme === 'light' ? 'tile-text-sub' : 'text-slate-300'}`}>{subtitle}</p> : null}
       </div>
     </button>
   )
@@ -409,16 +415,19 @@ const AuctionsRow = React.memo(function AuctionsRow({
   auctions,
   onClickAuction,
   isMobileWidth,
+  theme,
 }: {
   auctions: AuctionShow[]
   onClickAuction: (id: string) => void
   isMobileWidth: boolean
+  theme: string
 }) {
   return (
     <HorizontalScrollRow
       title="Auctions"
       icon={<Gavel className="h-3.5 w-3.5 text-cyan-300" />}
       onViewAll={() => onClickAuction('')}
+      theme={theme}
     >
       {auctions.length === 0 ? (
         <div className={`flex shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-cyan-500/30 bg-cyan-500/[0.04] p-4 text-center ${isMobileWidth ? 'h-[120px] w-full' : 'h-[180px] w-[150px]'}`}>
@@ -434,6 +443,7 @@ const AuctionsRow = React.memo(function AuctionsRow({
             imageUrl={auction.thumbnail_url}
             fallbackIcon={Gavel}
             isMobileWidth={isMobileWidth}
+            theme={theme}
             onClick={() => onClickAuction(auction.id)}
           />
         ))
@@ -453,6 +463,7 @@ const CareerBroadcastRow = React.memo(function CareerBroadcastRow({
   emptyTitle,
   emptySubtitle,
   isMobileWidth,
+  theme,
 }: {
   title: string
   subtitle: string
@@ -462,12 +473,14 @@ const CareerBroadcastRow = React.memo(function CareerBroadcastRow({
   emptyTitle: string
   emptySubtitle: string
   isMobileWidth: boolean
+  theme: string
 }) {
   return (
     <HorizontalScrollRow
       title={title}
       subtitle={subtitle}
       icon={<Icon className="h-3.5 w-3.5 text-emerald-300" />}
+      theme={theme}
     >
       {items.length === 0 ? (
         <div className={`flex shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-4 text-center ${isMobileWidth ? 'h-[120px] w-full' : 'h-[180px] w-[150px]'}`}>
@@ -484,6 +497,7 @@ const CareerBroadcastRow = React.memo(function CareerBroadcastRow({
             imageUrl={item.streamerAvatar}
             fallbackIcon={Play}
             isMobileWidth={isMobileWidth}
+            theme={theme}
             onClick={() => onClickItem(item)}
           />
         ))
@@ -894,7 +908,7 @@ export default function Home() {
                   <PodcastRow />
                   <HyTroGamingRow onItemClick={handleScrollItemClick} />
 
-                  <AuctionsRow auctions={liveAuctions} onClickAuction={handleAuctionClick} isMobileWidth={isMobileWidth} />
+                  <AuctionsRow auctions={liveAuctions} onClickAuction={handleAuctionClick} isMobileWidth={isMobileWidth} theme={theme} />
                 </div>
               </section>
             )}
@@ -912,10 +926,12 @@ export default function Home() {
                       onClickItem={handleScrollItemClick}
                       user={user}
                       navigate={navigate}
+                      theme={theme}
                     />
                     <HomeAuctionGrid
                       auctions={liveAuctions}
                       onClickAuction={(id) => navigate(id ? `/auctions/${id}` : '/auctions')}
+                      theme={theme}
                     />
                     <NewStreamersRow onClickItem={handleScrollItemClick} />
                     <BestTrollersRow onClickItem={handleScrollItemClick} />
@@ -1026,6 +1042,7 @@ export default function Home() {
           <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[1]} variant="featured" />
         </aside>
       </div>
+
 
       {supportGoalReminder && !reminderLoading && (
         <SupportGoalReminderModal

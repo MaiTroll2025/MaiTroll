@@ -5,6 +5,7 @@ import { useLiveContent } from '@/contexts/LiveContentContext'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { useTheme } from '@/hooks/useTheme'
 
 interface HyTroGamingRowProps {
   onItemClick: (id: string) => void

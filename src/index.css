@@ -179,6 +179,20 @@ html.light ::-webkit-scrollbar-track {
   }
 }
 
+html.light .tile-text {
+  color: #000;
+  -webkit-text-stroke: 1px #fff;
+  text-stroke: 1px #fff;
+  paint-order: stroke fill;
+}
+
+html.light .tile-text-sub {
+  color: #333;
+  -webkit-text-stroke: 0.5px #fff;
+  text-stroke: 0.5px #fff;
+  paint-order: stroke fill;
+}
+
 .tc-app-shell::before {
   content: '';
   position: fixed;

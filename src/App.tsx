@@ -69,6 +69,8 @@ import { useUserPresenceRoute } from "./hooks/useUserPresenceRoute";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { reportBug } from "./lib/bugReporter";
 import { lazyWithRetry } from "./utils/lazyImport";
+import { useIsPhone } from "./phone/useIsPhone";
+import PhoneApp from "./phone/PhoneApp";
 
 // Animation components
 import { AnimationsContainer } from "./components/animations";
@@ -2799,6 +2801,10 @@ function App() {
     return cleanup;
   }, []);
 
+  // Screen-size detection: phone-sized screens get the dedicated src/phone
+  // experience instead of the full web application.
+  const isPhone = useIsPhone();
+
   return (
     <PageVisibilityProvider>
       <GlobalEventProvider>
@@ -2808,7 +2814,11 @@ function App() {
               <ProfileFrameProvider>
                 <TabSwitchHandler>
                   <GhostDropInProvider>
-                    <AppContent />
+                    {isPhone ? (
+                      <LiveContentProvider>
+                        <PhoneApp />
+                      </LiveContentProvider>
+                    ) : <AppContent />}
                     <GhostBanner />
                   </GhostDropInProvider>
                 </TabSwitchHandler>
