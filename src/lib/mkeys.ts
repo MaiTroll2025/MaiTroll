@@ -20,6 +20,21 @@ import { supabase } from './supabase'
 /** Web + Phone share this one implementation. Do not fork it. */
 export const MKEY_QUICK_AMOUNTS = [10, 25, 50, 100] as const
 
+/**
+ * Coins charged per MKey when buying MKeys with troll_coins.
+ * Keep this in sync with `mkey_config.mkey_coin_price_per_key`.
+ */
+export const MKEY_COIN_PRICE_PER_KEY = 10
+
+export interface MKeyPurchaseResult {
+  success: boolean
+  error?: string
+  mkeysPurchased?: number
+  coinCost?: number
+  available?: number
+  balance?: number
+}
+
 export interface MKeyWallet {
   available: number
   held: number
@@ -322,6 +337,57 @@ export async function fetchMyRecentMKeySends(limit = 5): Promise<MKeyBoostSummar
     return sends.map(mapBoostSummary)
   } catch {
     return []
+  }
+}
+
+/**
+ * Buy MKeys by spending troll_coins.
+ *
+ * Delegates the entire coin-deduction + MKey-credit accounting to the
+ * `mkey_purchase_with_coins` SECURITY DEFINER RPC. The client never touches a
+ * balance. Available to any authenticated user (broadcaster OR viewer) who has
+ * enough coins.
+ */
+export async function purchaseMKeysWithCoins(amount: number): Promise<MKeyPurchaseResult> {
+  const requested = Math.max(1, Math.floor(Number(amount) || 0))
+
+  try {
+    const { data, error } = await supabase.rpc('mkey_purchase_with_coins', {
+      p_amount: requested,
+    })
+
+    if (error) {
+      console.warn('[MKeys] coin purchase failed:', error.message)
+      return { success: false, error: 'rpc_error' }
+    }
+
+    const row = (data || {}) as any
+    return {
+      success: Boolean(row.success),
+      error: row.error,
+      mkeysPurchased: num(row.mkeys_purchased, requested),
+      coinCost: num(row.coin_cost),
+      available: num(row.available),
+      balance: num(row.balance),
+    }
+  } catch (err) {
+    console.warn('[MKeys] coin purchase threw:', err)
+    return { success: false, error: 'exception' }
+  }
+}
+
+/** Human-readable copy for a failed coin purchase. */
+export function describeMKeyPurchaseError(result: MKeyPurchaseResult): string {
+  if (!result.error) return 'Could not purchase MKeys. Try again.'
+  switch (result.error) {
+    case 'not_authenticated':
+      return 'Sign in to buy MKeys.'
+    case 'insufficient_coins':
+      return 'You do not have enough coins to buy that many MKeys.'
+    case 'invalid_amount':
+      return 'Choose at least 1 MKey to buy.'
+    default:
+      return 'Could not purchase MKeys. Try again.'
   }
 }
 

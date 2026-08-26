@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { KeyRound, Minus, Plus, Loader2, Users, ArrowLeft, Radio } from 'lucide-react'
+import { KeyRound, Minus, Plus, Loader2, Users, ArrowLeft, Radio, Coins } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '../../../lib/utils'
 import { useMKeyWallet } from '../../../hooks/useMKeyWallet'
+import { useCoins } from '../../../lib/hooks/useCoins'
 import {
   MKEY_QUICK_AMOUNTS,
+  MKEY_COIN_PRICE_PER_KEY,
+  describeMKeyPurchaseError,
   describeMKeySendError,
   fetchEligibleRecipientCount,
   fetchMKeyBoostSummary,
+  purchaseMKeysWithCoins,
   sendMKeys,
   type MKeyBoostSummary,
 } from '../../../lib/mkeys'
@@ -33,11 +37,21 @@ interface MKeySendPanelProps {
  */
 export default function MKeySendPanel({ broadcastId, onBack, onSent, className, children }: MKeySendPanelProps) {
   const { wallet, refresh: refreshWallet } = useMKeyWallet()
+  const { troll_coins: coinBalance, refreshCoins } = useCoins()
   const [amount, setAmount] = useState(10)
   const [sending, setSending] = useState(false)
   const [eligible, setEligible] = useState<number | null>(null)
   const [receipt, setReceipt] = useState<MKeyBoostSummary | null>(null)
   const mountedRef = useRef(true)
+
+  // Buy-with-coins flow.
+  const [buyAmount, setBuyAmount] = useState(10)
+  const [buying, setBuying] = useState(false)
+  const buyCost = useMemo(
+    () => Math.max(0, Math.floor(buyAmount) * MKEY_COIN_PRICE_PER_KEY),
+    [buyAmount]
+  )
+  const canAfford = coinBalance >= buyCost
 
   useEffect(() => {
     mountedRef.current = true
@@ -142,6 +156,35 @@ export default function MKeySendPanel({ broadcastId, onBack, onSent, className, 
     if (mountedRef.current) setEligible(count)
   }
 
+  const handleBuyWithCoins = async () => {
+    if (buying) return
+    if (buyAmount < 1) {
+      toast.error('Choose at least 1 MKey to buy.')
+      return
+    }
+    if (!canAfford) {
+      toast.error('You do not have enough coins to buy that many MKeys.')
+      return
+    }
+
+    setBuying(true)
+    const result = await purchaseMKeysWithCoins(buyAmount)
+    if (!mountedRef.current) return
+    setBuying(false)
+
+    await refreshWallet()
+    await refreshCoins()
+
+    if (!result.success) {
+      toast.error(describeMKeyPurchaseError(result))
+      return
+    }
+
+    toast.success(
+      `🔑 Bought ${result.mkeysPurchased} MKey${result.mkeysPurchased === 1 ? '' : 's'} for ${buyCost.toLocaleString()} coins`
+    )
+  }
+
   const noneLeft = maxSendable <= 0
 
   return (
@@ -201,6 +244,87 @@ export default function MKeySendPanel({ broadcastId, onBack, onSent, className, 
             </span>
           </div>
         )}
+
+        {/* Buy with coins (broadcaster OR viewer, anyone holding coins) */}
+        <div className="mt-4 rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/10 p-3 shadow-[0_0_18px_rgba(217,70,239,0.18)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-fuchsia-200">
+              <Coins size={13} />
+              Buy with coins
+            </div>
+            <span className="rounded-full border border-amber-300/25 bg-amber-400/10 px-2 py-0.5 font-mono text-[9px] text-amber-200">
+              {coinBalance.toLocaleString()} coins
+            </span>
+          </div>
+
+          <p className="mt-1.5 text-[10px] leading-relaxed text-fuchsia-100/80">
+            1 MKey = {MKEY_COIN_PRICE_PER_KEY.toLocaleString()} coins. Buy MKeys with your coins, then send them to bring viewers in.
+          </p>
+
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setBuyAmount((prev) => Math.max(1, prev - 1))}
+              disabled={buying}
+              className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-white transition-colors hover:border-fuchsia-300/40 hover:bg-white/[0.1] disabled:opacity-40"
+              aria-label="Decrease MKeys to buy"
+            >
+              <Minus size={16} />
+            </button>
+
+            <input
+              type="number"
+              inputMode="numeric"
+              value={buyAmount}
+              min={1}
+              disabled={buying}
+              onChange={(e) => setBuyAmount(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
+              className="h-11 w-24 rounded-xl border border-fuchsia-400/30 bg-slate-950/80 text-center font-mono text-xl font-black text-white outline-none focus:border-fuchsia-300/70 disabled:opacity-40 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              aria-label="MKeys to buy"
+            />
+
+            <button
+              type="button"
+              onClick={() => setBuyAmount((prev) => prev + 1)}
+              disabled={buying}
+              className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-white transition-colors hover:border-fuchsia-300/40 hover:bg-white/[0.1] disabled:opacity-40"
+              aria-label="Increase MKeys to buy"
+            >
+              <Plus size={16} />
+            </button>
+
+            <div className="ml-auto text-right">
+              <div className="font-mono text-sm font-black text-white">{buyCost.toLocaleString()}</div>
+              <div className="text-[9px] uppercase tracking-wider text-fuchsia-200/70">coins</div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleBuyWithCoins}
+            disabled={buying || !canAfford}
+            className={cn(
+              'mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black uppercase tracking-[0.12em] transition-all',
+              !canAfford
+                ? 'cursor-not-allowed border border-white/10 bg-white/[0.04] text-slate-500'
+                : 'bg-gradient-to-r from-fuchsia-700 via-pink-500 to-purple-600 text-white shadow-[0_0_26px_rgba(217,70,239,0.35)] hover:from-fuchsia-600 hover:to-purple-500'
+            )}
+          >
+            {buying ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Buying…
+              </>
+            ) : !canAfford ? (
+              'Not enough coins'
+            ) : (
+              <>
+                <Coins size={16} />
+                Buy {buyAmount} MKey{buyAmount === 1 ? '' : 's'}
+              </>
+            )}
+          </button>
+        </div>
 
         {/* Amount */}
         <div className="mt-5">

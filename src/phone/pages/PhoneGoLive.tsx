@@ -809,7 +809,7 @@ export default function PhoneGoLive() {
 
       <main className="mx-auto w-full max-w-xl space-y-4 p-4 pb-8">
         {/* Camera */}
-        <section className="relative aspect-video max-h-[40vh] overflow-hidden rounded-3xl border border-fuchsia-500/20 bg-zinc-950 shadow-[0_0_40px_rgba(168,85,247,.12)]">
+        <section className="relative mx-auto aspect-video max-h-[28vh] w-full max-w-sm overflow-hidden rounded-3xl border border-fuchsia-500/20 bg-zinc-950 shadow-[0_0_40px_rgba(168,85,247,.12)]">
           {permissionError ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
               <CameraOff
@@ -852,6 +852,10 @@ export default function PhoneGoLive() {
               autoPlay
               playsInline
               className={`absolute inset-0 h-full w-full object-cover ${
+                facingMode === 'user'
+                  ? '-scale-x-100'
+                  : ''
+              } ${
                 cameraOn
                   ? ''
                   : 'opacity-0'
