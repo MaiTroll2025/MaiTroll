@@ -676,9 +676,11 @@ export default function PhoneGoLive() {
        * IMPORTANT:
        * Do not stop the tracks here.
        *
-       * BroadcastPage owns them now.
+       * BroadcastPage owns them now. Keep `startingRef` true so the
+       * unmount cleanup leaves the LiveKit-owned camera/mic tracks running
+       * (stopping them here would kill the broadcast camera on the phone).
        */
-      startingRef.current = false
+      startingRef.current = true
 
       navigate(`/broadcast/${streamId}`)
     } catch (error: any) {
