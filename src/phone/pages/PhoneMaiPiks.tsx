@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Bell,
@@ -20,9 +20,11 @@ import {
   Send,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
+import { createNotification } from '../../lib/notifications'
 
 type PiksMode = 'feed' | 'camera' | 'story'
-type StoryVisibility = 'public' | 'private'
+type StoryVisibility = 'everyone' | 'followers' | 'private'
 
 interface PiksNotification {
   id: string
@@ -36,80 +38,267 @@ interface PiksNotification {
 
 interface PiksStory {
   id: string
+  userId: string
   username: string
   avatarUrl?: string | null
   thumbnailUrl?: string | null
   visibility: StoryVisibility
   hasAccess?: boolean
   isOwn?: boolean
+  expiresAt?: string
 }
 
 interface PiksFeedItem {
   id: string
+  userId: string
   username: string
   avatarUrl?: string | null
   mediaUrl?: string | null
+  mediaType?: 'photo' | 'video'
   caption?: string
   createdAt: string
   visibility: StoryVisibility
   isOwn?: boolean
 }
 
-interface PhoneMaiPiksProps {
-  onBackToMaiTroll?: () => void
-  notifications?: PiksNotification[]
-  stories?: PiksStory[]
-  feed?: PiksFeedItem[]
-  screenshotsAllowed?: boolean
-
-  onScreenshotDetected?: (payload: {
-    contentType: 'story' | 'feed' | 'profile' | 'chat' | 'broadcast'
-    contentId?: string
-    ownerUserId?: string
-  }) => void
-
-  onCreatePik?: (payload: {
-    mode: 'feed' | 'story'
-    visibility: StoryVisibility
-    mediaUrl?: string
-    caption?: string
-  }) => void
-
-  hasPrivateStoryAccess?: (story: PiksStory) => boolean
+interface CurrentUser {
+  id: string
+  username: string
+  avatarUrl?: string | null
+  screenshotsAllowed: boolean
 }
 
-export default function PhoneMaiPiks({
-  onBackToMaiTroll,
-  notifications = [],
-  stories = [],
-  feed = [],
-  screenshotsAllowed = true,
-  onScreenshotDetected,
-  onCreatePik,
-  hasPrivateStoryAccess,
-}: PhoneMaiPiksProps) {
+export default function PhoneMaiPiks() {
   const navigate = useNavigate()
 
   const [mode, setMode] = useState<PiksMode>('camera')
   const [showNotifications, setShowNotifications] = useState(false)
   const [selectedStory, setSelectedStory] = useState<PiksStory | null>(null)
-  const [selectedFeedItem, setSelectedFeedItem] =
-    useState<PiksFeedItem | null>(null)
+  const [selectedFeedItem, setSelectedFeedItem] = useState<PiksFeedItem | null>(null)
+
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [notifications, setNotifications] = useState<PiksNotification[]>([])
+  const [stories, setStories] = useState<PiksStory[]>([])
+  const [feed, setFeed] = useState<PiksFeedItem[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [cameraReady, setCameraReady] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
-
-  const [facingMode, setFacingMode] =
-    useState<'user' | 'environment'>('user')
-
-  const [mediaStream, setMediaStream] =
-    useState<MediaStream | null>(null)
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user')
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const unreadNotifications = notifications.filter(
-    (notification) => !notification.read,
-  ).length
+  /* ---------------------------------------------------------------------- */
+  /* Current user & profile                                                 */
+  /* ---------------------------------------------------------------------- */
+
+  const fetchCurrentUser = useCallback(async () => {
+    const { data: authData } = await supabase.auth.getUser()
+    if (!authData?.user) return null
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('id, username, avatar_url, screenshots_allowed')
+      .eq('id', authData.user.id)
+      .single()
+
+    if (!profile) return null
+
+    return {
+      id: profile.id,
+      username: profile.username,
+      avatarUrl: profile.avatar_url,
+      screenshotsAllowed: profile.screenshots_allowed ?? true,
+    }
+  }, [])
+
+  /* ---------------------------------------------------------------------- */
+  /* Feed                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  const fetchFeed = useCallback(async (userId: string) => {
+    const { data: follows } = await supabase
+      .from('user_follows')
+      .select('following_id')
+      .eq('follower_id', userId)
+
+    const followingIds = (follows || []).map((f) => f.following_id)
+    const viewerIds = [userId, ...followingIds]
+
+    const { data } = await supabase
+      .from('maipiks_posts')
+      .select('id, user_id, media_url, media_type, caption, visibility, created_at, deleted_at')
+      .in('user_id', viewerIds)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (!data) return []
+
+    const postUserIds = [...new Set(data.map((p) => p.user_id))]
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('id, username, avatar_url')
+      .in('id', postUserIds)
+
+    const profileMap = new Map((profiles || []).map((p) => [p.id, p]))
+
+    return data.map((post) => {
+      const profile = profileMap.get(post.user_id)
+      return {
+        id: post.id,
+        userId: post.user_id,
+        username: profile?.username || 'user',
+        avatarUrl: profile?.avatar_url,
+        mediaUrl: post.media_url,
+        mediaType: post.media_type,
+        caption: post.caption,
+        createdAt: post.created_at,
+        visibility: post.visibility,
+        isOwn: post.user_id === userId,
+      }
+    })
+  }, [])
+
+  /* ---------------------------------------------------------------------- */
+  /* Stories                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  const fetchStories = useCallback(async (userId: string) => {
+    const { data: follows } = await supabase
+      .from('user_follows')
+      .select('following_id')
+      .eq('follower_id', userId)
+
+    const followingIds = (follows || []).map((f) => f.following_id)
+    const viewerIds = [userId, ...followingIds]
+
+    const { data: storyRows } = await supabase
+      .from('maipiks_stories')
+      .select('id, user_id, visibility, expires_at, deleted_at, created_at')
+      .in('user_id', viewerIds)
+      .is('deleted_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+
+    if (!storyRows || storyRows.length === 0) return []
+
+    const storyIds = storyRows.map((s) => s.id)
+    const { data: items } = await supabase
+      .from('maipiks_story_items')
+      .select('id, story_id, media_url, thumbnail_url')
+      .in('story_id', storyIds)
+      .is('deleted_at', null)
+      .order('sort_order', { ascending: true })
+
+    const storyUserIds = [...new Set(storyRows.map((s) => s.user_id))]
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('id, username, avatar_url')
+      .in('id', storyUserIds)
+
+    const profileMap = new Map((profiles || []).map((p) => [p.id, p]))
+
+    const itemsByStory = new Map<string, { media_url: string; thumbnail_url: string | null }>()
+    ;(items || []).forEach((item) => {
+      if (!itemsByStory.has(item.story_id)) {
+        itemsByStory.set(item.story_id, { media_url: item.media_url, thumbnail_url: item.thumbnail_url })
+      }
+    })
+
+    return storyRows.map((story) => {
+      const profile = profileMap.get(story.user_id)
+      const firstItem = itemsByStory.get(story.id)
+      return {
+        id: story.id,
+        userId: story.user_id,
+        username: profile?.username || 'user',
+        avatarUrl: profile?.avatar_url,
+        thumbnailUrl: firstItem?.thumbnail_url || firstItem?.media_url,
+        visibility: story.visibility,
+        isOwn: story.user_id === userId,
+        expiresAt: story.expires_at,
+      }
+    })
+  }, [])
+
+  /* ---------------------------------------------------------------------- */
+  /* Notifications                                                          */
+  /* ---------------------------------------------------------------------- */
+
+  const fetchNotifications = useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from('notifications')
+      .select('id, type, title, message, metadata, read, created_at')
+      .eq('user_id', userId)
+      .in('type', ['maipiks_new_post', 'maipiks_new_story', 'maipiks_screenshot'])
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (!data) return []
+
+    const actorIds = [...new Set(data.map((n) => n.metadata?.actor_id).filter(Boolean))]
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('id, username, avatar_url')
+      .in('id', actorIds)
+
+    const profileMap = new Map((profiles || []).map((p) => [p.id, p]))
+
+    return data.map((n) => {
+      const actor = profileMap.get(n.metadata?.actor_id)
+      return {
+        id: n.id,
+        username: actor?.username || 'user',
+        avatarUrl: actor?.avatar_url,
+        type: n.type === 'maipiks_new_story' ? 'story' : n.type === 'maipiks_screenshot' ? 'private-story' : 'feed',
+        message: n.message || '',
+        createdAt: n.created_at,
+        read: n.read,
+      }
+    })
+  }, [])
+
+  /* ---------------------------------------------------------------------- */
+  /* Initial load                                                           */
+  /* ---------------------------------------------------------------------- */
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      const user = await fetchCurrentUser()
+      if (cancelled) return
+
+      if (!user) {
+        setLoading(false)
+        return
+      }
+
+      setCurrentUser(user)
+
+      const [feedData, storyData, notifData] = await Promise.all([
+        fetchFeed(user.id),
+        fetchStories(user.id),
+        fetchNotifications(user.id),
+      ])
+
+      if (cancelled) return
+
+      setFeed(feedData)
+      setStories(storyData)
+      setNotifications(notifData)
+      setLoading(false)
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [fetchCurrentUser, fetchFeed, fetchStories, fetchNotifications])
 
   /* ---------------------------------------------------------------------- */
   /* Navigation                                                             */
@@ -117,20 +306,13 @@ export default function PhoneMaiPiks({
 
   const stopCamera = () => {
     if (!mediaStream) return
-
     mediaStream.getTracks().forEach((track) => track.stop())
     setMediaStream(null)
   }
 
   const handleBack = () => {
     stopCamera()
-
-    if (onBackToMaiTroll) {
-      onBackToMaiTroll()
-      return
-    }
-
-    navigate('/phone')
+    navigate('/')
   }
 
   const openFeed = () => {
@@ -158,21 +340,16 @@ export default function PhoneMaiPiks({
       setCameraError(null)
 
       if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraError(
-          'Camera access is not available on this device.',
-        )
+        setCameraError('Camera access is not available on this device.')
         return
       }
 
       stopCamera()
 
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode,
-          },
-          audio: false,
-        })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode },
+        audio: false,
+      })
 
       setMediaStream(stream)
       setCameraReady(true)
@@ -183,19 +360,13 @@ export default function PhoneMaiPiks({
       }
     } catch (error) {
       console.error('MAI Piks camera error:', error)
-
       setCameraReady(false)
-
-      setCameraError(
-        'Camera permission is required to use MAI Piks.',
-      )
+      setCameraError('Camera permission is required to use MAI Piks.')
     }
   }
 
   const flipCamera = () => {
-    setFacingMode((current) =>
-      current === 'user' ? 'environment' : 'user',
-    )
+    setFacingMode((current) => (current === 'user' ? 'environment' : 'user'))
   }
 
   useEffect(() => {
@@ -219,7 +390,7 @@ export default function PhoneMaiPiks({
   /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
-    if (screenshotsAllowed) return
+    if (!currentUser || currentUser.screenshotsAllowed) return
 
     const handleVisibilityChange = () => {
       /*
@@ -228,18 +399,111 @@ export default function PhoneMaiPiks({
        */
     }
 
-    document.addEventListener(
-      'visibilitychange',
-      handleVisibilityChange,
-    )
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
-      document.removeEventListener(
-        'visibilitychange',
-        handleVisibilityChange,
-      )
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [screenshotsAllowed])
+  }, [currentUser])
+
+  /* ---------------------------------------------------------------------- */
+  /* Media upload                                                           */
+  /* ---------------------------------------------------------------------- */
+
+  const uploadMedia = async (dataUrl: string): Promise<string | null> => {
+    if (!currentUser) return null
+
+    try {
+      setUploading(true)
+
+      const byteString = atob(dataUrl.split(',')[1])
+      const mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0]
+      const ab = new ArrayBuffer(byteString.length)
+      const ia = new Uint8Array(ab)
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i)
+      }
+      const blob = new Blob([ab], { type: mimeString })
+
+      const ext = mimeString.includes('jpeg') || mimeString.includes('jpg') ? 'jpg' : 'png'
+      const path = `${currentUser.id}/${Date.now()}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('maipiks')
+        .upload(path, blob, { upsert: true, contentType: mimeString })
+
+      if (uploadError) {
+        console.error('[MAIPiks] Upload failed:', uploadError)
+        return null
+      }
+
+      const { data: urlData } = supabase.storage.from('maipiks').getPublicUrl(path)
+      return urlData.publicUrl
+    } catch (err) {
+      console.error('[MAIPiks] Upload error:', err)
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Create post / story                                                    */
+  /* ---------------------------------------------------------------------- */
+
+  const createPost = async (mediaUrl: string, caption: string, visibility: StoryVisibility) => {
+    if (!currentUser) return
+
+    const { error } = await supabase.from('maipiks_posts').insert({
+      user_id: currentUser.id,
+      media_url: mediaUrl,
+      media_type: 'photo',
+      caption,
+      visibility,
+    })
+
+    if (error) {
+      console.error('[MAIPiks] Create post failed:', error)
+      return
+    }
+
+    const freshFeed = await fetchFeed(currentUser.id)
+    setFeed(freshFeed)
+  }
+
+  const createStory = async (mediaUrl: string, visibility: StoryVisibility) => {
+    if (!currentUser) return
+
+    const { data: storyData, error: storyError } = await supabase
+      .from('maipiks_stories')
+      .insert({
+        user_id: currentUser.id,
+        visibility,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .select('id')
+      .single()
+
+    if (storyError || !storyData) {
+      console.error('[MAIPiks] Create story failed:', storyError)
+      return
+    }
+
+    const { error: itemError } = await supabase.from('maipiks_story_items').insert({
+      story_id: storyData.id,
+      media_url: mediaUrl,
+      media_type: 'photo',
+      sort_order: 0,
+    })
+
+    if (itemError) {
+      console.error('[MAIPiks] Create story item failed:', itemError)
+      return
+    }
+
+    const freshStories = await fetchStories(currentUser.id)
+    setStories(freshStories)
+  }
 
   /* ---------------------------------------------------------------------- */
   /* Capture                                                                */
@@ -247,16 +511,13 @@ export default function PhoneMaiPiks({
 
   const capturePhoto = async () => {
     const video = videoRef.current
-
     if (!video || !cameraReady) return
 
     const canvas = document.createElement('canvas')
-
     canvas.width = video.videoWidth || 1080
     canvas.height = video.videoHeight || 1920
 
     const context = canvas.getContext('2d')
-
     if (!context) return
 
     if (facingMode === 'user') {
@@ -264,24 +525,40 @@ export default function PhoneMaiPiks({
       context.scale(-1, 1)
     }
 
-    context.drawImage(
-      video,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    )
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-    const mediaUrl = canvas.toDataURL(
-      'image/jpeg',
-      0.92,
-    )
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
+    const mediaUrl = await uploadMedia(dataUrl)
 
-    onCreatePik?.({
-      mode: 'story',
-      visibility: 'public',
-      mediaUrl,
-    })
+    if (!mediaUrl) return
+
+    await createStory(mediaUrl, 'everyone')
+    setMode('story')
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Screenshot notification                                                */
+  /* ---------------------------------------------------------------------- */
+
+  const handleScreenshotDetected = async (payload: {
+    contentType: 'story' | 'feed' | 'profile' | 'chat' | 'broadcast'
+    contentId?: string
+    ownerUserId?: string
+  }) => {
+    if (!currentUser || !payload.ownerUserId || payload.ownerUserId === currentUser.id) return
+
+    await createNotification(
+      payload.ownerUserId,
+      'maipiks_screenshot',
+      'Screenshot Taken',
+      `@${currentUser.username} took a screenshot of your MAIPiks ${payload.contentType}.`,
+      {
+        actor_id: currentUser.id,
+        actor_username: currentUser.username,
+        content_type: payload.contentType,
+        content_id: payload.contentId,
+      }
+    )
   }
 
   /* ---------------------------------------------------------------------- */
@@ -290,28 +567,39 @@ export default function PhoneMaiPiks({
 
   const canViewStory = (story: PiksStory) => {
     if (story.isOwn) return true
-
-    if (story.visibility === 'public') {
-      return true
-    }
-
-    if (story.hasAccess !== undefined) {
-      return story.hasAccess
-    }
-
-    if (hasPrivateStoryAccess) {
-      return hasPrivateStoryAccess(story)
-    }
-
+    if (story.visibility === 'everyone' || story.visibility === 'followers') return true
+    if (story.hasAccess !== undefined) return story.hasAccess
     return false
   }
 
   const openStoryViewer = (story: PiksStory) => {
-    if (!canViewStory(story)) {
-      return
-    }
-
+    if (!canViewStory(story)) return
     setSelectedStory(story)
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Unread count                                                           */
+  /* ---------------------------------------------------------------------- */
+
+  const unreadNotifications = notifications.filter((n) => !n.read).length
+
+  /* ---------------------------------------------------------------------- */
+  /* Loading state                                                          */
+  /* ---------------------------------------------------------------------- */
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-[#03030a] text-white">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -left-32 top-20 h-80 w-80 rounded-full bg-[#00BFFF]/10 blur-[110px]" />
+          <div className="absolute -right-32 top-32 h-96 w-96 rounded-full bg-[#BF00FF]/10 blur-[120px]" />
+        </div>
+        <div className="relative grid h-20 w-20 place-items-center rounded-full border border-[#00BFFF]/30 bg-gradient-to-br from-[#00BFFF]/15 to-[#BF00FF]/15">
+          <Camera size={30} className="text-[#00BFFF] animate-pulse" />
+        </div>
+        <p className="relative mt-6 text-sm font-black text-zinc-400">Loading MAI Piks...</p>
+      </div>
+    )
   }
 
   /* ---------------------------------------------------------------------- */
@@ -328,9 +616,7 @@ export default function PhoneMaiPiks({
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-32 top-20 h-80 w-80 rounded-full bg-[#00BFFF]/10 blur-[110px]" />
         <div className="absolute -right-32 top-32 h-96 w-96 rounded-full bg-[#BF00FF]/10 blur-[120px]" />
-
         <div className="absolute left-1/2 top-[35%] h-72 w-72 -translate-x-1/2 rounded-full bg-[#1E90FF]/5 blur-[100px]" />
-
         <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rotate-12 bg-gradient-to-br from-[#00BFFF]/5 via-transparent to-[#BF00FF]/5 blur-3xl" />
       </div>
 
@@ -345,28 +631,17 @@ export default function PhoneMaiPiks({
           onClick={handleBack}
           className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 transition active:scale-95"
         >
-          <ArrowLeft
-            size={17}
-            className="text-[#00BFFF] transition group-hover:text-white"
-          />
-
-          <span className="text-xs font-black">
-            MAI Troll
-          </span>
+          <ArrowLeft size={17} className="text-[#00BFFF] transition group-hover:text-white" />
+          <span className="text-xs font-black">MAI Troll</span>
         </button>
 
         <div className="absolute left-1/2 -translate-x-1/2 text-center">
           <div className="flex items-center justify-center gap-1.5">
-            <Sparkles
-              size={13}
-              className="text-[#BF00FF] drop-shadow-[0_0_7px_#BF00FF]"
-            />
-
+            <Sparkles size={13} className="text-[#BF00FF] drop-shadow-[0_0_7px_#BF00FF]" />
             <h1 className="bg-gradient-to-r from-[#00BFFF] via-white to-[#BF00FF] bg-clip-text text-base font-black tracking-tight text-transparent">
               MAI Piks
             </h1>
           </div>
-
           <p className="mt-0.5 text-[7px] font-black uppercase tracking-[0.25em] text-zinc-600">
             Capture • Share • Connect
           </p>
@@ -378,21 +653,16 @@ export default function PhoneMaiPiks({
             className="relative grid h-9 w-9 place-items-center rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/5 text-[#00BFFF]"
           >
             <Bell size={17} />
-
             {unreadNotifications > 0 && (
               <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#BF00FF] px-1 text-[8px] font-black text-white shadow-[0_0_10px_#BF00FF]">
-                {unreadNotifications > 9
-                  ? '9+'
-                  : unreadNotifications}
+                {unreadNotifications > 9 ? '9+' : unreadNotifications}
               </span>
             )}
           </button>
 
           <button
             type="button"
-            onClick={() =>
-              setShowNotifications((value) => !value)
-            }
+            onClick={() => setShowNotifications((value) => !value)}
             className="grid h-9 w-9 place-items-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/5 text-[#BF00FF]"
           >
             <Zap size={16} />
@@ -407,16 +677,9 @@ export default function PhoneMaiPiks({
       {notifications.length > 0 && (
         <div className="relative z-30 shrink-0 border-b border-white/5 bg-[#05050d]/90">
           <div className="flex h-9 items-center gap-2 overflow-x-auto px-3 scrollbar-none">
-
             <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-[#00BFFF]/20 bg-[#00BFFF]/5 px-2.5 py-1">
-              <Radio
-                size={11}
-                className="text-[#00BFFF]"
-              />
-
-              <span className="text-[8px] font-black uppercase tracking-wider text-[#00BFFF]">
-                Piks
-              </span>
+              <Radio size={11} className="text-[#00BFFF]" />
+              <span className="text-[8px] font-black uppercase tracking-wider text-[#00BFFF]">Piks</span>
             </div>
 
             {notifications.map((notification) => (
@@ -424,14 +687,8 @@ export default function PhoneMaiPiks({
                 key={notification.id}
                 className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.035] px-2.5 py-1"
               >
-                <span className="text-[9px] font-black text-[#BF00FF]">
-                  @{notification.username}
-                </span>
-
-                <span className="text-[9px] text-zinc-500">
-                  {notification.message}
-                </span>
-
+                <span className="text-[9px] font-black text-[#BF00FF]">@{notification.username}</span>
+                <span className="text-[9px] text-zinc-500">{notification.message}</span>
                 {!notification.read && (
                   <span className="h-1.5 w-1.5 rounded-full bg-[#00BFFF] shadow-[0_0_7px_#00BFFF]" />
                 )}
@@ -447,18 +704,11 @@ export default function PhoneMaiPiks({
 
       {showNotifications && (
         <div className="absolute right-3 top-[70px] z-[100] w-[calc(100%-1.5rem)] max-w-[380px] overflow-hidden rounded-3xl border border-[#00BFFF]/20 bg-[#05050d]/95 shadow-[0_0_40px_rgba(0,191,255,0.12)] backdrop-blur-2xl">
-
           <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
             <div>
-              <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[#00BFFF]">
-                MAI Piks
-              </p>
-
-              <h3 className="mt-1 text-sm font-black">
-                Notifications
-              </h3>
+              <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[#00BFFF]">MAI Piks</p>
+              <h3 className="mt-1 text-sm font-black">Notifications</h3>
             </div>
-
             <button
               type="button"
               onClick={() => setShowNotifications(false)}
@@ -470,41 +720,20 @@ export default function PhoneMaiPiks({
 
           <div className="max-h-[55vh] overflow-y-auto">
             {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className="flex gap-3 border-b border-white/5 px-4 py-3"
-              >
-                <Avatar
-                  src={notification.avatarUrl}
-                  purple
-                />
-
+              <div key={notification.id} className="flex gap-3 border-b border-white/5 px-4 py-3">
+                <Avatar src={notification.avatarUrl} purple />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-black">
-                    @{notification.username}
-                  </p>
-
-                  <p className="mt-0.5 text-[10px] text-zinc-500">
-                    {notification.message}
-                  </p>
-
-                  <p className="mt-1 text-[8px] text-zinc-700">
-                    {notification.createdAt}
-                  </p>
+                  <p className="text-xs font-black">@{notification.username}</p>
+                  <p className="mt-0.5 text-[10px] text-zinc-500">{notification.message}</p>
+                  <p className="mt-1 text-[8px] text-zinc-700">{notification.createdAt}</p>
                 </div>
               </div>
             ))}
 
             {notifications.length === 0 && (
               <div className="px-4 py-10 text-center">
-                <Bell
-                  size={24}
-                  className="mx-auto text-zinc-700"
-                />
-
-                <p className="mt-3 text-xs font-bold text-zinc-500">
-                  No notifications
-                </p>
+                <Bell size={24} className="mx-auto text-zinc-700" />
+                <p className="mt-3 text-xs font-bold text-zinc-500">No notifications</p>
               </div>
             )}
           </div>
@@ -523,44 +752,27 @@ export default function PhoneMaiPiks({
 
         {mode === 'camera' && (
           <div className="absolute inset-0 overflow-hidden bg-black">
-
             {cameraReady ? (
               <video
                 ref={videoRef}
                 autoPlay
                 muted
                 playsInline
-                className={`h-full w-full object-cover ${
-                  facingMode === 'user'
-                    ? '-scale-x-100'
-                    : ''
-                }`}
+                className={`h-full w-full object-cover ${facingMode === 'user' ? '-scale-x-100' : ''}`}
               />
             ) : (
               <div className="relative flex h-full flex-col items-center justify-center px-8 text-center">
-
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(0,191,255,.12),transparent_35%),radial-gradient(circle_at_50%_70%,rgba(191,0,255,.12),transparent_35%)]" />
-
                 <div className="relative">
                   <div className="absolute -inset-6 rounded-full bg-[#00BFFF]/10 blur-2xl" />
-
                   <div className="relative grid h-24 w-24 place-items-center rounded-full border border-[#00BFFF]/30 bg-gradient-to-br from-[#00BFFF]/15 to-[#BF00FF]/15 shadow-[0_0_35px_rgba(0,191,255,0.15)]">
-                    <Camera
-                      size={34}
-                      className="text-[#00BFFF] drop-shadow-[0_0_10px_#00BFFF]"
-                    />
+                    <Camera size={34} className="text-[#00BFFF] drop-shadow-[0_0_10px_#00BFFF]" />
                   </div>
                 </div>
-
-                <h2 className="relative mt-7 text-2xl font-black">
-                  Capture the moment.
-                </h2>
-
+                <h2 className="relative mt-7 text-2xl font-black">Capture the moment.</h2>
                 <p className="relative mt-2 max-w-[290px] text-xs leading-relaxed text-zinc-500">
-                  {cameraError ||
-                    'MAI Piks puts your camera first. Capture something worth sharing.'}
+                  {cameraError || 'MAI Piks puts your camera first. Capture something worth sharing.'}
                 </p>
-
                 <button
                   type="button"
                   onClick={startCamera}
@@ -576,26 +788,19 @@ export default function PhoneMaiPiks({
             {cameraReady && (
               <>
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/75" />
-
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/60 to-transparent" />
-
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/90 to-transparent" />
               </>
             )}
 
             {/* Camera top UI */}
             <div className="absolute left-0 right-0 top-0 flex items-center justify-between p-4">
-
               <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-xl">
                 <div className="flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#00BFFF] shadow-[0_0_8px_#00BFFF]" />
-
-                  <span className="text-[8px] font-black uppercase tracking-[0.18em]">
-                    MAI Piks Camera
-                  </span>
+                  <span className="text-[8px] font-black uppercase tracking-[0.18em]">MAI Piks Camera</span>
                 </div>
               </div>
-
               <button
                 type="button"
                 onClick={flipCamera}
@@ -607,32 +812,30 @@ export default function PhoneMaiPiks({
 
             {/* Camera bottom */}
             <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center px-5 pb-8 pt-24">
+              {uploading && (
+                <div className="mb-4 flex items-center gap-2 rounded-full border border-[#00BFFF]/20 bg-black/60 px-4 py-2 backdrop-blur-xl">
+                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#00BFFF] border-t-transparent" />
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#00BFFF]">Uploading...</span>
+                </div>
+              )}
 
               <button
                 type="button"
                 onClick={capturePhoto}
-                className="group relative grid h-24 w-24 place-items-center rounded-full border-[5px] border-white bg-black/20 shadow-[0_0_40px_rgba(0,191,255,0.2)] transition active:scale-90"
+                disabled={uploading}
+                className="group relative grid h-24 w-24 place-items-center rounded-full border-[5px] border-white bg-black/20 shadow-[0_0_40px_rgba(0,191,255,0.2)] transition active:scale-90 disabled:opacity-50"
               >
                 <span className="absolute -inset-3 rounded-full border border-[#00BFFF]/20 opacity-0 transition group-hover:opacity-100" />
-
                 <div className="h-[68px] w-[68px] rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] p-[3px] shadow-[0_0_30px_rgba(0,191,255,0.45)]">
                   <div className="h-full w-full rounded-full bg-white" />
                 </div>
               </button>
 
-              <p className="mt-4 text-[9px] font-black uppercase tracking-[0.25em] text-white/50">
-                Tap to capture
-              </p>
+              <p className="mt-4 text-[9px] font-black uppercase tracking-[0.25em] text-white/50">Tap to capture</p>
 
               <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-xl">
-                <Sparkles
-                  size={11}
-                  className="text-[#BF00FF]"
-                />
-
-                <span className="text-[8px] font-bold text-zinc-500">
-                  Share your moment with MaiTroll
-                </span>
+                <Sparkles size={11} className="text-[#BF00FF]" />
+                <span className="text-[8px] font-bold text-zinc-500">Share your moment with MaiTroll</span>
               </div>
             </div>
           </div>
@@ -644,24 +847,15 @@ export default function PhoneMaiPiks({
 
         {mode === 'feed' && (
           <div className="absolute inset-0 overflow-y-auto">
-
             <div className="px-4 pb-8 pt-5">
-
               <div className="mb-5 flex items-end justify-between">
                 <div>
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-[#00BFFF] shadow-[0_0_8px_#00BFFF]" />
-
-                    <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[#00BFFF]">
-                      MAI Piks
-                    </p>
+                    <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[#00BFFF]">MAI Piks</p>
                   </div>
-
-                  <h1 className="mt-1 text-2xl font-black">
-                    Your Feed
-                  </h1>
+                  <h1 className="mt-1 text-2xl font-black">Your Feed</h1>
                 </div>
-
                 <button
                   type="button"
                   onClick={openCamera}
@@ -680,25 +874,13 @@ export default function PhoneMaiPiks({
                   className="relative flex min-w-[72px] flex-col items-center gap-1.5"
                 >
                   <div className="relative grid h-[68px] w-[68px] place-items-center rounded-2xl border border-dashed border-[#00BFFF]/40 bg-gradient-to-br from-[#00BFFF]/10 to-[#BF00FF]/10">
-                    <Plus
-                      size={22}
-                      className="text-[#00BFFF]"
-                    />
+                    <Plus size={22} className="text-[#00BFFF]" />
                   </div>
-
-                  <span className="text-[8px] font-black">
-                    Add Piks
-                  </span>
+                  <span className="text-[8px] font-black">Add Piks</span>
                 </button>
 
                 {stories.slice(0, 8).map((story) => (
-                  <StoryAvatar
-                    key={story.id}
-                    story={story}
-                    onClick={() =>
-                      openStoryViewer(story)
-                    }
-                  />
+                  <StoryAvatar key={story.id} story={story} onClick={() => openStoryViewer(story)} />
                 ))}
               </div>
 
@@ -708,87 +890,48 @@ export default function PhoneMaiPiks({
                     key={item.id}
                     className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.045] to-white/[0.02] shadow-[0_10px_40px_rgba(0,0,0,0.25)]"
                     onClick={() => {
-                      if (!screenshotsAllowed) {
-                        onScreenshotDetected?.({
+                      if (currentUser && !currentUser.screenshotsAllowed) {
+                        handleScreenshotDetected({
                           contentType: 'feed',
                           contentId: item.id,
+                          ownerUserId: item.userId,
                         })
                       }
-
                       setSelectedFeedItem(item)
                     }}
                   >
                     <div className="flex items-center gap-3 px-4 py-3">
-
-                      <Avatar
-                        src={item.avatarUrl}
-                        blue
-                      />
-
+                      <Avatar src={item.avatarUrl} blue />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-black">
-                          @{item.username}
-                        </p>
-
-                        <p className="mt-0.5 text-[8px] text-zinc-600">
-                          {item.createdAt}
-                        </p>
+                        <p className="truncate text-xs font-black">@{item.username}</p>
+                        <p className="mt-0.5 text-[8px] text-zinc-600">{item.createdAt}</p>
                       </div>
-
-                      <button
-                        type="button"
-                        className="grid h-8 w-8 place-items-center rounded-xl bg-white/[0.035]"
-                      >
+                      <button type="button" className="grid h-8 w-8 place-items-center rounded-xl bg-white/[0.035]">
                         <ChevronRight size={14} />
                       </button>
                     </div>
 
                     <div className="relative">
                       {item.mediaUrl ? (
-                        <img
-                          src={item.mediaUrl}
-                          alt=""
-                          className="max-h-[65vh] w-full object-cover"
-                        />
+                        <img src={item.mediaUrl} alt="" className="max-h-[65vh] w-full object-cover" />
                       ) : (
                         <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-[#00BFFF]/10 via-[#090913] to-[#BF00FF]/10">
-                          <ImageIcon
-                            size={40}
-                            className="text-white/10"
-                          />
+                          <ImageIcon size={40} className="text-white/10" />
                         </div>
                       )}
-
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
                     </div>
 
                     <div className="px-4 py-3">
-
                       <div className="mb-2 flex items-center gap-4">
-                        <Heart
-                          size={17}
-                          className="text-[#BF00FF]"
-                        />
-
-                        <Send
-                          size={17}
-                          className="text-[#00BFFF]"
-                        />
-
-                        <Eye
-                          size={17}
-                          className="ml-auto text-zinc-600"
-                        />
+                        <Heart size={17} className="text-[#BF00FF]" />
+                        <Send size={17} className="text-[#00BFFF]" />
+                        <Eye size={17} className="ml-auto text-zinc-600" />
                       </div>
-
-                      {item.caption && (
-                        <p className="text-xs leading-relaxed text-zinc-300">
-                          {item.caption}
-                        </p>
-                      )}
+                      {item.caption && <p className="text-xs leading-relaxed text-zinc-300">{item.caption}</p>}
                     </div>
 
-                    {!screenshotsAllowed && (
+                    {currentUser && !currentUser.screenshotsAllowed && (
                       <div className="flex items-center gap-2 border-t border-[#00BFFF]/10 bg-[#00BFFF]/5 px-4 py-2.5 text-[8px] font-black uppercase tracking-wider text-[#00BFFF]">
                         <ShieldCheck size={12} />
                         Protected Piks
@@ -815,24 +958,15 @@ export default function PhoneMaiPiks({
 
         {mode === 'story' && (
           <div className="absolute inset-0 overflow-y-auto">
-
             <div className="px-4 pb-8 pt-5">
-
               <div className="mb-6 flex items-end justify-between">
                 <div>
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-[#BF00FF] shadow-[0_0_8px_#BF00FF]" />
-
-                    <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[#BF00FF]">
-                      MAI Piks
-                    </p>
+                    <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[#BF00FF]">MAI Piks</p>
                   </div>
-
-                  <h1 className="mt-1 text-2xl font-black">
-                    Stories
-                  </h1>
+                  <h1 className="mt-1 text-2xl font-black">Stories</h1>
                 </div>
-
                 <button
                   type="button"
                   onClick={openCamera}
@@ -845,7 +979,6 @@ export default function PhoneMaiPiks({
 
               {/* Story carousel */}
               <div className="mb-7 flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-
                 <button
                   type="button"
                   onClick={openCamera}
@@ -853,44 +986,26 @@ export default function PhoneMaiPiks({
                 >
                   <div className="relative h-[70px] w-[70px] rounded-2xl border border-dashed border-[#00BFFF]/40 bg-gradient-to-br from-[#00BFFF]/10 to-[#BF00FF]/10">
                     <div className="absolute inset-1 flex items-center justify-center rounded-[13px] bg-[#05050d]">
-                      <Plus
-                        size={22}
-                        className="text-[#00BFFF]"
-                      />
+                      <Plus size={22} className="text-[#00BFFF]" />
                     </div>
                   </div>
-
-                  <span className="text-[8px] font-black">
-                    Your Story
-                  </span>
+                  <span className="text-[8px] font-black">Your Story</span>
                 </button>
 
                 {stories.map((story) => (
-                  <StoryAvatar
-                    key={story.id}
-                    story={story}
-                    onClick={() =>
-                      openStoryViewer(story)
-                    }
-                    square
-                  />
+                  <StoryAvatar key={story.id} story={story} onClick={() => openStoryViewer(story)} square />
                 ))}
               </div>
 
               {/* Stories list */}
               <div className="space-y-3">
-
                 {stories.map((story) => {
-                  const hasAccess =
-                    canViewStory(story)
-
+                  const hasAccess = canViewStory(story)
                   return (
                     <button
                       type="button"
                       key={`list-${story.id}`}
-                      onClick={() =>
-                        openStoryViewer(story)
-                      }
+                      onClick={() => openStoryViewer(story)}
                       className="group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.045] to-white/[0.02] p-3 text-left transition active:scale-[0.99]"
                     >
                       <div
@@ -902,27 +1017,17 @@ export default function PhoneMaiPiks({
                       >
                         <div className="h-full w-full overflow-hidden rounded-[13px] bg-[#05050d]">
                           {story.thumbnailUrl ? (
-                            <img
-                              src={story.thumbnailUrl}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
+                            <img src={story.thumbnailUrl} alt="" className="h-full w-full object-cover" />
                           ) : (
                             <div className="flex h-full items-center justify-center">
-                              <User
-                                size={18}
-                                className="text-zinc-600"
-                              />
+                              <User size={18} className="text-zinc-600" />
                             </div>
                           )}
                         </div>
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-black">
-                          @{story.username}
-                        </p>
-
+                        <p className="truncate text-xs font-black">@{story.username}</p>
                         <p className="mt-1 text-[9px] text-zinc-600">
                           {story.visibility === 'private'
                             ? hasAccess
@@ -935,17 +1040,10 @@ export default function PhoneMaiPiks({
                       {story.visibility === 'private' ? (
                         <Lock
                           size={15}
-                          className={
-                            hasAccess
-                              ? 'text-[#00BFFF]'
-                              : 'text-[#BF00FF]'
-                          }
+                          className={hasAccess ? 'text-[#00BFFF]' : 'text-[#BF00FF]'}
                         />
                       ) : (
-                        <ChevronRight
-                          size={16}
-                          className="text-zinc-700"
-                        />
+                        <ChevronRight size={16} className="text-zinc-700" />
                       )}
                     </button>
                   )
@@ -969,7 +1067,7 @@ export default function PhoneMaiPiks({
       {/* ------------------------------------------------------------------ */}
 
       <nav className="relative z-40 shrink-0 border-t border-[#00BFFF]/10 bg-[#03030a]/90 px-3 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-2xl">
-<div className="mx-auto grid h-[68px] max-w-md grid-cols-3 gap-2 rounded-3xl border border-transparent bg-transparent p-1.5 shadow-none">
+        <div className="mx-auto grid h-[68px] max-w-md grid-cols-3 gap-2 rounded-3xl border border-transparent bg-transparent p-1.5 shadow-none">
           <PiksNavButton
             icon={<ImageIcon size={19} />}
             label="Feed"
@@ -978,10 +1076,7 @@ export default function PhoneMaiPiks({
             color="blue"
           />
 
-          <PiksCameraNav
-            active={mode === 'camera'}
-            onClick={openCamera}
-          />
+          <PiksCameraNav active={mode === 'camera'} onClick={openCamera} />
 
           <PiksNavButton
             icon={<Radio size={19} />}
@@ -993,29 +1088,20 @@ export default function PhoneMaiPiks({
         </div>
       </nav>
 
-      {/*  */}
-‎  
+      {/* ------------------------------------------------------------------ */}
+      {/* STORY VIEWER                                                       */}
+      {/* ------------------------------------------------------------------ */}
+
       {selectedStory && (
         <div className="fixed inset-0 z-[200] bg-black">
-
           <div className="absolute left-0 right-0 top-0 z-20 h-28 bg-gradient-to-b from-black/80 to-transparent" />
 
           <div className="absolute left-4 right-4 top-4 z-30 flex items-center justify-between">
-
             <div className="flex items-center gap-2">
-              <Avatar
-                src={selectedStory.avatarUrl}
-                purple
-              />
-
+              <Avatar src={selectedStory.avatarUrl} purple />
               <div>
-                <p className="text-xs font-black">
-                  @{selectedStory.username}
-                </p>
-
-                <p className="text-[8px] text-zinc-500">
-                  MAI Piks Story
-                </p>
+                <p className="text-xs font-black">@{selectedStory.username}</p>
+                <p className="text-[8px] text-zinc-500">MAI Piks Story</p>
               </div>
             </div>
 
@@ -1030,47 +1116,27 @@ export default function PhoneMaiPiks({
 
           <div className="flex h-full items-center justify-center">
             {selectedStory.thumbnailUrl ? (
-              <img
-                src={selectedStory.thumbnailUrl}
-                alt=""
-                className="max-h-full max-w-full object-contain"
-              />
+              <img src={selectedStory.thumbnailUrl} alt="" className="max-h-full max-w-full object-contain" />
             ) : (
               <div className="text-center">
                 <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF]">
                   <User size={38} />
                 </div>
-
-                <p className="mt-4 text-sm font-black">
-                  @{selectedStory.username}
-                </p>
+                <p className="mt-4 text-sm font-black">@{selectedStory.username}</p>
               </div>
             )}
           </div>
 
           <div className="absolute bottom-7 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#00BFFF]/20 bg-black/70 px-4 py-2 backdrop-blur-xl">
-
-            {screenshotsAllowed ? (
+            {currentUser && currentUser.screenshotsAllowed ? (
               <>
-                <Sparkles
-                  size={12}
-                  className="text-[#BF00FF]"
-                />
-
-                <span className="text-[8px] font-black uppercase tracking-wider text-zinc-400">
-                  MAI Piks
-                </span>
+                <Sparkles size={12} className="text-[#BF00FF]" />
+                <span className="text-[8px] font-black uppercase tracking-wider text-zinc-400">MAI Piks</span>
               </>
             ) : (
               <>
-                <ShieldCheck
-                  size={12}
-                  className="text-[#00BFFF]"
-                />
-
-                <span className="text-[8px] font-black uppercase tracking-wider text-[#00BFFF]">
-                  Protected Piks
-                </span>
+                <ShieldCheck size={12} className="text-[#00BFFF]" />
+                <span className="text-[8px] font-black uppercase tracking-wider text-[#00BFFF]">Protected Piks</span>
               </>
             )}
           </div>
@@ -1083,31 +1149,18 @@ export default function PhoneMaiPiks({
 
       {selectedFeedItem && (
         <div className="fixed inset-0 z-[200] flex flex-col bg-black">
-
           <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-[#03030a]/90 px-4 py-3 backdrop-blur-xl">
-
             <div className="flex items-center gap-2">
-              <Avatar
-                src={selectedFeedItem.avatarUrl}
-                blue
-              />
-
+              <Avatar src={selectedFeedItem.avatarUrl} blue />
               <div>
-                <p className="text-xs font-black">
-                  @{selectedFeedItem.username}
-                </p>
-
-                <p className="text-[8px] text-zinc-600">
-                  {selectedFeedItem.createdAt}
-                </p>
+                <p className="text-xs font-black">@{selectedFeedItem.username}</p>
+                <p className="text-[8px] text-zinc-600">{selectedFeedItem.createdAt}</p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                setSelectedFeedItem(null)
-              }
+              onClick={() => setSelectedFeedItem(null)}
               className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/[0.035]"
             >
               <X size={17} />
@@ -1116,39 +1169,27 @@ export default function PhoneMaiPiks({
 
           <div className="flex min-h-0 flex-1 items-center justify-center bg-gradient-to-br from-[#00BFFF]/5 via-black to-[#BF00FF]/5">
             {selectedFeedItem.mediaUrl ? (
-              <img
-                src={selectedFeedItem.mediaUrl}
-                alt=""
-                className="max-h-full max-w-full object-contain"
-              />
+              <img src={selectedFeedItem.mediaUrl} alt="" className="max-h-full max-w-full object-contain" />
             ) : (
-              <ImageIcon
-                size={50}
-                className="text-white/10"
-              />
+              <ImageIcon size={50} className="text-white/10" />
             )}
           </div>
 
           <div className="shrink-0 border-t border-white/5 bg-[#03030a]/95 px-4 py-4">
-
             <div className="mb-3 flex items-center gap-4">
               <button className="text-[#BF00FF]">
                 <Heart size={19} />
               </button>
-
               <button className="text-[#00BFFF]">
                 <Send size={19} />
               </button>
-
               <button className="ml-auto text-zinc-600">
                 <Eye size={19} />
               </button>
             </div>
 
             {selectedFeedItem.caption && (
-              <p className="text-xs leading-relaxed text-zinc-300">
-                {selectedFeedItem.caption}
-              </p>
+              <p className="text-xs leading-relaxed text-zinc-300">{selectedFeedItem.caption}</p>
             )}
           </div>
         </div>
@@ -1182,16 +1223,9 @@ function Avatar({
     >
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[10px] bg-[#05050d]">
         {src ? (
-          <img
-            src={src}
-            alt=""
-            className="h-full w-full object-cover"
-          />
+          <img src={src} alt="" className="h-full w-full object-cover" />
         ) : (
-          <User
-            size={16}
-            className="text-zinc-600"
-          />
+          <User size={16} className="text-zinc-600" />
         )}
       </div>
     </div>
@@ -1211,20 +1245,13 @@ function StoryAvatar({
   onClick: () => void
   square?: boolean
 }) {
-  const isPrivate =
-    story.visibility === 'private'
+  const isPrivate = story.visibility === 'private'
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex min-w-[72px] shrink-0 flex-col items-center gap-1.5"
-    >
+    <button type="button" onClick={onClick} className="flex min-w-[72px] shrink-0 flex-col items-center gap-1.5">
       <div
         className={`relative ${
-          square
-            ? 'h-[70px] w-[70px] rounded-2xl'
-            : 'h-[68px] w-[68px] rounded-2xl'
+          square ? 'h-[70px] w-[70px] rounded-2xl' : 'h-[68px] w-[68px] rounded-2xl'
         } ${
           isPrivate
             ? 'bg-gradient-to-br from-[#BF00FF] via-[#9B30FF] to-[#00BFFF]'
@@ -1233,17 +1260,10 @@ function StoryAvatar({
       >
         <div className="h-full w-full overflow-hidden rounded-[13px] bg-[#05050d]">
           {story.thumbnailUrl ? (
-            <img
-              src={story.thumbnailUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
+            <img src={story.thumbnailUrl} alt="" className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <User
-                size={20}
-                className="text-zinc-600"
-              />
+              <User size={20} className="text-zinc-600" />
             </div>
           )}
         </div>
@@ -1296,30 +1316,16 @@ function PiksNavButton({
       {active && (
         <span
           className={`absolute bottom-0 h-[2px] w-8 rounded-full ${
-            isBlue
-              ? 'bg-[#00BFFF] shadow-[0_0_10px_#00BFFF]'
-              : 'bg-[#BF00FF] shadow-[0_0_10px_#BF00FF]'
+            isBlue ? 'bg-[#00BFFF] shadow-[0_0_10px_#00BFFF]' : 'bg-[#BF00FF] shadow-[0_0_10px_#BF00FF]'
           }`}
         />
       )}
 
-      <span
-        className={
-          active
-            ? isBlue
-              ? 'drop-shadow-[0_0_7px_#00BFFF]'
-              : 'drop-shadow-[0_0_7px_#BF00FF]'
-            : ''
-        }
-      >
+      <span className={active ? (isBlue ? 'drop-shadow-[0_0_7px_#00BFFF]' : 'drop-shadow-[0_0_7px_#BF00FF]') : ''}>
         {icon}
       </span>
 
-      <span
-        className={`text-[8px] font-black uppercase tracking-wider ${
-          active ? 'text-white' : 'text-zinc-600'
-        }`}
-      >
+      <span className={`text-[8px] font-black uppercase tracking-wider ${active ? 'text-white' : 'text-zinc-600'}`}>
         {label}
       </span>
     </button>
@@ -1330,19 +1336,9 @@ function PiksNavButton({
 /* CAMERA NAV                                                               */
 /* ========================================================================= */
 
-function PiksCameraNav({
-  active,
-  onClick,
-}: {
-  active: boolean
-  onClick: () => void
-}) {
+function PiksCameraNav({ active, onClick }: { active: boolean; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="relative flex flex-col items-center justify-center gap-0.5"
-    >
+    <button type="button" onClick={onClick} className="relative flex flex-col items-center justify-center gap-0.5">
       <div
         className={`relative grid h-12 w-12 place-items-center rounded-full p-[2px] transition ${
           active
@@ -1352,20 +1348,14 @@ function PiksCameraNav({
       >
         <div
           className={`grid h-full w-full place-items-center rounded-full ${
-            active
-              ? 'bg-[#05050d] text-white'
-              : 'bg-[#111118] text-zinc-500'
+            active ? 'bg-[#05050d] text-white' : 'bg-[#111118] text-zinc-500'
           }`}
         >
           <Camera size={20} />
         </div>
       </div>
 
-      <span
-        className={`text-[8px] font-black uppercase tracking-wider ${
-          active ? 'text-[#00BFFF]' : 'text-zinc-600'
-        }`}
-      >
+      <span className={`text-[8px] font-black uppercase tracking-wider ${active ? 'text-[#00BFFF]' : 'text-zinc-600'}`}>
         Camera
       </span>
     </button>
@@ -1376,33 +1366,18 @@ function PiksCameraNav({
 /* EMPTY STATE                                                              */
 /* ========================================================================= */
 
-function EmptyState({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: React.ElementType
-  title: string
-  description: string
-}) {
+function EmptyState({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#00BFFF]/5 via-white/[0.02] to-[#BF00FF]/5 px-6 py-14 text-center">
       <div className="absolute left-1/2 top-0 h-24 w-24 -translate-x-1/2 rounded-full bg-[#00BFFF]/10 blur-3xl" />
 
       <div className="relative mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-[#00BFFF]/20 bg-[#00BFFF]/5">
-        <Icon
-          size={25}
-          className="text-[#00BFFF]"
-        />
+        <Icon size={25} className="text-[#00BFFF]" />
       </div>
 
-      <h3 className="relative mt-5 text-sm font-black">
-        {title}
-      </h3>
+      <h3 className="relative mt-5 text-sm font-black">{title}</h3>
 
-      <p className="relative mx-auto mt-2 max-w-[260px] text-[10px] leading-relaxed text-zinc-600">
-        {description}
-      </p>
+      <p className="relative mx-auto mt-2 max-w-[260px] text-[10px] leading-relaxed text-zinc-600">{description}</p>
     </div>
   )
 }

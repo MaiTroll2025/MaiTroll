@@ -20,8 +20,10 @@ export async function sendChatThroughGate(opts: {
   streamId: string;
   content: string;
   type?: 'chat' | 'gift' | 'mod' | 'sys' | 'battle' | 'count';
+  isHighlighted?: boolean;
+  highlightColor?: string;
 }): Promise<SendChatResult> {
-  const { streamId, content, type = 'chat' } = opts;
+  const { streamId, content, type = 'chat', isHighlighted, highlightColor } = opts;
 
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError || !sessionData.session) {
@@ -41,7 +43,7 @@ export async function sendChatThroughGate(opts: {
         type,
         stream_id: streamId,
         txn_id,
-        data: { content },
+        data: { content, is_highlighted: isHighlighted, highlight_color: highlightColor },
       }),
     });
 

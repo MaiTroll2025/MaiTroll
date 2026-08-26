@@ -65,11 +65,18 @@ export type NotificationType =
   | 'academy_mail'
   | 'government_mail'
 
+  // MAI PIKS
+  | 'maipiks_new_post'
+  | 'maipiks_new_story'
+  | 'maipiks_screenshot'
+
   // GIFTS / COINS / WALLET
   | 'gift_received'
   | 'gift_sent'
   | 'large_gift_received'
   | 'coin_purchase_success'
+  | 'mkey_invite'
+  | 'mkey_boost_complete'
   | 'coin_purchase_failed'
   | 'bonus_coins_added'
   | 'daily_reward_available'

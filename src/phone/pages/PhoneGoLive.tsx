@@ -32,6 +32,8 @@ import { useAuthStore } from '@/lib/store'
 import { PreflightStore } from '@/lib/preflightStore'
 import { usePreflightStore } from '@/lib/preflightStore'
 import { requestLiveKitToken } from '@/lib/livekitToken'
+import { awardKeyToUser } from '@/services/keyService'
+import { useKeyDiscoveryStore } from '@/stores/useKeyDiscoveryStore'
 
 type BroadcastCategory =
   | 'general'
@@ -71,6 +73,7 @@ export default function PhoneGoLive() {
 
   const mountedRef = useRef(true)
   const startingRef = useRef(false)
+  const keyAwardedRef = useRef(false)
 
   const [title, setTitle] = useState('')
   const [category, setCategory] =
@@ -623,6 +626,26 @@ export default function PhoneGoLive() {
 
       if (liveError) {
         throw liveError
+      }
+
+      if (!keyAwardedRef.current) {
+        keyAwardedRef.current = true
+        void (async () => {
+          try {
+            const result = await awardKeyToUser(user.id)
+            if (result?.success && result.key_letter) {
+              useKeyDiscoveryStore.getState().openDiscovery({
+                key_letter: result.key_letter,
+                rarity: result.rarity || 'COMMON',
+                value: result.value || 0,
+                is_key_to_city: !!result.is_key_to_city,
+                cashout_available_at: result.cashout_available_at || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              })
+            }
+          } catch {
+            // non-blocking
+          }
+        })()
       }
 
       /*

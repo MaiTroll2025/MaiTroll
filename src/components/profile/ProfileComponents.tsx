@@ -254,9 +254,6 @@ export function ProfileHeader({
                                         Minor Account
                                     </span>
                                 )}
-                                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${theme === 'light' ? 'border-gray-300 bg-gray-100 text-gray-700' : 'border-white/10 bg-white/5 text-white/70'}`}>
-                                    Level {profile.level}
-                                </span>
                                 {subscriberCount > 0 && (
                                     <span className="rounded-full border border-purple-400/30 bg-purple-400/10 px-3 py-1 text-xs font-bold text-purple-300">
                                         {subscriberCount} Subscribers
@@ -264,7 +261,7 @@ export function ProfileHeader({
                                 )}
                             </div>
                             <h1 className={`text-3xl font-black tracking-tight md:text-5xl ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                                {profile.display_name || profile.username}
+                                {profile.username || profile.display_name}
                             </h1>
                             <div className={`mt-2 flex flex-wrap items-center gap-3 text-sm ${theme === 'light' ? 'text-gray-500' : 'text-white/50'}`}>
                                 <span className="font-bold" style={{ color: accentColor }}>

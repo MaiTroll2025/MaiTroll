@@ -37,6 +37,8 @@ import {
   DEFAULT_SEAT_COUNT,
   MAX_GUEST_SEATS,
 } from '../../config/broadcastCategories';
+import { awardKeyToUser } from '../../services/keyService';
+import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore';
 
 
 /* ============================================================================
@@ -178,6 +180,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const [userState, setUserState] = useState<string | null>(null);
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [isAssigningState, setIsAssigningState] = useState(false);
+  const keyAwardedRef = useRef(false);
   // Broadcast lockdown check
   const { isLocked: isBroadcastLocked, canBroadcast, isAdmin: isUserAdmin } = useBroadcastLockdown();
 
@@ -1822,6 +1825,26 @@ const handleStartStream = async () => {
       broadcastStartLog('stream live verification', { streamId: data.id, status: 'live' });
 
       await startBunnyDelivery(data.id, roomName).catch(() => null)
+
+      if (!keyAwardedRef.current) {
+        keyAwardedRef.current = true
+        void (async () => {
+          try {
+            const result = await awardKeyToUser(user.id)
+            if (result?.success && result.key_letter) {
+              useKeyDiscoveryStore.getState().openDiscovery({
+                key_letter: result.key_letter,
+                rarity: result.rarity || 'COMMON',
+                value: result.value || 0,
+                is_key_to_city: !!result.is_key_to_city,
+                cashout_available_at: result.cashout_available_at || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              })
+            }
+          } catch {
+            // non-blocking
+          }
+        })()
+      }
 
         // Stream is now created, LiveKit is connected, tracks are published, and DB is updated.
         // Proceed to broadcast room.

@@ -66,6 +66,7 @@ const DialogContent = React.forwardRef<
       />
       <div
         ref={ref}
+        onClick={(e) => e.stopPropagation()}
         className={cn(
           "relative z-[101] grid w-full gap-4 rounded-lg border bg-background p-6 shadow-lg animate-in data-[state=open]:fade-in-90 data-[state=open]:zoom-in-90 sm:max-w-lg",
           className

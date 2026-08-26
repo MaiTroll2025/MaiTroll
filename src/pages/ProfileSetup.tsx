@@ -149,6 +149,7 @@ const ProfileSetup = () => {
           id: user.id,
           username: uname, 
           full_name: fullName.trim(),
+          display_name: fullName.trim() || uname,
           bio: bio || null, 
           gender,
           message_cost: messageCost,

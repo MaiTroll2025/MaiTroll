@@ -847,17 +847,15 @@ const BattleArena = ({
 
       for (const side of ['challenger', 'opponent'] as const) {
         const hostId = side === 'challenger' ? challengerHostId : opponentHostId;
-        const liveKitIdentity = userIdToLiveKitIdentity?.[hostId] || hostId;
-        const normalizedIdentity = String(liveKitIdentity || '').replace(/-/g, '').toLowerCase();
-
         const participant = remoteUsers.find((u) => {
           const id = String(u.identity || '');
           const normalized = id.replace(/-/g, '').toLowerCase();
+          const hostNorm = String(hostId || '').replace(/-/g, '').toLowerCase();
           return (
-            id === liveKitIdentity ||
-            normalized === normalizedIdentity ||
-            normalized.startsWith(normalizedIdentity.substring(0, 8)) ||
-            normalizedIdentity.startsWith(normalized.substring(0, 8))
+            id === hostId ||
+            normalized === hostNorm ||
+            normalized.startsWith(hostNorm.substring(0, 8)) ||
+            hostNorm.startsWith(normalized.substring(0, 8))
           );
         });
 
@@ -885,7 +883,7 @@ const BattleArena = ({
     };
 
     checkCameras();
-  }, [battleStatus, remoteUsers, challengerHostId, opponentHostId, userIdToLiveKitIdentity]);
+  }, [battleStatus, remoteUsers, challengerHostId, opponentHostId]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -1025,10 +1023,6 @@ const BattleArena = ({
          
           // Helper to find LiveKit identity for a user ID
           const findLiveKitIdentity = (userId: string): string => {
-            if (userIdToLiveKitIdentity?.[userId]) {
-              return userIdToLiveKitIdentity[userId];
-            }
-            // Fallback to userId identity used by battle publishers.
             return userId;
           };
 
@@ -1095,12 +1089,18 @@ const BattleArena = ({
 
           // Collect all user IDs that need DB lookup (remote users + local user)
           const userIdsToFetch = new Set<string>();
+          const normalizeId = (v: string | null | undefined) => String(v || '').replace(/-/g, '').toLowerCase();
           for (const remoteUser of remoteUsers) {
             if (!remoteUser?.identity) continue;
             const remoteIdentity = String(remoteUser.identity);
             let matchedUserId: string | null = null;
             
-            if (userIdToLiveKitIdentity) {
+            // Battle room: remote identity is the bare user ID - match directly first
+            if (remoteIdentity === challengerHostId || normalizeId(remoteIdentity) === normalizeId(challengerHostId)) {
+              matchedUserId = challengerHostId;
+            } else if (remoteIdentity === opponentHostId || normalizeId(remoteIdentity) === normalizeId(opponentHostId)) {
+              matchedUserId = opponentHostId;
+            } else if (userIdToLiveKitIdentity) {
               for (const [userId, identity] of Object.entries(userIdToLiveKitIdentity)) {
                 if (identity === remoteIdentity) {
                   matchedUserId = userId;
@@ -1133,8 +1133,8 @@ const BattleArena = ({
             const remoteIdentity = String(remoteUser.identity);
             const normalizeId = (v: string | null | undefined) => String(v || '').replace(/-/g, '').toLowerCase();
             const remoteIdentityNorm = normalizeId(remoteIdentity);
-            const challengerIdentityGuess = normalizeId(userIdToLiveKitIdentity?.[challengerHostId] || challengerHostId);
-            const opponentIdentityGuess = normalizeId(userIdToLiveKitIdentity?.[opponentHostId] || opponentHostId);
+            const challengerIdentityGuess = normalizeId(challengerHostId);
+            const opponentIdentityGuess = normalizeId(opponentHostId);
 
             // Try to match remote user to a team using the LiveKit identity mapping
             let matchedUserId: string | null = null;
@@ -1153,6 +1153,17 @@ const BattleArena = ({
                   }
                   break;
                 }
+              }
+            }
+            
+            // Battle room fallback: match by bare user ID directly
+            if (!matchedUserId) {
+              if (remoteIdentity === challengerHostId || normalizeId(remoteIdentity) === normalizeId(challengerHostId)) {
+                matchedUserId = challengerHostId;
+                matchedTeam = 'challenger';
+              } else if (remoteIdentity === opponentHostId || normalizeId(remoteIdentity) === normalizeId(opponentHostId)) {
+                matchedUserId = opponentHostId;
+                matchedTeam = 'opponent';
               }
             }
 
@@ -1351,17 +1362,16 @@ const BattleArena = ({
         label: string
       ) => {
         const hostAlreadyPresent = participantsData.some(
-          (p) => p.role === 'host' && p.team === team && (!!p.videoTrack || !!p.audioTrack)
+          (p) => p.role === 'host' && p.team === team && (!!p.videoTrack || !!p.audioTrack || p.isLocal)
         );
         if (hostAlreadyPresent) return;
 
-        const liveKitIdentity = userIdToLiveKitIdentity?.[hostUserId] || hostUserId;
-        const normalizedIdentity = String(liveKitIdentity || '').replace(/-/g, '').toLowerCase();
+        const normalizedIdentity = String(hostUserId || '').replace(/-/g, '').toLowerCase();
         const remote = remoteUsers.find((u) => {
           const id = String(u.identity || '');
           const normalized = id.replace(/-/g, '').toLowerCase();
           return (
-            id === liveKitIdentity ||
+            id === hostUserId ||
             normalized === normalizedIdentity
           );
         });
@@ -1378,7 +1388,6 @@ const BattleArena = ({
           team,
           label,
           hostUserId,
-          liveKitIdentity,
           hasVideo: !!videoPub?.track,
           hasAudio: !!audioPub?.track,
           videoPubTrackSid: videoPub?.track?.sid,
@@ -1408,10 +1417,10 @@ const BattleArena = ({
       // when identity mapping fails on some mobile viewer sessions, bind remaining remote
       // participants to missing host slots by order so broadcaster feeds still render.
       const hasChallengerHost = participantsData.some(
-        (p) => p.role === 'host' && p.team === 'challenger' && (!!p.videoTrack || !!p.audioTrack)
+        (p) => p.role === 'host' && p.team === 'challenger' && (!!p.videoTrack || !!p.audioTrack || p.isLocal)
       );
       const hasOpponentHost = participantsData.some(
-        (p) => p.role === 'host' && p.team === 'opponent' && (!!p.videoTrack || !!p.audioTrack)
+        (p) => p.role === 'host' && p.team === 'opponent' && (!!p.videoTrack || !!p.audioTrack || p.isLocal)
       );
 
       if ((!hasChallengerHost || !hasOpponentHost) && remoteUsers.length > 0) {
@@ -1568,7 +1577,7 @@ const BattleArena = ({
         participantAbortControllerRef.current = null;
       }
     };
-  }, [participantIdentitySignature, battleId, challengerHostId, opponentHostId, userIdToLiveKitIdentity]);
+  }, [participantIdentitySignature, battleId, challengerHostId, opponentHostId]);
 
   const categorized = useMemo(() => {
     const teams = {
@@ -1858,7 +1867,7 @@ const BattleArena = ({
       challengeHostTrack: !!battleParticipants.find(p => p.team === 'challenger' && p.role === 'host')?.videoTrack,
       opponentHostTrack: !!battleParticipants.find(p => p.team === 'opponent' && p.role === 'host')?.videoTrack,
     });
-  }, [remoteUsers.length, challengerHostId, opponentHostId, userIdToLiveKitIdentity, challengerSlots.length, opponentSlots.length, categorized.challenger.guests.length, categorized.opponent.guests.length, battleParticipants.length]);
+  }, [remoteUsers.length, challengerHostId, opponentHostId, challengerSlots.length, opponentSlots.length, categorized.challenger.guests.length, categorized.opponent.guests.length, battleParticipants.length]);
 
   // Determine if a side has only the host (no guests) - for single-host styling
   const challengerIsSingleHost = challengerSlots.length === 1 && challengerSlots[0]?.type === 'host';

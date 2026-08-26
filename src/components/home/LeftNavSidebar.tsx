@@ -189,6 +189,9 @@ export default function LeftNavSidebar({
 
   const handleMoreClick = () => {
     grantNavCoins('More')
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('open-more-panel'))
+    }
     onMoreClick?.()
   }
 

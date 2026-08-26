@@ -571,15 +571,22 @@ serve(async (req) => {
 
     // 9. Insert message into database FIRST so RLS policies (e.g. chat-blocked)
     // win over realtime delivery. Broadcast only AFTER the insert succeeds.
-    const { error: insertError } = await supabase
-      .from("stream_messages")
-      .insert({
+    const insertPayload: any = {
         stream_id: stream.id,
         user_id: user.id,
         content: data.content,
         type: type,
         username: userProfile.username,
-      })
+    };
+
+    if (data.is_highlighted) {
+        insertPayload.is_highlighted = true;
+        insertPayload.highlight_color = data.highlight_color || null;
+    }
+
+    const { error: insertError } = await supabase
+      .from("stream_messages")
+      .insert(insertPayload)
       .select()
       .single();
 

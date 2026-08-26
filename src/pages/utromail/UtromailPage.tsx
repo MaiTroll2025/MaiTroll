@@ -901,12 +901,23 @@ export default function UtromailPage() {
                       className={`flex max-w-[82%] flex-col sm:max-w-[72%] ${isOwn ? "items-end" : "items-start"}`}
                     >
                       {startsGroup && !isOwn && (
-                        <span className="mb-1.5 ml-1 text-[10px] font-black uppercase tracking-[0.14em] text-fuchsia-300/80">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const senderUsername =
+                              msg.sender_username ||
+                              activeThread?.other_username;
+                            if (senderUsername) {
+                              navigate(`/profile/${encodeURIComponent(senderUsername)}`);
+                            }
+                          }}
+                          className="mb-1.5 ml-1 text-left text-[10px] font-black uppercase tracking-[0.14em] text-fuchsia-300/80 transition hover:text-fuchsia-200"
+                        >
                           {msg.sender_name ||
                             msg.sender_username ||
                             activeThread?.other_username ||
                             "City member"}
-                        </span>
+                        </button>
                       )}
 
                       <div

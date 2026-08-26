@@ -632,6 +632,7 @@ const HomeNotificationPrompt = lazyWithRetry(() => import("./components/HomeNoti
 import { GhostDropInProvider } from "./context/GhostDropInContext";
 const GhostBanner = lazyWithRetry(() => import("./components/home/GhostBanner"));
 const RTCAdminMonitor = lazyWithRetry(() => import("./components/admin/RTCAdminMonitor.tsx"));
+import MKeyInvitePopup from "./components/broadcast/mkey/MKeyInvitePopup";
 
 
 function AppContent() {
@@ -2784,10 +2785,14 @@ const handleVisibilityChange = async () => {
         }}
       />
       
-      {/* Home page notification permission prompt */}
-      <ErrorBoundary>
-        <HomeNotificationPrompt />
-      </ErrorBoundary>
+       {/* Home page notification permission prompt */}
+       <ErrorBoundary>
+         <HomeNotificationPrompt />
+       </ErrorBoundary>
+
+       {/* 🔑 Live MKey invitations reach a viewer wherever they are — usually
+           inside another broadcast — with a single JOIN LIVE deep link. */}
+       <MKeyInvitePopup />
     </>
   );
 

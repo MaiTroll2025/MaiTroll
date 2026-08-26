@@ -89,6 +89,13 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
     setError(null);
 
     try {
+      // Fetch user stats (authoritative XP/level)
+      const { data: statsData } = await supabase
+        .from('user_stats')
+        .select('xp_total, level, xp_to_next_level')
+        .eq('user_id', options.userId)
+        .maybeSingle();
+
       // Fetch user profile
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
@@ -97,9 +104,6 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
           username,
           display_name,
           avatar_url,
-          level,
-          xp,
-          next_level_xp,
           hype_coins,
           license_plate,
           license_status,
@@ -116,6 +120,11 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         .maybeSingle();
 
       if (profileError) throw profileError;
+
+      // Use user_stats as authoritative source for level/XP
+      const authoritativeLevel = statsData?.level ?? profileData?.level ?? 1;
+      const authoritativeXp = statsData?.xp_total ?? profileData?.xp ?? 0;
+      const authoritativeNextXp = statsData?.xp_to_next_level ?? profileData?.next_level_xp ?? null;
 
       // Check for recent raids on this user's house
       let recentlyRaided = false;
@@ -152,9 +161,9 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         username: profileData?.username || 'Unknown',
         display_name: profileData?.display_name || null,
         avatar_url: profileData?.avatar_url || null,
-        level: profileData?.level || 1,
-        xp: profileData?.xp || 0,
-        next_level_xp: profileData?.next_level_xp || null,
+        level: authoritativeLevel,
+        xp: authoritativeXp,
+        next_level_xp: authoritativeNextXp,
         hype_coins: profileData?.hype_coins || 0,
         license_plate: profileData?.license_plate || null,
         license_status: profileData?.license_status || null,

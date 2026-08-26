@@ -531,7 +531,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2 } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -553,6 +553,7 @@ import { useCityStatusOrb } from '@/lib/hooks/useCityStatusOrb'
 import SeatCityStatusOrb from '@/components/broadcast/SeatCityStatusOrb'
 import RaidPanel from '@/components/city/RaidPanel'
 import PaidChatSettingsModal from '@/components/broadcast/PaidChatSettingsModal'
+import AuctionMePanel from '@/components/broadcast/AuctionMePanel'
 
 // Debug counters for broadcast stability verification
 const DEBUG_COUNTERS = {
@@ -1823,6 +1824,7 @@ useEffect(() => {
     const [isNewMessageMode, setIsNewMessageMode] = useState(false)
     const [isBroadcasterControlsOpen, setIsBroadcasterControlsOpen] = useState(false)
     const [isSeatControlsOpen, setIsSeatControlsOpen] = useState(false)
+    const [isAuctionMeOpen, setIsAuctionMeOpen] = useState(false)
     const [selectedSeatForControls, setSelectedSeatForControls] = useState<{ seatIndex: number; seatSessionId?: string } | null>(null)
     const [messagePopupPosition, setMessagePopupPosition] = useState<{ x: number; y: number } | null>(null)
     const [isDraggingMessagePopup, setIsDraggingMessagePopup] = useState(false)
@@ -2033,6 +2035,7 @@ const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
      username: string
      content: string
      createdAt: number
+     user_id?: string
    }
 
      const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([])
@@ -3718,15 +3721,27 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         }
 
         if (isInRandomBattleCountdown) {
-          // Allow activation to sync through, but keep local is_battle/battle_status
-          // so the countdown UI and queue controller remain stable.
-          if (nextStream?.battle_status === 'active' || nextStream?.battle_status === 'ended') {
+          // If a new random battle arrived while we were still in a previous
+          // countdown, treat it as a fresh match so the opponent isn't stuck
+          // on stale battle state.
+          const isNewRandomBattle =
+            nextStream?.battle_mode === 'random_queue' &&
+            nextStream?.battle_id &&
+            nextStream.battle_id !== stream.battle_id;
+
+          if (isNewRandomBattle || nextStream?.battle_status === 'active' || nextStream?.battle_status === 'ended') {
             setStream((prev: any) => prev ? { ...prev,
               battle_status: nextStream.battle_status,
               is_battle: nextStream.is_battle,
+              battle_id: nextStream.battle_id,
+              battle_mode: nextStream.battle_mode,
+              battle_start_time: nextStream.battle_start_time,
               battle_end_time: nextStream.battle_end_time,
               battle_end_reason: nextStream.battle_end_reason,
               battle_winner_id: nextStream.battle_winner_id,
+              random_battle_queue_enabled: nextStream.random_battle_queue_enabled,
+              random_battle_queued_at: nextStream.random_battle_queued_at,
+              random_battle_cooldown_until: nextStream.random_battle_cooldown_until,
             } : prev);
           }
           return;
@@ -3775,6 +3790,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           username,
           content,
           createdAt: new Date(newRow.created_at || Date.now()).getTime(),
+          user_id: newRow.user_id || undefined,
         }
         setFloatingMessages(prev => [floatingMsg, ...prev].slice(0, 50))
         if (import.meta.env.DEV) {
@@ -4049,7 +4065,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
     channel
       .on('broadcast', { event: 'floating_chat' }, (payload: any) => {
-        const { username, content } = payload.payload || {};
+        const { username, content, user_id } = payload.payload || {}
         if (!username || !content) return;
 
         const chatKey = `${username}:${content}`;
@@ -4072,6 +4088,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
               username,
               content,
               createdAt: Date.now(),
+              user_id,
             } as FloatingMessage,
             ...prev,
           ].slice(0, 50)
@@ -5267,31 +5284,55 @@ const toggleMicrophone = useCallback(async () => {
       }
     }, [selectedSeatForControls, handleCloseSeatControls])
 
-   const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
-     if (!username || isAnonymousDisplayName(username)) return
-     try {
-       const { data, error } = await supabase
-         .from('user_profiles')
-         .select('id, username, created_at, role, troll_role')
-         .eq('username', username)
-         .maybeSingle()
-       
-       if (error || !data?.id) {
-         toast.error('User not found')
-         return
-       }
-       
-       handleOpenUserAction({
-         userId: data.id,
-         username: data.username || username,
-         role: data.role || data.troll_role,
-         createdAt: data.created_at,
-       })
-     } catch (err) {
-       console.error('[BroadcastPage] Error opening user action:', err)
-       toast.error('Failed to open user profile')
-     }
-   }, [])
+   const handleOpenFloatingChatUsername = useCallback(async (username: string, userId?: string) => {
+    if (!username || isAnonymousDisplayName(username)) return
+    try {
+      let profileId = userId
+      let profileUsername = username
+      let profileRole: string | null = null
+      let profileCreatedAt: string | null = null
+
+      if (!profileId) {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id, username, created_at, role, troll_role')
+          .eq('username', username)
+          .maybeSingle()
+        
+        if (error || !data?.id) {
+          toast.error('User not found')
+          return
+        }
+        
+        profileId = data.id
+        profileUsername = data.username || username
+        profileRole = data.role || data.troll_role
+        profileCreatedAt = data.created_at
+      } else {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('username, created_at, role, troll_role')
+          .eq('id', profileId)
+          .maybeSingle()
+
+        if (data) {
+          profileUsername = data.username || username
+          profileRole = data.role || data.troll_role
+          profileCreatedAt = data.created_at
+        }
+      }
+      
+      handleOpenUserAction({
+        userId: profileId,
+        username: profileUsername,
+        role: profileRole,
+        createdAt: profileCreatedAt,
+      })
+    } catch (err) {
+      console.error('[BroadcastPage] Error opening user action:', err)
+      toast.error('Failed to open user profile')
+    }
+  }, [])
 
    const handleCloseUserAction = useCallback(() => {
      setUserActionTarget(null)
@@ -7352,7 +7393,7 @@ const toggleMicrophone = useCallback(async () => {
                             style={{ animation: 'slideInFromTop 0.3s ease-out' }}
                           >
                             <button
-                              onClick={() => handleOpenFloatingChatUsername(msg.username)}
+                              onClick={() => handleOpenFloatingChatUsername(msg.username, msg.user_id)}
                               className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
                               title={`View ${msg.username}'s profile`}
                             >
@@ -7708,7 +7749,7 @@ const toggleMicrophone = useCallback(async () => {
                             style={{ animation: 'slideInFromTop 0.3s ease-out' }}
                           >
                             <button
-                              onClick={() => handleOpenFloatingChatUsername(msg.username)}
+                              onClick={() => handleOpenFloatingChatUsername(msg.username, msg.user_id)}
                               className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
                               title={`View ${msg.username}'s profile`}
                             >
@@ -8267,11 +8308,32 @@ const toggleMicrophone = useCallback(async () => {
               </>
              )}
 
-              {!isMobileHost && (
-                <div className="absolute right-4 top-4 z-[40]">
-                  <CollaborateButton onClick={() => setShowCollaborationModal(true)} />
-                </div>
-              )}
+               {!isMobileHost && (
+                 <div className="absolute right-4 top-4 z-[40]">
+                   <CollaborateButton onClick={() => setShowCollaborationModal(true)} />
+                 </div>
+               )}
+
+               {/* Games Button */}
+               {isHost && (
+                 <div className="absolute bottom-4 left-4 z-50">
+                   <button
+                     onClick={() => setIsAuctionMeOpen(true)}
+                     className="flex items-center gap-2 bg-gradient-to-r from-neon-blue to-neon-purple px-4 py-2 rounded-xl font-bold text-white text-sm hover:opacity-90 transition-opacity shadow-lg"
+                   >
+                     <Gamepad2 className="w-4 h-4" />
+                     Games
+                   </button>
+                 </div>
+               )}
+
+               {/* Auction Me Panel */}
+               {isAuctionMeOpen && streamId && (
+                 <AuctionMePanel
+                   streamId={streamId}
+                   onClose={() => setIsAuctionMeOpen(false)}
+                 />
+               )}
 
               {/* Celeb Stream Toolbar — only for hosts of celeb_stream */}
               {isCelebStream && isHost && (
@@ -8907,16 +8969,16 @@ const toggleMicrophone = useCallback(async () => {
                                 chatChannel.send({
                                   type: 'broadcast',
                                   event: 'floating_chat',
-                                  payload: { username, content: text },
-                                }).catch(() => {})
+                                  payload: { username, content: text, user_id: user?.id },
+                                  }).catch(() => {})
+                                }
                               }
+                            } catch (err) {
+                              console.warn('[BroadcastPage] send-message failed:', err)
                             }
-                          } catch (err) {
-                            console.warn('[BroadcastPage] send-message failed:', err)
-                          }
-                      }}
-                      className="flex gap-2 rounded-2xl border border-white/10 bg-black/45 p-2 shadow-[0_0_24px_rgba(34,211,238,0.16)] backdrop-blur-xl"
-                    >
+                         }}
+                         className="mt-auto border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
+                       >
                       <input
                         type="text"
                         value={chatInput}

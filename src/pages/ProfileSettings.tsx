@@ -149,20 +149,30 @@ export default function ProfileSettings() {
         }
       }
 
-      const { error } = await supabase
+      const { data: updatedRows, error } = await supabase
         .from("user_profiles")
         .update({
           username: cleanUsername,
           full_name: cleanFullName || null,
+          display_name: cleanFullName || cleanUsername || null,
           bio: cleanBio,
           platform: platform || null,
           banner_notifications_enabled: bannerNotifications,
           is_minor: isMinor,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id);
+        .eq("id", user.id)
+        .select("*");
 
       if (error) throw error;
+
+      const updatedProfile = Array.isArray(updatedRows)
+        ? updatedRows[0]
+        : updatedRows;
+
+      if (updatedProfile) {
+        await useAuthStore.getState().setProfile(updatedProfile as any);
+      }
 
       await refreshProfile(true);
       toast.success("Profile settings saved.");

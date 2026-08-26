@@ -1136,6 +1136,9 @@ export function useBattleViewController({
       if (!identity) return null;
       const direct = participantSnapshots.find((p) => p.user_id === identity);
       if (direct) return direct.user_id;
+      const normalized = String(identity).replace(/-/g, '').toLowerCase();
+      const byNormalized = participantSnapshots.find((p) => String(p.user_id).replace(/-/g, '').toLowerCase() === normalized);
+      if (byNormalized) return byNormalized.user_id;
       if (userIdToLiveKitIdentity) {
         for (const [userId, mappedIdentity] of Object.entries(userIdToLiveKitIdentity)) {
           if (mappedIdentity === identity) return userId;
@@ -1500,6 +1503,9 @@ export function useBattleViewController({
       const { error: payoutError } = await supabase.rpc('distribute_battle_winnings', { p_battle_id: battle.id });
       if (payoutError) toast.error("Battle ended but payout failed.");
       else toast.success(`Battle Ended! Winnings distributed.`);
+
+      setBattle((prev: any) => prev ? { ...prev, status: 'ended' } : prev);
+      setShowResults(true);
     } catch (e) {
       console.error('[BattleView] endBattle error:', e);
       try {
@@ -2017,12 +2023,14 @@ export function useBattleViewController({
     });
   };
 
-  const resolveBoxUser = (streamUser: string | null | undefined, liveKitIdentity: string | undefined, isLocalBroadcaster: boolean) => {
+  const resolveBoxUser = (streamUser: string | null | undefined, _liveKitIdentity: string | undefined, isLocalBroadcaster: boolean) => {
     if (isLocalBroadcaster) {
       return { videoTrack: battleLocalVideoTrack, audioTrack: battleLocalAudioTrack, isLocal: true };
     }
-    if (!streamUser || !liveKitIdentity) return null;
-    return findRemoteByIdentity(liveKitIdentity, streamUser);
+    if (!streamUser) return null;
+    // Battle room participants use bare user IDs as LiveKit identities.
+    // Resolve directly by user ID instead of broadcast-room identity.
+    return findRemoteByIdentity(streamUser, streamUser);
   };
 
   const isChallengerBroadcaster = challengerStream ? effectiveUserId === challengerStream.user_id : false;

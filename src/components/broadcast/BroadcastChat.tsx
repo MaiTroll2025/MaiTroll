@@ -16,7 +16,7 @@ import { useUserFrame } from '@/hooks/useUserFrame';
 import UserMiniProfile from '@/components/user/UserMiniProfile';
 
 import { isStaffProfile } from '../../lib/staff';
-import { shouldAutoHideMessage, canControlSlowMode, shouldShowGoldenBanner } from '../../lib/perkEffects';
+import { shouldAutoHideMessage, canControlSlowMode, shouldShowGoldenBanner, hasHighlightedChat, getHighlightedChatColor } from '../../lib/perkEffects';
 import { useChatBlockStatus } from '../../hooks/useChatBlockStatus';
 import { useStreamRealtime } from '../../hooks/useStreamRealtime';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration';
@@ -26,6 +26,7 @@ import { useUserSubscriptionTier } from '@/hooks/useCreatorSubscription';
 import { getEmotesForTier, parseEmotesInText, type SubscriberEmote } from '@/lib/subscriberEmotes';
 import { useSubscriberBadges } from '@/hooks/useCreatorSubscription';
 import { SUBSCRIBER_TIER_SLA } from '@/hooks/useSlaStatus';
+import HighlightedChatColorPicker from './HighlightedChatColorPicker';
 
 // Cap total messages in memory to prevent unbounded growth.
 // Used consistently by: initial history, realtime chat, gifts, system messages,
@@ -61,6 +62,8 @@ interface Message {
   user_created_at?: string;
   user_rgb_expires_at?: string;
   user_glowing_username_color?: string;
+  is_highlighted?: boolean;
+  highlight_color?: string;
 
   user_profiles?: {
     username: string;
@@ -156,6 +159,8 @@ function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disap
   const userFrame = useUserFrame(msg.user_id);
 
   const isPriority = subscriberTier === 'Elite' || subscriberTier === 'Mythic';
+  const isHighlighted = (msg as any).is_highlighted;
+  const highlightColor = (msg as any).highlight_color;
 
   const { text: contentWithEmotes, emotes } = useMemo(() => {
     if (isSystem || isGift || isChallenge) {
@@ -313,7 +318,13 @@ function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disap
 
 // Regular chat message
   return (
-    <div className={`flex items-center gap-2 bg-black/50 backdrop-blur-sm p-2 rounded-lg ${disappearingMessages.has(msg.id) ? 'opacity-50 transition-opacity' : ''} ${isPinned ? 'border-2 border-yellow-500/50 bg-yellow-500/10' : ''} ${isPriority ? 'border border-purple-500/30 bg-purple-500/5' : ''}`}>
+    <div className={`flex items-center gap-2 bg-black/50 backdrop-blur-sm p-2 rounded-lg ${disappearingMessages.has(msg.id) ? 'opacity-50 transition-opacity' : ''} ${isPinned ? 'border-2 border-yellow-500/50 bg-yellow-500/10' : ''} ${isPriority ? 'border border-purple-500/30 bg-purple-500/5' : ''} ${isHighlighted ? 'border-2 shadow-[0_0_12px_rgba(255,255,255,0.3)]' : ''}`}
+      style={isHighlighted && highlightColor ? {
+        borderColor: highlightColor,
+        boxShadow: `0 0 12px ${highlightColor}40, inset 0 0 12px ${highlightColor}10`,
+        backgroundColor: `${highlightColor}10`
+      } : undefined}
+    >
       {showGoldenBanner && msg.user_id === user?.id && (
         <span className="text-yellow-400 text-xs">👑</span>
       )}
@@ -354,12 +365,15 @@ function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disap
         <button
           type="button"
           onClick={() => isOfficer ? openModActionsForUser(msg.user_id, msg.user_profiles?.username || 'User', msg.user_profiles?.avatar_url, msg.user_profiles?.role, msg.user_profiles?.troll_role) : openGiftForUser(msg.user_id)}
-          className="font-bold text-xs truncate hover:text-yellow-300 transition-colors text-yellow-400"
+          className="font-bold text-xs truncate hover:text-yellow-300 transition-colors"
+          style={isHighlighted && highlightColor ? { color: highlightColor, textShadow: `0 0 8px ${highlightColor}80` } : undefined}
           title="Send gift"
         >
           {msg.user_profiles?.username || 'User'}:
         </button>
-        <span className={`text-xs truncate ${isPinned ? 'text-yellow-100 font-semibold' : 'text-white'}`}>{renderContent()}</span>
+        <span className={`text-xs truncate ${isPinned ? 'text-yellow-100 font-semibold' : 'text-white'}`}
+          style={isHighlighted && highlightColor ? { color: highlightColor, textShadow: `0 0 6px ${highlightColor}60` } : undefined}
+        >{renderContent()}</span>
       </div>
       <div className="flex items-center gap-1">
         {canPinMessages && !isPinned && (
@@ -721,6 +735,9 @@ export default function BroadcastChat({
   
   // Golden Flex Banner state
   const [showGoldenBanner, setShowGoldenBanner] = useState(false);
+  const [highlightedChatActive, setHighlightedChatActive] = useState(false);
+  const [highlightedChatColor, setHighlightedChatColor] = useState<string | null>(null);
+  const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
   
   useEffect(() => {
     const checkGoldenBanner = async () => {
@@ -734,6 +751,28 @@ export default function BroadcastChat({
     
     checkGoldenBanner();
     const interval = setInterval(checkGoldenBanner, 30000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
+  useEffect(() => {
+    const checkHighlightedChat = async () => {
+      if (!user?.id) {
+        setHighlightedChatActive(false);
+        setHighlightedChatColor(null);
+        return;
+      }
+      const active = await hasHighlightedChat(user.id);
+      setHighlightedChatActive(active);
+      if (active) {
+        const color = await getHighlightedChatColor(user.id);
+        setHighlightedChatColor(color);
+      } else {
+        setHighlightedChatColor(null);
+      }
+    };
+
+    checkHighlightedChat();
+    const interval = setInterval(checkHighlightedChat, 30000);
     return () => clearInterval(interval);
   }, [user?.id]);
   
@@ -1486,6 +1525,8 @@ const fetchMessages = async () => {
         content,
         created_at: new Date().toISOString(),
         type: 'chat',
+        is_highlighted: !!(highlightedChatActive && showHighlightColorPicker && highlightedChatColor),
+        highlight_color: highlightedChatActive && showHighlightColorPicker ? highlightedChatColor : undefined,
         user_profiles: {
             username: profile.username || (profile as any).display_name || (profile as any).email?.split('@')?.[0] || 'Troll Citizen',
             display_name: (profile as any).display_name,
@@ -1511,7 +1552,13 @@ const fetchMessages = async () => {
 
     // 5. Save first so server-side moderation enforcement wins over realtime.
     try {
-        const result = await sendChatThroughGate({ streamId, content, txnId })
+    const isHighlighted = !!(highlightedChatActive && showHighlightColorPicker && highlightedChatColor);
+    const result = await sendChatThroughGate({
+      streamId,
+      content,
+      isHighlighted: isHighlighted || undefined,
+      highlightColor: isHighlighted ? highlightedChatColor : undefined,
+    })
         if (result.ok && broadcastChannelRef.current) {
             broadcastChannelRef.current.send({
                 type: 'broadcast',
@@ -1834,26 +1881,47 @@ const fetchMessages = async () => {
                     className="w-full bg-white/10 border-none rounded-full px-4 py-2.5 focus:ring-2 focus:ring-yellow-500 text-white placeholder:text-zinc-400 text-sm"
                 />
 
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    {availableEmotes.length > 0 && (
-                        <button
-                            type="button"
-                            onClick={() => setShowEmotePicker(prev => !prev)}
-                            className="text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition p-1"
-                            title="Subscriber emotes"
-                        >
-                            <span className="text-sm">😊</span>
-                        </button>
-                    )}
-                    <button
-                        type="submit"
-                        onClick={isGuest ? redirectGuestToAuth : undefined}
-                         disabled={hostChatDisabledByOfficer || streamEnded || userChatDisabled || (!isGuest && !input.trim())}
-                        className="text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition"
-                    >
-                        <Send size={16} />
-                    </button>
-                </div>
+                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                     {availableEmotes.length > 0 && (
+                         <button
+                             type="button"
+                             onClick={() => setShowEmotePicker(prev => !prev)}
+                             className="text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition p-1"
+                             title="Subscriber emotes"
+                         >
+                             <span className="text-sm">😊</span>
+                         </button>
+                     )}
+                     {highlightedChatActive && (
+                       <button
+                         type="button"
+                         onClick={() => setShowHighlightColorPicker(prev => !prev)}
+                         className="transition p-1"
+                         title="Highlighted Chat"
+                         style={{ color: highlightedChatColor || '#ff006e' }}
+                       >
+                         <Sparkles size={16} />
+                       </button>
+                     )}
+                     <button
+                         type="submit"
+                         onClick={isGuest ? redirectGuestToAuth : undefined}
+                          disabled={hostChatDisabledByOfficer || streamEnded || userChatDisabled || (!isGuest && !input.trim())}
+                         className="text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition"
+                     >
+                         <Send size={16} />
+                     </button>
+                 </div>
+
+                 {showHighlightColorPicker && highlightedChatActive && (
+                   <div className="absolute bottom-full right-0 mb-2 z-50">
+                     <HighlightedChatColorPicker
+                       selectedColor={highlightedChatColor || '#ff006e'}
+                       onColorChange={setHighlightedChatColor}
+                       canPurchase={false}
+                     />
+                   </div>
+                 )}
 
                 {showEmotePicker && availableEmotes.length > 0 && (
                     <div className="absolute bottom-full right-0 mb-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto">

@@ -38,6 +38,14 @@ export const BattleSounds = {
     setTimeout(() => playTone(165, 0.6, 'sawtooth', 0.08), 600);
   },
 
+  /** Battle start fanfare */
+  battleStart: () => {
+    const notes = [523, 659, 784];
+    notes.forEach((freq, i) => {
+      setTimeout(() => playTone(freq, 0.2, 'triangle', 0.1), i * 120);
+    });
+  },
+
   /** Victory fanfare */
   battleEnd: () => {
     const notes = [523, 659, 784, 1047];

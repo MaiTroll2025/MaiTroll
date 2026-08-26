@@ -8,6 +8,9 @@ import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
 import { quietRefreshGiftProfile } from '../../lib/hooks/useGiftSystem';
+import MKeyGiftCard from './mkey/MKeyGiftCard';
+import MKeySendPanel from './mkey/MKeySendPanel';
+import { useMKeyWallet } from '../../hooks/useMKeyWallet';
 
 interface GiftTrayProps {
   recipientId: string;
@@ -26,6 +29,11 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
   const { user, profile } = useAuthStore();
   const [_sendingToAll, setSendingToAll] = useState(false);
   const [selectedGift, setSelectedGift] = useState<GiftItem | null>(null);
+
+  // 🔑 MKeys are a gift-tray item. Selecting one swaps the tray body over to
+  // the MKey send interface rather than opening a disconnected promotion UI.
+  const [showMKeys, setShowMKeys] = useState(false);
+  const { wallet: mkeyWallet } = useMKeyWallet();
 
   // Calculate trollmonds info for display
   // New rule: gifts >= 100 coins deduct 100 trollmonds per gift (if sender has trollmonds)
@@ -220,6 +228,17 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
         </div>
         
         <div className="flex items-center gap-2 md:gap-3">
+          {/* MKey Balance */}
+          <button
+            type="button"
+            onClick={() => setShowMKeys(true)}
+            title="MKeys — invite active users to this broadcast"
+            className="flex items-center gap-1 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-2 py-1 font-mono text-xs text-cyan-200 transition-colors hover:border-cyan-300/60 hover:bg-cyan-400/20 md:px-3 md:text-sm"
+          >
+            <span aria-hidden="true">🔑</span>
+            <span>{mkeyWallet.available.toLocaleString()}</span>
+          </button>
+
           {/* Trollmonds Balance */}
           <div className="text-purple-400 font-mono text-xs md:text-sm bg-purple-400/10 px-2 md:px-3 py-1 rounded-full border border-purple-400/20 flex items-center gap-1">
             <Gem size={12} />
@@ -243,6 +262,13 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
         </div>
       </div>
 
+      {/* 🔑 MKey send interface, in-place inside the tray */}
+      {showMKeys ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-cyan-400/20 bg-slate-950/60">
+          <MKeySendPanel broadcastId={streamId} onBack={() => setShowMKeys(false)} />
+        </div>
+      ) : (
+      <>
       {/* Category Tabs */}
       {!loading && gifts.length > 0 && (
         <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide flex-shrink-0">
@@ -267,16 +293,16 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
         <div className="flex justify-center py-8">
           <Loader2 className="animate-spin text-white" />
         </div>
-      ) : gifts.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          No gifts available.
-        </div>
-      ) : filteredGifts.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          No gifts match this category.
-        </div>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2 overflow-y-auto flex-1 min-h-0 custom-scrollbar pb-safe">
+          {/* 🔑 MKEY — the one tray item that buys an audience, not a reaction. */}
+          <MKeyGiftCard
+            onSelect={() => setShowMKeys(true)}
+            available={mkeyWallet.available}
+            held={mkeyWallet.held}
+            compact
+          />
+
           {filteredGifts.map((gift) => {
             const affordable = user ? canAfford(gift.coinCost) : true;
             const giftConfig = getGiftVisualConfig(gift);
@@ -340,12 +366,14 @@ export default function GiftTray({ recipientId, streamId, onClose, battleId, all
       )}
 
       {/* Footer Info */}
-      {!loading && gifts.length > 0 && (
+      {!loading && (
         <div className="mt-2 pt-2 border-t border-white/10 flex-shrink-0">
           <p className="text-[9px] sm:text-[10px] text-gray-500 text-center">
-            Tap a gift to send • Coins are deducted instantly
+            Tap a gift to send • Coins are deducted instantly • 🔑 MKeys come back if nobody joins
           </p>
         </div>
+      )}
+      </>
       )}
     </div>
   );

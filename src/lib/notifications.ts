@@ -1453,3 +1453,62 @@ export async function notifyAdminReportFiled(
     }
   )
 }
+
+// ==========================================
+// MAI PIKS NOTIFICATIONS
+// ==========================================
+
+export async function notifyMaipiksNewPost(
+  userId: string,
+  username: string,
+  avatarUrl?: string | null
+): Promise<{ success: boolean; error?: string }> {
+  return createNotification(
+    userId,
+    'maipiks_new_post',
+    `📸 @${username} posted a new MaiPik`,
+    `@${username} just shared a new MaiPik on their feed.`,
+    {
+      actor_id: userId,
+      actor_username: username,
+      actor_avatar_url: avatarUrl,
+    }
+  )
+}
+
+export async function notifyMaipiksNewStory(
+  userId: string,
+  username: string,
+  avatarUrl?: string | null
+): Promise<{ success: boolean; error?: string }> {
+  return createNotification(
+    userId,
+    'maipiks_new_story',
+    `🎬 @${username} posted a new story`,
+    `@${username} just posted a new MaiPiks story.`,
+    {
+      actor_id: userId,
+      actor_username: username,
+      actor_avatar_url: avatarUrl,
+    }
+  )
+}
+
+export async function notifyMaipiksScreenshot(
+  ownerUserId: string,
+  screenshotterUsername: string,
+  contentType: 'story' | 'feed' | 'profile' | 'chat' | 'broadcast',
+  contentId?: string
+): Promise<{ success: boolean; error?: string }> {
+  return createNotification(
+    ownerUserId,
+    'maipiks_screenshot',
+    '📸 Screenshot Taken',
+    `@${screenshotterUsername} took a screenshot of your MaiPiks ${contentType}.`,
+    {
+      actor_username: screenshotterUsername,
+      content_type: contentType,
+      content_id: contentId,
+    }
+  )
+}

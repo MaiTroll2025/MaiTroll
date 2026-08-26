@@ -261,6 +261,10 @@ export function useStreamAudiencePresence(
           .update({
             is_active: true,
             left_at: null,
+            // A re-join starts a NEW session. joined_at must reflect the current
+            // session start, otherwise session-age checks (e.g. MKey join
+            // verification) would read a stale timestamp from a past visit.
+            joined_at: now,
             last_seen_at: now,
             username,
             avatar_url: avatarUrl,
@@ -281,7 +285,7 @@ export function useStreamAudiencePresence(
           user_id: effectiveUserId,
           username,
           avatar_url: avatarUrl,
-          joined_at: new Date().toISOString(),
+          joined_at: now,
           left_at: null,
           is_active: true,
           is_present: true,

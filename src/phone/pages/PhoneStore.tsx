@@ -1,15 +1,11 @@
-import React, { Suspense } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   Coins,
-  Loader2,
   Store,
 } from 'lucide-react'
-
-const CoinStore = React.lazy(
-  () => import('../../pages/CoinStore.jsx')
-)
+import CoinStore from '../../pages/CoinStore.jsx'
 
 export default function PhoneStore() {
   const navigate = useNavigate()
@@ -62,28 +58,7 @@ export default function PhoneStore() {
 
       {/* Store */}
       <main className="relative z-10 w-full">
-        <Suspense
-          fallback={
-            <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/5 shadow-[0_0_30px_rgba(34,211,238,.08)]">
-                <Loader2
-                  size={28}
-                  className="animate-spin text-cyan-300"
-                />
-              </div>
-
-              <h2 className="mt-5 text-sm font-black uppercase tracking-widest">
-                Loading Store
-              </h2>
-
-              <p className="mt-2 text-xs text-zinc-500">
-                Loading the Troll City Coin Store...
-              </p>
-            </div>
-          }
-        >
-          <CoinStore />
-        </Suspense>
+        <CoinStore />
       </main>
     </div>
   )

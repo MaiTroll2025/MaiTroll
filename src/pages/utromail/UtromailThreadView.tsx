@@ -3,6 +3,7 @@
 // ============================================================
 
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import {
   ChevronLeft,
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export default function UtromailThreadView({ threadId, onBack, onRefresh }: Props) {
+  const navigate = useNavigate();
   const { user, profile } = useAuthStore();
   const [messages, setMessages] = useState<UtromailMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -177,7 +179,18 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-bold text-white">{msg.sender_name || msg.sender_mail_address}</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const senderUsername = msg.sender_username;
+                          if (senderUsername) {
+                            navigate(`/profile/${encodeURIComponent(senderUsername)}`);
+                          }
+                        }}
+                        className="text-left text-xs font-bold text-white transition hover:text-fuchsia-300"
+                      >
+                        {msg.sender_name || msg.sender_mail_address}
+                      </button>
                       {!isOwn && subscriberBadge && (
                         <span
                           className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-black"

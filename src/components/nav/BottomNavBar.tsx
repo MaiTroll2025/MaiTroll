@@ -302,7 +302,7 @@ interface PageEntry {
   onClick?: () => void;
 }
 
-function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
+export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
   const { user, profile, logout } = useAuthStore();
   const xpStore = useXPStore();
   const { balances } = useCoins();
@@ -806,7 +806,6 @@ export default function BottomNavBar() {
   const { user, profile } = useAuthStore();
   const { isBroadcaster } = useRoleChecks(profile);
   const xpStore = useXPStore();
-  const [morePagesOpen, setMorePagesOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const badges = useNavBadges();
 
@@ -814,12 +813,6 @@ export default function BottomNavBar() {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    const openMore = () => setMorePagesOpen(true);
-    window.addEventListener('open-more-panel', openMore);
-    return () => window.removeEventListener('open-more-panel', openMore);
   }, []);
 
   const isActive = (path: string) => {
@@ -881,8 +874,10 @@ export default function BottomNavBar() {
                 <NavButton
                   icon={LayoutGrid}
                   label="More"
-                  onClick={() => setMorePagesOpen(true)}
-                  active={morePagesOpen}
+                  onClick={() => {
+                    window.dispatchEvent(new Event('open-more-panel'))
+                  }}
+                  active={false}
                   size="large"
                   level={xpStore.level}
                   showLevelOrb={isMobile}
@@ -927,8 +922,7 @@ export default function BottomNavBar() {
         </div>
       </div>
 
-      {/* More Pages Slide-up Panel */}
-      <MorePagesPanel isOpen={morePagesOpen} onClose={() => setMorePagesOpen(false)} />
+      
     </>
   );
 }

@@ -9,6 +9,10 @@ import { getAbilityById } from '../../types/broadcastAbilities';
 import CoinStoreModal from './CoinStoreModal';
 import { getGiftVisualConfig, GiftRarity } from '../../lib/giftVisuals';
 import { AR_GIFTS, AR_GIFT_CATEGORIES, getARGiftById } from '../../data/arGiftCatalog';
+import MKeyGiftCard from './mkey/MKeyGiftCard';
+import MKeySendPanel from './mkey/MKeySendPanel';
+import MKeyTrafficPanel from './mkey/MKeyTrafficPanel';
+import { useMKeyWallet } from '../../hooks/useMKeyWallet';
 
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
@@ -39,7 +43,7 @@ interface GiftBoxModalProps {
 
 type GiftCategory = 'all' | 'general' | 'cars' | 'houses' | 'boats' | 'planes' | 'luxury' | 'men' | 'women' | 'lgbt' | 'holiday' | 'smoking' | 'drinking' | 'funny' | 'seasonal';
 
-type ARTabType = 'gifts' | 'ar_gifts' | 'abilities' | 'store';
+type ARTabType = 'gifts' | 'ar_gifts' | 'abilities' | 'store' | 'mkeys';
 
 type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
 
@@ -122,6 +126,9 @@ const GiftBoxModalComponent = function GiftBoxModal({
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ARTabType>('gifts');
   const [arCategory, setArCategory] = useState<string>('all');
+
+  // 🔑 MKeys live inside the Gift Tray, not in a separate promotion UI.
+  const { wallet: mkeyWallet } = useMKeyWallet({ enabled: isOpen });
 
   // Fetch gifts from database with defensive fallback
   useEffect(() => {
@@ -444,6 +451,19 @@ const GiftBoxModalComponent = function GiftBoxModal({
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('mkeys')}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold transition-colors',
+                activeTab === 'mkeys'
+                  ? 'bg-cyan-500/15 text-cyan-200 shadow-[inset_0_-2px_0_rgba(34,211,238,0.7)]'
+                  : 'text-zinc-400 hover:bg-white/10 hover:text-white'
+              )}
+            >
+              <span aria-hidden="true">🔑</span>
+              MKeys
+            </button>
+            <button
+              type="button"
               onClick={() => {}}
               disabled
               className={cn(
@@ -484,6 +504,18 @@ const GiftBoxModalComponent = function GiftBoxModal({
             <div className="flex items-center gap-2">
               <span className="text-zinc-400">Balance:</span>
               <span className="text-yellow-400 font-bold">{(profile?.troll_coins || 0).toLocaleString()} 🪙</span>
+              <button
+                type="button"
+                onClick={() => setActiveTab('mkeys')}
+                title="MKeys — invite active users to this broadcast"
+                className="flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-cyan-200 transition-colors hover:border-cyan-300/60 hover:bg-cyan-500/20"
+              >
+                <span aria-hidden="true">🔑</span>
+                {mkeyWallet.available.toLocaleString()}
+                {mkeyWallet.held > 0 && (
+                  <span className="text-amber-300/90">(+{mkeyWallet.held} pending)</span>
+                )}
+              </button>
             </div>
             {selectedGift && (
               <div className="flex items-center gap-2">
@@ -501,6 +533,13 @@ const GiftBoxModalComponent = function GiftBoxModal({
                 <span>Quick Store • buy coins without leaving the stream</span>
               </div>
               <CoinStoreModal isOpen={true} onClose={() => setActiveTab('gifts')} embedded allowCardPayment={false} />
+            </div>
+          ) : activeTab === 'mkeys' ? (
+            /* 🔑 MKEY — an invitation, not a tip. Same backend on web and phone. */
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <MKeySendPanel broadcastId={streamId} onBack={() => setActiveTab('gifts')}>
+                <MKeyTrafficPanel broadcastId={streamId} className="mt-5" />
+              </MKeySendPanel>
             </div>
           ) : activeTab === 'abilities' ? (
             <div className="flex-1 overflow-hidden p-4 flex flex-col">
@@ -722,16 +761,17 @@ const GiftBoxModalComponent = function GiftBoxModal({
                   <div className="flex items-center justify-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
                   </div>
-                ) : filteredGifts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-2">
-                    <Gift size={32} className="opacity-40" />
-                    <p className="text-sm font-medium">No gifts available</p>
-                    <p className="text-xs text-zinc-600 text-center px-4">
-                      Gifts are currently being loaded or none are active. Check back soon!
-                    </p>
-                  </div>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
+                    {/* 🔑 MKEY sits with the gifts because it *is* a gift-tray item.
+                        It just gives a broadcast an audience instead of coins. */}
+                    <MKeyGiftCard
+                      onSelect={() => setActiveTab('mkeys')}
+                      available={mkeyWallet.available}
+                      held={mkeyWallet.held}
+                      compact
+                    />
+
                     {filteredGifts.map((gift) => {
                       const isSelected = selectedGift?.id === gift.id;
                       const giftConfig = getGiftVisualConfig(gift);
@@ -782,6 +822,16 @@ const GiftBoxModalComponent = function GiftBoxModal({
                         </motion.button>
                       );
                     })}
+                  </div>
+                )}
+
+                {!isLoading && filteredGifts.length === 0 && (
+                  <div className="mt-4 flex flex-col items-center justify-center gap-2 text-zinc-500">
+                    <Gift size={32} className="opacity-40" />
+                    <p className="text-sm font-medium">No coin gifts available</p>
+                    <p className="text-xs text-zinc-600 text-center px-4">
+                      Gifts are currently being loaded or none are active. MKeys are still available above.
+                    </p>
                   </div>
                 )}
               </div>

@@ -7,29 +7,31 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
-import {
-  getLeagueTier,
-  getLevelProgress,
-  getXpRequiredForNextLevel,
-} from '../../lib/leagueHelpers'
+import LevelStatusCard from '../../components/home/LevelStatusCard'
 
 import {
   ArrowLeft,
+  Award,
   Ban,
   BatteryCharging,
+  BookOpen,
   Boxes,
   ChevronRight,
   Coins,
   CreditCard,
+  Crown,
   Gavel,
-  Gamepad2,
   Image as ImageIcon,
   KeyRound,
   LogOut,
+  Music,
   Save,
   Scale,
   Settings,
+  Shield,
+  ShoppingBag,
   Sparkles,
+  Store,
   Trash2,
   Trophy,
   UserRound,
@@ -47,6 +49,14 @@ import CoverPhotoUpload, {
 import FamilyMinorSettings from '../../components/profile/FamilyMinorSettings'
 import BatterySaverToggle from '../../components/BatterySaverToggle'
 import UserInventory from '../../pages/UserInventory'
+import ProfileFeed from '../../components/profile/ProfileFeed'
+import ProfileBroadcasts from '../../components/profile/ProfileBroadcasts'
+import ProfileMarketplace from '../../components/profile/ProfileMarketplace'
+import ProfileCourt from '../../components/profile/ProfileCourt'
+import ProfileAgency from '../../components/profile/ProfileAgency'
+import ProfileChurch from '../../components/profile/ProfileChurch'
+import ProfilePurchases from '../../components/profile/ProfilePurchases'
+import ProfileWatchlist from '../../components/profile/ProfileWatchlist'
 
 type ProfileRow = {
   id: string
@@ -54,6 +64,7 @@ type ProfileRow = {
   level?: number | null
   xp?: number | null
   xp_to_next_level?: number | null
+  total_xp?: number | null
   display_name?: string | null
   full_name?: string | null
   username?: string | null
@@ -109,6 +120,31 @@ function Toggle({
   )
 }
 
+type ProfileTab = {
+  id: string
+  label: string
+  icon: any
+}
+
+const PROFILE_TABS: ProfileTab[] = [
+  { id: 'social', label: 'Social', icon: UserRound },
+  { id: 'broadcasts', label: 'Broadcasts', icon: Video },
+  { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
+  { id: 'auctions', label: 'Auctions', icon: Gavel },
+  { id: 'court', label: 'Court', icon: Scale },
+  { id: 'agency', label: 'Agency', icon: Shield },
+  { id: 'church', label: 'Church', icon: BookOpen },
+  { id: 'subscriptions', label: 'Subscriptions', icon: Crown },
+  { id: 'badges', label: 'Badges', icon: Award },
+  { id: 'keys', label: 'Keys', icon: KeyRound },
+  { id: 'inventory', label: 'Inventory & Perks', icon: Boxes },
+  { id: 'purchases', label: 'Purchase History', icon: Wallet },
+  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'music', label: 'Music', icon: Music },
+  { id: 'albums', label: 'Albums', icon: ImageIcon },
+  { id: 'tracks', label: 'Tracks', icon: Store },
+]
+
 export default function PhoneProfile() {
   const navigate = useNavigate()
 
@@ -121,27 +157,20 @@ export default function PhoneProfile() {
   const [loading, setLoading] = useState(true)
 
   const [coins, setCoins] = useState(0)
-  const [level, setLevel] = useState(1)
-  const [xp, setXp] = useState(0)
-  const [xpNext, setXpNext] = useState(0)
 
   const [displayName, setDisplayName] = useState('Guest')
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const [role, setRole] = useState('')
-  const [tier, setTier] = useState('')
+
+  const [activeTab, setActiveTab] = useState('social')
 
   /*
-   * Mobile view state.
-   *
-   * The settings screen lives INSIDE PhoneProfile.
+   * Settings
    */
   const [showSettings, setShowSettings] = useState(false)
 
-  /*
-   * Profile settings
-   */
   const [settingsUsername, setSettingsUsername] = useState('')
   const [fullName, setFullName] = useState('')
   const [bio, setBio] = useState('')
@@ -173,21 +202,7 @@ export default function PhoneProfile() {
     let cancelled = false
 
     const applyProfile = (row: ProfileRow) => {
-      const nextLevel = Math.max(1, Number(row.level) || 1)
-      const nextXp = Math.max(0, Number(row.xp) || 0)
-
-      const calculatedNextXp =
-        getXpRequiredForNextLevel(nextLevel)
-
-      const nextLevelXp =
-        Number(row.xp_to_next_level) > 0
-          ? Number(row.xp_to_next_level)
-          : calculatedNextXp
-
       setCoins(Math.max(0, Number(row.troll_coins) || 0))
-      setLevel(nextLevel)
-      setXp(nextXp)
-      setXpNext(nextLevelXp)
 
       setDisplayName(
         row.display_name ||
@@ -201,11 +216,7 @@ export default function PhoneProfile() {
       setAvatarUrl(row.avatar_url || null)
       setCoverUrl(row.cover_url || null)
       setRole(row.role || '')
-      setTier(row.tier || '')
 
-      /*
-       * Settings values
-       */
       setSettingsUsername(row.username || '')
       setFullName(row.full_name || '')
       setBio(row.bio || '')
@@ -229,20 +240,7 @@ export default function PhoneProfile() {
     const applyFallback = () => {
       const fallback = storeProfile as any
 
-      const fallbackLevel =
-        Number(fallback?.level) || 1
-
-      const fallbackXp =
-        Number(fallback?.xp) || 0
-
-      const fallbackNext =
-        Number(fallback?.xp_to_next_level) ||
-        getXpRequiredForNextLevel(fallbackLevel)
-
       setCoins(Number(fallback?.troll_coins) || 0)
-      setLevel(fallbackLevel)
-      setXp(fallbackXp)
-      setXpNext(fallbackNext)
 
       setDisplayName(
         fallback?.display_name ||
@@ -256,7 +254,6 @@ export default function PhoneProfile() {
       setAvatarUrl(fallback?.avatar_url || null)
       setCoverUrl(fallback?.cover_url || null)
       setRole(fallback?.role || '')
-      setTier(fallback?.tier || '')
 
       setSettingsUsername(fallback?.username || '')
       setFullName(fallback?.full_name || '')
@@ -289,6 +286,7 @@ export default function PhoneProfile() {
           level,
           xp,
           xp_to_next_level,
+          total_xp,
           display_name,
           full_name,
           username,
@@ -356,29 +354,7 @@ export default function PhoneProfile() {
       cancelled = true
       supabase.removeChannel(channel)
     }
-  }, [user?.id, storeProfile])
-
-  const league = useMemo(() => {
-    return getLeagueTier(level)
-  }, [level])
-
-  const progress = useMemo(() => {
-    if (xpNext <= 0) return 0
-
-    try {
-      const result = getLevelProgress(xp, level)
-
-      return Math.min(
-        100,
-        Math.max(0, Number(result.progress) || 0),
-      )
-    } catch {
-      return Math.min(
-        100,
-        Math.max(0, (xp / xpNext) * 100),
-      )
-    }
-  }, [xp, xpNext, level])
+  }, [user?.id, user?.email, storeProfile])
 
   const initials = useMemo(() => {
     const source = displayName.trim()
@@ -388,14 +364,16 @@ export default function PhoneProfile() {
     const parts = source.split(/\s+/)
 
     if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      return `${parts[0][0]}${parts[
+        parts.length - 1
+      ][0]}`.toUpperCase()
     }
 
     return source.charAt(0).toUpperCase()
   }, [displayName])
 
   /*
-   * Save profile settings
+   * Settings
    */
   const handleSaveProfile = async () => {
     if (!user) return
@@ -464,6 +442,7 @@ export default function PhoneProfile() {
 
       setUsername(cleanUsername)
       setSettingsUsername(cleanUsername)
+
       setDisplayName(
         cleanFullName ||
           cleanUsername ||
@@ -485,9 +464,6 @@ export default function PhoneProfile() {
     }
   }
 
-  /*
-   * Save creator memberships
-   */
   const handleSaveCreatorMemberships =
     async () => {
       if (!user) return
@@ -555,7 +531,9 @@ export default function PhoneProfile() {
   }
 
   const openSettings = () => {
+    setActiveTab('settings')
     setShowSettings(true)
+
     window.scrollTo({
       top: 0,
       behavior: 'smooth',
@@ -564,6 +542,22 @@ export default function PhoneProfile() {
 
   const closeSettings = () => {
     setShowSettings(false)
+    setActiveTab('social')
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+
+  const handleTabClick = (tabId: string) => {
+    if (tabId === 'settings') {
+      openSettings()
+      return
+    }
+
+    setActiveTab(tabId)
+
     window.scrollTo({
       top: 0,
       behavior: 'smooth',
@@ -571,80 +565,21 @@ export default function PhoneProfile() {
   }
 
   /*
-   * Quick access tabs
-   */
-  const tabs = [
-    {
-      label: 'Coin Store',
-      description: 'Buy Troll Coins',
-      path: '/store',
-      icon: Coins,
-      color: 'blue',
-    },
-    {
-      label: 'Mai Pay',
-      description: 'Wallet & payments',
-      path: '/wallet',
-      icon: Wallet,
-      color: 'purple',
-    },
-    {
-      label: 'Mai Piks',
-      description: 'Photos & posts',
-      path: '/mai-piks',
-      icon: ImageIcon,
-      color: 'blue',
-    },
-    {
-      label: 'Troll Court',
-      description: 'Cases & votes',
-      path: '/troll-court',
-      icon: Scale,
-      color: 'purple',
-    },
-    {
-      label: 'Treelz',
-      description: 'Players & comments',
-      path: '/treelz',
-      icon: Video,
-      color: 'blue',
-    },
-    {
-      label: 'Auctions',
-      description: 'Live auctions',
-      path: '/auctions',
-      icon: Gavel,
-      color: 'purple',
-    },
-    {
-      label: 'Hytro',
-      description: 'Live streams',
-      path: '/hytro',
-      icon: Gamepad2,
-      color: 'blue',
-    },
-  ]
-
-  /*
    * SETTINGS SCREEN
    */
   if (showSettings) {
     return (
       <div className="relative min-h-screen w-full overflow-x-hidden bg-[#05030B] text-white">
-        {/* Neon background */}
         <div className="pointer-events-none fixed inset-0 overflow-hidden">
           <div className="absolute -left-32 top-20 h-72 w-72 rounded-full bg-[#00BFFF]/10 blur-[100px]" />
           <div className="absolute -right-32 top-40 h-80 w-80 rounded-full bg-[#BF00FF]/10 blur-[110px]" />
-          <div className="absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#00BFFF]/5 blur-[100px]" />
         </div>
 
-        {/* Settings header */}
         <header className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#05030B]/95 px-4 py-3 backdrop-blur-2xl">
           <button
             type="button"
             onClick={closeSettings}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white active:scale-95"
-            aria-label="Back to profile"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] active:scale-95"
           >
             <ArrowLeft size={19} />
           </button>
@@ -653,6 +588,7 @@ export default function PhoneProfile() {
             <h1 className="text-sm font-black uppercase tracking-[0.18em]">
               Settings
             </h1>
+
             <p className="text-[8px] font-bold uppercase tracking-[0.25em] text-white/30">
               Account & Controls
             </p>
@@ -676,6 +612,7 @@ export default function PhoneProfile() {
                 <h2 className="text-base font-black">
                   Profile
                 </h2>
+
                 <p className="text-[9px] text-white/35">
                   Update your public information.
                 </p>
@@ -683,7 +620,6 @@ export default function PhoneProfile() {
             </div>
 
             <div className="space-y-4">
-              {/* Full Name */}
               <label className="block">
                 <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
                   Full Name
@@ -701,7 +637,6 @@ export default function PhoneProfile() {
                 />
               </label>
 
-              {/* Username */}
               <label className="block">
                 <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
                   Username
@@ -731,7 +666,6 @@ export default function PhoneProfile() {
                 </span>
               </label>
 
-              {/* Bio */}
               <label className="block">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-[9px] font-black uppercase tracking-wider text-white/40">
@@ -755,7 +689,6 @@ export default function PhoneProfile() {
                 />
               </label>
 
-              {/* Platform */}
               <label className="block">
                 <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
                   Platform You Represent
@@ -786,7 +719,7 @@ export default function PhoneProfile() {
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-[0_0_20px_rgba(0,191,255,0.15)] disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] py-3.5 text-xs font-black uppercase tracking-wider text-white disabled:opacity-50"
               >
                 <Save size={16} />
 
@@ -797,63 +730,65 @@ export default function PhoneProfile() {
             </div>
           </section>
 
-          {/* Profile Photos */}
-          {profileForUpload(storeProfile) && user && (
-            <section className="overflow-hidden rounded-[24px] border border-[#BF00FF]/20 bg-white/[0.025] p-4">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/10">
-                  <ImageIcon
-                    size={18}
-                    className="text-[#BF00FF]"
-                  />
-                </div>
-
-                <div>
-                  <h2 className="text-base font-black">
-                    Profile Photos
-                  </h2>
-                  <p className="text-[9px] text-white/35">
-                    Update your avatar and cover.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-5">
-                <div>
-                  <p className="mb-2 text-[9px] font-black uppercase tracking-wider text-white/35">
-                    Profile Picture
-                  </p>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                    <AvatarUpload
-                      currentUrl={avatarUrl}
-                      onUploadComplete={async () => {
-                        await refreshProfile(true)
-                      }}
-                      size="lg"
+          {/* Photos */}
+          {profileForUpload(storeProfile) &&
+            user && (
+              <section className="overflow-hidden rounded-[24px] border border-[#BF00FF]/20 bg-white/[0.025] p-4">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/10">
+                    <ImageIcon
+                      size={18}
+                      className="text-[#BF00FF]"
                     />
+                  </div>
+
+                  <div>
+                    <h2 className="text-base font-black">
+                      Profile Photos
+                    </h2>
+
+                    <p className="text-[9px] text-white/35">
+                      Update your avatar and cover.
+                    </p>
                   </div>
                 </div>
 
-                <div>
-                  <p className="mb-2 text-[9px] font-black uppercase tracking-wider text-white/35">
-                    Cover Photo
-                  </p>
+                <div className="space-y-5">
+                  <div>
+                    <p className="mb-2 text-[9px] font-black uppercase tracking-wider text-white/35">
+                      Profile Picture
+                    </p>
 
-                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                    <CoverPhotoUpload
-                      ref={coverUploadRef}
-                      currentCoverUrl={coverUrl}
-                      onUploadComplete={async () => {
-                        await refreshProfile(true)
-                      }}
-                      userId={user.id}
-                    />
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                      <AvatarUpload
+                        currentUrl={avatarUrl}
+                        onUploadComplete={async () => {
+                          await refreshProfile(true)
+                        }}
+                        size="lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-[9px] font-black uppercase tracking-wider text-white/35">
+                      Cover Photo
+                    </p>
+
+                    <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                      <CoverPhotoUpload
+                        ref={coverUploadRef}
+                        currentCoverUrl={coverUrl}
+                        onUploadComplete={async () => {
+                          await refreshProfile(true)
+                        }}
+                        userId={user.id}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
-          )}
+              </section>
+            )}
 
           {/* Creator Memberships */}
           <section className="rounded-[24px] border border-[#00BFFF]/20 bg-white/[0.025] p-4">
@@ -869,6 +804,7 @@ export default function PhoneProfile() {
                 <h2 className="text-base font-black">
                   Creator Memberships
                 </h2>
+
                 <p className="text-[9px] text-white/35">
                   Let supporters subscribe to you.
                 </p>
@@ -937,10 +873,6 @@ export default function PhoneProfile() {
                     className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-9 pr-3 text-sm text-white outline-none disabled:opacity-40"
                   />
                 </div>
-
-                <span className="mt-1.5 block text-[8px] text-white/25">
-                  Troll Coins • 10–10,000
-                </span>
               </label>
 
               <button
@@ -974,6 +906,7 @@ export default function PhoneProfile() {
                 <h2 className="text-base font-black">
                   Preferences
                 </h2>
+
                 <p className="text-[9px] text-white/35">
                   Control your Mai Troll experience.
                 </p>
@@ -1015,6 +948,7 @@ export default function PhoneProfile() {
                     <p className="text-xs font-black">
                       Battery Saver
                     </p>
+
                     <p className="text-[8px] text-white/25">
                       Reduce mobile resource usage.
                     </p>
@@ -1026,7 +960,7 @@ export default function PhoneProfile() {
             </div>
           </section>
 
-          {/* Family / Minor */}
+          {/* Family */}
           {storeProfile && (
             <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-4">
               <FamilyMinorSettings
@@ -1052,6 +986,7 @@ export default function PhoneProfile() {
                 <h2 className="text-base font-black">
                   Inventory
                 </h2>
+
                 <p className="text-[9px] text-white/30">
                   Your Mai Troll items.
                 </p>
@@ -1075,6 +1010,7 @@ export default function PhoneProfile() {
                 <h2 className="text-base font-black">
                   Security
                 </h2>
+
                 <p className="text-[9px] text-white/30">
                   Account security controls.
                 </p>
@@ -1124,7 +1060,7 @@ export default function PhoneProfile() {
             </button>
           </section>
 
-          {/* Danger Zone */}
+          {/* Danger */}
           <section className="rounded-[24px] border border-red-500/25 bg-red-500/[0.025] p-4">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10">
@@ -1157,7 +1093,6 @@ export default function PhoneProfile() {
             </button>
           </section>
 
-          {/* Sign Out */}
           <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-3">
             <button
               type="button"
@@ -1168,10 +1103,6 @@ export default function PhoneProfile() {
               Sign Out
             </button>
           </section>
-
-          <p className="pb-3 text-center text-[8px] font-bold uppercase tracking-[0.25em] text-white/15">
-            Troll City • Mobile Settings
-          </p>
         </main>
       </div>
     )
@@ -1179,22 +1110,36 @@ export default function PhoneProfile() {
 
   /*
    * PROFILE SCREEN
+   *
+   * This intentionally follows the WEB profile structure:
+   *
+   * Cover
+   * Avatar
+   * Identity
+   * Role / Level / Coins
+   * XP
+   * Stats
+   * Profile navigation tabs
+   *
+   * NO QUICK ACCESS.
    */
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#05030B] text-white">
-      {/* Ambient neon background */}
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#03050B] text-white">
+      {/* Neon atmosphere */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-32 top-20 h-72 w-72 rounded-full bg-[#00BFFF]/10 blur-[100px]" />
-        <div className="absolute -right-32 top-64 h-80 w-80 rounded-full bg-[#BF00FF]/10 blur-[110px]" />
-        <div className="absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#00BFFF]/5 blur-[100px]" />
+        <div className="absolute -left-40 top-20 h-80 w-80 rounded-full bg-[#00BFFF]/10 blur-[110px]" />
+
+        <div className="absolute -right-40 top-80 h-96 w-96 rounded-full bg-[#BF00FF]/10 blur-[120px]" />
+
+        <div className="absolute bottom-0 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-[#00BFFF]/5 blur-[120px]" />
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#05030B]/90 px-4 py-3 backdrop-blur-2xl">
+      {/* Mobile header */}
+      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#03050B]/90 px-4 py-3 backdrop-blur-2xl">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white transition active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] transition active:scale-95"
           aria-label="Go back"
         >
           <ArrowLeft size={19} />
@@ -1206,282 +1151,396 @@ export default function PhoneProfile() {
           </h1>
 
           <p className="text-[8px] font-bold uppercase tracking-[0.25em] text-white/30">
-            Troll City
+            Mai Troll
           </p>
         </div>
 
         <button
           type="button"
           onClick={openSettings}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/5 text-[#BF00FF] transition active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#BF00FF]/25 bg-[#BF00FF]/5 text-[#BF00FF] transition active:scale-95"
           aria-label="Settings"
         >
           <Settings size={18} />
         </button>
       </header>
 
-      <main className="relative z-10 space-y-5 px-4 pb-8 pt-4">
-        {/* Profile Card */}
-        <section className="relative overflow-hidden rounded-[28px] border border-[#00BFFF]/20 bg-gradient-to-br from-[#071722] via-[#090712] to-[#17071d] p-5 shadow-[0_0_40px_rgba(0,191,255,0.05)]">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#BF00FF]/20 blur-[70px]" />
-
-          <div className="pointer-events-none absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-[#00BFFF]/10 blur-[70px]" />
-
-          <div className="relative flex items-center gap-4">
-            {avatarUrl ? (
+      <main className="relative z-10 pb-8">
+        {/* =========================================================
+            WEB-STYLE PROFILE HERO
+        ========================================================= */}
+        <section className="mx-3 mt-3 overflow-hidden rounded-[24px] border border-white/10 bg-[#050914] shadow-[0_0_45px_rgba(0,0,0,0.45)]">
+          {/* Cover */}
+          <div className="relative h-[190px] overflow-hidden">
+            {coverUrl ? (
               <img
-                src={avatarUrl}
-                alt={displayName}
-                className="h-16 w-16 rounded-full border-2 border-[#00BFFF]/40 object-cover shadow-[0_0_25px_rgba(0,191,255,0.18)]"
+                src={coverUrl}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#00BFFF]/30 bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] text-lg font-black text-white shadow-[0_0_25px_rgba(0,191,255,0.2)]">
-                {initials}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#06131d] via-[#14051e] to-[#02040b]">
+                <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#BF00FF]/25 blur-[80px]" />
+
+                <div className="absolute -left-20 bottom-0 h-48 w-48 rounded-full bg-[#00BFFF]/20 blur-[75px]" />
               </div>
             )}
 
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-lg font-black text-white">
-                {displayName}
-              </p>
+            {/* Cover darkening */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/20 to-[#050914]" />
+
+            {/* Cover title treatment */}
+            <div className="absolute left-4 top-4">
+              <div className="rounded-full border border-white/20 bg-black/35 px-3 py-1 backdrop-blur-md">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white/80">
+                  MAI TROLL PROFILE
+                </span>
+              </div>
+            </div>
+
+            {/* Change cover */}
+            {user && (
+              <button
+                type="button"
+                onClick={() =>
+                  openSettings()
+                }
+                className="absolute bottom-4 right-4 rounded-full border border-white/20 bg-black/45 px-3 py-2 text-[8px] font-black text-white backdrop-blur-md active:scale-95"
+              >
+                Change Cover
+              </button>
+            )}
+          </div>
+
+          {/* Identity area */}
+          <div className="relative px-4 pb-4">
+            {/* Avatar */}
+            <div className="-mt-14 flex items-end justify-between">
+              <div className="relative">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="h-28 w-28 rounded-full border-[3px] border-[#050914] object-cover shadow-[0_0_0_2px_rgba(0,191,255,0.65),0_0_30px_rgba(0,191,255,0.25)]"
+                  />
+                ) : (
+                  <div className="flex h-28 w-28 items-center justify-center rounded-full border-[3px] border-[#050914] bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] text-3xl font-black shadow-[0_0_0_2px_rgba(0,191,255,0.65),0_0_30px_rgba(0,191,255,0.25)]">
+                    {initials}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={openSettings}
+                  className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#050914] bg-[#101523] text-[#00BFFF] shadow-lg"
+                  aria-label="Edit profile photo"
+                >
+                  <ImageIcon size={14} />
+                </button>
+              </div>
+
+              <div className="mb-1 flex gap-2">
+                <button
+                  type="button"
+                  onClick={openSettings}
+                  className="rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] px-3 py-2 text-[9px] font-black uppercase tracking-wider text-white shadow-[0_0_18px_rgba(191,0,255,0.18)]"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            </div>
+
+            {/* Name */}
+            <div className="mt-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-black tracking-tight">
+                  {displayName}
+                </h2>
+
+                <span className="rounded-full border border-[#00BFFF]/30 bg-[#00BFFF]/10 px-2 py-1 text-[8px] font-black text-[#00BFFF]">
+                  ✓ VERIFIED
+                </span>
+              </div>
 
               {username && (
-                <p className="mt-0.5 truncate text-[11px] font-bold text-white/40">
+                <p className="mt-1 text-[11px] font-bold text-[#00BFFF]/75">
                   @{username}
                 </p>
               )}
 
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-[#00BFFF]/20 bg-[#00BFFF]/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#00BFFF]">
-                  Level {level}
-                </span>
+              {bio && (
+                <p className="mt-2 text-[11px] leading-5 text-white/45">
+                  {bio}
+                </p>
+              )}
+            </div>
 
-                {league && (
-                  <span className="rounded-full border border-[#BF00FF]/20 bg-[#BF00FF]/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#BF00FF]">
-                    {league}
-                  </span>
-                )}
+            {/* Level System */}
+            <div className="mt-4">
+              <LevelStatusCard />
+            </div>
+
+            {/* Coins */}
+            <div className="mt-3 flex items-center justify-between rounded-xl border border-[#00BFFF]/20 bg-gradient-to-r from-[#00BFFF]/[0.06] to-[#BF00FF]/[0.05] p-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#00BFFF]/25 bg-[#00BFFF]/10">
+                  <Coins
+                    size={19}
+                    className="text-[#00BFFF]"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-[0.16em] text-white/35">
+                    Troll Coin Balance
+                  </p>
+
+                  <p className="mt-0.5 text-lg font-black">
+                    {loading
+                      ? '...'
+                      : coins.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate('/store')
+                }
+                className="rounded-lg border border-[#00BFFF]/20 bg-[#00BFFF]/10 px-3 py-2 text-[8px] font-black uppercase tracking-wider text-[#00BFFF]"
+              >
+                Buy Coins
+              </button>
+            </div>
+
+            {/* Profile stats */}
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3 text-center">
+                <p className="text-lg font-black">
+                  0
+                </p>
+
+                <p className="mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-white/30">
+                  Followers
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate('/following')}
+                className="rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/[0.04] p-3 text-center active:scale-95 transition"
+              >
+                <p className="text-lg font-black text-[#00BFFF]">
+                  0
+                </p>
+
+                <p className="mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-[#00BFFF]/60">
+                  Following
+                </p>
+              </button>
+
+              <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3 text-center">
+                <p className="text-lg font-black">
+                  0
+                </p>
+
+                <p className="mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-white/30">
+                  Actions
+                </p>
               </div>
             </div>
           </div>
+        </section>
 
-          {(role || tier) && (
-            <div className="relative mt-4 flex gap-2">
-              {role && (
-                <div className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <p className="text-[8px] font-black uppercase tracking-wider text-white/30">
-                    Role
-                  </p>
+        {/* =========================================================
+            PROFILE TABS
+        ========================================================= */}
+        <section className="mx-3 mt-3 overflow-hidden rounded-[20px] border border-white/10 bg-[#060913]/95">
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex min-w-max gap-1 p-2">
+              {PROFILE_TABS.map((tab) => {
+                const Icon = tab.icon
+                const active =
+                  activeTab === tab.id
 
-                  <p className="mt-0.5 truncate text-xs font-black text-white">
-                    {role}
-                  </p>
-                </div>
-              )}
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() =>
+                      handleTabClick(tab.id)
+                    }
+                    className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2.5 text-[8px] font-black uppercase tracking-wider transition ${
+                      active
+                        ? 'border-[#BF00FF]/30 bg-gradient-to-r from-[#00BFFF]/20 to-[#BF00FF]/20 text-white shadow-[0_0_15px_rgba(191,0,255,0.12)]'
+                        : 'border-white/5 bg-white/[0.025] text-white/35'
+                    }`}
+                  >
+                    <Icon
+                      size={12}
+                      className={
+                        active
+                          ? 'text-[#00BFFF]'
+                          : 'text-white/30'
+                      }
+                    />
 
-              {tier && (
-                <div className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <p className="text-[8px] font-black uppercase tracking-wider text-white/30">
-                    Tier
-                  </p>
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </section>
 
-                  <p className="mt-0.5 truncate text-xs font-black text-white">
-                    {tier}
-                  </p>
-                </div>
-              )}
+        {/* =========================================================
+            ACTIVE PROFILE AREA
+        ========================================================= */}
+        <section className="mx-3 mt-3 rounded-[22px] border border-white/10 bg-white/[0.025] p-4">
+          {activeTab === 'social' && user?.id && (
+            <ProfileFeed userId={user.id} />
+          )}
+
+          {activeTab === 'social' && !user?.id && (
+            <div className="text-center py-10 text-gray-500">
+              Please sign in to view posts.
             </div>
           )}
 
-          {/* Coins */}
-          <div className="relative mt-4 flex items-center justify-between rounded-2xl border border-[#00BFFF]/15 bg-[#00BFFF]/[0.04] p-3.5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
-                <Coins
-                  size={18}
-                  className="text-[#00BFFF]"
-                />
-              </div>
+          {activeTab === 'broadcasts' && user?.id && (
+            <ProfileBroadcasts userId={user.id} />
+          )}
 
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-wider text-white/40">
-                  Troll Coins
-                </p>
+          {activeTab === 'marketplace' && user?.id && (
+            <ProfileMarketplace userId={user.id} />
+          )}
 
-                <p className="text-sm font-black text-white">
-                  {loading
-                    ? 'Loading...'
-                    : coins.toLocaleString()}
-                </p>
-              </div>
+          {activeTab === 'auctions' && user?.id && (
+            <ProfileWatchlist userId={user.id} />
+          )}
+
+          {activeTab === 'court' && user?.id && (
+            <ProfileCourt userId={user.id} />
+          )}
+
+          {activeTab === 'agency' && user?.id && (
+            <ProfileAgency userId={user.id} />
+          )}
+
+          {activeTab === 'church' && user?.id && (
+            <ProfileChurch userId={user.id} />
+          )}
+
+          {activeTab === 'inventory' && (
+            <UserInventory embedded />
+          )}
+
+          {activeTab === 'purchases' && user?.id && (
+            <ProfilePurchases userId={user.id} />
+          )}
+
+          {activeTab === 'subscriptions' && (
+            <div className="text-center py-10 text-gray-500">
+              <Crown className="w-8 h-8 mx-auto mb-3 text-purple-400" />
+              <h3 className="text-sm font-black">Subscriptions</h3>
+              <p className="mt-1 text-[9px] text-white/30">
+                Subscription features coming soon.
+              </p>
             </div>
+          )}
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate('/store')
-              }
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#00BFFF]/20 bg-[#00BFFF]/5 text-[#00BFFF]"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-
-          {/* XP */}
-          <div className="relative mt-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Trophy
-                  size={15}
-                  className="text-[#BF00FF]"
-                />
-
-                <span className="text-xs font-black text-white">
-                  Level {level}
-                </span>
-              </div>
-
-              <span className="text-[9px] font-bold text-white/35">
-                {xp.toLocaleString()} /{' '}
-                {xpNext.toLocaleString()} XP
-              </span>
+          {activeTab === 'badges' && (
+            <div className="text-center py-10 text-gray-500">
+              <Award className="w-8 h-8 mx-auto mb-3 text-yellow-400" />
+              <h3 className="text-sm font-black">Badges</h3>
+              <p className="mt-1 text-[9px] text-white/30">
+                Badge collection coming soon.
+              </p>
             </div>
+          )}
 
-            <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[#00BFFF] via-[#8B00FF] to-[#BF00FF] shadow-[0_0_12px_rgba(0,191,255,0.35)] transition-all duration-500"
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
+          {activeTab === 'keys' && user?.id && (
+            <div className="text-center py-10 text-gray-500">
+              <KeyRound className="w-8 h-8 mx-auto mb-3 text-cyan-400" />
+              <h3 className="text-sm font-black">Keys</h3>
+              <p className="mt-1 text-[9px] text-white/30">
+                Key management coming soon.
+              </p>
             </div>
+          )}
 
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-[8px] font-bold uppercase tracking-wider text-white/25">
-                Progress
-              </span>
-
-              <span className="text-[9px] font-black text-[#BF00FF]">
-                {Math.round(progress)}%
-              </span>
+          {activeTab === 'music' && (
+            <div className="text-center py-10 text-gray-500">
+              <Music className="w-8 h-8 mx-auto mb-3 text-pink-400" />
+              <h3 className="text-sm font-black">Music</h3>
+              <p className="mt-1 text-[9px] text-white/30">
+                Music library coming soon.
+              </p>
             </div>
-          </div>
-        </section>
+          )}
 
-        {/* Quick Access */}
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles
-                size={16}
-                className="text-[#BF00FF]"
-              />
-
-              <h2 className="text-sm font-black tracking-[0.1em] text-white/85">
-                QUICK ACCESS
-              </h2>
+          {activeTab === 'albums' && (
+            <div className="text-center py-10 text-gray-500">
+              <ImageIcon className="w-8 h-8 mx-auto mb-3 text-purple-400" />
+              <h3 className="text-sm font-black">Albums</h3>
+              <p className="mt-1 text-[9px] text-white/30">
+                Album collection coming soon.
+              </p>
             </div>
+          )}
 
-            <span className="text-[8px] font-black uppercase tracking-wider text-white/25">
-              {tabs.length + 1} Apps
-            </span>
-          </div>
+          {activeTab === 'tracks' && (
+            <div className="text-center py-10 text-gray-500">
+              <Store className="w-8 h-8 mx-auto mb-3 text-green-400" />
+              <h3 className="text-sm font-black">Tracks</h3>
+              <p className="mt-1 text-[9px] text-white/30">
+                Track list coming soon.
+              </p>
+            </div>
+          )}
 
-          <div className="grid grid-cols-2 gap-3">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              const isBlue =
-                tab.color === 'blue'
+          {activeTab !== 'social' && activeTab !== 'broadcasts' && activeTab !== 'marketplace' && activeTab !== 'auctions' && activeTab !== 'court' && activeTab !== 'agency' && activeTab !== 'church' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'subscriptions' && activeTab !== 'badges' && activeTab !== 'keys' && activeTab !== 'music' && activeTab !== 'albums' && activeTab !== 'tracks' && activeTab !== 'settings' && (
+            <div className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
+                {(() => {
+                  const current =
+                    PROFILE_TABS.find(
+                      (tab) =>
+                        tab.id === activeTab,
+                    )
 
-              return (
-                <button
-                  key={tab.path}
-                  type="button"
-                  onClick={() =>
-                    navigate(tab.path)
-                  }
-                  className={`group relative overflow-hidden rounded-2xl border p-3.5 text-left transition-all duration-200 active:scale-[0.97] ${
-                    isBlue
-                      ? 'border-[#00BFFF]/15 bg-[#06121a]/90'
-                      : 'border-[#BF00FF]/15 bg-[#11061a]/90'
-                  }`}
-                >
-                  <div
-                    className={`absolute -right-5 -top-5 h-16 w-16 rounded-full blur-[25px] ${
-                      isBlue
-                        ? 'bg-[#00BFFF]/10'
-                        : 'bg-[#BF00FF]/10'
-                    }`}
-                  />
+                  const Icon =
+                    current?.icon || UserRound
 
-                  <div className="relative flex items-center gap-3">
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${
-                        isBlue
-                          ? 'border-[#00BFFF]/25 bg-[#00BFFF]/10 text-[#00BFFF]'
-                          : 'border-[#BF00FF]/25 bg-[#BF00FF]/10 text-[#BF00FF]'
-                      }`}
-                    >
-                      <Icon size={18} />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-black text-white">
-                        {tab.label}
-                      </p>
-
-                      <p className="mt-0.5 truncate text-[9px] font-bold text-white/30">
-                        {tab.description}
-                      </p>
-                    </div>
-
-                    <ChevronRight
-                      size={14}
-                      className={
-                        isBlue
-                          ? 'text-[#00BFFF]/30'
-                          : 'text-[#BF00FF]/30'
-                      }
+                  return (
+                    <Icon
+                      size={20}
+                      className="text-[#00BFFF]"
                     />
-                  </div>
-                </button>
-              )
-            })}
-
-            {/* Settings is now INTERNAL */}
-            <button
-              type="button"
-              onClick={openSettings}
-              className="group relative overflow-hidden rounded-2xl border border-[#BF00FF]/20 bg-[#11061a]/90 p-3.5 text-left transition-all duration-200 active:scale-[0.97]"
-            >
-              <div className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-[#BF00FF]/10 blur-[25px]" />
-
-              <div className="relative flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#BF00FF]/25 bg-[#BF00FF]/10 text-[#BF00FF]">
-                  <Settings size={18} />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-black text-white">
-                    Settings
-                  </p>
-
-                  <p className="mt-0.5 truncate text-[9px] font-bold text-white/30">
-                    Account settings
-                  </p>
-                </div>
-
-                <ChevronRight
-                  size={14}
-                  className="text-[#BF00FF]/30"
-                />
+                  )
+                })()}
               </div>
-            </button>
-          </div>
+
+              <h3 className="mt-3 text-sm font-black">
+                {
+                  PROFILE_TABS.find(
+                    (tab) =>
+                      tab.id === activeTab,
+                  )?.label
+                }
+              </h3>
+
+              <p className="mx-auto mt-1 max-w-xs text-[9px] leading-4 text-white/30">
+                This profile section is connected to
+                the web-style profile navigation.
+              </p>
+            </div>
+          )}
         </section>
 
         {/* Account */}
-        <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-3">
+        <section className="mx-3 mt-4 rounded-[20px] border border-white/10 bg-white/[0.025] p-3">
           <button
             type="button"
             onClick={handleSignOut}
@@ -1492,19 +1551,14 @@ export default function PhoneProfile() {
           </button>
         </section>
 
-        <p className="pb-3 text-center text-[8px] font-bold uppercase tracking-[0.25em] text-white/15">
-          Troll City • Mobile
+        <p className="pb-4 pt-5 text-center text-[7px] font-bold uppercase tracking-[0.25em] text-white/15">
+          Mai Troll • Profile
         </p>
       </main>
     </div>
   )
 }
 
-/*
- * Small helper used only to determine whether the
- * auth-store currently has a profile available for
- * the photo settings section.
- */
 function profileForUpload(profile: unknown) {
   return Boolean(profile)
 }

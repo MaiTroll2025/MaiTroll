@@ -130,12 +130,30 @@ function createEntry(streamId: string, battleId?: string | null): StreamEntry {
   return entry
 }
 
-export function subscribeToStreamRealtime(streamId: string, handler: StreamRealtimeHandler, battleId?: string | null) {
+export function subscribeToStreamRealtime(
+  streamId: string,
+  handler: StreamRealtimeHandler,
+  battleId?: string | null
+) {
   const key = streamId
   let entry = entries.get(key)
   if (!entry) {
     entry = createEntry(streamId, battleId)
     entries.set(key, entry)
+  } else if (battleId && entry.battleId !== battleId) {
+    const oldChannel = entry.channel
+    if (entry.handlers.size === 0) {
+      supabase.removeChannel(oldChannel)
+    }
+    entry = createEntry(streamId, battleId)
+    entries.set(key, entry)
+  } else if (battleId && !entry.battleId) {
+    entry.battleId = battleId
+    entry.channel.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'battle_sessions', filter: `id=eq.${battleId}` },
+      (payload) => emit(entry, 'battle_sessions', payload)
+    )
   }
 
   entry.handlers.add(handler)

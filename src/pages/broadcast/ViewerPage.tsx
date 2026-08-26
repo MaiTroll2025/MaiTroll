@@ -20,6 +20,7 @@ import {
   MonitorPlay,
   Shield,
   X,
+  Gamepad2,
 } from 'lucide-react'
 import type { LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteTrackPublication, RemoteVideoTrack } from 'livekit-client'
 import { RoomEvent, Track } from 'livekit-client'
@@ -63,6 +64,7 @@ import { useLiveKitRoom } from '../../hooks/useLiveKitRoom'
 import { useStreamRealtime } from '../../hooks/useStreamRealtime'
 import { useStreamSeats } from '../../hooks/useStreamSeats'
 import { useStreamAudiencePresence, StreamAudienceMember } from '../../hooks/useStreamAudiencePresence'
+import { useMKeyJoinClaim } from '../../hooks/useMKeyJoinClaim'
 import { useLiveStreams } from '../../hooks/useQueries'
 import FeedTheTroll from '../../components/feed-the-troll/FeedTheTroll'
 import { AudienceBubbleTicker } from '../../components/broadcast/AudienceBubbleTicker'
@@ -91,6 +93,11 @@ import { sendChatThroughGate } from '../../lib/sendChatThroughGate'
 import { sendStreamBroadcast } from '../../lib/realtime/streamRealtimeManager'
 import { admitViewerToStream, releaseViewerSlot } from '@/lib/streamCapacity'
 import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
+import { awardKeyToUser } from '../../services/keyService'
+import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore'
+import AuctionMePanel from '@/components/broadcast/AuctionMePanel'
+import SeatFocusButton from '@/components/broadcast/SeatFocusButton'
+import { useSeatFocus, type SeatInfo } from '@/hooks/useSeatFocus'
 
 // Import theme constants
 import { MaiTrollBroadcastTheme } from '../../styles/broadcastTheme'
@@ -875,6 +882,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     const [hostChatDisableRemainingMs, setHostChatDisableRemainingMs] = useState(0)
     const [isMessagePopupOpen, setIsMessagePopupOpen] = useState(false)
     const [isNewMessageMode, setIsNewMessageMode] = useState(false)
+    const [isAuctionMeOpen, setIsAuctionMeOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState<any[]>([])
     const [recentThreads, setRecentThreads] = useState<any[]>([])
@@ -1399,6 +1407,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
    const viewerIdentityRef = useRef<string>(
      `viewer-${streamId}-${user?.id || Math.random().toString(36).slice(2, 9)}`,
    )
+   const keyAwardedRef = useRef(false)
     const joinAudienceRef = useRef<(options?: any) => Promise<any>>(null as any)
     const heartbeatAudienceRef = useRef<() => Promise<void>>(null as any)
     const leaveAudienceRef = useRef<() => Promise<void>>(null as any)
@@ -1935,6 +1944,17 @@ const isActive = isStreamActive(stream)
       onError: handleLiveKitError,
     })
 
+    const audioTracksRef = useRef<Map<string, { audioTrack: any; audioEl: HTMLAudioElement | null }>>(new Map())
+
+    const {
+      focusedUserId,
+      focusedSeatIndex,
+      toggle: toggleSeatFocus,
+      focusOnAll: focusAllSeats,
+      isFocused: isSeatFocused,
+      getSeatLabel,
+    } = useSeatFocus(streamId, seats as any, audioTracksRef)
+
     // Populate refs so the seat_left handler (defined before this hook) can call them
      unpublishLocalTracksRef.current = unpublishLocalTracks
      leaveLiveKitRoomRef.current = leaveLiveKitRoom
@@ -2296,6 +2316,13 @@ const isActive = isStreamActive(stream)
     setIsGiftModalOpen(true)
   }, [hostId])
 
+  // Rule 2: clicking the broadcaster box / profile / live interaction area must
+  // open the Gift Tray, which is where 🔑 MKeys live alongside gifts.
+  const handleBroadcasterBoxClick = useCallback(() => {
+    setGiftRecipientId(hostId || null)
+    setIsGiftModalOpen(true)
+  }, [hostId])
+
   const handleOpenUserAction = useCallback(async (info: { userId: string; username?: string; role?: string; createdAt?: string }) => {
     const normalizedUserId = info.userId
     const normalizedUsername = info.username || ''
@@ -2373,43 +2400,43 @@ const isActive = isStreamActive(stream)
     }, [hostName, profile?.username, pushFloatingSystemMessage])
 
    const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
-     if (!username) return
+    if (!username) return
 
-      // For anonymous users: only mods/officers can click, open arrest dialog directly
-      if (isAnonymousDisplayName(username)) {
-        if (!isModOrHigher) return
-        await handleOpenUserAction({
-          userId: `anon-${username}`,
-          username,
-          role: 'anonymous',
-          createdAt: null,
-        })
-        return
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('id, username, created_at, role, troll_role')
-          .eq('username', username)
-          .maybeSingle()
-        
-        if (error || !data?.id) {
-          toast.error('User not found')
-          return
-        }
-        
-        await handleOpenUserAction({
-          userId: data.id,
-          username: data.username || username,
-          role: data.role || data.troll_role,
-          createdAt: data.created_at,
-        })
-     } catch (err) {
-       console.error('[ViewerPage] Error opening user action:', err)
-       toast.error('Failed to open user profile')
+     // For anonymous users: only mods/officers can click, open arrest dialog directly
+     if (isAnonymousDisplayName(username)) {
+       if (!isModOrHigher) return
+       await handleOpenUserAction({
+         userId: `anon-${username}`,
+         username,
+         role: 'anonymous',
+         createdAt: null,
+       })
+       return
      }
-    }, [isModOrHigher])
+
+     try {
+       const { data, error } = await supabase
+         .from('user_profiles')
+         .select('id, username, created_at, role, troll_role')
+         .eq('username', username)
+         .maybeSingle()
+       
+       if (error || !data?.id) {
+         toast.error('User not found')
+         return
+       }
+       
+       await handleOpenUserAction({
+         userId: data.id,
+         username: data.username || username,
+         role: data.role || data.troll_role,
+         createdAt: data.created_at,
+       })
+    } catch (err) {
+      console.error('[ViewerPage] Error opening user action:', err)
+      toast.error('Failed to open user profile')
+    }
+  }, [isModOrHigher])
 
   const handleSendChat = useCallback(async (text: string, floatTimeout = CHAT_FLOAT_MS) => {
     if (!text.trim()) return
@@ -2472,7 +2499,7 @@ const isActive = isStreamActive(stream)
         chatChannel.send({
           type: 'broadcast',
           event: 'floating_chat',
-          payload: { username, content: text },
+                                  payload: { username, content: text },
         }).catch(() => {})
       }
     } catch (err) {
@@ -3227,6 +3254,23 @@ useStreamRealtime(
      }
    }, [streamId, user?.id, profile?.is_ghost_mode])
 
+  // 🔑 MKEY CLAIM — rules 9, 13 and 14.
+  //
+  // If this viewer arrived on an MKey invitation, the MKey is only claimed once
+  // a real broadcast session exists here. We hand the server the broadcast id
+  // and nothing else: it verifies the viewer/seat session itself, decides
+  // whether the join counts, and moves the sender's held MKey to claimed.
+  // Clicking JOIN LIVE alone can never claim anything.
+  const mkeySessionEstablished = Boolean(
+    (myPresence?.is_active && !myPresence?.left_at) || mySeat?.seat_index != null
+  )
+
+  useMKeyJoinClaim({
+    broadcastId: streamId || null,
+    sessionEstablished: mkeySessionEstablished,
+    userId: user?.id || null,
+  })
+
   useEffect(() => {
 
      if (user?.id) {
@@ -3413,6 +3457,26 @@ useStreamRealtime(
                 hasJoinedAudienceRef.current = true
                 setViewerError(null)
                 console.log('[ViewerPage] LiveKit audience joined:', { streamId, roomId })
+
+                if (!keyAwardedRef.current && user?.id) {
+                  keyAwardedRef.current = true
+                  void (async () => {
+                    try {
+                      const result = await awardKeyToUser(user.id)
+                      if (result?.success && result.key_letter) {
+                        useKeyDiscoveryStore.getState().openDiscovery({
+                          key_letter: result.key_letter,
+                          rarity: result.rarity || 'COMMON',
+                          value: result.value || 0,
+                          is_key_to_city: !!result.is_key_to_city,
+                          cashout_available_at: result.cashout_available_at || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+                        })
+                      }
+                    } catch {
+                      // non-blocking
+                    }
+                  })()
+                }
              } else {
                 const errorDetail = typeof res === 'string'
                   ? res
@@ -3900,16 +3964,20 @@ useStreamRealtime(
                </BroadcastFrame>
              )}
              
-             {/* ── LEFT: Host Video Card / Mobile Watch Surface ─────────────── */}
-            {layoutMode === 'grid' ? (
+              {/* ── LEFT: Host Video Card / Mobile Watch Surface ─────────────── */}
+             {layoutMode === 'grid' ? (
               /* ===== GRID MODE: Broadcaster tile (same size as seat tiles) ===== */
                <div
+                onClick={handleBroadcasterBoxClick}
+                role="button"
+                aria-label="Open gift tray for this broadcaster"
                 className={cn(
-                    'relative min-h-0 overflow-hidden border border-cyan-400/30 bg-transparent',
+                    'relative min-h-0 cursor-pointer overflow-hidden border border-cyan-400/30 bg-transparent',
                     'aspect-video',
                     isMobileViewer ? 'rounded-lg' : 'rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.15)]'
                   )}
                >
+
                  {passiveBunnyPlaybackUrl && !isUserOnStage ? (
                    <video
                      key={passiveBunnyPlaybackUrl}
@@ -4050,8 +4118,11 @@ useStreamRealtime(
             ) : (
               /* ===== SPLIT MODE: Large broadcaster panel ===== */
             <section
+              onClick={handleBroadcasterBoxClick}
+              role="button"
+              aria-label="Open gift tray for this broadcaster"
               className={cn(
-                'relative min-h-0 overflow-hidden',
+                'relative min-h-0 cursor-pointer overflow-hidden',
                 theme.hostVideoPanel,
                 isMobileViewer
                   ? 'flex-none rounded-xl border-2 border-cyan-400/40'
@@ -4569,7 +4640,25 @@ useStreamRealtime(
                           </>
                         )}
                       </div>
-                      <div className="flex items-center shrink-0">
+                      <div className="flex items-center shrink-0 gap-1">
+                        {seatUserId && !seat.isMine && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleSeatFocus(seat.seatIndex, seatUserId)
+                            }}
+                            className={cn(
+                              'rounded-lg px-1.5 py-0.5 text-[10px] font-bold transition-colors',
+                              isSeatFocused(seat.seatIndex, seatUserId)
+                                ? 'bg-neon-blue/20 text-neon-blue border border-neon-blue/30'
+                                : 'bg-white/5 text-zinc-300 hover:bg-white/10 border border-white/10'
+                            )}
+                            title={getSeatLabel(seat.seatIndex)}
+                          >
+                            {isSeatFocused(seat.seatIndex, seatUserId) ? 'Listening' : 'Listen'}
+                          </button>
+                        )}
                         {seat.isMine && (
                           <button
                             type="button"
@@ -4581,10 +4670,10 @@ useStreamRealtime(
                           >
                             Leave
                            </button>
-                         )}
-                        </div>
-                       </div>
-                     )}
+                        )}
+                      </div>
+                    </div>
+                  )}
                    </div>
                  )
                })}
@@ -4688,7 +4777,24 @@ useStreamRealtime(
                              <p className="truncate text-[9px] font-bold text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">{seat.displayName}</p>
                            </div>
                          )}
-                       </div>
+                         {seatUserId && !seat.isMine && (
+                           <button
+                             type="button"
+                             onClick={(e) => {
+                               e.stopPropagation()
+                               toggleSeatFocus(seat.seatIndex, seatUserId)
+                             }}
+                             className="absolute top-1 right-1 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white hover:bg-white/10 transition-colors"
+                              style={isSeatFocused(seat.seatIndex, seatUserId) ? {
+                                color: '#00f5d4',
+                                borderColor: '#00f5d4',
+                                boxShadow: '0 0 8px rgba(0,245,212,0.25)'
+                              } : undefined}
+                           >
+                             {isSeatFocused(seat.seatIndex, seatUserId) ? '🔊 Listening' : '🔇 Listen'}
+                           </button>
+                         )}
+                        </div>
                     )
                   })}
                 </div>
@@ -5419,12 +5525,27 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
                >
                  <Gift className="h-10 w-10" />
               </button>
-               <button
-                 onClick={handleShare}
-                 className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold', theme.cyanButton)}
+                <button
+                  onClick={handleShare}
+                  className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold', theme.cyanButton)}
                 >
                   <Share2 className="h-10 w-10" />
-               </button>
+                </button>
+                <button
+                  onClick={() => setIsAuctionMeOpen(true)}
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20"
+                >
+                  <Gamepad2 className="h-10 w-10" />
+                </button>
+                <SeatFocusButton
+                  seats={seats}
+                  focusedUserId={focusedUserId}
+                  focusedSeatIndex={focusedSeatIndex}
+                  onToggle={toggleSeatFocus}
+                  onFocusAll={focusAllSeats}
+                  getSeatLabel={getSeatLabel}
+                  isFocused={isSeatFocused}
+                />
                {isUserOnStage && (
                  <>
                    <button
@@ -5486,12 +5607,27 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
         >
           <Gift className="h-5 w-5" />
         </button>
-        <button
-          onClick={handleShare}
-          className={cn('inline-flex h-12 w-20 items-center justify-center rounded-xl text-sm font-bold', theme.cyanButton)}
-        >
-          <Share2 className="h-5 w-5" />
-        </button>
+               <button
+                 onClick={handleShare}
+                 className={cn('inline-flex h-12 w-20 items-center justify-center rounded-xl text-sm font-bold', theme.cyanButton)}
+               >
+                 <Share2 className="h-5 w-5" />
+               </button>
+                <button
+                  onClick={() => setIsAuctionMeOpen(true)}
+                  className={cn('inline-flex h-12 w-20 items-center justify-center rounded-xl text-sm font-bold', 'border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20')}
+                >
+                  <Gamepad2 className="h-5 w-5" />
+                </button>
+                <SeatFocusButton
+                  seats={seats}
+                  focusedUserId={focusedUserId}
+                  focusedSeatIndex={focusedSeatIndex}
+                  onToggle={toggleSeatFocus}
+                  onFocusAll={focusAllSeats}
+                  getSeatLabel={getSeatLabel}
+                  isFocused={isSeatFocused}
+                />
         {isUserOnStage && (
           <>
             <button
@@ -5695,6 +5831,14 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
            pricePerChat={paidChatPricePerChat}
            isChatEnabled={isPaidChatEnabled}
            isChatLocked={hostChatDisabledByOfficer}
+         />
+       )}
+
+       {/* Auction Me Panel */}
+       {isAuctionMeOpen && streamId && (
+         <AuctionMePanel
+           streamId={streamId}
+           onClose={() => setIsAuctionMeOpen(false)}
          />
        )}
 

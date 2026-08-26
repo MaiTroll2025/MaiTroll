@@ -119,11 +119,8 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
   const trackCacheRef = React.useRef<Record<string, { videoTrack?: any; hasAudio: boolean }>>({});
 
   const resolveTrack = (userId: string) => {
-    // Prefer the bare user id (the real battle-room identity). Fall back to the
-    // broadcast-room mapping only if it happens to be a valid battle identity.
-    const remote =
-      findRemoteByIdentity(userId) ||
-      findRemoteByIdentity(userIdToLiveKitIdentity?.[userId] || "");
+    // In the battle room, participants use bare user IDs as LiveKit identities.
+    const remote = findRemoteByIdentity(userId);
 
     // ULTRA-FALLBACK (matches desktop Arena): if no remote matched by identity
     // yet this participant still needs a camera, grab any unmatched remote that
@@ -192,7 +189,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       else red.push(vm);
     }
     return { blueVMs: blue, redVMs: red };
-  }, [battleParticipants, participantContributions, remoteUsers, userIdToLiveKitIdentity]);
+  }, [battleParticipants, participantContributions, remoteUsers]);
 
   const viewers = useMemo(() => {
     return (battleParticipants as any[])

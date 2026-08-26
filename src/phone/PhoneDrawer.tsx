@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
-import { getLeagueTier, getLevelProgress, getXpRequiredForNextLevel } from '../lib/leagueHelpers'
 import { X, LogOut } from 'lucide-react'
+import LevelStatusCard from '../components/home/LevelStatusCard'
 
 interface PhoneDrawerProps {
   open: boolean
@@ -25,13 +25,9 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
   const profile = useAuthStore((s) => s.profile)
   const user = useAuthStore((s) => s.user)
   const [coins, setCoins] = useState<number | null>(null)
-  const [level, setLevel] = useState<number | null>(null)
-  const [xp, setXp] = useState<number | null>(null)
-  const [xpNext, setXpNext] = useState<number | null>(null)
 
   const sections = useMemo(() => {
     const isAdmin = (profile as any)?.is_admin || (profile as any)?.role === 'admin'
-    const role = (profile as any)?.role || (profile as any)?.troll_role || 'user'
     const items: { title: string; items: { label: string; path: string; icon: string; show?: boolean }[] }[] = []
 
     const add = (title: string, data: { label: string; path: string; icon: string; show?: boolean }[]) => {
@@ -102,15 +98,12 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
     const load = async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('troll_coins, level, xp, xp_to_next_level')
+        .select('troll_coins')
         .eq('id', user.id)
         .maybeSingle()
 
       if (!cancelled && data) {
         setCoins(data.troll_coins ?? 0)
-        setLevel(data.level ?? 1)
-        setXp(data.xp ?? 0)
-        setXpNext(data.xp_to_next_level ?? getXpRequiredForNextLevel(data.level ?? 1))
       }
     }
 
@@ -123,10 +116,7 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
         { event: 'UPDATE', schema: 'public', table: 'user_profiles', filter: `id=eq.${user.id}` },
         (payload) => {
           const row = payload.new as any
-          setCoins(row.troll_coins ?? coins)
-          setLevel(row.level ?? level)
-          setXp(row.xp ?? xp)
-          setXpNext(row.xp_to_next_level ?? xpNext)
+          setCoins(row.troll_coins ?? 0)
         }
       )
       .subscribe()
@@ -141,22 +131,47 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
   const roleLabel = (profile as any)?.role
     ? String((profile as any).role).split(/[_\s]+/).map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
     : null
-  const league = level ? getLeagueTier(level) : null
-  const progress = useMemo(() => {
-    if (!level || xp == null || xpNext == null) return null
-    const info = getLevelProgress(xp, level)
-    return info.progress
-  }, [level, xp, xpNext])
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut()
-    } catch {
-      /* ignore */
+      sessionStorage.setItem('logout_requested', 'true')
+
+      supabase.auth.signOut().catch((err) => {
+        console.warn('Phone logout signOut error:', err)
+      })
+
+      useAuthStore.getState().logout()
+
+      try {
+        localStorage.clear()
+
+        const introSeen = sessionStorage.getItem('trollIntroSeen')
+        sessionStorage.clear()
+
+        if (introSeen) {
+          sessionStorage.setItem('trollIntroSeen', introSeen)
+        }
+
+        if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
+          const dbs = await window.indexedDB.databases()
+
+          dbs.forEach((db: any) => {
+            if (db.name) {
+              window.indexedDB.deleteDatabase(db.name)
+            }
+          })
+        }
+      } catch (storageError) {
+        console.error('Phone logout storage clear error:', storageError)
+      }
+
+      onClose()
+      navigate('/auth', { replace: true })
+    } catch (error: any) {
+      console.error('Phone logout error:', error)
+      onClose()
+      navigate('/auth', { replace: true })
     }
-    useAuthStore.getState().logout()
-    onClose()
-    navigate('/')
   }
 
   useEffect(() => {
@@ -192,7 +207,6 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-white">{displayName}</p>
                   {roleLabel && <p className="truncate text-xs text-zinc-400">{roleLabel}</p>}
-                  {league && <p className="truncate text-[10px] font-black uppercase tracking-wider text-[#00BFFF]">{league}</p>}
                 </div>
               </div>
 
@@ -201,16 +215,10 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
                   <span className="text-zinc-400">Coins</span>
                   <span className="font-black text-[#00BFFF]">{coins != null ? coins.toLocaleString() : '—'}</span>
                 </div>
-                {progress != null && (
-                  <div>
-                    <div className="h-1.5 w-full rounded-full bg-white/10">
-                      <div className="h-1.5 rounded-full bg-gradient-to-r from-[#00BFFF] to-[#BF00FF]" style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
-                    </div>
-                    <p className="mt-1 text-[10px] text-zinc-500">
-                      Level {level} • {xp != null ? xp.toLocaleString() : '—'} / {xpNext != null ? xp.toLocaleString() : '—'} XP
-                    </p>
-                  </div>
-                )}
+              </div>
+
+              <div className="mt-3">
+                <LevelStatusCard />
               </div>
             </div>
           )}

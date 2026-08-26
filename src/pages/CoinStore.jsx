@@ -1941,14 +1941,16 @@ useEffect(() => {
                            <div className="text-lg font-semibold text-green-400 mb-1">{pkg.price}</div>
                            <div className="text-sm text-gray-400 mb-4">Troll Coins</div>
 
-                           <button
-                             onClick={() => {
-                               handlePayPalPurchase(pkg);
-                             }}
-                             className={`w-full py-2 rounded font-bold text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500`}
-                           >
-                             Pay with PayPal
-                           </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handlePayPalPurchase(pkg);
+                              }}
+                              className={`w-full py-2 rounded font-bold text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500`}
+                            >
+                              Pay with PayPal
+                            </button>
                         </div>
                       </div>
                     );

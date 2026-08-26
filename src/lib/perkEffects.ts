@@ -313,6 +313,33 @@ export async function shouldBlockModeration(targetUserId: string, _action: 'kick
 }
 
 /**
+ * HIGHLIGHTED CHAT (24h)
+ * Check if user has highlighted chat perk active
+ */
+export async function hasHighlightedChat(userId: string): Promise<boolean> {
+  return await isPerkActive(userId, 'perk_highlighted_chat');
+}
+
+/**
+ * Get highlighted chat color for a user
+ */
+export async function getHighlightedChatColor(userId: string): Promise<string | null> {
+  const { data: perkData, error } = await supabase
+    .from('user_perks')
+    .select('metadata')
+    .eq('user_id', userId)
+    .eq('perk_id', 'perk_highlighted_chat')
+    .eq('is_active', true)
+    .gt('expires_at', new Date().toISOString())
+    .order('expires_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !perkData) return null;
+  return perkData.metadata?.highlight_color || null;
+}
+
+/**
  * Calculate XP with multiplier
  */
 export async function calculateXP(baseXP: number, userId: string): Promise<number> {

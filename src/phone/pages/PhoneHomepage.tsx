@@ -586,7 +586,6 @@ export default function PhoneHomepage({
   const {
     liveItems,
     liveAuctions,
-    totalViewers,
     onlineUsers,
     loadingLive,
   } = useLiveContent()
@@ -732,10 +731,6 @@ export default function PhoneHomepage({
           </section>
         )}
 
-        <div className="mb-3">
-          <PhoneActivityTicker />
-        </div>
-
         <section className="mb-4 grid grid-cols-3 gap-2">
           <div className={`${glass} rounded-2xl p-3`}>
             <Radio size={14} className="text-red-400" />
@@ -749,6 +744,18 @@ export default function PhoneHomepage({
             </p>
           </div>
 
+          <button
+            type="button"
+            onClick={() => go('/go-live')}
+            className={`${glass} flex flex-col items-center justify-center rounded-2xl p-3 transition active:scale-[0.97]`}
+          >
+            <Radio size={14} className="text-red-500" />
+
+            <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-red-400">
+              Click to Go Live
+            </p>
+          </button>
+
           <div className={`${glass} rounded-2xl p-3`}>
             <Users size={14} className="text-emerald-300" />
 
@@ -760,24 +767,12 @@ export default function PhoneHomepage({
               Online
             </p>
           </div>
-
-          <div className={`${glass} rounded-2xl p-3`}>
-            <Play size={14} className="text-[#00BFFF]" />
-
-            <p className="mt-2 text-base font-black text-white">
-              {totalViewers.toLocaleString()}
-            </p>
-
-            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-600">
-              Watching
-            </p>
-          </div>
         </section>
 
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-black tracking-tight text-white">
-              MaiTroll Network
+              Powered By Troll City 
             </h1>
 
             <p className="text-[9px] font-bold text-zinc-600">

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+﻿import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Gamepad2 } from 'lucide-react'
 
 export default function PhoneHytroGameStreams() {

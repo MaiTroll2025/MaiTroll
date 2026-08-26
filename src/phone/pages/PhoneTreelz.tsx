@@ -2,10 +2,10 @@ import React, {
   memo,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   Bookmark,
@@ -13,7 +13,6 @@ import {
   Copy,
   Download,
   Gift,
-  Heart,
   MessageCircle,
   MessageSquare,
   MoreHorizontal,
@@ -25,7 +24,12 @@ import {
   Volume2,
   VolumeX,
   X,
+  Flame,
+  TrendingUp,
+  Users,
+  Heart,
 } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -34,9 +38,15 @@ import { useAuthStore } from '../../lib/store'
 import type {
   TreelzPost,
   TreelzComment,
+  TreelzFeedCursor,
 } from '../../types/treelz'
 
 import {
+  fetchTreelzFeed,
+  fetchTrendingTreelz,
+  fetchTreelzProfile,
+  recordTreelzView,
+  loadTreelzSettings,
   toggleTreelzTroll,
   toggleTreelzSave,
   fetchTreelzComments,
@@ -44,7 +54,40 @@ import {
   sendTreelzTip,
   recordTreelzShare,
   downloadTreelzVideo,
+  reportTreelzPost,
 } from '../../services/treelzService'
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
+const CATEGORIES = [
+  {
+    key: 'discover',
+    label: 'Discover',
+    icon: Sparkles,
+  },
+  {
+    key: 'trending',
+    label: 'Trending',
+    icon: Flame,
+  },
+  {
+    key: 'most-trolled',
+    label: 'Most Trolled',
+    icon: TrendingUp,
+  },
+  {
+    key: 'most-gifted',
+    label: 'Most Gifted',
+    icon: Gift,
+  },
+  {
+    key: 'following',
+    label: 'Following',
+    icon: Users,
+  },
+]
 
 /* =========================================================
    HELPERS
@@ -101,25 +144,29 @@ function CreatorAvatar({
 }
 
 /* =========================================================
-   VIDEO PLAYER
+   PHONE VIDEO
 ========================================================= */
 
 interface PhoneTreelzVideoProps {
   post: TreelzPost
   active: boolean
+  autoPlay: boolean
   onComment: () => void
   onShare: () => void
   onTip: () => void
   onMore: () => void
+  onView: (watchSeconds: number, completed: boolean) => void
 }
 
 const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
   post,
   active,
+  autoPlay,
   onComment,
   onShare,
   onTip,
   onMore,
+  onView,
 }: PhoneTreelzVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -128,6 +175,8 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
   const [showTroll, setShowTroll] = useState(false)
   const [progress, setProgress] = useState(0)
 
+  const watchStartedRef = useRef<number | null>(null)
+  const completedRef = useRef(false)
   const lastTapRef = useRef(0)
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -138,21 +187,60 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
 
     if (!video) return
 
+    completedRef.current = false
+
     if (active) {
+      watchStartedRef.current = Date.now()
+
       video.currentTime = 0
 
-      video
-        .play()
-        .then(() => setPlaying(true))
-        .catch(() => {
-          setPlaying(false)
-        })
+      if (autoPlay) {
+        video
+          .play()
+          .then(() => setPlaying(true))
+          .catch(() => setPlaying(false))
+      } else {
+        setPlaying(false)
+      }
     } else {
+      if (watchStartedRef.current !== null) {
+        const seconds = Math.max(
+          0,
+          Math.floor(
+            (Date.now() - watchStartedRef.current) / 1000,
+          ),
+        )
+
+        if (seconds > 0) {
+          onView(seconds, completedRef.current)
+        }
+      }
+
+      watchStartedRef.current = null
+
       video.pause()
       video.currentTime = 0
       setPlaying(false)
+      setProgress(0)
     }
-  }, [active])
+
+    return () => {
+      if (watchStartedRef.current !== null) {
+        const seconds = Math.max(
+          0,
+          Math.floor(
+            (Date.now() - watchStartedRef.current) / 1000,
+          ),
+        )
+
+        if (seconds > 0) {
+          onView(seconds, completedRef.current)
+        }
+
+        watchStartedRef.current = null
+      }
+    }
+  }, [active, autoPlay, onView])
 
   useEffect(() => {
     return () => {
@@ -193,7 +281,7 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
     try {
       await toggleTreelzTroll(user.id, post.id)
     } catch {
-      // Intentionally silent.
+      // Keep the same forgiving interaction behavior as web actions.
     }
   }, [post.id, user])
 
@@ -233,6 +321,41 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
     [],
   )
 
+  const handleTimeUpdate = useCallback(() => {
+    const video = videoRef.current
+
+    if (!video || !video.duration) return
+
+    const value = Math.min(
+      100,
+      Math.max(
+        0,
+        (video.currentTime / video.duration) * 100,
+      ),
+    )
+
+    setProgress(value)
+
+    if (
+      value >= 95 &&
+      !completedRef.current
+    ) {
+      completedRef.current = true
+
+      if (watchStartedRef.current !== null) {
+        const seconds = Math.max(
+          0,
+          Math.floor(
+            (Date.now() - watchStartedRef.current) /
+              1000,
+          ),
+        )
+
+        onView(seconds, true)
+      }
+    }
+  }, [onView])
+
   return (
     <div
       className="relative h-full w-full overflow-hidden bg-black text-white"
@@ -242,7 +365,7 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
       <video
         src={post.video_url}
         className="absolute inset-0 h-full w-full scale-125 object-cover opacity-35 blur-3xl"
-        autoPlay={active}
+        autoPlay={active && autoPlay}
         muted
         loop
         playsInline
@@ -260,24 +383,10 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
         preload="metadata"
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
-        onTimeUpdate={() => {
-          const video = videoRef.current
-
-          if (!video || !video.duration) return
-
-          setProgress(
-            Math.min(
-              100,
-              Math.max(
-                0,
-                (video.currentTime / video.duration) * 100,
-              ),
-            ),
-          )
-        }}
+        onTimeUpdate={handleTimeUpdate}
       />
 
-      {/* Dark overlays */}
+      {/* Overlays */}
       <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-black/65 via-transparent to-black/90" />
 
       <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_50%_25%,transparent_15%,rgba(0,0,0,0.2)_60%,rgba(0,0,0,0.7)_100%)]" />
@@ -340,13 +449,14 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
             <CreatorAvatar post={post} />
 
             <div className="min-w-0 flex-1">
-              <Link
-                to={`/profile/${post.author?.username || ''}`}
-                onClick={(e) => e.stopPropagation()}
-                className="block truncate text-sm font-black text-white"
+              <button
+                onClick={(event) => {
+                  event.stopPropagation()
+                }}
+                className="block max-w-full truncate text-left text-sm font-black text-white"
               >
                 @{post.author?.username || 'unknown'}
-              </Link>
+              </button>
 
               <p className="truncate text-[10px] font-bold text-white/50">
                 {post.author?.display_name || 'Creator'}
@@ -367,7 +477,9 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
 
             {post.video_duration_seconds > 0 && (
               <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-black text-white/60">
-                {formatDuration(post.video_duration_seconds)}
+                {formatDuration(
+                  post.video_duration_seconds,
+                )}
               </span>
             )}
           </div>
@@ -379,8 +491,8 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
         <PhoneAction
           icon={<span className="text-[25px]">🤡</span>}
           count={post.likes_count || 0}
-          onClick={async (e) => {
-            e.stopPropagation()
+          onClick={async (event) => {
+            event.stopPropagation()
 
             if (!user) {
               toast.info('Sign in to troll')
@@ -388,9 +500,12 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
             }
 
             try {
-              await toggleTreelzTroll(user.id, post.id)
+              await toggleTreelzTroll(
+                user.id,
+                post.id,
+              )
             } catch {
-              // Ignore.
+              // Keep action silent like web.
             }
           }}
         />
@@ -398,8 +513,8 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
         <PhoneAction
           icon={<MessageCircle size={22} />}
           count={post.comments_count || 0}
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={(event) => {
+            event.stopPropagation()
             onComment()
           }}
         />
@@ -407,8 +522,8 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
         <PhoneAction
           icon={<Share2 size={21} />}
           count={post.shares_count || 0}
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={(event) => {
+            event.stopPropagation()
             onShare()
           }}
         />
@@ -416,16 +531,16 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
         <PhoneAction
           icon={<Gift size={21} />}
           count={post.gifts_received || 0}
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={(event) => {
+            event.stopPropagation()
             onTip()
           }}
         />
 
         <PhoneAction
           icon={<Bookmark size={21} />}
-          onClick={async (e) => {
-            e.stopPropagation()
+          onClick={async (event) => {
+            event.stopPropagation()
 
             if (!user) {
               toast.info('Sign in to save')
@@ -433,7 +548,11 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
             }
 
             try {
-              await toggleTreelzSave(user.id, post.id)
+              await toggleTreelzSave(
+                user.id,
+                post.id,
+              )
+
               toast.success('Saved')
             } catch {
               toast.error('Unable to save')
@@ -443,8 +562,8 @@ const PhoneTreelzVideo = memo(function PhoneTreelzVideo({
 
         <PhoneAction
           icon={<MoreHorizontal size={22} />}
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={(event) => {
+            event.stopPropagation()
             onMore()
           }}
         />
@@ -474,7 +593,9 @@ function PhoneAction({
 }: {
   icon: React.ReactNode
   count?: number
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void
+  onClick: (
+    e: React.MouseEvent<HTMLButtonElement>,
+  ) => void
 }) {
   return (
     <button
@@ -495,6 +616,43 @@ function PhoneAction({
 }
 
 /* =========================================================
+   CATEGORY BAR
+========================================================= */
+
+function PhoneCategoryBar({
+  activeCategory,
+  onChange,
+}: {
+  activeCategory: string
+  onChange: (category: string) => void
+}) {
+  return (
+    <div className="absolute left-0 right-0 top-[64px] z-[55] flex gap-2 overflow-x-auto px-3 pb-2 scrollbar-hide">
+      {CATEGORIES.map(
+        ({ key, label, icon: Icon }) => {
+          const active = activeCategory === key
+
+          return (
+            <button
+              key={key}
+              onClick={() => onChange(key)}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black backdrop-blur-xl transition active:scale-95 ${
+                active
+                  ? 'border-[#00BFFF]/40 bg-[#00BFFF]/15 text-white shadow-[0_0_20px_rgba(0,191,255,0.12)]'
+                  : 'border-white/10 bg-black/35 text-white/55'
+              }`}
+            >
+              <Icon size={12} />
+              {label}
+            </button>
+          )
+        },
+      )}
+    </div>
+  )
+}
+
+/* =========================================================
    COMMENTS
 ========================================================= */
 
@@ -509,19 +667,35 @@ function PhoneComments({
 }) {
   const { user, isAdmin } = useAuthStore()
 
-  const [comments, setComments] = useState<TreelzComment[]>([])
+  const [comments, setComments] = useState<
+    TreelzComment[]
+  >([])
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!open || !post) return
 
+    let cancelled = false
+
     setLoading(true)
 
     fetchTreelzComments(post.id)
-      .then(setComments)
+      .then((data) => {
+        if (!cancelled) {
+          setComments(data)
+        }
+      })
       .catch(() => {})
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [open, post])
 
   const submit = async () => {
@@ -537,15 +711,22 @@ function PhoneComments({
     if (!value) return
 
     try {
-      await addTreelzComment(user.id, post.id, value)
+      await addTreelzComment(
+        user.id,
+        post.id,
+        value,
+      )
 
       setText('')
 
-      const updated = await fetchTreelzComments(post.id)
+      const updated =
+        await fetchTreelzComments(post.id)
 
       setComments(updated)
     } catch (error: any) {
-      toast.error(error?.message || 'Unable to comment')
+      toast.error(
+        error?.message || 'Unable to comment',
+      )
     }
   }
 
@@ -572,7 +753,9 @@ function PhoneComments({
       if (error) throw error
 
       setComments((current) =>
-        current.filter((comment) => comment.id !== commentId),
+        current.filter(
+          (comment) => comment.id !== commentId,
+        ),
       )
 
       toast.success('Comment deleted')
@@ -592,7 +775,9 @@ function PhoneComments({
 
       <div
         className="relative flex max-h-[82vh] w-full flex-col overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#080614]/98 shadow-[0_-30px_100px_rgba(0,191,255,0.18)]"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) =>
+          event.stopPropagation()
+        }
       >
         <div className="flex justify-center pt-3">
           <div className="h-1.5 w-12 rounded-full bg-white/20" />
@@ -643,7 +828,9 @@ function PhoneComments({
                 >
                   {comment.author?.avatar_url ? (
                     <img
-                      src={comment.author.avatar_url}
+                      src={
+                        comment.author.avatar_url
+                      }
                       alt=""
                       className="h-9 w-9 rounded-xl object-cover"
                     />
@@ -658,25 +845,29 @@ function PhoneComments({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="truncate text-xs font-black text-cyan-200">
-                        @{comment.author?.username || 'unknown'}
+                        @
+                        {comment.author?.username ||
+                          'unknown'}
                       </span>
 
-                      {(user &&
-                        (comment.user_id === user.id ||
-                          post.user_id === user.id ||
-                          isAdmin)) && (
-                        <button
-                          onClick={() =>
-                            deleteComment(
-                              comment.id,
-                              comment.user_id,
-                            )
-                          }
-                          className="ml-auto text-red-300/60"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
+                      {user &&
+                        (comment.user_id ===
+                          user.id ||
+                          post.user_id ===
+                            user.id ||
+                          isAdmin) && (
+                          <button
+                            onClick={() =>
+                              deleteComment(
+                                comment.id,
+                                comment.user_id,
+                              )
+                            }
+                            className="ml-auto text-red-300/60"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                     </div>
 
                     <p className="mt-1 text-sm leading-relaxed text-white/80">
@@ -693,9 +884,13 @@ function PhoneComments({
           <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-2">
             <input
               value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') submit()
+              onChange={(event) =>
+                setText(event.target.value)
+              }
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  submit()
+                }
               }}
               placeholder={
                 user
@@ -761,7 +956,6 @@ function PhoneTipModal({
       )
 
       toast.success(`Tipped ${amount} coins!`)
-
       onClose()
     } catch (error: any) {
       toast.error(
@@ -779,7 +973,9 @@ function PhoneTipModal({
     >
       <div
         className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/10 bg-[#080614]/98 p-6 shadow-[0_0_90px_rgba(191,0,255,0.2)]"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) =>
+          event.stopPropagation()
+        }
       >
         <button
           onClick={onClose}
@@ -822,8 +1018,10 @@ function PhoneTipModal({
         <div className="mt-4 flex gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-2">
           <input
             value={custom}
-            onChange={(e) =>
-              setCustom(e.target.value.replace(/\D/g, ''))
+            onChange={(event) =>
+              setCustom(
+                event.target.value.replace(/\D/g, ''),
+              )
             }
             placeholder="Custom amount"
             className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-white/30"
@@ -893,7 +1091,9 @@ function PhoneShareModal({
           post.video_url,
         )
 
-        toast.success('Download started! (-10 coins)')
+        toast.success(
+          'Download started! (-10 coins)',
+        )
       } catch (error: any) {
         toast.error(
           error?.message || 'Download failed',
@@ -903,41 +1103,51 @@ function PhoneShareModal({
 
     if (type === 'trollwall') {
       if (!user) {
-        toast.info('Sign in to share to TrollWall')
+        toast.info(
+          'Sign in to share to TrollWall',
+        )
         return
       }
 
       try {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('username')
-          .eq('id', user.id)
-          .single()
+        const { data: profile } =
+          await supabase
+            .from('user_profiles')
+            .select('username')
+            .eq('id', user.id)
+            .single()
 
-        const username = profile?.username || 'unknown'
+        const username =
+          profile?.username || 'unknown'
 
-        const { error } = await supabase
-          .from('troll_wall_posts')
-          .insert({
-            user_id: user.id,
-            post_type: 'text',
-            content: `🎬 @${username} shared a Treelz: ${
-              post.caption || 'Check out this video!'
-            }`,
-            metadata: {
-              video_url: post.video_url,
-              thumbnail_url: post.thumbnail_url,
-              treelz_post_id: post.id,
-              type: 'treelz_share',
-            },
-          })
+        const { error } =
+          await supabase
+            .from('troll_wall_posts')
+            .insert({
+              user_id: user.id,
+              post_type: 'text',
+              content: `🎬 @${username} shared a Treelz: ${
+                post.caption ||
+                'Check out this video!'
+              }`,
+              metadata: {
+                video_url: post.video_url,
+                thumbnail_url:
+                  post.thumbnail_url,
+                treelz_post_id: post.id,
+                type: 'treelz_share',
+              },
+            })
 
         if (error) throw error
 
-        toast.success('Shared to TrollWall!')
+        toast.success(
+          'Shared to TrollWall!',
+        )
       } catch (error: any) {
         toast.error(
-          error?.message || 'Unable to share',
+          error?.message ||
+            'Unable to share',
         )
       }
     }
@@ -948,7 +1158,9 @@ function PhoneShareModal({
           `${window.location.origin}/treelz?post=${post.id}`,
         )
 
-        toast.success('Treelz link copied for messaging')
+        toast.success(
+          'Treelz link copied for messaging',
+        )
       } catch {
         toast.error('Unable to copy link')
       }
@@ -962,25 +1174,29 @@ function PhoneShareModal({
       key: 'copy',
       label: 'Copy Link',
       icon: <Copy size={20} />,
-      gradient: 'from-[#00BFFF] to-blue-500',
+      gradient:
+        'from-[#00BFFF] to-blue-500',
     },
     {
       key: 'download',
       label: 'Save Video',
       icon: <Download size={20} />,
-      gradient: 'from-amber-300 to-orange-500',
+      gradient:
+        'from-amber-300 to-orange-500',
     },
     {
       key: 'trollwall',
       label: 'TrollWall',
       icon: <MessageSquare size={20} />,
-      gradient: 'from-[#BF00FF] to-pink-500',
+      gradient:
+        'from-[#BF00FF] to-pink-500',
     },
     {
       key: 'messages',
       label: 'Message',
       icon: <Share2 size={20} />,
-      gradient: 'from-emerald-300 to-teal-500',
+      gradient:
+        'from-emerald-300 to-teal-500',
     },
   ]
 
@@ -991,7 +1207,9 @@ function PhoneShareModal({
     >
       <div
         className="w-full rounded-t-[2rem] border border-white/10 bg-[#080614]/98 p-5 sm:mx-auto sm:max-w-md sm:rounded-[2rem]"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) =>
+          event.stopPropagation()
+        }
       >
         <div className="flex items-center justify-between">
           <div>
@@ -1043,7 +1261,7 @@ function PhoneShareModal({
 }
 
 /* =========================================================
-   MORE MENU
+   MORE MODAL
 ========================================================= */
 
 function PhoneMoreModal({
@@ -1066,18 +1284,18 @@ function PhoneMoreModal({
     }
 
     try {
-      await supabase
-        .from('treelz_reports')
-        .insert({
-          post_id: post.id,
-          reporter_id: user.id,
-          reason: 'Reported from phone',
-        })
+      await reportTreelzPost(
+        user.id,
+        post.id,
+        'reported_from_treelz_phone',
+      )
 
       toast.success('Report submitted')
       onClose()
     } catch {
-      toast.error('Unable to submit report')
+      toast.error(
+        'Unable to submit report',
+      )
     }
   }
 
@@ -1094,11 +1312,15 @@ function PhoneMoreModal({
         post.video_url,
       )
 
-      toast.success('Download started! (-10 coins)')
+      toast.success(
+        'Download started! (-10 coins)',
+      )
+
       onClose()
     } catch (error: any) {
       toast.error(
-        error?.message || 'Download failed',
+        error?.message ||
+          'Download failed',
       )
     }
   }
@@ -1110,7 +1332,9 @@ function PhoneMoreModal({
     >
       <div
         className="w-full rounded-t-[2rem] border border-white/10 bg-[#080614]/98 p-3 sm:mx-auto sm:max-w-sm sm:rounded-[2rem]"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) =>
+          event.stopPropagation()
+        }
       >
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-white/20 sm:hidden" />
 
@@ -1174,16 +1398,102 @@ function PhoneMoreModal({
 }
 
 /* =========================================================
+   LOADING
+========================================================= */
+
+function PhoneTreelzLoading() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-[#0A0814]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-[#00BFFF]" />
+
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
+          Loading Treelz
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+function PhoneTreelzEmpty({
+  userSignedIn,
+}: {
+  userSignedIn: boolean
+}) {
+  const navigate = useNavigate()
+
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-[#00BFFF]/10 to-[#BF00FF]/10 shadow-[0_0_50px_rgba(0,191,255,0.12)]">
+        <Play
+          size={30}
+          className="text-cyan-300"
+        />
+      </div>
+
+      <h2 className="mt-5 text-xl font-black">
+        No Treelz Yet
+      </h2>
+
+      <p className="mt-2 max-w-xs text-xs leading-relaxed text-white/40">
+        There are no Treelz videos available
+        yet. Be the first creator to post one.
+      </p>
+
+      <button
+        onClick={() =>
+          navigate(
+            userSignedIn
+              ? '/treelz/upload'
+              : '/auth',
+          )
+        }
+        className="mt-6 rounded-2xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] px-6 py-3 text-xs font-black shadow-[0_0_35px_rgba(0,191,255,0.25)]"
+      >
+        {userSignedIn
+          ? 'Create Treelz'
+          : 'Sign In to Create'}
+      </button>
+    </div>
+  )
+}
+
+/* =========================================================
    MAIN PHONE TREELZ
 ========================================================= */
 
 export default function PhoneTreelz() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] =
+    useSearchParams()
 
-  const [posts, setPosts] = useState<TreelzPost[]>([])
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuthStore()
 
-  const [activeIndex, setActiveIndex] = useState(0)
+  const initialPostId =
+    searchParams.get('post')
+
+  const [posts, setPosts] = useState<
+    TreelzPost[]
+  >([])
+
+  const [nextCursor, setNextCursor] =
+    useState<TreelzFeedCursor | null>(null)
+
+  const [loading, setLoading] =
+    useState(true)
+
+  const [activeIndex, setActiveIndex] =
+    useState(0)
+
+  const [activeCategory, setActiveCategory] =
+    useState('discover')
+
+  const [profileUserId, setProfileUserId] =
+    useState<string | null>(null)
 
   const [commentPost, setCommentPost] =
     useState<TreelzPost | null>(null)
@@ -1197,73 +1507,254 @@ export default function PhoneTreelz() {
   const [morePost, setMorePost] =
     useState<TreelzPost | null>(null)
 
-  const feedRef = useRef<HTMLDivElement>(null)
+  const [settings] = useState(
+    loadTreelzSettings(),
+  )
 
-  useEffect(() => {
-    let cancelled = false
+  const feedRef =
+    useRef<HTMLDivElement>(null)
 
-    const loadPosts = async () => {
+  const loadingMoreRef =
+    useRef(false)
+
+  /* =======================================================
+     LOAD SAME FEED AS WEB
+  ======================================================= */
+
+  const loadFeed = useCallback(
+    async (
+      category = activeCategory,
+      profileId: string | null = profileUserId,
+    ) => {
+      setLoading(true)
+
       try {
-        const { data, error } = await supabase
-          .from('treelz_posts')
-          .select(`
-            *,
-            author:user_profiles(
-              id,
-              username,
-              display_name,
-              avatar_url
-            )
-          `)
-          .order('created_at', {
-            ascending: false,
-          })
-          .limit(50)
-
-        if (error) throw error
-
-        if (!cancelled) {
-          setPosts((data || []) as TreelzPost[])
-          setLoading(false)
+        let result: {
+          posts: TreelzPost[]
+          nextCursor: TreelzFeedCursor | null
         }
+
+        if (profileId) {
+          const profilePosts =
+            await fetchTreelzProfile(
+              user?.id || null,
+              profileId,
+            )
+
+          result = {
+            posts: profilePosts,
+            nextCursor: null,
+          }
+        } else if (
+          category === 'trending'
+        ) {
+          const trendingPosts =
+            await fetchTrendingTreelz(30)
+
+          result = {
+            posts: trendingPosts,
+            nextCursor: null,
+          }
+        } else {
+          /*
+           * IMPORTANT:
+           *
+           * This intentionally uses the exact
+           * same feed service as TreelzPage.
+           *
+           * Phone is no longer querying treelz_posts
+           * directly to create its own feed.
+           */
+          result = await fetchTreelzFeed(
+            user?.id || null,
+            null,
+          )
+        }
+
+        setPosts(result.posts)
+        setNextCursor(result.nextCursor)
+
+        const requestedIndex =
+          initialPostId
+            ? result.posts.findIndex(
+                (post) =>
+                  post.id === initialPostId,
+              )
+            : -1
+
+        setActiveIndex(
+          requestedIndex >= 0
+            ? requestedIndex
+            : 0,
+        )
       } catch (error) {
         console.error(
-          'PhoneTreelz load error:',
+          'Failed to load Phone Treelz:',
           error,
         )
 
-        if (!cancelled) {
-          setPosts([])
-          setLoading(false)
-        }
+        toast.error(
+          'Unable to load Treelz right now',
+        )
+
+        setPosts([])
+        setNextCursor(null)
+      } finally {
+        setLoading(false)
       }
-    }
+    },
+    [
+      activeCategory,
+      initialPostId,
+      profileUserId,
+      user?.id,
+    ],
+  )
 
-    loadPosts()
+  /* =======================================================
+     LOAD MORE USING SAME WEB CURSOR
+  ======================================================= */
 
-    const channel = supabase
-      .channel('phone-treelz-feed')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'treelz_posts',
-        },
-        () => {
-          loadPosts()
-        },
-      )
-      .subscribe()
+  const loadMore = useCallback(
+    async () => {
+      if (
+        !nextCursor ||
+        loading ||
+        loadingMoreRef.current ||
+        profileUserId ||
+        activeCategory === 'trending'
+      ) {
+        return
+      }
 
-    return () => {
-      cancelled = true
-      supabase.removeChannel(channel)
-    }
-  }, [])
+      loadingMoreRef.current = true
+
+      try {
+        const result =
+          await fetchTreelzFeed(
+            user?.id || null,
+            nextCursor,
+          )
+
+        setPosts((current) => [
+          ...current,
+          ...result.posts,
+        ])
+
+        setNextCursor(
+          result.nextCursor,
+        )
+      } catch (error) {
+        console.error(
+          'Failed to load more Phone Treelz:',
+          error,
+        )
+      } finally {
+        loadingMoreRef.current = false
+      }
+    },
+    [
+      activeCategory,
+      loading,
+      nextCursor,
+      profileUserId,
+      user?.id,
+    ],
+  )
+
+  /* =======================================================
+     INITIAL LOAD / CATEGORY / URL
+  ======================================================= */
 
   useEffect(() => {
-    const container = feedRef.current
+    loadFeed()
+  }, [loadFeed])
+
+  const switchCategory = useCallback(
+    (category: string) => {
+      setActiveCategory(category)
+      setProfileUserId(null)
+      setActiveIndex(0)
+      setSearchParams({})
+
+      loadFeed(category, null)
+    },
+    [loadFeed, setSearchParams],
+  )
+
+  /* =======================================================
+     OPEN SPECIFIC POST
+  ======================================================= */
+
+  const openPost = useCallback(
+    (postId: string) => {
+      const index = posts.findIndex(
+        (post) => post.id === postId,
+      )
+
+      if (index < 0) return
+
+      setActiveIndex(index)
+
+      setSearchParams({
+        post: postId,
+      })
+
+      requestAnimationFrame(() => {
+        const container =
+          feedRef.current
+
+        const card =
+          container?.children[
+            index
+          ] as HTMLElement | undefined
+
+        card?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      })
+    },
+    [posts, setSearchParams],
+  )
+
+  /* =======================================================
+     ACTIVE POST
+  ======================================================= */
+
+  const currentPost =
+    posts[activeIndex] || null
+
+  /* =======================================================
+     VIEW TRACKING
+  ======================================================= */
+
+  const handleView = useCallback(
+    (
+      postId: string,
+      watchSeconds: number,
+      completed: boolean,
+    ) => {
+      if (!postId || watchSeconds <= 0) {
+        return
+      }
+
+      recordTreelzView(
+        postId,
+        watchSeconds,
+        completed,
+      ).catch(() => {})
+    },
+    [],
+  )
+
+  /* =======================================================
+     INTERSECTION / SNAP POSITION
+  ======================================================= */
+
+  useEffect(() => {
+    const container =
+      feedRef.current
 
     if (!container) return
 
@@ -1273,70 +1764,255 @@ export default function PhoneTreelz() {
 
     if (!cards.length) return
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return
+    const observer =
+      new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+              return
+            }
 
-          const index = cards.indexOf(
-            entry.target as HTMLElement,
-          )
+            const index =
+              cards.indexOf(
+                entry.target as HTMLElement,
+              )
 
-          if (index >= 0) {
+            if (index < 0) return
+
             setActiveIndex(index)
-          }
-        })
-      },
-      {
-        root: container,
-        threshold: 0.7,
-      },
-    )
+
+            const post = posts[index]
+
+            if (post) {
+              setSearchParams(
+                { post: post.id },
+                {
+                  replace: true,
+                },
+              )
+            }
+
+            if (
+              index >= posts.length - 3
+            ) {
+              loadMore()
+            }
+          })
+        },
+        {
+          root: container,
+          threshold: 0.7,
+        },
+      )
 
     cards.forEach((card) =>
       observer.observe(card),
     )
 
-    return () => observer.disconnect()
-  }, [posts])
+    return () =>
+      observer.disconnect()
+  }, [
+    posts,
+    loadMore,
+    setSearchParams,
+  ])
 
-  const refresh = async () => {
-    const { data } = await supabase
-      .from('treelz_posts')
-      .select(`
-        *,
-        author:user_profiles(
-          id,
-          username,
-          display_name,
-          avatar_url
-        )
-      `)
-      .order('created_at', {
-        ascending: false,
+  /* =======================================================
+     REALTIME REFRESH
+  ======================================================= */
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('phone-treelz-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'treelz_posts',
+        },
+        () => {
+          /*
+           * Re-run the same feed service used by web.
+           * This keeps phone synchronized without
+           * creating a second feed implementation.
+           */
+          loadFeed()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [loadFeed])
+
+  /* =======================================================
+     KEYBOARD / SWIPE-FRIENDLY PROGRAMMATIC NAVIGATION
+  ======================================================= */
+
+  const goNext = useCallback(() => {
+    if (
+      activeIndex >=
+      posts.length - 1
+    ) {
+      loadMore()
+      return
+    }
+
+    const nextIndex =
+      activeIndex + 1
+
+    setActiveIndex(nextIndex)
+
+    const nextPost =
+      posts[nextIndex]
+
+    if (nextPost) {
+      setSearchParams(
+        { post: nextPost.id },
+        { replace: true },
+      )
+
+      requestAnimationFrame(() => {
+        const card =
+          feedRef.current?.children[
+            nextIndex
+          ] as HTMLElement | undefined
+
+        card?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
       })
-      .limit(50)
+    }
 
-    setPosts((data || []) as TreelzPost[])
-  }
+    if (
+      nextIndex >=
+      posts.length - 3
+    ) {
+      loadMore()
+    }
+  }, [
+    activeIndex,
+    posts,
+    loadMore,
+    setSearchParams,
+  ])
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-[#0A0814]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-[#00BFFF]" />
+  const goPrevious =
+    useCallback(() => {
+      if (activeIndex <= 0) return
 
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
-            Loading Treelz
-          </p>
-        </div>
-      </div>
+      const previousIndex =
+        activeIndex - 1
+
+      setActiveIndex(previousIndex)
+
+      const previousPost =
+        posts[previousIndex]
+
+      if (previousPost) {
+        setSearchParams(
+          {
+            post: previousPost.id,
+          },
+          { replace: true },
+        )
+
+        requestAnimationFrame(() => {
+          const card =
+            feedRef.current?.children[
+              previousIndex
+            ] as
+              | HTMLElement
+              | undefined
+
+          card?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          })
+        })
+      }
+    }, [
+      activeIndex,
+      posts,
+      setSearchParams,
+    ])
+
+  useEffect(() => {
+    const handleKeyboard =
+      (event: KeyboardEvent) => {
+        if (
+          event.key === 'ArrowDown' ||
+          event.key === 'ArrowRight'
+        ) {
+          goNext()
+        }
+
+        if (
+          event.key === 'ArrowUp' ||
+          event.key === 'ArrowLeft'
+        ) {
+          goPrevious()
+        }
+      }
+
+    window.addEventListener(
+      'keydown',
+      handleKeyboard,
     )
+
+    return () =>
+      window.removeEventListener(
+        'keydown',
+        handleKeyboard,
+      )
+  }, [goNext, goPrevious])
+
+  /* =======================================================
+     CREATOR PROFILE
+  ======================================================= */
+
+  const openCreatorProfile =
+    useCallback(
+      async (authorId: string) => {
+        try {
+          const creatorPosts =
+            await fetchTreelzProfile(
+              user?.id || null,
+              authorId,
+            )
+
+          setProfileUserId(authorId)
+          setActiveCategory('discover')
+          setPosts(creatorPosts)
+          setNextCursor(null)
+          setActiveIndex(0)
+          setSearchParams({})
+        } catch {
+          toast.error(
+            'Unable to load this creator',
+          )
+        }
+      },
+      [user?.id, setSearchParams],
+    )
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (loading && posts.length === 0) {
+    return <PhoneTreelzLoading />
   }
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-[#0A0814] text-white">
-      {/* Header */}
+      {/* ===================================================
+          HEADER
+      =================================================== */}
+
       <header className="absolute left-0 right-0 top-0 z-[60] flex items-center justify-between px-4 py-3">
         <button
           onClick={() => navigate(-1)}
@@ -1352,39 +2028,64 @@ export default function PhoneTreelz() {
         </div>
 
         <button
-          onClick={() => {
+          onClick={() =>
             navigate('/treelz/upload')
-          }}
+          }
           className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/10 text-[#00BFFF] backdrop-blur-xl active:scale-90"
         >
           <Sparkles size={18} />
         </button>
       </header>
 
-      {/* Empty state */}
+      {/* ===================================================
+          CATEGORY NAV
+      =================================================== */}
+
+      <PhoneCategoryBar
+        activeCategory={
+          activeCategory
+        }
+        onChange={switchCategory}
+      />
+
+      {/* ===================================================
+          PROFILE MODE BACK BUTTON
+      =================================================== */}
+
+      {profileUserId && (
+        <button
+          onClick={() => {
+            setProfileUserId(null)
+            setActiveCategory(
+              'discover',
+            )
+            setActiveIndex(0)
+            setSearchParams({})
+            loadFeed(
+              'discover',
+              null,
+            )
+          }}
+          className="absolute left-3 top-[108px] z-[55] flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 text-[10px] font-black text-white/80 backdrop-blur-xl"
+        >
+          <ArrowLeft size={12} />
+          Back to Treelz
+        </button>
+      )}
+
+      {/* ===================================================
+          EMPTY STATE
+      =================================================== */}
+
       {posts.length === 0 ? (
-        <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-[#00BFFF]/10 to-[#BF00FF]/10 shadow-[0_0_50px_rgba(0,191,255,0.12)]">
-            <Play size={30} className="text-cyan-300" />
-          </div>
-
-          <h2 className="mt-5 text-xl font-black">
-            No Treelz Yet
-          </h2>
-
-          <p className="mt-2 max-w-xs text-xs leading-relaxed text-white/40">
-            There are no Treelz videos available yet.
-            Be the first creator to post one.
-          </p>
-
-          <button
-            onClick={() => navigate('/treelz/upload')}
-            className="mt-6 rounded-2xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] px-6 py-3 text-xs font-black shadow-[0_0_35px_rgba(0,191,255,0.25)]"
-          >
-            Create Treelz
-          </button>
-        </div>
+        <PhoneTreelzEmpty
+          userSignedIn={Boolean(user)}
+        />
       ) : (
+        /* =================================================
+           REAL PHONE FEED
+        ================================================= */
+
         <div
           ref={feedRef}
           className="h-full snap-y snap-mandatory overflow-y-auto overscroll-y-contain"
@@ -1392,56 +2093,110 @@ export default function PhoneTreelz() {
             scrollbarWidth: 'none',
           }}
         >
-          {posts.map((post, index) => (
-            <div
-              key={post.id}
-              className="relative h-[100svh] w-full snap-start snap-always"
-            >
-              <PhoneTreelzVideo
-                post={post}
-                active={index === activeIndex}
-                onComment={() =>
-                  setCommentPost(post)
-                }
-                onShare={() =>
-                  setSharePost(post)
-                }
-                onTip={() =>
-                  setTipPost(post)
-                }
-                onMore={() =>
-                  setMorePost(post)
-                }
-              />
-            </div>
-          ))}
+          {posts.map(
+            (post, index) => (
+              <div
+                key={post.id}
+                className="relative h-[100svh] w-full snap-start snap-always"
+              >
+                <PhoneTreelzVideo
+                  post={post}
+                  active={
+                    index ===
+                    activeIndex
+                  }
+                  autoPlay={
+                    settings.autoPlayEnabled
+                  }
+                  onView={(
+                    seconds,
+                    completed,
+                  ) =>
+                    handleView(
+                      post.id,
+                      seconds,
+                      completed,
+                    )
+                  }
+                  onComment={() =>
+                    setCommentPost(
+                      post,
+                    )
+                  }
+                  onShare={() =>
+                    setSharePost(
+                      post,
+                    )
+                  }
+                  onTip={() =>
+                    setTipPost(
+                      post,
+                    )
+                  }
+                  onMore={() =>
+                    setMorePost(
+                      post,
+                    )
+                  }
+                />
+              </div>
+            ),
+          )}
         </div>
       )}
 
-      {/* Modals */}
+      {/* ===================================================
+          MODALS
+      =================================================== */}
+
       <PhoneComments
         post={commentPost}
-        open={!!commentPost}
-        onClose={() => setCommentPost(null)}
+        open={Boolean(commentPost)}
+        onClose={() =>
+          setCommentPost(null)
+        }
       />
 
       <PhoneTipModal
         post={tipPost}
-        open={!!tipPost}
-        onClose={() => setTipPost(null)}
+        open={Boolean(tipPost)}
+        onClose={() =>
+          setTipPost(null)
+        }
       />
 
       <PhoneShareModal
         post={sharePost}
-        open={!!sharePost}
-        onClose={() => setSharePost(null)}
+        open={Boolean(sharePost)}
+        onClose={() =>
+          setSharePost(null)
+        }
       />
 
       <PhoneMoreModal
         post={morePost}
-        open={!!morePost}
-        onClose={() => setMorePost(null)}
+        open={Boolean(morePost)}
+        onClose={() =>
+          setMorePost(null)
+        }
       />
+
+      {/* ===================================================
+          LOADING MORE
+      =================================================== */}
+
+      {loading &&
+        posts.length > 0 && (
+          <div className="pointer-events-none absolute bottom-6 left-1/2 z-[70] -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-4 py-2 backdrop-blur-xl">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 animate-spin rounded-full border border-white/20 border-t-cyan-300" />
+
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">
+                Loading
+              </span>
+            </div>
+          </div>
+        )}
     </div>
   )
 }

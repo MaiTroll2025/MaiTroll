@@ -91,6 +91,13 @@ export const PERK_CONFIG = {
     cost: 2000,
     description: 'Randomly change another user\'s username style & emoji for 100 hour',
     type: 'cosmetic'
+  },
+  'perk_highlighted_chat': {
+    name: 'Highlighted Chat (24h)',
+    duration_minutes: 1440,
+    cost: 50,
+    description: 'Send highlighted flying chats for 24 hours',
+    type: 'chat'
   }
 } as const;
 

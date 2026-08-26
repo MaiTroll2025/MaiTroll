@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
 import BottomNavBar from '../nav/BottomNavBar'
+import { MorePagesPanel } from '../nav/BottomNavBar'
 import Sidebar from '../Sidebar'
 import Header from '../Header'
 import { useLocation } from 'react-router-dom'
@@ -53,11 +54,18 @@ export default function AppLayout({
     const isThemeExemptPage = normalizedPath.includes('court') || normalizedPath.startsWith('/church');
     const isKeyboardVisible = false;
     const isMobileLayout = isMobileWidth && !isAuthPage;
-    const [hytroSetupLive, setHytroSetupLive] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('tc_hytro_gaming_setup_live') === 'true')
+   const [hytroSetupLive, setHytroSetupLive] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('tc_hytro_gaming_setup_live') === 'true')
+  const [morePagesOpen, setMorePagesOpen] = useState(false)
 
-   useUcRedirect();
+  useUcRedirect();
 
-   // New bottom nav bar is always shown (replaces sidebar on all screen sizes)
+  useEffect(() => {
+    const openMore = () => setMorePagesOpen(true)
+    window.addEventListener('open-more-panel', openMore)
+    return () => window.removeEventListener('open-more-panel', openMore)
+  }, [])
+
+  // New bottom nav bar is always shown (replaces sidebar on all screen sizes)
    // Hidden on live pages and treelz pages
    const isHytroGamingSetupLivePage = location.pathname.startsWith('/broadcast/setup/gaming') && hytroSetupLive
     const showNewBottomNavBar = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed && location.pathname !== '/'
@@ -263,6 +271,9 @@ export default function AppLayout({
       {showNewBottomNavBar && (
         <BottomNavBar />
       )}
+
+      {/* Global More Pages Panel — always mounted so sidebar "More" works on every page */}
+      <MorePagesPanel isOpen={morePagesOpen} onClose={() => setMorePagesOpen(false)} />
     </div>
   )
 }

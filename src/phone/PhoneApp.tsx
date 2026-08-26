@@ -13,10 +13,12 @@ import PhonePodcast from './pages/PhonePodcast'
 import PhoneHytroGameStreams from './pages/PhoneHytroGameStreams'
 import PhoneViewerPage from './pages/PhoneViewerPage'
 import PhoneWebPage from './pages/PhoneWebPage'
+import MKeyInvitePopup from '../components/broadcast/mkey/MKeyInvitePopup'
 import PhoneCoins from './pages/PhoneCoins'
 import PhoneMaiPay from './pages/PhoneMaiPay'
 import PhoneTreelz from './pages/PhoneTreelz'
 import PhoneChat from './pages/PhoneChat'
+import PhoneFollowing from './pages/PhoneFollowing'
 import PhoneAdminDashboard from './pages/PhoneAdminDashboard'
 import PhoneSecretary from './pages/PhoneSecretary'
 import PhoneLeadOfficer from './pages/PhoneLeadOfficer'
@@ -39,6 +41,9 @@ import PhoneAdminModeration from './pages/PhoneAdminModeration'
 import PhoneAdminSettings from './pages/PhoneAdminSettings'
 import PhoneAdminMobile from './pages/PhoneAdminMobile'
 import PhonePlaceholderPage from './pages/PhonePlaceholderPage'
+import PhoneSupport from './pages/PhoneSupport'
+import PhoneSafety from './pages/PhoneSafety'
+import PhoneLegal from './pages/PhoneLegal'
 import PhoneErrorBoundary from './PhoneErrorBoundary'
 
 export default function PhoneApp() {
@@ -61,6 +66,7 @@ export default function PhoneApp() {
           <Route path="/coins" element={<PhoneCoins />} />
           <Route path="/wallet" element={<PhoneMaiPay />} />
           <Route path="/profile" element={<PhoneProfile />} />
+          <Route path="/following" element={<PhoneFollowing />} />
           <Route path="/podcast" element={<PhonePodcast />} />
           <Route path="/hytro" element={<PhoneHytroGameStreams />} />
           <Route path="/viewer" element={<PhoneViewerPage />} />
@@ -69,9 +75,9 @@ export default function PhoneApp() {
           <Route path="/utromail/:threadId" element={<PhoneChat />} />
           <Route path="/admin" element={<PhoneAdminDashboard />} />
           <Route path="/admin-mobile" element={<PhoneAdminMobile />} />
-          <Route path="/support" element={<PhonePlaceholderPage />} />
-          <Route path="/safety" element={<PhonePlaceholderPage />} />
-          <Route path="/legal" element={<PhonePlaceholderPage />} />
+          <Route path="/support" element={<PhoneSupport />} />
+          <Route path="/safety" element={<PhoneSafety />} />
+          <Route path="/legal" element={<PhoneLegal />} />
           <Route path="/phone-secretary" element={<PhoneSecretary />} />
           <Route path="/phone-lead-officer" element={<PhoneLeadOfficer />} />
           <Route path="/phone-troll-officer" element={<PhoneTrollOfficer />} />
@@ -118,6 +124,10 @@ export default function PhoneApp() {
 
           <Route path="*" element={<PhoneWebPage />} />
         </Routes>
+
+        {/* 🔑 Live MKey invitations reach a viewer wherever they are — usually
+            inside another broadcast — with a single JOIN LIVE deep link. */}
+        <MKeyInvitePopup />
       </div>
     </PhoneErrorBoundary>
   )
