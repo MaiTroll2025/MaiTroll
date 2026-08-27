@@ -58,6 +58,7 @@ export interface BattleViewProps {
   onReturnToStream?: () => void;
   onToggleCamera?: () => void;
   onToggleMic?: () => void;
+  returnPathTemplate?: string;
 }
 
 export function useBattleViewController({
@@ -69,6 +70,7 @@ export function useBattleViewController({
   onReturnToStream,
   onToggleCamera: onToggleCameraProp,
   onToggleMic: onToggleMicProp,
+  returnPathTemplate,
 }: BattleViewProps) {
   // Provide safe defaults to prevent ReferenceError if props are undefined
   const onToggleCamera = onToggleCameraProp || (() => {});
@@ -587,10 +589,17 @@ export function useBattleViewController({
       console.warn("[BattleView] Failed to broadcast return event:", e);
     }
 
+    const resolvePath = (streamId: string) => {
+      if (returnPathTemplate) {
+        return returnPathTemplate.replace(':id', streamId);
+      }
+      return `/stream/${streamId}`;
+    };
+
     if (original) {
-      navigate(`/stream/${original.streamId}`);
+      navigate(resolvePath(original.streamId));
     } else if (currentStreamId) {
-      navigate(`/stream/${currentStreamId}`);
+      navigate(resolvePath(currentStreamId));
     } else if (onReturnToStream) {
       onReturnToStream();
     } else {
@@ -608,6 +617,7 @@ export function useBattleViewController({
     navigate,
     onReturnToStream,
     disconnectBattleRoom,
+    returnPathTemplate,
   ]);
 
   // ── Channel diagnostics (dev only) ──
@@ -1063,8 +1073,8 @@ export function useBattleViewController({
     if (!battleRealtime.battle) return;
     clearDeferredError();
     setBattle((prev: any) => {
-      // PHASE 2: Avoid unnecessary re-renders — only update if battle data actually changed
       if (!prev) return battleRealtime.battle;
+      if (prev.status === 'ended') return prev;
       const keys = ['score_challenger', 'score_opponent', 'status', 'started_at', 'ends_at', 'winner_id', 'sudden_death'];
       const changed = keys.some((k) => (prev as any)[k] !== (battleRealtime.battle as any)[k]);
       return changed ? { ...prev, ...battleRealtime.battle } : prev;
@@ -1776,16 +1786,23 @@ export function useBattleViewController({
     const isChallengerHost = effectiveUserId && challengerStream?.user_id && effectiveUserId === challengerStream.user_id;
     const isOpponentHost = effectiveUserId && opponentStream?.user_id && effectiveUserId === opponentStream.user_id;
 
+    const resolvePath = (streamId: string) => {
+      if (returnPathTemplate) {
+        return returnPathTemplate.replace(':id', streamId);
+      }
+      return `/stream/${streamId}`;
+    };
+
     if ((participantInfo?.team === 'challenger' || isChallengerHost) && challengerStream?.id) {
-      navigate(`/stream/${challengerStream.id}`);
+      navigate(resolvePath(challengerStream.id));
       return;
     }
     if ((participantInfo?.team === 'opponent' || isOpponentHost) && opponentStream?.id) {
-      navigate(`/stream/${opponentStream.id}`);
+      navigate(resolvePath(opponentStream.id));
       return;
     }
     if (currentStreamId) {
-      navigate(`/stream/${currentStreamId}`);
+      navigate(resolvePath(currentStreamId));
       return;
     }
     if (onReturnToStream) {
@@ -1803,6 +1820,7 @@ export function useBattleViewController({
     currentStreamId,
     onReturnToStream,
     navigate,
+    returnPathTemplate,
   ]);
 
   // History-aware Back button: return to previous page when history is usable,

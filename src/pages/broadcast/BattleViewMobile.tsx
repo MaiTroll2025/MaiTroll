@@ -87,6 +87,8 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     preBattleCountdown,
     onToggleCamera,
     onToggleMic,
+    battleLocalVideoTrack,
+    battleLocalAudioTrack,
   } = battleView;
 
   const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -174,30 +176,18 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     const blue: MobileParticipantVM[] = [];
     const red: MobileParticipantVM[] = [];
 
-    const participantTracksMap = useMemo(() => {
-      const map = new Map<string, { videoTrack?: any; hasAudio: boolean }>();
-      for (const p of battleParticipants as any[]) {
-        const videoTrack = p.videoTrack;
-        const audioTrack = p.audioTrack;
-        const hasAudio = !!audioTrack;
-        if (videoTrack || hasAudio) {
-          map.set(p.user_id, { videoTrack, hasAudio });
-        }
-      }
-      return map;
-    }, [battleParticipants]);
-
     for (const p of battleParticipants as any[]) {
       const team = p.team === "opponent" ? "red" : "blue";
+      const isLocal = effectiveUserId && p.user_id === effectiveUserId;
+      let videoTrack = isLocal ? battleLocalVideoTrack : undefined;
+      let hasAudio = isLocal ? !!battleLocalAudioTrack : false;
 
-      const cached = participantTracksMap.get(p.user_id);
-      let videoTrack = cached?.videoTrack;
-      let hasAudio = cached?.hasAudio;
-
-      if (!videoTrack && !hasAudio) {
+      if (!isLocal) {
         const fallback = resolveTrack(p.user_id);
-        videoTrack = fallback.videoTrack;
-        hasAudio = fallback.hasAudio;
+        const fbVideo = fallback.videoTrack;
+        const fbAudio = fallback.hasAudio;
+        if (fbVideo) videoTrack = fbVideo;
+        if (fbAudio) hasAudio = true;
       }
 
       const vm: MobileParticipantVM = {
@@ -215,7 +205,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       else red.push(vm);
     }
     return { blueVMs: blue, redVMs: red };
-  }, [battleParticipants, participantContributions, remoteUsers, resolveTrack]);
+  }, [battleParticipants, participantContributions, remoteUsers, resolveTrack, effectiveUserId, battleLocalVideoTrack, battleLocalAudioTrack]);
 
   const viewers = useMemo(() => {
     return (battleParticipants as any[])

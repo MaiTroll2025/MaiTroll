@@ -10,6 +10,7 @@ interface StreamStats {
   createdAt: string;
   endedAt?: string;
   broadcasterId: string;
+  broadcasterName?: string | null;
 }
 
 interface UserStats {
@@ -25,6 +26,7 @@ export default function StreamSummary() {
   const { user, profile } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [streamStats, setStreamStats] = useState<StreamStats | null>(null);
+  const [broadcasterName, setBroadcasterName] = useState<string | null>(null);
   const [userStats, setUserStats] = useState<UserStats>({
     trollmondsSpent: 0,
     giftsReceived: 0,
@@ -67,6 +69,23 @@ export default function StreamSummary() {
         let trollmondsSpent = 0;
         let giftsReceived = 0;
         let newFollowers = 0;
+
+        let broadcasterName: string | null = null;
+
+        if (broadcasterId) {
+          const { data: broadcasterProfile } = await supabase
+            .from('user_profiles')
+            .select('username, display_name, avatar_url')
+            .eq('id', broadcasterId)
+            .maybeSingle();
+
+          broadcasterName =
+            broadcasterProfile?.display_name ||
+            broadcasterProfile?.username ||
+            null;
+        }
+
+        setBroadcasterName(broadcasterName);
 
         if (user?.id) {
           const { data: streamGiftsSpent, error: streamGiftsSpentError } = await supabase
@@ -160,6 +179,11 @@ export default function StreamSummary() {
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Broadcast Ended</h1>
+        {broadcasterName && (
+          <p className="text-zinc-300 mb-1 text-sm sm:text-base font-semibold">
+            {broadcasterName}
+          </p>
+        )}
         <p className="text-zinc-400 mb-4 sm:mb-8 text-sm sm:text-base">{displayStreamStats.title || "Great stream! Here's how it went:"}</p>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full mb-4 sm:mb-8">

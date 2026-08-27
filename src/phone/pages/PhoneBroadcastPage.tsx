@@ -1206,25 +1206,28 @@ export default function PhoneBroadcastPage() {
           }
         >
           <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black">
-            <BattleView
-              key={activeBattleId}
-              battleId={
-                stream.battle_id!
-              }
-              currentStreamId={
-                streamId || stream.id
-              }
-              viewerId={user?.id}
-              localTracks={
-                battleLocalTracks
-              }
-              remoteUsers={Array.from(
-                session.remoteParticipants.values(),
-              )}
-              userIdToLiveKitIdentity={
-                userIdToLiveKitIdentity
-              }
-              onReturnToStream={() => {
+             <BattleView
+               key={activeBattleId}
+               battleId={
+                 stream.battle_id!
+               }
+               currentStreamId={
+                 streamId || stream.id
+               }
+               viewerId={user?.id}
+               localTracks={
+                 battleLocalTracks
+               }
+               remoteUsers={Array.from(
+                 session.remoteParticipants.values(),
+               )}
+               userIdToLiveKitIdentity={
+                 userIdToLiveKitIdentity
+               }
+               returnPathTemplate={
+                 '/broadcast/:id'
+               }
+               onReturnToStream={() => {
                 setStream((previous) =>
                   previous
                     ? {
