@@ -2308,7 +2308,7 @@ const handleVisibilityChange = async () => {
                           key={route.id}
                           path={route.path}
                           element={
-                            <RequireRole roles={route.roles ?? [UserRole.ADMIN]}>
+                            <RequireRole roles={route.roles ?? ['admin']}>
                               <Component />
                             </RequireRole>
                           }
