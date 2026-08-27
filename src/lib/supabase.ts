@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+declare const __APP_VERSION__: string
+declare const __BUILD_TIME__: number
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -264,80 +267,6 @@ export interface UserProfile {
   credit_status?: string
   battle_crowns?: number
 
-  // Profile Costs
-  
-  // Age system
-  age_days?: number
-
-  // Troller fields
-  is_troller?: boolean
-
-   // Notifications
-   banner_notifications_enabled?: boolean
-   church_notifications_enabled?: boolean
-   announcements_enabled?: boolean
-   push_notifications_enabled?: boolean
-  credit_score?: number
-  is_minor?: boolean
-  is_owner?: boolean
-  is_staff?: boolean
-  is_moderator?: boolean
-  is_background_jailed?: boolean
-  troller_level?: number // 1=Basic Troller, 2=Chaos Agent, 3=Supreme Troll
-  is_troll_family?: boolean
-  is_troll_family_leader?: boolean
-  is_ceo_assistant?: boolean
-  is_noah_assistant?: boolean
-  is_noah_admin?: boolean
-  is_journalist?: boolean
-  is_news_caster?: boolean
-  is_chief_news_caster?: boolean
-  is_tcnn_news_caster?: boolean
-  is_tcnn_chief_news_caster?: boolean
-  referred_by_user_id?: string
-
-  onboarding_completed?: boolean
-
-  // OG User field
-  is_og_user?: boolean
-
-  // Language preference
-  preferred_language?: string // 'en', 'es', 'ar', 'fr', 'fil', etc.
-
-  // Onboarding / W9 fields
-  legal_full_name?: string
-  date_of_birth?: string
-  country?: string
-  address_line1?: string
-  address_line2?: string
-  city?: string
-  state_region?: string
-  postal_code?: string
-  tax_id_last4?: string
-  tax_classification?: 'individual' | 'business'
-  w9_status?: 'pending' | 'submitted' | 'verified' | 'rejected'
-
-  // Attorney fields
-  is_pro_bono?: boolean
-  attorney_fee?: number
-  attorney_cases_count?: number
-
-  // Credit Card fields
-  credit_limit?: number
-  credit_used?: number
-  credit_apr_fee_percent?: number
-  credit_status?: string
-  stmt_apr_percent?: number
-  stmt_balance?: number
-  stmt_minimum_payment?: number
-  stmt_due_date?: string
-  stmt_statement_date?: string
-  stmt_past_due?: boolean
-  stmt_late_fees_accrued?: number
-  stmt_interest_accrued?: number
-  stmt_on_time_payments?: number
-  stmt_late_payments?: number
-
   // Trollz fields
   trollz_balance?: number
   bonus_coin_balance?: number
@@ -440,8 +369,7 @@ export interface UserProfile {
    license_suspended_at?: string | null
    license_restored_at?: string | null
    homeowners_insurance_expiry?: string | null
-  car_insurance_expiry?: string | null
-  broadcast_insurance_expiry?: string | null
+   car_insurance_expiry?: string | null
 
   // License plate (display on profile)
   license_plate?: string | null
@@ -1055,7 +983,6 @@ export const hasRole = (
     profile.role === 'superadmin' ||
     profile.role === 'ceo' ||
     profile.role === 'owner' ||
-    profile.role === UserRole.OWNER ||
     profile.troll_role === UserRole.ADMIN ||
     profile.troll_role === 'superadmin' ||
     profile.troll_role === 'ceo' ||
