@@ -9,17 +9,19 @@ import {
   PhoneOff,
   Gift,
   Swords,
+  Heart,
 } from 'lucide-react'
 
 import { useAuthStore } from '@/lib/store'
 import { useStreamSeats } from '@/hooks/useStreamSeats'
 import { useLiveBroadcast } from '@/hooks/useLiveBroadcast'
+import { useStreamAudiencePresence, StreamAudienceMember } from '@/hooks/useStreamAudiencePresence'
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { useRandomBattleQueueController } from '@/hooks/useRandomBattleQueueController'
 
 import BroadcastGrid from '@/components/broadcast/BroadcastGrid'
-import BroadcastChat from '@/components/broadcast/BroadcastChat'
-import RandomBattleBanner from '@/components/broadcast/RandomBattleBanner'
+import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
+import MobileBroadcastHostSettings from '@/components/broadcast/MobileBroadcastHostSettings'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BattleView from '@/pages/broadcast/BattleView'
 import { LocalAudioTrack, LocalVideoTrack } from 'livekit-client'
@@ -49,6 +51,15 @@ export default function PhoneBroadcastPage() {
 
   const [isGiftModalOpen, setIsGiftModalOpen] =
     useState(false)
+
+  const [facingMode, setFacingMode] =
+    useState<'user' | 'environment'>('user')
+
+  const [floatingMessages, setFloatingMessages] =
+    useState<Array<{id: string, text: string, username: string, timestamp: number}>>([])
+
+  const [chatInput, setChatInput] =
+    useState('')
 
   /*
    * -------------------------------------------------------------
@@ -113,7 +124,7 @@ export default function PhoneBroadcastPage() {
   const session = useLiveBroadcast({
     streamId: streamId || '',
     isHost: true,
-    facingMode: 'user',
+    facingMode,
   })
 
   /*
@@ -128,10 +139,15 @@ export default function PhoneBroadcastPage() {
     leaveSeat,
     mySeat,
    } = useStreamSeats(
-     streamId || '',
-     user?.id,
-     broadcasterProfile,
-     stream as any,
+    streamId || '',
+    user?.id,
+    broadcasterProfile,
+    stream as any,
+   )
+
+  const { audience } = useStreamAudiencePresence(
+    streamId || '',
+    user?.id,
    )
 
   const userIdToLiveKitIdentity = useMemo(() => {
@@ -218,6 +234,39 @@ export default function PhoneBroadcastPage() {
       }
     )
 
+    channel.on(
+      'broadcast',
+      { event: 'chat_message' },
+      (payload) => {
+        if (cancelled) return
+
+        const chatData =
+          payload.payload || {}
+
+        const text =
+          chatData.text ||
+          chatData.content ||
+          ''
+
+        if (!text) return
+
+        const username =
+          chatData.username || 'Viewer'
+
+        const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+        setFloatingMessages((previous) =>
+          [{ id: msgId, text, username, timestamp: Date.now() }, ...previous].slice(0, 50),
+        )
+
+        setTimeout(() => {
+          setFloatingMessages((previous) =>
+            previous.filter((m) => m.id !== msgId),
+          )
+        }, 8000)
+      }
+    )
+
     channel.subscribe()
 
     return () => {
@@ -277,6 +326,22 @@ export default function PhoneBroadcastPage() {
     }
 
     setIsGiftModalOpen(true)
+  }
+
+  const handleLike = () => {
+    if (!user) {
+      navigate('/auth?mode=signup')
+      return
+    }
+
+    setStream((previous) =>
+      previous
+        ? {
+            ...previous,
+            total_likes: Number(previous.total_likes || 0) + 1,
+          }
+        : previous
+    )
   }
 
   /*
@@ -352,10 +417,13 @@ export default function PhoneBroadcastPage() {
    */
 
    if (shouldShowRandomBattleArena) {
-    const battleLocalTracks =
-      session.localTracks?.[0] || session.localTracks?.[1]
-        ? ([session.localTracks?.[0], session.localTracks?.[1]] as [LocalAudioTrack | undefined, LocalVideoTrack | undefined])
-        : null;
+    const battleLocalTracks = useMemo(() => {
+      const tracks = session.localTracks
+      if (!tracks) return null
+      const audio = tracks.find(t => t?.kind === 'audio') as LocalAudioTrack | undefined
+      const video = tracks.find(t => t?.kind === 'video') as LocalVideoTrack | undefined
+      return audio || video ? [audio, video] as [LocalAudioTrack | undefined, LocalVideoTrack | undefined] : null
+    }, [session.localTracks])
 
     return (
       <ErrorBoundary>
@@ -384,6 +452,21 @@ export default function PhoneBroadcastPage() {
               }}
               onToggleCamera={session.toggleCamera}
               onToggleMic={session.toggleMicrophone}
+            />
+            <PhoneGiftModal
+              isOpen={isGiftModalOpen}
+              onClose={() =>
+                setIsGiftModalOpen(false)
+              }
+              recipientId={
+                stream?.user_id || ''
+              }
+              streamId={
+                streamId || ''
+              }
+              broadcasterId={
+                stream?.user_id
+              }
             />
           </div>
         </GiftSystemProvider>
@@ -476,44 +559,121 @@ export default function PhoneBroadcastPage() {
           )}
 
           {/* =====================================================
-              RANDOM BATTLE BANNER
+              AUDIENCE TICKER + LIKE
           ====================================================== */}
 
-          <div className="pointer-events-auto absolute left-0 right-0 top-0 z-20">
-            <RandomBattleBanner
-              phase={randomBattle.phase}
-              delayUntil={
-                randomBattle.delayUntil
-              }
-              isBroadcaster
-              onStartQueue={
-                randomBattle.startQueue
-              }
-              onStopQueue={
-                randomBattle.stopQueue
-              }
-              isBusy={
-                randomBattle.isBusy
-              }
-              mobileSafe
-            />
-          </div>
+          {stream && (
+            <div className="absolute inset-x-0 top-0 z-20 flex items-start gap-2 px-3 pt-[44px] pointer-events-none">
+              <div className="pointer-events-auto flex-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-sm shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
+                <MobileAudienceTicker
+                  audience={audience}
+                  currentUserId={user?.id}
+                  hostUserId={stream?.user_id}
+                  viewerCount={stream?.viewer_count ?? 0}
+                  likes={stream?.total_likes ?? 0}
+                  maxVisible={6}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleLike}
+                className="pointer-events-auto relative mt-0.5 flex h-8 w-8 items-center justify-center rounded-full border border-pink-400/20 bg-black/45 backdrop-blur-xl transition active:scale-90"
+              >
+                <Heart size={14} className="text-pink-300" />
+                <span className="absolute -bottom-1 -right-1 rounded-full border border-pink-400/30 bg-pink-500/20 px-1 text-[8px] font-black text-pink-100">
+                  {Math.max(0, Number(stream?.total_likes ?? 0)).toLocaleString()}
+                </span>
+              </button>
+            </div>
+          )}
 
         </div>
+
+        {stream && (
+          <div className="absolute bottom-4 right-3 z-50">
+              <MobileBroadcastHostSettings
+                isMicOn={session.micEnabled}
+                isCamOn={session.cameraEnabled}
+                isLive={stream?.status === 'live'}
+                hasRgbEffect={!!stream?.has_rgb_effect}
+                isChatLocked={!!stream?.is_chat_locked}
+                unreadMessageCount={0}
+                onToggleMic={session.toggleMicrophone}
+                onToggleCamera={session.toggleCamera}
+                onFlipCamera={session.flipCamera}
+                onGift={handleGift}
+                onShare={() => {}}
+                onOpenMessage={() => {}}
+                onEndStream={endStream}
+                onOpenCoinStore={() => {}}
+                onInviteFollowers={() => {}}
+                onToggleRGB={() => {}}
+                onTextPopup={() => {}}
+              />
+          </div>
+        )}
 
         {/* =======================================================
-            CHAT
+            FLYING CHAT
         ======================================================== */}
 
-        <div className="h-[32vh] shrink-0 border-t border-white/10">
-          <BroadcastChat
-            streamId={streamId}
-            hostId={
-              stream?.user_id || ''
+        {floatingMessages.length > 0 && (
+          <div className="absolute inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col items-center gap-1 pointer-events-none px-3">
+            {floatingMessages.slice(0, 8).map((msg) => (
+              <div
+                key={msg.id}
+                className="animate-in fade-in slide-in-from-bottom-2 duration-300 pointer-events-auto"
+                style={{ animation: 'slideInFromBottom 0.3s ease-out' }}
+              >
+                <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
+                  <span className="text-[10px] font-black text-cyan-300">{msg.username}</span>
+                  <span className="text-[10px] font-bold text-white/40">: </span>
+                  <span className="text-[10px] font-semibold text-white/90">{msg.text}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Chat input */}
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            const text = chatInput.trim()
+            if (!text || !streamId) return
+
+            const username = broadcasterProfile?.username || user?.email?.split('@')?.[0] || 'Viewer'
+            const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+            setFloatingMessages(prev => [{ id: msgId, text, username, timestamp: Date.now() }, ...prev].slice(0, 50))
+            setChatInput('')
+
+            setTimeout(() => {
+              setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+            }, 8000)
+
+            try {
+              const channel = supabase.channel(`stream:${streamId}`)
+              await channel.send({
+                type: 'broadcast',
+                event: 'chat_message',
+                payload: { user_id: user?.id, username, text },
+              })
+            } catch {
+              // ignore
             }
-            isHost
+          }}
+          className="shrink-0 border-t border-white/10 bg-slate-950/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+        >
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="Say something..."
+            maxLength={280}
+            className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
           />
-        </div>
+        </form>
 
         {/* =======================================================
             PHONE CONTROL BAR
@@ -621,11 +781,10 @@ export default function PhoneBroadcastPage() {
             label="End"
             danger
           />
-
         </div>
 
         {/* =======================================================
-            GIFT MODAL / MAI BAG
+            CHAT
         ======================================================== */}
 
         <PhoneGiftModal

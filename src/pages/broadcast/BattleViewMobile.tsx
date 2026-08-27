@@ -85,6 +85,8 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     error,
     showResults,
     preBattleCountdown,
+    onToggleCamera,
+    onToggleMic,
   } = battleView;
 
   const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -221,6 +223,12 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       );
       return;
     }
+
+    if (vm.userId === effectiveUserId) {
+      void onToggleCamera();
+      return;
+    }
+
     // Open gifting for this participant (controller enforces broadcaster/self restrictions).
     const streamId = vm.team === "blue" ? challengerStream?.id : opponentStream?.id;
     if (streamId) handleGiftSelect(vm.userId, streamId);

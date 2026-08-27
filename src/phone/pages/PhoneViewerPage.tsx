@@ -61,7 +61,7 @@ import {
   GiftSystemProvider,
 } from '@/lib/hooks/useGiftSystem'
 
-import BroadcastChat from '@/components/broadcast/BroadcastChat'
+import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import CityStatusOrb from '@/components/city/CityStatusOrb'
 import SeatCityStatusOrb from '@/components/broadcast/SeatCityStatusOrb'
 import CityStatusPanel from '@/components/city/CityStatusPanel'
@@ -732,6 +732,12 @@ export default function PhoneViewerPage() {
   const [showControls, setShowControls] =
     useState(true)
 
+  const [floatingMessages, setFloatingMessages] =
+    useState<Array<{id: string, text: string, username: string, timestamp: number}>>([])
+
+  const [chatInput, setChatInput] =
+    useState('')
+
   const [viewerCount, setViewerCount] =
     useState(0)
 
@@ -1175,8 +1181,59 @@ export default function PhoneViewerPage() {
   }, [stream?.user_id])
 
   /* ========================================================================
-     SEATS
-  ======================================================================== */
+     CHAT MESSAGES (FLYING CHAT)
+   ======================================================================== */
+
+  useEffect(() => {
+    if (!streamId) return
+
+    const channel = supabase.channel(
+      `stream:${streamId}`,
+    )
+
+    channel.on(
+      'broadcast',
+      { event: 'chat_message' },
+      (payload) => {
+        const chatData =
+          payload.payload || {}
+
+        const text =
+          chatData.text ||
+          chatData.content ||
+          ''
+
+        if (!text) return
+
+        const username =
+          chatData.username || 'Viewer'
+
+        const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+        setFloatingMessages((previous) =>
+          [{ id: msgId, text, username, timestamp: Date.now() }, ...previous].slice(0, 50),
+        )
+
+        setTimeout(() => {
+          setFloatingMessages((previous) =>
+            previous.filter((m) => m.id !== msgId),
+          )
+        }, 8000)
+      },
+    )
+
+    channel.subscribe()
+
+    return () => {
+      void supabase.removeChannel(
+        channel,
+      )
+    }
+  }, [streamId])
+
+  /* ========================================================================
+      SEATS
+   ======================================================================== */
 
   const {
     seats,
@@ -2385,6 +2442,31 @@ export default function PhoneViewerPage() {
               onToggleCamera={handleCamera}
               onToggleMic={handleMic}
             />
+            <PhoneGiftModal
+              isOpen={
+                isGiftModalOpen
+              }
+              onClose={() => {
+                setIsGiftModalOpen(
+                  false,
+                )
+
+                setGiftRecipientId(
+                  null,
+                )
+              }}
+              recipientId={
+                giftRecipientId ||
+                hostId ||
+                ''
+              }
+              streamId={
+                streamId
+              }
+              broadcasterId={
+                hostId
+              }
+            />
           </div>
         </GiftSystemProvider>
       </ErrorBoundary>
@@ -2480,6 +2562,21 @@ export default function PhoneViewerPage() {
             Hidden while battle is active so the battle gets the entire
             phone viewport.
         ================================================================= */}
+
+        {stream && (
+          <div className="absolute inset-x-0 top-0 z-30 flex items-center px-3 pt-[52px] pointer-events-none">
+            <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-xl shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
+              <MobileAudienceTicker
+                audience={activeAudience}
+                currentUserId={user?.id}
+                hostUserId={stream?.user_id}
+                viewerCount={viewerCount}
+                likes={stream?.total_likes ?? 0}
+                maxVisible={7}
+              />
+            </div>
+          </div>
+        )}
 
         {showControls &&
           !battleActive && (
@@ -2593,27 +2690,6 @@ export default function PhoneViewerPage() {
                         className="text-cyan-300"
                       />
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowChat(
-                          value =>
-                            !value,
-                        )
-                      }
-                      className={cn(
-                        'grid h-6 w-6 place-items-center rounded-full border backdrop-blur-xl transition active:scale-90',
-                        showChat
-                          ? 'border-cyan-300/40 bg-cyan-500/15'
-                          : 'border-white/10 bg-black/40',
-                      )}
-                    >
-                      <MessageCircle
-                        size={10}
-                        className="text-cyan-200"
-                      />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -2661,9 +2737,7 @@ export default function PhoneViewerPage() {
             <div
               className={cn(
                 'absolute left-0 right-0 z-40 px-2 transition-all duration-300',
-                showChat
-                  ? 'bottom-[calc(31vh+76px+env(safe-area-inset-bottom))]'
-                  : 'bottom-[calc(86px+env(safe-area-inset-bottom))]',
+                'bottom-[calc(86px+env(safe-area-inset-bottom))]',
               )}
               onClick={event =>
                 event.stopPropagation()
@@ -2877,10 +2951,7 @@ export default function PhoneViewerPage() {
             <div
               className="absolute left-0 right-0 z-40 flex justify-center px-4 pb-2"
               style={{
-                bottom:
-                  showChat
-                    ? '31vh'
-                    : '86px',
+                bottom: '86px',
               }}
             >
               <div className="relative">
@@ -2927,61 +2998,65 @@ export default function PhoneViewerPage() {
           )}
 
         {/* ================================================================
-            CHAT
+            FLYING CHAT
         ================================================================= */}
 
-        {showChat &&
-          !battleActive && (
-            <div
-              className="absolute bottom-0 left-0 right-0 z-30 h-[31vh] min-h-[190px] overflow-hidden border-t border-white/[0.07] bg-[#050711]/94 shadow-[0_-25px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
-              onClick={event =>
-                event.stopPropagation()
-              }
-            >
-              <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-violet-500/70" />
-
-              <div className="flex h-11 items-center justify-between border-b border-white/[0.06] px-3">
-                <div className="flex items-center gap-2">
-                  <div className="grid h-7 w-7 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-500/10">
-                    <MessageCircle
-                      size={13}
-                      className="text-cyan-300"
-                    />
-                  </div>
+        {!battleActive && floatingMessages.length > 0 && (
+          <div className="absolute inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col items-center gap-1 pointer-events-none px-3">
+            {floatingMessages.slice(0, 8).map((msg) => (
+              <div
+                key={msg.id}
+                className="animate-in fade-in slide-in-from-bottom-2 duration-300 pointer-events-auto"
+              >
+                <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
+                  <span className="text-[10px] font-black text-cyan-300">{msg.username}</span>
+                  <span className="text-[10px] font-bold text-white/40">: </span>
+                  <span className="text-[10px] font-semibold text-white/90">{msg.text}</span>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowChat(
-                      false,
-                    )
-                  }
-                  className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-white/[0.03]"
-                >
-                  <ChevronDown
-                    size={15}
-                    className="text-white/60"
-                  />
-                </button>
               </div>
+            ))}
+          </div>
+        )}
 
-              <div className="h-[calc(100%-44px)] overflow-hidden">
-                <BroadcastChat
-                  streamId={
-                    streamId
-                  }
-                  hostId={
-                    stream.user_id ||
-                    ''
-                  }
-                  isViewer
-                  hideEmotePicker
-                  hideSendButton
-                />
-              </div>
-            </div>
-          )}
+        {/* Chat input */}
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            const text = chatInput.trim()
+            if (!text || !streamId) return
+
+            const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
+            const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+            setFloatingMessages(prev => [{ id: msgId, text, username, timestamp: Date.now() }, ...prev].slice(0, 50))
+            setChatInput('')
+
+            setTimeout(() => {
+              setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+            }, 8000)
+
+            try {
+              const channel = supabase.channel(`stream:${streamId}`)
+              await channel.send({
+                type: 'broadcast',
+                event: 'chat_message',
+                payload: { user_id: user?.id, username, text },
+              })
+            } catch {
+              // ignore
+            }
+          }}
+          className="shrink-0 border-t border-white/10 bg-[#050711]/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+        >
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="Say something..."
+            maxLength={280}
+            className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+          />
+        </form>
 
         {/* ================================================================
             BOTTOM CONTROLS
@@ -2989,12 +3064,7 @@ export default function PhoneViewerPage() {
 
         {!battleActive && (
           <div
-            className={cn(
-              'absolute bottom-0 left-0 right-0 z-50 px-3 transition-all duration-300',
-              showChat
-                ? 'translate-y-full opacity-0 pointer-events-none'
-                : 'translate-y-0 opacity-100',
-            )}
+            className="absolute bottom-0 left-0 right-0 z-50 px-3"
             onClick={event =>
               event.stopPropagation()
             }
