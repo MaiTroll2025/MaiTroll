@@ -44,6 +44,7 @@ import {
 import type {
   Stream,
 } from '@/types/broadcast'
+import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
 
 import {
   useLiveKitRoom,
@@ -58,8 +59,16 @@ import {
 } from '@/hooks/useStreamAudiencePresence'
 
 import {
+  useStreamRealtime,
+} from '@/hooks/useStreamRealtime'
+
+import {
   GiftSystemProvider,
 } from '@/lib/hooks/useGiftSystem'
+import { useTargetedGiftQueue, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
+import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
+import { hydrateGiftForOverlay } from '@/lib/gifts'
+import { getGiftVisualConfig } from '@/lib/giftVisuals'
 
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import CityStatusOrb from '@/components/city/CityStatusOrb'
@@ -715,6 +724,9 @@ export default function PhoneViewerPage() {
   const [stream, setStream] =
     useState<Stream | null>(null)
 
+  const hostId =
+    stream?.user_id || ''
+
   const [
     broadcasterProfile,
     setBroadcasterProfile,
@@ -733,7 +745,10 @@ export default function PhoneViewerPage() {
     useState(true)
 
   const [floatingMessages, setFloatingMessages] =
-    useState<Array<{id: string, text: string, username: string, timestamp: number}>>([])
+    useState<Array<{id: string, username: string, content: string, timestamp: number, isSystem?: boolean}>>([])
+
+  const [blockedUsernames, setBlockedUsernames] =
+    useState<Set<string>>(new Set())
 
   const [chatInput, setChatInput] =
     useState('')
@@ -766,6 +781,35 @@ export default function PhoneViewerPage() {
     broadcastRaidTarget,
     setBroadcastRaidTarget,
   ] = useState<string | null>(null)
+
+  const [recentGifts, setRecentGifts] =
+    useState<BroadcastGift[]>([])
+
+  const processedGiftIdsRef =
+    useRef<Set<string>>(new Set())
+
+  const recentChatKeysRef =
+    useRef<Map<string, number>>(new Map())
+
+  const processedMessageIdsRef =
+    useRef<Set<string>>(new Set())
+
+  const floatingChatChannelRef =
+    useRef<ReturnType<typeof supabase.channel> | null>(null)
+
+  const { enqueueGift } = useTargetedGiftQueue()
+
+  const streamEndedRef =
+    useRef(false)
+
+  const hasJoinedAudienceRef =
+    useRef(false)
+
+  const joiningAudienceRef =
+    useRef(false)
+
+  const currentRoomKeyRef =
+    useRef<string | null>(null)
 
   /*
    * ========================================================================
@@ -1211,7 +1255,7 @@ export default function PhoneViewerPage() {
         const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
         setFloatingMessages((previous) =>
-          [{ id: msgId, text, username, timestamp: Date.now() }, ...previous].slice(0, 50),
+          [{ id: msgId, username, content: text, timestamp: Date.now() }, ...previous].slice(0, 50),
         )
 
         setTimeout(() => {
@@ -1349,6 +1393,7 @@ export default function PhoneViewerPage() {
     room: liveKitRoom,
     setMicEnabled,
     setCameraEnabled,
+    leaveRoom: leaveLiveKitRoom,
   } = useLiveKitRoom({
     roomId,
     roomType: 'broadcast',
@@ -1372,11 +1417,220 @@ export default function PhoneViewerPage() {
     }, [remoteUsers])
 
   /* ========================================================================
-     BROADCASTER
+     STREAM REALTIME
   ======================================================================== */
 
-  const hostId =
-    stream?.user_id || ''
+  const processGiftEvent = useCallback(async (rawGift: any) => {
+    if (!rawGift) return
+
+    const animationId = String(rawGift.id || rawGift.stream_gift_id || rawGift.gift_transaction_id || '')
+    if (!animationId) return
+
+    if (processedGiftIdsRef.current.has(animationId)) return
+    processedGiftIdsRef.current.add(animationId)
+    window.setTimeout(() => processedGiftIdsRef.current.delete(animationId), 12_000)
+
+    const enrichedGiftData = await hydrateGiftForOverlay(rawGift)
+
+    const resolvedMedia =
+      enrichedGiftData?.animation_url ||
+      enrichedGiftData?.video_url ||
+      enrichedGiftData?.metadata?.animation_url ||
+      enrichedGiftData?.metadata?.video_url
+
+    if (!resolvedMedia) return
+
+    const resolvedGiftAmount = enrichedGiftData?.metadata?.coins_spent ||
+      enrichedGiftData?.coins_spent ||
+      enrichedGiftData?.amount ||
+      1
+
+    const resolvedGiftName = enrichedGiftData?.gift_name ||
+      enrichedGiftData?.name ||
+      enrichedGiftData?.metadata?.gift_name ||
+      'Gift'
+
+    const newGift: BroadcastGift = {
+      id: animationId,
+      gift_id: enrichedGiftData?.gift_id || '',
+      gift_name: resolvedGiftName,
+      gift_icon: enrichedGiftData?.gift_icon || enrichedGiftData?.metadata?.gift_icon || '🎁',
+      gift_slug: enrichedGiftData?.gift_slug || enrichedGiftData?.metadata?.gift_slug,
+      animation_key: enrichedGiftData?.animation_key || enrichedGiftData?.metadata?.animation_key,
+      animation_type: enrichedGiftData?.animation_type || enrichedGiftData?.metadata?.animation_type || 'video',
+      animation_url: resolvedMedia,
+      video_url: resolvedMedia,
+      animation_duration_ms: enrichedGiftData?.animation_duration_ms || enrichedGiftData?.metadata?.animation_duration_ms,
+      sound_url: enrichedGiftData?.sound_url || enrichedGiftData?.metadata?.sound_url,
+      is_fullscreen: enrichedGiftData?.is_fullscreen ?? enrichedGiftData?.metadata?.is_fullscreen,
+      rarity: enrichedGiftData?.rarity || enrichedGiftData?.metadata?.rarity,
+      tray_visual_url: enrichedGiftData?.tray_visual_url || enrichedGiftData?.metadata?.tray_visual_url,
+      tray_gradient: enrichedGiftData?.tray_gradient || enrichedGiftData?.metadata?.tray_gradient,
+      amount: resolvedGiftAmount,
+      quantity: enrichedGiftData?.quantity || 1,
+      sender_id: enrichedGiftData?.sender_id,
+      sender_name: enrichedGiftData?.sender_name || enrichedGiftData?.metadata?.sender_name || 'Someone',
+      receiver_id: enrichedGiftData?.receiver_id || hostId,
+      receiver_name: enrichedGiftData?.receiver_name || enrichedGiftData?.metadata?.receiver_name,
+      created_at: enrichedGiftData?.timestamp || enrichedGiftData?.created_at || new Date().toISOString(),
+    }
+
+    setRecentGifts((prev) => {
+      if (prev.some((gift) => gift.id === animationId)) return prev
+      return [...prev, newGift].slice(-20)
+    })
+
+    const streamGiftEvent: StreamGiftEvent = {
+      id: animationId,
+      stream_id: streamId || '',
+      gift_id: enrichedGiftData?.gift_id || '',
+      gift_name: resolvedGiftName,
+      sender_user_id: enrichedGiftData?.sender_id || '',
+      recipient_user_id: enrichedGiftData?.receiver_id || hostId || '',
+      recipient_type: 'broadcaster',
+      recipient_seat_index: null,
+      animation_url: resolvedMedia || null,
+      animation_url_webm: enrichedGiftData?.animation_url_webm || null,
+      animation_url_mp4: enrichedGiftData?.animation_url_mp4 || null,
+      animation_url_mov: enrichedGiftData?.animation_url_mov || null,
+      animation_type: (newGift.animation_type || 'video') as StreamGiftEvent['animation_type'],
+      animation_duration_ms: newGift.animation_duration_ms || 7000,
+      sound_url: newGift.sound_url || null,
+      created_at: newGift.created_at,
+    }
+
+    enqueueGift(streamGiftEvent)
+
+    const giftDurationMs = newGift.animation_duration_ms ?? getGiftVisualConfig(newGift).durationMs
+    window.setTimeout(() => {
+      setRecentGifts((prev) => prev.filter((gift) => gift.id !== animationId))
+    }, giftDurationMs + 150)
+  }, [streamId, hostId, enqueueGift])
+
+  useStreamRealtime(
+    streamId || '',
+    {
+      onMessage: (event) => {
+        const newRow = event?.new
+        if (!newRow) return
+        const msgId = String(newRow.id || newRow.txn_id || '')
+        if (!msgId) return
+        if (processedMessageIdsRef.current.has(msgId)) return
+        processedMessageIdsRef.current.add(msgId)
+
+        const username = newRow.user_name || newRow.username || 'Viewer'
+        const content = newRow.content || ''
+        if (!content) return
+
+        const chatKey = `${username}:${content}`
+        const now = Date.now()
+        const existingTs = recentChatKeysRef.current.get(chatKey)
+        if (existingTs !== undefined && now - existingTs < 1500) return
+        recentChatKeysRef.current.set(chatKey, now)
+
+        setFloatingMessages((prev) =>
+          [{ id: msgId, username, content, timestamp: Date.now() }, ...prev].slice(0, 50)
+        )
+
+        window.setTimeout(() => {
+          setFloatingMessages((prev) => prev.filter((m) => m.id !== msgId))
+        }, 30_000)
+      },
+      onPresenceBroadcast: (event) => {
+        if (event.table !== 'broadcast:like_sent') return
+        const likeData = event.new || event.raw?.payload || {}
+        if (likeData.user_id === user?.id) return
+        const newTotal = typeof likeData.total_likes === 'number' ? likeData.total_likes : null
+        if (newTotal === null) return
+        setStream((prev) => {
+          if (!prev) return prev
+          return { ...prev, total_likes: newTotal } as Stream
+        })
+      },
+      onGift: (event) => {
+        const rawGift = event?.new ?? event
+        if (rawGift) {
+          void processGiftEvent(rawGift)
+        }
+      },
+      onStream: (event: any) => {
+        const next = event?.new || event
+        if (!next) return
+
+        if (next.status === 'ended' || next.ended_at) {
+          if (streamEndedRef.current) return
+          streamEndedRef.current = true
+          void leaveLiveKitRoom().catch(() => {})
+          hasJoinedAudienceRef.current = false
+          joiningAudienceRef.current = false
+          currentRoomKeyRef.current = null
+          navigate(`/broadcast/summary/${streamId}`, { replace: true })
+          return
+        }
+
+        setStream((prev) => {
+          if (!prev) return next as Stream
+          return {
+            ...(prev as any),
+            ...(next as any),
+            seat_count: typeof next.seat_count !== 'undefined' ? next.seat_count : (prev as any).seat_count,
+            box_count: typeof next.box_count !== 'undefined' ? next.box_count : (prev as any).box_count,
+            are_seats_locked: typeof next.are_seats_locked !== 'undefined' ? next.are_seats_locked : (prev as any).are_seats_locked,
+            seat_price: typeof next.seat_price !== 'undefined' ? next.seat_price : (prev as any).seat_price,
+            seat_prices: typeof next.seat_prices !== 'undefined' ? next.seat_prices : (prev as any).seat_prices,
+            total_likes: typeof next.total_likes !== 'undefined' ? next.total_likes : (prev as any).total_likes,
+          } as Stream
+        })
+      },
+    } as any,
+    stream?.battle_id ?? null,
+  )
+
+  /* ========================================================================
+     FLOATING CHAT
+  ======================================================================== */
+
+  useEffect(() => {
+    if (!streamId) return
+
+    const channel = supabase.channel(`floating-chat:${streamId}`)
+    floatingChatChannelRef.current = channel
+
+    channel
+      .on('broadcast', { event: 'floating_chat' }, (payload: any) => {
+        const { username, content, isSystem } = payload.payload || {}
+        if (!username || !content) return
+        if (blockedUsernames.has(username.toLowerCase())) return
+
+        const chatKey = `${username}:${content}`
+        const now = Date.now()
+        const existingTs = recentChatKeysRef.current.get(chatKey)
+        if (existingTs !== undefined && now - existingTs < 1500) return
+        recentChatKeysRef.current.set(chatKey, now)
+
+        const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+        setFloatingMessages((prev) =>
+          [{ id: msgId, username, content, timestamp: Date.now(), isSystem }, ...prev].slice(0, 50)
+        )
+
+        window.setTimeout(() => {
+          setFloatingMessages((prev) => prev.filter((m) => m.id !== msgId))
+        }, 30_000)
+      })
+      .subscribe()
+
+    return () => {
+      floatingChatChannelRef.current = null
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [streamId, blockedUsernames])
+
+  /* ========================================================================
+     BROADCASTER
+  ======================================================================== */
 
   const hostName =
     useMemo(
@@ -3011,7 +3265,7 @@ export default function PhoneViewerPage() {
                 <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
                   <span className="text-[10px] font-black text-cyan-300">{msg.username}</span>
                   <span className="text-[10px] font-bold text-white/40">: </span>
-                  <span className="text-[10px] font-semibold text-white/90">{msg.text}</span>
+                  <span className="text-[10px] font-semibold text-white/90">{msg.content}</span>
                 </div>
               </div>
             ))}
@@ -3028,20 +3282,32 @@ export default function PhoneViewerPage() {
             const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
             const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
-            setFloatingMessages(prev => [{ id: msgId, text, username, timestamp: Date.now() }, ...prev].slice(0, 50))
+            setFloatingMessages(prev => [{ id: msgId, username, content: text, timestamp: Date.now() }, ...prev].slice(0, 50))
             setChatInput('')
 
-            setTimeout(() => {
+            window.setTimeout(() => {
               setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-            }, 8000)
+            }, 30_000)
 
             try {
-              const channel = supabase.channel(`stream:${streamId}`)
-              await channel.send({
-                type: 'broadcast',
-                event: 'chat_message',
-                payload: { user_id: user?.id, username, text },
-              })
+              const result = await sendChatThroughGate({ streamId, content: text })
+              if (!result.ok) {
+                setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                const errMsg = String(result.error || '').toLowerCase()
+                if (errMsg.includes('disabled')) {
+                  // chat disabled - silently remove optimistic message
+                }
+                return
+              }
+
+              const chatChannel = floatingChatChannelRef.current
+              if (chatChannel) {
+                chatChannel.send({
+                  type: 'broadcast',
+                  event: 'floating_chat',
+                  payload: { username, content: text },
+                }).catch(() => {})
+              }
             } catch {
               // ignore
             }

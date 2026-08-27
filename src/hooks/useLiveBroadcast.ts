@@ -74,6 +74,7 @@ export function useLiveBroadcast({
   const [isConnecting, setIsConnecting] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [remoteParticipants, setRemoteParticipants] = useState<Map<string, RemoteParticipant>>(new Map())
+  const [currentFacingMode, setCurrentFacingMode] = useState<'user' | 'environment'>(facingMode || 'user')
 
   const isGoingLiveRef = useRef(false)
   const localTrackCreatedCountRef = useRef(0)
@@ -366,21 +367,41 @@ export function useLiveBroadcast({
 
   const flipCamera = useCallback(async () => {
     const room = roomRef.current
-    const track = localTracksRef.current?.[1]
-    if (!room || !track) return
+    if (!room) return
+
+    const next = currentFacingMode === 'user' ? 'environment' : 'user'
+    const oldTrack = localTracksRef.current?.[1]
+
+    if (oldTrack) {
+      try {
+        oldTrack.stop()
+      } catch {
+        // ignore
+      }
+    }
+
     try {
-      const switched = await room.switchActiveDevice('videoinput', '')
-      if (switched) {
-        const pub = room.localParticipant.getTrackPublication(Track.Source.Camera)
-        if (pub?.track) {
-          localTracksRef.current = [localTracksRef.current?.[0] || null, pub.track as LocalVideoTrack]
-          setLocalTracks((prev) => (prev ? [prev[0], pub.track as LocalVideoTrack] : prev))
+      const fresh = await createLocalTracks({
+        audio: false,
+        video: true,
+        ...(videoPreset ? { resolution: videoPreset.resolution } : {}),
+        facingMode: next,
+      })
+
+      const video = fresh.find(t => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined
+      if (video) {
+        if (oldTrack) {
+          room.localParticipant.unpublishTrack(oldTrack).catch(() => {})
         }
+        room.localParticipant.publishTrack(video).catch(() => {})
+        localTracksRef.current = [localTracksRef.current?.[0] || null, video]
+        setLocalTracks(prev => (prev ? [prev[0], video] : prev))
+        setCurrentFacingMode(next)
       }
     } catch (err) {
       console.warn('[useLiveBroadcast] flipCamera failed', err)
     }
-  }, [])
+  }, [currentFacingMode, videoPreset])
 
   const disconnect = useCallback(() => {
     disconnectLiveKitRoom()

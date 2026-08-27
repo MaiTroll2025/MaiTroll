@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Video,
@@ -16,8 +16,14 @@ import { useAuthStore } from '@/lib/store'
 import { useStreamSeats } from '@/hooks/useStreamSeats'
 import { useLiveBroadcast } from '@/hooks/useLiveBroadcast'
 import { useStreamAudiencePresence, StreamAudienceMember } from '@/hooks/useStreamAudiencePresence'
+import { useStreamRealtime } from '@/hooks/useStreamRealtime'
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { useRandomBattleQueueController } from '@/hooks/useRandomBattleQueueController'
+import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
+import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
+import { hydrateGiftForOverlay } from '@/lib/gifts'
+import { getGiftVisualConfig } from '@/lib/giftVisuals'
+import { useTargetedGiftQueue, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
 
 import BroadcastGrid from '@/components/broadcast/BroadcastGrid'
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
@@ -28,6 +34,7 @@ import { LocalAudioTrack, LocalVideoTrack } from 'livekit-client'
 
 import { supabase } from '@/lib/supabase'
 import type { Stream } from '@/types/broadcast'
+import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
 
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import MaiBag from '@/components/mai-bag/MaiBag'
@@ -60,6 +67,26 @@ export default function PhoneBroadcastPage() {
 
   const [chatInput, setChatInput] =
     useState('')
+
+  const [recentGifts, setRecentGifts] =
+    useState<BroadcastGift[]>([])
+
+  const processedGiftIdsRef =
+    useRef<Set<string>>(new Set())
+
+  const recentChatKeysRef =
+    useRef<Map<string, number>>(new Map())
+
+  const broadcastChatMessageIdsRef =
+    useRef<Set<string>>(new Set())
+
+  const floatingChatChannelRef =
+    useRef<ReturnType<typeof supabase.channel> | null>(null)
+
+  const { enqueueGift } = useTargetedGiftQueue()
+
+  const streamEndedRef =
+    useRef(false)
 
   /*
    * -------------------------------------------------------------
@@ -150,7 +177,225 @@ export default function PhoneBroadcastPage() {
     user?.id,
    )
 
-  const userIdToLiveKitIdentity = useMemo(() => {
+  /*
+    * -------------------------------------------------------------
+    * STREAM REALTIME
+    * -------------------------------------------------------------
+    */
+
+  const processGiftEvent = useCallback(async (rawGift: any) => {
+    if (!rawGift) return
+
+    const animationId = String(rawGift.id || rawGift.stream_gift_id || rawGift.gift_transaction_id || '')
+    if (!animationId) return
+
+    if (processedGiftIdsRef.current.has(animationId)) return
+    processedGiftIdsRef.current.add(animationId)
+    window.setTimeout(() => processedGiftIdsRef.current.delete(animationId), 12_000)
+
+    const enrichedGiftData = await hydrateGiftForOverlay(rawGift)
+
+    const resolvedMedia =
+      enrichedGiftData?.animation_url ||
+      enrichedGiftData?.video_url ||
+      enrichedGiftData?.metadata?.animation_url ||
+      enrichedGiftData?.metadata?.video_url
+
+    if (!resolvedMedia) return
+
+    const resolvedGiftAmount = enrichedGiftData?.metadata?.coins_spent ||
+      enrichedGiftData?.coins_spent ||
+      enrichedGiftData?.amount ||
+      1
+
+    const resolvedGiftName = enrichedGiftData?.gift_name ||
+      enrichedGiftData?.name ||
+      enrichedGiftData?.metadata?.gift_name ||
+      'Gift'
+
+    const newGift: BroadcastGift = {
+      id: animationId,
+      gift_id: enrichedGiftData?.gift_id || '',
+      gift_name: resolvedGiftName,
+      gift_icon: enrichedGiftData?.gift_icon || enrichedGiftData?.metadata?.gift_icon || '🎁',
+      gift_slug: enrichedGiftData?.gift_slug || enrichedGiftData?.metadata?.gift_slug,
+      animation_key: enrichedGiftData?.animation_key || enrichedGiftData?.metadata?.animation_key,
+      animation_type: enrichedGiftData?.animation_type || enrichedGiftData?.metadata?.animation_type || 'video',
+      animation_url: resolvedMedia,
+      video_url: resolvedMedia,
+      animation_duration_ms: enrichedGiftData?.animation_duration_ms || enrichedGiftData?.metadata?.animation_duration_ms,
+      sound_url: enrichedGiftData?.sound_url || enrichedGiftData?.metadata?.sound_url,
+      is_fullscreen: enrichedGiftData?.is_fullscreen ?? enrichedGiftData?.metadata?.is_fullscreen,
+      rarity: enrichedGiftData?.rarity || enrichedGiftData?.metadata?.rarity,
+      tray_visual_url: enrichedGiftData?.tray_visual_url || enrichedGiftData?.metadata?.tray_visual_url,
+      tray_gradient: enrichedGiftData?.tray_gradient || enrichedGiftData?.metadata?.tray_gradient,
+      amount: resolvedGiftAmount,
+      quantity: enrichedGiftData?.quantity || 1,
+      sender_id: enrichedGiftData?.sender_id,
+      sender_name: enrichedGiftData?.sender_name || enrichedGiftData?.metadata?.sender_name || 'Someone',
+      receiver_id: enrichedGiftData?.receiver_id || stream?.user_id,
+      receiver_name: enrichedGiftData?.receiver_name || enrichedGiftData?.metadata?.receiver_name,
+      created_at: enrichedGiftData?.timestamp || enrichedGiftData?.created_at || new Date().toISOString(),
+    }
+
+    setRecentGifts((prev) => {
+      if (prev.some((gift) => gift.id === animationId)) return prev
+      return [...prev, newGift].slice(-20)
+    })
+
+    const streamGiftEvent: StreamGiftEvent = {
+      id: animationId,
+      stream_id: streamId || '',
+      gift_id: enrichedGiftData?.gift_id || '',
+      gift_name: resolvedGiftName,
+      sender_user_id: enrichedGiftData?.sender_id || '',
+      recipient_user_id: enrichedGiftData?.receiver_id || stream?.user_id || '',
+      recipient_type: 'broadcaster',
+      recipient_seat_index: null,
+      animation_url: resolvedMedia || null,
+      animation_url_webm: enrichedGiftData?.animation_url_webm || null,
+      animation_url_mp4: enrichedGiftData?.animation_url_mp4 || null,
+      animation_url_mov: enrichedGiftData?.animation_url_mov || null,
+      animation_type: (newGift.animation_type || 'video') as StreamGiftEvent['animation_type'],
+      animation_duration_ms: newGift.animation_duration_ms || 7000,
+      sound_url: newGift.sound_url || null,
+      created_at: newGift.created_at,
+    }
+
+    enqueueGift(streamGiftEvent)
+
+    const giftDurationMs = newGift.animation_duration_ms ?? getGiftVisualConfig(newGift).durationMs
+    window.setTimeout(() => {
+      setRecentGifts((prev) => prev.filter((gift) => gift.id !== animationId))
+    }, giftDurationMs + 150)
+  }, [streamId, stream?.user_id, enqueueGift])
+
+  useStreamRealtime(streamId || '', {
+    onStream: (event) => {
+      const next = event?.new
+      if (!next) return
+
+      if (next.status === 'ended' || next.ended_at) {
+        if (streamEndedRef.current) return
+        streamEndedRef.current = true
+        void (async () => {
+          try {
+            session.disconnect()
+          } catch {
+            // ignore
+          }
+          navigate(`/broadcast/summary/${streamId}`, { replace: true })
+        })()
+        return
+      }
+
+      setStream((prev) => {
+        if (!prev) return next as Stream
+        return { ...(prev as any), ...(next as any) } as Stream
+      })
+    },
+    onMessage: (event) => {
+      const newRow = event?.new
+      if (!newRow) return
+
+      const msgId = String(newRow.id || newRow.txn_id || '')
+      if (!msgId) return
+      if (broadcastChatMessageIdsRef.current.has(msgId)) return
+
+      const username = newRow.user_name || newRow.username || 'Viewer'
+      const content = newRow.content || ''
+      if (!content) return
+
+      const chatKey = `${username}:${content}`
+      const now = Date.now()
+      const existingTs = recentChatKeysRef.current.get(chatKey)
+      if (existingTs !== undefined && now - existingTs < 1500) return
+
+      broadcastChatMessageIdsRef.current.add(msgId)
+      recentChatKeysRef.current.set(chatKey, now)
+
+      const floatingMsg = {
+        id: msgId,
+        username,
+        text: content,
+        timestamp: Date.now(),
+      }
+
+      setFloatingMessages((prev) => [floatingMsg, ...prev].slice(0, 50))
+      window.setTimeout(() => {
+        setFloatingMessages((prev) => prev.filter((m) => m.id !== msgId))
+      }, 30_000)
+    },
+    onGift: (event) => {
+      if (event.table === 'stream_gifts') return
+      const rawGift = event?.new ?? event
+      if (rawGift) {
+        void processGiftEvent(rawGift)
+      }
+    },
+    onPresenceBroadcast: (event) => {
+      if (event.table !== 'broadcast:like_sent') return
+      const likeData = event.new || event.raw?.payload || {}
+      if (likeData.user_id === user?.id) return
+      const newTotal = typeof likeData.total_likes === 'number' ? likeData.total_likes : null
+      if (newTotal === null) return
+      setStream((prev) => {
+        if (!prev) return prev
+        return { ...prev, total_likes: newTotal } as Stream
+      })
+    },
+  })
+
+  /*
+    * -------------------------------------------------------------
+    * FLOATING CHAT
+    * -------------------------------------------------------------
+    */
+
+  useEffect(() => {
+    if (!streamId) return
+
+    const channel = supabase.channel(`floating-chat:${streamId}`)
+    floatingChatChannelRef.current = channel
+
+    channel
+      .on('broadcast', { event: 'floating_chat' }, (payload: any) => {
+        const { username, content, isSystem } = payload.payload || {}
+        if (!username || !content) return
+
+        const chatKey = `${username}:${content}`
+        const now = Date.now()
+        const existingTs = recentChatKeysRef.current.get(chatKey)
+        if (existingTs !== undefined && now - existingTs < 1500) return
+        recentChatKeysRef.current.set(chatKey, now)
+
+        const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+        setFloatingMessages((prev) =>
+          [{ id: msgId, text: content, username, timestamp: Date.now(), isSystem }, ...prev].slice(0, 50)
+        )
+
+        window.setTimeout(() => {
+          setFloatingMessages((prev) => prev.filter((m) => m.id !== msgId))
+        }, 30_000)
+      })
+      .subscribe()
+
+    return () => {
+      floatingChatChannelRef.current = null
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [streamId])
+
+  /*
+    * -------------------------------------------------------------
+    * SEATS
+    * -------------------------------------------------------------
+   */
+
+   const userIdToLiveKitIdentity = useMemo(() => {
     const mapping: Record<string, string> = {};
     if (!seats) return mapping;
     Object.entries(seats).forEach(([seatIndex, seat]) => {
@@ -168,9 +413,17 @@ export default function PhoneBroadcastPage() {
     stream?.battle_mode === 'random_queue' &&
     !!stream?.battle_id &&
     stream?.is_battle === true &&
-    (stream?.battle_status === 'ready' || stream?.battle_status === 'starting' || stream?.battle_status === 'active');
+    (stream?.battle_status === 'ready' || stream?.battle_status === 'starting' || stream?.battle_status === 'active')
 
-  const activeBattleId = shouldShowRandomBattleArena ? stream?.battle_id ?? null : null;
+  const activeBattleId = shouldShowRandomBattleArena ? stream?.battle_id ?? null : null
+
+  const battleLocalTracks = useMemo(() => {
+    const tracks = session.localTracks
+    if (!tracks) return null
+    const audio = tracks.find(t => t?.kind === 'audio') as LocalAudioTrack | undefined
+    const video = tracks.find(t => t?.kind === 'video') as LocalVideoTrack | undefined
+    return audio || video ? [audio, video] as [LocalAudioTrack | undefined, LocalVideoTrack | undefined] : null
+  }, [session.localTracks])
 
   /*
    * -------------------------------------------------------------
@@ -328,11 +581,13 @@ export default function PhoneBroadcastPage() {
     setIsGiftModalOpen(true)
   }
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!user) {
       navigate('/auth?mode=signup')
       return
     }
+
+    if (!streamId) return
 
     setStream((previous) =>
       previous
@@ -342,6 +597,40 @@ export default function PhoneBroadcastPage() {
           }
         : previous
     )
+
+    try {
+      const { data } = await supabase.rpc('increment_stream_likes', {
+        p_stream_id: streamId,
+        p_like_count: 1,
+      })
+
+      if (typeof data === 'number') {
+        setStream((previous) =>
+          previous
+            ? {
+                ...previous,
+                total_likes: data,
+              }
+            : previous
+        )
+
+        try {
+          void sendStreamBroadcast(
+            streamId,
+            'like_sent',
+            {
+              user_id: user?.id,
+              stream_id: streamId,
+              total_likes: data,
+            },
+          )
+        } catch {
+          // ignore
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
 
   /*
@@ -351,6 +640,8 @@ export default function PhoneBroadcastPage() {
    */
 
   const endStream = async () => {
+    streamEndedRef.current = true
+
     if (
       stream?.is_battle &&
       stream?.battle_id &&
@@ -361,9 +652,9 @@ export default function PhoneBroadcastPage() {
         await supabase.rpc('forfeit_random_battle', {
           p_stream_id: stream.id,
           p_broadcaster_id: user.id,
-        });
+        })
       } catch (forfeitErr) {
-        console.warn('[PhoneBroadcastPage] forfeit_random_battle failed:', forfeitErr);
+        console.warn('[PhoneBroadcastPage] forfeit_random_battle failed:', forfeitErr)
       }
     }
 
@@ -380,7 +671,7 @@ export default function PhoneBroadcastPage() {
 
     session.disconnect()
 
-    window.history.back()
+    navigate(`/broadcast/summary/${streamId}`, { replace: true })
   }
 
   /*
@@ -590,7 +881,7 @@ export default function PhoneBroadcastPage() {
         </div>
 
         {stream && (
-          <div className="absolute bottom-4 right-3 z-50">
+          <div className="absolute bottom-24 right-3 z-50">
               <MobileBroadcastHostSettings
                 isMicOn={session.micEnabled}
                 isCamOn={session.cameraEnabled}
@@ -648,17 +939,29 @@ export default function PhoneBroadcastPage() {
             setFloatingMessages(prev => [{ id: msgId, text, username, timestamp: Date.now() }, ...prev].slice(0, 50))
             setChatInput('')
 
-            setTimeout(() => {
+            window.setTimeout(() => {
               setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-            }, 8000)
+            }, 30_000)
 
             try {
-              const channel = supabase.channel(`stream:${streamId}`)
-              await channel.send({
-                type: 'broadcast',
-                event: 'chat_message',
-                payload: { user_id: user?.id, username, text },
-              })
+              const result = await sendChatThroughGate({ streamId, content: text })
+              if (!result.ok) {
+                setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                const errMsg = String(result.error || '').toLowerCase()
+                if (errMsg.includes('disabled')) {
+                  // chat disabled - silently remove optimistic message
+                }
+                return
+              }
+
+              const chatChannel = floatingChatChannelRef.current
+              if (chatChannel) {
+                chatChannel.send({
+                  type: 'broadcast',
+                  event: 'floating_chat',
+                  payload: { username, content: text },
+                }).catch(() => {})
+              }
             } catch {
               // ignore
             }
