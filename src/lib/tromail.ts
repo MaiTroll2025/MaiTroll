@@ -2,7 +2,6 @@
 
 import { supabase } from './supabase'
 import { createNotification } from './notifications'
-import { UserRole } from './supabase'
 import { 
   TromailContract, 
   TromailContractTemplate, 
@@ -73,39 +72,6 @@ export interface TromailCalendarEventRecipient {
   recipient_role: string
   created_at: string
 }
-
-// Approved roles for Tromail access
-export const TRMAIL_APPROVED_ROLES = [
-  'auctioneer',
-  'prosecutor',
-  'attorney',
-  'tcnn_news_caster',
-  'secretary',
-  'tcnn_chief_news_caster',
-  'troll_officer',
-  'journalist',
-  'lead_troll_officer',
-  'troller',
-  'agency_hr_manager',
-  'agency_hr',
-  'agency_leader',
-  'troll_family_leader',
-  'ceo_assistant',
-  'noah_assistant',
-  'admin',
-  'noah_admin',
-  'ceo',
-  UserRole.ADMIN,
-  UserRole.SECRETARY,
-  UserRole.AGENCY_HR_MANAGER,
-  UserRole.HR_ADMIN,
-  UserRole.LEAD_TROLL_OFFICER,
-  UserRole.TROLL_OFFICER,
-  'ceo',
-  'lead_officer',
-  'troll_officer',
-  'officer'
-]
 
 // Check if user can access Tromail
 export const canAccessTromail = (profile: any): boolean => {
