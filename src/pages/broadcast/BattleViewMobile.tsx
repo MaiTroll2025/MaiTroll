@@ -173,9 +173,33 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
   const { blueVMs, redVMs } = useMemo(() => {
     const blue: MobileParticipantVM[] = [];
     const red: MobileParticipantVM[] = [];
+
+    const participantTracksMap = useMemo(() => {
+      const map = new Map<string, { videoTrack?: any; hasAudio: boolean }>();
+      for (const p of battleParticipants as any[]) {
+        const videoTrack = p.videoTrack;
+        const audioTrack = p.audioTrack;
+        const hasAudio = !!audioTrack;
+        if (videoTrack || hasAudio) {
+          map.set(p.user_id, { videoTrack, hasAudio });
+        }
+      }
+      return map;
+    }, [battleParticipants]);
+
     for (const p of battleParticipants as any[]) {
       const team = p.team === "opponent" ? "red" : "blue";
-      const { videoTrack, hasAudio } = resolveTrack(p.user_id);
+
+      const cached = participantTracksMap.get(p.user_id);
+      let videoTrack = cached?.videoTrack;
+      let hasAudio = cached?.hasAudio;
+
+      if (!videoTrack && !hasAudio) {
+        const fallback = resolveTrack(p.user_id);
+        videoTrack = fallback.videoTrack;
+        hasAudio = fallback.hasAudio;
+      }
+
       const vm: MobileParticipantVM = {
         userId: p.user_id,
         username: p.profile?.username || p.username || "User",
@@ -191,7 +215,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       else red.push(vm);
     }
     return { blueVMs: blue, redVMs: red };
-  }, [battleParticipants, participantContributions, remoteUsers]);
+  }, [battleParticipants, participantContributions, remoteUsers, resolveTrack]);
 
   const viewers = useMemo(() => {
     return (battleParticipants as any[])

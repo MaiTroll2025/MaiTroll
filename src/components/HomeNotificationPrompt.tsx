@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, X } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { doesUserProfileExist, supabase } from '../lib/supabase';
+import { getVapidPublicKey } from '../lib/vapid';
 
 const HomeNotificationPrompt: React.FC = () => {
   const { user } = useAuthStore();
@@ -100,7 +101,7 @@ const HomeNotificationPrompt: React.FC = () => {
         return;
       }
 
-      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      const vapidPublicKey = getVapidPublicKey();
       if (!vapidPublicKey) {
         alert('VAPID public key is missing. Please contact support.');
         setLoading(false);

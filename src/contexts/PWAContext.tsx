@@ -10,6 +10,7 @@ import React, {
 import { isStandalone, isIos, isSafari } from '../pwa/install';
 import { useInstallPrompt } from '../pwa/useInstallPrompt';
 import { doesUserProfileExist, supabase } from '../lib/supabase';
+import { getVapidPublicKey } from '../lib/vapid';
 
 const env = import.meta.env;
 
@@ -585,7 +586,7 @@ const isLocalhost =
       }
 
       console.log('[PWA] Service worker ready:', !!registration);
-      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      const vapidPublicKey = getVapidPublicKey();
 
       if (!vapidPublicKey) {
         console.warn('[PWA] VAPID public key not configured');

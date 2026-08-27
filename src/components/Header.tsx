@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
 import { doesUserProfileExist, supabase } from '../lib/supabase'
+import { getVapidPublicKey } from '../lib/vapid';
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 
@@ -84,7 +85,7 @@ const Header = () => {
         return
       }
 
-      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
+      const vapidPublicKey = getVapidPublicKey();
 
       if (!vapidPublicKey) {
         console.error('[PushDebug] Missing VITE_VAPID_PUBLIC_KEY')
