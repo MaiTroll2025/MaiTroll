@@ -7,7 +7,6 @@ const PUBLIC_ROUTES = new Set([
   '/', '/home', '/auth', '/login', '/support', '/legal', '/jobs', '/careers',
   '/auctions', '/troll-court', '/court', '/hytrogaming', '/podcast', '/safety',
   '/profile', '/search', '/state-rankings', '/verified-badge',
-  '/about', '/contact', '/faq', '/privacy', '/terms', '/reset-password',
 ])
 
 function isPublicRoute(pathname: string): boolean {

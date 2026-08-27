@@ -14,6 +14,7 @@ import { useJailMode } from '../hooks/useJailMode'
  * pages, regular user => only public/user pages, etc.
  */
 export interface PhoneRoleAccess {
+  [x: string]: boolean
   role: string
   trollRole: string
   isAdmin: boolean

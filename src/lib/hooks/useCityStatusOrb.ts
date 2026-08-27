@@ -23,6 +23,7 @@ export interface CityStatusOrbData {
   xp: number;
   next_level_xp: number | null;
   hype_coins: number;
+  blockers: number;
   license_plate: string | null;
   license_status: string | null;
   drivers_license_expiry: string | null;
@@ -105,6 +106,7 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
           display_name,
           avatar_url,
           hype_coins,
+          blockers,
           license_plate,
           license_status,
           drivers_license_expiry,
@@ -122,21 +124,33 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
       if (profileError) throw profileError;
 
       // Use user_stats as authoritative source for level/XP
-      const authoritativeLevel = statsData?.level ?? profileData?.level ?? 1;
-      const authoritativeXp = statsData?.xp_total ?? profileData?.xp ?? 0;
-      const authoritativeNextXp = statsData?.xp_to_next_level ?? profileData?.next_level_xp ?? null;
+      const authoritativeLevel = statsData?.level ?? (profileData as any)?.level ?? 1;
+      const authoritativeXp = statsData?.xp_total ?? (profileData as any)?.xp ?? 0;
+      const authoritativeNextXp = statsData?.xp_to_next_level ?? (profileData as any)?.next_level_xp ?? null;
 
-      // Check for recent raids on this user's house
+      // Check for recent raids on this user's house or broadcast
       let recentlyRaided = false;
       if (profileData?.house_id) {
-        const { data: recentRaid } = await supabase
+        const { data: recentHouseRaid } = await supabase
           .from('house_raids')
           .select('id')
           .eq('house_id', profileData.house_id)
           .gte('raided_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
           .limit(1)
           .maybeSingle();
-        recentlyRaided = !!recentRaid;
+        recentlyRaided = !!recentHouseRaid;
+      }
+
+      if (!recentlyRaided && options.isBroadcaster) {
+        const { data: recentBroadcastRaid } = await supabase
+          .from('broadcast_raids')
+          .select('id')
+          .eq('broadcaster_id', options.userId)
+          .eq('repaired', false)
+          .gte('raided_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+          .limit(1)
+          .maybeSingle();
+        recentlyRaided = !!recentBroadcastRaid;
       }
 
       // Fetch broadcast league stats (current season)
@@ -165,6 +179,7 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         xp: authoritativeXp,
         next_level_xp: authoritativeNextXp,
         hype_coins: profileData?.hype_coins || 0,
+        blockers: profileData?.blockers || 0,
         license_plate: profileData?.license_plate || null,
         license_status: profileData?.license_status || null,
         drivers_license_expiry: profileData?.drivers_license_expiry || null,
@@ -269,6 +284,43 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
     };
   }, [options.userId, profile?.house_id, fetchStatus]);
 
+  // Realtime subscription for broadcast raids
+  useEffect(() => {
+    if (!options.userId || !options.isBroadcaster) return;
+
+    const channel = supabase
+      .channel(`city_status_orb_broadcast_raids_${options.userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'broadcast_raids',
+          filter: `broadcaster_id=eq.${options.userId}`,
+        },
+        () => {
+          fetchStatus();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'broadcast_raids',
+          filter: `broadcaster_id=eq.${options.userId}`,
+        },
+        () => {
+          fetchStatus();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [options.userId, options.isBroadcaster, fetchStatus]);
+
   // Determine role-based permissions
   const currentUserId = user?.id;
   const isSelf = currentUserId === options.userId;
@@ -282,14 +334,13 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
   // Can view license/plate/insurance details
   const canCheckLicense = isBroadcasterContext || isBroadOfficer || isAdmin || isCEO || isOfficer;
 
-  // Can raid: anyone in broadcast (viewer, seat holder, broadcaster) if not self and target has house
+  // Can raid: anyone in broadcast (viewer, seat holder, broadcaster) if not self and target has house or is broadcaster
   const canRaid =
     !isSelf &&
-    data?.house_id != null &&
-    (isSeatHolder || isBroadcasterContext || options.broadcasterId != null);
+    (data?.house_id != null || isBroadcasterContext);
 
-  // Can repair: only self/owner
-  const canRepair = isSelf;
+  // Can repair: anyone (self or other viewers) when recently raided
+  const canRepair = !!data?.recentlyRaided && (isSelf || isBroadcasterContext || isSeatHolder || options.broadcasterId != null);
 
   // Can use enforcement: BroadOfficer, Admin, CEO, officer roles
   const canEnforce = isBroadOfficer || isAdmin || isCEO || isOfficer;

@@ -94,7 +94,11 @@ export function GiftSystemProvider({
   // any hooks run in the outer component, so it never affects hook order.
   if (!streamId) {
     if (import.meta.env.DEV) console.debug('[GiftSystemProvider] Skipping - no streamId provided')
-    return React.createElement(React.Fragment, {}, children)
+    return React.createElement(
+      GiftSystemContext.Provider,
+      { value: { sendGift: async () => false, isSending: false } },
+      children
+    )
   }
 
   return React.createElement(GiftSystemProviderInner, { streamId, defaultReceiverId }, children)

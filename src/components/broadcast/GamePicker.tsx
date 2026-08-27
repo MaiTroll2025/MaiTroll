@@ -3,24 +3,14 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Gamepad2, Swords, X, Dice5 } from 'lucide-react'
+import { Gamepad2, X, Dice5 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface GamePickerProps {
-  onSelectGame: (game: 'troll_toe' | 'troll_us' | 'trollopoly') => void
+  onSelectGame: (game: 'troll_us' | 'trollopoly') => void
   activeGame: string | null
   onClose: () => void
   category?: string
-}
-
-const TROLL_TOE_GAME = {
-  id: 'troll_toe' as const,
-  name: 'Troll Toe',
-  description: 'Classic tic-tac-toe with teams, fog & live video',
-  icon: Swords,
-  color: 'from-purple-600 to-pink-600',
-  borderColor: 'border-purple-500/30',
-  glowColor: 'shadow-purple-500/20',
 }
 
 const TROLL_US_GAME = {
@@ -43,8 +33,8 @@ const TROLLOPOLY_GAME = {
   glowColor: 'shadow-amber-500/20',
 }
 
-const GENERAL_CHAT_GAMES = [TROLL_TOE_GAME, TROLL_US_GAME, TROLLOPOLY_GAME]
-const OTHER_GAMES = [TROLL_TOE_GAME, TROLL_US_GAME]
+const GENERAL_CHAT_GAMES = [TROLL_US_GAME, TROLLOPOLY_GAME]
+const OTHER_GAMES = [TROLL_US_GAME]
 
 export default function GamePicker({ onSelectGame, activeGame, onClose, category }: GamePickerProps) {
   const GAMES = category === 'general' ? GENERAL_CHAT_GAMES : OTHER_GAMES

@@ -87,6 +87,7 @@ import CityStatusOrb from '../../components/city/CityStatusOrb'
 import { useCityStatusOrb } from '../../lib/hooks/useCityStatusOrb'
 import SeatCityStatusOrb from '../../components/broadcast/SeatCityStatusOrb'
 import RaidPanel from '../../components/city/RaidPanel'
+import RaidModal from '../../components/city/RaidModal'
 import { useGhostMode } from '../../hooks/useGhostMode'
 import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
 import { sendChatThroughGate } from '../../lib/sendChatThroughGate'
@@ -102,6 +103,7 @@ import { useSeatFocus, type SeatInfo } from '@/hooks/useSeatFocus'
 // Import theme constants
 import { MaiTrollBroadcastTheme } from '../../styles/broadcastTheme'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
+import MaiBag from '../../components/mai-bag/MaiBag'
 
 const theme = MaiTrollBroadcastTheme
 
@@ -1062,6 +1064,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
   const [showViewerAction, setShowViewerAction] = useState(false)
   const [selectedSeatUserId, setSelectedSeatUserId] = useState<string | null>(null)
   const [raidTarget, setRaidTarget] = useState<{ userId: string; houseId: string } | null>(null)
+  const [broadcastRaidTarget, setBroadcastRaidTarget] = useState<string | null>(null)
   const [viewerError, setViewerError] = useState<string | null>(null)
   const [retryAdmissionKey, setRetryAdmissionKey] = useState(0)
   const lastPermissionErrorRef = useRef<number>(0)
@@ -3788,7 +3791,19 @@ useStreamRealtime(
 
             <GiftVideoOverlay gifts={recentGifts} onFinish={handleRemoveGiftOverlay} />
 
-              {/* Feed the Troll — persistent companion for the broadcaster's troll */}
+            {streamId && (
+              <div className="absolute left-3 top-3 z-40 hidden md:block">
+                <MaiBag streamId={streamId} compact />
+              </div>
+            )}
+
+            {streamId && isMobileViewer && (
+              <div className="absolute left-2 top-12 z-40 md:hidden">
+                <MaiBag streamId={streamId} compact />
+              </div>
+            )}
+
+            {/* Feed the Troll — persistent companion for the broadcaster's troll */}
               {stream?.user_id && (
                 <FeedTheTroll
                   broadcasterId={stream.user_id}
@@ -4101,7 +4116,7 @@ useStreamRealtime(
                   {broadcasterCityStatus.data && (
                     <CityStatusOrb
                       data={broadcasterCityStatus.data}
-                      permissions={{ isSelf: false, canCheckLicense: false, canRaid: !!broadcasterCityStatus.data?.house_id, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
+                      permissions={{ isSelf: false, canCheckLicense: false, canRaid: true, canRepair: true, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
                       compact
                       onHouseClick={() => {
                         const targetUser = broadcasterCityStatus.data;
@@ -4109,6 +4124,12 @@ useStreamRealtime(
                           setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
                         } else {
                           setSelectedSeatUserId(hostId);
+                        }
+                      }}
+                      onRaid={() => {
+                        const targetUser = broadcasterCityStatus.data;
+                        if (targetUser?.id && targetUser.id !== user?.id) {
+                          setBroadcastRaidTarget(targetUser.id);
                         }
                       }}
                     />
@@ -4191,22 +4212,28 @@ useStreamRealtime(
                   <div className="absolute left-5 top-5 z-20 flex flex-col gap-2">
                     {/* City Status Orb — compact inline (clickable) */}
                      {broadcasterCityStatus.data && (
-                       <div className="pointer-events-auto">
-                         <CityStatusOrb
-                           data={broadcasterCityStatus.data}
-                           permissions={{ isSelf: false, canCheckLicense: false, canRaid: !!broadcasterCityStatus.data?.house_id, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
-                           compact
-                           onHouseClick={() => {
-                             const targetUser = broadcasterCityStatus.data;
-                             if (targetUser?.house_id && targetUser.id !== user?.id) {
-                               setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
-                             } else {
-                               setSelectedSeatUserId(hostId);
-                             }
-                           }}
-                         />
-                       </div>
-                     )}
+                        <div className="pointer-events-auto">
+                          <CityStatusOrb
+                            data={broadcasterCityStatus.data}
+                            permissions={{ isSelf: false, canCheckLicense: false, canRaid: true, canRepair: true, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
+                            compact
+                            onHouseClick={() => {
+                              const targetUser = broadcasterCityStatus.data;
+                              if (targetUser?.house_id && targetUser.id !== user?.id) {
+                                setRaidTarget({ userId: targetUser.id, houseId: targetUser.house_id });
+                              } else {
+                                setSelectedSeatUserId(hostId);
+                              }
+                            }}
+                            onRaid={() => {
+                              const targetUser = broadcasterCityStatus.data;
+                              if (targetUser?.id && targetUser.id !== user?.id) {
+                                setBroadcastRaidTarget(targetUser.id);
+                              }
+                            }}
+                          />
+                        </div>
+                      )}
                   </div>
 
                   <div className="absolute right-5 top-5 z-20 flex items-center gap-2">
@@ -5749,6 +5776,22 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
                 targetHouseId={raidTarget.houseId}
                 isOpen={!!raidTarget}
                 onClose={() => setRaidTarget(null)}
+                onRaidComplete={() => {
+                  broadcasterCityStatus.refetch?.();
+                }}
+              />
+            )}
+
+            {/* Broadcast Raid Modal */}
+            {broadcastRaidTarget && broadcasterCityStatus.data && (
+              <RaidModal
+                isOpen={!!broadcastRaidTarget}
+                onClose={() => setBroadcastRaidTarget(null)}
+                targetUserId={broadcastRaidTarget}
+                targetUsername={broadcasterCityStatus.data.username}
+                targetAvatarUrl={broadcasterCityStatus.data.avatar_url}
+                streamId={streamId}
+                mode={broadcasterCityStatus.data.recentlyRaided ? 'repair' : 'raid'}
                 onRaidComplete={() => {
                   broadcasterCityStatus.refetch?.();
                 }}

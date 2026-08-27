@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stream } from '../../types/broadcast';
 import { supabase } from '../../lib/supabase';
-import { Plus, Minus, LayoutGrid, Settings2, Coins, Lock, Unlock, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Sparkles, Palette, Gift, UserX, ImageIcon, LogOut, ChevronDown, ChevronUp, Share2, Package, Swords, Star, GripVertical, X, MoreHorizontal, Sliders, Shield, Gamepad2, PlusCircle, Users, Bell, Crown } from 'lucide-react';
+import { Plus, Minus, LayoutGrid, Settings2, Coins, Lock, Unlock, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Sparkles, Palette, Gift, UserX, ImageIcon, LogOut, ChevronDown, ChevronUp, Share2, Package, Swords, Star, GripVertical, X, MoreHorizontal,   Sliders, Shield, PlusCircle, Users, Bell, Crown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
 import { getCategoryConfig } from '../../config/broadcastCategories';
@@ -48,10 +48,6 @@ interface BroadcastControlsProps {
   onStartBattle?: () => void;
   isBattleActive?: boolean;
   isLive?: boolean;
-  onTrollToeController?: () => void;
-  trollToeActive?: boolean;
-  onGameSelect?: (game: 'troll_toe' | 'troll_us') => void;
-  activeGame?: string | null;
   activeViewers?: Array<{
     user_id: string;
     username: string;
@@ -99,10 +95,6 @@ function BroadcastControls({
   onStartBattle,
   isBattleActive = false,
   isLive = false,
-  onTrollToeController,
-  trollToeActive = false,
-  onGameSelect,
-  activeGame,
   activeViewers,
   selectedBattleTheme,
   onBattleThemeChange,
@@ -766,20 +758,6 @@ function BroadcastControls({
           />
         )}
 
-        {/* Games Controller - Troll Toe */}
-        {onTrollToeController && (
-          <OrbBtn
-            active={trollToeActive}
-            onClick={onTrollToeController}
-            icon={Gamepad2}
-            label="Games"
-            glow={undefined}
-            size="sm"
-            disabled={false}
-            tooltip="Open Game Controller"
-          />
-        )}
-
         {/* End Stream (host) - center large orb */}
         {isHost && (
           <OrbBtn
@@ -1102,8 +1080,6 @@ function areBroadcastControlsPropsEqual(prev: BroadcastControlsProps, next: Broa
     prev.boxCount === next.boxCount &&
     prev.isBattleActive === next.isBattleActive &&
     prev.isLive === next.isLive &&
-    prev.trollToeActive === next.trollToeActive &&
-    prev.activeGame === next.activeGame &&
     prev.selectedBattleTheme === next.selectedBattleTheme &&
     prevAudioTrack === nextAudioTrack &&
     prevVideoTrack === nextVideoTrack &&
@@ -1119,8 +1095,6 @@ function areBroadcastControlsPropsEqual(prev: BroadcastControlsProps, next: Broa
     prev.onPinProduct === next.onPinProduct &&
     prev.onRefreshStream === next.onRefreshStream &&
     prev.onStartBattle === next.onStartBattle &&
-    prev.onTrollToeController === next.onTrollToeController &&
-    prev.onGameSelect === next.onGameSelect &&
     prev.onBattleThemeChange === next.onBattleThemeChange &&
     prev.onOpenStagePass === next.onOpenStagePass &&
     prev.onInviteFollowers === next.onInviteFollowers

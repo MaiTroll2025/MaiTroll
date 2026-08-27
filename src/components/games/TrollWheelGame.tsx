@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coins, Gem, RotateCw, Ghost, Star, Package, Zap, Shield, Sparkles } from 'lucide-react';
+import { Coins, Gem, RotateCw, Ghost, Star, Package, Zap, Shield, ShieldCheck, Sparkles } from 'lucide-react';
 import { BROADCAST_ABILITIES, getAbilityById, getRarityColor, getRarityGlow, AbilityId } from '@/types/broadcastAbilities';
 
 // Sound effects using Web Audio API for generating sounds
@@ -109,7 +109,7 @@ interface TrollWheelProps {
 
 interface WheelReward {
   id: number;
-  type: 'trollmonds' | 'bankrupt' | 'trolled' | 'free_perk' | 'free_jail' | 'free_entrance' | 'ghost_mode' | 'featured_broadcaster' | 'broadcast_ability';
+  type: 'trollmonds' | 'bankrupt' | 'trolled' | 'free_perk' | 'free_jail' | 'free_entrance' | 'ghost_mode' | 'featured_broadcaster' | 'broadcast_ability' | 'blockers';
   coins: number;
   label: string;
   description: string;
@@ -140,6 +140,7 @@ const WHEEL_REWARDS: WheelReward[] = [
   // Special rewards
   { id: 14, type: 'bankrupt', coins: 0, label: 'BANKRUPT', description: 'Lose ALL your Trollmonds!', rarity: 'special', color: '#1a1a1a', glowColor: '#000000', icon: '💀' },
   { id: 15, type: 'trolled', coins: 0, label: 'TROLLED!', description: 'No spins for 24 hours!', rarity: 'special', color: '#dc2626', glowColor: '#ef4444', icon: '🤡' },
+  { id: 21, type: 'blockers', coins: 0, label: '+5 BLOCKERS', description: '5 Property Blockers!', rarity: 'rare', color: '#06b6d4', glowColor: '#22d3ee', icon: '🛡️' },
 ];
 
 // Additional special items that can be won (weighted lower)
@@ -866,10 +867,21 @@ export default function TrollWheelGame({
         message = '✨ FREE PERK! Visit Coin Store!';
         await addToInventory('free_perk', 'Free Perk', 'Get any perk for free');
        } else if (result.type === 'free_jail') {
-         playWinSound();
-         message = '🚪 JAIL FREE! Get out of jail free card!';
-         await addToInventory('free_jail', 'Jail Free Card', 'Get out of jail free card');
-       }
+          playWinSound();
+          message = '🚪 JAIL FREE! Get out of jail free card!';
+          await addToInventory('free_jail', 'Jail Free Card', 'Get out of jail free card');
+        } else if (result.type === 'blockers') {
+          playWinSound();
+          const { data: blockerData, error: blockerError } = await supabase.rpc('grant_daily_blockers', {
+            p_user_id: profile.id,
+          });
+          if (blockerError) {
+            console.warn('[TrollWheel] Failed to grant blockers:', blockerError);
+          } else {
+            message = `🛡️ BLOCKERS! +${blockerData?.blockers_granted || 5} Property Blockers!`;
+            useAuthStore.getState().refreshProfile();
+          }
+        }
       
       // Show toast based on result type
       if (result.type === 'bankrupt' || result.type === 'trolled') {

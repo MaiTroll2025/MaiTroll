@@ -198,20 +198,23 @@ SET search_path = public
 AS $$
 DECLARE
   v_buyer_username TEXT;
+  v_order_id TEXT;
 BEGIN
   SELECT COALESCE(NULLIF(username, ''), 'User') INTO v_buyer_username
   FROM public.user_profiles WHERE id = NEW.user_id;
+
+  v_order_id := NEW.metadata->>'order_id';
 
   PERFORM public.notify_staff(
     'coin_purchase_admin_alert',
     'Coin Purchase Alert',
     COALESCE(v_buyer_username, 'User') || ' purchased coins. Amount: ' || NEW.amount ||
-    '. Order: ' || COALESCE(NEW.order_id, 'N/A'),
+    '. Order: ' || COALESCE(v_order_id, 'N/A'),
     jsonb_build_object(
       'user_id', NEW.user_id,
       'username', v_buyer_username,
       'amount', NEW.amount,
-      'order_id', NEW.order_id,
+      'order_id', v_order_id,
       'route', '/admin/payments'
     )
   );

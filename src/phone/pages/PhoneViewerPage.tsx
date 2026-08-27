@@ -1,6 +1,3185 @@
-import { lazyWithRetry } from '@/utils/lazyImport'
-const ViewerPage = lazyWithRetry(() => import('../../pages/broadcast/ViewerPage'))
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  ArrowLeft,
+  ChevronDown,
+  Gift,
+  Heart,
+  MessageCircle,
+  Mic,
+  MicOff,
+  Plus,
+  Radio,
+  Share2,
+  Users,
+  Video,
+  VideoOff,
+  X,
+} from 'lucide-react'
+
+import {
+  RoomEvent,
+  Track,
+  type LocalAudioTrack,
+  type LocalVideoTrack,
+  type RemoteTrackPublication,
+  type RemoteVideoTrack,
+} from 'livekit-client'
+
+import {
+  useAuthStore,
+} from '@/lib/store'
+
+import {
+  supabase,
+} from '@/lib/supabase'
+
+import type {
+  Stream,
+} from '@/types/broadcast'
+
+import {
+  useLiveKitRoom,
+} from '@/hooks/useLiveKitRoom'
+
+import {
+  useStreamSeats,
+} from '@/hooks/useStreamSeats'
+
+import {
+  useStreamAudiencePresence,
+} from '@/hooks/useStreamAudiencePresence'
+
+import {
+  GiftSystemProvider,
+} from '@/lib/hooks/useGiftSystem'
+
+import BroadcastChat from '@/components/broadcast/BroadcastChat'
+import CityStatusOrb from '@/components/city/CityStatusOrb'
+import SeatCityStatusOrb from '@/components/broadcast/SeatCityStatusOrb'
+import CityStatusPanel from '@/components/city/CityStatusPanel'
+import RaidModal from '@/components/city/RaidModal'
+import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
+import MaiBag from '@/components/mai-bag/MaiBag'
+
+import {
+  useCityStatusOrb,
+} from '@/lib/hooks/useCityStatusOrb'
+
+import {
+  getLiveKitRoomName,
+} from '@/lib/liveUtils'
+
+import {
+  sendStreamBroadcast,
+} from '@/lib/realtime/streamRealtimeManager'
+
+import {
+  cn,
+} from '@/lib/utils'
+
+import {
+  getAnonymousDisplayName,
+} from '@/lib/anonymousIdentity'
+
+import {
+  toast,
+} from 'sonner'
+
+import ErrorBoundary from '@/components/ErrorBoundary'
+import BattleView from '@/pages/broadcast/BattleView'
+
+interface SeatState {
+  participant: any
+  videoTrack: RemoteVideoTrack | null
+  audioTrack: any
+  isLoading: boolean
+  userId: string | null
+}
+
+interface BroadcasterState {
+  participant: any
+  videoTrack: RemoteVideoTrack | null
+  audioTrack: any
+}
+
+interface PhoneSeatCard {
+  seatIndex: number
+  seat: any
+  userId: string | null
+  identity: string | null
+  displayName: string
+  isOccupied: boolean
+  isMine: boolean
+  isLocked: boolean
+  canJoin: boolean
+  seatPrice: number
+}
+
+/* ============================================================================
+   HELPERS
+============================================================================ */
+
+function getDisplayName(
+  profile: any,
+  fallback = 'Broadcaster',
+) {
+  return (
+    profile?.username ||
+    profile?.email?.split?.('@')?.[0] ||
+    fallback
+  )
+}
+
+function getParticipantIdentity(
+  participant: any,
+): string {
+  return String(
+    participant?.identity ||
+      participant?.participantIdentity ||
+      participant?.name ||
+      participant?.metadata?.user_id ||
+      participant?.metadata?.userId ||
+      '',
+  )
+}
+
+function getParticipantMetadata(
+  participant: any,
+): any {
+  const raw = participant?.metadata
+
+  if (!raw) return {}
+
+  if (typeof raw === 'object') {
+    return raw
+  }
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return {}
+  }
+}
+
+function participantMatchesUser(
+  participant: any,
+  userId?: string | null,
+) {
+  if (!participant || !userId) {
+    return false
+  }
+
+  const identity =
+    getParticipantIdentity(participant)
+
+  const metadata =
+    getParticipantMetadata(participant)
+
+  return (
+    identity === userId ||
+    identity.includes(userId) ||
+    identity.endsWith(`-${userId}`) ||
+    identity.startsWith(`${userId}-`) ||
+    metadata.user_id === userId ||
+    metadata.userId === userId
+  )
+}
+
+function getVideoTrackFromParticipant(
+  participant: any,
+): RemoteVideoTrack | null {
+  if (!participant) {
+    return null
+  }
+
+  const directCandidates = [
+    participant.videoTrack,
+    participant.cameraTrack,
+    participant.track,
+    participant.video,
+  ]
+
+  for (const candidate of directCandidates) {
+    if (
+      candidate?.attach &&
+      candidate?.kind === Track.Kind.Video
+    ) {
+      return candidate as RemoteVideoTrack
+    }
+
+    if (
+      candidate?.attach &&
+      candidate?.mediaStreamTrack?.kind === 'video'
+    ) {
+      return candidate as RemoteVideoTrack
+    }
+  }
+
+  const publications: RemoteTrackPublication[] = []
+
+  const collect = (value: any) => {
+    if (!value) return
+
+    if (typeof value.values === 'function') {
+      publications.push(
+        ...Array.from(
+          value.values(),
+        ) as RemoteTrackPublication[],
+      )
+      return
+    }
+
+    if (Array.isArray(value)) {
+      publications.push(...value)
+    }
+  }
+
+  collect(participant.videoTrackPublications)
+  collect(participant.trackPublications)
+  collect(participant.tracks)
+  collect(participant.publications)
+
+  const cameraPub =
+    publications.find(
+      (pub: any) =>
+        pub?.source === Track.Source.Camera &&
+        pub?.track?.attach,
+    ) ||
+    publications.find(
+      (pub: any) =>
+        pub?.source !== Track.Source.Microphone &&
+        pub?.kind === Track.Kind.Video &&
+        pub?.track?.attach,
+    ) ||
+    publications.find(
+      (pub: any) =>
+        pub?.kind === Track.Kind.Video &&
+        pub?.track?.attach,
+    ) ||
+    publications.find(
+      (pub: any) =>
+        pub?.track?.kind === Track.Kind.Video &&
+        pub?.track?.attach,
+    ) ||
+    publications.find(
+      (pub: any) =>
+        pub?.track?.mediaStreamTrack?.kind === 'video' &&
+        pub?.track?.attach,
+    )
+
+  return (
+    cameraPub?.track as RemoteVideoTrack
+  ) || null
+}
+
+function getAudioTrackFromParticipant(
+  participant: any,
+) {
+  if (!participant) {
+    return null
+  }
+
+  const publications: any[] = []
+
+  const collect = (value: any) => {
+    if (!value) return
+
+    if (typeof value.values === 'function') {
+      publications.push(
+        ...Array.from(value.values()),
+      )
+      return
+    }
+
+    if (Array.isArray(value)) {
+      publications.push(...value)
+    }
+  }
+
+  collect(participant.audioTrackPublications)
+  collect(participant.trackPublications)
+  collect(participant.tracks)
+  collect(participant.publications)
+
+  const audioPub =
+    publications.find(
+      (pub: any) =>
+        pub?.source === Track.Source.Microphone &&
+        pub?.track?.attach,
+    ) ||
+    publications.find(
+      (pub: any) =>
+        pub?.kind === Track.Kind.Audio &&
+        pub?.track?.attach,
+    ) ||
+    publications.find(
+      (pub: any) =>
+        pub?.track?.kind === Track.Kind.Audio &&
+        pub?.track?.attach,
+    ) ||
+    publications.find(
+      (pub: any) =>
+        pub?.track?.mediaStreamTrack?.kind === 'audio' &&
+        pub?.track?.attach,
+    )
+
+  return audioPub?.track || null
+}
+
+function getSeatPrice(
+  stream: Stream | null,
+  index: number,
+) {
+  if (!stream) {
+    return 0
+  }
+
+  if (
+    Array.isArray(
+      (stream as any).seat_prices,
+    ) &&
+    typeof (stream as any).seat_prices[index] === 'number'
+  ) {
+    return Number(
+      (stream as any).seat_prices[index],
+    )
+  }
+
+  return Number(
+    (stream as any).seat_price ?? 0,
+  )
+}
+
+/* ============================================================================
+   REMOTE VIDEO
+============================================================================ */
+
+const PhoneRemoteVideo = memo(
+  function PhoneRemoteVideo({
+    participant,
+    room,
+    className,
+    fallback,
+  }: {
+    participant: any
+    room?: any
+    className?: string
+    fallback: React.ReactNode
+  }) {
+    const videoRef =
+      useRef<HTMLVideoElement | null>(null)
+
+    const audioRef =
+      useRef<HTMLAudioElement | null>(null)
+
+    const attachedVideoRef =
+      useRef<RemoteVideoTrack | null>(null)
+
+    const attachedAudioIdRef =
+      useRef<string | null>(null)
+
+    const [trackTick, setTrackTick] =
+      useState(0)
+
+    useEffect(() => {
+      if (!room) return
+
+      const bump = () => {
+        setTrackTick(
+          value => value + 1,
+        )
+      }
+
+      room.on(
+        RoomEvent.TrackSubscribed,
+        bump,
+      )
+
+      room.on(
+        RoomEvent.TrackUnsubscribed,
+        bump,
+      )
+
+      room.on(
+        RoomEvent.ParticipantConnected,
+        bump,
+      )
+
+      room.on(
+        RoomEvent.ParticipantDisconnected,
+        bump,
+      )
+
+      return () => {
+        room.off(
+          RoomEvent.TrackSubscribed,
+          bump,
+        )
+
+        room.off(
+          RoomEvent.TrackUnsubscribed,
+          bump,
+        )
+
+        room.off(
+          RoomEvent.ParticipantConnected,
+          bump,
+        )
+
+        room.off(
+          RoomEvent.ParticipantDisconnected,
+          bump,
+        )
+      }
+    }, [room])
+
+    const videoTrack =
+      getVideoTrackFromParticipant(
+        participant,
+      )
+
+    const audioTrack =
+      getAudioTrackFromParticipant(
+        participant,
+      )
+
+    const videoTrackId =
+      videoTrack?.mediaStreamTrack?.id ||
+      videoTrack?.sid ||
+      null
+
+    const audioTrackId =
+      audioTrack?.mediaStreamTrack?.id ||
+      audioTrack?.sid ||
+      null
+
+    useEffect(() => {
+      const video =
+        videoRef.current
+
+      if (!video) return
+
+      const previous =
+        attachedVideoRef.current
+
+      const previousId =
+        previous?.mediaStreamTrack?.id ||
+        previous?.sid ||
+        null
+
+      if (
+        previous &&
+        previousId &&
+        videoTrackId &&
+        previousId === videoTrackId
+      ) {
+        return
+      }
+
+      if (previous) {
+        try {
+          previous.detach(video)
+        } catch {
+          // ignore
+        }
+
+        attachedVideoRef.current = null
+      }
+
+      if (!videoTrack) {
+        video.srcObject = null
+        return
+      }
+
+      let cancelled = false
+
+      const attach = async () => {
+        try {
+          video.autoplay = true
+          video.playsInline = true
+          video.muted = true
+
+          video.setAttribute(
+            'playsinline',
+            '',
+          )
+
+          video.setAttribute(
+            'webkit-playsinline',
+            '',
+          )
+
+          videoTrack.attach(video)
+
+          attachedVideoRef.current =
+            videoTrack
+
+          if (!cancelled) {
+            await video.play()
+          }
+        } catch (error) {
+          console.warn(
+            '[PhoneViewerPage] remote video attach failed',
+            error,
+          )
+        }
+      }
+
+      void attach()
+
+      return () => {
+        cancelled = true
+
+        try {
+          videoTrack.detach(video)
+        } catch {
+          // ignore
+        }
+
+        if (
+          attachedVideoRef.current ===
+          videoTrack
+        ) {
+          attachedVideoRef.current =
+            null
+        }
+      }
+    }, [
+      videoTrackId,
+      trackTick,
+    ])
+
+    useEffect(() => {
+      const audio =
+        audioRef.current
+
+      if (!audio) return
+
+      if (
+        audioTrackId ===
+        attachedAudioIdRef.current
+      ) {
+        return
+      }
+
+      if (audioTrack) {
+        try {
+          audioTrack.attach(audio)
+
+          audio.autoplay = true
+
+          audio.play().catch(
+            () => {},
+          )
+        } catch {
+          // ignore
+        }
+      }
+
+      attachedAudioIdRef.current =
+        audioTrackId
+    }, [
+      audioTrack,
+      audioTrackId,
+      trackTick,
+    ])
+
+    return (
+      <div
+        className={cn(
+          'relative h-full w-full overflow-hidden bg-black',
+          className,
+        )}
+      >
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          controls={false}
+          disablePictureInPicture
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+
+        <audio
+          ref={audioRef}
+          autoPlay
+        />
+
+        {!videoTrack &&
+          !attachedVideoRef.current && (
+            <div className="absolute inset-0">
+              {fallback}
+            </div>
+          )}
+      </div>
+    )
+  },
+)
+
+/* ============================================================================
+   LOCAL VIDEO
+============================================================================ */
+
+function PhoneLocalVideo({
+  videoTrack,
+  className,
+}: {
+  videoTrack: LocalVideoTrack | null
+  audioTrack?: LocalAudioTrack | null
+  className?: string
+}) {
+  const videoRef =
+    useRef<HTMLVideoElement | null>(null)
+
+  useEffect(() => {
+    const video =
+      videoRef.current
+
+    if (!video || !videoTrack) {
+      return
+    }
+
+    try {
+      videoTrack.attach(video)
+
+      video.play().catch(
+        () => {},
+      )
+    } catch {
+      // ignore
+    }
+
+    return () => {
+      try {
+        videoTrack.detach(video)
+      } catch {
+        // ignore
+      }
+    }
+  }, [videoTrack])
+
+  return (
+    <div
+      className={cn(
+        'relative h-full w-full overflow-hidden bg-black',
+        className,
+      )}
+    >
+      {videoTrack ? (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <VideoOff className="h-6 w-6 text-white/40" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ============================================================================
+   PHONE VIEWER
+============================================================================ */
 
 export default function PhoneViewerPage() {
-  return <ViewerPage />
+  const params =
+    useParams()
+
+  const navigate =
+    useNavigate()
+
+  const streamId =
+    params.streamId ||
+    params.id ||
+    ''
+
+  const {
+    user,
+    profile,
+  } = useAuthStore()
+
+  const [stream, setStream] =
+    useState<Stream | null>(null)
+
+  const [
+    broadcasterProfile,
+    setBroadcasterProfile,
+  ] = useState<any>(null)
+
+  const [loading, setLoading] =
+    useState(true)
+
+  const [error, setError] =
+    useState<string | null>(null)
+
+  const [showChat, setShowChat] =
+    useState(true)
+
+  const [showControls, setShowControls] =
+    useState(true)
+
+  const [viewerCount, setViewerCount] =
+    useState(0)
+
+  const [liked, setLiked] =
+    useState(false)
+
+  const [seatFocus, setSeatFocus] =
+    useState<number | null>(null)
+
+  const [
+    giftRecipientId,
+    setGiftRecipientId,
+  ] = useState<string | null>(null)
+
+  const [
+    isGiftModalOpen,
+    setIsGiftModalOpen,
+  ] = useState(false)
+
+  const [
+    selectedSeatUserId,
+    setSelectedSeatUserId,
+  ] = useState<string | null>(null)
+
+  const [
+    broadcastRaidTarget,
+    setBroadcastRaidTarget,
+  ] = useState<string | null>(null)
+
+  /*
+   * ========================================================================
+   * BATTLE STATE
+   *
+   * The viewer remains in the normal broadcast room.
+   *
+   * A battle is considered active when the stream receives a battle_id.
+   * When battle_id becomes empty/null, the BattleArena disappears and the
+   * normal broadcast automatically becomes visible again.
+   * ========================================================================
+   */
+
+  const battleId = useMemo(() => {
+    const value =
+      (stream as any)?.battle_id ??
+      (stream as any)?.battleId ??
+      ''
+
+    return String(value || '')
+  }, [stream])
+
+  const [
+    battleActive,
+    setBattleActive,
+  ] = useState(Boolean(battleId))
+
+  const previousBattleIdRef =
+    useRef<string>('')
+
+  useEffect(() => {
+    const nextBattleId =
+      String(battleId || '')
+
+    const previousBattleId =
+      previousBattleIdRef.current
+
+    setBattleActive(
+      Boolean(nextBattleId),
+    )
+
+    /*
+     * Battle transition.
+     */
+    if (
+      nextBattleId &&
+      nextBattleId !== previousBattleId
+    ) {
+      previousBattleIdRef.current =
+        nextBattleId
+
+      setShowControls(false)
+
+      /*
+       * Keep chat and broadcast alive underneath
+       * the battle. BattleArena owns the battle
+       * experience.
+       */
+      return
+    }
+
+    /*
+     * Battle ended.
+     */
+    if (
+      !nextBattleId &&
+      previousBattleId
+    ) {
+      previousBattleIdRef.current =
+        ''
+
+      setBattleActive(false)
+      setShowControls(true)
+
+      toast.success(
+        'Battle ended',
+      )
+    }
+  }, [battleId])
+
+  /*
+   * Stable anonymous viewer identity.
+   */
+  const anonViewerId =
+    useMemo(() => {
+      if (!streamId) return ''
+
+      if (
+        typeof window ===
+        'undefined'
+      ) {
+        return ''
+      }
+
+      const key =
+        `guest-viewer:${streamId}`
+
+      try {
+        const existing =
+          window.sessionStorage.getItem(
+            key,
+          )
+
+        if (existing) {
+          return existing
+        }
+
+        const cryptoObj =
+          (window as any).crypto
+
+        let id = ''
+
+        if (
+          cryptoObj &&
+          typeof cryptoObj.randomUUID ===
+            'function'
+        ) {
+          id =
+            `guest-viewer:${streamId}:${cryptoObj.randomUUID()}`
+        } else {
+          id =
+            `guest-viewer:${streamId}:${Math.random()
+              .toString(36)
+              .slice(2, 12)}`
+        }
+
+        window.sessionStorage.setItem(
+          key,
+          id,
+        )
+
+        return id
+      } catch {
+        return (
+          `guest-viewer:${streamId}:${Math.random()
+            .toString(36)
+            .slice(2, 12)}`
+        )
+      }
+    }, [streamId])
+
+  const anonDisplayName =
+    useMemo(
+      () =>
+        streamId
+          ? getAnonymousDisplayName()
+          : '',
+      [streamId],
+    )
+
+  const viewerIdentity =
+    useMemo(() => {
+      const effectiveId =
+        user?.id ||
+        anonViewerId
+
+      if (
+        !streamId ||
+        !effectiveId
+      ) {
+        return ''
+      }
+
+      return (
+        `viewer-${streamId}-${effectiveId}`
+      )
+    }, [
+      streamId,
+      user?.id,
+      anonViewerId,
+    ])
+
+  /* ========================================================================
+     LOAD STREAM
+  ======================================================================== */
+
+  useEffect(() => {
+    let cancelled = false
+
+    if (!streamId) {
+      setError(
+        'Missing stream ID',
+      )
+
+      setLoading(false)
+
+      return
+    }
+
+    const loadStream =
+      async () => {
+        setLoading(true)
+        setError(null)
+
+        try {
+          const {
+            data,
+            error: streamError,
+          } = await supabase
+            .from('streams')
+            .select('*')
+            .eq('id', streamId)
+            .maybeSingle()
+
+          if (cancelled) return
+
+          if (streamError) {
+            console.error(
+              '[PhoneViewerPage] stream lookup failed',
+              streamError,
+            )
+
+            setError(
+              streamError.message ||
+                'Unable to load stream',
+            )
+
+            setStream(null)
+
+            return
+          }
+
+          if (!data) {
+            setError(
+              'Stream not found',
+            )
+
+            setStream(null)
+
+            return
+          }
+
+          setStream(
+            data as Stream,
+          )
+        } catch (err) {
+          if (cancelled) return
+
+          console.error(
+            '[PhoneViewerPage] stream lookup failed',
+            err,
+          )
+
+          setError(
+            'Unable to load stream',
+          )
+
+          setStream(null)
+        } finally {
+          if (!cancelled) {
+            setLoading(false)
+          }
+        }
+      }
+
+    void loadStream()
+
+    return () => {
+      cancelled = true
+    }
+  }, [streamId])
+
+  /* ========================================================================
+     REALTIME STREAM UPDATES
+  ======================================================================== */
+
+  useEffect(() => {
+    if (!streamId) {
+      return
+    }
+
+    const streamEndedRef = {
+      current: false,
+    }
+
+    const channel =
+      supabase
+        .channel(
+          `phone-viewer-stream:${streamId}`,
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'streams',
+            filter: `id=eq.${streamId}`,
+          },
+          payload => {
+            const next =
+              payload.new || {}
+
+            /*
+             * IMPORTANT:
+             * Merge the realtime row into local stream state.
+             *
+             * This is what makes battle_id immediately available
+             * when the broadcaster starts a battle.
+             */
+            setStream(
+              previous => ({
+                ...(previous || {}),
+                ...next,
+              } as Stream),
+            )
+
+            const status =
+              String(
+                next.status || '',
+              ).toLowerCase()
+
+            const endedAt =
+              next.ended_at ||
+              next.endedAt
+
+            if (
+              status === 'ended' ||
+              endedAt
+            ) {
+              if (
+                streamEndedRef.current
+              ) {
+                return
+              }
+
+              streamEndedRef.current =
+                true
+
+              void (async () => {
+                try {
+                  await leaveAudience()
+                } catch {
+                  // ignore
+                }
+
+                navigate(
+                  `/broadcast/summary/${streamId}`,
+                  {
+                    replace: true,
+                  },
+                )
+              })()
+            }
+          },
+        )
+        .subscribe()
+
+    return () => {
+      void supabase.removeChannel(
+        channel,
+      )
+    }
+  }, [
+    streamId,
+    navigate,
+  ])
+
+  /* ========================================================================
+     BROADCASTER PROFILE
+  ======================================================================== */
+
+  useEffect(() => {
+    const broadcasterId =
+      stream?.user_id
+
+    if (!broadcasterId) {
+      setBroadcasterProfile(
+        null,
+      )
+
+      return
+    }
+
+    let cancelled = false
+
+    const loadProfile =
+      async () => {
+        const {
+          data,
+          error: profileError,
+        } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq(
+            'id',
+            broadcasterId,
+          )
+          .maybeSingle()
+
+        if (cancelled) {
+          return
+        }
+
+        if (profileError) {
+          console.warn(
+            '[PhoneViewerPage] broadcaster profile failed',
+            profileError,
+          )
+
+          return
+        }
+
+        setBroadcasterProfile(
+          data || null,
+        )
+      }
+
+    void loadProfile()
+
+    return () => {
+      cancelled = true
+    }
+  }, [stream?.user_id])
+
+  /* ========================================================================
+     SEATS
+  ======================================================================== */
+
+  const {
+    seats,
+    joinSeat,
+    leaveSeat,
+   } = useStreamSeats(
+     streamId,
+     user?.id,
+     broadcasterProfile,
+     stream as any,
+   )
+
+  const userIdToLiveKitIdentity = useMemo(() => {
+    const mapping: Record<string, string> = {};
+    if (!seats) return mapping;
+    Object.entries(seats).forEach(([seatIndex, seat]) => {
+      const seatData = seat as any;
+      const userId = seatData?.user_id || seatData?.guest_id;
+      const identity = seatData?.livekit_participant_identity || seatData?.participant_identity || seatData?.livekit_identity;
+      if (userId && identity) {
+        mapping[userId] = identity;
+      }
+    });
+    return mapping;
+  }, [seats]);
+
+  const shouldShowRandomBattleArena =
+    stream?.battle_mode === 'random_queue' &&
+    !!stream?.battle_id &&
+    stream?.is_battle === true &&
+    (stream?.battle_status === 'ready' || stream?.battle_status === 'starting' || stream?.battle_status === 'active');
+
+  const activeBattleId = shouldShowRandomBattleArena ? stream?.battle_id ?? null : null;
+
+  /* ========================================================================
+      AUDIENCE
+  ======================================================================== */
+
+  const {
+    activeAudience,
+    joinAudience,
+    leaveAudience,
+    heartbeatAudience,
+  } =
+    useStreamAudiencePresence(
+      streamId,
+      user?.id,
+    )
+
+  /* ========================================================================
+     MAIN BROADCAST LIVEKIT
+  ======================================================================== */
+
+  const roomId =
+    useMemo(() => {
+      return String(
+        getLiveKitRoomName(
+          stream,
+          streamId,
+        ) || '',
+      )
+    }, [
+      stream,
+      streamId,
+    ])
+
+  const audienceName =
+    useMemo(() => {
+      if (user) {
+        return (
+          profile?.username ||
+          (user as any)?.username ||
+          'Viewer'
+        )
+      }
+
+      return (
+        anonDisplayName ||
+        'Viewer'
+      )
+    }, [
+      user,
+      profile,
+      anonDisplayName,
+    ])
+
+  const noop =
+    useCallback(
+      () => {},
+      [],
+    )
+
+  const handleLiveKitError =
+    useCallback(
+      (err: any) => {
+        console.warn(
+          '[PhoneViewerPage] LiveKit error',
+          err,
+        )
+      },
+      [],
+    )
+
+  /*
+   * This remains the broadcast LiveKit connection.
+   *
+   * DO NOT change this identity to the battle identity.
+   */
+  const {
+    remoteUsers,
+    localVideoTrack,
+    localAudioTrack,
+    room: liveKitRoom,
+    setMicEnabled,
+    setCameraEnabled,
+  } = useLiveKitRoom({
+    roomId,
+    roomType: 'broadcast',
+    role: 'viewer',
+    publish: false,
+    audioOnly: false,
+    userName: audienceName,
+    identity: viewerIdentity,
+    onUserJoined: noop,
+    onUserLeft: noop,
+    onError: handleLiveKitError,
+  })
+
+  const remoteParticipants =
+    useMemo(() => {
+      return Array.isArray(
+        remoteUsers,
+      )
+        ? remoteUsers
+        : []
+    }, [remoteUsers])
+
+  /* ========================================================================
+     BROADCASTER
+  ======================================================================== */
+
+  const hostId =
+    stream?.user_id || ''
+
+  const hostName =
+    useMemo(
+      () =>
+        getDisplayName(
+          broadcasterProfile,
+          'Broadcaster',
+        ),
+      [broadcasterProfile],
+    )
+
+  const hostParticipantRef =
+    useRef<any>(null)
+
+  const [
+    broadcasterState,
+    setBroadcasterState,
+  ] =
+    useState<BroadcasterState>({
+      participant: null,
+      videoTrack: null,
+      audioTrack: null,
+    })
+
+  const updateBroadcasterState =
+    useCallback(
+      (participant: any) => {
+        if (!participant) {
+          return
+        }
+
+        const videoTrack =
+          getVideoTrackFromParticipant(
+            participant,
+          )
+
+        const audioTrack =
+          getAudioTrackFromParticipant(
+            participant,
+          )
+
+        setBroadcasterState(
+          previous => {
+            const previousIdentity =
+              previous.participant
+                ?.identity ||
+              null
+
+            const nextIdentity =
+              participant?.identity ||
+              null
+
+            const previousVideoId =
+              previous.videoTrack
+                ?.mediaStreamTrack
+                ?.id ||
+              previous.videoTrack
+                ?.sid ||
+              null
+
+            const nextVideoId =
+              videoTrack
+                ?.mediaStreamTrack
+                ?.id ||
+              videoTrack?.sid ||
+              null
+
+            const previousAudioId =
+              previous.audioTrack
+                ?.mediaStreamTrack
+                ?.id ||
+              previous.audioTrack
+                ?.sid ||
+              null
+
+            const nextAudioId =
+              audioTrack
+                ?.mediaStreamTrack
+                ?.id ||
+              audioTrack?.sid ||
+              null
+
+            if (
+              previousIdentity ===
+                nextIdentity &&
+              previousVideoId ===
+                nextVideoId &&
+              previousAudioId ===
+                nextAudioId
+            ) {
+              return previous
+            }
+
+            return {
+              participant,
+              videoTrack,
+              audioTrack,
+            }
+          },
+        )
+      },
+      [],
+    )
+
+  useEffect(() => {
+    let host =
+      remoteParticipants.find(
+        (participant: any) =>
+          participantMatchesUser(
+            participant,
+            hostId,
+          ),
+      )
+
+    if (
+      !host &&
+      liveKitRoom?.remoteParticipants
+    ) {
+      host =
+        Array.from(
+          liveKitRoom
+            .remoteParticipants
+            .values(),
+        ).find(
+          (participant: any) =>
+            participantMatchesUser(
+              participant,
+              hostId,
+            ),
+        )
+    }
+
+    if (host) {
+      hostParticipantRef.current =
+        host
+
+      updateBroadcasterState(
+        host,
+      )
+    }
+  }, [
+    remoteParticipants,
+    liveKitRoom,
+    hostId,
+    updateBroadcasterState,
+  ])
+
+  /* ========================================================================
+     SEAT TRACKS
+  ======================================================================== */
+
+  const [
+    seatTracks,
+    setSeatTracks,
+  ] =
+    useState<
+      Record<number, SeatState>
+    >({})
+
+  useEffect(() => {
+    if (!liveKitRoom) {
+      return
+    }
+
+    const syncSeats = () => {
+      setSeatTracks(
+        previous => {
+          const next = {
+            ...previous,
+          }
+
+          Object.entries(
+            seats || {},
+          ).forEach(
+            ([
+              index,
+              seat,
+            ]: [string, any]) => {
+              const seatIndex =
+                Number(index)
+
+              const userId =
+                seat?.user_id ||
+                seat?.guest_id ||
+                null
+
+              const identity =
+                seat?.livekit_participant_identity ||
+                seat?.participant_identity ||
+                seat?.livekit_identity ||
+                userId
+
+              if (
+                !userId &&
+                !identity
+              ) {
+                delete next[
+                  seatIndex
+                ]
+
+                return
+              }
+
+              const participant =
+                remoteParticipants.find(
+                  (candidate: any) => {
+                    const candidateIdentity =
+                      getParticipantIdentity(
+                        candidate,
+                      )
+
+                    return (
+                      participantMatchesUser(
+                        candidate,
+                        identity,
+                      ) ||
+                      participantMatchesUser(
+                        candidate,
+                        userId,
+                      ) ||
+                      candidateIdentity ===
+                        String(
+                          identity,
+                        )
+                    )
+                  },
+                )
+
+              next[seatIndex] = {
+                participant:
+                  participant ||
+                  null,
+
+                videoTrack:
+                  getVideoTrackFromParticipant(
+                    participant,
+                  ),
+
+                audioTrack:
+                  getAudioTrackFromParticipant(
+                    participant,
+                  ),
+
+                isLoading:
+                  Boolean(
+                    seat?.status ===
+                      'camera_starting',
+                  ) &&
+                  !participant,
+
+                userId,
+              }
+            },
+          )
+
+          return next
+        },
+      )
+    }
+
+    syncSeats()
+
+    liveKitRoom.on(
+      RoomEvent.TrackSubscribed,
+      syncSeats,
+    )
+
+    liveKitRoom.on(
+      RoomEvent.TrackUnsubscribed,
+      syncSeats,
+    )
+
+    liveKitRoom.on(
+      RoomEvent.ParticipantConnected,
+      syncSeats,
+    )
+
+    liveKitRoom.on(
+      RoomEvent.ParticipantDisconnected,
+      syncSeats,
+    )
+
+    return () => {
+      liveKitRoom.off(
+        RoomEvent.TrackSubscribed,
+        syncSeats,
+      )
+
+      liveKitRoom.off(
+        RoomEvent.TrackUnsubscribed,
+        syncSeats,
+      )
+
+      liveKitRoom.off(
+        RoomEvent.ParticipantConnected,
+        syncSeats,
+      )
+
+      liveKitRoom.off(
+        RoomEvent.ParticipantDisconnected,
+        syncSeats,
+      )
+    }
+  }, [
+    liveKitRoom,
+    remoteParticipants,
+    seats,
+  ])
+
+  /* ========================================================================
+     AUDIENCE PRESENCE
+  ======================================================================== */
+
+  useEffect(() => {
+    if (!streamId) {
+      return
+    }
+
+    void joinAudience()
+
+    const interval =
+      window.setInterval(
+        () => {
+          void heartbeatAudience()
+        },
+        15000,
+      )
+
+    return () => {
+      window.clearInterval(
+        interval,
+      )
+
+      void leaveAudience()
+    }
+  }, [
+    streamId,
+    joinAudience,
+    leaveAudience,
+    heartbeatAudience,
+  ])
+
+  useEffect(() => {
+    setViewerCount(
+      Math.max(
+        viewerCount,
+        activeAudience?.length ||
+          0,
+        Number(
+          (stream as any)
+            ?.current_viewers ||
+            0,
+        ),
+      ),
+    )
+  }, [
+    activeAudience,
+    stream,
+    viewerCount,
+  ])
+
+  /* ========================================================================
+     SEAT CARDS
+  ======================================================================== */
+
+  const seatCards =
+    useMemo<PhoneSeatCard[]>(
+      () => {
+        const configuredCount =
+          Number(
+            (stream as any)
+              ?.seat_count ?? 0,
+          )
+
+        const priceCount =
+          Array.isArray(
+            (stream as any)
+              ?.seat_prices,
+          )
+            ? (
+                stream as any
+              ).seat_prices.length
+            : 0
+
+        const count =
+          Math.max(
+            0,
+            Math.min(
+              6,
+              configuredCount ||
+                priceCount ||
+                0,
+            ),
+          )
+
+        const cards:
+          PhoneSeatCard[] = []
+
+        for (
+          let index = 1;
+          index <= count;
+          index += 1
+        ) {
+          const seat =
+            (seats as any)?.[
+              index
+            ] || null
+
+          const status =
+            String(
+              seat?.status ||
+                'empty',
+            ).toLowerCase()
+
+          const userId =
+            seat?.user_id ||
+            seat?.guest_id ||
+            null
+
+          const identity =
+            seat?.livekit_participant_identity ||
+            seat?.participant_identity ||
+            seat?.livekit_identity ||
+            userId
+
+          const isOccupied =
+            [
+              'reserved',
+              'camera_starting',
+              'active',
+              'live',
+            ].includes(status) &&
+            Boolean(userId)
+
+          const isMine =
+            Boolean(
+              user?.id &&
+              (
+                seat?.user_id ===
+                  user.id ||
+                seat?.guest_id ===
+                  user.id
+              ),
+            )
+
+          const isLocked =
+            Boolean(
+              seat?.is_locked ||
+              (
+                stream as any
+              )
+                ?.are_seats_locked,
+            )
+
+          cards.push({
+            seatIndex: index,
+            seat,
+            userId,
+            identity,
+            displayName:
+              seat?.display_name ||
+              seat?.username ||
+              `Seat ${index}`,
+            isOccupied,
+            isMine,
+            isLocked,
+            canJoin:
+              !isLocked &&
+              !isOccupied,
+            seatPrice:
+              getSeatPrice(
+                stream,
+                index,
+              ),
+          })
+        }
+
+        return cards
+      },
+      [
+        seats,
+        stream,
+        user?.id,
+      ],
+    )
+
+  /* ========================================================================
+     LIKES
+  ======================================================================== */
+
+  const pendingLikesRef =
+    useRef(0)
+
+  const flushInProgressRef =
+    useRef(false)
+
+  const clickTimesRef =
+    useRef<number[]>([])
+
+  const blockedUntilRef =
+    useRef<number | null>(null)
+
+  const flushLikes =
+    useCallback(
+      async () => {
+        if (
+          flushInProgressRef.current
+        ) {
+          return
+        }
+
+        const batch =
+          pendingLikesRef.current
+
+        if (
+          batch <= 0 ||
+          !streamId
+        ) {
+          return
+        }
+
+        pendingLikesRef.current =
+          0
+
+        flushInProgressRef.current =
+          true
+
+        try {
+          const {
+            data,
+            error,
+          } =
+            await supabase.rpc(
+              'increment_stream_likes',
+              {
+                p_stream_id:
+                  streamId,
+                p_like_count:
+                  batch,
+              },
+            )
+
+          if (error) {
+            throw error
+          }
+
+          if (
+            typeof data ===
+            'number'
+          ) {
+            setStream(
+              previous => {
+                if (!previous) {
+                  return previous
+                }
+
+                return {
+                  ...previous,
+                  total_likes:
+                    data,
+                }
+              },
+            )
+
+            try {
+              void sendStreamBroadcast(
+                streamId,
+                'like_sent',
+                {
+                  user_id:
+                    user?.id,
+                  stream_id:
+                    streamId,
+                  total_likes:
+                    data,
+                },
+              )
+            } catch {
+              // ignore
+            }
+          }
+        } catch {
+          pendingLikesRef.current +=
+            batch
+        } finally {
+          flushInProgressRef.current =
+            false
+        }
+      },
+      [
+        streamId,
+        user?.id,
+      ],
+    )
+
+  useEffect(() => {
+    const interval =
+      window.setInterval(
+        () => {
+          void flushLikes()
+        },
+        2500,
+      )
+
+    const handleVisibilityChange =
+      () => {
+        if (
+          document.visibilityState ===
+          'hidden'
+        ) {
+          void flushLikes()
+        }
+      }
+
+    document.addEventListener(
+      'visibilitychange',
+      handleVisibilityChange,
+    )
+
+    return () => {
+      window.clearInterval(
+        interval,
+      )
+
+      document.removeEventListener(
+        'visibilitychange',
+        handleVisibilityChange,
+      )
+
+      void flushLikes()
+    }
+  }, [flushLikes])
+
+  const handleLike =
+    useCallback(
+      async () => {
+        if (
+          !streamId ||
+          !user?.id
+        ) {
+          toast.success(
+            'Login to like this broadcast',
+          )
+
+          return
+        }
+
+        const now =
+          Date.now()
+
+        if (
+          blockedUntilRef.current &&
+          now <
+            blockedUntilRef.current
+        ) {
+          const secondsLeft =
+            Math.ceil(
+              (
+                blockedUntilRef.current -
+                now
+              ) /
+                1000,
+            )
+
+          toast.error(
+            `You're temporarily blocked from liking (${secondsLeft}s)`,
+          )
+
+          return
+        }
+
+        const times =
+          clickTimesRef.current
+
+        times.push(now)
+
+        const cutoff =
+          now - 1000
+
+        while (
+          times.length &&
+          times[0] <
+            cutoff
+        ) {
+          times.shift()
+        }
+
+        if (
+          times.length >=
+          20
+        ) {
+          blockedUntilRef.current =
+            now +
+            60 *
+              1000
+
+          clickTimesRef.current =
+            []
+
+          toast.error(
+            'Rate limited for 1 minute due to suspected auto-clicking',
+          )
+
+          return
+        }
+
+        setStream(
+          previous =>
+            previous
+              ? {
+                  ...previous,
+                  total_likes:
+                    Number(
+                      previous.total_likes ||
+                        0,
+                    ) + 1,
+                }
+              : previous,
+        )
+
+        pendingLikesRef.current +=
+          1
+
+        if (
+          pendingLikesRef.current >=
+          25
+        ) {
+          void flushLikes()
+        }
+      },
+      [
+        streamId,
+        user?.id,
+        flushLikes,
+      ],
+    )
+
+  const lastTapRef =
+    useRef(0)
+
+  const handleBroadcasterTap =
+    useCallback(() => {
+      /*
+       * Do not process broadcast double-tap likes
+       * while the battle is covering the screen.
+       */
+      if (battleActive) {
+        setShowControls(true)
+        return
+      }
+
+      const now =
+        Date.now()
+
+      const difference =
+        now -
+        lastTapRef.current
+
+      if (
+        difference > 0 &&
+        difference < 300
+      ) {
+        setLiked(true)
+
+        window.setTimeout(
+          () => {
+            setLiked(false)
+          },
+          700,
+        )
+
+        void handleLike()
+      }
+
+      lastTapRef.current =
+        now
+
+      setShowControls(true)
+    }, [
+      battleActive,
+      handleLike,
+    ])
+
+  /* ========================================================================
+     SEATS
+  ======================================================================== */
+
+  const handleJoinSeat =
+    useCallback(
+      async (
+        seatIndex: number,
+      ) => {
+        if (!joinSeat) {
+          return
+        }
+
+        try {
+          const price =
+            getSeatPrice(
+              stream,
+              seatIndex,
+            )
+
+          await joinSeat(
+            seatIndex,
+            price,
+          )
+        } catch (err) {
+          console.error(
+            '[PhoneViewerPage] join seat failed',
+            err,
+          )
+        }
+      },
+      [
+        joinSeat,
+        stream,
+      ],
+    )
+
+  const handleLeaveSeat =
+    useCallback(
+      async () => {
+        try {
+          await leaveSeat?.()
+        } catch (err) {
+          console.error(
+            '[PhoneViewerPage] leave seat failed',
+            err,
+          )
+        }
+      },
+      [leaveSeat],
+    )
+
+  /* ========================================================================
+     LEAVE
+  ======================================================================== */
+
+  const leave =
+    useCallback(
+      async () => {
+        try {
+          await leaveSeat?.()
+        } catch {
+          // ignore
+        }
+
+        try {
+          await leaveAudience()
+        } catch {
+          // ignore
+        }
+
+        navigate(-1)
+      },
+      [
+        leaveSeat,
+        leaveAudience,
+        navigate,
+      ],
+    )
+
+  /* ========================================================================
+     GIFTS
+  ======================================================================== */
+
+  const handleGift =
+    useCallback(() => {
+      if (!user) {
+        navigate(
+          '/auth?mode=signup',
+        )
+
+        return
+      }
+
+      setGiftRecipientId(
+        hostId || null,
+      )
+
+      setIsGiftModalOpen(
+        true,
+      )
+    }, [
+      user,
+      navigate,
+      hostId,
+    ])
+
+  /* ========================================================================
+     MIC / CAMERA
+  ======================================================================== */
+
+  const [
+    micEnabled,
+    setMicEnabledState,
+  ] = useState(true)
+
+  const [
+    cameraEnabled,
+    setCameraEnabledState,
+  ] = useState(true)
+
+  const handleMic =
+    useCallback(
+      async () => {
+        const next =
+          !micEnabled
+
+        const ok =
+          await setMicEnabled(
+            next,
+          )
+
+        if (ok) {
+          setMicEnabledState(
+            next,
+          )
+        }
+      },
+      [
+        micEnabled,
+        setMicEnabled,
+      ],
+    )
+
+  const handleCamera =
+    useCallback(
+      async () => {
+        const next =
+          !cameraEnabled
+
+        const ok =
+          await setCameraEnabled(
+            next,
+          )
+
+        if (ok) {
+          setCameraEnabledState(
+            next,
+          )
+        }
+      },
+      [
+        cameraEnabled,
+        setCameraEnabled,
+      ],
+    )
+
+  /* ========================================================================
+     CITY STATUS
+  ======================================================================== */
+
+  const broadcasterId =
+    stream?.user_id || ''
+
+  const broadcasterCityStatus =
+    useCityStatusOrb({
+      userId:
+        broadcasterId,
+      broadcasterId:
+        user?.id,
+      isBroadcaster:
+        false,
+      isBroadOfficer:
+        false,
+    })
+
+  /* ========================================================================
+     LOADING
+  ======================================================================== */
+
+  if (loading) {
+    return (
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-[#03040a]">
+        <div className="relative flex flex-col items-center gap-5">
+          <div className="absolute h-32 w-32 rounded-full bg-cyan-500/20 blur-3xl" />
+          <div className="absolute h-24 w-24 rounded-full bg-violet-600/20 blur-3xl" />
+
+          <div className="relative grid h-16 w-16 place-items-center rounded-3xl border border-cyan-300/30 bg-white/[0.04] shadow-[0_0_40px_rgba(34,211,238,0.15)]">
+            <Radio className="h-7 w-7 animate-pulse text-cyan-300" />
+          </div>
+
+          <div className="text-center">
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-white">
+              MaiTroll
+            </p>
+
+            <p className="mt-2 text-[11px] font-semibold text-white/40">
+              Connecting to live stream
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  /* ========================================================================
+     ERROR
+  ======================================================================== */
+
+  if (!stream) {
+    return (
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-[#03040a] px-6 text-white">
+        <div className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.035] p-7 text-center shadow-[0_0_60px_rgba(34,211,238,0.08)] backdrop-blur-2xl">
+          <div className="pointer-events-none absolute -left-16 -top-16 h-40 w-40 rounded-full bg-cyan-500/15 blur-3xl" />
+
+          <div className="pointer-events-none absolute -bottom-16 -right-16 h-40 w-40 rounded-full bg-violet-600/15 blur-3xl" />
+
+          <div className="relative mx-auto grid h-16 w-16 place-items-center rounded-3xl border border-violet-300/20 bg-violet-500/10">
+            <Radio className="h-7 w-7 text-violet-300" />
+          </div>
+
+          <h1 className="relative mt-5 text-lg font-black">
+            Stream unavailable
+          </h1>
+
+          <p className="relative mt-2 text-sm text-white/45">
+            {error ||
+              'This stream could not be loaded.'}
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate(-1)
+            }
+            className="relative mt-6 h-12 w-full rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/15 to-violet-500/15 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_0_25px_rgba(34,211,238,0.08)]"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (shouldShowRandomBattleArena) {
+    return (
+      <ErrorBoundary>
+        <GiftSystemProvider streamId={streamId} defaultReceiverId={stream.user_id}>
+          <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
+            <BattleView
+              key={activeBattleId}
+              battleId={stream.battle_id!}
+              currentStreamId={streamId}
+              viewerId={user?.id || anonViewerId}
+              remoteUsers={remoteUsers}
+              userIdToLiveKitIdentity={userIdToLiveKitIdentity}
+              onReturnToStream={() => {
+                setStream((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        is_battle: false,
+                        battle_id: null,
+                        battle_mode: 'none' as any,
+                        battle_status: 'waiting' as any,
+                      }
+                    : prev
+                );
+              }}
+              onToggleCamera={handleCamera}
+              onToggleMic={handleMic}
+            />
+          </div>
+        </GiftSystemProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  /* ========================================================================
+      MAIN VIEW
+  ======================================================================== */
+
+  return (
+    <GiftSystemProvider
+      streamId={streamId}
+      defaultReceiverId={
+        stream.user_id
+      }
+    >
+      <div
+        className="relative h-[100dvh] w-full overflow-hidden bg-[#02030a] text-white"
+        onClick={() => {
+          if (!showControls) {
+            setShowControls(true)
+          }
+        }}
+      >
+
+        {/* ================================================================
+            BROADCAST BACKDROP
+        ================================================================= */}
+
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px]" />
+
+          <div className="absolute -right-40 top-1/3 h-[28rem] w-[28rem] rounded-full bg-violet-600/10 blur-[140px]" />
+
+          <div className="absolute bottom-[-12rem] left-1/2 h-96 w-[140%] -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-500/10 via-violet-600/15 to-cyan-500/10 blur-[120px]" />
+
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_25%,rgba(0,0,0,0.65)_100%)]" />
+        </div>
+
+        {/* ================================================================
+            NORMAL BROADCAST
+            Battle sits ABOVE this surface.
+        ================================================================= */}
+
+        <div
+          className={cn(
+            'absolute inset-0 z-10 transition-all duration-500',
+            battleActive
+              ? 'scale-[0.985] opacity-25'
+              : 'scale-100 opacity-100',
+          )}
+          onClick={event => {
+            event.stopPropagation()
+            handleBroadcasterTap()
+          }}
+        >
+          <PhoneRemoteVideo
+            participant={
+              broadcasterState.participant
+            }
+            room={
+              liveKitRoom
+            }
+            className="h-full w-full"
+            fallback={
+              <div className="flex h-full w-full flex-col items-center justify-center bg-[#050711]">
+                <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/[0.03] via-transparent to-violet-500/[0.08]" />
+
+                <div className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-cyan-300/20 bg-cyan-500/10 shadow-[0_0_50px_rgba(34,211,238,0.12)]">
+                  <Radio className="h-8 w-8 animate-pulse text-cyan-300/70" />
+                </div>
+
+                <p className="relative mt-5 text-sm font-black">
+                  {hostName}
+                </p>
+
+                <p className="relative mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
+                  Camera connecting
+                </p>
+              </div>
+            }
+          />
+
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/80" />
+
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(34,211,238,0.025),transparent_30%,rgba(168,85,247,0.04))]" />
+        </div>
+
+        {/* ================================================================
+            TOP CONTROLS
+
+            Hidden while battle is active so the battle gets the entire
+            phone viewport.
+        ================================================================= */}
+
+        {showControls &&
+          !battleActive && (
+            <div
+              className="absolute left-0 right-0 top-0 z-50 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]"
+              onClick={event =>
+                event.stopPropagation()
+              }
+            >
+              <div className="flex items-start justify-between gap-3">
+
+                <div className="flex flex-col items-start gap-2">
+                  <button
+                    type="button"
+                    onClick={leave}
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-black/40 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-90"
+                  >
+                    <ArrowLeft
+                      size={19}
+                    />
+                  </button>
+
+                  {streamId && (
+                    <MaiBag streamId={streamId} compact />
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1.5">
+
+                  <div className="flex items-center gap-1.5 rounded-full border border-cyan-300/20 bg-black/45 px-2 py-1.5 backdrop-blur-xl">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-cyan-400/50" />
+
+                      <span className="relative h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_9px_rgba(103,232,249,0.9)]" />
+                    </span>
+
+                    <span className="text-[8px] font-black uppercase tracking-[0.14em] text-cyan-100">
+                      LIVE
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-0.5">
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLiked(true)
+
+                        void handleLike()
+
+                        window.setTimeout(
+                          () => {
+                            setLiked(false)
+                          },
+                          700,
+                        )
+                      }}
+                      className="flex h-6 w-6 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                    >
+                      <Heart
+                        size={10}
+                        className={cn(
+                          liked
+                            ? 'fill-pink-300 text-pink-300'
+                            : 'text-white',
+                        )}
+                      />
+
+                      <span className="text-[6px] font-black leading-none text-white">
+                        {Math.max(
+                          0,
+                          Number(
+                            (stream as any)
+                              ?.total_likes ??
+                              0,
+                          ) +
+                            pendingLikesRef.current,
+                        ).toLocaleString()}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleGift
+                      }
+                      className="grid h-6 w-6 place-items-center rounded-full border border-violet-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                    >
+                      <Gift
+                        size={10}
+                        className="text-violet-300"
+                      />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await navigator.share?.({
+                            title: `@${hostName} on MaiTroll`,
+                            url: window.location.href,
+                          })
+                        } catch {
+                          // cancelled
+                        }
+                      }}
+                      className="grid h-6 w-6 place-items-center rounded-full border border-cyan-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                    >
+                      <Share2
+                        size={10}
+                        className="text-cyan-300"
+                      />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowChat(
+                          value =>
+                            !value,
+                        )
+                      }
+                      className={cn(
+                        'grid h-6 w-6 place-items-center rounded-full border backdrop-blur-xl transition active:scale-90',
+                        showChat
+                          ? 'border-cyan-300/40 bg-cyan-500/15'
+                          : 'border-white/10 bg-black/40',
+                      )}
+                    >
+                      <MessageCircle
+                        size={10}
+                        className="text-cyan-200"
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-2 flex justify-center">
+                <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 backdrop-blur-xl">
+                  <Users
+                    size={11}
+                    className="text-white/60"
+                  />
+
+                  <span className="text-[9px] font-black text-white/70">
+                    {Math.max(
+                      viewerCount,
+                      activeAudience?.length ||
+                        0,
+                    ) || 0}
+                  </span>
+
+                  <span className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/30">
+                    watching
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+        {/* ================================================================
+            LIKE
+        ================================================================= */}
+
+        {liked &&
+          !battleActive && (
+            <div className="pointer-events-none absolute left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2">
+              <Heart className="h-24 w-24 animate-ping fill-pink-400 text-pink-400 drop-shadow-[0_0_35px_rgba(244,114,182,0.8)]" />
+            </div>
+          )}
+
+        {/* ================================================================
+            SEATS
+        ================================================================= */}
+
+        {!battleActive &&
+          seatCards.length > 0 && (
+            <div
+              className={cn(
+                'absolute left-0 right-0 z-40 px-2 transition-all duration-300',
+                showChat
+                  ? 'bottom-[calc(31vh+76px+env(safe-area-inset-bottom))]'
+                  : 'bottom-[calc(86px+env(safe-area-inset-bottom))]',
+              )}
+              onClick={event =>
+                event.stopPropagation()
+              }
+            >
+              <div className="mx-auto max-w-[720px]">
+
+                <div className="mb-1.5 flex items-center justify-between px-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_8px_rgba(196,181,253,0.9)]" />
+
+                    <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60">
+                      Live Seats
+                    </span>
+                  </div>
+
+                  <span className="rounded-full border border-white/10 bg-black/40 px-2 py-1 text-[7px] font-black text-white/45 backdrop-blur-xl">
+                    {
+                      seatCards.filter(
+                        seat =>
+                          seat.isOccupied,
+                      ).length
+                    }
+                    /
+                    {
+                      seatCards.length
+                    }
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5">
+                  {seatCards.map(
+                    seat => {
+                      const state =
+                        seatTracks[
+                          seat.seatIndex
+                        ]
+
+                      const participant =
+                        state?.participant
+
+                      const isFocused =
+                        seatFocus ===
+                        seat.seatIndex
+
+                      return (
+                        <div
+                          key={
+                            seat.seatIndex
+                          }
+                          className={cn(
+                            'relative aspect-[1.18] overflow-hidden rounded-xl border bg-[#060711]/90 shadow-[0_0_22px_rgba(0,0,0,0.4)] backdrop-blur-xl',
+                            seat.isMine
+                              ? 'border-emerald-300/45 shadow-[0_0_22px_rgba(16,185,129,0.12)]'
+                              : seat.isOccupied
+                                ? 'border-violet-300/30 shadow-[0_0_24px_rgba(139,92,246,0.12)]'
+                                : 'border-white/10',
+                            isFocused &&
+                              'ring-1 ring-cyan-300/70 shadow-[0_0_25px_rgba(34,211,238,0.2)]',
+                          )}
+                        >
+                          {seat.isOccupied ? (
+                            seat.isMine ? (
+                              <PhoneLocalVideo
+                                videoTrack={
+                                  localVideoTrack
+                                }
+                                className="absolute inset-0"
+                              />
+                            ) : (
+                              <PhoneRemoteVideo
+                                participant={
+                                  participant
+                                }
+                                room={
+                                  liveKitRoom
+                                }
+                                className="absolute inset-0"
+                                fallback={
+                                  <div className="flex h-full w-full flex-col items-center justify-center bg-[#080914]">
+                                    <Users className="h-4 w-4 text-violet-300/60" />
+
+                                    <span className="mt-1 max-w-full truncate px-2 text-[8px] font-black text-white/80">
+                                      {
+                                        seat.displayName
+                                      }
+                                    </span>
+
+                                    <span className="mt-0.5 text-[6px] font-black uppercase tracking-wider text-violet-200/40">
+                                      Connecting
+                                    </span>
+                                  </div>
+                                }
+                              />
+                            )
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={
+                                !seat.canJoin
+                              }
+                              onClick={() =>
+                                seat.canJoin &&
+                                void handleJoinSeat(
+                                  seat.seatIndex,
+                                )
+                              }
+                              className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-white/[0.025] to-transparent disabled:cursor-not-allowed"
+                            >
+                              <div className="grid h-7 w-7 place-items-center rounded-xl border border-cyan-300/15 bg-cyan-500/[0.06]">
+                                <Plus
+                                  size={13}
+                                  className="text-cyan-200/70"
+                                />
+                              </div>
+
+                              <span className="text-[8px] font-black text-white/70">
+                                Seat{' '}
+                                {
+                                  seat.seatIndex
+                                }
+                              </span>
+
+                              <span className="text-[6px] font-bold uppercase tracking-wider text-white/30">
+                                {seat.isLocked
+                                  ? 'Locked'
+                                  : seat.seatPrice ===
+                                      0
+                                    ? 'Free'
+                                    : `${seat.seatPrice} Coins`}
+                              </span>
+                            </button>
+                          )}
+
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
+
+                          <div className="absolute bottom-1 left-1 right-1 z-10 flex items-center justify-between gap-1">
+                            <div className="min-w-0 flex-1">
+                              {seat.userId ? (
+                                <SeatCityStatusOrb
+                                  userId={
+                                    seat.userId
+                                  }
+                                  broadcasterId={
+                                    broadcasterId
+                                  }
+                                />
+                              ) : (
+                                <span className="text-[7px] font-black text-white/55">
+                                  Seat{' '}
+                                  {
+                                    seat.seatIndex
+                                  }
+                                </span>
+                              )}
+                            </div>
+
+                            {seat.isOccupied &&
+                              !seat.isMine && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setSeatFocus(
+                                      current =>
+                                        current ===
+                                        seat.seatIndex
+                                          ? null
+                                          : seat.seatIndex,
+                                    )
+                                  }
+                                  className={cn(
+                                    'rounded-md border px-1.5 py-1 text-[6px] font-black uppercase tracking-wider backdrop-blur-md',
+                                    isFocused
+                                      ? 'border-cyan-300/50 bg-cyan-500/20 text-cyan-100'
+                                      : 'border-white/10 bg-black/50 text-white/55',
+                                  )}
+                                >
+                                  {isFocused
+                                    ? 'Listening'
+                                    : 'Listen'}
+                                </button>
+                              )}
+                          </div>
+
+                          {seat.isMine && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void handleLeaveSeat()
+                              }
+                              className="absolute right-1 top-1 z-20 rounded-md border border-red-300/20 bg-red-500/15 px-1.5 py-1 text-[6px] font-black uppercase tracking-wider text-red-100 backdrop-blur-md"
+                            >
+                              Leave
+                            </button>
+                          )}
+                        </div>
+                      )
+                    },
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+        {/* ================================================================
+            BROADCASTER CITY STATUS
+        ================================================================= */}
+
+        {!battleActive &&
+          broadcasterCityStatus.data && (
+            <div
+              className="absolute left-0 right-0 z-40 flex justify-center px-4 pb-2"
+              style={{
+                bottom:
+                  showChat
+                    ? '31vh'
+                    : '86px',
+              }}
+            >
+              <div className="relative">
+                <CityStatusOrb
+                  data={
+                    broadcasterCityStatus.data
+                  }
+                  permissions={{
+                    isSelf: false,
+                    canCheckLicense: false,
+                    canRaid: true,
+                    canRepair: true,
+                    canEnforce: false,
+                    canRemoveFromSeat: false,
+                    canAccessAll: false,
+                  }}
+                  compact
+                  onHouseClick={() => {
+                    const targetUser =
+                      broadcasterCityStatus.data
+
+                    if (
+                      targetUser?.house_id &&
+                      targetUser.id !==
+                        user?.id
+                    ) {
+                      setSelectedSeatUserId(
+                        targetUser.id,
+                      )
+                    }
+                  }}
+                  onRaid={() => {
+                    const targetUser =
+                      broadcasterCityStatus.data
+                    if (targetUser?.id && targetUser.id !== user?.id) {
+                      setBroadcastRaidTarget(targetUser.id)
+                    }
+                  }}
+                />
+
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#080912] bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+              </div>
+            </div>
+          )}
+
+        {/* ================================================================
+            CHAT
+        ================================================================= */}
+
+        {showChat &&
+          !battleActive && (
+            <div
+              className="absolute bottom-0 left-0 right-0 z-30 h-[31vh] min-h-[190px] overflow-hidden border-t border-white/[0.07] bg-[#050711]/94 shadow-[0_-25px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
+              onClick={event =>
+                event.stopPropagation()
+              }
+            >
+              <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-violet-500/70" />
+
+              <div className="flex h-11 items-center justify-between border-b border-white/[0.06] px-3">
+                <div className="flex items-center gap-2">
+                  <div className="grid h-7 w-7 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-500/10">
+                    <MessageCircle
+                      size={13}
+                      className="text-cyan-300"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowChat(
+                      false,
+                    )
+                  }
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-white/[0.03]"
+                >
+                  <ChevronDown
+                    size={15}
+                    className="text-white/60"
+                  />
+                </button>
+              </div>
+
+              <div className="h-[calc(100%-44px)] overflow-hidden">
+                <BroadcastChat
+                  streamId={
+                    streamId
+                  }
+                  hostId={
+                    stream.user_id ||
+                    ''
+                  }
+                  isViewer
+                  hideEmotePicker
+                  hideSendButton
+                />
+              </div>
+            </div>
+          )}
+
+        {/* ================================================================
+            BOTTOM CONTROLS
+        ================================================================= */}
+
+        {!battleActive && (
+          <div
+            className={cn(
+              'absolute bottom-0 left-0 right-0 z-50 px-3 transition-all duration-300',
+              showChat
+                ? 'translate-y-full opacity-0 pointer-events-none'
+                : 'translate-y-0 opacity-100',
+            )}
+            onClick={event =>
+              event.stopPropagation()
+            }
+          >
+            <div className="mx-auto flex max-w-xl items-center gap-2 rounded-[22px] border border-white/10 bg-[#050711]/90 p-2 shadow-[0_0_40px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+
+              <button
+                type="button"
+                onClick={handleMic}
+                className={cn(
+                  'grid h-12 w-12 place-items-center rounded-2xl border transition active:scale-90',
+                  micEnabled
+                    ? 'border-cyan-300/20 bg-cyan-500/10 text-cyan-200'
+                    : 'border-red-300/20 bg-red-500/10 text-red-200',
+                )}
+              >
+                {micEnabled ? (
+                  <Mic size={18} />
+                ) : (
+                  <MicOff
+                    size={18}
+                  />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  handleCamera
+                }
+                className={cn(
+                  'grid h-12 w-12 place-items-center rounded-2xl border transition active:scale-90',
+                  cameraEnabled
+                    ? 'border-violet-300/20 bg-violet-500/10 text-violet-200'
+                    : 'border-red-300/20 bg-red-500/10 text-red-200',
+                )}
+              >
+                {cameraEnabled ? (
+                  <Video
+                    size={18}
+                  />
+                ) : (
+                  <VideoOff
+                    size={18}
+                  />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowChat(
+                    true,
+                  )
+                }
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 text-[9px] font-black uppercase tracking-[0.16em] text-white/75"
+              >
+                <MessageCircle
+                  size={16}
+                />
+                Open Chat
+              </button>
+
+              <button
+                type="button"
+                onClick={leave}
+                className="grid h-12 w-12 place-items-center rounded-2xl border border-red-300/20 bg-red-500/10 text-red-200 transition active:scale-90"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="h-[calc(env(safe-area-inset-bottom)+0.6rem)]" />
+          </div>
+        )}
+
+        {/* ================================================================
+            EDGE ACCENTS
+        ================================================================= */}
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[130] h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-violet-500/50" />
+
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-[130] h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-violet-500/30" />
+
+        {/* ================================================================
+            CITY PANEL
+        ================================================================= */}
+
+        {selectedSeatUserId && (
+          <CityStatusPanel
+            userId={
+              selectedSeatUserId
+            }
+            onClose={() =>
+              setSelectedSeatUserId(
+                null,
+              )
+            }
+            isBroadcaster={
+              false
+            }
+            isBroadOfficer={
+              false
+            }
+            broadcasterId={
+              hostId
+            }
+            onHouseClick={() => {
+              const targetUser =
+                broadcasterCityStatus.data
+
+              if (
+                targetUser?.house_id &&
+                targetUser.id !==
+                  user?.id
+              ) {
+                setSelectedSeatUserId(
+                  targetUser.id,
+                )
+              }
+            }}
+          />
+        )}
+
+        {/* ================================================================
+            BROADCAST RAID MODAL
+        ================================================================= */}
+
+        {broadcastRaidTarget && broadcasterCityStatus.data && (
+          <RaidModal
+            isOpen={!!broadcastRaidTarget}
+            onClose={() =>
+              setBroadcastRaidTarget(null)
+            }
+            targetUserId={
+              broadcastRaidTarget
+            }
+            targetUsername={
+              broadcasterCityStatus.data.username
+            }
+            targetAvatarUrl={
+              broadcasterCityStatus.data.avatar_url
+            }
+            streamId={streamId}
+            mode={
+              broadcasterCityStatus.data.recentlyRaided
+                ? 'repair'
+                : 'raid'
+            }
+            onRaidComplete={() => {
+              broadcasterCityStatus.refetch?.()
+            }}
+          />
+        )}
+
+        {/* ================================================================
+            GIFT MODAL
+        ================================================================= */}
+
+        <PhoneGiftModal
+          isOpen={
+            isGiftModalOpen
+          }
+          onClose={() => {
+            setIsGiftModalOpen(
+              false,
+            )
+
+            setGiftRecipientId(
+              null,
+            )
+          }}
+          recipientId={
+            giftRecipientId ||
+            hostId ||
+            ''
+          }
+          streamId={
+            streamId
+          }
+          broadcasterId={
+            hostId
+          }
+        />
+      </div>
+    </GiftSystemProvider>
+  )
 }

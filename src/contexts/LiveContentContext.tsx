@@ -198,6 +198,28 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
 
       if (!mountedRef.current) return
 
+      const broadcasterIds = streams
+        .map(s => s.broadcasterId)
+        .filter((id): id is string => Boolean(id))
+
+      let enrichedStreams = streams
+      if (broadcasterIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('id, username, avatar_url')
+          .in('id', broadcasterIds)
+
+        const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]))
+        enrichedStreams = streams.map(item => {
+          const profile = profileMap.get(item.broadcasterId || '')
+          return {
+            ...item,
+            streamerName: profile?.username || item.streamerName || 'Unknown',
+            streamerAvatar: profile?.avatar_url || item.streamerAvatar || null,
+          }
+        })
+      }
+
       let courtLiveItems: LiveItem[] = []
       try {
         const { data: activeCourts } = await supabase
@@ -240,7 +262,7 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
         console.warn('[LiveContentContext] Court session fallback failed:', courtErr)
       }
 
-      const allItems = [...streams, ...courtLiveItems]
+      const allItems = [...enrichedStreams, ...courtLiveItems]
       setLiveItems(allItems)
     } catch (err) {
       console.error('Error fetching live content:', err)

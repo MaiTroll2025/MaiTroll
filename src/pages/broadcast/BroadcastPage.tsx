@@ -50,6 +50,7 @@ import CollaborateButton from '../../components/collaboration/CollaborateButton'
 import CollaborationModal from '../../components/collaboration/CollaborationModal'
 import CollaborationRequestNotification from '../../components/collaboration/CollaborationRequestNotification'
 import { useStreamCollaboration } from '../../hooks/useStreamCollaboration'
+import MaiBag from '../../components/mai-bag/MaiBag'
 
 import { MaiTrollBroadcastTheme as theme } from '../../styles/broadcastTheme'
 
@@ -552,6 +553,7 @@ import CityStatusOrb from '@/components/city/CityStatusOrb'
 import { useCityStatusOrb } from '@/lib/hooks/useCityStatusOrb'
 import SeatCityStatusOrb from '@/components/broadcast/SeatCityStatusOrb'
 import RaidPanel from '@/components/city/RaidPanel'
+import RaidModal from '@/components/city/RaidModal'
 import PaidChatSettingsModal from '@/components/broadcast/PaidChatSettingsModal'
 import AuctionMePanel from '@/components/broadcast/AuctionMePanel'
 
@@ -2282,6 +2284,7 @@ const ranked = senderIds
     // CityStatusPanel for clicking on seats / broadcaster orb
     const [selectedSeatUserId, setSelectedSeatUserId] = useState<string | null>(null)
     const [raidTarget, setRaidTarget] = useState<{ userId: string; houseId: string } | null>(null)
+    const [broadcastRaidTarget, setBroadcastRaidTarget] = useState<string | null>(null)
   // Broadcast Abilities
   const {
     abilities: userAbilities,
@@ -6580,6 +6583,9 @@ const toggleMicrophone = useCallback(async () => {
                     }}
                     style={isHost ? { cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } : undefined}
                   >
+                  {streamId && (
+                    <MaiBag streamId={streamId} compact className="pointer-events-none absolute right-2 top-2 z-20" />
+                  )}
                   {/* Camera starting fallback */}
                   {(() => {
                     const hostParticipant = hostParticipantRef.current
@@ -6620,7 +6626,6 @@ const toggleMicrophone = useCallback(async () => {
                       </div>
                     )
                   })()}
-
                   {/* Host video element */}
                   <TrackAttach
                     track={isHost ? (localTracks?.[1] ?? null) : (() => {
@@ -6700,7 +6705,7 @@ const toggleMicrophone = useCallback(async () => {
                     {broadcasterCityStatus.data && (
                       <CityStatusOrb
                         data={broadcasterCityStatus.data}
-                        permissions={{ isSelf: isHost, canCheckLicense: false, canRaid: false, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
+                        permissions={{ isSelf: isHost, canCheckLicense: false, canRaid: false, canRepair: true, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
                         compact
                         onHouseClick={() => setShowUserStats({
                           userId: stream?.user_id || '',
@@ -6711,6 +6716,12 @@ const toggleMicrophone = useCallback(async () => {
                           isSeatUser: false,
                           streamId: streamId,
                         })}
+                        onRaid={() => {
+                          const targetUser = broadcasterCityStatus.data;
+                          if (targetUser?.id && targetUser.id !== user?.id) {
+                            setBroadcastRaidTarget(targetUser.id);
+                          }
+                        }}
                       />
                     )}
                   </div>
@@ -6732,6 +6743,9 @@ const toggleMicrophone = useCallback(async () => {
                    }}
                    style={isHost ? { cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } : undefined}
                  >
+                  {streamId && (
+                    <MaiBag streamId={streamId} compact className="pointer-events-none absolute right-3 top-3 z-20" />
+                  )}
 
 {/* Camera starting fallback � shows when no video track is available */}
                 {(() => {
@@ -6797,7 +6811,7 @@ const toggleMicrophone = useCallback(async () => {
                     <div className="pointer-events-auto">
                       <CityStatusOrb
                         data={broadcasterCityStatus.data}
-                        permissions={{ isSelf: isHost, canCheckLicense: false, canRaid: false, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
+                        permissions={{ isSelf: isHost, canCheckLicense: false, canRaid: false, canRepair: true, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
                         compact
                         onHouseClick={() => setShowUserStats({
                           userId: stream?.user_id || '',
@@ -6808,6 +6822,12 @@ const toggleMicrophone = useCallback(async () => {
                           isSeatUser: false,
                           streamId: streamId,
                         })}
+                        onRaid={() => {
+                          const targetUser = broadcasterCityStatus.data;
+                          if (targetUser?.id && targetUser.id !== user?.id) {
+                            setBroadcastRaidTarget(targetUser.id);
+                          }
+                        }}
                       />
                     </div>
                   )}
@@ -8635,9 +8655,8 @@ const toggleMicrophone = useCallback(async () => {
                      targetUserId={userActionTarget.userId}
                      streamId={streamId || ''}
                      hostId={stream?.user_id || ''}
-                     currentUserId={user?.id}
-                     profile={profile as any}
-                   />
+                      currentUserId={user?.id}
+                    />
                 ) : (
                 <div className="pointer-events-auto">
                 <UserActionModal
@@ -8728,6 +8747,22 @@ const toggleMicrophone = useCallback(async () => {
                   targetHouseId={raidTarget.houseId}
                   isOpen={!!raidTarget}
                   onClose={() => setRaidTarget(null)}
+                  onRaidComplete={() => {
+                    broadcasterCityStatus.refetch?.();
+                  }}
+                />
+              )}
+
+              {/* Broadcast Raid Modal */}
+              {broadcastRaidTarget && broadcasterCityStatus.data && (
+                <RaidModal
+                  isOpen={!!broadcastRaidTarget}
+                  onClose={() => setBroadcastRaidTarget(null)}
+                  targetUserId={broadcastRaidTarget}
+                  targetUsername={broadcasterCityStatus.data.username}
+                  targetAvatarUrl={broadcasterCityStatus.data.avatar_url}
+                  streamId={streamId || stream.id}
+                  mode={broadcasterCityStatus.data.recentlyRaided ? 'repair' : 'raid'}
                   onRaidComplete={() => {
                     broadcasterCityStatus.refetch?.();
                   }}
@@ -9239,14 +9274,16 @@ const toggleMicrophone = useCallback(async () => {
                      const viewers = audience.length > 0
                        ? audience
                        : activeViewerProfiles.length > 0
-                         ? activeViewerProfiles.map(v => ({
-                             id: v.user_id,
-                             user_id: v.user_id,
-                             username: v.username,
-                             avatar_url: v.avatar_url,
-                             role: v.role || 'audience',
-                             gift_total: 0,
-                           }))
+                          ? activeViewerProfiles.map(v => ({
+                              id: v.user_id,
+                              user_id: v.user_id,
+                              username: v.username,
+                              avatar_url: v.avatar_url,
+                              role: v.role || 'audience',
+                              gift_total: 0,
+                              is_active: true,
+                              left_at: null,
+                            }))
                          : activeAudienceWithAnon
 
                      const activeViewers = viewers.filter(m => m.is_active && !m.left_at)

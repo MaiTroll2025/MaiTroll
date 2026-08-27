@@ -16,7 +16,6 @@ import { useStagePasses } from '../../hooks/useStagePasses';
 import { useProfileFrameStore } from '@/stores/useProfileFrameStore';
 import GiftAnimationLayer from '@/components/broadcast/GiftAnimationLayer';
 import { getAllPersistentGifts, type PersistentGift } from '../../lib/persistentGiftStore';
-import type { TrollToeMatch } from '../../types/trollToe';
 import BroadcastTicker from './BroadcastTicker';
 import SeatHeatBar from './SeatHeatBar';
 import BroadcastStageLayout from './BroadcastStageLayout';
@@ -73,7 +72,8 @@ interface BroadcastGridProps {
   onGiftAll: (ids: string[]) => void;
   mode?: 'viewer' | 'stage';
   seats?: Record<number, SeatSession>;
-  onJoinSeat?: (index: number) => void;
+  onJoinSeat?: (index: number, price: number) => Promise<boolean> | boolean;
+  onLeaveSeat?: (index: number) => void;
   onKick?: (userId: string) => void;
   broadcasterProfile?: any;
   hideEmptySeats?: boolean;
@@ -123,10 +123,6 @@ interface BroadcastGridProps {
   canEditBoxes?: boolean;
   // Broadcast mode (for hiding controls during game)
   broadcastMode?: 'normal' | 'game' | 'battle';
-   // Troll Toe game overlays
-   trollToeMatch?: TrollToeMatch | null;
-   onTrollToeFog?: (boxIndex: number) => void;
-   canTrollToeFog?: boolean;
    // Mobile viewer mode (disables interactions)
    isMobileViewer?: boolean;
 
@@ -484,9 +480,6 @@ const BroadcastGridComponent = function BroadcastGrid({
   hasRgbEffect = false,
   canEditBoxes = false,
    broadcastMode = 'normal',
-   trollToeMatch = null,
-   onTrollToeFog,
-   canTrollToeFog = false,
    showTicker = false,
     isMobileViewer = false,
     // Modal handlers
@@ -508,7 +501,7 @@ const BroadcastGridComponent = function BroadcastGrid({
    }
 
 const { profile } = useAuthStore();
-const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : undefined);
+const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : undefined);
 
   // Mini profile popup state
   const [miniProfile, setMiniProfile] = useState<{ userId: string; username: string; avatarUrl: string } | null>(null);
@@ -1077,19 +1070,6 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : und
     touchCurrentYRef.current = null;
   }, [enableStreamSwipe, canSwipe, onSwipeDown, onSwipeUp]);
 
-  // Troll Toe winning line calculation (must be at top level, not inside .map())
-  const trollToeWinningBoxes = useMemo(() => {
-    if (!trollToeMatch || trollToeMatch.phase !== 'ended') return null;
-    const patterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    for (const p of patterns) {
-      const [a,b,c] = p;
-      if (trollToeMatch.boxes[a].player && trollToeMatch.boxes[b].player && trollToeMatch.boxes[c].player &&
-        trollToeMatch.boxes[a].player!.team === trollToeMatch.boxes[b].player!.team &&
-        trollToeMatch.boxes[b].player!.team === trollToeMatch.boxes[c].player!.team) return p;
-    }
-    return null;
-  }, [trollToeMatch?.phase, trollToeMatch?.boxes]);
-
   const universalTeamAScore = (stream as any).side_a_score ?? battleState?.broadcasterScore ?? 0;
   const universalTeamBScore = (stream as any).side_b_score ?? battleState?.challengerScore ?? 0;
   const universalBattleStatus = stream.battle_status ?? 'waiting';
@@ -1404,9 +1384,6 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : und
           // Use real-time attributes if available
           const userAttrs = userId ? attributes[userId] : null;
 
-          // Troll Toe box state for this seat
-          const trollToeBox = trollToeMatch ? trollToeMatch.boxes[seatIndex] : null;
-
           const baseBoxClass = 'relative bg-black/50 rounded-xl overflow-hidden border border-white/10 transition-all duration-300 min-w-0 h-full cursor-pointer';
 
           const hasGold =
@@ -1435,12 +1412,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream.id : und
             battleState?.suddenDeath && 'animate-pulse',
             // Universal Battle: Left side = Team A (RED), Right side = Team B (BLUE)
             isUniversalBattleActive && seatIndex < (effectiveBoxCount / 2) && 'border-2 border-red-500/50',
-            isUniversalBattleActive && seatIndex >= (effectiveBoxCount / 2) && 'border-2 border-blue-500/50',
-            // Troll Toe game team highlighting
-            trollToeMatch && trollToeMatch.phase !== 'waiting' && trollToeMatch.phase !== 'ended' && trollToeBox?.player?.team === 'broadcaster' && 'border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]',
-            trollToeMatch && trollToeMatch.phase !== 'waiting' && trollToeMatch.phase !== 'ended' && trollToeBox?.player?.team === 'challenger' && 'border-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]',
-            trollToeMatch && trollToeBox?.state === 'broken' && 'border-2 border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.4)]',
-            trollToeMatch && trollToeMatch.phase === 'ended' && trollToeWinningBoxes?.includes(seatIndex) && 'ring-4 ring-yellow-400 animate-pulse'
+            isUniversalBattleActive && seatIndex >= (effectiveBoxCount / 2) && 'border-2 border-blue-500/50'
           );
 
           // Get received gifts for this user
@@ -1646,7 +1618,11 @@ boxClass,
                         e.stopPropagation();
                         e.preventDefault();
                         if (import.meta.env.DEV) console.debug('[BroadcastGrid] Join seat clicked:', seatIndex);
-                        onJoinSeat(seatIndex);
+                        const seatPrices = stream.seat_prices;
+                        const price = seatPrices && seatPrices.length > seatIndex
+                          ? seatPrices[seatIndex]
+                          : (typeof seatPriceOverride === 'number' ? seatPriceOverride : stream.seat_price);
+                        onJoinSeat(seatIndex, price);
                       }}
                       className="flex flex-col items-center text-zinc-400 hover:text-white active:scale-95 transition-all w-full h-full cursor-pointer"
                     >
@@ -2113,8 +2089,6 @@ function areBroadcastGridPropsEqual(prev: BroadcastGridProps, next: BroadcastGri
     prev.hasRgbEffect === next.hasRgbEffect &&
     prev.canEditBoxes === next.canEditBoxes &&
     prev.broadcastMode === next.broadcastMode &&
-    prev.trollToeMatch === next.trollToeMatch &&
-    prev.canTrollToeFog === next.canTrollToeFog &&
     prev.isMobileViewer === next.isMobileViewer &&
      prev.onGift === next.onGift &&
      prev.onGiftAll === next.onGiftAll &&
@@ -2130,9 +2104,8 @@ function areBroadcastGridPropsEqual(prev: BroadcastGridProps, next: BroadcastGri
      prev.onSwipeDown === next.onSwipeDown &&
      prev.onAddBox === next.onAddBox &&
      prev.onRemoveBox === next.onRemoveBox &&
-     prev.onToggleRgb === next.onToggleRgb &&
-     prev.onTrollToeFog === next.onTrollToeFog &&
-     prev.onOpenUserAction === next.onOpenUserAction &&
+    prev.onToggleRgb === next.onToggleRgb &&
+    prev.onOpenUserAction === next.onOpenUserAction &&
      prev.onOpenUserStats === next.onOpenUserStats &&
      prev.onCloseUserStats === next.onCloseUserStats &&
      prev.onOpenHostStats === next.onOpenHostStats &&

@@ -912,8 +912,6 @@ export default function PhoneHomepage({
             currentUserId={user?.id}
           />
 
-          <PhoneQuickLinks />
-
           <button
             type="button"
             onClick={() => go('/community-wall')}
@@ -973,6 +971,14 @@ export default function PhoneHomepage({
             </button>
           )}
         </div>
+
+        <PhoneQuickLinks />
+
+        <footer className="mt-6 border-t border-white/5 py-4 text-center">
+          <p className="text-[9px] font-bold text-zinc-600">
+            All rights reserved © 2025 Troll City
+          </p>
+        </footer>
       </main>
 
       <style>{`

@@ -111,6 +111,8 @@ interface BroadcastChatProps {
     seats?: Record<number, { user_id?: string | null; guest_id?: string | null; user_profile?: { username?: string; avatar_url?: string | null } | null }>;
     broadcasterProfile?: { username?: string; avatar_url?: string | null } | null;
     onMessageSent?: () => void;
+    hideEmotePicker?: boolean;
+    hideSendButton?: boolean;
 }
 
 // ── Extracted message item component for Virtuoso virtualization ──
@@ -414,12 +416,12 @@ function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disap
 export default function BroadcastChat({
   streamId,
   hostId,
-  isModerator, 
-  isHost, 
-  isViewer = false, 
-  isGuest = false, 
-  onStreamEnd, 
-  onChallengeBroadcaster, 
+  isModerator,
+  isHost,
+  isViewer = false,
+  isGuest = false,
+  onStreamEnd,
+  onChallengeBroadcaster,
   hasPendingChallenge = false,
   pendingChallenges = [],
   onAcceptChallenge,
@@ -428,7 +430,9 @@ export default function BroadcastChat({
   isChatOpen = true,
   seats = {},
   broadcasterProfile,
-  onMessageSent
+  onMessageSent,
+  hideEmotePicker = false,
+  hideSendButton = false,
 }: BroadcastChatProps) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1882,7 +1886,7 @@ const fetchMessages = async () => {
                 />
 
                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                     {availableEmotes.length > 0 && (
+                     {!hideEmotePicker && availableEmotes.length > 0 && (
                          <button
                              type="button"
                              onClick={() => setShowEmotePicker(prev => !prev)}
@@ -1903,14 +1907,16 @@ const fetchMessages = async () => {
                          <Sparkles size={16} />
                        </button>
                      )}
-                     <button
-                         type="submit"
-                         onClick={isGuest ? redirectGuestToAuth : undefined}
-                          disabled={hostChatDisabledByOfficer || streamEnded || userChatDisabled || (!isGuest && !input.trim())}
-                         className="text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition"
-                     >
-                         <Send size={16} />
-                     </button>
+                     {!hideSendButton && (
+                       <button
+                           type="submit"
+                           onClick={isGuest ? redirectGuestToAuth : undefined}
+                            disabled={hostChatDisabledByOfficer || streamEnded || userChatDisabled || (!isGuest && !input.trim())}
+                           className="text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition"
+                       >
+                           <Send size={16} />
+                       </button>
+                     )}
                  </div>
 
                  {showHighlightColorPicker && highlightedChatActive && (
@@ -1923,7 +1929,7 @@ const fetchMessages = async () => {
                    </div>
                  )}
 
-                {showEmotePicker && availableEmotes.length > 0 && (
+                {!hideEmotePicker && showEmotePicker && availableEmotes.length > 0 && (
                     <div className="absolute bottom-full right-0 mb-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto">
                         <div className="text-xs font-bold text-slate-400 mb-2 px-1">Subscriber Emotes</div>
                         <div className="grid grid-cols-4 gap-1">
