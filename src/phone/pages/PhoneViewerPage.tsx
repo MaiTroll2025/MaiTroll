@@ -105,6 +105,10 @@ import {
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BattleView from '@/pages/broadcast/BattleView'
 
+import {
+  usePhoneViewerDebug,
+} from '@/hooks/usePhoneViewerDebug'
+
 interface SeatState {
   participant: any
   videoTrack: RemoteVideoTrack | null
@@ -176,6 +180,123 @@ function getParticipantMetadata(
   } catch {
     return {}
   }
+}
+
+function normalizeUuid(value: unknown): string | null {
+  const text = String(value || '').trim().toLowerCase()
+  const match = text.match(
+    /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  )
+  return match?.[0]?.toLowerCase() || null
+}
+
+function resolveSeatParticipant(
+  seat: any,
+  participants: any[],
+  room: any,
+) {
+  const seatUserId =
+    seat?.user_id ||
+    seat?.guest_id ||
+    null
+
+  const storedIdentity =
+    String(
+      seat?.livekit_participant_identity ||
+        seat?.participant_identity ||
+        seat?.livekit_identity ||
+        seat?.seat_identity ||
+        '',
+    ).trim()
+
+  const check = (participant: any) => {
+    const participantIdentity =
+      String(
+        participant?.identity ||
+          participant?.participantIdentity ||
+          participant?.name ||
+          '',
+      ).trim()
+
+    const metadata =
+      getParticipantMetadata(participant)
+
+    const participantUuid =
+      normalizeUuid(participantIdentity)
+    const metadataUuid =
+      normalizeUuid(
+        metadata.user_id ||
+          metadata.userId ||
+          metadata.uid,
+      )
+    const seatUuid =
+      normalizeUuid(seatUserId)
+
+    if (
+      storedIdentity &&
+      participantIdentity === storedIdentity
+    ) {
+      return true
+    }
+
+    if (
+      storedIdentity &&
+      participantUuid &&
+      participantUuid === normalizeUuid(storedIdentity)
+    ) {
+      return true
+    }
+
+    if (
+      seatUuid &&
+      participantUuid &&
+      participantUuid === seatUuid
+    ) {
+      return true
+    }
+
+    if (
+      seatUuid &&
+      metadataUuid &&
+      metadataUuid === seatUuid
+    ) {
+      return true
+    }
+
+    if (
+      !storedIdentity &&
+      seatUserId &&
+      (
+        participantIdentity ===
+          String(seatUserId) ||
+        participantIdentity.endsWith(
+          `-${seatUserId}`,
+        ) ||
+        participantIdentity.startsWith(
+          `${seatUserId}-`,
+        )
+      )
+    ) {
+      return true
+    }
+
+    return false
+  }
+
+  let match =
+    participants.find(check)
+
+  if (
+    !match &&
+    room?.remoteParticipants
+  ) {
+    match =
+      Array.from(
+        room.remoteParticipants.values(),
+      ).find(check)
+  }
+
+  return match || null
 }
 
 function participantMatchesUser(
@@ -727,6 +848,14 @@ export default function PhoneViewerPage() {
   const hostId =
     stream?.user_id || ''
 
+  const {
+    logs,
+    pushLog,
+    clearLogs,
+  } = usePhoneViewerDebug(
+    '[PhoneViewerPage]',
+  )
+
   const [
     broadcasterProfile,
     setBroadcasterProfile,
@@ -736,6 +865,9 @@ export default function PhoneViewerPage() {
     useState(true)
 
   const [error, setError] =
+    useState<string | null>(null)
+
+  const [viewerError, setViewerError] =
     useState<string | null>(null)
 
   const [showChat, setShowChat] =
@@ -1281,6 +1413,7 @@ export default function PhoneViewerPage() {
 
   const {
     seats,
+    mySeat,
     joinSeat,
     leaveSeat,
    } = useStreamSeats(
@@ -1391,9 +1524,14 @@ export default function PhoneViewerPage() {
     localVideoTrack,
     localAudioTrack,
     room: liveKitRoom,
+    isConnected,
+    isPublishing,
     setMicEnabled,
     setCameraEnabled,
     leaveRoom: leaveLiveKitRoom,
+    joinAsAudience,
+    publishLocalTracks,
+    unpublishLocalTracks,
   } = useLiveKitRoom({
     roomId,
     roomType: 'broadcast',
@@ -1417,8 +1555,95 @@ export default function PhoneViewerPage() {
     }, [remoteUsers])
 
   /* ========================================================================
-     STREAM REALTIME
-  ======================================================================== */
+      LIVEKIT AUDIENCE JOIN
+   ======================================================================== */
+
+  useEffect(() => {
+    if (!streamId || !stream || !roomId || !viewerIdentity) {
+      return
+    }
+
+    if (viewerError) {
+      return
+    }
+
+    if (hasJoinedAudienceRef.current || joiningAudienceRef.current) {
+      return
+    }
+
+    const isActiveStatus =
+      String(
+        stream?.status || '',
+      ).toLowerCase() === 'live'
+
+    if (!isActiveStatus) {
+      return
+    }
+
+    joiningAudienceRef.current = true
+
+    if (import.meta.env.DEV) {
+      pushLog('joining audience', {
+        streamId,
+        roomId,
+        identity: viewerIdentity,
+      })
+    }
+
+    void joinAsAudience({
+      userId: viewerIdentity,
+      streamId,
+      roomName: roomId,
+      viewerIdentity,
+      publishCapable: true,
+    })
+      .then((res: any) => {
+          if (typeof res !== 'string') {
+            hasJoinedAudienceRef.current = true
+            setViewerError(null)
+            currentRoomKeyRef.current = `${streamId}:${roomId}`
+
+            pushLog('audience joined', {
+              streamId,
+              roomId,
+              identity: viewerIdentity,
+            })
+          } else {
+            setViewerError(res)
+
+            pushLog('audience join failed', res)
+          }
+        })
+        .catch((err: any) => {
+          const message =
+            err?.message ||
+            err?.statusText ||
+            String(err) ||
+            'Failed to join broadcast'
+
+          setViewerError(message)
+
+          pushLog('audience join error', {
+            message,
+            error: err,
+          })
+        })
+      .finally(() => {
+        joiningAudienceRef.current = false
+      })
+  }, [
+    streamId,
+    stream,
+    roomId,
+    viewerIdentity,
+    joinAsAudience,
+    viewerError,
+    pushLog,
+  ])
+
+  /* ========================================================================
+      STREAM REALTIME
+   ======================================================================== */
 
   const processGiftEvent = useCallback(async (rawGift: any) => {
     if (!rawGift) return
@@ -1553,6 +1778,45 @@ export default function PhoneViewerPage() {
           void processGiftEvent(rawGift)
         }
       },
+      onParticipant: (event: any) => {
+        if (event.eventType !== 'UPDATE' || !event.new || !streamId || !user?.id) {
+          return
+        }
+
+        const participant = event.new
+        if (participant.stream_id !== streamId || participant.removed !== true) {
+          return
+        }
+
+        if (participant.user_id !== user.id) {
+          return
+        }
+
+        pushLog('participant removed from stream', {
+          userId: participant.user_id,
+          streamId: participant.stream_id,
+        })
+
+        kickProcessedRef.current = true
+
+        void (async () => {
+          try {
+            if (isPublishing) {
+              await unpublishLocalTracks()
+            }
+            await leaveAudience()
+            await leaveLiveKitRoom()
+          } catch {
+            // ignore cleanup errors
+          }
+
+          hasJoinedAudienceRef.current = false
+          joiningAudienceRef.current = false
+          currentRoomKeyRef.current = null
+          toast.error('Removed from broadcast')
+          navigate('/?kicked=Removed%20from%20broadcast', { replace: true })
+        })()
+      },
       onStream: (event: any) => {
         const next = event?.new || event
         if (!next) return
@@ -1560,10 +1824,28 @@ export default function PhoneViewerPage() {
         if (next.status === 'ended' || next.ended_at) {
           if (streamEndedRef.current) return
           streamEndedRef.current = true
-          void leaveLiveKitRoom().catch(() => {})
-          hasJoinedAudienceRef.current = false
-          joiningAudienceRef.current = false
-          currentRoomKeyRef.current = null
+
+          pushLog('stream ended', {
+            status: next.status,
+            ended_at: next.ended_at,
+          })
+
+          void (async () => {
+            try {
+              if (isPublishing) {
+                await unpublishLocalTracks()
+              }
+              await leaveAudience()
+              await leaveLiveKitRoom()
+            } catch {
+              // ignore cleanup errors
+            }
+
+            hasJoinedAudienceRef.current = false
+            joiningAudienceRef.current = false
+            currentRoomKeyRef.current = null
+          })()
+
           navigate(`/broadcast/summary/${streamId}`, { replace: true })
           return
         }
@@ -1735,33 +2017,74 @@ export default function PhoneViewerPage() {
       [],
     )
 
-  useEffect(() => {
+  function resolveBroadcasterParticipant(
+    participants: any[],
+    room: any,
+    streamId: string,
+    broadcasterUserId: string,
+  ) {
+    const expectedHostIdentity = `host_${streamId}`
+
+    const matches = (participant: any) => {
+      const identity =
+        String(
+          participant?.identity ||
+            participant?.participantIdentity ||
+            participant?.name ||
+            '',
+        ).trim()
+
+      const metadata =
+        getParticipantMetadata(participant)
+
+      if (
+        identity === expectedHostIdentity
+      ) {
+        return true
+      }
+
+      if (
+        metadata.role === 'host' &&
+        metadata.streamId === streamId
+      ) {
+        return true
+      }
+
+      if (
+        participantMatchesUser(
+          participant,
+          broadcasterUserId,
+        )
+      ) {
+        return true
+      }
+
+      return false
+    }
+
     let host =
-      remoteParticipants.find(
-        (participant: any) =>
-          participantMatchesUser(
-            participant,
-            hostId,
-          ),
-      )
+      participants.find(matches)
 
     if (
       !host &&
-      liveKitRoom?.remoteParticipants
+      room?.remoteParticipants
     ) {
       host =
         Array.from(
-          liveKitRoom
-            .remoteParticipants
-            .values(),
-        ).find(
-          (participant: any) =>
-            participantMatchesUser(
-              participant,
-              hostId,
-            ),
-        )
+          room.remoteParticipants.values(),
+        ).find(matches)
     }
+
+    return host
+  }
+
+  useEffect(() => {
+    const host = resolveBroadcasterParticipant(
+      remoteParticipants,
+      liveKitRoom,
+      streamId,
+      hostId,
+    )
 
     if (host) {
       hostParticipantRef.current =
@@ -1770,12 +2093,19 @@ export default function PhoneViewerPage() {
       updateBroadcasterState(
         host,
       )
+
+      pushLog('broadcaster participant resolved', {
+        identity: host?.identity,
+        sid: host?.sid,
+      })
     }
   }, [
     remoteParticipants,
     liveKitRoom,
+    streamId,
     hostId,
     updateBroadcasterState,
+    pushLog,
   ])
 
   /* ========================================================================
@@ -1835,28 +2165,10 @@ export default function PhoneViewerPage() {
               }
 
               const participant =
-                remoteParticipants.find(
-                  (candidate: any) => {
-                    const candidateIdentity =
-                      getParticipantIdentity(
-                        candidate,
-                      )
-
-                    return (
-                      participantMatchesUser(
-                        candidate,
-                        identity,
-                      ) ||
-                      participantMatchesUser(
-                        candidate,
-                        userId,
-                      ) ||
-                      candidateIdentity ===
-                        String(
-                          identity,
-                        )
-                    )
-                  },
+                resolveSeatParticipant(
+                  seat,
+                  remoteParticipants,
+                  liveKitRoom,
                 )
 
               next[seatIndex] = {
@@ -1941,8 +2253,81 @@ export default function PhoneViewerPage() {
   ])
 
   /* ========================================================================
-     AUDIENCE PRESENCE
-  ======================================================================== */
+      SEAT PUBLISH / UNPUBLISH
+   ======================================================================== */
+
+  const isUserOnStage = useMemo(() => {
+    if (!mySeat || !user?.id) {
+      return false
+    }
+
+    const status =
+      String(mySeat?.status || '')
+        .trim()
+        .toLowerCase()
+
+    return (
+      [
+        'reserved',
+        'camera_starting',
+        'active',
+        'live',
+      ].includes(status) &&
+      (mySeat.user_id === user.id ||
+        mySeat.guest_id === user.id)
+    )
+  }, [mySeat, user?.id])
+
+  useEffect(() => {
+    if (!liveKitRoom || !isConnected) {
+      return
+    }
+
+    if (isUserOnStage && !isPublishing) {
+      pushLog('publishing local tracks for seat', {
+        seatIndex: mySeat?.seat_index,
+      })
+
+      void publishLocalTracks()
+        .then(() => {
+          if (mySeat?.seat_index != null) {
+            pushLog('seat tracks published', {
+              seatIndex: mySeat.seat_index,
+            })
+          }
+        })
+        .catch((err: any) => {
+          pushLog('publishLocalTracks failed', {
+            error: err?.message || String(err),
+          })
+        })
+    }
+
+    if (!isUserOnStage && isPublishing) {
+      pushLog('unpublishing local tracks')
+
+      void unpublishLocalTracks().catch(
+        (err: any) => {
+          pushLog('unpublishLocalTracks failed', {
+            error: err?.message || String(err),
+          })
+        },
+      )
+    }
+  }, [
+    isUserOnStage,
+    isConnected,
+    isPublishing,
+    liveKitRoom,
+    publishLocalTracks,
+    unpublishLocalTracks,
+    mySeat?.seat_index,
+    pushLog,
+  ])
+
+  /* ========================================================================
+      AUDIENCE PRESENCE
+   ======================================================================== */
 
   useEffect(() => {
     if (!streamId) {
@@ -1974,27 +2359,159 @@ export default function PhoneViewerPage() {
   ])
 
   useEffect(() => {
+    const audienceCount =
+      activeAudience?.length || 0
+
+    const serverCount =
+      Number(
+        (stream as any)?.current_viewers || 0,
+      ) || 0
+
     setViewerCount(
-      Math.max(
-        viewerCount,
-        activeAudience?.length ||
-          0,
-        Number(
-          (stream as any)
-            ?.current_viewers ||
-            0,
-        ),
-      ),
+      audienceCount > 0
+        ? audienceCount
+        : serverCount,
     )
   }, [
     activeAudience,
     stream,
-    viewerCount,
+  ])
+
+   /* ========================================================================
+      KICK / REMOVAL HANDLING
+   ======================================================================== */
+
+  const kickProcessedRef =
+    useRef(false)
+
+  useEffect(() => {
+    if (!streamId || !user?.id) {
+      return
+    }
+
+    kickProcessedRef.current = false
+
+    const channel = supabase.channel(
+      `stream-seat-events-kick:${streamId}`,
+    )
+
+    channel
+      .on(
+        'broadcast',
+        { event: 'seat_left' },
+        (payload) => {
+          if (kickProcessedRef.current) {
+            return
+          }
+
+          if (!mySeat) {
+            return
+          }
+
+          const payloadUserId =
+            String(
+              payload?.payload?.user_id ||
+                '',
+            ).trim()
+
+          if (
+            !payloadUserId ||
+            payloadUserId !== user.id
+          ) {
+            return
+          }
+
+          kickProcessedRef.current = true
+
+          pushLog('kick detected from seat_left event', {
+            payloadUserId: payload?.payload?.user_id,
+            mySeatIndex: mySeat?.seat_index,
+          })
+
+          void (async () => {
+            try {
+              await unpublishLocalTracks()
+              await leaveSeat?.()
+              await leaveAudience()
+              await leaveLiveKitRoom().catch(
+                () => {},
+              )
+              hasJoinedAudienceRef.current =
+                false
+              joiningAudienceRef.current =
+                false
+              currentRoomKeyRef.current =
+                null
+              toast.error(
+                'Removed from stage',
+              )
+              navigate(
+                '/?kicked=Removed%20from%20stage',
+                { replace: true },
+              )
+            } catch {
+              // ignore cleanup errors
+            }
+          })()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(
+          channel,
+        )
+      }
+      kickProcessedRef.current = false
+    }
+  }, [
+    streamId,
+    user?.id,
+    mySeat,
+    leaveSeat,
+    leaveAudience,
+    leaveLiveKitRoom,
+    unpublishLocalTracks,
+    navigate,
+    pushLog,
   ])
 
   /* ========================================================================
-     SEAT CARDS
-  ======================================================================== */
+      CLEANUP ON UNMOUNT / STREAM CHANGE
+   ======================================================================== */
+
+  useEffect(() => {
+    return () => {
+      if (isPublishing) {
+        void unpublishLocalTracks().catch(
+          () => {},
+        )
+      }
+
+      void leaveLiveKitRoom().catch(() => {})
+
+      if (
+        hasJoinedAudienceRef.current ||
+        joiningAudienceRef.current
+      ) {
+        void leaveAudience()
+      }
+
+      hasJoinedAudienceRef.current = false
+      joiningAudienceRef.current = false
+      currentRoomKeyRef.current = null
+    }
+  }, [
+    isPublishing,
+    leaveLiveKitRoom,
+    unpublishLocalTracks,
+    leaveAudience,
+  ])
+
+  /* ========================================================================
+      SEAT CARDS
+   ======================================================================== */
 
   const seatCards =
     useMemo<PhoneSeatCard[]>(
@@ -3515,6 +4032,44 @@ export default function PhoneViewerPage() {
             hostId
           }
         />
+
+        {import.meta.env.DEV && logs.length > 0 && (
+          <div className="absolute inset-x-0 bottom-0 z-[200] max-h-40 overflow-auto rounded-t-2xl border border-white/10 bg-black/90 p-2 font-mono text-[10px] text-cyan-300">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="font-black uppercase tracking-wider text-white/60">
+                Debug Log ({logs.length})
+              </span>
+              <button
+                type="button"
+                onClick={clearLogs}
+                className="text-[8px] font-black uppercase text-white/40"
+              >
+                Clear
+              </button>
+            </div>
+            {logs.slice(-50).map((entry, idx) => (
+              <div
+                key={`${entry.timestamp}-${idx}`}
+                className="border-b border-white/5 pb-1 last:border-0"
+              >
+                <span className="text-white/30">
+                  [{new Date(entry.timestamp).toLocaleTimeString()}]
+                </span>{' '}
+                <span className="text-cyan-300/80">
+                  {entry.prefix}
+                </span>{' '}
+                <span className="text-white/70">
+                  {entry.message}
+                </span>
+                {entry.data && (
+                  <pre className="mt-1 whitespace-pre-wrap text-white/40">
+                    {JSON.stringify(entry.data, null, 2)}
+                  </pre>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </GiftSystemProvider>
   )
