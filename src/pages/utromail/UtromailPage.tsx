@@ -21,6 +21,7 @@ import {
   Ban,
   Flag,
   Trash2,
+  Lock,
 } from "lucide-react";
 import {
   getThreads,
@@ -377,6 +378,35 @@ export default function UtromailPage() {
     return () => {
       if (notifChannel) {
         supabase.removeChannel(notifChannel);
+      }
+    };
+  }, [user?.id, activeConversationId]);
+
+  // Real-time: watch for jail status changes to update icons
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const jailChannel = supabase
+      .channel(`utromail-jail:${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "jail",
+        },
+        () => {
+          fetchThreadsRef.current?.();
+          if (activeConversationId) {
+            setMessages((prev) => prev);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      if (jailChannel) {
+        supabase.removeChannel(jailChannel);
       }
     };
   }, [user?.id, activeConversationId]);
@@ -911,12 +941,15 @@ export default function UtromailPage() {
                               navigate(`/profile/${encodeURIComponent(senderUsername)}`);
                             }
                           }}
-                          className="mb-1.5 ml-1 text-left text-[10px] font-black uppercase tracking-[0.14em] text-fuchsia-300/80 transition hover:text-fuchsia-200"
+                          className="mb-1.5 ml-1 flex items-center gap-1.5 text-left text-[10px] font-black uppercase tracking-[0.14em] text-fuchsia-300/80 transition hover:text-fuchsia-200"
                         >
                           {msg.sender_name ||
                             msg.sender_username ||
                             activeThread?.other_username ||
                             "City member"}
+                          {msg.sender_is_jailed && (
+                            <Lock className="h-3.5 w-3.5 text-red-400" title="In custody" />
+                          )}
                         </button>
                       )}
 
@@ -1314,21 +1347,26 @@ export default function UtromailPage() {
                             <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#080a16] bg-lime-400" />
                           )}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p
-                              className={`truncate text-sm ${isUnread ? "font-black text-white" : "font-bold text-slate-200"}`}
-                            >
-                              {displayName}
-                            </p>
-                            <span
-                              className={`shrink-0 text-[10px] ${isUnread ? "font-bold text-fuchsia-300" : "text-slate-600"}`}
-                            >
-                              {thread.last_message_at
-                                ? formatTime(thread.last_message_at)
-                                : ""}
-                            </span>
-                          </div>
+                         <div className="min-w-0 flex-1">
+                           <div className="flex items-center justify-between gap-2">
+                             <div className="flex items-center gap-1.5">
+                               <p
+                                 className={`truncate text-sm ${isUnread ? "font-black text-white" : "font-bold text-slate-200"}`}
+                               >
+                                 {displayName}
+                               </p>
+                               {thread.other_is_jailed && (
+                                 <Lock className="h-3.5 w-3.5 text-red-400" title="In custody" />
+                               )}
+                             </div>
+                             <span
+                               className={`shrink-0 text-[10px] ${isUnread ? "font-bold text-fuchsia-300" : "text-slate-600"}`}
+                             >
+                               {thread.last_message_at
+                                 ? formatTime(thread.last_message_at)
+                                 : ""}
+                             </span>
+                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <p
                               className={`min-w-0 flex-1 truncate text-xs ${isUnread ? "font-semibold text-slate-200" : "text-slate-500"}`}

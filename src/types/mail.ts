@@ -55,6 +55,7 @@ export interface UtromailThread {
   other_avatar_url?: string | null;
   other_display_name?: string | null;
   other_utromail_address?: string | null;
+  other_is_jailed?: boolean;
 }
 
 export interface UtromailThreadMember {
@@ -95,6 +96,7 @@ export interface UtromailMessage {
   recipient_name?: string;
   recipient_avatar?: string;
   is_read?: boolean;
+  sender_is_jailed?: boolean;
   attachments?: UtromailAttachment[];
 }
 

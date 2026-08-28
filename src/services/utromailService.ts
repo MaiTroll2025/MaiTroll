@@ -155,6 +155,24 @@ export const getThreads = async (userId: string, folder: MailFolder = 'inbox'): 
     }
   }
 
+  // Batch-fetch jail status for all unique user IDs
+  const jailMap: Record<string, boolean> = {};
+  const jailIds = Array.from(allUserIds).filter(Boolean);
+  if (jailIds.length > 0) {
+    const { data: jailData } = await supabase
+      .from('jail')
+      .select('user_id')
+      .in('user_id', jailIds)
+      .eq('status', 'jailed')
+      .gte('scheduled_release_at', new Date().toISOString())
+      .or('bond_paid.is.false,bond_paid.is.null');
+    if (jailData) {
+      for (const row of jailData as any[]) {
+        jailMap[row.user_id] = true;
+      }
+    }
+  }
+
   // Debug: log profile resolution (only in dev)
   if (import.meta.env.DEV) {
     console.log('[getThreads] userId:', userId, '| profiles fetched:', Object.keys(profileMap).length, '| threads:', (data || []).length);
@@ -201,11 +219,13 @@ export const getThreads = async (userId: string, folder: MailFolder = 'inbox'): 
       other_avatar_url: otherProfile?.avatar_url || null,
       other_utromail_address: otherProfile?.utromail_address || null,
       other_display_name: otherProfile?.display_name || otherProfile?.username || null,
+      other_is_jailed: otherUserId ? !!jailMap[otherUserId] : false,
       last_message: lastMsg ? {
         ...lastMsg,
         sender_name: senderProfile?.display_name || senderProfile?.username || null,
         sender_username: senderProfile?.username || null,
         sender_avatar: senderProfile?.avatar_url || null,
+        sender_is_jailed: lastMsg?.sender_id ? !!jailMap[lastMsg.sender_id] : false,
       } : null,
       members: membersWithProfiles,
     };
@@ -304,6 +324,23 @@ export const getThreadMessages = async (threadId: string): Promise<UtromailMessa
     }
   }
 
+  // Batch-fetch jail status for all senders
+  const jailMap: Record<string, boolean> = {};
+  if (senderIds.length > 0) {
+    const { data: jailData } = await supabase
+      .from('jail')
+      .select('user_id')
+      .in('user_id', senderIds)
+      .eq('status', 'jailed')
+      .gte('scheduled_release_at', new Date().toISOString())
+      .or('bond_paid.is.false,bond_paid.is.null');
+    if (jailData) {
+      for (const row of jailData as any[]) {
+        jailMap[row.user_id] = true;
+      }
+    }
+  }
+
   const result = (data || []).map((m: any) => {
     const senderProfile = profileMap[m.sender_id] || null;
     const mapped = {
@@ -311,8 +348,9 @@ export const getThreadMessages = async (threadId: string): Promise<UtromailMessa
       sender_name: senderProfile?.display_name || senderProfile?.username || null,
       sender_username: senderProfile?.username || null,
       sender_avatar: senderProfile?.avatar_url || null,
+      sender_is_jailed: m.sender_id ? !!jailMap[m.sender_id] : false,
     };
-    if (import.meta.env.DEV) console.log('[getThreadMessages] msg:', m.id, '| sender_id:', m.sender_id, '| sender:', mapped.sender_name);
+    if (import.meta.env.DEV) console.log('[getThreadMessages] msg:', m.id, '| sender_id:', m.sender_id, '| sender:', mapped.sender_name, '| jailed:', mapped.sender_is_jailed);
     return mapped;
   });
   return result;

@@ -17,6 +17,7 @@ import {
   Check,
   CheckCheck,
   Sparkles,
+  Lock,
 } from 'lucide-react'
 import {
   getThreads,
@@ -516,6 +517,36 @@ export default function PhoneChat() {
       supabase.removeChannel(channel)
     }
   }, [activeThreadId, user?.id])
+
+  /*
+   * ------------------------------------------------------------
+   * JAIL STATUS LISTENER
+   * ------------------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (!user?.id) return
+
+    const channel = supabase
+      .channel(`phone-chat-jail:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'jail',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchThreads()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user?.id, fetchThreads])
 
   /*
    * ------------------------------------------------------------
@@ -1035,34 +1066,39 @@ export default function PhoneChat() {
                             )}
                           </div>
 
-                          {/* Thread info */}
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <p
-                                className={`truncate text-sm ${
-                                  unread
-                                    ? 'font-black text-white'
-                                    : 'font-bold text-zinc-300'
-                                }`}
-                              >
-                                {displayName}
-                              </p>
+                           {/* Thread info */}
+                           <div className="min-w-0 flex-1">
+                             <div className="flex items-center justify-between gap-2">
+                               <div className="flex items-center gap-1.5">
+                                 <p
+                                   className={`truncate text-sm ${
+                                     unread
+                                       ? 'font-black text-white'
+                                       : 'font-bold text-zinc-300'
+                                   }`}
+                                 >
+                                   {displayName}
+                                 </p>
+                                 {thread.other_is_jailed && (
+                                   <Lock className="h-3.5 w-3.5 text-red-400" title="In custody" />
+                                 )}
+                               </div>
 
-                              {lastMessage && (
-                                <span
-                                  className={`shrink-0 text-[9px] ${
-                                    unread
-                                      ? 'font-black text-[#00BFFF]'
-                                      : 'text-zinc-600'
-                                  }`}
-                                >
-                                  {formatTime(
-                                    lastMessage.sent_at ||
-                                      lastMessage.created_at,
-                                  )}
-                                </span>
-                              )}
-                            </div>
+                               {lastMessage && (
+                                 <span
+                                   className={`shrink-0 text-[9px] ${
+                                     unread
+                                       ? 'font-black text-[#00BFFF]'
+                                       : 'text-zinc-600'
+                                   }`}
+                                 >
+                                   {formatTime(
+                                     lastMessage.sent_at ||
+                                       lastMessage.created_at,
+                                   )}
+                                 </span>
+                               )}
+                             </div>
 
                             <div className="mt-1 flex items-center gap-2">
                               <p

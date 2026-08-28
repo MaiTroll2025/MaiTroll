@@ -27,6 +27,16 @@ export const jailAttorneyService = {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return { success: false, error: 'Not authenticated' };
 
+    const { data: attorneys } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .or('is_attorney.eq.true,role.eq.attorney')
+      .limit(1);
+
+    if (!attorneys || attorneys.length === 0) {
+      return { success: false, error: 'No attorney is currently available. Please try again later or contact administration.' };
+    }
+
     const { data, error } = await supabase
       .from('jail_requests')
       .insert({

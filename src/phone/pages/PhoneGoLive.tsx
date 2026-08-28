@@ -34,6 +34,7 @@ import { usePreflightStore } from '@/lib/preflightStore'
 import { requestLiveKitToken } from '@/lib/livekitToken'
 import { awardKeyToUser } from '@/services/keyService'
 import { useKeyDiscoveryStore } from '@/stores/useKeyDiscoveryStore'
+import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap'
 
 type BroadcastCategory =
   | 'general'
@@ -94,6 +95,18 @@ export default function PhoneGoLive() {
 
   const [microphoneTrack, setMicrophoneTrack] =
     useState<LocalAudioTrack | null>(null)
+
+  const {
+    startCapEnabled,
+    startCapMax,
+    viewerCapEnabled,
+    viewerCapMax,
+    viewerCapHours,
+    seatCapEnabled,
+    seatCapMax,
+    allRestrictionsDisabled,
+    loading: capLoading,
+  } = useBroadcastViewerCap()
 
   /*
    * Attach the native MediaStream to the phone preview.
@@ -978,6 +991,73 @@ export default function PhoneGoLive() {
             />
           </div>
         </section>
+
+        {/* Broadcast Limits */}
+        {!capLoading && !allRestrictionsDisabled && (
+          <section className="space-y-2">
+            <p className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+              Broadcast Limits
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              {startCapEnabled && (
+                <div className="rounded-2xl border border-amber-500/10 bg-amber-500/5 px-3 py-2.5">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-amber-400/80">
+                    Start Cap
+                  </p>
+                  <p className="mt-1 text-sm font-black text-amber-300">
+                    {startCapMax} live
+                  </p>
+                  <p className="text-[9px] text-zinc-500">
+                    Max concurrent broadcasts
+                  </p>
+                </div>
+              )}
+
+              {viewerCapEnabled && (
+                <div className="rounded-2xl border border-fuchsia-500/10 bg-fuchsia-500/5 px-3 py-2.5">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-fuchsia-400/80">
+                    Viewer Cap
+                  </p>
+                  <p className="mt-1 text-sm font-black text-fuchsia-300">
+                    {viewerCapMax} viewers
+                  </p>
+                  <p className="text-[9px] text-zinc-500">
+                    Per stream for {viewerCapHours}h
+                  </p>
+                </div>
+              )}
+
+              {seatCapEnabled && (
+                <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/5 px-3 py-2.5">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-cyan-400/80">
+                    Seat Cap
+                  </p>
+                  <p className="mt-1 text-sm font-black text-cyan-300">
+                    {seatCapMax} boxes
+                  </p>
+                  <p className="text-[9px] text-zinc-500">
+                    Max seats per broadcast
+                  </p>
+                </div>
+              )}
+
+              {allRestrictionsDisabled && (
+                <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/5 px-3 py-2.5">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-emerald-400/80">
+                    Restrictions
+                  </p>
+                  <p className="mt-1 text-sm font-black text-emerald-300">
+                    Off
+                  </p>
+                  <p className="text-[9px] text-zinc-500">
+                    All limits removed
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Status */}
         <div className="flex items-center justify-between rounded-2xl border border-cyan-500/10 bg-cyan-500/5 px-4 py-3">

@@ -21,6 +21,7 @@ import {
   Heart,
   Gem,
   Star as StarIcon,
+  Lock,
 } from 'lucide-react';
 import { getThreadMessages, sendMessage, markAsRead, markThreadAsRead, starMessage, deleteThread } from '@/services/utromailService';
 import type { UtromailMessage } from '@/types/mail';
@@ -191,6 +192,9 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
                       >
                         {msg.sender_name || msg.sender_mail_address}
                       </button>
+                      {msg.sender_is_jailed && (
+                        <Lock className="h-3.5 w-3.5 text-red-400" title="In custody" />
+                      )}
                       {!isOwn && subscriberBadge && (
                         <span
                           className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-black"

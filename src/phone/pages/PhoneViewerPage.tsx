@@ -134,6 +134,30 @@ interface PhoneSeatCard {
 }
 
 /* ============================================================================
+   KICK BAN HELPERS
+============================================================================ */
+
+const KICK_BAN_DURATION_MS = 24 * 60 * 60 * 1000
+
+function getKickStorageKey(streamId: string, userId: string) {
+  return `kick_${streamId}_${userId}`
+}
+
+function parseKickData(raw: string | null) {
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function isKickBanActive(kickData: any) {
+  if (!kickData || typeof kickData.timestamp !== 'number') return false
+  return Date.now() - kickData.timestamp < KICK_BAN_DURATION_MS
+}
+
+/* ============================================================================
    HELPERS
 ============================================================================ */
 
@@ -516,8 +540,24 @@ const PhoneRemoteVideo = memo(
     const [trackTick, setTrackTick] =
       useState(0)
 
+    const participantIdentityRef =
+      useRef<string>('')
+
+    participantIdentityRef.current =
+      String(
+        participant?.identity ||
+          participant?.participantIdentity ||
+          participant?.name ||
+          '',
+      ).trim()
+
     useEffect(() => {
       if (!room) return
+
+      const identity =
+        participantIdentityRef.current
+
+      if (!identity) return
 
       const bump = () => {
         setTrackTick(
@@ -525,45 +565,113 @@ const PhoneRemoteVideo = memo(
         )
       }
 
+      const handleTrackSubscribed = (
+        _track: any,
+        _publication: any,
+        participant: any,
+      ) => {
+        const pIdentity =
+          String(
+            participant?.identity ||
+              participant?.participantIdentity ||
+              participant?.name ||
+              '',
+          ).trim()
+
+        if (pIdentity === identity) {
+          bump()
+        }
+      }
+
+      const handleTrackUnsubscribed = (
+        _track: any,
+        _publication: any,
+        participant: any,
+      ) => {
+        const pIdentity =
+          String(
+            participant?.identity ||
+              participant?.participantIdentity ||
+              participant?.name ||
+              '',
+          ).trim()
+
+        if (pIdentity === identity) {
+          bump()
+        }
+      }
+
+      const handleParticipantConnected = (
+        participant: any,
+      ) => {
+        const pIdentity =
+          String(
+            participant?.identity ||
+              participant?.participantIdentity ||
+              participant?.name ||
+              '',
+          ).trim()
+
+        if (pIdentity === identity) {
+          bump()
+        }
+      }
+
+      const handleParticipantDisconnected = (
+        participant: any,
+      ) => {
+        const pIdentity =
+          String(
+            participant?.identity ||
+              participant?.participantIdentity ||
+              participant?.name ||
+              '',
+          ).trim()
+
+        if (pIdentity === identity) {
+          bump()
+        }
+      }
+
       room.on(
         RoomEvent.TrackSubscribed,
-        bump,
+        handleTrackSubscribed,
       )
 
       room.on(
         RoomEvent.TrackUnsubscribed,
-        bump,
+        handleTrackUnsubscribed,
       )
 
       room.on(
         RoomEvent.ParticipantConnected,
-        bump,
+        handleParticipantConnected,
       )
 
       room.on(
         RoomEvent.ParticipantDisconnected,
-        bump,
+        handleParticipantDisconnected,
       )
 
       return () => {
         room.off(
           RoomEvent.TrackSubscribed,
-          bump,
+          handleTrackSubscribed,
         )
 
         room.off(
           RoomEvent.TrackUnsubscribed,
-          bump,
+          handleTrackUnsubscribed,
         )
 
         room.off(
           RoomEvent.ParticipantConnected,
-          bump,
+          handleParticipantConnected,
         )
 
         room.off(
           RoomEvent.ParticipantDisconnected,
-          bump,
+          handleParticipantDisconnected,
         )
       }
     }, [room])
@@ -602,16 +710,19 @@ const PhoneRemoteVideo = memo(
         previous?.sid ||
         null
 
-      if (
-        previous &&
-        previousId &&
-        videoTrackId &&
-        previousId === videoTrackId
-      ) {
-        return
-      }
+      if (previous && previousId) {
+        if (
+          videoTrackId &&
+          previousId ===
+            videoTrackId
+        ) {
+          return
+        }
 
-      if (previous) {
+        if (!videoTrackId) {
+          return
+        }
+
         try {
           previous.detach(video)
         } catch {
@@ -1273,20 +1384,18 @@ export default function PhoneViewerPage() {
               streamEndedRef.current =
                 true
 
-              void (async () => {
-                try {
-                  await leaveAudience()
-                } catch {
-                  // ignore
-                }
+                void (async () => {
+                  try {
+                    await leaveAudience()
+                  } catch {
+                    // ignore
+                  }
 
-                navigate(
-                  `/broadcast/summary/${streamId}`,
-                  {
-                    replace: true,
-                  },
-                )
-              })()
+                  navigate(
+                    `/broadcast/summary/${streamId}`,
+                    { replace: true },
+                  )
+                })()
             }
           },
         )
@@ -1303,8 +1412,8 @@ export default function PhoneViewerPage() {
   ])
 
   /* ========================================================================
-     BROADCASTER PROFILE
-  ======================================================================== */
+      BROADCASTER PROFILE
+   ======================================================================== */
 
   useEffect(() => {
     const broadcasterId =
@@ -1623,6 +1732,87 @@ export default function PhoneViewerPage() {
   ])
 
   /* ========================================================================
+      KICK GUARD — 24hr ban after kick
+   ======================================================================== */
+
+  useEffect(() => {
+    if (!streamId || !user?.id) return
+
+    const kickKey = getKickStorageKey(streamId, user.id)
+
+    const enforceKickBan = () => {
+      const kickRaw = localStorage.getItem(kickKey)
+      const kickData = parseKickData(kickRaw)
+
+      if (isKickBanActive(kickData)) {
+        const remainingMs = Math.max(KICK_BAN_DURATION_MS - (Date.now() - kickData.timestamp), 0)
+        const hoursRemaining = Math.ceil(remainingMs / (60 * 60 * 1000))
+
+        void leaveAudience()
+        void leaveLiveKitRoom().catch(() => {})
+
+        hasJoinedAudienceRef.current = false
+        joiningAudienceRef.current = false
+        currentRoomKeyRef.current = null
+
+        toast.error(`You were kicked from this broadcast and cannot rejoin for ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'}.`)
+
+        navigate('/', { replace: true })
+      } else if (kickRaw) {
+        localStorage.removeItem(kickKey)
+      }
+    }
+
+    enforceKickBan()
+
+    const channel = supabase
+      .channel(`stream-kicks:${streamId}:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stream_kicks',
+          filter: `stream_id=eq.${streamId},user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const kick = payload.new
+          if (!kick) return
+
+          const kickTimestamp = new Date(kick.created_at).getTime()
+          const timeSinceKick = Date.now() - kickTimestamp
+
+          if (timeSinceKick < KICK_BAN_DURATION_MS) {
+            const remainingMs = Math.max(KICK_BAN_DURATION_MS - timeSinceKick, 0)
+            const hoursRemaining = Math.ceil(remainingMs / (60 * 60 * 1000))
+
+            localStorage.setItem(getKickStorageKey(streamId, user.id), JSON.stringify({
+              timestamp: kickTimestamp,
+              streamId,
+              reason: kick.reason || 'Kicked by moderator',
+            }))
+
+            void leaveAudience()
+            void leaveLiveKitRoom().catch(() => {})
+
+            hasJoinedAudienceRef.current = false
+            joiningAudienceRef.current = false
+            currentRoomKeyRef.current = null
+
+            toast.error(`You were kicked from this broadcast and cannot rejoin for ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'}.`)
+
+            navigate('/', { replace: true })
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [streamId, user?.id, navigate, leaveAudience, leaveLiveKitRoom])
+
+  /* ========================================================================
       STREAM REALTIME
    ======================================================================== */
 
@@ -1792,12 +1982,97 @@ export default function PhoneViewerPage() {
             // ignore cleanup errors
           }
 
+          localStorage.setItem(
+            getKickStorageKey(streamId, user.id),
+            JSON.stringify({
+              timestamp: Date.now(),
+              streamId,
+              reason: participant.removed_reason || 'Kicked by broadcaster',
+            }),
+          )
+
           hasJoinedAudienceRef.current = false
           joiningAudienceRef.current = false
           currentRoomKeyRef.current = null
           toast.error('Removed from broadcast')
-          navigate('/?kicked=Removed%20from%20broadcast', { replace: true })
+          navigate('/', { replace: true })
         })()
+      },
+      onAudiencePresence: (event: any) => {
+        if (!streamId || !user?.id) return
+        if (streamEndedRef.current) return
+
+        const evtType = event.eventType
+        const newRow = event.new
+        const oldRow = event.old
+
+        if (evtType === 'DELETE') {
+          const deletedUserId = oldRow?.user_id
+          if (deletedUserId && deletedUserId === user.id) {
+            kickProcessedRef.current = true
+            void (async () => {
+              try {
+                if (isPublishing) {
+                  await unpublishLocalTracks()
+                }
+                await leaveAudience()
+                await leaveLiveKitRoom()
+              } catch {
+                // ignore cleanup errors
+              }
+
+              localStorage.setItem(
+                getKickStorageKey(streamId, user.id),
+                JSON.stringify({
+                  timestamp: Date.now(),
+                  streamId,
+                  reason: 'Removed from broadcast',
+                }),
+              )
+
+              hasJoinedAudienceRef.current = false
+              joiningAudienceRef.current = false
+              currentRoomKeyRef.current = null
+              toast.error('Removed from broadcast')
+              navigate('/', { replace: true })
+            })()
+          }
+          return
+        }
+
+        if (evtType === 'UPDATE' && newRow) {
+          if (newRow.stream_id !== streamId) return
+          if (newRow.user_id !== user.id) return
+          if (newRow.is_active === false) {
+            kickProcessedRef.current = true
+            void (async () => {
+              try {
+                if (isPublishing) {
+                  await unpublishLocalTracks()
+                }
+                await leaveAudience()
+                await leaveLiveKitRoom()
+              } catch {
+                // ignore cleanup errors
+              }
+
+              localStorage.setItem(
+                getKickStorageKey(streamId, user.id),
+                JSON.stringify({
+                  timestamp: Date.now(),
+                  streamId,
+                  reason: 'Removed from broadcast',
+                }),
+              )
+
+              hasJoinedAudienceRef.current = false
+              joiningAudienceRef.current = false
+              currentRoomKeyRef.current = null
+              toast.error('Removed from broadcast')
+              navigate('/', { replace: true })
+            })()
+          }
+        }
       },
       onStream: (event: any) => {
         const next = event?.new || event
@@ -1821,9 +2096,9 @@ export default function PhoneViewerPage() {
             hasJoinedAudienceRef.current = false
             joiningAudienceRef.current = false
             currentRoomKeyRef.current = null
-          })()
 
-          navigate(`/broadcast/summary/${streamId}`, { replace: true })
+            navigate(`/broadcast/summary/${streamId}`, { replace: true })
+          })()
           return
         }
 
@@ -2454,11 +2729,21 @@ export default function PhoneViewerPage() {
                 false
               currentRoomKeyRef.current =
                 null
+
+              localStorage.setItem(
+                getKickStorageKey(streamId, user.id),
+                JSON.stringify({
+                  timestamp: Date.now(),
+                  streamId,
+                  reason: 'Removed from stage',
+                }),
+              )
+
               toast.error(
                 'Removed from stage',
               )
               navigate(
-                '/?kicked=Removed%20from%20stage',
+                '/',
                 { replace: true },
               )
             } catch {
@@ -3110,6 +3395,131 @@ export default function PhoneViewerPage() {
     )
 
   /* ========================================================================
+     MODERATOR MUTE ENFORCEMENT
+     ======================================================================== */
+
+  const isModeratorMutedRef =
+    useRef(false)
+
+  const moderatorMuteTimestampRef =
+    useRef(0)
+
+  const moderatorMuteTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const applyModeratorMute =
+    useCallback(async () => {
+      moderatorMuteTimestampRef.current = Date.now()
+      isModeratorMutedRef.current = true
+
+      if (moderatorMuteTimerRef.current) {
+        clearTimeout(moderatorMuteTimerRef.current)
+      }
+
+      moderatorMuteTimerRef.current = setTimeout(() => {
+        isModeratorMutedRef.current = false
+        moderatorMuteTimestampRef.current = 0
+        moderatorMuteTimerRef.current = null
+        toast.info('You can now unmute your microphone')
+      }, 5000)
+
+      await setMicEnabled(false)
+      setMicEnabledState(false)
+    },
+    [
+      setMicEnabled,
+      setMicEnabledState,
+      toast,
+    ],
+    )
+
+  const clearModeratorMute =
+    useCallback(async () => {
+      if (moderatorMuteTimerRef.current) {
+        clearTimeout(moderatorMuteTimerRef.current)
+      }
+
+      moderatorMuteTimerRef.current = null
+      moderatorMuteTimestampRef.current = 0
+      isModeratorMutedRef.current = false
+
+      await setMicEnabled(true)
+      setMicEnabledState(true)
+    },
+    [
+      setMicEnabled,
+      setMicEnabledState,
+    ],
+    )
+
+  useEffect(() => {
+    if (!streamId || !user?.id) return
+
+    const checkMuteState = async () => {
+      try {
+        const { data } = await supabase
+          .from('stream_mutes')
+          .select('id, expires_at')
+          .eq('stream_id', streamId)
+          .eq('user_id', user.id)
+          .or(`expires_at.gt.${new Date().toISOString()},expires_at.is.null`)
+          .maybeSingle()
+
+        if (data) {
+          toast.error('You have been muted by a moderator.')
+          void applyModeratorMute()
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    void checkMuteState()
+
+    const muteChannel = supabase
+      .channel(`viewer-mute:${streamId}:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stream_mutes',
+          filter: `stream_id=eq.${streamId}`,
+        },
+        (payload) => {
+          const newMute = payload.new as any
+          if (newMute?.user_id === user.id) {
+            toast.error('You have been muted by a moderator.')
+            void applyModeratorMute()
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'stream_mutes',
+          filter: `stream_id=eq.${streamId}`,
+        },
+        (payload) => {
+          const oldMute = payload.old as any
+          if (oldMute?.user_id === user.id) {
+            toast.success('You have been unmuted.')
+            void clearModeratorMute()
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      if (muteChannel) {
+        supabase.removeChannel(muteChannel)
+      }
+    }
+  }, [streamId, user?.id, applyModeratorMute, clearModeratorMute])
+
+  /* ========================================================================
      CITY STATUS
   ======================================================================== */
 
@@ -3703,7 +4113,7 @@ export default function PhoneViewerPage() {
                           <div className="absolute bottom-1 left-1 right-1 z-10 flex items-center justify-between gap-1">
                             <div className="min-w-0 flex-1">
                               {seat.userId ? (
-                                <div className="scale-75 origin-bottom-left">
+                                 <div className="scale-50 origin-bottom-left">
                                   <SeatCityStatusOrb
                                     userId={
                                       seat.userId
