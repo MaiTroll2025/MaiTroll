@@ -99,16 +99,16 @@ const FakeBanScreen: React.FC<FakeBanScreenProps> = ({ rarity }) => {
               }`}>
                 JUST KIDDING 😈
               </h1>
-              <p className="text-yellow-300 mb-4">Welcome to MaiMaiTroll!</p>
+              <p className="text-yellow-300 mb-4">Welcome to MaiTroll!</p>
               <p className="text-gray-400 text-sm">
-                Did we get you good? This is just a taste of the chaos that awaits you in MaiMaiTroll.
+                Did we get you good? This is just a taste of the chaos that awaits you in MaiTroll.
               </p>
             </div>
 
             {/* Fake dismiss button */}
             <div className="flex justify-center">
               <button className="bg-yellow-600 hover:bg-yellow-700 text-black px-6 py-2 rounded-lg transition-colors">
-                Continue to MaiMaiTroll
+                Continue to MaiTroll
               </button>
             </div>
           </>

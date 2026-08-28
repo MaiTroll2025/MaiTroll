@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, LogOut, UserCircle, Zap } from 'lucide-react'
+import { Bell, BellRing, LogOut, UserCircle, Zap, Monitor, Download } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
@@ -15,6 +15,8 @@ import { TMButton } from './trollmatch/TMButton'
 import MaiNetworkSwitcher from './mai-network/MaiNetworkSwitcher'
 import RGBSearchBar from './header/RGBSearchBar'
 import GlobalTicker from './header/GlobalTicker'
+import { isDesktopPlatform, getDesktopDownloadUrl } from '../utils/desktopDownload'
+import { useAutoUpdate } from '../hooks/useAutoUpdate'
 
 const Header = () => {
   const { user, profile } = useAuthStore()
@@ -24,6 +26,13 @@ const Header = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [isMaiSwitcherOpen, setIsMaiSwitcherOpen] = useState(false)
   const [hasDeviceSubscription, setHasDeviceSubscription] = useState(false)
+  const [showDesktopDownload, setShowDesktopDownload] = useState(false)
+
+  useEffect(() => {
+    setShowDesktopDownload(isDesktopPlatform())
+  }, [])
+
+  const { isElectron, updateStatus, checkForUpdate, downloadUpdate, installUpdate, dismissUpdate } = useAutoUpdate()
 
   const canDebugPush =
     !!user &&
@@ -311,6 +320,11 @@ const Header = () => {
     }
   }
 
+  const handleDesktopDownload = () => {
+    const url = getDesktopDownloadUrl()
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   const handleProfileClick = () => {
     if (profile?.username) {
       navigate(`/profile/${profile.username}`)
@@ -347,19 +361,59 @@ const Header = () => {
 
           {user && <TMButton />}
 
-           {canDebugPush && !hasDeviceSubscription && (
-             <button
-               onClick={() => {
-                 void enablePushNotifications()
-               }}
-               className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-cyan-100 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-300/20 rounded-xl transition-all duration-200"
-               title="Enable Push Notifications"
-               type="button"
-             >
-               <BellRing className="w-4 h-4" />
-               <span className="hidden lg:inline">Enable Push Notifications</span>
-             </button>
-           )}
+            {canDebugPush && !hasDeviceSubscription && (
+              <button
+                onClick={() => {
+                  void enablePushNotifications()
+                }}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-cyan-100 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-300/20 rounded-xl transition-all duration-200"
+                title="Enable Push Notifications"
+                type="button"
+              >
+                <BellRing className="w-4 h-4" />
+                <span className="hidden lg:inline">Enable Push Notifications</span>
+              </button>
+            )}
+
+             {showDesktopDownload && (
+               <button
+                 onClick={handleDesktopDownload}
+                 className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-purple-100 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-300/20 rounded-xl transition-all duration-200"
+                 title="Download MaiTroll for Windows"
+                 type="button"
+               >
+                 <Monitor className="w-4 h-4" />
+                 <span className="hidden lg:inline">Download for Windows</span>
+               </button>
+             )}
+
+             {isElectron && updateStatus.status === 'available' && (
+               <button
+                 onClick={async () => {
+                   await downloadUpdate()
+                 }}
+                 className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-100 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-300/20 rounded-xl transition-all duration-200"
+                 title={`Update available: ${updateStatus.version}`}
+                 type="button"
+               >
+                 <Download className="w-4 h-4" />
+                 <span className="hidden lg:inline">Update {updateStatus.version}</span>
+               </button>
+             )}
+
+             {isElectron && updateStatus.status === 'downloaded' && (
+               <button
+                 onClick={async () => {
+                   await installUpdate()
+                 }}
+                 className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-emerald-100 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-300/20 rounded-xl transition-all duration-200"
+                 title="Restart and install update"
+                 type="button"
+               >
+                 <Download className="w-4 h-4" />
+                 <span className="hidden lg:inline">Install Update</span>
+               </button>
+             )}
 
           {user && (
             <button

@@ -156,10 +156,10 @@ export default function AboutPage() {
   return (
     <SEOLayout
       title="About Mai Troll | Social Streaming Platform"
-      description="Learn about Mai Troll (MaiMaiTroll), a social streaming platform for creators, streamers, gamers, and online communities. Review platform features, supported devices, browser compatibility, and live streaming requirements."
+      description="Learn about Mai Troll (MaiTroll), a social streaming platform for creators, streamers, gamers, and online communities. Review platform features, supported devices, browser compatibility, and live streaming requirements."
       keywords={[
         'MaiTroll',
-        'MaiMaiTroll',
+        'MaiTroll',
         'about Mai Troll',
         'social streaming platform',
         'live streaming',
@@ -205,7 +205,7 @@ export default function AboutPage() {
             </h1>
 
             <p className="mx-auto max-w-3xl text-xl leading-relaxed text-slate-300">
-              Mai Troll, also known as MaiMaiTroll, is a social streaming
+              Mai Troll, also known as MaiTroll, is a social streaming
               platform built for creators, streamers, gamers, and online
               communities. The platform combines livestreaming, real-time
               interaction, community participation, creator tools, and digital
@@ -271,7 +271,7 @@ export default function AboutPage() {
             <div className="space-y-6 text-lg leading-relaxed text-slate-300">
               <p>
                 <strong className="text-white">Mai Troll</strong> and{' '}
-                <strong className="text-white">MaiMaiTroll</strong> refer to
+                <strong className="text-white">MaiTroll</strong> refer to
                 the same digital platform. Mai Troll is designed for live
                 entertainment, social interaction, creator content, and online
                 community participation.

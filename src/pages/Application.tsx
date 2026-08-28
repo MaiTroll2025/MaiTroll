@@ -376,6 +376,8 @@ export default function Application() {
       const { error } = await supabase.from('job_applications').insert(payload)
       if (error) throw error
 
+      await supabase.from('profiles').update({ application_submitted: true }).eq('id', user.id)
+
       await notifyCareerApplicationSubmitted(user.id, position.id, position.title)
 
       toast.success('Application submitted! We will review it soon.')
@@ -388,12 +390,15 @@ export default function Application() {
     }
   }, [user, position, form, navigate])
 
-  if (!positionId) {
-    useEffect(() => { navigate('/jobs') }, [navigate])
-    return null
-  }
-  if (!position) {
-    useEffect(() => { navigate('/jobs') }, [navigate])
+  const noPosition = !positionId || !position
+
+  useEffect(() => {
+    if (noPosition) {
+      navigate('/jobs')
+    }
+  }, [noPosition, navigate])
+
+  if (noPosition) {
     return null
   }
 

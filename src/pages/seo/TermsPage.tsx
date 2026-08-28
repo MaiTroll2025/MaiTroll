@@ -21,7 +21,7 @@ export default function TermsPage() {
       description="Read the Mai Troll Terms of Service, including account, content, payment, creator earnings, enforcement, and platform rules."
       keywords={[
         'MaiTroll terms of service',
-        'MaiMaiTroll terms',
+        'MaiTroll terms',
         'user agreement',
         'terms and conditions',
         'creator platform terms',
@@ -627,10 +627,10 @@ export default function TermsPage() {
                 <p>
                   <strong>Email:</strong>{' '}
                   <a
-                    href="mailto:copyright@maiMaiTroll.com"
+                    href="mailto:copyright@MaiTroll.com"
                     className="text-purple-400 hover:text-purple-300"
                   >
-                    copyright@maiMaiTroll.com
+                    copyright@MaiTroll.com
                   </a>
                 </p>
               </div>
@@ -774,10 +774,10 @@ export default function TermsPage() {
               <p className="text-slate-300 leading-relaxed mt-4">
                 Before filing a formal claim, you agree to contact us at{' '}
                 <a
-                  href="mailto:legal@maiMaiTroll.com"
+                  href="mailto:legal@MaiTroll.com"
                   className="text-purple-400 hover:text-purple-300"
                 >
-                  legal@maiMaiTroll.com
+                  legal@MaiTroll.com
                 </a>{' '}
                 and give us at least 30 days to try to resolve the dispute informally.
               </p>
@@ -887,10 +887,10 @@ export default function TermsPage() {
                 <p>
                   <strong>Email:</strong>{' '}
                   <a
-                    href="mailto:legal@maiMaiTroll.com"
+                    href="mailto:legal@MaiTroll.com"
                     className="text-purple-400 hover:text-purple-300"
                   >
-                    legal@maiMaiTroll.com
+                    legal@MaiTroll.com
                   </a>
                 </p>
 

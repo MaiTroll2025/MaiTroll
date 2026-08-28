@@ -7,9 +7,9 @@ export default function PrivacyPage() {
   return (
     <SEOLayout
       title="Privacy Policy | Mai Troll"
-      description="Read the Mai Troll (MaiMaiTroll) Privacy Policy. Learn how we collect, use, and protect your personal information."
+      description="Read the Mai Troll (MaiTroll) Privacy Policy. Learn how we collect, use, and protect your personal information."
       keywords={[
-        'MaiTroll privacy policy', 'MaiMaiTroll privacy', 'data protection',
+        'MaiTroll privacy policy', 'MaiTroll privacy', 'data protection',
         'personal information', 'privacy', 'GDPR', 'data collection',
         'MaiTroll terms', 'user data'
       ]}
@@ -146,8 +146,8 @@ export default function PrivacyPage() {
                 </div>
                 <p className="text-slate-300">
                   If you have any questions about this Privacy Policy, please contact us at{' '}
-                  <a href="mailto:privacy@maiMaiTroll.com" className="text-purple-400 hover:text-purple-300">
-                    privacy@maiMaiTroll.com
+                  <a href="mailto:privacy@MaiTroll.com" className="text-purple-400 hover:text-purple-300">
+                    privacy@MaiTroll.com
                   </a>{' '}
                   or visit our <Link to="/contact" className="text-purple-400 hover:text-purple-300">Contact page</Link>.
                 </p>

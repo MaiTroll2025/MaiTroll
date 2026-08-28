@@ -161,7 +161,7 @@ function TopPrideHero({
               <h1 className="text-3xl font-black leading-tight text-white md:text-5xl">
                 Welcome to Mai Troll{' '}
                 <span className="bg-gradient-to-r from-pink-400 via-yellow-300 to-cyan-300 bg-clip-text text-transparent">
-                  (MaiMaiTroll)
+                  (MaiTroll)
                 </span>
               </h1>
               <p className="mt-2 max-w-2xl text-sm font-medium text-slate-200 md:text-base">

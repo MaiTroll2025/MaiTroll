@@ -21,7 +21,7 @@ const privacyPolicyHTML = `<!DOCTYPE html>
     <p class="last-updated">Last updated: January 2026</p>
   </div>
 
-  <p><strong>MaiTroll</strong> (also referred to as "<strong>MaiMaiTroll</strong>") is a social streaming platform. This Privacy Policy explains how we collect, use, and protect your information when you use our app and services.</p>
+  <p><strong>MaiTroll</strong> (also referred to as "<strong>MaiTroll</strong>") is a social streaming platform. This Privacy Policy explains how we collect, use, and protect your information when you use our app and services.</p>
 
   <h2>1. Information We Collect</h2>
   <p>We collect information you provide directly to us, such as when you create an account, verify your identity, request payouts, or contact support. This includes:</p>

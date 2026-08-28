@@ -203,7 +203,7 @@ export function SEOFooter() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
               <Home className="w-4 h-4 text-white" />
             </div>
-            <span className="text-slate-400 text-sm">© {currentYear} Mai Troll (MaiMaiTroll). All rights reserved.</span>
+            <span className="text-slate-400 text-sm">© {currentYear} Mai Troll (MaiTroll). All rights reserved.</span>
           </div>
           <div className="flex items-center gap-6 text-slate-400 text-sm">
             <Link to="/sitemap.xml" className="hover:text-purple-300 transition-colors">Sitemap</Link>

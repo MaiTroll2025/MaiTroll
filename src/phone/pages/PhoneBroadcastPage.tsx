@@ -50,6 +50,7 @@ import BattleView from '@/pages/broadcast/BattleView'
 
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import MaiBag from '@/components/mai-bag/MaiBag'
+import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 
 import type { Stream } from '@/types/broadcast'
 import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
@@ -83,6 +84,9 @@ export default function PhoneBroadcastPage() {
 
   const [chatInput, setChatInput] =
     useState('')
+
+  const [recentGifts, setRecentGifts] =
+    useState<BroadcastGift[]>([])
 
   const processedGiftIdsRef =
     useRef<Set<string>>(new Set())
@@ -234,8 +238,14 @@ export default function PhoneBroadcastPage() {
 
         const resolvedMedia =
           enrichedGiftData?.animation_url ||
+          enrichedGiftData?.animation_url_webm ||
+          enrichedGiftData?.animation_url_mp4 ||
+          enrichedGiftData?.animation_url_mov ||
           enrichedGiftData?.video_url ||
           enrichedGiftData?.metadata?.animation_url ||
+          enrichedGiftData?.metadata?.animation_url_webm ||
+          enrichedGiftData?.metadata?.animation_url_mp4 ||
+          enrichedGiftData?.metadata?.animation_url_mov ||
           enrichedGiftData?.metadata?.video_url
 
         if (!resolvedMedia) return
@@ -400,16 +410,18 @@ export default function PhoneBroadcastPage() {
 
         enqueueGift(streamGiftEvent)
 
+        setRecentGifts((prev) =>
+          prev.some((g) => g.id === newGift.id) ? prev : [...prev, newGift].slice(-20)
+        )
+
         const duration =
           newGift.animation_duration_ms ??
           getGiftVisualConfig(newGift).durationMs
 
         window.setTimeout(() => {
-          /*
-           * The actual overlay queue owns playback.
-           * This timeout only releases the duplicate
-           * protection window.
-           */
+          setRecentGifts((prev) =>
+            prev.filter((gift) => gift.id !== newGift.id)
+          )
         }, duration + 150)
       } catch (error) {
         console.error(
@@ -557,18 +569,7 @@ export default function PhoneBroadcastPage() {
       },
 
       onGift: (event) => {
-        /*
-         * stream_gifts are handled by the targeted
-         * gift queue elsewhere. Prevent double playback.
-         */
-        if (
-          event?.table === 'stream_gifts'
-        ) {
-          return
-        }
-
-        const rawGift =
-          event?.new ?? event
+        const rawGift = event?.new ?? event
 
         if (rawGift) {
           void processGiftEvent(rawGift)
@@ -1273,11 +1274,49 @@ export default function PhoneBroadcastPage() {
         </GiftSystemProvider>
       </ErrorBoundary>
     )
-  }
+
+  const handleUpdateSeatCount =
+    useCallback(
+      async (newSeatCount: number) => {
+        if (!streamId || !stream) return
+
+        const clampedCount = Math.max(
+          0,
+          Math.min(6, newSeatCount),
+        )
+
+        const newBoxCount = clampedCount + 1
+
+        try {
+          await supabase
+            .from('streams')
+            .update({
+              seat_count: clampedCount,
+              box_count: newBoxCount,
+            })
+            .eq('id', streamId)
+
+          setStream((prev) => {
+            if (!prev) return prev
+            return {
+              ...prev,
+              seat_count: clampedCount,
+              box_count: newBoxCount,
+            } as Stream
+          })
+        } catch (error) {
+          console.error(
+            '[PhoneBroadcastPage] Failed to update seat count:',
+            error,
+          )
+        }
+      },
+      [streamId, stream],
+    )
 
   /*
    * ============================================================
-   * MAIN BROADCAST VIEW
+   * BATTLE VIEW
    * ============================================================
    */
 
@@ -1348,44 +1387,13 @@ export default function PhoneBroadcastPage() {
           )}
 
           {/* ====================================================
-              LIVE STATUS
-          ==================================================== */}
-
-          <div className="pointer-events-none absolute left-3 top-3 z-30 flex items-center gap-2 rounded-full border border-cyan-400/30 bg-black/50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-200 shadow-lg backdrop-blur-xl">
-            <span
-              className={`h-2 w-2 rounded-full ${
-                session.isConnected
-                  ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]'
-                  : 'animate-pulse bg-amber-400'
-              }`}
-            />
-
-            {session.isConnected
-              ? 'Live'
-              : 'Connecting'}
-          </div>
-
-          {/* ====================================================
-              MAI BAG
-          ==================================================== */}
-
-          {streamId && (
-            <div className="absolute left-3 top-12 z-40">
-              <MaiBag
-                streamId={streamId}
-                compact
-              />
-            </div>
-          )}
-
-          {/* ====================================================
               AUDIENCE + LIKES
           ==================================================== */}
 
           {stream && (
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start gap-2 px-3 pt-[44px]">
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
 
-              <div className="pointer-events-auto min-w-0 flex-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
+              <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
                 <MobileAudienceTicker
                   audience={audience}
                   currentUserId={
@@ -1406,27 +1414,40 @@ export default function PhoneBroadcastPage() {
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={handleLike}
-                aria-label="Like stream"
-                className="pointer-events-auto relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-pink-400/20 bg-black/50 backdrop-blur-xl transition active:scale-90"
-              >
-                <Heart
-                  size={14}
-                  className="text-pink-300"
-                />
+              {broadcasterProfile?.troll_coins !== undefined && (
+                <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-yellow-400/15 bg-black/50 px-2.5 py-1 backdrop-blur-md">
+                  <span className="text-[9px] font-black text-yellow-300">
+                    {Number(broadcasterProfile.troll_coins || 0).toLocaleString()}
+                  </span>
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-yellow-200/60">
+                    Coins
+                  </span>
+                </div>
+              )}
 
-                <span className="absolute -bottom-1 -right-1 rounded-full border border-pink-400/30 bg-pink-500/20 px-1 text-[8px] font-black text-pink-100">
-                  {Math.max(
-                    0,
-                    Number(
-                      stream.total_likes ??
-                        0,
-                    ),
-                  ).toLocaleString()}
-                </span>
-              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleLike}
+                  aria-label="Like stream"
+                  className="pointer-events-auto relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-pink-400/20 bg-black/50 backdrop-blur-xl transition active:scale-90"
+                >
+                  <Heart
+                    size={14}
+                    className="text-pink-300"
+                  />
+
+                  <span className="absolute -bottom-1 -right-1 rounded-full border border-pink-400/30 bg-pink-500/20 px-1 text-[8px] font-black text-pink-100">
+                    {Math.max(
+                      0,
+                      Number(
+                        stream.total_likes ??
+                          0,
+                      ),
+                    ).toLocaleString()}
+                  </span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1455,6 +1476,12 @@ export default function PhoneBroadcastPage() {
                 !!stream.is_chat_locked
               }
               unreadMessageCount={0}
+              seatCount={
+                stream?.seat_count ?? 0
+              }
+              onUpdateSeatCount={
+                handleUpdateSeatCount
+              }
               onToggleMic={
                 session.toggleMicrophone
               }
@@ -1661,6 +1688,15 @@ export default function PhoneBroadcastPage() {
             stream?.user_id
           }
         />
+
+        <GiftVideoOverlay
+          gifts={recentGifts}
+          onFinish={(giftId) =>
+            setRecentGifts((prev) =>
+              prev.filter((gift) => gift.id !== giftId),
+            )
+          }
+        />
       </div>
     </GiftSystemProvider>
   )
@@ -1756,4 +1792,4 @@ function ControlButton({
     </button>
   )
 }
-
+}

@@ -50,6 +50,8 @@ export default function MobileBattleFloatingChat({
     (profile as any)?.username?.trim() ||
     (profile as any)?.display_name?.trim() ||
     null;
+  const recentBattleChatKeysRef =
+    useRef<Map<string, number>>(new Map());
 
   const normalizeMessage = (raw: any): ChatMessage => {
     const rawUsername = raw.username || "";
@@ -105,6 +107,13 @@ export default function MobileBattleFloatingChat({
         },
         (payload) => {
           const msg = normalizeMessage(payload.new);
+          const chatKey = `${msg.user_id}:${msg.content}:${msg.stream_id}`;
+          const now = Date.now();
+          const existingTs = recentBattleChatKeysRef.current.get(chatKey);
+          if (existingTs !== undefined && now - existingTs < 1500) {
+            return;
+          }
+          recentBattleChatKeysRef.current.set(chatKey, now);
           setMessages((prev) =>
             prev.some((m) => m.id === msg.id) ? prev : [...prev.slice(-19), msg]
           );

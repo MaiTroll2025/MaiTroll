@@ -329,7 +329,7 @@ export default function XAdsStudio() {
   };
 
   const connectAccount = async (platform: 'x' | 'instagram' | 'facebook') => {
-    const redirectUrl = customRedirectUrl || 'https://maiMaiTroll.com/admin/x-ads/oauth-callback';
+    const redirectUrl = customRedirectUrl || 'https://MaiTroll.com/admin/x-ads/oauth-callback';
     
     console.log('Connecting with redirect:', redirectUrl);
     

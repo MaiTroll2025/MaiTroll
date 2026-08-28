@@ -147,7 +147,7 @@ export default function TermsAgreement() {
          }
        }
 
-       toast.success('Welcome to MaiMaiTroll!')
+       toast.success('Welcome to MaiTroll!')
 
        const targetPath = (updatedProfile?.role || profile?.role) === 'admin' ? '/admin' : '/home'
 
@@ -194,7 +194,7 @@ export default function TermsAgreement() {
         <div className="text-center mb-8">
           <FileText className="w-16 h-16 mx-auto mb-4 text-troll-neon-blue" />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-green-400 bg-clip-text text-transparent mb-2">
-            Welcome to MaiMaiTroll
+            Welcome to MaiTroll
           </h1>
           <p className={`${MaiTrollTheme.text.muted}`}>Please read and agree to our platform terms before continuing</p>
         </div>

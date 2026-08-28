@@ -34,7 +34,7 @@ const faqPreview = [
   },
   {
     question: 'How do I report a bug?',
-    answer: 'Use the Bug Center in the app or email us at bugs@maiMaiTroll.com with details.'
+    answer: 'Use the Bug Center in the app or email us at bugs@MaiTroll.com with details.'
   },
   {
     question: 'How do I delete my account?',
@@ -61,9 +61,9 @@ export default function ContactPage() {
   return (
     <SEOLayout
       title="Contact Us | Mai Troll"
-      description="Contact Mai Troll (MaiMaiTroll) support team. Get help with your account, report issues, or send feedback. We're here to help."
+      description="Contact Mai Troll (MaiTroll) support team. Get help with your account, report issues, or send feedback. We're here to help."
       keywords={[
-        'contact Mai Troll', 'MaiTroll support', 'MaiMaiTroll contact',
+        'contact Mai Troll', 'MaiTroll support', 'MaiTroll contact',
         'help desk', 'customer support', 'report issue', 'feedback',
         'MaiTroll email', 'MaiTroll help'
       ]}

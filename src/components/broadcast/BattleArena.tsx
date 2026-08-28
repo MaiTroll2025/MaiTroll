@@ -825,6 +825,23 @@ const BattleArena = ({
     return window.innerWidth < 768;
   });
 
+  // Sync local participant tracks when they change after initial fetch
+  useEffect(() => {
+    setBattleParticipants(prev => {
+      const localIndex = prev.findIndex(p => p.isLocal);
+      if (localIndex === -1) return prev;
+      const updated = [...prev];
+      updated[localIndex] = {
+        ...updated[localIndex],
+        videoTrack: localVideoTrack,
+        audioTrack: localAudioTrack,
+        isCameraEnabled: localIsCameraEnabled ?? !!localVideoTrack,
+        isMicrophoneEnabled: localIsMicEnabled ?? (localAudioTrack?.mediaStreamTrack?.enabled ?? false),
+      };
+      return updated;
+    });
+  }, [localVideoTrack, localAudioTrack, localIsCameraEnabled, localIsMicEnabled]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const onResize = () => setIsMobileLayout(window.innerWidth < 768);

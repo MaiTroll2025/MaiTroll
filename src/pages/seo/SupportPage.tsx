@@ -115,9 +115,9 @@ export default function SupportPage() {
   return (
     <SEOLayout
       title="Support & Help Center | Mai Troll"
-      description="Get help with Mai Troll (MaiMaiTroll). Find answers to common questions about your account, streaming, payments, safety, and more."
+      description="Get help with Mai Troll (MaiTroll). Find answers to common questions about your account, streaming, payments, safety, and more."
       keywords={[
-        'MaiTroll help', 'MaiTroll support', 'MaiMaiTroll support',
+        'MaiTroll help', 'MaiTroll support', 'MaiTroll support',
         'help center', 'FAQ', 'customer support', 'troubleshooting',
         'account help', 'payment support', 'report issue', 'bug report'
       ]}

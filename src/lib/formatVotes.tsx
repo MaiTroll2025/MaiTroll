@@ -267,9 +267,9 @@ export default function GovernmentPage() {
   return (
     <SEOLayout
       title="Government System on Mai Troll | Social Streaming Platform"
-      description="Learn about the Mai Troll (MaiMaiTroll) government system. Vote in elections, run for office, and participate in our democratic social streaming community."
+      description="Learn about the Mai Troll (MaiTroll) government system. Vote in elections, run for office, and participate in our democratic social streaming community."
       keywords={[
-        'MaiTroll', 'MaiMaiTroll', 'government', 'election', 'vote', 'democracy', 'president', 'voting',
+        'MaiTroll', 'MaiTroll', 'government', 'election', 'vote', 'democracy', 'president', 'voting',
         'Troll Court', 'legal', 'court', 'attorney', 'prosecutor', 'officer',
         'run for office', 'political', 'elections 2026', 'candidate',
         'community leadership', 'public office', 'government system', 'MaiTroll government',

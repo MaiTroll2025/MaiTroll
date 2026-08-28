@@ -65,7 +65,7 @@ const DEFAULT_MAI_APPS: MaiApp[] = [
     name: 'MaiTroll',
     tagline: 'Go live, earn coins, enter the virtual city.',
     category: 'Live Social City',
-    websiteUrl: 'https://maiMaiTroll.com',
+    websiteUrl: 'https://MaiTroll.com',
     googlePlayUrl: 'https://play.google.com/store/apps/details?id=com.Mai Troll.twa',
     appleStoreUrl: '',
     status: 'live',

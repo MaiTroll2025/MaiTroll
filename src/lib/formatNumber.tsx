@@ -278,9 +278,9 @@ export default function BroadcastingPage() {
   return (
     <SEOLayout
       title="Live Broadcasting on Mai Troll | Social Streaming Platform"
-      description="Start broadcasting live on Mai Troll (MaiMaiTroll). Stream to unlimited viewers, earn money through virtual gifts and tips, and build your creator career on our social streaming platform."
+      description="Start broadcasting live on Mai Troll (MaiTroll). Stream to unlimited viewers, earn money through virtual gifts and tips, and build your creator career on our social streaming platform."
       keywords={[
-        'MaiTroll', 'MaiMaiTroll', 'live broadcasting', 'go live', 'streaming', 'stream live', 'broadcast live',
+        'MaiTroll', 'MaiTroll', 'live broadcasting', 'go live', 'streaming', 'stream live', 'broadcast live',
         'live stream', 'how to stream', 'streaming platform', 'live video', 'real-time streaming',
         'creator streaming', 'broadcasting software', 'live streaming app',
         'video streaming', 'online streaming', 'webcam streaming', 'mobile streaming',
@@ -309,7 +309,7 @@ export default function BroadcastingPage() {
               </h1>
               
               <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-                Start streaming today on <strong>Mai Troll</strong> (MaiMaiTroll) and reach viewers worldwide. 
+                Start streaming today on <strong>Mai Troll</strong> (MaiTroll) and reach viewers worldwide. 
                 Our social streaming platform provides powerful broadcasting tools to help you create engaging content. 
                 Whether you're a gamer, musician, or just want to chat – go live on Mai Troll and build your audience.
               </p>

@@ -250,9 +250,9 @@ export default function CategoriesPage() {
   return (
     <SEOLayout
       title="Browse Categories on Mai Troll | Social Streaming Platform"
-      description="Discover trending content categories on Mai Troll (MaiMaiTroll). Browse live streams in gaming, music, art, chat, and more on our social streaming platform."
+      description="Discover trending content categories on Mai Troll (MaiTroll). Browse live streams in gaming, music, art, chat, and more on our social streaming platform."
       keywords={[
-        'MaiTroll', 'MaiMaiTroll', 'categories', 'browse streams', 'trending', 'gaming', 'music', 'art',
+        'MaiTroll', 'MaiTroll', 'categories', 'browse streams', 'trending', 'gaming', 'music', 'art',
         'just chatting', 'live content', 'stream categories', 'find streams',
         'trending streams', 'popular streams', 'best streams', 'top streamers',
         'watch live', 'live video', 'streaming categories', 'MaiTroll streaming',

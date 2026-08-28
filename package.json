@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "dist-electron/main.js",
   "engines": {
     "node": ">=20.x <25.0"
   },
@@ -26,7 +27,12 @@
     "cap:run:android": "npm run cap:sync:android && cap run android --livereload --external",
     "deploy:edge": "supabase functions deploy --no-verify-jwt",
     "deploy:mux-webhook": "supabase functions deploy mux-webhook --no-verify-jwt",
-    "postinstall": "node scripts/setup-githooks.js"
+    "postinstall": "node scripts/setup-githooks.js",
+    "desktop:dev": "tsx electron/main.ts",
+    "desktop:compile": "tsc -p electron/tsconfig.json",
+    "desktop:build": "npm run desktop:compile && electron-builder --win",
+    "desktop:dist": "npm run desktop:compile && electron-builder --win nsis",
+    "desktop:pack": "npm run desktop:compile && electron-builder --win --dir"
   },
   "dependencies": {
     "@babylonjs/core": "^7.0.0",
@@ -140,6 +146,9 @@
     "@vitejs/plugin-react": "^4.3.4",
     "dompurify": "^3.2.3",
     "dotenv": "^16.4.7",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-updater": "^6.8.9",
     "eslint": "^9.16.0",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^5.1.0",
@@ -168,5 +177,54 @@
     "rollup": "^4.28.1",
     "picomatch": "^4.0.2",
     "busboy": "^1.6.0"
+  },
+  "build": {
+    "appId": "com.maitroll.desktop",
+    "productName": "MaiTroll",
+    "asar": true,
+    "asarUnpack": [
+      "**/*.node",
+      "**/node_modules/keytar/**"
+    ],
+    "directories": {
+      "output": "dist-desktop"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "dist/**/*",
+      "public/icons/maitroll.ico",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/icons/maitroll.ico",
+      "publisherName": "MaiTroll"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MaiTroll",
+      "installerIcon": "public/icons/maitroll.ico",
+      "uninstallerIcon": "public/icons/maitroll.ico",
+      "installerHeaderIcon": "public/icons/maitroll.ico",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "include": "build/nsis.nsh"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "maitroll",
+      "repo": "maitroll",
+      "releaseType": "release"
+    }
   }
 }

@@ -54,7 +54,7 @@ function websiteSchemaStub() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'MaiTroll',
-    alternateName: 'MaiMaiTroll',
+    alternateName: 'MaiTroll',
     url: SITE_URL,
     description: 'MaiTroll is a social streaming platform for creators, streamers, gamers, and online communities.',
     potentialAction: {

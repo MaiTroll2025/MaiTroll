@@ -181,7 +181,7 @@ export default function SEOLayout({ children, title, description, keywords = [],
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                 <Eye className="w-4 h-4 text-white" />
               </div>
-              <span className="text-slate-400">© 2026 Mai Troll (MaiMaiTroll). All rights reserved.</span>
+              <span className="text-slate-400">© 2026 Mai Troll (MaiTroll). All rights reserved.</span>
               <Link
                 to="/admin"
                 className="ml-4 px-3 py-1 text-xs text-slate-500 hover:text-purple-400 transition-colors"

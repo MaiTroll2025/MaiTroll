@@ -805,7 +805,7 @@ function PhoneLocalVideo({
         className,
       )}
     >
-      {videoTrack ? (
+        {videoTrack ? (
         <video
           ref={videoRef}
           autoPlay
@@ -1676,8 +1676,14 @@ export default function PhoneViewerPage() {
 
     const resolvedMedia =
       enrichedGiftData?.animation_url ||
+      enrichedGiftData?.animation_url_webm ||
+      enrichedGiftData?.animation_url_mp4 ||
+      enrichedGiftData?.animation_url_mov ||
       enrichedGiftData?.video_url ||
       enrichedGiftData?.metadata?.animation_url ||
+      enrichedGiftData?.metadata?.animation_url_webm ||
+      enrichedGiftData?.metadata?.animation_url_mp4 ||
+      enrichedGiftData?.metadata?.animation_url_mov ||
       enrichedGiftData?.metadata?.video_url
 
     if (!resolvedMedia) return
@@ -3263,6 +3269,7 @@ export default function PhoneViewerPage() {
               viewerId={user?.id || anonViewerId}
               remoteUsers={remoteUsers}
               userIdToLiveKitIdentity={userIdToLiveKitIdentity}
+              returnPathTemplate="/watch/:id"
               onReturnToStream={() => {
                 setStream((prev) =>
                   prev
@@ -3855,7 +3862,101 @@ export default function PhoneViewerPage() {
           </div>
         )}
 
-        {/* Chat input */}
+        {/* Chat overlay */}
+        {showChat && !battleActive && (
+          <div
+            className="absolute inset-0 z-[60] flex flex-col bg-[#02030a]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowChat(false)
+              }
+            }}
+          >
+            <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-white/70">Chat</span>
+              <button
+                type="button"
+                onClick={() => setShowChat(false)}
+                className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-xl"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 pb-3">
+              <div className="flex flex-col items-center gap-2">
+                {floatingMessages.length === 0 && (
+                  <p className="mt-10 text-[11px] font-bold text-white/25">No messages yet</p>
+                )}
+                {floatingMessages.slice(0, 50).map((msg) => (
+                  <div
+                    key={msg.id}
+                    className="w-full max-w-lg animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  >
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 backdrop-blur-md">
+                      <span className="text-[11px] font-black text-cyan-300">{msg.username}</span>
+                      <span className="text-[11px] font-bold text-white/35">: </span>
+                      <span className="text-[11px] font-semibold text-white/85">{msg.content}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const text = chatInput.trim()
+                if (!text || !streamId) return
+
+                const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
+                const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+                setFloatingMessages(prev => [{ id: msgId, username, content: text, timestamp: Date.now() }, ...prev].slice(0, 50))
+                setChatInput('')
+
+                window.setTimeout(() => {
+                  setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                }, 30_000)
+
+                try {
+                  const result = await sendChatThroughGate({ streamId, content: text })
+                  if (!result.ok) {
+                    setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                    const errMsg = String(result.error || '').toLowerCase()
+                    if (errMsg.includes('disabled')) {
+                      // chat disabled - silently remove optimistic message
+                    }
+                    return
+                  }
+
+                  const chatChannel = floatingChatChannelRef.current
+                  if (chatChannel) {
+                    chatChannel.send({
+                      type: 'broadcast',
+                      event: 'floating_chat',
+                      payload: { username, content: text },
+                    }).catch(() => {})
+                  }
+                } catch {
+                  // ignore
+                }
+              }}
+              className="shrink-0 border-t border-white/10 bg-[#050711]/95 px-4 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+            >
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Say something..."
+                maxLength={280}
+                className="h-11 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+              />
+            </form>
+          </div>
+        )}
+
+        {!showChat && !battleActive && (
         <form
           onSubmit={async (e) => {
             e.preventDefault()
@@ -3906,6 +4007,7 @@ export default function PhoneViewerPage() {
             className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
           />
         </form>
+        )}
 
         {/* ================================================================
             BOTTOM CONTROLS
@@ -3918,64 +4020,68 @@ export default function PhoneViewerPage() {
               event.stopPropagation()
             }
           >
-            <div className="mx-auto flex max-w-xl items-center gap-2 rounded-[22px] border border-white/10 bg-[#050711]/90 p-2 shadow-[0_0_40px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+              <div className="mx-auto flex max-w-xl items-center gap-2 rounded-[22px] border border-white/10 bg-[#050711]/90 p-2 shadow-[0_0_40px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
 
-              <button
-                type="button"
-                onClick={handleMic}
-                className={cn(
-                  'grid h-12 w-12 place-items-center rounded-2xl border transition active:scale-90',
-                  micEnabled
-                    ? 'border-cyan-300/20 bg-cyan-500/10 text-cyan-200'
-                    : 'border-red-300/20 bg-red-500/10 text-red-200',
-                )}
-              >
-                {micEnabled ? (
-                  <Mic size={18} />
-                ) : (
-                  <MicOff
-                    size={18}
-                  />
-                )}
-              </button>
+                {seatCards.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleMic}
+                      className={cn(
+                        'grid h-12 w-12 place-items-center rounded-2xl border transition active:scale-90',
+                        micEnabled
+                          ? 'border-cyan-300/20 bg-cyan-500/10 text-cyan-200'
+                          : 'border-red-300/20 bg-red-500/10 text-red-200',
+                      )}
+                    >
+                      {micEnabled ? (
+                        <Mic size={18} />
+                      ) : (
+                        <MicOff
+                          size={18}
+                        />
+                      )}
+                    </button>
 
-              <button
-                type="button"
-                onClick={
-                  handleCamera
-                }
-                className={cn(
-                  'grid h-12 w-12 place-items-center rounded-2xl border transition active:scale-90',
-                  cameraEnabled
-                    ? 'border-violet-300/20 bg-violet-500/10 text-violet-200'
-                    : 'border-red-300/20 bg-red-500/10 text-red-200',
+                    <button
+                      type="button"
+                      onClick={
+                        handleCamera
+                      }
+                      className={cn(
+                        'grid h-12 w-12 place-items-center rounded-2xl border transition active:scale-90',
+                        cameraEnabled
+                          ? 'border-violet-300/20 bg-violet-500/10 text-violet-200'
+                          : 'border-red-300/20 bg-red-500/10 text-red-200',
+                      )}
+                    >
+                      {cameraEnabled ? (
+                        <Video
+                          size={18}
+                        />
+                      ) : (
+                        <VideoOff
+                          size={18}
+                        />
+                      )}
+                    </button>
+                  </>
                 )}
-              >
-                {cameraEnabled ? (
-                  <Video
-                    size={18}
-                  />
-                ) : (
-                  <VideoOff
-                    size={18}
-                  />
-                )}
-              </button>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setShowChat(
-                    true,
-                  )
-                }
-                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 text-[9px] font-black uppercase tracking-[0.16em] text-white/75"
-              >
-                <MessageCircle
-                  size={16}
-                />
-                Open Chat
-              </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowChat(
+                      true,
+                    )
+                  }
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 text-[9px] font-black uppercase tracking-[0.16em] text-white/75"
+                >
+                  <MessageCircle
+                    size={16}
+                  />
+                  Open Chat
+                </button>
 
               <button
                 type="button"

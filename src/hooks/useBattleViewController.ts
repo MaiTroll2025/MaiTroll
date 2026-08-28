@@ -719,6 +719,19 @@ export function useBattleViewController({
     }
   }, [battleLocalAudioTrack, battleLocalVideoTrack]);
 
+  // Sync local track state when effectiveLocalTracks changes after initial join
+  const audioTrackId = effectiveLocalTracks?.[0]?.sid || effectiveLocalTracks?.[0]?.id;
+  const videoTrackId = effectiveLocalTracks?.[1]?.sid || effectiveLocalTracks?.[1]?.id;
+  const prevTracksRef = useRef<{ audio?: LocalAudioTrack | undefined; video?: LocalVideoTrack | undefined }>({});
+  useEffect(() => {
+    const prev = prevTracksRef.current;
+    const [audio, video] = effectiveLocalTracks || [];
+    if (prev.audio === audio && prev.video === video) return;
+    prevTracksRef.current = { audio, video };
+    setBattleLocalAudioTrack(audio || null);
+    setBattleLocalVideoTrack(video || null);
+  }, [effectiveLocalTracks, audioTrackId, videoTrackId]);
+
   // Fetch crown info for both broadcasters
   useEffect(() => {
     const fetchCrownInfo = async () => {
@@ -1626,19 +1639,16 @@ export function useBattleViewController({
       
       // FIX: Forfeiting broadcaster should return to their own stream, not the winner's stream
       // Navigate back to the forfeiting broadcaster's own stream so they can continue their broadcast
-      // Use /stream/{streamId} route (not /live which redirects to /live)
+      // Use returnPathTemplate when provided, fallback to /stream route
       if (participantInfo?.team === 'challenger' && challengerStream?.id) {
-        navigate(`/stream/${challengerStream.id}`);
+        navigate(returnPathTemplate ? returnPathTemplate.replace(':id', challengerStream.id) : `/stream/${challengerStream.id}`);
       } else if (participantInfo?.team === 'opponent' && opponentStream?.id) {
-        navigate(`/stream/${opponentStream.id}`);
+        navigate(returnPathTemplate ? returnPathTemplate.replace(':id', opponentStream.id) : `/stream/${opponentStream.id}`);
       } else if (currentStreamId) {
-        // Fallback to original stream
-        navigate(`/stream/${currentStreamId}`);
+        navigate(returnPathTemplate ? returnPathTemplate.replace(':id', currentStreamId) : `/stream/${currentStreamId}`);
       } else if (onReturnToStream) {
-        // Fallback to callback if provided
         onReturnToStream();
       } else {
-        // Last resort - navigate to home
         navigate('/');
       }
       
@@ -1936,7 +1946,7 @@ export function useBattleViewController({
             return;
           }
           if (winnerStreamId) {
-            navigate(`/stream/${winnerStreamId}`);
+            navigate(returnPathTemplate ? returnPathTemplate.replace(':id', winnerStreamId) : `/stream/${winnerStreamId}`);
             onReturnToStream?.();
             return;
           }

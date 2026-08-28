@@ -328,7 +328,7 @@ export default function FAQPage() {
       title="Frequently Asked Questions | Mai Troll"
       description="Find answers to frequently asked questions about Mai Troll. Learn about streaming, battles, coins, payouts, safety, account management, and more."
       keywords={[
-        'MaiTroll FAQ', 'MaiTroll questions', 'MaiMaiTroll FAQ',
+        'MaiTroll FAQ', 'MaiTroll questions', 'MaiTroll FAQ',
         'help', 'how to', 'streaming help', 'account help',
         'payment FAQ', 'creator FAQ', 'MaiTroll guide',
         'Troll Coins', 'battles', 'payouts', 'HytroGaming'

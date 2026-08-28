@@ -20,7 +20,7 @@ export const MAI_APPS: MaiApp[] = [
     name: 'MaiTroll',
     tagline: 'Go live, earn coins, enter the virtual city.',
     category: 'Live Social City',
-    websiteUrl: 'https://maiMaiTroll.com',
+    websiteUrl: 'https://MaiTroll.com',
     googlePlayUrl: '',
     appleStoreUrl: '',
     status: 'live',

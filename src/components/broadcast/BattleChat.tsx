@@ -57,7 +57,9 @@ export default function BattleChat({
      (profile as any)?.username?.trim() ||
      (profile as any)?.display_name?.trim() ||
      null;
-   const profileCacheRef = useRef<Record<string, any>>({});
+    const profileCacheRef = useRef<Record<string, any>>({});
+    const recentBattleChatKeysRef =
+      useRef<Map<string, number>>(new Map());
 
    // Determine which team the current user is on
    const getUserTeam = (userId: string) => {
@@ -204,12 +206,19 @@ export default function BattleChat({
              }
            }
            
-           const newMsg = normalizeMessage(newMsgRaw, profile ? { [newMsgRaw.user_id]: profile } : {});
-           setMessages((prev) => {
-             // Prevent duplicates
-             if (prev.some((m) => m.id === newMsg.id)) return prev;
-             return [...prev.slice(-49), newMsg];
-           });
+            const newMsg = normalizeMessage(newMsgRaw, profile ? { [newMsgRaw.user_id]: profile } : {});
+            const chatKey = `${newMsg.user_id}:${newMsg.content}:${newMsg.stream_id}`;
+            const now = Date.now();
+            const existingTs = recentBattleChatKeysRef.current.get(chatKey);
+            if (existingTs !== undefined && now - existingTs < 1500) {
+              return;
+            }
+            recentBattleChatKeysRef.current.set(chatKey, now);
+            setMessages((prev) => {
+              // Prevent duplicates
+              if (prev.some((m) => m.id === newMsg.id)) return prev;
+              return [...prev.slice(-49), newMsg];
+            });
          }
        )
        // Also listen for broadcast chat events (for real-time delivery)

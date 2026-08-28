@@ -780,7 +780,7 @@ export default function CityMapGuidePreview() {
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-cyan-500/50" />
-              <span>© 2026 MaiMaiTroll. All rights reserved.</span>
+              <span>© 2026 MaiTroll. All rights reserved.</span>
             </div>
             <div className="flex gap-5">
               {['/legal/terms', '/legal/privacy', '/legal/safety', '/support'].map(p => (

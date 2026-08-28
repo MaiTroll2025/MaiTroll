@@ -5,6 +5,7 @@
     { "src": "/api/og/(.*)", "dest": "/api/og/$1" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/legal/(.*)", "dest": "/api/legal/$1" },
+    { "src": "/downloads/MaiTroll-Setup.exe", "dest": "https://github.com/maitroll/maitroll/releases/latest/download/MaiTroll-Setup.exe" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],

@@ -32,6 +32,7 @@ interface MobileBroadcastHostSettingsProps {
   hasRgbEffect: boolean;
   isChatLocked: boolean;
   unreadMessageCount: number;
+  seatCount: number;
 
   // Actions
   onToggleMic: () => void;
@@ -47,8 +48,9 @@ interface MobileBroadcastHostSettingsProps {
   onTextPopup?: () => void;
   onAssignOfficer?: () => void;
   onPayOfficers?: () => void;
-onToggleChatLock?: () => void;
-  }
+  onToggleChatLock?: () => void;
+  onUpdateSeatCount?: (count: number) => void;
+}
 
 // ─── Grid Item Definition ────────────────────────────────────────────────────
 
@@ -150,6 +152,7 @@ export default function MobileBroadcastHostSettings({
   hasRgbEffect,
   isChatLocked,
   unreadMessageCount,
+  seatCount,
   onToggleMic,
   onToggleCamera,
   onFlipCamera,
@@ -163,8 +166,9 @@ export default function MobileBroadcastHostSettings({
   onTextPopup,
   onAssignOfficer,
   onPayOfficers,
-onToggleChatLock,
-  }: MobileBroadcastHostSettingsProps) {
+  onToggleChatLock,
+  onUpdateSeatCount,
+}: MobileBroadcastHostSettingsProps) {
   const [isGridOpen, setIsGridOpen] = useState(false);
   const [activePopup, setActivePopup] = useState<string | null>(null);
 
@@ -203,6 +207,16 @@ onToggleChatLock,
       bgColor: isCamOn ? 'bg-emerald-500/15' : 'bg-red-500/15',
       borderColor: isCamOn ? 'border-emerald-400/30' : 'border-red-400/30',
       action: () => setActivePopup('camera'),
+      hasPopup: true,
+    },
+    {
+      id: 'seats',
+      label: 'Seats',
+      icon: Users,
+      color: 'text-violet-400',
+      bgColor: 'bg-violet-500/15',
+      borderColor: 'border-violet-400/30',
+      action: () => setActivePopup('seats'),
       hasPopup: true,
     },
     {
@@ -543,6 +557,52 @@ onToggleChatLock,
                 <span className="text-sm font-bold">Send Text Popup</span>
               </button>
             )}
+          </div>
+        </SettingsSubPopup>
+      )}
+
+      {/* Seats Popup */}
+      {activePopup === 'seats' && (
+        <SettingsSubPopup
+          title="Manage Seats"
+          icon={Users}
+          color="bg-violet-500/20"
+          onClose={closePopup}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <span className="text-sm font-bold text-white/80">Viewer Seats</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    const next = Math.max(0, seatCount - 1);
+                    if (next !== seatCount) {
+                      onUpdateSeatCount?.(next);
+                    }
+                    closePopup();
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95"
+                >
+                  -
+                </button>
+                <span className="text-sm font-black text-white w-4 text-center">{seatCount}</span>
+                <button
+                  onClick={() => {
+                    const next = Math.min(6, seatCount + 1);
+                    if (next !== seatCount) {
+                      onUpdateSeatCount?.(next);
+                    }
+                    closePopup();
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <p className="text-[11px] text-white/40">
+              Adjust how many viewer seats are available. Total boxes = seats + broadcaster.
+            </p>
           </div>
         </SettingsSubPopup>
       )}

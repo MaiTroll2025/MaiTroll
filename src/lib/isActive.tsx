@@ -456,7 +456,7 @@ export default function Sidebar() {
               </div>
                 <div className="min-w-0 text-left">
                 <div className="truncate bg-gradient-to-r from-white via-pink-100 via-yellow-100 via-cyan-100 to-purple-200 bg-clip-text text-lg font-black leading-tight text-transparent">
-                  MaiMaiTroll
+                  MaiTroll
                 </div>
                 <div className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-white/80">
                   City OS

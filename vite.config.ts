@@ -36,9 +36,12 @@ export default defineConfig(({ mode }) => {
     SUPABASE_ANON_KEY: !!env.VITE_SUPABASE_ANON_KEY,
   })
 
+  const isElectronBuild = process.env.ELECTRON_BUILD === '1'
+
   return {
     root,
     envDir: root,
+    base: isElectronBuild ? './' : '/',
     define: {
       global: 'window',
       __APP_VERSION__: JSON.stringify(appVersion),

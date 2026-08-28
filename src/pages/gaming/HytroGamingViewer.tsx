@@ -421,8 +421,8 @@ export default function HytroGamingViewer() {
 
   // SEO meta tags for stream page (accessible to Google for indexing)
   const streamUrl = currentStream
-    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://maiMaiTroll.com'}/live/${encodeURIComponent(currentStream.broadcaster_name || streamId)}`
-    : `${typeof window !== 'undefined' ? window.location.origin : 'https://maiMaiTroll.com'}/gaming/watch/${streamId}`
+    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://MaiTroll.com'}/live/${encodeURIComponent(currentStream.broadcaster_name || streamId)}`
+    : `${typeof window !== 'undefined' ? window.location.origin : 'https://MaiTroll.com'}/gaming/watch/${streamId}`
   useSEO({
     title: currentStream
       ? `${currentStream.broadcaster_name || 'Gamer'} is LIVE on HytroGaming | Mai Troll`
@@ -445,7 +445,7 @@ export default function HytroGamingViewer() {
       author: {
         '@type': 'Person',
         name: currentStream.broadcaster_name || 'Gamer',
-        url: `${typeof window !== 'undefined' ? window.location.origin : 'https://maiMaiTroll.com'}/profile/${encodeURIComponent(currentStream.broadcaster_name || '')}`,
+        url: `${typeof window !== 'undefined' ? window.location.origin : 'https://MaiTroll.com'}/profile/${encodeURIComponent(currentStream.broadcaster_name || '')}`,
       },
       ...(isLive && {
         isLiveBroadcast: true,

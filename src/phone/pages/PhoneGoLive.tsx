@@ -490,8 +490,8 @@ export default function PhoneGoLive() {
 
         started_at: null,
 
-        box_count: 2,
-        seat_count: 1,
+        box_count: 1,
+        seat_count: 0,
 
         layout_mode: 'grid',
 

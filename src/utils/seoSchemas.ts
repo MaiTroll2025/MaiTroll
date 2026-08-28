@@ -1,6 +1,6 @@
 export const SITE_URL = 'https://www.maitroll.com'
 export const SITE_NAME = 'MaiTroll'
-export const SITE_ALT_NAME = 'MaiMaiTroll'
+export const SITE_ALT_NAME = 'MaiTroll'
 
 export function websiteSchema() {
   return {
@@ -29,7 +29,7 @@ export function organizationSchema() {
     alternateName: SITE_ALT_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.png`,
-    description: 'MaiTroll (MaiMaiTroll) is a live social broadcasting and content-sharing platform for creators, streamers, gamers, and online communities.',
+    description: 'MaiTroll (MaiTroll) is a live social broadcasting and content-sharing platform for creators, streamers, gamers, and online communities.',
     sameAs: [SITE_URL],
     contactPoint: {
       '@type': 'ContactPoint',

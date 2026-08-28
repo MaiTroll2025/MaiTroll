@@ -200,9 +200,9 @@ export default function GoLivePage() {
   return (
     <SEOLayout
       title="Go Live on Mai Troll | Livestreaming on Mai Troll"
-      description="Start broadcasting live on Mai Troll (MaiMaiTroll). Go live in minutes with free streaming tools on our social streaming platform. Stream from phone, PC, or browser."
+      description="Start broadcasting live on Mai Troll (MaiTroll). Go live in minutes with free streaming tools on our social streaming platform. Stream from phone, PC, or browser."
       keywords={[
-        'MaiTroll', 'MaiMaiTroll', 'go live', 'start streaming', 'live broadcast', 'start live stream',
+        'MaiTroll', 'MaiTroll', 'go live', 'start streaming', 'live broadcast', 'start live stream',
         'broadcasting', 'live video', 'video streaming', 'stream live',
         'how to go live', 'start streaming free', 'live stream app',
         'go live streaming', 'start broadcasting', 'live video app',
@@ -232,7 +232,7 @@ export default function GoLivePage() {
               </h1>
               
               <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-                Start broadcasting in seconds on <strong>Mai Troll</strong> (MaiMaiTroll). No equipment needed – just a device and internet connection. 
+                Start broadcasting in seconds on <strong>Mai Troll</strong> (MaiTroll). No equipment needed – just a device and internet connection. 
                 Join creators worldwide on our social streaming platform who are sharing their passion with millions of viewers.
               </p>
               

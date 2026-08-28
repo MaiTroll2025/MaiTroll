@@ -1,0 +1,108 @@
+name: Build Windows Desktop
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to build (e.g. v1.0.1)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    env:
+      ELECTRON_BUILD: 1
+      NODE_OPTIONS: '--max_old_space_size=4096'
+      CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+      PUBLISH_URL: ${{ secrets.MAITROLL_DESKTOP_PUBLISH_URL }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.version || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        shell: pwsh
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          $ref = "${{ github.ref }}"
+          $tag = $ref -replace 'refs/tags/', ''
+          if ($tag -match '^v(.+)$') {
+            echo "version=$($Matches[1])" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "version=1.0.0" >> $env:GITHUB_OUTPUT
+          }
+        shell: pwsh
+
+      - name: Update version.json
+        run: node scripts/generate-version.js
+        shell: pwsh
+
+      - name: Generate desktop icon
+        run: node scripts/generate-desktop-icon.js
+        shell: pwsh
+
+      - name: Build React/Vite application
+        run: npm run build
+        shell: pwsh
+
+      - name: Build Electron Windows application
+        run: npm run desktop:dist
+        shell: pwsh
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: maitroll-windows-installer
+          path: dist/*.exe
+          retention-days: 90
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload to production (optional)
+        if: env.PUBLISH_URL != ''
+        run: |
+          $installer = Get-ChildItem -Path dist -Filter 'MaiTroll-Setup*.exe' | Select-Object -First 1
+          if ($installer) {
+            Write-Host "Uploading $($installer.Name) to production..."
+            $uri = "$env:PUBLISH_URL/$($installer.Name)"
+            Invoke-RestMethod -Uri $uri -Method Put -InFile $installer.FullName -ContentType 'application/octet-stream'
+          } else {
+            Write-Warning 'No installer found to upload to production'
+          }
+        shell: pwsh
+        env:
+          PUBLISH_URL: ${{ secrets.MAITROLL_DESKTOP_PUBLISH_URL }}

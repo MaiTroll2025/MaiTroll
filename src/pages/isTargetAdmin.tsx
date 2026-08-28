@@ -87,7 +87,7 @@ interface SignupStats {
 
 interface ClickStats {
   total: number;
-  maiMaiTroll: number;
+  MaiTroll: number;
   googlePlay: number;
   topUrls: { url: string; count: number }[];
 }
@@ -241,7 +241,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [recentSignups, setRecentSignups] = useState<UserListItem[]>([]);
   const [signupLoading, setSignupLoading] = useState(false);
 
-  const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, maiMaiTroll: 0, googlePlay: 0, topUrls: [] });
+  const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, MaiTroll: 0, googlePlay: 0, topUrls: [] });
   const [clickLoading, setClickLoading] = useState(false);
 
   const [cashoutBonusData, setCashoutBonusData] = useState<any[]>([]);
@@ -430,9 +430,9 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     setClickLoading(true);
     try {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: total }, { count: maiMaiTroll }, { count: googlePlay }, { data: topUrlsData }] = await Promise.all([
+      const [{ count: total }, { count: MaiTroll }, { count: googlePlay }, { data: topUrlsData }] = await Promise.all([
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }),
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%maiMaiTroll.com%'),
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%MaiTroll.com%'),
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.Mai Troll.twa%'),
         supabase.from('outbound_clicks').select('url, created_at').gte('created_at', sevenDaysAgo),
       ]);
@@ -444,7 +444,7 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
 
       setClickStats({
         total: total || 0,
-        maiMaiTroll: maiMaiTroll || 0,
+        MaiTroll: MaiTroll || 0,
         googlePlay: googlePlay || 0,
         topUrls: Object.entries(counts).map(([url, count]) => ({ url, count })).sort((a, b) => b.count - a.count).slice(0, 5),
       });

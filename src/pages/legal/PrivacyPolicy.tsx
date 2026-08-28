@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
         </p>
 
         <p>
-          <strong>Mai Troll</strong> (also referred to as "<strong>MaiMaiTroll</strong>") is a social streaming platform. This Privacy Policy explains how we collect, use, and protect your information when you use our app and services.
+          <strong>Mai Troll</strong> (also referred to as "<strong>MaiTroll</strong>") is a social streaming platform. This Privacy Policy explains how we collect, use, and protect your information when you use our app and services.
         </p>
 
         <h2>1. Information We Collect</h2>
@@ -78,7 +78,7 @@ export default function PrivacyPolicy() {
 
         <h2>8. Contact Information</h2>
         <p>
-          This app is operated by MaiMaiTroll. For privacy-related questions, please contact support through the app.
+          This app is operated by MaiTroll. For privacy-related questions, please contact support through the app.
         </p>
       </article>
     </LegalLayout>
