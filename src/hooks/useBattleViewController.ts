@@ -598,10 +598,10 @@ export function useBattleViewController({
 
     if (original) {
       navigate(resolvePath(original.streamId));
-    } else if (currentStreamId) {
-      navigate(resolvePath(currentStreamId));
     } else if (onReturnToStream) {
       onReturnToStream();
+    } else if (currentStreamId) {
+      navigate(resolvePath(currentStreamId));
     } else {
       navigate("/");
     }

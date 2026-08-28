@@ -2388,14 +2388,28 @@ export default function PhoneViewerPage() {
     audienceJoinAttemptedKeyRef.current = null
     currentRoomKeyRef.current = null
 
-    void joinAsAudience({
-      userId: viewerIdentityRef.current || viewerIdentity,
-      streamId,
-      roomName: roomId,
-      viewerIdentity: viewerIdentityRef.current || viewerIdentity,
-      publishCapable: true,
-    }).catch(() => {})
-  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience])
+    void (async () => {
+      joiningAudienceRef.current = true
+      try {
+        const isBattleMode = Boolean(battleId)
+        const result = await joinAsAudience({
+          userId: viewerIdentityRef.current || viewerIdentity,
+          streamId,
+          roomName: roomId,
+          viewerIdentity: viewerIdentityRef.current || viewerIdentity,
+          publishCapable: !isBattleMode && true,
+        })
+
+        if (typeof result === 'string') {
+          pushLog('seat publisher join failed', result)
+        }
+      } catch (err) {
+        // ignore join errors
+      } finally {
+        joiningAudienceRef.current = false
+      }
+    })()
+  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience, pushLog, battleId])
 
   /* ========================================================================
       AUDIENCE PRESENCE

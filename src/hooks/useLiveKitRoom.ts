@@ -856,8 +856,36 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
       providedRoomName = userIdOrParam.roomName
       publishCapable = !!userIdOrParam.publishCapable
     }
-    // Guard: prevent multiple simultaneous connection attempts
+
     if (joinedRef.current) {
+      const currentRoom = roomRef.current
+      const needsPublisherUpgrade =
+        currentRoom != null &&
+        publishCapable &&
+        (currentRoom.localParticipant as any)?.canPublish !== true
+
+      if (needsPublisherUpgrade) {
+        try {
+          await currentRoom.disconnect()
+        } catch {
+          // ignore disconnect errors during upgrade
+        }
+
+        joinedRef.current = false
+        roomRef.current = null
+      } else {
+        if (import.meta.env.DEV) {
+          console.log('[useLiveKitRoom] Join prevented: already joined', {
+            roomId,
+            userId,
+          })
+        }
+        return currentRoom
+      }
+    }
+
+    // Guard: prevent multiple simultaneous connection attempts
+    if (joiningRef.current) {
       if (import.meta.env.DEV) console.log('[useLiveKitRoom] Join prevented: already joined', { roomId, userId });
       return roomRef.current;
     }
