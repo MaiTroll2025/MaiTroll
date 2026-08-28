@@ -104,6 +104,7 @@ import {
 
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BattleView from '@/pages/broadcast/BattleView'
+import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 
 import {
   usePhoneViewerDebug,
@@ -943,6 +944,18 @@ export default function PhoneViewerPage() {
   const currentRoomKeyRef =
     useRef<string | null>(null)
 
+  const viewerIdentityRef =
+    useRef<string>('')
+
+  const joiningPublisherRef =
+    useRef(false)
+
+  const audienceJoinAttemptedKeyRef =
+    useRef<string | null>(null)
+
+  const audienceFailedUntilRef =
+    useRef<number>(0)
+
   /*
    * ========================================================================
    * BATTLE STATE
@@ -1113,6 +1126,10 @@ export default function PhoneViewerPage() {
       user?.id,
       anonViewerId,
     ])
+
+  useEffect(() => {
+    viewerIdentityRef.current = viewerIdentity
+  }, [viewerIdentity])
 
   /* ========================================================================
      LOAD STREAM
@@ -1595,7 +1612,7 @@ export default function PhoneViewerPage() {
       streamId,
       roomName: roomId,
       viewerIdentity,
-      publishCapable: true,
+      publishCapable: false,
     })
       .then((res: any) => {
           if (typeof res !== 'string') {
@@ -1631,7 +1648,7 @@ export default function PhoneViewerPage() {
       .finally(() => {
         joiningAudienceRef.current = false
       })
-  }, [
+   }, [
     streamId,
     stream,
     roomId,
@@ -2284,6 +2301,13 @@ export default function PhoneViewerPage() {
     }
 
     if (isUserOnStage && !isPublishing) {
+      if (joiningPublisherRef.current || joiningAudienceRef.current) {
+        return
+      }
+
+      joiningPublisherRef.current = true
+      currentRoomKeyRef.current = `${streamId}:${roomId}`
+
       pushLog('publishing local tracks for seat', {
         seatIndex: mySeat?.seat_index,
       })
@@ -2301,18 +2325,32 @@ export default function PhoneViewerPage() {
             error: err?.message || String(err),
           })
         })
+        .finally(() => {
+          joiningPublisherRef.current = false
+        })
+      return
     }
 
     if (!isUserOnStage && isPublishing) {
+      joiningPublisherRef.current = true
+
       pushLog('unpublishing local tracks')
 
-      void unpublishLocalTracks().catch(
-        (err: any) => {
+      void unpublishLocalTracks()
+        .catch((err: any) => {
           pushLog('unpublishLocalTracks failed', {
             error: err?.message || String(err),
           })
-        },
-      )
+        })
+        .finally(() => {
+          joiningPublisherRef.current = false
+        })
+
+      void leaveLiveKitRoom().catch(() => {})
+      hasJoinedAudienceRef.current = false
+      joiningAudienceRef.current = false
+      currentRoomKeyRef.current = null
+      return
     }
   }, [
     isUserOnStage,
@@ -2321,9 +2359,37 @@ export default function PhoneViewerPage() {
     liveKitRoom,
     publishLocalTracks,
     unpublishLocalTracks,
+    leaveLiveKitRoom,
+    streamId,
+    roomId,
     mySeat?.seat_index,
     pushLog,
   ])
+
+  const wasOnStageRef = useRef(isUserOnStage)
+
+  useEffect(() => {
+    if (wasOnStageRef.current) {
+      wasOnStageRef.current = isUserOnStage
+      return
+    }
+    wasOnStageRef.current = isUserOnStage
+    if (!isUserOnStage) return
+
+    joiningAudienceRef.current = false
+    hasJoinedAudienceRef.current = false
+    joiningAudienceRef.current = false
+    audienceJoinAttemptedKeyRef.current = null
+    currentRoomKeyRef.current = null
+
+    void joinAsAudience({
+      userId: viewerIdentityRef.current || viewerIdentity,
+      streamId,
+      roomName: roomId,
+      viewerIdentity: viewerIdentityRef.current || viewerIdentity,
+      publishCapable: true,
+    }).catch(() => {})
+  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience])
 
   /* ========================================================================
       AUDIENCE PRESENCE
@@ -4070,6 +4136,13 @@ export default function PhoneViewerPage() {
             ))}
           </div>
         )}
+        
+        <GiftVideoOverlay 
+          gifts={recentGifts} 
+          onFinish={(giftId: string) => {
+            setRecentGifts((prev) => prev.filter((gift) => gift.id !== giftId))
+          }} 
+        />
       </div>
     </GiftSystemProvider>
   )

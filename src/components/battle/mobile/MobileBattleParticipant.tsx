@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Coins, Gift, MicOff, User } from "lucide-react";
-import { BattleVideoRenderer } from "../../../components/broadcast/BattleArena";
 
 export interface MobileParticipantVM {
   userId: string;
@@ -14,11 +13,6 @@ export interface MobileParticipantVM {
   hasAudio?: boolean;
 }
 
-/**
- * A single participant box in the mobile battle. Tapping opens gifting for that
- * participant. Contribution points are the REAL gift coin value credited to the
- * participant (never crowns).
- */
 export default function MobileBattleParticipant({
   vm,
   glow,
@@ -39,6 +33,73 @@ export default function MobileBattleParticipant({
     : "bg-white/10 text-white/60";
   const badgeLabel = vm.role === "host" ? "HOST" : vm.role === "stage" ? "GUEST" : "VIEWER";
 
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const trackIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const container = videoContainerRef.current;
+    const track = vm.videoTrack;
+    if (!track || !container) return;
+
+    const trackId = track.sid || (track as any).id || null;
+    if (trackId && trackId === trackIdRef.current && videoRef.current) {
+      return;
+    }
+
+    if (videoRef.current) {
+      try {
+        track.detach(videoRef.current);
+      } catch {
+        // ignore
+      }
+      videoRef.current.remove();
+      videoRef.current = null;
+      trackIdRef.current = null;
+    }
+
+    try {
+      const videoElement = track.attach() as HTMLVideoElement;
+      videoRef.current = videoElement;
+      trackIdRef.current = trackId;
+      videoElement.style.width = "100%";
+      videoElement.style.height = "100%";
+      videoElement.style.objectFit = "contain";
+      videoElement.style.display = "block";
+      videoElement.style.backgroundColor = "black";
+      videoElement.autoplay = true;
+      videoElement.playsInline = true;
+      videoElement.setAttribute("playsinline", "true");
+      videoElement.setAttribute("webkit-playsinline", "true");
+      videoElement.controls = false;
+      (videoElement as any).disablePictureInPicture = true;
+      videoElement.muted = true;
+      container.appendChild(videoElement);
+    } catch (err) {
+      console.error("[MobileBattleParticipant] attach() threw error:", err);
+    }
+  }, [vm.videoTrack]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const play = () => video.play().catch(() => {});
+    play();
+
+    return () => {
+      try {
+        if (vm.videoTrack && videoRef.current) {
+          vm.videoTrack.detach(videoRef.current);
+        }
+      } catch {
+        // ignore
+      }
+      videoRef.current = null;
+      trackIdRef.current = null;
+    };
+  }, [vm.videoTrack]);
+
   return (
     <button
       type="button"
@@ -54,7 +115,7 @@ export default function MobileBattleParticipant({
       {/* Video / fallback avatar — fills the entire box */}
       <div className="absolute inset-0 overflow-hidden bg-black">
         {vm.videoTrack ? (
-          <BattleVideoRenderer videoTrack={vm.videoTrack} />
+          <div ref={videoContainerRef} className="absolute inset-0" />
         ) : vm.avatarUrl ? (
           <img src={vm.avatarUrl} alt={vm.username} className="h-full w-full object-cover" />
         ) : (
