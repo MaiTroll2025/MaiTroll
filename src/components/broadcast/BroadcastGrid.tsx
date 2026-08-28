@@ -177,13 +177,18 @@ function LiveKitVideoPlayer({
   ));
 
   if (videoTrack && import.meta.env.DEV) {
-    if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] Track info:', {
+    if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer][DEBUG] Track info:', {
+      trackId: (videoTrack as any).sid || (videoTrack as any).id || (videoTrack as any).trackId,
       trackName,
       trackLabel,
       displaySurface: (settings as any).displaySurface,
       isScreenShare,
       isScreenShareProp,
-      isLocal
+      isLocal,
+      kind: videoTrack.kind,
+      enabled: (videoTrack as any).enabled,
+      muted: (videoTrack as any).muted,
+      mediaStreamTrackReadyState: mediaTrack?.readyState,
     });
   }
 
@@ -274,15 +279,25 @@ function LiveKitVideoPlayer({
 
     // If no video track, cleanup and show fallback
     if (!videoTrack) {
-      if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] No video track, cleaning up');
+      if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer][DEBUG] No video track, cleaning up');
       cleanup();
       return;
     }
 
     // If track hasn't changed, skip re-attachment
     if (previousTrackRef.current === videoTrack && videoElementRef.current) {
-      if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] Track unchanged, skipping re-attachment');
+      if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer][DEBUG] Track unchanged, skipping re-attachment');
       return;
+    }
+
+    if (import.meta.env.DEV) {
+      console.debug('[LiveKitVideoPlayer][DEBUG] Attaching/replacing track:', {
+        trackId: (videoTrack as any).sid || (videoTrack as any).id || (videoTrack as any).trackId,
+        isLocal,
+        hasContainer: !!containerRef.current,
+        hasExistingElement: !!videoElementRef.current,
+        previousTrackId: previousTrackRef.current ? ((previousTrackRef.current as any).sid || (previousTrackRef.current as any).id || (previousTrackRef.current as any).trackId) : null,
+      });
     }
 
     // Small delay to ensure DOM is ready
@@ -311,9 +326,22 @@ function LiveKitVideoPlayer({
       const isPlaying = !!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2);
       
       if (!isPlaying && video.srcObject) {
-        if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] Video not playing, attempting to resume...');
+        if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer][DEBUG] Video not playing, attempting to resume...', {
+          currentTime: video.currentTime,
+          paused: video.paused,
+          ended: video.ended,
+          readyState: video.readyState,
+          srcObject: !!video.srcObject,
+          trackId: (videoTrack as any).sid || (videoTrack as any).id || (videoTrack as any).trackId,
+        });
         video.play().catch(e => {
-          if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] Could not resume video:', e);
+          if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer][DEBUG] Could not resume video:', e);
+        });
+      } else if (isPlaying && import.meta.env.DEV) {
+        console.debug('[LiveKitVideoPlayer][DEBUG] Video playing OK:', {
+          currentTime: video.currentTime,
+          readyState: video.readyState,
+          trackId: (videoTrack as any).sid || (videoTrack as any).id || (videoTrack as any).trackId,
         });
       }
     };
@@ -492,6 +520,20 @@ const BroadcastGridComponent = function BroadcastGrid({
     onCloseModActions,
     onOpenPassModal,
   }: BroadcastGridProps) {
+   if (import.meta.env.DEV) {
+     console.debug('[BroadcastGrid][DEBUG] render:', {
+       streamId: stream?.id,
+       streamStatus,
+       isHost,
+       localTracksCount: localTracks?.length ?? 0,
+       localVideo: !!localTracks?.[1],
+       localAudio: !!localTracks?.[0],
+       remoteUsersCount: remoteUsers?.length ?? 0,
+       seatCount: Object.keys(seats).length,
+       battleActive: !!battleState?.active,
+       battleId: battleState?.battleId,
+     });
+   }
    const renderCountRef = useRef(0);
    renderCountRef.current += 1;
    if (import.meta.env.DEV) console.debug('[BroadcastGrid] render count', renderCountRef.current);
@@ -779,21 +821,24 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
     let audioTrack: LocalAudioTrack | RemoteAudioTrack | undefined;
     let isLocal = false;
 
-    if (userId === localUserId) {
-      // Local user - use the localTracks from props
-      isLocal = true;
-      // Handle null localTracks
-      audioTrack = localTracks?.[0];
-      videoTrack = localTracks?.[1];
-      if (import.meta.env.DEV) console.debug('[BroadcastGrid] Local user tracks for', userId?.substring(0, 8), ':', {
-        hasVideoTrack: !!videoTrack,
-        hasAudioTrack: !!audioTrack,
-        localTracksLength: localTracks?.length ?? 0,
-        localTracks0: localTracks?.[0]?.constructor?.name,
-        localTracks1: localTracks?.[1]?.constructor?.name,
-        videoTrackId: (videoTrack as any)?.getTrackId?.(),
-        videoEnabled: (videoTrack as any)?.enabled,
-      });
+     if (userId === localUserId) {
+       // Local user - use the localTracks from props
+       isLocal = true;
+       // Handle null localTracks
+       audioTrack = localTracks?.[0];
+       videoTrack = localTracks?.[1];
+       if (import.meta.env.DEV) console.debug('[BroadcastGrid][DEBUG] Local user tracks for', userId?.substring(0, 8), ':', {
+         hasVideoTrack: !!videoTrack,
+         hasAudioTrack: !!audioTrack,
+         localTracksLength: localTracks?.length ?? 0,
+         localTracks0: localTracks?.[0]?.constructor?.name,
+         localTracks1: localTracks?.[1]?.constructor?.name,
+         videoTrackId: (videoTrack as any)?.getTrackId?.(),
+         videoEnabled: (videoTrack as any)?.enabled,
+         videoTrackKind: videoTrack?.kind,
+         audioTrackId: (audioTrack as any)?.getTrackId?.(),
+         audioEnabled: (audioTrack as any)?.enabled,
+       });
       // For local participant, we create a dummy participant object
       participant = {
         identity: localUserId,
@@ -1260,6 +1305,18 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
             (p: StagePass) => p.status === 'open',
           );
 
+          if (import.meta.env.DEV) {
+            console.debug('[BroadcastGrid][DEBUG] host render state:', {
+              isLocalHost,
+              isMicOn: broadcasterTrackInfo.isMicOn,
+              isCamOn: broadcasterTrackInfo.isCamOn,
+              isScreenShare: broadcasterTrackInfo.isScreenShare,
+              hasVideo: !!(broadcasterTrackInfo as any).hasVideo,
+              localTracksVideo: !!localTracks?.[1],
+              remoteVideoTrack: !!getParticipantAndTracks(broadcasterUserId).videoTrack,
+            });
+          }
+
           return (
             <BroadcastStageLayout
               hostName={broadcasterProfileForLayout?.username || 'Broadcaster'}
@@ -1273,6 +1330,15 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
                   const videoTrack = isLocalHost
                     ? localTracks?.[1]
                     : getParticipantAndTracks(broadcasterUserId).videoTrack;
+                  if (import.meta.env.DEV) {
+                    console.debug('[BroadcastGrid][DEBUG] hostVideoNode resolve:', {
+                      isLocalHost,
+                      hasVideoTrack: !!videoTrack,
+                      videoTrackId: (videoTrack as any)?.sid || (videoTrack as any)?.id || (videoTrack as any)?.trackId || null,
+                      localTracksVideo: !!localTracks?.[1],
+                      remoteVideoTrack: !!getParticipantAndTracks(broadcasterUserId).videoTrack,
+                    });
+                  }
                   if (!videoTrack) return undefined;
                   return (
                     <LiveKitVideoPlayer

@@ -113,30 +113,40 @@ export default function MobileAudienceTicker({
             <button
               key={`${m.id}-${m.user_id}`}
               type="button"
-              onClick={() => canModerate(m) && onModerateUser?.({ userId: m.user_id, username: m.username, role: m.role })}
+              onClick={() =>
+                canModerate(m) &&
+                onModerateUser?.({
+                  userId: m.user_id,
+                  username: m.username,
+                  role: m.role,
+                })
+              }
               className={cn(
-                'relative flex shrink-0 flex-col items-center justify-center',
+                'relative flex shrink-0 flex-col items-center justify-center border-0 bg-transparent p-0 outline-none ring-0 shadow-none appearance-none focus:border-0 focus:bg-transparent focus:outline-none focus:ring-0 focus:shadow-none active:border-0 active:outline-none active:ring-0',
                 canModerate(m) ? 'cursor-pointer' : 'cursor-default',
               )}
               title={m.username}
             >
-              <div
-                className={cn(
-                  'relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow-[0_0_8px_rgba(34,211,238,0.18)] backdrop-blur-sm',
-                  isCurrent ? 'border-cyan-400/60 ring-1 ring-cyan-400/60' : 'border-cyan-400/30',
-                )}
-              >
+              <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white/10">
                 {m.avatar_url ? (
-                  <img src={m.avatar_url} alt={m.username} className="h-full w-full object-cover" />
+                  <img
+                    src={m.avatar_url}
+                    alt={m.username}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <span className="text-[11px] font-black text-cyan-100">{firstLetter}</span>
+                  <span className="text-[11px] font-black text-white/80">
+                    {firstLetter}
+                  </span>
                 )}
+
                 {m.role === 'broadcaster' && (
                   <span className="absolute -bottom-0.5 -right-0.5 rounded-full border border-yellow-300/30 bg-yellow-500 px-1 text-[6px] font-black uppercase leading-3 text-white">
                     H
                   </span>
                 )}
               </div>
+
               {coinLabel && (
                 <span className="mt-0.5 text-[7px] font-black leading-none text-cyan-300">
                   {coinLabel}💎

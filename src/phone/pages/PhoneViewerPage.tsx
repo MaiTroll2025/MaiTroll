@@ -8,20 +8,16 @@ import React, {
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft,
   ChevronDown,
   Gift,
   Heart,
-  MessageCircle,
   Mic,
   MicOff,
   Plus,
   Radio,
-  Share2,
   Users,
   Video,
   VideoOff,
-  X,
 } from 'lucide-react'
 
 import {
@@ -77,6 +73,8 @@ import CityStatusPanel from '@/components/city/CityStatusPanel'
 import RaidModal from '@/components/city/RaidModal'
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import MaiBag from '@/components/mai-bag/MaiBag'
+import ShareModal from '@/components/broadcast/ShareModal'
+import PhoneViewerHeader from '@/phone/components/PhoneViewerHeader'
 
 import {
   useCityStatusOrb,
@@ -105,10 +103,6 @@ import {
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BattleView from '@/pages/broadcast/BattleView'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
-
-import {
-  usePhoneViewerDebug,
-} from '@/hooks/usePhoneViewerDebug'
 
 interface SeatState {
   participant: any
@@ -726,7 +720,7 @@ const PhoneRemoteVideo = memo(
     return (
       <div
         className={cn(
-          'relative h-full w-full overflow-hidden bg-black',
+          'relative h-full w-full overflow-hidden bg-black pointer-events-none',
           className,
         )}
       >
@@ -737,12 +731,13 @@ const PhoneRemoteVideo = memo(
           muted
           controls={false}
           disablePictureInPicture
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover pointer-events-none"
         />
 
         <audio
           ref={audioRef}
           autoPlay
+          className="pointer-events-none"
         />
 
         {!videoTrack &&
@@ -849,14 +844,6 @@ export default function PhoneViewerPage() {
   const hostId =
     stream?.user_id || ''
 
-  const {
-    logs,
-    pushLog,
-    clearLogs,
-  } = usePhoneViewerDebug(
-    '[PhoneViewerPage]',
-  )
-
   const [
     broadcasterProfile,
     setBroadcasterProfile,
@@ -870,9 +857,6 @@ export default function PhoneViewerPage() {
 
   const [viewerError, setViewerError] =
     useState<string | null>(null)
-
-  const [showChat, setShowChat] =
-    useState(true)
 
   const [showControls, setShowControls] =
     useState(true)
@@ -903,6 +887,11 @@ export default function PhoneViewerPage() {
   const [
     isGiftModalOpen,
     setIsGiftModalOpen,
+  ] = useState(false)
+
+  const [
+    isShareModalOpen,
+    setIsShareModalOpen,
   ] = useState(false)
 
   const [
@@ -1599,14 +1588,6 @@ export default function PhoneViewerPage() {
 
     joiningAudienceRef.current = true
 
-    if (import.meta.env.DEV) {
-      pushLog('joining audience', {
-        streamId,
-        roomId,
-        identity: viewerIdentity,
-      })
-    }
-
     void joinAsAudience({
       userId: viewerIdentity,
       streamId,
@@ -1615,21 +1596,14 @@ export default function PhoneViewerPage() {
       publishCapable: false,
     })
       .then((res: any) => {
-          if (typeof res !== 'string') {
-            hasJoinedAudienceRef.current = true
-            setViewerError(null)
-            currentRoomKeyRef.current = `${streamId}:${roomId}`
+            if (typeof res !== 'string') {
+              hasJoinedAudienceRef.current = true
+              setViewerError(null)
+              currentRoomKeyRef.current = `${streamId}:${roomId}`
 
-            pushLog('audience joined', {
-              streamId,
-              roomId,
-              identity: viewerIdentity,
-            })
-          } else {
-            setViewerError(res)
-
-            pushLog('audience join failed', res)
-          }
+            } else {
+              setViewerError(res)
+            }
         })
         .catch((err: any) => {
           const message =
@@ -1638,13 +1612,7 @@ export default function PhoneViewerPage() {
             String(err) ||
             'Failed to join broadcast'
 
-          setViewerError(message)
-
-          pushLog('audience join error', {
-            message,
-            error: err,
-          })
-        })
+          setViewerError(message)})
       .finally(() => {
         joiningAudienceRef.current = false
       })
@@ -1655,7 +1623,6 @@ export default function PhoneViewerPage() {
     viewerIdentity,
     joinAsAudience,
     viewerError,
-    pushLog,
   ])
 
   /* ========================================================================
@@ -1815,11 +1782,6 @@ export default function PhoneViewerPage() {
           return
         }
 
-        pushLog('participant removed from stream', {
-          userId: participant.user_id,
-          streamId: participant.stream_id,
-        })
-
         kickProcessedRef.current = true
 
         void (async () => {
@@ -1847,11 +1809,6 @@ export default function PhoneViewerPage() {
         if (next.status === 'ended' || next.ended_at) {
           if (streamEndedRef.current) return
           streamEndedRef.current = true
-
-          pushLog('stream ended', {
-            status: next.status,
-            ended_at: next.ended_at,
-          })
 
           void (async () => {
             try {
@@ -2115,20 +2072,13 @@ export default function PhoneViewerPage() {
 
       updateBroadcasterState(
         host,
-      )
-
-      pushLog('broadcaster participant resolved', {
-        identity: host?.identity,
-        sid: host?.sid,
-      })
-    }
+      )}
   }, [
     remoteParticipants,
     liveKitRoom,
     streamId,
     hostId,
     updateBroadcasterState,
-    pushLog,
   ])
 
   /* ========================================================================
@@ -2314,22 +2264,9 @@ export default function PhoneViewerPage() {
       joiningPublisherRef.current = true
       currentRoomKeyRef.current = `${streamId}:${roomId}`
 
-      pushLog('publishing local tracks for seat', {
-        seatIndex: mySeat?.seat_index,
-      })
-
       void publishLocalTracks()
-        .then(() => {
-          if (mySeat?.seat_index != null) {
-            pushLog('seat tracks published', {
-              seatIndex: mySeat.seat_index,
-            })
-          }
-        })
         .catch((err: any) => {
-          pushLog('publishLocalTracks failed', {
-            error: err?.message || String(err),
-          })
+          // ignore publish errors
         })
         .finally(() => {
           joiningPublisherRef.current = false
@@ -2340,13 +2277,9 @@ export default function PhoneViewerPage() {
     if (!isUserOnStage && isPublishing) {
       joiningPublisherRef.current = true
 
-      pushLog('unpublishing local tracks')
-
       void unpublishLocalTracks()
         .catch((err: any) => {
-          pushLog('unpublishLocalTracks failed', {
-            error: err?.message || String(err),
-          })
+          // ignore unpublish errors
         })
         .finally(() => {
           joiningPublisherRef.current = false
@@ -2369,7 +2302,6 @@ export default function PhoneViewerPage() {
     streamId,
     roomId,
     mySeat?.seat_index,
-    pushLog,
   ])
 
   const wasOnStageRef = useRef(isUserOnStage)
@@ -2400,16 +2332,14 @@ export default function PhoneViewerPage() {
           publishCapable: !isBattleMode && true,
         })
 
-        if (typeof result === 'string') {
-          pushLog('seat publisher join failed', result)
-        }
+        if (typeof result === 'string') {}
       } catch (err) {
         // ignore join errors
       } finally {
         joiningAudienceRef.current = false
       }
     })()
-  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience, pushLog, battleId])
+  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience, battleId])
 
   /* ========================================================================
       AUDIENCE PRESENCE
@@ -2478,7 +2408,7 @@ export default function PhoneViewerPage() {
     kickProcessedRef.current = false
 
     const channel = supabase.channel(
-      `stream-seat-events-kick:${streamId}`,
+      `stream-seat-events:${streamId}`,
     )
 
     channel
@@ -2508,11 +2438,6 @@ export default function PhoneViewerPage() {
           }
 
           kickProcessedRef.current = true
-
-          pushLog('kick detected from seat_left event', {
-            payloadUserId: payload?.payload?.user_id,
-            mySeatIndex: mySeat?.seat_index,
-          })
 
           void (async () => {
             try {
@@ -2560,7 +2485,6 @@ export default function PhoneViewerPage() {
     leaveLiveKitRoom,
     unpublishLocalTracks,
     navigate,
-    pushLog,
   ])
 
   /* ========================================================================
@@ -2977,7 +2901,7 @@ export default function PhoneViewerPage() {
   const handleBroadcasterTap =
     useCallback(() => {
       /*
-       * Do not process broadcast double-tap likes
+       * Do not process broadcast likes
        * while the battle is covering the screen.
        */
       if (battleActive) {
@@ -3006,11 +2930,23 @@ export default function PhoneViewerPage() {
         )
 
         void handleLike()
+        lastTapRef.current = 0
+        setShowControls(true)
+        return
       }
 
-      lastTapRef.current =
-        now
+      lastTapRef.current = now
 
+      setLiked(true)
+
+      window.setTimeout(
+        () => {
+          setLiked(false)
+        },
+        700,
+      )
+
+      void handleLike()
       setShowControls(true)
     }, [
       battleActive,
@@ -3421,159 +3357,48 @@ export default function PhoneViewerPage() {
             phone viewport.
         ================================================================= */}
 
-        {stream && (
-          <div className="absolute inset-x-0 top-0 z-30 flex items-center px-3 pt-[52px] pointer-events-none">
-            <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-xl shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
-              <MobileAudienceTicker
-                audience={activeAudience}
-                currentUserId={user?.id}
-                hostUserId={stream?.user_id}
-                viewerCount={viewerCount}
-                likes={stream?.total_likes ?? 0}
-                maxVisible={7}
-              />
-            </div>
-          </div>
-        )}
-
-        {showControls &&
-          !battleActive && (
-            <div
-              className="absolute left-0 right-0 top-0 z-50 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]"
-              onClick={event =>
-                event.stopPropagation()
+        {stream && !battleActive && (
+          <PhoneViewerHeader
+            stream={stream}
+            streamId={streamId}
+            hostId={hostId}
+            viewerCount={viewerCount}
+            likes={stream?.total_likes ?? 0}
+            activeAudience={activeAudience}
+            onLeave={leave}
+            onGift={() => {
+              if (!user) {
+                navigate('/auth?mode=signup')
+                return
               }
-            >
-              <div className="flex items-start justify-between gap-3">
-
-                <div className="flex flex-col items-start gap-2">
-                  <button
-                    type="button"
-                    onClick={leave}
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-black/40 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-90"
-                  >
-                    <ArrowLeft
-                      size={19}
-                    />
-                  </button>
-
-                  {streamId && (
-                    <MaiBag streamId={streamId} compact />
-                  )}
-                </div>
-
-                <div className="flex shrink-0 items-center gap-1.5">
-
-                  <div className="flex items-center gap-1.5 rounded-full border border-cyan-300/20 bg-black/45 px-2 py-1.5 backdrop-blur-xl">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inset-0 animate-ping rounded-full bg-cyan-400/50" />
-
-                      <span className="relative h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_9px_rgba(103,232,249,0.9)]" />
-                    </span>
-
-                    <span className="text-[8px] font-black uppercase tracking-[0.14em] text-cyan-100">
-                      LIVE
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-0.5">
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLiked(true)
-
-                        void handleLike()
-
-                        window.setTimeout(
-                          () => {
-                            setLiked(false)
-                          },
-                          700,
-                        )
-                      }}
-                      className="flex h-6 w-6 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-xl transition active:scale-90"
-                    >
-                      <Heart
-                        size={10}
-                        className={cn(
-                          liked
-                            ? 'fill-pink-300 text-pink-300'
-                            : 'text-white',
-                        )}
-                      />
-
-                      <span className="text-[6px] font-black leading-none text-white">
-                        {Math.max(
-                          0,
-                          Number(
-                            (stream as any)
-                              ?.total_likes ??
-                              0,
-                          ) +
-                            pendingLikesRef.current,
-                        ).toLocaleString()}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={
-                        handleGift
-                      }
-                      className="grid h-6 w-6 place-items-center rounded-full border border-violet-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
-                    >
-                      <Gift
-                        size={10}
-                        className="text-violet-300"
-                      />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          await navigator.share?.({
-                            title: `@${hostName} on MaiTroll`,
-                            url: window.location.href,
-                          })
-                        } catch {
-                          // cancelled
-                        }
-                      }}
-                      className="grid h-6 w-6 place-items-center rounded-full border border-cyan-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
-                    >
-                      <Share2
-                        size={10}
-                        className="text-cyan-300"
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-2 flex justify-center">
-                <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 backdrop-blur-xl">
-                  <Users
-                    size={11}
-                    className="text-white/60"
-                  />
-
-                  <span className="text-[9px] font-black text-white/70">
-                    {Math.max(
-                      viewerCount,
-                      activeAudience?.length ||
-                        0,
-                    ) || 0}
-                  </span>
-
-                  <span className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/30">
-                    watching
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
+              setGiftRecipientId(hostId || null)
+              setIsGiftModalOpen(true)
+            }}
+            onShare={() => {
+              setIsShareModalOpen(true)
+            }}
+            onLike={() => {
+              setLiked(true)
+              void handleLike()
+              window.setTimeout(() => {
+                setLiked(false)
+              }, 700)
+            }}
+            liked={liked}
+            onHouseClick={() => {
+              const targetUser = broadcasterCityStatus.data
+              if (targetUser?.house_id && targetUser.id !== user?.id) {
+                setSelectedSeatUserId(targetUser.id)
+              }
+            }}
+            onRaid={() => {
+              const targetUser = broadcasterCityStatus.data
+              if (targetUser?.id && targetUser.id !== user?.id) {
+                setBroadcastRaidTarget(targetUser.id)
+              }
+            }}
+          />
+        )}
 
         {/* ================================================================
             LIKE
@@ -3647,12 +3472,12 @@ export default function PhoneViewerPage() {
                             seat.seatIndex
                           }
                           className={cn(
-                            'relative aspect-[1.18] overflow-hidden rounded-xl border bg-[#060711]/90 shadow-[0_0_22px_rgba(0,0,0,0.4)] backdrop-blur-xl',
+                            'relative aspect-[1.18] overflow-hidden rounded-xl border backdrop-blur-xl',
                             seat.isMine
-                              ? 'border-emerald-300/45 shadow-[0_0_22px_rgba(16,185,129,0.12)]'
+                              ? 'bg-[#060711]/90 border-emerald-300/45 shadow-[0_0_22px_rgba(16,185,129,0.12)]'
                               : seat.isOccupied
-                                ? 'border-violet-300/30 shadow-[0_0_24px_rgba(139,92,246,0.12)]'
-                                : 'border-white/10',
+                                ? 'bg-[#060711]/90 border-violet-300/30 shadow-[0_0_24px_rgba(139,92,246,0.12)]'
+                                : 'bg-white/[0.03] border-white/10',
                             isFocused &&
                               'ring-1 ring-cyan-300/70 shadow-[0_0_25px_rgba(34,211,238,0.2)]',
                           )}
@@ -3703,23 +3528,23 @@ export default function PhoneViewerPage() {
                                   seat.seatIndex,
                                 )
                               }
-                              className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-white/[0.025] to-transparent disabled:cursor-not-allowed"
+                              className="flex h-full w-full flex-col items-center justify-center gap-1 disabled:cursor-not-allowed"
                             >
-                              <div className="grid h-7 w-7 place-items-center rounded-xl border border-cyan-300/15 bg-cyan-500/[0.06]">
+                              <div className="grid h-7 w-7 place-items-center rounded-xl border border-white/10 bg-white/[0.03]">
                                 <Plus
                                   size={13}
-                                  className="text-cyan-200/70"
+                                  className="text-white/50"
                                 />
                               </div>
 
-                              <span className="text-[8px] font-black text-white/70">
+                              <span className="text-[8px] font-black text-white/40">
                                 Seat{' '}
                                 {
                                   seat.seatIndex
                                 }
                               </span>
 
-                              <span className="text-[6px] font-bold uppercase tracking-wider text-white/30">
+                              <span className="text-[6px] font-bold uppercase tracking-wider text-white/25">
                                 {seat.isLocked
                                   ? 'Locked'
                                   : seat.seatPrice ===
@@ -3730,7 +3555,9 @@ export default function PhoneViewerPage() {
                             </button>
                           )}
 
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
+                          {!seat.isOccupied && (
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
+                          )}
 
                           <div className="absolute bottom-1 left-1 right-1 z-10 flex items-center justify-between gap-1">
                             <div className="min-w-0 flex-1">
@@ -3781,6 +3608,50 @@ export default function PhoneViewerPage() {
                           </div>
 
                           {seat.isMine && (
+                            <div className="absolute left-1 top-1 z-20 flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  void handleMic()
+                                }}
+                                className={cn(
+                                  'rounded-md border p-1 backdrop-blur-md',
+                                  micEnabled
+                                    ? 'border-cyan-300/40 bg-cyan-500/15 text-cyan-100'
+                                    : 'border-red-300/40 bg-red-500/15 text-red-100',
+                                )}
+                              >
+                                {micEnabled ? (
+                                  <Mic size={12} />
+                                ) : (
+                                  <MicOff size={12} />
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  void handleCamera()
+                                }}
+                                className={cn(
+                                  'rounded-md border p-1 backdrop-blur-md',
+                                  cameraEnabled
+                                    ? 'border-violet-300/40 bg-violet-500/15 text-violet-100'
+                                    : 'border-red-300/40 bg-red-500/15 text-red-100',
+                                )}
+                              >
+                                {cameraEnabled ? (
+                                  <Video size={12} />
+                                ) : (
+                                  <VideoOff size={12} />
+                                )}
+                              </button>
+                            </div>
+                          )}
+
+                          {seat.isMine && (
                             <button
                               type="button"
                               onClick={() =>
@@ -3800,60 +3671,7 @@ export default function PhoneViewerPage() {
             </div>
           )}
 
-        {/* ================================================================
-            BROADCASTER CITY STATUS
-        ================================================================= */}
 
-        {!battleActive &&
-          broadcasterCityStatus.data && (
-            <div
-              className="absolute left-0 right-0 z-40 flex justify-center px-4 pb-2"
-              style={{
-                bottom: '86px',
-              }}
-            >
-              <div className="relative">
-                <CityStatusOrb
-                  data={
-                    broadcasterCityStatus.data
-                  }
-                  permissions={{
-                    isSelf: false,
-                    canCheckLicense: false,
-                    canRaid: true,
-                    canRepair: true,
-                    canEnforce: false,
-                    canRemoveFromSeat: false,
-                    canAccessAll: false,
-                  }}
-                  compact
-                  onHouseClick={() => {
-                    const targetUser =
-                      broadcasterCityStatus.data
-
-                    if (
-                      targetUser?.house_id &&
-                      targetUser.id !==
-                        user?.id
-                    ) {
-                      setSelectedSeatUserId(
-                        targetUser.id,
-                      )
-                    }
-                  }}
-                  onRaid={() => {
-                    const targetUser =
-                      broadcasterCityStatus.data
-                    if (targetUser?.id && targetUser.id !== user?.id) {
-                      setBroadcastRaidTarget(targetUser.id)
-                    }
-                  }}
-                />
-
-                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#080912] bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
-              </div>
-            </div>
-          )}
 
         {/* ================================================================
             FLYING CHAT
@@ -3877,31 +3695,14 @@ export default function PhoneViewerPage() {
         )}
 
         {/* Chat overlay */}
-        {showChat && !battleActive && (
+        {!battleActive && (
           <div
-            className="absolute inset-0 z-[60] flex flex-col bg-[#02030a]"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowChat(false)
-              }
-            }}
+            className="absolute inset-0 z-[60] flex flex-col bg-transparent pointer-events-none"
           >
-            <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-white/70">Chat</span>
-              <button
-                type="button"
-                onClick={() => setShowChat(false)}
-                className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-xl"
-              >
-                <X size={16} />
-              </button>
-            </div>
+            <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 pointer-events-none" />
 
-            <div className="flex-1 overflow-y-auto px-4 pb-3">
+            <div className="flex-1 overflow-y-auto px-4 pb-3 pointer-events-auto">
               <div className="flex flex-col items-center gap-2">
-                {floatingMessages.length === 0 && (
-                  <p className="mt-10 text-[11px] font-bold text-white/25">No messages yet</p>
-                )}
                 {floatingMessages.slice(0, 50).map((msg) => (
                   <div
                     key={msg.id}
@@ -3956,7 +3757,7 @@ export default function PhoneViewerPage() {
                   // ignore
                 }
               }}
-              className="shrink-0 border-t border-white/10 bg-[#050711]/95 px-4 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+              className="shrink-0 border-t border-white/10 bg-[#050711]/95 px-4 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] pointer-events-auto"
             >
               <input
                 type="text"
@@ -3970,145 +3771,7 @@ export default function PhoneViewerPage() {
           </div>
         )}
 
-        {!showChat && !battleActive && (
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault()
-            const text = chatInput.trim()
-            if (!text || !streamId) return
 
-            const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
-            const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-            setFloatingMessages(prev => [{ id: msgId, username, content: text, timestamp: Date.now() }, ...prev].slice(0, 50))
-            setChatInput('')
-
-            window.setTimeout(() => {
-              setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-            }, 30_000)
-
-            try {
-              const result = await sendChatThroughGate({ streamId, content: text })
-              if (!result.ok) {
-                setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                const errMsg = String(result.error || '').toLowerCase()
-                if (errMsg.includes('disabled')) {
-                  // chat disabled - silently remove optimistic message
-                }
-                return
-              }
-
-              const chatChannel = floatingChatChannelRef.current
-              if (chatChannel) {
-                chatChannel.send({
-                  type: 'broadcast',
-                  event: 'floating_chat',
-                  payload: { username, content: text },
-                }).catch(() => {})
-              }
-            } catch {
-              // ignore
-            }
-          }}
-          className="shrink-0 border-t border-white/10 bg-[#050711]/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
-        >
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Say something..."
-            maxLength={280}
-            className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
-          />
-        </form>
-        )}
-
-        {/* ================================================================
-            BOTTOM CONTROLS
-        ================================================================= */}
-
-        {!battleActive && (
-          <div
-            className="absolute bottom-0 left-0 right-0 z-50 px-3"
-            onClick={event =>
-              event.stopPropagation()
-            }
-          >
-              <div className="mx-auto flex max-w-xl items-center gap-2 rounded-[22px] border border-white/10 bg-[#050711]/90 p-2 shadow-[0_0_40px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
-
-                {seatCards.length > 0 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleMic}
-                      className={cn(
-                        'grid h-12 w-12 place-items-center rounded-2xl border transition active:scale-90',
-                        micEnabled
-                          ? 'border-cyan-300/20 bg-cyan-500/10 text-cyan-200'
-                          : 'border-red-300/20 bg-red-500/10 text-red-200',
-                      )}
-                    >
-                      {micEnabled ? (
-                        <Mic size={18} />
-                      ) : (
-                        <MicOff
-                          size={18}
-                        />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={
-                        handleCamera
-                      }
-                      className={cn(
-                        'grid h-12 w-12 place-items-center rounded-2xl border transition active:scale-90',
-                        cameraEnabled
-                          ? 'border-violet-300/20 bg-violet-500/10 text-violet-200'
-                          : 'border-red-300/20 bg-red-500/10 text-red-200',
-                      )}
-                    >
-                      {cameraEnabled ? (
-                        <Video
-                          size={18}
-                        />
-                      ) : (
-                        <VideoOff
-                          size={18}
-                        />
-                      )}
-                    </button>
-                  </>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowChat(
-                      true,
-                    )
-                  }
-                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 text-[9px] font-black uppercase tracking-[0.16em] text-white/75"
-                >
-                  <MessageCircle
-                    size={16}
-                  />
-                  Open Chat
-                </button>
-
-              <button
-                type="button"
-                onClick={leave}
-                className="grid h-12 w-12 place-items-center rounded-2xl border border-red-300/20 bg-red-500/10 text-red-200 transition active:scale-90"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="h-[calc(env(safe-area-inset-bottom)+0.6rem)]" />
-          </div>
-        )}
 
         {/* ================================================================
             EDGE ACCENTS
@@ -4219,44 +3882,37 @@ export default function PhoneViewerPage() {
           }
         />
 
-        {import.meta.env.DEV && logs.length > 0 && (
-          <div className="absolute inset-x-0 bottom-0 z-[200] max-h-40 overflow-auto rounded-t-2xl border border-white/10 bg-black/90 p-2 font-mono text-[10px] text-cyan-300">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="font-black uppercase tracking-wider text-white/60">
-                Debug Log ({logs.length})
-              </span>
-              <button
-                type="button"
-                onClick={clearLogs}
-                className="text-[8px] font-black uppercase text-white/40"
-              >
-                Clear
-              </button>
-            </div>
-            {logs.slice(-50).map((entry, idx) => (
-              <div
-                key={`${entry.timestamp}-${idx}`}
-                className="border-b border-white/5 pb-1 last:border-0"
-              >
-                <span className="text-white/30">
-                  [{new Date(entry.timestamp).toLocaleTimeString()}]
-                </span>{' '}
-                <span className="text-cyan-300/80">
-                  {entry.prefix}
-                </span>{' '}
-                <span className="text-white/70">
-                  {entry.message}
-                </span>
-                {entry.data && (
-                  <pre className="mt-1 whitespace-pre-wrap text-white/40">
-                    {JSON.stringify(entry.data, null, 2)}
-                  </pre>
-                )}
-              </div>
-            ))}
-          </div>
+        {/* ================================================================
+            SHARE MODAL
+        ================================================================= */}
+
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          streamTitle={stream?.title || hostName || 'Live Stream'}
+          streamUrl={window.location.href}
+          broadcasterName={hostName}
+        />
+
+        {/* ================================================================
+            MAI BAG
+        ================================================================= */}
+
+        {streamId && (
+          <MaiBag
+            streamId={streamId}
+            compact
+            className="pointer-events-none absolute right-2 top-2 z-20"
+          />
         )}
-        
+
+        <GiftVideoOverlay 
+          gifts={recentGifts} 
+          onFinish={(giftId: string) => {
+            setRecentGifts((prev) => prev.filter((g) => g.id !== giftId))
+          }} 
+        />
+
         <GiftVideoOverlay 
           gifts={recentGifts} 
           onFinish={(giftId: string) => {

@@ -19,6 +19,12 @@ interface UserStats {
   newFollowers: number;
 }
 
+function looksLikeUUID(value: unknown): boolean {
+  if (typeof value !== 'string') return false
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidPattern.test(value.trim())
+}
+
 export default function StreamSummary() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,7 +62,7 @@ export default function StreamSummary() {
         const streamEndedAt = stream?.ended_at || new Date().toISOString();
 
         setStreamStats({
-          title: stream?.title || 'Stream Ended',
+          title: looksLikeUUID(stream?.title) ? 'Stream Ended' : (stream?.title || 'Stream Ended'),
           totalLikes: stream?.total_likes || 0,
           createdAt: streamCreatedAt,
           endedAt: streamEndedAt,

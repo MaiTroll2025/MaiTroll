@@ -2,6 +2,7 @@ import type { LocalAudioTrack, LocalVideoTrack, Room } from 'livekit-client'
 import { create } from 'zustand'
 
 type TransferSession = {
+  [x: string]: any
   room: Room | null
   roomName: string | null
   streamId: string | null

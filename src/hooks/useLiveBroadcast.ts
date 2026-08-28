@@ -3,7 +3,7 @@
 // Shared LiveKit session logic for the BROADCASTER experience.
 //
 // This hook is the single source of truth for the LiveKit connection used by
-// BOTH the web BroadcastPage and the phone PhoneBroadcastPage. It encapsulates
+// BOTH the web BroadcastPage and the phone BroadcastHostPage. It encapsulates
 // the exact, verified behaviour:
 //   - adopt the transferred room/tracks coming from PhoneGoLive (PreflightStore)
 //   - connect + publish camera/mic tracks
@@ -103,13 +103,24 @@ export function useLiveBroadcast({
       kind: 'audio' | 'video',
     ): Promise<T | undefined> => {
       if (!track) return undefined
+      const trackId = (track as any).sid || (track as any).id || (track as any).trackId
+      console.log('[useLiveBroadcast][DEBUG] publishTrackOrClone start:', { kind, trackId, roomName: room.name, roomState: room.state, localIdentity: room.localParticipant?.identity })
       const tryPublish = async (candidate: T): Promise<T | undefined> => {
         try {
+          console.log('[useLiveBroadcast][DEBUG] Attempting publish:', { kind, trackId: candidate.sid || candidate.id, source: candidate.source, mediaStreamTrackKind: candidate.mediaStreamTrack?.kind })
           await room.localParticipant.publishTrack(candidate)
           localTrackPublishedCountRef.current += 1
+          console.log('[useLiveBroadcast][DEBUG] Publish succeeded:', { kind, trackId: candidate.sid || candidate.id })
           return candidate
-        } catch (err) {
-          console.warn(`[useLiveBroadcast] Failed to publish ${kind} track`, err)
+        } catch (err: any) {
+          console.warn(`[useLiveBroadcast][DEBUG] Failed to publish ${kind} track`, {
+            error: err?.message || err,
+            code: err?.code,
+            trackId: candidate.sid || candidate.id,
+            roomName: room.name,
+            roomState: room.state,
+            localIdentity: room.localParticipant?.identity,
+          })
           return undefined
         }
       }
@@ -118,6 +129,7 @@ export function useLiveBroadcast({
       try {
         const mediaTrack =
           (track as any).getMediaStreamTrack?.() || (track as any).mediaStreamTrack?.()
+        console.log('[useLiveBroadcast][DEBUG] Publish fallback mediaTrack:', { kind, hasMediaTrack: !!mediaTrack, mediaTrackKind: mediaTrack?.kind, mediaTrackReadyState: mediaTrack?.readyState })
         if (!mediaTrack) return undefined
         const clonedTrack = (
           kind === 'video' ? new LocalVideoTrack(mediaTrack) : new LocalAudioTrack(mediaTrack)
@@ -125,7 +137,7 @@ export function useLiveBroadcast({
         localTrackCreatedCountRef.current += 1
         return await tryPublish(clonedTrack)
       } catch (err) {
-        console.warn('[useLiveBroadcast] Failed to clone and publish track', err)
+        console.warn('[useLiveBroadcast][DEBUG] Failed to clone and publish track', { kind, error: err })
         return undefined
       }
     },
@@ -258,15 +270,24 @@ export function useLiveBroadcast({
       }
 
       // 2) Fresh connection (no transferred room).
+      const tokenRequestPayload = { room: expectedRoomName, identity: `host_${streamId}`, role: 'host', metadata: { streamId } }
+      console.log('[useLiveBroadcast][DEBUG] Fetching LiveKit token with payload:', tokenRequestPayload)
       const { data: tokenData, error: tokenError } = await (await import('../lib/supabase')).supabase
         .functions.invoke('livekit-token', {
-          body: { room: expectedRoomName, identity: `host_${streamId}`, metadata: { role: 'host', streamId } },
+          body: tokenRequestPayload,
         })
 
       if (tokenError || !tokenData?.token) {
-        console.error('[useLiveBroadcast] Failed to fetch LiveKit token', tokenError)
+        console.error('[useLiveBroadcast][DEBUG] Failed to fetch LiveKit token', { tokenError, tokenData })
         return
       }
+      console.log('[useLiveBroadcast][DEBUG] Token response:', {
+        participantType: tokenData.participantType,
+        isPublisher: tokenData.isPublisher,
+        canPublish: tokenData.canPublish,
+        mode: tokenData.mode,
+        identity: tokenData.participantIdentity,
+      })
       token = tokenData.token
 
       if (!roomToUse) {
@@ -275,9 +296,11 @@ export function useLiveBroadcast({
         attachLiveKitHandlers(roomToUse)
       }
 
+      console.log('[useLiveBroadcast][DEBUG] Connecting to LiveKit room:', { expectedRoomName, roomState: roomToUse.state })
       if (roomToUse.state !== 'connected') {
         await connectRoom(roomToUse, token)
       }
+      console.log('[useLiveBroadcast][DEBUG] Room connected:', { roomName: roomToUse.name, state: roomToUse.state, localIdentity: roomToUse.localParticipant?.identity })
 
       const existingCam =
         roomToUse.localParticipant.getTrackPublication(Track.Source.Camera) ||
@@ -289,6 +312,10 @@ export function useLiveBroadcast({
         Array.from(roomToUse.localParticipant.audioTrackPublications.values()).find(
           (pub: any) => pub?.track?.kind === 'audio',
         )
+      console.log('[useLiveBroadcast][DEBUG] Existing publications:', {
+        cam: existingCam?.track?.sid || existingCam?.trackSid || null,
+        mic: existingMic?.track?.sid || existingMic?.trackSid || null,
+      })
 
       let activeVideoTrack = (existingCam?.track as LocalVideoTrack | null) || null
       let activeAudioTrack = (existingMic?.track as LocalAudioTrack | null) || null
@@ -302,10 +329,22 @@ export function useLiveBroadcast({
         })
         activeAudioTrack = activeAudioTrack || (fresh.find((t) => t.kind === Track.Kind.Audio) as LocalAudioTrack | undefined) || null
         activeVideoTrack = activeVideoTrack || (fresh.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined) || null
+        console.log('[useLiveBroadcast][DEBUG] Created fresh tracks:', {
+          audio: !!activeAudioTrack,
+          video: !!activeVideoTrack,
+          audioId: activeAudioTrack?.sid || activeAudioTrack?.id || null,
+          videoId: activeVideoTrack?.sid || activeVideoTrack?.id || null,
+        })
       }
 
-      if (activeVideoTrack) await publishTrackOrClone(activeVideoTrack, roomToUse, 'video')
-      if (activeAudioTrack) await publishTrackOrClone(activeAudioTrack, roomToUse, 'audio')
+      if (activeVideoTrack) {
+        console.log('[useLiveBroadcast][DEBUG] Publishing video track:', { trackId: activeVideoTrack.sid || activeVideoTrack.id, kind: activeVideoTrack.kind })
+        await publishTrackOrClone(activeVideoTrack, roomToUse, 'video')
+      }
+      if (activeAudioTrack) {
+        console.log('[useLiveBroadcast][DEBUG] Publishing audio track:', { trackId: activeAudioTrack.sid || activeAudioTrack.id, kind: activeAudioTrack.kind })
+        await publishTrackOrClone(activeAudioTrack, roomToUse, 'audio')
+      }
 
       const next: [LocalAudioTrack | null, LocalVideoTrack | null] = [activeAudioTrack || null, activeVideoTrack || null]
       localTracksRef.current = next
@@ -383,9 +422,10 @@ export function useLiveBroadcast({
     try {
       const fresh = await createLocalTracks({
         audio: false,
-        video: true,
-        ...(videoPreset ? { resolution: videoPreset.resolution } : {}),
-        facingMode: next,
+        video: {
+          facingMode: next,
+          ...(videoPreset ? { resolution: videoPreset.resolution } : {}),
+        },
       })
 
       const video = fresh.find(t => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined

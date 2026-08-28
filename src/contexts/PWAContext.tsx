@@ -204,95 +204,95 @@ const isLocalhost =
        return;
      }
       
-      const registerSW = async () => {
-       try {
-         const registration = await navigator.serviceWorker.register('/service-worker.js', {
-           scope: '/'
-         });
-         
-         swRegistrationRef.current = registration;
-         
-         console.log('[PWA] Service Worker registered:', registration.scope);
-         
-         // Check for waiting worker
-         if (registration.waiting) {
-           setSwState(prev => ({
-             ...prev,
-             isUpdateAvailable: true,
-             waitingWorker: registration.waiting
-           }));
-         }
-         
-         // Listen for updates
-         registration.addEventListener('updatefound', () => {
-           const newWorker = registration.installing;
-           if (!newWorker) return;
-           
-           newWorker.addEventListener('statechange', () => {
-             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-               console.log('[PWA] Service Worker update found');
-               setSwState(prev => ({
-                 ...prev,
-                 isUpdateAvailable: true,
-                 waitingWorker: newWorker
-               }));
-             }
-           });
-         });
-         
-         // Listen for messages from SW
-         const handleSWMessage = (event: MessageEvent) => {
-           const { type, payload } = event.data || {};
-           
-           switch (type) {
-             case 'SW_UPDATED':
-               console.log('[PWA] Service Worker updated:', payload);
-               setSwState(prev => ({
-                 ...prev,
-                 version: payload?.version || null
-               }));
-               break;
-               
-             case 'SW_VERSION':
-               setSwState(prev => ({
-                 ...prev,
-                 isRegistered: true,
-                 version: payload?.version || null
-               }));
-               break;
-               
-             case 'OFFLINE_READY':
-               setSwState(prev => ({
-                 ...prev,
-                 isOfflineReady: true
-               }));
-               break;
-               
-             case 'SYNC_COMPLETE':
-               setPendingSyncItems(prev => ({
-                 ...prev,
-                 [payload.queueName]: 0
-               }));
-               break;
-               
-             case 'PUSH_RECEIVED':
-               window.dispatchEvent(new CustomEvent('pwa-push-received', { detail: payload }));
-               break;
-               
-             case 'NOTIFICATION_ACTION':
-               window.dispatchEvent(new CustomEvent('pwa-notification-action', { detail: payload }));
-               break;
-           }
-         };
+      const handleSWMessage = (event: MessageEvent) => {
+        const { type, payload } = event.data || {};
+        
+        switch (type) {
+          case 'SW_UPDATED':
+            console.log('[PWA] Service Worker updated:', payload);
+            setSwState(prev => ({
+              ...prev,
+              version: payload?.version || null
+            }));
+            break;
+            
+          case 'SW_VERSION':
+            setSwState(prev => ({
+              ...prev,
+              isRegistered: true,
+              version: payload?.version || null
+            }));
+            break;
+            
+          case 'OFFLINE_READY':
+            setSwState(prev => ({
+              ...prev,
+              isOfflineReady: true
+            }));
+            break;
+            
+          case 'SYNC_COMPLETE':
+            setPendingSyncItems(prev => ({
+              ...prev,
+              [payload.queueName]: 0
+            }));
+            break;
+            
+          case 'PUSH_RECEIVED':
+            window.dispatchEvent(new CustomEvent('pwa-push-received', { detail: payload }));
+            break;
+            
+          case 'NOTIFICATION_ACTION':
+            window.dispatchEvent(new CustomEvent('pwa-notification-action', { detail: payload }));
+            break;
+        }
+      };
 
-         navigator.serviceWorker.addEventListener('message', handleSWMessage);
-         
-         // Get SW version
-         if (registration.active) {
-           registration.active.postMessage({ type: 'GET_SW_VERSION' });
-         }
-         
-       } catch (error) {
+      const registerSW = async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('/service-worker.js', {
+            scope: '/'
+          });
+          
+          swRegistrationRef.current = registration;
+          
+          console.log('[PWA] Service Worker registered:', registration.scope);
+          
+          // Check for waiting worker
+          if (registration.waiting) {
+            setSwState(prev => ({
+              ...prev,
+              isUpdateAvailable: true,
+              waitingWorker: registration.waiting
+            }));
+          }
+          
+          // Listen for updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+            
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[PWA] Service Worker update found');
+                setSwState(prev => ({
+                  ...prev,
+                  isUpdateAvailable: true,
+                  waitingWorker: newWorker
+                }));
+              }
+            });
+          });
+          
+          // Listen for messages from SW
+          navigator.serviceWorker.addEventListener('message', handleSWMessage);
+          
+          // Get SW version
+          if (registration.active) {
+            registration.active.postMessage({ type: 'GET_SW_VERSION' });
+          }
+          
+        } catch (error) {
          // Only report SW registration failures in production
          if (!env.DEV && !window.location.hostname.match(/(localhost|127\.0\.0\.1|0\.0\.0\.0)/)) {
            console.error('[PWA] Service Worker registration failed:', error);

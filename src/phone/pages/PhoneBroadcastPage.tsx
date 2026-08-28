@@ -1,4 +1,4 @@
-import React, {
+﻿import React, {
   useCallback,
   useEffect,
   useMemo,
@@ -829,6 +829,14 @@ export default function PhoneBroadcastPage() {
   useEffect(() => {
     if (!streamId) return
 
+    console.log('[PhoneBroadcastPage][DEBUG] session.connect triggered:', {
+      streamId,
+      sessionState: session.isConnected,
+      sessionIsConnecting: session.isConnecting,
+      localTracksCount: session.localTracks?.length ?? 0,
+      localVideo: !!session.localTracks?.[1],
+      localAudio: !!session.localTracks?.[0],
+    })
     void session.connect()
 
     return () => {
@@ -1245,50 +1253,57 @@ export default function PhoneBroadcastPage() {
         >
           <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black">
              <BattleView
-               key={activeBattleId}
-               battleId={
-                 stream.battle_id!
-               }
-               currentStreamId={
-                 streamId || stream.id
-               }
-               viewerId={user?.id}
-               localTracks={
-                 battleLocalTracks
-               }
-               remoteUsers={Array.from(
-                 session.remoteParticipants.values(),
-               )}
-               userIdToLiveKitIdentity={
-                 userIdToLiveKitIdentity
-               }
-               returnPathTemplate={
-                 '/broadcast/:id'
-               }
-               onReturnToStream={() => {
-                setStream((previous) =>
-                  previous
-                    ? {
-                        ...previous,
-                        is_battle:
-                          false,
-                        battle_id:
-                          null,
-                        battle_mode:
-                          'none' as any,
-                        battle_status:
-                          'waiting' as any,
-                      }
-                    : previous,
-                )
-              }}
-              onToggleCamera={
-                session.toggleCamera
-              }
-              onToggleMic={
-                session.toggleMicrophone
-              }
-            />
+                key={activeBattleId}
+                battleId={
+                  stream.battle_id!
+                }
+                currentStreamId={
+                  streamId || stream.id
+                }
+                viewerId={user?.id}
+                localTracks={
+                  battleLocalTracks
+                }
+                remoteUsers={Array.from(
+                  session.remoteParticipants.values(),
+                )}
+                userIdToLiveKitIdentity={
+                  userIdToLiveKitIdentity
+                }
+                returnPathTemplate={
+                  '/broadcast/:id'
+                }
+                onReturnToStream={() => {
+                 setStream((previous) =>
+                   previous
+                     ? {
+                         ...previous,
+                         is_battle:
+                           false,
+                         battle_id:
+                           null,
+                         battle_mode:
+                           'none' as any,
+                         battle_status:
+                           'waiting' as any,
+                       }
+                     : previous,
+               )
+             }}
+             onToggleCamera={
+               session.toggleCamera
+             }
+             onToggleMic={
+               session.toggleMicrophone
+             }
+           />
+           {import.meta.env.DEV && (
+             <div className="pointer-events-none absolute inset-x-0 top-20 z-50 flex justify-center">
+               <div className="rounded-xl border border-white/10 bg-black/70 px-2 py-1 text-[10px] font-mono text-fuchsia-300/90 backdrop-blur">
+                 BattleView key={activeBattleId} | localTracks={String(!!battleLocalTracks)} | remote={String(session.remoteParticipants.size)}
+               </div>
+             </div>
+           )}
 
             <PhoneGiftModal
               isOpen={
@@ -1311,10 +1326,11 @@ export default function PhoneBroadcastPage() {
         </GiftSystemProvider>
       </ErrorBoundary>
     )
+  }
 
   /*
    * ============================================================
-   * BATTLE VIEW
+   * MAIN BROADCAST VIEW
    * ============================================================
    */
 
@@ -1326,6 +1342,20 @@ export default function PhoneBroadcastPage() {
       }
     >
       <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black text-white">
+
+        {import.meta.env.DEV && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-50 flex flex-col gap-1 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
+            <div className="rounded-xl border border-white/10 bg-black/70 px-2 py-1 text-[10px] font-mono text-cyan-300/90 backdrop-blur">
+              <div>streamId: {streamId || 'none'}</div>
+              <div>status: {stream?.status || 'none'}</div>
+              <div>battle: {stream?.battle_id || 'none'}</div>
+              <div>connected: {String(session.isConnected)}</div>
+              <div>localVideo: {String(!!session.localTracks?.[1])}</div>
+              <div>localAudio: {String(!!session.localTracks?.[0])}</div>
+              <div>remote: {String(session.remoteParticipants.size)}</div>
+            </div>
+          </div>
+        )}
 
         {/* ======================================================
             VIDEO / SEATS
@@ -1687,6 +1717,14 @@ export default function PhoneBroadcastPage() {
           }
         />
 
+        {streamId && (
+          <MaiBag
+            streamId={streamId}
+            compact
+            className="pointer-events-none absolute right-2 top-2 z-20"
+          />
+        )}
+
         <GiftVideoOverlay
           gifts={recentGifts}
           onFinish={(giftId) =>
@@ -1784,10 +1822,9 @@ function ControlButton({
     >
       <Icon size={20} />
 
-      <span className="max-w-full truncate px-0.5">
+       <span className="max-w-full truncate px-0.5">
         {label}
       </span>
     </button>
   )
-}
 }
