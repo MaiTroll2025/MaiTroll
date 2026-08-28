@@ -21,8 +21,13 @@ interface UserStats {
 
 function looksLikeUUID(value: unknown): boolean {
   if (typeof value !== 'string') return false
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  return uuidPattern.test(value.trim())
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (uuidPattern.test(trimmed)) return true
+  const noDashPattern = /^[0-9a-f]{32}$/i
+  if (noDashPattern.test(trimmed)) return true
+  return false
 }
 
 export default function StreamSummary() {

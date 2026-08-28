@@ -24,6 +24,7 @@ import {
 
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 
 import { useStreamSeats } from '@/hooks/useStreamSeats'
 import { useLiveBroadcast } from '@/hooks/useLiveBroadcast'
@@ -51,6 +52,7 @@ import BattleView from '@/pages/broadcast/BattleView'
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import MaiBag from '@/components/mai-bag/MaiBag'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
+import ShareModal from '@/components/broadcast/ShareModal'
 
 import type { Stream } from '@/types/broadcast'
 import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
@@ -77,6 +79,9 @@ export default function PhoneBroadcastPage() {
   const [stream, setStream] = useState<Stream | null>(null)
 
   const [isGiftModalOpen, setIsGiftModalOpen] =
+    useState(false)
+
+  const [isShareModalOpen, setIsShareModalOpen] =
     useState(false)
 
   const [floatingMessages, setFloatingMessages] =
@@ -901,6 +906,32 @@ export default function PhoneBroadcastPage() {
     setIsGiftModalOpen(true)
   }, [navigate, user])
 
+  const handleOpenShareModal = useCallback(() => {
+    setIsShareModalOpen(true)
+  }, [])
+
+  const handleCloseShareModal = useCallback(() => {
+    setIsShareModalOpen(false)
+  }, [])
+
+  const handleInviteFollowers = useCallback(async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser()
+      const inviterId = userData.user?.id
+      if (!inviterId || !streamId) return
+
+      const { data, error } = await supabase.rpc('invite_followers_to_broadcast', {
+        p_stream_id: streamId,
+        p_inviter_id: inviterId,
+      })
+
+      if (error) throw error
+      toast.success(`Invited ${data.invited_count || 0} followers and following users`)
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to send invites')
+    }
+  }, [streamId])
+
   /*
    * ============================================================
    * LIKES
@@ -1520,13 +1551,13 @@ export default function PhoneBroadcastPage() {
                 session.flipCamera
               }
               onGift={handleGift}
-              onShare={() => {}}
+              onShare={handleOpenShareModal}
               onOpenMessage={() => {}}
               onEndStream={
                 endStream
               }
               onOpenCoinStore={() => {}}
-              onInviteFollowers={() => {}}
+              onInviteFollowers={handleInviteFollowers}
               onToggleRGB={() => {}}
               onTextPopup={() => {}}
             />
@@ -1716,6 +1747,16 @@ export default function PhoneBroadcastPage() {
             stream?.user_id
           }
         />
+
+        {isShareModalOpen && (
+          <ShareModal
+            isOpen={isShareModalOpen}
+            onClose={handleCloseShareModal}
+            streamTitle={stream?.title || 'Live Stream'}
+            streamUrl={window.location.href}
+            broadcasterName={stream?.user_id || 'Broadcaster'}
+          />
+        )}
 
         {streamId && (
           <MaiBag
