@@ -1026,10 +1026,8 @@ export default function PhoneBroadcastPage() {
         try {
           await randomBattle.stopQueue()
         } catch {
-          /*
-           * Stream shutdown continues even if
-           * queue cleanup fails.
-           */
+          // Stream shutdown continues even if
+          // queue cleanup fails.
         }
       }
 
@@ -1197,6 +1195,45 @@ export default function PhoneBroadcastPage() {
    * ============================================================
    */
 
+  const handleUpdateSeatCount =
+    useCallback(
+      async (newSeatCount: number) => {
+        if (!streamId || !stream) return
+
+        const clampedCount = Math.max(
+          0,
+          Math.min(6, newSeatCount),
+        )
+
+        const newBoxCount = clampedCount + 1
+
+        try {
+          await supabase
+            .from('streams')
+            .update({
+              seat_count: clampedCount,
+              box_count: newBoxCount,
+            })
+            .eq('id', streamId)
+
+          setStream((prev) => {
+            if (!prev) return prev
+            return {
+              ...prev,
+              seat_count: clampedCount,
+              box_count: newBoxCount,
+            } as Stream
+          })
+        } catch (error) {
+          console.error(
+            '[PhoneBroadcastPage] Failed to update seat count:',
+            error,
+          )
+        }
+      },
+      [streamId, stream],
+    )
+
   if (shouldShowRandomBattleArena) {
     return (
       <ErrorBoundary>
@@ -1273,45 +1310,6 @@ export default function PhoneBroadcastPage() {
           </div>
         </GiftSystemProvider>
       </ErrorBoundary>
-    )
-
-  const handleUpdateSeatCount =
-    useCallback(
-      async (newSeatCount: number) => {
-        if (!streamId || !stream) return
-
-        const clampedCount = Math.max(
-          0,
-          Math.min(6, newSeatCount),
-        )
-
-        const newBoxCount = clampedCount + 1
-
-        try {
-          await supabase
-            .from('streams')
-            .update({
-              seat_count: clampedCount,
-              box_count: newBoxCount,
-            })
-            .eq('id', streamId)
-
-          setStream((prev) => {
-            if (!prev) return prev
-            return {
-              ...prev,
-              seat_count: clampedCount,
-              box_count: newBoxCount,
-            } as Stream
-          })
-        } catch (error) {
-          console.error(
-            '[PhoneBroadcastPage] Failed to update seat count:',
-            error,
-          )
-        }
-      },
-      [streamId, stream],
     )
 
   /*
