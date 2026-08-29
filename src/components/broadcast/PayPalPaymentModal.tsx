@@ -358,9 +358,17 @@ export default function PayPalPaymentModal({
     }
   }, [clearPayPalContainer, safelyClosePayPalButtons])
 
+  const [localOpen, setLocalOpen] = useState(isOpen)
+
+  useEffect(() => {
+    if (isOpen) {
+      setLocalOpen(true)
+    } else if (!paypalFlowActiveRef.current) {
+      setLocalOpen(false)
+    }
+  }, [isOpen])
+
   const handleClose = useCallback(() => {
-    // If a PayPal checkout is in progress (popup open / verifying),
-    // ignore the close request so the user isn't kicked out mid-payment.
     if (paypalFlowActiveRef.current) {
       console.warn('[PayPalPaymentModal] Close requested during active PayPal flow – ignoring.')
       return
@@ -370,13 +378,20 @@ export default function PayPalPaymentModal({
     paypalOrderIdRef.current = null
     safelyClosePayPalButtons()
     clearPayPalContainer()
+    setLocalOpen(false)
     onClose()
   }, [clearPayPalContainer, onClose, safelyClosePayPalButtons])
 
   if (!pkg) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
+    <Dialog open={localOpen} onOpenChange={(open) => { 
+      if (!open && paypalFlowActiveRef.current) {
+        console.warn('[PayPalPaymentModal] Close blocked during active PayPal flow')
+        return
+      }
+      if (!open) handleClose() 
+    }}>
       <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">

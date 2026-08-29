@@ -624,15 +624,9 @@ export default function PhoneHomepage({
 
   const handleStreamClick = useCallback(
     (item: LiveItem) => {
-      if (!user) {
-        toast.info('Sign in to watch live streams.')
-        go('/auth')
-        return
-      }
-
       go(`/watch/${item.id}`)
     },
-    [go, user],
+    [go],
   )
 
   const handleAuctionClick = useCallback(

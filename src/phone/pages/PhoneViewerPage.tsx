@@ -56,6 +56,7 @@ import {
 
 import {
   useStreamAudiencePresence,
+  type StreamAudienceMember,
 } from '@/hooks/useStreamAudiencePresence'
 
 import {
@@ -1571,6 +1572,39 @@ export default function PhoneViewerPage() {
       streamId,
       user?.id,
     )
+
+  const audienceWithAnon = useMemo(() => {
+    if (user?.id || !anonViewerId)
+      return activeAudience
+
+    const anonMember: StreamAudienceMember = {
+      id: `anon:${anonViewerId}`,
+      stream_id: streamId || '',
+      user_id: anonViewerId,
+      username:
+        anonDisplayName || 'Viewer',
+      avatar_url: null,
+      joined_at: new Date().toISOString(),
+      left_at: null,
+      is_active: true,
+      is_present: true,
+      gift_total: 0,
+      gift_score: 0,
+      seat_id: null,
+      seat_status: 'audience',
+      role: 'audience',
+      last_seen_at: new Date().toISOString(),
+      is_ghost_mode: false,
+    }
+
+    return [anonMember, ...activeAudience]
+  }, [
+    activeAudience,
+    user?.id,
+    anonViewerId,
+    anonDisplayName,
+    streamId,
+  ])
 
   /* ========================================================================
      MAIN BROADCAST LIVEKIT
@@ -3760,7 +3794,7 @@ export default function PhoneViewerPage() {
           <div className="absolute inset-x-0 top-0 z-30 flex flex-col items-center px-3 pt-[52px] pointer-events-none gap-2">
             <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-xl shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
               <MobileAudienceTicker
-                audience={activeAudience}
+                audience={audienceWithAnon}
                 currentUserId={user?.id}
                 hostUserId={stream?.user_id}
                 viewerCount={viewerCount}
@@ -4376,6 +4410,10 @@ export default function PhoneViewerPage() {
             e.preventDefault()
             const text = chatInput.trim()
             if (!text || !streamId) return
+
+            if (!user) {
+              return
+            }
 
             const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
             const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`

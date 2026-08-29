@@ -36,7 +36,6 @@ import { isStaffProfile } from '../../lib/staff'
 import {
   getAnonymousDisplayName,
   isAnonymousDisplayName,
-  reserveAnonymousChatSlot,
 } from '../../lib/anonymousIdentity'
 
 import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
@@ -2462,9 +2461,7 @@ const isActive = isStreamActive(stream)
       return
     }
 
-    if (!user && !reserveAnonymousChatSlot()) {
-      toast.error("You've used your 5 anonymous chats. Sign in to keep chatting.")
-      navigate('/auth?mode=login')
+    if (!user) {
       return
     }
 

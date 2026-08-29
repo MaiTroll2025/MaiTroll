@@ -28,7 +28,7 @@ import { toast } from 'sonner'
 
 import { useStreamSeats } from '@/hooks/useStreamSeats'
 import { useLiveBroadcast } from '@/hooks/useLiveBroadcast'
-import { useStreamAudiencePresence } from '@/hooks/useStreamAudiencePresence'
+import { useStreamAudiencePresence, type StreamAudienceMember } from '@/hooks/useStreamAudiencePresence'
 import { useStreamRealtime } from '@/hooks/useStreamRealtime'
 import { useRandomBattleQueueController } from '@/hooks/useRandomBattleQueueController'
 import {
@@ -63,6 +63,33 @@ type FloatingMessage = {
   username: string
   timestamp: number
   isSystem?: boolean
+}
+
+function getRemoteParticipantIdentity(participant: any): string {
+  return String(
+    participant?.identity ||
+      participant?.participantIdentity ||
+      participant?.name ||
+      participant?.metadata?.user_id ||
+      participant?.metadata?.userId ||
+      '',
+  )
+}
+
+function getRemoteParticipantMetadata(participant: any): any {
+  const raw = participant?.metadata
+  if (!raw) return {}
+  if (typeof raw === 'object') return raw
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return {}
+  }
+}
+
+function isGhostParticipant(participant: any): boolean {
+  const metadata = getRemoteParticipantMetadata(participant)
+  return metadata?.role === 'ghost' || metadata?.hidden === true
 }
 
 export default function PhoneBroadcastPage() {
@@ -199,6 +226,98 @@ export default function PhoneBroadcastPage() {
       streamId || '',
       user?.id,
     )
+
+  const remoteUsers = useMemo(() => {
+    return Array.from(
+      session.remoteParticipants.values(),
+    )
+  }, [session.remoteParticipants])
+
+  const audienceWithAnon = useMemo(() => {
+    if (!remoteUsers?.length) return audience
+
+    const hostId = String(
+      stream?.user_id || '',
+    ).trim()
+    const syntheticMembers: StreamAudienceMember[] = remoteUsers
+      .filter((participant: any) => {
+        if (!participant?.identity) return false
+        if (isGhostParticipant(participant))
+          return false
+
+        const metadata =
+          getRemoteParticipantMetadata(
+            participant,
+          )
+        if (metadata?.role === 'broadcaster')
+          return false
+        if (
+          metadata?.seat_index ||
+          metadata?.seatIndex
+        )
+          return false
+        if (
+          metadata?.user_id === hostId ||
+          metadata?.userId === hostId
+        )
+          return false
+
+        return true
+      })
+      .map((participant: any) => {
+        const metadata =
+          getRemoteParticipantMetadata(
+            participant,
+          )
+        const identity =
+          getRemoteParticipantIdentity(participant)
+        const userId = String(
+          metadata?.user_id ||
+            metadata?.userId ||
+            identity,
+        )
+        const username = String(
+          metadata?.username ||
+            participant?.name ||
+            'Viewer',
+        )
+        return {
+          id: `remote:${userId}`,
+          stream_id: streamId || '',
+          user_id: userId,
+          username,
+          avatar_url:
+            metadata?.avatar_url ?? null,
+          joined_at: new Date().toISOString(),
+          left_at: null,
+          is_active: true,
+          is_present: true,
+          gift_total: 0,
+          gift_score: 0,
+          seat_id: null,
+          seat_status: 'audience',
+          role: 'audience',
+          last_seen_at: new Date().toISOString(),
+          is_ghost_mode: false,
+        }
+      })
+
+    if (syntheticMembers.length === 0)
+      return audience
+    const existingIds = new Set(
+      audience.map((m) => m.user_id),
+    )
+    const filtered =
+      syntheticMembers.filter(
+        (m) => !existingIds.has(m.user_id),
+      )
+    return [...filtered, ...audience]
+  }, [
+    audience,
+    remoteUsers,
+    stream?.user_id,
+    streamId,
+  ])
 
   /*
    * ============================================================
@@ -1454,7 +1573,7 @@ export default function PhoneBroadcastPage() {
 
               <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
                 <MobileAudienceTicker
-                  audience={audience}
+                  audience={audienceWithAnon}
                   currentUserId={
                     user?.id
                   }

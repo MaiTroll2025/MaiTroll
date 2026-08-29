@@ -790,7 +790,7 @@ export default function Home() {
 
   return (
     <div
-      className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-hidden text-white"
+      className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-y-auto text-white"
     >
           <DynamicWeatherBackground isDark={theme === 'dark'} showWalker={!!user} />
 

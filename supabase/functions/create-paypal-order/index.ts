@@ -20,15 +20,6 @@ Deno.serve(async (req) => {
     return withCors({ success: false, error: "Method not allowed" }, 405, req)
   }
 
-  // Rate limit: max 5 purchase orders per minute per user
-  const rateLimitKey = `paypal_order_rate:${userId}:${Math.floor(Date.now() / 60000)}`;
-  const rateLimitCount = (globalThis as any).__paypalOrderRateLimit?.[rateLimitKey] || 0;
-  if (rateLimitCount >= 5) {
-    return withCors({ success: false, error: "Too many purchase attempts. Please wait a moment." }, 429, req)
-  }
-  if (!(globalThis as any).__paypalOrderRateLimit) (globalThis as any).__paypalOrderRateLimit = {};
-  (globalThis as any).__paypalOrderRateLimit[rateLimitKey] = rateLimitCount + 1;
-
   try {
     const body = await req.json()
     const { userId, coins, amountUsd, packageId, packageName, purchaseType } = body
@@ -39,6 +30,15 @@ Deno.serve(async (req) => {
     if (!amountUsd || amountUsd <= 0) {
       return withCors({ success: false, error: 'Invalid amount' }, 400, req)
     }
+
+    // Rate limit: max 5 purchase orders per minute per user
+    const rateLimitKey = `paypal_order_rate:${userId}:${Math.floor(Date.now() / 60000)}`;
+    const rateLimitCount = (globalThis as any).__paypalOrderRateLimit?.[rateLimitKey] || 0;
+    if (rateLimitCount >= 5) {
+      return withCors({ success: false, error: "Too many purchase attempts. Please wait a moment." }, 429, req)
+    }
+    if (!(globalThis as any).__paypalOrderRateLimit) (globalThis as any).__paypalOrderRateLimit = {};
+    (globalThis as any).__paypalOrderRateLimit[rateLimitKey] = rateLimitCount + 1;
 
     // PayPal credentials from environment
     const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID')
