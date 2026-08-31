@@ -1054,6 +1054,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
   const [micEnabled, setMicEnabled] = useState(true)
   const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user')
   const isGoingLiveRef = useRef(false)
+  const streamEndedRef = useRef(false)
 
   const trackedTimeout = (fn: () => void, ms: number) => {
     const id = window.setTimeout(() => {
@@ -3443,6 +3444,41 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
   //   const pollInterval = setInterval(async () => { ... }, 3000);
   //   return () => clearInterval(pollInterval);
   // }, [streamId, isHost, supabase, navigate, stopLocalTracks]);
+
+  useEffect(() => {
+    if (!streamId || stream?.status === 'ended') return
+
+    const pollInterval = window.setInterval(async () => {
+      if (streamEndedRef.current) return
+
+      try {
+        const { data, error } = await supabase
+          .from('streams')
+          .select('id, status, is_live')
+          .eq('id', streamId)
+          .maybeSingle()
+
+        if (error || !data?.id) return
+
+        if (data.status === 'ended' || data.is_live === false) {
+          streamEndedRef.current = true
+          stopLocalTracksRef.current()
+          disconnectLiveKitRoom()
+          setRemoteParticipants(new Map())
+          void removeStreamChannels(streamId)
+          trackedTimeout(() => {
+            navigate(`/broadcast/summary/${data.id || streamId}`)
+          }, 100)
+        }
+      } catch {
+        // ignore poll errors
+      }
+    }, 3000)
+
+    return () => {
+      window.clearInterval(pollInterval)
+    }
+  }, [streamId, stream?.status, supabase, navigate, disconnectLiveKitRoom, stopLocalTracks, removeStreamChannels])
 
   const areStreamRealtimeUpdatesEqual = useCallback((current: any, next: any) => {
     if (!current || !next) return false;

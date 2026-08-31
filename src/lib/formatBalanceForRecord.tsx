@@ -365,11 +365,11 @@ export async function deductCoins(params: {
 
       // Global event for large gifts
       if (type === 'gift_sent' && normalizedAmount > 1000) {
-        void supabase.from('global_events').insert({
-            type: 'gift',
-            title: `Someone just gifted ${normalizedAmount} coins!`,
-            icon: 'gift',
-            metadata: { ...metadata, amount: normalizedAmount, type }
+        void supabase.rpc('create_global_event', {
+            p_type: 'gift',
+            p_title: `Someone just gifted ${normalizedAmount} coins!`,
+            p_icon: 'gift',
+            p_metadata: { ...metadata, amount: normalizedAmount, type }
         }).then(({ error }) => {
           if (error) console.error('Failed to announce gift event:', error)
         })
@@ -604,11 +604,11 @@ export async function addCoins(params: {
 
     // Global event for large gifts
     if (type === 'gift_received' && amount > 1000) {
-        void supabase.from('global_events').insert({
-            type: 'gift',
-            title: `Someone just received a gift of ${amount} coins!`,
-            icon: 'gift',
-            metadata: { ...metadata, amount, type }
+        void supabase.rpc('create_global_event', {
+            p_type: 'gift',
+            p_title: `Someone just received a gift of ${amount} coins!`,
+            p_icon: 'gift',
+            p_metadata: { ...metadata, amount, type }
         }).then(({ error }) => {
           if (error) console.error('Failed to announce gift event:', error)
         })

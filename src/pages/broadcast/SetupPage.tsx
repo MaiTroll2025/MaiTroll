@@ -2036,9 +2036,12 @@ const handleStartStream = async () => {
       // Navigate to broadcast page
       navigate(`/broadcast/${data.id}`);
 
-      supabase.from('global_events').insert([
-        { title: `${profile.username} just went live!`, icon: 'live', priority: 2 },
-      ]).then(() => {}, () => {});
+      supabase.rpc('create_global_event', {
+        p_type: 'live',
+        p_title: `${profile.username} just went live!`,
+        p_icon: 'live',
+        p_priority: 2,
+      }).then(() => {}, () => {});
     } catch (err: any) {
       broadcastStartError(failureStage, {
         streamId: createdStreamId,

@@ -41,12 +41,12 @@ export async function createCityActivityEvent(input: CreateCityActivityEventInpu
     return
   }
 
-  const { error } = await supabase.from('global_events').insert({
-    type: input.type,
-    title: input.title,
-    icon: input.icon || null,
-    priority: input.priority ?? 1,
-    metadata: { ...(input.metadata || {}), dedupe_key: key },
+  const { error } = await supabase.rpc('create_global_event', {
+    p_type: input.type,
+    p_title: input.title,
+    p_icon: input.icon || null,
+    p_priority: input.priority ?? 1,
+    p_metadata: { ...(input.metadata || {}), dedupe_key: key },
   })
 
   window.setTimeout(() => inFlightEvents.delete(key), 60000)

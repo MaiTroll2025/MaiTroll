@@ -305,6 +305,35 @@ function shouldAnnounceGlobalEvent(key: string): boolean {
   return true
 }
 
+function isJwtExpired(token: string): boolean {
+  try {
+    const parts = token.split('.')
+    if (parts.length < 2) return false
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(atob(base64))
+    if (!payload || !payload.exp) return false
+    // 60s grace period to account for clock skew during refresh
+    return Date.now() >= payload.exp * 1000 - 60_000
+  } catch {
+    return false
+  }
+}
+
+function hasValidSession(): boolean {
+  try {
+    const { session } = useAuthStore.getState()
+    if (!session || !session.access_token) {
+      return false
+    }
+    if (isJwtExpired(session.access_token)) {
+      return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
 function announceGlobalEvent(event: { title: string; icon: string; priority: number }) {
   const key = event.title.toLowerCase()
 
@@ -312,7 +341,22 @@ function announceGlobalEvent(event: { title: string; icon: string; priority: num
     return
   }
 
-  supabase.from('global_events').insert([event]).then(({ error }) => {
+  // Guard: only insert into global_events when we have a valid authenticated
+  // session. During auth flow transitions — expired access token, refresh-token
+  // failure, or anonymous access — the insert is sent as anon and bounces off
+  // the RLS policy, producing 42501 errors and bug-center noise.
+  if (!hasValidSession()) {
+    return
+  }
+
+  // Route through the SECURITY DEFINER RPC instead of a direct INSERT so
+  // that the database never accepts writes from an anonymous client.
+  supabase.rpc('create_global_event', {
+    p_type: 'system',
+    p_title: event.title,
+    p_icon: event.icon,
+    p_priority: event.priority,
+  }).then(({ error }) => {
     if (error) {
       console.error('Failed to announce global event:', error)
     }

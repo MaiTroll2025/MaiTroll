@@ -258,7 +258,13 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
       try {
         const response = await originalFetch(input, init);
         if (!response.ok && !isSupabaseFunction) {
-          if (shouldIgnoreNetworkErrorForBugCenter(urlString)) {
+          // Bypass bug-center reporting for the bug reporter's own RPC calls
+          // to prevent recursive error loops (failed report -> reportBug ->
+          // failed report -> ...). The isBugReporterRequest helper was
+          // defined but never wired up, which caused log_app_bug_report
+          // failures (e.g. P0001 "Authentication required") to be reported
+          // as new bugs.
+          if (shouldIgnoreNetworkErrorForBugCenter(urlString) || isBugReporterRequest(urlString)) {
             return response;
           }
           // Detect Supabase/Cloudflare 522 (connection timeout) and trip circuit breaker
@@ -318,8 +324,8 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
           });
         }
         return response;
-      } catch (error: any) {
-        if (shouldIgnoreNetworkErrorForBugCenter(urlString)) {
+       } catch (error: any) {
+        if (shouldIgnoreNetworkErrorForBugCenter(urlString) || isBugReporterRequest(urlString)) {
           throw error
         }
 

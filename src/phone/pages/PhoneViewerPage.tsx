@@ -93,11 +93,20 @@ import {
 } from '@/lib/realtime/streamRealtimeManager'
 
 import {
+  isValidUuid,
+} from '@/lib/courtUtils'
+
+import {
   cn,
 } from '@/lib/utils'
 
 import {
+  hasModActionsAccess,
+} from '@/types/moderationActions'
+
+import {
   getAnonymousDisplayName,
+  isAnonymousDisplayName,
 } from '@/lib/anonymousIdentity'
 
 import {
@@ -107,6 +116,9 @@ import {
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BattleView from '@/pages/broadcast/BattleView'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
+import UserActionModal from '@/components/broadcast/UserActionModal'
+import ViewerUserActionModal from '@/components/broadcast/ViewerUserActionModal'
+import ModActionsPopup from '@/components/broadcast/ModActionsPopup'
 
 interface SeatState {
   participant: any
@@ -1014,6 +1026,26 @@ export default function PhoneViewerPage() {
   ] = useState(false)
 
   const [
+    userActionTarget,
+    setUserActionTarget,
+  ] = useState<{
+    userId: string
+    username?: string
+    role?: string
+    createdAt?: string
+  } | null>(null)
+
+  const [
+    showViewerAction,
+    setShowViewerAction,
+  ] = useState(false)
+
+  const [
+    showModActionMenu,
+    setShowModActionMenu,
+  ] = useState(false)
+
+  const [
     selectedSeatUserId,
     setSelectedSeatUserId,
   ] = useState<string | null>(null)
@@ -1530,9 +1562,123 @@ export default function PhoneViewerPage() {
     }
   }, [streamId])
 
-  /* ========================================================================
+   const canClickFloatingChatUsername =
+     hasModActionsAccess(profile)
+
+   const handleOpenUserAction = useCallback(
+     async (info: {
+       userId: string
+       username?: string
+       role?: string
+       createdAt?: string
+     }) => {
+       const normalizedUserId = info.userId
+       const normalizedUsername = info.username || ''
+       const isAnonUsername = isAnonymousDisplayName(normalizedUsername)
+
+       if (!isValidUuid(normalizedUserId)) {
+         if (isAnonUsername) {
+           setUserActionTarget({
+             userId: `anon-${normalizedUsername}`,
+             username: normalizedUsername,
+             role: 'anonymous',
+             createdAt: null,
+           })
+           setShowModActionMenu(canClickFloatingChatUsername)
+           setShowViewerAction(!canClickFloatingChatUsername)
+           return
+         }
+         toast.error('Invalid user identifier')
+         return
+       }
+
+       try {
+         const { data, error } = await supabase
+           .from('user_profiles')
+           .select(
+             'id, username, role, troll_role, avatar_url',
+           )
+           .eq('id', normalizedUserId)
+           .maybeSingle()
+
+         if (error || !data?.id) {
+           console.error(
+             '[MOD TARGET RESOLUTION] Profile not found for UUID:',
+             normalizedUserId,
+             error,
+           )
+           toast.error(
+             'MaiTroll profile could not be resolved for this participant.',
+           )
+           return
+         }
+
+         setUserActionTarget({
+           userId: data.id,
+           username: data.username || normalizedUsername,
+           role: data.role || data.troll_role || info.role,
+           createdAt: info.createdAt,
+         })
+         setShowModActionMenu(canClickFloatingChatUsername)
+         setShowViewerAction(!canClickFloatingChatUsername)
+       } catch (err) {
+         console.error(
+           '[PhoneViewerPage] Error opening user action:',
+           err,
+         )
+         toast.error('Failed to open user profile')
+       }
+     },
+     [canClickFloatingChatUsername],
+   )
+
+   const handleOpenFloatingChatUsername = useCallback(
+     async (username: string) => {
+       if (!username) return
+
+       if (isAnonymousDisplayName(username)) {
+         if (!canClickFloatingChatUsername) return
+         await handleOpenUserAction({
+           userId: `anon-${username}`,
+           username,
+           role: 'anonymous',
+           createdAt: null,
+         })
+         return
+       }
+
+       try {
+         const { data, error } = await supabase
+           .from('user_profiles')
+           .select('id, username, created_at, role, troll_role')
+           .eq('username', username)
+           .maybeSingle()
+
+         if (error || !data?.id) {
+           toast.error('User not found')
+           return
+         }
+
+         await handleOpenUserAction({
+           userId: data.id,
+           username: data.username || username,
+           role: data.role || data.troll_role,
+           createdAt: data.created_at,
+         })
+       } catch (err) {
+         console.error(
+           '[PhoneViewerPage] Error opening floating chat username:',
+           err,
+         )
+         toast.error('Failed to open user profile')
+       }
+     },
+     [canClickFloatingChatUsername, handleOpenUserAction],
+   )
+
+   /* ========================================================================
       SEATS
-   ======================================================================== */
+    ======================================================================== */
 
   const {
     seats,
@@ -4289,7 +4435,19 @@ export default function PhoneViewerPage() {
                 className="animate-in fade-in slide-in-from-bottom-2 duration-300 pointer-events-auto"
               >
                  <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
-                   <span className="text-[10px] font-black text-cyan-300">{msg.username}</span>
+                   {canClickFloatingChatUsername ? (
+                     <button
+                       type="button"
+                       onClick={() => handleOpenFloatingChatUsername(msg.username)}
+                       className="text-[10px] font-black text-cyan-300 transition-colors hover:text-cyan-100"
+                     >
+                       {msg.username}
+                     </button>
+                   ) : (
+                     <span className="text-[10px] font-black text-cyan-300">
+                       {msg.username}
+                     </span>
+                   )}
                    <span className="text-[10px] font-bold text-white/40"> sent: </span>
                    <span className="text-[10px] font-semibold text-white/90">{msg.content}</span>
                  </div>
@@ -4483,6 +4641,61 @@ export default function PhoneViewerPage() {
             setRecentGifts((prev) => prev.filter((gift) => gift.id !== giftId))
           }} 
         />
+
+        {userActionTarget && (
+          <>
+            {showModActionMenu ? (
+              <ModActionsPopup
+                isOpen={true}
+                onClose={() => {
+                  setUserActionTarget(null)
+                  setShowViewerAction(false)
+                  setShowModActionMenu(false)
+                }}
+                targetUser={{
+                  id: userActionTarget.userId,
+                  username: userActionTarget.username || '',
+                  role: userActionTarget.role || '',
+                  avatar_url: '',
+                }}
+                targetUsername={userActionTarget.username || ''}
+                targetUserId={userActionTarget.userId}
+                streamId={streamId || ''}
+                hostId={hostId}
+                currentUserId={user?.id}
+              />
+            ) : showViewerAction ? (
+              <ViewerUserActionModal
+                isOpen={true}
+                onClose={() => {
+                  setUserActionTarget(null)
+                  setShowViewerAction(false)
+                  setShowModActionMenu(false)
+                }}
+                userId={userActionTarget.userId}
+                username={userActionTarget.username}
+                streamId={streamId || ''}
+              />
+            ) : (
+              <UserActionModal
+                onClose={() => {
+                  setUserActionTarget(null)
+                  setShowViewerAction(false)
+                  setShowModActionMenu(false)
+                }}
+                userId={userActionTarget.userId}
+                streamId={streamId || ''}
+                isHost={userActionTarget.userId === hostId}
+                isModerator={canClickFloatingChatUsername}
+                isOfficer={canClickFloatingChatUsername}
+                onGift={() => {
+                  setGiftRecipientId(userActionTarget.userId)
+                  setIsGiftModalOpen(true)
+                }}
+              />
+            )}
+          </>
+        )}
       </div>
     </GiftSystemProvider>
   )

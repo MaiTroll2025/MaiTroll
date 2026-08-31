@@ -57,16 +57,16 @@ const GlobalTicker = () => {
     setIsSubmitting(true)
     try {
       const cleanMessage = tickerMessage.trim()
-      const { error } = await supabase.from('global_events').insert({
-        type: tickerType === 'breaking' ? 'tcnn_breaking' : 'tcnn_live',
-        title: tickerType === 'breaking' ? `BREAKING: ${cleanMessage}` : cleanMessage,
-        icon: tickerType === 'breaking' ? 'alert' : 'newspaper',
-        priority: tickerType === 'breaking' ? 3 : 1,
-        metadata: {
+      const { error } = await supabase.rpc('create_global_event', {
+        p_type: tickerType === 'breaking' ? 'tcnn_breaking' : 'tcnn_live',
+        p_title: tickerType === 'breaking' ? `BREAKING: ${cleanMessage}` : cleanMessage,
+        p_icon: tickerType === 'breaking' ? 'alert' : 'newspaper',
+        p_priority: tickerType === 'breaking' ? 3 : 1,
+        p_metadata: {
           category: tickerType === 'breaking' ? 'breaking_news' : 'ticker_message',
           submitted_by: user?.id,
         },
-      }).select()
+      })
 
       if (error) throw error
 
