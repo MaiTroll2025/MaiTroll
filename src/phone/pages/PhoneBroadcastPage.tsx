@@ -116,6 +116,8 @@ export default function PhoneBroadcastPage() {
   const [isShareModalOpen, setIsShareModalOpen] =
     useState(false)
 
+  const [isEnding, setIsEnding] = useState(false);
+
   const [floatingMessages, setFloatingMessages] =
     useState<FloatingMessage[]>([])
 
@@ -139,6 +141,11 @@ export default function PhoneBroadcastPage() {
 
   const streamEndedRef =
     useRef(false)
+
+  // Safety net: if endStream hangs (e.g. slow network), force-reset the
+  // guard so the button never stays permanently disabled.
+  const END_STREAM_TIMEOUT_MS = 30_000;
+  const endStreamSafetyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { enqueueGift } =
     useTargetedGiftQueue()
@@ -587,6 +594,16 @@ export default function PhoneBroadcastPage() {
           if (streamEndedRef.current) return
 
           streamEndedRef.current = true
+
+          // Safety net: if shutdown hangs, force-reset the guard after timeout
+          // so the button never stays permanently disabled.
+          if (endStreamSafetyTimeoutRef.current) {
+            clearTimeout(endStreamSafetyTimeoutRef.current);
+          }
+          endStreamSafetyTimeoutRef.current = setTimeout(() => {
+            streamEndedRef.current = false;
+            endStreamSafetyTimeoutRef.current = null;
+          }, END_STREAM_TIMEOUT_MS);
 
           try {
             session.disconnect()
@@ -1156,87 +1173,109 @@ export default function PhoneBroadcastPage() {
       }
 
       streamEndedRef.current = true
+      setIsEnding(true);
 
-      if (
-        stream?.is_battle &&
-        stream?.battle_id &&
-        stream?.battle_mode ===
-          'random_queue' &&
-        user?.id
-      ) {
-        try {
-          await supabase.rpc(
-            'forfeit_random_battle',
-            {
-              p_stream_id:
-                stream.id,
-              p_broadcaster_id:
-                user.id,
-            },
-          )
-        } catch (error) {
-          console.warn(
-            '[PhoneBroadcastPage] forfeit_random_battle failed:',
-            error,
-          )
-        }
+      // Safety net: if shutdown hangs, force-reset the guard after timeout
+      // so the button never stays permanently disabled.
+      if (endStreamSafetyTimeoutRef.current) {
+        clearTimeout(endStreamSafetyTimeoutRef.current);
       }
-
-      if (
-        randomBattle.isQueueEnabled &&
-        !randomBattle.isBattleActive
-      ) {
-        try {
-          await randomBattle.stopQueue()
-        } catch {
-          // Stream shutdown continues even if
-          // queue cleanup fails.
-        }
-      }
-
-      // Mark stream as ended in the database so it disappears from the homepage
-      if (stream?.id) {
-        try {
-          await supabase
-            .from('streams')
-            .update({
-              is_live: false,
-              status: 'ended',
-              ended_at: new Date().toISOString(),
-            })
-            .eq('id', stream.id)
-
-          setStream((previous) =>
-            previous
-              ? {
-                  ...previous,
-                  status: 'ended',
-                  is_live: false,
-                }
-              : previous,
-          )
-        } catch (error) {
-          console.warn(
-            '[PhoneBroadcastPage] Failed to mark stream ended:',
-            error,
-          )
-        }
-      }
+      endStreamSafetyTimeoutRef.current = setTimeout(() => {
+        streamEndedRef.current = false;
+        setIsEnding(false);
+        endStreamSafetyTimeoutRef.current = null;
+      }, END_STREAM_TIMEOUT_MS);
 
       try {
-        session.disconnect()
-      } catch {
-        // Ignore disconnect errors during shutdown.
+        if (
+          stream?.is_battle &&
+          stream?.battle_id &&
+          stream?.battle_mode ===
+            'random_queue' &&
+          user?.id
+        ) {
+          try {
+            await supabase.rpc(
+              'forfeit_random_battle',
+              {
+                p_stream_id:
+                  stream.id,
+                p_broadcaster_id:
+                  user.id,
+              },
+            )
+          } catch (error) {
+            console.warn(
+              '[PhoneBroadcastPage] forfeit_random_battle failed:',
+              error,
+            )
+          }
+        }
+
+        if (
+          randomBattle.isQueueEnabled &&
+          !randomBattle.isBattleActive
+        ) {
+          try {
+            await randomBattle.stopQueue()
+          } catch {
+            // Stream shutdown continues even if
+            // queue cleanup fails.
+          }
+        }
+
+        // Mark stream as ended in the database so it disappears from the homepage
+        if (stream?.id) {
+          try {
+            await supabase
+              .from('streams')
+              .update({
+                is_live: false,
+                status: 'ended',
+                ended_at: new Date().toISOString(),
+              })
+              .eq('id', stream.id)
+
+            setStream((previous) =>
+              previous
+                ? {
+                    ...previous,
+                    status: 'ended',
+                    is_live: false,
+                  }
+                : previous,
+            )
+          } catch (error) {
+            console.warn(
+              '[PhoneBroadcastPage] Failed to mark stream ended:',
+              error,
+            )
+          }
+        }
+
+        try {
+          session.disconnect()
+        } catch {
+          // Ignore disconnect errors during shutdown.
+        }
+
+        // Close any open modals before navigating
+        setIsGiftModalOpen(false)
+        setIsShareModalOpen(false)
+
+        navigate(
+          `/broadcast/summary/${streamId}`,
+          { replace: true },
+        )
+      } finally {
+        // Clear safety timeout on successful completion so it doesn't
+        // erroneously reset the guard later.
+        if (endStreamSafetyTimeoutRef.current) {
+          clearTimeout(endStreamSafetyTimeoutRef.current);
+          endStreamSafetyTimeoutRef.current = null;
+        }
+        setIsEnding(false);
       }
-
-      // Close any open modals before navigating
-      setIsGiftModalOpen(false)
-      setIsShareModalOpen(false)
-
-      navigate(
-        `/broadcast/summary/${streamId}`,
-        { replace: true },
-      )
     },
     [
       navigate,
@@ -1886,10 +1925,11 @@ export default function PhoneBroadcastPage() {
                onTextPopup={() => {}}
                onMuteAllSeats={muteAllSeats}
                onUnmuteAllSeats={unmuteAllSeats}
-               onCameraOffAllSeats={cameraOffAllSeats}
-               onCameraOnAllSeats={cameraOnAllSeats}
-               seatControls={seatControls}
-             />
+onCameraOffAllSeats={cameraOffAllSeats}
+                onCameraOnAllSeats={cameraOnAllSeats}
+                seatControls={seatControls}
+                disabled={isEnding}
+              />
           </div>
         )}
 
@@ -1960,6 +2000,7 @@ export default function PhoneBroadcastPage() {
             icon={PhoneOff}
             label="End"
             danger
+            disabled={isEnding}
           />
         </div>
 

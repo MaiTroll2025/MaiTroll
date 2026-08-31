@@ -62,21 +62,24 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
    };
 
   useEffect(() => {
-    if (isOpen && !user?.id) {
+    if (!isOpen) return
+
+    if (!user?.id) {
       toast.error('Sign in to use the coin store.')
       onClose()
       return
     }
 
-    if (isOpen) {
-      fetchCoinPacks();
-      loadCatalog();
-      loadUserFrames(user?.id);
-      // Reset state when opening
-      setSelectedPack(null);
-      setShowPayPalPayment(false);
-    }
-  }, [isOpen, onClose, user?.id, loadCatalog, loadUserFrames]);
+    fetchCoinPacks();
+    loadCatalog();
+    loadUserFrames(user?.id);
+
+    // Reset payment state only when the modal is opened, not on unrelated rerenders.
+    setSelectedPack(null);
+    setShowPayPalPayment(false);
+    setShowCardPayment(false);
+    paymentInProgressRef.current = false;
+  }, [isOpen, user?.id]);
 
     const handlePackageSelect = (pkg: CoinPackage) => {
       if (!user?.id) {
@@ -112,7 +115,9 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
         metadata: { source: 'broadcast_quick_store' },
         forceCard: true,
       };
+      paymentInProgressRef.current = true;
       setSelectedPack(pkgWithTax);
+      setShowPayPalPayment(false);
       setShowCardPayment(true);
     };
 
@@ -131,11 +136,19 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
     setSelectedPack(null);
   };
 
+  const resetPaymentState = useCallback(() => {
+    paymentInProgressRef.current = false;
+    setShowPayPalPayment(false);
+    setShowCardPayment(false);
+    setSelectedPack(null);
+  }, []);
+
   const handleSafeClose = () => {
     if (paymentInProgressRef.current) {
       toast.info('Please wait for the payment to complete.');
       return;
     }
+    resetPaymentState();
     onClose();
   };
 
@@ -365,10 +378,7 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
         <PayPalPaymentModal
          isOpen={showPayPalPayment || showCardPayment}
          onClose={() => {
-           paymentInProgressRef.current = false;
-           setShowPayPalPayment(false);
-           setShowCardPayment(false);
-           setSelectedPack(null);
+           resetPaymentState();
          }}
          pkg={selectedPack}
          userId={user?.id || ''}

@@ -5649,6 +5649,7 @@ const toggleMicrophone = useCallback(async () => {
 
    const clickHistoryRef = useRef<number[]>([]);
    const [isClickBlocked, setIsClickBlocked] = useState(false);
+   const [isEnding, setIsEnding] = useState(false);
    const pendingLikesRef = useRef(0);
    const flushInProgressRef = useRef(false);
 
@@ -5780,6 +5781,8 @@ const toggleMicrophone = useCallback(async () => {
   const isStaff = useMemo(() => isStaffProfile(profile), [profile])
 
   const handleStreamEnd = useCallback(async () => {
+    if (isEnding) return;
+
     // For staff, skip confirmation and skip summary page
     if (isStaff || stream?.status === 'ended') {
       // Allow immediate end without confirmation
@@ -5788,6 +5791,8 @@ const toggleMicrophone = useCallback(async () => {
       const confirmed = window.confirm('Are you sure you want to end this stream? This cannot be undone.');
       if (!confirmed) return;
     }
+
+    setIsEnding(true);
 
     // If in an active random battle, forfeit first so the other broadcaster wins
     if (stream?.is_battle && stream?.battle_id && stream?.battle_mode === 'random_queue' && user?.id) {
@@ -5807,8 +5812,12 @@ const toggleMicrophone = useCallback(async () => {
     // Delegate to the single shared shutdown sequence: stops browser media,
     // tears down LiveKit, leaves the room, marks the stream ended, and emits
     // the realtime broadcast_ended event. Navigation happens in onEnded.
-    await endBroadcastShutdown('manual');
-  }, [endBroadcastShutdown, isStaff, stream?.id, stream?.status, stream?.is_battle, stream?.battle_id, stream?.battle_mode, user?.id]);
+    try {
+      await endBroadcastShutdown('manual');
+    } finally {
+      setIsEnding(false);
+    }
+  }, [endBroadcastShutdown, isStaff, isEnding, stream?.id, stream?.status, stream?.is_battle, stream?.battle_id, stream?.battle_mode, user?.id]);
 
   const handleStartBattle = useCallback(async () => {
     if (!stream || !isHost) return
@@ -8371,6 +8380,7 @@ const toggleMicrophone = useCallback(async () => {
                  onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
                  isHost={isHost}
                  onInviteFollowers={handleInviteFollowers}
+                 isEnding={isEnding}
                 />}
               </>
              )}

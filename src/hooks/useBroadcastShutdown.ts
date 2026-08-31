@@ -87,10 +87,19 @@ export function useBroadcastShutdown(options: BroadcastShutdownOptions): Broadca
     })
   }, [])
 
+  const END_BROADCAST_TIMEOUT_MS = 30_000;
+
   const endBroadcast = useCallback(
     async (reason: EndBroadcastReason = 'manual') => {
       if (endingBroadcastRef.current) return
       endingBroadcastRef.current = true
+
+      // Safety net: if shutdown hangs (e.g. slow network, stalled SDK call),
+      // force-reset the guard so the button never stays permanently disabled.
+      const safetyTimeout = setTimeout(() => {
+        endingBroadcastRef.current = false
+      }, END_BROADCAST_TIMEOUT_MS);
+
 
       try {
         // 1. Stop browser-owned camera and microphone tracks immediately.
@@ -164,6 +173,7 @@ export function useBroadcastShutdown(options: BroadcastShutdownOptions): Broadca
       } catch (err) {
         console.error('[useBroadcastShutdown] endBroadcast failed:', err)
       } finally {
+        clearTimeout(safetyTimeout);
         endingBroadcastRef.current = false
       }
     },

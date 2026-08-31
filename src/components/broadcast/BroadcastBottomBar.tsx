@@ -127,6 +127,7 @@ export interface BroadcastBottomBarProps {
    onOpenSeats?: () => void;
    currentViewerSeatCount?: number;
    seatCount?: number;
+   isEnding?: boolean;
 }
 
 export default function BroadcastBottomBar({
@@ -147,13 +148,14 @@ export default function BroadcastBottomBar({
   onOpenMessage,
   onManageMessage,
   onOpenCoinStore,
- onTroll,
+onTroll,
     isHost = false,
     onInviteFollowers,
     onOpenSeats,
     currentViewerSeatCount = 0,
     seatCount = 0,
-   }: BroadcastBottomBarProps) {
+    isEnding = false,
+  }: BroadcastBottomBarProps) {
   const theme = MaiTrollBroadcastTheme
   return (
     <div className={cn(bottomBarShell, 'relative overflow-hidden', 'bg-slate-950/95')}>
@@ -242,10 +244,15 @@ export default function BroadcastBottomBar({
             {/* End Stream — red variant */}
             <button
               onClick={onEndStream}
-              className={cn('flex h-[70px] min-w-[150px] flex-col items-center justify-center gap-2 rounded-xl transition-all', theme.danger)}
+              disabled={isEnding}
+              className={cn(
+                'flex h-[70px] min-w-[150px] flex-col items-center justify-center gap-2 rounded-xl transition-all',
+                theme.danger,
+                isEnding && 'opacity-50 cursor-not-allowed',
+              )}
             >
               <Radio className="h-7 w-7" />
-              <span className="text-sm font-black">End Stream</span>
+              <span className="text-sm font-black">{isEnding ? 'Ending...' : 'End Stream'}</span>
             </button>
           </div>
         </div>

@@ -18,7 +18,7 @@ import {
  * No viewer, participant, or broadcast-duration caps are enforced.
  */
 
-const TOKEN_TTL_SECONDS = 30 * 60;
+const TOKEN_TTL_SECONDS = 8 * 60 * 60; // 8 hours (max broadcast duration)
 
 type ParticipantCategory =
   | "host"

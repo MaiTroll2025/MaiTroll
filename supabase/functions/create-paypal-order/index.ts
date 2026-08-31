@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     // PayPal credentials from environment
     const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID')
     const PAYPAL_CLIENT_SECRET = Deno.env.get('PAYPAL_CLIENT_SECRET')
-    const PAYPAL_ENVIRONMENT = 'live'
+    const PAYPAL_ENVIRONMENT = (Deno.env.get('PAYPAL_ENV') || Deno.env.get('PAYPAL_MODE') || 'live').toLowerCase()
 
     if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
       console.error(`[CreatePayPalOrder ${requestId}] PayPal credentials not configured`)

@@ -76,6 +76,11 @@ export default function PhoneGoLive() {
   const startingRef = useRef(false)
   const keyAwardedRef = useRef(false)
 
+  // Safety net: if broadcast start hangs, force-reset the guard so the
+  // user can retry instead of being stuck on a frozen button.
+  const START_BROADCAST_TIMEOUT_MS = 30_000;
+  const startSafetyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [title, setTitle] = useState('')
   const [category, setCategory] =
     useState<BroadcastCategory>('general')
@@ -440,6 +445,16 @@ export default function PhoneGoLive() {
     startingRef.current = true
     setStarting(true)
 
+    // Safety net: if broadcast start hangs, force-reset the guard so the
+    // user can retry instead of being stuck on a frozen button.
+    if (startSafetyTimeoutRef.current) {
+      clearTimeout(startSafetyTimeoutRef.current);
+    }
+    startSafetyTimeoutRef.current = setTimeout(() => {
+      startingRef.current = false;
+      startSafetyTimeoutRef.current = null;
+    }, START_BROADCAST_TIMEOUT_MS);
+
     let streamId: string | null = null
     let room: Room | null = null
 
@@ -726,6 +741,11 @@ export default function PhoneGoLive() {
       )
 
       startingRef.current = false
+      // Clear safety timeout on success so it doesn't erroneously reset the guard later.
+      if (startSafetyTimeoutRef.current) {
+        clearTimeout(startSafetyTimeoutRef.current);
+        startSafetyTimeoutRef.current = null;
+      }
     } finally {
       if (mountedRef.current) {
         setStarting(false)

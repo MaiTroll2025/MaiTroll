@@ -62,6 +62,7 @@ interface MobileBroadcastHostSettingsProps {
     onToggleMute: () => void
     onToggleCamera: () => void
   }>
+  disabled?: boolean;
 }
 
 // ─── Grid Item Definition ────────────────────────────────────────────────────
@@ -185,6 +186,7 @@ export default function MobileBroadcastHostSettings({
   onCameraOffAllSeats,
   onCameraOnAllSeats,
   seatControls = [],
+  disabled = false,
 }: MobileBroadcastHostSettingsProps) {
   const [isGridOpen, setIsGridOpen] = useState(false);
   const [activePopup, setActivePopup] = useState<string | null>(null);
@@ -730,9 +732,13 @@ export default function MobileBroadcastHostSettings({
               </button>
               <button
                 onClick={() => { onEndStream(); closePopup(); }}
-                className="flex-1 rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm font-bold text-red-300 transition-all active:scale-[0.98]"
+                disabled={disabled}
+                className={cn(
+                  "flex-1 rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm font-bold text-red-300 transition-all active:scale-[0.98]",
+                  disabled && "opacity-50 cursor-not-allowed",
+                )}
               >
-                End Stream
+                {disabled ? 'Ending...' : 'End Stream'}
               </button>
             </div>
           </div>
