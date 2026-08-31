@@ -1,5 +1,5 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { supabase, UserProfile } from '../../lib/supabase'
 import { useXPStore } from '@/stores/useXPStore'
 import { toast } from 'sonner'
 import { BattleSounds } from '../battleSounds';
@@ -19,16 +19,16 @@ export async function quietRefreshGiftProfile(userId: string) {
       supabase.from('user_stats').select('level, xp_total, xp_to_next_level').eq('user_id', userId).maybeSingle(),
     ]);
 
-    if (profileRow) {
-      authStore.setProfile({
-        ...currentProfile,
-        ...profileRow,
-        level: levelRow?.level ?? profileRow.level ?? currentProfile?.level ?? 1,
-        xp: levelRow?.xp_total ?? profileRow.xp ?? currentProfile?.xp ?? 0,
-        total_xp: levelRow?.xp_total ?? profileRow.total_xp ?? currentProfile?.total_xp ?? 0,
-        next_level_xp: levelRow?.xp_to_next_level ?? profileRow.next_level_xp ?? currentProfile?.next_level_xp,
-      } as any);
-    }
+     if (profileRow) {
+       authStore.setProfile({
+         ...currentProfile,
+         ...profileRow,
+         level: levelRow?.level ?? profileRow.level ?? currentProfile?.level ?? 1,
+         xp: levelRow?.xp_total ?? profileRow.xp ?? currentProfile?.xp ?? 0,
+         total_xp: levelRow?.xp_total ?? profileRow.total_xp ?? currentProfile?.total_xp ?? 0,
+         next_level_xp: levelRow?.xp_to_next_level ?? profileRow.next_level_xp ?? currentProfile?.next_level_xp,
+       } as UserProfile)
+     }
   } catch (err) {
     console.warn('[GiftSystem] Quiet profile refresh failed:', err);
   }
@@ -88,9 +88,13 @@ export function GiftSystemProvider({
   defaultReceiverId?: string
   children: React.ReactNode
 }) {
-  if (typeof window !== 'undefined') {
-    (window as any).GIFT_SYSTEM_PROVIDER_RENDER_COUNT = ((window as any).GIFT_SYSTEM_PROVIDER_RENDER_COUNT || 0) + 1
-  }
+  const renderCountRef = useRef(0)
+  useEffect(() => {
+    renderCountRef.current += 1
+    if (typeof window !== 'undefined') {
+      (window as any).GIFT_SYSTEM_PROVIDER_RENDER_COUNT = renderCountRef.current
+    }
+  })
 
   // Guard: Do not initialize provider without streamId. This return happens before
   // any hooks run in the outer component, so it never affects hook order.

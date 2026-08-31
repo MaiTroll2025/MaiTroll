@@ -1674,45 +1674,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
         p_captain_id: user.id,
       })
 
-   // ── Seat Debug Overlay (dev only) ──
-   const [seatDebugOpen, setSeatDebugOpen] = useState(false)
-   const [seatErrors, setSeatErrors] = useState<string[]>([])
-   const prevEffectiveBoxCountRef = useRef(effectiveBoxCount)
-   const prevSeatCountRef = useRef(Object.keys(seats).length)
-
-   useEffect(() => {
-     if (!import.meta.env.DEV) return
-     const changed: string[] = []
-     if (prevEffectiveBoxCountRef.current !== effectiveBoxCount) {
-       changed.push(`boxCount: ${prevEffectiveBoxCountRef.current} -> ${effectiveBoxCount}`)
-       prevEffectiveBoxCountRef.current = effectiveBoxCount
-     }
-     const seatCount = Object.keys(seats).length
-     if (prevSeatCountRef.current !== seatCount) {
-       changed.push(`seats: ${prevSeatCountRef.current} -> ${seatCount}`)
-       prevSeatCountRef.current = seatCount
-     }
-     if (changed.length > 0 && seatDebugOpen) {
-       setSeatErrors(prev => [...prev.slice(-50), `[${new Date().toLocaleTimeString()}] ${changed.join(', ')}`])
-     }
-   }, [effectiveBoxCount, seats, seatDebugOpen])
-
-   // Listen for useStreamSeats errors via console or add explicit error boundary
-   useEffect(() => {
-     if (!import.meta.env.DEV || !seatDebugOpen) return
-     const originalError = console.error
-     const handler = (...args: any[]) => {
-       const msg = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ')
-       if (msg.includes('seat') || msg.includes('Seat') || msg.includes('useStreamSeats')) {
-         setSeatErrors(prev => [...prev.slice(-50), `ERROR: ${msg}`])
-       }
-       originalError.apply(console, args)
-     }
-     console.error = handler
-     return () => { console.error = originalError }
-   }, [seatDebugOpen])
-
-   if (error) {
+      if (error) {
         console.error('[ViewerPage] captain_click_battle error:', error)
         toast.error('Failed to start battle')
         return
@@ -2127,7 +2089,11 @@ const isActive = isStreamActive(stream)
   useEffect(() => {
     if (!seats) return
 
-    Object.entries(seats).forEach(([seatIndexStr, seat]: [string, any]) => {
+    const validSeatIds = new Set(Object.keys(seats).map(Number).filter(isValidSeatId))
+    const updates: Record<number, SeatState> = {}
+    const toClear = new Set<number>()
+
+    Object.entries(seats).forEach(([seatIndexStr, seat]) => {
       const seatId = Number(seatIndexStr)
       if (!isValidSeatId(seatId)) return
 
@@ -2136,7 +2102,7 @@ const isActive = isStreamActive(stream)
       const isActive = isSeatActiveStatus(seat?.status)
 
       if (!isActive || !seatUserId) {
-        clearSeatState(seatId)
+        toClear.add(seatId)
         return
       }
 
@@ -2152,28 +2118,26 @@ const isActive = isStreamActive(stream)
       }) || null
 
       if (participant && !participantMatchesUser(participant, seatUserId) && !participantMatchesUser(participant, seatIdentity)) {
-        return // Participant doesn't match — don't update
+        return
       }
 
       const isLoading = normalizeSeatStatus(seat?.status) === 'camera_starting'
-      updateSeatState(seatId, participant, isLoading)
+      const videoTrack = getVideoTrackFromParticipant(participant)
+      const audioTrack = getAudioTrackFromParticipant(participant)
+      const userId = participant ? (participant.identity || participant.name || null) : null
+
+      updates[seatId] = { participant, videoTrack, audioTrack, isLoading, userId }
     })
 
-    // Clear seats that no longer exist in the seats data
     setSeatTracks(prev => {
-      const validSeatIds = new Set(Object.keys(seats).map(Number).filter(isValidSeatId))
-      let changed = false
-      const next: Record<number, SeatState> = {}
-      for (const [id, state] of Object.entries(prev)) {
-        if (validSeatIds.has(Number(id))) {
-          next[Number(id)] = state
-        } else {
-          changed = true
-        }
-      }
-      return changed ? next : prev
+      const next = { ...prev }
+      toClear.forEach(id => {
+        if (next[id]) delete next[id]
+      })
+      Object.assign(next, updates)
+      return next
     })
-  }, [seats, remoteParticipants, isValidSeatId, updateSeatState, clearSeatState])
+  }, [seats, remoteParticipants, isValidSeatId])
   
 
   // Check if current user is CEO

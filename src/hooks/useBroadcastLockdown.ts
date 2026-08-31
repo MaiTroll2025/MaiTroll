@@ -49,22 +49,7 @@ export function useBroadcastLockdown() {
             }
           }
         } else {
-          // Setting doesn't exist yet - create it with default value (not locked)
-          console.log('Broadcast lockdown setting not found, creating with default value...')
-          const { error: insertError } = await supabase
-            .from('admin_settings')
-            .insert({
-              setting_key: 'broadcast_lockdown_enabled',
-              setting_value: { enabled: false },
-              description: 'Controls whether broadcasting is disabled for all users',
-              key: 'broadcast_lockdown_enabled'
-            })
-            .select()
-            .maybeSingle()
-          
-          if (insertError) {
-            console.error('Error creating default broadcast lockdown setting:', insertError)
-          }
+          setIsLocked(false)
         }
       } catch (err) {
         console.error('Error fetching broadcast lockdown status:', err)
@@ -136,18 +121,8 @@ export function useBroadcastLockdown() {
         .eq('setting_key', 'broadcast_lockdown_enabled')
 
       if (updateError) {
-        // If update fails (record doesn't exist), try insert
-        console.log('Update failed, trying insert:', updateError)
-        const { error: insertError } = await supabase
-          .from('admin_settings')
-          .insert({
-            setting_key: 'broadcast_lockdown_enabled',
-            setting_value: { enabled: newState },
-            description: 'Controls whether broadcasting is disabled for all users',
-            key: 'broadcast_lockdown_enabled'
-          })
-
-        if (insertError) throw insertError
+        console.error('Error toggling lockdown:', updateError)
+        return false
       }
 
       setIsLocked(newState)

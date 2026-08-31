@@ -43,21 +43,7 @@ export function useLockdown(settingKey: string, description: string): LockdownSt
             }
           }
         } else {
-          console.log(`${settingKey} setting not found, creating with default value...`)
-          const { error: insertError } = await supabase
-            .from('admin_settings')
-            .insert({
-              setting_key: settingKey,
-              setting_value: { enabled: false },
-              description,
-              key: settingKey,
-            })
-            .select()
-            .maybeSingle()
-
-          if (insertError) {
-            console.error(`Error creating default ${settingKey} setting:`, insertError)
-          }
+          setIsLocked(false)
         }
       } catch (err) {
         console.error(`Error fetching ${settingKey} status:`, err)
@@ -114,17 +100,8 @@ export function useLockdown(settingKey: string, description: string): LockdownSt
         .eq('setting_key', settingKey)
 
       if (updateError) {
-        console.log('Update failed, trying insert:', updateError)
-        const { error: insertError } = await supabase
-          .from('admin_settings')
-          .insert({
-            setting_key: settingKey,
-            setting_value: { enabled: newState },
-            description,
-            key: settingKey,
-          })
-
-        if (insertError) throw insertError
+        console.error(`Error toggling ${settingKey}:`, updateError)
+        return false
       }
 
       setIsLocked(newState)

@@ -1738,6 +1738,8 @@ export default function PhoneViewerPage() {
 
     joiningAudienceRef.current = true
 
+    let mounted = true
+
     void joinAsAudience({
       userId: viewerIdentity,
       streamId,
@@ -1746,6 +1748,8 @@ export default function PhoneViewerPage() {
       publishCapable: false,
     })
       .then((res: any) => {
+          if (!mounted) return
+
           if (typeof res !== 'string') {
             hasJoinedAudienceRef.current = true
             setViewerError(null)
@@ -1755,6 +1759,8 @@ export default function PhoneViewerPage() {
           }
         })
         .catch((err: any) => {
+          if (!mounted) return
+
           const message =
             err?.message ||
             err?.statusText ||
@@ -1766,6 +1772,10 @@ export default function PhoneViewerPage() {
       .finally(() => {
         joiningAudienceRef.current = false
       })
+
+    return () => {
+      mounted = false
+    }
    }, [
     streamId,
     stream,
@@ -3128,8 +3138,8 @@ export default function PhoneViewerPage() {
           !streamId ||
           !user?.id
         ) {
-          toast.success(
-            'Login to like this broadcast',
+          navigate(
+            '/auth?mode=signup',
           )
 
           return

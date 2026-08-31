@@ -9,7 +9,7 @@ import { Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, RemoteParticipant, R
 
 import { isStaffUser } from '../../lib/userUtils'
 
-import { supabase, UserProfile, getBlockedUserIds } from '../../lib/supabase'
+import { supabase, getBlockedUserIds } from '../../lib/supabase'
 
 import { useAuthStore } from '../../lib/store'
 import { useStreamStore } from '../../lib/streamStore'
@@ -83,12 +83,13 @@ function seatPriceToNumber(value: SeatModalPrice): number {
 }
 
 function getRemoteParticipantIdentity(participant: any): string {
+  const metadata = getRemoteParticipantMetadata(participant)
   return String(
     participant?.identity ||
       participant?.participantIdentity ||
       participant?.name ||
-      participant?.metadata?.user_id ||
-      participant?.metadata?.userId ||
+      metadata?.user_id ||
+      metadata?.userId ||
       '',
   )
 }
@@ -1157,7 +1158,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
           const releaseTime = new Date(data.release_time);
           if (releaseTime > new Date()) {
 
-            toast.error('?? You are in jail and cannot broadcast');
+            toast.error('You are in jail and cannot broadcast');
             navigate('/jail', { replace: true });
             return;
           }
@@ -1198,9 +1199,11 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
     // If direct publication fails, attempt to recreate the LiveKit track from the native MediaStreamTrack
     try {
-      const mediaTrack =
-        (track as any).getMediaStreamTrack?.() ||
-        (track as any).mediaStreamTrack?.();
+      const trackLike = track as unknown as {
+        getMediaStreamTrack?: () => MediaStreamTrack | undefined
+        mediaStreamTrack?: MediaStreamTrack
+      }
+      const mediaTrack = trackLike.getMediaStreamTrack?.() || trackLike.mediaStreamTrack
       if (!mediaTrack) {
         console.warn('[BroadcastPage] No native media track available for clone publish', { kind })
         return undefined
@@ -1770,26 +1773,28 @@ useEffect(() => {
   // by deriving from seat state changes � no duplicate channel needed.
   useEffect(() => {
     if (!streamId) return;
-    // Track seat join times from current seats state
+    const updates: Record<number, number> = {}
     Object.values(seats).forEach((seat: any) => {
       if (seat?.joined_at && !seatJoinTimesRef.current[seat.seat_index]) {
-        seatJoinTimesRef.current[seat.seat_index] = Date.now();
-        setSeatJoinTimes(prev => ({ ...prev, [seat.seat_index]: Date.now() }));
+        seatJoinTimesRef.current[seat.seat_index] = Date.now()
+        updates[seat.seat_index] = Date.now()
       }
-    });
-    // Clean up times for seats that are no longer occupied
+    })
+    if (Object.keys(updates).length > 0) {
+      setSeatJoinTimes(prev => ({ ...prev, ...updates }))
+    }
     setSeatJoinTimes(prev => {
-      const next = { ...prev };
+      const next = { ...prev }
       Object.keys(next).forEach(key => {
-        const idx = Number(key);
+        const idx = Number(key)
         if (!seats[idx] || !seats[idx]?.id) {
-          delete next[idx];
-          seatJoinTimesRef.current[idx] = 0;
+          delete next[idx]
+          seatJoinTimesRef.current[idx] = 0
         }
-      });
-      return next;
-    });
-  }, [streamId, seats]);
+      })
+      return next
+    })
+  }, [streamId, seats])
 
   // Tick every second to re-evaluate "Camera unavailable" 8s timeout
   // Removed setInterval to prevent full-page rerenders; timeout UI updates on natural rerenders from seat/participant changes
@@ -3209,11 +3214,12 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       return
     }
 
+    let mounted = true
+
     const fetchStream = async () => {
-      // INSTANT JOIN: Set streamLoaded to false temporarily to show loading in header only
+      if (!mounted) return
       setStreamLoaded(false)
       
-      // Retry stream fetch to handle transient DB replication delays during SetupPage->BroadcastPage transition
       const MAX_RETRIES = 3
       const RETRY_DELAY_MS = 500
       let streamResult: any = null
@@ -3241,10 +3247,12 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       const { data, error } = streamResult
 
       if (error || !data) {
+        if (!mounted) return
         console.warn('[BroadcastPage] Stream fetch by ID failed, trying host fallback', { error, streamId, userId: user?.id })
         const fallbackStream = await fetchHostStreamFallback()
 
         if (fallbackStream) {
+          if (!mounted) return
           console.log('[BroadcastPage] Using fallback stream (host stream):', {
             id: fallbackStream.id,
             title: fallbackStream.title,
@@ -3259,34 +3267,41 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           return
         }
 
+        if (!mounted) return
         setError('Stream not found.')
         toast.error('Stream not found.')
         setStreamLoaded(true)
         return
       }
 
-        setStream(data)
+      if (!mounted) return
+      setStream(data)
       
-      // Set battle start time if battle is already active
-      if (data.is_battle && data.battle_id) {
+      if (data.is_battle && data.battle_id && mounted) {
         setBattleStartTime(data.battle_start_time ? new Date(data.battle_start_time) : new Date())
       }
       
-      // Fetch profile in parallel with other operations
       const { data: profileData } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', data.user_id)
         .maybeSingle()
       
-      if (profileData) {
+      if (profileData && mounted) {
         setBroadcasterProfile(profileData)
         if (data.user_id === user?.id) {
           setHostMicMutedByOfficer(!!profileData.broadcast_mic_muted)
         }
       }
 
-      setStreamLoaded(true)
+      if (mounted) {
+        setStreamLoaded(true)
+      }
+
+      if (data.status === 'ended') {
+        stopLocalTracks()
+        navigate(`/broadcast/summary/${data.id || streamId}`)
+      }
 
       // Fetch smoke event for this stream
       if (data?.id && (profile?.role === 'admin' || profile?.is_admin || profile?.role === 'owner' || data.user_id === user?.id)) {
@@ -3303,18 +3318,14 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
             }
           });
       }
-
-      if (data.status === 'ended') {
-        stopLocalTracks()
-        navigate(`/broadcast/summary/${data.id || streamId}`)
-      }
-
-      // INSTANT JOIN: Don't set isLoading - let page render immediately
-      // Only use isLoading for critical errors, not for data fetching
     }
 
     fetchStream()
-  }, [streamId, navigate, user?.id]);
+
+    return () => {
+      mounted = false
+    }
+  }, [streamId, navigate, user?.id])
 
   // Check if current user is broadofficer (stream-scoped, realtime)
   useEffect(() => {
@@ -5024,7 +5035,7 @@ const toggleMicrophone = useCallback(async () => {
 
     lastTapRef.current = { time: now, x: clientX, y: clientY }
 
-    setTimeout(() => {
+    trackedTimeout(() => {
       if (lastTapRef.current && Date.now() - lastTapRef.current.time >= 350) {
         setIsBroadcasterControlsOpen(true)
         lastTapRef.current = null
@@ -5581,12 +5592,12 @@ const toggleMicrophone = useCallback(async () => {
          amount:          null,
        })
 
-       // 4) Auto-delete the effect after 10 s so the overlay disappears
-       if (effectData?.id) {
-         setTimeout(async () => {
-           await supabase.from('broadcast_active_effects').delete().eq('id', effectData.id)
-         }, 10_500)
-       }
+        // 4) Auto-delete the effect after 10 s so the overlay disappears
+        if (effectData?.id) {
+          trackedTimeout(async () => {
+            await supabase.from('broadcast_active_effects').delete().eq('id', effectData.id)
+          }, 10_500)
+        }
 
        toast.success(
          `?? Troll used: ${prank.icon} ${prank.name}\n${prank.description}`,
@@ -7469,10 +7480,10 @@ const toggleMicrophone = useCallback(async () => {
                           setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
                           setChatInput('')
 
-                          // Auto-remove after 60 seconds
-                          setTimeout(() => {
-                            setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                          }, 60_000)
+                           // Auto-remove after 60 seconds
+                           trackedTimeout(() => {
+                             setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                           }, 60_000)
 
                            try {
                              const result = await sendChatThroughGate({ streamId, content: text })
