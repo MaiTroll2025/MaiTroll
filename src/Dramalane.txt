@@ -1,0 +1,970 @@
+IMPLEMENT A NEW FEATURE CALLED “DRAMA LANE” ACROSS THE ENTIRE MAITROLL APPLICATION.
+
+IMPORTANT:
+This feature must work on BOTH:
+1. Desktop/Web pages
+2. Phone/mobile pages
+
+Do NOT create a phone-only implementation and do NOT create a web-only implementation. The underlying Drama Lane functionality must be shared wherever possible, with responsive UI for each platform.
+
+==================================================
+DRAMA LANE — PRODUCT PURPOSE
+==================================================
+
+Drama Lane is a 24/7 MaiTroll feature designed to give two users involved in a dispute a structured place to talk things out and ultimately squash the drama.
+
+The concept is:
+
+“Get it off your chest. Hear the other side. Squash the drama.”
+
+Drama Lane is NOT intended to encourage threats, violence, doxxing, or real-world harm.
+
+The page should feel bold, entertaining, premium, and very MaiTroll/cyberpunk, but moderation rules still apply.
+
+==================================================
+NAVIGATION
+==================================================
+
+Add “Drama Lane” to the existing navigation system.
+
+DESKTOP:
+- Add Drama Lane to the existing LEFT NAV SIDEBAR.
+- It should be accessible from the existing “More” area/container if that is how the current sidebar organizes secondary features.
+- Do NOT create a second sidebar.
+- Use the existing sidebar/navigation architecture.
+- Use an appropriate Lucide icon.
+- Make sure active route styling matches the existing navigation.
+
+PHONE:
+- Add Drama Lane to the existing PHONE “More” container.
+- Do NOT create another More container.
+- Use the existing phone navigation architecture.
+- Drama Lane should open as a normal phone page.
+- Make sure it works with the current PhoneHeader / PhoneDrawer architecture.
+
+The route should be something similar to:
+
+/drama-lane
+
+Use the project's existing routing conventions if a different route pattern is already established.
+
+==================================================
+CORE USER FLOW
+==================================================
+
+The most important part of this feature is the “Send to Drama Lane” flow.
+
+Users can encounter usernames throughout MaiTroll, including:
+
+- Live streams
+- Broadcast chat
+- Community Wall
+- Messages
+- Comments
+- Battles
+- TCNN
+- Auctions
+- Other areas where usernames are displayed
+
+When a user clicks/taps another username, the existing username/user action modal should provide:
+
+“Send to Drama Lane”
+
+Do NOT create a completely separate username interaction system if one already exists.
+
+Find the existing reusable username/profile action modal and extend it.
+
+The new action should be available regardless of the selected user's role.
+
+Examples:
+- Normal user
+- Creator
+- Broadcaster
+- Admin
+- Other roles
+
+The role does NOT prevent the Drama Lane option from appearing.
+
+==================================================
+SEND TO DRAMA LANE FLOW
+==================================================
+
+When User A clicks User B's username and selects:
+
+“Send to Drama Lane”
+
+open a Drama Lane participant-selection modal.
+
+The user they originally clicked MUST automatically become Participant 1.
+
+Example:
+
+User clicked:
+
+@John
+
+Then the modal should show:
+
+DRAMA LANE
+
+Participant 1
+@John
+
+Participant 2
+[ Select username ▼ ]
+
+The initiator must then select the second user from a searchable username dropdown.
+
+==================================================
+PARTICIPANT 2 DROPDOWN
+==================================================
+
+The second participant must be explicitly selected.
+
+DO NOT try to infer who the second person is from chat history.
+
+DO NOT automatically guess the other participant.
+
+The user must choose the second account.
+
+The dropdown should:
+
+- Be searchable
+- Display usernames
+- Display avatars where appropriate
+- Allow selection of exactly one second user
+- Exclude the currently selected Participant 1
+- Prevent selecting the initiator if appropriate
+- Only allow valid existing users
+- Handle large user lists efficiently
+
+Example:
+
+Who is the other person involved?
+
+[ 🔎 Search username... ]
+
+@Jane
+@Mike
+@Chris
+@Taylor
+
+After selection:
+
+Participant 1:
+@John
+
+Participant 2:
+@Jane
+
+==================================================
+50 TROLL COIN ENTRY COST
+==================================================
+
+The cost to SEND someone to Drama Lane is:
+
+50 Troll Coins.
+
+NOT 100.
+
+The UI should clearly display:
+
+“50 Troll Coins”
+
+Before allowing the request to be submitted, verify that the initiating user has at least 50 Troll Coins.
+
+If they do not:
+
+- Do not create the Drama Lane request.
+- Do not deduct anything.
+- Show an appropriate insufficient-coins message.
+- Follow existing MaiTroll Troll Coin UI conventions.
+
+The actual deduction MUST be performed server-side / through a secure Supabase RPC or equivalent backend mechanism.
+
+DO NOT trust a client-side balance.
+
+The client must never be able to simply tell the backend:
+
+“deduct 50”
+
+without server-side validation.
+
+==================================================
+DRAMA REQUEST
+==================================================
+
+Create a persistent Drama Lane request/session record.
+
+The database should store at minimum:
+
+- id
+- initiator_id
+- participant_one_id
+- participant_two_id
+- entry_cost
+- status
+- created_at
+- accepted_at
+- started_at
+- ended_at
+- duration_seconds
+- winner/result if the product eventually needs one
+- moderation status
+- cancellation reason if applicable
+
+Use UUIDs consistent with the existing Supabase schema.
+
+Suggested status values:
+
+pending
+accepted
+active
+completed
+declined
+cancelled
+expired
+moderated
+
+Do not blindly create duplicate columns/tables if equivalent infrastructure already exists.
+
+FIRST inspect the existing database/schema and reuse existing coin/user/session patterns wherever possible.
+
+==================================================
+ACCEPTANCE / SECOND USER
+==================================================
+
+The second participant should receive a Drama Lane invitation/request.
+
+The request should clearly show:
+
+🔥 DRAMA LANE INVITATION
+
+@UserA wants to enter Drama Lane with you.
+
+Duration:
+3 minutes
+
+Entry:
+50 Troll Coins
+
+Goal:
+Talk it out and squash the drama.
+
+[ ACCEPT ]
+[ DECLINE ]
+
+The exact UX can follow existing MaiTroll notification/modal patterns.
+
+The second user should NOT automatically be forced into a Drama Lane session merely because someone selected them.
+
+The recipient must have the opportunity to accept/decline unless the existing product architecture establishes another explicit consent mechanism.
+
+If the request expires without acceptance, handle the entry fee according to a clearly defined and secure policy.
+
+DO NOT silently create coin duplication or coin loss.
+
+==================================================
+DRAMA LANE PAGE
+==================================================
+
+Create the actual /drama-lane page.
+
+The page must work on desktop and mobile.
+
+The page should have:
+
+- Dramatic MaiTroll branding
+- Clear “DRAMA LANE” title
+- Explanation of purpose
+- Active Drama Lane sessions
+- Ability to see/join appropriate public sessions if the product design permits
+- Rules
+- Moderation information
+- Empty state when nobody is active
+
+Suggested header:
+
+🔥 DRAMA LANE
+
+“Say what you need to say. Hear the other side. Squash the drama.”
+
+Then:
+
+“24/7”
+
+“3 MINUTES”
+
+“NO THREATS”
+
+==================================================
+ACTIVE DRAMA SESSION
+==================================================
+
+When two users enter an active Drama Lane session, show both participants prominently.
+
+Example:
+
+DRAMA LANE
+
+03:00
+
+┌─────────────────────┐
+│       @USER_A       │
+│      AVATAR         │
+│                     │
+│      SPEAKING       │
+└─────────────────────┘
+
+VS
+
+┌─────────────────────┐
+│       @USER_B       │
+│      AVATAR         │
+│                     │
+│      LISTENING      │
+└─────────────────────┘
+
+The timer must be server-authoritative.
+
+The browser/device timer must NOT be the source of truth.
+
+==================================================
+3 MINUTE SESSION
+==================================================
+
+Each Drama Lane session lasts 3 minutes total.
+
+Duration:
+
+180 seconds.
+
+The session should automatically end when the timer reaches zero.
+
+Do NOT allow the client to extend the timer.
+
+Store the actual server-side start/end timestamps.
+
+Use server time or a trusted timestamp source to calculate remaining time.
+
+If a user refreshes the page, closes/reopens the app, or switches devices, the session state must remain correct.
+
+==================================================
+30 SECOND SPEAKING CONTROL
+==================================================
+
+The session should rotate speaking control every 30 seconds.
+
+The goal is to give both users structured opportunities to speak.
+
+The UI should clearly indicate who currently has speaking control.
+
+Example:
+
+@USER_A
+YOUR TURN
+
+30
+
+Then:
+
+@USER_B
+YOUR TURN
+
+30
+
+Continue through the 3-minute session.
+
+Do not rely entirely on local JavaScript timers for state transitions.
+
+The server/session state should determine the current speaking participant.
+
+==================================================
+MUTE OTHER USER
+==================================================
+
+During the active session, the current speaker should have a control:
+
+“MUTE OTHER USER”
+
+This is a temporary speaking control.
+
+The product requirement is that every 30-second speaking period gives the active speaker the ability to mute the other participant.
+
+Implement this safely so that:
+
+- The current speaker can mute the other participant.
+- The inactive participant cannot mute the current speaker unless they become the active speaker.
+- Mute state cannot be manipulated through client-side state alone.
+- A user cannot mute themselves through this control.
+- The mute control does not bypass Troll Officer moderation controls.
+
+The UI should clearly indicate:
+
+🔇 MUTED
+
+when applicable.
+
+==================================================
+TROLL OFFICER MODERATION
+==================================================
+
+Drama Lane still uses MaiTroll moderation.
+
+Troll Officers must be able to intervene.
+
+Do NOT remove existing moderation infrastructure.
+
+Where possible, integrate with existing:
+
+- Troll Officer controls
+- Reports
+- User moderation
+- Blocks
+- Bans
+- Session moderation
+- Admin tools
+
+Troll Officers should be able to end/intervene in a Drama Lane session if rules are violated.
+
+Potential moderation controls:
+
+- End session
+- Mute participant
+- Remove participant
+- Record moderation event
+- Report/flag session
+
+Use existing MaiTroll moderation patterns where available.
+
+==================================================
+RULES / FREEDOM
+==================================================
+
+Drama Lane should be presented as a place where users can speak openly.
+
+Use wording similar to:
+
+“Drama Lane is a place to speak your mind, hear the other side, and settle the beef.”
+
+But clearly state:
+
+NO THREATS
+NO REAL-WORLD VIOLENCE
+NO DOXXING
+NO ILLEGAL ACTIVITY
+
+Moderation still applies.
+
+Do not market the feature as a place where users can violate MaiTroll's rules.
+
+==================================================
+GIFTS DURING DRAMA LANE
+==================================================
+
+Drama Lane must support MaiTroll gifts.
+
+Viewers should be able to send gifts while watching the session.
+
+The gift system must integrate with the EXISTING MaiTroll gift infrastructure.
+
+DO NOT build an entirely separate gift economy if an existing gift system already exists.
+
+Reuse existing:
+
+- Gift catalog
+- Gift animations
+- Gift transactions
+- Troll Coin deductions
+- Gift event/realtime system
+- Gift display components
+
+Drama Lane gifts should be associated with the specific Drama Lane session.
+
+Store:
+
+- drama_session_id
+- sender_id
+- recipient/session participant as appropriate
+- gift_id
+- coin_value
+- timestamp
+
+==================================================
+50/50 DRAMA LANE GIFT SPLIT
+==================================================
+
+This is a key monetization rule.
+
+Normal MaiTroll gift behavior may currently give the recipient 100% of the applicable gift value.
+
+Drama Lane is DIFFERENT.
+
+For gifts sent during a Drama Lane session:
+
+50% goes to Participant 1.
+
+50% goes to Participant 2.
+
+MaiTroll retains its platform share according to the final business/payment architecture.
+
+IMPORTANT:
+
+Do NOT simply credit the full gift to one participant and then try to manually fix the balance later.
+
+The transaction must be designed so the final accounting is deterministic and auditable.
+
+Example:
+
+Viewer sends:
+
+1,000 Troll Coins worth of gifts.
+
+Drama Lane participant distribution:
+
+Participant 1 → 500
+Participant 2 → 500
+
+Use integer-safe coin accounting.
+
+If a value cannot divide evenly, establish a deterministic rounding rule and document it in the code.
+
+==================================================
+GIFTS MUST BE SESSION-SCOPED
+==================================================
+
+A gift sent during Drama Lane must be tied to the current Drama Lane session.
+
+Do NOT accidentally route Drama Lane gifts through the normal broadcaster 100%-recipient logic.
+
+The gift transaction should know:
+
+context_type = drama_lane
+
+or an equivalent existing architecture.
+
+Prefer reusing existing transaction metadata/context fields if available.
+
+==================================================
+PAYOUT TIMING
+==================================================
+
+The Drama Lane participants should receive their Drama Lane gift earnings when the Drama Lane session ends.
+
+Do NOT make the payout dependent on the client staying open.
+
+The backend should calculate/finalize the session payout.
+
+When the session ends:
+
+1. Lock the session.
+2. Stop accepting session gifts.
+3. Aggregate valid gifts.
+4. Calculate the 50/50 participant split.
+5. Create the appropriate coin ledger entries.
+6. Mark payout as finalized.
+7. Prevent duplicate payout.
+
+This must be idempotent.
+
+If the same completion endpoint is called twice, it must NOT pay users twice.
+
+==================================================
+COIN TRANSACTION SAFETY
+==================================================
+
+Use the existing Troll Coin transaction architecture.
+
+Inspect the current coin transaction table/schema and existing RPC functions first.
+
+DO NOT invent column names that do not exist.
+
+DO NOT assume:
+
+receiver_id
+sender_id
+amount
+etc.
+
+exist without checking the actual schema.
+
+If the existing system is missing a field required for Drama Lane, create a proper migration.
+
+All coin changes should be auditable.
+
+Never trust:
+
+- client-provided balances
+- client-provided payout amounts
+- client-provided participant IDs
+- client-provided session duration
+
+The server must validate all of these.
+
+==================================================
+REALTIME
+==================================================
+
+Drama Lane should feel live.
+
+Use the existing Supabase realtime architecture where appropriate.
+
+Realtime events may include:
+
+- Drama request created
+- Request accepted
+- Request declined
+- Session started
+- Speaking turn changed
+- Participant muted
+- Gift received
+- Session ended
+- Moderation action
+
+Do NOT create unnecessary duplicate realtime systems if MaiTroll already has reusable realtime hooks.
+
+==================================================
+PAGE DISCOVERY
+==================================================
+
+The main Drama Lane page should allow users to understand:
+
+- What Drama Lane is
+- How to send someone there
+- How much it costs
+- What happens during a session
+- The rules
+- Current active sessions if applicable
+
+Include a clear button:
+
+“🔥 SEND SOMEONE TO DRAMA LANE”
+
+This should open the participant selection flow.
+
+==================================================
+RESPONSIVE PHONE DESIGN
+==================================================
+
+The phone version must be a FIRST-CLASS design.
+
+Do NOT simply shrink the desktop layout.
+
+Use the existing Phone UI patterns.
+
+The phone page should support:
+
+- Full-width participant cards
+- Large timer
+- Large speaking indicator
+- Large mute control
+- Gift button
+- Scrollable chat if applicable
+- Safe-area spacing
+- Existing PhoneHeader
+- Existing More container
+- Existing mobile navigation patterns
+
+The page must not overflow horizontally.
+
+==================================================
+DESKTOP DESIGN
+==================================================
+
+Desktop should use the existing MaiTroll desktop design system.
+
+Use:
+
+- Existing sidebar
+- Existing cards
+- Existing glass/cyberpunk styling
+- Neon purple/blue accents
+- Red emphasis for Drama Lane
+- Existing modal system
+- Existing notification system
+
+Do not introduce an entirely different visual language.
+
+==================================================
+USERNAME MODAL INTEGRATION
+==================================================
+
+This is CRITICAL.
+
+Find the existing reusable username click/user action implementation.
+
+Add:
+
+🔥 Send to Drama Lane
+
+to that system.
+
+It should be available from all existing locations that already invoke the user action modal.
+
+Do NOT manually add separate Drama Lane buttons to every individual page unless necessary.
+
+The goal is one reusable action.
+
+==================================================
+ROUTING
+==================================================
+
+Add the Drama Lane route to the application's routing system.
+
+Make sure:
+
+- Desktop can navigate to it.
+- Phone can navigate to it.
+- Direct URL navigation works.
+- Refreshing the page works.
+- Auth requirements follow existing MaiTroll conventions.
+- Unauthorized users are handled correctly.
+- The route does not break existing routes.
+
+==================================================
+DATABASE / MIGRATIONS
+==================================================
+
+Before writing migrations:
+
+INSPECT THE EXISTING DATABASE.
+
+Look for:
+
+- User profiles
+- Troll Coins
+- Coin transactions
+- Gifts
+- Gift transactions
+- Notifications
+- Realtime
+- Moderation
+- Existing live sessions
+- Existing participant/session tables
+
+Reuse existing infrastructure wherever appropriate.
+
+Then create the minimum required migration(s).
+
+Potential tables could include:
+
+drama_lane_sessions
+
+drama_lane_participants
+
+drama_lane_gifts
+
+drama_lane_events
+
+BUT:
+
+Do NOT blindly create all four.
+
+If one table can safely handle the architecture, keep it simpler.
+
+Use proper foreign keys.
+
+Use UUIDs.
+
+Use timestamps.
+
+Add indexes for:
+
+- participant IDs
+- status
+- active sessions
+- created_at
+- session IDs
+- gift/session relationships
+
+==================================================
+ROW LEVEL SECURITY
+==================================================
+
+Implement proper Supabase RLS.
+
+Users should not be able to:
+
+- Change participant IDs
+- Change coin amounts
+- Change payout values
+- Extend sessions
+- Mark sessions completed
+- Give themselves coins
+- Give another user fake gifts
+- Manipulate speaking turns
+
+Sensitive state changes should happen through secure RPC/server-side functions.
+
+Users should only be able to read/write what they are authorized to access.
+
+==================================================
+ANTI-ABUSE
+==================================================
+
+Prevent obvious abuse.
+
+At minimum:
+
+- Cannot select the same user twice.
+- Cannot create duplicate active Drama Lane sessions for the same pair if the product rules prohibit it.
+- Cannot spam unlimited requests.
+- Add a reasonable cooldown/rate limit to Drama Lane requests.
+- Cannot send gifts after session closure.
+- Cannot payout a session twice.
+- Cannot manipulate the timer.
+- Cannot manipulate participant IDs after session creation.
+- Cannot change gift values from the client.
+- Cannot bypass the 50 Troll Coin entry fee.
+
+Use server-side enforcement.
+
+==================================================
+NOTIFICATIONS
+==================================================
+
+Integrate Drama Lane invitations with the existing notification system.
+
+Example:
+
+🔥 Drama Lane
+
+@Username invited you to Drama Lane.
+
+[ View ]
+
+Use existing notification infrastructure rather than creating a completely separate notification system.
+
+==================================================
+EMPTY STATES
+==================================================
+
+Create polished empty states.
+
+Example:
+
+🔥 DRAMA LANE
+
+“No drama happening right now.”
+
+“That's probably a good thing.”
+
+[ Explore MaiTroll ]
+
+==================================================
+ERROR STATES
+==================================================
+
+Handle:
+
+- Insufficient Troll Coins
+- User no longer exists
+- User blocked you
+- User blocked you
+- Recipient declined
+- Request expired
+- Session already active
+- Session ended
+- Network failure
+- Realtime disconnect
+- Gift transaction failure
+- Payout failure
+
+Never leave users stuck in an apparently active session.
+
+==================================================
+IMPORTANT EXISTING CODEBASE RULES
+==================================================
+
+Before modifying anything:
+
+1. Search the repository for existing username/user action modals.
+2. Search for existing Troll Coin purchase/spending functions.
+3. Search for existing coin_transactions schema/functions.
+4. Search for existing gift transaction logic.
+5. Search for existing notification logic.
+6. Search for existing moderation logic.
+7. Search for existing LiveKit/session architecture.
+8. Search for existing phone More navigation.
+9. Search for existing desktop More/left sidebar navigation.
+10. Search for existing realtime hooks.
+
+Reuse existing components/hooks/functions where possible.
+
+DO NOT duplicate existing infrastructure.
+
+==================================================
+TESTING REQUIREMENTS
+==================================================
+
+After implementation, test:
+
+1. Desktop navigation → Drama Lane.
+2. Phone More → Drama Lane.
+3. Direct /drama-lane navigation.
+4. Click username → Send to Drama Lane.
+5. Participant 1 is automatically populated.
+6. Participant 2 dropdown works.
+7. Search username works.
+8. Same user cannot be selected twice.
+9. 50 Troll Coin validation works.
+10. Insufficient balance is rejected.
+11. Exactly 50 coins are deducted once.
+12. Drama request is created.
+13. Recipient receives notification.
+14. Recipient can accept.
+15. Recipient can decline.
+16. Accepted session starts correctly.
+17. 3-minute server-authoritative timer works.
+18. Speaking turns rotate every 30 seconds.
+19. Mute control only works for the active speaker.
+20. Gifts work inside Drama Lane.
+21. Gifts are tied to the correct Drama Lane session.
+22. Gift distribution is 50/50 between participants.
+23. Session payout happens once.
+24. Duplicate completion cannot double-pay.
+25. Session automatically ends.
+26. Refreshing the page does not break the session.
+27. Mobile layout works.
+28. Desktop layout works.
+29. Troll Officer moderation still works.
+30. Existing MaiTroll functionality is not broken.
+
+==================================================
+FINAL REQUIREMENT
+==================================================
+
+Do NOT stop after creating the UI.
+
+This is a complete feature request.
+
+I need:
+
+- Database/schema
+- Secure RPC/backend logic
+- Coin handling
+- Drama Lane session management
+- Participant selection
+- Invitation system
+- Notifications
+- Realtime updates
+- 3-minute timer
+- 30-second speaking turns
+- Mute controls
+- Gift integration
+- 50/50 gift distribution
+- Payout finalization
+- Moderation integration
+- Desktop page
+- Phone page
+- Desktop left sidebar/More navigation
+- Phone More container
+- Username action modal integration
+- Responsive styling
+- Error handling
+- Security/RLS
+- Testing
+
+DO NOT break existing live broadcasting, battles, gifts, Troll Coins, navigation, phone pages, or desktop pages.
+
+Before making changes, inspect the existing architecture and adapt Drama Lane to MaiTroll's current systems instead of replacing existing systems.

@@ -76,13 +76,13 @@ const CATEGORIES: {
   label: string
   icon: React.ReactNode
 }[] = [
-  { id: 'all', label: 'All', icon: <Gift size={14} /> },
-  { id: 'general', label: 'General', icon: <Sparkles size={14} /> },
+  { id: 'all', label: 'All', icon: <Gift size={13} /> },
+  { id: 'general', label: 'General', icon: <Sparkles size={13} /> },
   { id: 'cars', label: 'Cars', icon: '🏎️' },
   { id: 'houses', label: 'Houses', icon: '🏠' },
   { id: 'boats', label: 'Boats', icon: '🛥️' },
   { id: 'planes', label: 'Planes', icon: '✈️' },
-  { id: 'luxury', label: 'Luxury', icon: <Crown size={14} /> },
+  { id: 'luxury', label: 'Luxury', icon: <Crown size={13} /> },
   { id: 'men', label: 'Men', icon: '👨' },
   { id: 'women', label: 'Women', icon: '👩' },
   { id: 'lgbt', label: 'LGBT', icon: '🌈' },
@@ -110,31 +110,31 @@ const RARITY_STYLES: Record<
   },
   uncommon: {
     border: 'border-emerald-400/25',
-    glow: 'shadow-[0_0_22px_rgba(52,211,153,0.06)]',
+    glow: 'shadow-[0_0_18px_rgba(52,211,153,0.05)]',
     label: 'Uncommon',
     badge: 'bg-emerald-400/10 text-emerald-300',
   },
   rare: {
     border: 'border-blue-400/30',
-    glow: 'shadow-[0_0_24px_rgba(59,130,246,0.08)]',
+    glow: 'shadow-[0_0_20px_rgba(59,130,246,0.07)]',
     label: 'Rare',
     badge: 'bg-blue-400/10 text-blue-300',
   },
   epic: {
     border: 'border-purple-400/35',
-    glow: 'shadow-[0_0_26px_rgba(168,85,247,0.10)]',
+    glow: 'shadow-[0_0_22px_rgba(168,85,247,0.08)]',
     label: 'Epic',
     badge: 'bg-purple-400/10 text-purple-300',
   },
   legendary: {
     border: 'border-orange-400/40',
-    glow: 'shadow-[0_0_28px_rgba(251,146,60,0.12)]',
+    glow: 'shadow-[0_0_24px_rgba(251,146,60,0.10)]',
     label: 'Legendary',
     badge: 'bg-orange-400/10 text-orange-300',
   },
   mythic: {
     border: 'border-yellow-300/45',
-    glow: 'shadow-[0_0_32px_rgba(250,204,21,0.14)]',
+    glow: 'shadow-[0_0_26px_rgba(250,204,21,0.12)]',
     label: 'Mythic',
     badge: 'bg-yellow-300/10 text-yellow-200',
   },
@@ -577,63 +577,61 @@ export default function PhoneGiftModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end bg-black/75 backdrop-blur-[3px]"
+      className="fixed inset-0 z-[100] flex items-end bg-black/70 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div
         className={cn(
           'relative flex w-full flex-col overflow-hidden',
-          'rounded-t-[30px] border border-white/[0.09]',
+          'rounded-t-[26px] border border-white/[0.09]',
           'bg-[#080a12]',
-          'shadow-[0_-20px_80px_rgba(0,0,0,0.75)]',
-          'max-h-[94dvh] min-h-[72dvh]'
+          'shadow-[0_-18px_60px_rgba(0,0,0,0.75)]',
+          'h-[52dvh] max-h-[560px] min-h-[360px]'
         )}
         onClick={e =>
           e.stopPropagation()
         }
       >
         {/* Top highlight */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent" />
 
         {/* Drag Handle */}
-        <div className="flex shrink-0 justify-center pt-2.5">
-          <div className="h-1 w-10 rounded-full bg-white/15" />
+        <div className="flex shrink-0 justify-center pt-2">
+          <div className="h-1 w-9 rounded-full bg-white/15" />
         </div>
 
-        {/* Header */}
-        <div className="flex shrink-0 items-center justify-between px-4 pb-3 pt-2.5">
-          <div className="flex items-center gap-3">
-            <div className="relative grid h-10 w-10 place-items-center rounded-2xl border border-cyan-300/15 bg-gradient-to-br from-cyan-400/15 to-violet-500/10 shadow-[0_0_25px_rgba(34,211,238,0.08)]">
+        {/* Compact Header */}
+        <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-1.5">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-cyan-300/15 bg-gradient-to-br from-cyan-400/15 to-violet-500/10">
               <Gift
-                size={19}
+                size={17}
                 className="text-cyan-200"
               />
-              <div className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.8)]" />
+              <div className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_7px_rgba(103,232,249,0.8)]" />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-[15px] font-black tracking-tight text-white">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-[14px] font-black tracking-tight text-white">
                   Gifts
                 </h2>
 
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[7px] font-black uppercase tracking-[0.14em] text-white/35">
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[6px] font-black uppercase tracking-[0.12em] text-white/35">
                   LIVE
                 </span>
               </div>
 
-              <p className="mt-0.5 text-[10px] font-medium text-white/35">
+              <p className="truncate text-[9px] font-medium text-white/30">
                 Support this broadcast
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden min-[380px]:flex items-center gap-1.5 rounded-full border border-yellow-300/10 bg-yellow-300/[0.05] px-2.5 py-1.5">
-              <span className="text-[11px]">
-                🪙
-              </span>
-              <span className="text-[9px] font-black text-yellow-200/80">
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 rounded-full border border-yellow-300/10 bg-yellow-300/[0.05] px-2 py-1">
+              <span className="text-[10px]">🪙</span>
+              <span className="text-[8px] font-black text-yellow-200/80">
                 {Number(
                   (mkeyWallet as any)?.balance ??
                     (mkeyWallet as any)?.coins ??
@@ -645,23 +643,23 @@ export default function PhoneGiftModal({
             <button
               type="button"
               onClick={onClose}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.04] transition active:scale-95"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] transition active:scale-95"
               aria-label="Close gifts"
             >
               <X
-                size={17}
+                size={16}
                 className="text-white/60"
               />
             </button>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="shrink-0 px-4 pb-3">
+        {/* Compact Search */}
+        <div className="shrink-0 px-4 pb-2">
           <div className="relative">
             <Search
-              size={16}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30"
+              size={14}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/30"
             />
 
             <input
@@ -672,17 +670,17 @@ export default function PhoneGiftModal({
                   e.target.value
                 )
               }
-              placeholder="Search gifts"
+              placeholder="Search gifts..."
               className={cn(
-                'h-11 w-full rounded-2xl',
-                'border border-white/[0.09]',
-                'bg-white/[0.045]',
-                'pl-10 pr-10',
-                'text-[13px] font-medium text-white',
+                'h-9 w-full rounded-xl',
+                'border border-white/[0.08]',
+                'bg-white/[0.04]',
+                'pl-9 pr-9',
+                'text-[11px] font-medium text-white',
                 'placeholder:text-white/25',
                 'outline-none transition',
                 'focus:border-cyan-300/25',
-                'focus:bg-white/[0.06]'
+                'focus:bg-white/[0.055]'
               )}
             />
 
@@ -692,10 +690,10 @@ export default function PhoneGiftModal({
                 onClick={() =>
                   setSearchQuery('')
                 }
-                className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/[0.06]"
+                className="absolute right-1.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full bg-white/[0.06]"
               >
                 <X
-                  size={13}
+                  size={11}
                   className="text-white/50"
                 />
               </button>
@@ -703,9 +701,9 @@ export default function PhoneGiftModal({
           </div>
         </div>
 
-        {/* Categories */}
-        <div className="shrink-0 overflow-x-auto border-b border-white/[0.05] px-4 pb-3 scrollbar-none">
-          <div className="flex w-max gap-1.5">
+        {/* Compact Categories */}
+        <div className="shrink-0 overflow-x-auto border-b border-white/[0.05] px-4 pb-2 scrollbar-none">
+          <div className="flex w-max gap-1">
             {CATEGORIES.map(category => {
               const active =
                 selectedCategory ===
@@ -721,11 +719,11 @@ export default function PhoneGiftModal({
                     )
                   }
                   className={cn(
-                    'flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3',
-                    'text-[9px] font-black uppercase tracking-[0.08em]',
+                    'flex h-7 shrink-0 items-center gap-1 rounded-full border px-2.5',
+                    'text-[7px] font-black uppercase tracking-[0.07em]',
                     'transition-all active:scale-[0.97]',
                     active
-                      ? 'border-cyan-300/30 bg-cyan-300/[0.11] text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.08)]'
+                      ? 'border-cyan-300/30 bg-cyan-300/[0.11] text-cyan-100 shadow-[0_0_14px_rgba(34,211,238,0.08)]'
                       : 'border-white/[0.08] bg-white/[0.025] text-white/40'
                   )}
                 >
@@ -739,47 +737,47 @@ export default function PhoneGiftModal({
           </div>
         </div>
 
-        {/* Gift Area */}
+        {/* Gift Grid */}
         <div
           className={cn(
             'min-h-0 flex-1 overflow-y-auto',
             'overscroll-contain',
-            'px-4 py-4',
+            'px-3.5 py-2.5',
             selectedGift
-              ? 'pb-3'
-              : 'pb-6'
+              ? 'pb-2'
+              : 'pb-4'
           )}
         >
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {Array.from({
-                length: 8,
+                length: 6,
               }).map((_, index) => (
                 <div
                   key={index}
-                  className="h-[154px] animate-pulse rounded-[22px] border border-white/[0.05] bg-white/[0.025]"
+                  className="h-[112px] animate-pulse rounded-[17px] border border-white/[0.05] bg-white/[0.025]"
                 />
               ))}
             </div>
           ) : filteredGifts.length === 0 ? (
-            <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-              <div className="mb-3 grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-white/[0.04]">
+            <div className="flex min-h-[180px] flex-col items-center justify-center text-center">
+              <div className="mb-2 grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/[0.04]">
                 <Gift
-                  size={23}
+                  size={19}
                   className="text-white/20"
                 />
               </div>
 
-              <p className="text-[13px] font-black text-white/60">
+              <p className="text-[11px] font-black text-white/60">
                 No gifts found
               </p>
 
-              <p className="mt-1 max-w-[220px] text-[10px] leading-relaxed text-white/25">
+              <p className="mt-1 max-w-[190px] text-[9px] leading-relaxed text-white/25">
                 Try another gift name or category.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {filteredGifts.map(gift => {
                 const rarity =
                   getRarity(gift)
@@ -803,21 +801,20 @@ export default function PhoneGiftModal({
                       )
                     }
                     className={cn(
-                      'group relative min-h-[166px] overflow-hidden rounded-[23px]',
+                      'group relative min-h-[116px] overflow-hidden rounded-[18px]',
                       'border bg-white/[0.025]',
-                      'p-3 text-left',
+                      'p-2 text-left',
                       'transition-all duration-200',
-                      'active:scale-[0.975]',
+                      'active:scale-[0.965]',
                       rarityStyle.border,
                       rarityStyle.glow,
                       selected &&
-                        'border-cyan-300/55 bg-cyan-300/[0.075] shadow-[0_0_30px_rgba(34,211,238,0.12)]'
+                        'border-cyan-300/55 bg-cyan-300/[0.075] shadow-[0_0_24px_rgba(34,211,238,0.12)]'
                     )}
                   >
-                    {/* Background gradient */}
                     {gift.trayGradient && (
                       <div
-                        className="pointer-events-none absolute inset-0 opacity-25"
+                        className="pointer-events-none absolute inset-0 opacity-20"
                         style={{
                           background:
                             gift.trayGradient,
@@ -825,22 +822,20 @@ export default function PhoneGiftModal({
                       />
                     )}
 
-                    {/* Selected indicator */}
                     {selected && (
-                      <div className="absolute right-2.5 top-2.5 z-10 grid h-6 w-6 place-items-center rounded-full bg-cyan-300 text-black shadow-[0_0_15px_rgba(103,232,249,0.35)]">
+                      <div className="absolute right-1.5 top-1.5 z-10 grid h-5 w-5 place-items-center rounded-full bg-cyan-300 text-black shadow-[0_0_12px_rgba(103,232,249,0.35)]">
                         <Check
-                          size={13}
+                          size={11}
                           strokeWidth={3}
                         />
                       </div>
                     )}
 
-                    {/* Rarity */}
                     {rarity !==
                       'common' && (
                       <span
                         className={cn(
-                          'absolute left-2.5 top-2.5 z-10 rounded-full px-1.5 py-1 text-[6px] font-black uppercase tracking-[0.12em]',
+                          'absolute left-1.5 top-1.5 z-10 rounded-full px-1 py-0.5 text-[5px] font-black uppercase tracking-[0.1em]',
                           rarityStyle.badge
                         )}
                       >
@@ -850,11 +845,11 @@ export default function PhoneGiftModal({
                       </span>
                     )}
 
-                    {/* Gift artwork */}
-                    <div className="relative flex h-[88px] items-center justify-center">
+                    {/* Artwork */}
+                    <div className="relative flex h-[67px] items-center justify-center">
                       <div
                         className={cn(
-                          'absolute h-20 w-20 rounded-full blur-2xl opacity-20 transition-opacity',
+                          'absolute h-12 w-12 rounded-full blur-xl opacity-20',
                           selected &&
                             'opacity-45'
                         )}
@@ -867,7 +862,7 @@ export default function PhoneGiftModal({
                           }
                           alt=""
                           className={cn(
-                            'relative z-[1] h-[76px] w-[76px] object-contain',
+                            'relative z-[1] h-[54px] w-[54px] object-contain',
                             'transition-transform duration-200',
                             'group-active:scale-95',
                             selected &&
@@ -878,7 +873,7 @@ export default function PhoneGiftModal({
                       ) : (
                         <span
                           className={cn(
-                            'relative z-[1] text-[52px] leading-none drop-shadow-[0_8px_18px_rgba(0,0,0,0.45)]',
+                            'relative z-[1] text-[37px] leading-none drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)]',
                             'transition-transform duration-200',
                             selected &&
                               'scale-110'
@@ -890,24 +885,18 @@ export default function PhoneGiftModal({
                     </div>
 
                     {/* Gift Info */}
-                    <div className="relative z-[2] mt-1">
-                      <p className="truncate text-[12px] font-black text-white/90">
+                    <div className="relative z-[2]">
+                      <p className="truncate text-[9px] font-black text-white/90">
                         {gift.name}
                       </p>
 
-                      <div className="mt-1 flex items-center justify-between gap-2">
-                        <span className="flex items-center gap-1 text-[10px] font-black text-yellow-200/80">
-                          <span>
+                      <div className="mt-0.5 flex items-center gap-1">
+                        <span className="flex items-center gap-0.5 text-[8px] font-black text-yellow-200/80">
+                          <span className="text-[8px]">
                             🪙
                           </span>
                           {gift.coinCost.toLocaleString()}
                         </span>
-
-                        {gift.description && (
-                          <span className="truncate text-[8px] font-medium text-white/20">
-                            {gift.description}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </button>
@@ -917,8 +906,8 @@ export default function PhoneGiftModal({
           )}
         </div>
 
-        {/* MKey Toggle */}
-        <div className="shrink-0 border-t border-white/[0.06] bg-[#090b13]/95 px-4 py-2 backdrop-blur-xl">
+        {/* MKey Compact Toggle */}
+        <div className="shrink-0 border-t border-white/[0.06] bg-[#090b13]/95 px-3 py-1.5 backdrop-blur-xl">
           <button
             type="button"
             onClick={() =>
@@ -926,28 +915,28 @@ export default function PhoneGiftModal({
                 value => !value
               )
             }
-            className="flex min-h-[42px] w-full items-center justify-between rounded-2xl border border-white/[0.07] bg-white/[0.025] px-3"
+            className="flex min-h-[34px] w-full items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-2.5"
           >
-            <div className="flex items-center gap-2.5">
-              <div className="grid h-7 w-7 place-items-center rounded-lg bg-violet-400/10">
+            <div className="flex items-center gap-2">
+              <div className="grid h-6 w-6 place-items-center rounded-lg bg-violet-400/10">
                 <Gem
-                  size={14}
+                  size={12}
                   className="text-violet-300"
                 />
               </div>
 
               <div className="text-left">
-                <p className="text-[10px] font-black text-white/70">
+                <p className="text-[9px] font-black text-white/70">
                   MKey
                 </p>
-                <p className="text-[8px] font-medium text-white/25">
+                <p className="text-[7px] font-medium text-white/25">
                   Send MKey to this broadcast
                 </p>
               </div>
             </div>
 
             <ChevronDown
-              size={15}
+              size={14}
               className={cn(
                 'text-white/30 transition-transform',
                 showMKey &&
@@ -957,7 +946,7 @@ export default function PhoneGiftModal({
           </button>
 
           {showMKey && (
-            <div className="pt-2">
+            <div className="pt-1.5">
               <MKeySendPanel
                 broadcastId={streamId}
                 onSent={() => {}}
@@ -972,25 +961,25 @@ export default function PhoneGiftModal({
           <div
             className={cn(
               'shrink-0 border-t border-white/[0.07]',
-              'bg-[#070910]/98 px-4 pt-3',
-              'pb-[max(14px,env(safe-area-inset-bottom))]',
+              'bg-[#070910]/98 px-3 pt-2',
+              'pb-[max(8px,env(safe-area-inset-bottom))]',
               'backdrop-blur-2xl'
             )}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               {/* Mini artwork */}
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.045]">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.045]">
                 {selectedGift.trayVisualUrl ? (
                   <img
                     src={
                       selectedGift.trayVisualUrl
                     }
                     alt=""
-                    className="h-9 w-9 object-contain"
+                    className="h-7 w-7 object-contain"
                     draggable={false}
                   />
                 ) : (
-                  <span className="text-2xl">
+                  <span className="text-xl">
                     {selectedGift.icon}
                   </span>
                 )}
@@ -998,18 +987,18 @@ export default function PhoneGiftModal({
 
               {/* Name / Price */}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[12px] font-black text-white">
+                <p className="truncate text-[10px] font-black text-white">
                   {selectedGift.name}
                 </p>
 
-                <p className="mt-0.5 text-[9px] font-bold text-white/35">
+                <p className="mt-0.5 text-[7px] font-bold text-white/35">
                   {selectedGift.coinCost.toLocaleString()}{' '}
                   coins each
                 </p>
               </div>
 
               {/* Quantity */}
-              <div className="flex shrink-0 items-center rounded-full border border-white/10 bg-white/[0.045] p-1">
+              <div className="flex shrink-0 items-center rounded-full border border-white/10 bg-white/[0.045] p-0.5">
                 <button
                   type="button"
                   onClick={() =>
@@ -1020,13 +1009,13 @@ export default function PhoneGiftModal({
                       )
                     )
                   }
-                  className="grid h-8 w-8 place-items-center rounded-full text-lg font-medium text-white/60 active:bg-white/10"
+                  className="grid h-7 w-7 place-items-center rounded-full text-base font-medium text-white/60 active:bg-white/10"
                   aria-label="Decrease quantity"
                 >
                   −
                 </button>
 
-                <span className="w-7 text-center text-[11px] font-black text-white">
+                <span className="w-6 text-center text-[10px] font-black text-white">
                   {quantity}
                 </span>
 
@@ -1037,7 +1026,7 @@ export default function PhoneGiftModal({
                       q + 1
                     )
                   }
-                  className="grid h-8 w-8 place-items-center rounded-full text-lg font-medium text-white/70 active:bg-white/10"
+                  className="grid h-7 w-7 place-items-center rounded-full text-base font-medium text-white/70 active:bg-white/10"
                   aria-label="Increase quantity"
                 >
                   +
@@ -1046,13 +1035,13 @@ export default function PhoneGiftModal({
             </div>
 
             {/* Total + Send */}
-            <div className="mt-3 flex items-center gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-[8px] font-black uppercase tracking-[0.15em] text-white/25">
+            <div className="mt-1.5 flex items-center gap-2.5">
+              <div className="min-w-0 w-[92px] shrink-0">
+                <p className="text-[6px] font-black uppercase tracking-[0.15em] text-white/25">
                   Total
                 </p>
 
-                <p className="mt-0.5 flex items-center gap-1 text-[14px] font-black text-yellow-200">
+                <p className="mt-0.5 flex items-center gap-1 text-[11px] font-black text-yellow-200">
                   🪙{' '}
                   {totalCost.toLocaleString()}
                 </p>
@@ -1065,12 +1054,12 @@ export default function PhoneGiftModal({
                 }
                 disabled={isSending}
                 className={cn(
-                  'min-h-[50px] flex-1 rounded-2xl',
+                  'min-h-[40px] flex-1 rounded-xl',
                   'border border-cyan-300/25',
                   'bg-gradient-to-r from-cyan-500/25 via-cyan-400/15 to-violet-500/25',
-                  'px-4',
-                  'text-[10px] font-black uppercase tracking-[0.14em] text-white',
-                  'shadow-[0_0_25px_rgba(34,211,238,0.10)]',
+                  'px-3',
+                  'text-[8px] font-black uppercase tracking-[0.12em] text-white',
+                  'shadow-[0_0_20px_rgba(34,211,238,0.10)]',
                   'transition-all active:scale-[0.985]',
                   'disabled:cursor-not-allowed disabled:opacity-50'
                 )}

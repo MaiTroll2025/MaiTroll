@@ -338,7 +338,7 @@ export default function TrollCourt() {
             *,
             defendant_user:defendant_id(username, avatar_url),
             plaintiff_user:plaintiff_id(username, avatar_url),
-            court_dockets!inner(court_date)
+            court_dockets!court_cases_docket_id_fkey(court_date)
           `)
           .eq('defendant_id', user.id)
           .eq('status', 'pending')

@@ -8,6 +8,7 @@ import {
   LogOut,
   MessageCircle,
   Radio,
+  Search,
   Sparkles,
   Store,
   User,
@@ -266,6 +267,21 @@ export default function PhoneBottomNav() {
       {isOpen && (
         <div className="max-h-[65vh] overflow-y-auto border-t border-white/10 bg-[#050715]/95 backdrop-blur-xl">
           <div className="mx-auto max-w-xl px-4 py-4">
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="Search Mai Troll..."
+                  className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-9 pr-4 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20"
+                  onFocus={() => {
+                    setIsOpen(false)
+                    navigate('/search')
+                  }}
+                />
+              </div>
+            </div>
+
             {visibleSections.map((section) => (
               <div key={section.title} className="mb-4">
                 <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">

@@ -1,0 +1,569 @@
+Implement a complete **MaiTroll “Go Live & Earn” campaign**, integrated across **all four live-stream experiences**:
+
+- `PhoneBroadcastPage`
+- `PhoneViewerPage`
+- Web/Desktop Broadcast Page
+- Web/Desktop Viewer Page
+The campaign must use the existing LiveKit, broadcast, viewer/audience-presence, notification, and Troll Coin infrastructure wherever possible.
+
+## CORE CAMPAIGN RULE
+The reward is based on **5 unique invited friends entering the user's actual live broadcast and remaining in that specific broadcast for at least 1 continuous minute.**
+
+A friend simply opening an invite, opening MaiTroll, watching another stream, or going live themselves does **NOT** qualify.
+
+The relationship that must be tracked is:
+
+**Inviter → Invited Friend → Inviter's Specific Stream → Friend Joins That Stream → Friend Remains 1 Minute → Qualified Friend**
+
+When the inviter reaches **5 unique qualified friends**, award the inviter **100 Troll Coins**.
+
+---
+
+# 1. 6-HOUR RE-ENGAGEMENT PUSH
+Create/use a server-side scheduled process that checks users every 6 hours.
+
+A user is eligible when:
+
+- They are offline.
+- They have not been online/active for at least 6 hours.
+- `push_notifications_enabled` is true.
+- They have a valid device push subscription/token.
+- They have not already received the campaign push for the current inactivity window.
+Push:
+
+**🔴 GO LIVE TODAY & EARN!**
+
+**Go live today, tell at least 5 friends, and they’ll get you closer to 100 Troll Coins! 🧌💰 Come back to MaiTroll and start your stream!**
+
+Deep-link the notification into MaiTroll's Go Live experience.
+
+The 6-hour timer MUST be server-side.
+
+Do not rely on JavaScript running on the user's device.
+
+When the user becomes active again, reset their inactivity/re-engagement window.
+
+Do not spam users who are actively using MaiTroll.
+
+Reuse the existing push notification infrastructure.
+
+---
+
+# 2. CAMPAIGN / INVITATION TRACKING
+Create or reuse database structures to track the campaign.
+
+The database must track:
+
+- `inviter_user_id`
+- `invited_user_id`
+- campaign ID
+- invitation timestamp
+- invitation/deep-link identifier
+- whether the invitation was accepted
+- whether the invited friend joined the inviter's stream
+- the specific `stream_id` where they joined
+- join timestamp
+- qualifying timestamp
+- whether that friend has already counted toward the 5-friend requirement
+- inviter's current qualified-friend count
+- whether the 100 Troll Coin reward has been granted
+Use database constraints to prevent duplicate inviter/friend relationships and duplicate qualification.
+
+Do not rely on React state or localStorage as the source of truth.
+
+---
+
+# 3. INVITATION FLOW
+When a user chooses to invite a friend for this campaign, generate/use a campaign-aware invitation/deep link.
+
+The invitation must preserve enough information to identify:
+
+**who invited the friend.**
+
+When the friend follows the invitation and enters MaiTroll, associate the invited account with the inviter.
+
+Do NOT count the friend yet.
+
+The friend only becomes eligible to qualify after entering the inviter's actual live broadcast.
+
+---
+
+# 4. STREAM-SPECIFIC QUALIFICATION
+This is extremely important.
+
+The system must identify the **exact stream owned by the inviter**.
+
+Example:
+
+User A invites User B.
+
+User A starts Stream `ABC123`.
+
+User B enters Stream `ABC123`.
+
+The database/event system records:
+
+```
+inviter_user_id = A
+invited_user_id = B
+stream_id = ABC123
+joined_at = timestamp
+```
+User B must then remain present in **Stream ABC123** for at least **60 continuous seconds**.
+
+If B leaves before 60 seconds:
+
+- Do not qualify B.
+- Do not count B toward the 5 friends.
+If B leaves and comes back:
+
+- Restart the continuous 60-second qualification period unless the existing audience-presence system can accurately prove 60 continuous seconds.
+If B watches a different broadcaster:
+
+- That does not count.
+If B goes live themselves:
+
+- That does not count.
+If B joins User A's stream for only a few seconds:
+
+- That does not count.
+The qualifying relationship must remain tied to:
+
+**inviter + invited friend + specific stream_id**
+
+---
+
+# 5. SUPPORT ALL FOUR LIVE EXPERIENCES
+The campaign must work regardless of whether the inviter or invited friend is using:
+
+### Phone
+`PhoneBroadcastPage`
+
+`PhoneViewerPage`
+
+### Web/Desktop
+Web Broadcast Page
+
+Web Viewer Page
+
+Do NOT create separate campaign logic for phone and web.
+
+Use a shared backend/database qualification system.
+
+The client pages should report/consume the same underlying stream and audience-presence information.
+
+## PhoneBroadcastPage
+When the inviter broadcasts from `PhoneBroadcastPage`:
+
+- Their stream must register normally.
+- Invited viewers joining the stream must be detectable.
+- The campaign must receive the correct `stream_id`.
+- Audience presence must remain accurate.
+- Existing camera, LiveKit, seats, chat, gifts, broadcaster controls, and other functionality must not be broken.
+
+## PhoneViewerPage
+When an invited friend watches through `PhoneViewerPage`:
+
+- Their authenticated user ID must be associated with the viewer presence.
+- Their presence in the inviter's exact stream must be recorded.
+- The 60-second timer must be based on actual presence in that stream.
+- Leaving/rejoining must be handled correctly.
+Do not depend on the visual UI to determine qualification.
+
+## Web Broadcast Page
+When the inviter broadcasts from the web:
+
+- Register the exact stream ID.
+- Continue using existing LiveKit/broadcast infrastructure.
+- Invited viewers must be tracked against that stream.
+
+## Web Viewer Page
+When an invited friend watches through the web:
+
+- Register their authenticated viewer identity.
+- Associate their presence with the exact stream.
+- Maintain accurate join/leave/presence timing.
+- Support the same 60-second qualification rules as mobile.
+The four clients must ultimately produce the same backend result.
+
+---
+
+# 6. USE EXISTING AUDIENCE PRESENCE
+Before creating anything new, inspect the existing:
+
+- `useStreamAudiencePresence`
+- viewer presence logic
+- LiveKit room/session logic
+- stream IDs
+- broadcast records
+- viewer join/leave events
+- realtime subscriptions
+- existing audience tracking tables/functions
+Reuse these systems where possible.
+
+Do not create a second competing audience-presence system if the existing system can support this campaign.
+
+The campaign should consume the authoritative viewer-presence information.
+
+---
+
+# 7. 60-SECOND QUALIFICATION
+When an invited friend joins the inviter's stream:
+
+Start/record qualification timing server-side.
+
+After 60 continuous seconds:
+
+1. Verify inviter.
+2. Verify invited friend.
+3. Verify the invitation relationship.
+4. Verify the exact stream ID belongs to the inviter.
+5. Verify the friend actually joined that stream.
+6. Verify continuous viewer presence for at least 60 seconds.
+7. Verify the friend has not already qualified for this inviter/campaign.
+8. Atomically mark the friend as qualified.
+9. Increment the inviter's qualified-friend count.
+10. Determine whether the inviter reached 5/5.
+11. If 5/5 is reached, atomically award 100 Troll Coins.
+Duplicate LiveKit events, reconnects, realtime events, browser refreshes, phone reconnects, and duplicate webhook processing must NOT create duplicate qualifications or rewards.
+
+---
+
+# 8. PROGRESS
+The inviter should be able to see campaign progress:
+
+**GO LIVE & EARN**
+
+**Invite friends into your live stream**
+
+**3 / 5 friends qualified**
+
+A friend only increments this counter after completing the full 60-second requirement.
+
+Do not increment progress simply because someone accepted an invitation.
+
+---
+
+# 9. 100 TROLL COIN REWARD
+When the inviter reaches exactly 5 unique qualified friends:
+
+Award:
+
+**100 Troll Coins**
+
+The reward MUST happen server-side/database-side.
+
+Never trust the client to award coins.
+
+Make the transaction atomic and idempotent.
+
+Create a unique campaign reward record so duplicate events cannot award another 100 coins.
+
+The reward record should contain enough information to audit:
+
+- inviter
+- campaign
+- reward amount
+- qualifying friend IDs
+- timestamp
+- unique reward ID
+Do not break the existing Troll Coin balance system.
+
+Use the existing Troll Coin transaction/RPC infrastructure if available.
+
+---
+
+# 10. “YOU GOT TROLLED” POPUP
+When an invited friend completes the 60-second qualification:
+
+If the inviter has NOT reached 5/5:
+
+Show:
+
+**🧌 YOU GOT TROLLED!**
+
+**Your friend stayed in your live for 1 minute!**
+
+**3/5 friends qualified**
+
+Use the actual current count.
+
+When the inviter reaches 5/5:
+
+Show:
+
+**🧌 YOU GOT TROLLED!**
+
+**+100 Troll Coins**
+
+**You completed the challenge! 🎉**
+
+Make it match the existing MaiTroll cyberpunk/neon design.
+
+Include a fun coin/troll animation.
+
+Do not show `+100` unless the database confirms the reward was actually granted.
+
+---
+
+# 11. OFFLINE INVITER
+If the inviter is not currently inside MaiTroll when the invited friend qualifies:
+
+Send a push notification.
+
+For normal progress:
+
+**🧌 YOU GOT TROLLED!**
+
+**Your friend stayed in your live for 1 minute! Come back to MaiTroll.**
+
+For completion:
+
+**🧌 YOU GOT TROLLED!**
+
+**You earned 100 Troll Coins! 💰**
+
+Deep-link back into MaiTroll.
+
+If the inviter is currently online/in the app, prefer the in-app popup instead of unnecessarily duplicating the push.
+
+---
+
+# 12. ANTI-ABUSE
+Implement server-side protections.
+
+Requirements:
+
+- Same friend cannot count twice for the same campaign.
+- Same friend cannot qualify from multiple streams.
+- A friend must actually enter the inviter's stream.
+- The stream must belong to the inviter.
+- Friend must remain for 60 continuous seconds.
+- Inviter cannot count themselves.
+- Invitation acceptance alone does not count.
+- Watching another stream does not count.
+- Going live does not count.
+- Reconnecting cannot restart/farm qualification incorrectly.
+- Duplicate realtime/LiveKit events cannot award multiple qualifications.
+- Duplicate reward requests cannot award multiple 100-coin rewards.
+- Client cannot directly award coins.
+- Use unique indexes/constraints where appropriate.
+- Use atomic database transactions/RPCs.
+Also inspect existing account/fraud protections and integrate with them instead of duplicating them.
+
+---
+
+# 13. PUSH NOTIFICATION INFRASTRUCTURE
+Before implementing push:
+
+Inspect the existing:
+
+- push notification implementation
+- device token/subscription storage
+- notification preferences
+- `push_notifications_enabled`
+- Edge Functions
+- scheduled functions/jobs
+- existing notification tables
+Reuse the existing system.
+
+Do not create a second push architecture.
+
+The notification must work when:
+
+- app is closed
+- browser is closed
+- phone is asleep
+- user has not opened MaiTroll for hours
+
+---
+
+# 14. 6-HOUR SERVER-SIDE SCHEDULER
+Implement the campaign scheduler server-side.
+
+Every 6 hours:
+
+Find users who:
+
+- are offline
+- have been inactive for >= 6 hours
+- have push enabled
+- have a valid device subscription
+- have not already received the campaign push for the current inactivity period
+Send the push.
+
+Make the scheduler idempotent.
+
+Running the scheduler multiple times must not create duplicate notifications for the same 6-hour inactivity window.
+
+---
+
+# 15. DATABASE DESIGN
+Before adding tables:
+
+Inspect the current Supabase schema.
+
+Reuse existing:
+
+- streams
+- broadcast records
+- viewer presence
+- notifications
+- push subscriptions
+- Troll Coin transactions
+- user profiles
+- activity/last-seen data
+- campaign/reward systems
+Only create new migrations where necessary.
+
+Add appropriate:
+
+- primary keys
+- foreign keys
+- unique constraints
+- indexes
+- RLS policies
+- server-side RPCs/functions
+Do not expose privileged reward operations to clients.
+
+---
+
+# 16. CLIENT INTEGRATION
+Integrate the campaign into both mobile and web without duplicating business logic.
+
+The clients should primarily:
+
+- create/send campaign invitations
+- display campaign progress
+- display campaign popup events
+- navigate from campaign notifications
+- expose the existing stream/viewer identity needed by the backend
+The server/database must remain authoritative for:
+
+- invitation relationship
+- stream relationship
+- viewer qualification
+- 60-second requirement
+- 5-friend count
+- 100 Troll Coin reward
+
+---
+
+# 17. DO NOT BREAK EXISTING LIVE FEATURES
+Before modifying any LiveKit, viewer presence, or broadcast code, inspect how it currently works.
+
+Do NOT break:
+
+- PhoneBroadcastPage camera
+- PhoneBroadcastPage broadcaster controls
+- PhoneBroadcastPage seats
+- PhoneBroadcastPage chat
+- PhoneBroadcastPage gifts
+- PhoneViewerPage viewer functionality
+- web broadcasting
+- web viewing
+- LiveKit connections
+- audience presence
+- stream joining/leaving
+- battles
+- gifts
+- Troll Coins
+- notifications
+Keep campaign logic isolated enough that removing/disabling the campaign would not break live streaming.
+
+---
+
+# 18. PRODUCTION IMPLEMENTATION
+Do not just give me a plan.
+
+Actually inspect the existing MaiTroll codebase and implement this.
+
+Before changing anything:
+
+1. Find the actual PhoneBroadcastPage.
+2. Find the actual PhoneViewerPage.
+3. Find the actual web Broadcast Page.
+4. Find the actual web Viewer Page.
+5. Find `useStreamAudiencePresence`.
+6. Find the existing stream/broadcast tables.
+7. Find the existing viewer presence implementation.
+8. Find the existing notification/push implementation.
+9. Find the existing Troll Coin transaction/reward implementation.
+10. Find the existing last-seen/activity system.
+11. Find the existing scheduled-job/Edge Function infrastructure.
+Then implement the campaign using the existing architecture wherever possible.
+
+---
+
+# 19. TEST BOTH PHONE AND WEB
+Explicitly test these scenarios:
+
+### Test A
+Web inviter → Web invited viewer → same stream → 60 seconds → qualifies.
+
+### Test B
+Web inviter → Phone invited viewer → same stream → 60 seconds → qualifies.
+
+### Test C
+Phone inviter → Web invited viewer → same stream → 60 seconds → qualifies.
+
+### Test D
+Phone inviter → Phone invited viewer → same stream → 60 seconds → qualifies.
+
+### Test E
+Friend joins for 30 seconds → leaves → does NOT qualify.
+
+### Test F
+Friend joins Stream A but watches Stream B → does NOT qualify for Stream A.
+
+### Test G
+Same friend reconnects repeatedly → still only counts once.
+
+### Test H
+Five different invited friends qualify → inviter receives exactly 100 Troll Coins.
+
+### Test I
+Duplicate LiveKit/realtime events → no duplicate reward.
+
+### Test J
+Inviter is offline when reward is earned → push notification is delivered.
+
+### Test K
+User inactive for 6+ hours → campaign push is sent.
+
+### Test L
+User becomes active → 6-hour inactivity window resets.
+
+---
+
+# 20. FINAL REPORT
+When implementation is complete, report exactly:
+
+- Files changed
+- Migrations created
+- Tables created/modified
+- RPCs/functions created/modified
+- Edge Functions created/modified
+- Scheduled jobs created/modified
+- PhoneBroadcastPage changes
+- PhoneViewerPage changes
+- Web Broadcast Page changes
+- Web Viewer Page changes
+- Audience-presence changes
+- Invitation tracking implementation
+- Exact 60-second qualification logic
+- Exact 5-friend qualification logic
+- Exact 100 Troll Coin reward logic
+- How duplicate rewards are prevented
+- How the exact `stream_id` is verified
+- How offline push notifications work
+- How the 6-hour scheduler works
+- How the system handles phone → web, web → phone, phone → phone, and web → web
+- Any Supabase dashboard configuration required manually
+- Any environment variables/secrets required
+- Any remaining limitations
+**Most important:** Do not implement the campaign as “friend went live for 1 minute.”
+
+The actual rule is:
+
+**INVITE FRIEND → FRIEND ENTERS INVITER'S LIVE STREAM → FRIEND STAYS IN THAT SPECIFIC STREAM FOR 60 CONTINUOUS SECONDS → FRIEND QUALIFIES → 5 UNIQUE QUALIFIED FRIENDS → INVITER GETS 100 TROLL COINS.**

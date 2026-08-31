@@ -588,6 +588,7 @@ export default function PhoneHomepage({
     liveAuctions,
     onlineUsers,
     loadingLive,
+    refresh,
   } = useLiveContent()
 
   const { newPostCount } = useWallNotifications(false)
@@ -640,15 +641,12 @@ export default function PhoneHomepage({
     setRefreshing(true)
 
     try {
-      window.dispatchEvent(
-        new CustomEvent('maitroll-refresh-live-content'),
-      )
-
-      await new Promise((resolve) => setTimeout(resolve, 700))
+      await refresh()
+      await new Promise((resolve) => setTimeout(resolve, 300))
     } finally {
       setRefreshing(false)
     }
-  }, [])
+  }, [refresh])
 
   useEffect(() => {
     window.scrollTo({
@@ -668,6 +666,20 @@ export default function PhoneHomepage({
       window.removeEventListener('phone-open-live', handleOpenLive)
     }
   }, [go])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refresh()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [refresh])
 
   if (isLoading) {
     return (
@@ -739,16 +751,23 @@ export default function PhoneHomepage({
           </div>
 
           <button
-            type="button"
-            onClick={() => go('/go-live')}
-            className={`${glass} flex flex-col items-center justify-center rounded-2xl p-3 transition active:scale-[0.97]`}
-          >
-            <Radio size={14} className="text-red-500" />
+  type="button"
+  onClick={() => go('/go-live')}
+  className="group flex flex-col items-center justify-center rounded-2xl border border-red-400 bg-red-500 p-3 text-black shadow-[0_0_25px_rgba(239,68,68,0.25)] transition active:scale-[0.97] hover:bg-red-400"
+>
+  <Radio
+    size={18}
+    className="text-black transition group-hover:scale-110"
+  />
 
-            <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-red-400">
-              Click to Go Live
-            </p>
-          </button>
+  <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-black">
+    GO LIVE
+  </p>
+
+  <p className="mt-0.5 text-[7px] font-black uppercase tracking-wider text-black/70">
+    Start Broadcast
+  </p>
+</button>
 
           <div className={`${glass} rounded-2xl p-3`}>
             <Users size={14} className="text-emerald-300" />

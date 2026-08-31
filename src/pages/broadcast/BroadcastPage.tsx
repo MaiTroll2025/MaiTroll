@@ -7412,18 +7412,18 @@ const toggleMicrophone = useCallback(async () => {
                             )}
                             style={{ animation: 'slideInFromTop 0.3s ease-out' }}
                           >
-                            <button
-                              onClick={() => handleOpenFloatingChatUsername(msg.username, msg.user_id)}
-                              className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
-                              title={`View ${msg.username}'s profile`}
-                            >
-                              {msg.username}
-                              {subscriberUsernames?.has(msg.username) && (
-                                <Crown className="w-3 h-3 text-yellow-400" />
-                              )}
-                            </button>
-                            <span className="text-white/40 mx-1">:</span>
-                            <span className="text-white/90">{msg.content}</span>
+                             <button
+                               onClick={() => handleOpenFloatingChatUsername(msg.username, msg.user_id)}
+                               className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
+                               title={`View ${msg.username}'s profile`}
+                             >
+                               {msg.username}
+                               {subscriberUsernames?.has(msg.username) && (
+                                 <Crown className="w-3 h-3 text-yellow-400" />
+                               )}
+                             </button>
+                             <span className="text-white/40 mx-1">sent:</span>
+                             <span className="text-white/90">{msg.content}</span>
                             {canPinMessages && (
                               <button
                                 onClick={() => isPinned ? handleUnpinMessage(msg.id) : handlePinMessage(msg.id)}

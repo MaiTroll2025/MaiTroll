@@ -66,6 +66,7 @@ import {
 import {
   GiftSystemProvider,
 } from '@/lib/hooks/useGiftSystem'
+import UndoRecentGiftBar from '@/components/broadcast/UndoRecentGiftBar'
 import { useTargetedGiftQueue, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
 import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
@@ -989,6 +990,15 @@ export default function PhoneViewerPage() {
 
   const [liked, setLiked] =
     useState(false)
+
+  const [
+    tapIndicators,
+    setTapIndicators,
+  ] = useState<Array<{
+    id: string
+    x: number
+    y: number
+  }>>([])
 
   const [seatFocus, setSeatFocus] =
     useState<number | null>(null)
@@ -3261,6 +3271,51 @@ export default function PhoneViewerPage() {
       handleLike,
     ])
 
+  const handleVideoTap =
+    useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect =
+          e.currentTarget.getBoundingClientRect()
+
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        const x =
+          e.clientX -
+          rect.left
+        const y =
+          e.clientY -
+          rect.top
+
+        setTapIndicators(
+          previous => [
+            ...previous,
+            { id, x, y },
+          ],
+        )
+
+        window.setTimeout(
+          () => {
+            setTapIndicators(
+              previous =>
+                previous.filter(
+                  t => t.id !== id,
+                ),
+            )
+          },
+          900,
+        )
+
+        void handleLike()
+
+        if (!showControls) {
+          setShowControls(true)
+        }
+      },
+      [
+        handleLike,
+        showControls,
+      ],
+    )
+
   /* ========================================================================
      SEATS
   ======================================================================== */
@@ -3643,8 +3698,9 @@ export default function PhoneViewerPage() {
   if (shouldShowRandomBattleArena) {
     return (
       <ErrorBoundary>
-        <GiftSystemProvider streamId={streamId} defaultReceiverId={stream.user_id}>
-          <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
+    <GiftSystemProvider streamId={streamId} defaultReceiverId={stream.user_id}>
+      <UndoRecentGiftBar />
+      <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
             <BattleView
               key={activeBattleId}
               battleId={stream.battle_id!}
@@ -3711,6 +3767,7 @@ export default function PhoneViewerPage() {
         stream.user_id
       }
     >
+      <UndoRecentGiftBar />
       <div
         className="relative h-[100dvh] w-full overflow-hidden bg-[#02030a] text-white"
         onClick={() => {
@@ -3721,36 +3778,10 @@ export default function PhoneViewerPage() {
       >
 
         {/* ================================================================
-            BROADCAST BACKDROP
+            FULL-SCREEN BROADCASTER VIDEO
         ================================================================= */}
 
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px]" />
-
-          <div className="absolute -right-40 top-1/3 h-[28rem] w-[28rem] rounded-full bg-violet-600/10 blur-[140px]" />
-
-          <div className="absolute bottom-[-12rem] left-1/2 h-96 w-[140%] -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-500/10 via-violet-600/15 to-cyan-500/10 blur-[120px]" />
-
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_25%,rgba(0,0,0,0.65)_100%)]" />
-        </div>
-
-        {/* ================================================================
-            NORMAL BROADCAST
-            Battle sits ABOVE this surface.
-        ================================================================= */}
-
-        <div
-          className={cn(
-            'absolute inset-0 z-10 transition-all duration-500',
-            battleActive
-              ? 'scale-[0.985] opacity-25'
-              : 'scale-100 opacity-100',
-          )}
-          onClick={event => {
-            event.stopPropagation()
-            handleBroadcasterTap()
-          }}
-        >
+        <div className="absolute inset-0 z-0">
           <PhoneRemoteVideo
             participant={
               broadcasterState.participant
@@ -3761,8 +3792,6 @@ export default function PhoneViewerPage() {
             className="h-full w-full"
             fallback={
               <div className="flex h-full w-full flex-col items-center justify-center bg-[#050711]">
-                <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/[0.03] via-transparent to-violet-500/[0.08]" />
-
                 <div className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-cyan-300/20 bg-cyan-500/10 shadow-[0_0_50px_rgba(34,211,238,0.12)]">
                   <Radio className="h-8 w-8 animate-pulse text-cyan-300/70" />
                 </div>
@@ -3778,21 +3807,65 @@ export default function PhoneViewerPage() {
             }
           />
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/80" />
+          <div
+            className="absolute inset-0 z-[1]"
+            onClick={handleVideoTap}
+          />
 
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(34,211,238,0.025),transparent_30%,rgba(168,85,247,0.04))]" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70" />
         </div>
 
         {/* ================================================================
-            TOP CONTROLS
+            FLOATING LIKE INDICATORS
+        ================================================================= */}
 
-            Hidden while battle is active so the battle gets the entire
-            phone viewport.
+        {!battleActive &&
+          tapIndicators.length > 0 && (
+            <div className="pointer-events-none absolute inset-0 z-[60] overflow-hidden">
+              {tapIndicators.map(
+                (indicator) => {
+                  const hue =
+                    indicator.id.charCodeAt(
+                      indicator.id.length -
+                        1,
+                    ) %
+                    2 ===
+                    0
+                      ? 190
+                      : 270
+
+                  return (
+                    <div
+                      key={
+                        indicator.id
+                      }
+                      className="absolute mt-pop font-black text-lg"
+                      style={{
+                        left:
+                          indicator
+                            .x,
+                        top:
+                          indicator
+                            .y,
+                        color: `hsl(${hue}, 100%, 70%)`,
+                        textShadow: `0 0 10px hsl(${hue}, 100%, 50%), 0 0 20px hsl(${hue}, 100%, 40%)`,
+                      }}
+                    >
+                      MT
+                    </div>
+                  )
+                },
+              )}
+            </div>
+          )}
+
+        {/* ================================================================
+            AUDIENCE TICKER + VIEWER CONTROLS (top)
         ================================================================= */}
 
         {stream && (
-          <div className="absolute inset-x-0 top-0 z-30 flex flex-col items-center px-3 pt-[52px] pointer-events-none gap-2">
-            <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-2 py-1.5 backdrop-blur-xl shadow-[0_2px_24px_0_rgba(34,211,238,0.10)]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
+            <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
               <MobileAudienceTicker
                 audience={audienceWithAnon}
                 currentUserId={user?.id}
@@ -3803,50 +3876,95 @@ export default function PhoneViewerPage() {
               />
             </div>
 
-            {!battleActive && broadcasterCityStatus.data && (
-              <div className="pointer-events-auto w-full flex justify-center">
-                <CityStatusOrb
-                  data={
-                    broadcasterCityStatus.data
-                  }
-                  permissions={{
-                    isSelf: false,
-                    canCheckLicense: false,
-                    canRaid: true,
-                    canRepair: true,
-                    canEnforce: false,
-                    canRemoveFromSeat: false,
-                    canAccessAll: false,
-                  }}
-                  compact
-                  onHouseClick={() => {
-                    const targetUser =
-                      broadcasterCityStatus.data
-
-                    if (
-                      targetUser?.house_id &&
-                      targetUser.id !==
-                        user?.id
-                    ) {
-                      setSelectedSeatUserId(
-                        targetUser.id,
-                      )
-                    }
-                  }}
-                  onRaid={() => {
-                    const targetUser =
-                      broadcasterCityStatus.data
-                    if (targetUser?.id && targetUser.id !== user?.id) {
-                      setBroadcastRaidTarget(targetUser.id)
-                    }
-                  }}
-                />
-
-                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#080912] bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+            <div className="flex w-full items-center gap-1.5">
+              <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-2.5 py-1 backdrop-blur-md">
+                <Users size={10} className="text-white/60" />
+                <span className="text-[9px] font-black text-white/70">
+                  {Math.max(
+                    viewerCount,
+                    activeAudience?.length ||
+                      0,
+                  ) || 0}
+                </span>
+                <span className="text-[8px] font-bold uppercase tracking-wider text-white/30">
+                  watching
+                </span>
               </div>
-            )}
+
+              <div className="pointer-events-auto ml-auto flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLiked(true)
+                    void handleLike()
+                    window.setTimeout(
+                      () => {
+                        setLiked(false)
+                      },
+                      700,
+                    )
+                  }}
+                  className="flex h-8 w-8 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                >
+                  <Heart
+                    size={12}
+                    className={cn(
+                      liked
+                        ? 'fill-pink-300 text-pink-300'
+                        : 'text-white',
+                    )}
+                  />
+                  <span className="text-[6px] font-black leading-none text-white">
+                    {Math.max(
+                      0,
+                      Number(
+                        (stream as any)
+                          ?.total_likes ??
+                          0,
+                      ) +
+                        pendingLikesRef.current,
+                    ).toLocaleString()}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGift}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-violet-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                >
+                  <Gift
+                    size={12}
+                    className="text-violet-300"
+                  />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.share?.({
+                        title: `@${hostName} on MaiTroll`,
+                        url: window.location.href,
+                      })
+                    } catch {
+                      // cancelled
+                    }
+                  }}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-cyan-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                >
+                  <Share2
+                    size={12}
+                    className="text-cyan-300"
+                  />
+                </button>
+              </div>
+            </div>
           </div>
         )}
+
+        {/* ================================================================
+            TOP CONTROLS (back + mai bag)
+        ================================================================= */}
 
         {showControls &&
           !battleActive && (
@@ -3857,7 +3975,6 @@ export default function PhoneViewerPage() {
               }
             >
               <div className="flex items-start justify-between gap-3">
-
                 <div className="flex flex-col items-start gap-2">
                   <button
                     type="button"
@@ -3872,116 +3989,6 @@ export default function PhoneViewerPage() {
                   {streamId && (
                     <MaiBag streamId={streamId} compact />
                   )}
-                </div>
-
-                <div className="flex shrink-0 items-center gap-1.5">
-
-                  <div className="flex items-center gap-1.5 rounded-full border border-cyan-300/20 bg-black/45 px-2 py-1.5 backdrop-blur-xl">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inset-0 animate-ping rounded-full bg-cyan-400/50" />
-
-                      <span className="relative h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_9px_rgba(103,232,249,0.9)]" />
-                    </span>
-
-                    <span className="text-[8px] font-black uppercase tracking-[0.14em] text-cyan-100">
-                      LIVE
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-0.5">
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLiked(true)
-
-                        void handleLike()
-
-                        window.setTimeout(
-                          () => {
-                            setLiked(false)
-                          },
-                          700,
-                        )
-                      }}
-                      className="flex h-6 w-6 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-xl transition active:scale-90"
-                    >
-                      <Heart
-                        size={10}
-                        className={cn(
-                          liked
-                            ? 'fill-pink-300 text-pink-300'
-                            : 'text-white',
-                        )}
-                      />
-
-                      <span className="text-[6px] font-black leading-none text-white">
-                        {Math.max(
-                          0,
-                          Number(
-                            (stream as any)
-                              ?.total_likes ??
-                              0,
-                          ) +
-                            pendingLikesRef.current,
-                        ).toLocaleString()}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={
-                        handleGift
-                      }
-                      className="grid h-6 w-6 place-items-center rounded-full border border-violet-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
-                    >
-                      <Gift
-                        size={10}
-                        className="text-violet-300"
-                      />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          await navigator.share?.({
-                            title: `@${hostName} on MaiTroll`,
-                            url: window.location.href,
-                          })
-                        } catch {
-                          // cancelled
-                        }
-                      }}
-                      className="grid h-6 w-6 place-items-center rounded-full border border-cyan-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
-                    >
-                      <Share2
-                        size={10}
-                        className="text-cyan-300"
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-2 flex justify-center">
-                <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 backdrop-blur-xl">
-                  <Users
-                    size={11}
-                    className="text-white/60"
-                  />
-
-                  <span className="text-[9px] font-black text-white/70">
-                    {Math.max(
-                      viewerCount,
-                      activeAudience?.length ||
-                        0,
-                    ) || 0}
-                  </span>
-
-                  <span className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/30">
-                    watching
-                  </span>
                 </div>
               </div>
             </div>
@@ -4271,11 +4278,11 @@ export default function PhoneViewerPage() {
                 key={msg.id}
                 className="animate-in fade-in slide-in-from-bottom-2 duration-300 pointer-events-auto"
               >
-                <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
-                  <span className="text-[10px] font-black text-cyan-300">{msg.username}</span>
-                  <span className="text-[10px] font-bold text-white/40">: </span>
-                  <span className="text-[10px] font-semibold text-white/90">{msg.content}</span>
-                </div>
+                 <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
+                   <span className="text-[10px] font-black text-cyan-300">{msg.username}</span>
+                   <span className="text-[10px] font-bold text-white/40"> sent: </span>
+                   <span className="text-[10px] font-semibold text-white/90">{msg.content}</span>
+                 </div>
               </div>
             ))}
           </div>

@@ -50,6 +50,7 @@ import { useTargetedGiftQueue, type StreamGiftEvent } from '../../hooks/useTarge
 
 
 import { GiftSystemProvider } from '../../lib/hooks/useGiftSystem'
+import UndoRecentGiftBar from '../../components/broadcast/UndoRecentGiftBar'
 import BattleView from '../../pages/broadcast/BattleView'
 import { useBoxCount } from '../../hooks/useBoxCount'
 import ProfileFrame from '@/components/profile/ProfileFrame'
@@ -3668,6 +3669,7 @@ useStreamRealtime(
     return (
       <ErrorBoundary>
         <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
+          <UndoRecentGiftBar />
           <div className="relative flex h-dvh w-full flex-col overflow-hidden">
             <BattleView
               key={activeBattleId}
@@ -3708,6 +3710,7 @@ useStreamRealtime(
 
   return (
     <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
+      <UndoRecentGiftBar />
       <ErrorBoundary>
         {/* Broadofficer appointment notification popup */}
         {broadofficerPopupVisible && (
@@ -5391,39 +5394,39 @@ useStreamRealtime(
                           transition={{ duration: 28, ease: 'linear' }}
                      className="pointer-events-auto mb-1 max-w-[85%] self-start bg-transparent"
                    >
-                     {isModOrHigher ? (
-                       <button
-                         type="button"
-                         onClick={(e) => { e.stopPropagation(); handleOpenFloatingChatUsername(message.username) }}
-                         className="font-black text-[12px] inline-flex items-center gap-1 cursor-pointer"
-                         style={{
-                           color: '#ffffff',
-                           textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-                         }}
-                       >
-                         {message.username}
-                       </button>
-                     ) : (
-                       <span
-                         className="font-black text-[12px] inline-flex items-center gap-1"
-                         style={{
-                           color: '#ffffff',
-                           textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-                         }}
-                       >
-                         {message.username}
-                       </span>
-                     )}
-                     {' '}
-                     <span
-                       className="text-[12px]"
-                       style={{
-                         color: '#ffffff',
-                         textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-                       }}
-                     >
-                       {message.content}
-                     </span>
+                      {isModOrHigher ? (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleOpenFloatingChatUsername(message.username) }}
+                          className="font-black text-[12px] inline-flex items-center gap-1 cursor-pointer"
+                          style={{
+                            color: '#ffffff',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+                          }}
+                        >
+                          {message.username}
+                        </button>
+                      ) : (
+                        <span
+                          className="font-black text-[12px] inline-flex items-center gap-1"
+                          style={{
+                            color: '#ffffff',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+                          }}
+                        >
+                          {message.username}
+                        </span>
+                      )}
+                      {' sent: '}
+                      <span
+                        className="text-[12px]"
+                        style={{
+                          color: '#ffffff',
+                          textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+                        }}
+                      >
+                        {message.content}
+                      </span>
                    </motion.div>
                    )
                  })}
@@ -5496,7 +5499,7 @@ useStreamRealtime(
                           >
                             {msg.username}
                           </button>
-                          <span className="mx-0.5 text-white/30">:</span>
+                          <span className="mx-0.5 text-white/30">sent:</span>
                           <span
                             className="text-[11px]"
                             style={{

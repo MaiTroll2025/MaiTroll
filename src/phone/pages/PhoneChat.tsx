@@ -18,6 +18,7 @@ import {
   CheckCheck,
   Sparkles,
   Lock,
+  ChevronRight,
 } from 'lucide-react'
 import {
   getThreads,
@@ -61,8 +62,12 @@ function formatTime(dateStr: string): string {
   })
 }
 
-function getMessageTimestamp(message: UtromailMessage) {
+function getMessageTimestamp(message: UtromailMessage): string {
   return message.sent_at || message.created_at
+}
+
+function getInitial(name?: string | null): string {
+  return (name || '?').charAt(0).toUpperCase()
 }
 
 export default function PhoneChat() {
@@ -87,15 +92,11 @@ export default function PhoneChat() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const realtimeChannelsRef = useRef<ReturnType<
-    typeof supabase.channel
-  >[]>([])
+  const realtimeChannelsRef = useRef<
+    ReturnType<typeof supabase.channel>[]
+  >([])
 
-  const pendingMessagesRef = useRef<
-    Map<string, string>
-  >(new Map())
-
-  const shouldStickToBottomRef = useRef(true)
+  const pendingMessagesRef = useRef<Map<string, string>>(new Map())
 
   /*
    * ------------------------------------------------------------
@@ -108,7 +109,6 @@ export default function PhoneChat() {
 
     try {
       const data = await getThreads(user.id, 'inbox')
-
       setThreads(data || [])
     } catch (err) {
       console.error('[PhoneChat] Error fetching threads:', err)
@@ -118,13 +118,18 @@ export default function PhoneChat() {
   }, [user?.id])
 
   useEffect(() => {
-    fetchThreads()
+    void fetchThreads()
   }, [fetchThreads])
 
   /*
    * ------------------------------------------------------------
-   * KEEP CONVERSATION AT TOP
+   * MOVE THREAD TO TOP
    * ------------------------------------------------------------
+   *
+   * IMPORTANT:
+   * UtromailThread.last_message is typed as a complete
+   * UtromailMessage. We therefore never construct a partial
+   * last_message object here.
    */
 
   const moveThreadToTop = useCallback(
@@ -138,34 +143,31 @@ export default function PhoneChat() {
           (thread) => thread.id === threadIdToMove,
         )
 
-        if (index === -1) {
-          return prev
-        }
+        if (index === -1) return prev
 
         const existing = prev[index]
 
+        const messageTime =
+          timestamp ||
+          existing.last_message_at ||
+          new Date().toISOString()
+
+        let updatedLastMessage = existing.last_message
+
+        if (existing.last_message && previewBody) {
+          updatedLastMessage = {
+            ...existing.last_message,
+            body: previewBody,
+            sent_at: messageTime,
+            created_at: messageTime,
+            updated_at: messageTime,
+          }
+        }
+
         const updated: UtromailThread = {
           ...existing,
-
-          last_message_at:
-            timestamp ||
-            existing.last_message_at ||
-            new Date().toISOString(),
-
-          last_message: previewBody
-            ? {
-                ...(existing.last_message || {}),
-                body: previewBody,
-                sent_at:
-                  timestamp ||
-                  existing.last_message?.sent_at ||
-                  new Date().toISOString(),
-                created_at:
-                  timestamp ||
-                  existing.last_message?.created_at ||
-                  new Date().toISOString(),
-              }
-            : existing.last_message,
+          last_message_at: messageTime,
+          last_message: updatedLastMessage,
         }
 
         return [
@@ -202,11 +204,6 @@ export default function PhoneChat() {
         )
 
         await markThreadAsRead(tid, user.id)
-
-        /*
-         * Refresh the thread list after opening so unread count
-         * disappears immediately.
-         */
         await fetchThreads()
 
         requestAnimationFrame(() => {
@@ -234,12 +231,12 @@ export default function PhoneChat() {
       return
     }
 
-    fetchMessages(activeThreadId)
+    void fetchMessages(activeThreadId)
   }, [activeThreadId, fetchMessages])
 
   /*
    * ------------------------------------------------------------
-   * PREMIUM AUTO SCROLL
+   * SCROLL
    * ------------------------------------------------------------
    */
 
@@ -280,10 +277,6 @@ export default function PhoneChat() {
 
             if (!newMsg?.id) return
 
-            /*
-             * If this realtime message corresponds to an
-             * optimistic message, replace the temporary one.
-             */
             const matchingLocalId =
               pendingMessagesRef.current.get(newMsg.id)
 
@@ -301,14 +294,9 @@ export default function PhoneChat() {
               )
 
               pendingMessagesRef.current.delete(newMsg.id)
-
               return
             }
 
-            /*
-             * Fetch complete row because realtime payload may
-             * not contain all message fields.
-             */
             const { data: fullMsg } = await supabase
               .from('utromail_messages')
               .select('*')
@@ -317,15 +305,12 @@ export default function PhoneChat() {
 
             const msgData = fullMsg || newMsg
 
-            /*
-             * Our optimistic sender message already exists.
-             * Never duplicate our own message.
-             */
             if (msgData.sender_id === user.id) {
               setMessages((prev) => {
                 if (
                   prev.some(
-                    (message) => message.id === msgData.id,
+                    (message) =>
+                      message.id === msgData.id,
                   )
                 ) {
                   return prev
@@ -357,27 +342,33 @@ export default function PhoneChat() {
               subject: msgData.subject,
               body: msgData.body,
               body_html: msgData.body_html,
-              message_type: msgData.message_type,
-              is_starred: false,
-              is_draft: false,
+              message_type:
+                msgData.message_type || 'normal',
+              is_starred:
+                msgData.is_starred ?? false,
+              is_draft:
+                msgData.is_draft ?? false,
               parent_message_id:
                 msgData.parent_message_id,
-              sent_at: msgData.sent_at,
+              sent_at:
+                msgData.sent_at || msgData.created_at,
               created_at: msgData.created_at,
-              updated_at: msgData.updated_at,
+              updated_at:
+                msgData.updated_at ||
+                msgData.created_at,
 
               sender_name:
                 (senderProfile as any)?.display_name ||
                 (senderProfile as any)?.username ||
-                null,
+                undefined,
 
               sender_username:
                 (senderProfile as any)?.username ||
-                null,
+                undefined,
 
               sender_avatar:
                 (senderProfile as any)?.avatar_url ||
-                null,
+                undefined,
 
               is_read: true,
               local_status: 'sent',
@@ -386,7 +377,8 @@ export default function PhoneChat() {
             setMessages((prev) => {
               if (
                 prev.some(
-                  (message) => message.id === mappedMsg.id,
+                  (message) =>
+                    message.id === mappedMsg.id,
                 )
               ) {
                 return prev
@@ -395,10 +387,6 @@ export default function PhoneChat() {
               return [...prev, mappedMsg]
             })
 
-            /*
-             * Incoming message immediately becomes the newest
-             * message in the inbox.
-             */
             moveThreadToTop(
               activeThreadId,
               mappedMsg.body,
@@ -429,7 +417,7 @@ export default function PhoneChat() {
           (item) => item !== channel,
         )
 
-      supabase.removeChannel(channel)
+      void supabase.removeChannel(channel)
     }
   }, [
     activeThreadId,
@@ -440,10 +428,7 @@ export default function PhoneChat() {
 
   /*
    * ------------------------------------------------------------
-   * REALTIME THREAD LIST
-   *
-   * This keeps the inbox alive even when the user is not inside
-   * the conversation.
+   * REALTIME INBOX
    * ------------------------------------------------------------
    */
 
@@ -463,33 +448,18 @@ export default function PhoneChat() {
           const newMsg = payload.new as any
 
           if (!newMsg?.thread_id) return
-
-          /*
-           * Ignore messages created by this user here.
-           * handleSend already updates the inbox instantly.
-           */
           if (newMsg.sender_id === user.id) return
 
           try {
             const threadIdFromMessage =
               newMsg.thread_id
 
-            /*
-             * If this is the currently opened conversation,
-             * the active channel handles the actual message.
-             */
             if (
-              threadIdFromMessage ===
-              activeThreadId
+              threadIdFromMessage === activeThreadId
             ) {
               return
             }
 
-            /*
-             * Refreshing the thread list here is intentionally
-             * lightweight. It guarantees the conversation gets
-             * its correct participant/unread metadata.
-             */
             const latestThreads = await getThreads(
               user.id,
               'inbox',
@@ -514,13 +484,13 @@ export default function PhoneChat() {
           (item) => item !== channel,
         )
 
-      supabase.removeChannel(channel)
+      void supabase.removeChannel(channel)
     }
   }, [activeThreadId, user?.id])
 
   /*
    * ------------------------------------------------------------
-   * JAIL STATUS LISTENER
+   * JAIL STATUS
    * ------------------------------------------------------------
    */
 
@@ -538,22 +508,19 @@ export default function PhoneChat() {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          fetchThreads()
+          void fetchThreads()
         },
       )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      void supabase.removeChannel(channel)
     }
   }, [user?.id, fetchThreads])
 
   /*
    * ------------------------------------------------------------
    * SEND MESSAGE
-   *
-   * Optimistic UI:
-   * The message appears BEFORE Supabase finishes.
    * ------------------------------------------------------------
    */
 
@@ -574,11 +541,6 @@ export default function PhoneChat() {
     if (!activeThread) return
 
     const body = replyText.trim()
-
-    /*
-     * We use the last existing message to determine the
-     * recipient exactly like the original system.
-     */
     const lastMsg = messages[messages.length - 1]
 
     if (!lastMsg) {
@@ -590,60 +552,49 @@ export default function PhoneChat() {
 
     const recipientId =
       lastMsg.sender_id === user.id
-        ? lastMsg.recipient_id!
+        ? lastMsg.recipient_id
         : lastMsg.sender_id
 
     const recipientMail =
       lastMsg.sender_id === user.id
-        ? lastMsg.recipient_mail_address!
+        ? lastMsg.recipient_mail_address
         : lastMsg.sender_mail_address
 
-    /*
-     * Unique temporary ID.
-     */
+    if (!recipientId || !recipientMail) {
+      toast.error(
+        'Unable to determine the recipient.',
+      )
+      return
+    }
+
     const localId = `local-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2)}`
 
     const now = new Date().toISOString()
 
-    /*
-     * PREMIUM INSTANT MESSAGE
-     */
     const optimisticMessage: LocalMessage = {
       id: localId,
-
       local_id: localId,
-
       thread_id: activeThreadId,
-
       sender_id: user.id,
-
       sender_mail_address:
         `${profile?.username || 'user'}@utromail`,
-
       recipient_id: recipientId,
-
       recipient_mail_address: recipientMail,
-
       subject: 'Direct Message',
-
       body,
-
       body_html: null,
 
-      message_type: 'direct',
+      // MessageType does not contain "direct".
+      // Normal is the correct type for a regular private message.
+      message_type: 'normal',
 
       is_starred: false,
-
       is_draft: false,
-
       parent_message_id: lastMsg.id,
-
       sent_at: now,
-
       created_at: now,
-
       updated_at: now,
 
       sender_name:
@@ -652,43 +603,28 @@ export default function PhoneChat() {
         'You',
 
       sender_username:
-        profile?.username || null,
+        profile?.username || undefined,
 
       sender_avatar:
-        profile?.avatar_url || null,
+        profile?.avatar_url || undefined,
 
       is_read: false,
-
       local_status: 'sending',
     }
 
-    /*
-     * Put message into UI immediately.
-     */
     setMessages((prev) => [
       ...prev,
       optimisticMessage,
     ])
 
-    /*
-     * Immediately move conversation to top of inbox.
-     */
     moveThreadToTop(
       activeThreadId,
       body,
       now,
     )
 
-    /*
-     * Clear input immediately.
-     */
     setReplyText('')
-
-    /*
-     * Scroll immediately.
-     */
     scrollToBottom('smooth')
-
     setSending(true)
 
     try {
@@ -699,19 +635,13 @@ export default function PhoneChat() {
           `${profile?.username || 'user'}@utromail`,
 
         recipientId,
-
         recipientMail,
 
         subject: 'Direct Message',
-
         body,
-
         parentMessageId: lastMsg.id,
       })
 
-      /*
-       * Replace optimistic message with real DB message.
-       */
       if (sentMessage?.id) {
         pendingMessagesRef.current.set(
           sentMessage.id,
@@ -731,15 +661,20 @@ export default function PhoneChat() {
                   created_at:
                     sentMessage.created_at ||
                     message.created_at,
+                  updated_at:
+                    sentMessage.updated_at ||
+                    message.updated_at,
+                  message_type:
+                    sentMessage.message_type ||
+                    message.message_type,
+                  is_read:
+                    sentMessage.is_read ??
+                    message.is_read,
                 }
               : message,
           ),
         )
       } else {
-        /*
-         * If the service doesn't return the created row,
-         * still mark the optimistic message as sent.
-         */
         setMessages((prev) =>
           prev.map((message) =>
             message.local_id === localId
@@ -752,9 +687,6 @@ export default function PhoneChat() {
         )
       }
 
-      /*
-       * Keep conversation at the very top.
-       */
       moveThreadToTop(
         activeThreadId,
         body,
@@ -766,10 +698,6 @@ export default function PhoneChat() {
         err,
       )
 
-      /*
-       * Mark the bubble failed rather than silently
-       * disappearing.
-       */
       setMessages((prev) =>
         prev.map((message) =>
           message.local_id === localId
@@ -781,9 +709,6 @@ export default function PhoneChat() {
         ),
       )
 
-      /*
-       * Put text back in composer.
-       */
       setReplyText(body)
 
       toast.error(
@@ -892,6 +817,11 @@ export default function PhoneChat() {
       )
     : null
 
+  const activeDisplayName =
+    activeOther?.display_name ||
+    activeOther?.username ||
+    'Unknown'
+
   /*
    * ------------------------------------------------------------
    * UI
@@ -899,74 +829,80 @@ export default function PhoneChat() {
    */
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#05030C] text-white">
-      {/* Premium neon atmosphere */}
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#03040A] text-white">
+      {/* PREMIUM ATMOSPHERE */}
+
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-[#00BFFF]/10 blur-[120px]" />
+        <div className="absolute -left-40 -top-40 h-[28rem] w-[28rem] rounded-full bg-[#00BFFF]/10 blur-[140px]" />
 
-        <div className="absolute -right-32 top-20 h-96 w-96 rounded-full bg-[#BF00FF]/10 blur-[130px]" />
+        <div className="absolute -right-40 top-0 h-[32rem] w-[32rem] rounded-full bg-[#BF00FF]/10 blur-[150px]" />
 
-        <div className="absolute bottom-0 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#00BFFF]/5 blur-[120px]" />
+        <div className="absolute bottom-[-12rem] left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-[#00BFFF]/[0.045] blur-[140px]" />
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.035),transparent_35%)]" />
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-white/[0.08] bg-[#07050F]/85 px-4 backdrop-blur-2xl">
-        <button
-          type="button"
-          className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.04] text-white transition active:scale-95"
-          onClick={() =>
-            activeThreadId
-              ? backToThreads()
-              : navigate(-1)
-          }
-        >
-          <ArrowLeft size={18} />
-        </button>
+      {/* TOP HEADER */}
 
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1.5">
-            <Sparkles
-              size={12}
-              className="text-[#00BFFF]"
+      <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#05060D]/80 backdrop-blur-2xl">
+        <div className="mx-auto flex h-[68px] w-full max-w-3xl items-center justify-between px-4">
+          <button
+            type="button"
+            onClick={() =>
+              activeThreadId
+                ? backToThreads()
+                : navigate(-1)
+            }
+            className="group grid h-10 w-10 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-white/75 shadow-[0_8px_30px_rgba(0,0,0,0.25)] transition-all hover:border-white/[0.15] hover:bg-white/[0.07] hover:text-white active:scale-95"
+            aria-label="Back"
+          >
+            <ArrowLeft
+              size={18}
+              className="transition-transform group-hover:-translate-x-0.5"
             />
+          </button>
 
-            <h1 className="text-[13px] font-black uppercase tracking-[0.22em]">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2">
+              <Sparkles
+                size={12}
+                className="text-[#00BFFF]"
+              />
+
+              <h1 className="text-[12px] font-black uppercase tracking-[0.28em] text-white">
+                {activeThreadId
+                  ? activeDisplayName
+                  : 'UTroMail'}
+              </h1>
+
+              <Sparkles
+                size={12}
+                className="text-[#BF00FF]"
+              />
+            </div>
+
+            <p className="mt-1 text-[8px] font-black uppercase tracking-[0.25em] text-white/30">
               {activeThreadId
-                ? activeOther?.display_name ||
-                  activeOther?.username ||
-                  'Chat'
+                ? 'Private conversation'
                 : 'Messages'}
-            </h1>
-
-            <Sparkles
-              size={12}
-              className="text-[#BF00FF]"
-            />
+            </p>
           </div>
 
-          {activeThreadId && (
-            <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.22em] text-[#00BFFF]/70">
-              Live conversation
-            </p>
-          )}
+          <div className="h-10 w-10" />
         </div>
-
-        <div className="w-10" />
       </header>
 
-      <main className="relative z-10 h-[calc(100vh-64px)]">
-        {/* ======================================================
-            THREAD LIST
-            ====================================================== */}
-
+      <main className="relative z-10 mx-auto h-[calc(100vh-68px)] w-full max-w-3xl">
         {!activeThreadId ? (
+          /* INBOX */
           <div className="flex h-full flex-col">
             {/* Search */}
-            <div className="border-b border-white/[0.06] bg-[#07050F]/80 p-3 backdrop-blur-xl">
+
+            <div className="border-b border-white/[0.06] bg-[#05060D]/70 p-4 backdrop-blur-2xl">
               <div className="relative">
                 <Search
                   size={16}
-                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/25"
                 />
 
                 <input
@@ -974,42 +910,77 @@ export default function PhoneChat() {
                   onChange={(e) =>
                     setSearchQuery(e.target.value)
                   }
-                  placeholder="Search your conversations..."
-                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.035] pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-[#00BFFF]/40 focus:bg-white/[0.055] focus:ring-2 focus:ring-[#00BFFF]/10"
+                  placeholder="Search conversations"
+                  className="h-12 w-full rounded-2xl border border-white/[0.08] bg-white/[0.035] pl-11 pr-4 text-sm font-medium text-white outline-none transition-all placeholder:text-white/25 focus:border-[#00BFFF]/35 focus:bg-white/[0.055] focus:ring-4 focus:ring-[#00BFFF]/[0.06]"
                 />
+
+                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+                  <span className="rounded-lg border border-white/[0.06] bg-white/[0.025] px-2 py-1 text-[8px] font-black uppercase tracking-wider text-white/20">
+                    Mail
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Inbox */}
-            <div className="flex-1 overflow-y-auto">
+            {/* Inbox heading */}
+
+            <div className="flex items-center justify-between px-5 pb-2 pt-5">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#00BFFF]">
+                  Your inbox
+                </p>
+
+                <h2 className="mt-1 text-xl font-black tracking-tight">
+                  Conversations
+                </h2>
+              </div>
+
+              {threads.length > 0 && (
+                <div className="rounded-full border border-white/[0.07] bg-white/[0.035] px-3 py-1.5 text-[9px] font-bold text-white/40">
+                  {threads.length}{' '}
+                  {threads.length === 1
+                    ? 'thread'
+                    : 'threads'}
+                </div>
+              )}
+            </div>
+
+            {/* Thread list */}
+
+            <div className="flex-1 overflow-y-auto px-3 pb-6 pt-2">
               {loadingThreads ? (
-                <div className="flex items-center justify-center py-20">
+                <div className="flex items-center justify-center py-24">
                   <div className="relative">
-                    <div className="absolute -inset-3 rounded-full bg-[#00BFFF]/20 blur-xl" />
+                    <div className="absolute -inset-5 rounded-full bg-[#00BFFF]/10 blur-2xl" />
 
                     <Loader2 className="relative h-6 w-6 animate-spin text-[#00BFFF]" />
                   </div>
                 </div>
               ) : filteredThreads.length === 0 ? (
-                <div className="flex flex-col items-center justify-center px-6 py-24 text-center">
-                  <div className="grid h-16 w-16 place-items-center rounded-2xl border border-white/10 bg-gradient-to-br from-[#00BFFF]/10 to-[#BF00FF]/10">
-                    <MessageCircle
-                      size={28}
-                      className="text-zinc-600"
-                    />
+                <div className="flex flex-col items-center justify-center px-6 py-28 text-center">
+                  <div className="relative">
+                    <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-[#00BFFF]/10 to-[#BF00FF]/10 blur-xl" />
+
+                    <div className="relative grid h-20 w-20 place-items-center rounded-[1.7rem] border border-white/[0.09] bg-white/[0.035] shadow-2xl">
+                      <MessageCircle
+                        size={30}
+                        className="text-white/20"
+                      />
+                    </div>
                   </div>
 
-                  <p className="mt-4 text-sm font-black text-zinc-300">
-                    No conversations
+                  <p className="mt-6 text-base font-black text-white/75">
+                    No conversations yet
                   </p>
 
-                  <p className="mt-1 max-w-xs text-xs leading-5 text-zinc-600">
-                    Your newest conversations will appear
-                    here instantly.
+                  <p className="mt-2 max-w-xs text-xs leading-5 text-white/30">
+                    When someone messages you,
+                    your conversation will appear
+                    here.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-1 p-2">
+                <div className="space-y-2">
                   {filteredThreads.map(
                     (thread, index) => {
                       const other =
@@ -1026,14 +997,11 @@ export default function PhoneChat() {
                         other?.username ||
                         'Unknown'
 
-                      const avatarLetter =
-                        displayName
-                          .charAt(0)
-                          .toUpperCase()
-
                       const unread =
                         (thread.unread_count || 0) >
                         0
+
+                      const isTop = index === 0
 
                       return (
                         <button
@@ -1042,82 +1010,110 @@ export default function PhoneChat() {
                           onClick={() =>
                             openThread(thread.id)
                           }
-                          className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl p-3 text-left transition duration-200 active:scale-[0.985] ${
-                            index === 0
-                              ? 'bg-gradient-to-r from-[#00BFFF]/[0.08] via-[#BF00FF]/[0.06] to-transparent'
-                              : 'hover:bg-white/[0.025]'
+                          className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-[1.35rem] border p-3.5 text-left transition-all duration-200 active:scale-[0.985] ${
+                            unread
+                              ? 'border-[#00BFFF]/15 bg-gradient-to-r from-[#00BFFF]/[0.075] via-[#BF00FF]/[0.045] to-white/[0.015] shadow-[0_10px_40px_rgba(0,0,0,0.16)]'
+                              : 'border-white/[0.055] bg-white/[0.018] hover:border-white/[0.10] hover:bg-white/[0.035]'
                           }`}
                         >
-                          {/* Active/new glow */}
-                          {index === 0 && (
-                            <div className="absolute inset-y-3 left-0 w-[2px] rounded-full bg-gradient-to-b from-[#00BFFF] to-[#BF00FF] shadow-[0_0_12px_rgba(0,191,255,0.8)]" />
+                          {isTop && (
+                            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00BFFF]/50 to-transparent" />
+                          )}
+
+                          {unread && (
+                            <div className="absolute inset-y-4 left-0 w-[2px] rounded-r-full bg-gradient-to-b from-[#00BFFF] to-[#BF00FF] shadow-[0_0_12px_rgba(0,191,255,0.7)]" />
                           )}
 
                           {/* Avatar */}
-                          <div className="relative shrink-0">
-                            <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] opacity-60 blur-[2px]" />
 
-                            <div className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#090611] bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] text-sm font-black text-white">
-                              {avatarLetter}
+                          <div className="relative shrink-0">
+                            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] opacity-25 blur-md transition-opacity group-hover:opacity-45" />
+
+                            <div className="relative flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-full border-2 border-[#070812] bg-gradient-to-br from-[#00BFFF] via-[#6D5CFF] to-[#BF00FF] text-sm font-black shadow-xl">
+                              {other?.avatar_url ? (
+                                <img
+                                  src={
+                                    other.avatar_url
+                                  }
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span>
+                                  {getInitial(
+                                    displayName,
+                                  )}
+                                </span>
+                              )}
                             </div>
 
                             {unread && (
-                              <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-[#07050F] bg-[#BF00FF] shadow-[0_0_10px_rgba(191,0,255,0.8)]" />
+                              <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#080811] bg-[#00BFFF] shadow-[0_0_12px_rgba(0,191,255,0.9)]" />
                             )}
                           </div>
 
-                           {/* Thread info */}
-                           <div className="min-w-0 flex-1">
-                             <div className="flex items-center justify-between gap-2">
-                               <div className="flex items-center gap-1.5">
-                                 <p
-                                   className={`truncate text-sm ${
-                                     unread
-                                       ? 'font-black text-white'
-                                       : 'font-bold text-zinc-300'
-                                   }`}
-                                 >
-                                   {displayName}
-                                 </p>
-                                 {thread.other_is_jailed && (
-                                   <Lock className="h-3.5 w-3.5 text-red-400" title="In custody" />
-                                 )}
-                               </div>
+                          {/* Thread body */}
 
-                               {lastMessage && (
-                                 <span
-                                   className={`shrink-0 text-[9px] ${
-                                     unread
-                                       ? 'font-black text-[#00BFFF]'
-                                       : 'text-zinc-600'
-                                   }`}
-                                 >
-                                   {formatTime(
-                                     lastMessage.sent_at ||
-                                       lastMessage.created_at,
-                                   )}
-                                 </span>
-                               )}
-                             </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                <p
+                                  className={`truncate text-sm ${
+                                    unread
+                                      ? 'font-black text-white'
+                                      : 'font-bold text-white/75'
+                                  }`}
+                                >
+                                  {displayName}
+                                </p>
 
-                            <div className="mt-1 flex items-center gap-2">
+                                {thread.other_is_jailed && (
+                                  <Lock
+                                    className="h-3.5 w-3.5 shrink-0 text-red-400"
+                                    aria-label="In custody"
+                                  />
+                                )}
+                              </div>
+
+                              {lastMessage && (
+                                <span
+                                  className={`shrink-0 text-[9px] ${
+                                    unread
+                                      ? 'font-black text-[#00BFFF]'
+                                      : 'font-medium text-white/25'
+                                  }`}
+                                >
+                                  {formatTime(
+                                    lastMessage.sent_at ||
+                                      lastMessage.created_at,
+                                  )}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="mt-1.5 flex items-center gap-2">
                               <p
                                 className={`min-w-0 flex-1 truncate text-xs ${
                                   unread
-                                    ? 'font-semibold text-zinc-200'
-                                    : 'text-zinc-600'
+                                    ? 'font-semibold text-white/60'
+                                    : 'text-white/30'
                                 }`}
                               >
                                 {lastMessage
                                   ? lastMessage.body
-                                  : 'No messages'}
+                                  : 'No messages yet'}
                               </p>
 
                               {unread && (
-                                <span className="grid min-w-5 place-items-center rounded-full bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] px-1.5 py-0.5 text-[9px] font-black text-white shadow-[0_0_12px_rgba(191,0,255,0.35)]">
+                                <span className="grid min-w-5 place-items-center rounded-full bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] px-1.5 py-0.5 text-[9px] font-black text-white shadow-[0_0_14px_rgba(191,0,255,0.35)]">
                                   {thread.unread_count}
                                 </span>
                               )}
+
+                              <ChevronRight
+                                size={14}
+                                className="shrink-0 text-white/15 transition-transform group-hover:translate-x-0.5 group-hover:text-white/35"
+                              />
                             </div>
                           </div>
                         </button>
@@ -1129,54 +1125,81 @@ export default function PhoneChat() {
             </div>
           </div>
         ) : (
-          /* ====================================================
-             CHAT
-             ==================================================== */
+          /* CHAT */
           <div className="flex h-full flex-col">
             {/* Conversation identity */}
-            <div className="relative flex items-center gap-3 overflow-hidden border-b border-white/[0.07] bg-[#07050F]/90 px-4 py-3 backdrop-blur-2xl">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#00BFFF]/[0.04] via-transparent to-[#BF00FF]/[0.05]" />
 
-              <div className="relative">
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] opacity-50 blur-[3px]" />
+            <div className="relative shrink-0 overflow-hidden border-b border-white/[0.07] bg-[#05060D]/80 px-4 py-3 backdrop-blur-2xl">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_50%,rgba(0,191,255,0.07),transparent_30%),radial-gradient(circle_at_90%_50%,rgba(191,0,255,0.07),transparent_30%)]" />
 
-                <div className="relative flex h-11 w-11 items-center justify-center rounded-full border-2 border-[#090611] bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] text-sm font-black">
-                  {(
-                    activeOther?.display_name ||
-                    activeOther?.username ||
-                    '?'
-                  )
-                    .charAt(0)
-                    .toUpperCase()}
+              <div className="relative flex items-center gap-3">
+                <div className="relative shrink-0">
+                  <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] opacity-35 blur-md" />
+
+                  <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-[#070812] bg-gradient-to-br from-[#00BFFF] via-[#6D5CFF] to-[#BF00FF] text-sm font-black">
+                    {activeOther?.avatar_url ? (
+                      <img
+                        src={
+                          activeOther.avatar_url
+                        }
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      getInitial(activeDisplayName)
+                    )}
+                  </div>
+
+                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#070812] bg-[#38FCA3] shadow-[0_0_9px_rgba(56,252,163,0.8)]" />
                 </div>
 
-                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#07050F] bg-[#38FCA3] shadow-[0_0_8px_rgba(56,252,163,0.8)]" />
-              </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black text-white">
+                    {activeDisplayName}
+                  </p>
 
-              <div className="relative min-w-0 flex-1">
-                <p className="truncate text-sm font-black text-white">
-                  {activeOther?.display_name ||
-                    activeOther?.username ||
-                    'Unknown'}
-                </p>
+                  <div className="mt-0.5 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#38FCA3] shadow-[0_0_6px_rgba(56,252,163,0.8)]" />
 
-                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-[#38FCA3]">
-                  Active conversation
-                </p>
+                    <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/35">
+                      Private conversation
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="relative flex-1 overflow-y-auto">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(0,191,255,0.06),transparent_28%),radial-gradient(circle_at_90%_20%,rgba(191,0,255,0.07),transparent_30%)]" />
 
-              <div className="relative min-h-full p-4">
+            <div className="relative flex-1 overflow-y-auto">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_5%,rgba(0,191,255,0.055),transparent_28%),radial-gradient(circle_at_90%_15%,rgba(191,0,255,0.06),transparent_30%)]" />
+
+              <div className="relative min-h-full px-4 pb-5 pt-4">
                 {msgLoading ? (
-                  <div className="flex items-center justify-center py-20">
-                    <Loader2 className="h-6 w-6 animate-spin text-[#00BFFF]" />
+                  <div className="flex items-center justify-center py-24">
+                    <div className="relative">
+                      <div className="absolute -inset-4 rounded-full bg-[#00BFFF]/10 blur-xl" />
+
+                      <Loader2 className="relative h-6 w-6 animate-spin text-[#00BFFF]" />
+                    </div>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex min-h-[60%] items-center justify-center">
+                    <div className="text-center">
+                      <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/[0.07] bg-white/[0.025]">
+                        <MessageCircle
+                          size={22}
+                          className="text-white/20"
+                        />
+                      </div>
+
+                      <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-white/30">
+                        Start the conversation
+                      </p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {messages.map(
                       (msg, index) => {
                         const isOwn =
@@ -1203,29 +1226,33 @@ export default function PhoneChat() {
                                 : 'justify-start'
                             } ${
                               !grouped
-                                ? 'mt-3'
-                                : ''
+                                ? 'mt-4'
+                                : 'mt-1'
                             }`}
                           >
                             <div
-                              className={`relative max-w-[82%] ${
+                              className={`relative max-w-[84%] ${
                                 isOwn
                                   ? 'items-end'
                                   : 'items-start'
                               }`}
                             >
-                              {/* Sending glow */}
                               {isOwn &&
                                 msg.local_status ===
                                   'sending' && (
-                                  <div className="absolute -inset-1 rounded-3xl bg-[#00BFFF]/20 blur-lg" />
+                                  <div className="absolute -inset-1 rounded-[1.6rem] bg-[#00BFFF]/15 blur-lg" />
                                 )}
 
                               <div
-                                className={`relative rounded-3xl px-4 py-3 ${
+                                className={`relative overflow-hidden rounded-[1.45rem] px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${
                                   isOwn
-                                    ? 'rounded-br-md bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] text-white shadow-[0_8px_30px_rgba(0,191,255,0.15)]'
-                                    : 'rounded-bl-md border border-white/[0.09] bg-white/[0.045] text-zinc-100 backdrop-blur-xl'
+                                    ? `rounded-br-md bg-gradient-to-br from-[#00BFFF] via-[#397CFF] to-[#BF00FF] text-white ${
+                                        msg.local_status ===
+                                        'sending'
+                                          ? 'opacity-75'
+                                          : ''
+                                      }`
+                                    : 'rounded-bl-md border border-white/[0.08] bg-white/[0.045] text-white/90 backdrop-blur-xl'
                                 }`}
                               >
                                 <p className="whitespace-pre-wrap break-words text-sm leading-6">
@@ -1235,8 +1262,8 @@ export default function PhoneChat() {
                                 <div
                                   className={`mt-1.5 flex items-center justify-end gap-1.5 text-[9px] ${
                                     isOwn
-                                      ? 'text-white/65'
-                                      : 'text-zinc-600'
+                                      ? 'text-white/60'
+                                      : 'text-white/25'
                                   }`}
                                 >
                                   <span>
@@ -1290,12 +1317,13 @@ export default function PhoneChat() {
             </div>
 
             {/* Composer */}
-            <div className="relative border-t border-white/[0.08] bg-[#07050F]/95 p-3 pb-[calc(12px+env(safe-area-inset-bottom,0px))] backdrop-blur-2xl">
+
+            <div className="relative shrink-0 border-t border-white/[0.07] bg-[#05060D]/85 px-3 pb-[calc(10px+env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-2xl">
               <div
-                className={`relative flex items-end gap-2 rounded-2xl border bg-white/[0.035] px-3 py-2 transition-all duration-200 ${
+                className={`relative flex items-end gap-2 rounded-[1.35rem] border bg-white/[0.035] p-1.5 transition-all duration-200 ${
                   replyText.trim()
-                    ? 'border-[#00BFFF]/30 shadow-[0_0_25px_rgba(0,191,255,0.07)]'
-                    : 'border-white/10'
+                    ? 'border-[#00BFFF]/30 bg-white/[0.045] shadow-[0_0_35px_rgba(0,191,255,0.08)]'
+                    : 'border-white/[0.08]'
                 }`}
               >
                 <textarea
@@ -1312,7 +1340,7 @@ export default function PhoneChat() {
                     'member'
                   }...`}
                   rows={1}
-                  className="max-h-28 min-h-[38px] flex-1 resize-none bg-transparent px-1 py-2 text-sm leading-5 text-white outline-none placeholder:text-zinc-600"
+                  className="max-h-28 min-h-[42px] flex-1 resize-none bg-transparent px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-white/20"
                 />
 
                 <button
@@ -1324,24 +1352,32 @@ export default function PhoneChat() {
                     !replyText.trim() ||
                     sending
                   }
-                  className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] text-white shadow-[0_0_20px_rgba(0,191,255,0.25)] transition active:scale-90 disabled:opacity-30"
+                  className="group relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] text-white shadow-[0_0_24px_rgba(0,191,255,0.22)] transition-all hover:shadow-[0_0_30px_rgba(191,0,255,0.3)] active:scale-90 disabled:cursor-not-allowed disabled:opacity-25"
+                  aria-label="Send message"
                 >
-                  <span className="absolute inset-0 bg-white/10 opacity-0 transition group-hover:opacity-100" />
+                  <span className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100" />
 
                   {sending ? (
                     <Loader2
                       size={17}
-                      className="animate-spin"
+                      className="relative animate-spin"
                     />
                   ) : (
-                    <Send size={17} />
+                    <Send
+                      size={17}
+                      className="relative -ml-0.5"
+                    />
                   )}
                 </button>
               </div>
 
-              <p className="mt-1.5 text-center text-[8px] font-bold uppercase tracking-[0.18em] text-zinc-700">
-                Enter to send · Shift + Enter for new line
-              </p>
+              <div className="mt-2 flex items-center justify-center gap-2 text-[8px] font-black uppercase tracking-[0.18em] text-white/15">
+                <span>Enter to send</span>
+                <span className="h-0.5 w-0.5 rounded-full bg-white/15" />
+                <span>
+                  Shift + Enter for new line
+                </span>
+              </div>
             </div>
           </div>
         )}

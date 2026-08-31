@@ -7,6 +7,9 @@
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
+  Crown,
+  Gem,
+  Coins,
   Gift,
   Heart,
   Mic,
@@ -20,6 +23,9 @@ import {
 import {
   LocalAudioTrack,
   LocalVideoTrack,
+  RemoteParticipant,
+  RemoteVideoTrack,
+  Track,
 } from 'livekit-client'
 
 import { useAuthStore } from '@/lib/store'
@@ -42,7 +48,6 @@ import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
 
-import BroadcastGrid from '@/components/broadcast/BroadcastGrid'
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import MobileBroadcastHostSettings from '@/components/broadcast/MobileBroadcastHostSettings'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -1189,11 +1194,44 @@ export default function PhoneBroadcastPage() {
         }
       }
 
+      // Mark stream as ended in the database so it disappears from the homepage
+      if (stream?.id) {
+        try {
+          await supabase
+            .from('streams')
+            .update({
+              is_live: false,
+              status: 'ended',
+              ended_at: new Date().toISOString(),
+            })
+            .eq('id', stream.id)
+
+          setStream((previous) =>
+            previous
+              ? {
+                  ...previous,
+                  status: 'ended',
+                  is_live: false,
+                }
+              : previous,
+          )
+        } catch (error) {
+          console.warn(
+            '[PhoneBroadcastPage] Failed to mark stream ended:',
+            error,
+          )
+        }
+      }
+
       try {
         session.disconnect()
       } catch {
         // Ignore disconnect errors during shutdown.
       }
+
+      // Close any open modals before navigating
+      setIsGiftModalOpen(false)
+      setIsShareModalOpen(false)
 
       navigate(
         `/broadcast/summary/${streamId}`,
@@ -1392,6 +1430,195 @@ export default function PhoneBroadcastPage() {
       [streamId, stream],
     )
 
+  const findParticipantBySeatIdentity = useCallback(
+    (seatIdentity: string) => {
+      if (!session || !seatIdentity) return null
+
+      const normalizedSeat = seatIdentity
+        .replace(/-/g, '')
+        .toLowerCase()
+
+      for (const participant of session.remoteParticipants.values()) {
+        const raw = participant as any
+        const identity = String(
+          raw.identity ||
+            raw.participantIdentity ||
+            '',
+        )
+        const normalizedIdentity = identity
+          .replace(/-/g, '')
+          .toLowerCase()
+        const normUid = identity
+          .replace(/^viewer-/, '')
+          .toLowerCase()
+
+        if (
+          identity === seatIdentity ||
+          normUid === seatIdentity ||
+          normalizedIdentity === normalizedSeat ||
+          normalizedIdentity.startsWith(normalizedSeat.substring(0, 8)) ||
+          normalizedIdentity.includes(normalizedSeat.substring(0, 8)) ||
+          normalizedSeat.startsWith(normalizedIdentity.substring(0, 8))
+        ) {
+          return participant
+        }
+      }
+
+      return null
+    },
+    [session],
+  )
+
+  const muteAllSeats = useCallback(async () => {
+    if (!session) return
+
+    for (const participant of session.remoteParticipants.values()) {
+      try {
+        await (participant as any).setMicrophoneEnabled(false)
+      } catch (error) {
+        console.warn(
+          '[PhoneBroadcastPage] Failed to mute participant:',
+          error,
+        )
+      }
+    }
+  }, [session])
+
+  const unmuteAllSeats = useCallback(async () => {
+    if (!session) return
+
+    for (const participant of session.remoteParticipants.values()) {
+      try {
+        await (participant as any).setMicrophoneEnabled(true)
+      } catch (error) {
+        console.warn(
+          '[PhoneBroadcastPage] Failed to unmute participant:',
+          error,
+        )
+      }
+    }
+  }, [session])
+
+  const cameraOffAllSeats = useCallback(async () => {
+    if (!session) return
+
+    for (const participant of session.remoteParticipants.values()) {
+      try {
+        await (participant as any).setCameraEnabled(false)
+      } catch (error) {
+        console.warn(
+          '[PhoneBroadcastPage] Failed to disable camera for participant:',
+          error,
+        )
+      }
+    }
+  }, [session])
+
+  const cameraOnAllSeats = useCallback(async () => {
+    if (!session) return
+
+    for (const participant of session.remoteParticipants.values()) {
+      try {
+        await (participant as any).setCameraEnabled(true)
+      } catch (error) {
+        console.warn(
+          '[PhoneBroadcastPage] Failed to enable camera for participant:',
+          error,
+        )
+      }
+    }
+  }, [session])
+
+  const seatControls = useMemo(() => {
+    if (!seats || !session) return []
+
+    return Object.entries(seats)
+      .filter(
+        ([, seat]) =>
+          Number(seat?.seat_index) !== 0 &&
+          (seat?.user_id || seat?.guest_id),
+      )
+      .map(([index, seat]) => {
+        const seatIdentity =
+          seat?.livekit_participant_identity ||
+          seat?.livekit_identity ||
+          seat?.participant_identity ||
+          seat?.user_id ||
+          seat?.guest_id ||
+          ''
+
+        const participant = findParticipantBySeatIdentity(
+          seatIdentity,
+        )
+
+        const audioPubs = participant
+          ?.audioTrackPublications
+          ? Array.from(participant.audioTrackPublications.values())
+          : []
+        const videoPubs = participant
+          ?.videoTrackPublications
+          ? Array.from(participant.videoTrackPublications.values())
+          : []
+
+        const isMuted = audioPubs.some(
+          (pub: any) => pub.track && !pub.track.enabled,
+        )
+        const isCameraOff = videoPubs.some(
+          (pub: any) => pub.track && !pub.track.enabled,
+        )
+
+        return {
+          index: Number(index),
+          username:
+            seat?.user_profile?.username ||
+            seat?.profile?.username ||
+            'Viewer',
+          isMuted,
+          isCameraOff,
+          onToggleMute: async () => {
+            if (!participant) return
+            try {
+              await (participant as any).setMicrophoneEnabled(isMuted)
+            } catch (error) {
+              console.warn(
+                '[PhoneBroadcastPage] Failed to toggle seat mic:',
+                error,
+              )
+            }
+          },
+          onToggleCamera: async () => {
+            if (!participant) return
+            try {
+              await (participant as any).setCameraEnabled(isCameraOff)
+            } catch (error) {
+              console.warn(
+                '[PhoneBroadcastPage] Failed to toggle seat camera:',
+                error,
+              )
+            }
+          },
+        }
+      })
+  }, [seats, session, findParticipantBySeatIdentity])
+
+  /*
+    * ============================================================
+    * COMPUTED: occupied remote seats for compact row display
+    * ============================================================
+    */
+
+  const occupiedRemoteSeats = useMemo(() => {
+    return Object.entries(seats)
+      .filter(([index, seat]) => Number(index) !== 0 && (seat?.user_id || seat?.guest_id))
+      .map(([index, seat]) => ({
+        index: Number(index),
+        userId: seat?.user_id || seat?.guest_id || '',
+        username: seat?.user_profile?.username || seat?.profile?.username || 'Viewer',
+        avatarUrl: seat?.user_profile?.avatar_url || seat?.profile?.avatar_url || null,
+        userProfile: seat?.user_profile || seat?.profile || null,
+      }))
+  }, [seats])
+
   if (shouldShowRandomBattleArena) {
     return (
       <ErrorBoundary>
@@ -1484,6 +1711,12 @@ export default function PhoneBroadcastPage() {
    * ============================================================
    */
 
+  /*
+    * ============================================================
+    * MAIN BROADCAST VIEW — full-screen camera with overlays
+    * ============================================================
+    */
+
   return (
     <GiftSystemProvider
       streamId={streamId}
@@ -1491,107 +1724,52 @@ export default function PhoneBroadcastPage() {
         stream?.user_id
       }
     >
-      <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black text-white">
+      <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
 
-        {import.meta.env.DEV && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-50 flex flex-col gap-1 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-            <div className="rounded-xl border border-white/10 bg-black/70 px-2 py-1 text-[10px] font-mono text-cyan-300/90 backdrop-blur">
-              <div>streamId: {streamId || 'none'}</div>
-              <div>status: {stream?.status || 'none'}</div>
-              <div>battle: {stream?.battle_id || 'none'}</div>
-              <div>connected: {String(session.isConnected)}</div>
-              <div>localVideo: {String(!!session.localTracks?.[1])}</div>
-              <div>localAudio: {String(!!session.localTracks?.[0])}</div>
-              <div>remote: {String(session.remoteParticipants.size)}</div>
-            </div>
-          </div>
+        {/*
+         * ============================================================
+         * FULL-SCREEN BROADCASTER CAMERA (single authoritative render)
+         * ============================================================
+         */}
+        <div className="absolute inset-0 z-0">
+          <LocalCameraFullVideo videoTrack={session.localTracks?.[1]} />
+          {/* Clickable overlay for broadcaster interactions */}
+          <div className="absolute inset-0" />
+        </div>
+
+        {/* ======================================================
+            REMOTE AUDIO (attach remote participant audio)
+        ====================================================== */}
+        <RemoteAudioManager remoteUsers={Array.from(session.remoteParticipants.values())} hostUserId={stream?.user_id} />
+
+        {/* ======================================================
+            MAI BAG (top-right)
+        ====================================================== */}
+        {streamId && (
+          <MaiBag
+            streamId={streamId}
+            compact
+            className="absolute right-3 top-3 z-20"
+          />
         )}
 
         {/* ======================================================
-            VIDEO / SEATS
+            AUDIENCE TICKER + CROWN / HOST STATUS (top)
         ====================================================== */}
+        {stream && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
+            <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
+              <MobileAudienceTicker
+                audience={audienceWithAnon}
+                currentUserId={user?.id}
+                hostUserId={stream.user_id}
+                viewerCount={stream.viewer_count ?? 0}
+                likes={stream.total_likes ?? 0}
+                maxVisible={6}
+              />
+            </div>
 
-        <div className="relative min-h-0 flex-1">
-
-          {stream && (
-            <BroadcastGrid
-              stream={stream as any}
-              streamStatus={
-                stream.status || 'live'
-              }
-              seats={seats}
-              isHost
-              isMobileViewer
-              localTracks={
-                session.localTracks as any
-              }
-              onGift={handleGift}
-              onGiftAll={() => []}
-              onJoinSeat={(index) =>
-                joinSeat(
-                  index,
-                  stream?.seat_prices?.[
-                    index
-                  ] ??
-                    stream?.seat_price ??
-                    0,
-                )
-              }
-              onLeaveSeat={
-                leaveSeat
-              }
-              toggleCamera={
-                session.toggleCamera
-              }
-              toggleMicrophone={
-                session.toggleMicrophone
-              }
-              flipCamera={
-                session.flipCamera
-              }
-              isCameraOn={
-                session.cameraEnabled
-              }
-              isMicOn={
-                session.micEnabled
-              }
-              remoteUsers={Array.from(
-                session.remoteParticipants.values(),
-              )}
-              localUserId={
-                user?.id || ''
-              }
-            />
-          )}
-
-          {/* ====================================================
-              AUDIENCE + LIKES
-          ==================================================== */}
-
-          {stream && (
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-
-              <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
-                <MobileAudienceTicker
-                  audience={audienceWithAnon}
-                  currentUserId={
-                    user?.id
-                  }
-                  hostUserId={
-                    stream.user_id
-                  }
-                  viewerCount={
-                    stream.viewer_count ??
-                    0
-                  }
-                  likes={
-                    stream.total_likes ??
-                    0
-                  }
-                  maxVisible={6}
-                />
-              </div>
-
+            <div className="flex items-center gap-1.5">
               {broadcasterProfile?.troll_coins !== undefined && (
                 <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-yellow-400/15 bg-black/50 px-2.5 py-1 backdrop-blur-md">
                   <span className="text-[9px] font-black text-yellow-300">
@@ -1603,93 +1781,61 @@ export default function PhoneBroadcastPage() {
                 </div>
               )}
 
-              <div className="ml-auto flex items-center gap-2">
+              {broadcasterProfile && (
+                <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-amber-400/15 bg-black/50 px-2.5 py-1 backdrop-blur-md">
+                  <Crown size={10} className="text-amber-400" />
+                  <span className="text-[9px] font-black text-amber-300">
+                    {broadcasterProfile.battle_crowns || 0}
+                  </span>
+                  <Gem size={10} className="text-purple-400" />
+                  <span className="text-[9px] font-black text-purple-300">
+                    {broadcasterProfile.trollmonds || 0}
+                  </span>
+                </div>
+              )}
+
+              <div className="pointer-events-auto ml-auto">
                 <button
                   type="button"
                   onClick={handleLike}
                   aria-label="Like stream"
-                  className="pointer-events-auto relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-pink-400/20 bg-black/50 backdrop-blur-xl transition active:scale-90"
+                  className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-pink-400/20 bg-black/50 backdrop-blur-xl transition active:scale-90"
                 >
                   <Heart
                     size={14}
                     className="text-pink-300"
                   />
-
                   <span className="absolute -bottom-1 -right-1 rounded-full border border-pink-400/30 bg-pink-500/20 px-1 text-[8px] font-black text-pink-100">
-                    {Math.max(
-                      0,
-                      Number(
-                        stream.total_likes ??
-                          0,
-                      ),
-                    ).toLocaleString()}
+                    {Math.max(0, Number(stream.total_likes ?? 0)).toLocaleString()}
                   </span>
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ======================================================
-            HOST SETTINGS
+            REMOTE SEATS ROW (top-left, compact)
         ====================================================== */}
-
-        {stream && (
-          <div className="absolute bottom-24 right-3 z-50">
-            <MobileBroadcastHostSettings
-              isMicOn={
-                session.micEnabled
-              }
-              isCamOn={
-                session.cameraEnabled
-              }
-              isLive={
-                stream.status ===
-                'live'
-              }
-              hasRgbEffect={
-                !!stream.has_rgb_effect
-              }
-              isChatLocked={
-                !!stream.is_chat_locked
-              }
-              unreadMessageCount={0}
-              seatCount={
-                stream?.seat_count ?? 0
-              }
-              onUpdateSeatCount={
-                handleUpdateSeatCount
-              }
-              onToggleMic={
-                session.toggleMicrophone
-              }
-              onToggleCamera={
-                session.toggleCamera
-              }
-              onFlipCamera={
-                session.flipCamera
-              }
-              onGift={handleGift}
-              onShare={handleOpenShareModal}
-              onOpenMessage={() => {}}
-              onEndStream={
-                endStream
-              }
-              onOpenCoinStore={() => {}}
-              onInviteFollowers={handleInviteFollowers}
-              onToggleRGB={() => {}}
-              onTextPopup={() => {}}
-            />
+        {occupiedRemoteSeats.length > 0 && (
+          <div className="pointer-events-none absolute left-3 z-20 flex items-start gap-1.5 pt-[calc(env(safe-area-inset-top)+7rem)]">
+            {occupiedRemoteSeats.map((seat) => (
+              <RemoteSeatThumbnail
+                key={`phone-seat-${seat.index}`}
+                userId={seat.userId}
+                username={seat.username}
+                avatarUrl={seat.avatarUrl}
+                remoteUsers={Array.from(session.remoteParticipants.values())}
+              />
+            ))}
           </div>
         )}
 
         {/* ======================================================
             FLYING CHAT
         ====================================================== */}
-
-        {floatingMessages.length >
-          0 && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col items-center gap-1 px-3">
+        {floatingMessages.length > 0 && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-[calc(160px+env(safe-area-inset-bottom))] z-30 flex flex-col items-center gap-1 px-3">
             {floatingMessages
               .slice(0, 8)
               .map((message) => (
@@ -1701,11 +1847,9 @@ export default function PhoneBroadcastPage() {
                     <span className="text-[10px] font-black text-cyan-300">
                       {message.username}
                     </span>
-
                     <span className="text-[10px] font-bold text-white/40">
-                      :{' '}
+                      sent:{' '}
                     </span>
-
                     <span className="text-[10px] font-semibold text-white/90">
                       {message.text}
                     </span>
@@ -1715,24 +1859,51 @@ export default function PhoneBroadcastPage() {
           </div>
         )}
 
+         {/* ======================================================
+             HOST SETTINGS (bottom-right, above control bar)
+         ====================================================== */}
+         {stream && (
+           <div className="absolute bottom-32 right-3 z-40">
+              <MobileBroadcastHostSettings
+               isMicOn={session.micEnabled}
+               isCamOn={session.cameraEnabled}
+               isLive={stream.status === 'live'}
+               hasRgbEffect={!!stream.has_rgb_effect}
+               isChatLocked={!!stream.is_chat_locked}
+               unreadMessageCount={0}
+               seatCount={stream?.seat_count ?? 0}
+               onUpdateSeatCount={handleUpdateSeatCount}
+               onToggleMic={session.toggleMicrophone}
+               onToggleCamera={session.toggleCamera}
+               onFlipCamera={session.flipCamera}
+               onGift={handleGift}
+               onShare={handleOpenShareModal}
+               onOpenMessage={() => {}}
+               onEndStream={endStream}
+               onOpenCoinStore={() => {}}
+               onInviteFollowers={handleInviteFollowers}
+               onToggleRGB={() => {}}
+               onTextPopup={() => {}}
+               onMuteAllSeats={muteAllSeats}
+               onUnmuteAllSeats={unmuteAllSeats}
+               onCameraOffAllSeats={cameraOffAllSeats}
+               onCameraOnAllSeats={cameraOnAllSeats}
+               seatControls={seatControls}
+             />
+          </div>
+        )}
+
         {/* ======================================================
             CHAT INPUT
         ====================================================== */}
-
         <form
-          onSubmit={
-            handleChatSubmit
-          }
-          className="shrink-0 border-t border-white/10 bg-slate-950/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+          onSubmit={handleChatSubmit}
+          className="absolute inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
         >
           <input
             type="text"
             value={chatInput}
-            onChange={(event) =>
-              setChatInput(
-                event.target.value,
-              )
-            }
+            onChange={(event) => setChatInput(event.target.value)}
             placeholder="Say something..."
             maxLength={280}
             className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
@@ -1740,74 +1911,30 @@ export default function PhoneBroadcastPage() {
         </form>
 
         {/* ======================================================
-            PHONE CONTROL BAR
+            PHONE CONTROL BAR (bottom, above chat input)
         ====================================================== */}
-
-        <div className="flex shrink-0 items-center justify-around gap-1.5 border-t border-white/10 bg-slate-950/95 px-2 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
-
-          {/* CAMERA */}
-
+        <div className="absolute inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-around gap-1.5 bg-slate-950/95 px-2 py-3">
           <ControlButton
-            active={
-              session.cameraEnabled
-            }
-            onClick={
-              session.toggleCamera
-            }
-            icon={
-              session.cameraEnabled
-                ? Video
-                : VideoOff
-            }
-            label={
-              session.cameraEnabled
-                ? 'Cam'
-                : 'Off'
-            }
+            active={session.cameraEnabled}
+            onClick={session.toggleCamera}
+            icon={session.cameraEnabled ? Video : VideoOff}
+            label={session.cameraEnabled ? 'Cam' : 'Off'}
           />
-
-          {/* MICROPHONE */}
-
           <ControlButton
-            active={
-              session.micEnabled
-            }
-            onClick={
-              session.toggleMicrophone
-            }
-            icon={
-              session.micEnabled
-                ? Mic
-                : MicOff
-            }
-            label={
-              session.micEnabled
-                ? 'Mic'
-                : 'Muted'
-            }
+            active={session.micEnabled}
+            onClick={session.toggleMicrophone}
+            icon={session.micEnabled ? Mic : MicOff}
+            label={session.micEnabled ? 'Mic' : 'Muted'}
           />
-
-          {/* FLIP */}
-
           <ControlButton
             active
-            onClick={
-              session.flipCamera
-            }
+            onClick={session.flipCamera}
             icon={RefreshCw}
             label="Flip"
           />
-
-          {/* RANDOM MATCH */}
-
           <ControlButton
-            active={
-              randomBattle.isQueueEnabled ||
-              randomBattleIsActive
-            }
-            onClick={
-              handleRandomMatch
-            }
+            active={randomBattle.isQueueEnabled || randomBattleIsActive}
+            onClick={handleRandomMatch}
             icon={Swords}
             label={
               randomBattle.isBusy
@@ -1818,24 +1945,15 @@ export default function PhoneBroadcastPage() {
                     ? 'Battle'
                     : 'Random'
             }
-            disabled={
-              randomBattle.isBusy ||
-              randomBattle.isBattleActive
-            }
+            disabled={randomBattle.isBusy || randomBattle.isBattleActive}
             battle
           />
-
-          {/* GIFT */}
-
           <ControlButton
             active
             onClick={handleGift}
             icon={Gift}
             label="Gift"
           />
-
-          {/* END */}
-
           <ControlButton
             active={false}
             onClick={endStream}
@@ -1848,23 +1966,12 @@ export default function PhoneBroadcastPage() {
         {/* ======================================================
             GIFT MODAL
         ====================================================== */}
-
         <PhoneGiftModal
-          isOpen={
-            isGiftModalOpen
-          }
-          onClose={() =>
-            setIsGiftModalOpen(false)
-          }
-          recipientId={
-            stream?.user_id || ''
-          }
-          streamId={
-            streamId || ''
-          }
-          broadcasterId={
-            stream?.user_id
-          }
+          isOpen={isGiftModalOpen}
+          onClose={() => setIsGiftModalOpen(false)}
+          recipientId={stream?.user_id || ''}
+          streamId={streamId || ''}
+          broadcasterId={stream?.user_id}
         />
 
         {isShareModalOpen && (
@@ -1877,25 +1984,249 @@ export default function PhoneBroadcastPage() {
           />
         )}
 
-        {streamId && (
-          <MaiBag
-            streamId={streamId}
-            compact
-            className="pointer-events-none absolute right-2 top-2 z-20"
-          />
-        )}
-
         <GiftVideoOverlay
           gifts={recentGifts}
           onFinish={(giftId) =>
-            setRecentGifts((prev) =>
-              prev.filter((gift) => gift.id !== giftId),
-            )
+            setRecentGifts((prev) => prev.filter((gift) => gift.id !== giftId))
           }
         />
       </div>
     </GiftSystemProvider>
   )
+}
+
+/*
+ * ================================================================
+ * LOCAL CAMERA — full-screen broadcaster video (single authoritative render)
+ * ================================================================
+ */
+
+function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | null | undefined }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const videoElementRef = useRef<HTMLVideoElement | null>(null)
+  const previousTrackRef = useRef<LocalVideoTrack | null>(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const cleanup = () => {
+      if (videoElementRef.current) {
+        videoElementRef.current = null
+      }
+      container.innerHTML = ''
+    }
+
+    if (!videoTrack) {
+      cleanup()
+      return
+    }
+
+    if (previousTrackRef.current === videoTrack && videoElementRef.current) {
+      return
+    }
+
+    try {
+      cleanup()
+
+      const videoElement = videoTrack.attach() as HTMLVideoElement
+      videoElement.style.width = '100%'
+      videoElement.style.height = '100%'
+      videoElement.style.objectFit = 'cover'
+      videoElement.style.position = 'absolute'
+      videoElement.style.top = '0'
+      videoElement.style.left = '0'
+      videoElement.autoplay = true
+      videoElement.playsInline = true
+      videoElement.muted = true
+      container.appendChild(videoElement)
+      videoElementRef.current = videoElement
+      previousTrackRef.current = videoTrack
+
+      const settings = videoTrack.mediaStreamTrack?.getSettings?.()
+      const shouldMirror = settings?.facingMode !== 'environment'
+      container.style.transform = shouldMirror ? 'scaleX(-1)' : ''
+    } catch (err) {
+      console.error('[LocalCameraFullVideo] Failed to attach video track:', err)
+    }
+  }, [videoTrack])
+
+  useEffect(() => {
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.innerHTML = ''
+      }
+      videoElementRef.current = null
+      previousTrackRef.current = null
+    }
+  }, [])
+
+  return (
+    <div
+      ref={containerRef}
+      className="absolute inset-0 w-full h-full overflow-hidden bg-black"
+    />
+  )
+}
+
+/*
+ * ================================================================
+ * REMOTE SEAT THUMBNAIL — small video tile for remote participants on phone
+ * ================================================================
+ */
+
+function RemoteSeatThumbnail({
+  userId,
+  username,
+  avatarUrl,
+  remoteUsers,
+}: {
+  userId: string
+  username: string
+  avatarUrl: string | null
+  remoteUsers: RemoteParticipant[]
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const videoElementRef = useRef<HTMLVideoElement | null>(null)
+  const previousTrackRef = useRef<RemoteVideoTrack | null>(null)
+
+  const participant = useMemo(() => {
+    const normalizedUserId = userId.replace(/-/g, '').toLowerCase()
+    const shortUserId = normalizedUserId.substring(0, 8)
+    return remoteUsers.find((u) => {
+      const identityStr = String(u.identity || '')
+      const normalizedIdentity = identityStr.replace(/-/g, '').toLowerCase()
+      const normUid = identityStr.replace(/^viewer-/, '').toLowerCase()
+      return (
+        identityStr === userId ||
+        normUid === userId ||
+        normalizedIdentity === normalizedUserId ||
+        normalizedIdentity.startsWith(shortUserId) ||
+        normalizedIdentity.includes(shortUserId) ||
+        normalizedIdentity.endsWith(shortUserId) ||
+        normalizedUserId.startsWith(normalizedIdentity.substring(0, 8))
+      )
+    })
+  }, [userId, remoteUsers])
+
+  const videoTrack = useMemo(() => {
+    if (!participant) return null
+    const videoPubs = participant.videoTrackPublications
+    if (!videoPubs) return null
+    const pub = Array.from(videoPubs.values()).find((p: any) => p.track && p.track.kind === Track.Kind.Video)
+    return (pub?.track as RemoteVideoTrack) || null
+  }, [participant])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const cleanup = () => {
+      videoElementRef.current = null
+      container.innerHTML = ''
+    }
+
+    if (!videoTrack) {
+      cleanup()
+      return
+    }
+
+    if (previousTrackRef.current === videoTrack && videoElementRef.current) {
+      return
+    }
+
+    try {
+      cleanup()
+      const videoElement = videoTrack.attach() as HTMLVideoElement
+      videoElement.style.width = '100%'
+      videoElement.style.height = '100%'
+      videoElement.style.objectFit = 'cover'
+      videoElement.style.position = 'absolute'
+      videoElement.style.top = '0'
+      videoElement.style.left = '0'
+      videoElement.autoplay = true
+      videoElement.playsInline = true
+      container.appendChild(videoElement)
+      videoElementRef.current = videoElement
+      previousTrackRef.current = videoTrack
+    } catch (err) {
+      console.error('[RemoteSeatThumbnail] Failed to attach video track:', err)
+    }
+  }, [videoTrack])
+
+  useEffect(() => {
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.innerHTML = ''
+      }
+      videoElementRef.current = null
+      previousTrackRef.current = null
+    }
+  }, [])
+
+  return (
+    <div className="pointer-events-auto relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-black/60 shadow-lg">
+      <div ref={containerRef} className="absolute inset-0" />
+      {!videoTrack && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={username} className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-xs font-bold text-white/70">
+              {username?.charAt(0)?.toUpperCase() || '?'}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/*
+ * ================================================================
+ * REMOTE AUDIO MANAGER — attaches remote participant audio tracks
+ * ================================================================
+ */
+
+function RemoteAudioManager({
+  remoteUsers,
+  hostUserId,
+}: {
+  remoteUsers: RemoteParticipant[]
+  hostUserId?: string
+}) {
+  const attachedIdentitiesRef = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    const attachedIdentities = attachedIdentitiesRef.current
+
+    remoteUsers.forEach((participant) => {
+      const identity = participant.identity
+      if (attachedIdentities.has(identity)) return
+
+      const audioPubs = participant.audioTrackPublications
+      if (!audioPubs) return
+      const audioPub = Array.from(audioPubs.values()).find((p: any) => p.track && p.track.kind === Track.Kind.Audio)
+      if (!audioPub?.track) return
+
+      try {
+        const audioElement = audioPub.track.attach()
+        audioElement.style.display = 'none'
+        document.body.appendChild(audioElement)
+        attachedIdentities.add(identity)
+      } catch (err) {
+        console.warn('[RemoteAudioManager] Failed to attach audio:', err)
+      }
+    })
+  }, [remoteUsers])
+
+  useEffect(() => {
+    return () => {
+      attachedIdentitiesRef.current.clear()
+    }
+  }, [])
+
+  return null
 }
 
 /*

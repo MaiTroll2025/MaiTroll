@@ -1,0 +1,1125 @@
+# MaiTroll — Full Legacy Feature Audit, Cleanup & Current Feature Wiring
+
+You are working on the MaiTroll / TrollCity codebase.
+
+We need to perform a **full codebase audit and cleanup of outdated broadcaster/viewer/monetization/game systems**, while preserving all current functionality.
+
+## CRITICAL RULE
+
+**DO NOT rewrite or redesign unrelated systems.**
+
+The goal is:
+
+1. Identify what is actually still used.
+2. Preserve current functionality.
+3. Wire the features marked **NEEDS TO BE WIRED**.
+4. Remove obsolete/dead functionality marked **REMOVE**.
+5. Update hardcoded limits and outdated business rules.
+6. Do not create replacement systems for features we intentionally retired.
+7. Do not remove shared infrastructure if another CURRENT feature depends on it.
+
+Before making destructive changes, search the entire repository for every affected feature, component, hook, constant, type, database query, RPC, migration reference, route, import, permission check, and UI reference.
+
+---
+
+# 1. CURRENT MAITROLL BROADCASTING MODEL
+
+MaiTroll currently uses:
+
+* LiveKit for live video/audio
+* Multi-seat broadcasting
+* Maximum **6 guest/co-host seats**
+* Broadcaster + up to 6 additional seats
+* Current battle system is **1v1**
+* Current moderation model uses **Broadofficer** and **Troll Officer**
+* Current XP/Tier system remains
+* Current T-League system remains
+* Current coin store/package system is the source of truth
+* Current MaiTroll promotion/ad system remains, but its pricing rules need updating
+
+Do NOT assume the old feature documentation is accurate.
+
+The old documentation contains retired functionality.
+
+---
+
+# 2. FEATURES TO KEEP
+
+These features are CURRENT and must remain.
+
+## Pinned Messages
+
+Keep pinned-message functionality.
+
+It needs to support the current permission model.
+
+Pinned messages should be available to appropriate:
+
+* Broadcaster
+* Broadofficer
+* Troll Officer where applicable
+* Admin/CEO/current authorized staff roles
+
+Do not reintroduce the old moderator/superadmin roles.
+
+Audit the existing implementation and determine whether it is already functional.
+
+If partially implemented, wire it correctly.
+
+---
+
+# 3. STREAM SWIPE
+
+## KEEP
+
+Stream Swipe is a current MaiTroll feature.
+
+Do NOT remove Stream Swipe.
+
+Audit:
+
+* Stream Swipe page/component
+* stream discovery logic
+* stream loading
+* viewer navigation
+* joining streams
+* mobile behavior
+* desktop behavior
+* current stream eligibility
+
+Remove only the obsolete Treelz promotion requirement described later.
+
+Stream Swipe itself remains.
+
+---
+
+# 4. GUEST / CO-HOST FUNCTIONALITY
+
+## KEEP
+
+Guest/co-host functionality remains.
+
+Current rule:
+
+### Maximum 6 guest/co-host seats.
+
+NOT 9.
+
+The old documentation saying:
+
+> 1-9 configurable boxes
+
+is obsolete.
+
+The current platform should support:
+
+```text
+1 broadcaster
++
+up to 6 guest/co-host seats
+```
+
+Audit the entire codebase for:
+
+* `9`
+* max seat constants
+* seat validation
+* seat arrays
+* seat selectors
+* seat UI
+* LiveKit participant handling
+* database validation
+* seat requests
+* seat claiming
+* seat release
+* broadcaster seat management
+* phone broadcast
+* phone viewer
+* web broadcast
+* web viewer
+
+Do not simply change every number `9` you find.
+
+Determine whether each reference actually relates to broadcast seats.
+
+Change only the obsolete 9-seat broadcast assumptions.
+
+---
+
+# 5. GUEST / CO-HOST FEES
+
+REMOVE the old guest/co-host fee system.
+
+There is currently:
+
+**NO guest/co-host fee.**
+
+Do not preserve or reintroduce:
+
+* per-minute guest billing
+* flat guest fees
+* guest seat pricing
+* co-host billing
+* subscriber discounts on guest-seat pricing
+
+If these systems are only used for obsolete guest billing, remove them.
+
+If a database table/function is shared by another CURRENT feature, do not blindly delete it.
+
+First trace dependencies.
+
+---
+
+# 6. BATTLE SYSTEM
+
+Current battle system is:
+
+# 1v1 ONLY
+
+Keep:
+
+* 1v1 battles
+* crowns
+* pots
+* streaks
+* existing battle functionality
+
+REMOVE obsolete references/functionality for:
+
+* 5v5 battles
+* 5-person teams
+* 5v5 matchmaking
+* 5v5 UI
+* 5v5 configuration
+* 5v5 database logic
+* 5v5 battle types
+
+Do not break current 1v1 battle functionality.
+
+Search for 5v5-related code before deleting anything.
+
+---
+
+# 7. RETIRED GAMES / FEATURES
+
+These are DEAD CODE and should be removed from the codebase if they are no longer referenced by current functionality.
+
+## REMOVE:
+
+### TrollToe
+
+Remove:
+
+* routes
+* pages
+* components
+* hooks
+* services
+* types
+* constants
+* database calls
+* unused assets
+* navigation entries
+* feature flags
+* imports
+* documentation/comments referring to it
+
+Only remove database objects if they are truly unused.
+
+---
+
+### Trollopoly
+
+Same cleanup.
+
+Remove obsolete:
+
+* pages
+* components
+* hooks
+* routes
+* services
+* types
+* assets
+* navigation
+* imports
+* feature flags
+
+Do not break unrelated economy/game infrastructure.
+
+---
+
+### Pride Challenges
+
+Pride Challenges are retired.
+
+Remove obsolete Pride Challenge functionality and references.
+
+Do not remove the general challenge infrastructure if current MaiTroll features still use it.
+
+---
+
+# 8. ROLE SYSTEM CLEANUP
+
+The old role system contains:
+
+```text
+superadmin
+moderator
+```
+
+These are NOT current MaiTroll roles.
+
+Remove them from active application logic.
+
+Current moderation should use the current MaiTroll role structure, including:
+
+```text
+broadofficer
+troll_officer
+```
+
+along with the other legitimate current roles.
+
+Audit:
+
+* role types
+* permission maps
+* route guards
+* UI checks
+* database checks
+* moderation checks
+* broadcast checks
+* pinned-message permissions
+* admin panels
+* feature gates
+
+Do not replace `moderator` with `broadofficer` blindly.
+
+Trace what the old permission actually did and map it to the correct current role where appropriate.
+
+Do NOT create a new generic moderator role.
+
+Do NOT create a superadmin role.
+
+---
+
+# 9. XP / TIER SYSTEM
+
+## KEEP — IMPORTANT
+
+The XP/Tier system is CURRENT.
+
+Do NOT remove it.
+
+Do NOT simplify it.
+
+Do NOT replace it with the old documentation.
+
+Audit the existing implementation and preserve:
+
+* XP
+* levels
+* tier progression
+* current rewards/unlocks
+* badges
+* current tier calculations
+* current database logic
+
+The tier system should remain clearly represented in the application where currently intended.
+
+Do not assume the old level descriptions are the current source of truth.
+
+The actual current implementation/database should be treated as authoritative.
+
+---
+
+# 10. T-LEAGUE
+
+KEEP the current T-League system.
+
+Do not remove:
+
+* T-League
+* current tier progression
+* current subtiers
+* weekly goals
+* current league calculations
+
+Only remove code if it is specifically obsolete and unrelated to the active T-League implementation.
+
+---
+
+# 11. STREAM PROMOTION
+
+Stream Promotion remains a current concept where currently implemented.
+
+However, the following OLD requirement must be removed:
+
+> 15-second preview clip + join button at 20+ viewers
+
+That requirement is obsolete.
+
+REMOVE:
+
+* 20 viewer threshold
+* automatic 15-second preview requirement
+* preview-trigger logic
+* old Treelz-specific promotion trigger
+
+Do not remove the entire current Stream Promotion system if MaiTroll still uses it.
+
+Audit what the current promotion flow actually does first.
+
+---
+
+# 12. TREELZ
+
+Treelz remains a current MaiTroll content system.
+
+Do NOT remove Treelz.
+
+Only remove the obsolete Stream Promotion behavior:
+
+```text
+20+ viewers
++
+15-second preview clip
++
+join button
+```
+
+Do not remove unrelated Treelz functionality.
+
+---
+
+# 13. OBS / RTMP / HYTROGAMES
+
+OBS/RTMP ingest is RETIRED.
+
+HytroGames does NOT use OBS.
+
+This is dead code.
+
+Search the entire codebase for:
+
+* OBS
+* RTMP ingest
+* RTMP broadcast
+* HytroGames OBS integration
+* OBS configuration
+* RTMP endpoints
+* OBS-specific UI
+* OBS-specific hooks
+* OBS-specific services
+* obsolete gaming ingest code
+
+Remove obsolete code.
+
+Do NOT remove LiveKit.
+
+Do NOT remove normal gaming-category broadcasting.
+
+Do NOT remove HytroGames itself if it is still a current feature.
+
+The requirement is specifically to remove the obsolete OBS/RTMP implementation.
+
+---
+
+# 14. DAILY BROADCAST REWARD
+
+REMOVE this obsolete reward:
+
+> 25 coins after 60 seconds of broadcasting
+
+Remove:
+
+* reward trigger
+* timer
+* database RPC
+* UI messaging
+* toast
+* notification
+* documentation
+* reward constants
+* reward claims
+
+Only delete database functions if they are not used by anything else.
+
+Do not break unrelated reward systems.
+
+---
+
+# 15. PROMO CARD SYSTEM
+
+The old Promo Card system is no longer used.
+
+REMOVE the obsolete Promo Card System.
+
+This includes:
+
+* Promo Card Mail
+* broadcast_start promo cards
+* broadcast_60m promo cards
+* broadcast_240m promo cards
+* viewer_reward promo cards
+* share_reward promo cards
+* pending share reward evaluation
+* token batch limits
+* promo card generation
+* promo card delivery
+* related UI
+* related hooks
+* related services
+* related feature flags
+* obsolete notification logic
+
+Search for all related names before removing.
+
+Do not delete normal UTroMail.
+
+UTroMail is CURRENT.
+
+Only remove the obsolete Promo Card functionality.
+
+---
+
+# 16. NEW USER CASHOUT PROMO
+
+The old:
+
+> New User Promo / Special Cashout Promotion
+
+is retired.
+
+Remove obsolete code for this promotion.
+
+Do NOT remove the current cashout system.
+
+Do NOT remove legitimate current cashout tiers.
+
+Only remove the old special/new-user promotional logic.
+
+---
+
+# 17. COIN PACKAGES
+
+The following old package list is NOT current:
+
+```text
+Baby Troll — 500 — $6.49
+Little Troller — 1,440 — $12.99
+Mischief Pack — 3,280 — $19.99
+Troll Family Pack — 7,700 — $49.99
+Troll Empire Pack — 25,400 — $139.99
+Mega Troll King Pack — 51,800 — $279.99
+```
+
+DO NOT use these values.
+
+DO NOT restore them.
+
+DO NOT hardcode them anywhere.
+
+The CURRENT Coin Store implementation/database/configuration is the source of truth.
+
+Audit for old hardcoded package values and remove obsolete definitions where safe.
+
+The UI must use the current Coin Store data.
+
+---
+
+# 18. AD PRICING
+
+The old advertising price:
+
+> 1,000 Troll Coins for 7 days
+
+is obsolete.
+
+Current advertising rule:
+
+# 100 Trollmonds for 24 hours
+
+However, duration should be configurable.
+
+The system should NOT hardcode every promotion to 24 hours.
+
+It should support configurable duration.
+
+Example conceptual structure:
+
+```text
+price_currency = trollmonds
+price_amount = 100
+duration = configurable
+duration_unit = hours/days
+```
+
+The default/current offer should be:
+
+```text
+100 Trollmonds
+24 hours
+```
+
+But authorized configuration should allow the duration to be changed.
+
+Audit:
+
+* ad pricing
+* promotion purchase logic
+* duration calculation
+* expiration
+* UI pricing
+* checkout
+* database records
+* admin configuration
+
+Make sure the actual charged currency is Trollmonds, NOT Troll Coins.
+
+---
+
+# 19. RGB BOX EFFECT
+
+## CURRENT FEATURE — MUST BE WIRED
+
+RGB Box Effect currently costs:
+
+**10 coins**
+
+It needs to be functional on:
+
+### PhoneViewerPage
+
+### PhoneBroadcastPage
+
+### Web ViewerPage
+
+### Web BroadcastPage
+
+The RGB effect should display on the **outlines of broadcast seat/video boxes**.
+
+Requirements:
+
+* RGB animated outline
+* works for empty/filled seat boxes as appropriate
+* works consistently across mobile and desktop
+* does not break LiveKit video rendering
+* does not block clicks/touch
+* does not cover chat controls
+* does not interfere with seat controls
+* does not create duplicate video elements
+
+If the existing RGB implementation already exists, reuse it.
+
+Do not create four unrelated RGB implementations.
+
+Create/use a shared component or shared styling mechanism where appropriate.
+
+The purchase/toggle should actually persist according to the existing MaiTroll economy system.
+
+Do not invent a new currency.
+
+---
+
+# 20. MINOR SAFETY
+
+## CURRENT FEATURE — MUST BE WIRED
+
+Minor Safety needs to actually work visually and functionally.
+
+It must be supported on:
+
+### PhoneViewerPage
+
+### PhoneBroadcastPage
+
+### Web ViewerPage
+
+### Web BroadcastPage
+
+The system should support the existing Minor Safety concept, including:
+
+* confirmation modal where required
+* minor safety badge/display
+* appropriate stream/user safety indication
+
+Audit existing database fields and safety logic first.
+
+Do NOT invent new safety fields if current fields already exist.
+
+Do NOT weaken existing safety checks.
+
+Do not expose unnecessary personal information.
+
+Make sure the UI clearly reflects the current safety state.
+
+---
+
+# 21. STREAM SWIPE
+
+Again:
+
+## KEEP
+
+Do not confuse Stream Swipe with the obsolete Treelz 15-second promotion.
+
+Stream Swipe stays.
+
+The old preview/20-viewer promotion trigger goes away.
+
+---
+
+# 22. CURRENT MODERATION MODEL
+
+Do not use:
+
+```text
+moderator
+superadmin
+```
+
+Use the current MaiTroll role system.
+
+Important current roles include:
+
+```text
+broadofficer
+troll_officer
+admin
+owner
+ceo
+```
+
+plus other legitimate current platform roles already present in the database.
+
+Do not make assumptions about every role.
+
+Read the existing role/permission implementation first.
+
+---
+
+# 23. DO NOT REMOVE THESE CURRENT SYSTEMS
+
+During cleanup, be extremely careful not to accidentally delete or break:
+
+* LiveKit
+* current broadcasting
+* current viewer functionality
+* current 6-seat system
+* current guest/co-host functionality
+* 1v1 battles
+* current battle economy
+* Troll Coins
+* Trollmonds
+* current Coin Store
+* current cashout
+* T-League
+* XP/Tier system
+* Treelz
+* UTroMail
+* MaiPiks
+* Mai Network
+* current advertising/promotion system
+* current moderation system
+* current officer system
+* current government/city systems
+* current family systems
+* current economy systems
+* current subscriptions
+* current gift systems
+* MAI Bag
+* current notifications
+* current realtime systems
+
+---
+
+# 24. FULL SEARCH REQUIREMENT
+
+Before changing code, perform repository-wide searches for every retired/current feature.
+
+Search terms should include at minimum:
+
+```text
+TrollToe
+Trollopoly
+PrideChallenge
+Pride Challenges
+superadmin
+moderator
+5v5
+5v5 battle
+9 seats
+maxSeats
+seatCount
+OBS
+RTMP
+HytroGames
+promo card
+PromoCard
+broadcast_start
+broadcast_60m
+broadcast_240m
+share_reward
+viewer_reward
+pending share
+daily reward
+25 coins
+60 seconds
+new user promo
+cashout promo
+1000 Troll Coins
+7 days
+20 viewers
+15 second
+15s preview
+Stream Promotion
+RGB
+rgb
+minor safety
+pinned
+pinned message
+stream swipe
+guest fee
+co-host fee
+seat pricing
+```
+
+Also search for equivalent snake_case/camelCase names.
+
+---
+
+# 25. DATABASE AUDIT
+
+Do NOT automatically delete database objects.
+
+For every obsolete feature:
+
+1. Find frontend references.
+2. Find backend references.
+3. Find RPC references.
+4. Find database function references.
+5. Find triggers.
+6. Find scheduled jobs.
+7. Find policies.
+8. Find migrations.
+9. Determine whether the object is shared with current functionality.
+
+Only remove database objects when they are truly obsolete and no current system depends on them.
+
+If a database object is obsolete but risky to remove because of dependencies, document it instead of breaking production.
+
+---
+
+# 26. FRONTEND AUDIT
+
+Check:
+
+* routes
+* navigation
+* lazy imports
+* pages
+* components
+* hooks
+* contexts
+* providers
+* services
+* API calls
+* Supabase queries
+* RPC calls
+* realtime subscriptions
+* constants
+* types
+* feature flags
+* permissions
+* icons/assets
+* CSS/Tailwind
+* mobile pages
+* desktop pages
+
+Remove dead imports after feature deletion.
+
+Make sure TypeScript builds cleanly.
+
+---
+
+# 27. REALTIME REQUIREMENT
+
+For any feature that is supposed to be realtime, do not solve it with page refreshes.
+
+Audit existing Supabase Realtime subscriptions.
+
+Especially ensure current chat/broadcast-related systems are not dependent on manual refresh.
+
+When adding or repairing realtime functionality:
+
+* subscribe to the correct table/channel
+* handle INSERT events
+* handle UPDATE events where applicable
+* clean up subscriptions
+* avoid duplicate subscriptions
+* avoid duplicate messages
+* update local state immediately after sending
+* handle reconnects
+* preserve existing RLS/security
+
+Do not introduce polling unless absolutely necessary.
+
+---
+
+# 28. PHONE + WEB PARITY
+
+Where a feature is explicitly listed for phone and web, implement it on BOTH.
+
+Specifically verify:
+
+```text
+PhoneViewerPage
+PhoneBroadcastPage
+Web ViewerPage
+Web BroadcastPage
+```
+
+for:
+
+* RGB Box Effect
+* Minor Safety
+* pinned-message behavior where applicable
+* seat behavior
+* current broadcast/viewer behavior
+
+Do not fix desktop only and assume mobile inherits it.
+
+---
+
+# 29. LIVEKIT SAFETY
+
+Do not modify the underlying LiveKit publishing/subscription architecture unless required.
+
+The cleanup must NOT cause:
+
+* duplicate camera tracks
+* duplicate microphone tracks
+* frozen remote video
+* missing remote video
+* duplicate participants
+* broken seat joins
+* broken seat releases
+* broken broadcaster camera
+* broken viewer camera subscriptions
+
+The current LiveKit architecture is production functionality.
+
+Preserve it.
+
+---
+
+# 30. NO FEATURE REINVENTION
+
+If a feature already exists:
+
+**FIX/WIRE IT.**
+
+Do not build a second competing implementation.
+
+If a feature does not exist but is explicitly marked as needing to be wired, inspect the existing architecture first and integrate into it.
+
+Do not create duplicate tables/components/hooks/services unnecessarily.
+
+---
+
+# 31. IMPLEMENTATION ORDER
+
+Use this order:
+
+### Phase 1 — Audit
+
+Create an internal inventory:
+
+```text
+KEEP
+WIRE
+REMOVE
+LEGACY BUT SHARED
+```
+
+for every affected feature.
+
+### Phase 2 — Remove dead frontend code
+
+Remove obsolete:
+
+* routes
+* pages
+* components
+* imports
+* navigation
+* feature flags
+
+### Phase 3 — Remove dead backend references
+
+Remove obsolete:
+
+* API calls
+* RPC calls
+* service methods
+* reward handlers
+* obsolete promotion logic
+
+### Phase 4 — Database safety audit
+
+Determine which database objects can safely be removed.
+
+Do not perform destructive DB changes without dependency verification.
+
+### Phase 5 — Current feature wiring
+
+Wire:
+
+* pinned messages
+* Stream Swipe
+* guest/co-host functionality
+* 6-seat limit
+* RGB Box Effect
+* Minor Safety
+* current Stream Promotion
+
+### Phase 6 — Business rule corrections
+
+Correct:
+
+* 6 seats
+* 1v1 battle
+* no guest/co-host fees
+* no daily broadcast reward
+* current Coin Store
+* 100 Trollmonds / 24h advertising default
+* configurable ad duration
+* no 20-viewer/15-second Treelz promotion trigger
+
+### Phase 7 — Build/test
+
+Run:
+
+* TypeScript checks
+* production build
+* lint if configured
+* existing tests
+* route verification
+
+Search for remaining references to retired functionality.
+
+---
+
+# 32. FINAL VERIFICATION SEARCH
+
+After implementation, run another repository-wide search for:
+
+```text
+TrollToe
+Trollopoly
+PrideChallenge
+superadmin
+moderator
+5v5
+OBS
+RTMP
+25 coins
+broadcast_start
+broadcast_60m
+broadcast_240m
+share_reward
+viewer_reward
+PromoCard
+1000 Troll Coins
+20 viewers
+15s preview
+15-second preview
+guest fee
+co-host fee
+9 seats
+```
+
+Any remaining matches must be reviewed.
+
+Some may be historical migrations or documentation.
+
+Do not blindly delete harmless historical migration records.
+
+But there should be no ACTIVE application logic using these retired features.
+
+---
+
+# 33. IMPORTANT — DO NOT TOUCH UNRELATED LOGIC
+
+This is a cleanup and wiring task.
+
+Do not use it as an excuse to rewrite:
+
+* authentication
+* Supabase auth
+* LiveKit architecture
+* payments
+* current Coin Store
+* current cashout architecture
+* MaiPiks
+* Mai Network
+* MAI Bag
+* battle architecture
+* UTroMail
+* government systems
+* family systems
+* existing profile systems
+
+unless an affected retired feature directly depends on it.
+
+---
+
+# 34. DELIVERABLE
+
+After completing the work, report:
+
+### KEEP
+
+List the current features confirmed preserved.
+
+### WIRED
+
+List each feature that was actually made functional.
+
+### REMOVED
+
+List every obsolete feature/code path removed.
+
+### LEGACY / SHARED
+
+List anything that was intentionally left because another current system depends on it.
+
+### DATABASE
+
+List database objects that were safely removed or left untouched due to dependencies.
+
+### FILES CHANGED
+
+List the important files changed.
+
+### TESTING
+
+Report:
+
+* TypeScript result
+* build result
+* lint result if available
+* tests if available
+* any remaining warnings/errors
+
+### REMAINING WORK
+
+Only list things that genuinely still need implementation.
+
+Do not claim a feature is wired if it was only visually added.
+
+Do not claim something was removed if only the UI was hidden.
+
+The goal is a **clean, current MaiTroll codebase that reflects what the platform actually uses today**, without breaking current production functionality.

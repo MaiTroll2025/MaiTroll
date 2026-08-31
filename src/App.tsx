@@ -633,6 +633,31 @@ import { GhostDropInProvider } from "./context/GhostDropInContext";
 const GhostBanner = lazyWithRetry(() => import("./components/home/GhostBanner"));
 const RTCAdminMonitor = lazyWithRetry(() => import("./components/admin/RTCAdminMonitor.tsx"));
 import MKeyInvitePopup from "./components/broadcast/mkey/MKeyInvitePopup";
+import { useUtromailMessagePopup } from "@/hooks/useUtromailMessagePopup";
+import UtromailMessagePopup from "@/components/messaging/UtromailMessagePopup";
+
+function GlobalUtromailPopup() {
+  const popup = useUtromailMessagePopup()
+
+  if (!popup.visible) return null
+
+  return (
+    <UtromailMessagePopup
+      message={{
+        id: popup.message?.id || '',
+        threadId: popup.message?.thread_id || '',
+        senderId: popup.message?.sender_id || '',
+        senderUsername: popup.message?.sender?.username || popup.message?.sender_mail_address || 'Unknown',
+        senderAvatarUrl: popup.message?.sender?.avatar_url || null,
+        content: popup.message?.body || '',
+        createdAt: popup.message?.sent_at || '',
+      }}
+      onClose={popup.dismiss}
+      onOpenThread={popup.handleOpenThread}
+      onViewProfile={popup.handleViewProfile}
+    />
+  )
+}
 
 
 function AppContent() {
@@ -2793,6 +2818,8 @@ const handleVisibilityChange = async () => {
        {/* 🔑 Live MKey invitations reach a viewer wherever they are — usually
            inside another broadcast — with a single JOIN LIVE deep link. */}
        <MKeyInvitePopup />
+
+       <GlobalUtromailPopup />
     </>
   );
 

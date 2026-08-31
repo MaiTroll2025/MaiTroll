@@ -2,9 +2,9 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
-import { Users, Radio, Store, Award, Gavel, Newspaper, Hash, FileText, User as UserIcon, Search } from 'lucide-react'
+import { Users, Radio, Store, Award, Gavel, Newspaper, Hash, FileText, User as UserIcon, Search, Briefcase, BookOpen, Shield, Heart } from 'lucide-react'
 
-type TabKey = 'all' | 'posts' | 'users' | 'streams' | 'stores' | 'broadcasters' | 'auctions' | 'articles' | 'hashtags'
+type TabKey = 'all' | 'posts' | 'users' | 'streams' | 'stores' | 'broadcasters' | 'auctions' | 'articles' | 'hashtags' | 'pages'
 
 const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: 'all', label: 'All', icon: Search },
@@ -16,6 +16,7 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: 'auctions', label: 'Auctions', icon: Gavel },
   { key: 'articles', label: 'TCNN', icon: Newspaper },
   { key: 'hashtags', label: 'Hashtags', icon: Hash },
+  { key: 'pages', label: 'Pages', icon: BookOpen },
 ]
 
 export default function ExploreSearchResults() {
@@ -34,6 +35,16 @@ export default function ExploreSearchResults() {
   const [auctions, setAuctions] = useState<any[]>([])
   const [articles, setArticles] = useState<any[]>([])
   const [hashtags, setHashtags] = useState<{ tag: string; count: number }[]>([])
+  const [pages] = useState<{ title: string; path: string; icon: any; color: string }[]>([
+    { title: 'Careers', path: '/careers', icon: Briefcase, color: 'text-amber-300' },
+    { title: 'Academy', path: '/academy', icon: BookOpen, color: 'text-emerald-300' },
+    { title: 'Support', path: '/support', icon: Shield, color: 'text-sky-300' },
+    { title: 'Troll Court', path: '/troll-court', icon: Gavel, color: 'text-violet-300' },
+    { title: 'Church', path: '/church', icon: Heart, color: 'text-pink-300' },
+    { title: 'Podcast', path: '/podcast', icon: Radio, color: 'text-orange-300' },
+    { title: 'Marketplace', path: '/marketplace', icon: Store, color: 'text-cyan-300' },
+    { title: 'Leaderboard', path: '/leaderboard', icon: Award, color: 'text-yellow-300' },
+  ])
 
   const setQuery = useCallback((value: string) => {
     const next = new URLSearchParams(params)
@@ -258,7 +269,29 @@ export default function ExploreSearchResults() {
               </Section>
             )}
 
-            {!loading && posts.length === 0 && users.length === 0 && streams.length === 0 && stores.length === 0 && broadcasters.length === 0 && auctions.length === 0 && articles.length === 0 && hashtags.length === 0 && (
+            {showSection('pages') && pages.length > 0 && (
+              <Section title="Pages">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {pages.map((p) => {
+                    const Icon = p.icon
+                    return (
+                      <Link
+                        key={p.path}
+                        to={p.path}
+                        className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20 hover:bg-white/[0.06]"
+                      >
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 ${p.color}`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <span className="text-sm font-bold text-slate-200">{p.title}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </Section>
+            )}
+
+            {!loading && posts.length === 0 && users.length === 0 && streams.length === 0 && stores.length === 0 && broadcasters.length === 0 && auctions.length === 0 && articles.length === 0 && hashtags.length === 0 && pages.length === 0 && (
               <div className="py-10 text-center text-sm text-slate-400">No results. Try a different search.</div>
             )}
           </div>

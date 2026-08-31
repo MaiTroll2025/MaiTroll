@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { Database, Shield, RefreshCw, Settings, FileText, AlertTriangle, Phone, Gavel, Trophy, DollarSign, Lock, Zap, MapPin, ShoppingCart, Megaphone, Share2, Image, TrendingUp, PieChart, HeadphonesIcon, Gift, Calendar, Crown, Award, Activity } from 'lucide-react'
+import { Database, Shield, RefreshCw, Settings, FileText, AlertTriangle, Phone, Gavel, Trophy, DollarSign, Lock, Zap, MapPin, ShoppingCart, Megaphone, Share2, Image, TrendingUp, PieChart, HeadphonesIcon, Gift, Calendar, Crown, Award, Activity, Coins } from 'lucide-react'
 
 const CustomerServiceDashboard = lazy(() => import('./CustomerServiceDashboard'))
 
@@ -10,6 +10,7 @@ const CityControlCenter = lazy(() => import('./CityControlCenter'))
 const CacheClear = lazy(() => import('./CacheClear'))
 const SystemConfig = lazy(() => import('./SystemConfig'))
 const CoinPackPurchasesLedger = lazy(() => import('./CoinPackPurchasesLedger'))
+const FeePool = lazy(() => import('./FeePool'))
 const StartupExpenseTracker = lazy(() => import('./StartupExpenseTracker'))
 const AdminActivity = lazy(() => import('./AdminActivity'))
 
@@ -152,6 +153,19 @@ export const systemManagementRoutes: AdminRoute[] = [
     tileColor: 'text-green-200',
     tileBgColor: 'bg-green-500/10',
     tileBorderColor: 'border-green-500/30',
+    category: 'economy'
+  },
+  {
+    id: 'fee-pool',
+    title: 'Fee Pool',
+    path: '/admin/fee-pool',
+    component: FeePool,
+    roles: ['admin'],
+    description: 'Every platform fee collected across Troll City, with USD value at 100 coins = $1',
+    icon: <Coins className="w-5 h-5 text-emerald-200" />,
+    tileColor: 'text-emerald-200',
+    tileBgColor: 'bg-emerald-500/10',
+    tileBorderColor: 'border-emerald-500/30',
     category: 'economy'
   },
   {

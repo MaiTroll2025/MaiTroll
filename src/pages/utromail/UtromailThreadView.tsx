@@ -82,6 +82,86 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
   };
 
   useEffect(() => {
+    if (!threadId || !user?.id) return;
+
+    const msgChannel = supabase
+      .channel(`utromail-thread-view:${threadId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "utromail_messages",
+          filter: `thread_id=eq.${threadId}`,
+        },
+        async (payload) => {
+          try {
+            const newMsg = payload.new as any;
+            if (!newMsg) return;
+
+            const isOwn = newMsg.sender_id === user.id;
+
+            if (isOwn) return;
+
+            const { data: senderProfile } = await supabase
+              .from("user_profiles")
+              .select("username, display_name, avatar_url")
+              .eq("id", newMsg.sender_id)
+              .maybeSingle();
+
+            const mappedMsg = {
+              id: newMsg.id,
+              thread_id: newMsg.thread_id,
+              sender_id: newMsg.sender_id,
+              sender_mail_address: newMsg.sender_mail_address,
+              recipient_id: newMsg.recipient_id,
+              recipient_mail_address: newMsg.recipient_mail_address,
+              subject: newMsg.subject,
+              body: newMsg.body,
+              body_html: newMsg.body_html,
+              message_type: newMsg.message_type,
+              is_starred: newMsg.is_starred || false,
+              is_draft: newMsg.is_draft || false,
+              parent_message_id: newMsg.parent_message_id,
+              sent_at: newMsg.sent_at,
+              created_at: newMsg.created_at,
+              updated_at: newMsg.updated_at,
+              sender_name:
+                (senderProfile as any)?.display_name ||
+                (senderProfile as any)?.username ||
+                null,
+              sender_username:
+                (senderProfile as any)?.username || null,
+              sender_avatar:
+                (senderProfile as any)?.avatar_url || null,
+              is_read: false,
+            };
+
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === mappedMsg.id)) {
+                return prev;
+              }
+              return [...prev, mappedMsg];
+            });
+
+            await markThreadAsRead(threadId, user.id);
+            onRefresh();
+          } catch (err) {
+            console.error(
+              "[UtromailThreadView] Realtime handler error:",
+              err,
+            );
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(msgChannel);
+    };
+  }, [threadId, user?.id, onRefresh]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 

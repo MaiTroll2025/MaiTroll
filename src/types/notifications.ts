@@ -69,6 +69,7 @@ export type NotificationType =
   | 'maipiks_new_post'
   | 'maipiks_new_story'
   | 'maipiks_screenshot'
+  | 'maipiks_story_tip'
 
   // GIFTS / COINS / WALLET
   | 'gift_received'

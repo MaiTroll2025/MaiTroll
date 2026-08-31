@@ -180,6 +180,29 @@ export default function ShopView() {
 
       if (purchaseError) throw purchaseError
 
+      // Route the 3% platform fee into the admin Fee Pool ledger
+      if (platformFee > 0) {
+        const { error: feeError } = await supabase.rpc('record_platform_fee', {
+          p_fee_type: 'marketplace_sale',
+          p_coins: platformFee,
+          p_gross_coins: item.price,
+          p_fee_percent: 3,
+          p_payer_user_id: user.id,
+          p_earner_user_id: shop.owner_id,
+          p_reference_table: 'marketplace_purchases',
+          p_reference_id: purchaseData.id,
+          p_fee_label: 'Marketplace Sale Fee',
+          p_metadata: { item_id: marketplaceItemId, item_name: item.name, item_type: item.category },
+          p_credit_admin: true,
+          p_idempotency_key: `marketplace_purchase:${purchaseData.id}`
+        })
+
+        if (feeError) {
+          console.error('Error recording platform fee in fee pool:', feeError)
+          // Never fail a purchase because of fee bookkeeping
+        }
+      }
+
       // Update item stock (if limited)
       if (item.stock_quantity !== null) {
         const { error: stockError } = await supabase

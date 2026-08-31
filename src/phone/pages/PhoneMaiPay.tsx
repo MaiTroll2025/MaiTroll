@@ -537,11 +537,32 @@ export default function PhoneMaiPay() {
     }, [user?.id])
 
   useEffect(() => {
-    loadAllData()
-    loadCashoutLimit()
-    loadCashoutRequests()
-    loadTransactions()
-    loadCrownRedemptions()
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      try {
+        await Promise.all([
+          loadAllData(),
+          loadCashoutLimit(),
+          loadCashoutRequests(),
+          loadTransactions(),
+          loadCrownRedemptions(),
+        ])
+      } catch (error) {
+        console.error('[PhoneMaiPay] Failed loading data:', error)
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void load()
+
+    return () => {
+      cancelled = true
+    }
   }, [
     loadAllData,
     loadCashoutLimit,
@@ -1302,7 +1323,7 @@ export default function PhoneMaiPay() {
                   Coins Gifted
                 </h2>
                 <p className="mt-1 text-[10px] text-zinc-500">
-                  Users you've sent coins to
+                  Users you&apos;ve sent coins to
                 </p>
               </div>
 

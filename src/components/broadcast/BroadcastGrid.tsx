@@ -124,7 +124,9 @@ interface BroadcastGridProps {
   // Broadcast mode (for hiding controls during game)
   broadcastMode?: 'normal' | 'game' | 'battle';
    // Mobile viewer mode (disables interactions)
-   isMobileViewer?: boolean;
+    isMobileViewer?: boolean;
+    // Phone broadcaster mode: skip box 0 (broadcaster handled externally as full-screen)
+    hideBox0?: boolean;
 
     // Modal state callbacks (for lifting modal state to parent)
     onOpenUserAction?: (info: { userId: string; username?: string; role?: string; createdAt?: string }) => void;
@@ -507,9 +509,10 @@ const BroadcastGridComponent = function BroadcastGrid({
   onToggleRgb,
   hasRgbEffect = false,
   canEditBoxes = false,
-   broadcastMode = 'normal',
-   showTicker = false,
-    isMobileViewer = false,
+    broadcastMode = 'normal',
+    showTicker = false,
+     isMobileViewer = false,
+     hideBox0 = false,
     // Modal handlers
     onOpenUserAction,
     onOpenUserStats,
@@ -1035,11 +1038,19 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
       battleRequiredBoxes = teamSize * 2; // Both teams
     }
 
-    let effectiveBoxCount: number;
-    let boxes: number[];
+     let effectiveBoxCount: number;
+     let boxes: number[];
 
-    // Troll Battle Universe Mode (4v4): always use exactly 8 boxes
-    if (isTrollBattleUniverseMode) {
+     // Phone broadcaster mode: skip box 0 (broadcaster rendered externally as full-screen)
+     if (hideBox0) {
+       const remoteOccupiedIndices = occupiedSeatIndices.filter(idx => idx !== 0);
+       const maxRemoteIndex = remoteOccupiedIndices.length > 0 ? Math.max(...remoteOccupiedIndices) : 0;
+       const requiredRemoteBoxes = Math.max(0, maxRemoteIndex); // box 0 excluded
+       const configuredBoxes = Math.max(0, Number(boxCountProp !== undefined ? boxCountProp : (stream.box_count || 1)) - 1);
+       const totalRemoteBoxes = Math.max(configuredBoxes, requiredRemoteBoxes);
+       effectiveBoxCount = Math.min(totalRemoteBoxes, HARD_CAP);
+       boxes = Array.from({ length: effectiveBoxCount }, (_, i) => i + 1); // skip index 0
+     } else if (isTrollBattleUniverseMode) {
       effectiveBoxCount = trollBattleBoxCount;
       boxes = Array.from({ length: trollBattleBoxCount }, (_, i) => i);
     } else if (hideEmptySeats) {
@@ -1164,8 +1175,8 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
         />
       )}
 
-      {/* Mobile Profile Banner at top of grid */}
-      {isMobileViewer && broadcasterProfile && (
+       {/* Mobile Profile Banner at top of grid */}
+       {isMobileViewer && !hideBox0 && broadcasterProfile && (
         <div className="absolute top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-white/10 p-3 flex items-center gap-3">
           <img
             src={broadcasterProfile.avatar_url || `https://ui-avatars.com/api/?name=${broadcasterProfile.username}&background=random`}
@@ -1253,20 +1264,24 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
         </div>
       )}
 
-        {/* Stage Pass layout — replaces box-grid when broadcaster goes live */}
-        {(() => {
-          const {
-            stagePasses: spStagePasses,
-            requestStagePass: spRequestPass,
-            approveStagePass: spApprovePass,
-            denyStagePass: spDenyPass,
-            removeStageGuest: spRemoveGuest,
-            refetch: spRefetch,
-          } = stagePassesHook;
+         {/* Stage Pass layout — replaces box-grid when broadcaster goes live */}
+         {(() => {
+           const {
+             stagePasses: spStagePasses,
+             requestStagePass: spRequestPass,
+             approveStagePass: spApprovePass,
+             denyStagePass: spDenyPass,
+             removeStageGuest: spRemoveGuest,
+             refetch: spRefetch,
+           } = stagePassesHook;
 
-          if (streamStatus !== 'live') return null;
+           if (streamStatus !== 'live') return null;
 
-          const livePasses = liveStagePasses;
+           // When hideBox0 is active, broadcaster camera is rendered externally (full-screen)
+           // so skip the stage pass host video to avoid duplicate camera
+           if (hideBox0) return null;
+
+           const livePasses = liveStagePasses;
 
           // Who the broadcaster is
           const isLocalHost = stream.user_id === localUserId;
@@ -2154,9 +2169,10 @@ function areBroadcastGridPropsEqual(prev: BroadcastGridProps, next: BroadcastGri
     prev.canSwipe === next.canSwipe &&
     prev.hasRgbEffect === next.hasRgbEffect &&
     prev.canEditBoxes === next.canEditBoxes &&
-    prev.broadcastMode === next.broadcastMode &&
-    prev.isMobileViewer === next.isMobileViewer &&
-     prev.onGift === next.onGift &&
+     prev.broadcastMode === next.broadcastMode &&
+     prev.isMobileViewer === next.isMobileViewer &&
+     prev.hideBox0 === next.hideBox0 &&
+      prev.onGift === next.onGift &&
      prev.onGiftAll === next.onGiftAll &&
      prev.onJoinSeat === next.onJoinSeat &&
      prev.onKick === next.onKick &&

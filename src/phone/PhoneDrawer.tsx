@@ -46,6 +46,7 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
       { label: 'Treelz', path: '/treelz', icon: 'Video' },
       { label: 'Auctions', path: '/auctions', icon: 'Gavel' },
       { label: 'HytroGaming', path: '/hytro', icon: 'Gamepad2' },
+      { label: 'Careers', path: '/careers', icon: 'Briefcase' },
       { label: 'Live', path: '/broadcast/setup', icon: 'Radio', show: !!(profile as any)?.is_broadcaster || isAdmin },
     ])
 
@@ -136,11 +137,11 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
     try {
       sessionStorage.setItem('logout_requested', 'true')
 
-      supabase.auth.signOut().catch((err) => {
+      await supabase.auth.signOut().catch((err) => {
         console.warn('Phone logout signOut error:', err)
       })
 
-      useAuthStore.getState().logout()
+      await useAuthStore.getState().logout()
 
       try {
         localStorage.clear()

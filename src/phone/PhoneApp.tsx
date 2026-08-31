@@ -48,11 +48,37 @@ import PhoneJailPage from './pages/PhoneJailPage'
 import PhoneBroadcastSummaryPage from './pages/PhoneBroadcastSummaryPage'
 import PhoneErrorBoundary from './PhoneErrorBoundary'
 import PhoneBottomNav from './layout/PhoneBottomNav'
+import PhoneCareers from './pages/PhoneCareers'
+import { useUtromailMessagePopup } from '@/hooks/useUtromailMessagePopup'
+import UtromailMessagePopup from '@/components/messaging/UtromailMessagePopup'
 
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { moderation } from '@/services/maitrollModeration'
 import { useEffect, useState } from 'react'
+
+function GlobalUtromailPopup() {
+  const popup = useUtromailMessagePopup()
+
+  if (!popup.visible) return null
+
+  return (
+    <UtromailMessagePopup
+      message={{
+        id: popup.message?.id || '',
+        threadId: popup.message?.thread_id || '',
+        senderId: popup.message?.sender_id || '',
+        senderUsername: popup.message?.sender?.username || popup.message?.sender_mail_address || 'Unknown',
+        senderAvatarUrl: popup.message?.sender?.avatar_url || null,
+        content: popup.message?.body || '',
+        createdAt: popup.message?.sent_at || '',
+      }}
+      onClose={popup.dismiss}
+      onOpenThread={popup.handleOpenThread}
+      onViewProfile={popup.handleViewProfile}
+    />
+  )
+}
 
 function PhoneJailRedirect({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
@@ -129,6 +155,8 @@ function PhoneJailRedirect({ children }: { children: React.ReactNode }) {
 }
 
 export default function PhoneApp() {
+  const authUser = useAuthStore((state) => state.user)
+
   return (
     <PhoneErrorBoundary>
       <PhoneJailRedirect>
@@ -136,9 +164,10 @@ export default function PhoneApp() {
           <Routes>
             <Route path="/phone" element={<Navigate to="/" replace />} />
 
-            <Route path="/" element={<PhoneHomepage />} />
+            <Route path="/" element={<PhoneHomepage key={authUser?.id ?? 'anon'} />} />
             <Route path="/auth" element={<PhoneAuth />} />
             <Route path="/login" element={<PhoneAuth />} />
+            <Route path="/careers" element={<PhoneCareers />} />
             <Route path="/go-live" element={<PhoneGoLive />} />
             <Route path="/mai-piks" element={<PhoneMAIPiks />} />
             <Route path="/broadcast" element={<PhoneBroadcastPage />} />
@@ -205,7 +234,10 @@ export default function PhoneApp() {
             <Route path="/president/:id" element={<PhonePlaceholderPage />} />
             <Route path="/secretary/:id" element={<PhoneSecretary />} />
             <Route path="/artist/:id" element={<PhonePlaceholderPage />} />
-            <Route path="/ceo-*" element={<PhonePlaceholderPage />} />
+            {/* React Router requires `*` to follow a `/`, so the CEO pages are
+                listed explicitly instead of using a bare `/ceo-*` prefix. */}
+            <Route path="/ceo-assistant-dashboard" element={<PhonePlaceholderPage />} />
+            <Route path="/ceo-assistant-dashboard/*" element={<PhonePlaceholderPage />} />
 
             <Route path="*" element={<PhoneWebPage />} />
           </Routes>
@@ -213,6 +245,8 @@ export default function PhoneApp() {
           {/* 🔑 Live MKey invitations reach a viewer wherever they are — usually
               inside another broadcast — with a single JOIN LIVE deep link. */}
           <MKeyInvitePopup />
+
+          <GlobalUtromailPopup />
 
           <PhoneBottomNav />
         </div>

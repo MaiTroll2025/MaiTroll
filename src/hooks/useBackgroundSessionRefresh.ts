@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 
@@ -10,7 +11,8 @@ import { supabase } from '../lib/supabase'
  * This addresses the issue where the site becomes stale until refresh.
  */
 export function useBackgroundSessionRefresh() {
-  const { user, refreshProfile } = useAuthStore()
+  const navigate = useNavigate()
+  const { user, logout, refreshProfile } = useAuthStore()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isActiveRef = useRef(false)
   const refreshInFlightRef = useRef(false)
@@ -38,7 +40,6 @@ export function useBackgroundSessionRefresh() {
         if (!error && data?.session?.access_token) {
           return true
         }
-        // If refresh returned but no token, check if we still have a valid session
         const { data: checkSession } = await supabase.auth.getSession()
         if (checkSession.session?.access_token) {
           return true
@@ -48,7 +49,6 @@ export function useBackgroundSessionRefresh() {
           console.debug('[BackgroundSession] Token refresh retry failed; session will be checked again quietly', err)
         }
       }
-      // Wait before retry (exponential backoff)
       if (attempt < retries) {
         await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
       }
@@ -60,7 +60,6 @@ export function useBackgroundSessionRefresh() {
   const doRefresh = useCallback(async () => {
     if (!user) return
     
-    // Prevent multiple concurrent refreshes
     if (refreshInFlightRef.current) {
       console.debug('[BackgroundSession] Refresh already in progress, skipping')
       return
@@ -72,21 +71,17 @@ export function useBackgroundSessionRefresh() {
       
       if (!refreshSucceeded) {
         console.debug('[BackgroundSession] Refresh attempts did not complete; checking session state')
-        // Final check - maybe Supabase auto-refresh already handled it
-        // DON'T auto-logout - let the user stay logged in and retry on next action
-        // The session might still be valid, just not accessible right now
         const { data: finalCheck } = await supabase.auth.getSession()
         if (!finalCheck.session?.access_token) {
-          console.warn('[BackgroundSession] No valid session after all attempts - but NOT logging out to prevent false positives')
-          // Just mark the session as needing refresh on next action
-          // Don't logout - this prevents the "logged in on another device" false positive
+          console.warn('[BackgroundSession] No valid session after all attempts - logging out')
+          await logout()
+          navigate('/auth', { replace: true })
+          return
         }
       }
 
-      // Force a soft refresh periodically to ensure UI stays in sync
-      // This prevents the "stale until refresh" issue by proactively updating the state
       const timeSinceLastRefresh = Date.now() - lastRefreshTimeRef.current
-      if (timeSinceLastRefresh > 5 * 60 * 1000) { // Every 5 minutes, trigger full profile refresh
+      if (timeSinceLastRefresh > 5 * 60 * 1000) {
         if (isBroadcastRoute()) {
           if (import.meta.env.DEV) console.debug('[BackgroundSession] Broadcast route active; skipping full profile refresh to prevent broadcast disruption')
           lastRefreshTimeRef.current = Date.now()
@@ -97,18 +92,15 @@ export function useBackgroundSessionRefresh() {
         }
       }
       
-      // Dispatch event to notify other components (like realtime) that we're active
       window.dispatchEvent(new CustomEvent('supabase-realtime-activity'))
       
       console.debug('[BackgroundSession] Session and profile refreshed successfully')
     } catch (err) {
       console.error('[BackgroundSession] Unexpected error during refresh:', err)
-      // On unexpected errors, don't reload - just log the error
-      // This prevents infinite reload loops
     } finally {
       refreshInFlightRef.current = false
     }
-  }, [user, refreshProfile])
+  }, [user, logout, refreshProfile, navigate])
 
   useEffect(() => {
     // Only run if user is logged in
@@ -152,5 +144,5 @@ export function useBackgroundSessionRefresh() {
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [user?.id, doRefresh]) // Only re-run when user ID changes
+  }, [user, doRefresh])
 }

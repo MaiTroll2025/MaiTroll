@@ -323,7 +323,7 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
           throw error
         }
 
-        if (!isSupabaseFunction && !isExpectedDevNoise(error)) {
+        if (!isSupabaseFunction && !isExpectedDevNoise(error) && !shouldIgnoreBugCenterError(error)) {
           if (!shouldReportBugCenterError(error)) throw error
           
           const errorContext: any = {

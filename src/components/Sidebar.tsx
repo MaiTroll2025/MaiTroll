@@ -735,6 +735,7 @@ export default function Sidebar() {
               {isAdmin && (
                 <>
                   <GridItem collapsed={isSidebarCollapsed} icon={Coins} label="Coin Purchase Ledger" to="/admin/coinpurchase-ledger" active={location.pathname.startsWith('/admin/coinpurchase-ledger')} highlight={isUpdated('/admin/coinpurchase-ledger')} onClick={() => markAsViewed('/admin/coinpurchase-ledger')} className="text-cyan-300" tone="cyan" />
+                  <GridItem collapsed={isSidebarCollapsed} icon={Coins} label="Fee Pool" to="/admin/fee-pool" active={location.pathname.startsWith('/admin/fee-pool')} highlight={isUpdated('/admin/fee-pool')} onClick={() => markAsViewed('/admin/fee-pool')} className="text-emerald-300" tone="green" />
                   <GridItem collapsed={isSidebarCollapsed} icon={TrendingUp} label="Startup Expense Tracker" to="/admin/startup-expense-tracker" active={location.pathname.startsWith('/admin/startup-expense-tracker')} highlight={isUpdated('/admin/startup-expense-tracker')} onClick={() => markAsViewed('/admin/startup-expense-tracker')} className="text-cyan-300" tone="cyan" />
                   <GridItem collapsed={isSidebarCollapsed} icon={Shield} label="Security Command" to="/admin/security-command-center" active={location.pathname.startsWith('/admin/security-command-center')} highlight={isUpdated('/admin/security-command-center')} onClick={() => markAsViewed('/admin/security-command-center')} className="text-cyan-300" tone="cyan" />
                 </>

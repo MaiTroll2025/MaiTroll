@@ -18,7 +18,7 @@ export default function LearnAboutMaiTrollBanner() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-white sm:text-base">Learn About MaiTroll</p>
-            <p className="text-xs text-slate-400 sm:text-sm">Discover what MaiTroll is and what you can do here.</p>
+            <p className="text-xs text-slate-400 sm:text-sm">Click here if you're new to Learn </p>
           </div>
           <div className="shrink-0 rounded-full bg-purple-600/20 px-3 py-1.5 text-xs font-semibold text-purple-300 group-hover:bg-purple-600/30 transition-colors">
             Click to explore

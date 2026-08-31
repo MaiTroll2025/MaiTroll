@@ -297,7 +297,13 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
     fetchLiveContent()
     fetchLiveAuctions()
 
-    const homeChannel = supabase.channel('home:global')
+    /*
+     * A unique topic per mount. A fixed topic makes a second mount (React
+     * StrictMode in dev, or two providers) collide on the same channel, which
+     * surfaces as `CHANNEL_ERROR` with an undefined error object.
+     */
+    const channelName = `home:global:${Math.random().toString(36).slice(2, 10)}`
+    const homeChannel = supabase.channel(channelName)
 
     homeChannel
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'streams' }, async (payload) => {
@@ -470,9 +476,35 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
           return [...prev, auction]
         })
       })
-      .subscribe()
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`[LiveContentContext] Realtime subscribed to ${channelName}`)
+          return
+        }
+
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          /*
+           * Realtime is an optimisation here — the 10s poll below keeps the home
+           * feed fresh either way, so this is a warning rather than an error.
+           * `err` is routinely undefined for transport level failures, so spell
+           * out the likely causes instead of logging `undefined`.
+           */
+          console.warn(
+            `[LiveContentContext] Realtime ${status} on ${channelName}:`,
+            (err as any)?.message ||
+              err ||
+              'no error detail — usually a dropped websocket or a table missing from the realtime publication. Falling back to polling.'
+          )
+        }
+      })
+
+    const pollInterval = window.setInterval(() => {
+      fetchLiveContent()
+      fetchLiveAuctions()
+    }, 10000)
 
     return () => {
+      window.clearInterval(pollInterval)
       try { supabase.removeChannel(homeChannel) } catch {}
     }
   }, [fetchLiveContent, fetchLiveAuctions, mapStreamRow, enrichStreamItem])

@@ -67,7 +67,9 @@ export interface GiftSendOptions {
 
 interface GiftSystemContextValue {
   sendGift: (gift: GiftItem, options?: GiftSendOptions) => Promise<boolean | { success: boolean; bonus?: any }>
+  undoRecentGift: (streamGiftId?: string) => Promise<{ success: boolean; message?: string }>
   isSending: boolean
+  lastSentGiftId: string | null
 }
 
 const GiftSystemContext = createContext<GiftSystemContextValue | null>(null)
@@ -116,8 +118,53 @@ function GiftSystemProviderInner({
   const { user, profile } = useAuthStore()
   const { recordGiftSent, recordGiftEarned } = useTrollFamilyActivity()
   const [isSending, setIsSending] = useState(false)
+  const [lastSentGiftId, setLastSentGiftId] = useState<string | null>(null)
 
   const circuitRef = useRef<{ openUntil: number }>({ openUntil: 0 })
+
+  const undoRecentGift = useCallback(
+    async (streamGiftId?: string): Promise<{ success: boolean; message?: string }> => {
+      const currentUserId = user?.id
+      const targetId = streamGiftId || lastSentGiftId
+
+      if (!currentUserId || !targetId) {
+        return { success: false, message: 'No gift to undo' }
+      }
+
+      try {
+        const { data: result, error: rpcError } = await supabase.rpc('undo_gift_transaction', {
+          p_stream_gift_id: targetId,
+          p_requester_id: currentUserId,
+        })
+
+        if (rpcError) {
+          console.error('[GiftSystem] Undo RPC error:', rpcError)
+          return { success: false, message: rpcError.message || 'Undo failed' }
+        }
+
+        if (!result?.success) {
+          return { success: false, message: result?.message || 'Undo failed' }
+        }
+
+        setLastSentGiftId(null)
+
+        void quietRefreshGiftProfile(currentUserId)
+        void quietRefreshGiftProfile(result.receiver_id)
+
+        try {
+          const xpState = useXPStore.getState()
+          await xpState.fetchXP(currentUserId)
+          if (result.receiver_id) await xpState.fetchXP(result.receiver_id)
+        } catch (e) { if (import.meta.env.DEV) console.warn('[GiftSystem] undo fetchXP failed:', e) }
+
+        return { success: true, message: 'Gift undone successfully' }
+      } catch (error: any) {
+        console.error('[GiftSystem] Undo error:', error)
+        return { success: false, message: error?.message || 'Undo failed' }
+      }
+    },
+    [user?.id, lastSentGiftId]
+  )
 
   const sendGift = useCallback(
     async (gift: GiftItem, options: GiftSendOptions = {}) => {
@@ -237,6 +284,7 @@ function GiftSystemProviderInner({
           } catch (e) { if (import.meta.env.DEV) console.warn('[GiftSystem] activity record failed:', e) }
 
           const giftId = result?.stream_gift_id || result?.gift_transaction_id || result?.transaction_id
+          if (giftId) setLastSentGiftId(giftId)
           const normalizedPayload = {
             id: giftId,
             stream_gift_id: giftId,
@@ -308,8 +356,8 @@ function GiftSystemProviderInner({
   )
 
   const contextValue = useMemo(
-    () => ({ sendGift, isSending }),
-    [sendGift, isSending]
+    () => ({ sendGift, undoRecentGift, isSending, lastSentGiftId }),
+    [sendGift, undoRecentGift, isSending, lastSentGiftId]
   )
 
   return React.createElement(
