@@ -46,6 +46,7 @@ import PhoneSafety from './pages/PhoneSafety'
 import PhoneLegal from './pages/PhoneLegal'
 import PhoneJailPage from './pages/PhoneJailPage'
 import PhoneBroadcastSummaryPage from './pages/PhoneBroadcastSummaryPage'
+import PhoneExplore from './pages/PhoneExplore'
 import PhoneErrorBoundary from './PhoneErrorBoundary'
 import PhoneBottomNav from './layout/PhoneBottomNav'
 import PhoneCareers from './pages/PhoneCareers'
@@ -180,6 +181,8 @@ export default function PhoneApp() {
             <Route path="/wallet" element={<PhoneMaiPay />} />
             <Route path="/profile" element={<PhoneProfile />} />
             <Route path="/following" element={<PhoneFollowing />} />
+            <Route path="/following/:userId" element={<PhoneFollowing />} />
+            <Route path="/following/:username" element={<PhoneFollowing />} />
             <Route path="/podcast" element={<PhonePodcast />} />
             <Route path="/hytro" element={<PhoneHytroGameStreams />} />
             <Route path="/viewer" element={<PhoneViewerPage />} />
@@ -201,6 +204,7 @@ export default function PhoneApp() {
             <Route path="/live" element={<PhoneLiveNow />} />
             <Route path="/leagues" element={<PhoneLeagues />} />
             <Route path="/academy" element={<PhoneAcademy />} />
+            <Route path="/explore" element={<PhoneExplore />} />
             <Route path="/mai-record-label" element={<PhoneRecordLabel />} />
             <Route path="/tcnn" element={<PhoneTCNN />} />
             <Route path="/community-wall" element={<PhoneCommunityWall />} />

@@ -278,8 +278,11 @@ export default function CityStatusOrb({
       ? 'border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)]'
       : 'border-white/10';
 
-    const handleClick = () => {
-      if (permissions.canRaid && !permissions.isSelf && onRaid) {
+    const handleClick = (event: React.MouseEvent) => {
+      event.stopPropagation()
+      if (permissions.isSelf && onHouseClick) {
+        onHouseClick()
+      } else if (permissions.canRaid && !permissions.isSelf && onRaid) {
         onRaid()
       } else if (permissions.canRepair && onRaid) {
         onRaid()
@@ -904,7 +907,8 @@ export default function CityStatusOrb({
         <div className="px-4 pb-4">
           <button
             type="button"
-            onClick={() => {
+            onClick={(event) => {
+              event.stopPropagation()
               if (
                 permissions.canRaid &&
                 !permissions.isSelf &&
@@ -972,7 +976,10 @@ export default function CityStatusOrb({
         <div className="px-4 pb-4">
           <button
             type="button"
-            onClick={onRaid}
+            onClick={(event) => {
+              event.stopPropagation()
+              onRaid?.()
+            }}
             className={cn(
               'group flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-all duration-200',
               data.recentlyRaided
@@ -1042,7 +1049,10 @@ export default function CityStatusOrb({
         <div className="flex rounded-xl border border-white/[0.06] bg-black/20 p-1">
           <button
             type="button"
-            onClick={() => setActiveTab('overview')}
+            onClick={(event) => {
+              event.stopPropagation()
+              setActiveTab('overview')
+            }}
             className={[
               'flex-1 rounded-lg py-2 text-[8px] font-black uppercase tracking-[0.16em]',
               'transition-all duration-200',
@@ -1056,7 +1066,10 @@ export default function CityStatusOrb({
 
           <button
             type="button"
-            onClick={() => setActiveTab('keys')}
+            onClick={(event) => {
+              event.stopPropagation()
+              setActiveTab('keys')
+            }}
             className={[
               'flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2',
               'text-[8px] font-black uppercase tracking-[0.16em]',
@@ -1132,7 +1145,10 @@ export default function CityStatusOrb({
           {permissions.isSelf && (
             <button
               type="button"
-              onClick={openSafe}
+              onClick={(event) => {
+                event.stopPropagation()
+                openSafe()
+              }}
               className={[
                 'mt-2.5 flex w-full items-center justify-center gap-2',
                 'rounded-xl border border-amber-400/20',
@@ -1312,7 +1328,10 @@ function OrbAction({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(event) => {
+        event.stopPropagation()
+        onClick?.()
+      }}
       className={[
         'flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5',
         'text-[8px] font-black uppercase tracking-wider',
@@ -1386,7 +1405,10 @@ function SafeBoxModal({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={(event) => {
+              event.stopPropagation()
+              onClose()
+            }}
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-zinc-500 hover:text-white"
           >
             <X size={15} />

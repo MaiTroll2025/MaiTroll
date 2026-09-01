@@ -6,9 +6,10 @@ import { supabase } from '../lib/supabase'
 /**
  * Background session refresh hook
  * Periodically refreshes the Supabase session and user profile to prevent
- * staleness issues that occur after ~10 minutes of inactivity.
- * 
- * This addresses the issue where the site becomes stale until refresh.
+ * staleness issues that occur after ~1 hour of inactivity.
+ *
+ * The default Supabase JWT TTL is ~1h, so we refresh on a shorter cadence
+ * and on tab-resume events to stay ahead of expiry.
  */
 export function useBackgroundSessionRefresh() {
   const navigate = useNavigate()
@@ -22,7 +23,7 @@ export function useBackgroundSessionRefresh() {
     if (typeof window === 'undefined') return false
     return /^\/(broadcast|watch|live)(\/|$)/.test(window.location.pathname)
   }
-  
+
   // Attempt session refresh with retry logic
   const attemptRefresh = async (retries = 2): Promise<boolean> => {
     const { data: currentSession } = await supabase.auth.getSession()
@@ -30,7 +31,7 @@ export function useBackgroundSessionRefresh() {
       ? currentSession.session.expires_at * 1000
       : 0
 
-    if (currentSession.session?.access_token && expiresAtMs - Date.now() > 5 * 60 * 1000) {
+    if (currentSession.session?.access_token && expiresAtMs - Date.now() > 10 * 60 * 1000) {
       return true
     }
 
@@ -59,16 +60,16 @@ export function useBackgroundSessionRefresh() {
   // Function to refresh session and profile
   const doRefresh = useCallback(async () => {
     if (!user) return
-    
+
     if (refreshInFlightRef.current) {
       console.debug('[BackgroundSession] Refresh already in progress, skipping')
       return
     }
     refreshInFlightRef.current = true
-    
+
     try {
       const refreshSucceeded = await attemptRefresh(2)
-      
+
       if (!refreshSucceeded) {
         console.debug('[BackgroundSession] Refresh attempts did not complete; checking session state')
         const { data: finalCheck } = await supabase.auth.getSession()
@@ -91,9 +92,9 @@ export function useBackgroundSessionRefresh() {
           lastRefreshTimeRef.current = Date.now()
         }
       }
-      
+
       window.dispatchEvent(new CustomEvent('supabase-realtime-activity'))
-      
+
       console.debug('[BackgroundSession] Session and profile refreshed successfully')
     } catch (err) {
       console.error('[BackgroundSession] Unexpected error during refresh:', err)
@@ -114,10 +115,9 @@ export function useBackgroundSessionRefresh() {
     }
     isActiveRef.current = true
 
-    // Refresh session every 10 minutes to prevent staleness
-    // Reduced frequency to avoid rate limiting with Supabase's built-in autoRefreshToken
-    const SESSION_REFRESH_INTERVAL = 10 * 60 * 1000 // 10 minutes
-    
+    // Refresh session every 5 minutes to prevent staleness
+    const SESSION_REFRESH_INTERVAL = 5 * 60 * 1000 // 5 minutes
+
     // Initial refresh
     doRefresh()
 
@@ -127,14 +127,31 @@ export function useBackgroundSessionRefresh() {
       doRefresh()
     }, SESSION_REFRESH_INTERVAL)
 
-    // Refresh immediately when tab becomes visible again (fixes backgrounded tab logout)
+    // Refresh immediately when tab/window becomes visible again
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.debug('[BackgroundSession] Tab became visible, refreshing session')
         doRefresh()
       }
     }
+
+    // Refresh when the window regains focus (covers some mobile browsers)
+    const handleFocus = () => {
+      console.debug('[BackgroundSession] Window regained focus, refreshing session')
+      doRefresh()
+    }
+
+    // Refresh when the page is restored from bfcache
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        console.debug('[BackgroundSession] Page restored from bfcache, refreshing session')
+        doRefresh()
+      }
+    }
+
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('pageshow', handlePageShow)
 
     return () => {
       isActiveRef.current = false
@@ -143,6 +160,8 @@ export function useBackgroundSessionRefresh() {
         intervalRef.current = null
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('pageshow', handlePageShow)
     }
   }, [user, doRefresh])
 }

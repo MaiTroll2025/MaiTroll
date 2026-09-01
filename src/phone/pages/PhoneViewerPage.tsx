@@ -117,6 +117,10 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import BattleView from '@/pages/broadcast/BattleView'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import UserActionModal from '@/components/broadcast/UserActionModal'
+import { useFeaturedLive } from '@/hooks/useFeaturedLive'
+import { FeaturedBanner } from '@/components/featured/FeaturedBanner'
+import { FeaturedLeaderboard } from '@/components/featured/FeaturedLeaderboard'
+import { FeaturedLiveOverlay } from '@/components/featured/FeaturedLiveOverlay'
 import ViewerUserActionModal from '@/components/broadcast/ViewerUserActionModal'
 import ModActionsPopup from '@/components/broadcast/ModActionsPopup'
 
@@ -533,11 +537,13 @@ const PhoneRemoteVideo = memo(
     room,
     className,
     fallback,
+    mirror = false,
   }: {
     participant: any
     room?: any
     className?: string
     fallback: React.ReactNode
+    mirror?: boolean
   }) {
     const videoRef =
       useRef<HTMLVideoElement | null>(null)
@@ -858,7 +864,7 @@ const PhoneRemoteVideo = memo(
           muted
           controls={false}
           disablePictureInPicture
-          className="absolute inset-0 h-full w-full object-cover"
+          className={cn('absolute inset-0 h-full w-full object-cover', mirror && '-scale-x-100')}
         />
 
         <audio
@@ -966,6 +972,19 @@ export default function PhoneViewerPage() {
 
   const [stream, setStream] =
     useState<Stream | null>(null)
+
+  const {
+    featuredBroadcasters,
+    featuredEvent,
+    isFeaturedEvent,
+    currentStreamFeatured,
+    leaderboardOpen,
+    openFeaturedLeaderboard,
+    closeFeaturedLeaderboard,
+  } = useFeaturedLive({
+    streamId: streamId || stream?.id || null,
+    enabled: !!(streamId || stream?.id),
+  })
 
   const hostId =
     stream?.user_id || ''
@@ -1294,46 +1313,71 @@ export default function PhoneViewerPage() {
         setError(null)
 
         try {
-          const {
-            data,
-            error: streamError,
-          } = await supabase
+          let streamQuery = supabase
             .from('streams')
             .select('*')
-            .eq('id', streamId)
-            .maybeSingle()
 
-          if (cancelled) return
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(streamId)
+          let data: any = null
+          let streamError: any = null
 
-          if (streamError) {
-            console.error(
-              '[PhoneViewerPage] stream lookup failed',
-              streamError,
-            )
+          if (isUuid) {
+            const result = await streamQuery.eq('id', streamId).maybeSingle()
+            data = result.data
+            streamError = result.error
+          } else {
+            const { data: owner, error: ownerError } = await supabase
+              .from('user_profiles')
+              .select('id')
+              .eq('username', streamId)
+              .maybeSingle()
 
-            setError(
-              streamError.message ||
-                'Unable to load stream',
-            )
-
-            setStream(null)
-
-            return
+            if (ownerError) {
+              streamError = ownerError
+            } else if (owner?.id) {
+              const result = await streamQuery
+                .eq('user_id', owner.id)
+                .eq('is_live', true)
+                .eq('status', 'live')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+              data = result.data
+              streamError = result.error
+            }
           }
 
-          if (!data) {
-            setError(
-              'Stream not found',
+            if (cancelled) return
+
+            if (streamError) {
+              console.error(
+                '[PhoneViewerPage] stream lookup failed',
+                streamError,
+              )
+
+              setError(
+                streamError.message ||
+                  'Unable to load stream',
+              )
+
+              setStream(null)
+
+              return
+            }
+
+            if (!data) {
+              setError(
+                'Stream not found',
+              )
+
+              setStream(null)
+
+              return
+            }
+
+            setStream(
+              data as Stream,
             )
-
-            setStream(null)
-
-            return
-          }
-
-          setStream(
-            data as Stream,
-          )
         } catch (err) {
           if (cancelled) return
 
@@ -3924,6 +3968,21 @@ export default function PhoneViewerPage() {
       }
     >
       <UndoRecentGiftBar />
+      {isFeaturedEvent && (
+        <FeaturedBanner
+          broadcasters={featuredBroadcasters}
+          event={featuredEvent}
+          onOpenLeaderboard={openFeaturedLeaderboard}
+        />
+      )}
+      {featuredBroadcasters.length > 0 && (
+        <FeaturedLeaderboard
+          open={leaderboardOpen}
+          broadcasters={featuredBroadcasters}
+          onClose={closeFeaturedLeaderboard}
+        />
+      )}
+      <FeaturedLiveOverlay active={!!currentStreamFeatured} className="left-4 top-4" />
       <div
         className="relative h-[100dvh] w-full overflow-hidden bg-[#02030a] text-white"
         onClick={() => {
@@ -4100,7 +4159,7 @@ export default function PhoneViewerPage() {
                     try {
                       await navigator.share?.({
                         title: `@${hostName} on MaiTroll`,
-                        url: window.location.href,
+                        url: `${window.location.origin}/live/${encodeURIComponent(hostName)}`,
                       })
                     } catch {
                       // cancelled
@@ -4141,11 +4200,11 @@ export default function PhoneViewerPage() {
                       size={19}
                     />
                   </button>
-
-                  {streamId && (
-                    <MaiBag streamId={streamId} compact />
-                  )}
                 </div>
+
+                {streamId && (
+                  <MaiBag streamId={streamId} compact className="pointer-events-auto absolute right-3 top-3 z-20" />
+                )}
               </div>
             </div>
           )}

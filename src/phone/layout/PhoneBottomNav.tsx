@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  Bell,
   ChevronUp,
   Coins,
   Home,
@@ -12,11 +11,8 @@ import {
   Sparkles,
   Store,
   User,
-  Wallet,
-  Zap,
 } from 'lucide-react'
 
-import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { getPhoneNavSections, type PhoneNavSection } from '../phoneNav'
 import { usePhoneRoleAccess } from '../usePhoneRoleAccess'
@@ -47,61 +43,12 @@ function isPathHidden(pathname: string): boolean {
   return false
 }
 
-type PhoneUserCard = {
-  id: string | null
-  username: string
-  displayName: string
-  avatarUrl: string | null
-  role: string
-  level: number
-  xp: number
-  trollCoins: number
-  hypeCoins: number
-  trollmonds: number
-}
-
-const DEFAULT_USER: PhoneUserCard = {
-  id: null,
-  username: 'Guest',
-  displayName: 'Guest',
-  avatarUrl: null,
-  role: 'user',
-  level: 1,
-  xp: 0,
-  trollCoins: 0,
-  hypeCoins: 0,
-  trollmonds: 0,
-}
-
-function getStringValue(source: any, keys: string[], fallback = ''): string {
-  for (const key of keys) {
-    const value = source?.[key]
-    if (typeof value === 'string' && value.trim()) {
-      return value.trim()
-    }
-  }
-  return fallback
-}
-
-function getNumberValue(source: any, keys: string[], fallback = 0): number {
-  for (const key of keys) {
-    const value = source?.[key]
-    if (value !== null && value !== undefined && value !== '') {
-      const numeric = Number(value)
-      if (!Number.isNaN(numeric)) return numeric
-    }
-  }
-  return fallback
-}
-
 export default function PhoneBottomNav() {
   const [isOpen, setIsOpen] = useState(false)
   const navigate = useNavigate()
-  const { user, profile, logout } = useAuthStore()
+  const { logout } = useAuthStore()
   const roleAccess = usePhoneRoleAccess()
-
-  const [userCard, setUserCard] = useState<PhoneUserCard>(DEFAULT_USER)
-  const [loadingProfile, setLoadingProfile] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const sections: PhoneNavSection[] = useMemo(
     () => getPhoneNavSections(roleAccess),
@@ -116,59 +63,6 @@ export default function PhoneBottomNav() {
     [sections],
   )
 
-  useEffect(() => {
-    if (!user?.id) {
-      setUserCard(DEFAULT_USER)
-      return
-    }
-
-    let cancelled = false
-
-    async function load() {
-      setLoadingProfile(true)
-      try {
-        const { data } = await supabase
-          .from('user_profiles')
-          .select(
-            'id, username, display_name, avatar_url, role, troll_role, level, xp, troll_coins, hype_coins, trollmonds',
-          )
-          .eq('id', user.id)
-          .maybeSingle()
-
-        if (!cancelled && data) {
-          setUserCard({
-            id: data.id ?? user.id,
-            username: getStringValue(data, ['username'], user.email ?? 'User'),
-            displayName: getStringValue(
-              data,
-              ['display_name'],
-              getStringValue(data, ['username'], 'User'),
-            ),
-            avatarUrl: data.avatar_url ?? null,
-            role: getStringValue(data, ['role', 'troll_role'], 'user'),
-            level: getNumberValue(data, ['level'], 1),
-            xp: getNumberValue(data, ['xp'], 0),
-            trollCoins: getNumberValue(data, ['troll_coins'], 0),
-            hypeCoins: getNumberValue(data, ['hype_coins'], 0),
-            trollmonds: getNumberValue(data, ['trollmonds'], 0),
-          })
-        }
-      } catch {
-        // ignore
-      } finally {
-        if (!cancelled) {
-          setLoadingProfile(false)
-        }
-      }
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [user?.id, supabase])
-
   const handleSignOut = useCallback(async () => {
     await logout()
     navigate('/', { replace: true })
@@ -179,90 +73,96 @@ export default function PhoneBottomNav() {
     return null
   }
 
+  const openExplore = () => {
+    setIsOpen(false)
+    navigate(`/explore${searchQuery.trim() ? `?q=${encodeURIComponent(searchQuery.trim())}` : ''}`)
+  }
+
   return (
     <nav
       className={`fixed inset-x-0 bottom-0 z-50 pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] ${
         isOpen ? 'pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)]' : ''
       }`}
     >
-      {/* Always-visible bottom tab bar */}
-      <div className="mx-auto flex max-w-xl items-center justify-around border-t border-white/10 bg-[#050715]/95 px-1 py-2 backdrop-blur-xl">
-        <NavLink
-          to="/"
-          className={({ isActive }) =>
-            `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
-              isActive ? 'text-cyan-400' : 'text-slate-400'
-            }`
-          }
-        >
-          <Home size={18} />
-          <span className="text-[9px] font-black leading-none">Home</span>
-        </NavLink>
+      {!isOpen && (
+        <div className="mx-auto flex max-w-xl items-center justify-around border-t border-white/10 bg-[#050715]/95 px-1 py-2 backdrop-blur-xl">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
+                isActive ? 'text-cyan-400' : 'text-slate-400'
+              }`
+            }
+          >
+            <Home size={18} />
+            <span className="text-[9px] font-black leading-none">Home</span>
+          </NavLink>
 
-        <NavLink
-          to="/broadcast/setup"
-          className={({ isActive }) =>
-            `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
-              isActive ? 'text-cyan-400' : 'text-slate-400'
-            }`
-          }
-        >
-          <Radio size={18} />
-          <span className="text-[9px] font-black leading-none">Go Live</span>
-        </NavLink>
+          <NavLink
+            to="/broadcast/setup"
+            className={({ isActive }) =>
+              `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
+                isActive ? 'text-cyan-400' : 'text-slate-400'
+              }`
+            }
+          >
+            <Radio size={18} />
+            <span className="text-[9px] font-black leading-none">Go Live</span>
+          </NavLink>
 
-        <NavLink
-          to="/utromail"
-          className={({ isActive }) =>
-            `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
-              isActive ? 'text-cyan-400' : 'text-slate-400'
-            }`
-          }
-        >
-          <MessageCircle size={18} />
-          <span className="text-[9px] font-black leading-none">Chats</span>
-        </NavLink>
+          <NavLink
+            to="/utromail"
+            className={({ isActive }) =>
+              `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
+                isActive ? 'text-cyan-400' : 'text-slate-400'
+              }`
+            }
+          >
+            <MessageCircle size={18} />
+            <span className="text-[9px] font-black leading-none">Chats</span>
+          </NavLink>
 
-        <NavLink
-          to="/store"
-          className={({ isActive }) =>
-            `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
-              isActive ? 'text-cyan-400' : 'text-slate-400'
-            }`
-          }
-        >
-          <Store size={18} />
-          <span className="text-[9px] font-black leading-none">Coins</span>
-        </NavLink>
+          <NavLink
+            to="/store"
+            className={({ isActive }) =>
+              `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
+                isActive ? 'text-cyan-400' : 'text-slate-400'
+              }`
+            }
+          >
+            <Store size={18} />
+            <span className="text-[9px] font-black leading-none">Coins</span>
+          </NavLink>
 
-        <NavLink
-          to="/profile"
-          className={({ isActive }) =>
-            `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
-              isActive ? 'text-cyan-400' : 'text-slate-400'
-            }`
-          }
-        >
-          <User size={18} />
-          <span className="text-[9px] font-black leading-none">Profile</span>
-        </NavLink>
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              `flex min-w-0 shrink flex-col items-center gap-1 px-1 ${
+                isActive ? 'text-cyan-400' : 'text-slate-400'
+              }`
+            }
+          >
+            <User size={18} />
+            <span className="text-[9px] font-black leading-none">Profile</span>
+          </NavLink>
 
-        <button
-          type="button"
-          className="flex min-w-0 shrink flex-col items-center gap-1 px-1 text-slate-400"
-          onClick={() => setIsOpen((value) => !value)}
-          aria-expanded={isOpen}
-        >
-          {isOpen ? (
-            <ChevronUp size={18} />
-          ) : (
-            <Sparkles size={18} />
-          )}
-          <span className="text-[9px] font-black leading-none">
-            {isOpen ? 'Close' : 'More'}
-          </span>
-        </button>
-      </div>
+          <button
+            type="button"
+            className="flex min-w-0 shrink flex-col items-center gap-1 px-1 text-slate-400"
+            onClick={() => setIsOpen((value) => !value)}
+            aria-expanded={isOpen}
+          >
+            {isOpen ? (
+              <ChevronUp size={18} />
+            ) : (
+              <Sparkles size={18} />
+            )}
+            <span className="text-[9px] font-black leading-none">
+              {isOpen ? 'Close' : 'More'}
+            </span>
+          </button>
+        </div>
+      )}
 
       {isOpen && (
         <div className="max-h-[65vh] overflow-y-auto border-t border-white/10 bg-[#050715]/95 backdrop-blur-xl">
@@ -272,12 +172,11 @@ export default function PhoneBottomNav() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="Search Mai Troll..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search pages, users, posts..."
                   className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-9 pr-4 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20"
-                  onFocus={() => {
-                    setIsOpen(false)
-                    navigate('/search')
-                  }}
+                  onFocus={openExplore}
                 />
               </div>
             </div>

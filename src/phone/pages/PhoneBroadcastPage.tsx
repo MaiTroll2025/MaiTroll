@@ -58,6 +58,10 @@ import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import MaiBag from '@/components/mai-bag/MaiBag'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import ShareModal from '@/components/broadcast/ShareModal'
+import { useFeaturedLive } from '@/hooks/useFeaturedLive'
+import { FeaturedBanner } from '@/components/featured/FeaturedBanner'
+import { FeaturedLeaderboard } from '@/components/featured/FeaturedLeaderboard'
+import { FeaturedLiveOverlay } from '@/components/featured/FeaturedLiveOverlay'
 
 import type { Stream } from '@/types/broadcast'
 import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
@@ -109,6 +113,16 @@ export default function PhoneBroadcastPage() {
   } = useAuthStore()
 
   const [stream, setStream] = useState<Stream | null>(null)
+
+  const {
+    featuredBroadcasters,
+    featuredEvent,
+    isFeaturedEvent,
+    currentStreamFeatured,
+    leaderboardOpen,
+    openFeaturedLeaderboard,
+    closeFeaturedLeaderboard,
+  } = useFeaturedLive({ streamId: routeStreamId || stream?.id || null, enabled: !!(routeStreamId || stream?.id) })
 
   const [isGiftModalOpen, setIsGiftModalOpen] =
     useState(false)
@@ -163,6 +177,31 @@ export default function PhoneBroadcastPage() {
 
     const fetchStream = async () => {
       try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(routeStreamId)
+
+        if (!isUUID) {
+          const { data: userData } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('username', routeStreamId)
+            .maybeSingle()
+
+          if (userData?.id) {
+            const { data: userStream } = await supabase
+              .from('streams')
+              .select('*')
+              .eq('user_id', userData.id)
+              .eq('is_live', true)
+              .eq('status', 'live')
+              .maybeSingle()
+
+            if (userStream) {
+              if (!cancelled) setStream(userStream as Stream)
+              return
+            }
+          }
+        }
+
         const {
           data,
           error,
@@ -2020,8 +2059,8 @@ onCameraOffAllSeats={cameraOffAllSeats}
             isOpen={isShareModalOpen}
             onClose={handleCloseShareModal}
             streamTitle={stream?.title || 'Live Stream'}
-            streamUrl={window.location.href}
-            broadcasterName={stream?.user_id || 'Broadcaster'}
+            streamUrl={broadcasterProfile?.username ? `${window.location.origin}/live/${encodeURIComponent(broadcasterProfile.username)}` : window.location.origin}
+            broadcasterName={broadcasterProfile?.username || 'Broadcaster'}
           />
         )}
 

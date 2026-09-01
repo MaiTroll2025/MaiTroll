@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { Stream } from '../../types/broadcast'
+import { StreamRouteProvider } from '../../contexts/StreamRouteContext'
 import { BroadcastPage } from './BroadcastPage'
 import ViewerPage from './ViewerPage'
 
@@ -688,7 +689,11 @@ function BroadcastRouter() {
     )
   }
 
-  return shouldUseRtcPage ? <BroadcastPage /> : <ViewerPage />
+  return (
+    <StreamRouteProvider streamId={stream.id} stream={stream}>
+      {shouldUseRtcPage ? <BroadcastPage /> : <ViewerPage />}
+    </StreamRouteProvider>
+  )
 }
 
 export default BroadcastRouter

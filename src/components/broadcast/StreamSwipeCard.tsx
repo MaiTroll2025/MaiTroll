@@ -526,7 +526,7 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         streamTitle={stream.title}
-        streamUrl={broadcaster?.username ? `${window.location.origin}/live/${encodeURIComponent(broadcaster.username)}` : `${window.location.origin}/watch/${stream.id}`}
+        streamUrl={broadcaster?.username ? `${window.location.origin}/live/${encodeURIComponent(broadcaster.username)}` : window.location.origin}
         broadcasterName={broadcaster?.username}
       />
     </div>

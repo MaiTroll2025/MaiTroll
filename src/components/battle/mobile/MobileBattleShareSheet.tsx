@@ -12,18 +12,20 @@ import { toast } from "sonner";
  */
 export default function MobileBattleShareSheet({
   streamId,
+  broadcasterUsername,
   title,
   currentUserId,
   onClose,
 }: {
   streamId?: string;
+  broadcasterUsername?: string | null;
   title: string;
   currentUserId?: string | null;
   onClose: () => void;
 }) {
-  const shareUrl = streamId
-    ? `${window.location.origin}/broadcast/${streamId}`
-    : window.location.href;
+  const shareUrl = broadcasterUsername
+    ? `${window.location.origin}/live/${encodeURIComponent(broadcasterUsername)}`
+    : window.location.origin;
   const shareTitle = title || "Watch this Mai Troll battle";
 
   const shareToPlatforms = async () => {

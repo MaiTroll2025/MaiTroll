@@ -565,7 +565,7 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         streamTitle={stream.title}
-        streamUrl={stream.broadcaster?.username ? `${window.location.origin}/live/${encodeURIComponent(stream.broadcaster.username)}` : `${window.location.origin}/watch/${stream.id}`}
+        streamUrl={stream.broadcaster?.username ? `${window.location.origin}/live/${encodeURIComponent(stream.broadcaster.username)}` : window.location.origin}
         broadcasterName={stream.broadcaster?.username}
       />
     </div>

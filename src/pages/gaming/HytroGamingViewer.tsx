@@ -421,8 +421,8 @@ export default function HytroGamingViewer() {
 
   // SEO meta tags for stream page (accessible to Google for indexing)
   const streamUrl = currentStream
-    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://MaiTroll.com'}/live/${encodeURIComponent(currentStream.broadcaster_name || streamId)}`
-    : `${typeof window !== 'undefined' ? window.location.origin : 'https://MaiTroll.com'}/gaming/watch/${streamId}`
+    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://MaiTroll.com'}/live/${encodeURIComponent(currentStream.broadcaster_name || 'HytroGaming')}`
+    : `${typeof window !== 'undefined' ? window.location.origin : 'https://MaiTroll.com'}/live/HytroGaming`
   useSEO({
     title: currentStream
       ? `${currentStream.broadcaster_name || 'Gamer'} is LIVE on HytroGaming | Mai Troll`
@@ -542,7 +542,8 @@ export default function HytroGamingViewer() {
   }, [liked, likeCount, currentStream?.id, user?.id])
 
   const handleShare = useCallback(async () => {
-    const url = `${window.location.origin}/gaming/watch/${streamId}`
+    const publicName = currentStream?.broadcaster_name || 'HytroGaming'
+    const url = `${window.location.origin}/live/${encodeURIComponent(publicName)}`
     const shareText = `Watch ${currentStream?.broadcaster_name || 'this streamer'} live on HytroGaming! ${currentStream?.title || ''}`
     if (navigator.share) {
       try {

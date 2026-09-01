@@ -51,6 +51,11 @@ import CollaborationModal from '../../components/collaboration/CollaborationModa
 import CollaborationRequestNotification from '../../components/collaboration/CollaborationRequestNotification'
 import { useStreamCollaboration } from '../../hooks/useStreamCollaboration'
 import MaiBag from '../../components/mai-bag/MaiBag'
+import { useFeaturedLive } from '../../hooks/useFeaturedLive'
+import { useResolvedStream, useResolvedStreamId } from '../../contexts/StreamRouteContext'
+import { FeaturedBanner } from '../../components/featured/FeaturedBanner'
+import { FeaturedLeaderboard } from '../../components/featured/FeaturedLeaderboard'
+import { FeaturedLiveOverlay } from '../../components/featured/FeaturedLiveOverlay'
 
 import { MaiTrollBroadcastTheme as theme } from '../../styles/broadcastTheme'
 
@@ -660,12 +665,22 @@ async function resolvePlayableStorageUrl(url: string | null | undefined): Promis
 export function BroadcastPage() {
   const params = useParams()
   const navigate = useNavigate()
-  const streamId = params.id || params.streamId
+  const resolvedStream = useResolvedStream()
+  const streamId = useResolvedStreamId(params.id || params.streamId)
 
   const { user, profile } = useAuthStore()
   const { clearTracks, screenTrack, screenAudioTrack, cameraTrack } = useStreamStore()
   const { isMobileWidth, hasMounted } = useIsMobile()
   const { recordStreamStarted } = useTrollFamilyActivity()
+  const {
+    featuredBroadcasters,
+    featuredEvent,
+    isFeaturedEvent,
+    currentStreamFeatured,
+    leaderboardOpen,
+    openFeaturedLeaderboard,
+    closeFeaturedLeaderboard,
+  } = useFeaturedLive({ streamId, enabled: !!streamId })
 
   // Add render counter for debugging
   const renderCountRef = useRef(0)
@@ -696,7 +711,7 @@ export function BroadcastPage() {
 
   const isMobileDevice = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    const [stream, setStream] = useState<Stream | null>(null)
+    const [stream, setStream] = useState<Stream | null>(resolvedStream)
 
     const isAzgoraStream = Boolean((stream as any)?.is_azgora) || (stream as any)?.quality_cap === '720p'
     const videoPreset = isAzgoraStream
@@ -6482,6 +6497,22 @@ const toggleMicrophone = useCallback(async () => {
           <ErrorBoundary>
 
           {/* -- Outer layout: header + 3-column grid + bottom bar + footer -- */}
+          {isFeaturedEvent && (
+            <FeaturedBanner
+              broadcasters={featuredBroadcasters}
+              event={featuredEvent}
+              onOpenLeaderboard={openFeaturedLeaderboard}
+            />
+          )}
+
+          {featuredBroadcasters.length > 0 && (
+            <FeaturedLeaderboard
+              open={leaderboardOpen}
+              broadcasters={featuredBroadcasters}
+              onClose={closeFeaturedLeaderboard}
+            />
+          )}
+
           <div
             className={cn(
               theme.pageShell,
@@ -6640,7 +6671,7 @@ const toggleMicrophone = useCallback(async () => {
                     style={isHost ? { cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } : undefined}
                   >
                   {streamId && (
-                    <MaiBag streamId={streamId} compact className="pointer-events-none absolute right-2 top-2 z-20" />
+                    <MaiBag streamId={streamId} compact className="pointer-events-auto absolute right-2 top-2 z-20" />
                   )}
                   {/* Camera starting fallback */}
                   {(() => {
@@ -6800,7 +6831,7 @@ const toggleMicrophone = useCallback(async () => {
                    style={isHost ? { cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } : undefined}
                  >
                   {streamId && (
-                    <MaiBag streamId={streamId} compact className="pointer-events-none absolute right-3 top-3 z-20" />
+                    <MaiBag streamId={streamId} compact className="pointer-events-auto absolute right-3 top-3 z-20" />
                   )}
 
 {/* Camera starting fallback � shows when no video track is available */}
@@ -8333,6 +8364,7 @@ const toggleMicrophone = useCallback(async () => {
                     isLive={stream?.status === 'live'}
                     hasRgbEffect={!!stream?.has_rgb_effect}
                     isChatLocked={!!stream?.is_chat_locked}
+                    seatCount={Number(stream?.seat_count ?? 0)}
                     unreadMessageCount={0}
                     onToggleMic={toggleMicrophone}
                     onToggleCamera={toggleCamera}
@@ -8521,7 +8553,7 @@ const toggleMicrophone = useCallback(async () => {
                   isOpen={isShareModalOpen}
                   onClose={handleCloseShareModal}
                   streamTitle={stream?.title || 'Untitled Stream'}
-                  streamUrl={`${window.location.origin}/broadcast/${streamId}`}
+                  streamUrl={broadcasterProfile?.username ? `${window.location.origin}/live/${encodeURIComponent(broadcasterProfile.username)}` : window.location.origin}
                   broadcasterName={(broadcasterProfile && broadcasterProfile.username) || 'someone'}
                 />
                 </div>
@@ -9442,7 +9474,7 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
       try {
         const el = (track as any).attach();
         if (!el || !(el instanceof HTMLVideoElement)) return;
-        el.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center;position:absolute;top:0;left:0;display:block;background:#000;';
+        el.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:center;position:absolute;top:0;left:0;display:block;background:#000;';
         // Un-mirror local front-facing camera so broadcaster sees natural movement
         el.style.transform = track instanceof LocalVideoTrack ? 'scaleX(-1)' : 'none';
         el.autoplay = true;
@@ -9475,7 +9507,7 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
   return (
     <div
       ref={divRef}
-      className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-contain"
+      className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
     />
   );
 })

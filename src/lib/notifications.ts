@@ -602,6 +602,22 @@ export async function notifySomeoneFollowed(userId: string, followerUsername: st
   )
 }
 
+export async function followUser(followerId: string, followingId: string, followerUsername: string) {
+  const { error } = await supabase
+    .from('user_follows')
+    .upsert({ follower_id: followerId, following_id: followingId }, { onConflict: 'follower_id,following_id' })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  if (followerId !== followingId) {
+    await notifySomeoneFollowed(followingId, followerUsername)
+  }
+
+  return { success: true }
+}
+
 export async function notifyFriendRequestReceived(userId: string, requesterUsername: string) {
   return createNotification(
     userId,

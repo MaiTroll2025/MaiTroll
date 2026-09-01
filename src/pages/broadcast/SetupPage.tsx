@@ -1633,7 +1633,7 @@ const handleStartStream = async () => {
         hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
       });
 
-      // LiveKit room name is the stream ID
+      // LiveKit uses the generated stream ID for a stable, unique room name.
       const roomName = streamId;
       if (!roomName) throw new Error('Missing generated room name');
       if (!import.meta.env.VITE_LIVEKIT_URL) throw new Error('VITE_LIVEKIT_URL is missing');
@@ -2033,7 +2033,7 @@ const handleStartStream = async () => {
         transitionInProgress: true,
       })
 
-      // Navigate to broadcast page
+      // Temporary UUID route for render comparison with the username route.
       navigate(`/broadcast/${data.id}`);
 
       supabase.rpc('create_global_event', {

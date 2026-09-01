@@ -176,10 +176,13 @@ export default function EnhancedPublicProfile() {
   };
 
   const handleShare = async () => {
+    const profileUrl = profile?.username
+      ? `${window.location.origin}/${encodeURIComponent(profile.username)}`
+      : window.location.origin;
     const shareData = {
       title: `${profile?.display_name} on Mai Troll`,
       text: profile?.bio || `Check out ${profile?.display_name}'s profile`,
-      url: window.location.href,
+      url: profileUrl,
     };
 
     if (navigator.share) {
@@ -189,7 +192,7 @@ export default function EnhancedPublicProfile() {
         // User cancelled or error
       }
     } else {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(profileUrl);
     }
   };
 

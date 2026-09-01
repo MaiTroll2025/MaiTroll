@@ -4,7 +4,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import LevelStatusCard from '../../components/home/LevelStatusCard'
@@ -147,6 +147,7 @@ const PROFILE_TABS: ProfileTab[] = [
 
 export default function PhoneProfile() {
   const navigate = useNavigate()
+  const { username: usernameParam } = useParams<{ username?: string }>()
 
   const user = useAuthStore((state) => state.user)
   const storeProfile = useAuthStore((state) => state.profile)
@@ -159,7 +160,7 @@ export default function PhoneProfile() {
   const [coins, setCoins] = useState(0)
 
   const [displayName, setDisplayName] = useState('Guest')
-  const [username, setUsername] = useState('')
+  const [username, setUsername] = useState(usernameParam || '')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const [role, setRole] = useState('')
@@ -189,6 +190,16 @@ export default function PhoneProfile() {
 
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingSubscription, setSavingSubscription] = useState(false)
+
+  const [followersCount, setFollowersCount] = useState(0)
+  const [followingCount, setFollowingCount] = useState(0)
+  const [postsCount, setPostsCount] = useState(0)
+
+  const isViewingOwnProfile = !usernameParam || usernameParam === user?.username
+  const profileTargetId = useMemo(() => {
+    if (isViewingOwnProfile) return user?.id
+    return undefined
+  }, [isViewingOwnProfile, user?.id])
 
   /*
    * Load profile
@@ -278,7 +289,8 @@ export default function PhoneProfile() {
     const loadProfile = async () => {
       setLoading(true)
 
-      const { data, error } = await supabase
+      const targetId = usernameParam ? null : user.id
+      let query = supabase
         .from('user_profiles')
         .select(`
           id,
@@ -301,8 +313,14 @@ export default function PhoneProfile() {
           creator_subscription_enabled,
           creator_subscription_price_coins
         `)
-        .eq('id', user.id)
-        .maybeSingle()
+
+      if (usernameParam) {
+        query = query.eq('username', usernameParam)
+      } else if (targetId) {
+        query = query.eq('id', targetId)
+      }
+
+      const { data, error } = await query.maybeSingle()
 
       if (cancelled) return
 
@@ -319,6 +337,7 @@ export default function PhoneProfile() {
 
       if (data) {
         applyProfile(data as ProfileRow)
+        setUsername(data.username || usernameParam || '')
       } else {
         applyFallback()
       }
@@ -329,14 +348,14 @@ export default function PhoneProfile() {
     loadProfile()
 
     const channel = supabase
-      .channel(`phone-profile-${user.id}`)
+      .channel(`phone-profile-${usernameParam ? usernameParam : user.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'user_profiles',
-          filter: `id=eq.${user.id}`,
+          filter: usernameParam ? `username=eq.${usernameParam}` : `id=eq.${user.id}`,
         },
         (payload) => {
           if (cancelled) return
@@ -354,7 +373,48 @@ export default function PhoneProfile() {
       cancelled = true
       supabase.removeChannel(channel)
     }
-  }, [user?.id, user?.email, storeProfile])
+  }, [user?.id, user?.email, storeProfile, usernameParam])
+
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+
+    async function loadCounts() {
+      try {
+        const targetId = profileTargetId || (async () => {
+          if (!usernameParam) return user.id
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('username', usernameParam)
+            .maybeSingle()
+          return data?.id || user.id
+        })()
+
+        const resolvedTargetId = typeof targetId === 'string' ? targetId : await targetId
+
+        const [followersRes, followingRes, postsRes] = await Promise.all([
+          supabase.from('user_follows').select('id', { count: 'exact', head: true }).eq('following_id', resolvedTargetId),
+          supabase.from('user_follows').select('id', { count: 'exact', head: true }).eq('follower_id', resolvedTargetId),
+          supabase.from('troll_posts').select('id', { count: 'exact', head: true }).eq('user_id', resolvedTargetId),
+        ])
+
+        if (!cancelled) {
+          setFollowersCount(followersRes.count || 0)
+          setFollowingCount(followingRes.count || 0)
+          setPostsCount(postsRes.count || 0)
+        }
+      } catch (err) {
+        console.error('PhoneProfile: failed to load counts:', err)
+      }
+    }
+
+    loadCounts()
+
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id, usernameParam])
 
   const initials = useMemo(() => {
     const source = displayName.trim()
@@ -1318,7 +1378,7 @@ export default function PhoneProfile() {
             <div className="mt-3 grid grid-cols-3 gap-2">
               <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3 text-center">
                 <p className="text-lg font-black">
-                  0
+                  {followersCount}
                 </p>
 
                 <p className="mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-white/30">
@@ -1328,11 +1388,11 @@ export default function PhoneProfile() {
 
               <button
                 type="button"
-                onClick={() => navigate('/following')}
+                onClick={() => navigate(isViewingOwnProfile ? '/following' : `/following/${usernameParam}`)}
                 className="rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/[0.04] p-3 text-center active:scale-95 transition"
               >
                 <p className="text-lg font-black text-[#00BFFF]">
-                  0
+                  {followingCount}
                 </p>
 
                 <p className="mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-[#00BFFF]/60">
@@ -1342,11 +1402,11 @@ export default function PhoneProfile() {
 
               <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3 text-center">
                 <p className="text-lg font-black">
-                  0
+                  {postsCount}
                 </p>
 
                 <p className="mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-white/30">
-                  Actions
+                  Posts
                 </p>
               </div>
             </div>

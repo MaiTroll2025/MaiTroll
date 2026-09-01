@@ -31,6 +31,14 @@ export interface MaiBagProps {
   onAnimationComplete?: () => void
 }
 
+export interface MaiBagGiftOption {
+  id: string
+  name: string
+  icon?: string | null
+  coin_cost?: number | null
+  value?: number | null
+}
+
 export interface MaiBagProgressProps {
   fillPercent: number
   tier: import('./maiBagConfig').MaiBagTier

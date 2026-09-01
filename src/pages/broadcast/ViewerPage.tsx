@@ -83,6 +83,11 @@ import BroadcastTextPopupOverlay from '../../components/broadcast/BroadcastTextP
 import PaidChatViewerModal from '../../components/broadcast/PaidChatViewerModal'
 import RandomBattleBanner from '../../components/broadcast/RandomBattleBanner'
 import CityStatusPanel from '../../components/city/CityStatusPanel'
+import { useFeaturedLive } from '../../hooks/useFeaturedLive'
+import { useResolvedStream, useResolvedStreamId } from '../../contexts/StreamRouteContext'
+import { FeaturedBanner } from '../../components/featured/FeaturedBanner'
+import { FeaturedLeaderboard } from '../../components/featured/FeaturedLeaderboard'
+import { FeaturedLiveOverlay } from '../../components/featured/FeaturedLiveOverlay'
 import CityStatusOrb from '../../components/city/CityStatusOrb'
 import { useCityStatusOrb } from '../../lib/hooks/useCityStatusOrb'
 import SeatCityStatusOrb from '../../components/broadcast/SeatCityStatusOrb'
@@ -353,14 +358,8 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   const videoTrack = getVideoTrackFromParticipant(participant)
   const audioTrack = getAudioTrackFromParticipant(participant)
 
-  const shouldMirror = useMemo(() => {
-    if (!mirror) return false
-    const stream = videoTrack?.mediaStreamTrack || (videoTrack as any)?._mediaStreamTrack
-    const settings = stream?.getSettings?.() || {}
-    const facing = (settings as any).facingMode
-    if (facing === 'user') return true
-    return false
-  }, [videoTrack, mirror])
+  const shouldMirror = Boolean(mirror) &&
+    (videoTrack?.mediaStreamTrack as any)?.getSettings?.().facingMode === 'user'
 
   // Dev logging for track detection on mobile/PWA
   if (import.meta.env.DEV && trackTick > 0 && trackTick % 5 === 0) {
@@ -608,7 +607,8 @@ function LocalVideoSurface({
 
 function ViewerPage() {
   const params = useParams()
-  const streamId = params.streamId || params.id || ''
+  const resolvedStream = useResolvedStream()
+  const streamId = useResolvedStreamId(params.streamId || params.id)
 
   // Stable anonymous viewer identity — never use "undefined" in identity.
   // Uses sessionStorage so the same guest gets the same identity for the
@@ -666,6 +666,15 @@ function ViewerPage() {
   const isMobileViewer = hasMounted && isMobileWidth
   const { recordWatchTime } = useTrollFamilyActivity()
   const { data: liveStreamsData } = useLiveStreams()
+  const {
+    featuredBroadcasters,
+    featuredEvent,
+    isFeaturedEvent,
+    currentStreamFeatured,
+    leaderboardOpen,
+    openFeaturedLeaderboard,
+    closeFeaturedLeaderboard,
+  } = useFeaturedLive({ streamId, enabled: !!streamId })
 
   // Ghost drop-in mode: detect ?ghost=true from URL (set by GhostDropInRouter)
   const [isGhostDropIn, setIsGhostDropIn] = useState(false)
@@ -806,7 +815,7 @@ function ViewerPage() {
   const MOBILE_SAFE_BOTTOM = 'env(safe-area-inset-bottom)'
   const CHAT_FLOAT_MS = 30000
 
-   const [stream, setStream] = useState<Stream | null>(null)
+  const [stream, setStream] = useState<Stream | null>(resolvedStream)
 
    // Broadcaster's equipped profile frame
    const broadcasterFrame = useUserFrame((stream as any)?.user_id)
@@ -2648,7 +2657,10 @@ const isActive = isStreamActive(stream)
   }, [leaveAudience, leaveLiveKitRoom, leaveSeat, mySeat, navigate, unpublishLocalTracks])
 
   const handleShare = useCallback(async () => {
-    const shareUrl = `${window.location.origin}/broadcast/${streamId}`
+    const publicName = broadcasterProfile?.username || (stream as any)?.broadcaster_name
+    const shareUrl = publicName
+      ? `${window.location.origin}/live/${encodeURIComponent(publicName)}`
+      : window.location.origin
     const shareTitle = (stream as any)?.title || 'Watch me live on Mai Troll'
 
     try {
@@ -2666,7 +2678,7 @@ const isActive = isStreamActive(stream)
     } catch (err) {
       console.warn('[ViewerPage] share failed:', err)
     }
-  }, [streamId, stream])
+  }, [streamId, stream, broadcasterProfile])
 
   const isStreamLive = isActive
   const passiveBunnyPlaybackUrl = useMemo(() => {
@@ -3675,7 +3687,22 @@ useStreamRealtime(
   return (
     <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
       <UndoRecentGiftBar />
+      {isFeaturedEvent && (
+        <FeaturedBanner
+          broadcasters={featuredBroadcasters}
+          event={featuredEvent}
+          onOpenLeaderboard={openFeaturedLeaderboard}
+        />
+      )}
+      {featuredBroadcasters.length > 0 && (
+        <FeaturedLeaderboard
+          open={leaderboardOpen}
+          broadcasters={featuredBroadcasters}
+          onClose={closeFeaturedLeaderboard}
+        />
+      )}
       <ErrorBoundary>
+        <FeaturedLiveOverlay active={!!currentStreamFeatured} className="left-4 top-4" />
         {/* Broadofficer appointment notification popup */}
         {broadofficerPopupVisible && (
           <div
@@ -3756,15 +3783,11 @@ useStreamRealtime(
             <GiftVideoOverlay gifts={recentGifts} onFinish={handleRemoveGiftOverlay} />
 
             {streamId && (
-              <div className="absolute left-3 top-3 z-40 hidden md:block">
-                <MaiBag streamId={streamId} compact />
-              </div>
+              <MaiBag streamId={streamId} compact className="absolute right-3 top-3 z-40 hidden md:block" />
             )}
 
             {streamId && isMobileViewer && (
-              <div className="absolute left-2 top-12 z-40 md:hidden">
-                <MaiBag streamId={streamId} compact />
-              </div>
+              <MaiBag streamId={streamId} compact className="absolute right-3 top-3 z-40 md:hidden" />
             )}
 
             {/* Feed the Troll — persistent companion for the broadcaster's troll */}

@@ -161,6 +161,7 @@ export const PLATFORM_OPTIONS = [
 export type Platform = typeof PLATFORM_OPTIONS[number]['value'];
 
 export interface UserProfile {
+  is_live: import("react/jsx-runtime").JSX.Element
   verification_expires_at: boolean
   verified_since: any
   trollmonds: number

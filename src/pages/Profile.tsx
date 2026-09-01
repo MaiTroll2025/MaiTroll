@@ -562,15 +562,18 @@ function ProfileInner() {
     };
 
     const handleShare = async () => {
+        const profileUrl = profile?.username
+            ? `${window.location.origin}/profile/${encodeURIComponent(profile.username)}`
+            : window.location.origin;
         const shareData = {
             title: `${profile.display_name} on MaiTroll`,
             text: profile.bio || `Check out ${profile.display_name}'s profile`,
-            url: window.location.href,
+            url: profileUrl,
         };
         if (navigator.share) {
             try { await navigator.share(shareData); } catch { /* cancelled */ }
         } else {
-            await navigator.clipboard.writeText(window.location.href);
+            await navigator.clipboard.writeText(profileUrl);
             toast.success('Link copied!');
         }
     };

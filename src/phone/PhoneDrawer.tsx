@@ -209,6 +209,13 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
                   <p className="truncate text-sm font-semibold text-white">{displayName}</p>
                   {roleLabel && <p className="truncate text-xs text-zinc-400">{roleLabel}</p>}
                 </div>
+                <button
+                  onClick={handleSignOut}
+                  className="shrink-0 rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-red-400 transition hover:bg-red-500/20"
+                  aria-label="Sign out"
+                >
+                  <LogOut size={18} />
+                </button>
               </div>
 
               <div className="mt-3 space-y-2">
@@ -257,18 +264,6 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
             </div>
           ))}
         </div>
-
-        {user && (
-          <div className="border-t border-white/10 p-2">
-            <button
-              onClick={handleSignOut}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-red-400 transition hover:bg-red-500/10"
-            >
-              <LogOut size={20} className="shrink-0" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        )}
       </aside>
     </div>
   )

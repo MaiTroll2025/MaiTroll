@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { moderation } from '@/services/maitrollModeration';
 import UserNameWithAge from '../UserNameWithAge';
 import GiftModal from '../trollWall/GiftModal';
+import WallShareModal from '../trollWall/WallShareModal';
 import { parseTextWithLinks } from '../../lib/utils';
 import MentionTextarea from '../MentionTextarea';
 
@@ -47,6 +48,7 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [liked, setLiked] = useState(false);
   const [showGiftModal, setShowGiftModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [_gifting, setGifting] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -420,6 +422,14 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
             <Gift className="w-5 h-5" />
             <span className="text-sm">Gift</span>
         </button>
+
+        <button
+          className="flex-1 px-4 flex items-center justify-center gap-2 py-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-blue-400 transition-colors"
+          onClick={() => setShowShareModal(true)}
+        >
+          <Share2 className="w-5 h-5" />
+          <span className="text-sm">Share</span>
+        </button>
       </div>
 
       {showGiftModal && (
@@ -427,6 +437,17 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
             postId={post.id}
             onClose={() => setShowGiftModal(false)}
             onGiftSent={handleGiftSent}
+        />
+      )}
+
+      {showShareModal && (
+        <WallShareModal
+            isOpen={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            post={post}
+            postUrl={post.user_profiles?.username
+              ? `${window.location.origin}/profile/${encodeURIComponent(post.user_profiles.username)}?tab=social`
+              : window.location.origin}
         />
       )}
 
