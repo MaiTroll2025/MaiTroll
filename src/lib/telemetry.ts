@@ -87,7 +87,7 @@ export async function trackEvent(event: Omit<TelemetryEvent, 'session_id' | 'dev
     breadcrumbs: [...breadcrumbs], // Snapshot
     url: window.location.href,
     env: import.meta.env.MODE,
-    app_version: '1.0.0' // Should come from package.json in a real build
+    app_version: '1.2.5'
   };
 
   try {

@@ -1,6 +1,6 @@
 {
   "name": "Mai Troll",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "private": true,
   "type": "module",
   "main": "dist-electron/main.js",
@@ -22,6 +22,7 @@
     "cap:sync": "npm run build && cap sync",
     "cap:sync:android": "npm run build && cap sync android",
     "cap:sync:ios": "npm run build && cap sync ios",
+    "cap:sync:both": "npm run build && cap sync ios && cap sync android",
     "cap:open:ios": "cap open ios",
     "cap:open:android": "cap open android",
     "cap:run:android": "npm run cap:sync:android && cap run android --livereload --external",
