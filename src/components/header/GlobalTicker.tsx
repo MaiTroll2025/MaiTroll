@@ -18,7 +18,7 @@ const seoLinks = [
   { path: '/terms', label: 'Terms', icon: FileText },
 ]
 
-const GlobalTicker = () => {
+const GlobalTicker = ({ showSeoLinks = true }: { showSeoLinks?: boolean }) => {
   const events = useGlobalActivity()
   const navigate = useNavigate()
   const { user, profile } = useAuthStore()
@@ -198,21 +198,23 @@ const GlobalTicker = () => {
         </div>
 
         {/* Bottom: SEO Page Links */}
-        <nav className="ticker-seo-links" aria-label="Quick links">
-          <ul className="ticker-seo-list">
-            {seoLinks.map((link) => {
-              const Icon = link.icon
-              return (
-                <li key={link.path}>
-                  <Link to={link.path} className="ticker-seo-link">
-                    <Icon className="w-3 h-3" />
-                    <span>{link.label}</span>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
+        {showSeoLinks && (
+          <nav className="ticker-seo-links" aria-label="Quick links">
+            <ul className="ticker-seo-list">
+              {seoLinks.map((link) => {
+                const Icon = link.icon
+                return (
+                  <li key={link.path}>
+                    <Link to={link.path} className="ticker-seo-link">
+                      <Icon className="w-3 h-3" />
+                      <span>{link.label}</span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
+        )}
       </div>
 
       {showEditModal && (

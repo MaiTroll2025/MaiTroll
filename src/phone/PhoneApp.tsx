@@ -31,6 +31,7 @@ import PhoneAcademy from './pages/PhoneAcademy'
 import PhoneRecordLabel from './pages/PhoneRecordLabel'
 import PhoneTCNN from './pages/PhoneTCNN'
 import PhoneCommunityWall from './pages/PhoneCommunityWall'
+import PhoneLeaderboard from './pages/PhoneLeaderboard'
 import PhoneBlockedUsers from './pages/PhoneBlockedUsers'
 import PhoneProfileDelete from './pages/PhoneProfileDelete'
 import PhoneTreelzUpload from './pages/PhoneTreelzUpload'
@@ -41,6 +42,14 @@ import PhoneAdminModeration from './pages/PhoneAdminModeration'
 import PhoneAdminSettings from './pages/PhoneAdminSettings'
 import PhoneAdminMobile from './pages/PhoneAdminMobile'
 import PhonePlaceholderPage from './pages/PhonePlaceholderPage'
+import PhoneSearch from './pages/PhoneSearch'
+import PhoneFamily from './pages/PhoneFamily'
+import PhoneGovernment from './pages/PhoneGovernment'
+import PhonePresident from './pages/PhonePresident'
+import PhoneArtist from './pages/PhoneArtist'
+import PhoneAgency from './pages/PhoneAgency'
+import PhoneAgencyApply from './pages/PhoneAgencyApply'
+import PhoneCeoDashboard from './pages/PhoneCeoDashboard'
 import PhoneSupport from './pages/PhoneSupport'
 import PhoneSafety from './pages/PhoneSafety'
 import PhoneLegal from './pages/PhoneLegal'
@@ -161,7 +170,8 @@ export default function PhoneApp() {
   return (
     <PhoneErrorBoundary>
       <PhoneJailRedirect>
-        <div className="min-h-screen bg-black text-white pb-[calc(80px+env(safe-area-inset-bottom,0px))]">
+        <div className="phone-app min-h-screen bg-black text-white pb-[calc(80px+env(safe-area-inset-bottom,0px))]">
+          <style>{`\n            .phone-app button svg { color: #00BFFF; filter: drop-shadow(0 0 4px rgba(0,191,255,.85)) drop-shadow(0 0 7px rgba(191,0,255,.45)); }\n            .phone-app button:not(:has(svg))::before { content: '✦'; margin-right: .45rem; color: #00BFFF; text-shadow: 0 0 4px #00BFFF, 0 0 8px #BF00FF; }\n          `}</style>
           <Routes>
             <Route path="/phone" element={<Navigate to="/" replace />} />
 
@@ -208,6 +218,7 @@ export default function PhoneApp() {
             <Route path="/mai-record-label" element={<PhoneRecordLabel />} />
             <Route path="/tcnn" element={<PhoneTCNN />} />
             <Route path="/community-wall" element={<PhoneCommunityWall />} />
+            <Route path="/leaderboard" element={<PhoneLeaderboard />} />
             <Route path="/blocked-users" element={<PhoneBlockedUsers />} />
             <Route path="/profile/delete" element={<PhoneProfileDelete />} />
             <Route path="/treelz/upload" element={<PhoneTreelzUpload />} />
@@ -216,7 +227,7 @@ export default function PhoneApp() {
             <Route path="/admin/reports" element={<PhoneAdminReports />} />
             <Route path="/admin/moderation" element={<PhoneAdminModeration />} />
             <Route path="/admin/settings" element={<PhoneAdminSettings />} />
-            <Route path="/search" element={<PhonePlaceholderPage />} />
+            <Route path="/search" element={<PhoneSearch />} />
             <Route path="/profile/:username" element={<PhoneProfile />} />
             <Route path="/live/:id" element={<PhoneViewerPage />} />
             <Route path="/broadcast/:id" element={<PhoneBroadcastPage />} />
@@ -225,23 +236,23 @@ export default function PhoneApp() {
             <Route path="/podcast/:id" element={<PhonePodcast />} />
             <Route path="/troll-court/:id" element={<PhoneTrollCourt />} />
             <Route path="/court/:id" element={<PhoneTrollCourt />} />
-            <Route path="/agency/:id" element={<PhonePlaceholderPage />} />
-            <Route path="/agency-apply/:id" element={<PhonePlaceholderPage />} />
+            <Route path="/agency/:id" element={<PhoneAgency />} />
+            <Route path="/agency-apply/:id" element={<PhoneAgencyApply />} />
             <Route path="/music/:id" element={<PhoneRecordLabel />} />
             <Route path="/tromail" element={<PhoneChat />} />
             <Route path="/tromail/:threadId" element={<PhoneChat />} />
             <Route path="/academy/:id" element={<PhoneAcademy />} />
             <Route path="/academy/teacher/:id" element={<PhoneAcademy />} />
             <Route path="/academy/classroom/:id" element={<PhoneAcademy />} />
-            <Route path="/family/:id" element={<PhonePlaceholderPage />} />
-            <Route path="/government/:id" element={<PhonePlaceholderPage />} />
-            <Route path="/president/:id" element={<PhonePlaceholderPage />} />
+            <Route path="/family/:id" element={<PhoneFamily />} />
+            <Route path="/government/:id" element={<PhoneGovernment />} />
+            <Route path="/president/:id" element={<PhonePresident />} />
             <Route path="/secretary/:id" element={<PhoneSecretary />} />
-            <Route path="/artist/:id" element={<PhonePlaceholderPage />} />
+            <Route path="/artist/:id" element={<PhoneArtist />} />
             {/* React Router requires `*` to follow a `/`, so the CEO pages are
                 listed explicitly instead of using a bare `/ceo-*` prefix. */}
-            <Route path="/ceo-assistant-dashboard" element={<PhonePlaceholderPage />} />
-            <Route path="/ceo-assistant-dashboard/*" element={<PhonePlaceholderPage />} />
+            <Route path="/ceo-assistant-dashboard" element={<PhoneCeoDashboard />} />
+            <Route path="/ceo-assistant-dashboard/*" element={<PhoneCeoDashboard />} />
 
             <Route path="*" element={<PhoneWebPage />} />
           </Routes>

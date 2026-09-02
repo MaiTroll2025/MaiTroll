@@ -61,3 +61,26 @@ export interface FeaturedLeaderboardRow {
   stream_likes?: number
   featured_score?: number
 }
+
+export type FeaturedGiftCycleStatus = 'scheduled' | 'active' | 'ended' | 'cancelled'
+
+export interface FeaturedGiftCycle {
+  id: string
+  cycle_index: number
+  status: FeaturedGiftCycleStatus
+  current_gift_id?: string | null
+  started_at?: string | null
+  ends_at?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export interface FeaturedGiftLadderItem {
+  id: string
+  name: string
+  price: number
+  rarity: string
+  animation_type: string
+  thumbnail_url?: string | null
+  is_active: boolean
+}

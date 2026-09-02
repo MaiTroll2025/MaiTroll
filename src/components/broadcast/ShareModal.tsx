@@ -3,6 +3,7 @@ import { X, Copy, Check, MessageCircle, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/store';
+import { awardSharePoint } from '../../lib/weeklyPointsService';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -96,7 +97,10 @@ export default function ShareModal({ isOpen, onClose, streamTitle, streamUrl, br
 
   const handleShare = async (platform: typeof SOCIAL_PLATFORMS[0]) => {
     const title = `Check out this live stream by ${broadcasterName || 'someone'}!`;
-    
+
+    // Award weekly share points (idempotent server-side; only the first share of the week counts).
+    void awardSharePoint();
+
     if (platform.id === 'copy') {
       await navigator.clipboard.writeText(streamUrl);
       setCopied(true);
@@ -118,6 +122,7 @@ export default function ShareModal({ isOpen, onClose, streamTitle, streamUrl, br
   };
 
   const handleNativeShare = async () => {
+    void awardSharePoint();
     try {
       await navigator.share({
         title: streamTitle || 'Live Stream',

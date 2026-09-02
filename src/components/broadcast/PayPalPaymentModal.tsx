@@ -159,6 +159,7 @@ export default function PayPalPaymentModal({
     if (!window.paypal?.Buttons) return
     if (!Number.isFinite(amountUsd) || amountUsd <= 0) return
     if (requireCoins && (!Number.isFinite(Number(coins)) || Number(coins) <= 0)) return
+    if (paypalFlowActiveRef.current) return
 
     safelyClosePayPalButtons()
     clearPayPalContainer()

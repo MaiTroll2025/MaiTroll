@@ -11,6 +11,7 @@ import { useChatStore } from '../../lib/chatStore';
 import UserMiniProfile from '../user/UserMiniProfile';
 import { notifyBroadofficerAssigned } from '../../lib/notifications';
 import { isAnonymousDisplayName } from '../../lib/anonymousIdentity';
+import { awardFollowPoint } from '../../lib/weeklyPointsService';
 
 function getTierColor(tier: string) {
   switch (tier) {
@@ -678,12 +679,13 @@ export default function UserActionModal({
             toast.success(`Unfollowed ${displayName}`);
         }
     } else {
-        // Follow
-        const { error } = await supabase.from('user_follows').insert({ follower_id: currentUser.id, following_id: userId });
-        if (!error) {
-            setIsFollowing(true);
-            toast.success(`Followed ${displayName}`);
-        }
+         // Follow
+         const { error } = await supabase.from('user_follows').insert({ follower_id: currentUser.id, following_id: userId });
+         if (!error) {
+             setIsFollowing(true);
+             toast.success(`Followed ${displayName}`);
+             void awardFollowPoint();
+         }
     }
   };
 

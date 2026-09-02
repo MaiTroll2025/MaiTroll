@@ -72,6 +72,7 @@ export type CoinTransactionType =
   | 'marketplace_sale'
   | 'academy_course'
   | 'game'
+  | 'featured_gift_reward'
 
 export type CoinType = 'troll_coins'
 

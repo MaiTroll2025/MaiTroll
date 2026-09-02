@@ -35,6 +35,7 @@ import { requestLiveKitToken } from '@/lib/livekitToken'
 import { awardKeyToUser } from '@/services/keyService'
 import { useKeyDiscoveryStore } from '@/stores/useKeyDiscoveryStore'
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap'
+import CameraOffImageUpload from '@/components/broadcast/CameraOffImageUpload'
 
 type BroadcastCategory =
   | 'general'
@@ -256,7 +257,7 @@ export default function PhoneGoLive() {
     })
 
     if (microphoneTrack) {
-      microphoneTrack.track.enabled = nextState
+      microphoneTrack.mediaStreamTrack.enabled = nextState
     }
 
     setMicOn(nextState)
@@ -277,7 +278,7 @@ export default function PhoneGoLive() {
     })
 
     if (cameraTrack) {
-      cameraTrack.track.enabled = nextState
+      cameraTrack.mediaStreamTrack.enabled = nextState
     }
 
     setCameraOn(nextState)
@@ -718,15 +719,17 @@ export default function PhoneGoLive() {
       )
 
       if (streamId) {
-        await supabase
-          .from('streams')
-          .update({
-            status: 'failed',
-            is_live: false,
-          })
-          .eq('id', streamId)
-          .then(() => {})
-          .catch(() => {})
+        try {
+          await supabase
+            .from('streams')
+            .update({
+              status: 'failed',
+              is_live: false,
+            })
+            .eq('id', streamId)
+        } catch {
+          // ignore
+        }
       }
 
       if (room) {
@@ -953,6 +956,17 @@ export default function PhoneGoLive() {
               </button>
             </div>
           )}
+        </section>
+
+        {/* Camera Off Image */}
+        <section className="space-y-2">
+          <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+            Camera Off Image
+          </label>
+          <p className="px-1 text-[10px] text-zinc-600">
+            Show this image when your camera is off during broadcast
+          </p>
+          <CameraOffImageUpload />
         </section>
 
         {/* Title */}

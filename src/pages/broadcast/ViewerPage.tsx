@@ -37,6 +37,7 @@ import {
   getAnonymousDisplayName,
   isAnonymousDisplayName,
 } from '../../lib/anonymousIdentity'
+import { awardSharePoint } from '../../lib/weeklyPointsService'
 
 import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
 import ErrorBoundary from '../../components/ErrorBoundary'
@@ -98,6 +99,9 @@ import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
 import { sendChatThroughGate } from '../../lib/sendChatThroughGate'
 import { sendStreamBroadcast } from '../../lib/realtime/streamRealtimeManager'
 import { admitViewerToStream, releaseViewerSlot } from '@/lib/streamCapacity'
+import CashoutProgressBanner from '../../components/broadcast/CashoutProgressBanner'
+import MiniMaiPayCashoutModal from '../../components/broadcast/MiniMaiPayCashoutModal'
+import { useCashoutBanner } from '../../hooks/useCashoutBanner'
 import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
 import { awardKeyToUser } from '../../services/keyService'
 import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore'
@@ -109,6 +113,8 @@ import { useSeatFocus, type SeatInfo } from '@/hooks/useSeatFocus'
 import { MaiTrollBroadcastTheme } from '../../styles/broadcastTheme'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import MaiBag from '../../components/mai-bag/MaiBag'
+import RecoveryBanner from '../../components/broadcast/RecoveryBanner'
+import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
 
 const theme = MaiTrollBroadcastTheme
 
@@ -895,6 +901,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
    const [isChatOpen, setIsChatOpen] = useState(true)
     const [chatTab, setChatTab] = useState<'chat' | 'progress' | 'league' | 'gifts' | 'top-fans'>('chat')
    const [isGiftModalOpen, setIsGiftModalOpen] = useState(false)
+   const [isCashoutModalOpen, setIsCashoutModalOpen] = useState(false)
    const [giftRecipientId, setGiftRecipientId] = useState<string | null>(null)
    const { myLeagues, myMemberships, leagueMissions, isLoading: isUserLeaguesLoading } = useUserLeagues()
     const [recentGifts, setRecentGifts] = useState<BroadcastGift[]>([])
@@ -1585,6 +1592,12 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       handleParticipantDisconnected,
     } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any, refreshStageConfig)
     const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id)
+
+    const cashoutBanner = useCashoutBanner({
+      userId: user?.id,
+      isEligible: !!mySeat,
+      streamId: streamId || null,
+    })
 
    const [showViewerList, setShowViewerList] = useState(false)
    const onActiveViewersClick = useCallback(() => {
@@ -2704,6 +2717,7 @@ const isActive = isStreamActive(stream)
 
     try {
       if (navigator.share) {
+        void awardSharePoint();
         await navigator.share({
           title: shareTitle,
           text: 'Join this Mai Troll broadcast',
@@ -2712,6 +2726,7 @@ const isActive = isStreamActive(stream)
         return
       }
 
+      void awardSharePoint();
       await navigator.clipboard.writeText(shareUrl)
       toast.success('Broadcast link copied')
     } catch (err) {
@@ -3725,6 +3740,7 @@ useStreamRealtime(
 
   return (
     <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
+      <RecoveryBanner onRefresh={() => window.location.reload()} />
       <UndoRecentGiftBar />
       {isFeaturedEvent && (
         <FeaturedBanner
@@ -3742,6 +3758,7 @@ useStreamRealtime(
       )}
       <ErrorBoundary>
         <FeaturedLiveOverlay active={!!currentStreamFeatured} className="left-4 top-4" />
+        {!shouldShowRandomBattleArena && <FeaturedGiftBanner streamId={streamId} broadcasterId={hostId} isMobile={isMobileViewer} />}
         {/* Broadofficer appointment notification popup */}
         {broadofficerPopupVisible && (
           <div
@@ -4255,8 +4272,20 @@ useStreamRealtime(
                 />
                   </>
                 )}
-               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
+               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black-25" />
 
+                 {mySeat && !shouldShowRandomBattleArena && (
+                   <CashoutProgressBanner
+                     isVisible={cashoutBanner.isVisible}
+                     currentBalance={cashoutBanner.currentBalance}
+                     nextTier={cashoutBanner.nextTier}
+                     amountRemaining={cashoutBanner.amountRemaining}
+                     progressPercent={cashoutBanner.progressPercent}
+                     isCashoutReady={cashoutBanner.isCashoutReady}
+                     onClick={() => cashoutBanner.isCashoutReady && setIsCashoutModalOpen(true)}
+                     isMobile={isMobileViewer}
+                   />
+                 )}
 
               {!isMobileViewer && (
                 <>
@@ -5915,6 +5944,15 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
           </div>
         )}
 
+        {isCashoutModalOpen && (
+          <MiniMaiPayCashoutModal
+            isOpen={isCashoutModalOpen}
+            onClose={() => setIsCashoutModalOpen(false)}
+            currentBalance={cashoutBanner.currentBalance}
+            onSuccess={() => cashoutBanner.refreshBalance()}
+            isMobile={isMobileViewer}
+          />
+        )}
         {isPaidChatModalOpen && (
          <PaidChatViewerModal
            isOpen={isPaidChatModalOpen}

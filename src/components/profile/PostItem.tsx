@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
-import { Heart, MessageCircle, Gift, Share2, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Gift, Share2, Trash2, MoreHorizontal } from 'lucide-react';
 
 import { toast } from 'sonner';
 import { moderation } from '@/services/maitrollModeration';
@@ -49,9 +49,25 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
   const [liked, setLiked] = useState(false);
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const [_gifting, setGifting] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showActionMenu) {
+        const target = event.target as Node;
+        const menuEl = document.querySelector(`[data-action-menu="${post.id}"]`);
+        if (menuEl && !menuEl.contains(target)) {
+          setShowActionMenu(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showActionMenu, post.id]);
 
   // Check if user liked this post on mount
   useEffect(() => {
@@ -415,21 +431,32 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
             <span className="text-sm">Comment</span>
         </button>
 
-        <button 
-            className="flex-1 px-4 flex items-center justify-center gap-2 py-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-yellow-400 transition-colors"
-            onClick={() => setShowGiftModal(true)}
-        >
-            <Gift className="w-5 h-5" />
-            <span className="text-sm">Gift</span>
-        </button>
-
-        <button
-          className="flex-1 px-4 flex items-center justify-center gap-2 py-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-blue-400 transition-colors"
-          onClick={() => setShowShareModal(true)}
-        >
-          <Share2 className="w-5 h-5" />
-          <span className="text-sm">Share</span>
-        </button>
+        <div className="relative">
+          <button
+            className="flex items-center justify-center gap-1 px-3 py-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors"
+            onClick={() => setShowActionMenu(!showActionMenu)}
+          >
+            <MoreHorizontal className="w-5 h-5" />
+          </button>
+          {showActionMenu && (
+            <div className="absolute bottom-full right-0 mb-2 w-40 rounded-xl border border-white/10 bg-[#0d1117] shadow-xl z-20 overflow-hidden">
+              <button
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-300 hover:bg-white/5 hover:text-yellow-400 transition-colors"
+                onClick={() => { setShowActionMenu(false); setShowGiftModal(true); }}
+              >
+                <Gift className="w-4 h-4" />
+                Gift
+              </button>
+              <button
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors"
+                onClick={() => { setShowActionMenu(false); setShowShareModal(true); }}
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {showGiftModal && (
@@ -464,7 +491,7 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
                             <button onClick={() => setReplyingTo(null)} className="hover:text-white"><XIcon className="w-3 h-3" /></button>
                         </div>
                     )}
-                    <div className="relative">
+        <div className="relative" data-action-menu={post.id}>
                         <MentionTextarea
                             id={`comment-input-${post.id}`}
                             value={commentText}

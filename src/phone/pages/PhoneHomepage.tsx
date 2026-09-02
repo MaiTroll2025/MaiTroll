@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   BookOpen,
@@ -7,12 +8,17 @@ import {
   Crown,
   Gavel,
   MessageCircle,
+  FileText,
+  HelpCircle,
+  Home,
+  Mail,
   Music,
   Play,
   Radio,
   Sparkles,
   Trophy,
   Users,
+  Shield,
 } from 'lucide-react'
 
 import PhoneHeader from '../PhoneHeader'
@@ -24,7 +30,6 @@ import {
 } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
-import useGlobalActivity from '@/hooks/useGlobalActivity'
 import { useWallNotifications } from '@/hooks/useWallNotifications'
 
 const glass =
@@ -35,6 +40,148 @@ const neonGradient =
 
 const neonBorder =
   'border border-[#00BFFF]/30 shadow-[0_0_25px_rgba(0,191,255,0.10),0_0_35px_rgba(191,0,255,0.08)]'
+
+function PhoneSpaceBackground() {
+  const stars = Array.from({ length: 48 }, (_, index) => ({
+    left: `${(index * 47) % 100}%`,
+    top: `${(index * 71) % 100}%`,
+    depth: `${(index % 5) * 0.12 + 0.4}s`,
+    size: `${index % 13 === 0 ? 2 : 1}px`,
+    opacity: `${0.35 + (index % 6) * 0.1}`,
+  }))
+  const shootingStars = [
+    { top: '18%', left: '8%', delay: '0s', duration: '5.5s' },
+    { top: '34%', left: '56%', delay: '2.2s', duration: '6.5s' },
+    { top: '62%', left: '18%', delay: '4s', duration: '7s' },
+  ]
+
+  const planetTexture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 256
+    canvas.height = 128
+
+    const context = canvas.getContext('2d')
+    if (!context) return ''
+
+    const image = context.createImageData(canvas.width, canvas.height)
+    const data = image.data
+
+    const hash = (x: number, y: number, seed = 0) => {
+      const value = Math.sin(
+        x * 127.1 + y * 311.7 + seed * 74.7,
+      ) * 43758.5453123
+
+      return value - Math.floor(value)
+    }
+
+    const fade = (t: number) => t * t * (3 - 2 * t)
+
+    const noise = (x: number, y: number, scale: number, seed = 0) => {
+      const sx = x / scale
+      const sy = y / scale
+      const x0 = Math.floor(sx)
+      const y0 = Math.floor(sy)
+      const fx = fade(sx - x0)
+      const fy = fade(sy - y0)
+
+      const n00 = hash(x0, y0, seed)
+      const n10 = hash(x0 + 1, y0, seed)
+      const n01 = hash(x0, y0 + 1, seed)
+      const n11 = hash(x0 + 1, y0 + 1, seed)
+      const nx0 = n00 + (n10 - n00) * fx
+      const nx1 = n01 + (n11 - n01) * fx
+
+      return nx0 + (nx1 - nx0) * fy
+    }
+
+    const fbm = (x: number, y: number) => {
+      let value = 0
+      let total = 0
+      const layers = [
+        [180, 1],
+        [90, 0.5],
+        [45, 0.25],
+        [20, 0.12],
+        [8, 0.06],
+      ]
+
+      for (const [scale, amplitude] of layers) {
+        value += noise(x, y, scale, scale) * amplitude
+        total += amplitude
+      }
+
+      return value / total
+    }
+
+    for (let y = 0; y < canvas.height; y += 1) {
+      for (let x = 0; x < canvas.width; x += 1) {
+        const terrain = fbm(x, y)
+        const mariaNoise = noise(x + 400, y + 100, 230, 12)
+        const maria = mariaNoise > 0.56
+          ? Math.min(1, (mariaNoise - 0.56) * 4)
+          : 0
+
+        let brightness = 132 + terrain * 58 - maria * 48
+        brightness += (hash(x, y, 99) - 0.5) * 13
+        brightness = Math.max(48, Math.min(205, brightness))
+
+        const index = (y * canvas.width + x) * 4
+        data[index] = brightness
+        data[index + 1] = brightness * 0.99
+        data[index + 2] = brightness * 0.96
+        data[index + 3] = 255
+      }
+    }
+
+    context.putImageData(image, 0, 0)
+
+    return canvas.toDataURL('image/jpeg', 0.9)
+  }, [])
+
+  return (
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#01020a] [perspective:900px]">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(38,20,116,0.35),transparent_42%),radial-gradient(ellipse_at_10%_65%,rgba(0,136,214,0.18),transparent_38%),linear-gradient(160deg,#02030d_0%,#07152a_48%,#090219_100%)]" />
+      <div className="absolute left-[-20%] top-[18%] h-[34%] w-[140%] rotate-[-18deg] rounded-[50%] bg-[radial-gradient(ellipse,rgba(54,210,255,0.2),rgba(116,31,255,0.1)_28%,transparent_67%)] blur-2xl [transform:translateZ(-80px)]" />
+      <div className="absolute -left-[30%] top-[8%] h-[32%] w-[95%] rotate-[28deg] rounded-[50%] bg-[radial-gradient(ellipse,rgba(103,41,255,0.2),rgba(27,143,255,0.08)_38%,transparent_70%)] blur-3xl animate-[nebulaDrift_28s_ease-in-out_infinite]" />
+      <div className="absolute -right-[26%] top-[62%] h-[38%] w-[90%] rotate-[-24deg] rounded-[50%] bg-[radial-gradient(ellipse,rgba(32,178,255,0.15),rgba(153,27,255,0.12)_34%,transparent_70%)] blur-3xl animate-[nebulaDrift_34s_ease-in-out_infinite_reverse]" />
+      <div className="absolute inset-0 [transform-style:preserve-3d]">
+        {stars.map((star, index) => (
+          <span
+            key={index}
+            className="absolute rounded-full bg-white shadow-[0_0_7px_rgba(139,225,255,0.9)] animate-[spaceTwinkle_3.8s_ease-in-out_infinite]"
+            style={{ left: star.left, top: star.top, width: star.size, height: star.size, opacity: star.opacity, animationDelay: star.depth }}
+          />
+        ))}
+        {shootingStars.map((star, index) => (
+          <span
+            key={index}
+            className="absolute h-px w-20 origin-left rotate-[25deg] bg-gradient-to-r from-transparent via-cyan-100 to-white opacity-0 shadow-[0_0_8px_#38d9ff] animate-[shootingStar_6s_linear_infinite]"
+            style={{ top: star.top, left: star.left, animationDelay: star.delay, animationDuration: star.duration }}
+          />
+        ))}
+      </div>
+
+      <div className="absolute left-[8%] top-[23%] h-10 w-10 overflow-hidden rounded-full bg-[#168ed0] shadow-[-7px_-5px_12px_rgba(187,219,255,0.5),inset_-7px_-5px_12px_rgba(20,38,90,0.85)] [background-image:radial-gradient(ellipse_at_28%_28%,rgba(104,220,255,0.65),transparent_24%),radial-gradient(ellipse_at_68%_42%,#4f9d38 0%,#27782f 38%,transparent 40%),radial-gradient(ellipse_at_32%_76%,#69a844 0%,#287735 34%,transparent 36%),radial-gradient(ellipse_at_78%_78%,#367f35 0%,transparent_26%)] [transform:translateZ(18px)] sm:left-[14%] sm:top-[20%] sm:h-14 sm:w-14">
+        <span className="absolute left-[62%] top-[34%] h-1.5 w-1.5 rounded-full bg-[#174f2a] shadow-[3px_1px_0_#2f7c37,-2px_2px_0_#2f7c37] sm:h-2 sm:w-2" />
+        <span className="absolute left-[29%] top-[65%] h-1 w-1 rounded-full bg-[#174f2a] shadow-[3px_0_0_#3d8536] sm:h-1.5 sm:w-1.5" />
+        <div className="absolute left-1/2 top-1/2 h-[170%] w-[42%] -translate-x-1/2 -translate-y-1/2 rotate-[28deg] rounded-[50%] border border-white/30 opacity-40 [transform:rotateX(70deg)]" />
+      </div>
+
+      <div className="absolute right-[3%] top-[38%] h-[230px] w-[230px] [transform:translateZ(30px)_rotateX(12deg)_rotateY(-18deg)] sm:right-[12%] sm:h-[280px] sm:w-[280px]">
+        <div className="absolute inset-0 overflow-hidden rounded-full bg-[#777] shadow-[-18px_-12px_30px_rgba(190,190,190,0.22),18px_25px_42px_rgba(0,0,0,0.9),inset_-25px_-8px_35px_#080808] [transform:rotateY(-14deg)]">
+          <div className="absolute inset-[-4%] bg-cover bg-[position:0%_50%] opacity-95 mix-blend-normal animate-[planetSurfaceDrift_24s_linear_infinite]" style={{ backgroundImage: `url(${planetTexture})` }} />
+          <div className="absolute inset-[-8%] rounded-full bg-[radial-gradient(ellipse_at_24%_18%,rgba(255,255,255,0.38),transparent_18%),radial-gradient(circle_at_18%_50%,transparent_35%,rgba(0,0,0,0.86)_84%)]" />
+          <div className="absolute inset-0 rounded-full border border-white/20 opacity-60 [box-shadow:inset_12px_8px_22px_rgba(255,255,255,0.24),inset_-18px_-10px_30px_rgba(0,0,0,0.92)]" />
+          <div className="absolute inset-0 flex items-center justify-center px-4 [transform:translateZ(20px)_rotateY(14deg)]">
+            <span className="whitespace-nowrap text-[clamp(1.1rem,6vw,2rem)] font-black uppercase tracking-[0.18em] text-white/80 [text-shadow:1px_1px_2px_rgba(0,0,0,0.85),-1px_-1px_1px_rgba(255,255,255,0.3)]">Mai Troll</span>
+          </div>
+        </div>
+      </div>
+
+      <style>{`@keyframes spaceTwinkle { 0%, 100% { opacity: .28; transform: translateZ(0) scale(.8); } 50% { opacity: 1; transform: translateZ(28px) scale(1.5); } } @keyframes shootingStar { 0%, 12% { opacity: 0; transform: translate3d(-30px, -20px, 0) rotate(25deg) scaleX(.4); } 18% { opacity: 1; } 42% { opacity: .8; transform: translate3d(170px, 120px, 45px) rotate(25deg) scaleX(1); } 58%, 100% { opacity: 0; transform: translate3d(280px, 195px, 70px) rotate(25deg) scaleX(.2); } } @keyframes planetSurfaceDrift { from { background-position: 0% 50%; transform: scale(1.12); } to { background-position: 100% 50%; transform: scale(1.12); } } @keyframes nebulaDrift { 0%, 100% { transform: translate3d(-2%, 0, -80px) rotate(28deg) scale(1); opacity: .65; } 50% { transform: translate3d(5%, 4%, -60px) rotate(34deg) scale(1.08); opacity: .9; } }`}</style>
+    </div>
+  )
+}
 
 interface PhoneHomepageProps {
   onNavigate?: (path: string) => void
@@ -492,34 +639,6 @@ function PhoneOnlineUsers({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Global Activity                                                             */
-/* -------------------------------------------------------------------------- */
-
-function PhoneActivityTicker() {
-  const events = useGlobalActivity()
-
-  if (!events?.length) return null
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-[#00BFFF]/10 bg-gradient-to-r from-[#00BFFF]/5 to-[#BF00FF]/5 px-3 py-2">
-      <div className="flex items-center gap-2">
-        <Radio size={11} className="shrink-0 text-[#00BFFF]" />
-
-        <div className="min-w-0 overflow-hidden whitespace-nowrap">
-          <div className="flex animate-[phoneTicker_22s_linear_infinite] gap-8 text-[9px] font-bold text-[#00BFFF]/60">
-            {events.slice(0, 8).map((event, index) => (
-              <span key={`${event.id}-${index}`} className="shrink-0">
-                • {event.message}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
 /* Quick Links                                                                 */
 /* -------------------------------------------------------------------------- */
 
@@ -723,7 +842,7 @@ export default function PhoneHomepage({
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#03030a]">
-        <PhoneHeader />
+        <PhoneHeader showTickerLinks={false} />
 
         <div className="flex min-h-[70vh] items-center justify-center">
           <div className="text-center">
@@ -743,10 +862,11 @@ export default function PhoneHomepage({
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#03030a] text-white">
-      <PhoneHeader />
+    <div className="relative min-h-screen overflow-x-hidden bg-[#03030a] text-white">
+      <PhoneSpaceBackground />
+      <PhoneHeader showTickerLinks={false} />
 
-      <main className="px-3 pb-24 pt-3">
+      <main className="relative z-10 px-3 pb-24 pt-3">
         {/* ---------------------------------------------------------------- */}
         {/* Welcome                                                           */}
         {/* ---------------------------------------------------------------- */}
@@ -768,7 +888,7 @@ export default function PhoneHomepage({
                 </h2>
 
                 <p className="mt-0.5 text-[9px] font-bold text-zinc-400">
-                  Watch. Battle. Troll. Gift. Connect.
+                  Watch. Battle. Troll. Gift. Cashout.
                 </p>
               </div>
 
@@ -841,25 +961,7 @@ export default function PhoneHomepage({
           </div>
         </section>
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Header                                                            */}
-        {/* ---------------------------------------------------------------- */}
-
-        <div className="mb-5 flex items-end justify-between">
-          <div>
-            <p className="mb-1 text-[8px] font-black uppercase tracking-[0.2em] text-[#00BFFF]/50">
-              TROLL CITY NETWORK
-            </p>
-
-            <h1 className="text-lg font-black tracking-tight text-white">
-              What’s Happening Now
-            </h1>
-
-            <p className="mt-0.5 text-[9px] font-bold text-zinc-600">
-              Live broadcasts, battles and events across MaiTroll
-            </p>
-          </div>
-
+        <div className="mb-5 flex justify-start">
           <button
             type="button"
             disabled={refreshing}
@@ -868,14 +970,6 @@ export default function PhoneHomepage({
           >
             {refreshing ? 'Updating...' : 'Refresh'}
           </button>
-        </div>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Activity                                                           */}
-        {/* ---------------------------------------------------------------- */}
-
-        <div className="mb-5">
-          <PhoneActivityTicker />
         </div>
 
         <div className="space-y-6">
@@ -1108,6 +1202,26 @@ export default function PhoneHomepage({
             MaiTroll • Troll City
           </p>
 
+          <nav className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2" aria-label="Homepage links">
+            {[
+              { label: 'About', path: '/about', icon: Home },
+              { label: 'Contact', path: '/contact', icon: Mail },
+              { label: 'Support', path: '/support', icon: HelpCircle },
+              { label: 'FAQ', path: '/faq', icon: MessageCircle },
+              { label: 'Privacy', path: '/privacy', icon: Shield },
+              { label: 'Terms', path: '/terms', icon: FileText },
+            ].map(({ label, path, icon: Icon }) => (
+              <Link
+                key={path}
+                to={path}
+                className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wide text-[#00BFFF]/70 transition hover:text-[#BF00FF]"
+              >
+                <Icon size={10} />
+                {label}
+              </Link>
+            ))}
+          </nav>
+
           <p className="mt-1 text-[8px] font-bold text-zinc-800">
             All rights reserved © 2025 Troll City
           </p>
@@ -1115,16 +1229,6 @@ export default function PhoneHomepage({
       </main>
 
       <style>{`
-        @keyframes phoneTicker {
-          0% {
-            transform: translateX(0);
-          }
-
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }

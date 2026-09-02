@@ -9,6 +9,7 @@ import React, {
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
+  Bell,
   ChevronDown,
   Gift,
   Heart,
@@ -40,6 +41,7 @@ import {
 import {
   supabase,
 } from '@/lib/supabase'
+import { awardInvitePoint } from '@/lib/weeklyPointsService'
 
 import type {
   Stream,
@@ -79,6 +81,7 @@ import CityStatusPanel from '@/components/city/CityStatusPanel'
 import RaidModal from '@/components/city/RaidModal'
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import MaiBag from '@/components/mai-bag/MaiBag'
+import ShareModal from '@/components/broadcast/ShareModal'
 
 import {
   useCityStatusOrb,
@@ -123,6 +126,11 @@ import { FeaturedLeaderboard } from '@/components/featured/FeaturedLeaderboard'
 import { FeaturedLiveOverlay } from '@/components/featured/FeaturedLiveOverlay'
 import ViewerUserActionModal from '@/components/broadcast/ViewerUserActionModal'
 import ModActionsPopup from '@/components/broadcast/ModActionsPopup'
+import CashoutProgressBanner from '@/components/broadcast/CashoutProgressBanner'
+import MiniMaiPayCashoutModal from '@/components/broadcast/MiniMaiPayCashoutModal'
+import { useCashoutBanner } from '@/hooks/useCashoutBanner'
+import { usePullToRefresh } from '@/hooks/usePullToRefresh'
+import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
 
 interface SeatState {
   participant: any
@@ -1045,6 +1053,16 @@ export default function PhoneViewerPage() {
   ] = useState(false)
 
   const [
+    isShareModalOpen,
+    setIsShareModalOpen,
+  ] = useState(false)
+
+  const [
+    isCashoutModalOpen,
+    setIsCashoutModalOpen,
+  ] = useState(false)
+
+  const [
     userActionTarget,
     setUserActionTarget,
   ] = useState<{
@@ -1772,6 +1790,17 @@ export default function PhoneViewerPage() {
       streamId,
       user?.id,
     )
+
+  const cashoutBanner = useCashoutBanner({
+    userId: user?.id,
+    isEligible: !!mySeat,
+    streamId: streamId || null,
+  })
+
+  const { pulling: pullRefreshing, pullY } = usePullToRefresh(
+    () => window.location.reload(),
+    !shouldShowRandomBattleArena,
+  )
 
   const audienceWithAnon = useMemo(() => {
     if (user?.id || !anonViewerId)
@@ -3623,6 +3652,29 @@ export default function PhoneViewerPage() {
       hostId,
     ])
 
+  const handleOpenShareModal = useCallback(() => {
+    setIsShareModalOpen(true)
+  }, [])
+
+  const handleInviteFollowers = useCallback(async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser()
+      const inviterId = userData.user?.id
+      if (!inviterId || !streamId) return
+
+      const { data, error } = await supabase.rpc('invite_followers_to_broadcast', {
+        p_stream_id: streamId,
+        p_inviter_id: inviterId,
+      })
+
+      if (error) throw error
+      toast.success(`Invited ${data.invited_count || 0} followers and following users`)
+      void awardInvitePoint()
+    } catch (inviteError: any) {
+      toast.error(inviteError.message || 'Failed to send invites')
+    }
+  }, [streamId])
+
   /* ========================================================================
      MIC / CAMERA
   ======================================================================== */
@@ -3925,7 +3977,16 @@ export default function PhoneViewerPage() {
               onToggleCamera={handleCamera}
               onToggleMic={handleMic}
             />
-            <PhoneGiftModal
+            {isCashoutModalOpen && (
+          <MiniMaiPayCashoutModal
+            isOpen={isCashoutModalOpen}
+            onClose={() => setIsCashoutModalOpen(false)}
+            currentBalance={cashoutBanner.currentBalance}
+            onSuccess={() => cashoutBanner.refreshBalance()}
+            isMobile={true}
+          />
+        )}
+        <PhoneGiftModal
               isOpen={
                 isGiftModalOpen
               }
@@ -3983,6 +4044,7 @@ export default function PhoneViewerPage() {
         />
       )}
       <FeaturedLiveOverlay active={!!currentStreamFeatured} className="left-4 top-4" />
+      {!shouldShowRandomBattleArena && <FeaturedGiftBanner streamId={streamId} broadcasterId={hostId} isMobile={true} />}
       <div
         className="relative h-[100dvh] w-full overflow-hidden bg-[#02030a] text-white"
         onClick={() => {
@@ -3991,6 +4053,16 @@ export default function PhoneViewerPage() {
           }
         }}
       >
+        {pullRefreshing && (
+          <div
+            className="absolute inset-x-0 top-0 z-[400] flex justify-center pt-3 pointer-events-none"
+            style={{ transform: `translateY(${Math.min(pullY, 60)}px)` }}
+          >
+            <div className="rounded-full border border-white/10 bg-black/70 px-3 py-1 text-[10px] font-black text-white/80 backdrop-blur">
+              {pullY >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+            </div>
+          </div>
+        )}
 
         {/* ================================================================
             FULL-SCREEN BROADCASTER VIDEO
@@ -4005,6 +4077,7 @@ export default function PhoneViewerPage() {
               liveKitRoom
             }
             className="h-full w-full"
+            mirror={true}
             fallback={
               <div className="flex h-full w-full flex-col items-center justify-center bg-[#050711]">
                 <div className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-cyan-300/20 bg-cyan-500/10 shadow-[0_0_50px_rgba(34,211,238,0.12)]">
@@ -4021,13 +4094,36 @@ export default function PhoneViewerPage() {
               </div>
             }
           />
+          {/* Camera-off image fallback */}
+          {!broadcasterState.videoTrack && (broadcasterProfile as any)?.camera_off_image_url && (
+            <div className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-hidden bg-black">
+              <img
+                src={(broadcasterProfile as any).camera_off_image_url}
+                alt={`${broadcasterProfile?.username || 'Broadcaster'} camera off`}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
 
           <div
-            className="absolute inset-0 z-[1]"
+            className="absolute inset-0 z-[2]"
             onClick={handleVideoTap}
           />
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black-70" />
+
+          {mySeat && !shouldShowRandomBattleArena && (
+            <CashoutProgressBanner
+              isVisible={cashoutBanner.isVisible}
+              currentBalance={cashoutBanner.currentBalance}
+              nextTier={cashoutBanner.nextTier}
+              amountRemaining={cashoutBanner.amountRemaining}
+              progressPercent={cashoutBanner.progressPercent}
+              isCashoutReady={cashoutBanner.isCashoutReady}
+              onClick={() => cashoutBanner.isCashoutReady && setIsCashoutModalOpen(true)}
+              isMobile={true}
+            />
+          )}
         </div>
 
         {/* ================================================================
@@ -4080,33 +4176,52 @@ export default function PhoneViewerPage() {
 
         {stream && (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-            <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
-              <MobileAudienceTicker
-                audience={audienceWithAnon}
-                currentUserId={user?.id}
-                hostUserId={stream?.user_id}
-                viewerCount={viewerCount}
-                likes={stream?.total_likes ?? 0}
-                maxVisible={7}
-              />
-            </div>
-
-            <div className="flex w-full items-center gap-1.5">
-              <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-2.5 py-1 backdrop-blur-md">
-                <Users size={10} className="text-white/60" />
-                <span className="text-[9px] font-black text-white/70">
-                  {Math.max(
-                    viewerCount,
-                    activeAudience?.length ||
-                      0,
-                  ) || 0}
-                </span>
-                <span className="text-[8px] font-bold uppercase tracking-wider text-white/30">
-                  watching
-                </span>
+            <div className="pointer-events-auto flex w-full items-center gap-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
+              <div className="min-w-0 flex-1">
+                <MobileAudienceTicker
+                  audience={audienceWithAnon}
+                  currentUserId={user?.id}
+                  hostUserId={stream?.user_id}
+                  viewerCount={viewerCount}
+                  likes={stream?.total_likes ?? 0}
+                  maxVisible={7}
+                />
               </div>
 
-              <div className="pointer-events-auto ml-auto flex items-center gap-1.5">
+              {showControls && !battleActive && (
+                <button
+                  type="button"
+                  onClick={leave}
+                  aria-label="Go back"
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-black/40 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-90"
+                >
+                  <ArrowLeft size={16} />
+                </button>
+              )}
+            </div>
+
+            <div className="flex w-full items-start justify-between gap-2">
+              {/* City Status Orb and Mai Bag stay directly under the ticker. */}
+              <div className="pointer-events-auto flex shrink-0 flex-col items-start gap-1.5">
+                {broadcasterCityStatus.data && (
+                  <CityStatusOrb
+                    data={broadcasterCityStatus.data}
+                    permissions={{ isSelf: false, canCheckLicense: false, canRaid: true, canRepair: true, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
+                    compact
+                    onRaid={() => {
+                      const targetUser = broadcasterCityStatus.data;
+                      if (targetUser?.id && targetUser.id !== user?.id) {
+                        setBroadcastRaidTarget(targetUser.id);
+                      }
+                    }}
+                  />
+                )}
+                {streamId && <MaiBag streamId={streamId} phone />}
+              </div>
+
+              {/* Like / Gift / Share / Invite stay directly under the ticker. */}
+              <div className="pointer-events-auto flex min-w-0 flex-1 items-center justify-end gap-1.5">
+              <div className="ml-auto flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -4155,16 +4270,7 @@ export default function PhoneViewerPage() {
 
                 <button
                   type="button"
-                  onClick={async () => {
-                    try {
-                      await navigator.share?.({
-                        title: `@${hostName} on MaiTroll`,
-                        url: `${window.location.origin}/live/${encodeURIComponent(hostName)}`,
-                      })
-                    } catch {
-                      // cancelled
-                    }
-                  }}
+                  onClick={handleOpenShareModal}
                   className="grid h-8 w-8 place-items-center rounded-full border border-cyan-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
                 >
                   <Share2
@@ -4172,42 +4278,23 @@ export default function PhoneViewerPage() {
                     className="text-cyan-300"
                   />
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => void handleInviteFollowers()}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-emerald-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                  aria-label="Invite followers"
+                  title="Invite followers"
+                >
+                  <Bell size={12} className="text-emerald-300" />
+                </button>
               </div>
             </div>
           </div>
+        </div>
         )}
 
-        {/* ================================================================
-            TOP CONTROLS (back + mai bag)
-        ================================================================= */}
-
-        {showControls &&
-          !battleActive && (
-            <div
-              className="absolute left-0 right-0 top-0 z-50 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]"
-              onClick={event =>
-                event.stopPropagation()
-              }
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col items-start gap-2">
-                  <button
-                    type="button"
-                    onClick={leave}
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-black/40 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-90"
-                  >
-                    <ArrowLeft
-                      size={19}
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-        {streamId && (
-          <MaiBag streamId={streamId} phone className="pointer-events-auto absolute right-3 top-[5.5rem] z-20" />
-        )}
+        {/* Mai Bag moved below share/gift buttons */}
 
         {/* ================================================================
             LIKE
@@ -4637,6 +4724,14 @@ export default function PhoneViewerPage() {
           broadcasterId={
             hostId
           }
+        />
+
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          streamTitle={stream.title || 'Untitled Stream'}
+          streamUrl={`${window.location.origin}/live/${encodeURIComponent(hostName)}`}
+          broadcasterName={hostName}
         />
 
         <form

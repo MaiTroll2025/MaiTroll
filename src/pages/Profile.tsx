@@ -18,6 +18,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
 import { buildOGImageUrl } from '../lib/og';
 import { getLevelName } from '../lib/xp';
+import { awardFollowPoint } from '../lib/weeklyPointsService';
 import { useXPStore } from '@/stores/useXPStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import * as recordLabelService from '@/services/maiRecordLabel';
@@ -547,13 +548,14 @@ function ProfileInner() {
             setIsFollowing(false);
             setFollowersCount(prev => Math.max(0, prev - 1));
             toast.success(`Unfollowed ${profile.username}`);
-        } else {
-            const { error } = await supabase.from('user_follows').insert({ follower_id: currentUser.id, following_id: profile.id });
-            if (error) return toast.error('Failed to follow user');
-            setIsFollowing(true);
-            setFollowersCount(prev => prev + 1);
-            toast.success(`Followed ${profile.username}`);
-        }
+         } else {
+             const { error } = await supabase.from('user_follows').insert({ follower_id: currentUser.id, following_id: profile.id });
+             if (error) return toast.error('Failed to follow user');
+             setIsFollowing(true);
+             setFollowersCount(prev => prev + 1);
+             toast.success(`Followed ${profile.username}`);
+             void awardFollowPoint();
+         }
     };
 
     const handleMessage = async () => {

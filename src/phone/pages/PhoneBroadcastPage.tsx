@@ -19,6 +19,7 @@ import {
   Swords,
   Video,
   VideoOff,
+  X,
 } from 'lucide-react'
 import {
   LocalAudioTrack,
@@ -31,6 +32,7 @@ import {
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { awardInvitePoint } from '@/lib/weeklyPointsService'
 
 import { useStreamSeats } from '@/hooks/useStreamSeats'
 import { useLiveBroadcast } from '@/hooks/useLiveBroadcast'
@@ -51,6 +53,8 @@ import { getGiftVisualConfig } from '@/lib/giftVisuals'
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import MobileBroadcastHostSettings from '@/components/broadcast/MobileBroadcastHostSettings'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import CityStatusOrb from '@/components/city/CityStatusOrb'
+import { useCityStatusOrb } from '@/lib/hooks/useCityStatusOrb'
 
 import BattleView from '@/pages/broadcast/BattleView'
 
@@ -62,6 +66,13 @@ import { useFeaturedLive } from '@/hooks/useFeaturedLive'
 import { FeaturedBanner } from '@/components/featured/FeaturedBanner'
 import { FeaturedLeaderboard } from '@/components/featured/FeaturedLeaderboard'
 import { FeaturedLiveOverlay } from '@/components/featured/FeaturedLiveOverlay'
+import UserActionModal from '@/components/broadcast/UserActionModal'
+import { hasModActionsAccess } from '@/types/moderationActions'
+import CashoutProgressBanner from '@/components/broadcast/CashoutProgressBanner'
+import MiniMaiPayCashoutModal from '@/components/broadcast/MiniMaiPayCashoutModal'
+import { useCashoutBanner } from '@/hooks/useCashoutBanner'
+import { usePullToRefresh } from '@/hooks/usePullToRefresh'
+import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
 
 import type { Stream } from '@/types/broadcast'
 import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
@@ -130,10 +141,25 @@ export default function PhoneBroadcastPage() {
   const [isShareModalOpen, setIsShareModalOpen] =
     useState(false)
 
+  const [isCashoutModalOpen, setIsCashoutModalOpen] =
+    useState(false)
+
   const [isEnding, setIsEnding] = useState(false);
 
   const [floatingMessages, setFloatingMessages] =
     useState<FloatingMessage[]>([])
+
+  const [showHostSettings, setShowHostSettings] =
+    useState(false)
+
+  const [showModActionMenu, setShowModActionMenu] =
+    useState(false)
+
+  const [selectedActionUserId, setSelectedActionUserId] =
+    useState<string | null>(null)
+
+  const [selectedActionUsername, setSelectedActionUsername] =
+    useState<string | null>(null)
 
   const [chatInput, setChatInput] =
     useState('')
@@ -155,6 +181,12 @@ export default function PhoneBroadcastPage() {
 
   const streamEndedRef =
     useRef(false)
+
+  const lastVideoTapRef =
+    useRef<{ time: number; x: number; y: number } | null>(null)
+
+  const videoTapTimeoutRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Safety net: if endStream hangs (e.g. slow network), force-reset the
   // guard so the button never stays permanently disabled.
@@ -277,6 +309,24 @@ export default function PhoneBroadcastPage() {
       streamId || '',
       user?.id,
     )
+
+  const cashoutBanner = useCashoutBanner({
+    userId: user?.id,
+    isEligible: !!user?.id,
+    streamId: streamId || null,
+  })
+
+  const { pulling: pullRefreshing, pullY } = usePullToRefresh(
+    () => window.location.reload(),
+    true,
+  )
+
+  const broadcasterCityStatus = useCityStatusOrb({
+    userId: user?.id || '',
+    broadcasterId: user?.id || '',
+    isBroadcaster: true,
+    isBroadOfficer: false,
+  })
 
   const remoteUsers = useMemo(() => {
     return Array.from(
@@ -1107,6 +1157,7 @@ export default function PhoneBroadcastPage() {
 
       if (error) throw error
       toast.success(`Invited ${data.invited_count || 0} followers and following users`)
+      void awardInvitePoint()
     } catch (e: any) {
       toast.error(e.message || 'Failed to send invites')
     }
@@ -1679,6 +1730,59 @@ export default function PhoneBroadcastPage() {
       })
   }, [seats, session, findParticipantBySeatIdentity])
 
+  const handleVideoTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const now = Date.now()
+    const clientX = 'touches' in e ? e.touches[0]?.clientX ?? 0 : e.clientX
+    const clientY = 'touches' in e ? e.touches[0]?.clientY ?? 0 : e.clientY
+
+    if (lastVideoTapRef.current) {
+      const dx = clientX - lastVideoTapRef.current.x
+      const dy = clientY - lastVideoTapRef.current.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      if (now - lastVideoTapRef.current.time < 350 && dist < 30) {
+        void session.toggleCamera()
+        lastVideoTapRef.current = null
+        if (videoTapTimeoutRef.current) {
+          clearTimeout(videoTapTimeoutRef.current)
+          videoTapTimeoutRef.current = null
+        }
+        return
+      }
+    }
+
+    lastVideoTapRef.current = { time: now, x: clientX, y: clientY }
+
+    videoTapTimeoutRef.current = setTimeout(() => {
+      if (lastVideoTapRef.current && Date.now() - lastVideoTapRef.current.time >= 350) {
+        setShowHostSettings(true)
+        lastVideoTapRef.current = null
+      }
+    }, 350)
+  }, [session])
+
+  const canClickFloatingChatUsername = hasModActionsAccess(broadcasterProfile)
+
+  const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
+    if (!username || username.toLowerCase() === 'anonymous') return
+
+    try {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('id, username')
+        .eq('username', username)
+        .maybeSingle()
+
+      if (data?.id) {
+        setSelectedActionUserId(data.id)
+        setSelectedActionUsername(data.username)
+        setShowModActionMenu(true)
+      }
+    } catch (err) {
+      console.warn('[PhoneBroadcastPage] Failed to lookup user:', err)
+    }
+  }, [])
+
   /*
     * ============================================================
     * COMPUTED: occupied remote seats for compact row display
@@ -1760,7 +1864,16 @@ export default function PhoneBroadcastPage() {
              </div>
            )}
 
-            <PhoneGiftModal
+            {isCashoutModalOpen && (
+          <MiniMaiPayCashoutModal
+            isOpen={isCashoutModalOpen}
+            onClose={() => setIsCashoutModalOpen(false)}
+            currentBalance={cashoutBanner.currentBalance}
+            onSuccess={() => cashoutBanner.refreshBalance()}
+            isMobile={true}
+          />
+        )}
+        <PhoneGiftModal
               isOpen={
                 isGiftModalOpen
               }
@@ -1803,6 +1916,18 @@ export default function PhoneBroadcastPage() {
       }
     >
       <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
+        {pullRefreshing && (
+          <div
+            className="absolute inset-x-0 top-0 z-[400] flex justify-center pt-3 pointer-events-none"
+            style={{ transform: `translateY(${Math.min(pullY, 60)}px)` }}
+          >
+            <div className="rounded-full border border-white/10 bg-black/70 px-3 py-1 text-[10px] font-black text-white/80 backdrop-blur">
+              {pullY >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+            </div>
+          </div>
+        )}
+
+        {!shouldShowRandomBattleArena && <FeaturedGiftBanner streamId={streamId} broadcasterId={stream?.user_id} isMobile={true} />}
 
         {/*
          * ============================================================
@@ -1811,9 +1936,34 @@ export default function PhoneBroadcastPage() {
          */}
         <div className="absolute inset-0 z-0">
           <LocalCameraFullVideo videoTrack={session.localTracks?.[1]} />
+          {/* Camera-off image fallback */}
+          {!session.cameraEnabled && (broadcasterProfile as any)?.camera_off_image_url && (
+            <div className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-hidden bg-black">
+              <img
+                src={(broadcasterProfile as any).camera_off_image_url}
+                alt={`${broadcasterProfile?.username || 'Broadcaster'} camera off`}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
           {/* Clickable overlay for broadcaster interactions */}
-          <div className="absolute inset-0" />
+          <div
+            className="absolute inset-0 z-[2]"
+            onClick={handleVideoTap}
+            onTouchEnd={handleVideoTap}
+          />
         </div>
+
+        <CashoutProgressBanner
+          isVisible={cashoutBanner.isVisible}
+          currentBalance={cashoutBanner.currentBalance}
+          nextTier={cashoutBanner.nextTier}
+          amountRemaining={cashoutBanner.amountRemaining}
+          progressPercent={cashoutBanner.progressPercent}
+          isCashoutReady={cashoutBanner.isCashoutReady}
+          onClick={() => cashoutBanner.isCashoutReady && setIsCashoutModalOpen(true)}
+          isMobile={true}
+        />
 
         {/* ======================================================
             REMOTE AUDIO (attach remote participant audio)
@@ -1846,6 +1996,17 @@ export default function PhoneBroadcastPage() {
                 maxVisible={6}
               />
             </div>
+
+            {/* CityStatusOrb under audience ticker */}
+            {broadcasterCityStatus.data && (
+              <div className="pointer-events-auto">
+                <CityStatusOrb
+                  data={broadcasterCityStatus.data}
+                  permissions={{ isSelf: true, canCheckLicense: false, canRaid: false, canRepair: false, canEnforce: false, canRemoveFromSeat: false, canAccessAll: false }}
+                  compact
+                />
+              </div>
+            )}
 
             <div className="flex items-center gap-1.5">
               {broadcasterProfile?.troll_coins !== undefined && (
@@ -1922,9 +2083,19 @@ export default function PhoneBroadcastPage() {
                   className="pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300"
                 >
                   <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 shadow-lg backdrop-blur-md">
-                    <span className="text-[10px] font-black text-cyan-300">
-                      {message.username}
-                    </span>
+                    {canClickFloatingChatUsername ? (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenFloatingChatUsername(message.username)}
+                        className="text-[10px] font-black text-cyan-300 transition-colors hover:text-cyan-100"
+                      >
+                        {message.username}
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-black text-cyan-300">
+                        {message.username}
+                      </span>
+                    )}
                     <span className="text-[10px] font-bold text-white/40">
                       sent:{' '}
                     </span>
@@ -2070,6 +2241,71 @@ onCameraOffAllSeats={cameraOffAllSeats}
             setRecentGifts((prev) => prev.filter((gift) => gift.id !== giftId))
           }
         />
+
+        {showHostSettings && stream && (
+          <div
+            className="absolute inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowHostSettings(false)}
+          >
+            <div
+              className="w-full max-w-md rounded-t-3xl border-t border-white/10 bg-slate-950/95 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-sm font-black text-white">Host Settings</span>
+                <button
+                  type="button"
+                  onClick={() => setShowHostSettings(false)}
+                  className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-white"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <MobileBroadcastHostSettings
+                isMicOn={session.micEnabled}
+                isCamOn={session.cameraEnabled}
+                isLive={stream.status === 'live'}
+                hasRgbEffect={!!stream.has_rgb_effect}
+                isChatLocked={!!stream.is_chat_locked}
+                unreadMessageCount={0}
+                seatCount={stream?.seat_count ?? 0}
+                onUpdateSeatCount={handleUpdateSeatCount}
+                onToggleMic={session.toggleMicrophone}
+                onToggleCamera={session.toggleCamera}
+                onFlipCamera={session.flipCamera}
+                onGift={handleGift}
+                onShare={handleOpenShareModal}
+                onOpenMessage={() => {}}
+                onEndStream={endStream}
+                onOpenCoinStore={() => {}}
+                onInviteFollowers={handleInviteFollowers}
+                onToggleRGB={() => {}}
+                onTextPopup={() => {}}
+                onMuteAllSeats={muteAllSeats}
+                onUnmuteAllSeats={unmuteAllSeats}
+                onCameraOffAllSeats={cameraOffAllSeats}
+                onCameraOnAllSeats={cameraOnAllSeats}
+                seatControls={seatControls}
+                disabled={isEnding}
+              />
+            </div>
+          </div>
+        )}
+        {showModActionMenu && selectedActionUserId && (
+          <UserActionModal
+            onClose={() => {
+              setShowModActionMenu(false)
+              setSelectedActionUserId(null)
+              setSelectedActionUsername(null)
+            }}
+            userId={selectedActionUserId}
+            username={selectedActionUsername || undefined}
+            streamId={streamId}
+            isHost={true}
+            isModerator={canClickFloatingChatUsername}
+            onGift={() => {}}
+          />
+        )}
       </div>
     </GiftSystemProvider>
   )
@@ -2124,7 +2360,8 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
       previousTrackRef.current = videoTrack
 
       const settings = videoTrack.mediaStreamTrack?.getSettings?.()
-      container.style.transform = 'scaleX(-1)'
+      const isFrontCamera = settings?.facingMode === 'user' || !settings?.facingMode
+      container.style.transform = isFrontCamera ? 'scaleX(-1)' : 'none'
     } catch (err) {
       console.error('[LocalCameraFullVideo] Failed to attach video track:', err)
     }

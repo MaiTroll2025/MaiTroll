@@ -11,6 +11,7 @@ import ModActionsPopup from './broadcast/ModActionsPopup'
 import { toast } from 'sonner'
 import { isStaffProfile } from '../lib/staff'
 import { getUserAffiliation, UserAffiliation } from '../lib/userAffiliations'
+import { awardFollowPoint } from '../lib/weeklyPointsService'
 import AvatarWithFrame from './profile/AvatarWithFrame'
 
 interface UserProfilePopupProps {
@@ -116,14 +117,17 @@ export default function UserProfilePopup({ userId, username, onClose, onOpenChat
           .eq('following_id', userId)
         setIsFollowing(false)
         toast.success(`Unfollowed @${username}`)
-      } else {
-        await supabase.from('user_follows').insert({
-          follower_id: user.id,
-          following_id: userId
-        })
-        setIsFollowing(true)
-        toast.success(`Following @${username}`)
-      }
+       } else {
+         const { error: followError } = await supabase.from('user_follows').insert({
+           follower_id: user.id,
+           following_id: userId
+         })
+         if (!followError) {
+           setIsFollowing(true)
+           toast.success(`Following @${username}`)
+           void awardFollowPoint()
+         }
+       }
     } catch (err) {
       console.error('Error toggling follow:', err)
       toast.error('Failed to update follow status')

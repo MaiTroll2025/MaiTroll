@@ -72,8 +72,8 @@ export default function GhostBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-20 left-1/2 z-[9999] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 animate-[slideUp_0.4s_ease-out]">
-      <div className="relative overflow-hidden rounded-2xl border border-purple-500/30 bg-gradient-to-br from-[#1a0530]/95 to-[#0d1b2a]/95 p-4 shadow-[0_8px_32px_rgba(147,51,234,0.25)] backdrop-blur-xl">
+    <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+4rem)] z-[9999] flex justify-center px-4 animate-[ghostBannerSlideUp_0.4s_ease-out] sm:bottom-20">
+      <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-purple-500/30 bg-gradient-to-br from-[#1a0530]/95 to-[#0d1b2a]/95 p-4 shadow-[0_8px_32px_rgba(147,51,234,0.25)] backdrop-blur-xl">
         {/* Shimmer glow */}
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/10 via-transparent to-cyan-500/10" />
 
@@ -88,7 +88,7 @@ export default function GhostBanner() {
         <div className="relative">
           {/* Ghost icon + title */}
           <div className="mb-2 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/20">
+            <div className="flex h-8 w-2 items-center justify-center rounded-lg bg-purple-500/20">
               <Sparkles className="h-4 w-4 text-purple-300" />
             </div>
             <div>

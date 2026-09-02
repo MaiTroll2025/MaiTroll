@@ -605,6 +605,17 @@ button:focus-visible {
   }
 }
 
+@keyframes ghostBannerSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Mobile flying chat — rises from the bottom input box and fades as it climbs */
 @keyframes mobile-rise {
   0% {

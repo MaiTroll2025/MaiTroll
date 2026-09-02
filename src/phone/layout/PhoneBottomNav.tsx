@@ -6,11 +6,12 @@ import {
   Home,
   LogOut,
   MessageCircle,
+  MoreHorizontal,
   Radio,
   Search,
-  Sparkles,
   Store,
   User,
+  X,
 } from 'lucide-react'
 
 import { useAuthStore } from '@/lib/store'
@@ -81,8 +82,11 @@ export default function PhoneBottomNav() {
   return (
     <nav
       className={`fixed inset-x-0 bottom-0 z-50 pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] ${
-        isOpen ? 'pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)]' : ''
+        isOpen
+          ? 'inset-y-0 flex items-end bg-black/50'
+          : ''
       }`}
+      onClick={isOpen ? () => setIsOpen(false) : undefined}
     >
       {!isOpen && (
         <div className="mx-auto flex max-w-xl items-center justify-around border-t border-white/10 bg-[#050715]/95 px-1 py-2 backdrop-blur-xl">
@@ -155,7 +159,7 @@ export default function PhoneBottomNav() {
             {isOpen ? (
               <ChevronUp size={18} />
             ) : (
-              <Sparkles size={18} />
+              <MoreHorizontal size={18} />
             )}
             <span className="text-[9px] font-black leading-none">
               {isOpen ? 'Close' : 'More'}
@@ -165,9 +169,21 @@ export default function PhoneBottomNav() {
       )}
 
       {isOpen && (
-        <div className="max-h-[65vh] overflow-y-auto border-t border-white/10 bg-[#050715]/95 backdrop-blur-xl">
+        <div
+          className="relative z-10 max-h-[65vh] w-full overflow-y-auto border-t border-white/10 bg-[#050715]/95 backdrop-blur-xl"
+          onClick={(event) => event.stopPropagation()}
+        >
           <div className="mx-auto max-w-xl px-4 py-4">
-            <div className="mb-4">
+            <div className="relative mb-4 pr-10">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                aria-label="Close more menu"
+                className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 active:bg-white/15"
+              >
+                <X size={17} />
+              </button>
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                 <input

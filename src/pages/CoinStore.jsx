@@ -958,6 +958,16 @@ useEffect(() => {
     setShowPurchaseComplete(true);
   };
 
+  const handlePayPalModalClose = useCallback(() => {
+    setPaypalPaymentModalOpen(false);
+  }, []);
+
+  const handlePayPalPaymentSuccess = useCallback(() => {
+    setPaypalPaymentModalOpen(false);
+    showPurchaseCompleteOverlay();
+    refreshCoins();
+  }, [refreshCoins]);
+
   useEffect(() => {
     if (!showPurchaseComplete) return;
     sessionStorage.removeItem(STORE_COMPLETE_KEY);
@@ -2495,15 +2505,11 @@ useEffect(() => {
         
         <PayPalPaymentModal
           isOpen={paypalPaymentModalOpen}
-          onClose={() => setPaypalPaymentModalOpen(false)}
+          onClose={handlePayPalModalClose}
           pkg={selectedPackage}
           userId={user?.id}
           profile={profile}
-          onPaymentSuccess={() => {
-            setPaypalPaymentModalOpen(false);
-            showPurchaseCompleteOverlay();
-            refreshCoins();
-          }}
+          onPaymentSuccess={handlePayPalPaymentSuccess}
         />
         </div>
       )

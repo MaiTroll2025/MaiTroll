@@ -1331,12 +1331,21 @@ function PhoneMoreModal({
       onClick={onClose}
     >
       <div
-        className="w-full rounded-t-[2rem] border border-white/10 bg-[#080614]/98 p-3 sm:mx-auto sm:max-w-sm sm:rounded-[2rem]"
+        className="relative w-full rounded-t-[2rem] border border-white/10 bg-[#080614]/98 p-3 sm:mx-auto sm:max-w-sm sm:rounded-[2rem]"
         onClick={(event) =>
           event.stopPropagation()
         }
       >
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-white/20 sm:hidden" />
+
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close more actions"
+          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 active:bg-white/15"
+        >
+          <X size={17} />
+        </button>
 
         <div className="px-3 py-3">
           <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/35">

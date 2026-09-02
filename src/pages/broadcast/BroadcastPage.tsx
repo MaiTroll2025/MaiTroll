@@ -58,6 +58,12 @@ import { FeaturedBanner } from '../../components/featured/FeaturedBanner'
 import { FeaturedLeaderboard } from '../../components/featured/FeaturedLeaderboard'
 import { FeaturedLiveOverlay } from '../../components/featured/FeaturedLiveOverlay'
 
+import CashoutProgressBanner from '../../components/broadcast/CashoutProgressBanner'
+import MiniMaiPayCashoutModal from '../../components/broadcast/MiniMaiPayCashoutModal'
+import { useCashoutBanner } from '../../hooks/useCashoutBanner'
+import RecoveryBanner from '../../components/broadcast/RecoveryBanner'
+import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
+
 import { MaiTrollBroadcastTheme as theme } from '../../styles/broadcastTheme'
 
 // Reusable label classes from broadcastTheme
@@ -736,10 +742,16 @@ export function BroadcastPage() {
    const [streamMods, setStreamMods] = useState<string[]>([]);
    // Accumulate gift amounts received while broadcasterProfile is still loading (null);
    // applied once the profile arrives via @see applyPendingGiftsEffect
-     const isHost = stream?.user_id === user?.id
-    const isBroadcaster = isHost;
+      const isHost = stream?.user_id === user?.id
+     const isBroadcaster = isHost;
 
-     // Celeb stream: no seats, viewer-only participation with paid chat + products
+     const cashoutBanner = useCashoutBanner({
+       userId: user?.id,
+       isEligible: isHost,
+       streamId: streamId || null,
+     })
+
+      // Celeb stream: no seats, viewer-only participation with paid chat + products
      const isCelebStream = stream?.stream_type === 'celeb_stream'
      const isApprovedCeleb = !!(profile && profile.celeb_role === 'approved')
 
@@ -1848,6 +1860,7 @@ useEffect(() => {
     const [isMessagePopupOpen, setIsMessagePopupOpen] = useState(false)
     const [isNewMessageMode, setIsNewMessageMode] = useState(false)
     const [isBroadcasterControlsOpen, setIsBroadcasterControlsOpen] = useState(false)
+    const [isCashoutModalOpen, setIsCashoutModalOpen] = useState(false)
     const [isSeatControlsOpen, setIsSeatControlsOpen] = useState(false)
     const [isAuctionMeOpen, setIsAuctionMeOpen] = useState(false)
     const [selectedSeatForControls, setSelectedSeatForControls] = useState<{ seatIndex: number; seatSessionId?: string } | null>(null)
@@ -6497,6 +6510,7 @@ const toggleMicrophone = useCallback(async () => {
       <>
         <GiftSystemProvider streamId={streamId} defaultReceiverId={stream?.user_id}>
           <ErrorBoundary>
+          <RecoveryBanner onRefresh={() => window.location.reload()} />
 
           {/* -- Outer layout: header + 3-column grid + bottom bar + footer -- */}
           {isFeaturedEvent && (
@@ -6514,6 +6528,8 @@ const toggleMicrophone = useCallback(async () => {
               onClose={closeFeaturedLeaderboard}
             />
           )}
+
+          {!shouldShowRandomBattleArena && <FeaturedGiftBanner streamId={streamId || stream.id} broadcasterId={stream?.user_id} isMobile={isMobileHost} />}
 
           <div
             className={cn(
@@ -6764,6 +6780,19 @@ const toggleMicrophone = useCallback(async () => {
                   {/* Gradient overlay */}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
 
+                  {isHost && (
+                    <CashoutProgressBanner
+                      isVisible={cashoutBanner.isVisible}
+                      currentBalance={cashoutBanner.currentBalance}
+                      nextTier={cashoutBanner.nextTier}
+                      amountRemaining={cashoutBanner.amountRemaining}
+                      progressPercent={cashoutBanner.progressPercent}
+                      isCashoutReady={cashoutBanner.isCashoutReady}
+                      onClick={() => cashoutBanner.isCashoutReady && setIsCashoutModalOpen(true)}
+                      isMobile={isMobileHost}
+                    />
+                  )}
+
                   {/* Host badge */}
                   <div className={cn(
                     'absolute z-10 flex items-center',
@@ -6930,6 +6959,19 @@ const showFallback =
 
                 {/* Gradient overlay � sits above video/fallback */}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+
+                {isHost && (
+                  <CashoutProgressBanner
+                    isVisible={cashoutBanner.isVisible}
+                    currentBalance={cashoutBanner.currentBalance}
+                    nextTier={cashoutBanner.nextTier}
+                    amountRemaining={cashoutBanner.amountRemaining}
+                    progressPercent={cashoutBanner.progressPercent}
+                    isCashoutReady={cashoutBanner.isCashoutReady}
+                    onClick={() => cashoutBanner.isCashoutReady && setIsCashoutModalOpen(true)}
+                    isMobile={isMobileHost}
+                  />
+                )}
 
                 {/* Host badge � top-left */}
                 <div className="absolute left-5 top-5 z-10 flex flex-col gap-2">
@@ -9395,6 +9437,15 @@ const showFallback =
             )}
            </AnimatePresence>
 
+          {isCashoutModalOpen && (
+            <MiniMaiPayCashoutModal
+              isOpen={isCashoutModalOpen}
+              onClose={() => setIsCashoutModalOpen(false)}
+              currentBalance={cashoutBanner.currentBalance}
+              onSuccess={() => cashoutBanner.refreshBalance()}
+              isMobile={isMobileHost}
+            />
+          )}
           <BroadcasterControlsModal
             isOpen={isBroadcasterControlsOpen}
             onClose={() => setIsBroadcasterControlsOpen(false)}

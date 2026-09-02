@@ -6,11 +6,13 @@ import PhoneDrawer from './PhoneDrawer'
 interface PhoneHeaderProps {
   title?: string
   showActions?: boolean
+  showTickerLinks?: boolean
 }
 
 export default function PhoneHeader({
   title = 'MAiTROLL.com',
   showActions = true,
+  showTickerLinks = true,
 }: PhoneHeaderProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -85,7 +87,7 @@ export default function PhoneHeader({
 
         {/* Global activity ticker */}
         <div className="border-t border-white/5 px-3 py-1.5">
-          <GlobalTicker />
+          <GlobalTicker showSeoLinks={showTickerLinks} />
         </div>
       </header>
     </>
