@@ -28,6 +28,7 @@ export interface MaiBagProps {
   streamId: string
   className?: string
   compact?: boolean
+  phone?: boolean
   onAnimationComplete?: () => void
 }
 

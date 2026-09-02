@@ -886,11 +886,7 @@ export default function PhoneGoLive() {
               muted
               autoPlay
               playsInline
-              className={`absolute inset-0 h-full w-full object-cover ${
-                facingMode === 'user'
-                  ? '-scale-x-100'
-                  : ''
-              } ${
+              className={`absolute inset-0 h-full w-full object-cover -scale-x-100 ${
                 cameraOn
                   ? ''
                   : 'opacity-0'

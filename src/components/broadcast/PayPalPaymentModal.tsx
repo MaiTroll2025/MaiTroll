@@ -167,8 +167,7 @@ export default function PayPalPaymentModal({
     const localRenderKey = modalRenderKey
     renderKeyRef.current = localRenderKey
 
-    const buttonsConfig: any = {
-      createOrder: async () => {
+    const createOrder = async () => {
         // Mark flow as active so the Dialog won't auto-close
         paypalFlowActiveRef.current = true
         try {
@@ -196,9 +195,9 @@ export default function PayPalPaymentModal({
           paypalFlowActiveRef.current = false
           throw err
         }
-      },
+      }
 
-      onApprove: async (data: any) => {
+    const onApprove = async (data: any) => {
         setStep('processing')
 
         try {
@@ -235,9 +234,9 @@ export default function PayPalPaymentModal({
           // PayPal flow finished – re-enable dialog close
           paypalFlowActiveRef.current = false
         }
-      },
+      }
 
-      onError: (err: any) => {
+    const onError = (err: any) => {
         const message = String(err?.message || err || '')
 
         if (message.includes('Detected container element removed from DOM')) {
@@ -250,21 +249,21 @@ export default function PayPalPaymentModal({
         setStep('select')
         // Flow errored – allow dialog to close again
         paypalFlowActiveRef.current = false
-      },
+      }
 
-      onCancel: () => {
+    const onCancel = () => {
         toast.info('Payment cancelled')
         setStep('select')
         // User cancelled – allow dialog to close again
         paypalFlowActiveRef.current = false
-      },
-    }
-
-    if (forceCard && window.paypal?.FUNDING?.CARD) {
-      buttonsConfig.fundingSource = window.paypal.FUNDING.CARD
-    }
+      }
+    const buttonsConfig: any = { createOrder, onApprove, onError, onCancel }
 
     try {
+      if (forceCard && window.paypal?.FUNDING?.CARD) {
+        buttonsConfig.fundingSource = window.paypal.FUNDING.CARD
+      }
+
       const buttons = window.paypal.Buttons(buttonsConfig)
       paypalInstanceRef.current = buttons
 
@@ -273,10 +272,10 @@ export default function PayPalPaymentModal({
         return
       }
 
-      if (!container.isConnected) return
+      if (!paypalButtonsRef.current.isConnected) return
       if (renderKeyRef.current !== localRenderKey) return
 
-      await buttons.render(container)
+      await buttons.render(paypalButtonsRef.current)
     } catch (err: any) {
       const message = String(err?.message || err || '')
 

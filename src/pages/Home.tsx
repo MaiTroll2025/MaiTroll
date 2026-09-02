@@ -30,6 +30,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { useLiveContent, type AuctionShow, type LiveItem } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
+import { MaiTrollOperatingHoursWrapper } from '@/components/maitroll/MaiTrollOperatingHoursWrapper'
 import useGlobalActivity from '@/hooks/useGlobalActivity'
 import type { ActivityEvent } from '@/hooks/useGlobalActivity'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
@@ -789,9 +790,10 @@ export default function Home() {
    const showPresidentTab = currentElection?.status === 'open'
 
   return (
-    <div
-      className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-y-auto text-white"
-    >
+    <MaiTrollOperatingHoursWrapper>
+      <div
+        className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-y-auto text-white"
+      >
           <DynamicWeatherBackground isDark={theme === 'dark'} showWalker={!!user} />
 
       {isLoading && (
@@ -1090,6 +1092,7 @@ export default function Home() {
           }
         }
         `}</style>
-    </div>
+      </div>
+    </MaiTrollOperatingHoursWrapper>
   )
 }

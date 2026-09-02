@@ -54,7 +54,8 @@ export type ModerationActionType =
   | 'grant_license'
   | 'remove_officer'
   | 'set_to_user'
-  | 'end_stream';
+  | 'end_stream'
+  | 'troll_coin_penalty';
 
 export interface ModerationActionResult {
   success: boolean;
@@ -201,6 +202,50 @@ export async function rpcModeratorKickUser(
     return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
   }
   return data as ModerationActionResult;
+}
+
+export async function rpcApplyTrollCoinPenalty(
+  targetUserId: string,
+  moderatorId: string,
+  violationReason: string,
+  violationCategory: string,
+  coinAmount: number,
+  broadcastId?: string | null,
+  moderatorUsername?: string,
+  targetUsername?: string,
+): Promise<ModerationActionResult> {
+  const { data, error } = await supabase.rpc('apply_troll_coin_penalty', {
+    p_target_user_id: targetUserId,
+    p_moderator_id: moderatorId,
+    p_violation_reason: violationReason,
+    p_violation_category: violationCategory,
+    p_coin_amount: coinAmount,
+    p_broadcast_id: broadcastId || null,
+  });
+
+  if (error) {
+    return { success: false, code: 'RPC_ERROR', message: error.message, data: null };
+  }
+
+  const result = data as ModerationActionResult;
+  if (result?.success) {
+    const responseData = result.data || {};
+    const { notifyTrollCoinPenalty } = await import('../lib/notifications');
+    try {
+      await notifyTrollCoinPenalty(
+        targetUserId,
+        targetUsername || String(responseData.target_username || targetUserId),
+        violationReason,
+        coinAmount,
+        violationCategory,
+        moderatorUsername || String(responseData.moderator_username || moderatorId),
+      );
+    } catch (notificationError) {
+      console.warn('[moderationActions] Troll Coin penalty applied but notification failed:', notificationError);
+    }
+  }
+
+  return result;
 }
 
 export async function rpcModoArrest(

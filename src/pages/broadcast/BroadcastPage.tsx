@@ -43,6 +43,7 @@ import PayBroadOfficersModal from '../../components/broadcast/PayBroadOfficersMo
 import MoreControlsDrawer from '../../components/broadcast/MoreControlsDrawer'
 import MobileBroadcastHostSettings from '../../components/broadcast/MobileBroadcastHostSettings'
 import BroadcasterControlsModal from '@/components/broadcast/BroadcasterControlsModal'
+import CameraOffImageModal from '@/components/broadcast/CameraOffImageModal'
 import { useBroadcastFrame } from '../../hooks/useBroadcastFrame'
 import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
 import BroadcastFrame from '../../components/broadcast/BroadcastFrame'
@@ -538,7 +539,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2 } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -791,6 +792,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
     const [remoteParticipants, setRemoteParticipants] = useState<Map<string, RemoteParticipant>>(new Map())
     const [remoteParticipantSnapshots, setRemoteParticipantSnapshots] = useState<RemoteParticipantSnapshot[]>([])
     const [showCollaborationModal, setShowCollaborationModal] = useState(false)
+    const [showCameraOffImageModal, setShowCameraOffImageModal] = useState(false)
     const remoteUsers = useMemo(() => Array.from(remoteParticipants.values()), [remoteParticipants])
     const collaboration = useStreamCollaboration({
       currentUserId: user?.id,
@@ -6673,6 +6675,22 @@ const toggleMicrophone = useCallback(async () => {
                   {streamId && (
                     <MaiBag streamId={streamId} compact className="pointer-events-auto absolute right-2 top-2 z-20" />
                   )}
+                  {/* Camera-off image fallback */}
+                  {(() => {
+                    const showFallback = isHost ? !cameraEnabled : true
+                    if (!showFallback) return null
+                    if (!broadcasterProfile?.camera_off_image_url) return null
+                    return (
+                      <div className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden bg-black">
+                        <img
+                          src={broadcasterProfile.camera_off_image_url}
+                          alt={`${broadcasterProfile.username || 'Broadcaster'} camera off`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    )
+                  })()}
+
                   {/* Camera starting fallback */}
                   {(() => {
                     const hostParticipant = hostParticipantRef.current
@@ -6689,7 +6707,16 @@ const toggleMicrophone = useCallback(async () => {
                           return null
                         })()
 
-                    if (hostCamTrack) return null
+                    const showFallback =
+                      isHost
+                        ? !hostCamTrack || !cameraEnabled
+                        : !hostCamTrack
+
+                    if (showFallback && broadcasterProfile?.camera_off_image_url) {
+                      return null
+                    }
+
+                    if (!showFallback) return null
 
                     return (
                       <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.15),transparent_38%)]">
@@ -6715,7 +6742,7 @@ const toggleMicrophone = useCallback(async () => {
                   })()}
                   {/* Host video element */}
                   <TrackAttach
-                    track={isHost ? (localTracks?.[1] ?? null) : (() => {
+                    track={isHost ? ((localTracks?.[1] && cameraEnabled) ? localTracks[1] : null) : (() => {
                       const hostParticipant = hostParticipantRef.current
                       if (!hostParticipant) return null
                       const pubs = (hostParticipant as any).videoTrackPublications
@@ -6850,7 +6877,24 @@ const toggleMicrophone = useCallback(async () => {
                         return null
                       })()
 
-                  if (hostCamTrack) return null
+const showFallback =
+                    isHost
+                      ? !cameraEnabled || !hostCamTrack
+                      : !hostCamTrack
+
+                  if (!showFallback) return null
+
+                  if (broadcasterProfile?.camera_off_image_url) {
+                    return (
+                      <div className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden bg-black">
+                        <img
+                          src={broadcasterProfile.camera_off_image_url}
+                          alt={`${broadcasterProfile.username || 'Broadcaster'} camera off`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    )
+                  }
 
                   return (
                     <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.15),transparent_38%)]">
@@ -6864,14 +6908,14 @@ const toggleMicrophone = useCallback(async () => {
                         <Crown className="h-14 w-14 text-cyan-200/60" />
                       )}
                       <p className="mt-4 text-base font-black text-white">{broadcasterProfile?.username || 'Broadcaster'}</p>
-                      <p className="mt-1 text-sm text-cyan-200/60">Camera starting�</p>
+                      <p className="mt-1 text-sm text-cyan-200/60">Camera starting</p>
                     </div>
                   )
                 })()}
 
                 {/* Host video element � mounted via TrackAttach, covers card when track available */}
                 <TrackAttach
-                  track={isHost ? (localTracks?.[1] ?? null) : (() => {
+                  track={isHost ? ((localTracks?.[1] && cameraEnabled) ? localTracks[1] : null) : (() => {
                     const hostParticipant = hostParticipantRef.current
                     if (!hostParticipant) return null
                     const pubs = (hostParticipant as any).videoTrackPublications
@@ -8352,6 +8396,13 @@ const toggleMicrophone = useCallback(async () => {
                     </div>
                      <div className="pointer-events-auto relative mt-0.5 flex flex-col gap-2">
                        <CollaborateButton compact onClick={() => setShowCollaborationModal(true)} />
+                       <button
+                         onClick={() => setShowCameraOffImageModal(true)}
+                         className="h-10 w-10 flex items-center justify-center rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 transition-all"
+                         title="Camera off image"
+                       >
+                         <ImageIcon size={18} />
+                       </button>
                      </div>
                   </div>
                 )}
@@ -8959,6 +9010,18 @@ const toggleMicrophone = useCallback(async () => {
                 }}
               />
 
+              <CameraOffImageModal
+                isOpen={showCameraOffImageModal}
+                onClose={() => setShowCameraOffImageModal(false)}
+                userId={user?.id}
+                currentImageUrl={broadcasterProfile?.camera_off_image_url}
+                onImageUpdated={(url) => {
+                  if (broadcasterProfile) {
+                    setBroadcasterProfile({ ...broadcasterProfile, camera_off_image_url: url })
+                  }
+                }}
+              />
+
               <CollaborationRequestNotification
                 request={collaboration.incomingRequests[0] || null}
                 onAccept={async (request) => {
@@ -9445,6 +9508,7 @@ function isStaffProfile(profile: any) {
 const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | null }) {
   const divRef = React.useRef<HTMLDivElement>(null);
   const videoElRef = React.useRef<HTMLVideoElement | null>(null);
+  const hadTrackRef = React.useRef<boolean>(false);
 
   React.useEffect(() => {
     const div = divRef.current;
@@ -9452,20 +9516,23 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
 
     // If track is absent, detach and clear
     if (!track) {
+      hadTrackRef.current = false;
       if (videoElRef.current) {
-        try { track?.detach(videoElRef.current); } catch { /* ignore */ }
+        try { (videoElRef.current as any).srcObject = null; } catch { /* ignore */ }
         videoElRef.current = null;
       }
       div.innerHTML = '';
       return;
     }
 
-    const previousTrack = videoElRef.current?.srcObject
-    const previousTrackId = (previousTrack as any)?.mediaStreamTrack?.id || (previousTrack as any)?.sid || null
-    const nextTrackId = (track as any)?.mediaStreamTrack?.id || (track as any)?.sid || null
+    const wasPresent = hadTrackRef.current;
+    hadTrackRef.current = true;
 
-    if (previousTrackId && nextTrackId && previousTrackId === nextTrackId) {
-      return
+    const previousTrackId = (videoElRef.current?.srcObject as any)?.mediaStreamTrack?.id || (videoElRef.current?.srcObject as any)?.id || null;
+    const nextTrackId = (track as any)?.mediaStreamTrack?.id || (track as any)?.sid || null;
+
+    if (wasPresent && previousTrackId && nextTrackId && previousTrackId === nextTrackId) {
+      return;
     }
 
     let cancelled = false;
@@ -9479,6 +9546,7 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
         el.style.transform = track instanceof LocalVideoTrack ? 'scaleX(-1)' : 'none';
         el.autoplay = true;
         el.muted = true;
+        el.play?.().catch(() => {});
         if (videoElRef.current && videoElRef.current !== el) {
           try { track.detach(videoElRef.current); } catch { /* ignore */ }
         }

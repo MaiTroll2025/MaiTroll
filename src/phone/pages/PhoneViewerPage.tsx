@@ -938,7 +938,7 @@ function PhoneLocalVideo({
           autoPlay
           playsInline
           muted
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover -scale-x-100"
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center">
@@ -4201,13 +4201,13 @@ export default function PhoneViewerPage() {
                     />
                   </button>
                 </div>
-
-                {streamId && (
-                  <MaiBag streamId={streamId} compact className="pointer-events-auto absolute right-3 top-3 z-20" />
-                )}
               </div>
             </div>
           )}
+
+        {streamId && (
+          <MaiBag streamId={streamId} phone className="pointer-events-auto absolute right-3 top-[5.5rem] z-20" />
+        )}
 
         {/* ================================================================
             LIKE

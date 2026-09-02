@@ -12,6 +12,7 @@ import { useScreenShare, StreamMode, canScreenShare } from '../../hooks/useScree
 import { DraggableCameraOverlay } from '../../components/broadcast/DraggableCameraOverlay';
 import UniverseModeSetup from '../../components/broadcast/UniverseModeSetup';
 import LicenseRecoveryModal from '../../components/LicenseRecoveryModal';
+import CameraOffImageUpload from '../../components/broadcast/CameraOffImageUpload';
 import { toast } from 'sonner';
 import { useBroadcastLockdown } from '@/hooks/useBroadcastLockdown';
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap';
@@ -453,7 +454,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
             videoEl.style.width = '100%';
             videoEl.style.height = '100%';
             videoEl.style.objectFit = 'cover';
-            videoEl.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
+            videoEl.style.transform = 'scaleX(-1)';
             cameraOverlayContainerRef.current.appendChild(videoEl);
           }
 
@@ -706,7 +707,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       videoEl.style.width = '100%';
       videoEl.style.height = '100%';
       videoEl.style.objectFit = 'cover';
-      videoEl.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
+      videoEl.style.transform = 'scaleX(-1)';
       videoEl.play().catch(() => {
         // Autoplay may still be blocked in some contexts; muted should help.
       });
@@ -2533,6 +2534,15 @@ const handleStartStream = async () => {
 
         {/* Religion Selector */}
         {renderReligionSelector()}
+
+        {/* Camera Off Image Upload */}
+        <div className="bg-zinc-900/80 rounded-2xl border border-cyan-500/20 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <VideoOff size={16} className="text-cyan-400" />
+            <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Camera Off Image</span>
+          </div>
+          <CameraOffImageUpload userId={user?.id} />
+        </div>
 
         {/* Permission Warning */}
         {showPermissionPrompt && (

@@ -316,7 +316,6 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   onTap,
   onDoubleTap,
   room,
-  objectFit = 'contain',
 }: {
   participant: any
   mirror?: boolean
@@ -325,7 +324,6 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   onTap?: () => void
   onDoubleTap?: () => void
   room?: any
-  objectFit?: 'cover' | 'contain'
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -358,8 +356,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   const videoTrack = getVideoTrackFromParticipant(participant)
   const audioTrack = getAudioTrackFromParticipant(participant)
 
-  const shouldMirror = Boolean(mirror) &&
-    (videoTrack?.mediaStreamTrack as any)?.getSettings?.().facingMode === 'user'
+  const shouldMirror = Boolean(mirror)
 
   // Dev logging for track detection on mobile/PWA
   if (import.meta.env.DEV && trackTick > 0 && trackTick % 5 === 0) {
@@ -377,6 +374,35 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
    // unrelated room events (e.g. another participant joining a seat).
    const videoTrackId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
    const audioTrackId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
+
+   // DEBUG: Log mirror prop and track info for diagnosing mirrored broadcaster
+   useEffect(() => {
+     const identity = getParticipantIdentity(participant)
+     console.log('[RemoteVideoSurface] DEBUG mirror state:', {
+       identity,
+       mirrorProp: mirror,
+       shouldMirror,
+       videoTrackId,
+       videoTrackSid: videoTrack?.sid,
+       videoTrackSource: videoTrack?.source,
+       participantMetadata: getParticipantMetadata(participant),
+     })
+
+     const videoEl = videoRef.current
+     if (videoEl) {
+       const computedStyle = window.getComputedStyle(videoEl)
+       const parentStyle = videoEl.parentElement ? window.getComputedStyle(videoEl.parentElement) : null
+       console.log('[RemoteVideoSurface] DEBUG video element styles:', {
+         identity,
+         videoTransform: computedStyle.transform,
+         videoClassName: videoEl.className,
+         parentTransform: parentStyle?.transform,
+         parentClassName: videoEl.parentElement?.className,
+         parentScaleX: parentStyle?.scale,
+         videoInlineStyle: videoEl.getAttribute('style'),
+       })
+     }
+   }, [mirror, shouldMirror, videoTrackId, videoTrack?.sid, videoTrack?.source, participant])
 
    // Use refs to track what we actually attached, so we only detach/reattach
    // when the underlying track truly changes.
@@ -422,7 +448,6 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
          videoEl.muted = true
          videoEl.setAttribute('playsinline', '')
          videoEl.setAttribute('webkit-playsinline', '')
-
          videoTrack.attach(videoEl)
          attachedVideoTrackRef.current = videoTrack
 
@@ -450,7 +475,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
        }
      }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [videoTrackId, trackTick])
+    }, [mirror, videoTrackId, trackTick])
 
   useEffect(() => {
     const audioEl = audioRef.current
@@ -503,7 +528,12 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
           }, 300)
         }
       }}
-      className={cn('relative h-full w-full overflow-hidden bg-black', (onTap || onDoubleTap) && 'cursor-pointer', className)}
+      className={cn(
+        'relative h-full w-full overflow-hidden bg-black',
+        mirror && '[&>video]:scale-x-[-1]',
+        (onTap || onDoubleTap) && 'cursor-pointer',
+        className,
+      )}
     >
       <video
         ref={videoRef}
@@ -512,11 +542,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
         muted
         disablePictureInPicture
         controls={false}
-        className={cn(
-          'absolute inset-0 block h-full w-full bg-black object-center',
-          objectFit === 'contain' ? 'object-contain' : 'object-contain',
-          shouldMirror && '-scale-x-100',
-        )}
+        className="absolute inset-0 block h-full w-full bg-black object-cover object-center"
       />
       <audio ref={audioRef} autoPlay />
       {!videoTrack && !attachedVideoTrackRef.current && (
@@ -2017,6 +2043,19 @@ const isActive = isStreamActive(stream)
     }
   }, [remoteParticipants, hostId, updateBroadcasterState, liveKitRoom])
 
+  // DEBUG: Log broadcaster state changes to diagnose mirroring
+  useEffect(() => {
+    const identity = broadcasterState.participant?.identity
+    const videoTrackId = broadcasterState.videoTrack?.mediaStreamTrack?.id || broadcasterState.videoTrack?.sid
+    console.log('[ViewerPage] DEBUG broadcasterState updated:', {
+      hostIdentity: identity,
+      videoTrackId,
+      videoTrackSource: broadcasterState.videoTrack?.source,
+      hasVideoTrack: !!broadcasterState.videoTrack,
+      hasParticipant: !!broadcasterState.participant,
+    })
+  }, [broadcasterState])
+
   // Mic mute callbacks for walkie-talkie integration (for users on stage)
   const handleToggleMic = useCallback(async () => {
     if (!isUserOnStage) return
@@ -2791,7 +2830,7 @@ const isActive = isStreamActive(stream)
       if ((data as any).user_id) {
         const { data: hostProfile, error: hostProfileError } = await supabase
           .from('user_profiles')
-           .select('id, username, email, avatar_url, troll_coins, paid_coin_balance, free_coin_balance, total_earned_coins, is_verified')
+           .select('id, username, email, avatar_url, troll_coins, paid_coin_balance, free_coin_balance, total_earned_coins, is_verified, camera_off_image_url')
           .eq('id', (data as any).user_id)
           .maybeSingle()
 
@@ -3992,65 +4031,78 @@ useStreamRealtime(
                      onError={() => {
                        console.warn('[ViewerPage] Bunny viewer playback failed to load', passiveBunnyPlaybackUrl)
                      }}
-                   />
-                 ) : (
-                 <RemoteVideoSurface
-                   participant={broadcasterState.participant}
-                   mirror={false}
-                   className="absolute inset-0"
-                   onTap={handleLike}
-                   onDoubleTap={handleNextBroadcast}
-                   room={liveKitRoom}
-                   fallback={
-                    <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_42%),#030611]">
-                      <div className={cn(
-                        'border border-cyan-400/20 bg-slate-950/70 text-center shadow-2xl shadow-cyan-500/10 backdrop-blur-xl',
-                        isMobileViewer ? 'rounded-xl p-2' : 'rounded-3xl p-4'
-                      )} style={{ overflow: 'visible' }}>
-                        {broadcasterProfile?.avatar_url ? (
-                          <div className={cn(
-                            isMobileViewer ? 'mx-auto h-10 w-10' : 'mx-auto h-20 w-20'
-                          )} style={{ overflow: 'visible' }}>
-                            <ProfileFrame
-                              frame={broadcasterFrame}
-                              avatarUrl={broadcasterProfile.avatar_url}
-                              username={hostName}
-                              size={isMobileViewer ? 'sm' : 'md'}
-                            />
-                          </div>
-                        ) : (
-                          <Video className={cn(
-                            'mx-auto text-cyan-200/70',
-                            isMobileViewer ? 'h-6 w-6' : 'h-10 w-10'
-                          )} />
-                        )}
-                        <button
-                          onClick={() => {
-                            setIsMessagePopupOpen(true)
-                            setIsNewMessageMode(true)
-                            setSearchQuery(broadcasterProfile?.username || '')
-                            setSelectedThread(null)
-                          }}
-                          className={cn(
-                            'font-black text-left',
-                            isMobileViewer ? 'mt-1 text-[10px]' : 'mt-3 text-sm'
-                          )}
-                        >
-                          {hostName}
-                        </button>
-                        <div className={cn(
-                          'text-slate-300',
-                          isMobileViewer ? 'text-[8px]' : 'mt-1 text-xs'
-                        )}>
-                          {isActive ? 'Camera Off' : 'Waiting for broadcast…'}
-                        </div>
+                    />
+                  ) : (
+                  <>
+                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (grid):', { mirror: false, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
+                  <RemoteVideoSurface
+                    participant={broadcasterState.participant}
+                    mirror={false}
+                    className="absolute inset-0"
+                    onTap={handleLike}
+                    onDoubleTap={handleNextBroadcast}
+                    room={liveKitRoom}
+                    fallback={
+                     isActive && broadcasterProfile?.camera_off_image_url ? (
+                       <div className="absolute inset-0 h-full w-full overflow-hidden bg-black">
+                         <img
+                           src={broadcasterProfile.camera_off_image_url}
+                           alt={`${hostName} camera off`}
+                           className="h-full w-full object-cover"
+                         />
+                       </div>
+                     ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_42%),#030611]">
+                       <div className={cn(
+                         'border border-cyan-400/20 bg-slate-950/70 text-center shadow-2xl shadow-cyan-500/10 backdrop-blur-xl',
+                         isMobileViewer ? 'rounded-xl p-2' : 'rounded-3xl p-4'
+                       )} style={{ overflow: 'visible' }}>
+                         {broadcasterProfile?.avatar_url ? (
+                           <div className={cn(
+                             isMobileViewer ? 'mx-auto h-10 w-10' : 'mx-auto h-20 w-20'
+                           )} style={{ overflow: 'visible' }}>
+                             <ProfileFrame
+                               frame={broadcasterFrame}
+                               avatarUrl={broadcasterProfile.avatar_url}
+                               username={hostName}
+                               size={isMobileViewer ? 'sm' : 'md'}
+                             />
+                           </div>
+                         ) : (
+                           <Video className={cn(
+                             'mx-auto text-cyan-200/70',
+                             isMobileViewer ? 'h-6 w-6' : 'h-10 w-10'
+                           )} />
+                         )}
+                         <button
+                           onClick={() => {
+                             setIsMessagePopupOpen(true)
+                             setIsNewMessageMode(true)
+                             setSearchQuery(broadcasterProfile?.username || '')
+                             setSelectedThread(null)
+                           }}
+                           className={cn(
+                             'font-black text-left',
+                             isMobileViewer ? 'mt-1 text-[10px]' : 'mt-3 text-sm'
+                           )}
+                         >
+                           {hostName}
+                         </button>
+                         <div className={cn(
+                           'text-slate-300',
+                           isMobileViewer ? 'text-[8px]' : 'mt-1 text-xs'
+                         )}>
+                           {isActive ? 'Camera Off' : 'Waiting for broadcast…'}
+                         </div>
+                       </div>
                       </div>
-                    </div>
-                  }
-                />
+                     )
+                    }
+                 />
+                  </>
+                 )}
 
-                )}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
+                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
 
 
                 <div className={cn(
@@ -4157,41 +4209,53 @@ useStreamRealtime(
                    onError={() => {
                      console.warn('[ViewerPage] Bunny viewer playback failed to load', passiveBunnyPlaybackUrl)
                    }}
-                 />
-               ) : (
-               <RemoteVideoSurface
-                 participant={broadcasterState.participant}
-                 mirror={false}
-                 className="absolute inset-0"
-                 onTap={handleLike}
-                 onDoubleTap={handleNextBroadcast}
-                 room={liveKitRoom}
-                 fallback={
-                  <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_42%),#030611]">
-                    <div className="rounded-3xl border border-cyan-400/20 bg-slate-950/70 p-6 text-center shadow-2xl shadow-cyan-500/10 backdrop-blur-xl" style={{ overflow: 'visible' }}>
-                      {broadcasterProfile?.avatar_url ? (
-                        <div className="mx-auto h-28 w-28" style={{ overflow: 'visible' }}>
-                          <ProfileFrame
-                            frame={broadcasterFrame}
-                            avatarUrl={broadcasterProfile.avatar_url}
-                            username={hostName}
-                            size="md"
-                          />
+                  />
+                ) : (
+                  <>
+                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (split):', { mirror: false, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
+ <RemoteVideoSurface
+                  participant={broadcasterState.participant}
+                  mirror={false}
+                  className="absolute inset-0"
+                  onTap={handleLike}
+                  onDoubleTap={handleNextBroadcast}
+                  room={liveKitRoom}
+                  fallback={
+                   isActive && broadcasterProfile?.camera_off_image_url ? (
+                     <div className="absolute inset-0 h-full w-full overflow-hidden bg-black">
+                       <img
+                         src={broadcasterProfile.camera_off_image_url}
+                         alt={`${hostName} camera off`}
+                         className="h-full w-full object-cover"
+                       />
+                     </div>
+                   ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_42%),#030611]">
+                     <div className="rounded-3xl border border-cyan-400/20 bg-slate-950/70 p-6 text-center shadow-2xl shadow-cyan-500/10 backdrop-blur-xl" style={{ overflow: 'visible' }}>
+                       {broadcasterProfile?.avatar_url ? (
+                         <div className="mx-auto h-28 w-28" style={{ overflow: 'visible' }}>
+                           <ProfileFrame
+                             frame={broadcasterFrame}
+                             avatarUrl={broadcasterProfile.avatar_url}
+                             username={hostName}
+                             size="md"
+                           />
+                         </div>
+                       ) : (
+                         <Video className="mx-auto h-12 w-12 text-cyan-200/70" />
+                       )}
+                       <div className="mt-4 text-lg font-black">{hostName}</div>
+                        <div className="mt-2 text-sm text-slate-300">
+                          {isActive ? 'Camera Off' : 'Waiting for broadcast…'}
                         </div>
-                      ) : (
-                        <Video className="mx-auto h-12 w-12 text-cyan-200/70" />
-                      )}
-                      <div className="mt-4 text-lg font-black">{hostName}</div>
-                      <div className="mt-2 text-sm text-slate-300">
-                        {isActive ? 'Camera Off' : 'Waiting for broadcast…'}
                       </div>
-                    </div>
-                  </div>
-                }
-              />
-
-               )}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
+                     </div>
+                    )
+                  }
+                />
+                  </>
+                )}
+               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
 
 
               {!isMobileViewer && (
@@ -4367,7 +4431,7 @@ useStreamRealtime(
                           <LocalVideoSurface
                             videoTrack={localVideoTrack}
                             audioTrack={localAudioTrack}
-                            mirror={false}
+                            mirror={true}
                             className="absolute inset-0"
                             fallback={
                               <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
@@ -4551,7 +4615,7 @@ useStreamRealtime(
                     <LocalVideoSurface
                       videoTrack={localVideoTrack}
                       audioTrack={localAudioTrack}
-                      mirror={false}
+                      mirror={true}
                       className="absolute inset-0"
                       fallback={
                         <div className={cn(
@@ -4744,7 +4808,7 @@ useStreamRealtime(
                           <LocalVideoSurface
                             videoTrack={localVideoTrack}
                             audioTrack={localAudioTrack}
-                            mirror={false}
+                            mirror={true}
                             className="absolute inset-0"
                             fallback={
                               <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-center">

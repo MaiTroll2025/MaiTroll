@@ -1196,7 +1196,7 @@ export default function PhoneMaiPiks() {
                 autoPlay
                 muted
                 playsInline
-                className={`h-full w-full object-cover ${facingMode === 'user' ? '-scale-x-100' : ''}`}
+                className={`h-full w-full object-cover -scale-x-100`}
               />
             ) : (
               <div className="relative flex h-full flex-col items-center justify-center px-8 text-center">

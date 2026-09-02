@@ -19,17 +19,10 @@ import ProfileFrame from '../components/profile/ProfileFrame';
 import { LAUNCH_FRAMES, RARITY_COLORS, RARITY_LABELS } from '../config/profileFrames';
 
 const LEVEL_PERK_IDS = new Set(LEVEL_PERKS.map((perk) => perk.id));
-import ManualPaymentModal from '@/components/broadcast/ManualPaymentModal';
 import PayPalPaymentModal from '@/components/broadcast/PayPalPaymentModal';
 import TrollPassBanner from '@/components/ui/TrollPassBanner';
 import { toast } from 'sonner';
 import VerifiedBadgeCard from '@/components/ui/VerifiedBadgeCard';
-
-const MANUAL_PROVIDERS = [
-  { id: 'venmo', name: 'Venmo', icon: '📱', color: 'bg-[#008CFF]' },
-  { id: 'cashapp', name: 'Cash App', icon: '💲', color: 'bg-[#00D632]' },
-  { id: 'paypal', name: 'PayPal', icon: '🅿️', color: 'bg-[#00457C]' }
-];
 
 const coinPackages = COIN_PACKAGES.map(p => ({
   ...p,
@@ -680,27 +673,7 @@ export default function CoinStore() {
   const [requestedAmount, setRequestedAmount] = useState(100);
 
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [manualPaymentModalOpen, setManualPaymentModalOpen] = useState(false);
   const [paypalPaymentModalOpen, setPaypalPaymentModalOpen] = useState(false);
-  const [selectedProviderId, setSelectedProviderId] = useState('venmo');
-
-  const handleManualPurchase = (pkg) => {
-    if (['cashapp', 'venmo', 'paypal'].includes(selectedProviderId)) {
-      const lastRequest = localStorage.getItem('last_manual_request_time');
-      if (lastRequest) {
-        const diff = Date.now() - parseInt(lastRequest, 10);
-        if (diff < 60000) {
-          const remaining = Math.ceil((60000 - diff) / 1000);
-          toast.error(`Please wait ${remaining} seconds before making another request.`);
-          return;
-        }
-      }
-      localStorage.setItem('last_manual_request_time', Date.now().toString());
-    }
-
-    setSelectedPackage(pkg);
-    setManualPaymentModalOpen(true);
-  };
 
   const handlePayPalPurchase = async (pkg) => {
     const purchasePkg = {
@@ -1923,7 +1896,7 @@ useEffect(() => {
               )}
 
 
-              {selectedPackage && (manualPaymentModalOpen || paypalPaymentModalOpen) ? null : (
+              {selectedPackage && paypalPaymentModalOpen ? null : (
                 <>
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {coinPackages.map((pkg) => {
@@ -2520,17 +2493,6 @@ useEffect(() => {
 
         </div>
         
-        <ManualPaymentModal
-          isOpen={manualPaymentModalOpen}
-          onClose={() => setManualPaymentModalOpen(false)}
-          pkg={selectedPackage}
-          providerId={selectedProviderId}
-          onSuccess={() => {
-            setManualPaymentModalOpen(false);
-            showPurchaseCompleteOverlay();
-            refreshCoins();
-          }}
-        />
         <PayPalPaymentModal
           isOpen={paypalPaymentModalOpen}
           onClose={() => setPaypalPaymentModalOpen(false)}

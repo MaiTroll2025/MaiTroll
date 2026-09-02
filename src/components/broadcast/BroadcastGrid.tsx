@@ -154,6 +154,7 @@ function LiveKitVideoPlayer({
   isCEO = false,
   isRgbEnabled = false,
   broadcasterProfile = null,
+  cameraOffImageUrl = null,
 }: {
   videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined;
   isLocal?: boolean;
@@ -162,6 +163,7 @@ function LiveKitVideoPlayer({
   isCEO?: boolean;
   isRgbEnabled?: boolean;
   broadcasterProfile?: any;
+  cameraOffImageUrl?: string | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
@@ -244,10 +246,8 @@ function LiveKitVideoPlayer({
       containerRef.current.appendChild(videoElement);
       videoElementRef.current = videoElement;
       
-      // Mirror only local participant video (self-preview). Remote viewers get unmirrored video.
-      const shouldMirror = isLocal && !isScreenShare && (settings as any).facingMode !== 'environment';
       if (containerRef.current) {
-        containerRef.current.style.transform = shouldMirror ? 'scaleX(-1)' : '';
+        containerRef.current.style.transform = '';
       }
 
       if (import.meta.env.DEV) if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] Video track attached successfully');
@@ -371,6 +371,19 @@ function LiveKitVideoPlayer({
     backgroundSize: 'cover',
     position: 'relative'
   } : {};
+
+  // Display camera-off image if no video track but image is available
+  if (!videoTrack && cameraOffImageUrl) {
+    return (
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <img
+          src={cameraOffImageUrl}
+          alt="Camera off"
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -1573,6 +1586,7 @@ boxClass,
                         isCEO={broadcasterProfile?.username === 'ceo' || broadcasterProfile?.role === 'ceo' || broadcasterProfile?.role === 'admin' || broadcasterProfile?.role === 'superadmin' || broadcasterProfile?.role === 'owner'}
                         isRgbEnabled={!!stream.has_rgb_effect}
                         broadcasterProfile={broadcasterProfile}
+                        cameraOffImageUrl={broadcasterProfile?.camera_off_image_url}
                       />
                       {/* Camera Overlay for screen share */}
                       {cameraOverlayTrack && seatIndex === 0 && (
@@ -1616,6 +1630,27 @@ boxClass,
                 // Remote users who exist but have camera off or no track
                 if (participant) {
                   const seatUserFrame = userId ? frameCacheRef.current.get(userId) ?? null : null
+                  const hasCameraOffImage = displayProfile?.camera_off_image_url;
+                  
+                  // If user has a custom camera-off image, display it fullscreen
+                  if (hasCameraOffImage) {
+                    return (
+                      <div className="absolute inset-0 w-full h-full overflow-hidden">
+                        <img
+                          src={displayProfile.camera_off_image_url}
+                          alt={displayProfile?.username || 'Camera Off'}
+                          className="w-full h-full object-cover"
+                        />
+                        {!isMicOn && (
+                          <div className="absolute bottom-2 right-2 bg-red-500 rounded-full p-2">
+                            <MicOff size={14} className="text-white" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  
+                  // Default: show avatar + Camera Off text
                   return (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90">
                       <div

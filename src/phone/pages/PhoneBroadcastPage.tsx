@@ -1826,8 +1826,8 @@ export default function PhoneBroadcastPage() {
         {streamId && (
           <MaiBag
             streamId={streamId}
-            compact
-            className="absolute right-3 top-3 z-20"
+            phone
+            className="absolute right-3 top-[5.5rem] z-20"
           />
         )}
 
@@ -2124,8 +2124,7 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
       previousTrackRef.current = videoTrack
 
       const settings = videoTrack.mediaStreamTrack?.getSettings?.()
-      const shouldMirror = settings?.facingMode !== 'environment'
-      container.style.transform = shouldMirror ? 'scaleX(-1)' : ''
+      container.style.transform = 'scaleX(-1)'
     } catch (err) {
       console.error('[LocalCameraFullVideo] Failed to attach video track:', err)
     }

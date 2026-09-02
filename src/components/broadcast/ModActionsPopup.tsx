@@ -27,6 +27,7 @@ import {
   rpcRemoveStreamBroadofficer,
   rpcResetUserPermissions,
   rpcModoEndStream,
+  rpcApplyTrollCoinPenalty,
 } from '../../types/moderationActions';
 import { isProtectedPlatformRole } from '../../lib/protectedRoles';
 
@@ -67,6 +68,7 @@ const MOD_ACTIONS_LIST = [
   { id: 'mute', label: 'Mute', icon: Mic, color: 'text-red-400', description: 'Mute user\'s microphone' },
   { id: 'unmute', label: 'Unmute', icon: MicOff, color: 'text-green-400', description: 'Unmute user\'s microphone' },
   { id: 'arrest', label: 'Arrest', icon: AlertCircle, color: 'text-orange-400', description: 'Send to Troll Jail' },
+  { id: 'troll_coin_penalty', label: 'Coin Penalty', icon: Wallet, color: 'text-amber-400', description: 'Donate Troll Coins to admins' },
   { id: 'disable_chat', label: 'Disable Chat', icon: MessageSquareOff, color: 'text-yellow-400', description: 'Disable chat temporarily' },
   { id: 'kick', label: 'Kick', icon: LogOut, color: 'text-purple-400', description: 'Remove from broadcast' },
   { id: 'suspend_license', label: 'Suspend License', icon: Car, color: 'text-blue-400', description: 'Suspend driver\'s license' },
@@ -130,6 +132,13 @@ const ModActionsPopup = memo(function ModActionsPopup({
   const [arrestSeverity, setArrestSeverity] = useState('moderate');
   const [arrestBailAmount, setArrestBailAmount] = useState(100);
   const [isArresting, setIsArresting] = useState(false);
+
+  // Troll Coin penalty state
+  const [showTrollCoinPenaltyModal, setShowTrollCoinPenaltyModal] = useState(false);
+  const [trollCoinPenaltyAmount, setTrollCoinPenaltyAmount] = useState(500);
+  const [trollCoinPenaltyReason, setTrollCoinPenaltyReason] = useState('');
+  const [trollCoinPenaltyCategory, setTrollCoinPenaltyCategory] = useState('Other');
+  const [isApplyingTrollCoinPenalty, setIsApplyingTrollCoinPenalty] = useState(false);
 
   // Memoized handlers for arrest form
   const handleArrestReasonChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -431,6 +440,46 @@ const ModActionsPopup = memo(function ModActionsPopup({
     }
   };
 
+  const handleTrollCoinPenalty = async () => {
+    if (!profile || isLoading) {
+      toast.error('Authentication data is still loading. Please try again.');
+      return;
+    }
+    const amount = Math.floor(Number(trollCoinPenaltyAmount));
+    if (!targetUserId || amount <= 0 || !trollCoinPenaltyReason.trim()) {
+      toast.error('Enter a positive amount and violation reason');
+      return;
+    }
+
+    setIsApplyingTrollCoinPenalty(true);
+    try {
+      const res = await rpcApplyTrollCoinPenalty(
+        targetUserId,
+        profile.id,
+        trollCoinPenaltyReason.trim(),
+        trollCoinPenaltyCategory,
+        amount,
+        effectiveStreamId || streamId || null,
+        profile.username,
+        targetUsername,
+      );
+      if (!res.success) {
+        toast.error(res.message);
+        return;
+      }
+      toast.success(res.message || `${targetUsername} received a ${amount.toLocaleString()} Troll Coin penalty`);
+      setShowTrollCoinPenaltyModal(false);
+      setTrollCoinPenaltyReason('');
+      setTrollCoinPenaltyCategory('Other');
+      onClose();
+    } catch (error) {
+      console.error('[ModActions] Error applying Troll Coin penalty:', error);
+      toast.error('Failed to apply Troll Coin penalty');
+    } finally {
+      setIsApplyingTrollCoinPenalty(false);
+    }
+  };
+
 const handleDisableChat = async () => {
     if (!profile || isLoading) {
       toast.error("Authentication data is still loading. Please try again.");
@@ -580,6 +629,9 @@ const handleKick = async () => {
         break;
       case 'arrest':
         setShowArrestModal(true);
+        break;
+      case 'troll_coin_penalty':
+        setShowTrollCoinPenaltyModal(true);
         break;
       case 'disable_chat':
         setShowDisableChatModal(true);
@@ -971,6 +1023,85 @@ const handleEndStream = async () => {
           </>
         )}
         </div>
+
+        {/* Troll Coin Penalty Modal */}
+        <AnimatePresence>
+          {showTrollCoinPenaltyModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/95 flex items-center justify-center p-4 z-40"
+            >
+              <div className="bg-slate-800 border border-amber-500/30 rounded-xl p-4 w-full max-w-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <Wallet className="w-5 h-5 text-amber-400" />
+                  <h3 className="text-white font-semibold">Troll Coin Penalty</h3>
+                </div>
+                <p className="text-xs text-slate-400 mb-4">
+                  Deduct coins from {targetUsername} and send them to the Admin Donation pool.
+                </p>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm text-slate-400 block mb-1">Amount</label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={trollCoinPenaltyAmount}
+                      onChange={(e) => setTrollCoinPenaltyAmount(Number(e.target.value))}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-400 block mb-1">Violation Category</label>
+                    <select
+                      value={trollCoinPenaltyCategory}
+                      onChange={(e) => setTrollCoinPenaltyCategory(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option>Harassment</option>
+                      <option>Spam</option>
+                      <option>Abuse</option>
+                      <option>Terms Violation</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-400 block mb-1">Violation Reason</label>
+                    <textarea
+                      value={trollCoinPenaltyReason}
+                      onChange={(e) => setTrollCoinPenaltyReason(e.target.value)}
+                      placeholder="Describe the violation..."
+                      rows={3}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowTrollCoinPenaltyModal(false)}
+                    disabled={isApplyingTrollCoinPenalty}
+                    className="flex-1 py-2 bg-slate-700 text-white rounded-lg text-sm hover:bg-slate-600 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleTrollCoinPenalty}
+                    disabled={isApplyingTrollCoinPenalty}
+                    className="flex-1 py-2 bg-amber-500 text-slate-950 rounded-lg text-sm font-semibold hover:bg-amber-400 disabled:opacity-50"
+                  >
+                    {isApplyingTrollCoinPenalty ? 'Applying...' : 'Apply Penalty'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Arrest Modal */}
         <AnimatePresence>

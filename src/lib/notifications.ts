@@ -810,6 +810,50 @@ export async function notifyWalletAdjustment(userId: string, amount: number, adm
   )
 }
 
+export async function notifyTrollCoinPenalty(
+  userId: string,
+  targetUsername: string,
+  violationReason: string,
+  penaltyAmount: number,
+  violationCategory?: string,
+  moderatorUsername?: string,
+): Promise<{ success: boolean; error?: string }> {
+  const baseMessage = `You received a Troll Coin penalty.\n\nReason: ${violationReason}\n\nPenalty: 🪙 -${penaltyAmount.toLocaleString()} Troll Coins\n\n⚠️ Continued violations may result in additional moderation actions.`
+
+  const result = await createNotification(
+    userId,
+    'moderation_action',
+    '🚨 TROLL COIN PENALTY',
+    baseMessage,
+    {
+      violation_reason: violationReason,
+      violation_category: violationCategory || 'moderation',
+      amount: -Math.abs(penaltyAmount),
+      penalty_amount: penaltyAmount,
+      moderator_username: moderatorUsername,
+      action_url: '/wallet',
+    }
+  )
+
+  await notifyAdmins(
+    '🚨 Troll Coin Penalty',
+    `@${targetUsername} received a Troll Coin penalty for "${violationReason}". Penalty: -${penaltyAmount.toLocaleString()} Troll Coins. Destination: Admin Donation.`,
+    'moderation_action',
+    {
+      target_user_id: userId,
+      target_username: targetUsername,
+      violation_reason: violationReason,
+      violation_category: violationCategory || 'moderation',
+      penalty_amount: penaltyAmount,
+      destination: 'Admin Donation',
+      action_url: '/admin',
+      audience: 'admin',
+    }
+  )
+
+  return result
+}
+
 // ==========================================
 // COURT / JAIL / CITY GOVERNANCE NOTIFICATIONS
 // ==========================================
