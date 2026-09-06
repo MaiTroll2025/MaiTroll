@@ -3592,7 +3592,7 @@ useStreamRealtime(
           isSeatActiveStatus(normalizeSeatStatus(mySeat.status)) &&
           (mySeat.user_id === user?.id || mySeat.guest_id === user?.id),
       )
-      const canJoin = !isLocked && !isOccupied && !isMine && !amAlreadySeated
+      const canJoin = false
 
       return {
         seatIndex,

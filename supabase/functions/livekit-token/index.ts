@@ -18,7 +18,7 @@ import {
  * No viewer, participant, or broadcast-duration caps are enforced.
  */
 
-const TOKEN_TTL_SECONDS = 8 * 60 * 60; // 8 hours (max broadcast duration)
+const TOKEN_TTL_SECONDS = 30 * 60;
 
 type ParticipantCategory =
   | "host"
@@ -496,18 +496,76 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const authenticated = await getAuthenticatedUser(
-      req,
-      supabaseUrl,
-      supabaseAnonKey,
-    );
+    const mode = normalizeMode(body.mode)
+    const role = normalizeRole(body.role)
 
-    const userId = authenticated.userId;
+    let authenticated
+    let userId: string
+    let isAnonymousViewer = false
+
+    try {
+      authenticated = await getAuthenticatedUser(
+        req,
+        supabaseUrl,
+        supabaseAnonKey,
+      )
+
+      userId = authenticated.userId
+    } catch (authError) {
+      const viewerOnly =
+        mode === "audience" ||
+        mode === "viewer" ||
+        role === "viewer" ||
+        role === "audience" ||
+        (mode !== "publisher" &&
+          mode !== "broadcaster" &&
+          mode !== "seat-publisher" &&
+          mode !== "singoff-publisher" &&
+          mode !== "singoff-viewer" &&
+          role !== "publisher" &&
+          role !== "host")
+
+      if (!viewerOnly) {
+        console.warn("[livekit-token] Authentication failed for non-viewer request", {
+          message: authError instanceof Error ? authError.message : String(authError),
+        })
+
+        return withCors(
+          {
+            success: false,
+            error: "Missing authentication token",
+            code: "authentication_required",
+          },
+          401,
+          req,
+        )
+      }
+
+      const fallbackIdentity =
+        cleanString(body.identity) ||
+        cleanString(body.participantIdentity) ||
+        cleanString(body.userId) ||
+        cleanString(body.user_name) ||
+        cleanString(body.name) ||
+        cleanString(body.displayName) ||
+        cleanString(body.participantName) ||
+        `anon-viewer-${Date.now()}`
+
+      userId = fallbackIdentity
+      isAnonymousViewer = true
+
+      console.log("[livekit-token] Allowing anonymous viewer token", {
+        roomName,
+        identity: userId,
+        mode,
+        role,
+      })
+    }
 
     /*
      * Never trust body.userId/body.identity as the authoritative user ID.
      */
-    const identity = normalizeIdentity(userId);
+    const identity = normalizeIdentity(userId)
 
     if (!identity) {
       return withCors(
@@ -518,7 +576,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         },
         400,
         req,
-      );
+      )
     }
 
     const adminDb = createClient(
@@ -531,11 +589,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
           detectSessionInUrl: false,
         },
       },
-    );
+    )
 
-    const profile = await getProfile(adminDb, userId);
+    const profile = isAnonymousViewer ? null : await getProfile(adminDb, userId)
 
-    if (isRestrictedProfile(profile)) {
+    if (!isAnonymousViewer && isRestrictedProfile(profile)) {
       return withCors(
         {
           success: false,
@@ -547,15 +605,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const mode = normalizeMode(body.mode);
-    const role = normalizeRole(body.role);
-
     let category = getRequestedCategory(body, mode, role);
     let isBattleRoom = false;
     let battleBroadcaster = false;
     let battleStatus = "";
 
-    const userIsAdmin = isAdmin(profile);
+    const userIsAdmin = isAnonymousViewer ? false : isAdmin(profile);
 
     if (roomName.startsWith("battle-")) {
       isBattleRoom = true;

@@ -599,19 +599,21 @@ export default function MobileBroadcastHostSettings({
                       onUpdateSeatCount?.(next);
                     }
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95"
+                  disabled
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95 opacity-50 cursor-not-allowed"
                 >
                   -
                 </button>
                 <span className="text-sm font-black text-white w-4 text-center">{seatCount}</span>
                 <button
+                  disabled
                   onClick={() => {
                     const next = Math.min(6, seatCount + 1);
                     if (next !== seatCount) {
                       onUpdateSeatCount?.(next);
                     }
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95 opacity-50 cursor-not-allowed"
                 >
                   +
                 </button>

@@ -7099,9 +7099,10 @@ const showFallback =
                         This broadcast is currently host-only. Add seats anytime to invite guests.
                       </p>
                       <div className="mt-5 flex flex-col gap-2.5">
-                        <button
-                          onClick={handleOpenSeatsModal}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/15 px-5 py-2.5 text-sm font-black text-cyan-200 transition-all hover:bg-cyan-500/25 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]"
+                          <button
+                            onClick={handleOpenSeatsModal}
+                            disabled
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/15 px-5 py-2.5 text-sm font-black text-cyan-200 transition-all opacity-50 cursor-not-allowed"
                         >
                           <Plus className="h-4 w-4" />
                           Add Seats

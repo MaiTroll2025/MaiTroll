@@ -3192,9 +3192,8 @@ export default function PhoneViewerPage() {
             isOccupied,
             isMine,
             isLocked,
-            canJoin:
-              !isLocked &&
-              !isOccupied,
+            canJoin: false,
+            isDisabled: true,
             seatPrice:
               getSeatPrice(
                 stream,

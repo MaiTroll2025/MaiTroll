@@ -191,14 +191,15 @@ onTroll,
                icon={isMicOn ? Mic : MicOff}
                label={isMicOn ? 'Mute' : 'Unmute'}
              />
-             {isHost && onOpenSeats && (
-               <HostActionButton
-                 active={false}
-                 onClick={onOpenSeats}
-                 icon={Users}
-                 label={`Seats${seatCount > 0 ? ` ${currentViewerSeatCount}/${seatCount}` : ''}`}
-               />
-             )}
+              {isHost && onOpenSeats && (
+                <HostActionButton
+                  active={false}
+                  onClick={undefined}
+                  disabled
+                  icon={Users}
+                  label={`Seats${seatCount > 0 ? ` ${currentViewerSeatCount}/${seatCount}` : ''}`}
+                />
+              )}
              <HostActionButton
               active={isCamOn}
               onClick={onToggleCam}
