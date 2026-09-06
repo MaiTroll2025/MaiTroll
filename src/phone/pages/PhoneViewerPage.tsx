@@ -1747,12 +1747,13 @@ export default function PhoneViewerPage() {
     mySeat,
     joinSeat,
     leaveSeat,
+    markSeatLive,
    } = useStreamSeats(
-     streamId,
-     user?.id,
-     broadcasterProfile,
-     stream as any,
-   )
+    streamId,
+    user?.id,
+    broadcasterProfile,
+    stream as any,
+  )
 
   const userIdToLiveKitIdentity = useMemo(() => {
     const mapping: Record<string, string> = {};
@@ -2868,6 +2869,10 @@ export default function PhoneViewerPage() {
     audienceJoinAttemptedKeyRef.current = null
     currentRoomKeyRef.current = null
 
+    if (mySeat?.seat_index != null && viewerIdentity) {
+      void markSeatLive(mySeat.seat_index, viewerIdentity)
+    }
+
     void (async () => {
       joiningAudienceRef.current = true
       try {
@@ -2888,7 +2893,7 @@ export default function PhoneViewerPage() {
         joiningAudienceRef.current = false
       }
     })()
-  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience, battleId])
+  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience, battleId, mySeat?.seat_index, markSeatLive])
 
   /* ========================================================================
       AUDIENCE PRESENCE
@@ -3568,6 +3573,7 @@ export default function PhoneViewerPage() {
           await joinSeat(
             seatIndex,
             price,
+            viewerIdentity,
           )
         } catch (err) {
           console.error(
@@ -3579,6 +3585,7 @@ export default function PhoneViewerPage() {
       [
         joinSeat,
         stream,
+        viewerIdentity,
       ],
     )
 
@@ -4608,12 +4615,64 @@ export default function PhoneViewerPage() {
 
         {!battleActive && (
           <div
-            className="absolute bottom-0 left-0 right-0 z-50 px-3"
+            className="absolute bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#050711]/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
             onClick={event =>
               event.stopPropagation()
             }
           >
-            <div className="h-[calc(env(safe-area-inset-bottom)+0.6rem)]" />
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const text = chatInput.trim()
+                if (!text || !streamId) return
+
+                if (!user) {
+                  return
+                }
+
+                const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
+                const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+                setFloatingMessages(prev => [{ id: msgId, username, content: text, timestamp: Date.now() }, ...prev].slice(0, 50))
+                setChatInput('')
+
+                window.setTimeout(() => {
+                  setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                }, 30_000)
+
+                try {
+                  const result = await sendChatThroughGate({ streamId, content: text })
+                  if (!result.ok) {
+                    setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                    const errMsg = String(result.error || '').toLowerCase()
+                    if (errMsg.includes('disabled')) {
+                      // chat disabled - silently remove optimistic message
+                    }
+                    return
+                  }
+
+                  const chatChannel = floatingChatChannelRef.current
+                  if (chatChannel) {
+                    chatChannel.send({
+                      type: 'broadcast',
+                      event: 'floating_chat',
+                      payload: { username, content: text },
+                    }).catch(() => {})
+                  }
+                } catch {
+                  // ignore
+                }
+              }}
+            >
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Say something..."
+                maxLength={280}
+                className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+              />
+            </form>
           </div>
         )}
 
@@ -4733,61 +4792,6 @@ export default function PhoneViewerPage() {
           streamUrl={`${window.location.origin}/live/${encodeURIComponent(hostName)}`}
           broadcasterName={hostName}
         />
-
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault()
-            const text = chatInput.trim()
-            if (!text || !streamId) return
-
-            if (!user) {
-              return
-            }
-
-            const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
-            const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-            setFloatingMessages(prev => [{ id: msgId, username, content: text, timestamp: Date.now() }, ...prev].slice(0, 50))
-            setChatInput('')
-
-            window.setTimeout(() => {
-              setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-            }, 30_000)
-
-            try {
-              const result = await sendChatThroughGate({ streamId, content: text })
-              if (!result.ok) {
-                setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                const errMsg = String(result.error || '').toLowerCase()
-                if (errMsg.includes('disabled')) {
-                  // chat disabled - silently remove optimistic message
-                }
-                return
-              }
-
-              const chatChannel = floatingChatChannelRef.current
-              if (chatChannel) {
-                chatChannel.send({
-                  type: 'broadcast',
-                  event: 'floating_chat',
-                  payload: { username, content: text },
-                }).catch(() => {})
-              }
-            } catch {
-              // ignore
-            }
-          }}
-          className="absolute bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#050711]/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
-        >
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Say something..."
-            maxLength={280}
-            className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
-          />
-        </form>
 
         <GiftVideoOverlay 
           gifts={recentGifts} 

@@ -67,7 +67,7 @@ BEGIN
     c.cycle_index,
     c.current_gift_id AS gift_id,
     g.name AS gift_name,
-    g.price AS gift_price,
+    g.price::BIGINT AS gift_price,
     c.started_at,
     c.ends_at
   FROM public.active_featured_gift_cycle c

@@ -381,7 +381,7 @@ export function useStreamSeats(
   )
 
   const joinSeat = useCallback(
-    async (seatIndex: number, price: number) => {
+    async (seatIndex: number, price: number, livekitIdentity?: string) => {
       if (!effectiveUserId || !streamId) {
         toast.error('Login to join a stage seat')
         return false
@@ -449,9 +449,9 @@ export function useStreamSeats(
         updated_at: new Date().toISOString(),
         joined_at: new Date().toISOString(),
         left_at: null,
-        livekit_participant_identity: effectiveUserId,
-        livekit_identity: effectiveUserId,
-        participant_identity: effectiveUserId,
+        livekit_participant_identity: livekitIdentity || effectiveUserId,
+        livekit_identity: livekitIdentity || effectiveUserId,
+        participant_identity: livekitIdentity || effectiveUserId,
         seat_price_paid: finalPrice,
         price_paid: finalPrice,
         user_profile: {
