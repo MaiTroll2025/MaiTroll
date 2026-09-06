@@ -2885,6 +2885,10 @@ export default function PhoneViewerPage() {
           publishCapable: !isBattleMode && true,
         })
 
+        if (!isBattleMode) {
+          await publishLocalTracks()
+        }
+
         if (typeof result === 'string') {
         }
       } catch (err) {
@@ -2893,7 +2897,7 @@ export default function PhoneViewerPage() {
         joiningAudienceRef.current = false
       }
     })()
-  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience, battleId, mySeat?.seat_index, markSeatLive])
+  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience, publishLocalTracks, battleId, mySeat?.seat_index, markSeatLive])
 
   /* ========================================================================
       AUDIENCE PRESENCE
