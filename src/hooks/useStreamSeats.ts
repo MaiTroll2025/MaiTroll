@@ -641,6 +641,21 @@ export function useStreamSeats(
           user_id: effectiveUserId,
           livekit_participant_identity: livekitParticipantIdentity || effectiveUserId,
         })
+
+        // Still call the RPC to update livekit_participant_identity in the DB
+        // even if the seat is already active/live
+        if (livekitParticipantIdentity) {
+          try {
+            await supabase.rpc('mark_stream_seat_live', {
+              p_stream_id: streamId,
+              p_seat_index: seatIndex,
+              p_livekit_participant_identity: livekitParticipantIdentity,
+            })
+          } catch (rpcErr) {
+            console.warn('[useStreamSeats] markSeatLive RPC (already-live) error:', rpcErr)
+          }
+        }
+
         scheduleRefresh('markSeatLive:already-live')
         return
       }

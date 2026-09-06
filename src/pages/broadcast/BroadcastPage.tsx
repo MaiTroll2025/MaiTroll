@@ -4683,6 +4683,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           existingParticipants.forEach((participant) => next.set(participant.identity, participant))
           return next
         })
+        setRemoteParticipantSnapshots(buildRemoteParticipantSnapshots(roomToUse))
         if (import.meta.env.DEV) {
           console.log('[BroadcastPage] Host: synced existing remote participants after connect', {
             count: existingParticipants.length,
