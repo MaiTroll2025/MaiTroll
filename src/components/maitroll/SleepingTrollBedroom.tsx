@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Moon, UserPlus, ArrowLeft, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import {
   getChicagoTime,
   getSecondsUntilOpen,
 } from '@/lib/maitrollOperatingHours'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { setSleepUnlocked } from '@/lib/appSleep'
 
 interface SleepingTrollBedroomProps {
   countdownToOpen?: string
@@ -13,11 +15,30 @@ interface SleepingTrollBedroomProps {
   isStaff?: boolean
 }
 
+type Question = {
+  prompt: string
+  answer: string
+}
+
+function generateQuestion(): Question {
+  const a = Math.floor(Math.random() * 10) + 1
+  const b = Math.floor(Math.random() * 10) + 1
+  const ops: Array<{ label: string; calc: () => number }> = [
+    { label: '+', calc: () => a + b },
+    { label: '-', calc: () => a - b },
+    { label: '×', calc: () => a * b },
+  ]
+  const op = ops[Math.floor(Math.random() * ops.length)]
+  const answer = String(op.calc())
+  return { prompt: `${a} ${op.label} ${b} = ?`, answer }
+}
+
 export function SleepingTrollBedroom({
   countdownToOpen,
   onWakeUp,
   isStaff = false,
 }: SleepingTrollBedroomProps) {
+  const navigate = useNavigate()
   const [secondsUntilOpen, setSecondsUntilOpen] = useState<number | null>(null)
   const [showSignup, setShowSignup] = useState(false)
   const [signupEmail, setSignupEmail] = useState('')
@@ -26,6 +47,10 @@ export function SleepingTrollBedroom({
   const [signupLoading, setSignupLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+
+  const [question, setQuestion] = useState<Question>(() => generateQuestion())
+  const [puzzleAnswer, setPuzzleAnswer] = useState('')
+  const [puzzleBusy, setPuzzleBusy] = useState(false)
 
   const particles = useMemo(
     () => [
@@ -107,6 +132,29 @@ export function SleepingTrollBedroom({
       toast.error(err.message || 'Signup failed')
     } finally {
       setSignupLoading(false)
+    }
+  }
+
+  const handlePuzzleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (puzzleBusy) return
+    setPuzzleBusy(true)
+
+    try {
+      const solved = puzzleAnswer.trim() === question.answer
+      if (!solved) {
+        toast.error('Not quite — try again!')
+        setQuestion(generateQuestion())
+        setPuzzleAnswer('')
+        return
+      }
+
+      setSleepUnlocked(question.answer)
+      toast.success('Unlocked!')
+      onWakeUp?.()
+      navigate('/', { replace: true })
+    } finally {
+      setPuzzleBusy(false)
     }
   }
 
@@ -368,6 +416,30 @@ export function SleepingTrollBedroom({
               </div>
             </div>
           </div>
+
+          {/* Puzzle Section */}
+          <form onSubmit={handlePuzzleSubmit} className="mx-auto w-full max-w-[360px] mb-6 rounded-2xl border border-[#00BFFF]/30 bg-black/40 p-5 backdrop-blur-xl">
+            <p className="text-sm font-bold text-white">Solve this to enter</p>
+            <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+              <p className="text-2xl font-black tracking-wide text-white">{question.prompt}</p>
+            </div>
+            <input
+              value={puzzleAnswer}
+              onChange={(e) => setPuzzleAnswer(e.target.value)}
+              inputMode="numeric"
+              pattern="[0-9\-]*"
+              autoFocus
+              className="mt-3 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-center text-lg font-semibold text-white outline-none focus:border-[#00BFFF]/50"
+              placeholder="Your answer"
+            />
+            <button
+              type="submit"
+              disabled={puzzleBusy || !puzzleAnswer.trim()}
+              className="mt-3 w-full rounded-lg bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
+            >
+              {puzzleBusy ? 'Checking...' : 'Unlock'}
+            </button>
+          </form>
 
           {/* Signup Section */}
           <div className="mb-6">

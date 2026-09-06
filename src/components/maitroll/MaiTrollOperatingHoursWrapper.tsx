@@ -3,6 +3,7 @@ import { MaiTrollOperatingState } from '@/lib/maitrollOperatingHours'
 import { useMaiTrollOperatingHours } from '@/lib/maitrollOperatingStore'
 import { useAuthStore } from '@/lib/store'
 import { UserRole } from '@/lib/supabase'
+import { getSleepState } from '@/lib/appSleep'
 import { SleepingTrollBedroom } from './SleepingTrollBedroom'
 import { ClosingWarning } from './ClosingWarning'
 import { TrollWakeUpAnimation } from './TrollWakeUpAnimation'
@@ -29,6 +30,10 @@ export function MaiTrollOperatingHoursWrapper({
 
   const [showWakeUpAnimation, setShowWakeUpAnimation] = useState(false)
   const [previousState, setPreviousState] = useState<MaiTrollOperatingState | null>(null)
+  const [sleepUnlocked, setSleepUnlocked] = useState(() => {
+    const sleepState = getSleepState()
+    return !sleepState.isAsleep && !!sleepState.unlockedAt
+  })
 
   // Determine if current user is authorized staff
   const isStaff = !!(
@@ -37,6 +42,14 @@ export function MaiTrollOperatingHoursWrapper({
     profile?.is_troll_officer ||
     profile?.role === UserRole.ADMIN
   )
+
+  // Restore sleep unlock state on mount/page refresh
+  useEffect(() => {
+    const sleepState = getSleepState()
+    if (!sleepState.isAsleep && sleepState.unlockedAt) {
+      setSleepUnlocked(true)
+    }
+  }, [])
 
   // Handle state changes and wake-up animation trigger
   useEffect(() => {
@@ -54,6 +67,7 @@ export function MaiTrollOperatingHoursWrapper({
   // Handle wake-up animation completion
   const handleWakeUpComplete = useCallback(() => {
     setShowWakeUpAnimation(false)
+    setSleepUnlocked(false)
   }, [])
 
   // Show wake-up animation (overlays everything)
@@ -76,9 +90,9 @@ export function MaiTrollOperatingHoursWrapper({
     )
   }
 
-  // Closed: show sleeping bedroom
-  if (isClosed) {
-    return <SleepingTrollBedroom isStaff={false} />
+  // Closed: show sleeping bedroom unless puzzle was solved
+  if (isClosed && !sleepUnlocked) {
+    return <SleepingTrollBedroom isStaff={false} onWakeUp={() => setSleepUnlocked(true)} />
   }
 
   // Open: show normal UI

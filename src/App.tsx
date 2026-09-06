@@ -124,6 +124,7 @@ const CoinLiabilityPage = lazyWithRetry(() => import("./pages/secretary/coin-lia
 const AppealManagement = lazyWithRetry(() => import("./pages/admin/AppealManagement"));
 const AdminMeetingsDashboard = lazyWithRetry(() => import("./pages/admin/AdminMeetingsDashboard"));
 import { systemManagementRoutes } from "./pages/admin/adminRoutes";
+import { getSleepState } from "./lib/appSleep";
 const CEOAssistantDashboard = lazyWithRetry(() => import("./pages/ceo-assistant-dashboard"));
 
 const TaxOnboarding = lazyWithRetry(() => import("./pages/TaxOnboarding"));
@@ -228,6 +229,7 @@ const ShareAThonVerification = lazyWithRetry(() => import("./pages/shareathon/Sh
 
  const TestDiagnosticsPage = lazyWithRetry(() => import("./pages/admin/TestDiagnosticsPage"));
 const ResetMaintenance = lazyWithRetry(() => import("./pages/admin/ResetMaintenance"));
+const SleepPuzzlePage = lazyWithRetry(() => import("./pages/SleepPuzzlePage"));
 const Government = lazyWithRetry(() => import("./pages/Government"));
 const GovernmentStreams = lazyWithRetry(() => import("./pages/government/GovernmentStreams"));
 const MayorDashboard = lazyWithRetry(() => import("./pages/MayorDashboard"));
@@ -397,9 +399,14 @@ const isPublicRoute = (pathname: string) => {
     // 🚔 Jail Guard - Exempt admins from jail redirect so they can manage the system
     const isAdminUser = profile?.role === UserRole.ADMIN || profile?.is_admin === true || (profile as any)?.role === 'superadmin';
     const onCourtSummary = location.pathname.startsWith('/court/') && location.pathname.endsWith('/summary');
-    if (isJailed && !isAdminUser && location.pathname !== "/jail" && !onCourtSummary) {
-      return <Navigate to="/jail" replace />;
-    }
+     if (isJailed && !isAdminUser && location.pathname !== "/jail" && !onCourtSummary) {
+       return <Navigate to="/jail" replace />;
+     }
+
+     const sleepState = getSleepState()
+     if (sleepState.isAsleep && location.pathname !== "/sleep" && !location.pathname.startsWith("/admin")) {
+       return <Navigate to="/sleep" replace />
+     }
     
     // If we have a user but no profile, and we are not loading, it means the profile row is missing.
     // We must redirect to setup to create one.
@@ -1614,7 +1621,8 @@ const handleVisibilityChange = async () => {
                  <Route path="/auth/callback" element={<AuthCallback />} />
                  <Route path="/exit" element={<RequireInternalNavigation><ExitPage /></RequireInternalNavigation>} />
                  <Route path="/terms" element={<Navigate to="/legal/terms" replace />} />
-                 <Route path="/access-denied" element={<AccessDenied />} />
+                  <Route path="/access-denied" element={<AccessDenied />} />
+                  <Route path="/sleep" element={<SleepPuzzlePage />} />
                  <Route path="/terms-of-service" element={<Navigate to="/legal/terms" replace />} />
                  <Route path="/privacy-policy" element={<Navigate to="/legal/privacy" replace />} />
                  <Route path="/payment-terms" element={<Navigate to="/legal/refunds" replace />} />
@@ -2689,15 +2697,16 @@ const handleVisibilityChange = async () => {
                        }
                      />                   
         
+                     <Route
+                       path="/admin/reset-maintenance"
+                       element={
+                         <RequireRole roles={[UserRole.ADMIN]}>
+                           <ResetMaintenance />
+                          </RequireRole>
+                        }
+                      />
+
                     <Route
-                      path="/admin/reset-maintenance"
-                      element={
-                        <RequireRole roles={[UserRole.ADMIN]}>
-                          <ResetMaintenance />
-                        </RequireRole>
-                      }
-                    />
-                   <Route
                      path="/admin/hr"
                      element={<Navigate to="/hr-center" replace />}
                    />
