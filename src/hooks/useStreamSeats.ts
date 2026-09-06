@@ -254,7 +254,7 @@ export function useStreamSeats(
     const seatSig = keys
       .map((k) => {
         const s = map[Number(k)]
-        return `${k}:${s.user_id || s.guest_id || ''}:${s.status || ''}:${s.id}:${s.updated_at || ''}:${s.joined_at || ''}`
+        return `${k}:${s.user_id || s.guest_id || ''}:${s.status || ''}:${s.id}:${s.updated_at || ''}:${s.joined_at || ''}:${s.livekit_participant_identity || ''}`
       })
       .join('|')
     const mineSig = mine ? `${mine.seat_index}:${mine.id}:${mine.status}` : 'none'
@@ -291,11 +291,9 @@ export function useStreamSeats(
       const seq = ++fetchSeqRef.current
 
       try {
-        const { data, error } = await supabase
-          .from('stream_seat_sessions')
-          .select('*')
-          .eq('stream_id', streamId)
-          .in('status', ['active', 'live', 'reserved', 'camera_starting'])
+        const { data, error } = await supabase.rpc('get_stream_seats', {
+          p_stream_id: streamId,
+        })
 
         if (error) {
           console.warn('[useStreamSeats] fetchSeats error:', { reason, error })
@@ -657,6 +655,7 @@ export function useStreamSeats(
         }
 
         scheduleRefresh('markSeatLive:already-live')
+        await fetchSeats('markSeatLive:already-live-fetch')
         return
       }
 
