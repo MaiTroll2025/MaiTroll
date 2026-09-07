@@ -67,6 +67,8 @@ const { enforceRateLimit, verifyAdmin, getSummary, getBreakdown, getHistorical, 
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+const { generateSitemap } = require('./api/sitemap');
+
 // Global error handlers to prevent silent crashes
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
@@ -100,6 +102,22 @@ const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.
 
 // Default fallback image (used when no stream thumbnail available)
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-preview.png`;
+
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    if (!supabase) {
+      res.status(200).sendFile(path.join(__dirname, '../public/sitemap.xml'));
+      return;
+    }
+
+    const sitemap = await generateSitemap(supabase);
+    res.setHeader('Content-Type', 'application/xml');
+    res.status(200).send(sitemap);
+  } catch (error) {
+    console.error('[Sitemap] Error:', error);
+    res.status(500).send('Error generating sitemap');
+  }
+});
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public'), {
@@ -302,6 +320,44 @@ app.get('/api/social/profile/:username', async (req, res) => {
   await profileSEO.handleProfileSEO(req, res);
 });
 
+app.get(/^\/post\/([a-zA-Z0-9-]+)$/, async (req, res, next) => {
+  const postId = req.params[0];
+  const userAgent = req.headers['user-agent'] || '';
+  const isBot = /facebookexternalhit|twitterbot|bingbot|googlebot|slackbot|discordbot|telegrambot|whatsapp|metaexternalhit|linkedinbot|applebot|duckduckbot|baiduspider|yandexbot/i.test(userAgent);
+
+  if (!isBot) return next();
+
+  try {
+    const { data: post, error } = await supabase
+      .from('troll_wall_posts')
+      .select('id, content, media_url, created_at, user_profiles(username, display_name, avatar_url)')
+      .eq('id', postId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!post) {
+      return res.status(404).send('Post not found');
+    }
+
+    return res.status(200).send(profileSEO.generateWallPostSEOHTML(post, APP_URL));
+  } catch (error) {
+    console.error('[WallPostSEO] Error:', error);
+    return res.status(500).send('Error generating post preview');
+  }
+});
+
+app.get('/wall/:postId', (req, res, next) => {
+  const postId = req.params.postId;
+  const userAgent = req.headers['user-agent'] || '';
+  const isBot = /facebookexternalhit|twitterbot|bingbot|googlebot|slackbot|discordbot|telegrambot|whatsapp|metaexternalhit|linkedinbot|applebot|duckduckbot|baiduspider|yandexbot/i.test(userAgent);
+
+  if (isBot) {
+    return res.redirect(301, `/post/${encodeURIComponent(postId)}`);
+  }
+
+  return res.redirect(302, `/post/${encodeURIComponent(postId)}`);
+});
+
 // ============================================================================
 // STREAM SEO ENDPOINT (username/slug format)
 // Returns full HTML with OG/Twitter meta tags for stream URLs
@@ -314,8 +370,6 @@ app.get('/api/social/stream/:username/:slug', async (req, res) => {
 // ============================================================================
 // DYNAMIC SITEMAP
 // ============================================================================
-const { generateSitemap } = require('./api/sitemap');
-
 app.get('/sitemap-dynamic.xml', async (req, res) => {
   try {
     const sitemap = await generateSitemap(supabase);
@@ -778,11 +832,11 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})\/live\/([a-zA-Z0-9_-]+)$/, async (req, res, ne
   try {
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('id, username, display_name, avatar_url, is_banned')
+      .select('id, username, display_name, avatar_url, is_banned, account_state')
       .ilike('username', username)
       .maybeSingle();
 
-    if (!profile || profile.is_banned) {
+    if (!profile || profile.is_banned || ['suspended', 'banned'].includes(profile.account_state)) {
       const noindexHtml = `<!DOCTYPE html>
 <html><head><meta name="robots" content="noindex, nofollow">
 <title>Stream Not Available</title></head>

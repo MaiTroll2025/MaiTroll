@@ -108,6 +108,7 @@ import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore'
 import AuctionMePanel from '@/components/broadcast/AuctionMePanel'
 import SeatFocusButton from '@/components/broadcast/SeatFocusButton'
 import { useSeatFocus, type SeatInfo } from '@/hooks/useSeatFocus'
+import { recordSignalEventInBackground } from '@/lib/signalEngine'
 
 // Import theme constants
 import { MaiTrollBroadcastTheme } from '../../styles/broadcastTheme'
@@ -444,10 +445,9 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
        return
      }
 
-    let cancelled = false
-    let pollInterval: ReturnType<typeof setInterval> | null = null
+      let cancelled = false
 
-     const attachAndPlay = async () => {
+      const attachAndPlay = async () => {
        try {
          videoEl.autoplay = true
          videoEl.playsInline = true
@@ -1862,6 +1862,52 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
 const isActive = isStreamActive(stream)
    const hostId = (stream as any)?.user_id || ''
    const hostName = getDisplayName(broadcasterProfile, 'Broadcaster')
+
+   useEffect(() => {
+     if (!stream?.id || !isActive) return
+
+     const contentType = (stream as any)?.category === 'gaming' || (stream as any)?.stream_type === 'hytro'
+       ? 'hytrogame'
+       : 'broadcast'
+     const surface = contentType === 'hytrogame' ? 'hytrogames' : 'live_now'
+     const metadata = {
+       category: (stream as any)?.category,
+       stream_type: (stream as any)?.stream_type,
+     }
+
+     recordSignalEventInBackground({
+       eventType: 'impression',
+       contentType,
+       contentId: stream.id,
+       creatorId: hostId || null,
+       surface,
+       metadata,
+     })
+     recordSignalEventInBackground({
+       eventType: 'watch_start',
+       contentType,
+       contentId: stream.id,
+       creatorId: hostId || null,
+       surface,
+       metadata,
+     })
+
+     const startedAt = Date.now()
+     return () => {
+       const secondsViewed = Math.round((Date.now() - startedAt) / 1000)
+      if (secondsViewed >= 3 && secondsViewed < 30) {
+         recordSignalEventInBackground({
+           eventType: 'skip',
+           contentType,
+           contentId: stream.id,
+           creatorId: hostId || null,
+           surface,
+           value: secondsViewed,
+           metadata: { ...metadata, seconds_viewed: secondsViewed },
+         })
+       }
+     }
+   }, [hostId, isActive, stream?.category, stream?.id, stream?.stream_type])
    const { subscriberUsernames } = useSubscriberUsernames(hostId)
 
     const roomId = useMemo(() => {
@@ -2428,7 +2474,7 @@ const isActive = isStreamActive(stream)
     }, [hostName, profile?.username, pushFloatingSystemMessage])
 
    const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
-    if (!username) return
+     if (!username) return
 
      // For anonymous users: only mods/officers can click, open arrest dialog directly
      if (isAnonymousDisplayName(username)) {
@@ -2460,13 +2506,19 @@ const isActive = isStreamActive(stream)
          role: data.role || data.troll_role,
          createdAt: data.created_at,
        })
-    } catch (err) {
-      console.error('[ViewerPage] Error opening user action:', err)
-      toast.error('Failed to open user profile')
-    }
-  }, [isModOrHigher])
+     } catch (err) {
+       console.error('[ViewerPage] Error opening user action:', err)
+       toast.error('Failed to open user profile')
+     }
+   }, [isModOrHigher])
 
-  const handleSendChat = useCallback(async (text: string, floatTimeout = CHAT_FLOAT_MS) => {
+   const handleArrestUserFromPopup = useCallback((targetUserId: string, reason: string, severity: string, bailAmount: number) => {
+     setUserActionTarget(null)
+     setShowViewerAction(false)
+     toast.success('Arrest action completed.')
+   }, [])
+
+   const handleSendChat = useCallback(async (text: string, floatTimeout = CHAT_FLOAT_MS) => {
     if (!text.trim()) return
 
     if (hostChatDisabledByOfficer) {
@@ -3807,7 +3859,7 @@ useStreamRealtime(
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-black text-white">Subscription Active</p>
-                  <p className="mt-1 text-xs text-yellow-200/80">You're now subscribed to {subscriptionPopup.broadcaster}!</p>
+                   <p className="mt-1 text-xs text-yellow-200/80">You&apos;re now subscribed to {subscriptionPopup.broadcaster}!</p>
                 </div>
                 <button
                   onClick={dismissSubscriptionPopup}
@@ -5797,6 +5849,7 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
                   streamId={streamId || ''}
                   hostId={hostId}
                   currentUserId={user?.id}
+                  onArrestUser={handleArrestUserFromPopup}
                 />
               ) : showViewerAction ? (
                 <ViewerUserActionModal

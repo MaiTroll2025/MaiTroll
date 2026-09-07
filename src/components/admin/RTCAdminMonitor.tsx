@@ -656,35 +656,27 @@ const fetchRTCStats = useCallback(async () => {
     }
   }, [isStaff]);
 
-  const openUserList = useCallback(async (type: 'online' | 'all') => {
-    setUserListType(type);
+  const openUserList = useCallback(async () => {
+    setUserListType('all');
     setUserList([]);
     setUserListLoading(true);
-    setEditingUserId(null); // Clear any active edit
+    setEditingUserId(null);
     setEditUsernameValue('');
     try {
-      if (type === 'online') {
-        // Use onlineUserIds from the presence store (populated by GlobalPresenceTracker
-        // via Supabase Realtime Presence) instead of querying the user_presence DB table.
-        // The DB table is no longer written to by the presence tracker, so querying it
-        // returns stale/empty data even though onlineCount is correct.
-        const onlineUserIds = usePresenceStore.getState().onlineUserIds;
-        const userIds = Array.from(onlineUserIds);
-        if (userIds.length === 0) {
-          setUserList([]);
-          return;
-        }
-        const { data } = await supabase
-            .from('user_profiles')
-            .select('id, username, avatar_url, role, is_admin, walkie_talkie_page')
-            .in('id', userIds)
-            .limit(200);
+      const { data } = await supabase.from('user_profiles').select('id, username, avatar_url, role, is_admin, walkie_talkie_page').order('created_at', { ascending: false }).limit(200);
 
-        setUserList((data || []) as UserListItem[]);
-      } else {
-        const { data } = await supabase.from('user_profiles').select('id, username, avatar_url, role, is_admin, walkie_talkie_page').order('created_at', { ascending: false }).limit(200);
-        setUserList((data || []) as UserListItem[]);
-      }
+      const rows = (data || []) as UserListItem[];
+      const onlineUserIds = usePresenceStore.getState().onlineUserIds;
+      const onlineSet = new Set(onlineUserIds);
+
+      const sorted = rows.sort((a, b) => {
+        const aOnline = onlineSet.has(a.id) ? 1 : 0;
+        const bOnline = onlineSet.has(b.id) ? 1 : 0;
+        if (aOnline !== bOnline) return bOnline - aOnline;
+        return 0;
+      });
+
+      setUserList(sorted);
     } catch (err) {
       console.error('[RTC Monitor] Error fetching user list:', err);
     } finally {
@@ -2090,190 +2082,184 @@ const renderRtcTab = () => (
       ? userList.filter((user) => user.username.toLowerCase().includes(userSearch.trim().toLowerCase()))
       : userList;
 
-return (
-       <div className="space-y-3">
-         <div className="flex gap-2">
+    return (
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <button type="button" onClick={openUserList} disabled={userListLoading} className="flex items-center gap-2 rounded bg-slate-700 px-3 py-2 text-xs text-white hover:bg-slate-600 disabled:opacity-50">
+            <RefreshCw className={`h-3.5 w-3.5 ${userListLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
           <input
             type="text"
             value={userSearch}
             onChange={(e) => setUserSearch(e.target.value)}
-            placeholder="Search loaded users..."
+            placeholder="Search users..."
             className="flex-1 rounded border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
           />
-          <button type="button" onClick={() => openUserList('online')} className="rounded bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-500">
-            <Search className="h-4 w-4" />
-          </button>
         </div>
 
-        {!userListType ? (
-          <button type="button" onClick={() => openUserList('online')} className="w-full rounded-lg bg-white/5 p-4 text-center text-xs text-gray-400 hover:bg-white/10">
-            Load active users
-          </button>
-        ) : (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">Active Users ({filteredUsers.length})</span>
-              <button type="button" onClick={closeUserList} className="text-gray-500 hover:text-white"><X className="h-4 w-4" /></button>
-            </div>
-            <div className="max-h-56 space-y-1 overflow-y-auto">
-              {userListLoading ? (
-                <div className="py-4 text-center text-gray-500">Loading...</div>
-              ) : filteredUsers.length === 0 ? (
-                <div className="py-4 text-center text-gray-500">No users found</div>
-               ) : (
-                 filteredUsers.map((user) => (
-                    <div key={user.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-3 hover:bg-white/5 cursor-pointer" onClick={() => navigate(`/profile/id/${user.id}`)}>
-                     <div className="flex items-center justify-between gap-2">
-                       <div className="min-w-0 flex-1">
-                          {editingUserId === user.id ? (
-                            <div className="flex items-center gap-2">
-                               <input
-                                 type="text"
-                                 value={editUsernameValue}
-                                 onChange={(e) => setEditUsernameValue(e.target.value)}
-                                 onKeyDown={(e) => {
-                                   if (e.key === 'Enter') void handleUsernameSave(user.id, editUsernameValue);
-                                   if (e.key === 'Escape') setEditingUserId(null);
-                                 }}
-                                 autoFocus
-                                 className="flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-white"
-                                 placeholder="Enter new username"
-                               />
-                               <button
-                                 type="button"
-                                 onClick={() => void handleUsernameSave(user.id, editUsernameValue)}
-                                 disabled={usernameEditLoading || !editUsernameValue.trim()}
-                                 className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-500 disabled:opacity-50"
-                               >
-                                 {usernameEditLoading ? 'Saving...' : 'Save'}
-                               </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditingUserId(null)}
-                                className="rounded bg-slate-600 px-2 py-1 text-xs text-white hover:bg-slate-500"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="truncate font-medium text-white">@{user.username}</div>
-                              <div className="text-xs capitalize text-gray-400">{user.role || 'user'}</div>
-                              {user.walkie_talkie_page !== null && user.walkie_talkie_page !== undefined && user.walkie_talkie_page > 0 && (
-                                <div className="text-xs text-blue-400">WP#{user.walkie_talkie_page}</div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        <div className="relative flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openAction(user, 'warn');
-                            }}
-                            className="rounded bg-slate-600 p-1.5 text-yellow-400 hover:bg-slate-500 hover:text-yellow-300"
-                            title="Mod Actions"
-                          >
-                            <Shield className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const menuWidth = 144;
-                              const menuHeight = 260;
-                              const pad = 4;
-                              let top = rect.bottom;
-                              let left = rect.left;
-                              if (top + menuHeight + pad > window.innerHeight) {
-                                top = rect.top - menuHeight;
-                              }
-                              if (top < pad) {
-                                top = pad;
-                              }
-                              if (left + menuWidth + pad > window.innerWidth) {
-                                left = rect.right - menuWidth;
-                              }
-                              if (left < pad) {
-                                left = pad;
-                              }
-                              setDropdownRect({ top, left });
-                              setOpenDropdownUserId(openDropdownUserId === user.id ? null : user.id);
-                            }}
-                            className="dropdown-trigger-btn rounded bg-slate-600 p-1.5 text-white hover:bg-slate-500"
-                            title="Actions"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
-
-                          {openDropdownUserId === user.id && dropdownRect && createPortal(
-                            <div
-                              className="dropdown-menu-content fixed w-36 bg-slate-800 border border-slate-600 rounded-lg shadow-lg z-[10000] overflow-hidden"
-                              style={{ top: dropdownRect.top, left: dropdownRect.left }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {editingUserId !== user.id && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingUserId(user.id);
-                                    setEditUsernameValue(user.username);
-                                    setOpenDropdownUserId(null);
-                                    setDropdownRect(null);
-                                  }}
-                                  className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
-                                >
-                                  <span className="text-[10px]">✏️</span> Edit
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => { openAction(user, 'warn'); setOpenDropdownUserId(null); setDropdownRect(null); }}
-                                className="w-full px-3 py-2 text-left text-xs text-yellow-300 hover:bg-yellow-900/30 flex items-center gap-2"
-                              >
-                                <span className="text-[10px]">⚠️</span> Warn
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { openAction(user, 'mute'); setOpenDropdownUserId(null); setDropdownRect(null); }}
-                                className="w-full px-3 py-2 text-left text-xs text-orange-300 hover:bg-orange-900/30 flex items-center gap-2"
-                              >
-                                <span className="text-[10px]">🔇</span> Mute
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { openAction(user, 'kick'); setOpenDropdownUserId(null); setDropdownRect(null); }}
-                                className="w-full px-3 py-2 text-left text-xs text-red-300 hover:bg-red-900/30 flex items-center gap-2"
-                              >
-                                <span className="text-[10px]">🚪</span> Kick
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { openAction(user, 'ban'); setOpenDropdownUserId(null); setDropdownRect(null); }}
-                                className="w-full px-3 py-2 text-left text-xs text-purple-300 hover:bg-purple-900/30 flex items-center gap-2"
-                              >
-                                <span className="text-[10px]">🔨</span> Ban
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { openAction(user, 'arrest'); setOpenDropdownUserId(null); setDropdownRect(null); }}
-                                className="w-full px-3 py-2 text-left text-xs text-orange-300 hover:bg-orange-900/30 flex items-center gap-2"
-                              >
-                                <span className="text-[10px]">👮</span> Arrest
-                              </button>
-                            </div>,
-                            document.body
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                 ))
-               )}
-            </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-400">Users ({filteredUsers.length})</span>
           </div>
-        )}
+          <div className="space-y-1 overflow-y-auto">
+            {userListLoading ? (
+              <div className="py-4 text-center text-gray-500">Loading...</div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="py-4 text-center text-gray-500">No users found</div>
+            ) : (
+              filteredUsers.map((user) => (
+                <div key={user.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-3 hover:bg-white/5 cursor-pointer" onClick={() => navigate(`/profile/id/${user.id}`)}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                       {editingUserId === user.id ? (
+                         <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editUsernameValue}
+                              onChange={(e) => setEditUsernameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') void handleUsernameSave(user.id, editUsernameValue);
+                                if (e.key === 'Escape') setEditingUserId(null);
+                              }}
+                              autoFocus
+                              className="flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-white"
+                              placeholder="Enter new username"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => void handleUsernameSave(user.id, editUsernameValue)}
+                              disabled={usernameEditLoading || !editUsernameValue.trim()}
+                              className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-500 disabled:opacity-50"
+                            >
+                              {usernameEditLoading ? 'Saving...' : 'Save'}
+                            </button>
+                           <button
+                             type="button"
+                             onClick={() => setEditingUserId(null)}
+                             className="rounded bg-slate-600 px-2 py-1 text-xs text-white hover:bg-slate-500"
+                           >
+                             Cancel
+                           </button>
+                         </div>
+                       ) : (
+                         <>
+                           <div className="truncate font-medium text-white">@{user.username}</div>
+                           <div className="text-xs capitalize text-gray-400">{user.role || 'user'}</div>
+                           {user.walkie_talkie_page !== null && user.walkie_talkie_page !== undefined && user.walkie_talkie_page > 0 && (
+                             <div className="text-xs text-blue-400">WP#{user.walkie_talkie_page}</div>
+                           )}
+                         </>
+                       )}
+                     </div>
+                     <div className="relative flex items-center gap-1">
+                       <button
+                         type="button"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           openAction(user, 'warn');
+                         }}
+                         className="rounded bg-slate-600 p-1.5 text-yellow-400 hover:bg-slate-500 hover:text-yellow-300"
+                         title="Mod Actions"
+                       >
+                         <Shield className="h-4 w-4" />
+                       </button>
+                       <button
+                         type="button"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           const rect = e.currentTarget.getBoundingClientRect();
+                           const menuWidth = 144;
+                           const menuHeight = 260;
+                           const pad = 4;
+                           let top = rect.bottom;
+                           let left = rect.left;
+                           if (top + menuHeight + pad > window.innerHeight) {
+                             top = rect.top - menuHeight;
+                           }
+                           if (top < pad) {
+                             top = pad;
+                           }
+                           if (left + menuWidth + pad > window.innerWidth) {
+                             left = rect.right - menuWidth;
+                           }
+                           if (left < pad) {
+                             left = pad;
+                           }
+                           setDropdownRect({ top, left });
+                           setOpenDropdownUserId(openDropdownUserId === user.id ? null : user.id);
+                         }}
+                         className="dropdown-trigger-btn rounded bg-slate-600 p-1.5 text-white hover:bg-slate-500"
+                         title="Actions"
+                       >
+                         <MoreVertical className="h-4 w-4" />
+                       </button>
+
+                       {openDropdownUserId === user.id && dropdownRect && createPortal(
+                         <div
+                           className="dropdown-menu-content fixed w-36 bg-slate-800 border border-slate-600 rounded-lg shadow-lg z-[10000] overflow-hidden"
+                           style={{ top: dropdownRect.top, left: dropdownRect.left }}
+                           onClick={(e) => e.stopPropagation()}
+                         >
+                           {editingUserId !== user.id && (
+                             <button
+                               type="button"
+                               onClick={() => {
+                                 setEditingUserId(user.id);
+                                 setEditUsernameValue(user.username);
+                                 setOpenDropdownUserId(null);
+                                 setDropdownRect(null);
+                               }}
+                               className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
+                             >
+                               <span className="text-[10px]">✏️</span> Edit
+                             </button>
+                           )}
+                           <button
+                             type="button"
+                             onClick={() => { openAction(user, 'warn'); setOpenDropdownUserId(null); setDropdownRect(null); }}
+                             className="w-full px-3 py-2 text-left text-xs text-yellow-300 hover:bg-yellow-900/30 flex items-center gap-2"
+                           >
+                             <span className="text-[10px]">⚠️</span> Warn
+                           </button>
+                           <button
+                             type="button"
+                             onClick={() => { openAction(user, 'mute'); setOpenDropdownUserId(null); setDropdownRect(null); }}
+                             className="w-full px-3 py-2 text-left text-xs text-orange-300 hover:bg-orange-900/30 flex items-center gap-2"
+                           >
+                             <span className="text-[10px]">🔇</span> Mute
+                           </button>
+                           <button
+                             type="button"
+                             onClick={() => { openAction(user, 'kick'); setOpenDropdownUserId(null); setDropdownRect(null); }}
+                             className="w-full px-3 py-2 text-left text-xs text-red-300 hover:bg-red-900/30 flex items-center gap-2"
+                           >
+                             <span className="text-[10px]">🚪</span> Kick
+                           </button>
+                           <button
+                             type="button"
+                             onClick={() => { openAction(user, 'ban'); setOpenDropdownUserId(null); setDropdownRect(null); }}
+                             className="w-full px-3 py-2 text-left text-xs text-purple-300 hover:bg-purple-900/30 flex items-center gap-2"
+                           >
+                             <span className="text-[10px]">🔨</span> Ban
+                           </button>
+                           <button
+                             type="button"
+                             onClick={() => { openAction(user, 'arrest'); setOpenDropdownUserId(null); setDropdownRect(null); }}
+                             className="w-full px-3 py-2 text-left text-xs text-orange-300 hover:bg-orange-900/30 flex items-center gap-2"
+                           >
+                             <span className="text-[10px]">👮</span> Arrest
+                           </button>
+                         </div>,
+                         document.body
+                       )}
+                     </div>
+                   </div>
+                 </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     );
   };

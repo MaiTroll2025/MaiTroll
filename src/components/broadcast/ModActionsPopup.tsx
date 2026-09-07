@@ -29,6 +29,7 @@ import {
   rpcModoEndStream,
   rpcApplyTrollCoinPenalty,
 } from '../../types/moderationActions';
+import { recordAnonymousArrest } from '../../services/ipTracking';
 import { isProtectedPlatformRole } from '../../lib/protectedRoles';
 
 interface UserProfile {
@@ -398,6 +399,9 @@ const ModActionsPopup = memo(function ModActionsPopup({
       return;
     }
     if (!targetUserId || !arrestReason) return;
+
+    const isAnonTarget = targetUserId.startsWith('anon-')
+
     console.debug('[ModActions][DEBUG] Arrest clicked', {
       actorId: profile?.id,
       actorRole: profile?.role,
@@ -406,10 +410,35 @@ const ModActionsPopup = memo(function ModActionsPopup({
       targetUserId,
       targetUsername,
       streamId: effectiveStreamId,
+      isAnonTarget,
     });
+
     setIsArresting(true);
 
     try {
+      if (isAnonTarget) {
+        const anonName = targetUserId.replace('anon-', '')
+        const result = await recordAnonymousArrest({
+          anonDisplayName: anonName,
+          reason: arrestReason,
+          severity: arrestSeverity as 'minor' | 'moderate' | 'serious' | 'severe',
+          arrestedBy: profile.id,
+          durationMinutes: 60,
+        })
+
+        if (!result.success) {
+          toast.error(result.message || 'Failed to arrest anonymous viewer')
+          return
+        }
+
+        toast.success(`${targetUsername} has been arrested and their device has been restricted.`)
+        setShowArrestModal(false)
+        setArrestReason('')
+        setArrestSeverity('moderate')
+        onArrestUser?.(targetUserId, arrestReason, arrestSeverity, 100)
+        return
+      }
+
       const res = await rpcModoArrest(
         effectiveStreamId || '',
         targetUserId,
@@ -446,8 +475,8 @@ const ModActionsPopup = memo(function ModActionsPopup({
       return;
     }
     const amount = Math.floor(Number(trollCoinPenaltyAmount));
-    if (!targetUserId || amount <= 0 || !trollCoinPenaltyReason.trim()) {
-      toast.error('Enter a positive amount and violation reason');
+    if (!targetUserId || amount === 0 || !trollCoinPenaltyReason.trim()) {
+      toast.error(isActorAdmin ? 'Enter a non-zero amount and violation reason' : 'Enter a positive amount and violation reason');
       return;
     }
 
@@ -463,11 +492,13 @@ const ModActionsPopup = memo(function ModActionsPopup({
         profile.username,
         targetUsername,
       );
+      const isGrant = amount < 0;
+      const displayAmount = Math.abs(amount).toLocaleString();
       if (!res.success) {
         toast.error(res.message);
         return;
       }
-      toast.success(res.message || `${targetUsername} received a ${amount.toLocaleString()} Troll Coin penalty`);
+      toast.success(res.message || `${isGrant ? 'Granted' : 'Penalty applied to'} ${targetUsername}: ${isGrant ? '+' : '-'}${displayAmount} Troll Coins`);
       setShowTrollCoinPenaltyModal(false);
       setTrollCoinPenaltyReason('');
       setTrollCoinPenaltyCategory('Other');
@@ -1039,7 +1070,9 @@ const handleEndStream = async () => {
                   <h3 className="text-white font-semibold">Troll Coin Penalty</h3>
                 </div>
                 <p className="text-xs text-slate-400 mb-4">
-                  Deduct coins from {targetUsername} and send them to the Admin Donation pool.
+                  {isActorAdmin
+                    ? `Add or deduct coins for ${targetUsername}. Positive amounts deduct coins; negative amounts grant coins.`
+                    : `Deduct coins from ${targetUsername} and send them to the Admin Donation pool.`}
                 </p>
 
                 <div className="space-y-3">
@@ -1047,7 +1080,7 @@ const handleEndStream = async () => {
                     <label className="text-sm text-slate-400 block mb-1">Amount</label>
                     <input
                       type="number"
-                      min="1"
+                      min={isActorAdmin ? '' : '1'}
                       step="1"
                       value={trollCoinPenaltyAmount}
                       onChange={(e) => setTrollCoinPenaltyAmount(Number(e.target.value))}
@@ -1095,7 +1128,7 @@ const handleEndStream = async () => {
                     disabled={isApplyingTrollCoinPenalty}
                     className="flex-1 py-2 bg-amber-500 text-slate-950 rounded-lg text-sm font-semibold hover:bg-amber-400 disabled:opacity-50"
                   >
-                    {isApplyingTrollCoinPenalty ? 'Applying...' : 'Apply Penalty'}
+                    {isApplyingTrollCoinPenalty ? 'Applying...' : (isActorAdmin && trollCoinPenaltyAmount < 0 ? 'Grant Coins' : 'Apply Penalty')}
                   </button>
                 </div>
               </div>

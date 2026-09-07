@@ -143,7 +143,7 @@ function injectSocialMetaTags(stream: Stream | null, broadcaster: BroadcasterMet
   const title = `${broadcasterName} is ${statusText} on MaiTroll`
   const description = stream.title || 'Watch this live broadcast on MaiTroll'
 
-  const canonicalUrl = `${APP_URL}/live/${encodeURIComponent(broadcasterName)}`
+  const canonicalUrl = `${APP_URL}${currentPath || `/live/${encodeURIComponent(broadcasterName)}`}`
 
   const previewImage =
     (stream as any).thumbnail_url ||
@@ -272,7 +272,8 @@ function injectSafeMetaForPrivateStream(streamId: string, isPrivate: boolean) {
  * - Do not remount BroadcastPage when profile realtime updates.
  */
 function BroadcastRouter() {
-  const params = useParams<{ id?: string; streamId?: string; username?: string }>()
+  const params = useParams<{ id?: string; streamId?: string; username?: string; slug?: string }>()
+  const streamSlug = params.slug
   const streamId = params.id || params.streamId || params.username
   const navigate = useNavigate()
   const location = useLocation()
@@ -370,7 +371,29 @@ function BroadcastRouter() {
       let broadcasterData: BroadcasterMeta | null = null
 
       try {
-        if (isUUID) {
+        if (streamSlug && params.username) {
+          const { data: userData, error: userError } = await supabase
+            .from('user_profiles')
+            .select('id, username, avatar_url, thumbnail_url')
+            .eq('username', params.username)
+            .maybeSingle()
+
+          if (!userError && userData) {
+            broadcasterData = userData as BroadcasterMeta
+
+            const { data: streamBySlug, error: streamBySlugError } = await supabase
+              .from('streams')
+              .select('*')
+              .eq('user_id', userData.id)
+              .eq('slug', streamSlug)
+              .eq('is_public', true)
+              .maybeSingle()
+
+            if (!streamBySlugError && streamBySlug) {
+              streamData = streamBySlug as Stream
+            }
+          }
+        } else if (isUUID) {
           const { data, error: fetchError } = await supabase
             .from('streams')
             .select('*')

@@ -11,6 +11,8 @@ import {
 import { handleConcurrentLogin, resetConcurrentLoginCheck } from './sessionUtils'
 import { generateUUID } from './uuid'
 import { globalRequestScheduler } from './requestScheduler'
+import { toast } from 'sonner'
+import { isDevBypassEnabled } from '../services/ipTracking'
 
 /**
  * Mai Troll Auth Store
@@ -819,11 +821,32 @@ setProfile: (profile, options = {}) => {
       },
 
       logout: async () => {
-        setLogoutRequested()
-
         const currentState = get()
         const userId = currentState.user?.id
         const sessionId = currentState.sessionId
+
+        if (userId && !isDevBypassEnabled()) {
+          try {
+            const { data: jailRecord } = await supabase
+              .from('jail')
+              .select('id, release_time')
+              .eq('user_id', userId)
+              .eq('status', 'jailed')
+              .maybeSingle()
+
+            if (jailRecord) {
+              const releaseTime = new Date(jailRecord.release_time)
+              if (releaseTime > new Date()) {
+                toast.error('You cannot log out while detained. Your sentence must be served or posted via bond.')
+                return
+              }
+            }
+          } catch (err) {
+            console.warn('[authStore] Jail check during logout failed:', err)
+          }
+        }
+
+        setLogoutRequested()
 
         cleanupProfileRealtime()
 

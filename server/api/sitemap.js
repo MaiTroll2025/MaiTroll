@@ -32,6 +32,8 @@ async function generateSitemap(supabase) {
     { loc: `${APP_URL}/new-creators`, priority: 0.8, changefreq: 'daily' },
     { loc: `${APP_URL}/auctions`, priority: 0.8, changefreq: 'daily' },
     { loc: `${APP_URL}/marketplace`, priority: 0.8, changefreq: 'daily' },
+    { loc: `${APP_URL}/mai-record-label`, priority: 0.8, changefreq: 'weekly' },
+    { loc: `${APP_URL}/mai-piks`, priority: 0.8, changefreq: 'daily' },
     { loc: `${APP_URL}/hytrogaming`, priority: 0.8, changefreq: 'daily' },
     { loc: `${APP_URL}/podcast`, priority: 0.7, changefreq: 'daily' },
     { loc: `${APP_URL}/troll-wheel`, priority: 0.7, changefreq: 'daily' },
@@ -90,7 +92,7 @@ async function generateSitemap(supabase) {
     try {
       const { data: streams, error: streamError } = await supabase
         .from('streams')
-        .select('id, slug, status, updated_at, user_profiles!streams_broadcaster_id_fkey(username)')
+        .select('id, slug, status, updated_at, user_profiles!streams_broadcaster_id_fkey(username, is_banned, account_state)')
         .eq('is_public', true)
         .not('status', 'eq', 'deleted')
         .not('slug', 'is', null)
@@ -99,7 +101,7 @@ async function generateSitemap(supabase) {
       if (!streamError && streams) {
         for (const stream of streams) {
           const username = stream.user_profiles?.username;
-          if (!username) continue;
+          if (!username || stream.user_profiles?.is_banned || ['suspended', 'banned'].includes(stream.user_profiles?.account_state)) continue;
 
           const lastmod = stream.updated_at
             ? new Date(stream.updated_at).toISOString().split('T')[0]

@@ -11,6 +11,7 @@ import ClickableUsername from '../components/ClickableUsername'
 import { useAuthStore } from '../lib/store'
 import { parseTextWithLinks } from '../lib/utils'
 import WallShareModal from '../components/trollWall/WallShareModal'
+import useSEO from '../hooks/useSEO'
 
 export default function WallPostPage() {
   const { postId } = useParams<{ postId: string }>()
@@ -20,6 +21,36 @@ export default function WallPostPage() {
   const [loading, setLoading] = useState(true)
   const [showShareModal, setShowShareModal] = useState(false)
   const [streamStatus, setStreamStatus] = useState<'live' | 'ended' | 'unknown' | null>(null)
+  const streamId = post?.metadata?.stream_id
+
+  const postAuthor = post?.username || 'MaiTroll community member'
+  const postSnippet = post?.content?.replace(/\s+/g, ' ').trim() || 'A public community post on MaiTroll.'
+  const postDescription = postSnippet.length > 155 ? `${postSnippet.slice(0, 152)}...` : postSnippet
+  const postCanonical = postId ? `https://www.maitroll.com/post/${encodeURIComponent(postId)}` : 'https://www.maitroll.com/wall'
+
+  useSEO({
+    title: post ? `${postAuthor} on MaiTroll | ${postDescription.slice(0, 60)}` : 'Community Post | MaiTroll',
+    description: postDescription,
+    canonical: postCanonical,
+    robots: post ? 'index, follow' : 'noindex, nofollow',
+    ogType: 'article',
+    author: postAuthor,
+    publishedTime: post?.created_at,
+    structuredData: post ? {
+      '@context': 'https://schema.org',
+      '@type': 'SocialMediaPosting',
+      headline: postDescription,
+      description: postDescription,
+      url: postCanonical,
+      datePublished: post.created_at,
+      text: postSnippet,
+      author: {
+        '@type': 'Person',
+        name: postAuthor,
+        url: post.username ? `https://www.maitroll.com/profile/${encodeURIComponent(post.username)}` : 'https://www.maitroll.com/',
+      },
+    } : undefined,
+  })
 
   useEffect(() => {
     const loadPost = async () => {
@@ -73,7 +104,7 @@ export default function WallPostPage() {
 
   // Check stream status when post has a stream_id
   useEffect(() => {
-    if (!post?.metadata?.stream_id) {
+    if (!streamId) {
       setStreamStatus(null)
       return
     }
@@ -82,7 +113,7 @@ export default function WallPostPage() {
         const { data } = await supabase
           .from('streams')
           .select('status, ended_at')
-          .eq('id', post.metadata!.stream_id)
+          .eq('id', streamId)
           .maybeSingle()
         if (data) {
           setStreamStatus(data.status === 'ended' ? 'ended' : 'live')
@@ -94,7 +125,7 @@ export default function WallPostPage() {
       }
     }
     checkStreamStatus()
-  }, [post?.metadata?.stream_id])
+  }, [streamId])
 
   const getPostIcon = (type: WallPostType) => {
     switch (type) {

@@ -21,6 +21,7 @@ import StreamSwipeCard from '../components/broadcast/StreamSwipeCard';
 import BattleSwipeCard from '../components/broadcast/BattleSwipeCard';
 import StreamStackIndicator from '../components/broadcast/StreamStackIndicator';
 import useSEO from '@/hooks/useSEO';
+import { recordSignalEventInBackground } from '@/lib/signalEngine';
 
 // Category types for the swipe interface
 export type SwipeCategory = 'battle' | 'top' | 'podcast' | 'gaming';
@@ -324,6 +325,51 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
   // Get current stream
   const currentStream = streams[currentIndex];
   const isBattleStream = currentStream?.is_battle || currentStream?.category === 'trollmers';
+
+  useEffect(() => {
+    if (!currentStream?.id) return;
+
+    const contentType = currentStream.stream_type === 'podcast'
+      ? 'podcast'
+      : currentStream.category === 'gaming'
+        ? 'hytrogame'
+        : 'broadcast';
+    const surface = contentType === 'hytrogame' ? 'hytrogames' : contentType === 'podcast' ? 'podcast' : 'live_now';
+    const metadata = { category: currentStream.category, stream_type: currentStream.stream_type };
+
+    recordSignalEventInBackground({
+      eventType: 'impression',
+      contentType,
+      contentId: currentStream.id,
+      creatorId: currentStream.user_id,
+      surface,
+      metadata,
+    });
+    recordSignalEventInBackground({
+      eventType: contentType === 'podcast' ? 'listen_start' : 'watch_start',
+      contentType,
+      contentId: currentStream.id,
+      creatorId: currentStream.user_id,
+      surface,
+      metadata,
+    });
+
+    const startedAt = Date.now();
+    return () => {
+      const secondsViewed = Math.round((Date.now() - startedAt) / 1000);
+      if (secondsViewed >= 3 && secondsViewed < 30) {
+        recordSignalEventInBackground({
+          eventType: 'skip',
+          contentType,
+          contentId: currentStream.id,
+          creatorId: currentStream.user_id,
+          surface,
+          value: secondsViewed,
+          metadata: { ...metadata, seconds_viewed: secondsViewed },
+        });
+      }
+    };
+  }, [currentStream]);
   
   // Loading state
   if (loading && streams.length === 0) {

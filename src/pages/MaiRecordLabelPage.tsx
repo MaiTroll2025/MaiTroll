@@ -24,6 +24,7 @@ import { usePresenceStore } from '@/lib/presenceStore'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import * as recordLabelService from '@/services/maiRecordLabel'
+import useSEO from '@/hooks/useSEO'
 
 type ArtistProfile = {
   id: string
@@ -67,6 +68,21 @@ export default function MaiRecordLabelPage() {
   const navigate = useNavigate()
   const onlineCount = usePresenceStore((state) => state.onlineCount)
   const { user, profile, isAdmin } = useAuthStore()
+
+  useSEO({
+    title: 'MAI Record Label | Discover Artists and Music',
+    description: 'Discover emerging artists, new music, and releases from the MAI Record Label community on MaiTroll.',
+    keywords: ['MAI Record Label', 'MaiTroll music', 'independent artists', 'new music'],
+    canonical: 'https://www.maitroll.com/mai-record-label',
+    robots: 'index, follow',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'MusicGroup',
+      name: 'MAI Record Label',
+      url: 'https://www.maitroll.com/mai-record-label',
+      description: 'Discover emerging artists and music from the MAI Record Label community on MaiTroll.',
+    },
+  })
 
   const [loading, setLoading] = useState(true)
   const [newArtists, setNewArtists] = useState<ArtistProfile[]>([])

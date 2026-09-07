@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { moderation } from '@/services/maitrollModeration';
 import { jailAttorneyService, type JailRequest } from '@/services/jailAttorneyService';
 import { toast } from 'sonner';
+import { COIN_PACKAGES } from '@/lib/coinMath';
+import PayPalPaymentModal from '@/components/broadcast/PayPalPaymentModal';
 import {
   Shield,
   Lock,
@@ -33,11 +35,14 @@ type ContactType = 'attorney' | 'admin';
 export default function JailPage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isAnonymousArrest = searchParams.get('anon') === '1';
 
   const [jailState, setJailState] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [postingBond, setPostingBond] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [coinPurchaseOpen, setCoinPurchaseOpen] = useState(false);
 
   const [contactType, setContactType] = useState<ContactType | null>(null);
   const [message, setMessage] = useState('');
@@ -53,6 +58,13 @@ export default function JailPage() {
   const [adminRequest, setAdminRequest] = useState<JailRequest | null>(null);
   const [hasAttorneyAccess, setHasAttorneyAccess] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAnonymousArrest && !user) {
+      setLoading(false)
+      return
+    }
+  }, [isAnonymousArrest, user])
 
   const loadJailState = useCallback(async () => {
     if (!user) return;
@@ -249,6 +261,12 @@ export default function JailPage() {
       setPostingBond(false);
     }
   };
+
+  const handleCoinPurchaseSuccess = useCallback(async () => {
+    setCoinPurchaseOpen(false);
+    await loadWalletBalance();
+    toast.success('Coins added. You can now post bond.');
+  }, [loadWalletBalance]);
 
   /*
    * ============================================================
@@ -464,6 +482,12 @@ export default function JailPage() {
           ? 'Message sent to Attorney Services.'
           : 'Message sent to Administration.'
       );
+
+      if (contactType === 'admin') {
+        void notifyAdminsOfMessage(user.id, trimmed);
+      } else if (contactType === 'attorney') {
+        void notifyAttorneysOfMessage(user.id, trimmed);
+      }
     } catch (err: any) {
       console.error(err);
       toast.error(
@@ -471,6 +495,180 @@ export default function JailPage() {
       );
     } finally {
       setSendingMessage(false);
+    }
+  };
+
+  const notifyAttorneysOfMessage = async (senderId: string, messageBody: string) => {
+    try {
+      const { data: attorneys } = await supabase
+        .from('user_profiles')
+        .select('id, utromail_address')
+        .or('is_attorney.eq.true,role.eq.attorney')
+        .limit(50);
+
+      if (!attorneys || attorneys.length === 0) return;
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('username, display_name')
+        .eq('id', senderId)
+        .maybeSingle();
+
+      const inmateName = profile?.display_name || profile?.username || 'An inmate';
+      const subject = `Jail Message from ${inmateName}`;
+
+      for (const attorney of attorneys) {
+        try {
+          let existingThread: string | null = null
+          try {
+            const result = await supabase.rpc('find_utromail_thread', { user_a: senderId, user_b: attorney.id })
+            existingThread = result.data
+          } catch {
+            // RPC may not exist
+          }
+
+          let threadId = existingThread
+
+          if (!threadId) {
+            const { data: newThread, error: threadError } = await supabase
+              .from('utromail_threads')
+              .insert({ subject, created_by: senderId })
+              .select('id')
+              .single();
+
+            if (threadError) throw threadError;
+            threadId = newThread.id;
+
+            const memberRows = [
+              { thread_id: threadId, user_id: senderId, folder: 'sent' },
+              { thread_id: threadId, user_id: senderId, folder: 'inbox' },
+              { thread_id: threadId, user_id: attorney.id, folder: 'inbox' },
+            ];
+
+            await supabase
+              .from('utromail_thread_members')
+              .upsert(memberRows, { onConflict: 'thread_id,user_id,folder', ignoreDuplicates: true });
+          }
+
+          const { data: message, error: msgError } = await supabase
+            .from('utromail_messages')
+            .insert({
+              thread_id: threadId,
+              sender_id: senderId,
+              sender_mail_address: 'inmate@tromail.mai',
+              recipient_id: attorney.id,
+              recipient_mail_address: attorney.utromail_address || 'attorney@tromail',
+              subject,
+              body: messageBody,
+              message_type: 'government',
+            })
+            .select()
+            .single();
+
+          if (msgError) throw msgError;
+
+          try {
+            await supabase.from('utromail_notifications').insert({
+              user_id: attorney.id,
+              message_id: message.id,
+              notification_type: 'government_mail',
+            });
+          } catch (notifErr) {
+            console.warn('[JailPage] Attorney notification failed:', notifErr);
+          }
+        } catch (e) {
+          console.error('Failed to send attorney notification:', e);
+        }
+      }
+    } catch (err) {
+      console.error('Error notifying attorneys:', err);
+    }
+  };
+
+  const notifyAdminsOfMessage = async (senderId: string, messageBody: string) => {
+    try {
+      const { data: admins } = await supabase
+        .from('user_profiles')
+        .select('id, utromail_address')
+        .or('is_admin.eq.true,role.eq.admin,role.eq.superadmin,role.eq.ceo,role.eq.secretary,role.eq.lead_troll_officer,role.eq.troll_officer,role.eq.prosecutor')
+        .limit(50);
+
+      if (!admins || admins.length === 0) return;
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('username, display_name')
+        .eq('id', senderId)
+        .maybeSingle();
+
+      const inmateName = profile?.display_name || profile?.username || 'An inmate';
+      const subject = `Jail Message from ${inmateName}`;
+
+      for (const admin of admins) {
+        try {
+          let existingThread: string | null = null
+          try {
+            const result = await supabase.rpc('find_utromail_thread', { user_a: senderId, user_b: admin.id })
+            existingThread = result.data
+          } catch {
+            // RPC may not exist
+          }
+
+          let threadId = existingThread
+
+          if (!threadId) {
+            const { data: newThread, error: threadError } = await supabase
+              .from('utromail_threads')
+              .insert({ subject, created_by: senderId })
+              .select('id')
+              .single();
+
+            if (threadError) throw threadError;
+            threadId = newThread.id;
+
+            const memberRows = [
+              { thread_id: threadId, user_id: senderId, folder: 'sent' },
+              { thread_id: threadId, user_id: senderId, folder: 'inbox' },
+              { thread_id: threadId, user_id: admin.id, folder: 'inbox' },
+            ];
+
+            await supabase
+              .from('utromail_thread_members')
+              .upsert(memberRows, { onConflict: 'thread_id,user_id,folder', ignoreDuplicates: true });
+          }
+
+          const { data: message, error: msgError } = await supabase
+            .from('utromail_messages')
+            .insert({
+              thread_id: threadId,
+              sender_id: senderId,
+              sender_mail_address: 'inmate@tromail.mai',
+              recipient_id: admin.id,
+              recipient_mail_address: admin.utromail_address || 'admin@tromail',
+              subject,
+              body: messageBody,
+              message_type: 'government',
+            })
+            .select()
+            .single();
+
+          if (msgError) throw msgError;
+
+          try {
+            await supabase.from('utromail_notifications').insert({
+              user_id: admin.id,
+              message_id: message.id,
+              notification_type: 'government_mail',
+            });
+          } catch (notifErr) {
+            console.warn('[JailPage] Admin notification failed:', notifErr);
+          }
+        } catch (e) {
+          console.error('Failed to send admin notification:', e);
+        }
+      }
+    } catch (err) {
+      console.error('Error notifying admins:', err);
     }
   };
 
@@ -497,6 +695,22 @@ export default function JailPage() {
 
   const canAffordBond =
     walletBalance >= (jailState?.bondAmount || 0);
+
+  const bondShortfall = Math.max(0, (jailState?.bondAmount || 0) - walletBalance);
+  const bondCoinPackage = useMemo(
+    () => COIN_PACKAGES.find((pkg) => pkg.coins >= bondShortfall) || COIN_PACKAGES[COIN_PACKAGES.length - 1],
+    [bondShortfall],
+  );
+  const paymentPackage = useMemo(
+    () => bondCoinPackage
+      ? {
+          ...bondCoinPackage,
+          price: bondCoinPackage.usdPrice,
+          price_usd: bondCoinPackage.usdPrice,
+        }
+      : null,
+    [bondCoinPackage],
+  );
 
   const canAffordAttorneyQuote =
     walletBalance >= (attorneyRequest?.quoteAmount || 0);
@@ -534,7 +748,7 @@ export default function JailPage() {
    * ============================================================
    */
 
-  if (loading) {
+  if (loading && !isAnonymousArrest) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
         <div className="text-center">
@@ -546,6 +760,75 @@ export default function JailPage() {
             Mai Troll Corrections
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (isAnonymousArrest) {
+    return (
+      <div className="fixed inset-0 z-[99999] overflow-y-auto bg-[#060606] text-white">
+        <header className="sticky top-0 z-50 border-b border-red-900/40 bg-black/95 backdrop-blur">
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-red-950 border border-red-800 flex items-center justify-center">
+                <Ban className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h1 className="text-sm font-black text-red-400 uppercase tracking-wider">
+                  Device Restricted
+                </h1>
+                <p className="text-xs text-slate-500">
+                  Anonymous Viewer Detention
+                </p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-3xl mx-auto px-4 py-10">
+          <div className="bg-slate-900 border-2 border-red-900/60 rounded-2xl p-8 md:p-12 text-center shadow-2xl">
+            <Ban className="w-20 h-20 text-red-500 mx-auto mb-6" />
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+              DEVICE RESTRICTED
+            </h2>
+            <p className="text-slate-400 text-lg mb-2">
+              Your device has been restricted from accessing Troll City.
+            </p>
+            <p className="text-slate-500 text-sm mb-8 max-w-lg mx-auto">
+              This restriction is tied to your device&apos;s IP address. Creating a new account or clearing your storage will not remove this restriction.
+            </p>
+
+            <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-6 mb-8">
+              <h3 className="text-red-400 font-bold text-sm uppercase tracking-wider mb-3">
+                Why am I seeing this?
+              </h3>
+              <ul className="text-slate-400 text-sm text-left space-y-2 max-w-md mx-auto">
+                <li>• Your IP address was flagged for violating platform rules</li>
+                <li>• This restriction applies to all accounts accessed from this device</li>
+                <li>• The restriction will automatically expire after the sentence period</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => navigate('/auth')}
+                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm font-semibold transition-colors"
+              >
+                Try to Sign Up
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-red-900/30 hover:bg-red-900/50 border border-red-800 rounded-lg text-sm font-semibold text-red-300 transition-colors"
+              >
+                Refresh Page
+              </button>
+            </div>
+
+            <p className="text-slate-600 text-xs mt-6">
+              If you believe this is an error, please contact support.
+            </p>
+          </div>
+        </main>
       </div>
     );
   }
@@ -932,9 +1215,28 @@ export default function JailPage() {
                 </div>
 
                 {!canAffordBond && (
-                  <div className="mt-4 flex items-center gap-2 text-red-400 text-sm font-bold">
-                    <UserX className="w-4 h-4" />
-                    Insufficient Troll Coins
+                  <div className="mt-4 border border-amber-700/50 bg-amber-950/20 p-4">
+                    <div className="flex items-center gap-2 text-amber-300 text-sm font-bold">
+                      <UserX className="w-4 h-4" />
+                      You need {bondShortfall.toLocaleString()} more Troll Coins to post bond.
+                    </div>
+                    {bondCoinPackage && (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs text-slate-300 font-bold">Suggested package: {bondCoinPackage.label}</p>
+                          <p className="text-xs text-slate-500">
+                            {bondCoinPackage.coins.toLocaleString()} TC for ${bondCoinPackage.usdPrice.toFixed(2)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCoinPurchaseOpen(true)}
+                          className="px-4 py-2 bg-amber-700 hover:bg-amber-600 border border-amber-500 text-white font-black text-xs uppercase tracking-wider transition-colors"
+                        >
+                          Buy Coins to Post Bond
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -951,6 +1253,17 @@ export default function JailPage() {
               </div>
             </div>
           </section>
+        )}
+
+        {coinPurchaseOpen && paymentPackage && user?.id && (
+          <PayPalPaymentModal
+            isOpen={coinPurchaseOpen}
+            onClose={() => setCoinPurchaseOpen(false)}
+            pkg={paymentPackage}
+            userId={user.id}
+            profile={user}
+            onPaymentSuccess={handleCoinPurchaseSuccess}
+          />
         )}
 
         {/* ====================================================

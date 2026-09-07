@@ -11,6 +11,7 @@ import PhoneStore from './pages/PhoneStore'
 import PhoneProfile from './pages/PhoneProfile'
 import PhonePodcast from './pages/PhonePodcast'
 import PhoneHytroGameStreams from './pages/PhoneHytroGameStreams'
+import PhoneHytroGameViewer from './pages/PhoneHytroGameViewer'
 import PhoneViewerPage from './pages/PhoneViewerPage'
 import PhoneWebPage from './pages/PhoneWebPage'
 import MKeyInvitePopup from '../components/broadcast/mkey/MKeyInvitePopup'
@@ -195,6 +196,7 @@ export default function PhoneApp() {
             <Route path="/following/:username" element={<PhoneFollowing />} />
             <Route path="/podcast" element={<PhonePodcast />} />
             <Route path="/hytro" element={<PhoneHytroGameStreams />} />
+            <Route path="/gaming/watch/:streamId" element={<PhoneHytroGameViewer />} />
             <Route path="/viewer" element={<PhoneViewerPage />} />
             <Route path="/treelz" element={<PhoneTreelz />} />
             <Route path="/utromail" element={<PhoneChat />} />

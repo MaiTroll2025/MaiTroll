@@ -10,6 +10,7 @@ const TreelzUploadPage = lazyWithRetry(() => import("./pages/TreelzUploadPage"))
 import { useAuthStore } from "./lib/store";
 const MaiSingOffPage = lazyWithRetry(() => import("./features/mai-sing-off/pages/MaiSingOffPage"));
 const MaiRecordLabelPage = lazyWithRetry(() => import("./pages/MaiRecordLabelPage"));
+const MaiPiksPage = lazyWithRetry(() => import("./pages/MaiPiksPage"));
 const MaiRecordLabelApplyPage = lazyWithRetry(() => import("./pages/mai-record-label/MaiRecordLabelApplyPage"));
 const ArtistDashboardPage = lazyWithRetry(() => import("./pages/artist/ArtistDashboardPage"));
 const ArtistContractPage = lazyWithRetry(() => import("./pages/artist/ArtistContractPage"));
@@ -61,10 +62,22 @@ import { PageVisibilityProvider } from "./contexts/PageVisibilityContext";
 import { LiveContentProvider } from "./contexts/LiveContentContext";
 import TabSwitchHandler from "./components/TabSwitchHandler";
 import { initTelemetry } from "./lib/telemetry";
+import {
+  getCurrentIP,
+  isIPBlocked,
+  isDevBypassEnabled,
+  storeAnonymousIP,
+  storeAnonymousName,
+  trackAnonymousViewer,
+  recordAnonymousArrest,
+} from "./services/ipTracking";
 import GlobalPresenceTracker from "./components/GlobalPresenceTracker";
 import ChatBubble from "./components/ChatBubble";
 import IdleSessionPrompt from "./components/IdleSessionPrompt";
 import { useChatStore } from "./lib/chatStore";
+import {
+  getAnonymousDisplayName,
+} from './lib/anonymousIdentity';
 import { useUserPresenceRoute } from "./hooks/useUserPresenceRoute";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { reportBug } from "./lib/bugReporter";
@@ -96,6 +109,7 @@ const CreateAgencyPage = lazyWithRetry(() => import("./pages/agencies/CreateAgen
 const AgencyProfilePage = lazyWithRetry(() => import("./pages/agency/[agencyId]"));
 const AgencyApplyPage = lazyWithRetry(() => import("./pages/agency-apply/[agencyId]"));
 const AgencyDashboard = lazyWithRetry(() => import("./pages/agency-dashboard"));
+const HytroGaming = lazyWithRetry(() => import("./pages/gaming/HytroGaming"));
 const HytroGamingApply = lazyWithRetry(() => import("./pages/gaming/HytroGamingApply"));
 const HytroGamingContract = lazyWithRetry(() => import("./pages/gaming/HytroGamingContract"));
 const AgencyHRDashboard = lazyWithRetry(() => import("./pages/agency-hr-dashboard"));
@@ -160,7 +174,6 @@ const CourtViewerPage = lazyWithRetry(() => import("./pages/CourtViewerPage"));
 const Call = lazyWithRetry(() => import("./pages/Call"));
 const InterviewPage = lazyWithRetry(() => import("./pages/InterviewPage"));
 const Notifications = lazyWithRetry(() => import("./pages/Notifications"));
-const HytroGaming = lazyWithRetry(() => import("./pages/gaming/HytroGaming"));
 const HytroGamingViewer = lazyWithRetry(() => import("./pages/gaming/HytroGamingViewer"));
 const Trollifications = lazyWithRetry(() => import("./pages/Trollifications"));
 const Trollifieds = lazyWithRetry(() => import("./pages/Trollifieds"));
@@ -599,6 +612,7 @@ const AudioSettings = lazyWithRetry(() => import("./pages/live/AudioSettings.js"
 const TrollCourt = lazyWithRetry(() => import("./pages/TrollCourt.js"));
 const AuctionsPage = lazyWithRetry(() => import("./pages/AuctionsPage.js"));
 const SearchPage = lazyWithRetry(() => import("./pages/SearchPage.tsx"));
+const Marketplace = lazyWithRetry(() => import("./pages/Marketplace.js"));
 const PodcastCentral = lazyWithRetry(() => import("./pages/PodcastCentral.js"));
 const PodcastRoom = lazyWithRetry(() => import("./pages/PodcastRoom.js"));
 const AuctionStudio = lazyWithRetry(() => import("./pages/auction/AuctionStudio.js"));
@@ -1202,7 +1216,7 @@ function AppContent() {
     };
   }, [user?.id, profile, navigate]);
 
-  // 🔹 Track user IP address and check for IP bans
+  // 🔹 Track user IP address and check for IP bans / anonymous arrests
   useEffect(() => {
     const controller = new AbortController()
 
@@ -1210,7 +1224,6 @@ function AppContent() {
       if (!userId) return
 
       try {
-        // Get user's IP address with timeout
         const ipResponse = await fetch('https://api.ipify.org?format=json', {
             signal: controller.signal
         })
@@ -1219,36 +1232,30 @@ function AppContent() {
 
         if (controller.signal.aborted) return
 
-        // Check if IP is banned
-        const { data: isBanned, error: banError } = await supabase.rpc('is_ip_banned', {
-          p_ip_address: userIP
-        })
+        const blocked = await isIPBlocked(userIP)
 
-        if (banError) {
-          // Ignore abort/timeout errors from Supabase
-          if (
-            banError.message?.includes('AbortError') || 
-            banError.details?.includes('AbortError') ||
-            banError.message?.includes('timeout')
-          ) {
+        if (blocked) {
+          if (controller.signal.aborted) return
+          toast.error('Your IP address has been restricted. Access denied.')
+
+          const arrestResult = await recordAnonymousArrest({
+            ipAddress: userIP,
+            reason: 'Auto-arrest: Restricted IP attempted login',
+            severity: 'severe',
+            durationMinutes: 60 * 24,
+          })
+
+          if (arrestResult.success) {
+            navigate('/jail', { replace: true })
             return
           }
-          console.error('Error checking IP ban:', banError)
-          return
-        }
 
-        if (isBanned) {
-          if (controller.signal.aborted) return
-          toast.error('Your IP address has been banned. Please contact support.')
-          // Sign out user (defensive)
           try {
             const { data: sessionData } = await supabase.auth.getSession()
             const hasSession = !!sessionData?.session
             if (hasSession) {
               const { error } = await supabase.auth.signOut()
               if (error) console.warn('supabase.signOut returned error:', error)
-            } else {
-              console.debug('No active session; skipping supabase.auth.signOut()')
             }
           } catch (innerErr) {
             console.warn('Error during sign-out (ignored):', innerErr)
@@ -1274,8 +1281,7 @@ function AppContent() {
           timestamp: new Date().toISOString()
         }
 
-        // Add to history if not already present
-        const updatedHistory = [...ipHistory, newIPEntry].slice(-10) // Keep last 10 IPs
+        const updatedHistory = [...ipHistory, newIPEntry].slice(-10)
 
         await supabase
           .from('user_profiles')
@@ -1285,7 +1291,6 @@ function AppContent() {
           })
           .eq('id', userId)
       } catch (error: any) {
-        // Ignore abort errors
         if (error.name === 'AbortError' || error.message?.includes('AbortError')) return
         console.error('Error tracking IP:', error)
       }
@@ -1297,6 +1302,52 @@ function AppContent() {
 
     return () => {
         controller.abort()
+    }
+  }, [userId, navigate])
+
+  // 🔹 Anonymous viewer IP block check — runs when no user is logged in
+  useEffect(() => {
+    if (userId) return
+    if (isDevBypassEnabled()) return
+
+    let cancelled = false
+    let intervalId: ReturnType<typeof setInterval> | null = null
+
+    const checkAnonIP = async () => {
+      try {
+        const ip = await getCurrentIP()
+        if (!ip || cancelled) return
+
+        storeAnonymousIP(ip)
+
+        const anonName = getAnonymousDisplayName()
+        storeAnonymousName(anonName)
+
+        await trackAnonymousViewer({
+          anonDisplayName: anonName,
+          ipAddress: ip,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+        })
+
+        const blocked = await isIPBlocked(ip)
+        if (blocked && !cancelled) {
+          toast.error('Your device has been restricted from accessing Troll City.')
+          navigate('/jail?anon=1', { replace: true })
+        }
+      } catch (err) {
+        console.error('[AnonIP] Error checking IP:', err)
+      }
+    }
+
+    checkAnonIP()
+
+    intervalId = setInterval(() => {
+      checkAnonIP()
+    }, 10000)
+
+    return () => {
+      cancelled = true
+      if (intervalId) clearInterval(intervalId)
     }
   }, [userId, navigate])
 
@@ -1653,10 +1704,10 @@ const handleVisibilityChange = async () => {
                  <Route path="/live-swipe" element={<StreamSwipePage />} />
                 <Route path="/embed/:id" element={<EmbedPage />} />
                 <Route path="/jobs" element={<HowToVideosPage />} />
-                <Route path="/hytrogaming" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
-                <Route path="/hytrogaming/apply" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
-                <Route path="/hytrogaming/contract/:id" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
-                <Route path="/hytro/:id" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
+                 <Route path="/hytrogaming" element={<HytroGaming />} />
+                 <Route path="/hytrogaming/apply" element={<HytroGamingApply />} />
+                 <Route path="/hytrogaming/contract/:id" element={<HytroGamingContract />} />
+                 <Route path="/hytro/:id" element={<HytroGaming />} />
                 <Route path="/dev/theme-preview" element={<ThemePreviewPage />} />
                 <Route path="/dev/homepage-preview" element={<HomepageBackgroundShowcase />} />
 
@@ -1696,9 +1747,9 @@ const handleVisibilityChange = async () => {
                 <Route path="/" element={<ErrorBoundary><AuthenticatedHome /></ErrorBoundary>} />
 
                 {/* 🎤 Live Auctions — Public browse/watch, studio gated below */}
-                <Route path="/auctions" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
-                <Route path="/auctions/:showId" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
-                <Route path="/auctions/won/:showId" element={<UnderConstructionPage pageName="Live Auctions" openingDate="Coming Soon" />} />
+                <Route path="/auctions" element={<AuctionsPage />} />
+                <Route path="/auctions/:showId" element={<LiveAuctionRoom />} />
+                <Route path="/auctions/won/:showId" element={<AuctionWon />} />
                 <Route path="/treelz" element={<TreelzPage />} />
                 <Route path="/treelz/upload" element={<TreelzUploadPage />} />
 
@@ -1708,10 +1759,11 @@ const handleVisibilityChange = async () => {
                 <Route path="/profile/:username" element={<Profile />} />
 
 {/* Broadcast/Stream routes - public with password protection */}
-                  <Route path="/gaming/watch/:streamId" element={<UnderConstructionPage pageName="Hytro Gaming" openingDate="Coming Soon" />} />
+                  <Route path="/gaming/watch/:streamId" element={<HytroGamingViewer />} />
 
                   {/* Username-based stream routes (SEO-friendly, e.g. /live/username) */}
                 <Route path="/live/:username" element={<BroadcastRouter />} />
+                <Route path="/:username/live/:slug" element={<BroadcastRouter />} />
                 <Route path="/stream/:username" element={<BroadcastRouter />} />
                  {/* UUID-based stream routes (backwards compatibility) */}
                  <Route path="/broadcast/summary/:id" element={<StreamSummary />} />
@@ -1965,9 +2017,9 @@ const handleVisibilityChange = async () => {
                   <Route path="/following/:userId" element={<Following />} />
                   <Route path="/trollifications" element={<Trollifications />} />
                   <Route path="/trollifieds" element={<Trollifieds />} />
-                  <Route path="/marketplace" element={<UnderConstructionPage pageName="Shop" openingDate="Oct 1, 2026" />} />
-                  <Route path="/marketplace/orders" element={<UnderConstructionPage pageName="Shop" openingDate="Oct 1, 2026" />} />
-                  <Route path="/marketplace/sales" element={<UnderConstructionPage pageName="Shop" openingDate="Oct 1, 2026" />} />
+                  <Route path="/marketplace" element={<Marketplace />} />
+                  <Route path="/marketplace/orders" element={<MyOrders />} />
+                  <Route path="/marketplace/sales" element={<SellerOrders />} />
                   <Route path="/pool" element={<PublicPool />} />
 
                   <Route path="/troll-games/giveaways" element={<GiveawaysPage />} />
@@ -1992,7 +2044,8 @@ const handleVisibilityChange = async () => {
                   <Route path="/inmates" element={<InmatesPage />} />
                   <Route path="/jail/appeal" element={<JailAppealPage />} />
                   <Route path="/wall" element={<WallPage />} />
-                  <Route path="/wall/:postId" element={<WallPostPage />} />
+                  <Route path="/wall/:postId" element={<RedirectWallPost />} />
+                  <Route path="/post/:postId" element={<WallPostPage />} />
 <Route path="/profile/setup" element={<ProfileSetup />} />
                    <Route path="/onboarding" element={<NewUserOnboarding />} />
                     <Route path="/profile/settings" element={<ProfileSettings />} />
@@ -2747,8 +2800,8 @@ const handleVisibilityChange = async () => {
                 </Route>
 
                 {/* 🎙️ Podcast Central — public, no sign-in required to listen */}
-                <Route path="/podcast" element={<UnderConstructionPage pageName="Podcast" openingDate="Coming Soon" />} />
-                <Route path="/podcast/:id" element={<UnderConstructionPage pageName="Podcast" openingDate="Coming Soon" />} />
+                <Route path="/podcast" element={<PodcastCentral />} />
+                <Route path="/podcast/:id" element={<PodcastRoom />} />
 
                  {/* 🎤 Mai Sing Off — live singing competition */}
                  <Route path="/mai-sing-off/*" element={<MaiSingOffPage />} />
@@ -2756,6 +2809,7 @@ const handleVisibilityChange = async () => {
 
                    {/* 🎵 MAI Record Label — program preview */}
                    <Route path="/mai-record-label" element={<MaiRecordLabelPage />} />
+                   <Route path="/mai-piks" element={<MaiPiksPage />} />
                    <Route path="/mai-record-label/apply" element={<MaiRecordLabelApplyPage />} />
                    <Route path="/artist/dashboard" element={<ArtistDashboardPage />} />
                    <Route path="/artist/contract" element={<ArtistContractPage />} />
@@ -2874,6 +2928,11 @@ function App() {
 }
 
 export default App;
+
+function RedirectWallPost() {
+  const { postId } = useParams();
+  return <Navigate to={postId ? `/post/${postId}` : '/wall'} replace />;
+}
 
 // Username redirect component - redirects /{username} to their live stream or profile
 function UsernameRedirect() {

@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { Database, Shield, RefreshCw, Settings, FileText, AlertTriangle, Phone, Gavel, Trophy, DollarSign, Lock, Zap, MapPin, ShoppingCart, Megaphone, Share2, Image, TrendingUp, PieChart, HeadphonesIcon, Gift, Calendar, Crown, Award, Activity, Coins } from 'lucide-react'
+import { Database, Shield, RefreshCw, Settings, FileText, AlertTriangle, Phone, Gavel, Trophy, DollarSign, Lock, Zap, MapPin, ShoppingCart, Megaphone, Share2, Image, TrendingUp, PieChart, HeadphonesIcon, Gift, Calendar, Crown, Award, Activity, Coins, Flame } from 'lucide-react'
 
 const CustomerServiceDashboard = lazy(() => import('./CustomerServiceDashboard'))
 
@@ -33,6 +33,7 @@ const LoadLab = lazy(() => import('../../components/admin/LoadLab'))
 const AdminCrownRedemptions = lazy(() => import('./AdminCrownRedemptions'))
 const SellerManagement = lazy(() => import('./SellerManagement'))
 const ExecutiveSecretaries = lazy(() => import('./ExecutiveSecretaries'))
+const FirstCashoutMatch = lazy(() => import('./FirstCashoutMatch'))
 const SupabaseUsageDashboard = lazy(() => import('./SupabaseUsageDashboard'))
 
 export interface AdminRoute {
@@ -444,7 +445,20 @@ export const systemManagementRoutes: AdminRoute[] = [
     tileBgColor: 'bg-blue-500/10',
      tileBorderColor: 'border-blue-500/30',
      category: 'economy'
-   },
+    },
+  {
+    id: 'first-cashout-match',
+    title: 'First Cashout Match',
+    path: '/admin/first-cashout-match',
+    component: FirstCashoutMatch,
+    roles: ['admin'],
+    description: 'Manage the limited-time first cashout match promotion',
+    icon: <Flame className="w-5 h-5 text-orange-200" />,
+    tileColor: 'text-orange-200',
+    tileBgColor: 'bg-orange-500/10',
+    tileBorderColor: 'border-orange-500/30',
+    category: 'economy'
+  },
   {
     id: 'executive-secretaries',
     title: 'Secretary & Founder Rewards',

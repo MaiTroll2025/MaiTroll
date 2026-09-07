@@ -31,6 +31,7 @@ import { useAdminDashboardMetrics } from '../../hooks/useAdminDashboardMetrics'
 import PresidentialOversightPanel from './components/PresidentialOversightPanel'
 import BetaCapacityMonitor from './components/BetaCapacityMonitor'
 import MaiPayPlusManager from './components/MaiPayPlusManager'
+import FirstCashoutMatch from './FirstCashoutMatch'
 
 
 
@@ -1340,6 +1341,10 @@ export default function AdminDashboard() {
 
           <ErrorBoundary>
             <MaiPayPlusManager />
+          </ErrorBoundary>
+
+          <ErrorBoundary>
+            <FirstCashoutMatch />
           </ErrorBoundary>
 
           <CoinSalesPanel purchases={coinPurchases} loading={coinPurchasesLoading} onRefresh={loadCoinPurchases} />

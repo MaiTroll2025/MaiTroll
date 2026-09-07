@@ -83,10 +83,10 @@ export default function CashoutProgressBanner({
                     >
                       {isCashoutReady ? 'CASHOUT READY' : 'GIFT RECEIVED'}
                     </p>
-                    <p className={`font-black text-white ${isMobile ? 'text-sm' : 'text-base'}`}>
+                     <p className={`font-black text-white ${isMobile ? 'text-sm' : 'text-base'}`}>
                       {isCashoutReady
                         ? `$${displayTier.usd.toFixed(2)} AVAILABLE`
-                        : `$${displayRemaining.toFixed(2)} UNTIL CASHOUT`}
+                        : `${displayRemaining.toLocaleString()} COINS UNTIL CASHOUT`}
                     </p>
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export default function CashoutProgressBanner({
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-[10px] font-semibold text-white/60">
-                    ${currentBalance.toFixed(2)} / ${displayTier.usd.toFixed(2)}
+                    {currentBalance.toLocaleString()} / {displayTier.coins.toLocaleString()} COINS
                   </p>
                 </div>
               </div>

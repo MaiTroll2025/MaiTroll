@@ -41,6 +41,7 @@ import {
 import {
   supabase,
 } from '@/lib/supabase'
+import { recordSignalEventInBackground } from '@/lib/signalEngine'
 import { awardInvitePoint } from '@/lib/weeklyPointsService'
 
 import type {
@@ -996,6 +997,54 @@ export default function PhoneViewerPage() {
 
   const hostId =
     stream?.user_id || ''
+
+  useEffect(() => {
+    const isActive = stream?.status === 'live' && stream?.is_live !== false
+    if (!stream?.id || !isActive) return
+
+    const contentType = (stream as any)?.category === 'gaming' || (stream as any)?.stream_type === 'hytro'
+      ? 'hytrogame'
+      : 'broadcast'
+    const surface = contentType === 'hytrogame' ? 'hytrogames' : 'live_now'
+    const metadata = {
+      category: (stream as any)?.category,
+      stream_type: (stream as any)?.stream_type,
+      platform: 'phone',
+    }
+
+    recordSignalEventInBackground({
+      eventType: 'impression',
+      contentType,
+      contentId: stream.id,
+      creatorId: hostId || null,
+      surface,
+      metadata,
+    })
+    recordSignalEventInBackground({
+      eventType: 'watch_start',
+      contentType,
+      contentId: stream.id,
+      creatorId: hostId || null,
+      surface,
+      metadata,
+    })
+
+    const startedAt = Date.now()
+    return () => {
+      const secondsViewed = Math.round((Date.now() - startedAt) / 1000)
+      if (secondsViewed >= 3 && secondsViewed < 30) {
+        recordSignalEventInBackground({
+          eventType: 'skip',
+          contentType,
+          contentId: stream.id,
+          creatorId: hostId || null,
+          surface,
+          value: secondsViewed,
+          metadata: { ...metadata, seconds_viewed: secondsViewed },
+        })
+      }
+    }
+  }, [hostId, stream?.category, stream?.id, stream?.is_live, stream?.status, stream?.stream_type])
   
 
   const [
@@ -1331,7 +1380,7 @@ export default function PhoneViewerPage() {
         setError(null)
 
         try {
-          let streamQuery = supabase
+          const streamQuery = supabase
             .from('streams')
             .select('*')
 

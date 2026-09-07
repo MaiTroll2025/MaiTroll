@@ -64,7 +64,6 @@ Disallow: /blocked-users
 Disallow: /jail
 Disallow: /inmates
 Disallow: /jail/appeal
-Disallow: /wall
 Disallow: /search
 Disallow: /beta-feedback
 Disallow: /survey/

@@ -375,10 +375,84 @@ async function handleStreamSEO(req, res) {
   }
 }
 
+function generateWallPostSEOHTML(post, baseUrl) {
+  const username = post?.user_profiles?.username || 'maitroll';
+  const displayName = post?.user_profiles?.display_name || username;
+  const contentText = String(post?.content || 'Community post on MaiTroll').replace(/\s+/g, ' ').trim();
+  const snippet = contentText.length > 180 ? `${contentText.slice(0, 177).trim()}...` : contentText;
+  const title = `${displayName} on MaiTroll | ${snippet.slice(0, 60)}`;
+  const canonicalUrl = `${baseUrl}/post/${post.id}`;
+  const previewImage = post?.media_url || post?.thumbnail_url || post?.user_profiles?.avatar_url || FALLBACK_PREVIEW_IMAGE;
+  const esc = (str) => String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+  const jsonLd = safeJsonLd({
+    "@context": "https://schema.org",
+    "@type": "SocialMediaPosting",
+    "headline": snippet,
+    "url": canonicalUrl,
+    "author": {
+      "@type": "Person",
+      "name": displayName,
+      "url": `${baseUrl}/profile/${username}`
+    },
+    "datePublished": post?.created_at || new Date().toISOString(),
+    "image": previewImage,
+    "text": snippet
+  });
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${esc(title)}</title>
+  <meta name="description" content="${esc(snippet)}">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="${esc(canonicalUrl)}">
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(snippet)}">
+  <meta property="og:url" content="${esc(canonicalUrl)}">
+  <meta property="og:image" content="${esc(previewImage)}">
+  <meta property="og:site_name" content="MaiTroll">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${esc(title)}">
+  <meta name="twitter:description" content="${esc(snippet)}">
+  <meta name="twitter:image" content="${esc(previewImage)}">
+  <script type="application/ld+json">${jsonLd}</script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #0A0814; color: white; }
+    .wrap { max-width: 760px; margin: 48px auto; padding: 24px; }
+    .card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; padding: 24px; }
+    h1 { margin: 0 0 12px; font-size: 2rem; }
+    .meta { color: #a5b4fc; margin-bottom: 16px; }
+    p { color: #e2e8f0; line-height: 1.7; }
+    .cta { display: inline-block; margin-top: 20px; background: linear-gradient(90deg, #8b5cf6, #ec4899); color: white; text-decoration: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="meta">${esc(displayName)} • MaiTroll</div>
+      <h1>${esc(title)}</h1>
+      <p>${esc(snippet)}</p>
+      <a class="cta" href="${esc(canonicalUrl)}">Open Post</a>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 module.exports = {
   handleProfileSEO,
   handleStreamSEO,
   generateProfileSEOHTML,
   generateStreamSEOHTML,
+  generateWallPostSEOHTML,
   FALLBACK_PREVIEW_IMAGE
 };

@@ -250,12 +250,13 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
       <div className="space-y-3">
         {messages.map(msg => {
           const isOwn = msg.sender_id === user?.id;
+          const isJailedSender = !!msg.sender_is_jailed;
           return (
-            <div key={msg.id} className={`rounded-2xl border p-4 ${isOwn ? 'border-emerald-400/20 bg-emerald-500/[0.05]' : 'border-white/10 bg-white/[0.03]'}`}>
+            <div key={msg.id} className={`rounded-2xl border p-4 ${isJailedSender ? 'border-red-500/40 bg-red-500/[0.08]' : isOwn ? 'border-emerald-400/20 bg-emerald-500/[0.05]' : 'border-white/10 bg-white/[0.03]'}`}>
               {/* Message Header */}
               <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${isOwn ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-slate-400'}`}>
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${isJailedSender ? 'bg-red-500/20 text-red-300' : isOwn ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-slate-400'}`}>
                     {(msg.sender_name || '?')[0].toUpperCase()}
                   </div>
                   <div>
@@ -268,7 +269,7 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
                             navigate(`/profile/${encodeURIComponent(senderUsername)}`);
                           }
                         }}
-                        className="text-left text-xs font-bold text-white transition hover:text-fuchsia-300"
+                        className={`text-left text-xs font-bold transition hover:text-fuchsia-300 ${isJailedSender ? 'text-red-300' : 'text-white'}`}
                       >
                         {msg.sender_name || msg.sender_mail_address}
                       </button>
@@ -306,7 +307,7 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
               </div>
 
               {/* Message Body */}
-              <div className="text-sm leading-relaxed text-slate-300 whitespace-pre-wrap">{msg.body}</div>
+              <div className={`text-sm leading-relaxed whitespace-pre-wrap ${isJailedSender ? 'text-red-200' : 'text-slate-300'}`}>{msg.body}</div>
 
               {/* Attachments */}
               {msg.attachments && msg.attachments.length > 0 && (

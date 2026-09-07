@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
+import useSEO from '@/hooks/useSEO'
 import { Users, Radio, Store, Award, Gavel, Newspaper, Hash, FileText, User as UserIcon, Search, Briefcase, BookOpen, Shield, Heart } from 'lucide-react'
 
 type TabKey = 'all' | 'posts' | 'users' | 'streams' | 'stores' | 'broadcasters' | 'auctions' | 'articles' | 'hashtags' | 'pages'
@@ -21,10 +22,20 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
 
 export default function ExploreSearchResults() {
   const [params, setParams] = useSearchParams()
-  const navigate = useNavigate()
   const { user } = useAuthStore()
   const q = params.get('q') || ''
   const activeTab = (params.get('tab') as TabKey) || 'all'
+
+  const hasSearchVariant = Boolean(q.trim()) || activeTab !== 'all'
+
+  useSEO({
+    title: hasSearchVariant ? `Search MaiTroll${q.trim() ? ` for "${q.trim()}"` : ''}` : 'Explore MaiTroll | Live Streams, Creators, Auctions & More',
+    description: hasSearchVariant
+      ? 'Search public creators, live streams, auctions, marketplace listings, podcasts, and community content on MaiTroll.'
+      : 'Discover public creators, live streams, auctions, marketplace listings, podcasts, gaming, and community content on MaiTroll.',
+    canonical: 'https://www.maitroll.com/explore',
+    robots: hasSearchVariant ? 'noindex, follow' : 'index, follow',
+  })
 
   const [loading, setLoading] = useState(false)
   const [posts, setPosts] = useState<any[]>([])

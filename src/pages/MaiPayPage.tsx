@@ -22,7 +22,7 @@ import {
   FileText,
   ArrowDownLeft,
   ArrowUpRight,
-  Filter,
+  Flame,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
@@ -57,7 +57,7 @@ interface RedemptionRecord {
   updated_at: string;
 }
 
-type MaiPayTab = 'overview' | 'application' | 'crowns' | 'gifted' | 'cashout' | 'requests' | 'transactions';
+type MaiPayTab = 'overview' | 'application' | 'crowns' | 'gifted' | 'cashout' | 'requests' | 'transactions' | 'promotion';
 
 interface CoinTransaction {
   id: string;
@@ -120,6 +120,16 @@ export default function MaiPayPage() {
   const [achBankName, setAchBankName] = useState('');
   const [achRoutingNumber, setAchRoutingNumber] = useState('');
   const [achAccountNumber, setAchAccountNumber] = useState('');
+
+  // First Cashout Match promotion
+  const [promotion, setPromotion] = useState<any>(null);
+  const [promotionLoading, setPromotionLoading] = useState(false);
+  const [showMatchCelebration, setShowMatchCelebration] = useState(false);
+  const [matchDetails, setMatchDetails] = useState<{ amount: number; coins: number; winnerNumber: number } | null>(null);
+
+  // Promotion analytics (admin only)
+  const [promoAnalytics, setPromoAnalytics] = useState<any>(null);
+  const [promoAnalyticsLoading, setPromoAnalyticsLoading] = useState(false);
 
   // Transactions
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
@@ -237,6 +247,77 @@ export default function MaiPayPage() {
   const refreshCashoutLimit = useCallback(() => {
     loadCashoutLimit();
   }, [loadCashoutLimit]);
+
+  // ── First Cashout Match Promotion ──────────────────────────────────────────
+
+  const loadPromotionStatus = useCallback(async () => {
+    setPromotionLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('get_first_cashout_match_promotion');
+      if (error) throw error;
+      setPromotion(data || null);
+    } catch (err) {
+      console.error('[MaiPay] Failed to load promotion status:', err);
+    } finally {
+      setPromotionLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPromotionStatus();
+  }, [loadPromotionStatus]);
+
+  const loadPromotionAnalytics = useCallback(async () => {
+    setPromoAnalyticsLoading(true);
+    try {
+      const { data: promoData, error } = await supabase
+        .from('cashout_promotions')
+        .select('*')
+        .eq('slug', 'first_cashout_match')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !promoData) {
+        setPromoAnalytics(null);
+        return;
+      }
+
+      const { data: claimsData, error: claimsError } = await supabase
+        .from('cashout_promotion_claims')
+        .select('status, match_amount, match_coins')
+        .eq('promotion_id', promoData.id);
+
+      if (claimsError) {
+        setPromoAnalytics(null);
+        return;
+      }
+
+      const claims = claimsData || [];
+      setPromoAnalytics({
+        totalClaims: claims.length,
+        totalIssued: claims.filter((c: any) => c.status === 'issued').length,
+        totalPending: claims.filter((c: any) => c.status === 'pending').length,
+        totalUnderReview: claims.filter((c: any) => c.status === 'under_review').length,
+        totalRejected: claims.filter((c: any) => c.status === 'rejected').length,
+        totalMatchUsd: claims.filter((c: any) => c.status === 'issued').reduce((s: number, c: any) => s + Number(c.match_amount || 0), 0),
+        totalMatchCoins: claims.filter((c: any) => c.status === 'issued').reduce((s: number, c: any) => s + Number(c.match_coins || 0), 0),
+        winnersClaimed: promoData.winners_claimed || 0,
+        maxWinners: promoData.max_winners || 10,
+        spotsRemaining: Math.max((promoData.max_winners || 10) - (promoData.winners_claimed || 0), 0),
+      });
+    } catch (err) {
+      console.error('[MaiPay] Failed to load promotion analytics:', err);
+    } finally {
+      setPromoAnalyticsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (profile?.is_admin || profile?.role === 'admin') {
+      loadPromotionAnalytics();
+    }
+  }, [profile?.is_admin, profile?.role, loadPromotionAnalytics]);
 
   // ── Gifted Users Loading ─────────────────────────────────────────────────
 
@@ -378,6 +459,21 @@ export default function MaiPayPage() {
       if (data?.success === false) throw new Error(data.error || 'Cashout request failed');
 
       toast.success(`Cashout request submitted! ${selectedTier.coins.toLocaleString()} coins = $${selectedTier.usd.toFixed(2)}${feeCoins > 0 ? ` (+ ${feeCoins.toLocaleString()} coin fee)` : ''}`);
+
+      if (data?.promotion_eligible && data?.promotion?.success) {
+        const promo = data.promotion;
+        setMatchDetails({
+          amount: Number(promo.match_amount),
+          coins: Number(promo.match_coins),
+          winnerNumber: Number(promo.winner_number),
+        });
+        setShowMatchCelebration(true);
+        toast.success(
+          `🎉 FIRST CASHOUT MATCH RESERVED! Winner #${promo.winner_number} — +${Number(promo.match_coins).toLocaleString()} coins`,
+          { duration: 6000 }
+        );
+      }
+
       setSelectedTier(null);
       setProviderUsername('');
       setAchBankName('');
@@ -385,13 +481,14 @@ export default function MaiPayPage() {
       setAchAccountNumber('');
       await loadAllData();
       refreshCashoutLimit();
+      loadPromotionStatus();
       setActiveTab('requests');
     } catch (err: any) {
       toast.error(err.message || 'Failed to submit cashout request');
     } finally {
       setSubmittingCashout(false);
     }
-  }, [selectedTier, canRequestCashout, user?.id, selectedProvider, providerUsername, achBankName, achRoutingNumber, achAccountNumber, loadAllData]);
+  }, [selectedTier, canRequestCashout, user?.id, selectedProvider, providerUsername, achBankName, achRoutingNumber, achAccountNumber, loadAllData, refreshCashoutLimit, loadPromotionStatus, feeCoins]);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -428,6 +525,47 @@ export default function MaiPayPage() {
     );
   }
 
+  // Celebration popup for match
+  if (showMatchCelebration && matchDetails) {
+    return (
+      <div className="min-h-screen bg-[#0A0814] text-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full rounded-[2rem] border border-orange-400/30 bg-slate-950/90 backdrop-blur-2xl p-8 text-center shadow-[0_0_60px_rgba(251,146,60,0.25)]">
+          <div className="text-6xl mb-4">🎉</div>
+          <h2 className="text-2xl font-black text-orange-300 mb-2">YOU GOT MATCHED!</h2>
+          <p className="text-sm text-slate-400 mb-6">You just completed your first cashout!</p>
+
+          <div className="space-y-2 mb-6">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Your cashout</span>
+              <span className="font-mono text-white">${(matchDetails.amount / 2).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-orange-300">MaiTroll First Cashout Match</span>
+              <span className="font-mono text-orange-300">+${matchDetails.amount.toFixed(2)}</span>
+            </div>
+            <div className="border-t border-orange-400/20 pt-2 flex justify-between">
+              <span className="text-white font-bold">Total</span>
+              <span className="font-mono text-xl font-black text-orange-300">${matchDetails.amount.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-500 mb-6">
+            🔥 You&apos;re officially one of our first MaiTroll broadcasters to earn real rewards.
+            <br />
+            Winner #{matchDetails.winnerNumber} — +{matchDetails.coins.toLocaleString()} coins credited to your balance.
+          </p>
+
+          <button
+            onClick={() => setShowMatchCelebration(false)}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold hover:shadow-lg hover:shadow-orange-500/25 transition-all"
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0814] text-white overflow-y-auto">
       {/* Header */}
@@ -446,8 +584,8 @@ export default function MaiPayPage() {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide">
+        <div className="w-full">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide px-4">
               {([
               { key: 'application', label: 'Application', icon: <FileText className="w-4 h-4" /> },
               { key: 'overview', label: 'Overview', icon: <WalletIcon className="w-4 h-4" /> },
@@ -456,6 +594,7 @@ export default function MaiPayPage() {
               { key: 'cashout', label: 'Cash Out', icon: <DollarSign className="w-4 h-4" /> },
               { key: 'requests', label: 'Requests', icon: <FileText className="w-4 h-4" /> },
               { key: 'transactions', label: 'Transactions', icon: <ArrowDownLeft className="w-4 h-4" /> },
+              ...((profile?.is_admin || profile?.role === 'admin') ? [{ key: 'promotion' as MaiPayTab, label: 'Promotion', icon: <Flame className="w-4 h-4" /> }] : []),
             ] as const).map((tab) => (
               <button
                 key={tab.key}
@@ -463,7 +602,7 @@ export default function MaiPayPage() {
                   setActiveTab(tab.key);
                   if (tab.key === 'gifted' && giftedUsers.length === 0) loadGiftedUsers();
                 }}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
                   activeTab === tab.key
                     ? 'border-purple-500 text-white'
                     : 'border-transparent text-gray-500 hover:text-gray-300'
@@ -753,6 +892,34 @@ export default function MaiPayPage() {
               successfulCashoutsLast24Hours={successfulCashoutsLast24Hours}
               nextCashoutAvailableAt={nextCashoutAvailableAt}
             />
+
+            {/* First Cashout Match Banner */}
+            {promotion && promotion.is_active && (
+              <div className="rounded-2xl border border-orange-400/30 bg-gradient-to-br from-orange-900/30 via-slate-950/75 to-slate-950/75 backdrop-blur-2xl p-6 shadow-[0_0_48px_rgba(251,146,60,0.12),inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-orange-400/20 bg-orange-400/10">
+                    <Flame className="h-6 w-6 text-orange-300" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-black text-orange-200">🔥 FIRST CASHOUT MATCH</h3>
+                    <p className="text-sm text-slate-300 mt-1">
+                      Your first eligible cashout could be matched by MaiTroll.
+                    </p>
+                    <div className="flex items-center gap-3 mt-3">
+                      <span className="rounded-xl border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-xs font-black text-orange-200">
+                        {promotion.winners_claimed} / {promotion.max_winners} CLAIMED
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {Number(promotion.max_winners) - Number(promotion.winners_claimed)} spots remaining
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Eligible broadcasters may receive a matching promotional reward while the promotion remains available.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Eligible Balance */}
             <div className="bg-gradient-to-br from-green-900/30 to-[#0E0A1A] rounded-xl border border-green-500/30 p-6">
@@ -1116,6 +1283,72 @@ export default function MaiPayPage() {
                     );
                   })}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── Promotion Analytics Tab (Admin Only) ───────────────────── */}
+        {activeTab === 'promotion' && (profile?.is_admin || profile?.role === 'admin') && (
+          <div className="bg-[#0E0A1A] rounded-xl border border-orange-500/20 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">First Cashout Match — Promotion Analytics</h3>
+              <button
+                onClick={loadPromotionAnalytics}
+                disabled={promoAnalyticsLoading}
+                className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+                title="Refresh"
+              >
+                <RefreshCw className={`w-5 h-5 text-orange-300 ${promoAnalyticsLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
+            {promoAnalyticsLoading && !promoAnalytics ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-orange-400 mr-2" />
+                <p className="text-sm text-gray-400">Loading promotion analytics...</p>
+              </div>
+            ) : promoAnalytics ? (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="text-center p-4 bg-slate-800/50 rounded-lg">
+                    <p className="text-3xl font-bold text-white">{promoAnalytics.winnersClaimed} / {promoAnalytics.maxWinners}</p>
+                    <p className="text-sm text-gray-400 mt-1">Winners Claimed</p>
+                  </div>
+                  <div className="text-center p-4 bg-slate-800/50 rounded-lg">
+                    <p className="text-3xl font-bold text-orange-300">{promoAnalytics.spotsRemaining}</p>
+                    <p className="text-sm text-gray-400 mt-1">Spots Remaining</p>
+                  </div>
+                  <div className="text-center p-4 bg-slate-800/50 rounded-lg">
+                    <p className="text-3xl font-bold text-green-400">${promoAnalytics.totalMatchUsd.toFixed(2)}</p>
+                    <p className="text-sm text-gray-400 mt-1">Total Issued (USD)</p>
+                  </div>
+                  <div className="text-center p-4 bg-slate-800/50 rounded-lg">
+                    <p className="text-3xl font-bold text-yellow-400">{promoAnalytics.totalMatchCoins.toLocaleString()}</p>
+                    <p className="text-sm text-gray-400 mt-1">Total Issued (Coins)</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="text-center p-3 bg-slate-800/30 rounded-lg">
+                    <p className="text-xl font-bold text-white">{promoAnalytics.totalClaims}</p>
+                    <p className="text-xs text-gray-400">Total Claims</p>
+                  </div>
+                  <div className="text-center p-3 bg-slate-800/30 rounded-lg">
+                    <p className="text-xl font-bold text-green-300">{promoAnalytics.totalIssued}</p>
+                    <p className="text-xs text-gray-400">Issued</p>
+                  </div>
+                  <div className="text-center p-3 bg-slate-800/30 rounded-lg">
+                    <p className="text-xl font-bold text-yellow-300">{promoAnalytics.totalPending}</p>
+                    <p className="text-xs text-gray-400">Pending</p>
+                  </div>
+                  <div className="text-center p-3 bg-slate-800/30 rounded-lg">
+                    <p className="text-xl font-bold text-red-300">{promoAnalytics.totalRejected}</p>
+                    <p className="text-xs text-gray-400">Rejected</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-8">No promotion analytics available.</p>
             )}
           </div>
         )}

@@ -19,6 +19,7 @@ import {
   Trophy,
   Users,
   Shield,
+  Gamepad2,
 } from 'lucide-react'
 
 import PhoneHeader from '../PhoneHeader'
@@ -762,6 +763,11 @@ export default function PhoneHomepage({
     [liveItems],
   )
 
+  const hytroItems = useMemo(
+    () => liveItems.filter((item) => item.category === 'gaming'),
+    [liveItems],
+  )
+
   const totalLive = liveItems.length + liveAuctions.length
 
   const go = useCallback(
@@ -777,7 +783,11 @@ export default function PhoneHomepage({
 
   const handleStreamClick = useCallback(
     (item: LiveItem) => {
-      go(`/watch/${item.id}`)
+      if (item.category === 'gaming') {
+        go(`/gaming/watch/${item.id}`)
+      } else {
+        go(`/watch/${item.id}`)
+      }
     },
     [go],
   )
@@ -980,6 +990,38 @@ export default function PhoneHomepage({
             onItemClick={handleStreamClick}
             onViewAll={() => go('/live')}
           />
+
+          {/* Hytro Gaming */}
+          <PhoneSection
+            title="Hytro Gaming"
+            icon={Gamepad2}
+            count={hytroItems.length}
+            onViewAll={() => go('/hytro')}
+          >
+            {hytroItems.length === 0 ? (
+              <div className="flex h-[120px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl border border-orange-500/15 bg-gradient-to-br from-orange-500/5 to-red-500/5 text-center">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10">
+                  <Gamepad2 className="h-5 w-5 text-orange-400/40" />
+                </div>
+
+                <p className="mt-2 text-[10px] font-black text-zinc-500">
+                  No HytroGaming streams live
+                </p>
+
+                <p className="mt-0.5 text-[8px] font-bold text-zinc-700">
+                  Check back for the next gaming stream.
+                </p>
+              </div>
+            ) : (
+              hytroItems.slice(0, 10).map((item) => (
+                <PhoneLiveTile
+                  key={item.id}
+                  item={item}
+                  onClick={() => handleStreamClick(item)}
+                />
+              ))
+            )}
+          </PhoneSection>
 
           {/* Auctions */}
           <PhoneAuctions

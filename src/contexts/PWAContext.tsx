@@ -11,6 +11,8 @@ import { isStandalone, isIos, isSafari } from '../pwa/install';
 import { useInstallPrompt } from '../pwa/useInstallPrompt';
 import { doesUserProfileExist, supabase } from '../lib/supabase';
 import { getVapidPublicKey } from '../lib/vapid';
+import { useAuthStore } from '../lib/store';
+import { registerNativePush } from '../lib/nativePush';
 
 const env = import.meta.env;
 
@@ -99,6 +101,8 @@ interface PWAProviderProps {
 }
 
 export function PWAProvider({ children }: PWAProviderProps) {
+  const user = useAuthStore((state) => state.user);
+
   // Install state
   const {
     deferredPrompt,
@@ -158,6 +162,11 @@ export function PWAProvider({ children }: PWAProviderProps) {
    // Refs
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const reconnectAttempts = useRef(0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    void registerNativePush(user.id);
+  }, [user?.id]);
   
   // ===== INSTALL DETECTION =====
   

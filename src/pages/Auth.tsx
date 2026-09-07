@@ -11,6 +11,7 @@ import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { generateUUID } from '../lib/uuid';
 import { handleConcurrentLogin, resetConcurrentLoginCheck } from '../lib/sessionUtils';
 import { moderation } from '@/services/maitrollModeration';
+import { checkAndAutoArrestNewAccount, getCurrentIP } from '@/services/ipTracking';
 
 interface AuthProps {
   embedded?: boolean;
@@ -460,17 +461,34 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
            const loginPassword = selectedRole === 'organization' ? orgPassword : password
            await executeLogin(loginEmail, loginPassword)
 
-           // Canonical ban evasion check
-           const { data: { user: loggedInUser } } = await supabase.auth.getUser()
-           if (loggedInUser) {
-             const evasionResult = await moderation.checkBanEvasion(loggedInUser.id)
-             if (evasionResult.evasionDetected) {
-               toast.error('Account restricted due to policy violation. Please contact support.')
-               // The App.tsx jail guard will redirect to /jail
-             }
-           }
+            // Canonical ban evasion check
+            const { data: { user: loggedInUser } } = await supabase.auth.getUser()
+            if (loggedInUser) {
+              const evasionResult = await moderation.checkBanEvasion(loggedInUser.id)
+              if (evasionResult.evasionDetected) {
+                toast.error('Account restricted due to policy violation. Please contact support.')
+                // The App.tsx jail guard will redirect to /jail
+              }
+            }
 
-           // If celeb signup was requested, submit the Celeb application
+            // Check IP for anonymous arrests — auto-arrest new account if IP is flagged
+            const { data: { user: ipCheckUser } } = await supabase.auth.getUser()
+            if (ipCheckUser) {
+              try {
+                const ip = await getCurrentIP()
+                if (ip) {
+                  const arrestResult = await checkAndAutoArrestNewAccount(ipCheckUser.id, ip)
+                  if (arrestResult.success) {
+                    toast.error('Account restricted due to IP policy violation. Please contact support.')
+                    // App.tsx jail guard will redirect to /jail
+                  }
+                }
+              } catch (ipErr) {
+                console.error('Error checking IP on signup:', ipErr)
+              }
+            }
+
+            // If celeb signup was requested, submit the Celeb application
           if (isCelebSignup) {
             if (!celebFullName.trim() || !celebPhone.trim()) {
               toast.error('Please provide your full name and phone number for the Celeb application')
