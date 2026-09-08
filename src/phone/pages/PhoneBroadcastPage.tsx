@@ -2360,7 +2360,8 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
       previousTrackRef.current = videoTrack
 
       const settings = videoTrack.mediaStreamTrack?.getSettings?.()
-      const isFrontCamera = settings?.facingMode === 'user' || !settings?.facingMode
+      const facingMode = String(settings?.facingMode || '').toLowerCase()
+      const isFrontCamera = facingMode === 'user' || facingMode === 'front'
       container.style.transform = isFrontCamera ? 'scaleX(-1)' : 'none'
     } catch (err) {
       console.error('[LocalCameraFullVideo] Failed to attach video track:', err)
