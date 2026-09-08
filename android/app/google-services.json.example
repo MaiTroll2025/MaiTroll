@@ -1,21 +1,20 @@
 {
   "project_info": {
-    "project_number": "74700967631",
-    "project_id": "maitroll",
-    "storage_bucket": "maitroll.firebasestorage.app"
+    "project_number": "YOUR_FIREBASE_PROJECT_NUMBER",
+    "project_id": "YOUR_FIREBASE_PROJECT_ID",
+    "storage_bucket": "YOUR_FIREBASE_STORAGE_BUCKET"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:74700967631:android:77ea45408003ff951ab1ba",
+        "mobilesdk_app_id": "YOUR_FIREBASE_ANDROID_APP_ID",
         "android_client_info": {
           "package_name": "com.maitroll.app"
         }
       },
-      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAshfmOEgsVbh6KAiIpaiozKJ0je7uAJFo"
+          "current_key": "YOUR_RESTRICTED_FIREBASE_API_KEY"
         }
       ],
       "services": {
