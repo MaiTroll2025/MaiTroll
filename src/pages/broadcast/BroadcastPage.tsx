@@ -400,7 +400,10 @@ function findSeatRemoteParticipant(
       seatUserId &&
       (
         participantUserId === seatUserId ||
-        metadataUserId === seatUserId
+        metadataUserId === seatUserId ||
+        participantIdentity.includes(seatUserId) ||
+        participantIdentity.endsWith(`-${seatUserId}`) ||
+        participantIdentity.startsWith(`${seatUserId}-`)
       )
     ) {
       return participant

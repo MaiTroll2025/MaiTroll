@@ -7,7 +7,6 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
-import LevelStatusCard from '../../components/home/LevelStatusCard'
 
 import {
   ArrowLeft,
@@ -21,7 +20,7 @@ import {
   CreditCard,
   Crown,
   Gavel,
-  Image as ImageIcon,
+  Image as Image,
   KeyRound,
   LogOut,
   Music,
@@ -31,6 +30,7 @@ import {
   Shield,
   ShoppingBag,
   Sparkles,
+  Star,
   Store,
   Trash2,
   Trophy,
@@ -40,6 +40,8 @@ import {
 } from 'lucide-react'
 
 import { toast } from 'sonner'
+
+import { getLevelName } from '../../lib/xp'
 
 import AvatarUpload from '../../components/profile/AvatarUpload'
 import CoverPhotoUpload, {
@@ -65,6 +67,7 @@ type ProfileRow = {
   xp?: number | null
   xp_to_next_level?: number | null
   total_xp?: number | null
+  next_level_xp?: number | null
   display_name?: string | null
   full_name?: string | null
   username?: string | null
@@ -141,7 +144,7 @@ const PROFILE_TABS: ProfileTab[] = [
   { id: 'purchases', label: 'Purchase History', icon: Wallet },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'music', label: 'Music', icon: Music },
-  { id: 'albums', label: 'Albums', icon: ImageIcon },
+  { id: 'albums', label: 'Albums', icon: Image },
   { id: 'tracks', label: 'Tracks', icon: Store },
 ]
 
@@ -191,15 +194,18 @@ export default function PhoneProfile() {
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingSubscription, setSavingSubscription] = useState(false)
 
+  const [level, setLevel] = useState(1)
+  const [xp, setXp] = useState(0)
+  const [xpToNextLevel, setXpToNextLevel] = useState(100)
+  const [totalXp, setTotalXp] = useState(0)
+
+  const [profileTargetId, setProfileTargetId] = useState<string | null>(null)
+
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
   const [postsCount, setPostsCount] = useState(0)
 
   const isViewingOwnProfile = !usernameParam || usernameParam === user?.username
-  const profileTargetId = useMemo(() => {
-    if (isViewingOwnProfile) return user?.id
-    return undefined
-  }, [isViewingOwnProfile, user?.id])
 
   /*
    * Load profile
@@ -214,6 +220,10 @@ export default function PhoneProfile() {
 
     const applyProfile = (row: ProfileRow) => {
       setCoins(Math.max(0, Number(row.troll_coins) || 0))
+      setLevel(Number(row.level) || 1)
+      setXp(Number(row.xp) || 0)
+      setTotalXp(Number(row.total_xp) || 0)
+      setXpToNextLevel(Number(row.xp_to_next_level) || Number(row.next_level_xp) || 100)
 
       setDisplayName(
         row.display_name ||
@@ -246,12 +256,20 @@ export default function PhoneProfile() {
       setCreatorSubscriptionPrice(
         Number(row.creator_subscription_price_coins) || 100,
       )
+
+      if (row.id) {
+        setProfileTargetId(row.id)
+      }
     }
 
     const applyFallback = () => {
       const fallback = storeProfile as any
 
       setCoins(Number(fallback?.troll_coins) || 0)
+      setLevel(Number(fallback?.level) || 1)
+      setXp(Number(fallback?.xp) || 0)
+      setTotalXp(Number(fallback?.total_xp) || 0)
+      setXpToNextLevel(Number(fallback?.xp_to_next_level) || Number(fallback?.next_level_xp) || 100)
 
       setDisplayName(
         fallback?.display_name ||
@@ -284,6 +302,10 @@ export default function PhoneProfile() {
       setCreatorSubscriptionPrice(
         Number(fallback?.creator_subscription_price_coins) || 100,
       )
+
+      if (fallback?.id) {
+        setProfileTargetId(fallback.id)
+      }
     }
 
     const loadProfile = async () => {
@@ -299,6 +321,7 @@ export default function PhoneProfile() {
           xp,
           xp_to_next_level,
           total_xp,
+          next_level_xp,
           display_name,
           full_name,
           username,
@@ -431,6 +454,13 @@ export default function PhoneProfile() {
 
     return source.charAt(0).toUpperCase()
   }, [displayName])
+
+  const xpProgress = useMemo(() => {
+    const currentXp = xp || 0
+    const needed = xpToNextLevel || 100
+    if (needed <= 0) return 100
+    return Math.min((currentXp / (currentXp + needed)) * 100, 100)
+  }, [xp, xpToNextLevel])
 
   /*
    * Settings
@@ -796,7 +826,7 @@ export default function PhoneProfile() {
               <section className="overflow-hidden rounded-[24px] border border-[#BF00FF]/20 bg-white/[0.025] p-4">
                 <div className="mb-4 flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/10">
-                    <ImageIcon
+                    <Image
                       size={18}
                       className="text-[#BF00FF]"
                     />
@@ -1295,7 +1325,7 @@ export default function PhoneProfile() {
                   className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#050914] bg-[#101523] text-[#00BFFF] shadow-lg"
                   aria-label="Edit profile photo"
                 >
-                  <ImageIcon size={14} />
+                  <Image size={14} />
                 </button>
               </div>
 
@@ -1337,7 +1367,42 @@ export default function PhoneProfile() {
 
             {/* Level System */}
             <div className="mt-4">
-              <LevelStatusCard />
+              <div className="overflow-hidden rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#071020] via-[#090712] to-[#17071d] p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="flex items-center gap-1.5 text-xs font-black text-white">
+                      <Star size={14} className="text-yellow-300" />
+                      Level System
+                    </p>
+                    <p className="mt-0.5 text-[10px] font-bold text-slate-400">
+                      City Rank Lvl {level}
+                    </p>
+                  </div>
+                  <Crown size={20} className="text-yellow-300 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]" />
+                </div>
+                <div className="mt-2 rounded-lg border border-fuchsia-400/30 bg-gradient-to-r from-amber-500 via-fuchsia-500 to-purple-600 px-2 py-1.5 text-center text-[10px] font-black text-white">
+                  {getLevelName(level)}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-slate-300">
+                  <span>XP Progress</span>
+                  <span>{xpProgress.toFixed(1)}%</span>
+                </div>
+                <div className="mt-1 h-1.5 rounded-full bg-white/10">
+                  <div
+                    className="h-1.5 rounded-full bg-gradient-to-r from-pink-500 via-yellow-300 to-cyan-300"
+                    style={{ width: `${Math.min(xpProgress, 100)}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-[9px] text-slate-400">
+                  <span className="font-black text-fuchsia-300">
+                    {xpToNextLevel.toLocaleString()} XP
+                  </span>{' '}
+                  to next level
+                  <span className="float-right font-black text-cyan-300">
+                    +{Math.ceil(xpToNextLevel * 0.1).toLocaleString()} bonus coins
+                  </span>
+                </p>
+              </div>
             </div>
 
             {/* Coins */}
@@ -1458,46 +1523,46 @@ export default function PhoneProfile() {
             ACTIVE PROFILE AREA
         ========================================================= */}
         <section className="mx-3 mt-3 rounded-[22px] border border-white/10 bg-white/[0.025] p-4">
-          {activeTab === 'social' && user?.id && (
-            <ProfileFeed userId={user.id} />
+          {activeTab === 'social' && profileTargetId && (
+            <ProfileFeed userId={profileTargetId} />
           )}
 
-          {activeTab === 'social' && !user?.id && (
+          {activeTab === 'social' && !profileTargetId && (
             <div className="text-center py-10 text-gray-500">
               Please sign in to view posts.
             </div>
           )}
 
-          {activeTab === 'broadcasts' && user?.id && (
-            <ProfileBroadcasts userId={user.id} />
+          {activeTab === 'broadcasts' && profileTargetId && (
+            <ProfileBroadcasts userId={profileTargetId} />
           )}
 
-          {activeTab === 'marketplace' && user?.id && (
-            <ProfileMarketplace userId={user.id} />
+          {activeTab === 'marketplace' && profileTargetId && (
+            <ProfileMarketplace userId={profileTargetId} />
           )}
 
-          {activeTab === 'auctions' && user?.id && (
-            <ProfileWatchlist userId={user.id} />
+          {activeTab === 'auctions' && profileTargetId && (
+            <ProfileWatchlist userId={profileTargetId} />
           )}
 
-          {activeTab === 'court' && user?.id && (
-            <ProfileCourt userId={user.id} />
+          {activeTab === 'court' && profileTargetId && (
+            <ProfileCourt userId={profileTargetId} />
           )}
 
-          {activeTab === 'agency' && user?.id && (
-            <ProfileAgency userId={user.id} />
+          {activeTab === 'agency' && profileTargetId && (
+            <ProfileAgency userId={profileTargetId} />
           )}
 
-          {activeTab === 'church' && user?.id && (
-            <ProfileChurch userId={user.id} />
+          {activeTab === 'church' && profileTargetId && (
+            <ProfileChurch userId={profileTargetId} />
           )}
 
           {activeTab === 'inventory' && (
             <UserInventory embedded />
           )}
 
-          {activeTab === 'purchases' && user?.id && (
-            <ProfilePurchases userId={user.id} />
+          {activeTab === 'purchases' && profileTargetId && (
+            <ProfilePurchases userId={profileTargetId} />
           )}
 
           {activeTab === 'subscriptions' && (
@@ -1542,7 +1607,7 @@ export default function PhoneProfile() {
 
           {activeTab === 'albums' && (
             <div className="text-center py-10 text-gray-500">
-              <ImageIcon className="w-8 h-8 mx-auto mb-3 text-purple-400" />
+              <Image className="w-8 h-8 mx-auto mb-3 text-purple-400" />
               <h3 className="text-sm font-black">Albums</h3>
               <p className="mt-1 text-[9px] text-white/30">
                 Album collection coming soon.

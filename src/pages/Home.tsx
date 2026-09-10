@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   BookOpen,
+  ChevronRight,
   Crown,
   FileText,
   Gavel,

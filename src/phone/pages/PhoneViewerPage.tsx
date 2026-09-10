@@ -974,13 +974,16 @@ export default function PhoneViewerPage() {
     params.id ||
     ''
 
+  const [stream, setStream] =
+    useState<Stream | null>(null)
+
+  const resolvedStreamId =
+    stream?.id || streamId
+
   const {
     user,
     profile,
   } = useAuthStore()
-
-  const [stream, setStream] =
-    useState<Stream | null>(null)
 
   const {
     featuredBroadcasters,
@@ -991,8 +994,8 @@ export default function PhoneViewerPage() {
     openFeaturedLeaderboard,
     closeFeaturedLeaderboard,
   } = useFeaturedLive({
-    streamId: streamId || stream?.id || null,
-    enabled: !!(streamId || stream?.id),
+    streamId: resolvedStreamId || null,
+    enabled: !!resolvedStreamId,
   })
 
   const hostId =
@@ -1266,69 +1269,69 @@ export default function PhoneViewerPage() {
    */
   const anonViewerId =
     useMemo(() => {
-      if (!streamId) return ''
+    if (!resolvedStreamId) return ''
+
+    if (
+      typeof window ===
+      'undefined'
+    ) {
+      return ''
+    }
+
+    const key =
+      `guest-viewer:${resolvedStreamId}`
+
+    try {
+      const existing =
+        window.sessionStorage.getItem(
+          key,
+        )
+
+      if (existing) {
+        return existing
+      }
+
+      const cryptoObj =
+        (window as any).crypto
+
+      let id = ''
 
       if (
-        typeof window ===
-        'undefined'
+        cryptoObj &&
+        typeof cryptoObj.randomUUID ===
+          'function'
       ) {
-        return ''
-      }
-
-      const key =
-        `guest-viewer:${streamId}`
-
-      try {
-        const existing =
-          window.sessionStorage.getItem(
-            key,
-          )
-
-        if (existing) {
-          return existing
-        }
-
-        const cryptoObj =
-          (window as any).crypto
-
-        let id = ''
-
-        if (
-          cryptoObj &&
-          typeof cryptoObj.randomUUID ===
-            'function'
-        ) {
-          id =
-            `guest-viewer:${streamId}:${cryptoObj.randomUUID()}`
-        } else {
-          id =
-            `guest-viewer:${streamId}:${Math.random()
-              .toString(36)
-              .slice(2, 12)}`
-        }
-
-        window.sessionStorage.setItem(
-          key,
-          id,
-        )
-
-        return id
-      } catch {
-        return (
-          `guest-viewer:${streamId}:${Math.random()
+        id =
+          `guest-viewer:${resolvedStreamId}:${cryptoObj.randomUUID()}`
+      } else {
+        id =
+          `guest-viewer:${resolvedStreamId}:${Math.random()
             .toString(36)
             .slice(2, 12)}`
-        )
       }
-    }, [streamId])
+
+      window.sessionStorage.setItem(
+        key,
+        id,
+      )
+
+      return id
+    } catch {
+      return (
+        `guest-viewer:${resolvedStreamId}:${Math.random()
+          .toString(36)
+          .slice(2, 12)}`
+      )
+    }
+  }, [resolvedStreamId])
 
   const anonDisplayName =
     useMemo(
       () =>
-        streamId
+        resolvedStreamId
           ? getAnonymousDisplayName()
           : '',
-      [streamId],
+      [resolvedStreamId],
     )
 
   const viewerIdentity =
@@ -1338,17 +1341,17 @@ export default function PhoneViewerPage() {
         anonViewerId
 
       if (
-        !streamId ||
+        !resolvedStreamId ||
         !effectiveId
       ) {
         return ''
       }
 
       return (
-        `viewer-${streamId}-${effectiveId}`
+        `viewer-${resolvedStreamId}-${effectiveId}`
       )
     }, [
-      streamId,
+      resolvedStreamId,
       user?.id,
       anonViewerId,
     ])
@@ -1476,19 +1479,19 @@ export default function PhoneViewerPage() {
      REALTIME STREAM UPDATES
   ======================================================================== */
 
-  useEffect(() => {
-    if (!streamId) {
-      return
-    }
+   useEffect(() => {
+     if (!resolvedStreamId) {
+       return
+     }
 
-    const streamEndedRef = {
-      current: false,
-    }
+     const streamEndedRef = {
+       current: false,
+     }
 
-    const channel =
-      supabase
+     const channel =
+       supabase
         .channel(
-          `phone-viewer-stream:${streamId}`,
+          `phone-viewer-stream:${resolvedStreamId}`,
         )
         .on(
           'postgres_changes',
@@ -1496,7 +1499,7 @@ export default function PhoneViewerPage() {
             event: 'UPDATE',
             schema: 'public',
             table: 'streams',
-            filter: `id=eq.${streamId}`,
+            filter: `id=eq.${resolvedStreamId}`,
           },
           payload => {
             const next =
@@ -1545,10 +1548,10 @@ export default function PhoneViewerPage() {
                     // ignore
                   }
 
-                  navigate(
-                    `/broadcast/summary/${streamId}`,
-                    { replace: true },
-                  )
+                   navigate(
+                     `/broadcast/summary/${resolvedStreamId}`,
+                     { replace: true },
+                   )
                 })()
             }
           },
@@ -1560,10 +1563,10 @@ export default function PhoneViewerPage() {
         channel,
       )
     }
-  }, [
-    streamId,
-    navigate,
-  ])
+   }, [
+     resolvedStreamId,
+     navigate,
+   ])
 
   /* ========================================================================
       BROADCASTER PROFILE
@@ -1627,10 +1630,10 @@ export default function PhoneViewerPage() {
    ======================================================================== */
 
   useEffect(() => {
-    if (!streamId) return
+    if (!resolvedStreamId) return
 
     const channel = supabase.channel(
-      `stream:${streamId}`,
+      `stream:${resolvedStreamId}`,
     )
 
     channel.on(
@@ -1671,7 +1674,7 @@ export default function PhoneViewerPage() {
         channel,
       )
     }
-  }, [streamId])
+  }, [resolvedStreamId])
 
    const canClickFloatingChatUsername =
      hasModActionsAccess(profile)
@@ -1791,18 +1794,18 @@ export default function PhoneViewerPage() {
       SEATS
     ======================================================================== */
 
-  const {
-    seats,
-    mySeat,
-    joinSeat,
-    leaveSeat,
-    markSeatLive,
-   } = useStreamSeats(
-    streamId,
-    user?.id,
-    broadcasterProfile,
-    stream as any,
-  )
+   const {
+     seats,
+     mySeat,
+     joinSeat,
+     leaveSeat,
+     markSeatLive,
+    } = useStreamSeats(
+     resolvedStreamId || '',
+     user?.id,
+     broadcasterProfile,
+     stream as any,
+   )
 
   const userIdToLiveKitIdentity = useMemo(() => {
     const mapping: Record<string, string> = {};
@@ -1837,14 +1840,14 @@ export default function PhoneViewerPage() {
     heartbeatAudience,
   } =
     useStreamAudiencePresence(
-      streamId,
+      resolvedStreamId || '',
       user?.id,
     )
 
   const cashoutBanner = useCashoutBanner({
     userId: user?.id,
     isEligible: !!mySeat,
-    streamId: streamId || null,
+    streamId: resolvedStreamId || null,
   })
 
   const { pulling: pullRefreshing, pullY } = usePullToRefresh(
@@ -1858,7 +1861,7 @@ export default function PhoneViewerPage() {
 
     const anonMember: StreamAudienceMember = {
       id: `anon:${anonViewerId}`,
-      stream_id: streamId || '',
+      stream_id: resolvedStreamId || '',
       user_id: anonViewerId,
       username:
         anonDisplayName || 'Viewer',
@@ -1882,7 +1885,7 @@ export default function PhoneViewerPage() {
     user?.id,
     anonViewerId,
     anonDisplayName,
-    streamId,
+    resolvedStreamId,
   ])
 
   /* ========================================================================
@@ -1894,12 +1897,12 @@ export default function PhoneViewerPage() {
       return String(
         getLiveKitRoomName(
           stream,
-          streamId,
+          resolvedStreamId,
         ) || '',
       )
     }, [
       stream,
-      streamId,
+      resolvedStreamId,
     ])
 
   const audienceName =
@@ -2011,7 +2014,7 @@ export default function PhoneViewerPage() {
 
     void joinAsAudience({
       userId: viewerIdentity,
-      streamId,
+      streamId: resolvedStreamId,
       roomName: roomId,
       viewerIdentity,
       publishCapable: false,
@@ -2022,7 +2025,7 @@ export default function PhoneViewerPage() {
           if (typeof res !== 'string') {
             hasJoinedAudienceRef.current = true
             setViewerError(null)
-            currentRoomKeyRef.current = `${streamId}:${roomId}`
+            currentRoomKeyRef.current = `${resolvedStreamId}:${roomId}`
           } else {
             setViewerError(res)
           }
@@ -2046,22 +2049,22 @@ export default function PhoneViewerPage() {
       mounted = false
     }
    }, [
-    streamId,
-    stream,
-    roomId,
-    viewerIdentity,
-    joinAsAudience,
-    viewerError,
-  ])
+     resolvedStreamId,
+     stream,
+     roomId,
+     viewerIdentity,
+     joinAsAudience,
+     viewerError,
+   ])
 
   /* ========================================================================
       KICK GUARD — 24hr ban after kick
    ======================================================================== */
 
   useEffect(() => {
-    if (!streamId || !user?.id) return
+    if (!resolvedStreamId || !user?.id) return
 
-    const kickKey = getKickStorageKey(streamId, user.id)
+    const kickKey = getKickStorageKey(resolvedStreamId, user.id)
 
     const enforceKickBan = () => {
       const kickRaw = localStorage.getItem(kickKey)
@@ -2089,14 +2092,14 @@ export default function PhoneViewerPage() {
     enforceKickBan()
 
     const channel = supabase
-      .channel(`stream-kicks:${streamId}:${user.id}`)
+      .channel(`stream-kicks:${resolvedStreamId}:${user.id}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'stream_kicks',
-          filter: `stream_id=eq.${streamId},user_id=eq.${user.id}`,
+          filter: `stream_id=eq.${resolvedStreamId},user_id=eq.${user.id}`,
         },
         (payload) => {
           const kick = payload.new
@@ -2109,9 +2112,9 @@ export default function PhoneViewerPage() {
             const remainingMs = Math.max(KICK_BAN_DURATION_MS - timeSinceKick, 0)
             const hoursRemaining = Math.ceil(remainingMs / (60 * 60 * 1000))
 
-            localStorage.setItem(getKickStorageKey(streamId, user.id), JSON.stringify({
+            localStorage.setItem(getKickStorageKey(resolvedStreamId, user.id), JSON.stringify({
               timestamp: kickTimestamp,
-              streamId,
+              resolvedStreamId,
               reason: kick.reason || 'Kicked by moderator',
             }))
 
@@ -2133,7 +2136,7 @@ export default function PhoneViewerPage() {
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [streamId, user?.id, navigate, leaveAudience, leaveLiveKitRoom])
+   }, [resolvedStreamId, user?.id, navigate, leaveAudience, leaveLiveKitRoom])
 
   /* ========================================================================
       STREAM REALTIME
@@ -2207,7 +2210,7 @@ export default function PhoneViewerPage() {
 
     const streamGiftEvent: StreamGiftEvent = {
       id: animationId,
-      stream_id: streamId || '',
+      stream_id: resolvedStreamId || '',
       gift_id: enrichedGiftData?.gift_id || '',
       gift_name: resolvedGiftName,
       sender_user_id: enrichedGiftData?.sender_id || '',
@@ -2230,10 +2233,10 @@ export default function PhoneViewerPage() {
     window.setTimeout(() => {
       setRecentGifts((prev) => prev.filter((gift) => gift.id !== animationId))
     }, giftDurationMs + 150)
-  }, [streamId, hostId, enqueueGift])
+  }, [resolvedStreamId, hostId, enqueueGift])
 
   useStreamRealtime(
-    streamId || '',
+    resolvedStreamId || '',
     {
       onMessage: (event) => {
         const newRow = event?.new
@@ -2279,12 +2282,12 @@ export default function PhoneViewerPage() {
         }
       },
       onParticipant: (event: any) => {
-        if (event.eventType !== 'UPDATE' || !event.new || !streamId || !user?.id) {
+        if (event.eventType !== 'UPDATE' || !event.new || !resolvedStreamId || !user?.id) {
           return
         }
 
         const participant = event.new
-        if (participant.stream_id !== streamId || participant.removed !== true) {
+        if (participant.stream_id !== resolvedStreamId || participant.removed !== true) {
           return
         }
 
@@ -2306,10 +2309,10 @@ export default function PhoneViewerPage() {
           }
 
           localStorage.setItem(
-            getKickStorageKey(streamId, user.id),
+            getKickStorageKey(resolvedStreamId, user.id),
             JSON.stringify({
               timestamp: Date.now(),
-              streamId,
+              resolvedStreamId,
               reason: participant.removed_reason || 'Kicked by broadcaster',
             }),
           )
@@ -2322,7 +2325,7 @@ export default function PhoneViewerPage() {
         })()
       },
       onAudiencePresence: (event: any) => {
-        if (!streamId || !user?.id) return
+        if (!resolvedStreamId || !user?.id) return
         if (streamEndedRef.current) return
 
         const evtType = event.eventType
@@ -2345,10 +2348,10 @@ export default function PhoneViewerPage() {
               }
 
               localStorage.setItem(
-                getKickStorageKey(streamId, user.id),
+                getKickStorageKey(resolvedStreamId, user.id),
                 JSON.stringify({
                   timestamp: Date.now(),
-                  streamId,
+                  resolvedStreamId,
                   reason: 'Removed from broadcast',
                 }),
               )
@@ -2364,7 +2367,7 @@ export default function PhoneViewerPage() {
         }
 
         if (evtType === 'UPDATE' && newRow) {
-          if (newRow.stream_id !== streamId) return
+          if (newRow.stream_id !== resolvedStreamId) return
           if (newRow.user_id !== user.id) return
           if (newRow.is_active === false) {
             kickProcessedRef.current = true
@@ -2380,10 +2383,10 @@ export default function PhoneViewerPage() {
               }
 
               localStorage.setItem(
-                getKickStorageKey(streamId, user.id),
+                getKickStorageKey(resolvedStreamId, user.id),
                 JSON.stringify({
                   timestamp: Date.now(),
-                  streamId,
+                  resolvedStreamId,
                   reason: 'Removed from broadcast',
                 }),
               )
@@ -2420,7 +2423,7 @@ export default function PhoneViewerPage() {
             joiningAudienceRef.current = false
             currentRoomKeyRef.current = null
 
-            navigate(`/broadcast/summary/${streamId}`, { replace: true })
+            navigate(`/broadcast/summary/${resolvedStreamId}`, { replace: true })
           })()
           return
         }
@@ -2448,9 +2451,9 @@ export default function PhoneViewerPage() {
   ======================================================================== */
 
   useEffect(() => {
-    if (!streamId) return
+    if (!resolvedStreamId) return
 
-    const channel = supabase.channel(`floating-chat:${streamId}`)
+    const channel = supabase.channel(`floating-chat:${resolvedStreamId}`)
     floatingChatChannelRef.current = channel
 
     channel
@@ -2483,7 +2486,7 @@ export default function PhoneViewerPage() {
         supabase.removeChannel(channel)
       }
     }
-  }, [streamId, blockedUsernames])
+   }, [resolvedStreamId, blockedUsernames])
 
   /* ========================================================================
      BROADCASTER
@@ -2653,13 +2656,13 @@ export default function PhoneViewerPage() {
     return host
   }
 
-  useEffect(() => {
-    const host = resolveBroadcasterParticipant(
-      remoteParticipants,
-      liveKitRoom,
-      streamId,
-      hostId,
-    )
+   useEffect(() => {
+     const host = resolveBroadcasterParticipant(
+       remoteParticipants,
+       liveKitRoom,
+       resolvedStreamId,
+       hostId,
+     )
 
     if (host) {
       hostParticipantRef.current =
@@ -2669,13 +2672,13 @@ export default function PhoneViewerPage() {
         host,
       )
     }
-  }, [
-    remoteParticipants,
-    liveKitRoom,
-    streamId,
-    hostId,
-    updateBroadcasterState,
-  ])
+   }, [
+     remoteParticipants,
+     liveKitRoom,
+     resolvedStreamId,
+     hostId,
+     updateBroadcasterState,
+   ])
 
   /* ========================================================================
      SEAT TRACKS
@@ -2858,7 +2861,7 @@ export default function PhoneViewerPage() {
       }
 
       joiningPublisherRef.current = true
-      currentRoomKeyRef.current = `${streamId}:${roomId}`
+      currentRoomKeyRef.current = `${resolvedStreamId}:${roomId}`
 
       void publishLocalTracks()
         .then(() => {
@@ -2889,18 +2892,18 @@ export default function PhoneViewerPage() {
       currentRoomKeyRef.current = null
       return
     }
-  }, [
-    isUserOnStage,
-    isConnected,
-    isPublishing,
-    liveKitRoom,
-    publishLocalTracks,
-    unpublishLocalTracks,
-    leaveLiveKitRoom,
-    streamId,
-    roomId,
-    mySeat?.seat_index,
-  ])
+   }, [
+     isUserOnStage,
+     isConnected,
+     isPublishing,
+     liveKitRoom,
+     publishLocalTracks,
+     unpublishLocalTracks,
+     leaveLiveKitRoom,
+     resolvedStreamId,
+     roomId,
+     mySeat?.seat_index,
+   ])
 
   const wasOnStageRef = useRef(isUserOnStage)
 
@@ -2928,7 +2931,7 @@ export default function PhoneViewerPage() {
         const isBattleMode = Boolean(battleId)
         const result = await joinAsAudience({
           userId: viewerIdentityRef.current || viewerIdentity,
-          streamId,
+          streamId: resolvedStreamId,
           roomName: roomId,
           viewerIdentity: viewerIdentityRef.current || viewerIdentity,
           publishCapable: !isBattleMode && true,
@@ -2946,18 +2949,18 @@ export default function PhoneViewerPage() {
         joiningAudienceRef.current = false
       }
     })()
-  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience, publishLocalTracks, battleId, mySeat?.seat_index, markSeatLive])
+   }, [isUserOnStage, roomId, resolvedStreamId, viewerIdentity, joinAsAudience, publishLocalTracks, battleId, mySeat?.seat_index, markSeatLive])
 
   /* ========================================================================
       AUDIENCE PRESENCE
    ======================================================================== */
 
-  useEffect(() => {
-    if (!streamId) {
-      return
-    }
+   useEffect(() => {
+     if (!resolvedStreamId) {
+       return
+     }
 
-    void joinAudience()
+     void joinAudience()
 
     const interval =
       window.setInterval(
@@ -2974,12 +2977,12 @@ export default function PhoneViewerPage() {
 
       void leaveAudience()
     }
-  }, [
-    streamId,
-    joinAudience,
-    leaveAudience,
-    heartbeatAudience,
-  ])
+   }, [
+     resolvedStreamId,
+     joinAudience,
+     leaveAudience,
+     heartbeatAudience,
+   ])
 
   useEffect(() => {
     const audienceCount =
@@ -3007,78 +3010,78 @@ export default function PhoneViewerPage() {
   const kickProcessedRef =
     useRef(false)
 
-  useEffect(() => {
-    if (!streamId || !user?.id) {
-      return
-    }
+   useEffect(() => {
+     if (!resolvedStreamId || !user?.id) {
+       return
+     }
 
-    kickProcessedRef.current = false
+     kickProcessedRef.current = false
 
-    const channel = supabase.channel(
-      `stream-seat-events-kick:${streamId}`,
-    )
+     const channel = supabase.channel(
+       `stream-seat-events-kick:${resolvedStreamId}`,
+     )
 
-    channel
-      .on(
-        'broadcast',
-        { event: 'seat_left' },
-        (payload) => {
-          if (kickProcessedRef.current) {
-            return
-          }
+     channel
+       .on(
+         'broadcast',
+         { event: 'seat_left' },
+         (payload) => {
+           if (kickProcessedRef.current) {
+             return
+           }
 
-          if (!mySeat) {
-            return
-          }
+           if (!mySeat) {
+             return
+           }
 
-          const payloadUserId =
-            String(
-              payload?.payload?.user_id ||
-                '',
-            ).trim()
+           const payloadUserId =
+             String(
+               payload?.payload?.user_id ||
+                 '',
+             ).trim()
 
-          if (
-            !payloadUserId ||
-            payloadUserId !== user.id
-          ) {
-            return
-          }
+           if (
+             !payloadUserId ||
+             payloadUserId !== user.id
+           ) {
+             return
+           }
 
-          kickProcessedRef.current = true
+           kickProcessedRef.current = true
 
-          void (async () => {
-            try {
-              await unpublishLocalTracks()
-              await leaveSeat?.()
-              await leaveAudience()
-              await leaveLiveKitRoom().catch(
-                () => {},
-              )
-              hasJoinedAudienceRef.current =
-                false
-              joiningAudienceRef.current =
-                false
-              currentRoomKeyRef.current =
-                null
+           void (async () => {
+             try {
+               await unpublishLocalTracks()
+               await leaveSeat?.()
+               await leaveAudience()
+               await leaveLiveKitRoom().catch(
+                 () => {},
+               )
+               hasJoinedAudienceRef.current =
+                 false
+               joiningAudienceRef.current =
+                 false
+               currentRoomKeyRef.current =
+                 null
 
-              localStorage.setItem(
-                getKickStorageKey(streamId, user.id),
-                JSON.stringify({
-                  timestamp: Date.now(),
-                  streamId,
-                  reason: 'Removed from stage',
-                }),
-              )
+               localStorage.setItem(
+                 getKickStorageKey(resolvedStreamId, user.id),
+                 JSON.stringify({
+                   timestamp: Date.now(),
+                   resolvedStreamId,
+                   reason: 'Removed from stage',
+                 }),
+               )
 
-              toast.error(
-                'Removed from stage',
-              )
-              navigate(
-                '/',
-                { replace: true },
-              )
-            } catch {
-              // ignore cleanup errors
+               toast.error(
+                 'Removed from stage',
+               )
+               navigate(
+                 '/',
+                 { replace: true },
+               )
+             } catch {
+               // ignore cleanup errors
             }
           })()
         },
@@ -3093,16 +3096,16 @@ export default function PhoneViewerPage() {
       }
       kickProcessedRef.current = false
     }
-  }, [
-    streamId,
-    user?.id,
-    mySeat,
-    leaveSeat,
-    leaveAudience,
-    leaveLiveKitRoom,
-    unpublishLocalTracks,
-    navigate,
-  ])
+   }, [
+     resolvedStreamId,
+     user?.id,
+     mySeat,
+     leaveSeat,
+     leaveAudience,
+     leaveLiveKitRoom,
+     unpublishLocalTracks,
+     navigate,
+   ])
 
   /* ========================================================================
       CLEANUP ON UNMOUNT / STREAM CHANGE
@@ -3290,7 +3293,7 @@ export default function PhoneViewerPage() {
 
         if (
           batch <= 0 ||
-          !streamId
+          !resolvedStreamId
         ) {
           return
         }
@@ -3306,15 +3309,15 @@ export default function PhoneViewerPage() {
             data,
             error,
           } =
-            await supabase.rpc(
-              'increment_stream_likes',
-              {
-                p_stream_id:
-                  streamId,
-                p_like_count:
-                  batch,
-              },
-            )
+             await supabase.rpc(
+               'increment_stream_likes',
+               {
+                 p_stream_id:
+                   resolvedStreamId,
+                 p_like_count:
+                   batch,
+               },
+             )
 
           if (error) {
             throw error
@@ -3338,17 +3341,17 @@ export default function PhoneViewerPage() {
               },
             )
 
-            try {
-              void sendStreamBroadcast(
-                streamId,
-                'like_sent',
-                {
-                  user_id:
-                    user?.id,
-                  stream_id:
-                    streamId,
-                  total_likes:
-                    data,
+             try {
+               void sendStreamBroadcast(
+                 resolvedStreamId,
+                 'like_sent',
+                 {
+                   user_id:
+                     user?.id,
+                   stream_id:
+                     resolvedStreamId,
+                   total_likes:
+                     data,
                 },
               )
             } catch {
@@ -3364,7 +3367,7 @@ export default function PhoneViewerPage() {
         }
       },
       [
-        streamId,
+        resolvedStreamId,
         user?.id,
       ],
     )
@@ -3411,7 +3414,7 @@ export default function PhoneViewerPage() {
     useCallback(
       async () => {
         if (
-          !streamId ||
+          !resolvedStreamId ||
           !user?.id
         ) {
           navigate(
@@ -3505,7 +3508,7 @@ export default function PhoneViewerPage() {
         }
       },
       [
-        streamId,
+        resolvedStreamId,
         user?.id,
         flushLikes,
       ],
@@ -3719,10 +3722,10 @@ export default function PhoneViewerPage() {
     try {
       const { data: userData } = await supabase.auth.getUser()
       const inviterId = userData.user?.id
-      if (!inviterId || !streamId) return
+      if (!inviterId || !resolvedStreamId) return
 
       const { data, error } = await supabase.rpc('invite_followers_to_broadcast', {
-        p_stream_id: streamId,
+        p_stream_id: resolvedStreamId,
         p_inviter_id: inviterId,
       })
 
@@ -3732,7 +3735,7 @@ export default function PhoneViewerPage() {
     } catch (inviteError: any) {
       toast.error(inviteError.message || 'Failed to send invites')
     }
-  }, [streamId])
+  }, [resolvedStreamId])
 
   /* ========================================================================
      MIC / CAMERA
@@ -3852,72 +3855,72 @@ export default function PhoneViewerPage() {
     ],
     )
 
-  useEffect(() => {
-    if (!streamId || !user?.id) return
+   useEffect(() => {
+     if (!resolvedStreamId || !user?.id) return
 
-    const checkMuteState = async () => {
-      try {
-        const { data } = await supabase
-          .from('stream_mutes')
-          .select('id, expires_at')
-          .eq('stream_id', streamId)
-          .eq('user_id', user.id)
-          .or(`expires_at.gt.${new Date().toISOString()},expires_at.is.null`)
-          .maybeSingle()
+     const checkMuteState = async () => {
+       try {
+         const { data } = await supabase
+           .from('stream_mutes')
+           .select('id, expires_at')
+           .eq('stream_id', resolvedStreamId)
+           .eq('user_id', user.id)
+           .or(`expires_at.gt.${new Date().toISOString()},expires_at.is.null`)
+           .maybeSingle()
 
-        if (data) {
-          toast.error('You have been muted by a moderator.')
-          void applyModeratorMute()
-        }
-      } catch {
-        // ignore
-      }
-    }
+         if (data) {
+           toast.error('You have been muted by a moderator.')
+           void applyModeratorMute()
+         }
+       } catch {
+         // ignore
+       }
+     }
 
-    void checkMuteState()
+     void checkMuteState()
 
-    const muteChannel = supabase
-      .channel(`viewer-mute:${streamId}:${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'stream_mutes',
-          filter: `stream_id=eq.${streamId}`,
-        },
-        (payload) => {
-          const newMute = payload.new as any
-          if (newMute?.user_id === user.id) {
-            toast.error('You have been muted by a moderator.')
-            void applyModeratorMute()
-          }
-        },
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'stream_mutes',
-          filter: `stream_id=eq.${streamId}`,
-        },
-        (payload) => {
-          const oldMute = payload.old as any
-          if (oldMute?.user_id === user.id) {
-            toast.success('You have been unmuted.')
-            void clearModeratorMute()
-          }
-        },
-      )
-      .subscribe()
+     const muteChannel = supabase
+       .channel(`viewer-mute:${resolvedStreamId}:${user.id}`)
+       .on(
+         'postgres_changes',
+         {
+           event: 'INSERT',
+           schema: 'public',
+           table: 'stream_mutes',
+           filter: `stream_id=eq.${resolvedStreamId}`,
+         },
+         (payload) => {
+           const newMute = payload.new as any
+           if (newMute?.user_id === user.id) {
+             toast.error('You have been muted by a moderator.')
+             void applyModeratorMute()
+           }
+         },
+       )
+       .on(
+         'postgres_changes',
+         {
+           event: 'DELETE',
+           schema: 'public',
+           table: 'stream_mutes',
+           filter: `stream_id=eq.${resolvedStreamId}`,
+         },
+         (payload) => {
+           const oldMute = payload.old as any
+           if (oldMute?.user_id === user.id) {
+             toast.success('You have been unmuted.')
+             void clearModeratorMute()
+           }
+         },
+       )
+       .subscribe()
 
-    return () => {
-      if (muteChannel) {
-        supabase.removeChannel(muteChannel)
-      }
-    }
-  }, [streamId, user?.id, applyModeratorMute, clearModeratorMute])
+     return () => {
+       if (muteChannel) {
+         supabase.removeChannel(muteChannel)
+       }
+     }
+   }, [resolvedStreamId, user?.id, applyModeratorMute, clearModeratorMute])
 
   /* ========================================================================
      CITY STATUS
@@ -4009,7 +4012,7 @@ export default function PhoneViewerPage() {
   if (shouldShowRandomBattleArena) {
     return (
       <ErrorBoundary>
-    <GiftSystemProvider streamId={streamId} defaultReceiverId={stream.user_id}>
+    <GiftSystemProvider streamId={resolvedStreamId} defaultReceiverId={stream.user_id}>
       <UndoRecentGiftBar />
       <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
             <BattleView
@@ -4081,12 +4084,12 @@ export default function PhoneViewerPage() {
   ======================================================================== */
 
   return (
-    <GiftSystemProvider
-      streamId={streamId}
-      defaultReceiverId={
-        stream.user_id
-      }
-    >
+      <GiftSystemProvider
+        streamId={resolvedStreamId}
+        defaultReceiverId={
+          stream.user_id
+        }
+      >
       <UndoRecentGiftBar />
       {isFeaturedEvent && (
         <FeaturedBanner
@@ -4103,7 +4106,7 @@ export default function PhoneViewerPage() {
         />
       )}
       <FeaturedLiveOverlay active={!!currentStreamFeatured} className="left-4 top-4" />
-      {!shouldShowRandomBattleArena && <FeaturedGiftBanner streamId={streamId} broadcasterId={hostId} isMobile={true} />}
+      {!shouldShowRandomBattleArena && <FeaturedGiftBanner streamId={resolvedStreamId} broadcasterId={hostId} isMobile={true} />}
       <div
         className="relative h-[100dvh] w-full overflow-hidden bg-[#02030a] text-white"
         onClick={() => {
@@ -4275,7 +4278,7 @@ export default function PhoneViewerPage() {
                     }}
                   />
                 )}
-                {streamId && <MaiBag streamId={streamId} phone />}
+                {streamId && <MaiBag streamId={resolvedStreamId} phone />}
               </div>
 
               {/* Like / Gift / Share / Invite stay directly under the ticker. */}
@@ -4672,28 +4675,28 @@ export default function PhoneViewerPage() {
               event.stopPropagation()
             }
           >
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault()
-                const text = chatInput.trim()
-                if (!text || !streamId) return
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  const text = chatInput.trim()
+                  if (!text || !resolvedStreamId) return
 
-                if (!user) {
-                  return
-                }
+                  if (!user) {
+                    return
+                  }
 
-                const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
-                const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+                  const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
+                  const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
-                setFloatingMessages(prev => [{ id: msgId, username, content: text, timestamp: Date.now() }, ...prev].slice(0, 50))
-                setChatInput('')
+                  setFloatingMessages(prev => [{ id: msgId, username, content: text, timestamp: Date.now() }, ...prev].slice(0, 50))
+                  setChatInput('')
 
-                window.setTimeout(() => {
-                  setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                }, 30_000)
+                  window.setTimeout(() => {
+                    setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                  }, 30_000)
 
-                try {
-                  const result = await sendChatThroughGate({ streamId, content: text })
+                  try {
+                    const result = await sendChatThroughGate({ streamId: resolvedStreamId, content: text })
                   if (!result.ok) {
                     setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
                     const errMsg = String(result.error || '').toLowerCase()
@@ -4795,7 +4798,7 @@ export default function PhoneViewerPage() {
             targetAvatarUrl={
               broadcasterCityStatus.data.avatar_url
             }
-            streamId={streamId}
+            streamId={resolvedStreamId}
             mode={
               broadcasterCityStatus.data.recentlyRaided
                 ? 'repair'
@@ -4870,7 +4873,7 @@ export default function PhoneViewerPage() {
                 }}
                 targetUsername={userActionTarget.username || ''}
                 targetUserId={userActionTarget.userId}
-                streamId={streamId || ''}
+                streamId={resolvedStreamId || ''}
                 hostId={hostId}
                 currentUserId={user?.id}
               />
@@ -4884,7 +4887,7 @@ export default function PhoneViewerPage() {
                 }}
                 userId={userActionTarget.userId}
                 username={userActionTarget.username}
-                streamId={streamId || ''}
+                streamId={resolvedStreamId || ''}
               />
             ) : (
               <UserActionModal
@@ -4894,7 +4897,7 @@ export default function PhoneViewerPage() {
                   setShowModActionMenu(false)
                 }}
                 userId={userActionTarget.userId}
-                streamId={streamId || ''}
+                streamId={resolvedStreamId || ''}
                 isHost={userActionTarget.userId === hostId}
                 isModerator={canClickFloatingChatUsername}
                 isOfficer={canClickFloatingChatUsername}

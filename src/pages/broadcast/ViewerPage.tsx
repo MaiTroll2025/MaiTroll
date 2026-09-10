@@ -1785,8 +1785,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
 
   const handleJoinAvailableSeat = useCallback(async () => {
     if (typeof availableSeatIndex !== 'number') return
-    await joinSeat(availableSeatIndex, availableSeatPrice)
-  }, [availableSeatIndex, availableSeatPrice, joinSeat])
+    await joinSeat(availableSeatIndex, availableSeatPrice, viewerIdentityRef.current || viewerIdentity)
+  }, [availableSeatIndex, availableSeatPrice, joinSeat, viewerIdentity])
 
   const joinSeatThrottleRef = useRef<{ lastTime: number; count: number }>({ lastTime: 0, count: 0 })
 
@@ -1804,8 +1804,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       return
     }
     const seatPrice = getSeatPriceForIndex(stream as Stream | null, seatIndex)
-    await joinSeat(seatIndex, seatPrice)
-  }, [joinSeat, stream])
+    await joinSeat(seatIndex, seatPrice, viewerIdentityRef.current || viewerIdentity)
+  }, [joinSeat, stream, viewerIdentity])
 
   const handleAddSeat = useCallback(async () => {
     if (!streamId || !user?.id) {
@@ -3644,7 +3644,7 @@ useStreamRealtime(
           isSeatActiveStatus(normalizeSeatStatus(mySeat.status)) &&
           (mySeat.user_id === user?.id || mySeat.guest_id === user?.id),
       )
-      const canJoin = false
+      const canJoin = !isLocked && !isOccupied && !amAlreadySeated
 
       return {
         seatIndex,

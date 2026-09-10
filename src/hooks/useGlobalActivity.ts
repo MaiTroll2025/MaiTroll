@@ -21,13 +21,14 @@ const useGlobalActivity = () => {
 
   const normalizeEvent = useCallback((row: any): ActivityEvent => {
     const numericPriority = Number(row?.priority || 1)
+    const durationMinutes = Number(row?.duration_minutes || 5)
     return {
       id: row?.id || `event-${Date.now()}`,
       type: row?.type || 'system',
       message: row?.title || row?.description || 'City update',
       priority: numericPriority >= 3 ? 'breaking' : numericPriority === 2 ? 'high' : 'medium',
       created_at: row?.created_at || new Date().toISOString(),
-      duration_minutes: row?.duration_minutes,
+      duration_minutes: durationMinutes,
       metadata: row?.metadata || {},
     }
   }, [])
@@ -51,13 +52,14 @@ const useGlobalActivity = () => {
 
     const loadEvents = async () => {
       if (!mounted) return
-      const since = new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+      // Load events from the last 24h so new users joining see active messages
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       const { data, error } = await supabase
         .from('global_events')
         .select('id,type,title,icon,priority,metadata,created_at,duration_minutes')
         .gte('created_at', since)
         .order('created_at', { ascending: false })
-        .limit(20)
+        .limit(50)
 
       if (!mounted) return
       if (error) {
@@ -65,6 +67,8 @@ const useGlobalActivity = () => {
         return
       }
 
+      // Show all loaded events to new users — don't filter by expiry on initial load
+      // so anyone joining sees the latest ticker messages
       setEvents(dedupeEvents((data || []).map(normalizeEvent)))
     }
 
@@ -100,7 +104,7 @@ const useGlobalActivity = () => {
         supabase.removeChannel(channel)
       }
     }
-  }, [normalizeEvent])
+  }, [normalizeEvent, dedupeEvents])
 
   return events
 }

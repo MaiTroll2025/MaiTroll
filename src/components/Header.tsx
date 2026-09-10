@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, LogOut, UserCircle, Zap, Monitor, Download } from 'lucide-react'
+import { Bell, BellRing, LogOut, UserCircle, Zap, Monitor, Download, Smartphone, Plus, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
@@ -33,6 +33,7 @@ const Header = () => {
   }, [])
 
   const { isElectron, updateStatus, checkForUpdate, downloadUpdate, installUpdate, dismissUpdate } = useAutoUpdate()
+  const showMobileButtons = !isElectron
 
   const canDebugPush =
     !!user &&
@@ -375,17 +376,50 @@ const Header = () => {
               </button>
             )}
 
-             {showDesktopDownload && (
-               <button
-                 onClick={handleDesktopDownload}
-                 className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-purple-100 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-300/20 rounded-xl transition-all duration-200"
-                 title="Download MaiTroll for Windows"
-                 type="button"
-               >
-                 <Monitor className="w-4 h-4" />
-                 <span className="hidden lg:inline">Download for Windows</span>
-               </button>
-             )}
+            {showMobileButtons && !isElectron && (
+              <>
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.maitroll.app&pli=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-cyan-100 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-300/20 rounded-xl transition-all duration-200"
+                  title="Get MaiTroll on Google Play"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span className="hidden lg:inline">Google Play</span>
+                  <ChevronRight className="w-3 h-3 text-cyan-400/50 transition-transform group-hover:translate-x-0.5" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+                    const message = isIOS
+                      ? 'To add MaiTroll to your Home Screen:\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right'
+                      : 'To add MaiTroll to your Home Screen on iOS:\n1. Open this page in Safari on your iPhone/iPad\n2. Tap the Share button (square with arrow up)\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add" in the top right'
+                    alert(message)
+                  }}
+                  className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-purple-100 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-300/20 rounded-xl transition-all duration-200"
+                  title="Add to Home Screen on iOS"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden lg:inline">Add to Home</span>
+                  <ChevronRight className="w-3 h-3 text-purple-400/50 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </>
+            )}
+
+            {showDesktopDownload && !isElectron && !user && (
+              <button
+                onClick={handleDesktopDownload}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-purple-100 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-300/20 rounded-xl transition-all duration-200"
+                title="Download MaiTroll for Windows"
+                type="button"
+              >
+                <Monitor className="w-4 h-4" />
+                <span className="hidden lg:inline">Download for Windows</span>
+              </button>
+            )}
 
              {isElectron && updateStatus.status === 'available' && (
                <button

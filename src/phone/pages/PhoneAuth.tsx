@@ -8,10 +8,13 @@ import { useAuthStore } from '../../lib/store'
 import {
   ArrowRight,
   Check,
+  ChevronRight,
   Eye,
   EyeOff,
   Lock,
   Mail,
+  Plus,
+  Smartphone,
   Sparkles,
   User,
   Users,
@@ -595,6 +598,57 @@ export default function PhoneAuth() {
 
             </div>
           )}
+        </div>
+
+        {/* ---------------------------------------------------------------- */}
+        {/* App Download Buttons                                              */}
+        {/* ---------------------------------------------------------------- */}
+
+        <div className="mt-4 flex gap-2">
+          <a
+            href="https://play.google.com/store/apps/details?id=com.maitroll.app&pli=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative flex-1 flex items-center justify-center gap-2 overflow-hidden rounded-2xl border border-[#00BFFF]/30 bg-gradient-to-r from-[#00BFFF]/20 via-[#070711] to-[#1787FF]/20 px-4 py-3 text-white shadow-[0_0_20px_rgba(0,191,255,0.15)] transition-all active:scale-[0.98] hover:border-[#00BFFF]/50 hover:shadow-[0_0_25px_rgba(0,191,255,0.25)]"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#00BFFF]/30 bg-[#00BFFF]/10">
+              <Smartphone size={16} className="text-[#00BFFF]" />
+            </div>
+            <div className="text-left">
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#00BFFF]/70">
+                Get the App
+              </p>
+              <p className="text-[11px] font-black text-white">
+                Google Play
+              </p>
+            </div>
+            <ChevronRight size={14} className="text-[#00BFFF]/50 transition-transform group-hover:translate-x-0.5" />
+          </a>
+
+          <button
+            type="button"
+            onClick={() => {
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+              const message = isIOS
+                ? 'To add MaiTroll to your Home Screen:\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right'
+                : 'To add MaiTroll to your Home Screen on iOS:\n1. Open this page in Safari on your iPhone/iPad\n2. Tap the Share button (square with arrow up)\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add" in the top right'
+              alert(message)
+            }}
+            className="group relative flex-1 flex items-center justify-center gap-2 overflow-hidden rounded-2xl border border-[#BF00FF]/30 bg-gradient-to-r from-[#BF00FF]/20 via-[#070711] to-[#00BFFF]/20 px-4 py-3 text-white shadow-[0_0_20px_rgba(191,0,255,0.15)] transition-all active:scale-[0.98] hover:border-[#BF00FF]/50 hover:shadow-[0_0_25px_rgba(191,0,255,0.25)]"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#BF00FF]/30 bg-[#BF00FF]/10">
+              <Plus size={16} className="text-[#BF00FF]" />
+            </div>
+            <div className="text-left">
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#BF00FF]/70">
+                Add to Home
+              </p>
+              <p className="text-[11px] font-black text-white">
+                iOS Safari
+              </p>
+            </div>
+            <ChevronRight size={14} className="text-[#BF00FF]/50 transition-transform group-hover:translate-x-0.5" />
+          </button>
         </div>
 
         {/* ---------------------------------------------------------------- */}

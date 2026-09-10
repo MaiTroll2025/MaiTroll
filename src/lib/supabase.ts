@@ -1218,16 +1218,17 @@ export async function reportError(params: {
 }) {
   try {
     let userId = params.userId
-    // 🔧 REQUIRED client confirmation: Ensure user_id is included
     if (!userId) {
       const { data } = await supabase.auth.getUser()
       userId = data.user?.id || null
     }
 
+    const profileExists = userId ? await doesUserProfileExist(userId) : false
+
     const payload = {
       message: params.message?.slice(0, 1000),
       stack: params.stack?.slice(0, 4000),
-      user_id: userId,
+      user_id: profileExists ? userId : null,
       url: params.url || (typeof window !== 'undefined' ? window.location.href : null),
       component: params.component || null,
       context: {
