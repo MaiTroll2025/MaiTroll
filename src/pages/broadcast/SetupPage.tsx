@@ -51,6 +51,7 @@ import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore';
 type BroadcastStartStage =
   | 'validation'
   | 'stream row created'
+  | 'capacity check'
   | 'requesting livekit token'
   | 'token response received'
   | 'token response normalized'

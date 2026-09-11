@@ -115,14 +115,14 @@ export default function BattleChat({
     setShowModActions(true);
   };
 
-  // Fetch existing messages from both streams
+  // Fetch existing messages from challenger stream only (shared battle chat)
   useEffect(() => {
     const fetchMessages = async () => {
       // First, fetch messages only (no join)
       const { data: messages, error } = await supabase
         .from('stream_chat')
         .select('id, stream_id, user_id, username, content, created_at, avatar_url')
-        .in('stream_id', [challengerStream.id, opponentStream.id])
+        .eq('stream_id', challengerStream.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -164,109 +164,117 @@ export default function BattleChat({
     };
 
     fetchMessages();
-  }, [challengerStream.id, opponentStream.id, currentUserId, profileUsername]);
+  }, [challengerStream.id, currentUserId, profileUsername]);
 
-   // Subscribe to real-time chat messages from both streams
-   useEffect(() => {
-     // Create a single channel for both streams
-     channelRef.current = supabase
-       .channel(`battle-chat:${battleId}`)
-       .on(
-         'postgres_changes',
-         {
-           event: 'INSERT',
-           schema: 'public',
-           table: 'stream_chat',
-           filter: `stream_id=in.(${challengerStream.id},${opponentStream.id})`,
-         },
-         async (payload) => {
-           if (import.meta.env.DEV) {
-             console.log('[BattleChat] Received postgres chat message:', payload);
-           }
-           
-           const newMsgRaw = payload.new;
-           
-           // Try to get profile from cache, or fetch if missing
-           let profile = profileCacheRef.current[newMsgRaw.user_id];
-           if (!profile && newMsgRaw.user_id) {
-             try {
-               const { data } = await supabase
-                 .from('user_profiles')
-                 .select('id, username, avatar_url')
-                 .eq('id', newMsgRaw.user_id)
-                 .maybeSingle();
-               if (data) {
-                 profileCacheRef.current = { ...profileCacheRef.current, [data.id]: data };
-                 profile = data;
-               }
-             } catch (e) {
-               if (import.meta.env.DEV) {
-                 console.warn('[BattleChat] Failed to fetch profile for new message:', e);
-               }
-             }
-           }
-           
-            const newMsg = normalizeMessage(newMsgRaw, profile ? { [newMsgRaw.user_id]: profile } : {});
-            const chatKey = `${newMsg.user_id}:${newMsg.content}:${newMsg.stream_id}`;
-            const now = Date.now();
-            const existingTs = recentBattleChatKeysRef.current.get(chatKey);
-            if (existingTs !== undefined && now - existingTs < 1500) {
-              return;
+// Subscribe to real-time chat messages from both streams
+  useEffect(() => {
+    // Use challenger stream as the primary chat stream (both sides share this)
+    const primaryStreamId = challengerStream.id;
+    
+    channelRef.current = supabase
+      .channel(`battle-chat:${battleId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stream_chat',
+          filter: `stream_id=eq.${primaryStreamId}`,
+        },
+        async (payload) => {
+          if (import.meta.env.DEV) {
+            console.log('[BattleChat] Received postgres chat message:', payload);
+          }
+          
+          const newMsgRaw = payload.new;
+          
+          // Try to get profile from cache, or fetch if missing
+          let profile = profileCacheRef.current[newMsgRaw.user_id];
+          if (!profile && newMsgRaw.user_id) {
+            try {
+              const { data } = await supabase
+                .from('user_profiles')
+                .select('id, username, avatar_url')
+                .eq('id', newMsgRaw.user_id)
+                .maybeSingle();
+              if (data) {
+                profileCacheRef.current = { ...profileCacheRef.current, [data.id]: data };
+                profile = data;
+              }
+            } catch (e) {
+              if (import.meta.env.DEV) {
+                console.warn('[BattleChat] Failed to fetch profile for new message:', e);
+              }
             }
-            recentBattleChatKeysRef.current.set(chatKey, now);
-            setMessages((prev) => {
-              // Prevent duplicates
-              if (prev.some((m) => m.id === newMsg.id)) return prev;
-              return [...prev.slice(-49), newMsg];
-            });
-         }
-       )
-       // Also listen for broadcast chat events (for real-time delivery)
-       .on('broadcast', { event: 'chat_message' }, async (payload) => {
-         if (import.meta.env.DEV) {
-           console.log('[BattleChat] Received broadcast chat message:', payload);
-         }
-         
-         const newMsgRaw = payload.payload;
-         
-         // Try to get profile from cache, or fetch if missing
-         let profile = profileCacheRef.current[newMsgRaw.user_id];
-         if (!profile && newMsgRaw.user_id) {
-           try {
-             const { data } = await supabase
-               .from('user_profiles')
-               .select('id, username, avatar_url')
-               .eq('id', newMsgRaw.user_id)
-               .maybeSingle();
-             if (data) {
-               profileCacheRef.current = { ...profileCacheRef.current, [data.id]: data };
-               profile = data;
-             }
-           } catch (e) {
-             if (import.meta.env.DEV) {
-               console.warn('[BattleChat] Failed to fetch profile for broadcast message:', e);
-             }
-           }
-         }
-         
-         const newMsg = normalizeMessage(newMsgRaw, profile ? { [newMsgRaw.user_id]: profile } : {});
-         if (newMsg && newMsg.id) {
-           setMessages((prev) => {
-             // Prevent duplicates
-             if (prev.some((m) => m.id === newMsg.id)) return prev;
-             // Add sender's own message immediately for instant display
-             return [...prev.slice(-49), newMsg];
-           });
-         }
-       })
-       .subscribe();
+          }
+          
+          const newMsg = normalizeMessage(newMsgRaw, profile ? { [newMsgRaw.user_id]: profile } : {});
+          const chatKey = `${newMsg.user_id}:${newMsg.content}:${newMsg.stream_id}`;
+          const now = Date.now();
+          const existingTs = recentBattleChatKeysRef.current.get(chatKey);
+          if (existingTs !== undefined && now - existingTs < 1500) {
+            return;
+          }
+          recentBattleChatKeysRef.current.set(chatKey, now);
+          setMessages((prev) => {
+            // Prevent duplicates
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev.slice(-49), newMsg];
+          });
+        }
+      )
+      // Also listen for broadcast chat events (for real-time delivery)
+      .on('broadcast', { event: 'chat_message' }, async (payload) => {
+        if (import.meta.env.DEV) {
+          console.log('[BattleChat] Received broadcast chat message:', payload);
+        }
+        
+        const newMsgRaw = payload.payload;
+        
+        // Try to get profile from cache, or fetch if missing
+        let profile = profileCacheRef.current[newMsgRaw.user_id];
+        if (!profile && newMsgRaw.user_id) {
+          try {
+            const { data } = await supabase
+              .from('user_profiles')
+              .select('id, username, avatar_url')
+              .eq('id', newMsgRaw.user_id)
+              .maybeSingle();
+            if (data) {
+              profileCacheRef.current = { ...profileCacheRef.current, [data.id]: data };
+              profile = data;
+            }
+          } catch (e) {
+            if (import.meta.env.DEV) {
+              console.warn('[BattleChat] Failed to fetch profile for broadcast message:', e);
+            }
+          }
+        }
+        
+        const newMsg = normalizeMessage(newMsgRaw, profile ? { [newMsgRaw.user_id]: profile } : {});
+        if (newMsg && newMsg.id) {
+          const chatKey = `${newMsg.user_id}:${newMsg.content}:${newMsg.stream_id}`;
+          const now = Date.now();
+          const existingTs = recentBattleChatKeysRef.current.get(chatKey);
+          if (existingTs !== undefined && now - existingTs < 1500) {
+            return;
+          }
+          recentBattleChatKeysRef.current.set(chatKey, now);
+          setMessages((prev) => {
+            // Prevent duplicates
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev.slice(-49), newMsg];
+          });
+        }
+      })
+      .subscribe();
 
-     return () => {
-       if (channelRef.current) {
-         supabase.removeChannel(channelRef.current);
-       }
-     };
-   }, [battleId, challengerStream.id, opponentStream.id]); // Removed profileCache from deps - ref is stable
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
+  }, [battleId, challengerStream.id]); // Only depend on challenger stream
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -293,8 +301,6 @@ export default function BattleChat({
       }
     }
 
-    const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
     // Always prefer auth/profile username to avoid writing placeholders like "You".
     const existingMessage = messages.find(m => m.user_id === currentUserId);
     const existingUsername =
@@ -303,36 +309,16 @@ export default function BattleChat({
         : null;
     const senderUsername = profileUsername || existingUsername || 'Troll Citizen';
     
-    const chatMessage = {
-      id: messageId,
-      stream_id: battleId,
+    // Insert to challenger stream only (shared battle chat)
+    const { error } = await supabase.from('stream_chat').insert({
+      stream_id: challengerStream.id,
       user_id: currentUserId,
       username: senderUsername,
       content: newMessage.trim(),
-      created_at: new Date().toISOString(),
-    };
+    });
 
-    // IMMEDIATELY add sender's own message to local state so they can see it
-    setMessages((prev) => [...prev.slice(-49), chatMessage]);
-
-    // Insert to BOTH streams' chat channels so all viewers see it
-    const [insertA, insertB] = await Promise.all([
-      supabase.from('stream_chat').insert({
-        stream_id: challengerStream.id,
-        user_id: currentUserId,
-        username: senderUsername,
-        content: newMessage.trim(),
-      }),
-      supabase.from('stream_chat').insert({
-        stream_id: opponentStream.id,
-        user_id: currentUserId,
-        username: senderUsername,
-        content: newMessage.trim(),
-      }),
-    ]);
-
-    if (insertA.error || insertB.error) {
-      console.error('Error sending message:', insertA.error || insertB.error);
+    if (error) {
+      console.error('Error sending message:', error);
       return;
     }
 

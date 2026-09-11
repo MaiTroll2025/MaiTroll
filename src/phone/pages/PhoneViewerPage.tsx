@@ -2927,9 +2927,7 @@ export default function PhoneViewerPage() {
     audienceJoinAttemptedKeyRef.current = null
     currentRoomKeyRef.current = null
 
-    // markSeatLive is called after publishLocalTracks() succeeds in the
-    // publish effect above, so the livekit_participant_identity is correct.
-
+    // markSeatLive is called after publishLocalTracks() succeeds in this effect.
     void (async () => {
       joiningAudienceRef.current = true
       try {
@@ -2944,6 +2942,13 @@ export default function PhoneViewerPage() {
 
         if (!isBattleMode) {
           await publishLocalTracks()
+          if (mySeat?.seat_index != null) {
+            try {
+              await markSeatLive(mySeat.seat_index, viewerIdentityRef.current || viewerIdentity)
+            } catch (err) {
+              console.warn('[PhoneViewerPage] markSeatLive after publish failed:', err)
+            }
+          }
         }
 
         if (typeof result === 'string') {
