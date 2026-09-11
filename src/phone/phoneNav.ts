@@ -75,6 +75,7 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     { label: 'Mai Piks', path: '/mai-piks', icon: Image },
     { label: 'Troll Court', path: '/troll-court', icon: Scale, show: true },
     { label: 'Treelz', path: '/treelz', icon: Video },
+    { label: 'Troll Up', path: '/troll-up', icon: Zap },
     { label: 'Auctions', path: '/auctions', icon: Gavel, show: true },
     { label: 'HytroGaming', path: '/hytro', icon: Gamepad2 },
     { label: 'Careers', path: '/careers', icon: Briefcase },

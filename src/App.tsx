@@ -604,6 +604,7 @@ const WallPage = lazyWithRetry(() => import("./pages/WallPage"));
 const WallPostPage = lazyWithRetry(() => import("./pages/WallPostPage"));
 import LivingPage from "./pages/UnderConstructionPage";
 const ChurchPage = lazyWithRetry(() => import("./pages/ChurchPage"));
+const TrollUpPage = lazyWithRetry(() => import("./pages/TrollUp"));
 const PastorDashboard = lazyWithRetry(() => import("./pages/church/PastorDashboard"));
 const ChurchLivePage = lazyWithRetry(() => import("./pages/church/ChurchLivePage.tsx"));
 const LiveCommandCenter = lazyWithRetry(() => import("./pages/live/LiveCommandCenter"));
@@ -2022,9 +2023,10 @@ const handleVisibilityChange = async () => {
                   <Route path="/marketplace/sales" element={<SellerOrders />} />
                   <Route path="/pool" element={<PublicPool />} />
 
-                  <Route path="/troll-games/giveaways" element={<GiveawaysPage />} />
-                  <Route path="/troll-wheel" element={<TrollWheel />} />
-                  <Route path="/ktauto" element={<CarDealership />} />
+                   <Route path="/troll-games/giveaways" element={<GiveawaysPage />} />
+                   <Route path="/troll-wheel" element={<TrollWheel />} />
+                   <Route path="/troll-up" element={<TrollUpPage />} />
+                   <Route path="/ktauto" element={<CarDealership />} />
                   <Route path="/garage" element={<GaragePage />} />
                   <Route path="/vehicle-transactions" element={<VehicleTransactionsPage />} />
 

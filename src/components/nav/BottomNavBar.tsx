@@ -56,6 +56,7 @@ import {
   Radio,
   RefreshCw,
   Gem,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
@@ -346,6 +347,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
           { label: 'MAI Pay', icon: DollarSign, path: '/mai-pay' },
           { label: 'Coin Store', icon: Coins, path: '/store' },
           { label: 'My Garage', icon: Car, path: '/garage' },
+          { label: 'Troll Up', icon: Zap, path: '/troll-up' },
         ],
       },
       {

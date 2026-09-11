@@ -23,6 +23,7 @@ import {
   Video,
   VideoOff,
   X,
+  Zap,
 } from 'lucide-react'
 
 import {
@@ -3232,6 +3233,28 @@ export default function PhoneViewerPage() {
                 ?.are_seats_locked,
             )
 
+          const amAlreadySeated =
+            Boolean(
+              mySeat &&
+                [
+                  'reserved',
+                  'camera_starting',
+                  'active',
+                  'live',
+                ].includes(
+                  String(
+                    mySeat.status ||
+                      '',
+                  ).toLowerCase(),
+                ) &&
+                (
+                  mySeat.user_id ===
+                    user?.id ||
+                  mySeat.guest_id ===
+                    user?.id
+                ),
+            )
+
           cards.push({
             seatIndex: index,
             seat,
@@ -3244,8 +3267,10 @@ export default function PhoneViewerPage() {
             isOccupied,
             isMine,
             isLocked,
-            canJoin: false,
-            isDisabled: true,
+            canJoin:
+              !isLocked &&
+              !isOccupied &&
+              !amAlreadySeated,
             seatPrice:
               getSeatPrice(
                 stream,
@@ -3260,6 +3285,7 @@ export default function PhoneViewerPage() {
         seats,
         stream,
         user?.id,
+        mySeat,
       ],
     )
 
@@ -4909,7 +4935,21 @@ export default function PhoneViewerPage() {
             )}
           </>
         )}
+        <TrollUpFloatingButton />
       </div>
     </GiftSystemProvider>
+  )
+}
+
+function TrollUpFloatingButton() {
+  const navigate = useNavigate()
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/troll-up')}
+      className="fixed bottom-20 right-4 z-[60] flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-950/90 px-4 py-2.5 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl active:scale-95"
+    >
+      <Zap className="h-4 w-4" /> Troll Up
+    </button>
   )
 }

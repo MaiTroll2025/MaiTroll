@@ -20,6 +20,7 @@ import {
   Video,
   VideoOff,
   X,
+  Zap,
 } from 'lucide-react'
 import {
   LocalAudioTrack,
@@ -73,6 +74,7 @@ import MiniMaiPayCashoutModal from '@/components/broadcast/MiniMaiPayCashoutModa
 import { useCashoutBanner } from '@/hooks/useCashoutBanner'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
+import TrollUpSlideModal from '@/components/trollup/TrollUpSlideModal'
 
 import type { Stream } from '@/types/broadcast'
 import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
@@ -145,6 +147,8 @@ export default function PhoneBroadcastPage() {
     useState(false)
 
   const [isEnding, setIsEnding] = useState(false);
+
+  const [showTrollUpModal, setShowTrollUpModal] = useState(false)
 
   const [floatingMessages, setFloatingMessages] =
     useState<FloatingMessage[]>([])
@@ -1873,6 +1877,12 @@ export default function PhoneBroadcastPage() {
             isMobile={true}
           />
         )}
+
+        <TrollUpSlideModal
+          isOpen={showTrollUpModal}
+          onClose={() => setShowTrollUpModal(false)}
+        />
+
         <PhoneGiftModal
               isOpen={
                 isGiftModalOpen
@@ -2307,6 +2317,7 @@ onCameraOffAllSeats={cameraOffAllSeats}
           />
         )}
       </div>
+      <TrollUpFloatingButton onClick={() => setShowTrollUpModal(true)} />
     </GiftSystemProvider>
   )
 }
@@ -2632,6 +2643,18 @@ function ControlButton({
        <span className="max-w-full truncate px-0.5">
         {label}
       </span>
+    </button>
+  )
+}
+
+function TrollUpFloatingButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="fixed bottom-20 right-4 z-[60] flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-950/90 px-4 py-2.5 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl active:scale-95"
+    >
+      <Zap className="h-4 w-4" /> Troll Up
     </button>
   )
 }

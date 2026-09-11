@@ -65,6 +65,7 @@ import RecoveryBanner from '../../components/broadcast/RecoveryBanner'
 import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
 
 import { MaiTrollBroadcastTheme as theme } from '../../styles/broadcastTheme'
+import TrollUpSlideModal from '../../components/trollup/TrollUpSlideModal'
 
 // Reusable label classes from broadcastTheme
 // const guestLabel = 'rounded-lg bg-cyan-500/20 px-2.5 py-1 text-[11px] font-black text-cyan-300 shadow-[0_0_12px_rgba(45,212,191,0.25)]'
@@ -548,7 +549,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2, Image as ImageIcon } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2, Image as ImageIcon, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -808,6 +809,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
     const [remoteParticipantSnapshots, setRemoteParticipantSnapshots] = useState<RemoteParticipantSnapshot[]>([])
     const [showCollaborationModal, setShowCollaborationModal] = useState(false)
     const [showCameraOffImageModal, setShowCameraOffImageModal] = useState(false)
+    const [showTrollUpModal, setShowTrollUpModal] = useState(false)
     const remoteUsers = useMemo(() => Array.from(remoteParticipants.values()), [remoteParticipants])
     const collaboration = useStreamCollaboration({
       currentUserId: user?.id,
@@ -9069,6 +9071,11 @@ const showFallback =
                 }}
               />
 
+              <TrollUpSlideModal
+                isOpen={showTrollUpModal}
+                onClose={() => setShowTrollUpModal(false)}
+              />
+
               <CollaborationRequestNotification
                 request={collaboration.incomingRequests[0] || null}
                 onAccept={async (request) => {
@@ -9543,9 +9550,10 @@ const showFallback =
                 </div>
               </div>
             )}
-         </GiftSystemProvider>
-         <RoleInviteHandler />
-      </>
+          </GiftSystemProvider>
+          <TrollUpFloatingButton onClick={() => setShowTrollUpModal(true)} />
+          <RoleInviteHandler />
+       </>
     );
     }
 
@@ -9628,10 +9636,23 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
 
   if (!track) return null;
 
-  return (
-    <div
-      ref={divRef}
-      className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
-    />
-  );
+   return (
+     <div
+       ref={divRef}
+       className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
+     />
+   );
 })
+
+function TrollUpFloatingButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="fixed bottom-20 right-4 z-[60] flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-950/90 px-4 py-2.5 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl hover:bg-cyan-500/15 active:scale-95"
+    >
+      <Zap className="h-4 w-4" /> Troll Up
+    </button>
+  )
+}
+

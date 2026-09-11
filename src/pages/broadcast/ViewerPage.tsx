@@ -21,6 +21,7 @@ import {
   Shield,
   X,
   Gamepad2,
+  Zap,
 } from 'lucide-react'
 import type { LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteTrackPublication, RemoteVideoTrack } from 'livekit-client'
 import { RoomEvent, Track } from 'livekit-client'
@@ -6159,15 +6160,26 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
         )}
       </AnimatePresence>
 
-    </ErrorBoundary>
-  </GiftSystemProvider>
-)
+     </ErrorBoundary>
+     <TrollUpFloatingButton />
+   </GiftSystemProvider>
+ )
 }
 
 export default ViewerPage
 
-
-
+function TrollUpFloatingButton() {
+  const navigate = useNavigate()
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/troll-up')}
+      className="fixed bottom-24 right-4 z-[60] flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-950/90 px-4 py-2.5 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl hover:bg-cyan-500/15 active:scale-95"
+    >
+      <Zap className="h-4 w-4" /> Troll Up
+    </button>
+  )
+}
 
 
 

@@ -60,6 +60,7 @@ import PhoneExplore from './pages/PhoneExplore'
 import PhoneErrorBoundary from './PhoneErrorBoundary'
 import PhoneBottomNav from './layout/PhoneBottomNav'
 import PhoneCareers from './pages/PhoneCareers'
+import PhoneTrollUp from './pages/PhoneTrollUp'
 import { useUtromailMessagePopup } from '@/hooks/useUtromailMessagePopup'
 import UtromailMessagePopup from '@/components/messaging/UtromailMessagePopup'
 
@@ -220,9 +221,10 @@ export default function PhoneApp() {
             <Route path="/mai-record-label" element={<PhoneRecordLabel />} />
             <Route path="/tcnn" element={<PhoneTCNN />} />
             <Route path="/community-wall" element={<PhoneCommunityWall />} />
-            <Route path="/leaderboard" element={<PhoneLeaderboard />} />
-            <Route path="/blocked-users" element={<PhoneBlockedUsers />} />
-            <Route path="/profile/delete" element={<PhoneProfileDelete />} />
+             <Route path="/leaderboard" element={<PhoneLeaderboard />} />
+             <Route path="/blocked-users" element={<PhoneBlockedUsers />} />
+             <Route path="/troll-up" element={<PhoneTrollUp />} />
+             <Route path="/profile/delete" element={<PhoneProfileDelete />} />
             <Route path="/treelz/upload" element={<PhoneTreelzUpload />} />
             <Route path="/admin/users" element={<PhoneAdminUsers />} />
             <Route path="/admin/payouts" element={<PhoneAdminPayouts />} />
