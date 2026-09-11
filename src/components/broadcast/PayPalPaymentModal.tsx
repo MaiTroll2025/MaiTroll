@@ -54,14 +54,12 @@ export default function PayPalPaymentModal({
   const [paymentResult, setPaymentResult] = useState<any>(null)
   const [sdkReady, setSdkReady] = useState(false)
   const [forceCard, setForceCard] = useState(false)
+  const [paypalError, setPaypalError] = useState(false)
 
   const paypalButtonsRef = useRef<HTMLDivElement | null>(null)
   const paypalOrderIdRef = useRef<string | null>(null)
   const paypalInstanceRef = useRef<any>(null)
   const renderKeyRef = useRef<string>('')
-  // Track whether a PayPal checkout flow is actively in progress so we
-  // can prevent the Dialog from closing (via onOpenChange) while the
-  // user is completing the PayPal popup.
   const paypalFlowActiveRef = useRef(false)
 
   const coins = pkg?.coins ?? pkg?.coin_amount ?? pkg?.coinAmount ?? 0
@@ -160,6 +158,7 @@ export default function PayPalPaymentModal({
     if (!Number.isFinite(amountUsd) || amountUsd <= 0) return
     if (requireCoins && (!Number.isFinite(Number(coins)) || Number(coins) <= 0)) return
     if (paypalFlowActiveRef.current) return
+    if (paypalError) return // Don't auto-re-render after error; wait for user action
 
     safelyClosePayPalButtons()
     clearPayPalContainer()
@@ -224,13 +223,19 @@ export default function PayPalPaymentModal({
         } catch (err: any) {
           console.error('[PayPalPaymentModal] PayPal payment verification error:', err)
           const errorMessage = String(err?.message || '')
+          const errorData = err?.data || err?.response?.data || {}
           // If the edge function returned a non-2xx status, show a clean message
           if (errorMessage.includes('Edge Function returned a non-2xx status code')) {
             toast.error('Payment verification failed')
+          } else if (errorData?.code === 'PAYER_CANNOT_PAY') {
+            toast.error("This payment method can't be used. Please try a different card or PayPal balance.")
+          } else if (errorData?.code === 'CARD_DECLINED') {
+            toast.error('Your card was declined. Please try a different payment method.')
           } else {
             toast.error(errorMessage || 'Payment verification failed')
           }
           setStep('select')
+          setPaypalError(true)
         } finally {
           // PayPal flow finished – re-enable dialog close
           paypalFlowActiveRef.current = false
@@ -248,6 +253,7 @@ export default function PayPalPaymentModal({
         console.error('[PayPalPaymentModal] PayPal error:', err)
         toast.error('PayPal payment failed. Please try again.')
         setStep('select')
+        setPaypalError(true)
         // Flow errored – allow dialog to close again
         paypalFlowActiveRef.current = false
       }
@@ -309,6 +315,7 @@ export default function PayPalPaymentModal({
 
     setStep('select')
     setPaymentResult(null)
+    setPaypalError(false)
     paypalOrderIdRef.current = null
 
     loadPayPalSDK().catch((err: any) => {

@@ -483,7 +483,7 @@ export function useStreamSeats(
           p_price: finalPrice,
           p_user_id: effectiveUserId,
         })
-        console.log(`[useStreamSeats] join_seat_atomic RPC completed in ${Date.now() - tRpc}ms`)
+        console.log(`[useStreamSeats] SEAT_JOIN_RPC_SUCCESS: join_seat_atomic completed in ${Date.now() - tRpc}ms`)
 
         if (error) {
           console.warn('[useStreamSeats] joinSeat rpc error:', error)

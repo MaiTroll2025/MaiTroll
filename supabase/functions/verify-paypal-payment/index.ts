@@ -196,9 +196,34 @@ Deno.serve(async (req) => {
     if (!captureRes.ok) {
       const error = await captureRes.json()
       console.error(`[VerifyPayPalPayment ${requestId}] Capture failed:`, error)
+
+      const details = error?.details || []
+      const payerCannotPay = details.some((d: any) => d.issue === 'PAYER_CANNOT_PAY')
+      const cardDeclined = details.some((d: any) => d.issue === 'CARD_DECLINED' || d.issue === 'DECLINED')
+      const instrumentDeclined = details.some((d: any) => d.issue === 'INSTRUMENT_DECLINED')
+
+      if (payerCannotPay) {
+        return withCors({
+          success: false,
+          error: "This payment method can't be used for this purchase. Please try a different card or payment method.",
+          code: 'PAYER_CANNOT_PAY',
+          retryable: true,
+        }, 422, req)
+      }
+
+      if (cardDeclined || instrumentDeclined) {
+        return withCors({
+          success: false,
+          error: "Your card was declined. Please try a different payment method.",
+          code: 'CARD_DECLINED',
+          retryable: true,
+        }, 422, req)
+      }
+
       return withCors({
         success: false,
         error: "Failed to capture payment",
+        details: error,
       }, 500, req)
     }
 

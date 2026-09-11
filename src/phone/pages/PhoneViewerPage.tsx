@@ -2865,8 +2865,13 @@ export default function PhoneViewerPage() {
       currentRoomKeyRef.current = `${resolvedStreamId}:${roomId}`
 
       void publishLocalTracks()
-        .then(() => {
+        .then(async () => {
           if (mySeat?.seat_index != null) {
+            try {
+              await markSeatLive(mySeat.seat_index, viewerIdentity)
+            } catch (err) {
+              console.warn('[PhoneViewerPage] markSeatLive after publish failed:', err)
+            }
           }
         })
         .catch((err: any) => {
@@ -2922,9 +2927,8 @@ export default function PhoneViewerPage() {
     audienceJoinAttemptedKeyRef.current = null
     currentRoomKeyRef.current = null
 
-    if (mySeat?.seat_index != null && viewerIdentity) {
-      void markSeatLive(mySeat.seat_index, viewerIdentity)
-    }
+    // markSeatLive is called after publishLocalTracks() succeeds in the
+    // publish effect above, so the livekit_participant_identity is correct.
 
     void (async () => {
       joiningAudienceRef.current = true

@@ -934,6 +934,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
     setIsJoining(true);
     setError(null);
     localUserIdRef.current = userId;
+    console.log('[useLiveKitRoom] AUDIENCE_CONNECT_START', { roomId, userId, publishCapable })
 
     try {
       const t0 = Date.now()
@@ -952,7 +953,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
       
       // Handle disconnection events to reset state
       room.on(RoomEvent.Disconnected, () => {
-        console.log('[useLiveKitRoom] Room disconnected');
+        console.log('[useLiveKitRoom] AUDIENCE_DISCONNECT');
         joinedRef.current = false;
         joiningRef.current = false;
         setIsConnected(false);
@@ -1041,6 +1042,8 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
       setIsConnected(true);
       setIsJoining(false);
       joiningRef.current = false;
+
+      console.log('[useLiveKitRoom] AUDIENCE_CONNECTED', { roomName: room.name, identity, remoteParticipantCount: existingParticipants.length })
 
       if (import.meta.env.DEV) {
         console.log('[useLiveKitRoom] joinAsAudience connected:', {
@@ -1140,16 +1143,22 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
   }, [])
 
    const publishLocalTracks = useCallback(async () => {
-      const room = roomRef.current
-      if (!room || room.state !== 'connected') {
+      const startRoom = roomRef.current
+      if (!startRoom || startRoom.state !== 'connected') {
+        console.log('[useLiveKitRoom] PUBLISH_ABORT: room not connected')
         return
       }
 
       let audioTrack = localAudioTrackRef.current
       let videoTrack = localVideoTrackRef.current
 
-      if (!audioTrack) {
+       if (!audioTrack) {
         audioTrack = await createLocalAudioTrack()
+        if (roomRef.current !== startRoom) {
+          console.log('[useLiveKitRoom] PUBLISH_ABORT: room changed during audio track creation')
+          try { await audioTrack.stop() } catch {}
+          return
+        }
         localAudioTrackRef.current = audioTrack
         setLocalAudioTrack(audioTrack)
       }
@@ -1157,14 +1166,26 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
       if (!videoTrack && !audioOnly) {
         const { createLocalVideoTrack: createVideo } = await import('livekit-client')
         videoTrack = await createVideo({ ...videoPreset, facingMode: 'user' })
+        if (roomRef.current !== startRoom) {
+          console.log('[useLiveKitRoom] PUBLISH_ABORT: room changed during video track creation')
+          try { await videoTrack.stop() } catch {}
+          return
+        }
         localVideoTrackRef.current = videoTrack
         setLocalVideoTrack(videoTrack)
       }
 
-      await room.localParticipant.publishTrack(audioTrack)
-      if (videoTrack) {
-        await room.localParticipant.publishTrack(videoTrack)
+      if (roomRef.current !== startRoom) {
+        console.log('[useLiveKitRoom] PUBLISH_ABORT: room changed before publishTrack')
+        return
       }
+
+      console.log('[useLiveKitRoom] PUBLISH_START')
+      await startRoom.localParticipant.publishTrack(audioTrack)
+      if (videoTrack) {
+        await startRoom.localParticipant.publishTrack(videoTrack)
+      }
+      console.log('[useLiveKitRoom] PUBLISH_SUCCESS')
 
       setIsPublishing(true)
     }, [audioOnly, videoPreset])
@@ -1310,13 +1331,13 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
           return true
         }
 
-        const { createLocalVideoTrack } = await import('livekit-client')
-        track = await createLocalVideoTrack({
-          ...videoPreset,
-          facingMode: 'user',
-        })
-        localVideoTrackRef.current = track
-      }
+         const { createLocalVideoTrack } = await import('livekit-client')
+         track = await createLocalVideoTrack({
+           ...videoPreset,
+           facingMode: 'user',
+         })
+         localVideoTrackRef.current = track
+       }
 
       const isPublished = Array.from(currentParticipant.videoTrackPublications.values())
         .some((pub) => pub.track === track)
@@ -1326,9 +1347,13 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
           await track.unmute()
         }
 
-        if (!isPublished) {
-          await currentParticipant.publishTrack(track)
+      if (!isPublished) {
+        if (roomRef.current !== room) {
+          console.log('[useLiveKitRoom] CAMERA_TOGGLE_ABORT: room changed before publish')
+          return false
         }
+        await currentParticipant.publishTrack(track)
+      }
 
         setLocalVideoTrack(track)
         return true

@@ -1786,8 +1786,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
 
   const handleJoinAvailableSeat = useCallback(async () => {
     if (typeof availableSeatIndex !== 'number') return
-    await joinSeat(availableSeatIndex, availableSeatPrice, viewerIdentityRef.current || viewerIdentity)
-  }, [availableSeatIndex, availableSeatPrice, joinSeat, viewerIdentity])
+    await joinSeat(availableSeatIndex, availableSeatPrice, viewerIdentityRef.current)
+  }, [availableSeatIndex, availableSeatPrice, joinSeat])
 
   const joinSeatThrottleRef = useRef<{ lastTime: number; count: number }>({ lastTime: 0, count: 0 })
 
@@ -1805,8 +1805,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       return
     }
     const seatPrice = getSeatPriceForIndex(stream as Stream | null, seatIndex)
-    await joinSeat(seatIndex, seatPrice, viewerIdentityRef.current || viewerIdentity)
-  }, [joinSeat, stream, viewerIdentity])
+    await joinSeat(seatIndex, seatPrice, viewerIdentityRef.current)
+  }, [joinSeat, stream])
 
   const handleAddSeat = useCallback(async () => {
     if (!streamId || !user?.id) {
@@ -3386,9 +3386,11 @@ useStreamRealtime(
 
         joiningPublisherRef.current = true
         currentRoomKeyRef.current = audienceRoomKey
+        console.log('[ViewerPage] SEAT_JOIN_START')
 
         publishLocalTracks()
           .then(async () => {
+            console.log('[ViewerPage] PUBLISH_SUCCESS')
             setViewerError(null)
             if (mySeat?.seat_index != null) {
               await markSeatLive(mySeat.seat_index, viewerIdentityRef.current || viewerIdentity)
@@ -3397,6 +3399,7 @@ useStreamRealtime(
           .catch(async (err: any) => {
             const errorDetail = err?.message || err?.statusText || String(err) || 'Failed to publish seat tracks'
             const isPermissionError = /permission|insufficient|forbidden|not authorized|not permitted|403/i.test(errorDetail)
+            console.warn('[ViewerPage] PUBLISH_FAILED:', errorDetail, { isPermissionError, isUserOnStage: !!isUserOnStage })
 
             if (isPermissionError && mySeat?.id && isUserOnStage) {
               const now = Date.now()
@@ -3410,6 +3413,7 @@ useStreamRealtime(
               lastPermissionErrorRef.current = now
 
               try {
+                console.log('[ViewerPage] PUBLISH_RETRY: reconnecting with stage permissions')
                 setViewerError('Reconnecting with stage permissions...')
                 await leaveLiveKitRoom()
 
@@ -3424,6 +3428,7 @@ useStreamRealtime(
 
                 await new Promise(r => setTimeout(r, 800))
 
+                console.log('[ViewerPage] PUBLISH_RETRY: publishing after reconnect')
                 await publishLocalTracks()
                 setViewerError(null)
 
@@ -3449,15 +3454,16 @@ useStreamRealtime(
 
       if (!isUserOnStage && isPublishing) {
         joiningPublisherRef.current = true
+        console.log('[ViewerPage] SEAT_LEAVE_START')
         unpublishLocalTracks()
+          .then(() => {
+            console.log('[ViewerPage] UNPUBLISH_COMPLETE')
+          })
           .catch(() => {})
           .finally(() => {
             joiningPublisherRef.current = false
           })
-        leaveLiveKitRoom().catch(() => {})
-        hasJoinedAudienceRef.current = false
-        joiningAudienceRef.current = false
-        currentRoomKeyRef.current = null
+        console.log('[ViewerPage] AUDIENCE_RETAINED')
         return
       }
 
@@ -3591,33 +3597,7 @@ useStreamRealtime(
     return () => { cancelled = true }
   }, [streamId, stream?.id, stream?.status, stream?.is_live, roomId, user?.id, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage])
 
-  // Transition watcher: when the user goes from off-stage to on-stage, the
-  // focused join effect above has already joined LiveKit as plain audience
-  // (publishCapable: false). Re-join with publishCapable: true so the
-  // publisher effect below can publish immediately without hitting a
-  // permission error and without ever tearing the room down.
-  const wasOnStageRef = useRef(isUserOnStage)
-  useEffect(() => {
-    if (wasOnStageRef.current) { wasOnStageRef.current = isUserOnStage; return }
-    wasOnStageRef.current = isUserOnStage
-    if (!isUserOnStage) return
-
-    joiningAudienceRef.current = false
-    hasJoinedAudienceRef.current = false
-    joiningAudienceRef.current = false
-    audienceJoinAttemptedKeyRef.current = null
-    currentRoomKeyRef.current = null
-
-    void joinAsAudience({
-      userId: viewerIdentityRef.current || viewerIdentity,
-      streamId,
-      roomName: roomId,
-      viewerIdentity: viewerIdentityRef.current || viewerIdentity,
-      publishCapable: true,
-    }).catch(() => {})
-  }, [isUserOnStage, roomId, streamId, viewerIdentity, joinAsAudience])
-
-  const stageSlots = useMemo(() => {
+   const stageSlots = useMemo(() => {
     const liveSeats = activeSeats.slice(0, Math.max(0, effectiveBoxCount - 1))
     const emptyCount = Math.max(1, effectiveBoxCount - 1 - liveSeats.length)
     return { liveSeats, emptyCount }
