@@ -1,4 +1,4 @@
-```tsx
+
 import React from 'react'
 import { Link } from 'react-router-dom'
 import SEOLayout, { Breadcrumb } from './SEOLayout'
@@ -664,4 +664,4 @@ export default function PrivacyPage() {
     </SEOLayout>
   )
 }
-```
+
