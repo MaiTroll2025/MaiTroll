@@ -884,7 +884,7 @@ export default function PhoneMaiPiks() {
   /** Only stories the viewer is allowed to open take part in left/right scrolling. */
   const viewableStories = useMemo(
     () => stories.filter((story) => canViewStory(story) && story.items.length > 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     [stories]
   )
 

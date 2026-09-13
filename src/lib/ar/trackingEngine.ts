@@ -105,7 +105,7 @@ export class TrackingEngine {
 
     try {
       let faceData: FaceLandmarks | null = null;
-      let bodyData: BodyLandmarks | null = null;
+      const bodyData: BodyLandmarks | null = null;
 
       if (this.modelsLoaded && this.video.readyState >= 2) {
         faceData = await this.detectFace();

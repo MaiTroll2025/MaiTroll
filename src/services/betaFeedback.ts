@@ -19,7 +19,7 @@ import type {
 
 function appVersion(): string {
   try {
-    // eslint-disable-next-line no-undef
+     
     return typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : ''
   } catch {
     return ''

@@ -653,7 +653,7 @@ function ViewerPage() {
       let anonId = window.sessionStorage.getItem(storageKey);
       if (anonId) return anonId;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const cryptoObj = (window as any).crypto;
       if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
         anonId = `guest-viewer:${streamId}:${cryptoObj.randomUUID()}`;
