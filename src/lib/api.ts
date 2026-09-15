@@ -64,20 +64,6 @@ export const API_ENDPOINTS = {
     vote: '/officer-vote',
     cycle: '/officer-vote-cycle'
   },
-  celeb: {
-    submitApplication: '/submit-celeb-application',
-    uploadDocument: '/upload-celeb-document',
-    reviewAction: '/celeb-review-action',
-    createStream: '/celeb-create-stream',
-    joinBattleQueue: '/celeb-join-battle-queue',
-    paidChat: '/celeb-paid-chat',
-    paidChatSettings: '/celeb-paid-chat-settings',
-    externalLinks: '/celeb-external-links',
-    products: '/celeb-products',
-    cashout: '/celeb-cashout',
-    moderation: '/celeb-moderation',
-    auditLog: '/celeb-audit-log',
-  },
 }
 
 interface ApiResponse<T = any> {

@@ -130,7 +130,6 @@ export default function AuctionsPage() {
   const isAuctioneer =
     profile?.role === 'auctioneer' ||
     profile?.troll_role === 'auctioneer' ||
-    !!(profile as any)?.is_auctioneer ||
     !!(profile as any)?.is_admin
 
   useSEO({

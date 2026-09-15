@@ -29,7 +29,6 @@ import PhoneHeader from '../PhoneHeader'
 import { useAuthStore } from '@/lib/store'
 import {
   useLiveContent,
-  type AuctionShow,
   type LiveItem,
 } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
@@ -378,77 +377,6 @@ function PhoneLiveNow({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Auctions                                                                    */
-/* -------------------------------------------------------------------------- */
-
-function PhoneAuctions({
-  auctions,
-  onClick,
-}: {
-  auctions: AuctionShow[]
-  onClick: (id?: string) => void
-}) {
-  return (
-    <PhoneSection
-      title="Live Auctions"
-      icon={Gavel}
-      count={auctions.length}
-      onViewAll={() => onClick()}
-    >
-      {auctions.length === 0 ? (
-        <div className="flex h-[145px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl border border-[#BF00FF]/15 bg-gradient-to-br from-[#BF00FF]/5 to-[#00BFFF]/5 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#BF00FF]/10">
-            <Gavel className="h-6 w-6 text-[#BF00FF]/50" />
-          </div>
-
-          <p className="mt-2 text-xs font-black text-zinc-400">
-            No live auctions
-          </p>
-
-          <p className="mt-1 text-[9px] font-bold text-zinc-600">
-            Check back when the bidding starts.
-          </p>
-        </div>
-      ) : (
-        auctions.slice(0, 10).map((auction) => (
-          <button
-            key={auction.id}
-            type="button"
-            onClick={() => onClick(auction.id)}
-            className="group relative h-[145px] w-[150px] shrink-0 overflow-hidden rounded-2xl border border-[#BF00FF]/15 bg-[#0b0b18] text-left transition-all active:scale-[0.97]"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00BFFF]/25 via-[#070711] to-[#BF00FF]/30" />
-
-            {auction.thumbnail_url ? (
-              <img
-                src={auction.thumbnail_url}
-                alt={auction.title || 'Auction'}
-                loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover opacity-70 transition-transform duration-500 group-hover:scale-105"
-              />
-            ) : (
-              <Gavel className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 text-[#BF00FF]/30" />
-            )}
-
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/95" />
-
-            <span className="absolute right-2 top-2 rounded-lg border border-[#BF00FF]/30 bg-black/60 px-1.5 py-1 text-[8px] font-black text-white backdrop-blur-md">
-              LIVE
-            </span>
-
-            <div className="absolute inset-x-0 bottom-0 p-2.5">
-              <p className="truncate text-[10px] font-black text-white">
-                {auction.title || 'Live Auction'}
-              </p>
-            </div>
-          </button>
-        ))
-      )}
-    </PhoneSection>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
 /* Online Users                                                                */
 /* -------------------------------------------------------------------------- */
 
@@ -660,16 +588,6 @@ function PhoneQuickLinks() {
       icon: Trophy,
       path: '/leagues',
     },
-    {
-      label: 'Academy',
-      icon: BookOpen,
-      path: '/academy',
-    },
-    {
-      label: 'Record Label',
-      icon: Music,
-      path: '/mai-record-label',
-    },
   ]
 
   return (
@@ -741,7 +659,6 @@ export default function PhoneHomepage({
 
   const {
     liveItems,
-    liveAuctions,
     onlineUsers,
     loadingLive,
     refresh,
@@ -771,7 +688,7 @@ export default function PhoneHomepage({
     [liveItems],
   )
 
-  const totalLive = liveItems.length + liveAuctions.length
+  const totalLive = liveItems.length
 
   const go = useCallback(
     (path: string) => {
@@ -791,13 +708,6 @@ export default function PhoneHomepage({
       } else {
         go(`/watch/${item.id}`)
       }
-    },
-    [go],
-  )
-
-  const handleAuctionClick = useCallback(
-    (id?: string) => {
-      go(id ? `/auctions/${id}` : '/auctions')
     },
     [go],
   )
@@ -1076,12 +986,6 @@ export default function PhoneHomepage({
               ))
             )}
           </PhoneSection>
-
-          {/* Auctions */}
-          <PhoneAuctions
-            auctions={liveAuctions}
-            onClick={handleAuctionClick}
-          />
 
           {/* -------------------------------------------------------------- */}
           {/* Battles                                                          */}

@@ -258,13 +258,8 @@ export default function MaiBusinessDashboard() {
             tone="amber"
             description="Student-to-student marketplace"
           />
-          <DashboardCard
-            icon={Award}
-            label="Store"
-            to="/mai-business/store"
-            tone="teal"
-            description="Official MAiTROLL merchandise"
-          />
+         
+        
           <DashboardCard
             icon={LifeBuoy}
             label="Help & Resources"

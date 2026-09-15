@@ -16,6 +16,7 @@ import {
   Gem,
   Crown,
   Plus,
+  Building2,
 } from 'lucide-react'
 
 import { useLiveContent } from '@/contexts/LiveContentContext'
@@ -139,14 +140,6 @@ export default function LeftNavSidebar({
     },
 
     {
-      id: 'academy',
-      label: 'Academy',
-      icon: BookOpen,
-      activeGradient: 'from-emerald-500 to-teal-600',
-      description: 'Learn with courses from Mai Troll Academy',
-    },
-
-    {
       label: 'Troll Wheel',
       icon: Shuffle,
       activeGradient: 'from-amber-500 to-orange-600',
@@ -156,23 +149,24 @@ export default function LeftNavSidebar({
     },
 
     {
-      label: 'Mai Sing Off',
+      label: 'MAI Business',
+      icon: Building2,
+      activeGradient: 'from-emerald-500 to-teal-600',
+      isExternal: true,
+      path: '/mai-business',
+      description: 'Start and grow your business on MaiTroll',
+    },
+
+    {
+      label: 'Mai Talent Show',
       icon: Mic,
       activeGradient: 'from-pink-500 to-rose-600',
       isExternal: true,
       path: '/mai-sing-off',
-      description: 'Compete in Mai Sing Off music battles',
+      description: 'Compete in Mai Talent Show music battles',
     },
 
-    {
-      label: 'MAI Record Label',
-      icon: Music,
-      activeGradient: 'from-purple-500 to-violet-600',
-      isExternal: true,
-      path: '/mai-record-label',
-      description: 'Browse artists and releases on MAI Record Label',
-    },
-  ]
+    ]
 
   const handleTabClick = (tab: NavTab) => {
     grantNavCoins(tab.label)

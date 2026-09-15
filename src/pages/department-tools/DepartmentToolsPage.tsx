@@ -67,7 +67,6 @@ export default function DepartmentToolsPage() {
     if (profile.is_attorney) roles.push('attorney')
     if (profile.is_prosecutor) roles.push('prosecutor')
     if (profile.is_judge) roles.push('judge')
-    if (profile.is_auctioneer) roles.push('auctioneer')
     if (profile.is_broadcaster) roles.push('broadcaster')
     if (profile.is_journalist) roles.push('journalist')
     if (profile.is_news_caster) roles.push('tcnn_news_caster')

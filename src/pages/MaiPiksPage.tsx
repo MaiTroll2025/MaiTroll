@@ -36,10 +36,6 @@ export default function MaiPiksPage() {
               <LogIn size={18} />
               Sign in to use MaiPiks
             </Link>
-            <Link to="/mai-record-label" className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-5 py-3 font-bold text-white hover:border-cyan-300/60">
-              <Image size={18} />
-              Explore MaiTroll music
-            </Link>
           </div>
         </div>
 

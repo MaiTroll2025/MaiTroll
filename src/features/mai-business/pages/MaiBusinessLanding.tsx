@@ -121,7 +121,7 @@ export default function MaiBusinessLanding() {
           <div className="mt-16 text-center text-xs text-zinc-500 max-w-3xl mx-auto">
             <p className="mb-2">
               <Shield size={12} className="inline mr-1" />
-              MAI Business is a nonprofit entrepreneur-development program.
+              MAI Business is a For-Profit entrepreneur-development program.
             </p>
             <p className="mb-2">
               <Scale size={12} className="inline mr-1" />

@@ -455,7 +455,7 @@ export default function AuctioneerDashboard() {
       void cleanupAgoraRef.current()
     }
     // Only re-run when these stable values change — NOT the callbacks
-     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show?.id, show?.status, user?.id, isAuctioneer])
 
   const toggleAuctioneerMic = useCallback(async () => {

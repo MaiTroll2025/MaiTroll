@@ -62,23 +62,21 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
     const isTrollOfficer = (profile as any)?.role === 'troll_officer' || (profile as any)?.troll_role === 'troll_officer' || (profile as any)?.is_troll_officer === true
     const isPastor = (profile as any)?.role === 'pastor' || (profile as any)?.troll_role === 'pastor'
     const isTCNN = (profile as any)?.role === 'tcnn' || (profile as any)?.troll_role === 'tcnn' || (profile as any)?.is_tcnn === true
-    const isRecordLabel = (profile as any)?.role === 'record_label' || (profile as any)?.troll_role === 'record_label'
 
-    if (isSecretary || isLeadOfficer || isTrollOfficer || isPastor || isTCNN || isRecordLabel || isAdmin) {
+    if (isSecretary || isLeadOfficer || isTrollOfficer || isPastor || isTCNN || isAdmin) {
       const roleItems: { label: string; path: string; icon: string }[] = []
       if (isSecretary) roleItems.push({ label: 'Secretary', path: '/phone-secretary', icon: 'PenSquare' })
       if (isLeadOfficer) roleItems.push({ label: 'Lead Officer', path: '/phone-lead-officer', icon: 'Star' })
       if (isTrollOfficer) roleItems.push({ label: 'Troll Officer', path: '/phone-troll-officer', icon: 'Shield' })
       if (isPastor) roleItems.push({ label: 'Pastor', path: '/phone-pastor', icon: 'Heart' })
       if (isTCNN) roleItems.push({ label: 'TCNN News', path: '/tcnn', icon: 'MessageCircle' })
-      if (isRecordLabel) roleItems.push({ label: 'Record Label', path: '/mai-record-label', icon: 'Music' })
       if (roleItems.length) add('Role', roleItems)
     }
 
     add('Explore', [
       { label: 'Live Now', path: '/live', icon: 'Radio' },
       { label: 'Leagues', path: '/leagues', icon: 'Trophy' },
-      { label: 'Academy', path: '/academy', icon: 'BookOpen' },
+      { label: 'MAI Business', path: '/mai-business', icon: 'Building2' },
       { label: 'Community Wall', path: '/community-wall', icon: 'MessageSquare' },
       { label: 'Blocked Users', path: '/blocked-users', icon: 'Ban' },
     ])

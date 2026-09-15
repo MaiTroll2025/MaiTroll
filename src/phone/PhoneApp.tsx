@@ -7,7 +7,6 @@ import PhoneMAIPiks from './pages/PhoneMaiPiks'
 import PhoneBroadcastPage from './pages/PhoneBroadcastPage'
 import PhoneAuctions from './pages/PhoneAuctions'
 import PhoneTrollCourt from './pages/PhoneTrollCourt'
-import PhoneStore from './pages/PhoneStore'
 import PhoneProfile from './pages/PhoneProfile'
 import PhonePodcast from './pages/PhonePodcast'
 import PhoneHytroGameStreams from './pages/PhoneHytroGameStreams'
@@ -28,8 +27,6 @@ import PhonePastor from './pages/PhonePastor'
 import PhoneBattles from './pages/PhoneBattles'
 import PhoneLiveNow from './pages/PhoneLiveNow'
 import PhoneLeagues from './pages/PhoneLeagues'
-import PhoneAcademy from './pages/PhoneAcademy'
-import PhoneRecordLabel from './pages/PhoneRecordLabel'
 import PhoneTCNN from './pages/PhoneTCNN'
 import PhoneCommunityWall from './pages/PhoneCommunityWall'
 import PhoneLeaderboard from './pages/PhoneLeaderboard'
@@ -47,7 +44,6 @@ import PhoneSearch from './pages/PhoneSearch'
 import PhoneFamily from './pages/PhoneFamily'
 import PhoneGovernment from './pages/PhoneGovernment'
 import PhonePresident from './pages/PhonePresident'
-import PhoneArtist from './pages/PhoneArtist'
 import PhoneAgency from './pages/PhoneAgency'
 import PhoneAgencyApply from './pages/PhoneAgencyApply'
 import PhoneCeoDashboard from './pages/PhoneCeoDashboard'
@@ -68,6 +64,7 @@ import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { moderation } from '@/services/maitrollModeration'
 import { useEffect, useState } from 'react'
+import PhoneStore from './pages/PhoneStore'
 
 function GlobalUtromailPopup() {
   const popup = useUtromailMessagePopup()
@@ -216,9 +213,7 @@ export default function PhoneApp() {
             <Route path="/battles" element={<PhoneBattles />} />
             <Route path="/live" element={<PhoneLiveNow />} />
             <Route path="/leagues" element={<PhoneLeagues />} />
-            <Route path="/academy" element={<PhoneAcademy />} />
             <Route path="/explore" element={<PhoneExplore />} />
-            <Route path="/mai-record-label" element={<PhoneRecordLabel />} />
             <Route path="/tcnn" element={<PhoneTCNN />} />
             <Route path="/community-wall" element={<PhoneCommunityWall />} />
              <Route path="/leaderboard" element={<PhoneLeaderboard />} />
@@ -242,17 +237,12 @@ export default function PhoneApp() {
             <Route path="/court/:id" element={<PhoneTrollCourt />} />
             <Route path="/agency/:id" element={<PhoneAgency />} />
             <Route path="/agency-apply/:id" element={<PhoneAgencyApply />} />
-            <Route path="/music/:id" element={<PhoneRecordLabel />} />
             <Route path="/tromail" element={<PhoneChat />} />
             <Route path="/tromail/:threadId" element={<PhoneChat />} />
-            <Route path="/academy/:id" element={<PhoneAcademy />} />
-            <Route path="/academy/teacher/:id" element={<PhoneAcademy />} />
-            <Route path="/academy/classroom/:id" element={<PhoneAcademy />} />
             <Route path="/family/:id" element={<PhoneFamily />} />
             <Route path="/government/:id" element={<PhoneGovernment />} />
             <Route path="/president/:id" element={<PhonePresident />} />
             <Route path="/secretary/:id" element={<PhoneSecretary />} />
-            <Route path="/artist/:id" element={<PhoneArtist />} />
             {/* React Router requires `*` to follow a `/`, so the CEO pages are
                 listed explicitly instead of using a bare `/ceo-*` prefix. */}
             <Route path="/ceo-assistant-dashboard" element={<PhoneCeoDashboard />} />

@@ -45,7 +45,7 @@ export const handler = async (req: Request): Promise<Response> => {
 
     const now = new Date();
     let effectiveTimerRate = battle.timer_rate || 1;
-    const effectiveTimeRemaining = 0;
+    let effectiveTimeRemaining = 0;
     let battleElapsedSeconds = 0;
 
     if (battle.started_at && !battle.ended_at) {

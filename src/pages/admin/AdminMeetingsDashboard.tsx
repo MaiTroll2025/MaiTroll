@@ -62,27 +62,26 @@ export default function AdminMeetingsDashboard() {
      profile.is_ceo === true ||
      profile.is_lead_officer === true ||
      profile.is_troll_officer === true ||
-     profile.is_officer === true ||
-     profile.is_secretary === true ||
-     profile.is_prosecutor === true ||
-     profile.is_judge === true ||
-     profile.is_attorney === true ||
-     profile.is_pastor === true ||
-     profile.is_auctioneer === true ||
-     profile.is_moderator === true ||
-     profile.is_ceo_assistant === true ||
-     profile.is_noah_assistant === true ||
-     profile.is_agency_hr === true ||
-     profile.is_agency_hr_manager === true ||
-     profile.is_journalist === true ||
-     profile.is_tcnn_news_caster === true ||
-     profile.is_tcnn_chief_news_caster === true ||
-     profile.is_troller === true ||
-     profile.is_troll_family_leader === true ||
-     profile.is_agency_leader === true ||
-     profile.is_noah_admin === true ||
-     profile.officer_role === 'lead_officer'
-   );
+profile.is_officer === true ||
+      profile.is_secretary === true ||
+      profile.is_prosecutor === true ||
+      profile.is_judge === true ||
+      profile.is_attorney === true ||
+      profile.is_pastor === true ||
+      profile.is_moderator === true ||
+      profile.is_ceo_assistant === true ||
+      profile.is_noah_assistant === true ||
+      profile.is_agency_hr === true ||
+      profile.is_agency_hr_manager === true ||
+      profile.is_journalist === true ||
+      profile.is_tcnn_news_caster === true ||
+      profile.is_tcnn_chief_news_caster === true ||
+      profile.is_troller === true ||
+      profile.is_troll_family_leader === true ||
+      profile.is_agency_leader === true ||
+      profile.is_noah_admin === true ||
+      profile.officer_role === 'lead_officer'
+    );
 
   useEffect(() => {
     if (!user || !profile) {
@@ -235,7 +234,7 @@ const handleStartMeeting = async (meetingId: string) => {
           supabase
             .from('user_profiles')
             .select('id')
-            .or('role.eq.admin,role.eq.lead_troll_officer,role.eq.troll_officer,role.eq.officer,role.eq.secretary,role.eq.prosecutor,role.eq.judge,role.eq.attorney,role.eq.pastor,role.eq.auctioneer,role.eq.moderator,role.eq.ceo,role.eq.ceo_assistant,role.eq.noah_assistant,role.eq.agency_hr,role.eq.agency_hr_manager,role.eq.journalist,role.eq.tcnn_news_caster,role.eq.tcnn_chief_news_caster,role.eq.troller,role.eq.troll_family_leader,role.eq.agency_leader,role.eq.noah_admin,is_admin.eq.true,is_ceo.eq.true,is_lead_officer.eq.true,is_troll_officer.eq.true,is_officer.eq.true,is_secretary.eq.true,is_prosecutor.eq.true,is_judge.eq.true,is_attorney.eq.true,is_pastor.eq.true,is_auctioneer.eq.true,is_moderator.eq.true,is_ceo_assistant.eq.true,is_noah_assistant.eq.true,is_agency_hr.eq.true,is_agency_hr_manager.eq.true,is_journalist.eq.true,is_tcnn_news_caster.eq.true,is_tcnn_chief_news_caster.eq.true,is_troller.eq.true,is_troll_family_leader.eq.true,is_agency_leader.eq.true,is_noah_admin.eq.true'),
+            .or('role.eq.admin,role.eq.lead_troll_officer,role.eq.troll_officer,role.eq.officer,role.eq.secretary,role.eq.prosecutor,role.eq.judge,role.eq.attorney,role.eq.pastor,role.eq.moderator,role.eq.ceo,role.eq.ceo_assistant,role.eq.noah_assistant,role.eq.agency_hr,role.eq.agency_hr_manager,role.eq.journalist,role.eq.tcnn_news_caster,role.eq.tcnn_chief_news_caster,role.eq.troller,role.eq.troll_family_leader,role.eq.agency_leader,role.eq.noah_admin,is_admin.eq.true,is_ceo.eq.true,is_lead_officer.eq.true,is_troll_officer.eq.true,is_officer.eq.true,is_secretary.eq.true,is_prosecutor.eq.true,is_judge.eq.true,is_attorney.eq.true,is_pastor.eq.true,is_moderator.eq.true,is_ceo_assistant.eq.true,is_noah_assistant.eq.true,is_agency_hr.eq.true,is_agency_hr_manager.eq.true,is_journalist.eq.true,is_tcnn_news_caster.eq.true,is_tcnn_chief_news_caster.eq.true,is_troller.eq.true,is_troll_family_leader.eq.true,is_agency_leader.eq.true,is_noah_admin.eq.true'),
           supabase
             .from('user_profiles')
             .select('id')

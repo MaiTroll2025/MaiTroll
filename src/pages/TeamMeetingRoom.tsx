@@ -36,7 +36,6 @@ const checkStaffAccessFallback = (profileData: any): boolean => {
   const is_judge = profileData?.is_judge === true;
   const is_attorney = profileData?.is_attorney === true;
   const is_pastor = profileData?.is_pastor === true;
-  const is_auctioneer = profileData?.is_auctioneer === true;
   const is_moderator = profileData?.is_moderator === true;
   const is_ceo_assistant = profileData?.is_ceo_assistant === true;
   const is_noah_assistant = profileData?.is_noah_assistant === true;
@@ -64,7 +63,6 @@ const checkStaffAccessFallback = (profileData: any): boolean => {
     role === 'judge' ||
     role === 'attorney' ||
     role === 'pastor' ||
-    role === 'auctioneer' ||
     role === 'moderator' ||
     role === 'ceo_assistant' ||
     role === 'noah_assistant' ||
@@ -88,7 +86,6 @@ const checkStaffAccessFallback = (profileData: any): boolean => {
     is_judge ||
     is_attorney ||
     is_pastor ||
-    is_auctioneer ||
     is_moderator ||
     is_ceo_assistant ||
     is_noah_assistant ||
@@ -130,7 +127,7 @@ export const TeamMeetingRoom: React.FC = () => {
         const { data: staffFallbackUsers, error: fallbackError } = await supabase
           .from('user_profiles')
           .select('id')
-          .or('role.eq.admin,role.eq.lead_troll_officer,role.eq.troll_officer,role.eq.officer,role.eq.secretary,role.eq.prosecutor,role.eq.judge,role.eq.attorney,role.eq.pastor,role.eq.auctioneer,role.eq.moderator,role.eq.ceo,role.eq.ceo_assistant,role.eq.noah_assistant,role.eq.agency_hr,role.eq.agency_hr_manager,role.eq.journalist,role.eq.tcnn_news_caster,role.eq.tcnn_chief_news_caster,role.eq.troller,role.eq.troll_family_leader,role.eq.agency_leader,role.eq.noah_admin,is_admin.eq.true,is_ceo.eq.true,is_lead_officer.eq.true,is_troll_officer.eq.true,is_officer.eq.true,is_secretary.eq.true,is_prosecutor.eq.true,is_judge.eq.true,is_attorney.eq.true,is_pastor.eq.true,is_auctioneer.eq.true,is_moderator.eq.true,is_ceo_assistant.eq.true,is_noah_assistant.eq.true,is_agency_hr.eq.true,is_agency_hr_manager.eq.true,is_journalist.eq.true,is_tcnn_news_caster.eq.true,is_tcnn_chief_news_caster.eq.true,is_troller.eq.true,is_troll_family_leader.eq.true,is_agency_leader.eq.true,is_noah_admin.eq.true');
+          .or('role.eq.admin,role.eq.lead_troll_officer,role.eq.troll_officer,role.eq.officer,role.eq.secretary,role.eq.prosecutor,role.eq.judge,role.eq.attorney,role.eq.pastor,role.eq.moderator,role.eq.ceo,role.eq.ceo_assistant,role.eq.noah_assistant,role.eq.agency_hr,role.eq.agency_hr_manager,role.eq.journalist,role.eq.tcnn_news_caster,role.eq.tcnn_chief_news_caster,role.eq.troller,role.eq.troll_family_leader,role.eq.agency_leader,role.eq.noah_admin,is_admin.eq.true,is_ceo.eq.true,is_lead_officer.eq.true,is_troll_officer.eq.true,is_officer.eq.true,is_secretary.eq.true,is_prosecutor.eq.true,is_judge.eq.true,is_attorney.eq.true,is_pastor.eq.true,is_moderator.eq.true,is_ceo_assistant.eq.true,is_noah_assistant.eq.true,is_agency_hr.eq.true,is_agency_hr_manager.eq.true,is_journalist.eq.true,is_tcnn_news_caster.eq.true,is_tcnn_chief_news_caster.eq.true,is_troller.eq.true,is_troll_family_leader.eq.true,is_agency_leader.eq.true,is_noah_admin.eq.true');
 
         // Also get organization members
         const { data: orgFallbackUsers, error: orgError } = await supabase

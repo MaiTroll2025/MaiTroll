@@ -35,7 +35,7 @@ export function StatisticsView() {
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
       <h2 className="text-lg font-bold text-white flex items-center gap-2">
-        <BarChart3 className="w-5 h-5 text-cyan-400" /> Mai Sing Off Stats
+        <BarChart3 className="w-5 h-5 text-cyan-400" /> Mai Talent Show Stats
       </h2>
 
       {loading && <div className="text-zinc-400">Loading stats…</div>}

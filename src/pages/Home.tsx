@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Crown,
   FileText,
-  Gavel,
   MessageCircle,
   Music,
   PenSquare,
@@ -28,9 +27,11 @@ import useSEO from '@/hooks/useSEO'
 import { websiteSchema, organizationSchema } from '@/utils/seoSchemas'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useTheme } from '@/hooks/useTheme'
-import { useLiveContent, type AuctionShow, type LiveItem } from '@/contexts/LiveContentContext'
+import { useLiveContent, type LiveItem } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
+import { usePublicAccessFee } from '@/hooks/usePublicAccessFee'
+import PublicAccessFeeModal from '@/components/PublicAccessFeeModal'
 import { MaiTrollOperatingHoursWrapper } from '@/components/maitroll/MaiTrollOperatingHoursWrapper'
 import useGlobalActivity from '@/hooks/useGlobalActivity'
 import type { ActivityEvent } from '@/hooks/useGlobalActivity'
@@ -40,7 +41,6 @@ import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
 import AcademyTab from '@/components/home/AcademyTab'
 import UnderConstructionPage from '@/components/UnderConstructionPage'
 import WallPage from '@/pages/WallPage'
-import LiveAuctionMiniWindow from '@/components/home/LiveAuctionMiniWindow'
 import SupportGoalReminderModal from '@/components/SupportGoalReminderModal'
 import { useSupportGoalReminder } from '@/hooks/useSupportGoalReminder'
 import { usePresidentSystem } from '@/hooks/usePresidentSystem'
@@ -110,7 +110,6 @@ const LiveGrid = React.memo(function LiveGrid({
   const groupLabels: Record<string, string> = {
     stream: 'Live Streams',
     podcast: 'Podcasts',
-    auction: 'Auctions',
     gaming: 'Gaming',
     court: 'Troll Court',
     tcnn: 'TCNN News',
@@ -213,11 +212,7 @@ const LiveGrid = React.memo(function LiveGrid({
                         className={`group relative aspect-square overflow-hidden rounded-xl border text-left transition ${theme === 'light' ? 'border-gray-300 bg-white hover:border-cyan-300/60' : 'border-white/10 bg-slate-900 hover:border-cyan-300/60'}`}
                       >
                         <div className={`absolute inset-0 ${theme === 'light' ? 'bg-gradient-to-br from-purple-100/70 via-gray-50 to-cyan-100/50' : 'bg-gradient-to-br from-purple-900/70 via-slate-950 to-cyan-900/50'}`} />
-                        {item.type === 'auction' ? (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Gavel className="h-8 w-8 text-cyan-300/40" />
-                          </div>
-                        ) : item.streamerAvatar ? (
+                        {item.streamerAvatar ? (
                           <img src={item.streamerAvatar} alt={item.streamerName} className="absolute inset-0 h-full w-full object-cover opacity-80" />
                         ) : (
                           <Play className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-white/20" />
@@ -303,67 +298,6 @@ const LiveGrid = React.memo(function LiveGrid({
    )
  })
 
-const HomeAuctionGrid = React.memo(function HomeAuctionGrid({
-  auctions,
-  onClickAuction,
-  theme,
-}: {
-  auctions: AuctionShow[]
-  onClickAuction: (id: string) => void
-  theme: string
-}) {
-  return (
-    <div className={`${glass} rounded-2xl p-4`}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className={`flex items-center gap-2 text-xl font-black ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
-            <Gavel className="h-5 w-5 text-cyan-300" />
-            Live Auctions
-          </h2>
-          <p className={`mt-1 text-xs font-bold ${theme === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>
-            {auctions.length} auction{auctions.length === 1 ? '' : 's'} live now
-          </p>
-        </div>
-        <button
-          onClick={() => onClickAuction('')}
-          className="rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-4 py-2 text-xs font-black text-cyan-100"
-        >
-          View All
-        </button>
-      </div>
-
-      {auctions.length === 0 ? (
-        <button
-          onClick={() => onClickAuction('')}
-          className={`mt-4 w-full rounded-2xl border border-dashed border-cyan-500/30 bg-cyan-500/[0.04] py-10 text-center transition hover:border-cyan-400/50 hover:bg-cyan-500/[0.08]`}
-        >
-          <Gavel className="mx-auto h-10 w-10 text-cyan-500/50" />
-          <p className="mt-3 text-sm font-bold text-cyan-300/70">No auctions live right now</p>
-        </button>
-      ) : (
-         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
-           {auctions.map((auction) => (
-             <button
-               key={auction.id}
-               onClick={() => onClickAuction(auction.id)}
-               className={`group relative aspect-[4/3] overflow-hidden rounded-2xl border text-left transition ${theme === 'light' ? 'border-gray-300 bg-white hover:border-cyan-300/60' : 'border-white/10 bg-slate-900 hover:border-cyan-300/60'}`}
-             >
-               <div className={`absolute inset-0 ${theme === 'light' ? 'bg-gradient-to-br from-cyan-100/70 via-gray-50 to-purple-100/50' : 'bg-gradient-to-br from-cyan-900/70 via-slate-950 to-purple-900/50'}`} />
-               <Gavel className={`absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 ${theme === 'light' ? 'text-cyan-600/40' : 'text-cyan-300/40'}`} />
-               <div className="absolute right-2 top-2 rounded-lg bg-red-600 px-2 py-1 text-[10px] font-black text-white">
-                 LIVE
-               </div>
-               <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t p-3 ${theme === 'light' ? 'from-white via-white/70 to-transparent' : 'from-black via-black/70 to-transparent'}`}>
-                 <p className={`truncate text-sm font-black ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{auction.title}</p>
-               </div>
-             </button>
-           ))}
-         </div>
-       )}
-    </div>
-  )
-})
-
 /* Reusable tile sized identically to the Broadcasters / Podcasts row tiles. */
 const LiveNowTile = React.memo(function LiveNowTile({
   title,
@@ -408,49 +342,6 @@ const LiveNowTile = React.memo(function LiveNowTile({
         {subtitle ? <p className={`truncate text-[8px] font-bold ${theme === 'light' ? 'tile-text-sub' : 'text-slate-300'}`}>{subtitle}</p> : null}
       </div>
     </button>
-  )
-})
-
-/* Auctions — live auction shows from the existing auction system,
-   rendered as a row of tiles matching the Broadcasters / Podcasts row. */
-const AuctionsRow = React.memo(function AuctionsRow({
-  auctions,
-  onClickAuction,
-  isMobileWidth,
-  theme,
-}: {
-  auctions: AuctionShow[]
-  onClickAuction: (id: string) => void
-  isMobileWidth: boolean
-  theme: string
-}) {
-  return (
-    <HorizontalScrollRow
-      title="Auctions"
-      icon={<Gavel className="h-3.5 w-3.5 text-cyan-300" />}
-      onViewAll={() => onClickAuction('')}
-      theme={theme}
-    >
-      {auctions.length === 0 ? (
-        <div className={`flex shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-cyan-500/30 bg-cyan-500/[0.04] p-4 text-center ${isMobileWidth ? 'h-[120px] w-full' : 'h-[180px] w-[150px]'}`}>
-          <Gavel className="h-8 w-8 text-cyan-500/50" />
-          <p className="text-xs font-bold text-cyan-300/70">No Auctions Live</p>
-          <p className="text-[10px] text-cyan-400/50">Active auctions will appear here!</p>
-        </div>
-      ) : (
-        auctions.map((auction) => (
-          <LiveNowTile
-            key={auction.id}
-            title={auction.title}
-            imageUrl={auction.thumbnail_url}
-            fallbackIcon={Gavel}
-            isMobileWidth={isMobileWidth}
-            theme={theme}
-            onClick={() => onClickAuction(auction.id)}
-          />
-        ))
-      )}
-    </HorizontalScrollRow>
   )
 })
 
@@ -612,7 +503,6 @@ const MobileTabBar = React.memo(function MobileTabBar({
     { id: 'live', label: 'Live', icon: Radio, count: liveCount + battleCount },
     { id: 'universe', label: 'Battles', icon: Sparkles, count: battleCount },
     { id: 'leagues', label: 'Leagues', icon: Trophy },
-    { id: 'mai-record-label', label: 'MAI Record Label', icon: Music, onClick: () => navigate('/mai-record-label') },
     { id: 'laws-fees', label: 'Laws', icon: FileText },
     { id: 'academy', label: 'Academy', icon: BookOpen },
     { id: 'wall', label: 'Wall', icon: PenSquare, count: wallNotificationCount },
@@ -682,7 +572,7 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const tabParam = params.get('tab')
-    if (tabParam && ['home', 'live', 'universe', 'jobs', 'laws-fees', 'leagues', 'president', 'academy', 'wall', 'mai-record-label'].includes(tabParam)) {
+    if (tabParam && ['home', 'live', 'universe', 'jobs', 'laws-fees', 'leagues', 'president', 'academy', 'wall'].includes(tabParam)) {
       setActiveTab(tabParam as TabType)
     }
   }, [])
@@ -697,7 +587,7 @@ export default function Home() {
     }
   }, [])
 
-  const { liveItems, liveAuctions, totalViewers, onlineUsers, loadingLive } = useLiveContent()
+  const { liveItems, totalViewers, onlineUsers, loadingLive } = useLiveContent()
   const [supportGoalReminder, setSupportGoalReminder] = useState<any>(null)
   const [reminderLoading, setReminderLoading] = useState(false)
 
@@ -708,6 +598,8 @@ export default function Home() {
   } = useSupportGoalReminder()
   const { currentElection, currentPresident } = usePresidentSystem()
 
+  const { feeStatus, showModal, setShowModal, handlePaymentComplete } = usePublicAccessFee()
+
   const presidentTabLabel = currentElection?.status === 'open'
     ? 'President Candidates'
     : currentPresident
@@ -716,18 +608,7 @@ export default function Home() {
 
   const battleItems = useMemo(() => liveItems.filter((item) => item.isBattle), [liveItems])
 
-  const auctionItems = useMemo(() => liveAuctions.map((auction) => ({
-    id: auction.id,
-    title: auction.title || 'Untitled Auction',
-    type: 'auction' as const,
-    viewerCount: 0,
-    streamerName: 'Auction',
-    streamerAvatar: null,
-    isFeatured: false,
-    isBattle: false,
-  })), [liveAuctions])
-
-  const allLiveItems = useMemo(() => [...liveItems, ...auctionItems], [liveItems, auctionItems])
+  const allLiveItems = useMemo(() => liveItems, [liveItems])
 
   // Active Troll Court & TCNN broadcasts already live in liveItems (realtime-fed
   // by LiveContentContext). Reuse them rather than adding duplicate subscriptions.
@@ -775,10 +656,6 @@ export default function Home() {
      navigate(`/watch/${targetId}`)
    }, [navigate, user])
 
-   const handleAuctionClick = useCallback((id: string) => {
-     navigate(id ? `/auctions/${id}` : '/auctions')
-   }, [navigate])
-
     const handleTrollCourtClick = useCallback((item: LiveItem) => {
       const sessionId = item.id.startsWith('court-') ? item.id.slice('court-'.length) : item.id
       navigate(`/court/${sessionId}`)
@@ -813,6 +690,11 @@ export default function Home() {
       <Suspense fallback={null}>
         <PWAInstallPrompt />
       </Suspense>
+
+      <PublicAccessFeeModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+      />
 
       <div className="relative z-10 flex w-full">
         <LeftNavSidebar
@@ -910,8 +792,6 @@ export default function Home() {
                   <FeaturedBroadcastersRow onItemClick={handleScrollItemClick} />
                   <PodcastRow />
                   <HyTroGamingRow onItemClick={handleScrollItemClick} />
-
-                  <AuctionsRow auctions={liveAuctions} onClickAuction={handleAuctionClick} isMobileWidth={isMobileWidth} theme={theme} />
                 </div>
               </section>
             )}
@@ -929,11 +809,6 @@ export default function Home() {
                       onClickItem={handleScrollItemClick}
                       user={user}
                       navigate={navigate}
-                      theme={theme}
-                    />
-                    <HomeAuctionGrid
-                      auctions={liveAuctions}
-                      onClickAuction={(id) => navigate(id ? `/auctions/${id}` : '/auctions')}
                       theme={theme}
                     />
                     <NewStreamersRow onClickItem={handleScrollItemClick} />

@@ -56,7 +56,7 @@ export function ShowsLobby() {
   }, [])
 
   const handleStartLive = async () => {
-    const id = await actions.startShow({ title: title || 'Mai Sing Off' })
+    const id = await actions.startShow({ title: title || 'Mai Talent Show' })
     if (id) navigate(`/mai-sing-off/live/${id}`)
   }
 
@@ -193,7 +193,7 @@ export function ShowsLobby() {
                       <Mic2 className="h-5 w-5 text-pink-400" />
                     </div>
                     <div className="mt-3 text-sm font-black text-white">
-                      {show.title || show.room_name || 'Mai Sing Off'}
+                      {show.title || show.room_name || 'Mai Talent Show'}
                     </div>
                     <div className="mt-1 text-xs text-white/40">
                       {new Date(show.started_at ?? Date.now()).toLocaleTimeString()}
@@ -232,7 +232,7 @@ export function ShowsLobby() {
                         <CalendarClock className="h-5 w-5 text-cyan-400" />
                       </div>
                       <div>
-                        <div className="text-sm font-black text-white">{show.title || 'Mai Sing Off'}</div>
+                        <div className="text-sm font-black text-white">{show.title || 'Mai Talent Show'}</div>
                         <div className="mt-0.5 text-xs text-cyan-300/80">
                           {show.scheduled_at ? new Date(show.scheduled_at).toLocaleString() : ''} · {countdownText(show.scheduled_at ?? '')}
                         </div>
@@ -284,7 +284,7 @@ export function ShowsLobby() {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Mai Sing Off — Season Opener"
+              placeholder="Mai Talent Show — Season Opener"
               className="mt-2 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-cyan-400/40"
             />
 

@@ -17,898 +17,896 @@ import {
 export default function TermsPage() {
   return (
     <SEOLayout
-      title="Terms of Service | Mai Troll"
-      description="Read the Mai Troll Terms of Service, including account, content, payment, creator earnings, enforcement, and platform rules."
+      title="Terms of Service | MAiTROLL"
+      description="Read the MAiTROLL Terms of Service covering educational verification, MAi Business, broadcasting, MAi Pay, Troll Coins, School Battles, School Pool, accounts, content, safety, and platform rules."
       keywords={[
-        'MaiTroll terms of service',
-        'MaiTroll terms',
-        'user agreement',
-        'terms and conditions',
-        'creator platform terms',
-        'MaiTroll rules',
+        'MAiTROLL terms of service',
+        'MAiTROLL terms',
+        'MAiTROLL rules',
+        'MAiTROLL student platform',
+        'MAi Business',
+        'School Battle',
+        'School Pool',
+        'MAi Pay',
+        'Troll Coins',
+        'broadcasting',
+        'student entrepreneurship',
         'platform rules',
+        'account rules',
       ]}
     >
       <Breadcrumb items={[{ label: 'Terms of Service' }]} />
 
-      <section className="relative py-20 lg:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-slate-900 to-pink-900/20" />
-
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-600/20 border border-purple-500/30 text-purple-300 text-sm font-medium mb-6">
-              <FileText className="w-4 h-4" />
-              Legal
+      <main className="max-w-5xl mx-auto px-4 py-12">
+        {/* Hero */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+              <Scale className="w-7 h-7 text-purple-400" />
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
-              Terms of{' '}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                Service
-              </span>
-            </h1>
-
-            <p className="text-slate-400">Last updated: July 12, 2026</p>
+            <div>
+              <p className="text-sm text-purple-400 font-semibold uppercase tracking-wider">
+                Legal
+              </p>
+              <h1 className="text-4xl md:text-5xl font-bold text-white">
+                Terms of Service
+              </h1>
+            </div>
           </div>
-        </div>
-      </section>
 
-      <section className="py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-8">
+          <p className="text-slate-300 text-lg leading-relaxed max-w-4xl">
+            These Terms of Service govern your access to and use of MAiTROLL,
+            including its website, applications, virtual city systems,
+            broadcasting features, educational verification, business
+            features, marketplace, payments, School Battles, School Pool,
+            communications, and related services.
+          </p>
 
-            <div className="p-6 bg-purple-950/30 border border-purple-500/30 rounded-2xl">
-              <p className="text-slate-200 leading-relaxed">
-                Welcome to Mai Troll. These Terms of Service are the agreement between you and
-                <strong> [INSERT LEGAL COMPANY NAME]</strong>, the company that operates Mai Troll
-                and its related services.
-              </p>
+          <p className="text-sm text-slate-500 mt-4">
+            Last updated: September 13, 2026
+          </p>
+        </section>
 
-              <p className="text-slate-300 leading-relaxed mt-4">
-                We wrote these Terms in plain English because you should not need a law degree to
-                understand the platform you are using. The legal part still matters, though. By
-                creating an account, clicking to accept these Terms, or continuing to use Troll
-                City, you agree to follow them.
-              </p>
+        {/* Important Notice */}
+        <section className="mb-10 rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6">
+          <div className="flex gap-4">
+            <FileText className="w-6 h-6 text-purple-400 shrink-0 mt-1" />
 
-              <p className="text-slate-300 leading-relaxed mt-4">
-                If you do not agree, do not create an account, purchase Troll Coins, send Gifts,
-                broadcast, request a cashout, or otherwise use the Platform.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Users className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  What These Terms Cover
-                </h2>
-              </div>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-3">
+                Please Read These Terms
+              </h2>
 
               <p className="text-slate-300 leading-relaxed">
-                These Terms apply to Mai Troll websites, applications, progressive web apps,
-                livestreams, chats, battles, collaborations, auctions, Troll Court features,
-                HytroGaming integrations, virtual items, creator tools, staff tools, and any other
-                Mai Troll service that links to these Terms.
+                By creating an account, accessing MAiTROLL, or using any MAiTROLL
+                service, you agree to these Terms of Service and any additional
+                rules that specifically apply to the feature you use.
               </p>
 
-              <p className="text-slate-300 leading-relaxed mt-4">
-                Some features have additional rules. Those rules are part of this agreement when
-                you use the related feature.
+              <p className="text-slate-300 leading-relaxed mt-3">
+                If you do not agree with these Terms, do not create an account
+                or use MAiTROLL.
               </p>
-
-              <div className="flex flex-wrap gap-3 mt-5">
-                <Link
-                  to="/community-guidelines"
-                  className="text-purple-400 hover:text-purple-300 underline underline-offset-4"
-                >
-                  Community Guidelines
-                </Link>
-
-                <Link
-                  to="/privacy"
-                  className="text-purple-400 hover:text-purple-300 underline underline-offset-4"
-                >
-                  Privacy Policy
-                </Link>
-
-                <Link
-                  to="/refund-policy"
-                  className="text-purple-400 hover:text-purple-300 underline underline-offset-4"
-                >
-                  Refund Policy
-                </Link>
-
-                <Link
-                  to="/cashout-rules"
-                  className="text-purple-400 hover:text-purple-300 underline underline-offset-4"
-                >
-                  Cashout Rules
-                </Link>
-
-                <Link
-                  to="/broadcaster-rules"
-                  className="text-purple-400 hover:text-purple-300 underline underline-offset-4"
-                >
-                  Broadcaster Rules
-                </Link>
-              </div>
             </div>
+          </div>
+        </section>
 
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <UserCheck className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Eligibility and Account Registration
-                </h2>
+        {/* What These Terms Cover */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            1. What These Terms Cover
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL is a virtual city designed to bring together education,
+            entrepreneurship, broadcasting, commerce, community, entertainment,
+            and civic-style systems in one digital environment.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            These Terms apply to your use of MAiTROLL services, including where
+            available:
+          </p>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            {[
+              'MAiTROLL website and web applications',
+              'Mobile applications and supported devices',
+              'Student and instructor accounts',
+              'Educational verification',
+              'MAi Business',
+              'Broadcasting and HytroGaming',
+              'Troll Pods and podcast features',
+              'Troll Coins and virtual items',
+              'MAi Pay and cashout services',
+              'School Battles',
+              'School Pool',
+              'Marketplace and commerce systems',
+              'Troll Court and civic systems',
+              'City Hall and government systems',
+              'Community and messaging features',
+              'Transportation and vehicle systems',
+              'Properties and virtual city systems',
+              'Events, competitions, and other MAiTROLL features',
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-slate-300"
+              >
+                {item}
               </div>
+            ))}
+          </div>
+        </section>
 
-              <ul className="list-disc pl-6 space-y-3 text-slate-300">
-                <li>
-                  You must be at least 13 years old to create a general Mai Troll account.
-                </li>
+        {/* Eligibility */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <UserCheck className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-white">
+              2. Account Eligibility
+            </h2>
+          </div>
 
-                <li>
-                  Certain features may require you to be at least 18 years old, including
-                  broadcasting, purchasing or sending paid virtual items, receiving creator
-                  earnings, requesting cashouts, entering binding commercial transactions, or
-                  using age-restricted areas of the Platform.
-                </li>
+          <p className="text-slate-300 leading-relaxed mb-4">
+            You must provide accurate information when creating and maintaining
+            your MAiTROLL account. You are responsible for maintaining the
+            security of your account and for activity conducted through it.
+          </p>
 
-                <li>
-                  We may require age or identity verification before allowing access to restricted
-                  features.
-                </li>
+          <ul className="space-y-3 text-slate-300 list-disc pl-6">
+            <li>You may not impersonate another person.</li>
+            <li>
+              You may not create an account using another person's identity,
+              credentials, or personal information.
+            </li>
+            <li>
+              You may not sell, rent, lease, transfer, or otherwise provide
+              control of your account to another person.
+            </li>
+            <li>
+              You may not use duplicate accounts to evade restrictions,
+              enforcement actions, financial controls, or platform limits.
+            </li>
+            <li>
+              You are responsible for protecting your login credentials and
+              notifying MAiTROLL of suspected unauthorized access.
+            </li>
+          </ul>
+        </section>
 
-                <li>
-                  You must provide accurate, current, and complete registration information.
-                </li>
+        {/* Education */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            3. Educational Accounts and Verification
+          </h2>
 
-                <li>
-                  Do not create an account using someone else's identity, documents, payment
-                  method, or personal information.
-                </li>
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL supports educational users, including eligible students
+            and instructors. Educational access is subject to verification.
+          </p>
 
-                <li>
-                  You are responsible for protecting your password, authentication codes, devices,
-                  and account access.
-                </li>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 mb-5">
+            <h3 className="text-lg font-semibold text-white mb-3">
+              Educational verification may require:
+            </h3>
 
-                <li>
-                  You are responsible for activity performed through your account unless you
-                  promptly report unauthorized access and reasonably cooperate with our
-                  investigation.
-                </li>
+            <ol className="space-y-3 text-slate-300 list-decimal pl-6">
+              <li>
+                Selecting an institution that exists in MAiTROLL's verified
+                institution system.
+              </li>
+              <li>
+                Providing an institutional email address associated with the
+                selected institution.
+              </li>
+              <li>
+                Completing required MAiTROLL and Supabase email confirmation.
+              </li>
+              <li>
+                Passing MAiTROLL's institution and domain verification process.
+              </li>
+            </ol>
+          </div>
 
-                <li>
-                  You may not sell, rent, transfer, or give your account to another person without
-                  written approval from Mai Troll.
-                </li>
+          <p className="text-slate-300 leading-relaxed">
+            A user may not enter an arbitrary school name and treat that school
+            as verified. MAiTROLL may reject, suspend, expire, or request
+            additional verification when educational information cannot be
+            validated.
+          </p>
+        </section>
 
-                <li>
-                  Mai Troll may limit duplicate or deceptive accounts. Multiple accounts are not
-                  automatically prohibited when a legitimate Platform feature allows them, but
-                  account farming, ban evasion, self-gifting schemes, reward manipulation, and
-                  deceptive duplicate accounts are prohibited.
-                </li>
-              </ul>
-            </div>
+        {/* MAi Business */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            4. MAi Business Eligibility
+          </h2>
 
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <AlertTriangle className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Use the Platform Without Wrecking It
-                </h2>
-              </div>
+          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6">
+            <h3 className="text-xl font-bold text-white mb-3">
+              MAi Business is restricted access.
+            </h3>
+
+            <p className="text-slate-300 leading-relaxed mb-4">
+              A regular or non-student MAiTROLL user may not access MAi Business
+              merely by creating a MAiTROLL account.
+            </p>
+
+            <p className="text-slate-300 leading-relaxed mb-4">
+              Access to MAi Business requires the user's MAiTROLL account to
+              qualify as an eligible verified educational account under
+              MAiTROLL's current eligibility requirements.
+            </p>
+
+            <p className="text-slate-300 leading-relaxed">
+              If a regular user later enrolls in a qualifying college,
+              university, trade school, or other eligible educational
+              institution, the user must complete the applicable MAiTROLL
+              verification/support process before MAi Business access is
+              granted.
+            </p>
+          </div>
+        </section>
+
+        {/* Regular Users */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            5. Regular Users and Administration Fee
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL may allow regular users who do not qualify for educational
+            verification to create accounts subject to the rules applicable to
+            regular users.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            Where applicable, a regular-user account requires a{' '}
+            <strong className="text-white">$1.00 administration fee</strong>
+            paid directly through PayPal.
+          </p>
+
+          <ul className="space-y-3 text-slate-300 list-disc pl-6">
+            <li>
+              The administration fee is a real-money payment and is separate
+              from Troll Coins.
+            </li>
+            <li>
+              The fee is processed through PayPal or another payment flow
+              specifically identified by MAiTROLL.
+            </li>
+            <li>
+              A failed or declined required administration payment may prevent
+              account completion.
+            </li>
+            <li>
+              Where technically and legally applicable, MAiTROLL may remove
+              incomplete account records associated with an unsuccessful
+              required payment.
+            </li>
+            <li>
+              Administration-fee revenue may be earmarked for MAiTROLL's School
+              Pool Funding Reserve.
+            </li>
+          </ul>
+        </section>
+
+        {/* Conduct */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <ShieldCheck className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-white">
+              6. Acceptable Use and Conduct
+            </h2>
+          </div>
+
+          <p className="text-slate-300 leading-relaxed mb-5">
+            MAiTROLL is intended to be used for constructive participation,
+            education, entrepreneurship, creativity, communication, commerce,
+            broadcasting, and community activity.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            You may not use MAiTROLL to:
+          </p>
+
+          <ul className="space-y-3 text-slate-300 list-disc pl-6">
+            <li>Commit, promote, or facilitate illegal activity.</li>
+            <li>Threaten, harass, stalk, or intentionally intimidate others.</li>
+            <li>Exploit, endanger, or sexually exploit minors.</li>
+            <li>Conduct scams, fraud, financial manipulation, or deception.</li>
+            <li>
+              Manipulate Gifts, Troll Coins, battles, viewers, rankings, School
+              Battles, School Pool activity, or other platform systems.
+            </li>
+            <li>
+              Self-gift, artificially inflate activity, or otherwise manipulate
+              economic or engagement metrics.
+            </li>
+            <li>
+              Attempt unauthorized access to accounts, systems, databases, or
+              administrative functions.
+            </li>
+            <li>Deploy malware or malicious code.</li>
+            <li>Use unauthorized bots or automation to abuse the service.</li>
+            <li>Scrape or systematically extract MAiTROLL data without authorization.</li>
+            <li>Impersonate MAiTROLL, MAi Corp, employees, officers, or users.</li>
+            <li>Infringe intellectual-property rights.</li>
+            <li>
+              Abuse reporting, appeals, chargebacks, moderation, or Troll Court
+              processes.
+            </li>
+          </ul>
+        </section>
+
+        {/* Content */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            7. User Content
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            You retain ownership of content that you lawfully own and upload,
+            publish, stream, transmit, or otherwise provide through MAiTROLL.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            By submitting content to MAiTROLL, you grant MAiTROLL a worldwide,
+            non-exclusive, royalty-free license to host, store, reproduce,
+            process, transmit, display, perform, format, adapt, and technically
+            modify that content as reasonably necessary to operate, secure,
+            maintain, and provide the MAiTROLL service.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            This may include technical processing required for livestreams,
+            video playback, thumbnails, captions, previews, recordings,
+            moderation, backups, device compatibility, and other platform
+            functionality.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mt-4">
+            MAiTROLL does not obtain ownership of your content merely because
+            you use the platform.
+          </p>
+        </section>
+
+        {/* IP */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <Copyright className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-white">
+              8. MAiTROLL Intellectual Property
+            </h2>
+          </div>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL's software, branding, logos, designs, interfaces, systems,
+            graphics, databases, original text, city concepts, features, and
+            other platform materials are owned by or licensed to MAiTROLL and
+            are protected by applicable intellectual-property laws.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            Except as expressly permitted by MAiTROLL, you may not copy,
+            reproduce, distribute, reverse engineer, modify, sell, sublicense,
+            or commercially exploit MAiTROLL's proprietary materials.
+          </p>
+        </section>
+
+        {/* Coins */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <CreditCard className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-white">
+              9. Troll Coins, Gifts, and Virtual Items
+            </h2>
+          </div>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            Troll Coins and other virtual items are digital platform units
+            governed by MAiTROLL's current systems and rules. Unless expressly
+            stated otherwise, they are not legal tender, bank deposits,
+            securities, cryptocurrency, or a personal bank balance.
+          </p>
+
+          <ul className="space-y-3 text-slate-300 list-disc pl-6">
+            <li>
+              Troll Coins may be purchased, awarded, earned, gifted, or
+              otherwise granted according to MAiTROLL rules.
+            </li>
+            <li>
+              Virtual items do not automatically guarantee earnings, prizes,
+              wins, cashouts, or any particular financial result.
+            </li>
+            <li>
+              Gifts and virtual transactions may be final where the applicable
+              transaction flow states that they are non-refundable.
+            </li>
+            <li>
+              Promotional, administrative, testing, or bonus credits may have
+              different restrictions.
+            </li>
+            <li>
+              MAiTROLL may modify virtual-item pricing, availability, rewards,
+              limits, or economic structures when reasonably necessary to
+              operate the service.
+            </li>
+          </ul>
+        </section>
+
+        {/* MAi Pay */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            10. MAi Pay, Cashouts, and Financial Transactions
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAi Pay is MAiTROLL's applicable financial and cashout system.
+            Eligibility, verification, minimum requirements, timing, payment
+            methods, account standing, and other requirements may apply before
+            a cashout can be processed.
+          </p>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 mb-5">
+            <h3 className="text-lg font-semibold text-white mb-3">
+              Current MAi Pay conversion
+            </h3>
+
+            <p className="text-2xl font-bold text-purple-400">
+              150 Troll Coins = $1 USD
+            </p>
+
+            <p className="text-slate-400 mt-2 text-sm">
+              This conversion applies to the current MAi Pay cashout system and
+              should not be confused with Coin Store purchase pricing or
+              promotional coin packages.
+            </p>
+          </div>
+
+          <ul className="space-y-3 text-slate-300 list-disc pl-6">
+            <li>
+              Only eligible balances may qualify for cashout.
+            </li>
+            <li>
+              Administrative, promotional, test, or restricted balances may
+              not be withdrawable.
+            </li>
+            <li>
+              Identity, tax, payment, fraud, or account verification may be
+              required.
+            </li>
+            <li>
+              Cashouts may be delayed when additional review is required.
+            </li>
+            <li>
+              Fraudulent, manipulated, reversed, or unauthorized transactions
+              may be reversed or withheld.
+            </li>
+            <li>
+              Users are responsible for applicable taxes and charges imposed by
+              their financial institution, payment provider, government, or
+              jurisdiction.
+            </li>
+          </ul>
+
+          <p className="text-slate-300 leading-relaxed mt-5">
+            MAiTROLL may maintain financial records and transaction histories
+            necessary to operate, reconcile, secure, and legally document
+            payments and cashouts.
+          </p>
+        </section>
+
+        {/* School Battles */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            11. School Battles
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            School Battles allow eligible users to represent a verified
+            educational institution within applicable MAiTROLL battle systems.
+          </p>
+
+          <ul className="space-y-3 text-slate-300 list-disc pl-6">
+            <li>
+              A represented school must come from MAiTROLL's verified
+              institution system.
+            </li>
+            <li>
+              Users may not simply type an arbitrary school and establish it as
+              their verified representation.
+            </li>
+            <li>
+              School identity is tied to the user's authenticated and verified
+              educational information.
+            </li>
+            <li>
+              MAiTROLL may reject or remove invalid school representation.
+            </li>
+            <li>
+              Existing battle functionality, including timers, matchmaking,
+              broadcasters, viewers, gifts, XP, chat, effects, and winner
+              determination, remains governed by the applicable battle rules.
+            </li>
+          </ul>
+        </section>
+
+        {/* School Pool */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            12. School Pool
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            The School Pool is a MAiTROLL financial program designed to
+            accumulate eligible school contributions and support participating
+            educational institutions.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            School Pool amounts are maintained separately from individual user
+            Troll Coin balances and are not a user's personal wallet balance.
+          </p>
+
+          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 mb-5">
+            <h3 className="text-lg font-semibold text-white mb-3">
+              School contribution calculation
+            </h3>
+
+            <p className="text-slate-300 leading-relaxed">
+              Where the School Pool program applies a 5% contribution to
+              eligible School Battle activity, the contribution is calculated
+              in USD using the applicable MAi Pay cashout conversion. The
+              School Pool does not use Coin Store pricing to determine this
+              amount.
+            </p>
+          </div>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL may also earmark applicable MAi Pay cashout fees and
+            qualifying regular-user administration fees for the School Pool
+            Funding Reserve.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            School Pool obligations, available funding, settlements, and actual
+            institutional payments may be maintained as separate accounting
+            records. A displayed School Pool amount does not necessarily mean
+            that a school has already received a payment.
+          </p>
+        </section>
+
+        {/* Auctions / Marketplace */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            13. Marketplace, Sales, Auctions, and User Transactions
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            Certain MAiTROLL features may allow users to list, sell, purchase,
+            auction, trade, or otherwise interact with goods, services, or
+            virtual-city assets.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            Users are responsible for ensuring that their listings and
+            transactions comply with applicable laws and MAiTROLL rules.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            MAiTROLL may restrict, remove, cancel, investigate, or suspend
+            transactions that appear fraudulent, abusive, unlawful, unsafe, or
+            inconsistent with platform rules.
+          </p>
+        </section>
+
+        {/* Third Parties / Privacy */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            14. Payment and Technical Infrastructure
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL relies on technical infrastructure and specialized
+            services necessary to operate the platform, including hosting,
+            databases, authentication, communications, video, realtime
+            infrastructure, storage, and payment processing.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            PayPal may receive information necessary to process applicable
+            payments. Such processing does not mean MAiTROLL sells your
+            personal information.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            MAiTROLL does not sell, rent, trade, or commercially monetize user
+            personal information to third-party advertisers, data brokers, or
+            other companies for their independent commercial purposes. Technical
+            infrastructure may process information only as necessary to provide
+            MAiTROLL's services.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mt-4">
+            For additional information, review the{' '}
+            <Link
+              to="/privacy"
+              className="text-purple-400 hover:text-purple-300"
+            >
+              MAiTROLL Privacy Policy
+            </Link>
+            .
+          </p>
+        </section>
+
+        {/* Reporting */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <ShieldCheck className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-white">
+              15. Reporting, Moderation, and Enforcement
+            </h2>
+          </div>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL may investigate suspected violations of these Terms,
+            applicable laws, platform rules, financial abuse, security
+            incidents, fraud, manipulation, or other harmful conduct.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            Depending on the circumstances, MAiTROLL may:
+          </p>
+
+          <ul className="space-y-3 text-slate-300 list-disc pl-6">
+            <li>Remove or restrict content.</li>
+            <li>Restrict specific features.</li>
+            <li>Freeze or review financial activity.</li>
+            <li>Remove battle or marketplace participation.</li>
+            <li>Suspend an account.</li>
+            <li>Terminate an account.</li>
+            <li>Preserve information necessary for security or legal reasons.</li>
+            <li>Refer matters to appropriate authorities where required.</li>
+          </ul>
+
+          <p className="text-slate-300 leading-relaxed mt-5">
+            MAiTROLL may also maintain internal moderation, officer, reporting,
+            appeal, and Troll Court systems as part of the platform's governance
+            structure.
+          </p>
+        </section>
+
+        {/* Copyright */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <Copyright className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-white">
+              16. Copyright Complaints
+            </h2>
+          </div>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            If you believe content available through MAiTROLL infringes your
+            copyright, you may submit a copyright complaint containing
+            sufficient information for MAiTROLL to evaluate the claim.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            Do not submit false or knowingly misleading copyright claims.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            Until MAiTROLL formally identifies a designated copyright agent,
+            users should contact MAiTROLL through its current support/contact
+            channels regarding copyright concerns.
+          </p>
+        </section>
+
+        {/* Account termination */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-white">
+              17. Account Suspension and Termination
+            </h2>
+          </div>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            You may stop using MAiTROLL at any time. MAiTROLL may suspend or
+            terminate access when reasonably necessary to protect users,
+            platform security, financial systems, legal compliance, or the
+            integrity of MAiTROLL.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            Termination does not automatically eliminate obligations that by
+            their nature should survive termination, including applicable
+            payment obligations, intellectual-property provisions, dispute
+            provisions, limitations of liability, and legally required record
+            retention.
+          </p>
+        </section>
+
+        {/* Account deletion */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            18. Account Deletion
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            Where account deletion is available, users may request deletion of
+            their MAiTROLL account through the applicable account or support
+            process.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            Certain information may remain for a limited period when necessary
+            for legal compliance, fraud prevention, financial reconciliation,
+            security, dispute resolution, backups, or other legitimate
+            operational purposes.
+          </p>
+        </section>
+
+        {/* Disclaimer */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            19. Disclaimers
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL is provided on an “as available” and “as is” basis to the
+            extent permitted by applicable law.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            MAiTROLL does not guarantee uninterrupted availability, error-free
+            operation, continuous broadcasting, uninterrupted payment
+            processing, or that every feature will remain available
+            indefinitely.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            Participation in battles, broadcasting, marketplace activity,
+            School Battles, entrepreneurship features, or other MAiTROLL
+            programs does not guarantee income, employment, business success,
+            educational outcomes, prizes, or financial returns.
+          </p>
+        </section>
+
+        {/* Liability */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            20. Limitation of Liability
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            To the maximum extent permitted by applicable law, MAiTROLL and its
+            owners, officers, employees, contractors, and service providers
+            will not be liable for indirect, incidental, consequential,
+            special, exemplary, or punitive damages arising from your use of
+            the service.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            Nothing in these Terms is intended to exclude liability that cannot
+            legally be excluded under applicable law.
+          </p>
+        </section>
+
+        {/* Indemnification */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            21. Indemnification
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed">
+            To the extent permitted by applicable law, you agree to defend,
+            indemnify, and hold harmless MAiTROLL and its applicable owners,
+            officers, employees, contractors, and agents from claims,
+            liabilities, damages, losses, and expenses arising from your
+            unlawful conduct, violation of these Terms, infringement of another
+            person's rights, or misuse of the service.
+          </p>
+        </section>
+
+        {/* Governing law */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <Gavel className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-white">
+              22. Governing Law and Disputes
+            </h2>
+          </div>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            These Terms are subject to the laws of the jurisdiction applicable
+            to MAiTROLL, without regard to conflict-of-law principles, except
+            where applicable law requires otherwise.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            Any specific governing state, county, venue, arbitration provision,
+            or class-action waiver should be inserted only after being reviewed
+            and approved for MAiTROLL by qualified legal counsel.
+          </p>
+        </section>
+
+        {/* Changes */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            23. Changes to These Terms
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed">
+            MAiTROLL may update these Terms when necessary to reflect changes
+            to the service, business model, technology, laws, security
+            requirements, payment systems, or platform rules. The updated
+            version will identify its effective or last-updated date.
+          </p>
+        </section>
+
+        {/* General */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            24. General Legal Terms
+          </h2>
+
+          <p className="text-slate-300 leading-relaxed mb-4">
+            If any provision of these Terms is determined to be unenforceable,
+            the remaining provisions will remain effective to the extent
+            permitted by law.
+          </p>
+
+          <p className="text-slate-300 leading-relaxed">
+            Failure by MAiTROLL to enforce a provision does not constitute a
+            waiver of the right to enforce that provision later.
+          </p>
+        </section>
+
+        {/* Contact */}
+        <section className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 md:p-8">
+          <div className="flex items-start gap-4">
+            <Mail className="w-7 h-7 text-purple-400 shrink-0 mt-1" />
+
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-3">
+                Contact MAiTROLL
+              </h2>
 
               <p className="text-slate-300 leading-relaxed mb-4">
-                Mai Troll is built for personality, jokes, debate, competition, creator culture,
-                and people who are not afraid to speak freely. That does not mean anything goes.
-              </p>
-
-              <p className="text-slate-300 mb-3">You may not:</p>
-
-              <ul className="list-disc pl-6 space-y-3 text-slate-300">
-                <li>
-                  Use the Platform to commit, promote, coordinate, or conceal illegal activity.
-                </li>
-
-                <li>
-                  Make credible threats, encourage real-world violence, stalk users, expose private
-                  information, or engage in targeted harassment prohibited by our Community
-                  Guidelines.
-                </li>
-
-                <li>
-                  Exploit, sexually endanger, groom, or otherwise harm a minor.
-                </li>
-
-                <li>
-                  Upload or distribute illegal sexual content, non-consensual intimate content,
-                  child sexual abuse material, or content that violates another person's privacy.
-                </li>
-
-                <li>
-                  Scam users, fake transactions, reverse legitimate payments fraudulently, operate
-                  pyramid schemes, or misrepresent goods, services, giveaways, or creator earnings.
-                </li>
-
-                <li>
-                  Manipulate Gifts, coins, battles, viewer counts, achievements, levels, Troll
-                  Tokens, cashouts, auctions, referrals, or other Platform systems.
-                </li>
-
-                <li>
-                  Gift yourself through alternate accounts, coordinate circular gifting, or use
-                  payment fraud to manufacture creator earnings or reward progress.
-                </li>
-
-                <li>
-                  Access another person's account, staff tools, database records, streams, private
-                  rooms, or systems without authorization.
-                </li>
-
-                <li>
-                  Probe, scan, overload, attack, interfere with, or attempt to bypass Platform
-                  security, rate limits, access controls, moderation tools, or technical
-                  restrictions.
-                </li>
-
-                <li>
-                  Introduce malware, destructive code, credential-stealing tools, automated abuse,
-                  or other harmful technology.
-                </li>
-
-                <li>
-                  Scrape, copy, harvest, or automatically collect Platform data except through an
-                  authorized Mai Troll feature or written permission.
-                </li>
-
-                <li>
-                  Use bots or scripts to fake activity, automate account actions, generate
-                  fraudulent engagement, or gain an unfair advantage.
-                </li>
-
-                <li>
-                  Impersonate another person, creator, company, staff member, moderator, officer,
-                  or government entity.
-                </li>
-
-                <li>
-                  Infringe copyrights, trademarks, publicity rights, privacy rights, or other legal
-                  rights.
-                </li>
-
-                <li>
-                  Abuse reports, chargebacks, appeals, moderation tools, Troll Court, or staff
-                  processes to knowingly target an innocent user.
-                </li>
-              </ul>
-
-              <p className="text-slate-400 leading-relaxed mt-5">
-                Detailed conduct standards belong in the Community Guidelines. These Terms are not
-                meant to turn every rude comment or heated argument into a legal essay.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Copyright className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Your Content and Your Rights
-                </h2>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                You keep ownership of the original content you create and upload to Mai Troll.
-                Posting it does not transfer your copyright to us.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                You are responsible for making sure you have the rights, licenses, releases, and
-                permissions needed to upload, broadcast, display, perform, sell, or otherwise use
-                your content.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                By uploading, posting, broadcasting, or otherwise submitting content, you grant
-                Mai Troll a worldwide, non-exclusive, royalty-free, sublicensable, and
-                transferable license to host, store, reproduce, process, adapt for technical
-                delivery, transmit, display, perform, distribute, and promote that content for the
-                purpose of operating, improving, securing, and marketing the Platform.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                This license includes creating thumbnails, previews, clips, recordings, captions,
-                resized versions, blurred previews, promotional excerpts, and other technical
-                versions needed to deliver Platform features.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                The license ends when your content is deleted from our active systems, except where
-                continued storage or use is reasonably necessary for backups, legal compliance,
-                fraud prevention, investigations, payment records, dispute resolution, or content
-                already shared by others through an authorized Platform feature.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                You give Mai Troll permission to display your username, profile image, stream
-                title, category, and related public account information alongside your content.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <ShieldCheck className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Mai Troll Content and Technology
-                </h2>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                Mai Troll's software, code, databases, interfaces, graphics, designs, trademarks,
-                logos, original characters, branding, platform text, systems, and other proprietary
-                materials belong to Mai Troll or its licensors.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                We give you a limited, personal, revocable, non-exclusive, non-transferable license
-                to use the Platform as intended under these Terms.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                You may not copy, resell, reverse engineer, decompile, commercially exploit,
-                reproduce, or create unauthorized derivative services from Mai Troll's
-                proprietary technology except where applicable law does not allow that restriction.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <CreditCard className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Troll Coins, Gifts, Troll Tokens, and Payments
-                </h2>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                Mai Troll may offer virtual items and Platform balances, including Troll Coins,
-                Gifts, Troll Tokens, rewards, achievements, promotional credits, or other digital
-                benefits.
-              </p>
-
-              <ul className="list-disc pl-6 space-y-3 text-slate-300 mt-4">
-                <li>
-                  Troll Coins and other virtual items are licensed Platform features. They are not
-                  legal tender, bank deposits, cryptocurrency, stored-value accounts, or property
-                  usable outside Mai Troll.
-                </li>
-
-                <li>
-                  Purchasing Troll Coins does not guarantee that you will receive creator earnings,
-                  win a battle, obtain a refund, qualify for a cashout, or achieve any particular
-                  result.
-                </li>
-
-                <li>
-                  Gifts are voluntary digital interactions. Once properly completed, a Gift may be
-                  final except where our Refund Policy, payment processor rules, or applicable law
-                  requires otherwise.
-                </li>
-
-                <li>
-                  Troll Tokens are promotional broadcaster rewards. They cannot be purchased,
-                  gifted, transferred, sold, or redeemed directly for cash.
-                </li>
-
-                <li>
-                  Troll Tokens may reduce the Troll Coin requirement for an eligible cashout under
-                  the current Troll Token and Cashout Rules. They do not guarantee cashout approval.
-                </li>
-
-                <li>
-                  Promotional balances, bonus coins, test credits, admin grants, and other limited
-                  credits may be non-refundable, non-transferable, non-cashable, or subject to
-                  expiration.
-                </li>
-
-                <li>
-                  Prices, packages, reward requirements, exchange structures, cashout tiers, and
-                  promotional offers may change. Changes will not be applied deceptively to a
-                  completed purchase.
-                </li>
-
-                <li>
-                  Before you authorize a purchase, we will display the applicable price and
-                  material transaction information.
-                </li>
-
-                <li>
-                  You authorize us and our payment processors to charge the payment method you
-                  select.
-                </li>
-
-                <li>
-                  You are responsible for taxes, carrier charges, bank charges, currency conversion
-                  costs, and other third-party costs that apply to your activity unless Mai Troll
-                  expressly agrees otherwise.
-                </li>
-
-                <li>
-                  Fraudulent payments, unauthorized payment methods, abusive chargebacks, or
-                  manipulated transactions may result in reversal of virtual items, account
-                  restrictions, withheld cashouts, or account termination.
-                </li>
-              </ul>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Scale className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Creator Earnings and Cashouts
-                </h2>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                Creator balances and projected earnings are not final until Mai Troll verifies the
-                underlying activity and approves the related cashout.
-              </p>
-
-              <ul className="list-disc pl-6 space-y-3 text-slate-300 mt-4">
-                <li>
-                  Cashouts are available only to eligible users who satisfy applicable age,
-                  identity, tax, account-standing, minimum-balance, level, scheduling, and
-                  verification requirements.
-                </li>
-
-                <li>
-                  Mai Troll may require identity verification, tax information, payment details,
-                  proof of account ownership, or additional fraud-prevention checks.
-                </li>
-
-                <li>
-                  Cashout timing may depend on user level, Fast Pay eligibility, payment processor
-                  availability, manual review, weekends, holidays, security checks, and technical
-                  conditions.
-                </li>
-
-                <li>
-                  Mai Troll's current cashout interface shows the total Troll Coin requirement for
-                  each cashout tier.
-                </li>
-
-                <li>
-                  No separate cashout fee is deducted from the displayed cashout amount when the
-                  applicable tier states that the user receives the full displayed amount.
-                </li>
-
-                <li>
-                  Troll Tokens may reduce the required Troll Coins for a cashout but do not increase
-                  the displayed cash payout.
-                </li>
-
-                <li>
-                  We may delay, deny, reverse, or adjust a cashout connected to fraud, payment
-                  reversals, self-gifting, circular gifting, stolen payment methods, bot activity,
-                  duplicated transactions, manipulated Gifts, account compromise, sanctions
-                  restrictions, or violations of these Terms.
-                </li>
-
-                <li>
-                  We may correct obvious technical, accounting, or ledger errors. We will not
-                  knowingly use error correction as an excuse to take legitimate verified earnings.
-                </li>
-
-                <li>
-                  You are responsible for determining and paying taxes related to your creator
-                  income. Mai Troll may issue tax documents or report payments when legally
-                  required.
-                </li>
-              </ul>
-
-              <p className="text-slate-400 leading-relaxed mt-5">
-                The current cashout tiers, Fast Pay schedule, Troll Token reductions, review
-                requirements, and payment procedures are explained on the{' '}
+                If you have questions about these Terms, educational
+                verification, MAi Business eligibility, MAi Pay, School
+                Battles, School Pool, account rules, or other MAiTROLL legal
+                matters, contact us at{' '}
+                <a
+                  href="mailto:ceo@maitroll.com"
+                  className="text-purple-400 hover:text-purple-300"
+                  aria-label="Email MAiTROLL at ceo@maitroll.com"
+                >
+                  ceo@maitroll.com
+                </a>{' '}
+                or visit our{' '}
                 <Link
-                  to="/cashout-rules"
+                  to="/contact"
                   className="text-purple-400 hover:text-purple-300"
                 >
-                  Cashout Rules page
+                  Contact page
                 </Link>
                 .
               </p>
-            </div>
 
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Gavel className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Auctions, Sales, and User Transactions
-                </h2>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                Mai Troll may provide tools that allow users to list items, host auctions, place
-                bids, arrange shipping, communicate, or complete transactions with one another.
-              </p>
-
-              <ul className="list-disc pl-6 space-y-3 text-slate-300 mt-4">
-                <li>
-                  Unless Mai Troll expressly states otherwise, the seller—not Mai Troll—is
-                  responsible for the item, description, condition, legality, authenticity,
-                  packaging, shipping, tracking information, returns, and transaction promises.
-                </li>
-
-                <li>
-                  Buyers are responsible for reviewing listings, bidding carefully, providing
-                  accurate shipping information, and meeting applicable payment or confirmation
-                  deadlines.
-                </li>
-
-                <li>
-                  Users may not sell illegal, stolen, counterfeit, recalled, dangerous, restricted,
-                  or prohibited items.
-                </li>
-
-                <li>
-                  Mai Troll may cancel or restrict suspicious listings, bids, auctions, or orders
-                  and may preserve records needed to investigate disputes.
-                </li>
-
-                <li>
-                  Additional auction deadlines, cancellation rules, shipping requirements, and
-                  seller obligations may apply through the Auction Rules.
-                </li>
-              </ul>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <AlertTriangle className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Enforcement, Restrictions, and Account Termination
-                </h2>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                Mai Troll may investigate suspected violations and take action reasonably related
-                to platform safety, fraud prevention, legal compliance, or enforcement of these
-                Terms.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                Depending on the situation, action may include a warning, content removal, feature
-                restriction, livestream removal, transaction hold, cashout review, temporary
-                suspension, permanent account termination, device restriction, or another
-                Platform-level consequence described in our rules.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                Mai Troll is not required to start with the lightest consequence when the conduct
-                is severe, dangerous, fraudulent, illegal, or creates an immediate risk.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                Where an appeal process is available, you may challenge an enforcement decision
-                through the applicable appeal, moderation review, or Troll Court process. An appeal
-                does not automatically pause a safety restriction, payment hold, or account
-                limitation.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                You may stop using Mai Troll at any time. Account deletion does not erase payment
-                obligations, completed transactions, legal records, fraud records, unresolved
-                disputes, or provisions of these Terms that are intended to survive termination.
+              <p className="text-sm text-slate-500">
+                MAiTROLL reserves the right to update these Terms as the city,
+                business systems, payment infrastructure, educational programs,
+                and services evolve.
               </p>
             </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Copyright Complaints
-              </h2>
-
-              <p className="text-slate-300 leading-relaxed">
-                If you believe content on Mai Troll infringes your copyright, send a complete
-                notice to our designated copyright contact:
-              </p>
-
-              <div className="mt-4 p-4 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-300 space-y-1">
-                <p>
-                  <strong>DMCA Agent:</strong> [INSERT DESIGNATED AGENT NAME]
-                </p>
-                <p>
-                  <strong>Company:</strong> [INSERT LEGAL COMPANY NAME]
-                </p>
-                <p>
-                  <strong>Address:</strong> [INSERT MAILING ADDRESS]
-                </p>
-                <p>
-                  <strong>Email:</strong>{' '}
-                  <a
-                    href="mailto:copyright@MaiTroll.com"
-                    className="text-purple-400 hover:text-purple-300"
-                  >
-                    copyright@MaiTroll.com
-                  </a>
-                </p>
-              </div>
-
-              <p className="text-slate-400 leading-relaxed mt-4">
-                Mai Troll may remove allegedly infringing material and may terminate repeat
-                infringers where appropriate.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Third-Party Services
-              </h2>
-
-              <p className="text-slate-300 leading-relaxed">
-                Mai Troll may rely on third-party services for payments, authentication, video,
-                realtime communication, cloud hosting, storage, analytics, identity verification,
-                email, notifications, or other infrastructure.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                Those providers may have their own terms and privacy practices. Mai Troll is not
-                responsible for an independent third party's products, outages, actions, or
-                policies, but we remain responsible for obligations the law places directly on us.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Feedback
-              </h2>
-
-              <p className="text-slate-300 leading-relaxed">
-                We welcome suggestions, bug reports, feature ideas, and criticism. If you send us
-                feedback without a separate written agreement, you allow Mai Troll to use it
-                without restriction or payment to you.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                This does not transfer ownership of your separate copyrighted content, confidential
-                business materials, or inventions covered by a written agreement.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Disclaimer of Warranties
-              </h2>
-
-              <p className="text-slate-300 leading-relaxed">
-                To the fullest extent permitted by law, Mai Troll is provided on an “as is” and
-                “as available” basis.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                We do not promise that every feature will always be available, uninterrupted,
-                secure, error-free, compatible with every device, or free from data loss. We do not
-                guarantee viewer counts, Gifts, earnings, cashout eligibility, audience growth,
-                auction success, battle outcomes, creator partnerships, employment, or any other
-                specific result.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                Some jurisdictions do not allow certain warranty exclusions, so some of these
-                exclusions may not apply to you.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Limitation of Liability
-              </h2>
-
-              <p className="text-slate-300 leading-relaxed">
-                To the fullest extent permitted by law, Mai Troll and its owners, affiliates,
-                officers, employees, contractors, and service providers will not be liable for
-                indirect, incidental, special, exemplary, punitive, or consequential damages,
-                including lost profits, lost data, lost opportunities, reputational harm, or
-                business interruption arising from your use of the Platform.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                To the fullest extent permitted by law, Mai Troll's total liability for claims
-                arising out of or related to the Platform will not exceed the greater of:
-              </p>
-
-              <ul className="list-disc pl-6 space-y-2 text-slate-300 mt-3">
-                <li>
-                  the amount you paid directly to Mai Troll during the 12 months before the event
-                  giving rise to the claim; or
-                </li>
-                <li>$100 USD.</li>
-              </ul>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                These limitations do not apply where applicable law does not permit them, including
-                certain claims involving fraud, intentional misconduct, or personal injury.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Indemnification
-              </h2>
-
-              <p className="text-slate-300 leading-relaxed">
-                To the extent permitted by law, you agree to defend, indemnify, and hold harmless
-                Mai Troll, its affiliates, owners, officers, employees, and contractors from
-                third-party claims, losses, liabilities, and reasonable legal costs arising from:
-              </p>
-
-              <ul className="list-disc pl-6 space-y-2 text-slate-300 mt-3">
-                <li>your content;</li>
-                <li>your products, auctions, listings, or transactions;</li>
-                <li>your violation of these Terms;</li>
-                <li>your violation of another person's rights; or</li>
-                <li>your unlawful or fraudulent use of the Platform.</li>
-              </ul>
-
-              <p className="text-slate-400 leading-relaxed mt-4">
-                This section does not require you to indemnify Mai Troll for Mai Troll's own
-                unlawful conduct where such indemnification is prohibited.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Scale className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Governing Law and Disputes
-                </h2>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                These Terms are governed by the laws of the State of{' '}
-                <strong>[INSERT STATE]</strong>, without regard to conflict-of-law principles,
-                except where federal law or the law of your location requires otherwise.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                Before filing a formal claim, you agree to contact us at{' '}
-                <a
-                  href="mailto:legal@MaiTroll.com"
-                  className="text-purple-400 hover:text-purple-300"
-                >
-                  legal@MaiTroll.com
-                </a>{' '}
-                and give us at least 30 days to try to resolve the dispute informally.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                Any lawsuit that is not eligible for small claims court must be brought in the state
-                or federal courts located in <strong>[INSERT COUNTY AND STATE]</strong>, and each
-                party consents to that jurisdiction and venue.
-              </p>
-
-              <p className="text-amber-300/90 leading-relaxed mt-4">
-                Do not add mandatory arbitration or a class-action waiver unless a qualified
-                attorney prepares and reviews that section for your company and intended operating
-                states.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Changes to the Platform or These Terms
-              </h2>
-
-              <p className="text-slate-300 leading-relaxed">
-                Mai Troll will continue changing as features are added, removed, tested, repaired,
-                or redesigned.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                We may update these Terms when the Platform, our business, or legal requirements
-                change. If a change materially affects your rights, payments, creator earnings, or
-                obligations, we may provide additional notice through the Platform, email, or
-                another reasonable method.
-              </p>
-
-              <p className="text-slate-300 leading-relaxed mt-4">
-                The updated date at the top tells you when the Terms were last revised. Continuing
-                to use the Platform after the effective date means you accept the revised Terms.
-                Where the law requires separate consent, we will request it.
-              </p>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                General Legal Terms
-              </h2>
-
-              <ul className="list-disc pl-6 space-y-3 text-slate-300">
-                <li>
-                  These Terms and the policies incorporated into them make up the agreement between
-                  you and Mai Troll regarding the Platform.
-                </li>
-
-                <li>
-                  If part of these Terms is found unenforceable, the rest remains effective to the
-                  fullest extent permitted by law.
-                </li>
-
-                <li>
-                  Mai Troll's failure to enforce a provision once does not waive the right to
-                  enforce it later.
-                </li>
-
-                <li>
-                  You may not assign your rights or obligations under these Terms without our
-                  written permission.
-                </li>
-
-                <li>
-                  Mai Troll may assign these Terms as part of a merger, acquisition,
-                  reorganization, financing, asset transfer, or transfer to an affiliate.
-                </li>
-
-                <li>
-                  Headings are included to make the Terms easier to read and do not change their
-                  legal meaning.
-                </li>
-
-                <li>
-                  Sections concerning ownership, payments, creator earnings, liability,
-                  indemnification, disputes, fraud records, and other provisions that logically
-                  should survive will remain effective after account termination.
-                </li>
-              </ul>
-            </div>
-
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Mail className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white m-0">
-                  Contact Us
-                </h2>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                Questions about these Terms can be sent to:
-              </p>
-
-              <div className="mt-4 text-slate-300 space-y-2">
-                <p>
-                  <strong>Legal company:</strong> [INSERT LEGAL COMPANY NAME]
-                </p>
-
-                <p>
-                  <strong>Mailing address:</strong> [INSERT BUSINESS MAILING ADDRESS]
-                </p>
-
-                <p>
-                  <strong>Email:</strong>{' '}
-                  <a
-                    href="mailto:legal@MaiTroll.com"
-                    className="text-purple-400 hover:text-purple-300"
-                  >
-                    legal@MaiTroll.com
-                  </a>
-                </p>
-
-                <p>
-                  <strong>Online:</strong>{' '}
-                  <Link
-                    to="/contact"
-                    className="text-purple-400 hover:text-purple-300"
-                  >
-                    Contact page
-                  </Link>
-                </p>
-              </div>
-            </div>
-
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
     </SEOLayout>
   )
 }

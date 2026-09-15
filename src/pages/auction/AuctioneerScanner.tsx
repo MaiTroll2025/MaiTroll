@@ -536,7 +536,7 @@ export default function AuctioneerScanner() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const isAuctioneer = profile?.is_auctioneer === true ||
+  const isAuctioneer =
     (profile?.role as string) === 'auctioneer' ||
     profile?.role === 'admin'
 

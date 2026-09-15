@@ -220,7 +220,7 @@ export default function MaiSingOffPage() {
 
   const handleEndShow = async () => {
     if (!sessionId || !canEndShow) return;
-    const confirmed = window.confirm('End the current Mai Sing Off show?');
+    const confirmed = window.confirm('End the current Mai Talent Show show?');
     if (!confirmed) return;
     try {
       if (typeof actionsRef.current.endLiveShow === 'function') {
@@ -245,7 +245,7 @@ export default function MaiSingOffPage() {
       return (
         <StageError
           title="Invalid show"
-          message="This Mai Sing Off show does not have a valid session ID."
+          message="This Mai Talent Show show does not have a valid session ID."
           onBack={goBack}
         />
       );
@@ -274,7 +274,7 @@ export default function MaiSingOffPage() {
 
               <div className="min-w-0">
                 <h1 className="truncate text-sm font-black sm:text-base">
-                  {session.title || 'Mai Sing Off'}
+                  {session.title || 'Mai Talent Show'}
                 </h1>
                 <div className="flex items-center gap-2 text-[11px] text-white/50">
                   <span>Virtual Talent Show</span>
@@ -439,7 +439,7 @@ export default function MaiSingOffPage() {
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
                 Take the stage. Challenge another singer. Face the judges.
-                Earn your place in Mai Sing Off history — now with scheduled shows,
+                Earn your place in Mai Talent Show history — now with scheduled shows,
                 championship seasons, and grand prizes.
               </p>
             </div>
@@ -879,7 +879,7 @@ function StageSquare({
                 type="button"
                 onClick={onKick}
                 className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-600/90 text-white shadow-lg hover:bg-red-500"
-                title="Kick challenger from Mai Sing Off"
+                title="Kick challenger from Mai Talent Show"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1053,7 +1053,7 @@ function CoinView({ balance }: { balance: number }) {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h2 className="text-2xl font-black">Mai Sing Off Coins</h2>
+      <h2 className="text-2xl font-black">Mai Talent Show Coins</h2>
 
       <div className="mt-5 rounded-3xl border border-yellow-400/20 bg-yellow-500/10 p-6">
         <div className="text-xs font-black uppercase tracking-[0.2em] text-yellow-300/60">Current Balance</div>
@@ -1115,7 +1115,7 @@ function SignedOutView({ onSignIn }: { onSignIn: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-black p-4 text-white">
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-950 p-8 text-center">
         <Mic2 className="mx-auto h-10 w-10 text-pink-400" />
-        <h1 className="mt-4 text-3xl font-black">Mai Sing Off</h1>
+        <h1 className="mt-4 text-3xl font-black">Mai Talent Show</h1>
         <p className="mt-3 text-sm text-white/45">Sign in to enter the virtual talent show.</p>
         <button type="button" onClick={onSignIn} className="mt-6 w-full rounded-xl bg-pink-600 px-4 py-3 font-black hover:bg-pink-500">
           Sign In
@@ -1152,7 +1152,7 @@ function StageError({ title, message, onBack }: { title: string; message: string
         <h2 className="text-xl font-black">{title}</h2>
         <p className="mt-2 text-sm text-white/45">{message}</p>
         <button onClick={onBack} className="mt-5 rounded-xl bg-white/10 px-4 py-2 text-sm font-bold">
-          Back to Mai Sing Off
+          Back to Mai Talent Show
         </button>
       </div>
     </div>
@@ -1170,7 +1170,7 @@ function UnderConstruction() {
         </div>
         <h1 className="mt-6 text-3xl font-black">Under Construction</h1>
         <p className="mt-3 text-sm text-white/45">
-          Mai Sing Off is being upgraded. Check back soon for the new virtual talent show experience.
+          Mai Talent Show is being upgraded. Check back soon for the new virtual talent show experience.
         </p>
         <button
           type="button"
@@ -1190,7 +1190,7 @@ function UnderConstruction() {
    ============================================================ */
 
 async function kickParticipant(actions: any, participant: SingOffParticipantLike) {
-  const confirmed = window.confirm(`Kick @${participant.username ?? 'user'} from Mai Sing Off?`);
+  const confirmed = window.confirm(`Kick @${participant.username ?? 'user'} from Mai Talent Show?`);
   if (!confirmed) return;
 
   if (typeof actions.kickUser === 'function') {

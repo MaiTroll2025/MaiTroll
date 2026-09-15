@@ -42,7 +42,6 @@ const POSITION_OPTIONS = [
 ]
 
 const ROLE_BOOLEAN_FIELD: Record<string, string> = {
-  auctioneer: 'is_auctioneer',
   prosecutor: 'is_prosecutor',
   attorney: 'is_attorney',
   tcnn_news_caster: 'is_news_caster',

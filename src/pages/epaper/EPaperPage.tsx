@@ -42,7 +42,7 @@ const EVENT_META: Record<
   { label: string; icon: React.ElementType; className: string }
 > = {
   show: {
-    label: 'Mai Sing Off',
+    label: 'Mai Talent Show',
     icon: Mic2,
     className: 'border-pink-400/30 bg-pink-500/10 text-pink-300',
   },

@@ -174,8 +174,7 @@ function useRoleChecks(profile: any) {
 
   const isAuctioneer =
     role === 'auctioneer' ||
-    trollRole === 'auctioneer' ||
-    !!(profile as any)?.is_auctioneer
+    trollRole === 'auctioneer'
 
   // Any profile whose role is an approved employee role can open the
   // employee office (mirrors permissions.ts APPROVED_ROLES).
@@ -364,7 +363,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
            { label: 'TCNN News', icon: Newspaper, path: '/tcnn' },
            { label: 'EPaper', icon: Newspaper, path: '/epaper' },
            { label: 'Troll Wheel', icon: Shuffle, path: '/troll-wheel' },
-           { label: 'Mai Sing Off', icon: Mic, path: '/mai-sing-off' },
+           { label: 'Mai Talent Show', icon: Mic, path: '/mai-sing-off' },
         ],
       },
        {
@@ -439,15 +438,8 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
            ...(isHRAdmin
              ? [{ label: '', icon: Briefcase as any, path: '/hr-center' }]
              : []),
-         ],
-       },
-       {
-         category: 'Learning',
-        items: [
-          { label: 'Academy', icon: GraduationCap, path: '/academy' },
-          { label: 'Courses', icon: BookOpen, path: '/academy/courses' },
-        ],
-      },
+],
+        },
         {
           category: 'Tools & Help',
           items: [

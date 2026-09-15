@@ -47,7 +47,6 @@ interface UserProfile {
     is_journalist?: boolean;
     is_news_caster?: boolean;
     is_chief_news_caster?: boolean;
-    is_auctioneer?: boolean;
     is_pastor?: boolean;
     is_secretary?: boolean;
 }
@@ -112,7 +111,6 @@ export function ProfileHeader({
         if (profile.role === 'journalist' || profile.is_journalist) return 'Journalist';
         if (profile.role === 'tcnn_news_caster' || profile.is_news_caster) return 'News Caster';
         if (profile.role === 'tcnn_chief_news_caster' || profile.is_chief_news_caster) return 'Chief News Caster';
-        if (profile.role === 'auctioneer' || profile.is_auctioneer) return 'Auctioneer';
         if (profile.role === 'pastor' || profile.is_pastor) return 'Pastor';
         if (profile.role === 'secretary' || profile.is_secretary) return 'Secretary';
         return null;

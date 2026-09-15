@@ -366,7 +366,7 @@ export default function AdditionalTasksGrid({
         },
         {
           icon: <Trophy className="w-5 h-5" />,
-          label: 'Mai Sing Off Judges',
+          label: 'Mai Talent Show Judges',
           description: 'Review judge applications',
           action: () => navigate('/admin/mai-singoff-judges'),
           color: 'text-pink-400',

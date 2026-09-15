@@ -85,7 +85,7 @@ export function SingOffCoinStore({ open, onClose }: CoinStoreProps) {
         <div className="relative w-full max-w-lg rounded-xl bg-zinc-900 border border-zinc-800 p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Coins className="w-5 h-5 text-yellow-400" /> Mai Sing Off Coins
+              <Coins className="w-5 h-5 text-yellow-400" /> Mai Talent Show Coins
             </h2>
             <button onClick={safeClose} className="p-1 hover:bg-zinc-800 rounded" disabled={payProgressRef.current}>
               <X className="w-5 h-5 text-zinc-400" />

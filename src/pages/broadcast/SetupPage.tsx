@@ -243,32 +243,16 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const [broadcastPassword, setBroadcastPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-   // Check if user can create protected broadcast (admin/staff or level >= 50)
-   const canCreateProtected = profile && (
-     profile.role === 'admin' || 
-     profile.is_admin || 
-     profile.is_troll_officer || 
-     profile.is_lead_officer || 
-     (profile.level !== undefined && profile.level >= 50)
-   );
-   
-    // Celeb stream support — only approved celebrities can create Celeb Streams
-    const isApprovedCeleb = !!(profile && profile.celeb_role === 'approved');
-    const [isCelebStream, setIsCelebStream] = useState(() => {
-     const params = new URLSearchParams(location.search);
-     return params.get('type') === 'celeb_stream';
-   });
+// Check if user can create protected broadcast (admin/staff or level >= 50)
+    const canCreateProtected = profile && (
+      profile.role === 'admin' || 
+      profile.is_admin || 
+      profile.is_troll_officer || 
+      profile.is_lead_officer || 
+      (profile.level !== undefined && profile.level >= 50)
+    );
 
-   useEffect(() => {
-     if (isCelebStream && !isApprovedCeleb) {
-       const params = new URLSearchParams(location.search);
-       params.delete('type');
-       window.history.replaceState({}, '', `${location.pathname}?${params.toString()}`);
-       setIsCelebStream(false);
-     }
-   }, [isApprovedCeleb, isCelebStream, location.search])
-
-   // Determine if user is admin for quality settings (1080p admin, 720p regular)
+    // Determine if user is admin for quality settings (1080p admin, 720p regular)
    const isStreamAdmin = !!(profile && (
      profile.role === 'admin' || profile.is_admin ||
      profile.role === 'owner'
@@ -1657,13 +1641,13 @@ const handleStartStream = async () => {
             owner_id: user.id,
             title,
             category,
-            stream_type: isCelebStream ? 'celeb_stream' : 'standard',
+            stream_type: 'standard',
             camera_ready: isVideoEnabled,
            status: 'starting',
            is_live: false,
            started_at: null,
             box_count: seatCount === 0 ? 1 : seatCount + 1,
-            seat_count: isCelebStream ? 0 : (seatCount === 0 ? 0 : seatCount),
+            seat_count: (seatCount === 0 ? 0 : seatCount),
            layout_mode: layoutMode,
             random_battle_queue_enabled: RANDOM_BATTLE_ENABLED && category === 'general' && (battleMode === 'world' || battleMode === 'state') ? randomBattleQueueEnabled : false,
            random_battle_queued_at: null,
@@ -2383,8 +2367,8 @@ const handleStartStream = async () => {
               </div>
             </div>
 
-            {/* Seat Count Selector (hidden for Celeb Streams) */}
-            {!isCelebStream && (() => {
+            {/* Seat Count Selector */}
+            {(() => {
               const effectiveMaxSeats = seatCap.enabled ? Math.min(MAX_GUEST_SEATS, seatCap.max) : MAX_GUEST_SEATS;
               return (
                 <div className="flex-1 bg-zinc-900/80 rounded-xl border border-amber-500/20 p-3 flex flex-col justify-between">

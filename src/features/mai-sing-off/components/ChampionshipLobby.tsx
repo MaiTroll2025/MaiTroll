@@ -260,7 +260,7 @@ export function ChampionshipLobby() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Mai Sing Off Championship Season X"
+              placeholder="Mai Talent Show Championship Season X"
               className="mt-2 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-yellow-400/40"
             />
 

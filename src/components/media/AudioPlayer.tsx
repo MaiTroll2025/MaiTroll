@@ -8,7 +8,6 @@ import { Howl } from 'howler';
 import { MaiTrollTheme } from '@/styles/trollCityTheme';
 import type { Song } from '@/types/media';
 import { TIP_AMOUNTS } from '@/types/media';
-import { useSong } from '@/lib/hooks/useMedia';
 
 interface AudioPlayerProps {
   song: Song;
@@ -48,7 +47,10 @@ export default function AudioPlayer({
   
   const howlRef = useRef<Howl | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  const { toggleLike, sendTip, song: currentSongData } = useSong(song.id);
+
+  const toggleLike = () => {};
+  const sendTip = async () => ({ success: false, error: 'Not available' });
+  const currentSongData = null;
 
   // Initialize Howl when song changes
   useEffect(() => {
@@ -70,7 +72,7 @@ export default function AudioPlayer({
     const getAudioUrl = (audioUrl: string) => {
       if (!audioUrl) return '';
       if (audioUrl.startsWith('http')) return audioUrl;
-      return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/record-label-tracks/${audioUrl}`;
+      return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/audio/${audioUrl}`;
     };
 
     const audioSrc = getAudioUrl(song.audio_url);

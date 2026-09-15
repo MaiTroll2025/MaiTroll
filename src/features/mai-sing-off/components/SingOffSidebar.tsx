@@ -196,7 +196,7 @@ export function SingOffSidebar({
   /**
    * MOBILE
    *
-   * Bottom navigation for Mai Sing Off.
+   * Bottom navigation for Mai Talent Show.
    */
   if (isMobileWidth) {
     return (
@@ -214,7 +214,7 @@ export function SingOffSidebar({
           pt-2
           backdrop-blur-xl
         "
-        aria-label="Mai Sing Off navigation"
+        aria-label="Mai Talent Show navigation"
       >
         <div className="flex items-center gap-1 overflow-x-auto">
           {context === 'stage' && onBack && (
@@ -239,7 +239,7 @@ export function SingOffSidebar({
                 hover:bg-white/10
                 hover:text-white
               "
-              aria-label="Back to Mai Sing Off"
+              aria-label="Back to Mai Talent Show"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
@@ -317,7 +317,7 @@ export function SingOffSidebar({
 
             <div>
               <div className="text-sm font-black text-white">
-                Mai Sing Off
+                Mai Talent Show
               </div>
 
               <div className="text-[11px] uppercase tracking-[0.2em] text-white/40">

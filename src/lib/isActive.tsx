@@ -170,8 +170,7 @@ export default function Sidebar() {
   const canSeeAuctionStudio = Boolean(
     isApprovedAuctioneer ||
     (profile?.role as string) === 'auctioneer' ||
-    profile?.troll_role === 'auctioneer' ||
-    (profile as any)?.is_auctioneer
+    profile?.troll_role === 'auctioneer'
   )
 
   const canSeeProsecutorDashboard = Boolean(

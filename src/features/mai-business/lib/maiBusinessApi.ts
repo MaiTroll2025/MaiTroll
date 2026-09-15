@@ -927,5 +927,40 @@ export const maiBusinessApi = {
       .maybeSingle()
     if (error) { console.error('updateRecognitionRequest error:', error); return null }
     return data
+  },
+
+  // --- MaiTroll Merch Store (isolated, USD only) ---
+  async getMerchProducts() {
+    const { data, error } = await supabase
+      .from('mai_merch_products')
+      .select('*')
+      .eq('is_active', true)
+      .order('category', { ascending: true })
+    if (error) { console.error('getMerchProducts error:', error); return [] }
+    return data
+  },
+
+  async getMerchOrders() {
+    const { user } = useAuthStore.getState()
+    if (!user?.id) return []
+    const { data, error } = await supabase
+      .from('mai_merch_orders')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (error) { console.error('getMerchOrders error:', error); return [] }
+    return data
+  },
+
+  async createMerchOrder(productIds: string[]) {
+    const { user } = useAuthStore.getState()
+    if (!user?.id) return null
+    const { data, error } = await supabase.rpc('create_merch_order', {
+      p_product_ids: productIds,
+      p_shipping_address: null,
+    })
+    if (error) { console.error('createMerchOrder error:', error); return null }
+    return data
   }
 }

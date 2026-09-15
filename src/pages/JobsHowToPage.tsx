@@ -294,7 +294,6 @@ const jobPositions: JobPosition[] = [
 ]
 
 const positionToRoleCheck: Record<string, { field: string; message: string }> = {
-  auctioneer: { field: 'is_auctioneer', message: 'You are already an Auctioneer' },
   secretary: { field: 'is_secretary', message: 'You are already a Secretary' },
   troll_officer: { field: 'is_troll_officer', message: 'You are already a Troll Officer' },
   lead_troll_officer: { field: 'is_lead_officer', message: 'You are already a Lead Troll Officer' },
@@ -313,7 +312,6 @@ const positionToRoleCheck: Record<string, { field: string; message: string }> = 
 }
 
 const roleBooleanField: Record<string, string> = {
-  auctioneer: 'is_auctioneer',
   prosecutor: 'is_prosecutor',
   attorney: 'is_attorney',
   tcnn_news_caster: 'is_news_caster',

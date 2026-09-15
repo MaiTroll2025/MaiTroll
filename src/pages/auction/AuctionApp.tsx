@@ -76,7 +76,7 @@ export default function AuctionApp() {
   const [loading, setLoading] = useState(true)
 
   const isAuctioneer = useMemo(
-    () => profile?.is_auctioneer === true || (profile?.role as string) === 'auctioneer' || profile?.is_admin === true,
+    () => (profile?.role as string) === 'auctioneer' || profile?.is_admin === true,
     [profile],
   )
 

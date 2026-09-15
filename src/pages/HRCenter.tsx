@@ -103,7 +103,6 @@ export default function HRCenter() {
       p?.is_journalist,
       p?.is_news_caster,
       p?.is_chief_news_caster,
-      p?.is_auctioneer,
       p?.is_troller,
       p?.is_ceo_assistant,
       p?.is_noah_assistant,

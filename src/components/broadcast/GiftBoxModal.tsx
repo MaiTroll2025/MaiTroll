@@ -362,21 +362,21 @@ const GiftBoxModalComponent = function GiftBoxModal({
          }
        } else if (giftTarget.type === 'broadcaster') {
          success = await sendGift(selectedGift, { receiverId: broadcasterId, quantity });
-          if (success) {
+          if (Boolean(success)) {
             toast.success(`Sent ${quantity}x ${selectedGift.name} to broadcaster!`);
             onGiftSent?.(selectedGift, { type: 'broadcaster', userId: broadcasterId, quantity });
           }
        } else {
          const targetId = giftTarget.userId || recipientId;
          success = await sendGift(selectedGift, { receiverId: targetId, quantity });
-          if (success) {
+          if (Boolean(success)) {
            const targetName = userProfiles[targetId]?.username || 'user';
            toast.success(`Sent ${quantity}x ${selectedGift.name} to ${targetName}!`);
            onGiftSent?.(selectedGift, { type: 'specific', userId: targetId, username: targetName, quantity });
          }
       }
       
-      if (success) {
+      if (Boolean(success)) {
         onClose();
         setSelectedGift(null);
         setQuantity(1);

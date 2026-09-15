@@ -948,7 +948,7 @@ export function useBattleViewController({
             let found = false;
             const start = Date.now();
             while (!found && Date.now() - start < 3000) {
-               
+              // eslint-disable-next-line no-await-in-loop
               await new Promise((r) => setTimeout(r, 100));
               const candidate = (battleRealtime as any)?.battle;
               if (candidate) {

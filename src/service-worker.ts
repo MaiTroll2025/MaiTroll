@@ -262,14 +262,7 @@ self.addEventListener('fetch', (event) => {
       url.pathname.includes('/rest/v1/troll_wall_') ||
       url.pathname.includes('/rest/v1/streams') ||
       url.pathname.includes('/rest/v1/chat_messages') ||
-      url.pathname.includes('/rest/v1/notifications') ||
-      url.pathname.includes('/rest/v1/record_label_tracks') ||
-      url.pathname.includes('/rest/v1/record_label_albums') ||
-      url.pathname.includes('/rest/v1/record_label_artist_profiles') ||
-      url.pathname.includes('/rest/v1/record_label_applications') ||
-      url.pathname.includes('/rest/v1/record_label_contracts') ||
-      url.pathname.includes('/rest/v1/record_label_transactions') ||
-      url.pathname.includes('/rest/v1/record_label_track_likes');
+      url.pathname.includes('/rest/v1/notifications');
     if (isFeedQuery) {
       return; // bypass SW cache entirely
     }

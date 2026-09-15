@@ -88,8 +88,6 @@ export const canAccessTromail = (profile: any): boolean => {
     profile?.is_prosecutor ||
     role === 'attorney' ||
     profile?.is_attorney ||
-    role === 'auctioneer' ||
-    profile?.is_auctioneer ||
     role === 'troll_officer' ||
     profile?.is_troll_officer ||
     role === 'lead_troll_officer' ||

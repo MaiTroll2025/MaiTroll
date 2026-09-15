@@ -23,8 +23,7 @@ type View =
   | 'calendar'
   | 'secretary_dashboard'
   | 'crown_redemptions'
-  | 'coin_liability'
-  | 'mai_record_label_contracts'
+| 'coin_liability'
 
 interface NavigationItem {
   id: View
@@ -130,26 +129,21 @@ export const navigation: NavigationGroup[] = [
     title: 'Administration',
     icon: <Briefcase className="w-4 h-4" />,
     items: [
-      {
-        id: 'staff',
-        label: 'Staff Management',
-        icon: <Users className="w-4 h-4" />
-      },
-      {
-        id: 'mai_record_label_contracts',
-        label: 'MAI Record Label',
-        icon: <Music className="w-4 h-4" />
-      },
-      {
-        id: 'calendar',
-        label: 'Secretary Calendar',
-        icon: <CalendarDays className="w-4 h-4" />
-      },
-      {
-        id: 'crown_redemptions',
-        label: 'Crown Redemptions',
-        icon: <Crown className="w-4 h-4" />
-      }
+{
+    id: 'staff',
+    label: 'Staff Management',
+    icon: <Users className="w-4 h-4" />
+  },
+  {
+    id: 'calendar',
+    label: 'Secretary Calendar',
+    icon: <CalendarDays className="w-4 h-4" />
+  },
+  {
+    id: 'crown_redemptions',
+    label: 'Crown Redemptions',
+    icon: <Crown className="w-4 h-4" />
+  }
     ]
   },
 

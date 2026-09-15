@@ -324,7 +324,6 @@ export interface UserProfile {
   is_prosecutor?: boolean
   is_judge?: boolean
   is_attorney?: boolean
-  is_auctioneer?: boolean
 
   // Profile view price
   profile_view_price?: number
@@ -977,7 +976,6 @@ export const hasRole = (
     judge: profile.is_judge,
     secretary: profile.is_secretary,
     ceo: profile.is_ceo,
-    auctioneer: profile.is_auctioneer,
     // moderator: profile.is_moderator, // column does not exist
     officer: profile.is_officer,
     journalist: (profile as any).is_journalist,

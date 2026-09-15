@@ -753,11 +753,7 @@ export function BroadcastPage() {
        userId: user?.id,
        isEligible: isHost,
        streamId: streamId || null,
-     })
-
-      // Celeb stream: no seats, viewer-only participation with paid chat + products
-     const isCelebStream = stream?.stream_type === 'celeb_stream'
-     const isApprovedCeleb = !!(profile && profile.celeb_role === 'approved')
+})
 
       const isStreamLive = stream?.status === 'live' && stream?.is_live === true;
 
@@ -946,7 +942,6 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
   const viewerSeatCards = useMemo(() => {
     if (currentViewerSeatCount <= 0) return []
-    if (isCelebStream) return []
 
     return Array.from({ length: currentViewerSeatCount }, (_, offset) => {
       const seatIndex = offset + 1
@@ -8542,37 +8537,7 @@ const showFallback =
                    streamId={streamId}
                    onClose={() => setIsAuctionMeOpen(false)}
                  />
-               )}
-
-              {/* Celeb Stream Toolbar — only for hosts of celeb_stream */}
-              {isCelebStream && isHost && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-slate-900/80 border border-yellow-500/30 rounded-xl px-3 py-2 shadow-[0_0_20px_rgba(251,191,36,0.2)]">
-                  <button
-                    type="button"
-                    onClick={() => window.open(`/celeb/dashboard/products`, '_blank')}
-                    className="flex items-center gap-1.5 text-xs font-medium text-yellow-300 hover:text-yellow-200 hover:bg-yellow-500/10 px-3 py-1.5 rounded-lg transition-all"
-                  >
-                    <ShoppingBag size={14} />
-                    Products
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => window.open(`/celeb/dashboard/earnings`, '_blank')}
-                    className="flex items-center gap-1.5 text-xs font-medium text-yellow-300 hover:text-yellow-200 hover:bg-yellow-500/10 px-3 py-1.5 rounded-lg transition-all"
-                  >
-                    <BarChart3 size={14} />
-                    Earnings
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => window.open(`/celeb/moderation/${streamId}`, '_blank')}
-                    className="flex items-center gap-1.5 text-xs font-medium text-yellow-300 hover:text-yellow-200 hover:bg-yellow-500/10 px-3 py-1.5 rounded-lg transition-all"
-                  >
-                    <Shield size={14} />
-                    Moderate
-                  </button>
-                </div>
-              )}
+)}
 
 
           

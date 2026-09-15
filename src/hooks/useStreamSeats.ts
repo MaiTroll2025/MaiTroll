@@ -385,12 +385,6 @@ export function useStreamSeats(
         return false
       }
 
-      // Celeb streams do not support seat joining — viewers participate via chat only
-      if (_streamData?.stream_type === 'celeb_stream') {
-        toast.error('Seats are not available in Celeb Streams')
-        return false
-      }
-
       const existing = mySeatRef.current
       if (
         existing &&

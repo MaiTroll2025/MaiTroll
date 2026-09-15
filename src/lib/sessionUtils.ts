@@ -67,7 +67,7 @@ export async function canHaveMultiSession(userId: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('role, is_admin, is_auctioneer, is_ceo, is_superadmin, is_troll_officer, is_lead_officer')
+      .select('role, is_admin, is_ceo, is_superadmin, is_troll_officer, is_lead_officer')
       .eq('id', userId)
       .maybeSingle()
 
@@ -78,7 +78,6 @@ export async function canHaveMultiSession(userId: string): Promise<boolean> {
     if (data.is_admin === true) return true
     if (data.is_superadmin === true) return true
     if (data.is_ceo === true) return true
-    if (data.is_auctioneer === true) return true
     if (data.is_troll_officer === true) return true
     if (data.is_lead_officer === true) return true
 

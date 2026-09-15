@@ -8,7 +8,6 @@ import {
   Crown,
   FileText,
   Gamepad2,
-  Gavel,
   Gift,
   Heart,
   MessageCircle,
@@ -26,13 +25,12 @@ import {
 
 import { useAuthStore } from '@/lib/store'
 import { isPrideMonth } from '@/lib/prideMonth'
-import { useLiveContent, type AuctionShow, type LiveItem } from '@/contexts/LiveContentContext'
+import { useLiveContent, type LiveItem } from '@/contexts/LiveContentContext'
 import TrollWallFeed from '@/components/home/TrollWallFeed'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
 import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
 import AcademyTab from '@/components/home/AcademyTab'
-import LiveAuctionMiniWindow from '@/components/home/LiveAuctionMiniWindow'
 import SupportGoalReminderModal from '@/components/SupportGoalReminderModal'
 import { useSupportGoalReminder } from '@/hooks/useSupportGoalReminder'
 import { usePresidentSystem } from '@/hooks/usePresidentSystem'
@@ -588,11 +586,7 @@ const LiveGrid = React.memo(function LiveGrid({
                   className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 text-left transition hover:border-cyan-300/60"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-900/70 via-slate-950 to-cyan-900/50" />
-                  {item.type === 'auction' ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Gavel className="h-16 w-16 text-cyan-300/40" />
-                    </div>
-                  ) : item.streamerAvatar ? (
+                  {item.streamerAvatar ? (
                     <img src={item.streamerAvatar} alt={item.streamerName} className="absolute inset-0 h-full w-full object-cover opacity-80" />
                   ) : (
                     <Play className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 text-white/20" />
@@ -747,107 +741,6 @@ const LeftSidebar = React.memo(function LeftSidebar({ liveItems }: { liveItems: 
   )
 })
 
-const RightSidebar = React.memo(function RightSidebar({ user, liveAuctions, isPride, onOpenStore, onOpenChallenges }: { user: any; liveAuctions: AuctionShow[]; isPride: boolean; onOpenStore: () => void; onOpenChallenges: () => void }) {
-  return (
-    <aside className="hidden space-y-3 md:block">
-      {/* Pride Month Widget */}
-      {isPride && (
-        <div className={`${glass} ${rainbowBorder} rounded-2xl p-4`}>
-          <h3 className="text-sm font-black text-white">Pride Month 🏳️‍🌈</h3>
-          <p className="mt-1 text-[10px] text-slate-400">Live with pride. Troll with love.</p>
-          
-          <div className="mt-3 rounded-xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 p-3">
-            <div className="flex items-center justify-between text-[10px]">
-              <span className="font-black text-cyan-300">75% Complete</span>
-              <span className="text-slate-400">Ends June 30th</span>
-            </div>
-            <div className="mt-2 h-2 rounded-full bg-black/50">
-              <div className="h-2 w-[75%] rounded-full bg-gradient-to-r from-pink-500 via-yellow-300 to-cyan-300" />
-            </div>
-          </div>
-          
-          <button
-            onClick={onOpenChallenges}
-            className="mt-3 w-full rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 px-3 py-2 text-xs font-black text-white"
-          >
-            View Challenges
-          </button>
-        </div>
-      )}
-
-      {/* Live Battles */}
-      <div className={`${neonCard} rounded-2xl p-4`}>
-        <h3 className="flex items-center gap-2 text-sm font-black text-white">
-          <Sparkles className="h-4 w-4 text-yellow-300" />
-          Live Battles
-        </h3>
-        <p className="mt-1 text-[10px] text-slate-400">2,089 LIVE</p>
-        
-        <div className="mt-3 space-y-2">
-          {[
-            { name: 'Team Chaos', vs: 'Team Order', viewers: 1245, state: 'LIVE' },
-            { name: 'Team Chaos', vs: 'Team Order', viewers: 987, state: 'LIVE' },
-          ].map((battle, idx) => (
-            <button key={idx} className="w-full rounded-lg border border-yellow-300/20 bg-yellow-900/20 p-2 text-left transition hover:bg-yellow-900/40">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black text-yellow-300">{battle.name}</p>
-                <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-[8px] font-black text-white">🔴 LIVE</span>
-              </div>
-              <p className="mt-1 text-[9px] text-slate-400">vs {battle.vs} • 👁 {battle.viewers}</p>
-            </button>
-          ))}
-        </div>
-        
-        <button className="mt-3 w-full rounded-lg border border-yellow-300/30 bg-yellow-600/10 px-3 py-2 text-xs font-black text-yellow-300 transition hover:bg-yellow-600/20">
-          Watch Battle
-        </button>
-      </div>
-
-      {/* City Announcement */}
-      <div className={`${glass} rounded-2xl p-4`}>
-        <h3 className="flex items-center gap-2 text-sm font-black text-white">
-          <Shield className="h-4 w-4 text-cyan-300" />
-          City Announcement
-        </h3>
-        <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
-          City elections are now LIVE! Vote for your next president and shape the future of Mai Troll.
-        </p>
-        <button className="mt-3 w-full rounded-lg bg-gradient-to-r from-amber-500 to-yellow-600 px-3 py-2 text-xs font-black text-white">
-          Vote Now
-        </button>
-      </div>
-
-      {/* Level Progress */}
-      <div className={`${neonCard} rounded-2xl p-4`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="flex items-center gap-1 text-sm font-black text-white">
-              <Star className="h-4 w-4 text-yellow-300" />
-              Level 24
-            </p>
-            <p className="text-[10px] text-slate-400">Veteran Warrior</p>
-          </div>
-          <Crown className="h-6 w-6 text-yellow-300" />
-        </div>
-        
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-[10px] font-black">
-            <span className="text-slate-300">XP Progress</span>
-            <span className="text-cyan-300">68%</span>
-          </div>
-          <div className="mt-1.5 h-2 rounded-full bg-white/10">
-            <div className="h-2 w-[68%] rounded-full bg-gradient-to-r from-pink-500 via-yellow-300 to-cyan-300" />
-          </div>
-        </div>
-        
-        <p className="mt-2 text-[9px] text-slate-400">
-          <span className="font-black text-cyan-300">91,234 XP</span> to next level
-        </p>
-      </div>
-    </aside>
-  )
-})
-
 export default function Home() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
@@ -855,7 +748,7 @@ export default function Home() {
 
   const [activeTab, setActiveTab] = useState<TabType>('wall')
   const [showLiveGrid, setShowLiveGrid] = useState<boolean | null>(null)
-  const { liveItems, liveAuctions, totalViewers, loadingLive } = useLiveContent()
+  const { liveItems, totalViewers, loadingLive } = useLiveContent()
   const [supportGoalReminder, setSupportGoalReminder] = useState<any>(null)
   const [reminderLoading, setReminderLoading] = useState(false)
 
@@ -874,18 +767,7 @@ export default function Home() {
 
   const battleItems = useMemo(() => liveItems.filter((item) => item.isBattle), [liveItems])
 
-  const auctionItems = useMemo(() => liveAuctions.map((auction) => ({
-    id: auction.id,
-    title: auction.title || 'Untitled Auction',
-    type: 'auction' as const,
-    viewerCount: 0,
-    streamerName: 'Auction',
-    streamerAvatar: null,
-    isFeatured: false,
-    isBattle: false,
-  })), [liveAuctions])
-
-  const allLiveItems = useMemo(() => [...liveItems, ...auctionItems], [liveItems, auctionItems])
+  const allLiveItems = useMemo(() => liveItems, [liveItems])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -913,9 +795,7 @@ export default function Home() {
   )
 
   const handleLiveItemClick = useCallback((item: LiveItem) => {
-    if (item.type === 'auction') {
-      navigate(`/auctions/${item.id}`)
-    } else if (item.category === 'gaming') {
+    if (item.category === 'gaming') {
       navigate(`/gaming/watch/${item.id}`)
     } else {
       navigate(`/watch/${item.id}`)
@@ -1031,7 +911,6 @@ export default function Home() {
             <div className="hidden space-y-3 md:block">
               <LevelStatusCard />
               <FloatingPoster />
-              {liveAuctions.length > 0 && <LiveAuctionMiniWindow auction={liveAuctions[0]} onRequireAuth={requireAuth} />}
             </div>
             <div className="hidden space-y-3 md:block">
               {isPrideMonth() && (

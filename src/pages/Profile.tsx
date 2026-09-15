@@ -7,10 +7,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useInRouterContext, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     Bell, Ban, CheckCircle, CheckCircle2, ChevronDown, Coins, Crown,
-    FileText, Heart, Loader2, LogOut, MapPin, MessageCircle,
+    FileText, Loader2, LogOut, MapPin, MessageCircle,
     Package, RefreshCw, Settings, Shield, ShoppingBag,
-    Trash2, UserPlus, Users, Video, X, Zap, MoreHorizontal,
-    History, Award, Gavel, Scale, BookOpen, Newspaper, Music, Disc3, Mic2, LayoutDashboard, Play, Pause, Clock, Volume2, VolumeX
+    UserPlus, Users, Video, X, Zap, MoreHorizontal,
+    History, Award, Gavel, Scale, BookOpen, Newspaper
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -21,7 +21,6 @@ import { getLevelName } from '../lib/xp';
 import { awardFollowPoint } from '../lib/weeklyPointsService';
 import { useXPStore } from '@/stores/useXPStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
-import * as recordLabelService from '@/services/maiRecordLabel';
 import SubscriptionTierSelector from '../components/user/SubscriptionTierSelector';
 import { ProfileHeader, RoleCard, ProfileTabs, PROFILE_TABS } from '../components/profile/ProfileComponents';
 import ProfileFeed from '../components/profile/ProfileFeed';
@@ -84,68 +83,14 @@ function ProfileInner() {
     const lastFetchKeyRef = useRef<string | null>(null);
     const profileNotFoundRef = useRef(false);
 
-    const [artistProfile, setArtistProfile] = useState<any>(null);
-    const [artistLoading, setArtistLoading] = useState(false);
-    const [artistTracks, setArtistTracks] = useState<any[]>([]);
-    const [artistAlbums, setArtistAlbums] = useState<any[]>([]);
-    const [deletingTrackId, setDeletingTrackId] = useState<string | null>(null);
-    const [deletingAlbumId, setDeletingAlbumId] = useState<string | null>(null);
-
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [volume, setVolume] = useState(0.8);
-    const [showVolume, setShowVolume] = useState(false);
-
-    const getTrackAudioUrl = (audioUrl: string) => {
-        if (!audioUrl) return '';
-        if (audioUrl.startsWith('http')) return audioUrl;
-        return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/record-label-tracks/${audioUrl}`;
-    };
-
-    const handlePlayTrack = (track: any) => {
-        if (!audioRef.current) return;
-        if (currentTrackId === track.id && isPlaying) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-            return;
-        }
-        audioRef.current.src = getTrackAudioUrl(track.audio_url);
-        audioRef.current.volume = volume;
-        audioRef.current.play().then(() => {
-            setCurrentTrackId(track.id);
-            setIsPlaying(true);
-        }).catch((e) => console.error('Failed to play track:', e));
-    };
-
-    const handleStopTrack = () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-        }
-        setIsPlaying(false);
-        setCurrentTrackId(null);
-    };
-
-    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newVolume = Number(e.target.value);
-        setVolume(newVolume);
-        if (audioRef.current) {
-            audioRef.current.volume = newVolume;
-        }
-    };
-
-    const currentTrack = artistTracks.find(t => t.id === currentTrackId) || null;
-
     const isOwnProfile = currentUser?.id === profile?.id;
     const viewerRole = currentUserProfile?.troll_role || currentUserProfile?.role || 'user';
     const isAdminViewer = ['admin', 'troll_officer', 'lead_troll_officer'].includes(viewerRole);
-    const isStaffViewer = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'agency_hr_manager', 'ceo', 'superadmin', 'empire_partner', 'auctioneer', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'agency_hr', 'agency_leader', 'ceo_assistant', 'noah_assistant', 'academy_teacher', 'academy_director', 'admissions_officer'].includes(viewerRole) || currentUserProfile?.is_admin === true;
+    const isStaffViewer = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'agency_hr_manager', 'ceo', 'superadmin', 'empire_partner', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'agency_hr', 'agency_leader', 'ceo_assistant', 'noah_assistant', 'academy_teacher', 'academy_director', 'admissions_officer'].includes(viewerRole) || currentUserProfile?.is_admin === true;
     const isViewBlocked = !isOwnProfile && !isAdminViewer && isBlocked;
 
     // Filter visible tabs based on roles and ownership
     const visibleTabs = useMemo(() => {
-        const isArtist = (profile as any)?.is_record_label_artist === true;
         return PROFILE_TABS.filter(tab => {
             if (tab.key === 'settings') return isOwnProfile;
             if (tab.key === 'purchases') return isOwnProfile;
@@ -153,12 +98,10 @@ function ProfileInner() {
             if (tab.key === 'inventory') return isOwnProfile;
             if (tab.key === 'subscriptions') return true;
             if (tab.key === 'broadcasts') return activeRoles.some(r => r.role_type === 'broadcaster') || isOwnProfile;
-            if (tab.key === 'auctions') return activeRoles.some(r => r.role_type === 'auctioneer') || isOwnProfile;
             if (tab.key === 'court') return activeRoles.some(r => ['attorney', 'prosecutor'].includes(r.role_type)) || isOwnProfile;
             if (tab.key === 'agency') return activeRoles.some(r => ['agency_leader', 'agency_hr', 'agency_hr_manager', 'secretary'].includes(r.role_type)) || isOwnProfile;
             if (tab.key === 'church') return activeRoles.some(r => r.role_type === 'pastor') || isOwnProfile;
             if (tab.key === 'marketplace') return activeRoles.some(r => r.role_type === 'seller') || isOwnProfile;
-            if (tab.key === 'music' || tab.key === 'albums' || tab.key === 'tracks') return isArtist || isOwnProfile;
             return true;
         });
     }, [activeRoles, isOwnProfile, profile]);
@@ -189,7 +132,7 @@ function ProfileInner() {
                 subscribeToXP(currentUserId);
             }
 
-            const PROFILE_COLS = 'id,username,display_name,avatar_url,cover_url,banner_url,troll_coins,role,is_admin,level,xp,xp_to_next_level,created_at,updated_at,bio,city,country,website,pronouns,is_verified,is_broadcaster,is_minor,is_attorney,is_judge,is_prosecutor,is_ceo_assistant,is_noah_assistant,is_journalist,is_news_caster,is_chief_news_caster,is_auctioneer,is_pastor,is_secretary';
+            const PROFILE_COLS = 'id,username,display_name,avatar_url,cover_url,banner_url,troll_coins,role,is_admin,level,xp,xp_to_next_level,created_at,updated_at,bio,city,country,website,pronouns,is_verified,is_broadcaster,is_minor,is_attorney,is_judge,is_prosecutor,is_ceo_assistant,is_noah_assistant,is_journalist,is_news_caster,is_chief_news_caster,is_pastor,is_secretary';
             let query = supabase.from('user_profiles').select(PROFILE_COLS);
             if (userId) query = query.eq('id', userId);
             else if (username) query = query.eq('username', username);
@@ -304,76 +247,6 @@ function ProfileInner() {
         };
     }, [activeTab, profile?.id]);
 
-    // Fetch artist profile data when profile is an artist
-    useEffect(() => {
-        if (!profile?.id || !(profile as any)?.is_record_label_artist) {
-            setArtistProfile(null);
-            setArtistTracks([]);
-            setArtistAlbums([]);
-            return;
-        }
-
-        let isMounted = true;
-        setArtistLoading(true);
-
-        (async () => {
-            const { data: artist } = await supabase
-                .from('record_label_artist_profiles')
-                .select('*')
-                .eq('user_id', profile.id)
-                .maybeSingle();
-
-            if (!isMounted) return;
-            setArtistProfile(artist);
-
-            if (artist?.id) {
-                const [tracksRes, albumsRes] = await Promise.all([
-                    supabase.from('record_label_tracks').select('*').eq('artist_id', artist.id).order('created_at', { ascending: false }).limit(20),
-                    supabase.from('record_label_albums').select('*').eq('artist_id', artist.id).order('created_at', { ascending: false }).limit(20),
-                ]);
-
-                if (isMounted) {
-                    setArtistTracks(tracksRes.data || []);
-                    setArtistAlbums(albumsRes.data || []);
-                }
-            }
-            if (isMounted) setArtistLoading(false);
-        })();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [profile?.id, (profile as any)?.is_record_label_artist]);
-
-    const handleDeleteTrack = async (trackId: string) => {
-        if (!confirm('Delete this track permanently? This cannot be undone.')) return;
-        setDeletingTrackId(trackId);
-        try {
-            const { error } = await recordLabelService.deleteTrack(trackId);
-            if (error) throw error;
-            setArtistTracks(prev => prev.filter(t => t.id !== trackId));
-            toast.success('Track deleted');
-        } catch (err: any) {
-            toast.error(err?.message || 'Failed to delete track');
-        } finally {
-            setDeletingTrackId(null);
-        }
-    };
-
-    const handleDeleteAlbum = async (albumId: string) => {
-        if (!confirm('Delete this album permanently? This cannot be undone.')) return;
-        setDeletingAlbumId(albumId);
-        try {
-            const { error } = await recordLabelService.deleteAlbum(albumId);
-            if (error) throw error;
-            setArtistAlbums(prev => prev.filter(a => a.id !== albumId));
-            toast.success('Album deleted');
-        } catch (err: any) {
-            toast.error(err?.message || 'Failed to delete album');
-        } finally {
-            setDeletingAlbumId(null);
-        }
-    };
     const prevProfileIdRef = useRef<string | null>(null);
 
     // Real-time profile updates
@@ -711,159 +584,11 @@ function ProfileInner() {
             case 'keys':
                 return <KeysPage profileId={profile.id} isOwnProfile={isOwnProfile} />;
             case 'music':
-                return (
-                    <div className="space-y-6">
-                        <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Latest Track</h3>
-                            {artistLoading ? (
-                                <p className="text-white/50">Loading…</p>
-                            ) : artistTracks.length === 0 ? (
-                                <p className="text-white/50">No tracks published yet.</p>
-                            ) : (
-                                <div className="grid gap-3 md:grid-cols-2">
-                                    {artistTracks.slice(0, 4).map((track: any) => (
-                                        <div key={track.id} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5">
-                                                {track.cover_url ? (
-                                                    <img src={track.cover_url} alt={track.title} className="h-full w-full object-cover" />
-                                                ) : (
-                                                    <div className="flex h-full w-full items-center justify-center"><Music size={23} className="text-purple-300" /></div>
-                                                )}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate font-black text-white">{track.title}</p>
-                                                <p className="truncate text-xs text-slate-400">{artistProfile?.stage_name}</p>
-                                                <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
-                                                    <span className="flex items-center gap-1"><Heart size={12} />{track.like_count.toLocaleString()}</span>
-                                                    <span className="flex items-center gap-1"><Play size={12} />{track.play_count.toLocaleString()}</span>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handlePlayTrack(track)}
-                                                className="shrink-0 rounded-full p-2 text-slate-400 hover:text-purple-300 hover:bg-purple-500/20"
-                                            >
-                                                {currentTrackId === track.id && isPlaying ? (
-                                                    <Pause size={16} />
-                                                ) : (
-                                                    <Play size={16} />
-                                                )}
-                                            </button>
-                                            {isOwnProfile && (
-                                                <button
-                                                    onClick={() => handleDeleteTrack(track.id)}
-                                                    disabled={deletingTrackId === track.id}
-                                                    className="shrink-0 rounded-full p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-                                                >
-                                                    {deletingTrackId === track.id ? (
-                                                        <Loader2 size={16} className="animate-spin" />
-                                                    ) : (
-                                                        <Trash2 size={16} />
-                                                    )}
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
+                return <div className="text-center text-white/50 p-8">Music features coming soon.</div>;
             case 'albums':
-                return (
-                    <div className="space-y-6">
-                        <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Albums</h3>
-                            {artistLoading ? (
-                                <p className="text-white/50">Loading…</p>
-                            ) : artistAlbums.length === 0 ? (
-                                <p className="text-white/50">No albums published yet.</p>
-                            ) : (
-                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                    {artistAlbums.map((album: any) => (
-                                        <div key={album.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                                            {album.cover_url && <img src={album.cover_url} alt={album.title} className="w-full aspect-square object-cover rounded-xl mb-3" />}
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="font-black text-white truncate">{album.title}</p>
-                                                {isOwnProfile && (
-                                                    <button
-                                                        onClick={() => handleDeleteAlbum(album.id)}
-                                                        disabled={deletingAlbumId === album.id}
-                                                        className="shrink-0 rounded-full p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-                                                    >
-                                                        {deletingAlbumId === album.id ? (
-                                                            <Loader2 size={14} className="animate-spin" />
-                                                        ) : (
-                                                            <Trash2 size={14} />
-                                                        )}
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-slate-400">{album.release_date || 'Draft'}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
+                return <div className="text-center text-white/50 p-8">Album features coming soon.</div>;
             case 'tracks':
-                return (
-                    <div className="space-y-6">
-                        <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Tracks</h3>
-                            {artistLoading ? (
-                                <p className="text-white/50">Loading…</p>
-                            ) : artistTracks.length === 0 ? (
-                                <p className="text-white/50">No tracks published yet.</p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {artistTracks.map((track: any) => (
-                                        <div key={track.id} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white/5">
-                                                {track.cover_url ? (
-                                                    <img src={track.cover_url} alt={track.title} className="h-full w-full object-cover" />
-                                                ) : (
-                                                    <div className="flex h-full w-full items-center justify-center"><Music size={18} className="text-purple-300" /></div>
-                                                )}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate font-black text-white">{track.title}</p>
-                                                <p className="truncate text-xs text-slate-400">{track.genre || 'No genre'}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => handlePlayTrack(track)}
-                                                className="shrink-0 rounded-full p-2 text-slate-400 hover:text-purple-300 hover:bg-purple-500/20"
-                                            >
-                                                {currentTrackId === track.id && isPlaying ? (
-                                                    <Pause size={16} />
-                                                ) : (
-                                                    <Play size={16} />
-                                                )}
-                                            </button>
-                                            <div className="flex items-center gap-3 text-xs text-slate-500">
-                                                <span className="flex items-center gap-1"><Heart size={12} />{track.like_count.toLocaleString()}</span>
-                                                <span className="flex items-center gap-1"><Play size={12} />{track.play_count.toLocaleString()}</span>
-                                            </div>
-                                            {isOwnProfile && (
-                                                <button
-                                                    onClick={() => handleDeleteTrack(track.id)}
-                                                    disabled={deletingTrackId === track.id}
-                                                    className="shrink-0 rounded-full p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-                                                >
-                                                    {deletingTrackId === track.id ? (
-                                                        <Loader2 size={16} className="animate-spin" />
-                                                    ) : (
-                                                        <Trash2 size={16} />
-                                                    )}
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
+                return <div className="text-center text-white/50 p-8">Track features coming soon.</div>;
             case 'purchases':
                 return <ProfilePurchases userId={profile.id} />;
             case 'church':
@@ -872,8 +597,6 @@ function ProfileInner() {
                 return <ProfileAgency userId={profile.id} />;
             case 'court':
                 return <ProfileCourt userId={profile.id} />;
-            case 'auctions':
-                return <ProfileWatchlist userId={profile.id} />;
             case 'marketplace':
                 return <ProfileMarketplace userId={profile.id} />;
             default:
@@ -937,7 +660,6 @@ function ProfileInner() {
                                     stats={roleStats[role.role_type]}
                                     onClick={() => {
                                         const tabMap: Record<string, string> = {
-                                            auctioneer: 'auctions',
                                             attorney: 'court',
                                             prosecutor: 'court',
                                             journalist: 'social',
@@ -950,68 +672,6 @@ function ProfileInner() {
                                     }}
                                 />
                             ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* MAI Record Label Artist Section */}
-                {(profile as any)?.is_record_label_artist && (
-                    <section className="mt-6">
-                        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                            <Music className="w-5 h-5 text-purple-400" />
-                            MAI Record Label
-                        </h2>
-                        <div className="rounded-3xl border border-purple-500/20 bg-gradient-to-br from-purple-950/40 to-black/30 p-6">
-                            <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <span className="flex items-center gap-1 rounded-full border border-purple-400/30 bg-purple-400/10 px-3 py-1 text-xs font-bold text-purple-300">
-                                    <Music size={14} /> MAI Artist
-                                </span>
-                                {artistProfile?.verified && (
-                                    <span className="flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-bold text-cyan-300">
-                                        <CheckCircle size={14} /> Verified
-                                    </span>
-                                )}
-                                {artistProfile?.status === 'probation' && (
-                                    <span className="flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300">
-                                        <Clock size={14} /> Probation
-                                    </span>
-                                )}
-                                {artistProfile?.status === 'active' && (
-                                    <span className="flex items-center gap-1 rounded-full border border-green-400/30 bg-green-400/10 px-3 py-1 text-xs font-bold text-green-300">
-                                        <CheckCircle2 size={14} /> Approved
-                                    </span>
-                                )}
-                            </div>
-                            {artistProfile && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
-                                        <p className="text-white/50 text-xs">Stage Name</p>
-                                        <p className="text-sm font-black text-white truncate">{artistProfile.stage_name}</p>
-                                    </div>
-                                    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
-                                        <p className="text-white/50 text-xs">Genre</p>
-                                        <p className="text-sm font-black text-white truncate">{artistProfile.primary_genre || 'N/A'}</p>
-                                    </div>
-                                    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
-                                        <p className="text-white/50 text-xs">Joined</p>
-                                        <p className="text-sm font-black text-white truncate">{new Date(artistProfile.created_at).toLocaleDateString()}</p>
-                                    </div>
-                                    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
-                                        <p className="text-white/50 text-xs">Tracks</p>
-                                        <p className="text-sm font-black text-white truncate">{artistTracks.length}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {isOwnProfile && (
-                                <div className="mt-4 flex flex-wrap gap-2">
-                                    <button onClick={() => navigate('/artist/dashboard')} className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-black text-white transition hover:bg-purple-500">
-                                        <LayoutDashboard size={16} /> Artist Dashboard
-                                    </button>
-                                    <button onClick={() => navigate('/artist/contract')} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/10">
-                                        <FileText size={16} /> Contract
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     </section>
                 )}
@@ -1044,7 +704,7 @@ function ProfileInner() {
                 />
             )}
 
-            {/* User Mod Actions Modal */}
+{/* User Mod Actions Modal */}
             {showUserModActions && (
                 <UserModActionsModal
                     isOpen={showUserModActions}
@@ -1053,55 +713,6 @@ function ProfileInner() {
                     username={profile.username}
                     currentUserId={currentUser?.id}
                 />
-            )}
-
-            {/* Audio Player */}
-            <audio
-                ref={audioRef}
-                onEnded={() => { setIsPlaying(false); setCurrentTrackId(null); }}
-                onPause={() => setIsPlaying(false)}
-                onPlay={() => setIsPlaying(true)}
-            />
-
-            {/* Mini Player Bar */}
-            {(activeTab === 'music' || activeTab === 'tracks') && currentTrack && (
-                <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 w-full max-w-xl px-4">
-                    <div className="flex items-center gap-3 rounded-2xl border border-purple-400/30 bg-slate-950/95 p-3 shadow-2xl backdrop-blur">
-                        <button
-                            onClick={isPlaying ? handleStopTrack : () => currentTrack && handlePlayTrack(currentTrack)}
-                            className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 flex items-center justify-center"
-                        >
-                            {isPlaying ? (
-                                <Pause className="h-4 w-4 text-white" />
-                            ) : (
-                                <Play className="h-4 w-4 text-white" />
-                            )}
-                        </button>
-                        <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-black text-white">{currentTrack.title}</p>
-                            <p className="truncate text-xs text-slate-400">{currentTrack.genre || 'Unknown genre'}</p>
-                        </div>
-                        <button
-                            onClick={() => setShowVolume(!showVolume)}
-                            className="shrink-0 rounded-full p-2 text-slate-400 hover:text-white"
-                        >
-                            {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                        </button>
-                        {showVolume && (
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.01"
-                                    value={volume}
-                                    onChange={handleVolumeChange}
-                                    className="w-20 h-1 accent-purple-400"
-                                />
-                            </div>
-                        )}
-                    </div>
-                </div>
             )}
         </div>
     );

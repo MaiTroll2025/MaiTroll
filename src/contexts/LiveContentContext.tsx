@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 export interface LiveItem {
   id: string
   title: string
-  type: 'stream' | 'podcast' | 'auction'
+  type: 'stream' | 'podcast'
   viewerCount: number
   streamerName: string
   streamerAvatar: string | null
@@ -23,30 +23,8 @@ export interface LiveItem {
   velocityTrend?: string
 }
 
-export interface AuctionShow {
-  id: string
-  title: string
-  description?: string | null
-  category?: string | null
-  thumbnail_url?: string | null
-  status: string
-  scheduled_for?: string | null
-  live_started_at?: string | null
-  ended_at?: string | null
-  livekit_room_name?: string | null
-  auctioneer_id: string
-  current_lot_id?: string | null
-  hls_url?: string | null
-  egress_id?: string | null
-  visibilityScore?: number
-  hotScore?: number
-  isRising?: boolean
-  isTrending?: boolean
-}
-
 interface LiveContentState {
   liveItems: LiveItem[]
-  liveAuctions: AuctionShow[]
   totalViewers: number
   onlineUsers: number
   loadingLive: boolean
@@ -58,7 +36,6 @@ const LiveContentContext = createContext<LiveContentState | null>(null)
 
 export function LiveContentProvider({ children }: { children: React.ReactNode }) {
   const [liveItems, setLiveItems] = useState<LiveItem[]>([])
-  const [liveAuctions, setLiveAuctions] = useState<AuctionShow[]>([])
   const [onlineUsers, setOnlineUsers] = useState(0)
   const [loadingLive, setLoadingLive] = useState(true)
   const [loadingOnline, setLoadingOnline] = useState(true)
@@ -271,31 +248,12 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
     }
   }, [])
 
-  const fetchLiveAuctions = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('auction_shows')
-        .select('*')
-        .eq('status', 'live')
-        .order('live_started_at', { ascending: false })
-        .limit(5)
-
-      if (error) throw error
-      if (!mountedRef.current) return
-      setLiveAuctions(data || [])
-    } catch (err) {
-      console.error('Error fetching live auctions:', err)
-    }
-  }, [])
-
   const refresh = useCallback(() => {
     fetchLiveContent()
-    fetchLiveAuctions()
-  }, [fetchLiveContent, fetchLiveAuctions])
+  }, [fetchLiveContent])
 
   useEffect(() => {
     fetchLiveContent()
-    fetchLiveAuctions()
 
     /*
      * A unique topic per mount. A fixed topic makes a second mount (React
@@ -437,45 +395,6 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
           }
         }
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_shows' }, (payload) => {
-        const row = payload.new as any || payload.old as any
-        if (!row) return
-
-        if (payload.eventType === 'DELETE') {
-          setLiveAuctions(prev => prev.filter(a => a.id !== row.id))
-          return
-        }
-
-        const auction: AuctionShow = {
-          id: row.id,
-          title: row.title || '',
-          description: row.description,
-          category: row.category,
-          thumbnail_url: row.thumbnail_url,
-          status: row.status,
-          scheduled_for: row.scheduled_for,
-          live_started_at: row.live_started_at,
-          ended_at: row.ended_at,
-          livekit_room_name: row.livekit_room_name,
-          auctioneer_id: row.auctioneer_id,
-          current_lot_id: row.current_lot_id,
-          hls_url: row.hls_url,
-          egress_id: row.egress_id,
-          visibilityScore: row.visibility_score || 0,
-          hotScore: row.hot_score || 0,
-          isRising: row.is_rising || false,
-          isTrending: row.is_trending || false,
-        }
-
-        setLiveAuctions(prev => {
-          const exists = prev.some(a => a.id === row.id)
-          if (exists) {
-            return prev.map(a => a.id === row.id ? auction : a)
-          }
-          if (row.status !== 'live') return prev
-          return [...prev, auction]
-        })
-      })
       .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
           console.log(`[LiveContentContext] Realtime subscribed to ${channelName}`)
@@ -500,14 +419,13 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
 
     const pollInterval = window.setInterval(() => {
       fetchLiveContent()
-      fetchLiveAuctions()
     }, 10000)
 
     return () => {
       window.clearInterval(pollInterval)
       try { supabase.removeChannel(homeChannel) } catch {}
     }
-  }, [fetchLiveContent, fetchLiveAuctions, mapStreamRow, enrichStreamItem])
+  }, [fetchLiveContent, mapStreamRow, enrichStreamItem])
 
   useEffect(() => {
     if (presenceOnlineCount > 0) {
@@ -518,13 +436,12 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
 
   const value = useMemo(() => ({
     liveItems: liveItems || [],
-    liveAuctions: liveAuctions || [],
     totalViewers: totalViewers || 0,
     onlineUsers: onlineUsers || 0,
     loadingLive: loadingLive !== undefined ? loadingLive : true,
     loadingOnline: loadingOnline !== undefined ? loadingOnline : true,
     refresh,
-  }), [liveItems, liveAuctions, totalViewers, onlineUsers, loadingLive, loadingOnline, refresh])
+  }), [liveItems, totalViewers, onlineUsers, loadingLive, loadingOnline, refresh])
 
   return (
     <LiveContentContext.Provider value={value}>

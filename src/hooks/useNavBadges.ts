@@ -20,7 +20,7 @@ export interface NavBadges {
 }
 
 // Track which tabs the user has clicked/visited since last notification
-const dismissedTabs: Set<keyof NavBadges> = new Set();
+let dismissedTabs: Set<keyof NavBadges> = new Set();
 let lastBadgeCounts: NavBadges = {
   home: 0, chats: 0, coins: 0, auctions: 0, court: 0,
   neighborhood: 0, academy: 0, wallet: 0, family: 0,

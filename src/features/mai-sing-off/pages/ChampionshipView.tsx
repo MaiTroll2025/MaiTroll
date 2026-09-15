@@ -6,7 +6,7 @@ export default function ChampionshipView() {
   return (
     <div className="h-full w-full space-y-6 p-4 md:p-6">
       <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-        <Trophy className="w-6 h-6 text-yellow-400" /> Mai Sing Off Championships
+        <Trophy className="w-6 h-6 text-yellow-400" /> Mai Talent Show Championships
       </h1>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 text-center">

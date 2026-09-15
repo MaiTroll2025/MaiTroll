@@ -10,309 +10,520 @@ export default function PayoutPolicy() {
         </p>
 
         <h1 className="mb-2 text-2xl font-bold tracking-tight">
-          Creator & Payout Policy
+          MAi Pay Cashout & Payout Policy
         </h1>
 
         <p className="mb-6 text-xs text-slate-400">
-          Last updated: May 2026
+          Last updated: September 13, 2026
         </p>
 
-        <h2>1. Eligibility for Payouts</h2>
         <p>
-          To be eligible for payouts, you must meet all payout requirements before
-          your request can be approved or paid.
+          This MAi Pay Cashout & Payout Policy explains the requirements,
+          eligibility rules, payout tiers, review process, payment processing,
+          and other conditions that apply when an eligible MAiTROLL user
+          requests a cashout.
+        </p>
+
+        <p>
+          MAiTROLL is designed to support education, entrepreneurship,
+          broadcasting, commerce, community participation, and other virtual
+          city activities. Earning or receiving Troll Coins does not guarantee
+          that a user will qualify for a cashout.
+        </p>
+
+        <h2>1. Eligibility for Cashouts</h2>
+
+        <p>
+          To request a cashout through MAi Pay, you must satisfy the applicable
+          MAiTROLL payout requirements at the time of the request.
         </p>
 
         <ul>
           <li>
-            Hold enough eligible Troll Coins to qualify for one of the payout tiers.
+            Hold enough eligible Troll Coins to qualify for an available
+            cashout tier.
           </li>
+
           <li>
-            Have a verified email address on file.
+            Have a verified email address associated with your MAiTROLL account.
           </li>
+
           <li>
-            Complete identity verification if requested.
+            Complete identity verification when required.
           </li>
+
           <li>
-            Submit any required tax forms, such as a W-9 for eligible United States
-            users or equivalent documentation for international users.
+            Provide required tax information or tax forms when applicable.
           </li>
+
           <li>
-            Have no active account restrictions, fraud flags, unresolved payment
-            disputes, or open chargebacks.
+            Have an account in good standing and not be subject to a restriction
+            that prevents financial transactions.
           </li>
+
           <li>
-            Have a valid PayPal payout account or another approved payout method if
-            Mai Troll makes one available.
+            Have valid payout information and an approved payout method.
+          </li>
+
+          <li>
+            Satisfy any additional fraud, security, compliance, or financial
+            review requirements applicable to the transaction.
           </li>
         </ul>
 
-        <h2>2. Payout Request Window</h2>
+        <h2>2. Cashout Requests Through MAi Pay</h2>
+
         <p>
-          Mai Troll payout requests are submitted through MAI Pay.
-          A payout request is not automatically approved just because it is
-          submitted. Each request must go through review before it can be included
-          in a payout batch.
+          Cashout requests are submitted through MAi Pay. Submitting a request
+          does not guarantee approval or payment.
         </p>
 
         <p>
-          If the payout window is closed, you may need to wait until the next
-          available payout cycle.
-          payout window to submit or process a payout request.
+          A cashout request may be placed into a pending or review status while
+          MAiTROLL verifies the user's eligibility, account standing, eligible
+          coin balance, payout information, and transaction history.
         </p>
 
-        <h2>3. Payout Review and Batch Process</h2>
         <p>
-          Mai Troll uses a review and batch process for payouts:
+          If a cashout window, processing period, or other applicable
+          requirement prevents immediate processing, the request may remain
+          pending until the next available processing opportunity.
+        </p>
+
+        <h2>3. Cashout Review and Processing</h2>
+
+        <p>
+          MAiTROLL may use a review and processing workflow for cashouts.
         </p>
 
         <ol>
           <li>
-            A user submits a cashout request through MAI Pay.
+            The user submits a cashout request through MAi Pay.
           </li>
+
           <li>
-            A payout request is created with a pending status.
+            MAiTROLL records the request and places it into the applicable
+            pending or review status.
           </li>
+
           <li>
-            Authorized reviewers inspect the request for eligibility, payout
-            details, coin balance, account standing, and possible fraud risk.
+            The request may be reviewed for eligible coins, account standing,
+            payout information, fraud risk, payment risk, and applicable
+            compliance requirements.
           </li>
+
           <li>
-            Verified payout requests may be forwarded into a payout batch.
+            Approved requests may be placed into a payout processing batch.
           </li>
+
           <li>
-            A payout batch is created with an open status.
+            Authorized MAiTROLL personnel or automated financial systems may
+            process the approved payout through the available payout provider.
           </li>
+
           <li>
-            An admin reviews the payout batch and processes the payouts through
-            PayPal or marks the payout as paid manually when appropriate.
+            The payout is marked according to the actual payment result.
           </li>
         </ol>
 
         <p>
-          Mai Troll may delay, reject, or require additional review for any payout
-          request that appears suspicious, incomplete, inaccurate, abusive, or in
-          violation of platform rules.
+          MAiTROLL may delay, reject, cancel, or require additional review for
+          a cashout that appears suspicious, incomplete, inaccurate,
+          manipulated, fraudulent, abusive, or inconsistent with MAiTROLL
+          rules.
         </p>
 
-        <h2>4. Payout Tiers and Conversion Rates</h2>
+        <h2>4. Current Cashout Tiers</h2>
+
         <p>
-          Payouts are processed according to fixed tiers. You must meet the minimum
-          eligible coin balance for a tier before that tier can be requested.
+          MAi Pay currently uses the following cashout tiers. The minimum
+          available cashout is <strong>2,000 eligible Troll Coins</strong>.
         </p>
 
-        <ul className="list-none space-y-2 pl-0">
-          <li className="flex items-center gap-2">
-            <span className="w-36 font-bold text-slate-200">Starter Tier:</span>
-            <span>
-              7,500 coins = <span className="text-green-400">$25 USD</span>
-            </span>
+        <ul className="list-none space-y-3 pl-0">
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">2,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$10.00 USD</span>
           </li>
 
-          <li className="flex items-center gap-2">
-            <span className="w-36 font-bold text-amber-600">Bronze Tier:</span>
-            <span>
-              15,000 coins = <span className="text-green-400">$50 USD</span>
-            </span>
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">4,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$20.00 USD</span>
           </li>
 
-          <li className="flex items-center gap-2">
-            <span className="w-36 font-bold text-slate-400">Silver Tier:</span>
-            <span>
-              30,000 coins = <span className="text-green-400">$150 USD</span>
-            </span>
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">10,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$50.00 USD</span>
           </li>
 
-          <li className="flex items-center gap-2">
-            <span className="w-36 font-bold text-yellow-400">Gold Tier:</span>
-            <span>
-              60,000 coins = <span className="text-green-400">$300 USD</span>
-            </span>
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">20,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$100.00 USD</span>
           </li>
 
-          <li className="flex items-center gap-2">
-            <span className="w-36 font-bold text-purple-400">Platinum Tier:</span>
-            <span>
-              120,000 coins = <span className="text-green-400">$600 USD</span>
-            </span>
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">30,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$150.00 USD</span>
           </li>
 
-          <li className="flex items-center gap-2">
-            <span className="w-36 font-bold text-cyan-400">Diamond Tier:</span>
-            <span>
-              200,000 coins = <span className="text-green-400">$1,000 USD</span>{' '}
-              <span className="text-yellow-300">manual review</span>
-            </span>
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">50,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$250.00 USD</span>
           </li>
 
-          <li className="flex items-center gap-2">
-            <span className="w-36 font-bold text-pink-400">VIP Tier:</span>
-            <span>
-              400,000 coins = <span className="text-green-400">$2,000 USD</span>{' '}
-              <span className="text-yellow-300">manual review</span>
-            </span>
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">100,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$500.00 USD</span>
           </li>
 
-          <li className="flex items-center gap-2">
-            <span className="w-36 font-bold text-blue-300">Empire Tier:</span>
-            <span>
-              600,000 coins = <span className="text-green-400">$3,000 USD</span>{' '}
-              <span className="text-yellow-300">manual review</span>
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">200,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$1,000.00 USD</span>
+          </li>
+
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+            <span className="font-bold text-slate-200">500,000 Troll Coins</span>
+            <span className="text-green-400 font-semibold">$2,500.00 USD</span>
+          </li>
+
+          <li className="flex items-center justify-between gap-4 rounded-lg border border-purple-500/30 bg-purple-500/5 p-3">
+            <span className="font-bold text-purple-300">
+              1,000,000 Troll Coins
+            </span>
+
+            <span className="text-green-400 font-semibold">
+              $5,000.00 USD
             </span>
           </li>
         </ul>
 
-        <p className="mt-4 text-sm text-slate-400">
-          Cashout amounts are based on eligible gift coins only. Rates, tiers,
-          review rules, payout timing, and eligibility requirements may change as
-          Mai Troll grows or updates its payout system.
+        <p className="mt-5 text-sm text-slate-400">
+          The current cashout schedule represents a conversion of{' '}
+          <strong>200 Troll Coins = $1 USD</strong> for the listed MAi Pay
+          cashout tiers.
         </p>
 
-        <h2>5. Minimum and Maximum Payouts</h2>
-        <p>
-          Minimum payout: <strong>7,500 eligible Troll Coins ($25 USD)</strong>
-          <br />
-          Higher payout tiers, including $1,000, $2,000, and $3,000 payouts, may
-          require manual review before approval.
-        </p>
+        <h2>5. Minimum Cashout</h2>
 
-        <h2>6. Eligible Coins</h2>
         <p>
-          Not every coin balance is automatically eligible for payout. Cashout
-          amounts are based on eligible gift coins only unless Mai Troll states
-          otherwise.
+          The current minimum cashout is{' '}
+          <strong>2,000 eligible Troll Coins ($10.00 USD)</strong>.
         </p>
 
         <p>
-          Mai Troll may separate troll_coins, gift-earned coins, promotional coins,
-          Hype Coins, bonuses, credits, and other balances for review and payout
-          eligibility.
+          A user must have the required eligible balance before the applicable
+          cashout tier can be selected.
+        </p>
+
+        <h2>6. Eligible Troll Coins</h2>
+
+        <p>
+          Not every balance displayed within MAiTROLL is automatically eligible
+          for cashout.
         </p>
 
         <p>
-          Mai Troll may deny or delay a payout if the requested coins came from
-          suspicious activity, fake engagement, chargeback-related activity,
-          platform abuse, exploit behavior, or any source that is not eligible for
-          cashout.
-        </p>
-
-        <h2>7. Hype Coins</h2>
-        <p>
-          Hype Coins are a broadcast engagement currency and may have separate
-          conversion rules before they become eligible Troll Coins. Hype Coin
-          conversion may depend on platform requirements, account status, timing,
-          and cashout eligibility.
+          MAiTROLL may maintain separate balances or classifications for
+          earned coins, gift-earned coins, purchased coins, promotional coins,
+          administrative coins, bonuses, credits, Hype Coins, restricted
+          balances, and other digital balances.
         </p>
 
         <p>
-          Converted Hype Coins may still be reviewed before a payout is approved.
-        </p>
-
-        <h2>8. Tax Obligations</h2>
-        <p>
-          <strong>United States users:</strong> If you receive $600 or more in
-          payouts during a calendar year, Mai Troll may be required to collect tax
-          information and may issue applicable tax forms.
+          Only balances identified by MAiTROLL as eligible for cashout may be
+          used to satisfy a cashout tier.
         </p>
 
         <p>
-          <strong>International users:</strong> You are responsible for reporting
-          and paying any taxes required by your local jurisdiction. Mai Troll may
-          request tax documentation when required by law, payment processors, or
-          platform policy.
+          MAiTROLL may deny or delay a cashout when eligible coins appear to
+          have resulted from fake engagement, fraudulent activity, manipulated
+          gifting, chargeback-related activity, exploits, unauthorized
+          transactions, platform abuse, or other activity that makes the
+          balance ineligible.
+        </p>
+
+        <h2>7. Hype Coins and Other Promotional Balances</h2>
+
+        <p>
+          Hype Coins and other promotional or engagement balances may operate
+          under separate rules from eligible Troll Coins.
         </p>
 
         <p>
-          <strong>Important:</strong> Payouts may be delayed, held, or denied if
-          required tax information is missing, incomplete, inaccurate, or not
-          approved.
+          Where MAiTROLL permits Hype Coins or another balance to be converted
+          into eligible Troll Coins, the conversion is subject to the rules in
+          effect at the time of conversion.
         </p>
 
-        <h2>9. Payout Denials</h2>
         <p>
-          Payout requests may be denied for reasons including, but not limited to:
+          Conversion does not automatically guarantee cashout eligibility.
+          Converted balances may remain subject to account, fraud, financial,
+          and eligibility review.
+        </p>
+
+        <h2>8. MAi Pay Conversion</h2>
+
+        <p>
+          For the current cashout schedule, MAi Pay uses:
+        </p>
+
+        <div className="my-6 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-6 text-center">
+          <p className="m-0 text-2xl font-bold text-cyan-300">
+            200 Troll Coins = $1 USD
+          </p>
+        </div>
+
+        <p>
+          This cashout conversion is separate from Coin Store pricing,
+          promotional coin packages, Google Play purchases, bonuses, or other
+          methods through which Troll Coins may enter the MAiTROLL ecosystem.
+        </p>
+
+        <p>
+          MAiTROLL may update cashout tiers or conversion structures in
+          accordance with its Terms of Service and applicable law.
+        </p>
+
+        <h2>9. Taxes and Required Information</h2>
+
+        <p>
+          Users are responsible for understanding and satisfying their own tax
+          obligations arising from payments they receive through MAiTROLL.
+        </p>
+
+        <p>
+          MAiTROLL may request tax information or documentation when required
+          by applicable law, payment providers, financial regulations, or
+          MAiTROLL's compliance procedures.
+        </p>
+
+        <p>
+          Cashouts may be delayed or withheld when required tax or compliance
+          information is missing, incomplete, inaccurate, or otherwise
+          insufficient.
+        </p>
+
+        <h2>10. Cashout Denials</h2>
+
+        <p>
+          A cashout may be denied, delayed, cancelled, or placed under review
+          for reasons including:
         </p>
 
         <ul>
-          <li>Insufficient eligible Troll Coin balance.</li>
+          <li>Insufficient eligible Troll Coins.</li>
           <li>Incomplete identity verification.</li>
-          <li>Missing or unapproved tax forms.</li>
-          <li>Incorrect payout details.</li>
-          <li>
-            Active account restrictions, Troll Jail restrictions, or suspensions.
-          </li>
-          <li>
-            Suspected fraud, fake engagement, payout abuse, or suspicious activity.
-          </li>
-          <li>Chargebacks, refunds, payment disputes, or processor risk flags.</li>
-          <li>Violation of the Terms of Service or Safety Guidelines.</li>
-          <li>
-            PayPal account issues, payout account limits, or payment processor
-            restrictions.
-          </li>
+          <li>Missing required tax information.</li>
+          <li>Incorrect payout information.</li>
+          <li>Account suspension or financial restrictions.</li>
+          <li>Troll Jail or other applicable platform restrictions.</li>
+          <li>Suspected fraud or fake engagement.</li>
+          <li>Manipulated gifting or battle activity.</li>
+          <li>Chargebacks, reversals, refunds, or payment disputes.</li>
+          <li>Payment-provider restrictions.</li>
+          <li>Security or compliance concerns.</li>
+          <li>Violation of the Terms of Service or applicable platform rules.</li>
         </ul>
 
         <p>
-          If your payout is denied, Mai Troll may provide a reason when available.
-          You may be allowed to correct the issue and request another review.
+          Where appropriate, MAiTROLL may provide information explaining why a
+          cashout was denied or placed under review.
         </p>
 
-        <h2>10. Processing Fees</h2>
-        <p>
-          PayPal or other payment processor fees may apply. Mai Troll may deduct
-          applicable processor fees from the payout amount or require users to
-          account for those fees depending on the payout method.
-        </p>
+        <h2>11. Processing Fees</h2>
 
         <p>
-          Mai Troll does not guarantee that the amount requested will exactly match
-          the final amount received after third-party payment processor fees, holds,
-          reversals, or restrictions.
-        </p>
-
-        <h2>11. Payment Method</h2>
-        <p>
-          Payouts are primarily processed through PayPal unless Mai Troll provides
-          another approved payout method. You are responsible for providing accurate
-          payout information.
+          Applicable cashout or payment-processing fees may apply according to
+          the MAiTROLL payout system and the payout method being used.
         </p>
 
         <p>
-          Mai Troll is not responsible for delays, failed payments, or lost funds
-          caused by incorrect payout details submitted by the user.
-        </p>
-
-        <h2>12. Payout Timeline</h2>
-        <p>
-Payouts are reviewed and processed on request. After admin processing, funds may arrive Within 5 Minutes, but
-          timing can vary based on PayPal, payment processor review, account limits,
-          holidays, weekends, or additional platform review.
-        </p>
-
-        <h2>13. Holds and Manual Review</h2>
-        <p>
-          Mai Troll may place a payout on hold or require manual review for larger
-          payouts, suspicious activity, new accounts, unusual gifting patterns,
-          refund risk, chargeback risk, or violations of platform rules.
+          Where MAiTROLL collects a cashout fee, that fee may be recorded as
+          part of the MAiTROLL financial system and may be earmarked for the
+          <strong> School Pool Funding Reserve</strong>.
         </p>
 
         <p>
-          A manual review does not guarantee approval. Mai Troll may approve,
-          partially approve, delay, deny, or cancel a payout depending on the review.
+          The School Pool Funding Reserve is separate from a user's Troll Coin
+          balance and is not available for individual user withdrawal.
         </p>
 
-        <h2>14. Disputes and Appeals</h2>
         <p>
-          If you disagree with a payout denial or have questions about your payout
-          status, contact support through the in-app support system. Include your
-          payout request details, payout method, and any relevant documentation.
+          Third-party payment providers may also impose their own processing,
+          conversion, account, or other fees. MAiTROLL does not control fees
+          independently imposed by those providers.
         </p>
 
-        <h2>15. Policy Updates</h2>
+        <h2>12. Payment Method</h2>
+
         <p>
-          Mai Troll may update this Creator & Payout Policy at any time. Continued
-          use of Mai Troll after updates means you accept the revised payout
-          policy.
+          PayPal is an approved payout method for applicable MAi Pay
+          transactions. MAiTROLL may make additional payout methods available
+          in the future.
+        </p>
+
+        <p>
+          Users are responsible for providing accurate payout information.
+          MAiTROLL is not responsible for delays or failed payments resulting
+          from incorrect information supplied by the user.
+        </p>
+
+        <h2>13. Payout Timing</h2>
+
+        <p>
+          After a cashout request is approved and processed, payment timing
+          depends on the applicable payment provider, account status, payment
+          review, holidays, weekends, transaction volume, and other factors.
+        </p>
+
+        <p>
+          MAiTROLL does not guarantee that an approved payment will arrive
+          within a specific number of minutes or hours.
+        </p>
+
+        <p>
+          A payment may remain pending after MAiTROLL initiates processing if
+          the payment provider requires additional review or action.
+        </p>
+
+        <h2>14. Manual Review and Large Cashouts</h2>
+
+        <p>
+          Larger cashouts or unusual account activity may require additional
+          review.
+        </p>
+
+        <p>
+          MAiTROLL may review account history, gifting activity, battles,
+          engagement patterns, payment history, account age, identity
+          information, and other relevant information when evaluating financial
+          activity.
+        </p>
+
+        <p>
+          Manual review does not guarantee approval. MAiTROLL may approve,
+          delay, partially approve, deny, or cancel a transaction when
+          permitted by applicable rules and law.
+        </p>
+
+        <h2>15. School Pool and Cashout Fees</h2>
+
+        <p>
+          MAiTROLL maintains the School Pool as a separate financial program
+          associated with eligible school participation and School Battle
+          activity.
+        </p>
+
+        <p>
+          Applicable cashout fees collected through MAi Pay may be earmarked for
+          the School Pool Funding Reserve.
+        </p>
+
+        <p>
+          School Pool funds are not personal user funds and cannot be withdrawn,
+          transferred, gifted, or spent by individual MAiTROLL users.
+        </p>
+
+        <p>
+          School Pool accounting may separately track school obligations,
+          funding reserves, weekly settlements, amounts funded, amounts paid,
+          and institutional graduation payouts.
+        </p>
+
+        <h2>16. Account Restrictions and Financial Holds</h2>
+
+        <p>
+          MAiTROLL may temporarily restrict financial activity when necessary to
+          investigate fraud, security incidents, payment disputes, chargebacks,
+          suspicious activity, account compromise, or violations of platform
+          rules.
+        </p>
+
+        <p>
+          A financial hold does not necessarily mean that a user has permanently
+          lost an eligible balance. The outcome depends on the applicable
+          investigation and the circumstances of the transaction.
+        </p>
+
+        <h2>17. Corrections and Reversals</h2>
+
+        <p>
+          MAiTROLL may correct accounting errors, duplicate credits, incorrect
+          balances, fraudulent transactions, unauthorized transactions,
+          reversed payments, or other financial discrepancies.
+        </p>
+
+        <p>
+          If a payment provider reverses or rejects a transaction, MAiTROLL may
+          update the corresponding financial records and take reasonable steps
+          to reconcile the affected account.
+        </p>
+
+        <h2>18. Disputes and Appeals</h2>
+
+        <p>
+          If you believe a cashout was incorrectly denied, delayed, or
+          processed, contact MAiTROLL support through the available support
+          system.
+        </p>
+
+        <p>
+          Include the relevant cashout information and any documentation
+          reasonably necessary for MAiTROLL to investigate the issue.
+        </p>
+
+        <p>
+          MAiTROLL may review the transaction and determine whether a correction
+          or additional action is appropriate.
+        </p>
+
+        <h2>19. No Guaranteed Income</h2>
+
+        <p>
+          MAiTROLL does not guarantee that any user will earn Troll Coins,
+          qualify for a cashout, receive a particular amount of money, win a
+          battle, receive Gifts, or generate income from using the platform.
+        </p>
+
+        <p>
+          Participation in broadcasting, School Battles, entrepreneurship,
+          marketplace activity, or other MAiTROLL features does not constitute
+          a promise of employment, income, profit, or financial success.
+        </p>
+
+        <h2>20. Policy Updates</h2>
+
+        <p>
+          MAiTROLL may update this MAi Pay Cashout & Payout Policy as its
+          financial systems, payment providers, platform features, legal
+          requirements, or business operations change.
+        </p>
+
+        <p>
+          The current version published by MAiTROLL governs cashout activity
+          subject to applicable law and the MAiTROLL Terms of Service.
+        </p>
+
+        <h2>21. Contact MAiTROLL</h2>
+
+        <p>
+          If you have questions about a cashout, payout eligibility, payment
+          processing, or this policy, contact MAiTROLL at{' '}
+          <a
+            href="mailto:ceo@maitroll.com"
+            aria-label="Email MAiTROLL at ceo@maitroll.com"
+          >
+            ceo@maitroll.com
+          </a>
+          .
+        </p>
+
+        <p>
+          You may also visit the{' '}
+          <a href="/support">
+            MAiTROLL Support
+          </a>{' '}
+          page for assistance.
         </p>
       </article>
     </LegalLayout>

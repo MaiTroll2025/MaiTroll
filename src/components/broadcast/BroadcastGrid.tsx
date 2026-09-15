@@ -1853,7 +1853,6 @@ boxClass,
                         {(displayProfile as any).role === 'journalist' || (displayProfile as any).is_journalist ? <span className="text-[10px] font-bold text-blue-300">JOURNALIST</span> : null}
                         {(displayProfile as any).role === 'tcnn_news_caster' || (displayProfile as any).is_news_caster ? <span className="text-[10px] font-bold text-cyan-300">NEWS CASTER</span> : null}
                         {(displayProfile as any).role === 'tcnn_chief_news_caster' || (displayProfile as any).is_chief_news_caster ? <span className="text-[10px] font-bold text-yellow-300">CHIEF NEWS</span> : null}
-                        {(displayProfile as any).role === 'auctioneer' || (displayProfile as any).is_auctioneer ? <span className="text-[10px] font-bold text-green-300">AUCTIONEER</span> : null}
                         {(displayProfile as any).role === 'pastor' || (displayProfile as any).is_pastor ? <span className="text-[10px] font-bold text-pink-300">PASTOR</span> : null}
                         {(displayProfile as any).role === 'secretary' || (displayProfile as any).is_secretary ? <span className="text-[10px] font-bold text-pink-300">SECRETARY</span> : null}
                        {licensePlate && (

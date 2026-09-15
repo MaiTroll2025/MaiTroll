@@ -1365,7 +1365,7 @@ export default function LiveAuctionRoom() {
       void cleanupViewerRef.current()
     }
     // Only depend on stable values — not the callbacks which change every render
-     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showId, user?.id, isAuctioneer])
 
   const upcomingLots = lots.filter((lot) => lot.status === 'upcoming' || lot.status === 'queued' || lot.status === 'scheduled')

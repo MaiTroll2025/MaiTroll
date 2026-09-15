@@ -95,32 +95,8 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
 
   add('City Core', [
     { label: 'Neighborhood', path: '/neighborhood-setup', icon: Building2 },
-    { label: 'Mai Sing Off', path: '/mai-sing-off', icon: Trophy },
-    { label: 'MAI Record Label', path: '/mai-record-label', icon: Music },
-  ])
-
-  add('Mai Troll Academy', [
-    { label: 'Academy', path: '/academy', icon: BookOpen },
-    { label: 'Courses', path: '/academy/courses', icon: GraduationCap },
-    { label: 'Certificates', path: '/academy/certificates', icon: Award },
-    { label: 'Admissions', path: '/academy/admissions', icon: Users },
-    { label: 'Classroom', path: '/academy/classroom', icon: BookOpen },
-    {
-      label: 'Teacher Dashboard',
-      path: '/academy/teacher/dashboard',
-      icon: Users,
-      show: a.isTeacher,
-    },
-    {
-      label: 'Board of Education',
-      path: '/academy/admin',
-      icon: Shield,
-      show: a.isAdmin,
-    },
-    { label: 'Assignments', path: '/academy/assignments', icon: FileText },
-    { label: 'Teachers', path: '/academy/teachers', icon: GraduationCap },
-    { label: 'My Loans', path: '/academy/loans', icon: Wallet },
-    { label: 'Transcript', path: '/academy/transcript/official', icon: TrendingUp },
+    { label: 'Mai Talent Show', path: '/mai-sing-off', icon: Trophy },
+    { label: 'MAI Business', path: '/mai-business', icon: Building2 },
   ])
 
   add('City Services', [

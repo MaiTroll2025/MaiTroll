@@ -19,19 +19,21 @@ export interface BuildingMeta {
   to: string
 }
 
-const DEFAULT_BUILDINGS: BuildingMeta[] = [
-  { label: 'Home', to: '/home' },
-  { label: 'Chats', to: '/utromail' },
-  { label: 'Buy Coins', to: '/store' },
-  { label: 'Treelz', to: '/treelz' },
-  { label: 'Live', to: '/broadcast/setup' },
-  { label: 'Auctions  ', to: '/auctions' },
-  { label: 'Court', to: '/troll-court' },
-  { label: 'Hydro  ', to: '/hytrogaming' },
-  { label: 'Academy', to: '/academy' },
-  { label: 'MAI Pay', to: '/mai-pay' },
-  { label: 'Leaders', to: '/leaderboard' },
-  { label: 'Profile', to: '/profile' },
+interface BuildingMetaExtended extends BuildingMeta {
+  type?: 'home' | 'arcade' | 'bank' | 'school' | 'court' | 'standard' | 'achievement'
+}
+
+const DEFAULT_BUILDINGS: BuildingMetaExtended[] = [
+  { label: 'Your Home', to: '/home', type: 'home' },
+  { label: 'Chats', to: '/utromail', type: 'standard' },
+  { label: 'MAI Troll Bank', to: '/store', type: 'bank' },
+  { label: 'Treelz', to: '/treelz', type: 'standard' },
+  { label: 'Go Live', to: '/broadcast/setup', type: 'standard' },
+  { label: 'Court House', to: '/troll-court', type: 'court' },
+  { label: 'Hytro Arcade', to: '/hytrogaming', type: 'arcade' },
+  { label: 'MAI Pay', to: '/mai-pay', type: 'bank' },
+  { label: 'Leaders', to: '/leaderboard', type: 'achievement' },
+  { label: 'MAi School', to: '/school', type: 'school' },
 ]
 
 type Material = 'brick' | 'glass' | 'concrete' | 'stone' | 'darkGlass'
@@ -303,10 +305,11 @@ interface Building {
     person: boolean
     flicker: number
   }[]
+  buildingType: 'home' | 'arcade' | 'bank' | 'school' | 'court' | 'standard' | 'achievement'
 }
 
 function generateBuildings(
-  metas: BuildingMeta[],
+  metas: BuildingMetaExtended[],
   canvasWidth: number,
 ): Building[] {
   const buildings: Building[] = []
@@ -315,36 +318,85 @@ function generateBuildings(
   const segmentWidth = canvasWidth / count
 
   for (let i = 0; i < count; i++) {
-    const width =
-      segmentWidth *
-      (0.62 + Math.random() * 0.3)
+    const buildingType = metas[i].type || 'standard'
 
-    const height =
-      100 + Math.random() * 220
+    // Give each landmark a silhouette that matches what it actually is.
+    // Homes stay short and wide, schools are broad low campuses, and banks
+    // have a more substantial civic footprint. Other buildings keep the
+    // original randomized skyline proportions.
+    let width: number
+    let height: number
 
-    const material =
-      MATERIAL_POOL[i % MATERIAL_POOL.length]
+    if (buildingType === 'home') {
+      width = segmentWidth * (0.52 + Math.random() * 0.16)
+      height = 105 + Math.random() * 55
+    } else if (buildingType === 'school') {
+      width = segmentWidth * (0.78 + Math.random() * 0.14)
+      height = 125 + Math.random() * 45
+    } else if (buildingType === 'bank') {
+      width = segmentWidth * (0.72 + Math.random() * 0.18)
+      height = 155 + Math.random() * 70
+    } else {
+      width = segmentWidth * (0.62 + Math.random() * 0.3)
+      height = 100 + Math.random() * 220
+    }
+
+    // Select material based on building type
+    let material: Material
+    if (buildingType === 'bank') {
+      material = 'concrete'
+    } else if (buildingType === 'court') {
+      material = 'stone'
+    } else if (buildingType === 'arcade') {
+      material = 'darkGlass'
+    } else if (buildingType === 'school') {
+      material = 'brick'
+    } else if (buildingType === 'home') {
+      material = 'brick'
+    } else {
+      material = MATERIAL_POOL[i % MATERIAL_POOL.length]
+    }
 
     const isGlass =
       material === 'glass' ||
       material === 'darkGlass'
 
-    const cols = Math.max(
-      isGlass ? 3 : 1,
-      Math.floor(
-        width / (isGlass ? 32 : 20),
-      ),
-    )
+    let cols: number
+    let rows: number
+    let winW: number
+    let winH: number
 
-    const rows = Math.max(
-      isGlass ? 3 : 1,
-      Math.floor(
-        height / (isGlass ? 28 : 24),
-      ),
-    )
-
-    const winW = isGlass ? 20 : 10
-    const winH = isGlass ? 18 : 14
+    if (buildingType === 'home') {
+      cols = Math.max(2, Math.floor(width / 34))
+      rows = Math.max(1, Math.min(2, Math.floor(height / 48)))
+      winW = 15
+      winH = 18
+    } else if (buildingType === 'school') {
+      cols = Math.max(4, Math.floor(width / 34))
+      rows = Math.max(2, Math.min(3, Math.floor(height / 42)))
+      winW = 16
+      winH = 18
+    } else if (buildingType === 'bank') {
+      cols = Math.max(4, Math.floor(width / 38))
+      rows = Math.max(2, Math.min(4, Math.floor(height / 45)))
+      winW = 17
+      winH = 19
+    } else {
+      cols = Math.max(
+        isGlass ? 3 : 1,
+        Math.floor(
+          width / (isGlass ? 32 : 20),
+        ),
+      )
+      rows = Math.max(
+        isGlass ? 3 : 1,
+        Math.floor(
+          height / (isGlass ? 28 : 24),
+        ),
+      )
+      winW = isGlass ? 20 : 10
+      winH = isGlass ? 18 : 14
+    }
 
     const windows = Array.from(
       { length: cols * rows },
@@ -372,6 +424,7 @@ function generateBuildings(
       winW,
       winH,
       windows,
+      buildingType,
     })
   }
 
@@ -909,13 +962,13 @@ function generateClouds(
      * Never place them down in the city/street area.
      */
     const maxY = Math.min(
-      height * 0.3,
-      150,
+      height * 0.18,
+      85,
     )
 
     clouds.push({
       x: Math.random() * width,
-      y: 30 + Math.random() * maxY,
+      y: 12 + Math.random() * maxY,
       width: 140 + Math.random() * 180,
       height: 45 + Math.random() * 45,
       speed:
@@ -1055,11 +1108,11 @@ function generateBirds(
     birds.push({
       x: Math.random() * width,
       y:
-        65 +
+        35 +
         Math.random() *
           Math.min(
-            150,
-            height * 0.25,
+            95,
+            height * 0.2,
           ),
       speed:
         0.35 +
@@ -1144,11 +1197,14 @@ function drawBirds(
 
     bird.x += bird.speed
 
+    // Gentle, continuous vertical flight so birds follow a natural path.
+    bird.y += Math.sin(time * 0.9 + bird.flapOffset) * 0.12
+
     if (bird.x > width + 30) {
       bird.x = -30
       bird.y =
-        65 +
-        Math.random() * 120
+        35 +
+        Math.random() * 95
     }
   }
 }
@@ -1301,6 +1357,272 @@ function drawAirplane(
   ctx.restore()
 }
 
+function drawBuildingDecorations(
+  ctx: CanvasRenderingContext2D,
+  building: Building,
+  top: number,
+  groundY: number,
+  isDark: boolean,
+  mc: MaterialColors,
+) {
+  const roofColor = isDark
+    ? 'rgba(45,35,32,0.98)'
+    : 'rgba(75,55,45,0.95)'
+
+  switch (building.buildingType) {
+    case 'school': {
+      // A recognizable school: broad campus silhouette, pitched center roof,
+      // central entrance, windows arranged like classrooms, and a flagpole.
+      ctx.fillStyle = roofColor
+      ctx.beginPath()
+      ctx.moveTo(building.x - 4, top + 5)
+      ctx.lineTo(building.x + building.width * 0.18, top - 18)
+      ctx.lineTo(building.x + building.width * 0.82, top - 18)
+      ctx.lineTo(building.x + building.width + 4, top + 5)
+      ctx.closePath()
+      ctx.fill()
+
+      // Central school entrance / portico.
+      const entranceW = Math.min(70, building.width * 0.28)
+      const entranceX = building.x + (building.width - entranceW) / 2
+      ctx.fillStyle = isDark
+        ? 'rgba(55,60,70,0.98)'
+        : 'rgba(185,185,180,0.98)'
+      ctx.fillRect(entranceX, groundY - 58, entranceW, 58)
+
+      ctx.fillStyle = isDark
+        ? 'rgba(25,30,38,0.95)'
+        : 'rgba(70,90,105,0.9)'
+      ctx.fillRect(entranceX + entranceW * 0.3, groundY - 45, entranceW * 0.4, 45)
+
+      // Small pediment over the entrance.
+      ctx.fillStyle = roofColor
+      ctx.beginPath()
+      ctx.moveTo(entranceX - 6, groundY - 58)
+      ctx.lineTo(entranceX + entranceW / 2, groundY - 72)
+      ctx.lineTo(entranceX + entranceW + 6, groundY - 58)
+      ctx.closePath()
+      ctx.fill()
+
+      // School sign.
+      ctx.fillStyle = isDark
+        ? 'rgba(225,230,235,0.9)'
+        : 'rgba(245,245,235,0.95)'
+      ctx.fillRect(
+        building.x + building.width * 0.32,
+        top + 4,
+        building.width * 0.36,
+        18,
+      )
+      ctx.fillStyle = isDark
+        ? 'rgba(40,50,65,0.95)'
+        : 'rgba(45,65,85,0.95)'
+      ctx.font = 'bold 9px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText(
+        'MAi SCHOOL',
+        building.x + building.width / 2,
+        top + 17,
+      )
+
+      // Flagpole.
+      ctx.strokeStyle = 'rgba(55,55,55,0.85)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(building.x + building.width * 0.72, top - 16)
+      ctx.lineTo(building.x + building.width * 0.72, top - 55)
+      ctx.stroke()
+      ctx.fillStyle = 'rgba(210,35,55,0.9)'
+      ctx.beginPath()
+      ctx.moveTo(building.x + building.width * 0.72, top - 54)
+      ctx.lineTo(building.x + building.width * 0.72 + 22, top - 48)
+      ctx.lineTo(building.x + building.width * 0.72, top - 42)
+      ctx.closePath()
+      ctx.fill()
+      break
+    }
+
+    case 'bank': {
+      // A recognizable real-world bank silhouette: civic facade, flat/parapet
+      // roof, prominent sign, tall front windows, and a columned entrance.
+      ctx.fillStyle = isDark
+        ? 'rgba(42,46,55,0.98)'
+        : 'rgba(205,202,190,0.98)'
+      ctx.fillRect(
+        building.x - 3,
+        top - 8,
+        building.width + 6,
+        10,
+      )
+
+      // Bank name panel.
+      ctx.fillStyle = isDark
+        ? 'rgba(220,225,230,0.92)'
+        : 'rgba(248,245,232,0.98)'
+      ctx.fillRect(
+        building.x + building.width * 0.16,
+        top + 10,
+        building.width * 0.68,
+        24,
+      )
+      ctx.fillStyle = isDark
+        ? 'rgba(30,45,65,0.98)'
+        : 'rgba(40,65,90,0.98)'
+      ctx.font = 'bold 11px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText(
+        building.label.toUpperCase().includes('BANK') ? building.label.toUpperCase() : 'MAI TROLL BANK',
+        building.x + building.width / 2,
+        top + 26,
+      )
+
+      // Classical front columns.
+      const colCount = 4
+      const colW = Math.max(4, building.width * 0.018)
+      for (let i = 0; i < colCount; i++) {
+        const cx =
+          building.x +
+          building.width * (0.12 + i * 0.255)
+        ctx.fillStyle = isDark
+          ? 'rgba(170,175,185,0.9)'
+          : 'rgba(235,232,218,0.98)'
+        ctx.fillRect(cx, top + 38, colW, building.height - 52)
+        ctx.fillRect(cx - 3, top + 36, colW + 6, 5)
+        ctx.fillRect(cx - 3, groundY - 18, colW + 6, 5)
+      }
+
+      // Main entrance and subtle vault-door detail.
+      const doorW = Math.min(52, building.width * 0.22)
+      const doorX = building.x + (building.width - doorW) / 2
+      ctx.fillStyle = isDark
+        ? 'rgba(25,30,40,0.98)'
+        : 'rgba(55,65,75,0.98)'
+      ctx.fillRect(doorX, groundY - 58, doorW, 58)
+      ctx.strokeStyle = 'rgba(190,195,200,0.75)'
+      ctx.lineWidth = 2
+      ctx.strokeRect(doorX + 4, groundY - 54, doorW - 8, 50)
+
+      ctx.fillStyle = 'rgba(200,170,90,0.8)'
+      ctx.beginPath()
+      ctx.arc(doorX + doorW / 2, groundY - 29, 7, 0, Math.PI * 2)
+      ctx.stroke()
+      break
+    }
+
+    case 'home': {
+      // A house should read as a house, not a rectangular commercial building:
+      // lower profile, pitched roof, chimney, centered door, and porch.
+      ctx.fillStyle = roofColor
+      ctx.beginPath()
+      ctx.moveTo(building.x - 8, top + 8)
+      ctx.lineTo(building.x + building.width / 2, top - 42)
+      ctx.lineTo(building.x + building.width + 8, top + 8)
+      ctx.closePath()
+      ctx.fill()
+
+      // Chimney.
+      ctx.fillStyle = isDark
+        ? 'rgba(75,55,50,0.98)'
+        : 'rgba(130,75,55,0.95)'
+      ctx.fillRect(
+        building.x + building.width * 0.72,
+        top - 42,
+        Math.max(8, building.width * 0.09),
+        28,
+      )
+
+      // Front porch roof.
+      const porchW = building.width * 0.48
+      const porchX = building.x + (building.width - porchW) / 2
+      ctx.fillStyle = roofColor
+      ctx.fillRect(porchX - 5, groundY - 52, porchW + 10, 7)
+
+      // Porch posts.
+      ctx.fillStyle = isDark
+        ? 'rgba(180,180,175,0.85)'
+        : 'rgba(235,230,215,0.95)'
+      ctx.fillRect(porchX, groundY - 47, 5, 47)
+      ctx.fillRect(porchX + porchW - 5, groundY - 47, 5, 47)
+
+      // Door.
+      ctx.fillStyle = 'rgba(95,60,38,0.98)'
+      ctx.fillRect(
+        building.x + building.width / 2 - 11,
+        groundY - 43,
+        22,
+        43,
+      )
+      ctx.fillStyle = 'rgba(245,205,95,0.95)'
+      ctx.beginPath()
+      ctx.arc(
+        building.x + building.width / 2 + 7,
+        groundY - 21,
+        2.5,
+        0,
+        Math.PI * 2,
+      )
+      ctx.fill()
+      break
+    }
+
+    case 'court': {
+      ctx.fillStyle = roofColor
+      ctx.beginPath()
+      ctx.moveTo(building.x, top)
+      ctx.lineTo(building.x + building.width / 2, top - 30)
+      ctx.lineTo(building.x + building.width, top)
+      ctx.closePath()
+      ctx.fill()
+
+      const colCount = 4
+      const colWidth = building.width / (colCount + 1)
+      ctx.strokeStyle = 'rgba(180,180,180,0.6)'
+      ctx.lineWidth = 3
+      for (let i = 0; i < colCount; i++) {
+        ctx.beginPath()
+        ctx.moveTo(building.x + colWidth * (i + 1), top)
+        ctx.lineTo(building.x + colWidth * (i + 1), groundY - 10)
+        ctx.stroke()
+      }
+      break
+    }
+
+    case 'arcade': {
+      ctx.fillStyle = 'rgba(255, 100, 0, 0.7)'
+      ctx.fillRect(building.x + 5, top + 15, building.width - 10, 20)
+      ctx.fillStyle = 'rgba(255, 200, 0, 0.9)'
+      ctx.font = '12px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('ARCADE', building.x + building.width / 2, top + 28)
+      break
+    }
+
+    case 'achievement': {
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.7)'
+      const rungs = 6
+      const rungHeight = building.height / (rungs + 1)
+      ctx.strokeStyle = 'rgba(180,140,60,0.7)'
+      ctx.lineWidth = 2
+      for (let i = 0; i < rungs; i++) {
+        const y = top + rungHeight * (i + 1)
+        ctx.beginPath()
+        ctx.moveTo(building.x + 8, y)
+        ctx.lineTo(building.x + building.width - 8, y)
+        ctx.stroke()
+      }
+      ctx.beginPath()
+      ctx.moveTo(building.x + 5, top)
+      ctx.lineTo(building.x + 5, groundY)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(building.x + building.width - 5, top)
+      ctx.lineTo(building.x + building.width - 5, groundY)
+      ctx.stroke()
+      break
+    }
+  }
+}
+
 function drawAirplanes(
   ctx: CanvasRenderingContext2D,
   airplanes: Airplane[],
@@ -1373,13 +1695,6 @@ function drawCity(
   time: number,
   isDark: boolean,
 ) {
-  ctx.clearRect(
-    0,
-    0,
-    ctx.canvas.width,
-    ctx.canvas.height,
-  )
-
   /*
    * IMPORTANT:
    *
@@ -1475,6 +1790,16 @@ function drawCity(
     if (isLiveBuilding) {
       ctx.shadowBlur = 0
     }
+
+    /* building-specific decorations */
+    drawBuildingDecorations(
+      ctx,
+      b,
+      top,
+      groundY,
+      isDark,
+      mc,
+    )
 
     /* brick / stone texture */
 
@@ -3320,7 +3645,7 @@ export default function DynamicWeatherBackground({
       {/* City                                                             */}
       {/* -------------------------------------------------------------- */}
 
-      <div className="absolute inset-x-0 bottom-0 z-[2] h-[420px]">
+      <div className="absolute inset-x-0 bottom-0 z-[2] h-[840px]">
         <canvas
           ref={
             cityCanvasRef

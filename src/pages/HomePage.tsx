@@ -193,7 +193,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Mai Sing Off Featured Card */}
+      {/* Mai Talent Show Featured Card */}
       <section className="px-6 py-12">
         <div className="mx-auto max-w-screen-2xl">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 p-6 md:p-10">
@@ -201,7 +201,7 @@ export default function HomePage() {
             <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <span className="inline-block rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-black">LIVE</span>
-                <h2 className="mt-3 text-3xl font-extrabold text-white md:text-4xl">Mai Sing Off</h2>
+                <h2 className="mt-3 text-3xl font-extrabold text-white md:text-4xl">Mai Talent Show</h2>
                 <p className="mt-2 max-w-lg text-sm text-zinc-100">
                   The ultimate live singing competition. Perform on stage, judge with your voice, send gifts, and compete for the Mai Winner crown.
                 </p>

@@ -170,7 +170,6 @@ export async function logStaffAction(log: StaffActionLog): Promise<string | null
       profile.is_secretary ||
       profile.is_prosecutor ||
       profile.is_attorney ||
-      profile.is_auctioneer ||
       profile.is_ceo ||
       profile.is_officer ||
       (profile as any).is_superadmin ||

@@ -251,7 +251,6 @@ const jobPositions: JobPosition[] = [
 const DEFAULT_MAX_APPLICATIONS = 10
 
 const positionToRoleCheck: Record<string, { field: string; message: string }> = {
-  auctioneer: { field: 'is_auctioneer', message: 'You are already an Auctioneer' },
   secretary: { field: 'is_secretary', message: 'You are already a Secretary' },
   troll_officer: { field: 'is_troll_officer', message: 'You are already a Troll Officer' },
   lead_troll_officer: { field: 'is_lead_officer', message: 'You are already a Lead Troll Officer' },

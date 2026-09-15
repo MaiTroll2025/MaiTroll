@@ -625,8 +625,8 @@ export const moderation = {
              */
             bondAllowed:
               bondAmount > 0 &&
-              !jail.bond_paid &&
-              !jail.bond_posted,
+              !Boolean(jail.bond_paid) &&
+              !Boolean(jail.bond_posted),
 
             reason:
               jail.reason ||

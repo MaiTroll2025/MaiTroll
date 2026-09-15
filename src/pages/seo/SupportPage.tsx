@@ -1,125 +1,276 @@
+
 import React from 'react'
 import { Link } from 'react-router-dom'
-import SEOLayout, { Breadcrumb, SEOContentSection, CTASection } from './SEOLayout'
-import { HelpCircle, Mail, MessageSquare, BookOpen, Shield, Zap, Users, AlertTriangle, FileText, Settings, User, CreditCard, Ban } from 'lucide-react'
+import SEOLayout, {
+  Breadcrumb,
+  SEOContentSection,
+  CTASection,
+} from './SEOLayout'
+import {
+  HelpCircle,
+  Mail,
+  MessageSquare,
+  BookOpen,
+  Shield,
+  Zap,
+  Users,
+  AlertTriangle,
+  Settings,
+  User,
+  CreditCard,
+  GraduationCap,
+  BriefcaseBusiness,
+  Trophy,
+  Landmark,
+  Wallet,
+  Radio,
+  Smartphone,
+} from 'lucide-react'
 
 const helpCategories = [
   {
     icon: User,
     title: 'Account & Profile',
-    description: 'Manage your account settings, profile information, and preferences.',
+    description:
+      'Manage your MAiTROLL account, profile information, verification, and account settings.',
     articles: [
       'How to create an account',
-      'How to reset your password',
+      'Student and instructor registration',
+      'How educational verification works',
       'How to update your profile',
-      'How to delete your account',
       'How to change your username',
-    ]
+      'How to delete your account',
+    ],
   },
   {
-    icon: Shield,
-    title: 'Safety & Privacy',
-    description: 'Learn about our safety features, privacy settings, and community guidelines.',
+    icon: GraduationCap,
+    title: 'Education & Verification',
+    description:
+      'Learn how institution verification works for students and instructors.',
     articles: [
-      'Community guidelines',
-      'How to block and report users',
-      'Privacy settings explained',
-      'Content moderation policies',
-      'Age restrictions',
-    ]
+      'How to verify your institution',
+      'Selecting your school',
+      'Institutional email verification',
+      'What to do if your school is missing',
+      'Verification status explained',
+      'Educational account requirements',
+    ],
+  },
+  {
+    icon: BriefcaseBusiness,
+    title: 'MAi Business',
+    description:
+      'Get help with MAi Business eligibility and the entrepreneurial side of the MAiTROLL ecosystem.',
+    articles: [
+      'What is MAi Business?',
+      'Who can access MAi Business?',
+      'MAi Business eligibility',
+      'Becoming an eligible educational user',
+      'Student entrepreneurship',
+      'Business access and verification',
+    ],
+  },
+  {
+    icon: Radio,
+    title: 'Broadcasting & HytroGaming',
+    description:
+      'Get help with live broadcasting, audience participation, gaming, and screen sharing.',
+    articles: [
+      'How to go live',
+      'Mobile broadcasting',
+      'HytroGaming',
+      'Screen sharing',
+      'Camera and microphone issues',
+      'Broadcast participation',
+    ],
   },
   {
     icon: CreditCard,
-    title: 'Payments & Earnings',
-    description: 'Information about virtual currency, payouts, subscriptions, and monetization.',
+    title: 'MAi Pay & Payments',
+    description:
+      'Learn about Troll Coins, MAi Pay, purchases, administration fees, and eligible cashouts.',
     articles: [
-      'How to purchase Troll Coins',
-      'How payouts work',
-      'Creator earnings explained',
-      'Subscription plans',
-      'Refund policy',
-    ]
+      'Troll Coins explained',
+      'MAi Pay explained',
+      'How eligible cashouts work',
+      'Payment methods',
+      'Cashout fees',
+      'Regular-user administration fee',
+    ],
   },
   {
-    icon: Zap,
-    title: 'Streaming & Broadcasting',
-    description: 'Get help with live streaming, broadcasting tools, and stream quality.',
+    icon: Trophy,
+    title: 'School Battles & School Pool',
+    description:
+      'Learn how school representation, School Battles, weekly settlements, and School Pool accounting work.',
     articles: [
-      'How to go live',
-      'Streaming quality settings',
-      'Virtual gifts explained',
-      'Moderation tools for streamers',
-      'Stream categories',
-    ]
+      'What are School Battles?',
+      'How school representation works',
+      'School Battle results',
+      'How School Pool contributions work',
+      'Friday settlement explained',
+      'Graduation donations',
+    ],
+  },
+  {
+    icon: Shield,
+    title: 'Safety, Privacy & Moderation',
+    description:
+      'Learn about safety tools, privacy, community standards, moderation, and account enforcement.',
+    articles: [
+      'Community guidelines',
+      'How to block and report users',
+      'Privacy and account safety',
+      'Content moderation',
+      'Moderation actions',
+      'Appeals and enforcement',
+    ],
   },
   {
     icon: AlertTriangle,
     title: 'Reporting & Appeals',
-    description: 'Report violations, appeal decisions, and understand our enforcement process.',
+    description:
+      'Report violations, request assistance, and understand MAiTROLL enforcement and appeal processes.',
     articles: [
       'How to report a user',
-      'How to appeal a ban',
+      'How to report content',
+      'How to appeal a moderation action',
       'Understanding violations',
-      'Court system explained',
-      'Escalation process',
-    ]
+      'Troll Court explained',
+      'Escalation and support',
+    ],
   },
   {
-    icon: Settings,
-    title: 'Technical Support',
-    description: 'Troubleshoot technical issues, bugs, and performance problems.',
+    icon: Landmark,
+    title: 'City Systems & Services',
+    description:
+      'Get help navigating the different systems and destinations inside the MAiTROLL virtual city.',
     articles: [
-      'Common error messages',
-      'App not loading',
-      'Audio/video issues',
-      'Push notifications not working',
-      'Report a bug',
-    ]
+      'Understanding the MAiTROLL city',
+      'City Hall',
+      'Troll Court',
+      'Transportation and TMV',
+      'KT Auto',
+      'Public services',
+    ],
+  },
+  {
+    icon: Users,
+    title: 'Community & Social',
+    description:
+      'Learn about messaging, communities, Troll Families, Troll Pods, content, and social participation.',
+    articles: [
+      'Messaging and communication',
+      'Community features',
+      'Troll Families',
+      'Troll Pods',
+      'Posting and sharing content',
+      'Blocking and privacy tools',
+    ],
+  },
+  {
+    icon: Zap,
+    title: 'Technical Support',
+    description:
+      'Troubleshoot browser, mobile, broadcasting, camera, microphone, and performance issues.',
+    articles: [
+      'Common technical problems',
+      'MAiTROLL not loading',
+      'Camera and microphone issues',
+      'Broadcast connection issues',
+      'Mobile troubleshooting',
+      'How to report a bug',
+    ],
+  },
+  {
+    icon: Smartphone,
+    title: 'Mobile & Devices',
+    description:
+      'Get help using MAiTROLL on Android, iPhone, tablets, and desktop computers.',
+    articles: [
+      'Android access',
+      'iPhone web access',
+      'Desktop access',
+      'Mobile broadcasting',
+      'Browser compatibility',
+      'Device permissions',
+    ],
   },
 ]
 
 const popularArticles = [
   {
-    title: 'How do I get started on Mai Troll?',
-    excerpt: 'Create a free account, set up your profile, and start exploring live streams or go live yourself.',
-    link: '/about'
+    title: 'What is MAiTROLL?',
+    excerpt:
+      'Learn how MAiTROLL brings education, entrepreneurship, broadcasting, commerce, and community together inside a virtual city.',
+    link: '/about',
   },
   {
-    title: 'How do I earn money on Mai Troll?',
-    excerpt: 'Go live and receive virtual gifts from viewers. Gifts convert to Troll Coins that can be redeemed for cash payouts.',
-    link: '/faq'
+    title: 'How do I create a MAiTROLL account?',
+    excerpt:
+      'Learn about student, instructor, and regular-user registration and the requirements associated with each account type.',
+    link: '/faq',
   },
   {
-    title: 'What are the community guidelines?',
-    excerpt: 'We maintain a safe and respectful environment. Review our guidelines to understand what is and isn\'t allowed.',
-    link: '/legal/safety'
+    title: 'How does educational verification work?',
+    excerpt:
+      'Educational access uses your selected institution, verified institutional domain, email confirmation, and verification status.',
+    link: '/faq',
   },
   {
-    title: 'How do I report inappropriate content?',
-    excerpt: 'Use the report button on any stream, profile, or message. Our moderation team reviews all reports.',
-    link: '/contact'
+    title: 'Who can access MAi Business?',
+    excerpt:
+      'MAi Business is restricted to eligible educational users whose MAiTROLL accounts have completed the applicable verification process.',
+    link: '/faq',
   },
   {
-    title: 'Why was my account suspended?',
-    excerpt: 'Accounts may be suspended for violating our Terms of Service. You can appeal through the court system.',
-    link: '/contact'
+    title: 'What are School Battles?',
+    excerpt:
+      'Eligible verified educational users can represent their school in supported competitive broadcast experiences.',
+    link: '/faq',
   },
   {
-    title: 'How do payouts work?',
-    creators: 'Create content, earn gifts, convert to coins, and request a payout. Minimum payout thresholds apply.',
-    link: '/faq'
+    title: 'What is the School Pool?',
+    excerpt:
+      'Learn how eligible School Battle activity contributes to school-focused financial accounting and future graduation donations.',
+    link: '/faq',
+  },
+  {
+    title: 'How does MAi Pay work?',
+    excerpt:
+      'Learn about eligible earnings, Troll Coins, the current MAi Pay cashout conversion, payment methods, and cashout requirements.',
+    link: '/faq',
+  },
+  {
+    title: 'How do I report a problem?',
+    excerpt:
+      'Use the support process to report technical issues, account problems, moderation concerns, payment issues, or other platform problems.',
+    link: '/contact',
   },
 ]
 
 export default function SupportPage() {
   return (
     <SEOLayout
-      title="Support & Help Center | Mai Troll"
-      description="Get help with Mai Troll (MaiTroll). Find answers to common questions about your account, streaming, payments, safety, and more."
+      title="MAiTROLL Support & Help Center"
+      description="Get help with MAiTROLL. Find support for accounts, educational verification, MAi Business, broadcasting, MAi Pay, School Battles, School Pool, safety, city systems, and technical issues."
       keywords={[
-        'MaiTroll help', 'MaiTroll support', 'MaiTroll support',
-        'help center', 'FAQ', 'customer support', 'troubleshooting',
-        'account help', 'payment support', 'report issue', 'bug report'
+        'MAiTROLL support',
+        'MAiTROLL help',
+        'MAiTROLL help center',
+        'MAiTROLL customer support',
+        'MAiTROLL account help',
+        'MAiTROLL education verification',
+        'MAi Business support',
+        'MAi Pay support',
+        'School Battle support',
+        'School Pool support',
+        'broadcasting support',
+        'HytroGaming support',
+        'payment support',
+        'technical support',
+        'report issue',
+        'bug report',
       ]}
     >
       <Breadcrumb items={[{ label: 'Support' }]} />
@@ -131,7 +282,7 @@ export default function SupportPage() {
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-600/20 border border-purple-500/30 text-purple-300 text-sm font-medium mb-6">
               <HelpCircle className="w-4 h-4" />
-              Help Center
+              MAiTROLL Support
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
@@ -142,7 +293,9 @@ export default function SupportPage() {
             </h1>
 
             <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-              Find answers to common questions, browse help articles, or contact our support team.
+              Find answers about your account, education verification, MAi
+              Business, broadcasting, MAi Pay, School Battles, School Pool,
+              safety, city systems, and technical issues.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -153,6 +306,7 @@ export default function SupportPage() {
                 <Mail className="w-5 h-5" />
                 Contact Support
               </Link>
+
               <Link
                 to="/faq"
                 className="w-full sm:w-auto px-8 py-4 border border-slate-600 text-white font-semibold rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
@@ -168,26 +322,42 @@ export default function SupportPage() {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Browse by Category</h2>
-            <p className="text-slate-400">Find the help you need by topic</p>
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Browse Support by Category
+            </h2>
+
+            <p className="text-slate-400">
+              Find help for the system or experience you are using
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {helpCategories.map((category, index) => {
+            {helpCategories.map((category) => {
               const Icon = category.icon
+
               return (
                 <div
-                  key={index}
+                  key={category.title}
                   className="p-6 bg-slate-900/50 border border-slate-800 hover:border-purple-500/30 rounded-2xl transition-all"
                 >
                   <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6 text-purple-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{category.title}</h3>
-                  <p className="text-slate-400 text-sm mb-4">{category.description}</p>
+
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    {category.title}
+                  </h3>
+
+                  <p className="text-slate-400 text-sm mb-4">
+                    {category.description}
+                  </p>
+
                   <ul className="space-y-2">
-                    {category.articles.map((article, aIndex) => (
-                      <li key={aIndex} className="text-slate-500 text-sm flex items-center gap-2">
+                    {category.articles.map((article) => (
+                      <li
+                        key={article}
+                        className="text-slate-500 text-sm flex items-center gap-2"
+                      >
                         <span className="w-1 h-1 bg-purple-400 rounded-full flex-shrink-0" />
                         {article}
                       </li>
@@ -203,21 +373,29 @@ export default function SupportPage() {
       <section className="py-16 bg-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Popular Articles</h2>
-            <p className="text-slate-400">Most frequently asked questions and topics</p>
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Popular Support Topics
+            </h2>
+
+            <p className="text-slate-400">
+              Start with the questions MAiTROLL users ask most often
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {popularArticles.map((article, index) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {popularArticles.map((article) => (
               <Link
-                key={index}
+                key={article.title}
                 to={article.link}
                 className="p-6 bg-slate-900/50 border border-slate-800 hover:border-purple-500/30 rounded-2xl transition-all group"
               >
                 <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-purple-300 transition-colors">
                   {article.title}
                 </h3>
-                <p className="text-slate-400 text-sm">{article.excerpt}</p>
+
+                <p className="text-slate-400 text-sm">
+                  {article.excerpt}
+                </p>
               </Link>
             ))}
           </div>
@@ -225,23 +403,28 @@ export default function SupportPage() {
       </section>
 
       <SEOContentSection
-        title="Still Need Help?"
-        description="If you couldn't find what you were looking for, our support team is ready to assist you."
+        title="Need Personalized Help?"
+        description="If you cannot find the answer you need, contact the MAiTROLL support team and provide as much relevant information as possible."
         icon={MessageSquare}
       >
         <div className="grid md:grid-cols-2 gap-6">
           <a
-            href="mailto:Mai Troll2025@gmail.com"
+            href="mailto:ceo@maitroll.com"
             className="p-6 bg-slate-900/50 border border-slate-800 hover:border-purple-500/30 rounded-xl transition-all flex items-center gap-4"
           >
             <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center flex-shrink-0">
               <Mail className="w-6 h-6 text-purple-400" />
             </div>
+
             <div>
               <h4 className="text-white font-medium">Email Support</h4>
-              <p className="text-slate-400 text-sm">Mai Troll2025@gmail.com</p>
+
+              <p className="text-slate-400 text-sm">
+                ceo@maitroll.com
+              </p>
             </div>
           </a>
+
           <Link
             to="/contact"
             className="p-6 bg-slate-900/50 border border-slate-800 hover:border-purple-500/30 rounded-xl transition-all flex items-center gap-4"
@@ -249,19 +432,29 @@ export default function SupportPage() {
             <div className="w-12 h-12 rounded-xl bg-pink-600/20 flex items-center justify-center flex-shrink-0">
               <MessageSquare className="w-6 h-6 text-pink-400" />
             </div>
+
             <div>
               <h4 className="text-white font-medium">Submit a Ticket</h4>
-              <p className="text-slate-400 text-sm">Get personalized help from our team</p>
+
+              <p className="text-slate-400 text-sm">
+                Get personalized help from MAiTROLL
+              </p>
             </div>
           </Link>
         </div>
       </SEOContentSection>
 
       <CTASection
-        title="Ready to Get Started?"
-        description="Join Mai Troll today and become part of our growing community."
-        primaryAction={{ label: 'Create Free Account', path: '/auth' }}
-        secondaryAction={{ label: 'Learn More', path: '/about' }}
+        title="Need Help With MAiTROLL?"
+        description="Explore the FAQ or contact the MAiTROLL support team for assistance."
+        primaryAction={{
+          label: 'Contact Support',
+          path: '/contact',
+        }}
+        secondaryAction={{
+          label: 'View FAQ',
+          path: '/faq',
+        }}
       />
     </SEOLayout>
   )

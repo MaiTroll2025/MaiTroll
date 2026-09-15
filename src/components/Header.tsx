@@ -17,11 +17,13 @@ import RGBSearchBar from './header/RGBSearchBar'
 import GlobalTicker from './header/GlobalTicker'
 import { isDesktopPlatform, getDesktopDownloadUrl } from '../utils/desktopDownload'
 import { useAutoUpdate } from '../hooks/useAutoUpdate'
+import { useIsPhone } from '../phone/useIsPhone'
 
 const Header = () => {
   const { user, profile } = useAuthStore()
   const headerFrame = useUserFrame(user?.id)
   const navigate = useNavigate()
+  const isPhone = useIsPhone()
 
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [isMaiSwitcherOpen, setIsMaiSwitcherOpen] = useState(false)
@@ -33,7 +35,7 @@ const Header = () => {
   }, [])
 
   const { isElectron, updateStatus, checkForUpdate, downloadUpdate, installUpdate, dismissUpdate } = useAutoUpdate()
-  const showMobileButtons = !isElectron
+  const showMobileButtons = !isElectron && isPhone
 
   const canDebugPush =
     !!user &&

@@ -2,6 +2,7 @@
 import React, { useEffect, Suspense, useState, useRef } from "react";
 import TrollProvider from "./troll/TrollProvider";
 import { EffectsProvider } from "./contexts/BroadcastEffectsContext";
+import { CartProvider } from "./lib/cartContext";
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { SwipeNavigationProvider } from "./contexts/SwipeNavigationContext";
 
@@ -9,22 +10,22 @@ const TreelzPage = lazyWithRetry(() => import("./pages/TreelzPage"));
 const TreelzUploadPage = lazyWithRetry(() => import("./pages/TreelzUploadPage"));
 import { useAuthStore } from "./lib/store";
 const MaiSingOffPage = lazyWithRetry(() => import("./features/mai-sing-off/pages/MaiSingOffPage"));
-const MaiRecordLabelPage = lazyWithRetry(() => import("./pages/MaiRecordLabelPage"));
 const MaiPiksPage = lazyWithRetry(() => import("./pages/MaiPiksPage"));
-const MaiRecordLabelApplyPage = lazyWithRetry(() => import("./pages/mai-record-label/MaiRecordLabelApplyPage"));
-const ArtistDashboardPage = lazyWithRetry(() => import("./pages/artist/ArtistDashboardPage"));
-const ArtistContractPage = lazyWithRetry(() => import("./pages/artist/ArtistContractPage"));
-const ArtistUploadTrackPage = lazyWithRetry(() => import("./pages/artist/UploadTrackPage"));
-const ArtistCreateAlbumPage = lazyWithRetry(() => import("./pages/artist/CreateAlbumPage"));
-const ArtistEarningsPage = lazyWithRetry(() => import("./pages/artist/ArtistEarningsPage"));
-const ArtistStaffDashboardPage = lazyWithRetry(() => import("./pages/artist/ArtistStaffDashboardPage"));
-const ArtistStaffHirePage = lazyWithRetry(() => import("./pages/artist/ArtistStaffHirePage"));
-const ArtistStaffDetailPage = lazyWithRetry(() => import("./pages/artist/ArtistStaffDetailPage"));
-const ArtistStaffJobsPage = lazyWithRetry(() => import("./pages/artist/ArtistStaffJobsPage"));
-const ArtistStaffWorkspacePage = lazyWithRetry(() => import("./pages/artist/ArtistStaffWorkspacePage"));
-const AdminMaiRecordLabel = lazyWithRetry(() => import("./pages/admin/AdminMaiRecordLabel"));
-const AlbumPage = lazyWithRetry(() => import("./pages/music/AlbumPage"));
-const TrackPage = lazyWithRetry(() => import("./pages/music/TrackPage"));
+const MaiBusinessLanding = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessLanding"));
+const MaiBusinessDashboard = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessDashboard"));
+const MaiBusinessStart = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessStart"));
+const MaiBusinessPlan = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessPlan"));
+const MaiBusinessEducation = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessEducation"));
+const MaiBusinessCredit = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessCredit"));
+const MaiBusinessFunding = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessFunding"));
+const MaiBusinessApplication = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessApplication"));
+const MaiBusinessProfile = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessProfile"));
+const MaiBusinessProgress = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessProgress"));
+const MaiBusinessResources = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessResources"));
+const MaiBusinessDocuments = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessDocuments"));
+const MaiBusinessMarketplace = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessMarketplace"));
+const MaiBusinessHelp = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessHelp"));
+const MaiBusinessAdmin = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessAdmin"));
 import { SingOffJudgeApplicationsAdmin } from "./features/mai-sing-off/pages/SingOffJudgeApplicationsAdmin";
 import { GlobalEventProvider } from "./contexts/GlobalEventContext";
 import { BatterySaverProvider } from "./contexts/BatterySaverContext";
@@ -267,7 +268,6 @@ const AdminLiveOfficersTracker = lazyWithRetry(() => import("./pages/admin/Admin
 const AdminVerifiedUsers = lazyWithRetry(() => import("./pages/admin/AdminVerifiedUsers"));
 const AdminActivity = lazyWithRetry(() => import("./pages/admin/AdminActivity"));
 const AdminVerificationReview = lazyWithRetry(() => import("./pages/admin/AdminVerificationReview"));
-const CelebVerificationDashboard = lazyWithRetry(() => import("./pages/admin/CelebVerificationDashboard"));
 const AdminPoliciesDocs = lazyWithRetry(() => import("./pages/admin/AdminPoliciesDocs"));
 const ExecutiveSecretaries = lazyWithRetry(() => import("./pages/admin/ExecutiveSecretaries"));
 const ExecutiveReports = lazyWithRetry(() => import("./pages/admin/ExecutiveReports"));
@@ -279,10 +279,31 @@ const StateDetail = lazyWithRetry(() => import("./pages/StateDetail"));
 const VerifiedBadgePage = lazyWithRetry(() => import("./pages/VerifiedBadgePage"));
 const TMFamilyInviteHandler = lazyWithRetry(() => import("./components/trollmatch/TMFamilyInviteHandler"));
 const EmbedPage = lazyWithRetry(() => import("./pages/broadcast/EmbedPage"));
+
+// MAi School Pages
+const SchoolHome = lazyWithRetry(() => import("./pages/school/SchoolHome"));
+const SchoolSocial = lazyWithRetry(() => import("./pages/school/SchoolSocial"));
+const SchoolProfile = lazyWithRetry(() => import("./pages/school/SchoolProfile"));
+const SchoolConnections = lazyWithRetry(() => import("./pages/school/SchoolConnections"));
+const SchoolTeam = lazyWithRetry(() => import("./pages/school/SchoolTeam"));
+const SchoolPool = lazyWithRetry(() => import("./pages/school/SchoolPool"));
+const SchoolBusiness = lazyWithRetry(() => import("./pages/school/SchoolBusiness"));
+const InstructorHome = lazyWithRetry(() => import("./pages/school/InstructorHome"));
+const PrivacyCompliance = lazyWithRetry(() => import("./pages/school/PrivacyCompliance"));
+const IncidentsCompliance = lazyWithRetry(() => import("./pages/school/IncidentsCompliance"));
+const FinancialCompliance = lazyWithRetry(() => import("./pages/school/FinancialCompliance"));
+const SetupWizard = lazyWithRetry(() => import("./pages/school/SetupWizard"));
+const SchoolInstructorStudents = lazyWithRetry(() => import("./pages/school/SchoolInstructorStudents"));
+const SchoolInstructorNetwork = lazyWithRetry(() => import("./pages/school/SchoolInstructorNetwork"));
+const InstitutionDashboard = lazyWithRetry(() => import("./pages/school/InstitutionDashboard"));
+const InstitutionStudents = lazyWithRetry(() => import("./pages/school/InstitutionStudents"));
+const InstitutionInstructors = lazyWithRetry(() => import("./pages/school/InstitutionInstructors"));
+const InstitutionPrograms = lazyWithRetry(() => import("./pages/school/InstitutionPrograms"));
+const InstitutionTeams = lazyWithRetry(() => import("./pages/school/InstitutionTeams"));
+const InstitutionPool = lazyWithRetry(() => import("./pages/school/InstitutionPool"));
+const InstitutionAnnouncements = lazyWithRetry(() => import("./pages/school/InstitutionAnnouncements"));
 const HomepageBackgroundShowcase = lazyWithRetry(() => import("./pages/dev/HomepageBackgroundShowcase"));
 const BlockedUsers = lazyWithRetry(() => import("./pages/BlockedUsers"));
-const CelebEarningsDashboard = lazyWithRetry(() => import("./pages/CelebEarningsDashboard"));
-const CelebStreamDiscovery = lazyWithRetry(() => import("./pages/CelebStreamDiscovery"));
 
 const AuthenticatedHome = lazyWithRetry(() => import("./pages/Home"));
 
@@ -292,33 +313,6 @@ const TroMailOfficePage = lazyWithRetry(() => import("./pages/office/TroMailOffi
 const UtromailPage = lazyWithRetry(() => import("./pages/utromail/UtromailPage"));
 const UtromailThreadView = lazyWithRetry(() => import("./pages/utromail/UtromailThreadView"));
 const UtromailCompose = lazyWithRetry(() => import("./pages/utromail/UtromailCompose"));
-const CourseCatalogPage = lazyWithRetry(() => import("./pages/academy/CourseCatalogPage"));
-const CourseDetailPage = lazyWithRetry(() => import("./pages/academy/CourseDetailPage"));
-const VerifyCertificatePage = lazyWithRetry(() => import("./pages/academy/VerifyCertificatePage"));
-const TeacherApplyPage = lazyWithRetry(() => import("./pages/academy/TeacherApplyPage"));
-const TeacherDashboardPage = lazyWithRetry(() => import("./pages/academy/TeacherDashboardPage"));
-const TeacherCoursePage = lazyWithRetry(() => import("./pages/academy/TeacherCoursePage"));
-const AcademyAdmissionsPage = lazyWithRetry(() => import("./pages/academy/AdmissionsDashboardPage"));
-const AcademyCertificatesPage = lazyWithRetry(() => import("./pages/academy/AcademyCertificatesPage"));
-const AcademyTranscriptPage = lazyWithRetry(() => import("./pages/academy/AcademyTranscriptPage"));
-const AcademyCoinsPage = lazyWithRetry(() => import("./pages/academy/AcademyCoinsPage"));
-const AcademyClassroomPage = lazyWithRetry(() => import("./pages/academy/AcademyClassroomPage"));
-const AcademyAdminPage = lazyWithRetry(() => import("./pages/academy/AcademyAdminPage"));
-const AssignmentCreatePage = lazyWithRetry(() => import("./pages/academy/AssignmentCreatePage"));
-const AssignmentStudentPage = lazyWithRetry(() => import("./pages/academy/AssignmentStudentPage"));
-const AssignmentGradingPage = lazyWithRetry(() => import("./pages/academy/AssignmentGradingPage"));
-const AttendancePage = lazyWithRetry(() => import("./pages/academy/AttendancePage"));
-const QuizBuilderPage = lazyWithRetry(() => import("./pages/academy/QuizBuilderPage"));
-const QuizTakePage = lazyWithRetry(() => import("./pages/academy/QuizTakePage"));
-const PathwayDetailPage = lazyWithRetry(() => import("./pages/academy/PathwayDetailPage"));
-const LoanServicingPage = lazyWithRetry(() => import("./pages/academy/LoanServicingPage"));
-const TeacherRevenuePage = lazyWithRetry(() => import("./pages/academy/TeacherRevenuePage"));
-const CommunicationCenterPage = lazyWithRetry(() => import("./pages/academy/CommunicationCenterPage"));
-const TranscriptPage = lazyWithRetry(() => import("./pages/academy/TranscriptPage"));
-const AccreditationPage = lazyWithRetry(() => import("./pages/academy/AccreditationPage"));
-const TeacherManagementPage = lazyWithRetry(() => import("./pages/academy/TeacherManagementPage"));
-const TeacherDirectoryPage = lazyWithRetry(() => import("./pages/academy/TeacherDirectoryPage"));
-const AssignmentsListPage = lazyWithRetry(() => import("./pages/academy/AssignmentsListPage"));
 
 const LoadingScreen = () => (
     <div className="min-h-screen flex items-center justify-center bg-[#0A0814] text-white">
@@ -635,6 +629,7 @@ const DeviceManagement = lazyWithRetry(() => import("./pages/auction/DeviceManag
 const AuctioneerScanner = lazyWithRetry(() => import("./pages/auction/AuctioneerScanner.js"));
 const AuctionApp = lazyWithRetry(() => import("./pages/auction/AuctionApp.js"));
 const CoinStore = lazyWithRetry(() => import("./pages/CoinStore.jsx"));
+const MerchStore = lazyWithRetry(() => import("./components/MerchStore"));
 const ProfileFrameStore = lazyWithRetry(() => import("./pages/ProfileFrameStore"));
 const SellOnTrollCity = lazyWithRetry(() => import("./pages/SellOnTrollCity"));
 const SellerOrders = lazyWithRetry(() => import("./pages/SellerOrders.js"));
@@ -1775,46 +1770,10 @@ const handleVisibilityChange = async () => {
                  <Route path="/state-rankings" element={<StateRankings />} />
                 <Route path="/state/:stateCode" element={<StateDetail />} />
 
-                {/* ✅ Verified Badge */}
+{/* ✅ Verified Badge */}
                 <Route path="/verified-badge" element={<VerifiedBadgePage />} />
 
-                {/* 🎓 Mai Troll Academy */}
-                <Route path="/academy" element={<UnderConstructionPage pageName="Academy" openingDate="Oct 1, 2026" />} />
-                <Route path="/academy/courses" element={<CourseCatalogPage />} />
-                <Route path="/academy/course/:slug" element={<CourseDetailPage />} />
-                <Route path="/academy/verify" element={<VerifyCertificatePage />} />
-                <Route path="/academy/teacher/apply" element={<TeacherApplyPage />} />
-                <Route path="/academy/teacher/dashboard" element={<TeacherDashboardPage />} />
-                <Route path="/academy/teacher/course/new" element={<TeacherCoursePage />} />
-                <Route path="/academy/teacher/course/:courseId" element={<TeacherCoursePage />} />
-                <Route path="/academy/grades" element={<AcademyTranscriptPage />} />
-                <Route path="/academy/certificates" element={<AcademyCertificatesPage />} />
-                <Route path="/academy/transcript" element={<AcademyTranscriptPage />} />
-                <Route path="/academy/coins" element={<AcademyCoinsPage />} />
-                <Route path="/academy/admissions" element={<AcademyAdmissionsPage />} />
-                <Route path="/academy/classroom" element={<AcademyClassroomPage />} />
-                <Route path="/academy/classroom/:courseId" element={<AcademyClassroomPage />} />
-                <Route path="/academy/admin" element={<RequireRole roles={[UserRole.ADMIN]}><AcademyAdminPage /></RequireRole>} />
-                <Route path="/academy/assignment/new" element={<AssignmentCreatePage />} />
-                <Route path="/academy/assignment/edit/:assignmentId" element={<AssignmentCreatePage />} />
-                <Route path="/academy/assignment/grade/:assignmentId" element={<AssignmentGradingPage />} />
-                <Route path="/academy/course/:slug/assignments" element={<AssignmentStudentPage />} />
-                <Route path="/academy/course/:slug/quiz/:quizId" element={<QuizTakePage />} />
-                <Route path="/academy/quiz/new" element={<QuizBuilderPage />} />
-                <Route path="/academy/quiz/new/:courseId" element={<QuizBuilderPage />} />
-                <Route path="/academy/attendance/:courseId" element={<AttendancePage />} />
-                <Route path="/academy/attendance/:courseId/:sessionId" element={<AttendancePage />} />
-                <Route path="/academy/pathway/:pathwayId" element={<PathwayDetailPage />} />
-                <Route path="/academy/loans" element={<LoanServicingPage />} />
-                <Route path="/academy/teacher/revenue" element={<TeacherRevenuePage />} />
-                <Route path="/academy/course/:slug/communication" element={<CommunicationCenterPage />} />
-                <Route path="/academy/transcript/official" element={<TranscriptPage />} />
-                <Route path="/academy/accreditation" element={<AccreditationPage />} />
-                <Route path="/academy/admin/teachers" element={<RequireRole roles={[UserRole.ADMIN]}><TeacherManagementPage /></RequireRole>} />
-                <Route path="/academy/teachers" element={<TeacherDirectoryPage />} />
-                <Route path="/academy/assignments" element={<AssignmentsListPage />} />
-
-                 {/* 📨 UTroMail */}
+                {/* 📨 UTroMail */}
                  <Route path="/utromail" element={<UtromailPage />} />
                  <Route path="/utromail/thread/:threadId" element={<UtromailPage />} />
                  <Route path="/utromail/compose" element={<UtromailPage />} />
@@ -1826,6 +1785,35 @@ const handleVisibilityChange = async () => {
 
                  {/* 🛰️ Universe Arena Dev Preview — public, fake data, no auth */}
                  <Route path="/universe/dev-preview" element={<UniverseArenaDevPreview />} />
+
+                 {/* 🎓 MAi School - Educational Ecosystem */}
+                 <Route path="/school" element={<SchoolHome />} />
+                 <Route path="/school/social" element={<SchoolSocial />} />
+                 <Route path="/school/profile" element={<SchoolProfile />} />
+                 <Route path="/school/profile/:userId" element={<SchoolProfile />} />
+                 <Route path="/school/connections" element={<SchoolConnections />} />
+                 <Route path="/school/team" element={<SchoolTeam />} />
+                 <Route path="/school/pool" element={<SchoolPool />} />
+                 <Route path="/school/business" element={<SchoolBusiness />} />
+                 {/* Instructor Routes */}
+<Route path="/school/instructor" element={<InstructorHome />} />
+                  <Route path="/school/instructor/students" element={<SchoolInstructorStudents />} />
+                  <Route path="/school/instructor/network" element={<SchoolInstructorNetwork />} />
+<Route path="/school/instructor/privacy" element={<PrivacyCompliance />} />
+                  <Route path="/school/instructor/incidents" element={<IncidentsCompliance />} />
+                  <Route path="/school/instructor/financial" element={<FinancialCompliance />} />
+                  {/* Institution Routes */}
+<Route path="/school/institution/setup" element={<SetupWizard />} />
+                  <Route path="/school/institution" element={<InstitutionDashboard />} />
+                  <Route path="/school/institution/students" element={<InstitutionStudents />} />
+                  <Route path="/school/institution/instructors" element={<InstitutionInstructors />} />
+                  <Route path="/school/institution/programs" element={<InstitutionPrograms />} />
+                  <Route path="/school/institution/teams" element={<InstitutionTeams />} />
+                  <Route path="/school/institution/pool" element={<InstitutionPool />} />
+                  <Route path="/school/institution/announcements" element={<InstitutionAnnouncements />} />
+                  <Route path="/school/institution/privacy" element={<PrivacyCompliance />} />
+                  <Route path="/school/institution/incidents" element={<IncidentsCompliance />} />
+                  <Route path="/school/institution/financial" element={<FinancialCompliance />} />
 
                  {/* 🔐 Protected Routes */}
                  <Route element={<RequireAuth />}>
@@ -2147,6 +2135,7 @@ const handleVisibilityChange = async () => {
                    <Route path="/pride-challenges" element={<PrideChallengesPage />} />
                     {/* 💰 Earnings & Coins */}
                     <Route path="/store" element={<CoinStore />} />
+                    <Route path="/store/merch" element={<MerchStore />} />
                     <Route path="/coins" element={<CoinStore />} />
                     <Route path="/profile-frames" element={<ProfileFrameStore />} />
                     <Route path="/coins/complete" element={<CoinsComplete />} />
@@ -2323,46 +2312,14 @@ const handleVisibilityChange = async () => {
                         <RequireRole roles={[UserRole.ADMIN]}>
                           <AdminVerificationReview />
                         </RequireRole>
-                      }
-                    />
-                    <Route
-                      path="/admin/celeb-verification"
-                      element={
-                        <RequireRole roles={[UserRole.ADMIN]}>
-                          <CelebVerificationDashboard />
-                        </RequireRole>
-                      }
-                    />
-                    <Route
-                      path="/celeb/dashboard"
-                      element={
-                        <CelebEarningsDashboard />
-                      }
-                    />
-                    <Route
-                      path="/celeb/dashboard/products"
-                      element={
-                        <CelebEarningsDashboard />
-                      }
-                    />
-                    <Route
-                      path="/celeb/dashboard/earnings"
-                      element={
-                        <CelebEarningsDashboard />
-                      }
-                    />
-                    <Route
-                      path="/celeb/streams"
-                      element={
-                        <CelebStreamDiscovery />
-                      }
-                    />
-                    <Route
-                      path="/admin/applications"
-                      element={
-                        <RequireRole roles={[UserRole.ADMIN]}>
-                          <ApplicationsPage />
-                        </RequireRole>
+}
+                  />
+                  <Route
+                    path="/admin/applications"
+                    element={
+                      <RequireRole roles={[UserRole.ADMIN]}>
+                        <ApplicationsPage />
+                      </RequireRole>
                       }
                     />
                     <Route
@@ -2805,31 +2762,28 @@ const handleVisibilityChange = async () => {
                 <Route path="/podcast" element={<PodcastCentral />} />
                 <Route path="/podcast/:id" element={<PodcastRoom />} />
 
-                 {/* 🎤 Mai Sing Off — live singing competition */}
-                 <Route path="/mai-sing-off/*" element={<MaiSingOffPage />} />
-                 <Route path="/xtrollz/*" element={<Navigate to="/mai-sing-off" replace />} />
+{/* 🎤 Mai Sing Off — live singing competition */}
+                  <Route path="/mai-sing-off/*" element={<MaiSingOffPage />} />
+                  <Route path="/xtrollz/*" element={<Navigate to="/mai-sing-off" replace />} />
 
-                   {/* 🎵 MAI Record Label — program preview */}
-                   <Route path="/mai-record-label" element={<MaiRecordLabelPage />} />
-                   <Route path="/mai-piks" element={<MaiPiksPage />} />
-                   <Route path="/mai-record-label/apply" element={<MaiRecordLabelApplyPage />} />
-                   <Route path="/artist/dashboard" element={<ArtistDashboardPage />} />
-                   <Route path="/artist/contract" element={<ArtistContractPage />} />
-                   <Route path="/artist/upload-track" element={<ArtistUploadTrackPage />} />
-                   <Route path="/artist/create-album" element={<ArtistCreateAlbumPage />} />
-                    <Route path="/artist/earnings" element={<ArtistEarningsPage />} />
-                    <Route path="/artist/dashboard/staff" element={<ArtistStaffDashboardPage />} />
-                    <Route path="/artist/dashboard/staff/hire" element={<ArtistStaffHirePage />} />
-                    <Route path="/artist/dashboard/staff/:membershipId" element={<ArtistStaffDetailPage />} />
-                    <Route path="/artist/staff" element={<ArtistStaffJobsPage />} />
-                    <Route path="/artist/staff/workspace/:artistId" element={<ArtistStaffWorkspacePage />} />
-                    <Route path="/admin/mai-record-label" element={
-                     <RequireRole roles={[UserRole.ADMIN]}>
-                       <AdminMaiRecordLabel />
-                     </RequireRole>
-                   } />
-                   <Route path="/music/album/:albumId" element={<AlbumPage />} />
-                   <Route path="/music/track/:trackId" element={<TrackPage />} />
+                  {/* 🏢 MAI Business — entrepreneurship platform */}
+                  <Route path="/mai-business" element={<MaiBusinessLanding />} />
+                  <Route path="/mai-business/dashboard" element={<MaiBusinessDashboard />} />
+                  <Route path="/mai-business/start" element={<MaiBusinessStart />} />
+                  <Route path="/mai-business/business-plan" element={<MaiBusinessPlan />} />
+                  <Route path="/mai-business/education" element={<MaiBusinessEducation />} />
+                  <Route path="/mai-business/credit" element={<MaiBusinessCredit />} />
+                  <Route path="/mai-business/funding" element={<MaiBusinessFunding />} />
+                  <Route path="/mai-business/funding/apply" element={<MaiBusinessApplication />} />
+                  <Route path="/mai-business/profile" element={<MaiBusinessProfile />} />
+                  <Route path="/mai-business/progress" element={<MaiBusinessProgress />} />
+                  <Route path="/mai-business/resources" element={<MaiBusinessResources />} />
+                  <Route path="/mai-business/documents" element={<MaiBusinessDocuments />} />
+                  <Route path="/mai-business/marketplace" element={<MaiBusinessMarketplace />} />
+                  <Route path="/mai-business/help" element={<MaiBusinessHelp />} />
+                  <Route path="/mai-business/admin" element={<MaiBusinessAdmin />} />
+
+                  <Route path="/mai-piks" element={<MaiPiksPage />} />
 
                  {/* 🔙 Catch-all - redirect username patterns to profile (PUBLIC ACCESS) */}
                  <Route path="/:username" element={<UsernameRedirect />} />
@@ -2907,6 +2861,7 @@ function App() {
       <GlobalEventProvider>
         <BatterySaverProvider>
           <EffectsProvider>
+            <CartProvider>
             <TrollProvider>
               <ProfileFrameProvider>
                 <TabSwitchHandler>
@@ -2922,7 +2877,8 @@ function App() {
                 <TMFamilyInviteHandler />
               </ProfileFrameProvider>
             </TrollProvider>
-          </EffectsProvider>
+          </CartProvider>
+            </EffectsProvider>
         </BatterySaverProvider>
       </GlobalEventProvider>
     </PageVisibilityProvider>
@@ -2947,12 +2903,13 @@ function UsernameRedirect() {
     if (!username) return;
     
     // Check if this looks like a username (not a known route)
-    const knownRoutes = ['home', 'auth', 'api', 'admin', 'agency', 'auctions', 'academy', 
+    const knownRoutes = ['home', 'auth', 'api', 'admin', 'agency', 'auctions',
       'apply', 'careers', 'live', 'broadcast', 'watch', 'stream', 'gaming', 'hytrogaming',
       'profile', 'wallet', 'stats', 'support', 'legal', 'church', 'podcast', 'auctions',
       'government', 'troll-court', 'court', 'meeting', 'team-meeting', 'tromail', 'utromail',
       'explore', 'leaderboard', 'marketplace', 'pool', 'map', 'settings', 'notifications',
       'following', 'trollifications', 'trollifieds', 'garage', 'ktauto', 'district', 'living',
+      'mai-business', 'mai-sing-off', 'mai-piks',
       'insurance', 'neighborhood', 'driver-test', 'inbox', 'shop', 'inventory', 'troting',
       'match', 'city-hall', 'city-registry', 'universe-event', 'events', 'terms',
       'access-denied', 'reset-password', 'tax-onboarding', 'verification', 'founding-officer-trial',

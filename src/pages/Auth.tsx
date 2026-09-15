@@ -5,7 +5,8 @@ import { post, API_ENDPOINTS } from '../lib/api'
 import { toast } from 'sonner'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
-import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Building2, Phone, Globe, MapPin } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Building2, Phone, Globe, MapPin, GraduationCap, Briefcase, Shield, Users } from 'lucide-react'
+import { validateInstitutionEmail } from '../lib/schoolValidation'
 import NavBubble from '../components/NavBubble';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { generateUUID } from '../lib/uuid';
@@ -127,29 +128,33 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
     ? initialMode === 'login'
     : searchParams.get('mode') === 'signup' ? false : true
   const [isLogin, setIsLogin] = useState(initialIsLogin)
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
-   const [showPassword, setShowPassword] = useState(false)
-   const [orgPassword, setOrgPassword] = useState('')
-   const [showOrgPassword, setShowOrgPassword] = useState(false)
+const [showPassword, setShowPassword] = useState(false)
    const [platform] = useState('')
-    const [selectedRole, setSelectedRole] = useState<'user' | 'staff' | 'admin' | 'organization'>('user')
-    const [isCelebSignup, setIsCelebSignup] = useState(false)
-    const [celebFullName, setCelebFullName] = useState('')
-    const [celebPhone, setCelebPhone] = useState('')
-    const [celebSocialLinks, setCelebSocialLinks] = useState<{ platform: string; url: string }[]>([])
-    const [showCelebFields, setShowCelebFields] = useState(false)
-   const [roleEmailError, setRoleEmailError] = useState('')
-   // Organization fields (only used when selectedRole === 'organization')
-   const [orgName, setOrgName] = useState('')
-   const [orgEmail, setOrgEmail] = useState('')
-   const [orgPhone, setOrgPhone] = useState('')
-   const [orgWebsite, setOrgWebsite] = useState('')
-   const [orgCountry, setOrgCountry] = useState('')
-   const [orgDescription, setOrgDescription] = useState('')
-   const [orgError, setOrgError] = useState('')
+  const [selectedRole, setSelectedRole] = useState<'student' | 'user' | 'instructor' | 'staff' | 'admin'>('student')
+
+  // Force Sign In mode for Staff and Admin roles (no public signup)
+  useEffect(() => {
+    if (selectedRole === 'staff' || selectedRole === 'admin') {
+      setIsLogin(true)
+    }
+  }, [selectedRole])
+
+  const [roleEmailError, setRoleEmailError] = useState('')
+   const [institutionName, setInstitutionName] = useState('')
+   const [institutionEmail, setInstitutionEmail] = useState('')
+   const [institutionDomain, setInstitutionDomain] = useState('')
+   const [schoolValidationResult, setSchoolValidationResult] = useState<any>(null)
+   const [validatingSchool, setValidatingSchool] = useState(false)
+   const [studentInstitutionName, setStudentInstitutionName] = useState('')
+   const [studentInstitutionEmail, setStudentInstitutionEmail] = useState('')
+   const [studentInstitutionDomain, setStudentInstitutionDomain] = useState('')
+   const [studentValidationResult, setStudentValidationResult] = useState<any>(null)
+   const [validatingStudentSchool, setValidatingStudentSchool] = useState(false)
    const [showAlertAdmin, setShowAlertAdmin] = useState(false)
   const [alertEmail, setAlertEmail] = useState('')
   const [alertDetails, setAlertDetails] = useState('')
@@ -293,8 +298,12 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
 
   // Validate role-email combinations on role or email change
   React.useEffect(() => {
+    if (!email.trim()) {
+      setRoleEmailError('')
+      return
+    }
     if (selectedRole === 'admin' && !isAdminEmail(email)) {
-      setRoleEmailError(`Only the admin email (${ADMIN_EMAIL}) can sign up as admin`)
+      setRoleEmailError(`Your email is not authorized for admin role. Allowed: ${ADMIN_EMAIL}`)
     } else if (selectedRole === 'staff' && !isStaffEmail(email)) {
       setRoleEmailError(`Your email is not authorized for staff role. Allowed: ${ALLOWED_STAFF_EMAILS.join(', ')}`)
     } else {
@@ -302,28 +311,75 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
     }
   }, [email, selectedRole, isLogin])
 
-   // Validate organization fields when org mode is selected
-   React.useEffect(() => {
-     if (selectedRole !== 'organization') {
-       setOrgError('')
-       return
-     }
+  // Validate institution fields when instructor mode is selected
+  React.useEffect(() => {
+    if (selectedRole !== 'instructor') {
+      return
+    }
 
-     if (!orgName.trim()) {
-       setOrgError('Organization name is required')
-     } else if (!orgEmail.trim()) {
-       setOrgError('Business email is required')
-     } else if (
-       orgEmail.includes('@gmail.com') ||
-       orgEmail.includes('@yahoo.com') ||
-       orgEmail.includes('@hotmail.com') ||
-       orgEmail.includes('@outlook.com')
-     ) {
-       setOrgError('Personal email addresses are not allowed. Please use a business email.')
-     } else {
-       setOrgError('')
-     }
-   }, [orgName, orgEmail, selectedRole])
+    if (!institutionName.trim()) {
+      setRoleEmailError('Institution name is required')
+    } else if (!institutionEmail.trim()) {
+      setRoleEmailError('Institution email is required')
+    } else {
+      setRoleEmailError('')
+    }
+  }, [institutionName, institutionEmail, selectedRole])
+
+  // Validate institution fields when student mode is selected
+  React.useEffect(() => {
+    if (selectedRole !== 'student') {
+      return
+    }
+
+    if (!studentInstitutionName.trim()) {
+      setRoleEmailError('School name is required')
+    } else if (!studentInstitutionEmail.trim()) {
+      setRoleEmailError('School email is required')
+    } else {
+      setRoleEmailError('')
+    }
+  }, [studentInstitutionName, studentInstitutionEmail, selectedRole])
+
+  // Validate institution email domain on blur for instructor signup
+  React.useEffect(() => {
+    if (selectedRole !== 'instructor' || !institutionEmail.trim()) {
+      setSchoolValidationResult(null)
+      return
+    }
+
+    setValidatingSchool(true)
+    validateInstitutionEmail(institutionEmail.trim())
+      .then((result) => {
+        setSchoolValidationResult(result)
+      })
+      .catch(() => {
+        setSchoolValidationResult(null)
+      })
+      .finally(() => {
+        setValidatingSchool(false)
+      })
+  }, [institutionEmail, selectedRole])
+
+  // Validate institution email domain on blur for student signup
+  React.useEffect(() => {
+    if (selectedRole !== 'student' || !studentInstitutionEmail.trim()) {
+      setStudentValidationResult(null)
+      return
+    }
+
+    setValidatingStudentSchool(true)
+    validateInstitutionEmail(studentInstitutionEmail.trim())
+      .then((result) => {
+        setStudentValidationResult(result)
+      })
+      .catch(() => {
+        setStudentValidationResult(null)
+      })
+      .finally(() => {
+        setValidatingStudentSchool(false)
+      })
+  }, [studentInstitutionEmail, selectedRole])
 
   const landingForProfile = (prof: any) => {
     const userRole = prof?.role || prof?.troll_role
@@ -371,82 +427,83 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
     if (loading) return // Prevent double submission
     setLoading(true)
     
-    try {
+try {
       if (isLogin) {
         await executeLogin(email, password)
       } else {
-        if (selectedRole !== 'organization' && !username.trim()) {
+        if (!username.trim()) {
           toast.error('Username is required for sign up')
           setLoading(false)
           return
         }
 
-         if (!acceptedTerms) {
-           toast.error('You must accept the terms and agreements to sign up')
-           setLoading(false)
-           return
-         }
-         
-           // Check org fields if signing up as organization
-           if (selectedRole === 'organization' && !orgName.trim()) {
-             toast.error('Organization name is required')
-             setLoading(false)
-             return
-           }
-           if (selectedRole === 'organization' && !orgEmail.trim()) {
-             toast.error('Business email is required')
-             setLoading(false)
-             return
-           }
-           if (selectedRole === 'organization') {
-             // Validate business email (no personal emails)
-             const cleanOrgEmail = orgEmail.trim().toLowerCase()
-             if (
-               cleanOrgEmail.includes('@gmail.com') ||
-               cleanOrgEmail.includes('@yahoo.com') ||
-               cleanOrgEmail.includes('@hotmail.com') ||
-               cleanOrgEmail.includes('@outlook.com')
-             ) {
-               toast.error('Personal email addresses are not allowed for organizations. Please use a business email.')
-               setLoading(false)
-               return
-             }
-           }
+        if (!acceptedTerms) {
+          toast.error('You must accept the terms and agreements to sign up')
+          setLoading(false)
+          return
+        }
 
-          // Use Edge Function for signup
-          console.log('Creating new user account...')
-          
-          // For organization signup, use org credentials; otherwise use user-provided
-           const finalEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
-           const finalPassword = selectedRole === 'organization' ? orgPassword : password
-            const finalUsername = selectedRole === 'organization' ? orgName.trim() : username.trim()
+        // Check institution fields if signing up as instructor
+        if (selectedRole === 'instructor' && !institutionName.trim()) {
+          toast.error('Institution name is required')
+          setLoading(false)
+          return
+        }
+        if (selectedRole === 'instructor' && !institutionEmail.trim()) {
+          toast.error('Institution email is required')
+          setLoading(false)
+          return
+        }
 
-            const signupData: any = {
-            email: finalEmail,
-            password: finalPassword,
-            username: finalUsername,
-            role: selectedRole,
-            referral_code: referralCode || localStorage.getItem('recruited_by') || undefined,
-            data: {
-              terms_accepted: true,
-              accepted_at: new Date().toISOString(),
-              platform: selectedRole === 'organization' ? null : (platform || null)
-            }
+        // Check institution fields if signing up as student
+        if (selectedRole === 'student' && !studentInstitutionName.trim()) {
+          toast.error('School name is required')
+          setLoading(false)
+          return
+        }
+        if (selectedRole === 'student' && !studentInstitutionEmail.trim()) {
+          toast.error('School email is required')
+          setLoading(false)
+          return
+        }
+
+        // Use instructor credentials for instructor signup; otherwise use user-provided
+        const finalEmail = selectedRole === 'instructor' ? institutionEmail.trim() : email.trim()
+        const finalPassword = password
+        const finalUsername = username.trim()
+
+        const signupData: any = {
+          email: finalEmail,
+          password: finalPassword,
+          username: finalUsername,
+          role: selectedRole,
+          referral_code: referralCode || localStorage.getItem('recruited_by') || undefined,
+          data: {
+            terms_accepted: true,
+            accepted_at: new Date().toISOString(),
+            platform: platform || null
           }
+        }
 
-          // Include organization details if signing up as organization
-          if (selectedRole === 'organization') {
-            signupData.organization_data = {
-              name: orgName.trim(),
-              email: orgEmail.trim(),
-              phone: orgPhone.trim() || null,
-              website: orgWebsite.trim() || null,
-              country: orgCountry.trim(),
-              description: orgDescription.trim()
-            }
+        // Include institution details if signing up as instructor
+        if (selectedRole === 'instructor') {
+          signupData.institution_data = {
+            name: institutionName.trim(),
+            email: institutionEmail.trim(),
+            domain: institutionDomain.trim() || (institutionEmail.trim().split('@')[1]?.toLowerCase() || '')
           }
+        }
 
-          const { success, error: signUpError } = await post(API_ENDPOINTS.auth.signup, signupData)
+        // Include institution details if signing up as student
+        if (selectedRole === 'student') {
+          signupData.institution_data = {
+            name: studentInstitutionName.trim(),
+            email: studentInstitutionEmail.trim(),
+            domain: studentInstitutionDomain.trim() || (studentInstitutionEmail.trim().split('@')[1]?.toLowerCase() || '')
+          }
+        }
+
+        const { success, error: signUpError } = await post(API_ENDPOINTS.auth.signup, signupData)
 
         if (!success || signUpError) {
           console.error('Signup failed:', signUpError)
@@ -454,76 +511,43 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
           setLoading(false)
           return
         }
-        
-           toast.success('Account created! Logging you in...')
-           // Use org credentials for org signup
-           const loginEmail = selectedRole === 'organization' ? orgEmail.trim() : email.trim()
-           const loginPassword = selectedRole === 'organization' ? orgPassword : password
-           await executeLogin(loginEmail, loginPassword)
 
-            // Canonical ban evasion check
-            const { data: { user: loggedInUser } } = await supabase.auth.getUser()
-            if (loggedInUser) {
-              const evasionResult = await moderation.checkBanEvasion(loggedInUser.id)
-              if (evasionResult.evasionDetected) {
-                toast.error('Account restricted due to policy violation. Please contact support.')
-                // The App.tsx jail guard will redirect to /jail
-              }
-            }
+        toast.success('Account created! Logging you in...')
+        // Use instructor/student credentials for instructor/student signup
+        const loginEmail = (selectedRole === 'instructor' || selectedRole === 'student') 
+          ? (selectedRole === 'instructor' ? institutionEmail.trim() : studentInstitutionEmail.trim()) 
+          : email.trim()
+        const loginPassword = password
+        await executeLogin(loginEmail, loginPassword)
 
-            // Check IP for anonymous arrests — auto-arrest new account if IP is flagged
-            const { data: { user: ipCheckUser } } = await supabase.auth.getUser()
-            if (ipCheckUser) {
-              try {
-                const ip = await getCurrentIP()
-                if (ip) {
-                  const arrestResult = await checkAndAutoArrestNewAccount(ipCheckUser.id, ip)
-                  if (arrestResult.success) {
-                    toast.error('Account restricted due to IP policy violation. Please contact support.')
-                    // App.tsx jail guard will redirect to /jail
-                  }
-                }
-              } catch (ipErr) {
-                console.error('Error checking IP on signup:', ipErr)
-              }
-            }
-
-            // If celeb signup was requested, submit the Celeb application
-          if (isCelebSignup) {
-            if (!celebFullName.trim() || !celebPhone.trim()) {
-              toast.error('Please provide your full name and phone number for the Celeb application')
-              return
-            }
-
-            try {
-              const socialMedia = celebSocialLinks.length > 0
-                ? celebSocialLinks.reduce((acc: Record<string, string>, link) => {
-                    acc[link.platform] = link.url
-                    return acc
-                  }, {})
-                : {}
-
-              toast.info('Submitting your Celeb application...')
-              const { success: appSuccess, error: appError } = await post(
-                API_ENDPOINTS.celeb.submitApplication,
-                {
-                  full_name: celebFullName.trim(),
-                  phone_number: celebPhone.trim(),
-                  email: email.trim(),
-                  social_media: socialMedia,
-                },
-              )
-
-              if (!appSuccess || appError) {
-                toast.error(appError || 'Failed to submit Celeb application')
-              } else {
-                toast.success('Celeb application submitted! You will be notified once reviewed.')
-              }
-            } catch (appErr: any) {
-              toast.error(appErr?.message || 'Failed to submit Celeb application')
-            }
+        // Canonical ban evasion check
+        const { data: { user: loggedInUser } } = await supabase.auth.getUser()
+        if (loggedInUser) {
+          const evasionResult = await moderation.checkBanEvasion(loggedInUser.id)
+          if (evasionResult.evasionDetected) {
+            toast.error('Account restricted due to policy violation. Please contact support.')
+            // The App.tsx jail guard will redirect to /jail
           }
         }
+
+        // Check IP for anonymous arrests — auto-arrest new account if IP is flagged
+        const { data: { user: ipCheckUser } } = await supabase.auth.getUser()
+        if (ipCheckUser) {
+          try {
+            const ip = await getCurrentIP()
+            if (ip) {
+              const arrestResult = await checkAndAutoArrestNewAccount(ipCheckUser.id, ip)
+              if (arrestResult.success) {
+                toast.error('Account restricted due to IP policy violation. Please contact support.')
+                // App.tsx jail guard will redirect to /jail
+              }
+            }
+          } catch (ipErr) {
+            console.error('Error checking IP on signup:', ipErr)
+          }
+        }
+
+      }
     } catch (err: any) {
       console.error('Email auth error:', err)
       
@@ -651,29 +675,92 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
             </p>
           </div>
 
-          {/* Tab Navigation */}
+{/* Role Tab Navigation */}
           <div className="flex justify-center mb-8">
-            <div className="grid grid-cols-2 w-full max-w-xs bg-slate-800/50 border border-white/5 rounded-xl p-1 gap-1">
+            <div className="grid grid-cols-5 w-full max-w-xs bg-slate-800/50 border border-white/5 rounded-xl p-1 gap-1">
+              <button
+                onClick={() => setSelectedRole('student')}
+                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
+                  selectedRole === 'student'
+                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                }`}
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span className="text-xs">Student</span>
+              </button>
+              <button
+                onClick={() => setSelectedRole('user')}
+                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
+                  selectedRole === 'user'
+                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span className="text-xs">User</span>
+              </button>
+              <button
+                onClick={() => setSelectedRole('instructor')}
+                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
+                  selectedRole === 'instructor'
+                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                }`}
+              >
+                <Briefcase className="w-4 h-4" />
+                <span className="text-xs">Instructor</span>
+              </button>
+              <button
+                onClick={() => setSelectedRole('staff')}
+                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
+                  selectedRole === 'staff'
+                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span className="text-xs">Staff</span>
+              </button>
+              <button
+                onClick={() => setSelectedRole('admin')}
+                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
+                  selectedRole === 'admin'
+                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span className="text-xs">Admin</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Sign In / Sign Up Tab Navigation */}
+          <div className="flex justify-center mb-8">
+            <div className={`${selectedRole === 'staff' || selectedRole === 'admin' ? 'grid-cols-1' : 'grid-cols-2'} w-full max-w-xs bg-slate-800/50 border border-white/5 rounded-xl p-1 gap-1`}>
               <button
                 onClick={() => setIsLogin(true)}
                 className={`px-6 py-2 rounded-lg font-semibold transition-all duration-300 ${
-                  isLogin 
-                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]' 
+                  isLogin
+                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                 }`}
               >
                 Sign In
               </button>
-              <button
-                onClick={() => setIsLogin(false)}
-                className={`px-6 py-2 rounded-lg font-semibold transition-all duration-300 ${
-                  !isLogin 
-                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]' 
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                }`}
-              >
-                Sign Up
-              </button>
+              {(selectedRole !== 'staff' && selectedRole !== 'admin') && (
+                <button
+                  onClick={() => setIsLogin(false)}
+                  className={`px-6 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                    !isLogin
+                      ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                  }`}
+                >
+                  Sign Up
+                </button>
+              )}
             </div>
           </div>
 
@@ -748,71 +835,199 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
               </div>
             ) : (
                <>
-                 {/* Email Input (hidden for organization) */}
-                 {selectedRole !== 'organization' && (
-                   <div className="relative group">
-                     <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
-                     <input
-                       type="email"
-                       id="email"
-                       name="email"
-                       value={email}
-                       onChange={(e) => setEmail(e.target.value)}
-                       className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
-                       placeholder="Email address"
-                       autoComplete="email"
-                       required
-                     />
-                   </div>
-                 )}
+{/* Email Input (shown for all roles; institution email used for instructor) */}
+                  {selectedRole !== 'instructor' && (
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                        placeholder="Email address"
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+                  )}
 
-                 {/* Password Input (hidden for organization) */}
-                 {selectedRole !== 'organization' && (
-                   <div className="relative group">
-                     <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
-                     <input
-                       type={showPassword ? "text" : "password"}
-                       id="password"
-                       name="password"
-                       value={password}
-                       onChange={(e) => setPassword(e.target.value)}
-                       className="w-full pl-12 pr-12 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
-                       placeholder="Password"
-                       autoComplete={isLogin ? 'current-password' : 'new-password'}
-                       required
-                       minLength={6}
-                     />
-                     <button
-                       type="button"
-                       onClick={() => setShowPassword(!showPassword)}
-                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors"
-                     >
-                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                     </button>
-                   </div>
-                 )}
+                  {/* Password Input (shown for all roles) */}
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      name="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-12 pr-12 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                      placeholder="Password"
+                      autoComplete={isLogin ? 'current-password' : 'new-password'}
+                      required
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
 
-                 {/* Username Input (Sign Up Only, hidden for organization) */}
-                 {!isLogin && selectedRole !== 'organization' && (
-                   <div className="relative group">
-                     <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
-                     <input
-                       type="text"
-                       id="username"
-                       name="username"
-                       value={username}
-                       onChange={(e) => setUsername(e.target.value)}
-                       className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
-                       placeholder="Username"
-                       autoComplete="username"
-                       required
-                     />
-                   </div>
-                 )}
+                  {/* Username Input (Sign Up Only, shown for student/instructor) */}
+                  {!isLogin && selectedRole !== 'staff' && selectedRole !== 'admin' && (
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                      <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                        placeholder="Username"
+                        autoComplete="username"
+                        required
+                      />
+                    </div>
+                  )}
 
-                       <div className="text-sm text-slate-400 mb-4">
-                         Accounts are created as a User by default. Role approval happens later via application.
-                       </div>
+                  {/* Institution Fields (Instructor Sign Up Only) */}
+                  {selectedRole === 'instructor' && !isLogin && (
+                    <div className="space-y-4">
+                      <div className="relative group">
+                        <Building2 className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                        <input
+                          type="text"
+                          id="institutionName"
+                          name="institutionName"
+                          value={institutionName}
+                          onChange={(e) => setInstitutionName(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                          placeholder="Institution / School Name"
+                          required
+                        />
+                      </div>
+                      <div className="relative group">
+                        <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                        <input
+                          type="email"
+                          id="institutionEmail"
+                          name="institutionEmail"
+                          value={institutionEmail}
+                          onChange={(e) => setInstitutionEmail(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                          placeholder="Institution Email"
+                          autoComplete="email"
+                          required
+                        />
+                      </div>
+                      <div className="relative group">
+                        <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                        <input
+                          type="text"
+                          id="institutionDomain"
+                          name="institutionDomain"
+                          value={institutionDomain}
+                          onChange={(e) => setInstitutionDomain(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                          placeholder="Institution Domain (e.g. harvard.edu)"
+                        />
+                      </div>
+                      {schoolValidationResult && (
+                        <div className={`text-xs px-3 py-2 rounded-lg border ${
+                          schoolValidationResult.institution_found
+                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                            : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+                        }`}>
+                          {schoolValidationResult.institution_found
+                            ? `Verified: ${schoolValidationResult.institution?.name || schoolValidationResult.domain}`
+                            : `Domain "${schoolValidationResult.domain}" not found in institution database. Manual review may be required.`}
+                        </div>
+                      )}
+                      {validatingSchool && (
+                        <div className="text-xs text-slate-400 px-3">Validating institution...</div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Institution Fields (Student Sign Up Only) */}
+                  {selectedRole === 'student' && !isLogin && (
+                    <div className="space-y-4">
+                      <div className="relative group">
+                        <Building2 className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                        <input
+                          type="text"
+                          id="studentInstitutionName"
+                          name="studentInstitutionName"
+                          value={studentInstitutionName}
+                          onChange={(e) => setStudentInstitutionName(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                          placeholder="School / University Name"
+                          required
+                        />
+                      </div>
+                      <div className="relative group">
+                        <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                        <input
+                          type="email"
+                          id="studentInstitutionEmail"
+                          name="studentInstitutionEmail"
+                          value={studentInstitutionEmail}
+                          onChange={(e) => setStudentInstitutionEmail(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                          placeholder="School Email (e.g. student@university.edu)"
+                          autoComplete="email"
+                          required
+                        />
+                      </div>
+                      <div className="relative group">
+                        <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                        <input
+                          type="text"
+                          id="studentInstitutionDomain"
+                          name="studentInstitutionDomain"
+                          value={studentInstitutionDomain}
+                          onChange={(e) => setStudentInstitutionDomain(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                          placeholder="School Domain (e.g. university.edu)"
+                        />
+                      </div>
+                      {studentValidationResult && (
+                        <div className={`text-xs px-3 py-2 rounded-lg border ${
+                          studentValidationResult.institution_found
+                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                            : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+                        }`}>
+                          {studentValidationResult.institution_found
+                            ? `Verified: ${studentValidationResult.institution?.name || studentValidationResult.domain}`
+                            : `Domain "${studentValidationResult.domain}" not found in institution database. Manual review may be required.`}
+                        </div>
+                      )}
+                      {validatingStudentSchool && (
+                        <div className="text-xs text-slate-400 px-3">Validating institution...</div>
+                      )}
+                    </div>
+                  )}
+
+{roleEmailError && (
+                        <div className="text-xs text-red-400 px-1">
+                          {roleEmailError}
+                        </div>
+                      )}
+
+                      <div className="text-sm text-slate-400 mb-4">
+                        {selectedRole === 'student' && 'Create your account to access the city.'}
+                        {selectedRole === 'user' && !isLogin && 'Create your account — $1 administration fee required.'}
+                        {selectedRole === 'user' && isLogin && 'Sign in to access your account.'}
+                        {selectedRole === 'instructor' && !isLogin && 'Sign up to teach at your institution.'}
+                        {selectedRole === 'instructor' && isLogin && 'Sign in with your institution credentials.'}
+                        {selectedRole === 'staff' && 'Staff sign in only — no public sign up available.'}
+                        {selectedRole === 'admin' && 'Admin sign in only — no public sign up available.'}
+                      </div>
 
                      {/* Terms Acceptance (Sign Up Only) */}
                     {!isLogin && (
@@ -851,105 +1066,9 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
                         </Link>.
                        </label>
                      </div>
-                    )}
+)}
 
-                 {/* Celeb Signup Checkbox (Sign Up Only) */}
-                 {!isLogin && (
-                   <>
-                     <div className="flex items-start gap-3 px-1">
-                       <div className="relative flex items-center pt-1">
-                         <input
-                           type="checkbox"
-                           id="celeb-signup"
-                           checked={isCelebSignup}
-                           onChange={(e) => {
-                             setIsCelebSignup(e.target.checked)
-                             setShowCelebFields(e.target.checked)
-                           }}
-                           className="peer h-5 w-5 appearance-none rounded border border-purple-500/30 bg-slate-800/50 checked:bg-purple-600 checked:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all cursor-pointer"
-                         />
-                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 transition-opacity">
-                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                           </svg>
-                         </div>
-                       </div>
-                       <label htmlFor="celeb-signup" className="text-sm text-slate-300 cursor-pointer select-none">
-                         Sign up as a{' '}
-                         <span className="text-yellow-400 font-semibold">Celebrity</span>
-                         {' '} — Apply for Celeb Stream status (requires review)
-                       </label>
-                     </div>
-
-                     {showCelebFields && (
-                       <>
-                         <div className="relative group">
-                           <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
-                           <input
-                             type="text"
-                             id="celeb-full-name"
-                             name="celeb-full-name"
-                             value={celebFullName}
-                             onChange={(e) => setCelebFullName(e.target.value)}
-                             className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all"
-                             placeholder="Full legal name"
-                             required={isCelebSignup}
-                           />
-                         </div>
-
-                         <div className="relative group">
-                           <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
-                           <input
-                             type="tel"
-                             id="celeb-phone"
-                             name="celeb-phone"
-                             value={celebPhone}
-                             onChange={(e) => setCelebPhone(e.target.value)}
-                             className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all"
-                             placeholder="Phone number"
-                             required={isCelebSignup}
-                           />
-                         </div>
-
-                         <div className="relative group">
-                           <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
-                           <input
-                             type="url"
-                             id="celeb-social-url"
-                             name="celeb-social-url"
-                             placeholder="Social media URL (e.g. https://instagram.com/yourname)"
-                             onKeyDown={(e) => {
-                               if (e.key === 'Enter') {
-                                 e.preventDefault()
-                                 const val = (e.target as HTMLInputElement).value.trim()
-                                 if (val) {
-                                   setCelebSocialLinks([...celebSocialLinks, { platform: 'social', url: val }])
-                                   ;(e.target as HTMLInputElement).value = ''
-                                 }
-                               }
-                             }}
-                             className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all"
-                           />
-                         </div>
-
-                         {celebSocialLinks.length > 0 && (
-                           <div className="flex flex-wrap gap-2">
-                             {celebSocialLinks.map((link, idx) => (
-                               <div key={idx} className="bg-slate-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-cyan-400 truncate max-w-full">
-                                 {link.url}
-                               </div>
-                             ))}
-                           </div>
-                         )}
-
-                         <div className="text-xs text-slate-500">
-                           Press Enter after entering a social media URL to add it. Your application will be reviewed by our team.
-                         </div>
-                       </>
-                     )}
-                   </>
-                 )}
-                 {/* Submit Button */}
+                  {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={loading}

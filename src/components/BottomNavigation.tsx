@@ -196,8 +196,7 @@ export default function BottomNavigation() {
 
   const isAuctioneer =
     profileRole === 'auctioneer' ||
-    profileTrollRole === 'auctioneer' ||
-    !!(profile as any)?.is_auctioneer
+    profileTrollRole === 'auctioneer'
 
   const isAgencyHR =
     profileRole === 'agency_hr' ||

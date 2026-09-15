@@ -1,1073 +1,854 @@
-import React, { useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import {
-  X,
+  ArrowRight,
+  BriefcaseBusiness,
+  Building2,
+  CheckCircle2,
+  ChevronRight,
+  GraduationCap,
+  Landmark,
+  MessageSquare,
   Radio,
-  MessageCircle,
-  Gift,
-  Swords,
-  Telescope,
-  Map as MapIcon,
-  Coins,
-  Shield,
-  Zap,
-  Pin,
-  Users,
+  Scale,
+  ShieldCheck,
+  ShoppingBag,
   Trophy,
-  Sparkles,
-  Smartphone,
-  Video,
-  Gamepad2,
-  Mail,
-  Crown,
-  Eye,
-  UserPlus,
-  Flame,
-} from 'lucide-react';
+  Users,
+  Wallet,
+  X,
+  Zap,
+} from 'lucide-react'
 
 interface LearnAboutMaiTrollModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
 
-/* ============================================================
-   MAITROLL FEATURES
-   Keep this list aligned with features that actually exist
-   or are intentionally part of the current platform.
-   ============================================================ */
-
-const features = [
+const ecosystemFeatures = [
+  {
+    icon: GraduationCap,
+    title: 'Education',
+    description:
+      'MAiTROLL connects students and instructors with a digital environment built around learning, participation, opportunity, and future-building.',
+  },
+  {
+    icon: BriefcaseBusiness,
+    title: 'MAi Business',
+    description:
+      'A dedicated business environment where eligible educational users can develop entrepreneurial ideas, opportunities, and real-world business activity.',
+  },
   {
     icon: Radio,
-    title: 'Go Live',
+    title: 'Broadcasting',
     description:
-      'Turn your camera on, grab a seat, and go live. Talk, hang out, build your audience, or just see who pulls up.',
-    color: 'from-red-500/15 to-orange-500/10',
-    iconColor: 'text-red-400',
+      'Go live, participate in broadcasts, connect with other users, and use broadcasting as one part of the larger MAiTROLL city.',
   },
   {
-    icon: MessageCircle,
-    title: 'Chat & Pull Up',
+    icon: ShoppingBag,
+    title: 'Commerce',
     description:
-      'Talk in live chats, meet people, react, follow creators, and actually be part of what is happening instead of just watching.',
-    color: 'from-cyan-500/15 to-blue-500/10',
-    iconColor: 'text-cyan-400',
+      'Marketplace experiences, businesses, products, services, virtual items, and economic systems give the city an active commercial layer.',
   },
-  {
-    icon: Gift,
-    title: 'Send Gifts',
-    description:
-      'Got a creator you rock with? Send gifts using Troll Coins and show some love while they are live.',
-    color: 'from-pink-500/15 to-rose-500/10',
-    iconColor: 'text-pink-400',
-  },
-  {
-    icon: Swords,
-    title: '1v1 MaiBattles',
-    description:
-      'Creators can go head-to-head in live 1v1 battles. Viewers watch, hype things up, send gifts, and pick their side.',
-    color: 'from-purple-500/15 to-violet-500/10',
-    iconColor: 'text-purple-400',
-  },
-  {
-    icon: Telescope,
-    title: 'Find Your People',
-    description:
-      'Swipe through live streams, discover creators, find new personalities, and see what is popping around the city.',
-    color: 'from-amber-500/15 to-yellow-500/10',
-    iconColor: 'text-amber-400',
-  },
-  {
-    icon: MapIcon,
-    title: 'The MaiTroll City',
-    description:
-      'This is bigger than one feed. Explore the city, jump between experiences, find communities, creators, games, events, and more.',
-    color: 'from-emerald-500/15 to-teal-500/10',
-    iconColor: 'text-emerald-400',
-  },
-];
-
-const liveFeatures = [
-  {
-    icon: Users,
-    title: 'Guest Seats',
-    description:
-      'Bring people into your live and turn a solo stream into a whole conversation.',
-  },
-  {
-    icon: UserPlus,
-    title: 'Co-Hosts',
-    description:
-      'Go live with other people and make the room feel like a real hangout.',
-  },
-  {
-    icon: Pin,
-    title: 'Pinned Messages',
-    description:
-      'Keep important messages front and center so the whole room can see them.',
-  },
-  {
-    icon: Sparkles,
-    title: 'RGB Box Effects',
-    description:
-      'Turn on RGB effects for supported broadcast boxes and make your setup pop.',
-  },
-  {
-    icon: Shield,
-    title: 'Minor Safety',
-    description:
-      'Safety confirmations and badges help make age-related protections visible where they matter.',
-  },
-  {
-    icon: Eye,
-    title: 'Stream Swipe',
-    description:
-      'Swipe through streams and find something worth watching without digging through menus.',
-  },
-];
-
-const creatorFeatures = [
-  'Go live from your phone or web',
-  'Bring guests into your stream',
-  'Co-host with other creators',
-  'Receive virtual gifts',
-  'Build your audience',
-  'Join 1v1 MaiBattles',
-  'Use pinned chat messages',
-  'Customize supported stream visuals',
-  'Build XP and progress through tiers',
-  'Take part in the creator economy',
-];
-
-const cityFeatures = [
-  'Live streams',
-  'Treelz',
-  'Mai Network',
-  'MaiBattles',
-  'Games',
-  'Events',
-  'Creator communities',
-  'UTroMail',
-  'Virtual economy',
-  'Social experiences',
-  'T-League',
-  'More city experiences',
-];
-
-const progressionFeatures = [
   {
     icon: Trophy,
-    title: 'XP & Tiers',
+    title: 'Competition',
     description:
-      'Use the platform, participate, create, and progress through MaiTroll’s tier system.',
+      'School Battles, events, competitions, progression, and recognition give members reasons to participate and build together.',
   },
   {
-    icon: Crown,
-    title: 'T-League',
+    icon: Users,
+    title: 'Community',
     description:
-      'Competitive progression gives the city another layer beyond simply watching and posting.',
+      'Connect with other members through conversations, shared experiences, city spaces, broadcasts, events, and community services.',
   },
-  {
-    icon: Flame,
-    title: 'Keep Moving Up',
-    description:
-      'Your activity and participation can help you progress through the MaiTroll experience.',
-  },
-];
+]
 
-const socialFeatures = [
+const businessFeatures = [
   {
-    icon: Video,
-    title: 'Treelz',
+    title: 'Built for entrepreneurs',
     description:
-      'Short-form content for when you want something quick, funny, chaotic, interesting, or completely random.',
+      'MAi Business gives eligible educational users a dedicated place to develop entrepreneurial ideas and opportunities.',
   },
   {
-    icon: Gamepad2,
-    title: 'Games & Experiences',
+    title: 'Education meets business',
     description:
-      'MaiTroll is not just about livestreams. There are different experiences around the city to jump into.',
+      'The goal is to connect education with practical entrepreneurship instead of separating learning from what comes next.',
   },
   {
-    icon: Mail,
-    title: 'UTroMail',
+    title: 'Verification matters',
     description:
-      'Your place for messaging and communication beyond the live room.',
+      'MAi Business access is controlled by verified educational eligibility. A regular MAiTROLL account does not automatically receive access.',
   },
   {
-    icon: Smartphone,
-    title: 'Built for Phone + Web',
+    title: 'Build something real',
     description:
-      'Use MaiTroll on your phone or web and keep moving around the city.',
+      'The platform is designed around creating, participating, learning, competing, and developing opportunities—not simply consuming content.',
   },
-];
+]
+
+const schoolFeatures = [
+  {
+    icon: Trophy,
+    title: 'School Battles',
+    description:
+      'Eligible users can represent their verified educational institution in school-based competition.',
+  },
+  {
+    icon: Landmark,
+    title: 'School Pool',
+    description:
+      'School activity can contribute to a dedicated School Pool system that tracks school-level results and financial activity.',
+  },
+  {
+    icon: GraduationCap,
+    title: 'School recognition',
+    description:
+      'Weekly results and school performance can create recognition around participation, competition, and achievement.',
+  },
+  {
+    icon: Building2,
+    title: 'Built around institutions',
+    description:
+      'School representation is tied to verified institution data rather than arbitrary school names entered by users.',
+  },
+]
+
+const citySystems = [
+  'City Hall and civic-style systems',
+  'Troll Court and moderation systems',
+  'Marketplace and commerce',
+  'Transportation and vehicle services',
+  'Community and social spaces',
+  'Broadcasting and live experiences',
+  'Podcasts, games, and events',
+  'Wallet and virtual economy systems',
+  'Support, safety, and account services',
+  'Progression, recognition, and competitions',
+]
 
 const steps = [
   {
-    step: '01',
-    title: 'Make Your Account',
-    description: 'Create your profile and pull up to the city.',
+    number: '01',
+    title: 'Create your account',
+    description:
+      'Choose the account path that fits you and complete the required verification or onboarding process.',
   },
   {
-    step: '02',
-    title: 'Find Your Spot',
+    number: '02',
+    title: 'Enter the city',
     description:
-      'Watch streams, swipe around, meet people, explore Treelz, or find something else going on.',
+      'Explore the systems, services, communities, opportunities, and experiences available to your account.',
   },
   {
-    step: '03',
-    title: 'Actually Join In',
+    number: '03',
+    title: 'Find your direction',
     description:
-      'Chat, follow, gift, battle, create, go live, bring friends, and make your mark.',
+      'Learn, build, broadcast, compete, participate, create, sell, connect, or develop something of your own.',
   },
-];
+  {
+    number: '04',
+    title: 'Build your future',
+    description:
+      'Use MAiTROLL as an environment for opportunity—not simply another place to scroll.',
+  },
+]
 
-const rules = [
-  'Respect people.',
-  'No harassment or threats.',
-  'No spam or platform abuse.',
-  'Do not impersonate people.',
-  'Do not post prohibited content.',
-  'Do not abuse moderation tools.',
-  'Do not exploit or manipulate the platform.',
-  'Follow applicable laws and MaiTroll policies.',
-];
+const principles = [
+  'Build instead of simply consume.',
+  'Create opportunities instead of waiting for them.',
+  'Respect the people and institutions around you.',
+  'Use the city responsibly.',
+  'Protect the integrity of competitions and financial systems.',
+  'Follow MAiTROLL policies and applicable laws.',
+]
 
 export default function LearnAboutMaiTrollModal({
   isOpen,
   onClose,
 }: LearnAboutMaiTrollModalProps) {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const handleClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
+    onClose()
+  }, [onClose])
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        handleClose();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose()
       }
-    };
+    }
 
-    document.addEventListener('keydown', handleKey);
-    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown)
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
 
     return () => {
-      document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
-    };
-  }, [isOpen, handleClose]);
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isOpen, handleClose])
 
-  if (!isOpen) return null;
+  const handleNavigate = (path: string) => {
+    handleClose()
+    navigate(path)
+  }
+
+  if (!isOpen) {
+    return null
+  }
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/85 p-0 backdrop-blur-md sm:p-4"
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="learn-about-maitroll-title"
       onClick={handleClose}
     >
-      <article
-        className="
-          relative my-0 w-full max-w-4xl overflow-hidden
-          border border-white/[0.08]
-          bg-[#07070d] text-white shadow-2xl
-          sm:my-6 sm:rounded-[28px]
-        "
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* =====================================================
-            CLOSE
-            ===================================================== */}
-
-        <button
-          onClick={handleClose}
-          className="
-            absolute right-4 top-4 z-50
-            flex h-10 w-10 items-center justify-center
-            rounded-full border border-white/10
-            bg-black/40 text-white/70
-            backdrop-blur-xl
-            transition-all duration-200
-            hover:bg-white/10 hover:text-white
-          "
-          aria-label="Close Learn About MaiTroll"
+      <div className="flex min-h-full items-start justify-center p-3 sm:p-6">
+        <article
+          className="relative my-4 w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-[#07070d] text-white shadow-2xl sm:my-8"
+          onClick={(event) => event.stopPropagation()}
         >
-          <X className="h-5 w-5" />
-        </button>
+          {/* Close */}
+          <button
+            type="button"
+            onClick={handleClose}
+            className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/70 backdrop-blur transition hover:bg-white/10 hover:text-white"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
 
-        {/* =====================================================
-            HERO
-            ===================================================== */}
+          {/* Hero */}
+          <section className="relative overflow-hidden border-b border-white/10 px-6 pb-14 pt-16 sm:px-10 sm:pb-20 sm:pt-20">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.20),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.12),transparent_35%)]" />
 
-        <header className="relative overflow-hidden border-b border-white/[0.06]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(168,85,247,0.22),transparent_35%),radial-gradient(circle_at_85%_20%,rgba(6,182,212,0.16),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(236,72,153,0.12),transparent_35%)]" />
-
-          <div className="absolute -left-32 top-20 h-64 w-64 rounded-full bg-purple-600/10 blur-3xl" />
-          <div className="absolute -right-32 bottom-0 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
-
-          <div className="relative px-6 pb-16 pt-20 sm:px-10 sm:pb-20 sm:pt-24">
-            <div className="mx-auto max-w-3xl text-center">
-              <div
-                className="
-                  mb-6 inline-flex items-center gap-2
-                  rounded-full border border-purple-400/20
-                  bg-purple-500/[0.08]
-                  px-4 py-2
-                  text-xs font-bold uppercase tracking-[0.16em]
-                  text-purple-300
-                "
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                Welcome to the city
+            <div className="relative mx-auto max-w-4xl">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-4 py-2 text-sm font-medium text-purple-300">
+                <Zap className="h-4 w-4" />
+                Welcome to MAiTROLL
               </div>
 
-              <h1 className="text-5xl font-black tracking-[-0.04em] sm:text-6xl lg:text-7xl">
-                This isn't just
-                <br />
-                another social app.
+              <h1
+                id="learn-about-maitroll-title"
+                className="max-w-4xl text-4xl font-bold tracking-tight sm:text-6xl"
+              >
+                A Virtual City Built to Help You Build Your Future.
               </h1>
 
-              <div className="mt-4 text-4xl font-black tracking-[-0.04em] sm:text-5xl">
-                This is{' '}
-                <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                  MaiTroll.
-                </span>
-              </div>
-
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-                Go live. Pull up on somebody else's stream. Find your people.
-                Send gifts. Battle. Swipe through streams. Explore the city.
-                Do whatever makes sense for you.
+              <p className="mt-6 max-w-3xl text-base leading-7 text-white/65 sm:text-lg sm:leading-8">
+                MAiTROLL is a virtual city connecting education,
+                entrepreneurship, business, broadcasting, commerce,
+                competition, and community in one digital environment.
               </p>
 
-              <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+              <p className="mt-4 max-w-3xl text-base leading-7 text-white/50">
+                It is designed for students, instructors, entrepreneurs,
+                creators, broadcasters, and eligible members of the MAiTROLL
+                community who want to do more than simply consume content.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <button
-                  onClick={() => navigate('/auth?mode=signup')}
-                  className="
-                    w-full rounded-2xl
-                    bg-white px-7 py-3.5
-                    text-sm font-black text-black
-                    shadow-[0_10px_40px_rgba(255,255,255,0.12)]
-                    transition-all duration-200
-                    hover:scale-[1.02] hover:bg-white/90
-                    sm:w-auto
-                  "
+                  type="button"
+                  onClick={() => handleNavigate('/auth?mode=signup')}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-semibold text-black transition hover:bg-white/90"
                 >
-                  Join MaiTroll
+                  Create Your Account
+                  <ArrowRight className="h-4 w-4" />
                 </button>
 
                 <button
-                  onClick={() => {
-                    handleClose();
-                    navigate('/explore');
-                  }}
-                  className="
-                    w-full rounded-2xl
-                    border border-white/10
-                    bg-white/[0.05]
-                    px-7 py-3.5
-                    text-sm font-bold text-white
-                    backdrop-blur-xl
-                    transition-all duration-200
-                    hover:bg-white/[0.09]
-                    sm:w-auto
-                  "
+                  type="button"
+                  onClick={() => handleNavigate('/explore')}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 font-semibold text-white transition hover:bg-white/10"
+                >
+                  Explore MAiTROLL
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* What MAiTROLL Is */}
+          <section className="border-b border-white/10 px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-400">
+                  The ecosystem
+                </p>
+
+                <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                  More than a social platform.
+                </h2>
+
+                <p className="mt-4 leading-7 text-white/55">
+                  MAiTROLL brings multiple digital experiences together under
+                  one city structure. Broadcasting is part of the city—but it
+                  is not the entire reason the city exists.
+                </p>
+              </div>
+
+              <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {ecosystemFeatures.map((feature) => {
+                  const Icon = feature.icon
+
+                  return (
+                    <div
+                      key={feature.title}
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-purple-400/20 hover:bg-white/[0.05]"
+                    >
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-500/10 text-purple-300">
+                        <Icon className="h-5 w-5" />
+                      </div>
+
+                      <h3 className="mt-5 text-lg font-semibold">
+                        {feature.title}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-6 text-white/50">
+                        {feature.description}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* MAi Business */}
+          <section className="border-b border-white/10 bg-white/[0.015] px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto grid max-w-4xl gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+              <div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-300">
+                  <BriefcaseBusiness className="h-7 w-7" />
+                </div>
+
+                <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">
+                  MAi Business
+                </p>
+
+                <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                  Where education meets entrepreneurship.
+                </h2>
+
+                <p className="mt-5 leading-7 text-white/55">
+                  MAi Business is a dedicated part of the MAiTROLL ecosystem
+                  for eligible educational users. The purpose is simple:
+                  connect education with entrepreneurship and give people a
+                  place to work toward what comes next.
+                </p>
+
+                <div className="mt-6 rounded-2xl border border-emerald-400/15 bg-emerald-500/5 p-5">
+                  <div className="flex gap-3">
+                    <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                    <div>
+                      <p className="font-semibold text-emerald-200">
+                        Eligibility is enforced.
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-white/50">
+                        A regular or non-student MAiTROLL account does not
+                        automatically receive access to MAi Business.
+                        Educational eligibility and verification are required.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                {businessFeatures.map((feature) => (
+                  <div
+                    key={feature.title}
+                    className="flex gap-4 rounded-2xl border border-white/10 bg-black/20 p-5"
+                  >
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+
+                    <div>
+                      <h3 className="font-semibold">{feature.title}</h3>
+                      <p className="mt-1 text-sm leading-6 text-white/50">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Education */}
+          <section className="border-b border-white/10 px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-300">
+                  <GraduationCap className="h-6 w-6" />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">
+                    Education
+                  </p>
+                  <h2 className="mt-1 text-2xl font-bold sm:text-3xl">
+                    Your education can be part of your city identity.
+                  </h2>
+                </div>
+              </div>
+
+              <div className="mt-8 grid gap-5 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <h3 className="font-semibold">Students</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/50">
+                    Verified students can participate in educational,
+                    entrepreneurial, competitive, and community experiences.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <h3 className="font-semibold">Instructors</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/50">
+                    Instructors can participate as verified educational
+                    members while remaining subject to their appropriate
+                    account permissions.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <h3 className="font-semibold">Verification</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/50">
+                    Educational access is tied to verified institution
+                    information rather than simply claiming a school name.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* School Battles */}
+          <section className="border-b border-white/10 bg-white/[0.015] px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-400">
+                  School competition
+                </p>
+
+                <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                  Bring your school into the city.
+                </h2>
+
+                <p className="mt-4 leading-7 text-white/55">
+                  MAiTROLL turns school participation into an active part of
+                  the ecosystem through verified school representation,
+                  School Battles, weekly activity, recognition, and the
+                  School Pool.
+                </p>
+              </div>
+
+              <div className="mt-10 grid gap-4 sm:grid-cols-2">
+                {schoolFeatures.map((feature) => {
+                  const Icon = feature.icon
+
+                  return (
+                    <div
+                      key={feature.title}
+                      className="rounded-2xl border border-white/10 bg-black/20 p-5"
+                    >
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-300">
+                        <Icon className="h-5 w-5" />
+                      </div>
+
+                      <h3 className="mt-5 text-lg font-semibold">
+                        {feature.title}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-6 text-white/50">
+                        {feature.description}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-amber-400/15 bg-amber-500/5 p-5">
+                <p className="text-sm leading-6 text-white/55">
+                  The School Pool is separate from an individual user's
+                  personal Troll Coin balance. School-level activity and
+                  school-level financial tracking are handled through the
+                  dedicated School Pool system.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* MAi Pay */}
+          <section className="border-b border-white/10 px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto grid max-w-4xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+              <div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-300">
+                  <Wallet className="h-7 w-7" />
+                </div>
+
+                <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-purple-400">
+                  MAi Pay
+                </p>
+
+                <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                  A virtual economy with separate financial systems.
+                </h2>
+
+                <p className="mt-5 leading-7 text-white/55">
+                  Troll Coins are part of the MAiTROLL virtual economy.
+                  Different balance types can have different purposes, and
+                  eligible earned balances may qualify for MAi Pay cashout
+                  under the current payout policy.
+                </p>
+
+                <p className="mt-4 leading-7 text-white/55">
+                  For current MAi Pay cashout calculations, the established
+                  conversion is <strong className="text-white">200 Troll Coins = $1 USD</strong>.
+                  Cashout eligibility, verification, fees, and other policy
+                  requirements still apply.
+                </p>
+
+                <div className="mt-6 inline-flex items-center gap-2 rounded-xl border border-purple-400/15 bg-purple-500/5 px-4 py-3 text-sm text-purple-200">
+                  <ShieldCheck className="h-4 w-4" />
+                  Coin Store pricing is separate from MAi Pay cashout calculations.
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+                <h3 className="font-semibold">The city economy can include</h3>
+
+                <div className="mt-5 space-y-3">
+                  {[
+                    'Troll Coins',
+                    'Virtual gifts and items',
+                    'Marketplace transactions',
+                    'Eligible MAi Pay cashouts',
+                    'School Pool financial tracking',
+                    'Wallet and payment experiences',
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 rounded-xl border border-white/5 bg-black/20 px-4 py-3"
+                    >
+                      <CheckCircle2 className="h-4 w-4 text-purple-300" />
+                      <span className="text-sm text-white/65">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* City Systems */}
+          <section className="border-b border-white/10 bg-white/[0.015] px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="text-center">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-400">
+                  The city
+                </p>
+
+                <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                  There is more to MAiTROLL than one feature.
+                </h2>
+
+                <p className="mx-auto mt-4 max-w-2xl leading-7 text-white/50">
+                  The city is made from interconnected systems designed to
+                  make the platform feel like an actual digital environment,
+                  rather than a collection of unrelated pages.
+                </p>
+              </div>
+
+              <div className="mt-10 grid gap-3 sm:grid-cols-2">
+                {citySystems.map((system) => (
+                  <div
+                    key={system}
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3.5"
+                  >
+                    <ChevronRight className="h-4 w-4 shrink-0 text-cyan-300" />
+                    <span className="text-sm text-white/65">{system}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Broadcasting */}
+          <section className="border-b border-white/10 px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="rounded-3xl border border-red-400/10 bg-gradient-to-br from-red-500/5 via-white/[0.02] to-purple-500/5 p-6 sm:p-8">
+                <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-300">
+                    <Radio className="h-7 w-7" />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-400">
+                      Broadcasting
+                    </p>
+
+                    <h2 className="mt-3 text-3xl font-bold">
+                      Go live—but don't stop there.
+                    </h2>
+
+                    <p className="mt-4 max-w-3xl leading-7 text-white/55">
+                      Broadcasting is one of the experiences inside MAiTROLL.
+                      Members can participate in live experiences, interact
+                      with broadcasters, compete, communicate, and use the
+                      broader city around them.
+                    </p>
+
+                    <p className="mt-4 max-w-3xl leading-7 text-white/55">
+                      MAiTROLL is not built around the idea of spending all
+                      day watching somebody else build their platform. The
+                      larger mission is participation, opportunity, creation,
+                      education, and building your own future.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* How It Works */}
+          <section className="border-b border-white/10 px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-400">
+                  Getting started
+                </p>
+
+                <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                  How MAiTROLL works.
+                </h2>
+              </div>
+
+              <div className="mt-10 grid gap-4 md:grid-cols-2">
+                {steps.map((step) => (
+                  <div
+                    key={step.number}
+                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+                  >
+                    <span className="text-sm font-bold tracking-widest text-purple-400">
+                      {step.number}
+                    </span>
+
+                    <h3 className="mt-4 text-xl font-semibold">
+                      {step.title}
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-white/50">
+                      {step.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Who It's For */}
+          <section className="border-b border-white/10 bg-white/[0.015] px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="text-center">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">
+                  Who is MAiTROLL for?
+                </p>
+
+                <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                  Different people. One city.
+                </h2>
+              </div>
+
+              <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  {
+                    icon: GraduationCap,
+                    title: 'Students',
+                    text: 'Learn, participate, compete, connect, and explore entrepreneurial opportunities.',
+                  },
+                  {
+                    icon: Building2,
+                    title: 'Instructors',
+                    text: 'Participate in a verified educational environment built around community and opportunity.',
+                  },
+                  {
+                    icon: BriefcaseBusiness,
+                    title: 'Entrepreneurs',
+                    text: 'Develop ideas, businesses, opportunities, and a future you actually want to build.',
+                  },
+                  {
+                    icon: Radio,
+                    title: 'Creators',
+                    text: 'Broadcast, create experiences, connect with people, and become part of the larger city.',
+                  },
+                ].map((audience) => {
+                  const Icon = audience.icon
+
+                  return (
+                    <div
+                      key={audience.title}
+                      className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center"
+                    >
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-300">
+                        <Icon className="h-6 w-6" />
+                      </div>
+
+                      <h3 className="mt-4 font-semibold">{audience.title}</h3>
+
+                      <p className="mt-2 text-sm leading-6 text-white/50">
+                        {audience.text}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* Philosophy */}
+          <section className="border-b border-white/10 px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-purple-500/10 via-white/[0.02] to-blue-500/5 p-8 text-center sm:p-12">
+                <MessageSquare className="mx-auto h-8 w-8 text-purple-300" />
+
+                <blockquote className="mx-auto mt-6 max-w-3xl text-2xl font-semibold leading-9 sm:text-3xl">
+                  “Don't just watch someone else build their future. Build
+                  yours.”
+                </blockquote>
+
+                <p className="mx-auto mt-5 max-w-2xl leading-7 text-white/50">
+                  That is the direction behind MAiTROLL: create an environment
+                  where people can learn, participate, create, compete,
+                  connect, and work toward something bigger.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Community Standards */}
+          <section className="border-b border-white/10 bg-white/[0.015] px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto grid max-w-4xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 text-green-300">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+
+                <p className="mt-5 text-sm font-semibold uppercase tracking-[0.2em] text-green-400">
+                  The standard
+                </p>
+
+                <h2 className="mt-3 text-3xl font-bold">
+                  Build something worth being part of.
+                </h2>
+
+                <p className="mt-4 leading-7 text-white/50">
+                  MAiTROLL depends on responsible participation. City systems,
+                  competitions, financial features, and community experiences
+                  require users to follow the rules.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {principles.map((principle) => (
+                  <div
+                    key={principle}
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                  >
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-green-300" />
+                    <span className="text-sm text-white/65">
+                      {principle}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Final CTA */}
+          <section className="relative overflow-hidden px-6 py-14 sm:px-10 sm:py-20">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.16),transparent_55%)]" />
+
+            <div className="relative mx-auto max-w-3xl text-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-400">
+                Enter the city
+              </p>
+
+              <h2 className="mt-4 text-3xl font-bold sm:text-5xl">
+                Education. Business. Broadcasting. Commerce. Competition.
+                Community.
+              </h2>
+
+              <p className="mx-auto mt-5 max-w-2xl leading-7 text-white/50">
+                MAiTROLL brings it together in one virtual city built around
+                participation and opportunity.
+              </p>
+
+              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => handleNavigate('/auth?mode=signup')}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-7 py-3.5 font-semibold text-black transition hover:bg-white/90"
+                >
+                  Join MAiTROLL
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleNavigate('/explore')}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-7 py-3.5 font-semibold transition hover:bg-white/10"
                 >
                   Explore the City
                 </button>
               </div>
             </div>
-          </div>
-        </header>
+          </section>
 
-        {/* =====================================================
-            QUICK IDENTITY
-            ===================================================== */}
-
-        <section className="border-b border-white/[0.06] px-6 py-10 sm:px-10">
-          <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-3">
-            {[
-              ['GO LIVE', 'Broadcast your way.'],
-              ['PULL UP', 'Find people worth watching.'],
-              ['GET INVOLVED', "Don't just sit there."],
-            ].map(([title, text]) => (
-              <div
-                key={title}
-                className="
-                  rounded-2xl border border-white/[0.07]
-                  bg-white/[0.025] p-5
-                  transition-all duration-200
-                  hover:border-white/[0.12]
-                  hover:bg-white/[0.04]
-                "
-              >
-                <div className="text-xs font-black tracking-[0.18em] text-purple-300">
-                  {title}
-                </div>
-
-                <div className="mt-2 text-sm font-medium text-white/60">
-                  {text}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* =====================================================
-            WHAT IS MAITROLL
-            ===================================================== */}
-
-        <section className="px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-3xl">
-            <div className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-cyan-400">
-              So... what is this?
-            </div>
-
-            <h2 className="text-3xl font-black tracking-tight sm:text-4xl">
-              A whole digital city built around people.
-            </h2>
-
-            <div className="mt-6 space-y-4 text-base leading-7 text-white/55 sm:text-lg">
-              <p>
-                MaiTroll brings live streaming, social interaction, creators,
-                battles, gifts, games, content, messaging, progression, and
-                community into one place.
-              </p>
-
-              <p>
-                You can literally just chill and watch. Or you can go all in,
-                build your profile, go live, meet people, battle, support
-                creators, and become part of the community.
-              </p>
-
-              <p className="font-bold text-white">
-                Basically: pull up, find something interesting, and make the
-                city yours.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            MAIN FEATURES
-            ===================================================== */}
-
-        <section className="border-y border-white/[0.06] bg-white/[0.015] px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-9">
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-purple-400">
-                The main stuff
+          {/* Legal Footer */}
+          <footer className="border-t border-white/10 bg-black/20 px-6 py-6 sm:px-10">
+            <div className="mx-auto flex max-w-4xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-sm text-white/35">
+                <Scale className="h-4 w-4" />
+                <span>MAiTROLL community standards and policies apply.</span>
               </div>
 
-              <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-                What you can actually do here.
-              </h2>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => {
-                const Icon = feature.icon;
-
-                return (
-                  <div
-                    key={feature.title}
-                    className={`
-                      group rounded-2xl border border-white/[0.07]
-                      bg-gradient-to-br ${feature.color}
-                      p-5 backdrop-blur-xl
-                      transition-all duration-200
-                      hover:-translate-y-0.5
-                      hover:border-white/[0.14]
-                    `}
-                  >
-                    <div
-                      className="
-                        mb-5 flex h-11 w-11 items-center justify-center
-                        rounded-xl border border-white/[0.07]
-                        bg-black/20
-                      "
-                    >
-                      <Icon
-                        className={`h-5 w-5 ${feature.iconColor}`}
-                      />
-                    </div>
-
-                    <h3 className="text-lg font-black text-white">
-                      {feature.title}
-                    </h3>
-
-                    <p className="mt-2 text-sm leading-6 text-white/50">
-                      {feature.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            LIVE STREAMING
-            ===================================================== */}
-
-        <section className="px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-5xl">
-            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-              <div>
-                <div className="text-xs font-black uppercase tracking-[0.2em] text-red-400">
-                  When you're live
-                </div>
-
-                <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-                  Your stream.
-                  <br />
-                  Your room.
-                </h2>
-
-                <p className="mt-5 text-base leading-7 text-white/50">
-                  Go solo or bring people in. Your live room can be a
-                  conversation, a performance, a battle, a hangout, or
-                  whatever you're making it.
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                {liveFeatures.map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <div
-                      key={item.title}
-                      className="
-                        rounded-2xl border border-white/[0.07]
-                        bg-white/[0.025] p-5
-                      "
-                    >
-                      <Icon className="h-5 w-5 text-purple-400" />
-
-                      <h3 className="mt-4 text-sm font-black text-white">
-                        {item.title}
-                      </h3>
-
-                      <p className="mt-1.5 text-xs leading-5 text-white/45">
-                        {item.description}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            CREATOR SECTION
-            ===================================================== */}
-
-        <section className="border-y border-white/[0.06] bg-white/[0.015] px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-4xl">
-            <div className="max-w-2xl">
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-pink-400">
-                For creators
-              </div>
-
-              <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-                If you create, there is room for you.
-              </h2>
-
-              <p className="mt-5 text-base leading-7 text-white/50">
-                MaiTroll gives creators more than a place to press “Go Live.”
-                Build your presence, connect with viewers, bring people into
-                your streams, battle other creators, and participate in the
-                platform economy.
-              </p>
-            </div>
-
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              {creatorFeatures.map((item) => (
-                <div
-                  key={item}
-                  className="
-                    flex items-center gap-3
-                    rounded-xl border border-white/[0.07]
-                    bg-white/[0.02] px-4 py-3
-                  "
-                >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/10">
-                    <Zap className="h-3.5 w-3.5 text-purple-400" />
-                  </div>
-
-                  <span className="text-sm font-semibold text-white/70">
-                    {item}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            CONTENT + SOCIAL
-            ===================================================== */}
-
-        <section className="px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-9">
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-cyan-400">
-                More than live
-              </div>
-
-              <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-                There's more than one way to be here.
-              </h2>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {socialFeatures.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <div
-                    key={item.title}
-                    className="
-                      rounded-2xl border border-white/[0.07]
-                      bg-white/[0.025] p-5
-                    "
-                  >
-                    <Icon className="h-5 w-5 text-cyan-400" />
-
-                    <h3 className="mt-5 text-base font-black">
-                      {item.title}
-                    </h3>
-
-                    <p className="mt-2 text-xs leading-5 text-white/45">
-                      {item.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            CITY
-            ===================================================== */}
-
-        <section className="border-y border-white/[0.06] bg-white/[0.015] px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/10 bg-emerald-400/[0.06]">
-              <MapIcon className="h-5 w-5 text-emerald-400" />
-            </div>
-
-            <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-              Welcome to the city.
-            </h2>
-
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/50 sm:text-lg">
-              MaiTroll is built like a digital city. Different places,
-              different people, different things happening all the time.
-              There is no single “right” way to use it.
-            </p>
-
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {cityFeatures.map((area) => (
-                <div
-                  key={area}
-                  className="
-                    rounded-xl border border-white/[0.07]
-                    bg-black/20 px-4 py-3
-                    text-sm font-semibold text-white/60
-                  "
-                >
-                  {area}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            XP + TIER
-            ===================================================== */}
-
-        <section className="px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-5xl">
-            <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-              <div>
-                <div className="text-xs font-black uppercase tracking-[0.2em] text-amber-400">
-                  Progression
-                </div>
-
-                <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-                  Level up while you use the city.
-                </h2>
-
-                <p className="mt-5 text-base leading-7 text-white/50">
-                  MaiTroll has progression built into the experience. As you
-                  participate, create, interact, and keep moving, there are
-                  tiers and competitive systems to work through.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {progressionFeatures.map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <div
-                      key={item.title}
-                      className="
-                        flex gap-4 rounded-2xl
-                        border border-white/[0.07]
-                        bg-white/[0.025] p-5
-                      "
-                    >
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-400/[0.08]">
-                        <Icon className="h-5 w-5 text-amber-400" />
-                      </div>
-
-                      <div>
-                        <h3 className="font-black text-white">
-                          {item.title}
-                        </h3>
-
-                        <p className="mt-1 text-sm leading-5 text-white/45">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            TROLL COINS
-            ===================================================== */}
-
-        <section className="border-y border-white/[0.06] bg-white/[0.015] px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-3xl">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/[0.08]">
-                <Coins className="h-5 w-5 text-amber-400" />
-              </div>
-
-              <div>
-                <div className="text-xs font-black uppercase tracking-[0.18em] text-amber-400">
-                  The economy
-                </div>
-
-                <h2 className="mt-1 text-3xl font-black tracking-tight">
-                  Troll Coins
-                </h2>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-4 text-base leading-7 text-white/50 sm:text-lg">
-              <p>
-                Troll Coins are MaiTroll's virtual currency used across
-                supported features on the platform.
-              </p>
-
-              <p>
-                Depending on the feature, they can be used for things like
-                sending gifts, supporting creators, and participating in
-                supported MaiTroll experiences.
-              </p>
-
-              <p className="font-semibold text-white/75">
-                Coin packages and pricing are available through the current
-                MaiTroll store.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            PAYOUTS
-            ===================================================== */}
-
-        <section className="px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-3xl">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/[0.08]">
-                <Coins className="h-5 w-5 text-emerald-400" />
-              </div>
-
-              <div>
-                <div className="text-xs font-black uppercase tracking-[0.18em] text-emerald-400">
-                  Creator economy
-                </div>
-
-                <h2 className="mt-1 text-3xl font-black tracking-tight">
-                  Creator Cashouts
-                </h2>
-              </div>
-            </div>
-
-            <p className="mt-6 text-base leading-7 text-white/50 sm:text-lg">
-              Eligible creators may be able to cash out qualifying balances
-              through supported payout methods. Cashouts are subject to current
-              MaiTroll requirements, limits, fees, and applicable policies.
-            </p>
-
-            <div className="mt-6 rounded-2xl border border-emerald-400/10 bg-emerald-400/[0.04] p-5">
-              <div className="text-sm font-black text-emerald-300">
-                Current payout rules apply
-              </div>
-
-              <p className="mt-1.5 text-sm leading-6 text-white/45">
-                Check the current cashout experience for the requirements and
-                options available to your account.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            COMMUNITY
-            ===================================================== */}
-
-        <section className="border-y border-white/[0.06] bg-white/[0.015] px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="text-xs font-black uppercase tracking-[0.2em] text-pink-400">
-              The vibe
-            </div>
-
-            <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-              Come for the content.
-              <br />
-              Stay for the people.
-            </h2>
-
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/50 sm:text-lg">
-              Some people are here to create. Some are here to watch. Some
-              pull up to chat. Some are here for battles. Some just want to
-              see what the city is doing today.
-            </p>
-
-            <p className="mt-5 font-bold text-white">
-              You don't have to fit one box.
-            </p>
-          </div>
-        </section>
-
-        {/* =====================================================
-            HOW IT WORKS
-            ===================================================== */}
-
-        <section className="px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-10 text-center">
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-purple-400">
-                It's really that simple
-              </div>
-
-              <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-                How to get started
-              </h2>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              {steps.map((item) => (
-                <div
-                  key={item.step}
-                  className="
-                    relative rounded-2xl
-                    border border-white/[0.07]
-                    bg-white/[0.025]
-                    p-6 text-center
-                  "
-                >
-                  <div
-                    className="
-                      mx-auto flex h-11 w-11
-                      items-center justify-center
-                      rounded-full
-                      bg-gradient-to-br from-purple-500 to-pink-500
-                      text-xs font-black
-                    "
-                  >
-                    {item.step}
-                  </div>
-
-                  <h3 className="mt-5 text-base font-black">
-                    {item.title}
-                  </h3>
-
-                  <p className="mt-2 text-sm leading-5 text-white/45">
-                    {item.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            RULES
-            ===================================================== */}
-
-        <section className="border-t border-white/[0.06] bg-white/[0.015] px-6 py-14 sm:px-10">
-          <div className="mx-auto max-w-4xl">
-            <div className="max-w-2xl">
-              <div className="flex items-center gap-3">
-                <Shield className="h-5 w-5 text-purple-400" />
-
-                <div className="text-xs font-black uppercase tracking-[0.2em] text-purple-400">
-                  Keep the city playable
-                </div>
-              </div>
-
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-                A few things are not cool.
-              </h2>
-
-              <p className="mt-4 text-base leading-7 text-white/50">
-                Have fun, talk your talk, be yourself — just don't ruin the
-                experience for everybody else.
-              </p>
-            </div>
-
-            <div className="mt-8 grid gap-2.5 sm:grid-cols-2">
-              {rules.map((rule) => (
-                <div
-                  key={rule}
-                  className="
-                    flex items-center gap-3
-                    rounded-xl border border-white/[0.07]
-                    bg-black/20 px-4 py-3
-                  "
-                >
-                  <div className="h-1.5 w-1.5 rounded-full bg-purple-400" />
-
-                  <span className="text-sm text-white/55">
-                    {rule}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-7 flex flex-wrap gap-3">
-              <button
-                onClick={() => {
-                  handleClose();
-                  navigate('/legal/safety');
-                }}
-                className="
-                  rounded-xl border border-white/10
-                  bg-white/[0.04] px-4 py-2.5
-                  text-sm font-bold text-white/70
-                  transition-colors hover:bg-white/[0.08]
-                "
-              >
-                Community Rules
-              </button>
-
-              <button
-                onClick={() => {
-                  handleClose();
-                  navigate('/legal/terms');
-                }}
-                className="
-                  rounded-xl border border-white/10
-                  bg-white/[0.04] px-4 py-2.5
-                  text-sm font-bold text-white/70
-                  transition-colors hover:bg-white/[0.08]
-                "
-              >
-                Terms
-              </button>
-
-              <button
-                onClick={() => {
-                  handleClose();
-                  navigate('/privacy');
-                }}
-                className="
-                  rounded-xl border border-white/10
-                  bg-white/[0.04] px-4 py-2.5
-                  text-sm font-bold text-white/70
-                  transition-colors hover:bg-white/[0.08]
-                "
-              >
-                Privacy
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            FINAL CTA
-            ===================================================== */}
-
-        <footer className="relative overflow-hidden border-t border-white/[0.06]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(168,85,247,0.18),transparent_55%)]" />
-
-          <div className="relative px-6 py-16 text-center sm:px-10 sm:py-20">
-            <div className="mx-auto max-w-2xl">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-purple-400/10 bg-purple-400/[0.07]">
-                <Sparkles className="h-5 w-5 text-purple-400" />
-              </div>
-
-              <h2 className="mt-6 text-4xl font-black tracking-[-0.03em] sm:text-5xl">
-                So...
-                <br />
-                you pulling up or what?
-              </h2>
-
-              <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-white/45 sm:text-lg">
-                Create your account, explore the city, find a stream, meet
-                some people, and see what MaiTroll is about.
-              </p>
-
-              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <div className="flex flex-wrap gap-4 text-sm">
                 <button
-                  onClick={() => navigate('/auth?mode=signup')}
-                  className="
-                    w-full rounded-2xl
-                    bg-white px-8 py-3.5
-                    text-sm font-black text-black
-                    transition-all duration-200
-                    hover:scale-[1.02]
-                    hover:bg-white/90
-                    sm:w-auto
-                  "
+                  type="button"
+                  onClick={() => handleNavigate('/legal/safety')}
+                  className="text-white/45 transition hover:text-white"
                 >
-                  Join MaiTroll
+                  Safety
                 </button>
 
                 <button
-                  onClick={() => {
-                    handleClose();
-                    navigate('/explore');
-                  }}
-                  className="
-                    w-full rounded-2xl
-                    border border-white/10
-                    bg-white/[0.05]
-                    px-8 py-3.5
-                    text-sm font-bold text-white
-                    transition-all duration-200
-                    hover:bg-white/[0.09]
-                    sm:w-auto
-                  "
+                  type="button"
+                  onClick={() => handleNavigate('/legal/terms')}
+                  className="text-white/45 transition hover:text-white"
                 >
-                  Explore First
+                  Terms
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleNavigate('/privacy')}
+                  className="text-white/45 transition hover:text-white"
+                >
+                  Privacy
                 </button>
               </div>
             </div>
-          </div>
-        </footer>
-      </article>
+          </footer>
+        </article>
+      </div>
     </div>,
     document.body
-  );
+  )
 }
-

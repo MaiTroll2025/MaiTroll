@@ -42,7 +42,7 @@ export function SingOffLobby() {
     <div className="h-full w-full space-y-6 p-4 md:p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Mic className="w-6 h-6 text-pink-400" /> Mai Sing Off
+          <Mic className="w-6 h-6 text-pink-400" /> Mai Talent Show
         </h1>
         {canStartShow && (
           <button

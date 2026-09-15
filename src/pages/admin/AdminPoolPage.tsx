@@ -60,7 +60,7 @@ export default function AdminPoolPage() {
 
       if (ledgerRows && ledgerRows.length > 0) {
         const userIds = [...new Set(ledgerRows.map(r => r.ref_user_id).filter(Boolean))]
-        const userMap: Record<string, { username?: string; avatar_url?: string }> = {}
+        let userMap: Record<string, { username?: string; avatar_url?: string }> = {}
 
         if (userIds.length > 0) {
           const { data: profiles } = await supabase

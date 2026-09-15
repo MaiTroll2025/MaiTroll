@@ -16,7 +16,7 @@ interface StaffMember {
   is_ceo: boolean;
   is_pastor: boolean;
   is_prosecutor: boolean;
-  is_auctioneer: boolean;
+  // is_auctioneer: boolean; // column does not exist
   is_moderator: boolean; // kept for DB select but column may not exist
   is_attorney: boolean;
   is_judge: boolean;
@@ -110,7 +110,7 @@ export default function StaffManagement() {
       const { data, error } = await supabase
         .from('user_profiles')
         .select(
-          'id, username, avatar_url, role, troll_role, is_troll_officer, is_lead_officer, is_admin, is_secretary, is_ceo, is_pastor, is_prosecutor, is_auctioneer, is_attorney, is_judge, is_troller, is_ceo_assistant, is_noah_assistant, officer_level, officer_role'
+          'id, username, avatar_url, role, troll_role, is_troll_officer, is_lead_officer, is_admin, is_secretary, is_ceo, is_pastor, is_prosecutor, is_attorney, is_judge, is_troller, is_ceo_assistant, is_noah_assistant, officer_level, officer_role'
         )
         .order('username');
 
@@ -127,7 +127,7 @@ export default function StaffManagement() {
           member.is_ceo ||
           member.is_pastor ||
           member.is_prosecutor ||
-          member.is_auctioneer ||
+          // member.is_auctioneer removed - column does not exist
           // is_moderator removed - column does not exist
           member.is_attorney ||
           member.is_judge ||

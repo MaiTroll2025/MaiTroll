@@ -123,7 +123,6 @@ function normalizeCourtRole(profile: any): CourtRole {
   if (profile.role === "attorney" || profile.is_attorney) return "attorney";
   if (profile.role === "pastor" || profile.is_pastor) return "pastor";
   if (profile.role === "moderator" || profile.is_moderator) return "moderator";
-  if (profile.role === "auctioneer" || profile.is_auctioneer) return "auctioneer";
 
   return "user";
 }

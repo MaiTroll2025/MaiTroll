@@ -54,19 +54,6 @@ import MobilePodcastPage from "./pages/MobilePodcastPage";
 import HowToVideosPage from "../pages/JobsHowToPage";
 
 import MobilePlaceholder from "./components/MobilePlaceholder";
-import MaiRecordLabelPage from "../../pages/MaiRecordLabelPage";
-import ArtistDashboardPage from "../../pages/artist/ArtistDashboardPage";
-import ArtistContractPage from "../../pages/artist/ArtistContractPage";
-import ArtistUploadTrackPage from "../../pages/artist/UploadTrackPage";
-import ArtistCreateAlbumPage from "../../pages/artist/CreateAlbumPage";
-import ArtistEarningsPage from "../../pages/artist/ArtistEarningsPage";
-import ArtistStaffDashboardPage from "../../pages/artist/ArtistStaffDashboardPage";
-import ArtistStaffHirePage from "../../pages/artist/ArtistStaffHirePage";
-import ArtistStaffDetailPage from "../../pages/artist/ArtistStaffDetailPage";
-import ArtistStaffJobsPage from "../../pages/artist/ArtistStaffJobsPage";
-import ArtistStaffWorkspacePage from "../../pages/artist/ArtistStaffWorkspacePage";
-import AlbumPage from "../../pages/music/AlbumPage";
-import TrackPage from "../../pages/music/TrackPage";
 import AuctioneerScanner from "../pages/auction/AuctioneerScanner";
 
 export type MobileUserRole =
@@ -199,117 +186,6 @@ export const mobileRoutes: MobileRouteItem[] = [
     regular: true,
     public: true,
     showInBottomBubble: true,
-  },
-  {
-    key: "mai-record-label",
-    label: "MAI Record Label",
-    path: "/mai-record-label",
-    element: <MaiRecordLabelPage />,
-    icon: Music,
-    priority: 63,
-    regular: true,
-    public: true,
-    showInBottomBubble: true,
-  },
-  {
-    key: "artist-dashboard",
-    label: "Artist Dashboard",
-    path: "/artist/dashboard",
-    element: <ArtistDashboardPage />,
-    icon: Mic,
-    priority: 64,
-    regular: true,
-    public: false,
-  },
-  {
-    key: "artist-contract",
-    label: "Artist Contract",
-    path: "/artist/contract",
-    element: <ArtistContractPage />,
-    icon: FileText,
-    priority: 65,
-    regular: true,
-    public: false,
-  },
-  {
-    key: "artist-upload-track",
-    label: "Upload Track",
-    path: "/artist/upload-track",
-    element: <ArtistUploadTrackPage />,
-    icon: Music,
-    priority: 66,
-    regular: true,
-    public: false,
-  },
-  {
-    key: "artist-create-album",
-    label: "Create Album",
-    path: "/artist/create-album",
-    element: <ArtistCreateAlbumPage />,
-    icon: Disc3,
-    priority: 67,
-    regular: true,
-    public: false,
-  },
-  {
-    key: "artist-earnings",
-    label: "Artist Earnings",
-    path: "/artist/earnings",
-    element: <ArtistEarningsPage />,
-    icon: Coins,
-    priority: 68,
-    regular: true,
-    public: false,
-  },
-  {
-    key: "artist-staff-dashboard",
-    label: "Artist Team",
-    path: "/artist/dashboard/staff",
-    element: <ArtistStaffDashboardPage />,
-    icon: Users,
-    priority: 69,
-    regular: true,
-    public: false,
-  },
-  {
-    key: "artist-staff-hire",
-    label: "Hire Staff",
-    path: "/artist/dashboard/staff/hire",
-    element: <ArtistStaffHirePage />,
-    icon: UserPlus,
-    priority: 70,
-    regular: true,
-    public: false,
-  },
-  {
-    key: "artist-staff-jobs",
-    label: "My Artist Jobs",
-    path: "/artist/staff",
-    element: <ArtistStaffJobsPage />,
-    icon: Briefcase,
-    priority: 71,
-    regular: true,
-    public: false,
-  },
-  {
-    key: "music-album",
-    label: "Album",
-    path: "/music/album/:albumId",
-    element: <AlbumPage />,
-    icon: Disc3,
-    priority: 69,
-    regular: true,
-    public: true,
-  },
-  {
-    key: "music-track",
-    label: "Track",
-    path: "/music/track/:trackId",
-    element: <TrackPage />,
-    icon: Music,
-    priority: 70,
-    regular: true,
-    public: true,
   },
   {
     key: "inmates",

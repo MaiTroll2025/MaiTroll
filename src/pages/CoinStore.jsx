@@ -5,9 +5,8 @@ import { useAuthStore } from '@/lib/store';
 import { useCoins } from '@/lib/hooks/useCoins';
 import { useBank as useBankHook } from '../lib/hooks/useBank';
 import { useAllCreditScores } from '../lib/hooks/useAllCreditScores';
-import { useStockMarket } from '../lib/hooks/useStockMarket';
 // import { toast } from 'sonner';
-import { Coins, ShoppingCart, CreditCard, Landmark, History, CheckCircle, AlertCircle, ChevronDown, X, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Zap, BarChart3, Wallet, Briefcase, Crown, Flame, RefreshCw, Sparkles } from 'lucide-react';
+import { Coins, CreditCard, Landmark, History, CheckCircle, AlertCircle, ChevronDown, X, Crown, Flame, RefreshCw, Sparkles, Wallet } from 'lucide-react';
 import { formatCoins, COIN_PACKAGES } from '../lib/coinMath';
 import { getBroadcastTheme } from '../lib/broadcastThemes';
 import { deductCoins } from '@/lib/coinTransactions';
@@ -16,6 +15,7 @@ import { useLiveContextStore } from '../lib/liveContextStore';
 import { PERKS as LEVEL_PERKS } from '@/config/levelSystem';
 import { MaiTrollTheme } from '@/styles/trollCityTheme';
 import ProfileFrame from '../components/profile/ProfileFrame';
+import MaiMerchStore from '@/components/MerchStore';
 import { LAUNCH_FRAMES, RARITY_COLORS, RARITY_LABELS } from '../config/profileFrames';
 
 const LEVEL_PERK_IDS = new Set(LEVEL_PERKS.map((perk) => perk.id));
@@ -618,45 +618,7 @@ export default function CoinStore() {
   const { scores: allCreditScores, loading: loadingScores } = useAllCreditScores(user?.id);
   const navigate = useNavigate();
   const { troll_coins, refreshCoins } = useCoins();
-  const { activeLoans, refresh: refreshBank, payCreditCard, creditInfo, _payLoan: _payLoan, applyForLoan, ledger = [] } = useBankHook();
-  
-  // Stock market hooks
-  const {
-    stocks,
-    trendingStocks,
-    portfolio,
-    portfolioSummary,
-    transactions,
-    marketStats,
-    loading: stockLoading,
-    filter,
-    setFilter,
-    sortBy,
-    setSortBy,
-    getSortedStocks,
-    buyStock,
-    sellStock
-  } = useStockMarket();
-
-  // Debug: log sortBy changes
-  useEffect(() => {
-    console.log('[CoinStore] sortBy changed to:', sortBy, 'filter:', filter);
-  }, [sortBy, filter]);
-
-  // Force update when sortBy changes to ensure UI reflects the sort
-  const [sortVersion, setSortVersion] = useState(0);
-  const handleSortChange = (value) => {
-    console.log('[CoinStore] Sort button clicked:', value, 'current sortBy:', sortBy);
-    if (sortBy !== value) {
-      setSortBy(value);
-      setSortVersion(v => v + 1);
-    }
-  };
-
-  // Debug effect to verify sortBy changes
-  useEffect(() => {
-    console.log('[CoinStore] sortBy state updated to:', sortBy);
-  }, [sortBy]);
+const { activeLoans, refresh: refreshBank, payCreditCard, creditInfo, _payLoan: _payLoan, applyForLoan, ledger = [] } = useBankHook();
 
   const [loading, setLoading] = useState(true);
   const [loadingPackage, setLoadingPackage] = useState(null);
@@ -1425,7 +1387,7 @@ useEffect(() => {
             <div className="text-xl font-semibold">Order submitted</div>
           </div>
         </div>
-      ) : loading || stockLoading ? (
+      ) : loading ? (
         <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white p-6`}>
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-8">
@@ -1461,36 +1423,35 @@ useEffect(() => {
           {/* Header */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-6">
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                <BarChart3 className="w-8 h-8 text-green-400" />
-                Mai Troll Market
-                </h1>
+<h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                 <Coins className="w-8 h-8 text-purple-400" />
+                 Mai Troll Coin Store
+                 </h1>
             </div>
 
             <div className="flex gap-2 hidden md:flex relative items-center">
                <button type="button" className={`px-3 py-2 rounded ${tab==='coins'?'bg-purple-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('coins')}>Coins</button>
                <button type="button" className={`px-3 py-2 rounded ${tab==='bank'?'bg-purple-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('bank')}>Bank</button>
-               <button type="button" className={`px-3 py-2 rounded ${tab==='market'?'bg-green-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('market')}>Market</button>
-               <button type="button" className={`px-3 py-2 rounded ${tab==='portfolio'?'bg-green-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('portfolio')}>Portfolio</button>
               
               <div className="relative">
                  <button 
-                     type="button" 
-                     className={`px-3 py-2 rounded flex items-center gap-2 ${['perks', 'calls', 'insurance', 'themes', 'frames'].includes(tab) ? 'bg-purple-600' : MaiTrollTheme.backgrounds.card}`}
-                     onClick={() => setShowStoreDropdown(!showStoreDropdown)}
-                 >
-                     Store Items
-                     <ChevronDown className="w-4 h-4" />
-                 </button>
-                 
+                      type="button" 
+                      className={`px-3 py-2 rounded flex items-center gap-2 ${['perks', 'calls', 'insurance', 'themes', 'frames', 'merch'].includes(tab) ? 'bg-purple-600' : MaiTrollTheme.backgrounds.card}`}
+                      onClick={() => setShowStoreDropdown(!showStoreDropdown)}
+                  >
+                      Store Items
+                      <ChevronDown className="w-4 h-4" />
+                  </button>
+                  
                   {showStoreDropdown && (
                       <div className="absolute top-full right-0 mt-2 w-48 bg-zinc-900 border border-purple-500/30 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
                                <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='perks' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('perks'); setShowStoreDropdown(false); }}>Perks</button>
-                             <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='insurance' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('insurance'); setShowStoreDropdown(false); }}>Insurance</button>
-                            <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='frames' ? 'text-pink-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('frames'); setShowStoreDropdown(false); }}>✨ Profile Frames</button>
-                      </div>
-                  )}
-               </div>
+                              <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='insurance' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('insurance'); setShowStoreDropdown(false); }}>Insurance</button>
+                             <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='frames' ? 'text-pink-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('frames'); setShowStoreDropdown(false); }}>✨ Profile Frames</button>
+                             <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='merch' ? 'text-pink-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('merch'); setShowStoreDropdown(false); }}>🛍️ Merch</button>
+                       </div>
+                   )}
+                </div>
               
 {/* Use Credit Card Toggle */}
 {creditInfo?.limit > 0 && (
@@ -1512,19 +1473,18 @@ useEffect(() => {
 )}
             </div>
             <div className="md:hidden w-full space-y-2">
-               <select
-                 value={tab}
-                 onChange={(e) => setTab(e.target.value)}
-                 className={`w-full ${MaiTrollTheme.backgrounds.card} text-white ${MaiTrollTheme.borders.glass} rounded-lg p-2 text-sm focus:outline-none focus:border-purple-500`}
-               >
-                 <option value="coins">Coins</option>
-                 <option value="bank">Bank</option>
-                 <option value="market">Market</option>
-                 <option value="portfolio">Portfolio</option>
-                  <option value="perks">Perks</option>
-                  <option value="insurance">Insurance</option>
-                  <option value="storage">Storage</option>
-               </select>
+                <select
+                  value={tab}
+                  onChange={(e) => setTab(e.target.value)}
+                  className={`w-full ${MaiTrollTheme.backgrounds.card} text-white ${MaiTrollTheme.borders.glass} rounded-lg p-2 text-sm focus:outline-none focus:border-purple-500`}
+                >
+ <option value="coins">Coins</option>
+                   <option value="bank">Bank</option>
+                   <option value="perks">Perks</option>
+                   <option value="insurance">Insurance</option>
+                   <option value="storage">Storage</option>
+                   <option value="merch">Merch</option>
+                </select>
               
               {/* Mobile Use Credit Card Toggle */}
               {creditInfo?.limit > 0 && (
@@ -1547,324 +1507,25 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Wallet Summary */}
+{/* Wallet Summary */}
           <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-xl p-6 border border-purple-500/30 shadow-lg">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <Wallet className="w-5 h-5 text-purple-400" />
               Your Wallet
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-zinc-900 rounded-lg p-4 border border-yellow-500/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Coins className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm text-gray-400">Troll Coins</span>
-                </div>
-                <p className="text-2xl font-bold text-yellow-400">
-                  {formatCoins(troll_coins)}
-                </p>
-              </div>
-              
-              <div className="bg-zinc-900 rounded-lg p-4 border border-green-500/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Briefcase className="w-5 h-5 text-green-400" />
-                  <span className="text-sm text-gray-400">Portfolio Value</span>
-                </div>
-                <p className="text-2xl font-bold text-green-400">
-                  {formatCoins(portfolioSummary?.total_value) || '0'}
-                </p>
-              </div>
-              
-              <div className="bg-zinc-900 rounded-lg p-4 border border-blue-500/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-5 h-5 text-blue-400" />
-                  <span className="text-sm text-gray-400">Total Invested</span>
-                </div>
-                <p className="text-2xl font-bold text-blue-400">
-                  {formatCoins(portfolioSummary?.total_invested) || '0'}
-                </p>
-              </div>
-              
-              <div className="bg-zinc-900 rounded-lg p-4 border border-purple-500/30">
-                <div className="flex items-center gap-2 mb-2">
-                  {portfolioSummary?.total_profit_loss >= 0 ? <TrendingUp className="w-5 h-5 text-green-400" /> : <TrendingDown className="w-5 h-5 text-red-400" />}
-                  <span className="text-sm text-gray-400">Profit/Loss</span>
-                </div>
-                <p className={`text-2xl font-bold ${portfolioSummary?.total_profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {portfolioSummary?.total_profit_loss >= 0 ? '+' : ''}{formatCoins(portfolioSummary?.total_profit_loss) || '0'} ({portfolioSummary?.profit_loss_pct?.toFixed(1) || '0'}%)
-                </p>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="bg-zinc-900 rounded-lg p-4 border border-yellow-500/30">
+                 <div className="flex items-center gap-2 mb-2">
+                   <Coins className="w-5 h-5 text-yellow-400" />
+                   <span className="text-sm text-gray-400">Troll Coins</span>
+                 </div>
+                 <p className="text-2xl font-bold text-yellow-400">
+                   {formatCoins(troll_coins)}
+                 </p>
+               </div>
             </div>
           </div>
-
-          {/* MARKET TAB */}
-          {tab === 'market' && (
-            <div className="space-y-6 animate-fadeIn">
-              {/* Trending Stocks */}
-              <div>
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-orange-400" />
-                  Trending Now
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {trendingStocks.map(stock => (
-                    <StockCard 
-                      key={stock.id} 
-                      stock={stock} 
-                      onBuy={buyStock}
-                      userCoins={troll_coins}
-                      refreshCoins={refreshCoins}
-                    />
-                  ))}
-                  {trendingStocks.length === 0 && (
-                    <div className="col-span-full text-center py-8 text-gray-500">
-                      No trending stocks available
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Market Stats */}
-              {marketStats && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-zinc-900/50 rounded-lg p-4 border border-white/10">
-                    <div className="text-xs text-gray-400">Total Stocks</div>
-                    <div className="text-xl font-bold text-white">{marketStats.total_stocks}</div>
-                  </div>
-                  <div className="bg-zinc-900/50 rounded-lg p-4 border border-white/10">
-                    <div className="text-xs text-gray-400">Top Gainer</div>
-                    <div className="text-xl font-bold text-green-400">{marketStats.top_gainer_stock}</div>
-                    <div className="text-xs text-green-400">+{marketStats.top_gainer_change?.toFixed(2)}%</div>
-                  </div>
-                  <div className="bg-zinc-900/50 rounded-lg p-4 border border-white/10">
-                    <div className="text-xs text-gray-400">Most Traded</div>
-                    <div className="text-xl font-bold text-blue-400">{marketStats.most_traded_stock}</div>
-                  </div>
-                  <div className="bg-zinc-900/50 rounded-lg p-4 border border-white/10">
-                    <div className="text-xs text-gray-400">Total Volume</div>
-                    <div className="text-xl font-bold text-purple-400">{marketStats.total_volume?.toLocaleString()} trades</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Filters and Sort */}
-              <div className="flex flex-wrap gap-4 items-center justify-between">
-                <div className="flex gap-2">
-                  {['all', 'creator', 'family', 'property'].map(type => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        console.log('[CoinStore] Filter clicked:', type);
-                        setFilter(type);
-                      }}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                        filter === type 
-                          ? 'bg-purple-600 text-white' 
-                          : 'bg-zinc-800 text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      {type.charAt(0).toUpperCase() + type.slice(1)}s
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  {[
-                    { value: 'trending', label: 'Trending' },
-                    { value: 'growth', label: 'Top Growth' },
-                    { value: 'traded', label: 'Most Traded' },
-                    { value: 'price_desc', label: 'Price ↓' },
-                    { value: 'price_asc', label: 'Price ↑' }
-                  ].map(sort => (
-                    <button
-                      key={sort.value}
-                      onClick={() => handleSortChange(sort.value)}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                        sortBy === sort.value 
-                          ? 'bg-green-600 text-white' 
-                          : 'bg-zinc-800 text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      {sort.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Full Stock List */}
-              <div className="overflow-x-auto" key={`stock-list-${sortVersion}`}>
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10 text-gray-400 text-sm">
-                      <th className="py-3 px-4">Stock</th>
-                      <th className="py-3 px-4">Type</th>
-                      <th className="py-3 px-4 text-right">Price</th>
-                      <th className="py-3 px-4 text-right">24h Change</th>
-                      <th className="py-3 px-4 text-right">Volume</th>
-                      <th className="py-3 px-4 text-right">Market Cap</th>
-                      <th className="py-3 px-4 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getSortedStocks().map(stock => (
-                      <tr key={stock.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-white">{stock.stock_symbol}</div>
-                          <div className="text-xs text-gray-500">{stock.name}</div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`text-xs uppercase font-bold px-2 py-0.5 rounded ${
-                            stock.type === 'creator' ? 'bg-blue-500/20 text-blue-300' :
-                            stock.type === 'family' ? 'bg-green-500/20 text-green-300' :
-                            'bg-yellow-500/20 text-yellow-300'
-                          }`}>
-                            {stock.type}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right font-medium text-white">
-                          {formatCoins(stock.current_price)}
-                        </td>
-                        <td className={`py-3 px-4 text-right font-medium ${stock.price_change_pct_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {stock.price_change_pct_24h >= 0 ? '+' : ''}{stock.price_change_pct_24h?.toFixed(2)}%
-                        </td>
-                        <td className="py-3 px-4 text-right text-gray-400">
-                          {stock.volume?.toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 text-right text-gray-400">
-                          {formatMarketCap(stock.market_cap)}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <button
-                            onClick={() => {
-                              // Calculate total with 2% fee
-                              const totalWithFee = 100 * 1.02;
-                              if (totalWithFee > troll_coins) {
-                                toast.error(`Not enough troll coins. Need ${Math.ceil(totalWithFee).toLocaleString()} (including 2% fee), have ${troll_coins.toLocaleString()}`);
-                                return;
-                              }
-                              buyStock(stock.id, stock.stock_symbol, 100, troll_coins, refreshCoins);
-                            }}
-                            disabled={troll_coins < 10}
-                            className="px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded text-sm font-medium"
-                          >
-                            Buy
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {stocks.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="py-8 text-center text-gray-500">
-                          No stocks available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* PORTFOLIO TAB */}
-          {tab === 'portfolio' && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-green-900/30 to-black border border-green-500/30 rounded-xl p-4">
-                  <div className="text-sm text-gray-400 mb-1">Total Value</div>
-                  <div className="text-2xl font-bold text-green-400">{formatCoins(portfolioSummary?.total_value) || '0'}</div>
-                </div>
-                <div className="bg-gradient-to-br from-blue-900/30 to-black border border-blue-500/30 rounded-xl p-4">
-                  <div className="text-sm text-gray-400 mb-1">Total Invested</div>
-                  <div className="text-2xl font-bold text-blue-400">{formatCoins(portfolioSummary?.total_invested) || '0'}</div>
-                </div>
-                <div className={`bg-gradient-to-br ${portfolioSummary?.total_profit_loss >= 0 ? 'from-green-900/30 to-black border-green-500/30' : 'from-red-900/30 to-black border-red-500/30'} border rounded-xl p-4`}>
-                  <div className="text-sm text-gray-400 mb-1">Profit/Loss</div>
-                  <div className={`text-2xl font-bold ${portfolioSummary?.total_profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {portfolioSummary?.total_profit_loss >= 0 ? '+' : ''}{formatCoins(portfolioSummary?.total_profit_loss) || '0'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Portfolio Holdings */}
-              <div>
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-purple-400" />
-                  Your Holdings
-                </h2>
-                {portfolio.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {portfolio.map((item, idx) => (
-                      <PortfolioCard 
-                        key={item.stock_symbol + idx} 
-                        item={item} 
-                        onSell={sellStock}
-                        refreshCoins={refreshCoins}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 bg-zinc-900/50 rounded-xl border border-white/10">
-                    <Briefcase className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-400 mb-2">No Holdings Yet</h3>
-                    <p className="text-gray-500 mb-4">Start investing in stocks to build your portfolio!</p>
-                    <button
-                      onClick={() => setTab('market')}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium"
-                    >
-                      Browse Market
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Transaction History */}
-              {transactions.length > 0 && (
-                <div>
-                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <History className="w-5 h-5 text-gray-400" />
-                    Transaction History
-                  </h2>
-                  <div className="overflow-x-auto bg-zinc-900/50 rounded-xl border border-white/10">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="border-b border-white/10 text-gray-400 text-sm">
-                          <th className="py-3 px-4">Date</th>
-                          <th className="py-3 px-4">Stock</th>
-                          <th className="py-3 px-4">Type</th>
-                          <th className="py-3 px-4 text-right">Shares</th>
-                          <th className="py-3 px-4 text-right">Price</th>
-                          <th className="py-3 px-4 text-right">Total</th>
-                          <th className="py-3 px-4 text-right">P/L</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {transactions.slice(0, 10).map(tx => (
-                          <tr key={tx.id} className="border-b border-white/5">
-                            <td className="py-3 px-4 text-gray-400 text-sm">
-                              {new Date(tx.created_at).toLocaleDateString()}
-                            </td>
-                            <td className="py-3 px-4 font-medium text-white">{tx.stock_symbol}</td>
-                            <td className="py-3 px-4">
-                              <span className={`text-xs uppercase font-bold px-2 py-0.5 rounded ${
-                                tx.transaction_type === 'buy' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-                              }`}>
-                                {tx.transaction_type}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right text-white">{tx.shares?.toFixed(4)}</td>
-                            <td className="py-3 px-4 text-right text-gray-400">{formatCoins(tx.price_per_share)}</td>
-                            <td className="py-3 px-4 text-right text-white">{formatCoins(tx.total_amount)}</td>
-                            <td className={`py-3 px-4 text-right font-medium ${tx.profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {tx.profit_loss >= 0 ? '+' : ''}{formatCoins(tx.profit_loss)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* COINS TAB (Original coin purchase) */}
           {tab === 'coins' && (
@@ -2499,6 +2160,11 @@ useEffect(() => {
           {/* Profile Frames Tab */}
           {tab === 'frames' && (
             <ProfileFramesStoreEmbed />
+          )}
+
+          {/* Merch Tab */}
+          {tab === 'merch' && (
+            <MaiMerchStore />
           )}
 
         </div>

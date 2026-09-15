@@ -313,7 +313,6 @@ export default function Stats() {
         ...(profile?.role === 'secretary' || profile?.troll_role === 'secretary' ? [{ key: 'secretary', label: 'Secretary', source: 'treasury' }] : []),
         ...(profile?.role === 'president' || profile?.troll_role === 'president' ? [{ key: 'president', label: 'President', source: 'treasury' }] : []),
         ...((profile as any)?.is_journalist ? [{ key: 'journalist', label: 'Journalist', source: 'treasury' }] : []),
-        ...((profile as any)?.is_auctioneer ? [{ key: 'auctioneer', label: 'Auctioneer', source: 'auctions' }] : []),
         ...((profile as any)?.is_attorney ? [{ key: 'attorney', label: 'Attorney', source: 'court' }] : []),
         ...((profile as any)?.is_prosecutor ? [{ key: 'prosecutor', label: 'Prosecutor', source: 'court' }] : []),
       ]

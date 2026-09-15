@@ -23,7 +23,6 @@ interface EmployeeRow {
   is_journalist?: boolean
   is_news_caster?: boolean
   is_chief_news_caster?: boolean
-  is_auctioneer?: boolean
   is_troller?: boolean
   is_ceo_assistant?: boolean
   is_noah_assistant?: boolean
@@ -81,7 +80,6 @@ const resolveRole = (row: EmployeeRow): string | null => {
     ['journalist', row.is_journalist],
     ['tcnn_news_caster', row.is_news_caster],
     ['tcnn_chief_news_caster', row.is_chief_news_caster],
-    ['auctioneer', row.is_auctioneer],
     ['troller', row.is_troller],
     ['ceo_assistant', row.is_ceo_assistant],
     ['noah_assistant', row.is_noah_assistant],
@@ -110,7 +108,7 @@ export default function EmployeeProfilePanel({ isHRAdmin, currentUserId }: Emplo
 
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, username, avatar_url, role, troll_role, created_at, updated_at, is_troll_officer, is_lead_officer, is_pastor, is_agency_hr, is_agency_hr_manager, is_agency_leader, is_secretary, is_attorney, is_prosecutor, is_journalist, is_news_caster, is_chief_news_caster, is_auctioneer, is_troller, is_ceo_assistant, is_noah_assistant, is_hr_admin, is_officer_active')
+        .select('id, username, avatar_url, role, troll_role, created_at, updated_at, is_troll_officer, is_lead_officer, is_pastor, is_agency_hr, is_agency_hr_manager, is_agency_leader, is_secretary, is_attorney, is_prosecutor, is_journalist, is_news_caster, is_chief_news_caster, is_troller, is_ceo_assistant, is_noah_assistant, is_hr_admin, is_officer_active')
         .or(orFilter)
         .order('updated_at', { ascending: false })
         .limit(500)

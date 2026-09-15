@@ -33,7 +33,6 @@ interface ClickableUsernameProps {
     username_style?: string
     badge?: string
     glowing_username_color?: string | null
-    celeb_role?: string | null
   }
   royalTitle?: {
     title_type: string
@@ -238,27 +237,25 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
      profile?.role === 'noah_assistant' || profile?.is_noah_assistant ||
      profile?.role === 'journalist' || profile?.is_journalist ||
      profile?.role === 'tcnn_news_caster' || profile?.is_news_caster ||
-     profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
-     profile?.role === 'auctioneer' || profile?.is_auctioneer ||
-     profile?.role === 'pastor' || profile?.is_pastor ||
-     profile?.role === 'secretary' || profile?.is_secretary
-   )
+profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
+      profile?.role === 'pastor' || profile?.is_pastor ||
+      profile?.role === 'secretary' || profile?.is_secretary
+    )
 
-   const getCareerRoleLabel = (): string | null => {
-     if (!profile) return null
-     if (profile.role === 'attorney' || profile.is_attorney) return 'Attorney'
-     if (profile.role === 'prosecutor' || profile.is_prosecutor) return 'Prosecutor'
-     if (profile.role === 'judge' || profile.is_judge) return 'Judge'
-     if (profile.role === 'ceo_assistant' || profile.is_ceo_assistant) return 'CEO Asst'
-     if (profile.role === 'noah_assistant' || profile.is_noah_assistant) return 'Noah Asst'
-     if (profile.role === 'journalist' || profile.is_journalist) return 'Journalist'
-     if (profile.role === 'tcnn_news_caster' || profile.is_news_caster) return 'News Caster'
-     if (profile.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster) return 'Chief News'
-     if (profile.role === 'auctioneer' || profile.is_auctioneer) return 'Auctioneer'
-     if (profile.role === 'pastor' || profile.is_pastor) return 'Pastor'
-     if (profile.role === 'secretary' || profile.is_secretary) return 'Secretary'
-     return null
-   }
+    const getCareerRoleLabel = (): string | null => {
+      if (!profile) return null
+      if (profile.role === 'attorney' || profile.is_attorney) return 'Attorney'
+      if (profile.role === 'prosecutor' || profile.is_prosecutor) return 'Prosecutor'
+      if (profile.role === 'judge' || profile.is_judge) return 'Judge'
+      if (profile.role === 'ceo_assistant' || profile.is_ceo_assistant) return 'CEO Asst'
+      if (profile.role === 'noah_assistant' || profile.is_noah_assistant) return 'Noah Asst'
+      if (profile.role === 'journalist' || profile.is_journalist) return 'Journalist'
+      if (profile.role === 'tcnn_news_caster' || profile.is_news_caster) return 'News Caster'
+      if (profile.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster) return 'Chief News'
+      if (profile.role === 'pastor' || profile.is_pastor) return 'Pastor'
+      if (profile.role === 'secretary' || profile.is_secretary) return 'Secretary'
+      return null
+    }
 
    const careerRoleLabel = getCareerRoleLabel()
    
@@ -939,11 +936,6 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
          {/* Verified Badge (shows for all verified users) */}
          {userProfile?.is_verified && (
              <VerifiedBadge size="sm" title="Verified User" />
-         )}
-
-         {/* Celebrity Badge (shows for approved celebrities) */}
-         {userProfile?.celeb_role === 'approved' && (
-             <Crown size={16} className="text-yellow-400" title="Verified Celebrity" />
          )}
 
         {/* Staff Action Menu */}
