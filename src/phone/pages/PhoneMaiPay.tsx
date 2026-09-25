@@ -891,9 +891,9 @@ export default function PhoneMaiPay() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white active:scale-95"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.08] text-white active:scale-95"
           >
-            <ArrowLeft size={19} />
+            <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
           </button>
 
           <div className="text-center">
@@ -907,9 +907,9 @@ export default function PhoneMaiPay() {
 
           <button
             onClick={handleRefresh}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#BF00FF]/20 bg-[#BF00FF]/5 text-[#BF00FF] active:scale-95"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.08] text-white active:scale-95"
           >
-            <RefreshCw size={17} />
+            <RefreshCw size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
           </button>
         </div>
       </header>

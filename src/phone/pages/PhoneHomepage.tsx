@@ -837,9 +837,7 @@ export default function PhoneHomepage({
             rel="noopener noreferrer"
             className="group relative flex-1 flex items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-[#00BFFF]/30 bg-gradient-to-r from-[#00BFFF]/20 via-[#070711] to-[#1787FF]/20 px-2.5 py-2.5 text-white shadow-[0_0_18px_rgba(0,191,255,0.12)] transition-all active:scale-[0.98] hover:border-[#00BFFF]/50 hover:shadow-[0_0_20px_rgba(0,191,255,0.2)]"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#00BFFF]/30 bg-[#00BFFF]/10">
-              <Smartphone size={13} className="text-[#00BFFF]" />
-            </div>
+            <Smartphone size={16} className="text-white drop-shadow-[0_0_4px_rgba(0,191,255,0.6)]" />
             <div className="min-w-0 text-left leading-tight">
               <p className="text-[7px] font-black uppercase tracking-wider text-[#00BFFF]/70">
                 Get the App
@@ -854,7 +852,7 @@ export default function PhoneHomepage({
           <button
             type="button"
             onClick={() => {
-              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream
               const message = isIOS
                 ? 'To add MaiTroll to your Home Screen:\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right'
                 : 'To add MaiTroll to your Home Screen on iOS:\n1. Open this page in Safari on your iPhone/iPad\n2. Tap the Share button (square with arrow up)\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add" in the top right'
@@ -863,7 +861,7 @@ export default function PhoneHomepage({
             className="group relative flex-1 flex items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-[#BF00FF]/30 bg-gradient-to-r from-[#BF00FF]/20 via-[#070711] to-[#00BFFF]/20 px-2.5 py-2.5 text-white shadow-[0_0_18px_rgba(191,0,255,0.12)] transition-all active:scale-[0.98] hover:border-[#BF00FF]/50 hover:shadow-[0_0_20px_rgba(191,0,255,0.2)]"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#BF00FF]/30 bg-[#BF00FF]/10">
-              <Plus size={13} className="text-[#BF00FF]" />
+              <Plus size={16} className="text-white drop-shadow-[0_0_4px_rgba(191,0,255,0.6)]" />
             </div>
             <div className="min-w-0 text-left leading-tight">
               <p className="text-[7px] font-black uppercase tracking-wider text-[#BF00FF]/70">

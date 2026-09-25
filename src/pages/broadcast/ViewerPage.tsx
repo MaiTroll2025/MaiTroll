@@ -69,6 +69,7 @@ import { useStreamAudiencePresence, StreamAudienceMember } from '../../hooks/use
 import { useMKeyJoinClaim } from '../../hooks/useMKeyJoinClaim'
 import { useLiveStreams } from '../../hooks/useQueries'
 import FeedTheTroll from '../../components/feed-the-troll/FeedTheTroll'
+import PetPresence from '../../components/pets/PetPresence'
 import { AudienceBubbleTicker } from '../../components/broadcast/AudienceBubbleTicker'
 import MobileAudienceTicker from '../../components/broadcast/MobileAudienceTicker'
 import { TopSubscribersBar } from '../../components/broadcast/TopSubscribersBar'
@@ -4153,6 +4154,7 @@ useStreamRealtime(
                  )}
 
                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
+                 <PetPresence ownerId={hostId} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
 
 
                 <div className={cn(
@@ -4306,6 +4308,7 @@ useStreamRealtime(
                   </>
                 )}
                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black-25" />
+              <PetPresence ownerId={hostId} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
 
                  {mySeat && !shouldShowRandomBattleArena && (
                    <CashoutProgressBanner
@@ -4442,7 +4445,9 @@ useStreamRealtime(
                           role: 'button' as const,
                           tabIndex: 0,
                           onClick: () => {
-                            if (isModOrHigher) {
+                            if (seatUserId === user?.id) {
+                              window.dispatchEvent(new Event('open-pet-shelter'))
+                            } else if (isModOrHigher) {
                               setSelectedSeatUserId(seatUserId)
                             } else {
                               const seatUser = userProfiles?.[seatUserId]
@@ -4457,7 +4462,9 @@ useStreamRealtime(
                           onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
                             if (event.key === 'Enter' || event.key === ' ') {
                               event.preventDefault();
-                              if (isModOrHigher) {
+                              if (seatUserId === user?.id) {
+                                window.dispatchEvent(new Event('open-pet-shelter'))
+                              } else if (isModOrHigher) {
                                 setSelectedSeatUserId(seatUserId)
                               } else {
                                 const seatUser = userProfiles?.[seatUserId]
@@ -4506,21 +4513,24 @@ useStreamRealtime(
                             }
                           />
                         ) : seat.isOccupied ? (
-                          <RemoteVideoSurface
-                            participant={seatParticipant}
-                            mirror={false}
-                            className="absolute inset-0"
-                            room={liveKitRoom}
-                            fallback={
-                              <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
-                                <div className="grid h-12 w-12 place-items-center rounded-2xl border border-purple-300/30 bg-purple-500/10">
-                                  <Users className="h-6 w-6 text-purple-200/80" />
+                          <>
+                            <RemoteVideoSurface
+                              participant={seatParticipant}
+                              mirror={false}
+                              className="absolute inset-0"
+                              room={liveKitRoom}
+                              fallback={
+                                <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
+                                  <div className="grid h-12 w-12 place-items-center rounded-2xl border border-purple-300/30 bg-purple-500/10">
+                                    <Users className="h-6 w-6 text-purple-200/80" />
+                                  </div>
+                                  <div className="px-3 text-sm font-black text-white">{seat.displayName}</div>
+                                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-purple-200/70">Camera starting</div>
                                 </div>
-                                <div className="px-3 text-sm font-black text-white">{seat.displayName}</div>
-                                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-purple-200/70">Camera starting</div>
-                              </div>
-                            }
-                          />
+                              }
+                            />
+                            <PetPresence ownerId={seatUserId} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
+                          </>
                         ) : (
                           <button
                             type="button"
@@ -4624,7 +4634,9 @@ useStreamRealtime(
                     role: 'button' as const,
                     tabIndex: 0,
                     onClick: () => {
-                      if (isModOrHigher) {
+                      if (seatUserId === user?.id) {
+                        window.dispatchEvent(new Event('open-pet-shelter'))
+                      } else if (isModOrHigher) {
                         setSelectedSeatUserId(seatUserId)
                       } else {
                         const seatUser = userProfiles?.[seatUserId]
@@ -4639,7 +4651,9 @@ useStreamRealtime(
                     onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        if (isModOrHigher) {
+                        if (seatUserId === user?.id) {
+                          window.dispatchEvent(new Event('open-pet-shelter'))
+                        } else if (isModOrHigher) {
                           setSelectedSeatUserId(seatUserId)
                         } else {
                           const seatUser = userProfiles?.[seatUserId]

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, LogOut, UserCircle, Zap, Monitor, Download, Smartphone, Plus, ChevronRight } from 'lucide-react'
+import { Bell, BellRing, LogOut, UserCircle, Zap, Monitor, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
@@ -24,6 +24,24 @@ const Header = () => {
   const headerFrame = useUserFrame(user?.id)
   const navigate = useNavigate()
   const isPhone = useIsPhone()
+
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const toggleFullscreen = () => {
+    const element = document.documentElement
+
+    if (!document.fullscreenElement) {
+      if (element.requestFullscreen) {
+        element.requestFullscreen()
+        setIsFullscreen(true)
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+        setIsFullscreen(false)
+      }
+    }
+  }
 
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [isMaiSwitcherOpen, setIsMaiSwitcherOpen] = useState(false)
@@ -362,7 +380,21 @@ const Header = () => {
             </button>
           )}
 
-          {user && <TMButton />}
+          {user && (
+              <button
+                onClick={toggleFullscreen}
+                className="hidden md:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-100 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-300/20 rounded-xl transition-all duration-200"
+                title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                type="button"
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="w-4 h-4" />
+                ) : (
+                  <Maximize2 className="w-4 h-4" />
+                )}
+                <span className="hidden lg:inline">{isFullscreen ? 'Exit Full' : 'Full'}</span>
+              </button>
+            )}
 
             {canDebugPush && !hasDeviceSubscription && (
               <button
@@ -395,7 +427,7 @@ const Header = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream
                     const message = isIOS
                       ? 'To add MaiTroll to your Home Screen:\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right'
                       : 'To add MaiTroll to your Home Screen on iOS:\n1. Open this page in Safari on your iPhone/iPad\n2. Tap the Share button (square with arrow up)\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add" in the top right'

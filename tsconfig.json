@@ -24,7 +24,7 @@
     "allowImportingTsExtensions": true,
     "types": ["vite/client"],
     "downlevelIteration": true,
-    "ignoreDeprecations": "5.0"
+      "ignoreDeprecations": "5.0"
   },
   "include": [
     "src"

@@ -29,6 +29,8 @@ import { MaiTrollTheme } from '../styles/trollCityTheme'
 import FileLawsuitModal from '../components/FileLawsuitModal'
 import JudgeRulingModal from '../components/JudgeRulingModal'
 import PayWarrantModal from '../components/PayWarrantModal'
+import ProtectionOrderFiling from '../components/ProtectionOrderFiling'
+import ProtectionOrderCases from '../components/ProtectionOrderCases'
 import { UserSearchInput } from '../components/UserSearchDropdown'
 import { generateUUID } from '../lib/uuid'
 
@@ -92,6 +94,7 @@ export default function TrollCourt() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isFileLawsuitModalOpen, setIsFileLawsuitModalOpen] = useState(false)
+  const [isProtectionOrderOpen, setIsProtectionOrderOpen] = useState(false)
   const [showPayWarrantModal, setShowPayWarrantModal] = useState(false)
   const [_userList, setUserList] = useState<any[]>([])
   const [selectedUser, setSelectedUser] = useState<any>(null)
@@ -635,6 +638,7 @@ export default function TrollCourt() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <CourtActionButton icon={<Users size={17} />} label="Enter Courtroom" onClick={() => navigate(`/court/${courtSession.id}`)} />
                   <CourtActionButton icon={<Gavel size={17} />} label="File Civil Lawsuit" onClick={() => setIsFileLawsuitModalOpen(true)} tone="red" />
+                  <CourtActionButton icon={<Shield size={17} />} label="File Protection Order" onClick={() => setIsProtectionOrderOpen(true)} tone="gold" />
                   {profile?.has_active_warrant && (
                     <CourtActionButton icon={<ShieldAlert size={17} />} label="Pay Warrant" onClick={() => setShowPayWarrantModal(true)} tone="gold" />
                   )}
@@ -667,6 +671,7 @@ export default function TrollCourt() {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <CourtActionButton icon={<Gavel size={17} />} label="File Civil Lawsuit" onClick={() => setIsFileLawsuitModalOpen(true)} tone="red" />
+                  <CourtActionButton icon={<Shield size={17} />} label="File Protection Order" onClick={() => setIsProtectionOrderOpen(true)} tone="gold" />
                   {profile?.has_active_warrant && (
                     <CourtActionButton icon={<ShieldAlert size={17} />} label="Pay Warrant" onClick={() => setShowPayWarrantModal(true)} tone="gold" />
                   )}
@@ -706,6 +711,7 @@ export default function TrollCourt() {
           </CourtPanel>
         </section>
 
+        <ProtectionOrderCases />
         <section className="grid gap-6 lg:grid-cols-2">
           <CourtPanel title="Rules of Procedure" icon={<Scale className="h-5 w-5 text-amber-300" />}>
             <div className="space-y-3 text-sm text-amber-100/70">
@@ -927,6 +933,11 @@ export default function TrollCourt() {
         isOpen={isFileLawsuitModalOpen}
         onClose={() => setIsFileLawsuitModalOpen(false)}
         onSuccess={() => {}}
+      />
+
+      <ProtectionOrderFiling
+        isOpen={isProtectionOrderOpen}
+        onClose={() => setIsProtectionOrderOpen(false)}
       />
 
       <PayWarrantModal

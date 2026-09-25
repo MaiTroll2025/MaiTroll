@@ -116,9 +116,9 @@ export default function PhoneAdminDashboard() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 active:scale-95"
+            className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white active:scale-95"
           >
-            <ArrowLeft size={19} />
+            <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
           </button>
 
           <div className="text-center">
@@ -132,9 +132,9 @@ export default function PhoneAdminDashboard() {
 
           <button
             type="button"
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/5 text-[#BF00FF] active:scale-95"
+            className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white active:scale-95"
           >
-            <Bell size={18} />
+            <Bell size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           </button>
         </div>

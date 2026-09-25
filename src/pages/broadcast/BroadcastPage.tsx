@@ -30,6 +30,7 @@ import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
 import LeagueProgressPanel from '../../components/broadcast/LeagueProgressPanel'
 import LeagueLevelUpBanner from '../../components/broadcast/LeagueLevelUpBanner'
 import FeedTheTroll from '../../components/feed-the-troll/FeedTheTroll'
+import PetPresence from '../../components/pets/PetPresence'
 import { RoleInviteHandler } from '../../components/broadcast/RoleInviteHandler'
 
 import { Stream } from '../../types/broadcast'
@@ -54,6 +55,7 @@ import { useStreamCollaboration } from '../../hooks/useStreamCollaboration'
 import MaiBag from '../../components/mai-bag/MaiBag'
 import { useFeaturedLive } from '../../hooks/useFeaturedLive'
 import { useResolvedStream, useResolvedStreamId } from '../../contexts/StreamRouteContext'
+import { useBroadcastLifecycle, formatCountdown } from '../../hooks/useBroadcastLifecycle'
 import { FeaturedBanner } from '../../components/featured/FeaturedBanner'
 import { FeaturedLeaderboard } from '../../components/featured/FeaturedLeaderboard'
 import { FeaturedLiveOverlay } from '../../components/featured/FeaturedLiveOverlay'
@@ -61,7 +63,6 @@ import { FeaturedLiveOverlay } from '../../components/featured/FeaturedLiveOverl
 import CashoutProgressBanner from '../../components/broadcast/CashoutProgressBanner'
 import MiniMaiPayCashoutModal from '../../components/broadcast/MiniMaiPayCashoutModal'
 import { useCashoutBanner } from '../../hooks/useCashoutBanner'
-import RecoveryBanner from '../../components/broadcast/RecoveryBanner'
 import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
 
 import { MaiTrollBroadcastTheme as theme } from '../../styles/broadcastTheme'
@@ -549,7 +550,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2, Image as ImageIcon, Zap } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2, Image as ImageIcon, Zap, AlertTriangle, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -792,11 +793,21 @@ export function BroadcastPage() {
 
      // CityStatusOrb for broadcaster box display
    const broadcasterCityStatus = useCityStatusOrb({
-     userId: stream?.user_id || '',
-     broadcasterId: user?.id,
-     isBroadcaster: isHost,
-     isBroadOfficer: isOfficer,
-   })
+userId: stream?.user_id || '',
+      broadcasterId: user?.id,
+      isBroadcaster: isHost,
+      isBroadOfficer: isOfficer,
+    })
+
+const lifecycle = useBroadcastLifecycle(streamId || null, stream, {
+  isBroadcaster: isHost,
+  onPhaseChange: (phase) => {
+    if (phase === 'expired' || phase === 'ended') {
+      // Navigate to summary page when broadcast ends
+      navigate(`/broadcast/summary/${streamId}`);
+    }
+  },
+})
 
 const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSeatLive, refreshSeats, removeSeat, removeSeatByUserId } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any)
     const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id)
@@ -1803,25 +1814,28 @@ useEffect(() => {
   // by deriving from seat state changes � no duplicate channel needed.
   useEffect(() => {
     if (!streamId) return;
-    const updates: Record<number, number> = {}
-    Object.values(seats).forEach((seat: any) => {
-      if (seat?.joined_at && !seatJoinTimesRef.current[seat.seat_index]) {
-        seatJoinTimesRef.current[seat.seat_index] = Date.now()
-        updates[seat.seat_index] = Date.now()
-      }
-    })
-    if (Object.keys(updates).length > 0) {
-      setSeatJoinTimes(prev => ({ ...prev, ...updates }))
-    }
-    setSeatJoinTimes(prev => {
-      const next = { ...prev }
-      Object.keys(next).forEach(key => {
-        const idx = Number(key)
-        if (!seats[idx] || !seats[idx]?.id) {
-          delete next[idx]
-          seatJoinTimesRef.current[idx] = 0
-        }
+    setSeatJoinTimes((prev) => {
+      let next = prev
+
+      Object.values(seats).forEach((seat: any) => {
+        const seatIndex = Number(seat?.seat_index)
+        if (!seat?.joined_at || !Number.isFinite(seatIndex)) return
+        if (seatJoinTimesRef.current[seatIndex]) return
+
+        const joinedAt = Date.now()
+        seatJoinTimesRef.current[seatIndex] = joinedAt
+        next = { ...next, [seatIndex]: joinedAt }
       })
+
+      Object.keys(prev).forEach((key) => {
+        const seatIndex = Number(key)
+        if (seats[seatIndex]?.id) return
+
+        if (next === prev) next = { ...prev }
+        delete next[seatIndex]
+        seatJoinTimesRef.current[seatIndex] = 0
+      })
+
       return next
     })
   }, [streamId, seats])
@@ -2321,6 +2335,9 @@ const ranked = senderIds
     const [selectedSeatUserId, setSelectedSeatUserId] = useState<string | null>(null)
     const [raidTarget, setRaidTarget] = useState<{ userId: string; houseId: string } | null>(null)
     const [broadcastRaidTarget, setBroadcastRaidTarget] = useState<string | null>(null)
+    const openPetShelter = useCallback(() => {
+      window.dispatchEvent(new Event('open-pet-shelter'))
+    }, [])
   // Broadcast Abilities
   const {
     abilities: userAbilities,
@@ -6511,8 +6528,6 @@ const toggleMicrophone = useCallback(async () => {
       <>
         <GiftSystemProvider streamId={streamId} defaultReceiverId={stream?.user_id}>
           <ErrorBoundary>
-          <RecoveryBanner onRefresh={() => window.location.reload()} />
-
           {/* -- Outer layout: header + 3-column grid + bottom bar + footer -- */}
           {isFeaturedEvent && (
             <FeaturedBanner
@@ -6588,7 +6603,65 @@ const toggleMicrophone = useCallback(async () => {
                 />
               )}
 
-               {/* --- AUDIENCE TICKER: full-width, neon style, desktop/tablet only --- */}
+               {/* --- BROADCAST LIFECYCLE BANNERS --- */}
+              {lifecycle.isWarning && (
+                <div
+                  className="relative z-30 w-full border-b border-amber-400/20 bg-gradient-to-r from-amber-900/30 via-amber-800/20 to-amber-900/30 px-4 py-2 backdrop-blur-xl"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
+                        <AlertTriangle className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-amber-200">Broadcast Warning</p>
+                        <p className="text-xs text-amber-300/80">
+                          This broadcast will end in {formatCountdown(lifecycle.timeRemainingMs)}. Please wrap up your stream.
+                        </p>
+                      </div>
+                    </div>
+                    {isHost && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/broadcast/summary/${streamId}`)}
+                        className="shrink-0 rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/30 transition-colors"
+                      >
+                        End Now
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+              {lifecycle.isEnding && !lifecycle.isWarning && (
+                <div
+                  className="relative z-30 w-full border-b border-red-400/30 bg-gradient-to-r from-red-900/30 via-red-800/20 to-red-900/30 px-4 py-2 backdrop-blur-xl animate-pulse"
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/20 text-red-300">
+                        <AlertCircle className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-red-200">Broadcast Ending Soon</p>
+                        <p className="text-xs text-red-300/80">
+                          Auto-ending in <span className="font-mono tabular-nums">{formatCountdown(lifecycle.timeRemainingMs)}</span>
+                        </p>
+                      </div>
+                    </div>
+                    {lifecycle.battleActive && (
+                      <span className="shrink-0 rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-200">
+                        Battle in progress - will complete naturally
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* --- AUDIENCE TICKER: full-width, neon style, desktop/tablet only --- */}
               <div
                 className="relative z-20 hidden w-full shrink-0 items-center justify-center border-b border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 px-0 backdrop-blur-xl shadow-[0_2px_32px_0_rgba(34,211,238,0.10)] sm:flex"
                 style={{
@@ -6777,6 +6850,7 @@ const toggleMicrophone = useCallback(async () => {
                     gifts={giftQueues[`user:${stream?.user_id || ''}`] ?? []}
                     onGiftComplete={removeGift}
                   />
+                  <PetPresence ownerId={stream?.user_id} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
 
                   {/* Gradient overlay */}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
@@ -6960,6 +7034,7 @@ const showFallback =
 
                 {/* Gradient overlay � sits above video/fallback */}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+                <PetPresence ownerId={stream?.user_id} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
 
                 {isHost && (
                   <CashoutProgressBanner
@@ -7192,7 +7267,9 @@ const showFallback =
                             role: 'button' as const,
                             tabIndex: 0,
                             onClick: () => {
-                              if (seatActionInfo) {
+                              if (seat.seatUserId === user?.id) {
+                                openPetShelter();
+                              } else if (seatActionInfo) {
                                 handleOpenUserAction(seatActionInfo);
                               } else {
                                 setSelectedSeatUserId(seat.seatUserId!);
@@ -7201,7 +7278,9 @@ const showFallback =
                             onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
                               if (event.key === 'Enter' || event.key === ' ') {
                                 event.preventDefault();
-                                if (seatActionInfo) {
+                                  if (seat.seatUserId === user?.id) {
+                                    openPetShelter();
+                                  } else if (seatActionInfo) {
                                   handleOpenUserAction(seatActionInfo);
                                 } else {
                                   setSelectedSeatUserId(seat.seatUserId!);
@@ -7241,6 +7320,7 @@ const showFallback =
                                 </div>
                               }
                             />
+                            <PetPresence ownerId={seat.seatUserId} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
                           </div>
                           <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-3">
                             <div className="flex flex-wrap items-center justify-center gap-1.5">
@@ -7380,7 +7460,9 @@ const showFallback =
                       role: 'button' as const,
                       tabIndex: 0,
                       onClick: () => {
-                        if (seatActionInfo) {
+                        if (seat.seatUserId === user?.id) {
+                          openPetShelter();
+                        } else if (seatActionInfo) {
                           handleOpenUserAction(seatActionInfo);
                         } else {
                           setSelectedSeatUserId(seat.seatUserId!);
@@ -7389,7 +7471,9 @@ const showFallback =
                       onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
-                          if (seatActionInfo) {
+                          if (seat.seatUserId === user?.id) {
+                            openPetShelter();
+                          } else if (seatActionInfo) {
                             handleOpenUserAction(seatActionInfo);
                           } else {
                             setSelectedSeatUserId(seat.seatUserId!);
@@ -7429,6 +7513,7 @@ const showFallback =
                                 </div>
                               }
                             />
+                            <PetPresence ownerId={seat.seatUserId} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
                           </div>
 
                           {seat.seatUserId && (

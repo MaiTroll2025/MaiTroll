@@ -1,0 +1,812 @@
+# MaiTroll Protection Order System — Web + Phone/PWA
+
+Build a complete **Protection Order system inside Troll Court** for MaiTroll. This feature must work consistently on **desktop web and phone/mobile PWA layouts**. Do not build this as a web-only feature.
+
+## 1. Troll Court Entry Point
+
+Inside Troll Court, add a clearly visible:
+
+**FILE PROTECTION ORDER**
+
+button/action.
+
+It must be available on both:
+
+* Desktop/Web
+* Phone/Mobile/PWA
+
+The UI must be responsive and use the existing MaiTroll design system.
+
+Do not create a separate legacy mobile implementation. Use the current application architecture/shared backend logic while providing proper responsive layouts for phone and desktop.
+
+---
+
+# 2. Filing a Protection Order
+
+When a user clicks **File Protection Order**, open a Protection Order filing screen.
+
+Explain:
+
+> A Protection Order lasts 6 months after it is granted by a Troll Court judge. The filing fee is 100 Troll Coins for the first respondent and 10 Troll Coins for each additional respondent.
+
+The petitioner must have enough Troll Coins before the case can be submitted.
+
+### Fees
+
+First respondent:
+
+**100 Troll Coins**
+
+Additional respondents:
+
+**10 Troll Coins per additional user**
+
+Example:
+
+* 1 respondent = 100 Troll Coins
+* 2 respondents = 110 Troll Coins
+* 3 respondents = 120 Troll Coins
+* 4 respondents = 130 Troll Coins
+
+The fee is paid when the protection-order case is filed.
+
+Do not charge the petitioner repeatedly for the same respondent during the same filing.
+
+---
+
+# 3. Respondent Search
+
+The petitioner must be able to search for the user they want protection from.
+
+Search using:
+
+**Username**
+
+The search must resolve the account to its permanent:
+
+**UUID / user ID**
+
+Do NOT make the protection order depend on the current username.
+
+The respondent's username can change after the case is filed.
+
+Once the respondent has been identified, the protection order must remain associated with the respondent's UUID.
+
+---
+
+# 4. 30-Day Username History
+
+Implement a username-history system.
+
+MaiTroll must retain username mappings for at least the previous **30 days**.
+
+Example:
+
+User originally had:
+
+`@John123`
+
+They later change their username to:
+
+`@John456`
+
+If a petitioner enters:
+
+`John123`
+
+the system should be able to find the historical username and resolve it to the same UUID.
+
+Store at minimum:
+
+```text
+user_uuid
+username
+valid_from
+valid_until
+```
+
+The username history is for account identification and court purposes.
+
+The actual Protection Order must always reference:
+
+```text
+respondent_uuid
+```
+
+not merely the username.
+
+---
+
+# 5. Multiple Respondents
+
+Allow the petitioner to add multiple respondents to one Protection Order.
+
+Display each selected respondent before filing:
+
+```text
+Protected From:
+
+@UserOne
+@UserTwo
+@UserThree
+```
+
+Show the calculated fee before final submission.
+
+Example:
+
+```text
+Protection Order
+Duration: 6 Months
+
+Respondents: 3
+
+Base Filing Fee: 100 Troll Coins
+Additional Respondents: 20 Troll Coins
+
+Total: 120 Troll Coins
+```
+
+Require confirmation before deducting the Troll Coins.
+
+---
+
+# 6. Court Case Creation
+
+After payment and submission:
+
+Create a Troll Court case.
+
+The case should contain:
+
+```text
+case_id
+petitioner_uuid
+respondent_uuid(s)
+filed_at
+filing_fee
+hearing_date
+status
+```
+
+Initial status:
+
+**PENDING HEARING**
+
+The system must assign/display a court date. When filed court date follows normal court dates every tuesday and thursday, add an option for faster court hearing which admin can process court hearing when order is filed, all admins must get notifications for protection orders as well 
+
+---
+
+# 7. Court Attendance Rules
+
+The petitioner is required to appear for the scheduled hearing.
+
+The respondent is **not required to appear**.
+
+Other MaiTroll users may attend the court session as observers.
+
+The court UI should clearly communicate:
+
+### Petitioner
+
+**Required to appear**
+
+### Respondent
+
+**Appearance not required**
+  
+### Public/Other Users
+
+**May attend as observers**
+
+Do not block observers from viewing an eligible public Troll Court hearing.
+
+---
+
+# 8. Judge Decision
+
+The judge must have a Protection Order decision interface.
+
+Available decisions:
+
+**GRANT PROTECTION ORDER**
+
+**DENY PROTECTION ORDER**
+
+If denied:
+
+* Protection Order never becomes active.
+* Case is marked DENIED.
+* No protection restrictions are activated.
+
+If granted:
+
+* Case becomes GRANTED.
+* Protection Order becomes ACTIVE.
+* The system automatically calculates a 6-month expiration date.
+
+Example:
+
+```text
+Granted:
+September 23, 2026
+
+Expires:
+March 23, 2027
+```
+
+Use the actual grant timestamp/date rather than hard-coding a calendar date.
+
+---
+
+# 9. Protection Order Cannot Be Undone
+
+Once a judge grants the Protection Order:
+
+**The petitioner cannot cancel or undo it.**
+
+Do not provide a normal:
+
+* Cancel
+* Revoke
+* Delete
+* Undo
+
+button to the petitioner.
+
+The order remains active until its automatic expiration date unless an authorized court/admin mechanism exists for handling exceptional court actions.
+
+The standard user interface should treat the six-month order as fixed.
+
+---
+
+# 10. Active Protection Order Restrictions
+
+Once the judge grants the order, the respondent must immediately be restricted from interacting with the protected user.
+
+This must be enforced **server-side**, not only through frontend UI hiding.
+
+The respondent must not be able to:
+
+### Profile
+
+* View the protected user's profile
+* Open the protected user's profile URL
+* Search/access the protected user's profile through normal MaiTroll discovery
+
+### Broadcast
+
+* View the protected user's broadcast
+* Enter the protected user's broadcast
+* Interact with the protected user's broadcast
+
+### Messaging
+
+* Send the protected user a message
+* Start a conversation with the protected user
+* Reply to the protected user
+* Contact the protected user through supported messaging features
+
+### Social Interaction
+
+Block applicable direct interaction between the respondent and protected user, including relevant:
+
+* follows
+* comments
+* reactions
+* invitations
+* profile interactions
+* broadcast interactions
+
+Audit the existing MaiTroll interaction system and apply the protection-order restriction anywhere direct user-to-user interaction currently exists.
+They must not be able to see anything from the user who filed protection order at all not even in podcast, hytro games future events etc 
+---
+
+# 11. Enforcement Must Be Server-Side
+
+Do not rely on:
+
+```text
+if protection order then hide button
+```
+
+alone.
+
+Every relevant backend/API/database action must verify whether an active Protection Order exists.
+
+For example:
+
+```text
+isProtectionOrderActive(requestingUser, targetUser)
+```
+
+If an active order exists:
+
+```text
+DENY ACTION
+```
+
+This prevents users from bypassing the restriction through:
+
+* direct URLs
+* API calls
+* alternate frontend routes
+* mobile clients
+* desktop clients
+* old cached pages
+
+---
+
+# 12. New Account / Evasion Detection
+
+If a respondent creates a new MaiTroll account while an active Protection Order exists, the system must attempt to detect potential evasion.
+
+Use multiple account-security signals.
+
+IP address may be used as one signal, but **do not treat an IP address by itself as definitive identity proof**, because multiple legitimate users can share an IP address and IPs can change.
+
+Maintain appropriate account/device/security signals available to MaiTroll.
+
+The enforcement system should identify:
+
+```text
+Existing sanctioned respondent
+        ↓
+New account detected
+        ↓
+Account-evasion evaluation
+        ↓
+Potential match
+        ↓
+Protection Order enforcement
+```So any new account that watches a broadcast or anything with a user who have a protection order we must do checks for thry uuid and past usernames 
+
+The Protection Order is associated with the original respondent UUID, while enforcement can identify potential new accounts attempting to bypass it.
+
+---
+
+# 13. Protection Order Violation System
+
+Create a violation/audit record whenever the system confirms a protection-order violation.
+
+Store:
+
+```text
+protection_order_id
+respondent_uuid
+violating_account_uuid
+violation_type
+detected_at
+strike_number
+enforcement_action
+```
+
+Examples of violation types:
+
+```text
+PROFILE_ACCESS
+BROADCAST_ACCESS
+MESSAGE_ATTEMPT
+DIRECT_INTERACTION
+ACCOUNT_EVASION
+```
+
+The exact violation types should match the existing MaiTroll architecture.
+
+---
+
+# 14. Three-Strike Enforcement
+
+Track confirmed protection-order violations.
+
+Strike progression:
+
+```text
+Strike 1
+Strike 2
+Strike 3
+```
+
+After the third confirmed violation:
+
+**14-DAY TROLL COURT DETENTION**
+
+This is an in-app MaiTroll enforcement action.
+
+Do not represent this as real-world law enforcement or physical arrest.
+
+The account should be unable to use the applicable MaiTroll services for 14 days.
+
+Record:
+
+```text
+detention_started_at
+detention_expires_at
+reason
+related_protection_order_id
+violation_count
+```
+
+After 14 days, normal account access can resume unless another active enforcement action exists.
+
+---
+
+# 15. Protection Order Status
+
+Create clear statuses:
+
+```text
+PENDING_HEARING
+DENIED
+GRANTED
+ACTIVE
+EXPIRED
+```
+
+Recommended behavior:
+
+```text
+PENDING_HEARING
+      ↓
+GRANTED
+      ↓
+ACTIVE
+      ↓
+EXPIRED
+```
+
+If denied:
+
+```text
+PENDING_HEARING
+      ↓
+DENIED
+```
+
+A granted order should automatically transition to EXPIRED after six months.
+
+---
+
+# 16. Automatic Expiration
+
+Do not require an administrator to manually expire the order.
+
+Store:
+
+```text
+granted_at
+expires_at
+```
+
+The active check should be based on the current timestamp.
+
+Conceptually:
+
+```text
+active =
+status = GRANTED/ACTIVE
+AND
+current_time < expires_at
+```
+
+After expiration:
+
+* restrictions stop
+* order becomes EXPIRED
+* violation enforcement based solely on that order stops
+* historical court records remain intact
+
+Do not delete the historical case.
+
+---
+
+# 17. Court Record
+
+The petitioner should be able to view their Protection Order case.
+
+Show:
+
+```text
+Protection Order
+
+Case Number
+Status
+Filed Date
+Hearing Date
+Judge Decision
+Grant Date
+Expiration Date
+Protected User
+Respondent(s)
+```
+
+Do not expose sensitive security/enforcement information such as internal IP addresses or device identifiers to ordinary users.
+
+---
+
+# 18. Judge/Admin View
+
+Authorized judges should have a dedicated Protection Order section.
+
+Judge view should show:
+
+* Case number
+* Petitioner
+* Respondent(s)
+* Filing date
+* Hearing date
+* Case history
+* Relevant court evidence
+* Previous Protection Order history where authorized
+* Current case status
+* Grant/Deny controls
+
+If granted, show:
+
+```text
+PROTECTION ORDER ACTIVE
+
+Duration: 6 Months
+Granted: [timestamp]
+Expires: [timestamp]
+```
+
+---
+
+# 19. Web UI
+
+Desktop/web should use the existing MaiTroll visual design.
+
+Protection Order pages should fit naturally into:
+
+**Troll Court**
+
+Use the existing:
+
+* navigation
+* typography
+* cards
+* buttons
+* modals
+* notification system
+* court components
+
+Do not introduce a completely unrelated visual design.
+
+---
+
+# 20. Phone/PWA UI
+
+Everything available on desktop must also be usable on a phone.
+
+The phone interface must not simply shrink the desktop page.
+
+Use a proper mobile layout.
+
+Requirements:
+
+* touch-friendly controls
+* full-width court cards where appropriate
+* readable respondent information
+* mobile-friendly username search
+* bottom-sheet/modal behavior where appropriate
+* no horizontal scrolling
+* court date and status clearly visible
+* payment confirmation optimized for touch
+* judge controls usable on phone if judges are authorized to use mobile
+
+Test common widths including approximately:
+
+```text
+320px
+375px
+390px
+430px
+```
+
+---
+
+# 21. Notifications
+
+Use MaiTroll's existing notification system.
+
+Notify the petitioner when:
+
+* filing succeeds
+* hearing date is assigned
+* judge makes a decision
+* order becomes active
+* order expires
+
+For the respondent, follow the existing Troll Court notification/legal-case policy, but do not make notification necessary for the enforcement system to function.
+
+---
+
+# 22. Security Requirements
+
+Do not expose:
+
+* IP addresses
+* device fingerprints
+* internal security signals
+* enforcement detection logic
+* private account-security information
+
+to ordinary users.
+
+Only authorized backend/admin/judge systems should have access to sensitive enforcement data.
+
+Use proper authorization checks for:
+
+* petitioner
+* respondent
+* judge
+* administrator
+* court observer
+
+---
+
+# 23. Database / Backend
+
+Before creating new tables or functions, inspect the existing MaiTroll database.
+
+Do not create duplicate functionality if existing:
+
+* Troll Court tables
+* user UUID systems
+* username history
+* wallet/Troll Coin systems
+* notification systems
+* moderation systems
+* account-enforcement systems
+
+already exist.
+
+Integrate with the existing architecture.
+
+Use migrations for all schema changes.
+
+Do not modify production data destructively.
+
+---
+
+# 24. Troll Coin Transaction
+
+The Protection Order filing fee must use the existing MaiTroll Troll Coin transaction/wallet system.
+
+Do not create a second wallet system.
+
+The transaction should be atomic:
+
+```text
+Validate balance
+      ↓
+Resolve respondents
+      ↓
+Calculate fee
+      ↓
+Create court case
+      ↓
+Deduct Troll Coins
+      ↓
+Record transaction
+```
+
+If any critical step fails, the transaction must not leave the user charged without a valid filing.
+
+Prevent duplicate submissions/double charging caused by:
+
+* double clicks
+* mobile network retries
+* browser refresh
+* API retries
+
+Use an idempotent filing operation.
+
+---
+
+# 25. Testing Requirements
+
+Test the entire system on both:
+
+**WEB**
+
+and
+
+**PHONE/PWA**
+
+Test at minimum:
+
+### Filing
+
+* 1 respondent
+* 2 respondents
+* multiple respondents
+* insufficient Troll Coins
+* duplicate submit
+* username search
+* historical username search
+* changed username after filing
+
+### Court
+
+* hearing creation
+* petitioner attendance
+* observer access
+* judge grant
+* judge denial
+
+### Active Order
+
+Verify respondent cannot:
+
+* open profile
+* open broadcast
+* message
+* interact
+* bypass restrictions through direct URLs/API
+
+### Username Change
+
+Test:
+
+```text
+John123
+↓
+John456
+```
+
+The order must still apply because enforcement uses UUID.
+
+### Expiration
+
+Test six-month expiration.
+
+Verify restrictions automatically stop after expiration.
+
+### Account Evasion
+
+Test creation of a new account and the account-security enforcement workflow.
+
+### Three Strikes
+
+Test:
+
+```text
+Violation 1 → Strike 1
+Violation 2 → Strike 2
+Violation 3 → 14-day detention
+```
+
+Verify all events are logged.
+
+---
+
+# 26. Important Implementation Rule
+
+Do not simply build the frontend screens.
+
+This feature requires the complete:
+
+**UI + database + backend + payment/coin transaction + court workflow + authorization + enforcement + audit logging + responsive mobile implementation.**
+
+The Protection Order must be enforceable regardless of whether the user is accessing MaiTroll from:
+
+* desktop web
+* mobile web
+* PWA
+* supported future mobile clients
+
+Use the respondent's **UUID as the permanent identity**, use the **30-day username history to resolve old usernames**, and make all active-order restrictions **server-side**.
+
+Before finishing, provide a concise implementation summary listing:
+
+1. Files changed
+2. Database migrations created
+3. Backend functions/endpoints created or modified
+4. Web UI changes
+5. Mobile/PWA UI changes
+6. Security/enforcement changes
+7. Tests performed
+8. Any existing MaiTroll functionality that was reused rather than duplicated
+9. Any assumptions or unresolved issues

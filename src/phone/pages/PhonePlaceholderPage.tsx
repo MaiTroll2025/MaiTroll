@@ -26,8 +26,8 @@ export default function PhonePlaceholderPage() {
       <PhoneDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       <header className={`sticky top-0 z-50 flex items-center justify-between border-b bg-[#0a0420]/80 px-4 py-4 backdrop-blur border-[#BF00FF]/30`}>
-        <button className="text-xl font-bold" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
-          ☰
+        <button className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
+          <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">☰</span>
         </button>
         <h1 className={`text-xl font-black tracking-tight ${neonTextGradient}`}>MAITROLL</h1>
         <div className="w-6" />

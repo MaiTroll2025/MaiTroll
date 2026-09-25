@@ -26,37 +26,33 @@ export interface CoinPackage {
 }
 
 export const COIN_PACKAGES: CoinPackage[] = [
-  { id: 'pkg-100', coins: 110, usdPrice: 1.00, label: 'Micro Pack', description: '110 Coins' },
-  { id: 'pkg-300', coins: 330, usdPrice: 3.00, label: 'Starter Pack', description: '330 Coins' },
-  { id: 'pkg-500', coins: 550, usdPrice: 5.00, label: 'Small Boost', description: '550 Coins' },
-  { id: 'pkg-1000', coins: 1100, usdPrice: 10.00, label: 'Casual Pack', description: '1,100 Coins' },
-  { id: 'pkg-2500', coins: 2750, usdPrice: 25.00, label: 'Bronze Pack', description: '2,750 Coins' },
-  { id: 'pkg-5000', coins: 5500, usdPrice: 50.00, label: 'Silver Pack', description: '5,500 Coins' },
-  { id: 'pkg-10000', coins: 11000, usdPrice: 100.00, label: 'Gold Pack', description: '11,000 Coins' },
-  { id: 'pkg-15000', coins: 16500, usdPrice: 150.00, label: 'Platinum Pack', description: '16,500 Coins' },
-  { id: 'pkg-25000', coins: 27500, usdPrice: 250.00, label: 'Diamond Pack', description: '27,500 Coins' },
-  { id: 'pkg-50000', coins: 55000, usdPrice: 500.00, label: 'Legendary Pack', description: '55,000 Coins' },
-  { id: 'pkg-100000', coins: 110000, usdPrice: 1000.00, label: 'Titan Pack', description: '110,000 Coins' },
-  { id: 'pkg-250000', coins: 275000, usdPrice: 2500.00, label: 'Immortal Pack', description: '275,000 Coins' },
+  { id: 'pkg-100', coins: 125, usdPrice: 1.00, label: 'Micro Pack', description: '125 Coins' },
+  { id: 'pkg-300', coins: 375, usdPrice: 3.00, label: 'Starter Pack', description: '375 Coins' },
+  { id: 'pkg-500', coins: 625, usdPrice: 5.00, label: 'Small Boost', description: '625 Coins' },
+  { id: 'pkg-1000', coins: 1250, usdPrice: 10.00, label: 'Casual Pack', description: '1,250 Coins' },
+  { id: 'pkg-2500', coins: 3125, usdPrice: 25.00, label: 'Bronze Pack', description: '3,125 Coins' },
+  { id: 'pkg-5000', coins: 6250, usdPrice: 50.00, label: 'Silver Pack', description: '6,250 Coins' },
+  { id: 'pkg-10000', coins: 12500, usdPrice: 100.00, label: 'Gold Pack', description: '12,500 Coins' },
+  { id: 'pkg-15000', coins: 18750, usdPrice: 150.00, label: 'Platinum Pack', description: '18,750 Coins' },
+  { id: 'pkg-25000', coins: 31250, usdPrice: 250.00, label: 'Diamond Pack', description: '31,250 Coins' },
+  { id: 'pkg-50000', coins: 62500, usdPrice: 500.00, label: 'Legendary Pack', description: '62,500 Coins' },
+  { id: 'pkg-100000', coins: 125000, usdPrice: 1000.00, label: 'Titan Pack', description: '125,000 Coins' },
+  { id: 'pkg-250000', coins: 312500, usdPrice: 2500.00, label: 'Immortal Pack', description: '312,500 Coins' },
 ];
 
-// Exchange rate: 100 coins per $1 (all packages)
-export const COINS_PER_USD = 100;
+// Exchange rate: 125 coins per $1 (all packages)
+export const COINS_PER_USD = 125;
 
 // ============================================================================
 // CASHOUT TIERS (Single Source of Truth)
 // ============================================================================
 export const CASHOUT_TIERS = [
-  { coins: 2000, usd: 10, manualReview: false, name: 'Tier 1', color: '#cd7f32', label: '' },
-  { coins: 4000, usd: 20, manualReview: false, name: 'Tier 2', color: '#c0c0c0', label: '' },
-  { coins: 10000, usd: 50, manualReview: false, name: 'Tier 3', color: '#ffd700', label: '' },
-  { coins: 20000, usd: 100, manualReview: false, name: 'Tier 4', color: '#ff4dd2', label: '' },
-  { coins: 30000, usd: 150, manualReview: false, name: 'Tier 5', color: '#00ff00', label: '' },
-  { coins: 50000, usd: 250, manualReview: false, name: 'Tier 6', color: '#ff0000', label: '' },
-  { coins: 100000, usd: 500, manualReview: false, name: 'Tier 7', color: '#ff0000', label: '' },
-  { coins: 200000, usd: 1000, manualReview: false, name: 'Tier 8', color: '#ff0000', label: '' },
-  { coins: 500000, usd: 2500, manualReview: false, name: 'Tier 9', color: '#ff0000', label: '' },
-  { coins: 1000000, usd: 5000, manualReview: false, name: 'Tier 10', color: '#ff0000', label: '' },
+  { coins: 3500, usd: 10, manualReview: false, name: 'Tier 1', color: '#cd7f32', label: '' },
+  { coins: 17000, usd: 50, manualReview: false, name: 'Tier 2', color: '#c0c0c0', label: '' },
+  { coins: 33000, usd: 100, manualReview: false, name: 'Tier 3', color: '#ffd700', label: '' },
+  { coins: 160000, usd: 500, manualReview: false, name: 'Tier 4', color: '#ff4dd2', label: '' },
+  { coins: 310000, usd: 1000, manualReview: false, name: 'Tier 5', color: '#00ff00', label: '' },
+  { coins: 1500000, usd: 5000, manualReview: false, name: 'Tier 6', color: '#ff0000', label: '' },
 ] as const;
 
 // Alias exports for backward compatibility with old payoutTiers imports
@@ -66,7 +62,7 @@ export const TIERS = CASHOUT_TIERS;
 export type CashoutTier = typeof CASHOUT_TIERS[number];
 
 // Minimum coins required for any cashout
-export const MIN_CASHOUT_COINS = 2000;
+export const MIN_CASHOUT_COINS = 3500;
 
 // ============================================================================
 // HELPER FUNCTIONS

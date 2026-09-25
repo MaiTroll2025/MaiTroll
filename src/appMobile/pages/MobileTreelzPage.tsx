@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Upload, Settings, Sparkles, MessageCircle } from 'lucide-react'
-import { Swipeable } from 'react-swipeable'
+import { useSwipeable } from 'react-swipeable'
 import { TreelzVideoPlayer, TreelzActions, CommentSheet, TipModal, ShareModal, MoreModal } from '@/components/treelz/TreelzVideoPlayer'
 import { fetchTreelzFeed, recordTreelzView, loadTreelzSettings, reportTreelzPost, downloadTreelzVideo } from '@/services/treelzService'
 import { useAuthStore } from '@/lib/store'
@@ -93,6 +93,13 @@ export default function MobileTreelzPage() {
     }
   }, [nextPost?.video_url])
 
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => handleSwipe('left'),
+    onSwipedRight: () => handleSwipe('right'),
+    preventScrollOnSwipe: false,
+    trackMouse: false,
+  })
+
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-black">
@@ -154,13 +161,7 @@ export default function MobileTreelzPage() {
       </div>
 
       {/* Video feed */}
-      <Swipeable
-        onSwipedLeft={() => handleSwipe('left')}
-        onSwipedRight={() => handleSwipe('right')}
-        preventScrollOnSwipe
-        trackMouse={false}
-        className="h-full w-full"
-      >
+      <div {...swipeHandlers} className="h-full w-full">
         <div className="relative h-full w-full">
           {currentPost && (
             <TreelzVideoPlayer
@@ -173,7 +174,7 @@ export default function MobileTreelzPage() {
           <video ref={preloadRef1} className="hidden" muted playsInline preload="auto" />
           <video ref={preloadRef2} className="hidden" muted playsInline preload="auto" />
         </div>
-      </Swipeable>
+      </div>
 
       {/* Actions overlay */}
       {currentPost && (

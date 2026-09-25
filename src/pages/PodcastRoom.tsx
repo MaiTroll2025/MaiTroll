@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
+  AlertCircle,
+  AlertTriangle,
   ArrowLeft,
   Clock,
   Headphones,
@@ -21,6 +23,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { useBroadcastLifecycle, formatCountdown } from '@/hooks/useBroadcastLifecycle'
 import { MaiTrollBroadcastTheme as theme } from '@/styles/broadcastTheme'
 import { usePodcastStore } from '@/stores/podcastStore'
 import { usePodcastAgora } from '@/hooks/usePodcastAgora'
@@ -161,6 +164,17 @@ export default function PodcastRoom() {
   }, [podcast])
 
   const agoraEnabled = Boolean(podcast?.agora_channel_name && podcast?.id && isLive)
+
+  // Broadcast lifecycle for 50-minute reset
+  const lifecycle = useBroadcastLifecycle(podcast?.id || null, podcast, {
+    isBroadcaster: isHost,
+    sourceType: 'podcast',
+    onPhaseChange: (phase) => {
+      if (phase === 'expired' || phase === 'ended') {
+        navigate(`/podcast/summary/${podcast?.id}`)
+      }
+    },
+  })
 
   const {
     isConnected,
@@ -335,6 +349,10 @@ export default function PodcastRoom() {
 
   if (!podcast) return null
 
+  // Lifecycle warning/ending banners
+  const showWarningBanner = lifecycle.isWarning
+  const showEndingBanner = lifecycle.isEnding && !lifecycle.isWarning
+
   return (
     <div className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-hidden bg-slate-950">
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
@@ -344,6 +362,51 @@ export default function PodcastRoom() {
         <div className="absolute inset-0 bg-[radial-gradient(140%_140%_at_95%_88%,rgba(236,72,153,0.11),transparent_44%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:42px_42px] opacity-20" />
       </div>
+
+      {showWarningBanner && (
+        <div className="fixed top-0 left-0 right-0 z-30 border-b border-amber-400/20 bg-gradient-to-r from-amber-900/30 via-amber-800/20 to-amber-900/30 px-4 py-2 backdrop-blur-xl md:mx-auto md:max-w-6xl">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-amber-200">Podcast Warning</p>
+                <p className="text-xs text-amber-300/80">
+                  This podcast will end in {formatCountdown(lifecycle.timeRemainingMs)}. Please wrap up.
+                </p>
+              </div>
+            </div>
+            {isHost && (
+              <button
+                type="button"
+                onClick={() => navigate(`/podcast/summary/${podcast.id}`)}
+                className="shrink-0 rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/30 transition-colors"
+              >
+                End Now
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showEndingBanner && (
+        <div className="fixed top-0 left-0 right-0 z-30 border-b border-red-400/30 bg-gradient-to-r from-red-900/30 via-red-800/20 to-red-900/30 px-4 py-2 backdrop-blur-xl animate-pulse md:mx-auto md:max-w-6xl">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/20 text-red-300">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-red-200">Podcast Ending Soon</p>
+                <p className="text-xs text-red-300/80">
+                  Auto-ending in <span className="font-mono tabular-nums">{formatCountdown(lifecycle.timeRemainingMs)}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="safe-top relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-5 px-3 pb-8 pt-3 md:px-5">
         <div className="flex items-center justify-between gap-3">

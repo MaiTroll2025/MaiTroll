@@ -1069,7 +1069,7 @@ export default function PhoneMaiPiks() {
           onClick={handleBack}
           className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 transition active:scale-95"
         >
-          <ArrowLeft size={17} className="text-[#00BFFF] transition group-hover:text-white" />
+          <ArrowLeft size={22} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.5)] transition group-hover:text-white" />
           <span className="text-xs font-black">MAI Troll</span>
         </button>
 
@@ -1088,9 +1088,9 @@ export default function PhoneMaiPiks() {
         <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
-            className="relative grid h-9 w-9 place-items-center rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/5 text-[#00BFFF]"
+            className="relative grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
           >
-            <Bell size={17} />
+            <Bell size={24} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]" />
             {unreadNotifications > 0 && (
               <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#BF00FF] px-1 text-[8px] font-black text-white shadow-[0_0_10px_#BF00FF]">
                 {unreadNotifications > 9 ? '9+' : unreadNotifications}
@@ -1101,9 +1101,9 @@ export default function PhoneMaiPiks() {
           <button
             type="button"
             onClick={() => setShowNotifications((value) => !value)}
-            className="grid h-9 w-9 place-items-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/5 text-[#BF00FF]"
+            className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
           >
-            <Zap size={16} />
+            <Zap size={24} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]" />
           </button>
         </div>
       </header>

@@ -60,11 +60,11 @@ export default function PhoneCoins() {
 
   useEffect(() => {
     const pkgs: CoinPackage[] = [
-      { id: '1', name: 'Starter', coins: 100, price: 0.99 },
-      { id: '2', name: 'Basic', coins: 500, price: 3.99, bonus: 50, popular: true },
-      { id: '3', name: 'Pro', coins: 1200, price: 7.99, bonus: 200 },
-      { id: '4', name: 'Elite', coins: 3500, price: 19.99, bonus: 1000 },
-      { id: '5', name: 'Legend', coins: 10000, price: 49.99, bonus: 5000 },
+      { id: '1', name: 'Starter', coins: 125, price: 0.99 },
+      { id: '2', name: 'Basic', coins: 500, price: 3.99, popular: true },
+      { id: '3', name: 'Pro', coins: 1000, price: 7.99 },
+      { id: '4', name: 'Elite', coins: 2500, price: 19.99 },
+      { id: '5', name: 'Legend', coins: 6250, price: 49.99 },
     ]
     setPackages(pkgs)
   }, [])

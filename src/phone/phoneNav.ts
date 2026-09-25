@@ -17,6 +17,7 @@ import {
   Megaphone,
   Briefcase,
   Package,
+  PawPrint,
   Store,
   List,
   Waves,
@@ -43,6 +44,7 @@ import {
   Image,
   Warehouse,
   DollarSign,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react'
 import { UserRole } from '../lib/supabase'
@@ -80,6 +82,8 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     { label: 'HytroGaming', path: '/hytro', icon: Gamepad2 },
     { label: 'Careers', path: '/careers', icon: Briefcase },
     { label: 'Profile', path: '/profile', icon: Users, show: true },
+    { label: 'MaiLife', path: '/mai-life', icon: Sparkles, show: true },
+    { label: 'Troll Animal Shelter', path: '/troll-animal-shelter', icon: PawPrint, show: true },
   ])
 
   add('Broadcasting', [
@@ -293,7 +297,7 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     },
   ])
 
-  if (a.isAdmin) {
+if (a.isAdmin) {
     add('Admin Library', [
       { label: 'Admin Dashboard', path: '/admin', icon: LayoutDashboard },
       { label: 'Admin Marketplace', path: '/admin/marketplace', icon: Store },
@@ -344,26 +348,34 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
       { label: 'HR', path: '/admin/hr', icon: Users },
       { label: 'Appeals', path: '/admin/appeals', icon: Scale },
       { label: 'Meetings', path: '/admin/meetings', icon: Calendar },
-      { label: 'RTC Admin Monitor', path: '/rtcadminmonitor', icon: Radio },
+      { label: 'RTC Admin Monitor', path: '/rtcadminmonitor', icon: Radio, show: a.canAccessRtcAdminMonitor },
       { label: 'RFC', path: '/rfc', icon: FileText },
       { label: 'Changelog', path: '/changelog', icon: FileText },
     ])
+  }
 
-    add('Role Dashboards', [
-      { label: 'President Dashboard', path: '/president/dashboard', icon: Crown },
-      { label: 'Secretary Console', path: '/secretary', icon: LayoutDashboard },
-      { label: 'Government Streams', path: '/government/streams', icon: Radio },
-      { label: 'Officer Lounge', path: '/officer/lounge', icon: Building2 },
-      { label: 'Officer Scheduling', path: '/officer/scheduling', icon: Calendar },
-      { label: 'Officer Dashboard', path: '/officer/dashboard', icon: Users },
-      { label: 'Lead Officer', path: '/lead-officer', icon: Users },
-      { label: 'Attorney', path: '/attorney', icon: Briefcase },
-      { label: 'Prosecutor Dashboard', path: '/prosecutor', icon: Gavel },
-      { label: 'Pastor Dashboard', path: '/church/pastor', icon: Church },
-      { label: 'Agency HR Dashboard', path: '/agency-hr-dashboard', icon: Briefcase },
-      { label: 'CEO Assistant Dashboard', path: '/ceo-assistant-dashboard', icon: LayoutDashboard },
+  // RTC Admin Monitor is available to admin roles AND Career roles that
+  // have been explicitly granted the permission via the server-side gate.
+  if (a.canAccessRtcAdminMonitor) {
+    add('Control Room', [
+      { label: 'RTC Admin Monitor', path: '/rtcadminmonitor', icon: Radio },
     ])
   }
+
+  add('Role Dashboards', [
+    { label: 'President Dashboard', path: '/president/dashboard', icon: Crown },
+    { label: 'Secretary Console', path: '/secretary', icon: LayoutDashboard },
+    { label: 'Government Streams', path: '/government/streams', icon: Radio },
+    { label: 'Officer Lounge', path: '/officer/lounge', icon: Building2 },
+    { label: 'Officer Scheduling', path: '/officer/scheduling', icon: Calendar },
+    { label: 'Officer Dashboard', path: '/officer/dashboard', icon: Users },
+    { label: 'Lead Officer', path: '/lead-officer', icon: Users },
+    { label: 'Attorney', path: '/attorney', icon: Briefcase },
+    { label: 'Prosecutor Dashboard', path: '/prosecutor', icon: Gavel },
+    { label: 'Pastor Dashboard', path: '/church/pastor', icon: Church },
+    { label: 'Agency HR Dashboard', path: '/agency-hr-dashboard', icon: Briefcase },
+{ label: 'CEO Assistant Dashboard', path: '/ceo-assistant-dashboard', icon: LayoutDashboard },
+    ])
 
   return sections
 }

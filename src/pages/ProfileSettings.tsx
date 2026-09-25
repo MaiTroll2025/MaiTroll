@@ -5,12 +5,16 @@ import {
   Boxes,
   CreditCard,
   KeyRound,
+  Lock,
+  Mail,
   Save,
   Settings,
   Sparkles,
   Trash2,
   UserRound,
   Image as ImageIcon,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,6 +83,15 @@ export default function ProfileSettings() {
     useState(false);
   const [creatorSubscriptionPrice, setCreatorSubscriptionPrice] = useState(100);
   const [savingSubscription, setSavingSubscription] = useState(false);
+
+  // Email change flow state
+  const [emailChangeStep, setEmailChangeStep] = useState<
+    "idle" | "verify" | "update" | "pending"
+  >("idle");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [verifyingPassword, setVerifyingPassword] = useState(false);
+  const [updatingEmail, setUpdatingEmail] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -217,6 +230,85 @@ export default function ProfileSettings() {
     } finally {
       setSavingSubscription(false);
     }
+  };
+
+  const handleVerifyPassword = async () => {
+    if (!user || !currentPassword.trim()) {
+      toast.error("Please enter your current password.");
+      return;
+    }
+
+    setVerifyingPassword(true);
+    try {
+      // Verify password by attempting to sign in
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email || "",
+        password: currentPassword,
+      });
+
+      if (error) {
+        throw new Error("Incorrect password. Please try again.");
+      }
+
+      // Password verified, move to email update step
+      setEmailChangeStep("update");
+      setCurrentPassword(""); // Clear password
+      toast.success("Password verified. Enter your new email address.");
+    } catch (error) {
+      console.error("Password verification failed:", error);
+      toast.error(error instanceof Error ? error.message : "Verification failed");
+    } finally {
+      setVerifyingPassword(false);
+    }
+  };
+
+  const handleUpdateEmail = async () => {
+    if (!user || !newEmail.trim()) {
+      toast.error("Please enter a new email address.");
+      return;
+    }
+
+    // Basic email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (newEmail.trim().toLowerCase() === user.email?.toLowerCase()) {
+      toast.error("This is already your current email.");
+      return;
+    }
+
+    setUpdatingEmail(true);
+    try {
+      // Use Supabase's updateUser to change email - sends verification email
+      const { error } = await supabase.auth.updateUser({
+        email: newEmail.trim(),
+      });
+
+      if (error) {
+        // Check if email is already in use
+        if (error.message.includes("already registered") || error.message.includes("already exists")) {
+          throw new Error("This email is already in use by another account.");
+        }
+        throw error;
+      }
+
+      setEmailChangeStep("pending");
+      setNewEmail("");
+      toast.success("Verification email sent! Check your inbox and click the link to confirm your new email address.");
+    } catch (error) {
+      console.error("Email update failed:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to update email");
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
+
+  const handleCancelEmailChange = () => {
+    setEmailChangeStep("idle");
+    setCurrentPassword("");
+    setNewEmail("");
   };
 
   if (!user) return null;
@@ -507,7 +599,6 @@ export default function ProfileSettings() {
           <UserInventory embedded />
         </section>
 
-
         <section className={`${MaiTrollTheme.components.card} space-y-5`}>
           <h2 className="text-xl font-semibold">Security</h2>
 
@@ -520,6 +611,147 @@ export default function ProfileSettings() {
                 password by email.
               </p>
             </div>
+          </div>
+
+          {/* Email Change Flow */}
+          <div className="border-t border-white/10 pt-5">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-5 w-5 text-cyan-400" />
+              <div className="flex-1">
+                <h3 className="font-semibold">Email Address</h3>
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                  Current: <span className="text-white/70">{user.email || "Not set"}</span>
+                </p>
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`} style={{marginTop: '4px'}}>
+                  Change your email by verifying your password first.
+                </p>
+              </div>
+            </div>
+
+            {emailChangeStep === "idle" && (
+              <button
+                type="button"
+                onClick={() => setEmailChangeStep("verify")}
+                className="mt-3 rounded-lg px-4 py-2 text-sm font-semibold text-white bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600/30 transition-colors"
+              >
+                Change Email
+              </button>
+            )}
+
+            {emailChangeStep === "verify" && (
+              <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white/80">Current Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className={`w-full pl-10 pr-4 py-3 rounded-xl text-white outline-none ${MaiTrollTheme.components.input}`}
+                      placeholder="Enter your password to verify"
+                      autoComplete="current-password"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleVerifyPassword}
+                    disabled={verifyingPassword || !currentPassword.trim()}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white transition-colors ${
+                      verifyingPassword
+                        ? "bg-slate-700 cursor-not-allowed opacity-50"
+                        : "bg-purple-600 hover:bg-purple-500"
+                    }`}
+                  >
+                    {verifyingPassword ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+                        Verifying...
+                      </>
+                    ) : (
+                      "Verify Password"
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelEmailChange}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white bg-slate-700 hover:bg-slate-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {emailChangeStep === "update" && (
+              <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white/80">New Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      className={`w-full pl-10 pr-4 py-3 rounded-xl text-white outline-none ${MaiTrollTheme.components.input}`}
+                      placeholder="Enter new email address"
+                      autoComplete="email"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleUpdateEmail}
+                    disabled={updatingEmail || !newEmail.trim()}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white transition-colors ${
+                      updatingEmail
+                        ? "bg-slate-700 cursor-not-allowed opacity-50"
+                        : "bg-cyan-600 hover:bg-cyan-500"
+                    }`}
+                  >
+                    {updatingEmail ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Verification Email"
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelEmailChange}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white bg-slate-700 hover:bg-slate-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {emailChangeStep === "pending" && (
+              <div className="mt-3 p-4 rounded-xl bg-green-500/10 border border-green-500/30 animate-in fade-in duration-200">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-6 w-6 text-green-400 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-green-300">Verification Email Sent</p>
+                    <p className="text-sm text-green-400/80">
+                      We've sent a verification link to your new email address. Please check your inbox and click the link to confirm the change. Your email will be updated once you click the verification link.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleCancelEmailChange}
+                      className="mt-2 text-xs text-green-400 hover:underline"
+                    >
+                      Back to settings
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
@@ -541,7 +773,6 @@ export default function ProfileSettings() {
             </button>
           </div>
         </section>
-
 
         <section
           className={`${MaiTrollTheme.components.card} border border-red-500/30`}

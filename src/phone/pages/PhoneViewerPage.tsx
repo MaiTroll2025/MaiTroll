@@ -79,6 +79,7 @@ import { getGiftVisualConfig } from '@/lib/giftVisuals'
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import CityStatusOrb from '@/components/city/CityStatusOrb'
 import SeatCityStatusOrb from '@/components/broadcast/SeatCityStatusOrb'
+import PetPresence from '@/components/pets/PetPresence'
 import CityStatusPanel from '@/components/city/CityStatusPanel'
 import RaidModal from '@/components/city/RaidModal'
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
@@ -4035,8 +4036,9 @@ export default function PhoneViewerPage() {
             onClick={() =>
               navigate(-1)
             }
-            className="relative mt-6 h-12 w-full rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/15 to-violet-500/15 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_0_25px_rgba(34,211,238,0.08)]"
+            className="relative mt-6 h-12 w-full rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/15 to-violet-500/15 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_0_25px_rgba(34,211,238,0.08)] flex items-center justify-center gap-2"
           >
+            <ArrowLeft size={20} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]" />
             Go Back
           </button>
         </div>
@@ -4206,6 +4208,7 @@ export default function PhoneViewerPage() {
             className="absolute inset-0 z-[2]"
             onClick={handleVideoTap}
           />
+          <PetPresence ownerId={broadcasterId} streamId={resolvedStreamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
 
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black-70" />
 
@@ -4290,9 +4293,9 @@ export default function PhoneViewerPage() {
                   type="button"
                   onClick={leave}
                   aria-label="Go back"
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-black/40 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-90"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 bg-black/50 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-90"
                 >
-                  <ArrowLeft size={16} />
+                  <ArrowLeft size={22} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
                 </button>
               )}
             </div>
@@ -4474,6 +4477,9 @@ export default function PhoneViewerPage() {
                             isFocused &&
                               'ring-1 ring-cyan-300/70 shadow-[0_0_25px_rgba(34,211,238,0.2)]',
                           )}
+                          onClick={() => {
+                            if (seat.isMine) window.dispatchEvent(new Event('open-pet-shelter'))
+                          }}
                         >
                           {seat.isOccupied ? (
                             seat.isMine ? (
@@ -4549,6 +4555,7 @@ export default function PhoneViewerPage() {
                           )}
 
                           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
+                          <PetPresence ownerId={seat.userId} streamId={resolvedStreamId} className="left-1 right-auto top-1/2 bottom-auto -translate-y-1/2 scale-75 origin-left" />
 
                           <div className="absolute bottom-1 left-1 right-1 z-10 flex items-center justify-between gap-1">
                             <div className="min-w-0 flex-1">

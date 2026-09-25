@@ -39,6 +39,8 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
     add('Menu', [
       { label: 'Home', path: '/', icon: 'Home' },
       { label: 'Profile', path: '/profile', icon: 'User', show: !!user },
+      { label: 'MaiLife', path: '/mai-life', icon: 'Sparkles', show: !!user },
+      { label: 'Troll Animal Shelter', path: '/troll-animal-shelter', icon: 'PawPrint', show: !!user },
       { label: 'Coins', path: '/store', icon: 'Coins' },
       { label: 'Mai Pay', path: '/wallet', icon: 'Wallet' },
       { label: 'Mai Piks', path: '/mai-piks', icon: 'Image' },
@@ -54,6 +56,7 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
       add('Admin', [
         { label: 'Admin Dashboard', path: '/admin', icon: 'LayoutDashboard' },
         { label: 'Admin Mobile', path: '/admin-mobile', icon: 'Smartphone' },
+        { label: 'RTC Admin Monitor', path: '/rtcadminmonitor', icon: 'Radio' },
       ])
     }
 

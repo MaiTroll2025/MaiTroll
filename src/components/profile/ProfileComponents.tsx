@@ -3,18 +3,23 @@
  * Role cards and profile component for the career-based profile system
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/lib/store';
+import { blockUser, unblockUser } from '@/lib/blocking';
 import LevelStatusCard from '@/components/home/LevelStatusCard';
+import ReportModal from '@/components/ReportModal';
+import FileLawsuitModal from '@/components/FileLawsuitModal';
 import { useTheme } from '@/hooks/useTheme'
+import { toast } from 'sonner';
 import {
     Gavel, FileText, Mic, Radio, ShoppingBag, Video,
     Star, Award, Users, TrendingUp, Clock, DollarSign, Eye,
     CheckCircle, Shield, Crown, Heart, MessageCircle, UserPlus,
     Settings, Package, History, Bookmark, Send, MoreHorizontal,
     ShoppingCart, Hammer, BookOpen, Newspaper, Scale, Ticket, AlertTriangle, ShieldAlert,
-    Camera, Music, Disc3, Mic2, Key
+    Camera, Music, Disc3, Mic2, Key, Ban, Coins
 } from 'lucide-react';
 
 interface UserProfile {
@@ -71,6 +76,178 @@ interface ProfileHeaderProps {
     onCoverEdit?: () => void;
     onFollowersClick?: () => void;
     onFollowingClick?: () => void;
+    isBlocked?: boolean;
+    onBlockChange?: (isBlocked: boolean) => void;
+}
+
+interface ProfileActionsDropdownProps {
+    profileId: string;
+    username: string;
+    isBlocked?: boolean;
+    onBlockChange?: (isBlocked: boolean) => void;
+}
+
+export function ProfileActionsDropdown({
+    profileId,
+    username,
+    isBlocked = false,
+    onBlockChange,
+}: ProfileActionsDropdownProps) {
+    const { user } = useAuthStore();
+    const menuRef = useRef<HTMLDivElement | null>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [showLawsuitModal, setShowLawsuitModal] = useState(false);
+    const [viewerBlocked, setViewerBlocked] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
+
+    useEffect(() => {
+        if (!user?.id || user.id === profileId) {
+            setViewerBlocked(false);
+            return;
+        }
+
+        let active = true;
+        void supabase
+            .from('user_blocks')
+            .select('id')
+            .eq('blocker_id', user.id)
+            .eq('blocked_id', profileId)
+            .maybeSingle()
+            .then(({ data }) => {
+                if (active) setViewerBlocked(!!data);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [profileId, user?.id]);
+
+    useEffect(() => {
+        if (!isMenuOpen) return;
+
+        const handlePointerDown = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handlePointerDown);
+        return () => document.removeEventListener('mousedown', handlePointerDown);
+    }, [isMenuOpen]);
+
+    const closeMenu = () => setIsMenuOpen(false);
+
+    const handleReport = () => {
+        closeMenu();
+        setShowReportModal(true);
+    };
+
+    const handleLawsuit = () => {
+        if (!user) {
+            toast.error('Please log in to file a lawsuit');
+            closeMenu();
+            return;
+        }
+
+        closeMenu();
+        setShowLawsuitModal(true);
+    };
+
+    const handleBlock = async () => {
+        if (!user) {
+            toast.error('Please log in to block users');
+            closeMenu();
+            return;
+        }
+
+        if (user.id === profileId) {
+            toast.error('You cannot block yourself');
+            closeMenu();
+            return;
+        }
+
+        setActionLoading(true);
+        try {
+            const result = viewerBlocked
+                ? await unblockUser(user.id, profileId)
+                : await blockUser(user.id, profileId);
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to update block status');
+            }
+
+            const nextBlockedState = !viewerBlocked;
+            setViewerBlocked(nextBlockedState);
+            onBlockChange?.(nextBlockedState);
+            toast.success(nextBlockedState ? `Blocked @${username}` : `Unblocked @${username}`);
+            closeMenu();
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to update block status');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    return (
+        <div className="relative" ref={menuRef}>
+            <button
+                type="button"
+                aria-label="Profile actions"
+                aria-expanded={isMenuOpen}
+                onClick={() => setIsMenuOpen((open) => !open)}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-slate-950/75 text-white/85 shadow-lg backdrop-blur-xl transition hover:border-white/30 hover:bg-slate-900 hover:text-white active:scale-95"
+            >
+                <MoreHorizontal className="h-5 w-5" />
+            </button>
+
+            {isMenuOpen && (
+                <div className="absolute right-0 top-full z-40 mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-slate-950/95 py-1 shadow-2xl backdrop-blur-xl">
+                    <button
+                        type="button"
+                        onClick={handleReport}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-200 transition hover:bg-white/5 hover:text-red-300"
+                    >
+                        <AlertTriangle className="h-4 w-4" />
+                        Report
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleBlock}
+                        disabled={actionLoading}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-200 transition hover:bg-white/5 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <Ban className="h-4 w-4" />
+                        {isBlocked ? 'Unblock' : 'Block'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleLawsuit}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-200 transition hover:bg-white/5 hover:text-amber-300"
+                    >
+                        <Gavel className="h-4 w-4" />
+                        File Lawsuit
+                    </button>
+                </div>
+            )}
+
+            <ReportModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                targetUserId={profileId}
+                streamId={null}
+                targetType="user"
+                onSuccess={() => setShowReportModal(false)}
+            />
+
+            <FileLawsuitModal
+                isOpen={showLawsuitModal}
+                onClose={() => setShowLawsuitModal(false)}
+                onSuccess={() => setShowLawsuitModal(false)}
+                defendant={{ id: profileId, username }}
+            />
+        </div>
+    );
 }
 
 export function ProfileHeader({
@@ -93,6 +270,8 @@ export function ProfileHeader({
     onCoverEdit,
     onFollowersClick,
     onFollowingClick,
+    isBlocked = false,
+    onBlockChange,
 }: ProfileHeaderProps) {
     const { theme } = useTheme()
     const themeColor = profile.theme_color || '#9333ea';
@@ -164,6 +343,16 @@ export function ProfileHeader({
                 <div className={`absolute left-5 top-5 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] backdrop-blur-xl pointer-events-none ${theme === 'light' ? 'border-gray-300 bg-white/80 text-gray-900' : 'border-white/20 bg-slate-950/60 text-white/80'}`}>
                     Mai Troll Profile
                 </div>
+                {!isOwnProfile && (
+                    <div className="absolute right-4 top-4 z-30">
+                        <ProfileActionsDropdown
+                            profileId={profile.id}
+                            username={profile.username}
+                            isBlocked={isBlocked}
+                            onBlockChange={onBlockChange}
+                        />
+                    </div>
+                )}
                 {isOwnProfile && onCoverEdit && (
                     <button
                         onClick={onCoverEdit}
@@ -512,6 +701,7 @@ export const PROFILE_TABS = [
     { key: 'agency', label: 'Agency', icon: Shield },
     { key: 'church', label: 'Church', icon: BookOpen },
     { key: 'subscriptions', label: 'Subscriptions', icon: Crown },
+    { key: 'maisub', label: 'MaiSub', icon: Coins },
     { key: 'badges', label: 'Badges', icon: Award },
     { key: 'keys', label: 'Keys', icon: Key },
     { key: 'inventory', label: 'Inventory & Perks', icon: Package },

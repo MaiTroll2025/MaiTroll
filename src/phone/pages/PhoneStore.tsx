@@ -37,18 +37,18 @@ export default function PhoneStore() {
           type="button"
           onClick={() => navigate(-1)}
           className="
-            flex h-10 w-10 items-center justify-center
+            flex h-12 w-12 items-center justify-center
             rounded-xl
-            border border-white/[0.08]
-            bg-[#070711]/80
-            text-zinc-300
+            border border-white/15
+            bg-white/[0.08]
+            text-white
             shadow-[0_8px_25px_rgba(0,0,0,0.25)]
             transition-all duration-200
             active:scale-95
           "
           aria-label="Go back"
         >
-          <ArrowLeft size={19} />
+          <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
 
         {/* Store identity */}
@@ -65,8 +65,8 @@ export default function PhoneStore() {
             "
           >
             <Store
-              size={16}
-              className="text-[#00BFFF]"
+              size={20}
+              className="text-white drop-shadow-[0_0_6px_rgba(0,191,255,0.5)]"
             />
           </div>
 
@@ -91,8 +91,8 @@ export default function PhoneStore() {
           "
         >
           <Coins
-            size={18}
-            className="text-[#BF00FF]"
+            size={20}
+            className="text-white drop-shadow-[0_0_6px_rgba(191,0,255,0.5)]"
           />
         </div>
       </header>

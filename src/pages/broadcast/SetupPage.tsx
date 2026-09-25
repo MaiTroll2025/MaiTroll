@@ -2712,26 +2712,7 @@ const handleStartStream = async () => {
                 </div>
               )}
 
-              {/* Celeb Stream Toggle (approved celebs only) */}
-              {isApprovedCeleb && (
-                <div className="shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsCelebStream(!isCelebStream)}
-                    className={cn(
-                      "w-full md:w-auto px-4 py-2.5 rounded-xl text-xs font-bold transition-all border",
-                      isCelebStream
-                        ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-black border-yellow-400/50 shadow-[0_4px_12px_rgba(251,191,36,0.3)]"
-                        : "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Crown size={14} />
-                      Celeb Stream {isCelebStream ? 'ON' : 'OFF'}
-                    </span>
-                  </button>
-                </div>
-              )}
+              
 
               {/* Start Broadcast Button */}
              <div className="shrink-0">

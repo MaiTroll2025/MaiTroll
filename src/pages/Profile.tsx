@@ -9,7 +9,7 @@ import {
     Bell, Ban, CheckCircle, CheckCircle2, ChevronDown, Coins, Crown,
     FileText, Loader2, LogOut, MapPin, MessageCircle,
     Package, RefreshCw, Settings, Shield, ShoppingBag,
-    UserPlus, Users, Video, X, Zap, MoreHorizontal,
+    UserPlus, Users, Video, X, Zap,
     History, Award, Gavel, Scale, BookOpen, Newspaper
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -21,6 +21,7 @@ import { getLevelName } from '../lib/xp';
 import { awardFollowPoint } from '../lib/weeklyPointsService';
 import { useXPStore } from '@/stores/useXPStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
+import { useCityStatus } from '../hooks/useCityStatus';
 import SubscriptionTierSelector from '../components/user/SubscriptionTierSelector';
 import { ProfileHeader, RoleCard, ProfileTabs, PROFILE_TABS } from '../components/profile/ProfileComponents';
 import ProfileFeed from '../components/profile/ProfileFeed';
@@ -35,6 +36,9 @@ import ProfileAgency from '../components/profile/ProfileAgency';
 import ProfileCourt from '../components/profile/ProfileCourt';
 import ProfileMarketplace from '../components/profile/ProfileMarketplace';
 import ProfileBroadcasts from '../components/profile/ProfileBroadcasts';
+import MaiSubPanel from '../components/profile/MaiSubPanel';
+import CityIdentityPanel from '../components/profile/CityIdentityPanel';
+import AccessPurchasePanel from '../components/profile/AccessPurchasePanel';
 import { useProfileFrameStore } from '../stores/useProfileFrameStore';
 import type { ProfileFrame as ProfileFrameType } from '../config/profileFrames';
 
@@ -59,6 +63,7 @@ function ProfileInner() {
     const { mySubscriberCount, myMonthlyRevenue, fetchMySubscriberStats } = useSubscriptionStore();
 
     const [profile, setProfile] = useState<any>(null);
+    const { status: cityStatus, loading: cityStatusLoading } = useCityStatus(profile?.id);
     const [loading, setLoading] = useState(true);
     const [isProfileLive, setIsProfileLive] = useState(false);
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'social');
@@ -94,6 +99,7 @@ function ProfileInner() {
         return PROFILE_TABS.filter(tab => {
             if (tab.key === 'settings') return isOwnProfile;
             if (tab.key === 'purchases') return isOwnProfile;
+            if (tab.key === 'maisub') return isOwnProfile;
             if (tab.key === 'promos') return isOwnProfile;
             if (tab.key === 'inventory') return isOwnProfile;
             if (tab.key === 'subscriptions') return true;
@@ -552,6 +558,8 @@ function ProfileInner() {
                         </div>
                     </div>
                 );
+            case 'maisub':
+                return <MaiSubPanel />;
             case 'badges':
                 return (
                     <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
@@ -643,7 +651,48 @@ function ProfileInner() {
                     onCoverEdit={() => navigate('/profile/settings', { state: { openCoverUpload: true } })}
                     onFollowersClick={() => navigate(`/following/${profile.id}`)}
                     onFollowingClick={() => navigate(`/following/${profile.id}`)}
+                    isBlocked={isBlocked}
+                    onBlockChange={setIsBlocked}
                 />
+
+                {cityStatusLoading ? (
+                    <section className="mt-6 rounded-3xl border border-cyan-300/15 bg-slate-950/70 p-5 text-sm text-cyan-100/70">
+                        Loading city status...
+                    </section>
+                ) : cityStatus ? (
+                    <section className="mt-6 rounded-3xl border border-cyan-300/15 bg-slate-950/70 p-5 shadow-[0_0_34px_rgba(34,211,238,0.08)] backdrop-blur-xl">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div>
+                                <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200/70">City Status</p>
+                                <h2 className="mt-1 text-2xl font-black text-white">{cityStatus.display_name}</h2>
+                                <p className="mt-1 text-sm text-slate-400">Level {cityStatus.level}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200/70">XP</p>
+                                <p className="mt-1 text-xl font-black text-cyan-200">{cityStatus.xp_total.toLocaleString()}</p>
+                            </div>
+                        </div>
+                        {cityStatus.next_display_name && cityStatus.next_min_level ? (
+                            <div className="mt-4">
+                                <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
+                                    <span>Next: {cityStatus.next_display_name}</span>
+                                    <span>Level {cityStatus.next_min_level}</span>
+                                </div>
+                                <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                                    <div
+                                        className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-blue-400"
+                                        style={{ width: `${Math.min(100, Math.max(0, (cityStatus.level / cityStatus.next_min_level) * 100))}%` }}
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="mt-4 text-sm font-semibold text-emerald-300">Highest city status reached.</p>
+                        )}
+                    </section>
+                ) : null}
+
+                {isOwnProfile && <div className="mt-6"><CityIdentityPanel /></div>}
+                {!isOwnProfile && <div className="mt-6"><AccessPurchasePanel recipientId={profile.id} /></div>}
 
                 {/* Role Cards */}
                 {activeRoles.length > 0 && (

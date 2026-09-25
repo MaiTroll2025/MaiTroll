@@ -165,7 +165,7 @@ function StatCard({ label, value, tone, icon }: { label: string; value: React.Re
   );
 }
 
-export default function RTCAdminMonitor() {
+export default function RTCAdminMonitor({ fullPage = false }: { fullPage?: boolean } = {}) {
 const { profile } = useAuthStore();
   const navigate = useNavigate();
   const onlineCount = usePresenceStore((state) => state.onlineCount);
@@ -191,7 +191,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
     return target.role === 'admin' || target.role === 'superadmin' || target.role === 'ceo' || target.is_admin === true;
   };
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(fullPage);
   const [activeMainTab, setActiveMainTab] = useState<MainTab>('rtc');
   const [isLoading, setIsLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -3403,14 +3403,20 @@ const renderRtcTab = () => (
 
     const panelStyle: React.CSSProperties = monitorPos
       ? { top: monitorPos.top, left: monitorPos.left, bottom: 'auto', right: 'auto' }
-      : { bottom: '80px', right: '16px', top: 'auto', left: 'auto' }
+      : fullPage
+        ? { top: 0, left: 0, bottom: 0, right: 0 }
+        : { bottom: '80px', right: '16px', top: 'auto', left: 'auto' }
 
     // Early return after all hooks — non-staff users see nothing
     if (!isStaff) return null;
 
     return (
       <div
-        className="fixed inset-0 z-[9999] flex items-end justify-end bg-transparent p-0 animate-in fade-in duration-150"
+        className={
+          fullPage
+            ? 'fixed inset-0 z-[9999] flex flex-col bg-[#0A0814] animate-in fade-in duration-150'
+            : 'fixed inset-0 z-[9999] flex items-end justify-end bg-transparent p-0 animate-in fade-in duration-150'
+        }
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             setIsManuallyClosed(true)
@@ -3425,9 +3431,9 @@ const renderRtcTab = () => (
           style={{
             ...panelStyle,
             position: 'fixed',
-            height: 'min(86vh,720px)',
-            width: '100%',
-            maxWidth: '420px',
+            height: fullPage ? '100%' : 'min(86vh,720px)',
+            width: fullPage ? '100%' : '100%',
+            maxWidth: fullPage ? 'none' : '420px',
             cursor: isDragging ? 'grabbing' : 'default',
             userSelect: isDragging ? 'none' : 'auto',
           }}
@@ -3564,19 +3570,22 @@ const renderRtcTab = () => (
     );
   };
 
-    return (
+return (
       <>
-        {renderFloatingButton()}
-
-        {renderMobileMiniBubble()}
-
-        {isOpen && renderFullPageModal()}
-
+        {fullPage ? (
+          renderFullPageModal()
+        ) : (
+          <>
+            {renderFloatingButton()}
+            {renderMobileMiniBubble()}
+          </>
+        )}
+        {fullPage ? null : isOpen && renderFullPageModal()}
         {isOpen && renderActionModal()}
         {isOpen && renderStreamModal()}
       </>
     );
-}
+  }
 
 
 

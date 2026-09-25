@@ -15,6 +15,7 @@ import { useParticipantAttributes } from '../../hooks/useParticipantAttributes';
 import { useStagePasses } from '../../hooks/useStagePasses';
 import { useProfileFrameStore } from '@/stores/useProfileFrameStore';
 import GiftAnimationLayer from '@/components/broadcast/GiftAnimationLayer';
+import PetPresence from '@/components/pets/PetPresence';
 import { getAllPersistentGifts, type PersistentGift } from '../../lib/persistentGiftStore';
 import BroadcastTicker from './BroadcastTicker';
 import SeatHeatBar from './SeatHeatBar';
@@ -1977,6 +1978,7 @@ boxClass,
                   </div>
                 </div>
                )}
+               {userId && <PetPresence ownerId={userId} streamId={stream.id} />}
              </motion.div>
              </div>
            );
@@ -2057,6 +2059,7 @@ boxClass,
                          <span className="text-purple-400/50 text-xs">Empty</span>
                        </div>
                      )}
+                     {isOccupied && <PetPresence ownerId={userId} streamId={stream.id} />}
                    </div>
                    {/* Remove button - only for host */}
                    {isOccupied && onKick && (
@@ -2116,6 +2119,7 @@ boxClass,
                          <span className="text-blue-400/50 text-xs">Empty</span>
                        </div>
                      )}
+                     {isOccupied && <PetPresence ownerId={userId} streamId={stream.id} />}
                    </div>
                    {/* Remove button - only for host */}
                    {isOccupied && onKick && (

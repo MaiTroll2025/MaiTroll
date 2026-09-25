@@ -959,13 +959,13 @@ export default function PhoneAdminMobile() {
             onClick={() => navigate(-1)}
             aria-label="Go back"
             className={[
-              'flex h-10 w-10 items-center justify-center',
-              'rounded-xl border border-white/10',
-              'bg-white/[0.04] text-white/80',
+              'flex h-12 w-12 items-center justify-center',
+              'rounded-xl border border-white/15',
+              'bg-white/[0.08] text-white',
               'active:scale-95',
             ].join(' ')}
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
           </button>
 
           <div className="text-center">
@@ -993,15 +993,15 @@ export default function PhoneAdminMobile() {
             disabled={refreshing || metricsLoading}
             aria-label="Refresh admin metrics"
             className={[
-              'flex h-10 w-10 items-center justify-center',
-              'rounded-xl border border-white/10',
-              'bg-white/[0.04] text-white/70',
+              'flex h-12 w-12 items-center justify-center',
+              'rounded-xl border border-white/15',
+              'bg-white/[0.08] text-white',
               'active:scale-95 disabled:opacity-40',
             ].join(' ')}
           >
             <RefreshCw
-              size={17}
-              className={refreshing || metricsLoading ? 'animate-spin' : ''}
+              size={28}
+              className={refreshing || metricsLoading ? 'animate-spin' : 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]'}
             />
           </button>
         </div>

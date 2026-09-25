@@ -61,11 +61,11 @@ export default function PhoneWebPage() {
 
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#0A0814]/90 px-4 py-3 backdrop-blur-xl">
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white"
+          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
           aria-label="Open menu"
           onClick={() => setDrawerOpen(true)}
         >
-          <span className="text-lg">☰</span>
+          <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">☰</span>
         </button>
 
         <h1 className="text-sm font-black uppercase tracking-widest text-white/80">

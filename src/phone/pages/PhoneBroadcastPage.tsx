@@ -21,6 +21,8 @@ import {
   VideoOff,
   X,
   Zap,
+  AlertTriangle,
+  AlertCircle,
 } from 'lucide-react'
 import {
   LocalAudioTrack,
@@ -52,6 +54,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
 
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
+import PetPresence from '@/components/pets/PetPresence'
 import MobileBroadcastHostSettings from '@/components/broadcast/MobileBroadcastHostSettings'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import CityStatusOrb from '@/components/city/CityStatusOrb'
@@ -64,6 +67,7 @@ import MaiBag from '@/components/mai-bag/MaiBag'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import ShareModal from '@/components/broadcast/ShareModal'
 import { useFeaturedLive } from '@/hooks/useFeaturedLive'
+import { useBroadcastLifecycle, formatCountdown } from '@/hooks/useBroadcastLifecycle'
 import { FeaturedBanner } from '@/components/featured/FeaturedBanner'
 import { FeaturedLeaderboard } from '@/components/featured/FeaturedLeaderboard'
 import { FeaturedLiveOverlay } from '@/components/featured/FeaturedLiveOverlay'
@@ -330,6 +334,15 @@ export default function PhoneBroadcastPage() {
     broadcasterId: user?.id || '',
     isBroadcaster: true,
     isBroadOfficer: false,
+  })
+
+  const lifecycle = useBroadcastLifecycle(streamId || null, stream, {
+    isBroadcaster: true,
+    onPhaseChange: (phase) => {
+      if (phase === 'expired' || phase === 'ended') {
+        navigate(`/broadcast/summary/${streamId}`);
+      }
+    },
   })
 
   const remoteUsers = useMemo(() => {
@@ -1962,6 +1975,7 @@ export default function PhoneBroadcastPage() {
             onClick={handleVideoTap}
             onTouchEnd={handleVideoTap}
           />
+          <PetPresence ownerId={stream?.user_id} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
         </div>
 
         <CashoutProgressBanner
@@ -1974,6 +1988,64 @@ export default function PhoneBroadcastPage() {
           onClick={() => cashoutBanner.isCashoutReady && setIsCashoutModalOpen(true)}
           isMobile={true}
         />
+
+        {/* ======================================================
+            BROADCAST LIFECYCLE BANNERS
+        ====================================================== */}
+        {lifecycle.isWarning && (
+          <div
+            className="absolute inset-x-0 top-0 z-[50] border-b border-amber-400/20 bg-gradient-to-r from-amber-900/30 via-amber-800/20 to-amber-900/30 px-4 py-2 backdrop-blur-xl"
+            role="alert"
+            aria-live="polite"
+          >
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-500/20 text-amber-300">
+                  <AlertTriangle className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-amber-200">Broadcast Warning</p>
+                  <p className="text-[10px] text-amber-300/80">
+                    Ends in {formatCountdown(lifecycle.timeRemainingMs)}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/broadcast/summary/${streamId}`)}
+                className="shrink-0 rounded bg-amber-500/20 px-2 py-1 text-[10px] font-semibold text-amber-200"
+              >
+                End Now
+              </button>
+            </div>
+          </div>
+        )}
+        {lifecycle.isEnding && !lifecycle.isWarning && (
+          <div
+            className="absolute inset-x-0 top-0 z-[50] border-b border-red-400/30 bg-gradient-to-r from-red-900/30 via-red-800/20 to-red-900/30 px-4 py-2 backdrop-blur-xl animate-pulse"
+            role="alert"
+            aria-live="assertive"
+          >
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-red-500/20 text-red-300">
+                  <AlertCircle className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-red-200">Ending Soon</p>
+                  <p className="text-[10px] text-red-300/80">
+                    Auto-end in <span className="font-mono tabular-nums">{formatCountdown(lifecycle.timeRemainingMs)}</span>
+                  </p>
+                </div>
+              </div>
+              {lifecycle.battleActive && (
+                <span className="shrink-0 rounded bg-amber-500/20 px-2 py-1 text-[10px] font-semibold text-amber-200">
+                  Battle in progress
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ======================================================
             REMOTE AUDIO (attach remote participant audio)
@@ -2075,6 +2147,7 @@ export default function PhoneBroadcastPage() {
                 username={seat.username}
                 avatarUrl={seat.avatarUrl}
                 remoteUsers={Array.from(session.remoteParticipants.values())}
+                streamId={streamId}
               />
             ))}
           </div>
@@ -2407,11 +2480,13 @@ function RemoteSeatThumbnail({
   username,
   avatarUrl,
   remoteUsers,
+  streamId,
 }: {
   userId: string
   username: string
   avatarUrl: string | null
   remoteUsers: RemoteParticipant[]
+  streamId?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoElementRef = useRef<HTMLVideoElement | null>(null)
@@ -2494,6 +2569,7 @@ function RemoteSeatThumbnail({
   return (
     <div className="pointer-events-auto relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-black/60 shadow-lg">
       <div ref={containerRef} className="absolute inset-0" />
+      <PetPresence ownerId={userId} streamId={streamId} className="left-0 top-1/2 bottom-auto right-auto -translate-y-1/2 scale-50 origin-left" />
       {!videoTrack && (
         <div className="absolute inset-0 flex items-center justify-center">
           {avatarUrl ? (

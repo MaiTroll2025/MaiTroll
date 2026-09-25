@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useBattleViewController } from "../../hooks/useBattleViewController";
 import type { BattleViewController } from "../../hooks/useBattleViewController";
+import useTrollTime from "../../hooks/useTrollTime";
+import TrollTimeBanner from "../../components/battle/TrollTimeBanner";
 import ActiveBattlesPanel from "../../components/broadcast/battle/ActiveBattlesPanel";
 import BattleScoreboard from "../../components/broadcast/battle/BattleScoreboard";
 import BattleBottomBar from "../../components/broadcast/battle/BattleBottomBar";
@@ -78,6 +80,9 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
   } = battleView;
 
   const navigate = useNavigate();
+
+  // Server-authoritative Troll Time state for this battle.
+  const trollTime = useTrollTime(battleId);
 
   if (error) {
     return (
@@ -167,6 +172,12 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
 
       {/* CENTER COLUMN — scoreboard / stage / bottom bar */}
       <main className="relative flex min-w-0 flex-1 flex-col">
+        <TrollTimeBanner
+          active={trollTime.active}
+          multiplier={trollTime.multiplier}
+          endsAt={trollTime.endsAt}
+          eventId={trollTime.eventId}
+        />
         <BattleScoreboard
           challengerName={challengerStream?.title}
           opponentName={opponentStream?.title}

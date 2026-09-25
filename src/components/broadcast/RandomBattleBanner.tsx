@@ -85,7 +85,7 @@ export default function RandomBattleBanner({
                 </div>
                 <div>
                   <p className="text-sm font-black text-purple-100 tracking-wide">
-                    ⚔️ School BATTLE {phase === 'starting' ? 'STARTING' : 'ACTIVE'}!
+                    ⚔️ BATTLE {phase === 'starting' ? 'STARTING' : 'ACTIVE'}!
                   </p>
                   <p className="text-xs text-purple-300/80">
                     {phase === 'starting'
@@ -202,7 +202,7 @@ export default function RandomBattleBanner({
                 <Trophy className="w-5 h-5 text-indigo-300" />
                 <div>
                   <p className="text-sm font-bold text-indigo-100">
-                    🎲 School Battle Queue
+                    🎲 Battle Queue
                   </p>
                   <p className="text-xs text-indigo-300/70">
                     Get matched with a random opponent for a 1v1 battle!

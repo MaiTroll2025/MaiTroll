@@ -44,6 +44,7 @@ export interface PhoneRoleAccess {
   isShareAThonRestricted: boolean
   canBroadcast: boolean
   showAdminPagesTab: boolean
+  canAccessRtcAdminMonitor: boolean
 }
 
 const FALSE_ACCESS: PhoneRoleAccess = {
@@ -76,6 +77,7 @@ const FALSE_ACCESS: PhoneRoleAccess = {
   isShareAThonRestricted: false,
   canBroadcast: false,
   showAdminPagesTab: false,
+  canAccessRtcAdminMonitor: false,
 }
 
 export function usePhoneRoleAccess(): PhoneRoleAccess {
@@ -97,6 +99,7 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
   const [canSeeAuctionStudio, setCanSeeAuctionStudio] = useState(false)
   const [isTeacher, setIsTeacher] = useState(false)
   const [canSeeAgencyHR, setCanSeeAgencyHR] = useState(false)
+  const [canAccessRtcAdminMonitor, setCanAccessRtcAdminMonitor] = useState(false)
 
   const role = String(profile?.role || '')
   const trollRole = String(profile?.troll_role || '')
@@ -306,6 +309,18 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
       } catch (error) {
         console.error('[usePhoneRoleAccess] error:', error)
       }
+
+      // RTC Admin Monitor permission: admin roles always pass; Career roles
+      // require an explicit server-side grant (can_access_rtc_admin_monitor).
+      // This is enforced server-side — the frontend is not the only layer.
+      try {
+        const { data: rtcData } = await supabase.rpc('can_access_rtc_admin_monitor', {
+          p_user_id: profile.id,
+        })
+        if (!cancelled) setCanAccessRtcAdminMonitor(!!rtcData)
+      } catch {
+        if (!cancelled) setCanAccessRtcAdminMonitor(false)
+      }
     }
 
     run()
@@ -344,6 +359,7 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     isShareAThonRestricted,
     canBroadcast,
     showAdminPagesTab,
+    canAccessRtcAdminMonitor,
   }
 }
 

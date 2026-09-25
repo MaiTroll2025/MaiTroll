@@ -30,15 +30,12 @@ import { useTheme } from '@/hooks/useTheme'
 import { useLiveContent, type LiveItem } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
-import { usePublicAccessFee } from '@/hooks/usePublicAccessFee'
-import PublicAccessFeeModal from '@/components/PublicAccessFeeModal'
 import { MaiTrollOperatingHoursWrapper } from '@/components/maitroll/MaiTrollOperatingHoursWrapper'
 import useGlobalActivity from '@/hooks/useGlobalActivity'
 import type { ActivityEvent } from '@/hooks/useGlobalActivity'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
 import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
-import AcademyTab from '@/components/home/AcademyTab'
 import UnderConstructionPage from '@/components/UnderConstructionPage'
 import WallPage from '@/pages/WallPage'
 import SupportGoalReminderModal from '@/components/SupportGoalReminderModal'
@@ -590,6 +587,27 @@ export default function Home() {
   const { liveItems, totalViewers, onlineUsers, loadingLive } = useLiveContent()
   const [supportGoalReminder, setSupportGoalReminder] = useState<any>(null)
   const [reminderLoading, setReminderLoading] = useState(false)
+  const [totalUsers, setTotalUsers] = useState(1)
+
+  const fetchTotalUsers = useCallback(async () => {
+    try {
+      const { count } = await supabase
+        .from('user_profiles')
+        .select('id', { count: 'exact', head: true })
+      setTotalUsers(Math.max(1, count || 1))
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchTotalUsers()
+    const channel = supabase
+      .channel('home-total-users')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_profiles' }, () => fetchTotalUsers())
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [fetchTotalUsers])
 
   const {
     reminder: supportReminder,
@@ -597,8 +615,6 @@ export default function Home() {
     refetch: fetchSupportReminder,
   } = useSupportGoalReminder()
   const { currentElection, currentPresident } = usePresidentSystem()
-
-  const { feeStatus, showModal, setShowModal, handlePaymentComplete } = usePublicAccessFee()
 
   const presidentTabLabel = currentElection?.status === 'open'
     ? 'President Candidates'
@@ -672,7 +688,7 @@ export default function Home() {
       <div
         className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-y-auto text-white"
       >
-          <DynamicWeatherBackground isDark={theme === 'dark'} showWalker={!!user} />
+          <DynamicWeatherBackground isDark={theme === 'dark'} showWalker={!!user} walkerCount={totalUsers} />
 
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050715]/85 backdrop-blur-md">
@@ -690,11 +706,6 @@ export default function Home() {
       <Suspense fallback={null}>
         <PWAInstallPrompt />
       </Suspense>
-
-      <PublicAccessFeeModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-      />
 
       <div className="relative z-10 flex w-full">
         <LeftNavSidebar

@@ -77,7 +77,6 @@ export default function LevelSystemShowcase({ className }: LevelSystemShowcasePr
           Level System
         </h3>
         <div className="text-slate-400 text-xs">
-          City Rank Lvl {level}
         </div>
       </div>
 

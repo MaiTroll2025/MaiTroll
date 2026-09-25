@@ -2027,7 +2027,7 @@ export default function PhoneTreelz() {
           onClick={() => navigate(-1)}
           className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/45 backdrop-blur-xl active:scale-90"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
 
         <div className="rounded-full border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-xl">
@@ -2040,9 +2040,9 @@ export default function PhoneTreelz() {
           onClick={() =>
             navigate('/treelz/upload')
           }
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/10 text-[#00BFFF] backdrop-blur-xl active:scale-90"
+          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white backdrop-blur-xl active:scale-90"
         >
-          <Sparkles size={18} />
+          <Sparkles size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
       </header>
 

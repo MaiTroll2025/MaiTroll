@@ -14,7 +14,7 @@ import {
   Video,
   Zap,
 } from "lucide-react";
-import MobilePageShell from "../MobilePageShell";
+import MobilePageShell from "../components/MobilePageShell";
 
 type StreamMode = "camera" | "obs" | "screen";
 type StreamCategory = "general" | "battle" | "gaming" | "podcast" | "auction" | "church";

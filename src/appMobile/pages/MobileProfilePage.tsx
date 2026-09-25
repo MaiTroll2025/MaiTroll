@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeMobileRole, type MobileUserRole } from "../mobileRoutes.tsx";
+import { useCityStatus } from "../../hooks/useCityStatus";
+import CityIdentityPanel from "../../components/profile/CityIdentityPanel";
+import MaiSubPanel from "../../components/profile/MaiSubPanel";
 
 type MobileProfile = {
   id: string | null;
@@ -97,6 +100,7 @@ function getStringValue(source: unknown, keys: string[], fallback = ""): string 
 export default function MobileProfilePage() {
   const [profile, setProfile] = useState<MobileProfile>(DEFAULT_PROFILE);
   const [loading, setLoading] = useState(true);
+  const { status: cityStatus, loading: cityStatusLoading } = useCityStatus(profile.id);
 
   useEffect(() => {
     let cancelled = false;
@@ -199,6 +203,39 @@ export default function MobileProfilePage() {
           </div>
         ))}
       </div>
+
+      <section className="rounded-2xl border border-cyan-300/15 bg-cyan-400/[0.04] p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200/60">City Status</p>
+            <p className="mt-1 text-xl font-black text-white">
+              {cityStatusLoading ? "Loading..." : cityStatus?.display_name || "Resident"}
+            </p>
+          </div>
+          {cityStatus && <p className="text-sm font-black text-cyan-200">{numberFormat(cityStatus.xp_total)} XP</p>}
+        </div>
+        {cityStatus?.next_display_name && cityStatus.next_min_level && (
+          <div className="mt-3">
+            <div className="mb-1 flex justify-between text-[10px] text-white/45">
+              <span>Next: {cityStatus.next_display_name}</span>
+              <span>Level {cityStatus.next_min_level}</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/10">
+              <div
+                className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 to-purple-400"
+                style={{ width: `${Math.min(100, Math.max(0, ((cityStatus.level || 1) / cityStatus.next_min_level) * 100))}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </section>
+
+      {profile.id && (
+        <>
+          <CityIdentityPanel />
+          <MaiSubPanel />
+        </>
+      )}
 
       <div>
         <h2 className="mb-2 text-xs font-bold uppercase text-white/40">Badges</h2>

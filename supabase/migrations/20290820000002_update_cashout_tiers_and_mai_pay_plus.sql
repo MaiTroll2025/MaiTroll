@@ -10,15 +10,12 @@ DELETE FROM public.cashout_tiers;
 
 INSERT INTO public.cashout_tiers (coin_amount, cash_amount, processing_fee_percentage, is_active, created_at)
 VALUES
-  (4000,   5,    0, TRUE, NOW()),
-  (8000,   10,   0, TRUE, NOW()),
-  (16000,  20,   0, TRUE, NOW()),
-  (24000,  30,   0, TRUE, NOW()),
-  (40000,  50,   0, TRUE, NOW()),
-  (80000,  100,  0, TRUE, NOW()),
-  (200000, 250,  0, TRUE, NOW()),
-  (400000, 500,  0, TRUE, NOW()),
-  (880000, 1100, 0, TRUE, NOW());
+  (3500,   10,   0, TRUE, NOW()),
+  (17000,  50,   0, TRUE, NOW()),
+  (33000,  100,  0, TRUE, NOW()),
+  (160000, 500,  0, TRUE, NOW()),
+  (310000, 1000, 0, TRUE, NOW()),
+  (1500000,5000, 0, TRUE, NOW());
 
 -- Replace request_cashout with Mai Pay Plus aware logic
 CREATE OR REPLACE FUNCTION public.request_cashout(

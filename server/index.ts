@@ -11,6 +11,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import { createClient } from '@supabase/supabase-js';
 import broadcastRoutes from './routes/broadcasts.ts';
 import ghostModeRoutes from './api/ghost-mode.js';
 
@@ -33,6 +34,11 @@ import ghostModeRoutes from './api/ghost-mode.js';
 
 const app = express();
 const port = process.env.PORT || 3002;
+
+// Supabase client for JWT verification
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Middleware
 app.use(cors({
@@ -59,15 +65,90 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Broadcast API routes
-app.post('/api/broadcasts/start-streaming', broadcastRoutes.startBroadcast);
-app.post('/api/broadcasts/stop-streaming', broadcastRoutes.stopBroadcast);
-app.get('/api/broadcasts/:streamId/status', broadcastRoutes.getBroadcastStatus);
+// ── JWT Authentication Middleware ──────────────────────────────────────────
+// Verifies the Supabase JWT from the Authorization header and attaches the
+// authenticated user to the request. Used to protect broadcast and ghost-mode
+// endpoints from unauthenticated access.
+async function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  }
 
-// Ghost Mode API routes
-app.post('/api/ghost-mode/create', ghostModeRoutes.createGhostSession);
-app.post('/api/ghost-mode/leave', ghostModeRoutes.leaveGhostSession);
-app.get('/api/ghost-mode/sessions', ghostModeRoutes.getGhostSessions);
+  const token = authHeader.slice(7); // strip "Bearer "
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('[requireAuth] Token verification failed:', err.message);
+    return res.status(401).json({ error: 'Token verification failed' });
+  }
+}
+
+// ── CEO / Admin Authorization Check ────────────────────────────────────────
+// After requireAuth, checks whether the authenticated user is a CEO or admin.
+async function requireCEO(req, res, next) {
+  try {
+    const { data: profile, error } = await supabase
+      .from('user_profiles')
+      .select('role, is_admin, is_ceo')
+      .eq('id', req.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const isCEO = !!(profile?.is_ceo || profile?.role === 'ceo' || profile?.is_admin);
+    if (!isCEO) {
+      return res.status(403).json({ error: 'Only CEOs can perform this action' });
+    }
+    req.user.isCEO = true;
+    next();
+  } catch (err) {
+    console.error('[requireCEO] CEO check failed:', err.message);
+    return res.status(500).json({ error: 'Failed to verify CEO status' });
+  }
+}
+
+// ── Broadcast Owner Authorization ──────────────────────────────────────────
+// Verifies the authenticated user is the broadcaster (or an admin/CEO).
+async function requireBroadcaster(req, res, next) {
+  const broadcasterId = req.body?.broadcasterId;
+  if (!broadcasterId) {
+    return res.status(400).json({ error: 'broadcasterId is required' });
+  }
+
+  if (broadcasterId !== req.user.id) {
+    // Allow admins/CEOs to act on behalf of other broadcasters
+    const { data: profile, error } = await supabase
+      .from('user_profiles')
+      .select('role, is_admin, is_ceo')
+      .eq('id', req.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const isAdmin = !!(profile?.is_ceo || profile?.role === 'ceo' || profile?.is_admin);
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'You can only manage your own broadcasts' });
+    }
+  }
+  next();
+}
+
+// Broadcast API routes — protected with JWT auth
+app.post('/api/broadcasts/start-streaming', requireAuth, requireBroadcaster, broadcastRoutes.startBroadcast);
+app.post('/api/broadcasts/stop-streaming', requireAuth, requireBroadcaster, broadcastRoutes.stopBroadcast);
+app.get('/api/broadcasts/:streamId/status', requireAuth, broadcastRoutes.getBroadcastStatus);
+
+// Ghost Mode API routes — protected with JWT auth + CEO check
+app.post('/api/ghost-mode/create', requireAuth, requireCEO, ghostModeRoutes.createGhostSession);
+app.post('/api/ghost-mode/leave', requireAuth, ghostModeRoutes.leaveGhostSession);
+app.get('/api/ghost-mode/sessions', requireAuth, ghostModeRoutes.getGhostSessions);
 
 // 404 handler
 app.use((req, res) => {

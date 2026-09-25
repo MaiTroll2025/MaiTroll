@@ -42,6 +42,7 @@ import {
 import { toast } from 'sonner'
 
 import { getLevelName } from '../../lib/xp'
+import { useCityStatus } from '../../hooks/useCityStatus'
 
 import AvatarUpload from '../../components/profile/AvatarUpload'
 import CoverPhotoUpload, {
@@ -59,6 +60,9 @@ import ProfileAgency from '../../components/profile/ProfileAgency'
 import ProfileChurch from '../../components/profile/ProfileChurch'
 import ProfilePurchases from '../../components/profile/ProfilePurchases'
 import ProfileWatchlist from '../../components/profile/ProfileWatchlist'
+import MaiSubPanel from '../../components/profile/MaiSubPanel'
+import CityIdentityPanel from '../../components/profile/CityIdentityPanel'
+import AccessPurchasePanel from '../../components/profile/AccessPurchasePanel'
 
 type ProfileRow = {
   id: string
@@ -138,6 +142,7 @@ const PROFILE_TABS: ProfileTab[] = [
   { id: 'agency', label: 'Agency', icon: Shield },
   { id: 'church', label: 'Church', icon: BookOpen },
   { id: 'subscriptions', label: 'Subscriptions', icon: Crown },
+  { id: 'maisub', label: 'MaiSub', icon: Coins },
   { id: 'badges', label: 'Badges', icon: Award },
   { id: 'keys', label: 'Keys', icon: KeyRound },
   { id: 'inventory', label: 'Inventory & Perks', icon: Boxes },
@@ -200,6 +205,7 @@ export default function PhoneProfile() {
   const [totalXp, setTotalXp] = useState(0)
 
   const [profileTargetId, setProfileTargetId] = useState<string | null>(null)
+  const { status: cityStatus, loading: cityStatusLoading } = useCityStatus(profileTargetId)
 
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
@@ -669,9 +675,9 @@ export default function PhoneProfile() {
           <button
             type="button"
             onClick={closeSettings}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] active:scale-95"
+            className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white active:scale-95"
           >
-            <ArrowLeft size={19} />
+            <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
           </button>
 
           <div className="text-center">
@@ -1229,10 +1235,10 @@ export default function PhoneProfile() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] transition active:scale-95"
+          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white transition active:scale-95"
           aria-label="Go back"
         >
-          <ArrowLeft size={19} />
+          <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
 
         <div className="text-center">
@@ -1248,10 +1254,10 @@ export default function PhoneProfile() {
         <button
           type="button"
           onClick={openSettings}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#BF00FF]/25 bg-[#BF00FF]/5 text-[#BF00FF] transition active:scale-95"
+          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white transition active:scale-95"
           aria-label="Settings"
         >
-          <Settings size={18} />
+          <Settings size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
       </header>
 
@@ -1374,9 +1380,6 @@ export default function PhoneProfile() {
                       <Star size={14} className="text-yellow-300" />
                       Level System
                     </p>
-                    <p className="mt-0.5 text-[10px] font-bold text-slate-400">
-                      City Rank Lvl {level}
-                    </p>
                   </div>
                   <Crown size={20} className="text-yellow-300 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]" />
                 </div>
@@ -1405,7 +1408,51 @@ export default function PhoneProfile() {
               </div>
             </div>
 
+            {/* City Status */}
+            {cityStatusLoading ? (
+              <div className="mt-3 rounded-xl border border-cyan-400/20 bg-cyan-400/[0.04] p-3 text-[10px] font-bold text-cyan-100/60">
+                Loading city status...
+              </div>
+            ) : cityStatus ? (
+              <div className="mt-3 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/[0.08] to-purple-500/[0.08] p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-[0.16em] text-cyan-200/60">City Status</p>
+                    <p className="mt-1 text-lg font-black text-white">{cityStatus.display_name}</p>
+                  </div>
+                  <p className="text-sm font-black text-cyan-200">{cityStatus.xp_total.toLocaleString()} XP</p>
+                </div>
+                {cityStatus.next_display_name && cityStatus.next_min_level ? (
+                  <div className="mt-2">
+                    <div className="mb-1 flex justify-between text-[9px] font-bold text-slate-400">
+                      <span>Next: {cityStatus.next_display_name}</span>
+                      <span>Level {cityStatus.next_min_level}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/10">
+                      <div
+                        className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 to-purple-400"
+                        style={{ width: `${Math.min(100, Math.max(0, (cityStatus.level / cityStatus.next_min_level) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-[9px] font-bold text-emerald-300">Highest city status reached.</p>
+                )}
+              </div>
+            ) : null}
+
             {/* Coins */}
+            {isViewingOwnProfile && (
+              <div className="mt-3">
+                <CityIdentityPanel />
+              </div>
+            )}
+            {!isViewingOwnProfile && profileTargetId && (
+              <div className="mt-3">
+                <AccessPurchasePanel recipientId={profileTargetId} />
+              </div>
+            )}
+
             <div className="mt-3 flex items-center justify-between rounded-xl border border-[#00BFFF]/20 bg-gradient-to-r from-[#00BFFF]/[0.06] to-[#BF00FF]/[0.05] p-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#00BFFF]/25 bg-[#00BFFF]/10">
@@ -1573,6 +1620,10 @@ export default function PhoneProfile() {
                 Subscription features coming soon.
               </p>
             </div>
+          )}
+
+          {activeTab === 'maisub' && isViewingOwnProfile && (
+            <MaiSubPanel />
           )}
 
           {activeTab === 'badges' && (

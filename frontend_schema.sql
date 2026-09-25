@@ -32386,6 +32386,8 @@ DECLARE
   v_is_friday boolean := false;
   v_bonus_result jsonb;
   v_sender_troll_coins bigint;
+  v_battle_multiplier integer := 1;
+  v_troll_time_event_id uuid;
 BEGIN
    -- Bypass coin protection trigger for this SECURITY DEFINER function
    PERFORM set_config('app.bypass_coin_protection', 'true', true);
@@ -32787,31 +32789,64 @@ BEGIN
      AND status = 'active'
    LIMIT 1;
 
-   IF v_battle_id IS NOT NULL THEN
-     IF v_is_challenger THEN
-       UPDATE public.battles
-       SET score_challenger = COALESCE(score_challenger, 0) + v_total_cost,
-           pot_challenger = COALESCE(pot_challenger, 0) + v_total_cost
-       WHERE id = v_battle_id;
-     ELSE
-       UPDATE public.battles
-       SET score_opponent = COALESCE(score_opponent, 0) + v_total_cost,
-           pot_opponent = COALESCE(pot_opponent, 0) + v_total_cost
-       WHERE id = v_battle_id;
-     END IF;
-   END IF;
+IF v_battle_id IS NOT NULL THEN
+      -- ── Authoritative Troll Time multiplier (server-side only) ──────────
+      -- Troll Time multiplies BATTLE POINTS ONLY. It must NEVER multiply
+      -- actual coins, wallet deductions, gift coin value, creator earnings,
+      -- broadcaster earnings, cashout balances, or financial transactions.
+      -- The coin transactions above already used v_total_cost (the original
+      -- gift value). Only the battle score receives the multiplier.
+      SELECT COALESCE(troll_time_multiplier, 1), id
+        INTO v_battle_multiplier, v_troll_time_event_id
+      FROM public.troll_time_events
+      WHERE battle_id = v_battle_id
+        AND status = 'active'
+        AND started_at <= now()
+        AND ends_at >= now()
+      ORDER BY started_at DESC
+      LIMIT 1;
 
-   -- ── Friday Battle Bonus ────────────────────────────────────────────────
-   IF v_battle_id IS NOT NULL THEN
-     v_is_friday := EXTRACT(DOW FROM (NOW() AT TIME ZONE 'America/Denver')) = 5;
-     IF v_is_friday THEN
-       v_bonus_result := public.award_friday_battle_gifter_bonus(p_sender_id, v_battle_id, v_total_cost::BIGINT);
-     END IF;
-   END IF;
+      v_battle_multiplier := COALESCE(v_battle_multiplier, 1);
 
-   RETURN jsonb_build_object(
-     'success', true,
-     'transaction_id', v_existing_id,
+      IF v_is_challenger THEN
+        UPDATE public.battles
+        SET score_challenger = COALESCE(score_challenger, 0) + (v_total_cost * v_battle_multiplier),
+            pot_challenger = COALESCE(pot_challenger, 0) + v_total_cost
+        WHERE id = v_battle_id;
+      ELSE
+        UPDATE public.battles
+        SET score_opponent = COALESCE(score_opponent, 0) + (v_total_cost * v_battle_multiplier),
+            pot_opponent = COALESCE(pot_opponent, 0) + v_total_cost
+        WHERE id = v_battle_id;
+      END IF;
+    END IF;
+
+    -- ── Persist Troll Time multiplier on stream_gifts (audit) ─────────────
+    UPDATE public.stream_gifts
+    SET battle_multiplier = v_battle_multiplier,
+        troll_time_event_id = v_troll_time_event_id
+    WHERE id::text = v_existing_id;
+
+    -- ── Persist Troll Time multiplier on coin_transactions (audit) ────────
+    UPDATE public.coin_transactions
+    SET battle_multiplier = v_battle_multiplier,
+        troll_time_event_id = v_troll_time_event_id
+    WHERE metadata->>'stream_gift_id' = v_existing_id;
+
+    -- ── Friday Battle Bonus ────────────────────────────────────────────────
+    IF v_battle_id IS NOT NULL THEN
+      v_is_friday := EXTRACT(DOW FROM (NOW() AT TIME ZONE 'America/Denver')) = 5;
+      IF v_is_friday THEN
+        v_bonus_result := public.award_friday_battle_gifter_bonus(p_sender_id, v_battle_id, v_total_cost::BIGINT);
+      END IF;
+    END IF;
+
+    RETURN jsonb_build_object(
+      'success', true,
+      'transaction_id', v_existing_id,
+      'battle_multiplier', v_battle_multiplier,
+      'battle_points', v_total_cost * v_battle_multiplier,
+      'gift_value', v_total_cost,
      'currency_used', 'coins',
      'gift_value', v_total_cost,
      'trollmonds_spent', v_trollmonds_to_deduct,

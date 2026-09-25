@@ -170,9 +170,9 @@ export default function PhoneTrollUpPage() {
         <div className="mb-6 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300"
+            className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
           </button>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-[0_0_14px_rgba(45,212,191,0.45)]">

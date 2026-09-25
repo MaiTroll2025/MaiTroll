@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Stream } from '@/types/broadcast';
-import { User, Eye, Play } from 'lucide-react';
+import { User, Eye, Play, Camera } from 'lucide-react';
 import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
@@ -126,6 +126,30 @@ export default function FeaturedBroadcasts() {
 
       {/* Featured Streams Grid */}
       <div className="grid grid-cols-2 gap-3 px-3 pb-3">
+        <div
+          onClick={() => {
+            if (!user) {
+              toast.info('Sign in to start broadcasting.')
+              navigate('/auth')
+              return
+            }
+            navigate('/broadcast/setup')
+          }}
+          className="relative aspect-video bg-gradient-to-br from-red-600/40 via-red-900/30 to-amber-500/20 rounded-xl overflow-hidden border-2 border-red-500/50 cursor-pointer group shadow-[0_0_25px_rgba(239,68,68,0.4),0_0_50px_rgba(250,204,21,0.25)] hover:shadow-[0_0_40px_rgba(239,68,68,0.6),0_0_70px_rgba(250,204,21,0.35)] transition-all hover:scale-[1.02]"
+        >
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-500/10 via-transparent to-amber-400/10" />
+          <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-amber-400/30" />
+          <div className="absolute inset-0 rounded-xl animate-ping bg-red-500/10" style={{ animationDuration: '2s' }} />
+          <div className="relative h-full flex flex-col items-center justify-center gap-2">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_20px_rgba(239,68,68,0.5),0_0_30px_rgba(250,204,21,0.4)]">
+              <Camera className="h-7 w-7 text-white drop-shadow-[0_0_6px_rgba(0,0,0,0.4)]" />
+            </div>
+            <span className="text-xs font-black uppercase tracking-wider text-white drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]">
+              Go Live
+            </span>
+            <span className="text-[9px] font-bold text-white/60">Start Broadcasting</span>
+          </div>
+        </div>
         {streams.slice(0, 4).map((stream) => {
           return (
             <div

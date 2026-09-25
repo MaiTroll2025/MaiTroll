@@ -76,7 +76,6 @@ export default function LevelStatusCard() {
             <Star className="h-3.5 w-3.5 text-yellow-300" />
             Level System
           </p>
-          <p className="mt-0.5 text-[10px] font-bold text-slate-400">City Rank Lvl {level}</p>
         </div>
         <Crown className="h-6 w-6 text-yellow-300 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]" />
       </div>

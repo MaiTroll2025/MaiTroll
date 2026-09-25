@@ -233,7 +233,6 @@ export default function UserProfileWidget() {
             <div className="mb-1.5 flex items-center justify-between text-[10px]">
               <span className="flex items-center gap-1 font-black text-emerald-300">
                 <Trophy size={11} />
-                City Rank Lvl {level}
               </span>
               <span className="font-black text-slate-300">{Math.round(safeProgress)}%</span>
             </div>

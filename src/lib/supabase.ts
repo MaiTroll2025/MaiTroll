@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { supabaseStorage } from './supabaseStorage'
 
 declare const __APP_VERSION__: string
 declare const __BUILD_TIME__: number
@@ -16,6 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage: supabaseStorage,
     // Removed flowType: 'pkce' - it causes session issues when tabs are backgrounded
     // and doesn't work well with autoRefreshToken in background tabs
     // Using default implicit flow which handles background refresh better

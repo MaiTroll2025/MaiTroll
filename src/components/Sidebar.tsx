@@ -33,6 +33,7 @@ import {
      Music,
      Newspaper,
        Package,
+       PawPrint,
        Phone,
        Radio,
        Scale,
@@ -40,6 +41,7 @@ import {
     Shield,
     ShoppingBag,
     Shuffle,
+    Sparkles,
     Star,
     Store,
     TrendingUp,
@@ -649,6 +651,8 @@ export default function Sidebar() {
               )}
 
               <SectionTitle title="Social + Life" collapsed={isSidebarCollapsed} />
+              <GridItem collapsed={isSidebarCollapsed} icon={Sparkles} label="MaiLife" to="/mai-life" active={isActive('/mai-life')} highlight={isUpdated('/mai-life')} onClick={() => markAsViewed('/mai-life')} className="text-cyan-200" tone="cyan" glow="cyan" />
+              <GridItem collapsed={isSidebarCollapsed} icon={PawPrint} label="Troll Animal Shelter" to="/troll-animal-shelter" active={isActive('/troll-animal-shelter')} highlight={isUpdated('/troll-animal-shelter')} onClick={() => markAsViewed('/troll-animal-shelter')} className="text-cyan-200" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Mail} label="UTroMail" to="/utromail" active={isActivePath('/utromail')} highlight={isUpdated('/utromail')} onClick={() => markAsViewed('/utromail')} className="text-emerald-400" tone="green" glow="green" />
               <GridItem collapsed={isSidebarCollapsed} icon={Shield} label="Insurance" to="/insurance" active={isActive('/insurance')} highlight={isUpdated('/insurance')} onClick={() => markAsViewed('/insurance')} className="text-cyan-300" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Package} label="Inventory" to="/inventory" active={isActive('/inventory')} highlight={isUpdated('/inventory')} onClick={() => markAsViewed('/inventory')} tone="purple" />

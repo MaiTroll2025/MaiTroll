@@ -77,7 +77,6 @@ export default function LeftNavSidebar({
   const trollmonds = Number((profile as any)?.trollmonds ?? 0)
   const crowns = Number((profile as any)?.crowns ?? 0)
 
-  const currentLevel = xpStore.level
 
   const displayName =
     profile?.display_name ||
@@ -158,6 +157,15 @@ export default function LeftNavSidebar({
     },
 
     {
+      label: 'MaiLife',
+      icon: Sparkles,
+      activeGradient: 'from-cyan-500 to-blue-600',
+      isExternal: true,
+      path: '/mai-life',
+      description: 'Your city identity, progression, and place in MaiTroll',
+    },
+
+    {
       label: 'Mai Talent Show',
       icon: Mic,
       activeGradient: 'from-pink-500 to-rose-600',
@@ -235,10 +243,6 @@ export default function LeftNavSidebar({
             <div className="min-w-0 flex-1">
               <p className={`truncate text-[11px] font-black ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
                 {displayName}
-              </p>
-
-              <p className={`text-[9px] font-bold ${theme === 'light' ? 'text-gray-500' : 'text-cyan-300/80'}`}>
-                City Rank Lv. {currentLevel}
               </p>
 
               <div className={`mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] font-bold ${theme === 'light' ? 'text-gray-600' : ''}`}>

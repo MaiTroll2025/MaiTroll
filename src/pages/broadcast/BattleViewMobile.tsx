@@ -5,6 +5,8 @@ import { Track } from "livekit-client";
 
 import { useBattleViewController } from "../../hooks/useBattleViewController";
 import type { BattleViewController } from "../../hooks/useBattleViewController";
+import useTrollTime from "../../hooks/useTrollTime";
+import TrollTimeBanner from "../../components/battle/TrollTimeBanner";
 import { getTrackPublications, safeParseMetadata } from "../../components/broadcast/BattleArena";
 import QuickGiftRow from "../../components/broadcast/QuickGiftRow";
 import type { ActiveBattle } from "../../components/broadcast/battle/ActiveBattlesPanel";
@@ -52,6 +54,7 @@ function normalizeId(v: string | null | undefined) {
  */
 export default function BattleViewMobile({ battleView }: { battleView: BattleViewController }) {
   const {
+    battleId,
     battle,
     bluePoints,
     redPoints,
@@ -90,6 +93,9 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     battleLocalVideoTrack,
     battleLocalAudioTrack,
   } = battleView;
+
+  // Server-authoritative Troll Time state for this battle.
+  const trollTime = useTrollTime(battleId);
 
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [shareSheetOpen, setShareSheetOpen] = React.useState(false);
@@ -309,6 +315,12 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
           countdown={preBattleCountdown}
         />
       )}
+      <TrollTimeBanner
+        active={trollTime.active}
+        multiplier={trollTime.multiplier}
+        endsAt={trollTime.endsAt}
+        eventId={trollTime.eventId}
+      />
       <MobileBattleHeader
         viewerCount={viewerCount}
         viewers={viewers}

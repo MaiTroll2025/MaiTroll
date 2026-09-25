@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Radio, Users, Play } from 'lucide-react'
+import { Radio, Users, Play, Camera } from 'lucide-react'
 import HorizontalScrollRow from './HorizontalScrollRow'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { supabase } from '@/lib/supabase'
 import TrollTrapModal from './TrollTrapModal'
+import { useNavigate } from 'react-router-dom'
 
 interface Broadcaster {
   id: string
@@ -23,6 +24,7 @@ export default function FeaturedBroadcastersRow({ onItemClick }: FeaturedBroadca
   const [loading, setLoading] = useState(true)
   const [showTrollModal, setShowTrollModal] = useState(false)
   const { isMobileWidth } = useIsMobile()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchBroadcasters = async () => {
@@ -90,14 +92,6 @@ export default function FeaturedBroadcastersRow({ onItemClick }: FeaturedBroadca
 
   const trollTiles = [
     {
-      id: 'troll-trap-1',
-      title: 'Just Chatting',
-      streamerName: 'MysteryTroll',
-      streamerAvatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Alexandra',
-      category: 'Just Chatting',
-      isTroll: true as const,
-    },
-    {
       id: 'troll-trap-2',
       title: 'Troll City',
       streamerName: 'DefinitelyLive',
@@ -119,7 +113,25 @@ export default function FeaturedBroadcastersRow({ onItemClick }: FeaturedBroadca
           ))
         ) : hasData ? (
           <div className={isMobileWidth ? 'grid w-full grid-cols-2 gap-3' : 'flex gap-3'}>
-            {broadcasters.slice(0, isMobileWidth ? 6 : broadcasters.length).map((item) => {
+            <button
+              type="button"
+              onClick={() => navigate('/broadcast/setup')}
+              className={`group relative flex shrink-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-red-500/60 bg-gradient-to-br from-red-600/40 via-red-900/30 to-amber-500/20 text-left shadow-[0_0_30px_rgba(239,68,68,0.5),0_0_60px_rgba(250,204,21,0.3)] transition-all duration-200 hover:scale-[1.04] hover:shadow-[0_0_50px_rgba(239,68,68,0.7),0_0_90px_rgba(250,204,21,0.45)] ${isMobileWidth ? 'h-[120px] w-full' : 'h-[180px] w-[150px]'}`}
+            >
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-red-500/15 via-transparent to-amber-400/10" />
+              <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-400/40" />
+              <div className="absolute inset-0 rounded-2xl animate-ping bg-red-500/10" style={{ animationDuration: '2s' }} />
+              <div className="relative flex flex-col items-center gap-2">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_40px_rgba(250,204,21,0.5)]">
+                  <Camera className="h-8 w-8 text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]" />
+                </div>
+                <p className="text-sm font-black uppercase tracking-wider text-white drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">
+                  Go Live
+                </p>
+                <p className="text-[9px] font-bold text-white/70">Start Broadcasting</p>
+              </div>
+            </button>
+            {broadcasters.slice(0, isMobileWidth ? 5 : broadcasters.length).map((item, index) => {
               const avatarUrl =
                 item.streamerAvatar ||
                 `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.streamerName)}`
@@ -130,6 +142,9 @@ export default function FeaturedBroadcastersRow({ onItemClick }: FeaturedBroadca
                   onClick={() => onItemClick(item.id)}
                   className={`group relative flex shrink-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080c1a]/95 text-left transition-all duration-200 hover:border-red-400/30 hover:shadow-[0_0_24px_rgba(239,68,68,0.12)] ${isMobileWidth ? 'h-[120px] w-full' : 'h-[180px] w-[150px]'}`}
                 >
+                  {index === 0 && (
+                    <span className="absolute bottom-2 right-2 z-10 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]" aria-hidden="true" />
+                  )}
                   <div className={`relative w-full shrink-0 overflow-hidden ${isMobileWidth ? 'h-[64px]' : 'h-[100px]'}`}>
                     {item.streamerAvatar ? (
                       <img
@@ -175,6 +190,24 @@ export default function FeaturedBroadcastersRow({ onItemClick }: FeaturedBroadca
           </div>
         ) : (
           <div className={isMobileWidth ? 'grid w-full grid-cols-2 gap-3' : 'flex gap-3'}>
+            <button
+              type="button"
+              onClick={() => navigate('/broadcast/setup')}
+              className={`group relative flex shrink-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-red-500/60 bg-gradient-to-br from-red-600/40 via-red-900/30 to-amber-500/20 text-left shadow-[0_0_30px_rgba(239,68,68,0.5),0_0_60px_rgba(250,204,21,0.3)] transition-all duration-200 hover:scale-[1.04] hover:shadow-[0_0_50px_rgba(239,68,68,0.7),0_0_90px_rgba(250,204,21,0.45)] ${isMobileWidth ? 'h-[120px] w-full' : 'h-[180px] w-[150px]'}`}
+            >
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-red-500/15 via-transparent to-amber-400/10" />
+              <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-400/40" />
+              <div className="absolute inset-0 rounded-2xl animate-ping bg-red-500/10" style={{ animationDuration: '2s' }} />
+              <div className="relative flex flex-col items-center gap-2">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_40px_rgba(250,204,21,0.5)]">
+                  <Camera className="h-8 w-8 text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]" />
+                </div>
+                <p className="text-sm font-black uppercase tracking-wider text-white drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">
+                  Go Live
+                </p>
+                <p className="text-[9px] font-bold text-white/70">Start Broadcasting</p>
+              </div>
+            </button>
             {trollTiles.map((tile) => (
               <button
                 key={tile.id}

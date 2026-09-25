@@ -776,7 +776,7 @@ export default function PhoneLeagues() {
           onClick={() => navigate(-1)}
           className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
 
         <div className="text-center">
@@ -793,9 +793,9 @@ export default function PhoneLeagues() {
         <button
           type="button"
           onClick={() => setShowBrowse(true)}
-          className="grid h-9 w-9 place-items-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/10 text-[#BF00FF]"
-        >
-          <Trophy className="h-4 w-4" />
+className="grid h-12 w-12 place-items-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
+          >
+            <Trophy size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
       </header>
 

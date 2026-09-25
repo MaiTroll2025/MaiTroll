@@ -6,7 +6,7 @@ import { useCoins } from '@/lib/hooks/useCoins';
 import { useBank as useBankHook } from '../lib/hooks/useBank';
 import { useAllCreditScores } from '../lib/hooks/useAllCreditScores';
 // import { toast } from 'sonner';
-import { Coins, CreditCard, Landmark, History, CheckCircle, AlertCircle, ChevronDown, X, Crown, Flame, RefreshCw, Sparkles, Wallet } from 'lucide-react';
+import { Coins, CreditCard, Landmark, History, CheckCircle, AlertCircle, ChevronDown, X, Crown, Flame, RefreshCw, Sparkles, Wallet, ShoppingBag } from 'lucide-react';
 import { formatCoins, COIN_PACKAGES } from '../lib/coinMath';
 import { getBroadcastTheme } from '../lib/broadcastThemes';
 import { deductCoins } from '@/lib/coinTransactions';
@@ -1482,7 +1482,6 @@ useEffect(() => {
                    <option value="bank">Bank</option>
                    <option value="perks">Perks</option>
                    <option value="insurance">Insurance</option>
-                   <option value="storage">Storage</option>
                    <option value="merch">Merch</option>
                 </select>
               
@@ -1539,7 +1538,7 @@ useEffect(() => {
                   onPurchase={async () => {
                     const trollPassPkg = {
                       id: 'troll_pass_bundle',
-                      coins: 1500,
+                      coins: 1250,
                       usd_price: 9.99,
                       price: '$9.99',
                       name: 'Troll Pass Premium',
@@ -1581,7 +1580,6 @@ useEffect(() => {
                         <div className="flex flex-col items-center text-center p-1">
                            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{pkg.emoji}</div>
                            <div className="font-bold text-2xl text-white mb-1">{formatCoins(pkg.coins)}</div>
-                           <div className="text-[10px] font-semibold text-emerald-400 mb-1">+10% bonus</div>
                            <div className="text-lg font-semibold text-green-400 mb-1">{pkg.price}</div>
                            <div className="text-sm text-gray-400 mb-4">Troll Coins</div>
 
@@ -1601,7 +1599,7 @@ useEffect(() => {
                   })}
                 </div>
                 <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-200 text-center">
-                  Secure payments processed via PayPal. All coin packs include 10% extra coins.
+                  Secure payments processed via PayPal.
                 </div>
               </>
               )}
@@ -1889,7 +1887,7 @@ useEffect(() => {
           {tab === 'perks' && (
             <>
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-purple-400" />
+                <ShoppingBag className="w-5 h-5 text-purple-400" />
                 Perks
               </h2>
               {perksNote && (
@@ -2006,7 +2004,7 @@ useEffect(() => {
           {tab === 'insurance' && (
             <>
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-purple-400" />
+                <ShoppingBag className="w-5 h-5 text-purple-400" />
                 Insurance Plans
               </h2>
               {insuranceNote && (
@@ -2059,7 +2057,7 @@ useEffect(() => {
           {tab === 'calls' && (
             <>
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-purple-400" />
+                <ShoppingBag className="w-5 h-5 text-purple-400" />
                 Call Minutes
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -2118,7 +2116,7 @@ useEffect(() => {
           {tab === 'themes' && (
             <>
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-purple-400" />
+                <ShoppingBag className="w-5 h-5 text-purple-400" />
                 Broadcast Themes
               </h2>
               <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded text-sm text-blue-200">

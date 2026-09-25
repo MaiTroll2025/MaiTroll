@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { AuthApiError } from '@supabase/supabase-js'
 import { supabase, isAdminEmail, isStaffEmail, ALLOWED_STAFF_EMAILS } from '../lib/supabase'
 import { post, API_ENDPOINTS } from '../lib/api'
 import { toast } from 'sonner'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
-import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Building2, Phone, Globe, MapPin, GraduationCap, Briefcase, Shield, Users } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Building2, Phone, Globe, MapPin, GraduationCap, Briefcase, Shield, Users, ChevronDown, ChevronUp } from 'lucide-react'
 import { validateInstitutionEmail } from '../lib/schoolValidation'
 import NavBubble from '../components/NavBubble';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
@@ -18,6 +18,84 @@ interface AuthProps {
   embedded?: boolean;
   onClose?: () => void;
   initialMode?: 'login' | 'signup';
+}
+
+// Role Dropdown Component
+function RoleDropdown({
+  label,
+  icon: Icon,
+  options,
+  value,
+  onChange,
+  className = '',
+}: {
+  label: string;
+  icon: React.ComponentType<any>;
+  options: Array<{ value: 'student' | 'user' | 'instructor' | 'staff' | 'admin'; label: string; icon: React.ComponentType<any> }>;
+  value: 'student' | 'user' | 'instructor' | 'staff' | 'admin';
+  onChange: (v: 'student' | 'user' | 'instructor' | 'staff' | 'admin') => void;
+  className?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value) || options[0];
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+      >
+        <div className="flex items-center gap-3 flex-1">
+          <div className="p-2 bg-purple-500/20 rounded-lg">
+            <Icon className="w-5 h-5 text-purple-400" />
+          </div>
+          <span className="font-semibold">{label}</span>
+        </div>
+        <div className="flex items-center gap-2 text-slate-400">
+          <span className="text-sm font-medium">{selectedOption.label}</span>
+          {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-20 top-full left-0 right-0 mt-2 bg-slate-900/95 border border-white/10 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                value === option.value
+                  ? 'bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-500/20 text-white'
+                  : 'text-slate-300 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div className={`p-2 rounded-lg ${value === option.value ? 'bg-white/10' : 'bg-white/5'}`}>
+                <option.icon className={`w-4 h-4 ${value === option.value ? 'text-cyan-300' : 'text-slate-400'}`} />
+              </div>
+              <span className="font-medium">{option.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 
@@ -675,65 +753,29 @@ try {
             </p>
           </div>
 
-{/* Role Tab Navigation */}
-          <div className="flex justify-center mb-8">
-            <div className="grid grid-cols-5 w-full max-w-xs bg-slate-800/50 border border-white/5 rounded-xl p-1 gap-1">
-              <button
-                onClick={() => setSelectedRole('student')}
-                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
-                  selectedRole === 'student'
-                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                }`}
-              >
-                <GraduationCap className="w-4 h-4" />
-                <span className="text-xs">Student</span>
-              </button>
-              <button
-                onClick={() => setSelectedRole('user')}
-                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
-                  selectedRole === 'user'
-                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                <span className="text-xs">User</span>
-              </button>
-              <button
-                onClick={() => setSelectedRole('instructor')}
-                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
-                  selectedRole === 'instructor'
-                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                }`}
-              >
-                <Briefcase className="w-4 h-4" />
-                <span className="text-xs">Instructor</span>
-              </button>
-              <button
-                onClick={() => setSelectedRole('staff')}
-                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
-                  selectedRole === 'staff'
-                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span className="text-xs">Staff</span>
-              </button>
-              <button
-                onClick={() => setSelectedRole('admin')}
-                className={`px-2 py-2 rounded-lg font-semibold transition-all duration-300 flex flex-col items-center gap-1 ${
-                  selectedRole === 'admin'
-                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span className="text-xs">Admin</span>
-              </button>
-            </div>
+{/* Role Selection Dropdowns */}
+          <div className="space-y-4 mb-8 w-full max-w-md">
+            <RoleDropdown
+              label="Institution Access"
+              icon={Building2}
+              value={['student', 'instructor', 'staff'].includes(selectedRole) ? selectedRole : 'student'}
+              onChange={setSelectedRole}
+              options={[
+                { value: 'student', label: 'Student', icon: GraduationCap },
+                { value: 'instructor', label: 'Instructor', icon: Briefcase },
+                { value: 'staff', label: 'Staff', icon: Shield },
+              ]}
+            />
+            <RoleDropdown
+              label="Personal Access"
+              icon={User}
+              value={['user', 'admin'].includes(selectedRole) ? selectedRole : 'user'}
+              onChange={setSelectedRole}
+              options={[
+                { value: 'user', label: 'User', icon: Users },
+                { value: 'admin', label: 'Admin', icon: Shield },
+              ]}
+            />
           </div>
 
           {/* Sign In / Sign Up Tab Navigation */}

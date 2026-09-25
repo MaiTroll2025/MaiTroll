@@ -814,9 +814,9 @@ export default function PhoneGoLive() {
           type="button"
           onClick={handleClose}
           disabled={starting}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition hover:bg-white/10 disabled:opacity-40"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
         >
-          <ArrowLeft size={21} />
+          <ArrowLeft size={26} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
 
         <div className="flex items-center gap-2">
@@ -839,9 +839,9 @@ export default function PhoneGoLive() {
           type="button"
           onClick={handleClose}
           disabled={starting}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition hover:bg-white/10 disabled:opacity-40"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
         >
-          <X size={20} />
+          <X size={26} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
       </header>
 

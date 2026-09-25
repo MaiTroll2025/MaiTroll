@@ -436,10 +436,10 @@ export default function PhoneHytroGameViewer() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/10 transition active:scale-95"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/20 text-white backdrop-blur-md transition active:scale-95"
               aria-label="Go back"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={20} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
             </button>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[10px] font-black text-white">{currentStream.title}</p>

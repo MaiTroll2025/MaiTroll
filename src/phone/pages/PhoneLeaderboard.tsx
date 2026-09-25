@@ -122,11 +122,11 @@ export default function PhoneLeaderboard() {
     <div className="min-h-screen bg-[#0A0814] text-white pb-[calc(80px+env(safe-area-inset-bottom,0px))]">
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#0A0814]/90 px-4 py-3 backdrop-blur-xl">
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white"
+          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
           aria-label="Back"
           onClick={() => navigate('/')}
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
         <h1 className="text-sm font-black uppercase tracking-widest text-white/80">Weekly Leaderboard</h1>
         <div className="w-9" />

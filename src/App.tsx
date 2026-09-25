@@ -30,6 +30,7 @@ import { SingOffJudgeApplicationsAdmin } from "./features/mai-sing-off/pages/Sin
 import { GlobalEventProvider } from "./contexts/GlobalEventContext";
 import { BatterySaverProvider } from "./contexts/BatterySaverContext";
 import { ProfileFrameProvider } from "./contexts/ProfileFrameContext";
+import PetFloatingButton from "./components/pets/PetFloatingButton";
 
 import { useEligibilityStore } from "./lib/eligibilityStore";
 import { useJailMode } from "./hooks/useJailMode";
@@ -537,6 +538,9 @@ const InmatesPage = lazyWithRetry(() => import("./pages/InmatesPage.js"));
 const JailAppealPage = lazyWithRetry(() => import("./pages/JailAppealPage.js"));
 const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup.js"));
 const Profile = lazyWithRetry(() => import("./pages/Profile.js"));
+const MaiLifePage = lazyWithRetry(() => import("./pages/MaiLifePage"));
+const TrollAnimalShelterPage = lazyWithRetry(() => import("./pages/TrollAnimalShelterPage"));
+const OwnerPage = lazyWithRetry(() => import("./pages/OwnerPage"));
 const MapPage = lazyWithRetry(() => import("./pages/MapPage.js"));
 const InsurancePage = lazyWithRetry(() => import("./pages/InsurancePage.js"));
 const NeighborhoodOnboarding = lazyWithRetry(() => import("./pages/NeighborhoodOnboarding.js"));
@@ -649,6 +653,7 @@ const HomeNotificationPrompt = lazyWithRetry(() => import("./components/HomeNoti
 import { GhostDropInProvider } from "./context/GhostDropInContext";
 const GhostBanner = lazyWithRetry(() => import("./components/home/GhostBanner"));
 const RTCAdminMonitor = lazyWithRetry(() => import("./components/admin/RTCAdminMonitor.tsx"));
+const RtcAdminMonitorGate = lazyWithRetry(() => import("./components/admin/RtcAdminMonitorGate.tsx"));
 import MKeyInvitePopup from "./components/broadcast/mkey/MKeyInvitePopup";
 import { useUtromailMessagePopup } from "@/hooks/useUtromailMessagePopup";
 import UtromailMessagePopup from "@/components/messaging/UtromailMessagePopup";
@@ -1648,6 +1653,7 @@ const handleVisibilityChange = async () => {
        <SwipeNavigationProvider>
       <LiveContentProvider>
             <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true} isJailed={isJailed}>
+             <PetFloatingButton />
            <GlobalPresenceTracker />
            {user && <AdminOfficerQuickMenu />}
            {user && <ChatBubble />}
@@ -1751,6 +1757,9 @@ const handleVisibilityChange = async () => {
 
 {/* Username-based public profile routes - must be after known routes */}
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/mai-life" element={<MaiLifePage />} />
+                <Route path="/troll-animal-shelter" element={<TrollAnimalShelterPage />} />
+                <Route path="/owner" element={<OwnerPage />} />
                 <Route path="/profile/id/:userId" element={<Profile />} />
                 <Route path="/profile/:username" element={<Profile />} />
 
@@ -1883,12 +1892,36 @@ const handleVisibilityChange = async () => {
                       <PresidentDashboard />
                     </RequireRole>
                   } />
-                  <Route path="/mayor" element={<MayorDashboard />} />
-                  <Route path="/town-meeting" element={<TownMeetingPage />} />
-                  <Route path="/city-government" element={<CityGovernmentPage />} />
-                  <Route path="/government/proposals" element={<GovernmentProposalsPage />} />
-                  <Route path="/government/openings" element={<CityOpeningsPage />} />
-                  <Route path="/government/newspaper" element={<CityNewspaperPage />} />
+<Route path="/mayor" element={
+                     <RequireRole roles={[UserRole.ADMIN, 'mayor']}>
+                       <MayorDashboard />
+                     </RequireRole>
+                   } />
+                   <Route path="/town-meeting" element={
+                     <RequireRole roles={[UserRole.ADMIN, 'mayor']}>
+                       <TownMeetingPage />
+                     </RequireRole>
+                   } />
+                   <Route path="/city-government" element={
+                     <RequireRole roles={[UserRole.ADMIN, 'mayor']}>
+                       <CityGovernmentPage />
+                     </RequireRole>
+                   } />
+                   <Route path="/government/proposals" element={
+                     <RequireRole roles={[UserRole.ADMIN, 'mayor']}>
+                       <GovernmentProposalsPage />
+                     </RequireRole>
+                   } />
+                   <Route path="/government/openings" element={
+                     <RequireRole roles={[UserRole.ADMIN, 'mayor']}>
+                       <CityOpeningsPage />
+                     </RequireRole>
+                   } />
+                   <Route path="/government/newspaper" element={
+                     <RequireRole roles={[UserRole.ADMIN, 'mayor']}>
+                       <CityNewspaperPage />
+                     </RequireRole>
+                   } />
                   <Route path="/president/secretary" element={
                     <RequireRole roles={[UserRole.SECRETARY, UserRole.ADMIN]}>
                       <SecretaryDashboard />
@@ -2739,13 +2772,13 @@ const handleVisibilityChange = async () => {
                      }
                    />
 <Route
-                      path="/rtcadminmonitor"
-                      element={
-                        <RequireRole roles={[UserRole.ADMIN, UserRole.HR_ADMIN, UserRole.AGENCY_HR_MANAGER, UserRole.LEAD_TROLL_OFFICER, UserRole.TROLL_OFFICER, UserRole.SECRETARY, 'ceo', 'officer', 'pastor']}>
-                          <RTCAdminMonitor />
-                        </RequireRole>
-                      }
-                    />
+                       path="/rtcadminmonitor"
+                       element={
+                         <RequireRole roles={[UserRole.ADMIN, UserRole.HR_ADMIN, UserRole.AGENCY_HR_MANAGER, UserRole.LEAD_TROLL_OFFICER, UserRole.TROLL_OFFICER, UserRole.SECRETARY, 'ceo', 'officer', 'pastor']}>
+                           <RtcAdminMonitorGate />
+                         </RequireRole>
+                       }
+                     />
                   <Route path="/rfc" element={<AdminRFC />} />
                   <Route
                     path="/changelog"
@@ -2868,7 +2901,9 @@ function App() {
                   <GhostDropInProvider>
                     {isPhone ? (
                       <LiveContentProvider>
-                        <PhoneApp />
+                        <StaffWalkieTalkieProvider>
+                          <PhoneApp />
+                        </StaffWalkieTalkieProvider>
                       </LiveContentProvider>
                     ) : <AppContent />}
                     <GhostBanner />

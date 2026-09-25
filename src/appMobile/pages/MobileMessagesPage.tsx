@@ -15,7 +15,7 @@ import {
   User,
   Zap,
 } from "lucide-react";
-import MobilePageShell from "../MobilePageShell";
+import MobilePageShell from "../components/MobilePageShell";
 
 type MessageFilter = "all" | "unread" | "important" | "sent";
 

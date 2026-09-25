@@ -60,7 +60,6 @@ export default function ExploreProfileCard() {
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-black text-white md:text-base">{displayName}</p>
-          <p className="text-[10px] font-bold text-cyan-300/80 md:text-xs">City Rank Lv. {currentLevel}</p>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold md:text-xs">
             <span className="flex items-center gap-1 text-yellow-300">
               <Coins className="h-3 w-3" /> {formatCoins(trollCoins)}

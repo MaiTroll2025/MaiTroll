@@ -18,8 +18,10 @@ import {
   MessageSquareOff,
   MessageSquare,
   Users,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import RecoveryBanner from './RecoveryBanner'
 
 interface MoreControlsDrawerProps {
   isOpen: boolean
@@ -373,6 +375,8 @@ export default function MoreControlsDrawer({
           </div>
 
           <div className="shrink-0 border-t border-white/10 bg-black/25 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
+            <SectionTitle label="Recovery" className="mb-3" />
+            <RecoveryBanner onRefresh={() => window.location.reload()} />
             <button
               type="button"
               onClick={onLeave}

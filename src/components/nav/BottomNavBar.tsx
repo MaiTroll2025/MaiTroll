@@ -226,11 +226,9 @@ interface NavButtonProps {
   badge?: number;
   badgeKey?: keyof import('@/hooks/useNavBadges').NavBadges;
   onBadgeDismiss?: (key: keyof import('@/hooks/useNavBadges').NavBadges) => void;
-  level?: number;
-  showLevelOrb?: boolean;
 }
 
-function NavButton({ icon: Icon, label, to, active, highlight, onClick, size = 'normal', badge, badgeKey, onBadgeDismiss, level, showLevelOrb }: NavButtonProps) {
+function NavButton({ icon: Icon, label, to, active, highlight, onClick, size = 'normal', badge, badgeKey, onBadgeDismiss }: NavButtonProps) {
   const isLarge = size === 'large';
 
   const handleClick = () => {
@@ -260,11 +258,6 @@ function NavButton({ icon: Icon, label, to, active, highlight, onClick, size = '
       {badge !== undefined && badge > 0 && (
         <span className="absolute -right-0.5 -top-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-red-500 px-0.5 text-[7px] font-bold text-white">
           {badge > 9 ? '9+' : badge}
-        </span>
-      )}
-      {showLevelOrb && level !== undefined && (
-        <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-cyan-500 px-0.5 text-[6px] font-black text-white ring-1 ring-cyan-300/60">
-          {level}
         </span>
       )}
       {active && (
@@ -347,6 +340,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
           { label: 'Coin Store', icon: Coins, path: '/store' },
           { label: 'My Garage', icon: Car, path: '/garage' },
           { label: 'Troll Up', icon: Zap, path: '/troll-up' },
+          { label: 'MaiLife', icon: Sparkles, path: '/mai-life' },
         ],
       },
       {
@@ -582,13 +576,9 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
                         {displayName.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-slate-950 px-0.5 text-[7px] font-black text-cyan-300 ring-1 ring-cyan-400/60">
-                      {currentLevel}
-                    </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-black text-white">{displayName}</p>
-                    <p className="text-[9px] font-bold text-cyan-300/80">City Rank Lv. {currentLevel}</p>
                     <div className="mt-1 flex items-center gap-2 text-[9px] font-bold">
                       <span className="flex items-center gap-0.5 text-yellow-300">
                         <Coins className="h-2.5 w-2.5" /> {formatCoins(trollCoins)}
@@ -873,8 +863,6 @@ export default function BottomNavBar() {
                   }}
                   active={false}
                   size="large"
-                  level={xpStore.level}
-                  showLevelOrb={isMobile}
                 />
                 <NavButton icon={Bell} label="Alerts" to="/notifications" active={isActive('/notifications')} size="large" badge={badges.alerts} badgeKey="alerts" onBadgeDismiss={badges.dismiss} />
                 <NavButton icon={Search} label="Search" to="/search" active={isActive('/search')} size="large" />

@@ -2371,15 +2371,34 @@ function drawWalkingPerson(
   x: number,
   groundY: number,
   time: number,
+  pedestrian: {
+    variant: 'male' | 'female'
+    phase: number
+    hasPhone: boolean
+    clothes: {
+      shirt: string
+      pants: string
+      hair: string
+      shoe: string
+      skirt: boolean
+      skirtColor: string
+    }
+  },
 ) {
   const cycle =
-    Math.sin(time * 7)
+    Math.sin(time * 7 + pedestrian.phase)
 
-  const skin = '#d4a574'
-  const shirt = '#2563eb'
-  const pants = '#1e293b'
-  const hair = '#3e2723'
-  const shoe = '#0f172a'
+  const skin = pedestrian.variant === 'female'
+    ? '#f0c9a0'
+    : '#d4a574'
+
+  const shirt = pedestrian.clothes.shirt
+  const pants = pedestrian.clothes.pants
+  const hair = pedestrian.clothes.hair
+  const shoe = pedestrian.clothes.shoe
+  const skirt = pedestrian.clothes.skirt
+  const skirtColor = pedestrian.clothes.skirtColor
+  const hasPhone = pedestrian.hasPhone
 
   ctx.save()
 
@@ -2497,22 +2516,18 @@ function drawWalkingPerson(
     belbowY + 10
 
   ctx.beginPath()
-
   ctx.moveTo(
     -6,
     -38,
   )
-
   ctx.lineTo(
     belbowX,
     belbowY,
   )
-
   ctx.lineTo(
     bhandX,
     bhandY,
   )
-
   ctx.stroke()
 
   /* front leg */
@@ -2544,22 +2559,18 @@ function drawWalkingPerson(
   ctx.lineWidth = 7
 
   ctx.beginPath()
-
   ctx.moveTo(
     2,
     0,
   )
-
   ctx.lineTo(
     fkneeX,
     fkneeY,
   )
-
   ctx.lineTo(
     ffootX,
     ffootY,
   )
-
   ctx.stroke()
 
   /* front arm */
@@ -2592,23 +2603,31 @@ function drawWalkingPerson(
   ctx.lineWidth = 5
 
   ctx.beginPath()
-
   ctx.moveTo(
     6,
     -38,
   )
-
   ctx.lineTo(
     felbowX,
     felbowY,
   )
-
   ctx.lineTo(
     fhandX,
     fhandY,
   )
-
   ctx.stroke()
+
+  /* skirt for females */
+  if (skirt) {
+    ctx.fillStyle = skirtColor
+    ctx.beginPath()
+    ctx.moveTo(-8, -4)
+    ctx.lineTo(8, -4)
+    ctx.lineTo(6, 14)
+    ctx.lineTo(-6, 14)
+    ctx.closePath()
+    ctx.fill()
+  }
 
   /* hands */
 
@@ -2616,7 +2635,6 @@ function drawWalkingPerson(
     skin
 
   ctx.beginPath()
-
   ctx.arc(
     bhandX,
     bhandY,
@@ -2624,11 +2642,9 @@ function drawWalkingPerson(
     0,
     Math.PI * 2,
   )
-
   ctx.fill()
 
   ctx.beginPath()
-
   ctx.arc(
     fhandX,
     fhandY,
@@ -2636,8 +2652,55 @@ function drawWalkingPerson(
     0,
     Math.PI * 2,
   )
-
   ctx.fill()
+
+  /* phone in front hand with flash */
+  if (hasPhone) {
+    const phoneW = 7
+    const phoneH = 13
+    const phoneX = fhandX - phoneW / 2 + 1
+    const phoneY = fhandY - phoneH / 2 - 2
+
+    // Phone body
+    ctx.fillStyle = '#1a1a2e'
+    ctx.strokeStyle = '#0a0a14'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.rect(phoneX, phoneY, phoneW, phoneH)
+    ctx.fill()
+    ctx.stroke()
+
+    // Phone screen
+    ctx.fillStyle = '#0d1b2a'
+    ctx.fillRect(phoneX + 0.8, phoneY + 1, phoneW - 1.6, phoneH - 2.5)
+
+    // Flash pointing at the person (toward their face)
+    const flashX = phoneX + phoneW / 2 - 1
+    const flashY = phoneY + 2
+    const flashPulse = 0.5 + Math.sin(time * 12 + pedestrian.phase) * 0.5
+    const flashR = 2 + flashPulse * 2
+
+    ctx.save()
+    ctx.translate(flashX, flashY)
+    ctx.rotate(-0.6)
+
+    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, flashR * 3)
+    grad.addColorStop(0, `rgba(255,255,220,${0.9 * flashPulse})`)
+    grad.addColorStop(0.4, `rgba(255,240,150,${0.5 * flashPulse})`)
+    grad.addColorStop(1, 'rgba(255,240,150,0)')
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.arc(0, 0, flashR * 3, 0, Math.PI * 2)
+    ctx.fill()
+
+    // Bright flash core
+    ctx.fillStyle = `rgba(255,255,240,${flashPulse})`
+    ctx.beginPath()
+    ctx.arc(0, 0, flashR, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.restore()
+  }
 
   /* shoes */
 
@@ -2645,7 +2708,6 @@ function drawWalkingPerson(
     shoe
 
   ctx.beginPath()
-
   ctx.ellipse(
     ffootX - 2,
     ffootY,
@@ -2655,11 +2717,9 @@ function drawWalkingPerson(
     0,
     Math.PI * 2,
   )
-
   ctx.fill()
 
   ctx.beginPath()
-
   ctx.ellipse(
     bfootX - 2,
     bfootY,
@@ -2669,7 +2729,6 @@ function drawWalkingPerson(
     0,
     Math.PI * 2,
   )
-
   ctx.fill()
 
   /* head */
@@ -2681,7 +2740,6 @@ function drawWalkingPerson(
     skin
 
   ctx.beginPath()
-
   ctx.arc(
     headX,
     headY,
@@ -2689,7 +2747,6 @@ function drawWalkingPerson(
     0,
     Math.PI * 2,
   )
-
   ctx.fill()
 
   /* hair */
@@ -2698,7 +2755,6 @@ function drawWalkingPerson(
     hair
 
   ctx.beginPath()
-
   ctx.arc(
     headX,
     headY - 2,
@@ -2706,7 +2762,6 @@ function drawWalkingPerson(
     Math.PI,
     0,
   )
-
   ctx.fill()
 
   /* eye */
@@ -2715,7 +2770,6 @@ function drawWalkingPerson(
     '#1e293b'
 
   ctx.beginPath()
-
   ctx.arc(
     headX + 3,
     headY - 1,
@@ -2723,7 +2777,6 @@ function drawWalkingPerson(
     0,
     Math.PI * 2,
   )
-
   ctx.fill()
 
   /* smile */
@@ -2734,7 +2787,6 @@ function drawWalkingPerson(
   ctx.lineWidth = 1
 
   ctx.beginPath()
-
   ctx.arc(
     headX + 3,
     headY + 3,
@@ -2742,7 +2794,6 @@ function drawWalkingPerson(
     0.2,
     Math.PI - 0.2,
   )
-
   ctx.stroke()
 
   ctx.restore()
@@ -2755,11 +2806,13 @@ function drawWalkingPerson(
 export default function DynamicWeatherBackground({
   isDark = true,
   showWalker = false,
+  walkerCount = 1,
   buildings: buildingMetas = DEFAULT_BUILDINGS,
   onBuildingClick,
 }: {
   isDark?: boolean
   showWalker?: boolean
+  walkerCount?: number
   buildings?: BuildingMeta[]
   onBuildingClick?: (
     to: string,
@@ -2806,13 +2859,28 @@ export default function DynamicWeatherBackground({
   const onBuildingClickRef =
     useRef(onBuildingClick)
 
-  const walkerRef = useRef({
-    x: -60,
-    active: false,
-  })
+  const walkersRef = useRef<{
+    x: number
+    active: boolean
+    speed: number
+    variant: 'male' | 'female'
+    phase: number
+    hasPhone: boolean
+    clothes: {
+      shirt: string
+      pants: string
+      hair: string
+      shoe: string
+      skirt: boolean
+      skirtColor: string
+    }
+  }[]>([])
 
   const showWalkerRef =
     useRef(showWalker)
+
+  const walkerCountRef =
+    useRef(walkerCount)
 
   const flyingLeavesRef =
     useRef<FlyingLeaf[]>([])
@@ -2833,6 +2901,11 @@ export default function DynamicWeatherBackground({
     showWalkerRef.current =
       showWalker
   }, [showWalker])
+
+  useEffect(() => {
+    walkerCountRef.current =
+      walkerCount
+  }, [walkerCount])
 
   /* Weather */
 
@@ -3385,35 +3458,68 @@ export default function DynamicWeatherBackground({
       if (
         showWalkerRef.current
       ) {
-        const walker =
-          walkerRef.current
+        const count = Math.max(1, walkerCountRef.current)
 
-        if (!walker.active) {
-          walker.active =
-            true
-
-          walker.x = -60
+        // Ensure we have enough walkers
+        while (walkersRef.current.length < count) {
+          const isFemale = walkersRef.current.length % 2 === 1
+          const clothes = isFemale
+            ? {
+                shirt: '#ec4899',
+                pants: '#1e293b',
+                hair: '#fde68a',
+                shoe: '#1f2937',
+                skirt: true,
+                skirtColor: '#fb7185',
+              }
+            : {
+                shirt: ['#2563eb', '#16a34a', '#dc2626', '#7c3aed'][walkersRef.current.length % 4],
+                pants: '#1e293b',
+                hair: ['#3e2723', '#4a3728', '#6b4423'][walkersRef.current.length % 3],
+                shoe: '#0f172a',
+                skirt: false,
+                skirtColor: '#000000',
+              }
+          walkersRef.current.push({
+            x: -60 - walkersRef.current.length * 30,
+            active: false,
+            speed: 0.9 + Math.random() * 0.5,
+            variant: isFemale ? 'female' : 'male',
+            phase: walkersRef.current.length * 1.5,
+            hasPhone: walkersRef.current.length % 3 === 0,
+            clothes,
+          })
         }
 
-        walker.x += 1.1
+        // Trim extra walkers
+        walkersRef.current = walkersRef.current.slice(0, count)
 
-        if (
-          walker.x >
-          cityCanvas.width +
-            80
-        ) {
-          walker.x = -60
+        const width = cityCanvas.width
+
+        for (const walker of walkersRef.current) {
+          if (!walker.active) {
+            walker.active = true
+            walker.x = -60 - Math.random() * 200
+          }
+
+          walker.x += walker.speed
+
+          if (walker.x > width + 80) {
+            walker.x = -60 - Math.random() * 300
+          }
+
+          drawWalkingPerson(
+            cityCtx,
+            walker.x,
+            groundY,
+            time,
+            walker,
+          )
         }
-
-        drawWalkingPerson(
-          cityCtx,
-          walker.x,
-          groundY,
-          time,
-        )
       } else {
-        walkerRef.current.active =
-          false
+        for (const walker of walkersRef.current) {
+          walker.active = false
+        }
       }
 
       /* -------------------------------------------------------------- */

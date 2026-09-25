@@ -29,6 +29,8 @@ import { generateUUID } from '../../lib/uuid'
 import FileLawsuitModal from '../../components/FileLawsuitModal'
 import JudgeRulingModal from '../../components/JudgeRulingModal'
 import PayWarrantModal from '../../components/PayWarrantModal'
+import ProtectionOrderFiling from '../../components/ProtectionOrderFiling'
+import ProtectionOrderCases from '../../components/ProtectionOrderCases'
 import { UserSearchInput } from '../../components/UserSearchDropdown'
 
 const CASE_TYPE_MAP: Record<string, string> = {
@@ -63,6 +65,7 @@ export default function PhoneTrollCourt() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isFileLawsuitModalOpen, setIsFileLawsuitModalOpen] = useState(false)
+  const [isProtectionOrderOpen, setIsProtectionOrderOpen] = useState(false)
   const [showPayWarrantModal, setShowPayWarrantModal] = useState(false)
   const [selectedCaseForRuling, setSelectedCaseForRuling] = useState<any>(null)
 
@@ -736,6 +739,13 @@ export default function PhoneTrollCourt() {
                   tone="red"
                 />
 
+                <PhoneAction
+                  icon={<Shield size={16} />}
+                  label="Protection Order"
+                  onClick={() => setIsProtectionOrderOpen(true)}
+                  tone="gold"
+                />
+
                 {canSummonUser && (
                   <PhoneAction
                     icon={<Stamp size={16} />}
@@ -794,6 +804,13 @@ export default function PhoneTrollCourt() {
                     setIsFileLawsuitModalOpen(true)
                   }
                   tone="red"
+                />
+
+                <PhoneAction
+                  icon={<Shield size={16} />}
+                  label="Protection Order"
+                  onClick={() => setIsProtectionOrderOpen(true)}
+                  tone="gold"
                 />
 
                 {profile?.has_active_warrant && (
@@ -915,6 +932,8 @@ export default function PhoneTrollCourt() {
             </div>
           </PhoneSection>
         )}
+
+        <ProtectionOrderCases compact />
 
         {/* CALENDAR */}
         <PhoneSection
@@ -1425,6 +1444,12 @@ export default function PhoneTrollCourt() {
         onSuccess={() => {
           loadMyCases()
         }}
+      />
+
+      <ProtectionOrderFiling
+        isOpen={isProtectionOrderOpen}
+        onClose={() => setIsProtectionOrderOpen(false)}
+        onSuccess={loadMyCases}
       />
 
       <PayWarrantModal

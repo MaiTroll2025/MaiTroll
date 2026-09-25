@@ -1,17 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../supabaseClient';
 import { X, Search, Gavel, AlertTriangle, Scale } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../lib/store';
 
+interface LawsuitDefendant {
+  id: string;
+  username: string;
+  avatar_url?: string | null;
+}
+
 interface FileLawsuitModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  defendant?: LawsuitDefendant | null;
 }
 
-export default function FileLawsuitModal({ isOpen, onClose, onSuccess }: FileLawsuitModalProps) {
+export default function FileLawsuitModal({ isOpen, onClose, onSuccess, defendant }: FileLawsuitModalProps) {
   const [loading, setLoading] = useState(false);
   const { profile } = useAuthStore();
 
@@ -25,6 +33,12 @@ export default function FileLawsuitModal({ isOpen, onClose, onSuccess }: FileLaw
   const [description, setDescription] = useState('');
   const [evidenceUrl, setEvidenceUrl] = useState('');
   const [claimAmount, setClaimAmount] = useState<number>(0);
+
+  useEffect(() => {
+    if (defendant?.id) {
+      setSelectedDefendant(defendant);
+    }
+  }, [defendant]);
 
   const CASE_CATEGORIES = [
     'Debt / Unpaid Loan',
@@ -104,8 +118,8 @@ export default function FileLawsuitModal({ isOpen, onClose, onSuccess }: FileLaw
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  const modalContent = (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
       <div className="bg-[#120F1D] border border-purple-500/30 rounded-xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
@@ -265,4 +279,8 @@ export default function FileLawsuitModal({ isOpen, onClose, onSuccess }: FileLaw
       </div>
     </div>
   );
+
+  // Render into document.body to escape ancestor stacking contexts (e.g.
+  // backdrop-blur on ProfileHeader) so the modal sits above the profile tabs
+  return createPortal(modalContent, document.body);
 }

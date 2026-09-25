@@ -39,6 +39,7 @@ import PhoneAdminReports from './pages/PhoneAdminReports'
 import PhoneAdminModeration from './pages/PhoneAdminModeration'
 import PhoneAdminSettings from './pages/PhoneAdminSettings'
 import PhoneAdminMobile from './pages/PhoneAdminMobile'
+import PhoneRtcAdminMonitor from './pages/PhoneRtcAdminMonitor'
 import PhonePlaceholderPage from './pages/PhonePlaceholderPage'
 import PhoneSearch from './pages/PhoneSearch'
 import PhoneFamily from './pages/PhoneFamily'
@@ -64,7 +65,12 @@ import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { moderation } from '@/services/maitrollModeration'
 import { useEffect, useState } from 'react'
+import { registerNativePush } from '@/lib/nativePush'
 import PhoneStore from './pages/PhoneStore'
+import PetFloatingButton from '../components/pets/PetFloatingButton'
+import MaiLifePage from '../pages/MaiLifePage'
+import TrollAnimalShelterPage from '../pages/TrollAnimalShelterPage'
+import OwnerPage from '../pages/OwnerPage'
 
 function GlobalUtromailPopup() {
   const popup = useUtromailMessagePopup()
@@ -166,6 +172,13 @@ function PhoneJailRedirect({ children }: { children: React.ReactNode }) {
 export default function PhoneApp() {
   const authUser = useAuthStore((state) => state.user)
 
+  // Register native push notifications when user logs in
+  useEffect(() => {
+    if (authUser?.id) {
+      registerNativePush(authUser.id)
+    }
+  }, [authUser?.id])
+
   return (
     <PhoneErrorBoundary>
       <PhoneJailRedirect>
@@ -189,6 +202,9 @@ export default function PhoneApp() {
             <Route path="/coins" element={<PhoneCoins />} />
             <Route path="/wallet" element={<PhoneMaiPay />} />
             <Route path="/profile" element={<PhoneProfile />} />
+            <Route path="/mai-life" element={<MaiLifePage />} />
+            <Route path="/troll-animal-shelter" element={<TrollAnimalShelterPage />} />
+            <Route path="/owner" element={<OwnerPage />} />
             <Route path="/following" element={<PhoneFollowing />} />
             <Route path="/following/:userId" element={<PhoneFollowing />} />
             <Route path="/following/:username" element={<PhoneFollowing />} />
@@ -201,6 +217,7 @@ export default function PhoneApp() {
             <Route path="/utromail/:threadId" element={<PhoneChat />} />
             <Route path="/admin" element={<PhoneAdminDashboard />} />
             <Route path="/admin-mobile" element={<PhoneAdminMobile />} />
+            <Route path="/rtcadminmonitor" element={<PhoneRtcAdminMonitor />} />
             <Route path="/support" element={<PhoneSupport />} />
             <Route path="/safety" element={<PhoneSafety />} />
             <Route path="/legal" element={<PhoneLegal />} />
@@ -256,6 +273,8 @@ export default function PhoneApp() {
           <MKeyInvitePopup />
 
           <GlobalUtromailPopup />
+
+          <PetFloatingButton />
 
           <PhoneBottomNav />
         </div>

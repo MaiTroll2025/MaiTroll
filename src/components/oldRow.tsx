@@ -31,7 +31,6 @@ import TrollWallFeed from '@/components/home/TrollWallFeed'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
 import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
-import AcademyTab from '@/components/home/AcademyTab'
 import LiveAuctionMiniWindow from '@/components/home/LiveAuctionMiniWindow'
 import SupportGoalReminderModal from '@/components/SupportGoalReminderModal'
 import { useSupportGoalReminder } from '@/hooks/useSupportGoalReminder'
@@ -242,7 +241,6 @@ function LevelStatusCard() {
             <Star className="h-4 w-4 text-yellow-300" />
             Level System
           </p>
-          <p className="mt-1 text-[11px] font-bold text-slate-400">City Rank Lvl 385</p>
         </div>
         <Crown className="h-8 w-8 text-yellow-300 drop-shadow-[0_0_16px_rgba(250,204,21,0.6)]" />
       </div>
@@ -1278,10 +1276,6 @@ export default function Home() {
               <PresidentCandidatesTab />
             </Suspense>
           </section>
-        )}
-
-        {activeTab === 'academy' && (
-          <AcademyTab />
         )}
       </main>
 

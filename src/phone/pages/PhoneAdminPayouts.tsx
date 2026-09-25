@@ -325,13 +325,13 @@ export default function PhoneAdminPayouts() {
       <div className="relative min-h-screen w-full bg-[#05010f] text-white">
         <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#00BFFF]/20 bg-[#05010f]/90 px-4 py-3 backdrop-blur-2xl">
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white"
+            className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
             onClick={() => navigate(-1)}
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
           </button>
           <h1 className={`text-sm font-black uppercase tracking-widest ${neonTextGradient}`}>Payouts</h1>
-          <div className="w-9" />
+          <div className="w-12" />
         </header>
         <main className="p-6 text-center text-sm text-zinc-400">
           Access denied. Admin privileges required.
@@ -344,18 +344,18 @@ export default function PhoneAdminPayouts() {
     <div className="relative min-h-screen w-full bg-[#05010f] text-white">
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#00BFFF]/20 bg-[#05010f]/90 px-4 py-3 backdrop-blur-2xl">
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white"
+          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
           onClick={() => navigate(-1)}
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
         </button>
         <h1 className={`text-sm font-black uppercase tracking-widest ${neonTextGradient}`}>Payouts</h1>
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white"
+          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
           onClick={() => loadPayouts(true)}
           disabled={refreshing}
         >
-          <RefreshCw size={16} className={cn(refreshing && 'animate-spin')} />
+          <RefreshCw size={28} className={cn(refreshing && 'animate-spin', 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]')} />
         </button>
       </header>
 
