@@ -19,6 +19,7 @@ import {
   MessageSquare,
   Users,
   RefreshCw,
+  Zap,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import RecoveryBanner from './RecoveryBanner'
@@ -59,6 +60,7 @@ interface MoreControlsDrawerProps {
   userActionUserId?: string
   onPaidChat?: () => void
   onOpenSeatsModal?: () => void
+  onTrollUp?: () => void
 }
 
 export default function MoreControlsDrawer({
@@ -92,6 +94,7 @@ export default function MoreControlsDrawer({
   userActionUserId,
   onPaidChat,
   onOpenSeatsModal,
+  onTrollUp,
 }: MoreControlsDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
 
@@ -301,14 +304,22 @@ export default function MoreControlsDrawer({
                     />
                   )}
 
-                  {isHost && onPaidChat && (
-                    <ControlButton
-                      icon={MessageSquare}
-                      label="Paid Chat"
-                      onClick={onPaidChat}
-                    />
-                  )}
-                </div>
+{isHost && onPaidChat && (
+                      <ControlButton
+                        icon={MessageSquare}
+                        label="Paid Chat"
+                        onClick={onPaidChat}
+                      />
+                    )}
+
+                    {isHost && onTrollUp && (
+                      <ControlButton
+                        icon={Zap}
+                        label="Troll Up"
+                        onClick={onTrollUp}
+                      />
+                    )}
+                  </div>
               </>
             )}
 

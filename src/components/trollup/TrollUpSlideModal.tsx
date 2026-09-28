@@ -162,13 +162,21 @@ export default function TrollUpSlideModal({ isOpen, onClose }: { isOpen: boolean
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="fixed inset-y-0 right-0 z-[200] w-full max-w-md overflow-y-auto border-l border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-2xl"
-        >
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[190] bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed inset-y-0 right-0 z-[200] w-full max-w-md overflow-y-auto border-l border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-2xl"
+          >
           <div className="p-5">
             {/* Header */}
             <div className="mb-5 flex items-center justify-between">
@@ -361,11 +369,12 @@ export default function TrollUpSlideModal({ isOpen, onClose }: { isOpen: boolean
                   })}
                 </div>
               )}
-            </section>
+</section>
           </div>
         </motion.div>
+        </>
       )
     }
-    </AnimatePresence>
+  </AnimatePresence>
   )
 }

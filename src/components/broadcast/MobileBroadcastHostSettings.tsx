@@ -19,6 +19,7 @@ import {
   UserPlus,
   Circle,
   MessageSquare,
+  Zap,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -54,6 +55,7 @@ interface MobileBroadcastHostSettingsProps {
   onUnmuteAllSeats?: () => void;
   onCameraOffAllSeats?: () => void;
   onCameraOnAllSeats?: () => void;
+  onTrollUp?: () => void;
   seatControls?: Array<{
     index: number
     username: string
@@ -185,6 +187,7 @@ export default function MobileBroadcastHostSettings({
   onUnmuteAllSeats,
   onCameraOffAllSeats,
   onCameraOnAllSeats,
+  onTrollUp,
   seatControls = [],
   disabled = false,
 }: MobileBroadcastHostSettingsProps) {
@@ -293,6 +296,15 @@ export default function MobileBroadcastHostSettings({
       bgColor: 'bg-yellow-500/15',
       borderColor: 'border-yellow-400/30',
       action: onOpenCoinStore,
+    },
+    {
+      id: 'trollup',
+      label: 'Troll Up',
+      icon: Zap,
+      color: 'text-cyan-400',
+      bgColor: 'bg-cyan-500/15',
+      borderColor: 'border-cyan-400/30',
+      action: () => { onTrollUp?.() },
     },
     {
       id: 'officer',

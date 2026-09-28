@@ -20,7 +20,6 @@ import {
   Video,
   VideoOff,
   X,
-  Zap,
   AlertTriangle,
   AlertCircle,
 } from 'lucide-react'
@@ -316,6 +315,24 @@ export default function PhoneBroadcastPage() {
     useStreamAudiencePresence(
       streamId || '',
       user?.id,
+      {
+        onPresenceChange: event => {
+          if (!streamId || !event?.member?.username) return
+          const username = event.member.username
+          if (user?.id && event.member.user_id === user.id) return
+          const content = event.type === 'join'
+            ? `${username} entered the stream`
+            : `${username} left the stream`
+          const msgId = `presence-${event.type}-${event.member.user_id}-${Date.now()}`
+          setFloatingMessages(prev => {
+            if (prev.some(m => m.id.startsWith(`presence-${event.type}-${event.member.user_id}-`))) return prev
+            return [{ id: msgId, username, text: content, timestamp: Date.now(), isSystem: true }, ...prev].slice(0, 50)
+          })
+          window.setTimeout(() => {
+            setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+          }, 30_000)
+        },
+      },
     )
 
   const cashoutBanner = useCashoutBanner({
@@ -2165,27 +2182,33 @@ export default function PhoneBroadcastPage() {
                   key={message.id}
                   className="pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300"
                 >
-                  <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 shadow-lg backdrop-blur-md">
-                    {canClickFloatingChatUsername ? (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenFloatingChatUsername(message.username)}
-                        className="text-[10px] font-black text-cyan-300 transition-colors hover:text-cyan-100"
-                      >
-                        {message.username}
-                      </button>
-                    ) : (
-                      <span className="text-[10px] font-black text-cyan-300">
-                        {message.username}
+                  {message.isSystem ? (
+                    <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 shadow-lg backdrop-blur-md">
+                      <span className="text-[10px] font-semibold text-cyan-200/90">{message.text}</span>
+                    </div>
+                  ) : (
+                    <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 shadow-lg backdrop-blur-md">
+                      {canClickFloatingChatUsername ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenFloatingChatUsername(message.username)}
+                          className="text-[10px] font-black text-cyan-300 transition-colors hover:text-cyan-100"
+                        >
+                          {message.username}
+                        </button>
+                      ) : (
+                        <span className="text-[10px] font-black text-cyan-300">
+                          {message.username}
+                        </span>
+                      )}
+                      <span className="text-[10px] font-bold text-white/40">
+                        sent:{' '}
                       </span>
-                    )}
-                    <span className="text-[10px] font-bold text-white/40">
-                      sent:{' '}
-                    </span>
-                    <span className="text-[10px] font-semibold text-white/90">
-                      {message.text}
-                    </span>
-                  </div>
+                      <span className="text-[10px] font-semibold text-white/90">
+                        {message.text}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
           </div>
@@ -2219,10 +2242,11 @@ export default function PhoneBroadcastPage() {
                onMuteAllSeats={muteAllSeats}
                onUnmuteAllSeats={unmuteAllSeats}
 onCameraOffAllSeats={cameraOffAllSeats}
-                onCameraOnAllSeats={cameraOnAllSeats}
-                seatControls={seatControls}
-                disabled={isEnding}
-              />
+                 onCameraOnAllSeats={cameraOnAllSeats}
+                 seatControls={seatControls}
+                 onTrollUp={() => setShowTrollUpModal(true)}
+                 disabled={isEnding}
+               />
           </div>
         )}
 
@@ -2366,14 +2390,16 @@ onCameraOffAllSeats={cameraOffAllSeats}
                 onTextPopup={() => {}}
                 onMuteAllSeats={muteAllSeats}
                 onUnmuteAllSeats={unmuteAllSeats}
-                onCameraOffAllSeats={cameraOffAllSeats}
+onCameraOffAllSeats={cameraOffAllSeats}
                 onCameraOnAllSeats={cameraOnAllSeats}
                 seatControls={seatControls}
+                onTrollUp={() => setShowTrollUpModal(true)}
                 disabled={isEnding}
               />
             </div>
           </div>
         )}
+
         {showModActionMenu && selectedActionUserId && (
           <UserActionModal
             onClose={() => {
@@ -2390,7 +2416,6 @@ onCameraOffAllSeats={cameraOffAllSeats}
           />
         )}
       </div>
-      <TrollUpFloatingButton onClick={() => setShowTrollUpModal(true)} />
     </GiftSystemProvider>
   )
 }
@@ -2443,9 +2468,8 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
       videoElementRef.current = videoElement
       previousTrackRef.current = videoTrack
 
-      const settings = videoTrack.mediaStreamTrack?.getSettings?.()
-      const isFrontCamera = settings?.facingMode === 'user' || !settings?.facingMode
-      container.style.transform = isFrontCamera ? 'scaleX(-1)' : 'none'
+      // Broadcasters see themselves the way the audience does — never mirror.
+      container.style.transform = 'none'
     } catch (err) {
       console.error('[LocalCameraFullVideo] Failed to attach video track:', err)
     }
@@ -2569,7 +2593,6 @@ function RemoteSeatThumbnail({
   return (
     <div className="pointer-events-auto relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-black/60 shadow-lg">
       <div ref={containerRef} className="absolute inset-0" />
-      <PetPresence ownerId={userId} streamId={streamId} className="left-0 top-1/2 bottom-auto right-auto -translate-y-1/2 scale-50 origin-left" />
       {!videoTrack && (
         <div className="absolute inset-0 flex items-center justify-center">
           {avatarUrl ? (
@@ -2719,18 +2742,6 @@ function ControlButton({
        <span className="max-w-full truncate px-0.5">
         {label}
       </span>
-    </button>
-  )
-}
-
-function TrollUpFloatingButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="fixed bottom-20 right-4 z-[60] flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-950/90 px-4 py-2.5 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl active:scale-95"
-    >
-      <Zap className="h-4 w-4" /> Troll Up
     </button>
   )
 }

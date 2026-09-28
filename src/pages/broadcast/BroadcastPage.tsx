@@ -550,7 +550,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2, Image as ImageIcon, Zap, AlertTriangle, AlertCircle } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2, Image as Image, AlertTriangle, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -810,7 +810,21 @@ const lifecycle = useBroadcastLifecycle(streamId || null, stream, {
 })
 
 const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSeatLive, refreshSeats, removeSeat, removeSeatByUserId } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any)
-    const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id)
+    const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id, {
+      onPresenceChange: (event) => {
+        if (!streamId || !event?.member?.username) return
+        const username = event.member.username
+        const content = event.type === 'join' ? `${username} entered the stream` : `${username} left the stream`
+        const msgId = `presence-${event.type}-${event.member.user_id}-${Date.now()}`
+        setFloatingMessages(prev => {
+          if (prev.some(m => m.id.startsWith(`presence-${event.type}-${event.member.user_id}-`))) return prev
+          return [{ id: msgId, username, content, createdAt: Date.now(), isSystem: true }, ...prev].slice(0, 50)
+        })
+        window.setTimeout(() => {
+          setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+        }, 30_000)
+      },
+    })
 
     const [remoteParticipants, setRemoteParticipants] = useState<Map<string, RemoteParticipant>>(new Map())
     const [remoteParticipantSnapshots, setRemoteParticipantSnapshots] = useState<RemoteParticipantSnapshot[]>([])
@@ -2082,13 +2096,14 @@ const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
     const { subscriberUsernames } = useSubscriberUsernames(stream?.user_id)
 
     // -- Floating Chat ---------------------------------------------------------
-   interface FloatingMessage {
-     id: string
-     username: string
-     content: string
-     createdAt: number
-     user_id?: string
-   }
+interface FloatingMessage {
+      id: string
+      username: string
+      content: string
+      createdAt: number
+      user_id?: string
+      isSystem?: boolean
+    }
 
      const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([])
      const [pinnedMessageIds, setPinnedMessageIds] = useState<Set<string>>(new Set())
@@ -7672,29 +7687,37 @@ const showFallback =
                             )}
                             style={{ animation: 'slideInFromTop 0.3s ease-out' }}
                           >
-                             <button
-                               onClick={() => handleOpenFloatingChatUsername(msg.username, msg.user_id)}
-                               className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
-                               title={`View ${msg.username}'s profile`}
-                             >
-                               {msg.username}
-                               {subscriberUsernames?.has(msg.username) && (
-                                 <Crown className="w-3 h-3 text-yellow-400" />
-                               )}
-                             </button>
-                             <span className="text-white/40 mx-1">sent:</span>
-                             <span className="text-white/90">{msg.content}</span>
-                            {canPinMessages && (
-                              <button
-                                onClick={() => isPinned ? handleUnpinMessage(msg.id) : handlePinMessage(msg.id)}
-                                className={cn(
-                                  "ml-2 inline-flex items-center transition-colors",
-                                  isPinned ? "text-yellow-400 hover:text-yellow-300" : "text-white/30 hover:text-white/60"
+                            {msg.isSystem ? (
+                              <span className="inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-200/90">
+                                {msg.content}
+                              </span>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => handleOpenFloatingChatUsername(msg.username, msg.user_id)}
+                                  className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                  title={`View ${msg.username}'s profile`}
+                                >
+                                  {msg.username}
+                                  {subscriberUsernames?.has(msg.username) && (
+                                    <Crown className="w-3 h-3 text-yellow-400" />
+                                  )}
+                                </button>
+                                <span className="text-white/40 mx-1">sent:</span>
+                                <span className="text-white/90">{msg.content}</span>
+                                {canPinMessages && (
+                                  <button
+                                    onClick={() => isPinned ? handleUnpinMessage(msg.id) : handlePinMessage(msg.id)}
+                                    className={cn(
+                                      "ml-2 inline-flex items-center transition-colors",
+                                      isPinned ? "text-yellow-400 hover:text-yellow-300" : "text-white/30 hover:text-white/60"
+                                    )}
+                                    title={isPinned ? "Unpin message" : "Pin message"}
+                                  >
+                                    <Pin className={cn("w-3 h-3", isPinned && "fill-current")} />
+                                  </button>
                                 )}
-                                title={isPinned ? "Unpin message" : "Pin message"}
-                              >
-                                <Pin className={cn("w-3 h-3", isPinned && "fill-current")} />
-                              </button>
+                              </>
                             )}
                           </div>
                           )
@@ -8028,29 +8051,37 @@ const showFallback =
                             )}
                             style={{ animation: 'slideInFromTop 0.3s ease-out' }}
                           >
-                            <button
-                              onClick={() => handleOpenFloatingChatUsername(msg.username, msg.user_id)}
-                              className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
-                              title={`View ${msg.username}'s profile`}
-                            >
-                              {msg.username}
-                              {subscriberUsernames?.has(msg.username) && (
-                                <Crown className="w-3 h-3 text-yellow-400" />
-                              )}
-                            </button>
-                            <span className="mx-1 text-white/30 text-sm">:</span>
-                            <span className="text-sm text-white/80">{msg.content}</span>
-                            {canPinMessages && (
-                              <button
-                                onClick={() => isPinned ? handleUnpinMessage(msg.id) : handlePinMessage(msg.id)}
-                                className={cn(
-                                  "ml-2 inline-flex items-center transition-colors",
-                                  isPinned ? "text-yellow-400 hover:text-yellow-300" : "text-white/30 hover:text-white/60"
+                            {msg.isSystem ? (
+                              <span className="inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-200/90">
+                                {msg.content}
+                              </span>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => handleOpenFloatingChatUsername(msg.username, msg.user_id)}
+                                  className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                  title={`View ${msg.username}'s profile`}
+                                >
+                                  {msg.username}
+                                  {subscriberUsernames?.has(msg.username) && (
+                                    <Crown className="w-3 h-3 text-yellow-400" />
+                                  )}
+                                </button>
+                                <span className="mx-1 text-white/30 text-sm">:</span>
+                                <span className="text-sm text-white/80">{msg.content}</span>
+                                {canPinMessages && (
+                                  <button
+                                    onClick={() => isPinned ? handleUnpinMessage(msg.id) : handlePinMessage(msg.id)}
+                                    className={cn(
+                                      "ml-2 inline-flex items-center transition-colors",
+                                      isPinned ? "text-yellow-400 hover:text-yellow-300" : "text-white/30 hover:text-white/60"
+                                    )}
+                                    title={isPinned ? "Unpin message" : "Pin message"}
+                                  >
+                                    <Pin className={cn("w-3 h-3", isPinned && "fill-current")} />
+                                  </button>
                                 )}
-                                title={isPinned ? "Unpin message" : "Pin message"}
-                              >
-                                <Pin className={cn("w-3 h-3", isPinned && "fill-current")} />
-                              </button>
+                              </>
                             )}
                           </div>
                           )
@@ -9080,8 +9111,9 @@ const showFallback =
                        handleCloseMoreMenu()
                        setIsPaidChatModalOpen(true)
                      }}
-                     onOpenSeatsModal={handleOpenSeatsModal}
-                    />
+onOpenSeatsModal={handleOpenSeatsModal}
+                     onTrollUp={() => setShowTrollUpModal(true)}
+                   />
                 </div>
               )}
 
@@ -9204,18 +9236,26 @@ const showFallback =
                         className="text-sm leading-relaxed break-words animate-in fade-in duration-200"
                         style={{ animationDelay: `${idx * 120}ms` }}
                       >
-                        <button
-                          onClick={() => handleOpenFloatingChatUsername(msg.username)}
-                          className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
-                          title={`View ${msg.username}'s profile`}
-                        >
-                          {msg.username}
-                          {subscriberUsernames?.has(msg.username) && (
-                            <Crown className="w-3 h-3 text-yellow-400" />
-                          )}
-                        </button>
-                        <span className="text-white/40 mx-1">:</span>
-                        <span className="text-white/90">{msg.content}</span>
+                        {msg.isSystem ? (
+                          <span className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-200/90">
+                            {msg.content}
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleOpenFloatingChatUsername(msg.username)}
+                              className="font-black text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer inline-flex items-center gap-1"
+                              title={`View ${msg.username}'s profile`}
+                            >
+                              {msg.username}
+                              {subscriberUsernames?.has(msg.username) && (
+                                <Crown className="w-3 h-3 text-yellow-400" />
+                              )}
+                            </button>
+                            <span className="text-white/40 mx-1">:</span>
+                            <span className="text-white/90">{msg.content}</span>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -9599,13 +9639,12 @@ const showFallback =
                   })()}
                 </div>
               </div>
-            )}
+)}
           </GiftSystemProvider>
-          <TrollUpFloatingButton onClick={() => setShowTrollUpModal(true)} />
           <RoleInviteHandler />
        </>
     );
-    }
+  }
 
 function isStaffProfile(profile: any) {
   if (!profile) return false
@@ -9687,22 +9726,10 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
   if (!track) return null;
 
    return (
-     <div
-       ref={divRef}
-       className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
-     />
-   );
-})
-
-function TrollUpFloatingButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="fixed bottom-20 right-4 z-[60] flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-950/90 px-4 py-2.5 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl hover:bg-cyan-500/15 active:scale-95"
-    >
-      <Zap className="h-4 w-4" /> Troll Up
-    </button>
-  )
-}
+<div
+        ref={divRef}
+        className="absolute inset-0 h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
+      />
+    );
+  })
 

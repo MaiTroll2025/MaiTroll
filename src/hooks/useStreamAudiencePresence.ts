@@ -23,6 +23,10 @@ export interface StreamAudienceMember {
   is_ghost_mode?: boolean
 }
 
+export type AudiencePresenceEvent =
+  | { type: 'join'; member: StreamAudienceMember }
+  | { type: 'leave'; member: StreamAudienceMember }
+
 function normalizeSeatStatus(value: any): 'audience' | 'seated' {
   return value === 'seated' ? 'seated' : 'audience'
 }
@@ -60,10 +64,18 @@ function memberKey(member: { stream_id: string; user_id: string }): string {
 
 export function useStreamAudiencePresence(
   streamId: string,
-  userId: string | null
+  userId: string | null,
+  options?: {
+    onPresenceChange?: (event: AudiencePresenceEvent) => void
+  }
 ) {
   const { user, profile } = useAuthStore()
   const effectiveUserId = userId || user?.id
+  const onPresenceChangeRef = useRef(options?.onPresenceChange)
+
+  useEffect(() => {
+    onPresenceChangeRef.current = options?.onPresenceChange
+  }, [options?.onPresenceChange])
 
   // Normalized record keyed by stream_id:user_id. Rendering arrays are derived
   // from this record and only recomputed when it actually changes. Incremental
@@ -79,6 +91,7 @@ export function useStreamAudiencePresence(
   const ghostModeFetchedRef = useRef<{ streamId: string; userIds: string } | null>(null)
   const profileRef = useRef(profile)
   const userRef = useRef(user)
+  const audienceMapRef = useRef<Record<string, StreamAudienceMember>>({})
 
   // Bounded batching queue: rapid realtime events land here and are flushed on
   // the next animation frame so a burst (e.g. many simultaneous joins/gifts)
@@ -133,8 +146,12 @@ export function useStreamAudiencePresence(
 
   // Recompute derived arrays from the normalized map. Runs only when the map
   // changes (and we control those changes), not per realtime event.
-   useEffect(() => {
-     const list = Object.values(audienceMap)
+  useEffect(() => {
+    audienceMapRef.current = audienceMap
+  }, [audienceMap])
+
+  useEffect(() => {
+    const list = Object.values(audienceMap)
      setActiveAudience(list.filter((m) => m.is_active && !m.left_at))
      setTopAudience(
        [...list].sort((a, b) => {
@@ -441,6 +458,10 @@ export function useStreamAudiencePresence(
             if (evt === 'DELETE') {
               if (oldRow?.user_id) {
                 queueAudienceMutation(`${streamId}:${oldRow.user_id}`, null)
+                const prevMember = audienceMapRef.current[`${streamId}:${oldRow.user_id}`]
+                if (prevMember) {
+                  onPresenceChangeRef.current?.({ type: 'leave', member: { ...prevMember, is_active: false, left_at: oldRow?.left_at ?? new Date().toISOString() } })
+                }
               }
               return
             }
@@ -451,6 +472,21 @@ export function useStreamAudiencePresence(
             const member = normalizeAudienceMember(row)
             // Incremental: patch only this one member in the normalized record.
             queueAudienceMutation(memberKey(member), member)
+
+            // Detect join/leave transitions for floating-chat system messages.
+            const prevRow = oldRow || audienceMapRef.current[memberKey(member)]
+            const wasActive = prevRow ? Boolean(prevRow?.is_active ?? prevRow?.is_present ?? true) : false
+            const wasLeft = prevRow ? Boolean(prevRow?.left_at) : false
+            const nowActive = Boolean(member.is_active)
+            const nowLeft = Boolean(member.left_at)
+
+            if (!wasActive && nowActive && !nowLeft) {
+              onPresenceChangeRef.current?.({ type: 'join', member })
+            } else if (wasActive && !nowActive) {
+              onPresenceChangeRef.current?.({ type: 'leave', member: { ...member, is_active: false } })
+            } else if (!wasLeft && nowLeft) {
+              onPresenceChangeRef.current?.({ type: 'leave', member: { ...member, is_active: false, left_at: member.left_at } })
+            }
 
             if (effectiveUserId && newRow?.user_id === effectiveUserId) {
               setMyPresence(member)

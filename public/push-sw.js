@@ -1,4 +1,4 @@
-/* global clients */
+/* global clients, Audio */
 // Push Notification Handler
 self.addEventListener('push', (event) => {
   let data = {};
@@ -16,10 +16,25 @@ self.addEventListener('push', (event) => {
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-72.png',
     data: data.url || '/',
-    vibrate: [200, 100, 200]
+    vibrate: [200, 100, 200],
+    sound: '/sounds/click.mp3',
+    requireInteraction: true,
+    tag: data.tag || 'default',
+    renotify: true
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
+  
+  // Play sound in service worker context
+  if (data.playSound !== false) {
+    try {
+      const audio = new Audio('/sounds/click.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(() => {}); // Ignore autoplay restrictions
+    } catch (e) {
+      // Audio not supported in this context
+    }
+  }
 });
 
 self.addEventListener('notificationclick', (event) => {
@@ -38,4 +53,9 @@ self.addEventListener('notificationclick', (event) => {
       }
     })
   );
+});
+
+// Handle notification actions
+self.addEventListener('notificationclose', (event) => {
+  console.log('[SW] Notification closed:', event.notification.tag);
 });

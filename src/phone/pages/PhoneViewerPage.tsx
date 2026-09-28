@@ -1844,6 +1844,25 @@ export default function PhoneViewerPage() {
     useStreamAudiencePresence(
       resolvedStreamId || '',
       user?.id,
+      {
+        onPresenceChange: event => {
+          if (!resolvedStreamId) return
+          if (!event?.member?.username) return
+          const username = event.member.username
+          if (username === audienceName) return
+          const content = event.type === 'join'
+            ? `${username} entered the stream`
+            : `${username} left the stream`
+          const msgId = `presence-${event.type}-${event.member.user_id}-${Date.now()}`
+          setFloatingMessages(prev => {
+            if (prev.some(m => m.id.startsWith(`presence-${event.type}-${event.member.user_id}-`))) return prev
+            return [{ id: msgId, username, content, timestamp: Date.now(), isSystem: true }, ...prev].slice(0, 50)
+          })
+          window.setTimeout(() => {
+            setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+          }, 30_000)
+        },
+      },
     )
 
   const cashoutBanner = useCashoutBanner({
@@ -4677,30 +4696,36 @@ export default function PhoneViewerPage() {
             FLYING CHAT
         ================================================================= */}
 
-        {!battleActive && floatingMessages.length > 0 && (
+{!battleActive && floatingMessages.length > 0 && (
           <div className="absolute inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col items-center gap-1 pointer-events-none px-3">
             {floatingMessages.slice(0, 8).map((msg) => (
               <div
                 key={msg.id}
                 className="animate-in fade-in slide-in-from-bottom-2 duration-300 pointer-events-auto"
               >
-                 <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
-                   {canClickFloatingChatUsername ? (
-                     <button
-                       type="button"
-                       onClick={() => handleOpenFloatingChatUsername(msg.username)}
-                       className="text-[10px] font-black text-cyan-300 transition-colors hover:text-cyan-100"
-                     >
-                       {msg.username}
-                     </button>
-                   ) : (
-                     <span className="text-[10px] font-black text-cyan-300">
-                       {msg.username}
-                     </span>
-                   )}
-                   <span className="text-[10px] font-bold text-white/40"> sent: </span>
-                   <span className="text-[10px] font-semibold text-white/90">{msg.content}</span>
-                 </div>
+                {msg.isSystem ? (
+                  <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 backdrop-blur-md">
+                    <span className="text-[10px] font-semibold text-cyan-200/90">{msg.content}</span>
+                  </div>
+                ) : (
+                  <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
+                    {canClickFloatingChatUsername ? (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenFloatingChatUsername(msg.username)}
+                        className="text-[10px] font-black text-cyan-300 transition-colors hover:text-cyan-100"
+                      >
+                        {msg.username}
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-black text-cyan-300">
+                        {msg.username}
+                      </span>
+                    )}
+                    <span className="text-[10px] font-bold text-white/40"> sent: </span>
+                    <span className="text-[10px] font-semibold text-white/90">{msg.content}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

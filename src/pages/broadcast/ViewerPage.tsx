@@ -1593,7 +1593,21 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       removeSeatByUserId,
       handleParticipantDisconnected,
     } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any, refreshStageConfig)
-    const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id)
+    const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id, {
+      onPresenceChange: (event) => {
+        if (!streamId || !event?.member?.username) return
+        const username = event.member.username
+        const content = event.type === 'join' ? `${username} entered the stream` : `${username} left the stream`
+        const msgId = `presence-${event.type}-${event.member.user_id}-${Date.now()}`
+        setFloatingMessages(prev => {
+          if (prev.some(m => m.id.startsWith(`presence-${event.type}-${event.member.user_id}-`))) return prev
+          return [{ id: msgId, username, content, createdAt: Date.now(), isSystem: true }, ...prev].slice(0, 50)
+        })
+        window.setTimeout(() => {
+          setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+        }, 30_000)
+      },
+    })
 
     const cashoutBanner = useCashoutBanner({
       userId: user?.id,

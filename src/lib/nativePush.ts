@@ -2,7 +2,6 @@ import { Capacitor } from '@capacitor/core'
 import {
   PushNotifications,
   type Token,
-  type PushNotificationSchema,
 } from '@capacitor/push-notifications'
 import { supabase } from './supabase'
 
@@ -50,10 +49,7 @@ export async function registerNativePush(userId: string) {
       console.error('[NativePush] Registration failed:', error)
     })
 
-    await PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-      console.log('[NativePush] Notification received:', notification.title)
-    })
-
+    // Action performed when user taps notification
     await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
       const route = action.notification.data?.route || action.notification.data?.url
       if (typeof route === 'string' && route.startsWith('/')) {

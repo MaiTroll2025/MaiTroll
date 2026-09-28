@@ -76,6 +76,7 @@ import {
 import GlobalPresenceTracker from "./components/GlobalPresenceTracker";
 import ChatBubble from "./components/ChatBubble";
 import IdleSessionPrompt from "./components/IdleSessionPrompt";
+import GlobalNotificationHandler from "./components/GlobalNotificationHandler";
 import { useChatStore } from "./lib/chatStore";
 import {
   getAnonymousDisplayName,
@@ -1649,6 +1650,9 @@ const handleVisibilityChange = async () => {
 
        {/* Idle Session Prompt */}
        <IdleSessionPrompt />
+
+       {/* Global Push Notification Handler */}
+       <GlobalNotificationHandler />
 
        <SwipeNavigationProvider>
       <LiveContentProvider>

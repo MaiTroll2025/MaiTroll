@@ -8,9 +8,9 @@
   },
   "android": {
     "buildOptions": {
-      "keystorePath": "",
-      "keystoreAlias": "",
-      "releaseType": "APK"
+      "keystorePath": "C:/Users/kainm/TrollCity-upload-key.keystore",
+      "keystoreAlias": "trollcity",
+      "releaseType": "AAB"
     },
     "backgroundColor": "#06030e",
     "allowMixedContent": true,
@@ -46,6 +46,59 @@
     },
     "App": {
       "launchUrl": ""
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"],
+      "notificationChannels": [
+        {
+          "id": "default",
+          "name": "Default Notifications",
+          "description": "General app notifications",
+          "importance": 4,
+          "sound": "notification",
+          "vibrationPattern": [200, 100, 200],
+          "lightColor": "#A855F7",
+          "enableVibration": true,
+          "enableLights": true,
+          "showBadge": true
+        },
+        {
+          "id": "messages",
+          "name": "Messages & Chat",
+          "description": "Direct messages and chat notifications",
+          "importance": 4,
+          "sound": "notification",
+          "vibrationPattern": [100, 50, 100, 50, 100],
+          "lightColor": "#10B981",
+          "enableVibration": true,
+          "enableLights": true,
+          "showBadge": true
+        },
+        {
+          "id": "live",
+          "name": "Live Streams",
+          "description": "Live stream alerts and broadcasts",
+          "importance": 4,
+          "sound": "notification",
+          "vibrationPattern": [200, 100, 200],
+          "lightColor": "#F59E0B",
+          "enableVibration": true,
+          "enableLights": true,
+          "showBadge": true
+        },
+        {
+          "id": "system",
+          "name": "System Alerts",
+          "description": "Important system notifications",
+          "importance": 5,
+          "sound": "notification",
+          "vibrationPattern": [500, 100, 500],
+          "lightColor": "#EF4444",
+          "enableVibration": true,
+          "enableLights": true,
+          "showBadge": true
+        }
+      ]
     }
   },
   "cordova": {}

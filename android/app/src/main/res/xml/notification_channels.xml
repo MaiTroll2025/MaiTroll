@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<notification-channels>
+    <channel
+        id="default"
+        name="Default Notifications"
+        description="General app notifications"
+        importance="high"
+        sound="@raw/notification"
+        vibrationPattern="[200, 100, 200]"
+        lightColor="#A855F7"
+        enableVibration="true"
+        enableLights="true"
+        showBadge="true"
+        bypassDnd="false" />
+    <channel
+        id="messages"
+        name="Messages and Chat"
+        description="Direct messages and chat notifications"
+        importance="high"
+        sound="@raw/notification"
+        vibrationPattern="[100, 50, 100, 50, 100]"
+        lightColor="#10B981"
+        enableVibration="true"
+        enableLights="true"
+        showBadge="true"
+        bypassDnd="false" />
+    <channel
+        id="live"
+        name="Live Streams"
+        description="Live stream alerts and broadcasts"
+        importance="high"
+        sound="@raw/notification"
+        vibrationPattern="[200, 100, 200]"
+        lightColor="#F59E0B"
+        enableVibration="true"
+        enableLights="true"
+        showBadge="true"
+        bypassDnd="false" />
+    <channel
+        id="system"
+        name="System Alerts"
+        description="Important system notifications"
+        importance="max"
+        sound="@raw/notification"
+        vibrationPattern="[500, 100, 500]"
+        lightColor="#EF4444"
+        enableVibration="true"
+        enableLights="true"
+        showBadge="true"
+        bypassDnd="true" />
+</notification-channels>
