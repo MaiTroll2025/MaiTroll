@@ -199,6 +199,7 @@ export default function AdminApplications() {
       const { data: auctioneerData, error: auctioneerError } = auctioneerRes
       const { data: fastPayData, error: fastPayError } = fastPayRes
       const { data: careerAppData, error: careerAppError } = careerAppRes
+      const { data: jobAppData, error: jobAppError } = jobAppRes
 
       if (appError) throw appError
       if (appData?.error) throw new Error(appData.error)
@@ -279,13 +280,18 @@ export default function AdminApplications() {
         setFastPayApplications([])
       }
 
-      const { data: jobAppData, error: jobAppError } = jobAppRes
       if (!jobAppError && jobAppData) {
-        setJobApplications(jobAppData)
-      } else {
-        setJobApplications([])
-      }
-
+  setJobApplications(
+    jobAppData.map((app: any) => ({
+      ...app,
+      user_profiles: Array.isArray(app.user_profiles)
+        ? app.user_profiles[0]
+        : app.user_profiles,
+    }))
+  )
+} else {
+  setJobApplications([])
+}
       if (!careerAppError && careerAppData) {
         setCareerApplications(careerAppData as any)
       } else {
