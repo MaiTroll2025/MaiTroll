@@ -3,7 +3,7 @@ import VerifiedBadge from './VerifiedBadge'
 import OfficerTierBadge from './OfficerTierBadge'
 import { EmpireBadge } from './EmpireBadge'
 import { useNavigate } from 'react-router-dom'
-import { Shield, Crown, Skull, Star, UserX, Ban, MicOff, User, LogOut, ClipboardList, Gavel, Lock, Car, CreditCard, Heart, Briefcase } from 'lucide-react'
+import { Shield, Crown, Skull, Star, UserX, Ban, MicOff, User, LogOut, ClipboardList, Gavel, Lock, Car, CreditCard, Heart, Briefcase, Receipt } from 'lucide-react'
 import { applyGlowingUsername, getGlowingTextStyle, getTrollSpellEffect } from '../lib/perkEffects'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
@@ -327,6 +327,33 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
             break;
         }
             
+        case 'give_ticket': {
+            const amountStr = window.prompt(`Enter ticket amount (coins) for @${username}:`, '100')
+            if (amountStr === null) return
+            const amount = parseInt(amountStr)
+            if (isNaN(amount) || amount <= 0) {
+                toast.error('Invalid amount')
+                return
+            }
+            const notes = window.prompt(`Ticket notes for @${username}:`, '') || ''
+            try {
+                const { data, error } = await supabase.rpc('issue_ticket', {
+                    p_target_user_id: targetUserId,
+                    p_amount: amount,
+                    p_notes: notes || null
+                })
+                if (error) throw error
+                if (data && data.success) {
+                    toast.success(`Ticket issued to @${username} for ${amount} coins`)
+                } else {
+                    toast.error(data?.error || 'Failed to issue ticket')
+                }
+            } catch (err: any) {
+                toast.error(err.message || 'Failed to issue ticket')
+            }
+            break
+        }
+
         case 'ban': {
             const reason = window.prompt('Reason for warrant/ban:', 'Violation of rules')
             if (reason === null) return // Cancelled
@@ -1078,15 +1105,22 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                          </>
                     )}
 
-                    {isStaff && (
-                        <>
-                            <button
-                                onClick={() => handleAction('summon_to_court')}
-                                className="w-full text-left px-3 py-2 text-sm text-purple-400 hover:bg-zinc-800 hover:text-purple-300 rounded flex items-center gap-2"
-                            >
-                                <Gavel size={14} />
-                                Summon to Court
-                            </button>
+                     {isStaff && (
+                         <>
+                             <button
+                                 onClick={() => handleAction('give_ticket')}
+                                 className="w-full text-left px-3 py-2 text-sm text-amber-400 hover:bg-zinc-800 hover:text-amber-300 rounded flex items-center gap-2"
+                             >
+                                 <Receipt size={14} />
+                                 Give Ticket
+                             </button>
+                             <button
+                                 onClick={() => handleAction('summon_to_court')}
+                                 className="w-full text-left px-3 py-2 text-sm text-purple-400 hover:bg-zinc-800 hover:text-purple-300 rounded flex items-center gap-2"
+                             >
+                                 <Gavel size={14} />
+                                 Summon to Court
+                             </button>
                             <button
                                 onClick={() => handleAction('arrest_user')}
                                 className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-zinc-800 hover:text-red-300 rounded flex items-center gap-2"

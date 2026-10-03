@@ -42,6 +42,7 @@ import PhoneAdminReports from './pages/PhoneAdminReports'
 import PhoneAdminModeration from './pages/PhoneAdminModeration'
 import PhoneAdminSettings from './pages/PhoneAdminSettings'
 import PhoneAdminApplications from './pages/PhoneAdminApplications'
+import PhoneAdminPage from './pages/PhoneAdminPage'
 import PhoneRtcAdminMonitor from './pages/PhoneRtcAdminMonitor'
 import PhonePlaceholderPage from './pages/PhonePlaceholderPage'
 import PhoneSearch from './pages/PhoneSearch'
@@ -276,6 +277,7 @@ export default function PhoneApp() {
             <Route path="/ceo-assistant-dashboard" element={<PhoneCeoDashboard />} />
             <Route path="/ceo-assistant-dashboard/*" element={<PhoneCeoDashboard />} />
 
+            <Route path="/admin/*" element={<PhoneAdminPage />} />
             <Route path="*" element={<PhoneWebPage />} />
           </Routes>
 

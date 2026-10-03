@@ -8,6 +8,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
 import { App as CapApp } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
 
 export const isMobilePlatform = Capacitor.isNativePlatform();
 export const platform = Capacitor.getPlatform(); // 'ios', 'android', or 'web'
@@ -24,6 +25,10 @@ export async function initMobilePlatform() {
   console.log(`[Mobile] Initializing platform: ${platform}`);
 
   try {
+    // Lock the app to portrait so device rotation never exposes the
+    // underlying page background while the web layout re-renders.
+    await ScreenOrientation.lock({ orientation: 'portrait' });
+
     // Configure Status Bar
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: '#06030e' });

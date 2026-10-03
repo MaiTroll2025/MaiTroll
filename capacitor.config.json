@@ -44,6 +44,9 @@
       "style": "DARK",
       "resizeOnFullScreen": true
     },
+    "ScreenOrientation": {
+      "preferredOrientation": "portrait"
+    },
     "App": {
       "launchUrl": ""
     },

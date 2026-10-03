@@ -119,6 +119,7 @@ const AgencyHRDashboard = lazyWithRetry(() => import("./pages/agency-hr-dashboar
 const AttorneyDashboard = lazyWithRetry(() => import("./pages/attorney/AttorneyDashboard"));
 const ProsecutorDashboard = lazyWithRetry(() => import("./pages/prosecutor/ProsecutorDashboard"));
 const Support = lazyWithRetry(() => import("./pages/Support"));
+const Tickets = lazyWithRetry(() => import("./pages/Tickets"));
 const BetaFeedback = lazyWithRetry(() => import("./pages/BetaFeedback"));
 const SurveyPage = lazyWithRetry(() => import("./pages/SurveyPage"));
 const JailPage = lazyWithRetry(() => import("./pages/JailPage"));
@@ -271,6 +272,7 @@ const AdminVerifiedUsers = lazyWithRetry(() => import("./pages/admin/AdminVerifi
 const AdminActivity = lazyWithRetry(() => import("./pages/admin/AdminActivity"));
 const AdminVerificationReview = lazyWithRetry(() => import("./pages/admin/AdminVerificationReview"));
 const AdminPoliciesDocs = lazyWithRetry(() => import("./pages/admin/AdminPoliciesDocs"));
+const TicketManagement = lazyWithRetry(() => import("./pages/admin/TicketManagement"));
 const ExecutiveSecretaries = lazyWithRetry(() => import("./pages/admin/ExecutiveSecretaries"));
 const ExecutiveReports = lazyWithRetry(() => import("./pages/admin/ExecutiveReports"));
 const AdminTrollTownDeeds = lazyWithRetry(() => import("./pages/admin/AdminTrollTownDeeds"));
@@ -2411,6 +2413,14 @@ const handleVisibilityChange = async () => {
                          </RequireRole>
                        }
                      />
+                     <Route
+                       path="/admin/tickets"
+                       element={
+                         <RequireRole roles={[UserRole.ADMIN]}>
+                           <TicketManagement />
+                         </RequireRole>
+                       }
+                     />
 
                      <Route
                        path="/admin/trollmers-tournament"
@@ -2827,9 +2837,10 @@ const handleVisibilityChange = async () => {
 
                   <Route path="/mai-piks" element={<MaiPiksPage />} />
 
-                 {/* 🔙 Catch-all - redirect username patterns to profile (PUBLIC ACCESS) */}
-                 <Route path="/:username" element={<UsernameRedirect />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
+                  {/* 🔙 Catch-all - redirect username patterns to profile (PUBLIC ACCESS) */}
+                  <Route path="/tickets" element={<Tickets />} />
+                  <Route path="/:username" element={<UsernameRedirect />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </PageChannelProvider>
               </Suspense>

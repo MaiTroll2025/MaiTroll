@@ -47,6 +47,7 @@
     "@capacitor/keyboard": "^6.0.4",
     "@capacitor/preferences": "^6.0.4",
     "@capacitor/push-notifications": "^6.0.5",
+    "@capacitor/screen-orientation": "^6.0.4",
     "@capacitor/splash-screen": "^6.0.4",
     "@capacitor/status-bar": "^6.0.3",
     "@ffmpeg/ffmpeg": "^0.12.6",
