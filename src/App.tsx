@@ -279,6 +279,7 @@ const SupabaseUsageDashboard = lazyWithRetry(() => import("./pages/admin/Supabas
 const StateRankings = lazyWithRetry(() => import("./pages/StateRankings"));
 const StateDetail = lazyWithRetry(() => import("./pages/StateDetail"));
 const VerifiedBadgePage = lazyWithRetry(() => import("./pages/VerifiedBadgePage"));
+const FounderHub = lazyWithRetry(() => import("./pages/FounderHub"));
 const TMFamilyInviteHandler = lazyWithRetry(() => import("./components/trollmatch/TMFamilyInviteHandler"));
 const EmbedPage = lazyWithRetry(() => import("./pages/broadcast/EmbedPage"));
 
@@ -1783,8 +1784,12 @@ const handleVisibilityChange = async () => {
                  <Route path="/state-rankings" element={<StateRankings />} />
                 <Route path="/state/:stateCode" element={<StateDetail />} />
 
-{/* ✅ Verified Badge */}
+                {/* ✅ Verified Badge */}
                 <Route path="/verified-badge" element={<VerifiedBadgePage />} />
+
+                {/* ⭐ Founder Program Hub — gated in-page by founder_my_status() */}
+                <Route path="/founder" element={<FounderHub />} />
+
 
                 {/* 📨 UTroMail */}
                  <Route path="/utromail" element={<UtromailPage />} />

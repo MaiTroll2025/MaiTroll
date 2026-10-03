@@ -25,11 +25,13 @@ CREATE INDEX IF NOT EXISTS idx_pets_owner_active ON public.pets (owner_id, is_ac
 
 ALTER TABLE public.pets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Pet owners can read their pets" ON public.pets;
 CREATE POLICY "Pet owners can read their pets"
   ON public.pets FOR SELECT
   TO authenticated
   USING (auth.uid() = owner_id);
 
+DROP POLICY IF EXISTS "Public can read active pet summaries" ON public.pets;
 CREATE POLICY "Public can read active pet summaries"
   ON public.pets FOR SELECT
   TO authenticated
@@ -48,6 +50,7 @@ CREATE TABLE IF NOT EXISTS public.pet_care_agreements (
 
 ALTER TABLE public.pet_care_agreements ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Owners can read pet care agreements" ON public.pet_care_agreements;
 CREATE POLICY "Owners can read pet care agreements"
   ON public.pet_care_agreements FOR SELECT
   TO authenticated
@@ -67,6 +70,7 @@ CREATE INDEX IF NOT EXISTS idx_pet_interactions_pet_created
 
 ALTER TABLE public.pet_interactions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Owners can read pet interactions" ON public.pet_interactions;
 CREATE POLICY "Owners can read pet interactions"
   ON public.pet_interactions FOR SELECT
   TO authenticated
@@ -86,6 +90,7 @@ CREATE TABLE IF NOT EXISTS public.pet_abuse_actions (
 
 ALTER TABLE public.pet_abuse_actions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Participants can read pet abuse actions" ON public.pet_abuse_actions;
 CREATE POLICY "Participants can read pet abuse actions"
   ON public.pet_abuse_actions FOR SELECT
   TO authenticated
@@ -133,15 +138,100 @@ SET search_path = public
 AS $$
 DECLARE
   v_pet public.pets;
-  v_delta INTEGER;
+  v_delta INTEGER := 0;
+  v_cost INTEGER := 0;
+  v_daily_limit INTEGER := NULL;
+  v_daily_count INTEGER := 0;
+  v_user_balance NUMERIC(20,2);
+  v_admin_pool_id UUID;
+  v_admin_user_id UUID;
 BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Authentication required'; END IF;
   IF p_interaction_type NOT IN ('feed', 'walk', 'care') THEN RAISE EXCEPTION 'Unsupported pet interaction'; END IF;
 
-  SELECT * INTO v_pet FROM public.pets WHERE id = p_pet_id AND owner_id = auth.uid() AND is_active = true FOR UPDATE;
+  SELECT * INTO v_pet
+  FROM public.pets
+  WHERE id = p_pet_id AND owner_id = auth.uid() AND is_active = true
+  FOR UPDATE;
+
   IF NOT FOUND THEN RAISE EXCEPTION 'Pet not found'; END IF;
 
-  v_delta := CASE p_interaction_type WHEN 'feed' THEN 8 WHEN 'walk' THEN 7 ELSE 6 END;
+  v_delta := CASE p_interaction_type
+    WHEN 'feed' THEN 8
+    WHEN 'walk' THEN 7
+    ELSE 10
+  END;
+
+  v_cost := CASE p_interaction_type
+    WHEN 'feed' THEN 5
+    WHEN 'walk' THEN 1
+    ELSE 0
+  END;
+
+  IF p_interaction_type = 'feed' THEN
+    v_daily_limit := 1;
+  ELSIF p_interaction_type = 'walk' THEN
+    v_daily_limit := 4;
+  END IF;
+
+  IF v_daily_limit IS NOT NULL THEN
+    SELECT COUNT(*) INTO v_daily_count
+    FROM public.pet_interactions
+    WHERE pet_id = p_pet_id
+      AND owner_id = auth.uid()
+      AND interaction_type = p_interaction_type
+      AND created_at >= NOW() - INTERVAL '1 day';
+
+    IF v_daily_count >= v_daily_limit THEN
+      RAISE EXCEPTION 'Daily % limit reached for %', p_interaction_type, v_pet.name;
+    END IF;
+  END IF;
+
+  IF v_cost > 0 THEN
+    SELECT troll_coins INTO v_user_balance
+    FROM public.user_profiles
+    WHERE id = auth.uid()
+    FOR UPDATE;
+
+    IF COALESCE(v_user_balance, 0) < v_cost THEN
+      RAISE EXCEPTION 'Not enough Troll Coins';
+    END IF;
+
+    UPDATE public.user_profiles
+    SET troll_coins = troll_coins - v_cost
+    WHERE id = auth.uid();
+
+    SELECT id INTO v_admin_pool_id
+    FROM public.admin_pool
+    ORDER BY updated_at DESC NULLS LAST
+    LIMIT 1
+    FOR UPDATE;
+
+    IF v_admin_pool_id IS NULL THEN
+      SELECT id INTO v_admin_user_id
+      FROM public.user_profiles
+      WHERE is_admin = true OR role = 'admin' OR role = 'ceo'
+      ORDER BY created_at ASC
+      LIMIT 1;
+
+      IF v_admin_user_id IS NULL THEN
+        v_admin_user_id := auth.uid();
+      END IF;
+
+      INSERT INTO public.admin_pool (user_id, trollcoins_balance, updated_at)
+      VALUES (v_admin_user_id, 0, NOW())
+      RETURNING id INTO v_admin_pool_id;
+    END IF;
+
+    UPDATE public.admin_pool
+    SET trollcoins_balance = COALESCE(trollcoins_balance, 0) + v_cost,
+        updated_at = NOW()
+    WHERE id = v_admin_pool_id;
+
+    INSERT INTO public.admin_pool_ledger (amount, reason, ref_user_id, created_at)
+    VALUES (v_cost, 'pet_' || p_interaction_type, auth.uid(), NOW());
+  END IF;
+
   UPDATE public.pets
   SET care_status = LEAST(100, care_status + v_delta),
       needs = jsonb_set(needs, ARRAY[CASE p_interaction_type WHEN 'feed' THEN 'hunger' WHEN 'walk' THEN 'walk' ELSE 'care' END], 'false'::jsonb),
@@ -153,6 +243,22 @@ BEGIN
 
   INSERT INTO public.pet_interactions (pet_id, owner_id, interaction_type, status_delta)
   VALUES (p_pet_id, auth.uid(), p_interaction_type, v_delta);
+
+  PERFORM public.create_notification(
+    auth.uid(),
+    'pet_care',
+    CASE p_interaction_type
+      WHEN 'feed' THEN 'Pet fed'
+      WHEN 'walk' THEN 'Pet walked'
+      ELSE 'Pet playtime'
+    END,
+    CASE p_interaction_type
+      WHEN 'feed' THEN 'You fed ' || v_pet.name || ' for 5 Troll Coins.'
+      WHEN 'walk' THEN 'You walked ' || v_pet.name || ' for 1 Troll Coin.'
+      ELSE 'You played with ' || v_pet.name || ' for free and raised their care bar by 10%.'
+    END,
+    jsonb_build_object('pet_id', p_pet_id, 'interaction_type', p_interaction_type, 'cost', v_cost, 'care_status', v_pet.care_status)
+  );
 
   RETURN v_pet;
 END;

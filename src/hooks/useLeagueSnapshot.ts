@@ -73,7 +73,7 @@ export function useLeagueSnapshot({
 
       // Fetch active league event
       const now = new Date().toISOString()
-      let { data: eventData, error: eventError } = await supabase
+      const { data: eventData, error: eventError } = await supabase
         .from('league_events')
         .select('id, name, slug, type, status, starts_at, ends_at, metadata, points_multiplier')
         .eq('status', 'active')

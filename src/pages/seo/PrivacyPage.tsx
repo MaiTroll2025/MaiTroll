@@ -43,7 +43,7 @@ export default function PrivacyPage() {
           <div className="prose prose-invert max-w-none">
             <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl mb-8">
               <p className="text-slate-300 leading-relaxed">
-                This Privacy Policy describes how Troll City ("we", "us", or "our") collects, uses, and shares information
+                This Privacy Policy describes how Troll City (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) collects, uses, and shares information
                 when you use our platform. By using Troll City, you agree to the collection and use of information in accordance
                 with this policy.
               </p>
@@ -124,7 +124,7 @@ export default function PrivacyPage() {
               </div>
 
               <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-                <h2 className="text-2xl font-bold text-white mb-4">Children's Privacy</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">Children&apos;s Privacy</h2>
                 <p className="text-slate-300">
                   Our platform is not intended for children under 13. We do not knowingly collect personal information
                   from children under 13. If you believe we have collected such information, please contact us immediately.
@@ -135,7 +135,7 @@ export default function PrivacyPage() {
                 <h2 className="text-2xl font-bold text-white mb-4">Changes to This Policy</h2>
                 <p className="text-slate-300">
                   We may update this Privacy Policy from time to time. We will notify you of any changes by posting the
-                  new policy on this page and updating the "Last updated" date.
+                  new policy on this page and updating the &quot;Last updated&quot; date.
                 </p>
               </div>
 

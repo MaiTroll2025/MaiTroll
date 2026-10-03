@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Minus, Plus, Coins } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { MAX_GUEST_SEATS } from '../../config/broadcastCategories';
 
 interface OpenStagePassModalProps {
   isOpen: boolean;
@@ -19,12 +20,12 @@ export default function OpenStagePassModal({
   initialCount = 1,
   initialPrice = 0,
 }: OpenStagePassModalProps) {
-  const [count, setCount] = useState(Math.min(6, Math.max(1, initialCount)));
+  const [count, setCount] = useState(Math.min(MAX_GUEST_SEATS, Math.max(1, initialCount)));
   const [priceCoins, setPriceCoins] = useState(Math.max(0, initialPrice));
 
   useEffect(() => {
     if (isOpen) {
-      setCount(Math.min(6, Math.max(1, initialCount)));
+      setCount(Math.min(MAX_GUEST_SEATS, Math.max(1, initialCount)));
       setPriceCoins(Math.max(0, initialPrice));
     }
   }, [isOpen, initialCount, initialPrice]);
@@ -59,7 +60,7 @@ export default function OpenStagePassModal({
               Seats
             </h2>
             <p className="text-[11px] text-slate-400 mt-1">
-              Choose up to 6 viewer seats. Your broadcaster slot counts as 1 of 7 total boxes.
+              Choose up to {MAX_GUEST_SEATS} viewer seats. Your broadcaster slot counts as one additional box.
             </p>
           </div>
           <button
@@ -96,11 +97,11 @@ export default function OpenStagePassModal({
               </div>
 
               <button
-                onClick={() => setCount((c) => Math.min(6, c + 1))}
-                disabled={count >= 6}
+                onClick={() => setCount((c) => Math.min(MAX_GUEST_SEATS, c + 1))}
+                disabled={count >= MAX_GUEST_SEATS}
                 className={cn(
                   'w-10 h-10 rounded-xl border flex items-center justify-center transition-all',
-                  count >= 6
+                  count >= MAX_GUEST_SEATS
                     ? 'bg-white/5 border-white/10 text-white/25 cursor-not-allowed'
                     : 'bg-white/5 border-white/15 text-white hover:bg-white/10 hover:border-cyan-500/40'
                 )}

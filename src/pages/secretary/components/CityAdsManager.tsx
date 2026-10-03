@@ -5,8 +5,6 @@ import { uploadCityAdImage, deleteCityAdImage } from '../../../lib/uploadCityAdI
 import { compressAdImage } from '../../../lib/uploadCityAdImage';
 import { toast } from 'sonner';
 
-interface CityAdsManagerProps {}
-
 interface UserAdvertisement {
   id: string;
   user_id: string;

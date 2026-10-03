@@ -4,10 +4,11 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { BadgeCheck, Coins, Shield, Sparkles, CheckCircle, Clock } from 'lucide-react';
+import { calculateTromocodeDiscount } from '@/lib/tromocode';
 
 const VERIFICATION_COST_COINS = 500;
 
-export default function VerifiedBadgeCard() {
+export default function VerifiedBadgeCard({ promo }: { promo?: any }) {
   const { user, profile, refreshProfile } = useAuthStore();
   const navigate = useNavigate();
   const [processing, setProcessing] = useState(false);
@@ -97,7 +98,15 @@ export default function VerifiedBadgeCard() {
     );
   }
 
-  const canAfford = (profile?.troll_coins ?? 0) >= VERIFICATION_COST_COINS;
+  const displayPrice = promo
+    ? calculateTromocodeDiscount({
+        promotionType: promo.promotion_type,
+        promotionValue: promo.promotion_value,
+        originalAmount: VERIFICATION_COST_COINS,
+      }).finalAmount
+    : VERIFICATION_COST_COINS;
+  const coinBalance = profile?.troll_coins ?? 0;
+  const canAfford = coinBalance >= displayPrice;
 
   return (
     <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-950/60 via-fuchsia-950/40 to-purple-950/60 p-4">
@@ -113,6 +122,12 @@ export default function VerifiedBadgeCard() {
           <p className="text-[11px] text-purple-300/70 mt-0.5 leading-relaxed">
             Stand out with a verified badge on your profile. Valid for 1 year.
           </p>
+          <div className="mt-3 flex items-baseline gap-2">
+            {displayPrice < VERIFICATION_COST_COINS && (
+              <span className="text-xs text-purple-300/50 line-through">{VERIFICATION_COST_COINS.toLocaleString()} Coins</span>
+            )}
+            <span className="text-sm font-bold text-purple-100">{displayPrice.toLocaleString()} Coins</span>
+          </div>
           <div className="flex items-center gap-2 mt-3">
             <button
               type="button"
@@ -121,11 +136,11 @@ export default function VerifiedBadgeCard() {
               className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 text-[11px] font-bold text-white transition-all"
             >
               <Coins size={12} />
-              {processing ? 'Processing...' : `${VERIFICATION_COST_COINS.toLocaleString()} Coins`}
+              {processing ? 'Processing...' : 'Get Verified Badge'}
             </button>
             {!canAfford && (
               <span className="text-[10px] text-red-400 font-semibold">
-                Need {(VERIFICATION_COST_COINS - (profile?.troll_coins ?? 0)).toLocaleString()} more coins
+                Need {(displayPrice - coinBalance).toLocaleString()} more coins
               </span>
             )}
           </div>

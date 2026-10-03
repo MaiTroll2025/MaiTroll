@@ -259,7 +259,7 @@ export default function PhoneSafety() {
           </p>
 
           <p>
-            For MaiTroll safety enforcement purposes, the platform's minor
+            For MaiTroll safety enforcement purposes, the platform&apos;s minor
             rules apply to users under 18, with enhanced protections and
             restrictions applying to younger minors.
           </p>
@@ -316,7 +316,7 @@ export default function PhoneSafety() {
 
           <p>
             If required identification is missing, incomplete, suspicious,
-            fictitious, unverifiable, or otherwise fails MaiTroll's
+            fictitious, unverifiable, or otherwise fails MaiTroll&apos;s
             verification requirements, MaiTroll may place financial
             transactions or cash-outs on hold.
           </p>
@@ -367,133 +367,136 @@ export default function PhoneSafety() {
           </Rule>
 
           <Rule allowed={false}>
-            Users may not use another person's identity or fabricated
+            Users may not use another person&apos;s identity or fabricated
             identification to bypass verification.
           </Rule>
         </Section>
 
         {/* Threats, Harm & Harassment */}
-<Section icon={MessageSquareWarning} title="Threats, Harm & Harassment">
-  <p className="font-bold text-white">
-    MaiTroll does not automatically prohibit words simply because they can be
-    associated with violence, insults, or sensitive subjects.
-  </p>
+        <Section icon={MessageSquareWarning} title="Threats, Harm & Harassment">
+          <p className="font-bold text-white">
+            MaiTroll does not automatically prohibit words simply because they can be
+            associated with violence, insults, or sensitive subjects.
+          </p>
 
-  <p>
-    MaiTroll recognizes that people talk about real life, fictional stories,
-    television, movies, gaming, history, news, personal experiences, jokes,
-    arguments, and other subjects. Context matters.
-  </p>
+          <p>
+            MaiTroll recognizes that people talk about real life, fictional stories,
+            television, movies, gaming, history, news, personal experiences, jokes,
+            arguments, and other subjects. Context matters.
+          </p>
 
-  <div className="space-y-2 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
-    <Rule allowed={true}>
-      Users may use words such as "kill," "killed," "killing," "hurt," or
-      similar words when they are discussing a situation, story, event,
-      fictional content, gaming, news, or another non-threatening context.
-    </Rule>
+          <div className="space-y-2 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
+            <Rule allowed={true}>
+              Users may use words such as &quot;kill,&quot; &quot;killed,&quot;
+              &quot;killing,&quot; &quot;hurt,&quot; or similar words when they are
+              discussing a situation, story, event, fictional content, gaming, news,
+              or another non-threatening context.
+            </Rule>
 
-    <Rule allowed={true}>
-      Users do not have to add words such as "in GTA" every time they discuss
-      something that happened in a video game or other fictional environment.
-    </Rule>
+            <Rule allowed={true}>
+              Users do not have to add words such as &quot;in GTA&quot; every time they
+              discuss something that happened in a video game or other fictional
+              environment.
+            </Rule>
 
-    <Rule allowed={true}>
-      Strong language, profanity, insults, or words that some people consider
-      offensive are not automatically violations solely because someone finds
-      the word offensive.
-    </Rule>
+            <Rule allowed={true}>
+              Strong language, profanity, insults, or words that some people consider
+              offensive are not automatically violations solely because someone finds
+              the word offensive.
+            </Rule>
 
-    <Rule allowed={true}>
-      The word "retarded" is not automatically prohibited solely because the
-      word was used. MaiTroll evaluates the surrounding context and whether
-      the user is deliberately targeting, bullying, or harassing another
-      person.
-    </Rule>
-  </div>
+            <Rule allowed={true}>
+              The word &quot;retarded&quot; is not automatically prohibited solely
+              because the word was used. MaiTroll evaluates the surrounding context and
+              whether the user is deliberately targeting, bullying, or harassing another
+              person.
+            </Rule>
+          </div>
 
-  <div className="space-y-2 rounded-2xl border border-red-400/20 bg-red-500/5 p-4">
-    <Rule allowed={false}>
-      Do not make a genuine threat to kill another MaiTroll user or another
-      identifiable person.
-    </Rule>
+          <div className="space-y-2 rounded-2xl border border-red-400/20 bg-red-500/5 p-4">
+            <Rule allowed={false}>
+              Do not make a genuine threat to kill another MaiTroll user or another
+              identifiable person.
+            </Rule>
 
-    <Rule allowed={false}>
-      Do not make a genuine threat to physically harm another person.
-    </Rule>
+            <Rule allowed={false}>
+              Do not make a genuine threat to physically harm another person.
+            </Rule>
 
-    <Rule allowed={false}>
-      Do not encourage or coordinate real-world violence against another
-      person.
-    </Rule>
+            <Rule allowed={false}>
+              Do not encourage or coordinate real-world violence against another
+              person.
+            </Rule>
 
-    <Rule allowed={false}>
-      Do not deliberately use language to intimidate another user into
-      believing that you intend to harm them.
-    </Rule>
+            <Rule allowed={false}>
+              Do not deliberately use language to intimidate another user into
+              believing that you intend to harm them.
+            </Rule>
 
-    <Rule allowed={false}>
-      Do not deliberately bully, harass, repeatedly target, or abuse another
-      user.
-    </Rule>
+            <Rule allowed={false}>
+              Do not deliberately bully, harass, repeatedly target, or abuse another
+              user.
+            </Rule>
 
-    <Rule allowed={false}>
-      Do not use supposedly fictional or gaming language as a disguise for a
-      genuine threat against a real person.
-    </Rule>
-  </div>
+            <Rule allowed={false}>
+              Do not use supposedly fictional or gaming language as a disguise for a
+              genuine threat against a real person.
+            </Rule>
+          </div>
 
-  <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4">
-    <p className="font-black uppercase tracking-wide text-cyan-300">
-      Context Matters
-    </p>
+          <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+            <p className="font-black uppercase tracking-wide text-cyan-300">
+              Context Matters
+            </p>
 
-    <p className="mt-2">
-      Saying "I could kill this boss" while discussing a game is not the same
-      as telling a specific person "I'm going to kill you." Saying "he got
-      killed in the movie" is not a threat. Discussing someone being hurt in a
-      news story is not automatically a threat. MaiTroll does not treat every
-      occurrence of a sensitive word as a safety violation.
-    </p>
+            <p className="mt-2">
+              Saying &quot;I could kill this boss&quot; while discussing a game is not
+              the same as telling a specific person &quot;I&apos;m going to kill you.&quot;
+              Saying &quot;he got killed in the movie&quot; is not a threat. Discussing
+              someone being hurt in a news story is not automatically a threat.
+              MaiTroll does not treat every occurrence of a sensitive word as a safety
+              violation.
+            </p>
 
-    <p className="mt-2">
-      However, changing the wording to reference a game, joke, movie, or other
-      context does not automatically protect a user when the surrounding
-      circumstances show that the statement is actually directed at a real
-      person as a threat or harassment.
-    </p>
-  </div>
+            <p className="mt-2">
+              However, changing the wording to reference a game, joke, movie, or other
+              context does not automatically protect a user when the surrounding
+              circumstances show that the statement is actually directed at a real
+              person as a threat or harassment.
+            </p>
+          </div>
 
-  <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-4">
-    <p className="font-black uppercase tracking-wide text-amber-300">
-      Offensive Language vs. Targeted Harassment
-    </p>
+          <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-4">
+            <p className="font-black uppercase tracking-wide text-amber-300">
+              Offensive Language vs. Targeted Harassment
+            </p>
 
-    <p className="mt-2">
-      MaiTroll gives users room to speak in their own style. Not every rude,
-      offensive, insensitive, or controversial statement automatically
-      requires enforcement.
-    </p>
+            <p className="mt-2">
+              MaiTroll gives users room to speak in their own style. Not every rude,
+              offensive, insensitive, or controversial statement automatically
+              requires enforcement.
+            </p>
 
-    <p className="mt-2">
-      The situation changes when a user is reported for deliberately targeting
-      another person, repeatedly bullying them, threatening them, or using
-      language as part of a pattern of harassment. In those situations,
-      MaiTroll may review the surrounding context and take appropriate
-      enforcement action.
-    </p>
-  </div>
+            <p className="mt-2">
+              The situation changes when a user is reported for deliberately targeting
+              another person, repeatedly bullying them, threatening them, or using
+              language as part of a pattern of harassment. In those situations,
+              MaiTroll may review the surrounding context and take appropriate
+              enforcement action.
+            </p>
+          </div>
 
-  <p>
-    MaiTroll's goal is not to police every word. The goal is to distinguish
-    ordinary conversation and expression from conduct that creates a genuine
-    safety, harassment, bullying, or targeted-threat concern.
-  </p>
-</Section>
+          <p>
+            MaiTroll&apos;s goal is not to police every word. The goal is to distinguish
+            ordinary conversation and expression from conduct that creates a genuine
+            safety, harassment, bullying, or targeted-threat concern.
+          </p>
+        </Section>
 
         {/* Troll Officers */}
         <Section icon={Gavel} title="Troll Officers & Enforcement">
           <p>
-            Troll Officers are part of MaiTroll's internal safety and
+            Troll Officers are part of MaiTroll&apos;s internal safety and
             enforcement structure.
           </p>
 
@@ -519,7 +522,7 @@ export default function PhoneSafety() {
 
                 <p className="mt-1">
                   An internal platform restriction that may temporarily limit
-                  an account's ability to participate in MaiTroll.
+                  an account&apos;s ability to participate in MaiTroll.
                 </p>
               </div>
             </div>
@@ -530,7 +533,7 @@ export default function PhoneSafety() {
         <Section icon={Lock} title="CEO & Platform Authority">
           <p>
             The MaiTroll CEO and authorized platform leadership retain final
-            authority over the platform's rules, safety standards, enforcement
+            authority over the platform&apos;s rules, safety standards, enforcement
             systems, and operational policies.
           </p>
 
@@ -552,13 +555,13 @@ export default function PhoneSafety() {
         <Section icon={Video} title="When You See a Violation">
           <p>
             If you believe a broadcast, post, message, or user is violating
-            MaiTroll safety rules, use the platform's available reporting and
+            MaiTroll safety rules, use the platform&apos;s available reporting and
             moderation tools.
           </p>
 
           <p>
             Do not attempt to personally retaliate against another user.
-            Report the issue and allow MaiTroll's enforcement system to
+            Report the issue and allow MaiTroll&apos;s enforcement system to
             investigate.
           </p>
 

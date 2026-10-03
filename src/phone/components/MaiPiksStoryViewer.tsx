@@ -659,7 +659,7 @@ function StoryTipModal({
         </button>
 
         <p className="mt-3 text-center text-[9px] text-zinc-600">
-          Tips are final. {item?.mediaType === 'video' ? 'Video' : 'Photo'} tips go straight to the creator's wallet.
+          Tips are final. {item?.mediaType === 'video' ? 'Video' : 'Photo'} tips go straight to the creator&apos;s wallet.
         </p>
       </div>
     </div>

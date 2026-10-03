@@ -62,23 +62,28 @@ import {
 import { useAuthStore } from '@/lib/store';
 import { useCoins } from '@/lib/hooks/useCoins';
 import { useXPStore } from '@/stores/useXPStore';
-import { supabase, UserRole } from '@/lib/supabase';
+import { isAdminEmail, supabase, UserRole } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavBadges } from '@/hooks/useNavBadges';
+import { useIsActiveFounder } from '@/hooks/useFounderProgram';
 
 /* --- Role helpers (mirrored from Sidebar/BottomNav) --- */
-function useRoleChecks(profile: any) {
+function useRoleChecks(profile: any, userEmail?: string) {
   const role = String(profile?.role || '');
   const trollRole = String(profile?.troll_role || '');
 
   const isAdmin =
+    isAdminEmail(userEmail) ||
     role === String(UserRole.ADMIN) ||
     trollRole === String(UserRole.ADMIN) ||
     role === String(UserRole.HR_ADMIN) ||
     role === String(UserRole.AGENCY_HR_MANAGER) ||
     profile?.is_admin ||
     role === 'superadmin' ||
+    role === 'owner' ||
+    role === 'ceo' ||
     trollRole === 'ceo' ||
+    trollRole === 'owner' ||
     !!(profile as any)?.is_superadmin;
 
   const isSecretary =
@@ -315,8 +320,15 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
     isAdmin, isSecretary, isLead, isOfficer, isPresident, isBroadcaster, isAgencyHR, isHRAdmin,
     isAgencyLeader, isAttorney, isProsecutor, isPastor, isJournalist, isNewsCaster,
     isChiefNewsCaster, isCEOAssistant, isNoahAssistant, isAuctioneer, isEmployee,
-  } = useRoleChecks(profile);
+  } = useRoleChecks(profile, user?.email);
   const [search, setSearch] = useState('');
+
+  // ⭐ Founder Program: the "More" panel is the real web nav container, so the
+  // Founder Hub has to be listed here too or searching "founder" finds nothing.
+  // Role-based: active Founders AND Admins (Admins get the in-page
+  // "Manage Founders" tab). Status check, not the badge check.
+  const isActiveFounder = useIsActiveFounder(user?.id);
+  const canSeeFounderHub = isActiveFounder || isAdmin;
 
   const allPages = useMemo(() => {
     const pages: { category: string; items: PageEntry[] }[] = [
@@ -364,6 +376,9 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
           category: 'Government',
           items: [
             { label: 'Troll Court', icon: Scale, path: '/troll-court' },
+            ...(canSeeFounderHub
+              ? [{ label: 'Founder Hub', icon: Sparkles as any, path: '/founder' }]
+              : []),
             { label: 'Inmates', icon: Lock, path: '/inmates' },
             { label: 'City Laws & Fees', icon: FileText_M, path: '/home?tab=laws-fees' },
             { label: 'Mayor Dashboard', icon: Crown, path: '/mayor' },
@@ -478,7 +493,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
       ...cat,
       items: cat.items.filter((item) => item.show !== false),
     }));
-  }, [isAdmin, isSecretary, isLead, isOfficer, isPresident, isAgencyHR, isHRAdmin, profile?.username]);
+  }, [isAdmin, isSecretary, isLead, isOfficer, isPresident, isAgencyHR, isHRAdmin, profile?.username, canSeeFounderHub]);
 
   const filteredPages = useMemo(() => {
     if (!search.trim()) return allPages;

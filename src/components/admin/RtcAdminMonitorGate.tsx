@@ -15,7 +15,10 @@ import { useAuthStore } from '../../lib/store'
  * one RTC monitoring implementation and one set of realtime data across
  * web and phone.
  */
-export default function RtcAdminMonitorGate({ fullPage = false }: { fullPage?: boolean } = {}) {
+export default function RtcAdminMonitorGate({
+  fullPage = false,
+  onClose,
+}: { fullPage?: boolean; onClose?: () => void } = {}) {
   const user = useAuthStore((s) => s.user)
   const [allowed, setAllowed] = useState<boolean | null>(null)
   const [checking, setChecking] = useState(true)
@@ -79,7 +82,7 @@ export default function RtcAdminMonitorGate({ fullPage = false }: { fullPage?: b
         </div>
       }
     >
-      <RTCAdminMonitor fullPage={fullPage} />
+      <RTCAdminMonitor fullPage={fullPage} onClose={onClose} />
     </Suspense>
   )
 }

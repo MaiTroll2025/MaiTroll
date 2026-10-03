@@ -139,7 +139,7 @@ export default function CashoutBonusPanel() {
             <h4 className="text-sm font-bold text-amber-200">Admin Bonus Feature</h4>
             <p className="text-xs text-amber-300/80 mt-1">
               You can add up to <span className="text-white font-bold">$100</span> bonus to any cashout request.
-              If you don't approve the bonus, user only receives their original cashout amount.
+              If you don&apos;t approve the bonus, user only receives their original cashout amount.
             </p>
           </div>
         </div>

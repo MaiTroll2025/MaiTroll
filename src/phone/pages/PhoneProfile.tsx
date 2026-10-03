@@ -63,6 +63,9 @@ import ProfileWatchlist from '../../components/profile/ProfileWatchlist'
 import MaiSubPanel from '../../components/profile/MaiSubPanel'
 import CityIdentityPanel from '../../components/profile/CityIdentityPanel'
 import AccessPurchasePanel from '../../components/profile/AccessPurchasePanel'
+import FounderBadge from '../../components/founder/FounderBadge'
+import FounderScheduledBroadcastBanner from '../../components/founder/FounderScheduledBroadcastBanner'
+import { useFounderIdentity } from '../../hooks/useFounderProgram'
 
 type ProfileRow = {
   id: string
@@ -172,6 +175,12 @@ export default function PhoneProfile() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const [role, setRole] = useState('')
+  // Id of the profile being viewed (own profile or someone else's).
+  const [profileId, setProfileId] = useState<string | null>(null)
+
+  // ⭐ Founder Program — gold username + Founder badge, same shared store the
+  // web profile and username components use. Admins are excluded.
+  const { showFounderBadge: isProfileFounder } = useFounderIdentity(profileId)
 
   const [activeTab, setActiveTab] = useState('social')
 
@@ -366,6 +375,7 @@ export default function PhoneProfile() {
 
       if (data) {
         applyProfile(data as ProfileRow)
+        setProfileId((data as ProfileRow).id)
         setUsername(data.username || usernameParam || '')
       } else {
         applyFallback()
@@ -1310,6 +1320,15 @@ export default function PhoneProfile() {
 
           {/* Identity area */}
           <div className="relative px-4 pb-4">
+            {/* 🔴 Scheduled Founder Broadcast banner (web parity) */}
+            <div className="pt-3">
+              <FounderScheduledBroadcastBanner
+                userId={profileId}
+                variant="phone"
+                onClick={() => navigate('/live')}
+              />
+            </div>
+
             {/* Avatar */}
             <div className="-mt-14 flex items-end justify-between">
               <div className="relative">
@@ -1359,8 +1378,11 @@ export default function PhoneProfile() {
               </div>
 
               {username && (
-                <p className="mt-1 text-[11px] font-bold text-[#00BFFF]/75">
-                  @{username}
+                <p className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-[#00BFFF]/75">
+                  <span className={isProfileFounder ? 'founder-username' : undefined}>
+                    @{username}
+                  </span>
+                  <FounderBadge userId={profileId} compact />
                 </p>
               )}
 

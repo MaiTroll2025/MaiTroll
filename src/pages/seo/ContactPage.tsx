@@ -82,7 +82,7 @@ export default function ContactPage() {
               </span>
             </h1>
             <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-              Have a question, feedback, or need help? We'd love to hear from you.
+              Have a question, feedback, or need help? We&apos;d love to hear from you.
               Choose the best way to reach us below.
             </p>
           </div>
@@ -119,14 +119,14 @@ export default function ContactPage() {
             <div>
               <h2 className="text-3xl font-bold text-white mb-6">Send Us a Message</h2>
               <p className="text-slate-400 mb-8">
-                Fill out the form and we'll get back to you as soon as possible.
+                Fill out the form and we&apos;ll get back to you as soon as possible.
               </p>
 
               {submitted ? (
                 <div className="p-8 bg-green-900/20 border border-green-500/30 rounded-2xl text-center">
                   <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">Message Sent!</h3>
-                  <p className="text-slate-400">Thank you for reaching out. We'll respond within 24 hours.</p>
+                  <p className="text-slate-400">Thank you for reaching out. We&apos;ll respond within 24 hours.</p>
                   <button
                     onClick={() => setSubmitted(false)}
                     className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"

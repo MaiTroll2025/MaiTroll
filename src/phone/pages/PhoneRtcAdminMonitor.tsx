@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 /**
  * Phone RTC Admin Monitor — mobile wrapper that reuses the SAME
@@ -11,6 +12,14 @@ import React, { Suspense } from 'react'
  * The frontend is NOT the only security layer.
  */
 export default function PhoneRtcAdminMonitor() {
+  const navigate = useNavigate()
+
+  // The monitor fills the whole route, so closing it must leave the route.
+  const handleClose = () => {
+    if (window.history.length > 1) navigate(-1)
+    else navigate('/admin-mobile')
+  }
+
   const RtcAdminMonitorGate = React.lazy(() =>
     import('../../components/admin/RtcAdminMonitorGate.tsx'),
   )
@@ -26,7 +35,7 @@ export default function PhoneRtcAdminMonitor() {
         </div>
       }
     >
-      <RtcAdminMonitorGate fullPage />
+      <RtcAdminMonitorGate fullPage onClose={handleClose} />
     </React.Suspense>
   )
 }

@@ -36,6 +36,7 @@ import { awardKeyToUser } from '@/services/keyService'
 import { useKeyDiscoveryStore } from '@/stores/useKeyDiscoveryStore'
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap'
 import CameraOffImageUpload from '@/components/broadcast/CameraOffImageUpload'
+import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
 
 type BroadcastCategory =
   | 'general'
@@ -85,6 +86,7 @@ export default function PhoneGoLive() {
   const [title, setTitle] = useState('')
   const [category, setCategory] =
     useState<BroadcastCategory>('general')
+  const [seatCount, setSeatCount] = useState(0)
 
   const [cameraOn, setCameraOn] = useState(true)
   const [micOn, setMicOn] = useState(true)
@@ -113,6 +115,11 @@ export default function PhoneGoLive() {
     allRestrictionsDisabled,
     loading: capLoading,
   } = useBroadcastViewerCap()
+
+  const maxGuestSeats = seatCapEnabled
+    ? Math.max(0, Math.min(MAX_GUEST_SEATS, seatCapMax))
+    : MAX_GUEST_SEATS
+  const configuredSeatCount = Math.max(0, Math.min(seatCount, maxGuestSeats))
 
   /*
    * Attach the native MediaStream to the phone preview.
@@ -519,8 +526,8 @@ export default function PhoneGoLive() {
 
         started_at: null,
 
-        box_count: 1,
-        seat_count: 0,
+        box_count: configuredSeatCount + 1,
+        seat_count: configuredSeatCount,
 
         layout_mode: 'grid',
 
@@ -758,6 +765,7 @@ export default function PhoneGoLive() {
     acquireMedia,
     cameraOn,
     category,
+    configuredSeatCount,
     createLiveKitTracks,
     facingMode,
     micOn,
@@ -1019,6 +1027,42 @@ export default function PhoneGoLive() {
               size={18}
               className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500"
             />
+          </div>
+        </section>
+
+        {/* Guest seats */}
+        <section className="space-y-2">
+          <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+            Guest Seats
+          </label>
+          <div className="flex items-center justify-between rounded-2xl border border-cyan-500/15 bg-cyan-500/5 px-4 py-3">
+            <div>
+              <p className="text-sm font-bold text-white">Available seats</p>
+              <p className="mt-0.5 text-[10px] text-zinc-500">Host is not included</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSeatCount(Math.max(0, configuredSeatCount - 1))}
+                disabled={starting || configuredSeatCount <= 0}
+                className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-white disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Remove a guest seat"
+              >
+                -
+              </button>
+              <span className="min-w-12 text-center text-sm font-black text-cyan-200">
+                {configuredSeatCount} / {maxGuestSeats}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSeatCount(Math.min(maxGuestSeats, configuredSeatCount + 1))}
+                disabled={starting || configuredSeatCount >= maxGuestSeats}
+                className="grid h-9 w-9 place-items-center rounded-lg border border-cyan-300/25 bg-cyan-400/10 text-cyan-100 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Add a guest seat"
+              >
+                +
+              </button>
+            </div>
           </div>
         </section>
 

@@ -202,7 +202,7 @@ export default function PhoneSupport() {
               </h2>
 
               <p className="mt-1 text-xs leading-5 text-zinc-500">
-                If you see content or behavior that violates MaiTroll's
+                If you see content or behavior that violates MaiTroll&apos;s
                 community or safety rules, report it through the available
                 platform tools.
               </p>
@@ -276,7 +276,7 @@ export default function PhoneSupport() {
           </p>
 
           <p className="mt-1 text-[9px] text-zinc-700">
-            We're here to help keep MaiTroll running smoothly.
+            We&apos;re here to help keep MaiTroll running smoothly.
           </p>
         </div>
       </main>

@@ -158,7 +158,7 @@ export default function TermsPage() {
           <ul className="space-y-3 text-slate-300 list-disc pl-6">
             <li>You may not impersonate another person.</li>
             <li>
-              You may not create an account using another person's identity,
+              You may not create an account using another person&apos;s identity,
               credentials, or personal information.
             </li>
             <li>
@@ -194,7 +194,7 @@ export default function TermsPage() {
 
             <ol className="space-y-3 text-slate-300 list-decimal pl-6">
               <li>
-                Selecting an institution that exists in MAiTROLL's verified
+                Selecting an institution that exists in MAiTROLL&apos;s verified
                 institution system.
               </li>
               <li>
@@ -205,7 +205,7 @@ export default function TermsPage() {
                 Completing required MAiTROLL and Supabase email confirmation.
               </li>
               <li>
-                Passing MAiTROLL's institution and domain verification process.
+                Passing MAiTROLL&apos;s institution and domain verification process.
               </li>
             </ol>
           </div>
@@ -235,9 +235,9 @@ export default function TermsPage() {
             </p>
 
             <p className="text-slate-300 leading-relaxed mb-4">
-              Access to MAi Business requires the user's MAiTROLL account to
+              Access to MAi Business requires the user&apos;s MAiTROLL account to
               qualify as an eligible verified educational account under
-              MAiTROLL's current eligibility requirements.
+              MAiTROLL&apos;s current eligibility requirements.
             </p>
 
             <p className="text-slate-300 leading-relaxed">
@@ -287,7 +287,7 @@ export default function TermsPage() {
               required payment.
             </li>
             <li>
-              Administration-fee revenue may be earmarked for MAiTROLL's School
+              Administration-fee revenue may be earmarked for MAiTROLL&apos;s School
               Pool Funding Reserve.
             </li>
           </ul>
@@ -383,7 +383,7 @@ export default function TermsPage() {
           </div>
 
           <p className="text-slate-300 leading-relaxed mb-4">
-            MAiTROLL's software, branding, logos, designs, interfaces, systems,
+            MAiTROLL&apos;s software, branding, logos, designs, interfaces, systems,
             graphics, databases, original text, city concepts, features, and
             other platform materials are owned by or licensed to MAiTROLL and
             are protected by applicable intellectual-property laws.
@@ -392,7 +392,7 @@ export default function TermsPage() {
           <p className="text-slate-300 leading-relaxed">
             Except as expressly permitted by MAiTROLL, you may not copy,
             reproduce, distribute, reverse engineer, modify, sell, sublicense,
-            or commercially exploit MAiTROLL's proprietary materials.
+            or commercially exploit MAiTROLL&apos;s proprietary materials.
           </p>
         </section>
 
@@ -407,7 +407,7 @@ export default function TermsPage() {
 
           <p className="text-slate-300 leading-relaxed mb-4">
             Troll Coins and other virtual items are digital platform units
-            governed by MAiTROLL's current systems and rules. Unless expressly
+            governed by MAiTROLL&apos;s current systems and rules. Unless expressly
             stated otherwise, they are not legal tender, bank deposits,
             securities, cryptocurrency, or a personal bank balance.
           </p>
@@ -444,7 +444,7 @@ export default function TermsPage() {
           </h2>
 
           <p className="text-slate-300 leading-relaxed mb-4">
-            MAi Pay is MAiTROLL's applicable financial and cashout system.
+            MAi Pay is MAiTROLL&apos;s applicable financial and cashout system.
             Eligibility, verification, minimum requirements, timing, payment
             methods, account standing, and other requirements may apply before
             a cashout can be processed.
@@ -512,7 +512,7 @@ export default function TermsPage() {
 
           <ul className="space-y-3 text-slate-300 list-disc pl-6">
             <li>
-              A represented school must come from MAiTROLL's verified
+              A represented school must come from MAiTROLL&apos;s verified
               institution system.
             </li>
             <li>
@@ -520,7 +520,7 @@ export default function TermsPage() {
               their verified representation.
             </li>
             <li>
-              School identity is tied to the user's authenticated and verified
+              School identity is tied to the user&apos;s authenticated and verified
               educational information.
             </li>
             <li>
@@ -548,7 +548,7 @@ export default function TermsPage() {
 
           <p className="text-slate-300 leading-relaxed mb-4">
             School Pool amounts are maintained separately from individual user
-            Troll Coin balances and are not a user's personal wallet balance.
+            Troll Coin balances and are not a user&apos;s personal wallet balance.
           </p>
 
           <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 mb-5">
@@ -627,7 +627,7 @@ export default function TermsPage() {
             personal information to third-party advertisers, data brokers, or
             other companies for their independent commercial purposes. Technical
             infrastructure may process information only as necessary to provide
-            MAiTROLL's services.
+            MAiTROLL&apos;s services.
           </p>
 
           <p className="text-slate-300 leading-relaxed mt-4">
@@ -674,7 +674,7 @@ export default function TermsPage() {
 
           <p className="text-slate-300 leading-relaxed mt-5">
             MAiTROLL may also maintain internal moderation, officer, reporting,
-            appeal, and Troll Court systems as part of the platform's governance
+            appeal, and Troll Court systems as part of the platform&apos;s governance
             structure.
           </p>
         </section>
@@ -808,7 +808,7 @@ export default function TermsPage() {
             officers, employees, contractors, and agents from claims,
             liabilities, damages, losses, and expenses arising from your
             unlawful conduct, violation of these Terms, infringement of another
-            person's rights, or misuse of the service.
+            person&apos;s rights, or misuse of the service.
           </p>
         </section>
 

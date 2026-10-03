@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
         const stubRows: Array<Record<string, unknown>> = []
         let grossTotal = 0
         let taxTotal = 0
-        let deductionTotal = 0
+        const deductionTotal = 0
         let netTotal = 0
 
         for (const emp of employees ?? []) {

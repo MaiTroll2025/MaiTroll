@@ -458,14 +458,13 @@ export function getMaxBoxCount(categoryId: string): number {
   return config.maxBoxCount;
 }
 
-// All users: absolute maximum seat count (0-7 total boxes, broadcaster = box 1)
-// Max 6 guest seats + 1 broadcaster
-export const MAX_ADMIN_SEAT_COUNT = 7;
+// Maximum of four guest seats plus the broadcaster's box.
+export const MAX_ADMIN_SEAT_COUNT = 5;
 export const MIN_ADMIN_SEAT_COUNT = 0;
 export const DEFAULT_SEAT_COUNT = 0;
-export const MAX_GUEST_SEATS = 6;
+export const MAX_GUEST_SEATS = 4;
 
-// Helper to get the max seat count (always 7 total boxes = 6 guest seats)
+// Helper to get the max box count, including the broadcaster.
 export function getAdminMaxSeatCount(): number {
   return MAX_ADMIN_SEAT_COUNT;
 }

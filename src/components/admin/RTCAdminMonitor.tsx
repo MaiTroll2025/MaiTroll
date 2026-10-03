@@ -165,7 +165,7 @@ function StatCard({ label, value, tone, icon }: { label: string; value: React.Re
   );
 }
 
-export default function RTCAdminMonitor({ fullPage = false }: { fullPage?: boolean } = {}) {
+export default function RTCAdminMonitor({ fullPage = false, onClose }: { fullPage?: boolean; onClose?: () => void } = {}) {
 const { profile } = useAuthStore();
   const navigate = useNavigate();
   const onlineCount = usePresenceStore((state) => state.onlineCount);
@@ -207,6 +207,17 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const dragMovedRef = useRef(false);
   const monitorPosLoadedRef = useRef(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Single close path for the monitor. In fullPage mode the panel IS the route,
+   * so closing has to hand control back to the host screen via `onClose`
+   * instead of just hiding the panel (which would leave a blank screen).
+   */
+  const closeMonitor = useCallback(() => {
+    setIsManuallyClosed(true)
+    setIsOpen(false)
+    onClose?.()
+  }, [onClose])
 
   // Floating button drag state
   const [floatBtnPos, setFloatBtnPos] = useState<{ top: number; left: number } | null>(null);
@@ -1455,21 +1466,23 @@ const openAction = useCallback((user: UserListItem, action: string) => {
        if (e.key === 'Escape') {
          if (activeAction) {
            closeAction();
-         } else if (selectedStream) {
-           closeStreamModal();
-         } else {
-           setIsOpen(false);
-         }
-       }
-     };
+} else if (selectedStream) {
+            closeStreamModal();
+          } else {
+            closeMonitor();
+          }
+        }
+      };
 
-     window.addEventListener('keydown', handleEscape);
-     return () => window.removeEventListener('keydown', handleEscape);
-     }, [isOpen, activeAction, selectedStream, closeAction, closeStreamModal, setIsOpen]);
+      window.addEventListener('keydown', handleEscape);
+      return () => window.removeEventListener('keydown', handleEscape);
+      }, [isOpen, activeAction, selectedStream, closeAction, closeStreamModal, closeMonitor]);
 
-    // Load saved monitor position from sessionStorage when it first opens
+    // Load saved monitor position from sessionStorage when it first opens.
+    // fullPage always fills the viewport, so a saved floating position would
+    // offset the whole screen — never apply it there.
     useEffect(() => {
-      if (!isOpen || monitorPosLoadedRef.current) return
+      if (!isOpen || fullPage || monitorPosLoadedRef.current) return
       monitorPosLoadedRef.current = true
 
       try {
@@ -1483,7 +1496,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       } catch {
         // use default position
       }
-    }, [isOpen])
+    }, [isOpen, fullPage])
 
     // Reset position-loaded flag when monitor closes so we reload next time
     useEffect(() => {
@@ -1504,6 +1517,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     }
 
     const handleMonitorDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+      if (fullPage) return
       if ((e.target as HTMLElement).closest('button, [role="button"], input, select, textarea')) return
       const panel = panelRef.current
       if (!panel) return
@@ -1516,7 +1530,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       dragMovedRef.current = false
       setIsDragging(true)
       e.preventDefault()
-    }, [])
+    }, [fullPage])
 
     const handleMonitorDragMove = useCallback((e: MouseEvent | TouchEvent) => {
       if (!isDragging) return
@@ -3419,8 +3433,7 @@ const renderRtcTab = () => (
         }
         onClick={(e) => {
           if (e.target === e.currentTarget) {
-            setIsManuallyClosed(true)
-            setIsOpen(false)
+            closeMonitor();
           }
         }}
       >
@@ -3434,14 +3447,14 @@ const renderRtcTab = () => (
             height: fullPage ? '100%' : 'min(86vh,720px)',
             width: fullPage ? '100%' : '100%',
             maxWidth: fullPage ? 'none' : '420px',
-            cursor: isDragging ? 'grabbing' : 'default',
+            cursor: fullPage ? 'default' : isDragging ? 'grabbing' : 'default',
             userSelect: isDragging ? 'none' : 'auto',
           }}
           className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0A0814] shadow-2xl shadow-black/60"
         >
           {/* Header — drag handle */}
           <div
-            className="flex cursor-grab items-center justify-between border-b border-white/10 bg-gradient-to-r from-blue-900/45 to-purple-900/45 px-3 py-2 select-none"
+            className={`flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-blue-900/45 to-purple-900/45 px-3 py-2 select-none ${fullPage ? '' : 'cursor-grab'}`}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -3456,8 +3469,7 @@ const renderRtcTab = () => (
               type="button"
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => {
-                setIsManuallyClosed(true)
-                setIsOpen(false)
+                closeMonitor();
               }}
               className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
               title="Close"

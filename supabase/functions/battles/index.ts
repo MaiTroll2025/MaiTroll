@@ -75,6 +75,11 @@ export const handler = async (req: Request): Promise<Response> => {
           looking_for_battle: false,
           looking_for_battle_since: null
         }).eq('id', stream_id);
+
+        await supabase.from('battles').update({
+          status: 'cancelled'
+        }).or(`team_a_stream_id=eq.${stream_id},team_b_stream_id=eq.${stream_id}`)
+          .eq('status', 'waiting_for_opponent');
         
         return withCors({ success: true }, 200);
       }
@@ -178,21 +183,6 @@ export const handler = async (req: Request): Promise<Response> => {
            return withCors({ error: updateError.message }, 400);
          }
 
-         return withCors({ success: true }, 200);
-       }
-
-       case 'cancel_battle_search': {
-         const { stream_id } = body;
-         await supabase.from('streams').update({
-           looking_for_battle: false,
-           looking_for_battle_since: null
-         }).eq('id', stream_id);
-         
-         await supabase.from('battles').update({
-           status: 'cancelled'
-         }).or(`team_a_stream_id=eq.${stream_id},team_b_stream_id=eq.${stream_id}`)
-           .eq('status', 'waiting_for_opponent');
-         
          return withCors({ success: true }, 200);
        }
 

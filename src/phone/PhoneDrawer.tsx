@@ -55,7 +55,6 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
     if (isAdmin) {
       add('Admin', [
         { label: 'Admin Dashboard', path: '/admin', icon: 'LayoutDashboard' },
-        { label: 'Admin Mobile', path: '/admin-mobile', icon: 'Smartphone' },
         { label: 'RTC Admin Monitor', path: '/rtcadminmonitor', icon: 'Radio' },
       ])
     }

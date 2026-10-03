@@ -13,6 +13,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { Flame, X, DollarSign, Trophy, Music } from 'lucide-react';
 import { toast } from 'sonner';
+import { MAX_GUEST_SEATS } from '../../config/broadcastCategories';
 
 // Import the original BroadcastPage
 import { BroadcastPage } from '../../pages/broadcast/BroadcastPage';
@@ -33,7 +34,7 @@ export function SmokeEventBroadcastWrapper() {
   const [smokeEvent, setSmokeEvent] = useState<SmokeEvent | null>(null);
   const [showDropModal, setShowDropModal] = useState(false);
   const [showSongModal, setShowSongModal] = useState(false);
-  const [seatCount, setSeatCount] = useState(6);
+  const [seatCount, setSeatCount] = useState(MAX_GUEST_SEATS);
 
   // Check if user is admin or stream host
   const isAdmin = profile?.role === 'admin' || profile?.is_admin === true || profile?.role === 'owner';
@@ -43,7 +44,7 @@ export function SmokeEventBroadcastWrapper() {
     // Check sessionStorage flag set by SetupPage
     const smokeEnabled = sessionStorage.getItem('tc_smoke_event_enabled') === 'true';
     if (smokeEnabled) {
-      setSmokeEvent({ id: 'pending', stream_id: '', is_active: true, seat_count: 6, raffle_enabled: true, troll_drop_enabled: true, song_queue_enabled: true });
+      setSmokeEvent({ id: 'pending', stream_id: '', is_active: true, seat_count: MAX_GUEST_SEATS, raffle_enabled: true, troll_drop_enabled: true, song_queue_enabled: true });
     }
   }, []);
 

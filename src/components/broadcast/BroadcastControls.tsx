@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { Plus, Minus, LayoutGrid, Settings2, Coins, Lock, Unlock, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Sparkles, Palette, Gift, UserX, ImageIcon, LogOut, ChevronDown, ChevronUp, Share2, Package, Swords, Star, GripVertical, X, MoreHorizontal,   Sliders, Shield, PlusCircle, Users, Bell, Crown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
-import { getCategoryConfig } from '../../config/broadcastCategories';
+import { getCategoryConfig, MAX_GUEST_SEATS } from '../../config/broadcastCategories';
 import BannedUsersList from './BannedUsersList';
 import ThemeSelector from './ThemeSelector';
 import BattleThemeSelector from './BattleThemeSelector';
@@ -425,9 +425,9 @@ function BroadcastControls({
 
   const updateBoxCount = async (newCount: number) => {
     if (!canEditStream) return;
-    const effectiveMaxBoxes = seatCap.enabled ? Math.min(6, seatCap.max) : 6;
+    const effectiveMaxBoxes = seatCap.enabled ? Math.min(MAX_GUEST_SEATS + 1, seatCap.max) : MAX_GUEST_SEATS + 1;
     if (newCount > effectiveMaxBoxes) {
-      toast.error(seatCap.enabled ? `Maximum ${effectiveMaxBoxes} boxes allowed during capped period` : "Maximum 6 boxes allowed");
+      toast.error(seatCap.enabled ? `Maximum ${effectiveMaxBoxes} boxes allowed during capped period` : `Maximum ${MAX_GUEST_SEATS + 1} boxes allowed`);
       return;
     }
     const minLimit = Math.max(1, requiredBoxes);

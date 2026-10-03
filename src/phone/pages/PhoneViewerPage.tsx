@@ -3673,6 +3673,11 @@ export default function PhoneViewerPage() {
           return
         }
 
+        if ((stream as any)?.are_seats_locked) {
+          toast.error('Seats are currently locked')
+          return
+        }
+
         try {
           const price =
             getSeatPrice(
@@ -4697,11 +4702,16 @@ export default function PhoneViewerPage() {
         ================================================================= */}
 
 {!battleActive && floatingMessages.length > 0 && (
-          <div className="absolute inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col items-center gap-1 pointer-events-none px-3">
+          <div className="absolute inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col-reverse items-center gap-1 pointer-events-none px-3">
             {floatingMessages.slice(0, 8).map((msg) => (
               <div
                 key={msg.id}
-                className="animate-in fade-in slide-in-from-bottom-2 duration-300 pointer-events-auto"
+                className="mobile-rise-chat pointer-events-auto"
+                onAnimationEnd={() =>
+                  setFloatingMessages((previous) =>
+                    previous.filter((item) => item.id !== msg.id),
+                  )
+                }
               >
                 {msg.isSystem ? (
                   <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 backdrop-blur-md">

@@ -158,7 +158,6 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
-    base: '/',
     server: {
       host: true,
       https: process.env.VITE_FORCE_HTTPS === '1',

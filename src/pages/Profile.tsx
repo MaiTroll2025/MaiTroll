@@ -40,6 +40,7 @@ import MaiSubPanel from '../components/profile/MaiSubPanel';
 import CityIdentityPanel from '../components/profile/CityIdentityPanel';
 import AccessPurchasePanel from '../components/profile/AccessPurchasePanel';
 import { useProfileFrameStore } from '../stores/useProfileFrameStore';
+import FounderScheduledBroadcastBanner from '../components/founder/FounderScheduledBroadcastBanner';
 import type { ProfileFrame as ProfileFrameType } from '../config/profileFrames';
 
 interface ActiveRole {
@@ -617,6 +618,9 @@ function ProfileInner() {
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(147,51,234,0.22),transparent_32%),radial-gradient(circle_at_85%_10%,rgba(45,212,191,0.16),transparent_32%),linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.85))]" />
 
             <main className="relative mx-auto max-w-7xl px-3 py-5 sm:px-6 lg:px-8">
+                {/* 🔴 Scheduled Founder Broadcast banner (web parity) */}
+                <FounderScheduledBroadcastBanner userId={profile?.id} variant="web" />
+
                 {/* Profile Header */}
                 <ProfileHeader
                     profile={

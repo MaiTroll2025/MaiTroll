@@ -11,6 +11,8 @@ import { supabase } from '../lib/supabase'
 import { notifyAdmins } from '../lib/notifications'
 import SummonModal from './SummonModal'
 import SubscribeButton from './user/SubscribeButton'
+import FounderBadge from './founder/FounderBadge'
+import { useFounderIdentity } from '../hooks/useFounderProgram'
 
 interface ClickableUsernameProps {
   username: string
@@ -274,7 +276,18 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
     3: 'Supreme Troll',
   }
 
-  const specialClass = isGold ? 'gold-username' : hasRgb ? 'rgb-username' : '';
+    // Founder Program: active Founders get a gold username + Founder badge.
+  // Reading from the shared directory store keeps this to one query app-wide.
+  // Admins are excluded from the treatment (useFounderIdentity.showFounderBadge).
+  const { showFounderBadge } = useFounderIdentity(targetUserId)
+
+  const specialClass = showFounderBadge
+    ? 'founder-username'
+    : isGold
+      ? 'gold-username'
+      : hasRgb
+        ? 'rgb-username'
+        : ''
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -901,6 +914,11 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
             <span className="badge-title">OG</span>
             </span>
         )}
+
+        {/* Founder Badge — always visible for active Founders, independent of
+            any other role badge, so a Founder who is also an Admin/Officer
+            still shows both. */}
+        <FounderBadge userId={targetUserId} />
 
         {/* Empire Partner Badge (shows for all partners, regardless of other badges) */}
         <EmpireBadge empireRole={userProfile?.empire_role} />

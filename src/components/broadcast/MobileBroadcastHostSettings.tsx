@@ -22,6 +22,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { MAX_GUEST_SEATS } from '../../config/broadcastCategories';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -193,6 +194,7 @@ export default function MobileBroadcastHostSettings({
 }: MobileBroadcastHostSettingsProps) {
   const [isGridOpen, setIsGridOpen] = useState(false);
   const [activePopup, setActivePopup] = useState<string | null>(null);
+  const [pendingSeatCount, setPendingSeatCount] = useState(seatCount);
 
   // Lock body scroll when grid or popup is open
   useEffect(() => {
@@ -208,6 +210,11 @@ export default function MobileBroadcastHostSettings({
 
   const closeGrid = useCallback(() => setIsGridOpen(false), []);
   const closePopup = useCallback(() => setActivePopup(null), []);
+  const boundedSeatCount = Math.max(0, Math.min(MAX_GUEST_SEATS, seatCount));
+
+  useEffect(() => {
+    if (activePopup === 'seats') setPendingSeatCount(boundedSeatCount);
+  }, [activePopup, boundedSeatCount]);
 
   // ── Grid items ──────────────────────────────────────────────────────────
 
@@ -606,26 +613,20 @@ export default function MobileBroadcastHostSettings({
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => {
-                    const next = Math.max(0, seatCount - 1);
-                    if (next !== seatCount) {
-                      onUpdateSeatCount?.(next);
-                    }
+                    setPendingSeatCount((count) => Math.max(0, count - 1));
                   }}
-                  disabled
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95 opacity-50 cursor-not-allowed"
+                  disabled={disabled || pendingSeatCount <= 0}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   -
                 </button>
-                <span className="text-sm font-black text-white w-4 text-center">{seatCount}</span>
+                <span className="text-sm font-black text-white w-4 text-center">{pendingSeatCount}</span>
                 <button
-                  disabled
                   onClick={() => {
-                    const next = Math.min(6, seatCount + 1);
-                    if (next !== seatCount) {
-                      onUpdateSeatCount?.(next);
-                    }
+                    setPendingSeatCount((count) => Math.min(MAX_GUEST_SEATS, count + 1));
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95 opacity-50 cursor-not-allowed"
+                  disabled={disabled || pendingSeatCount >= MAX_GUEST_SEATS}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   +
                 </button>
@@ -721,6 +722,17 @@ export default function MobileBroadcastHostSettings({
             <p className="text-[11px] text-white/40">
               Adjust how many viewer seats are available. Total boxes = seats + broadcaster.
             </p>
+            <button
+              type="button"
+              onClick={() => {
+                onUpdateSeatCount?.(pendingSeatCount);
+                closePopup();
+              }}
+              disabled={disabled || !onUpdateSeatCount || pendingSeatCount === boundedSeatCount}
+              className="w-full rounded-xl border border-cyan-300/30 bg-cyan-400/10 px-4 py-3 text-sm font-black text-cyan-100 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Set Seats
+            </button>
           </div>
         </SettingsSubPopup>
       )}

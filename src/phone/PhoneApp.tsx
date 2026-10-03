@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 import PhoneHomepage from './pages/PhoneHomepage'
 import PhoneAuth from './pages/PhoneAuth'
@@ -13,13 +13,16 @@ import PhoneHytroGameStreams from './pages/PhoneHytroGameStreams'
 import PhoneHytroGameViewer from './pages/PhoneHytroGameViewer'
 import PhoneViewerPage from './pages/PhoneViewerPage'
 import PhoneWebPage from './pages/PhoneWebPage'
+// ⭐ Founder Hub is intentionally SHARED with the web app so every Founder
+// perk (chat, broadcasts, reports, court tools, audit) is identical on phone.
+import FounderHub from '../pages/FounderHub'
 import MKeyInvitePopup from '../components/broadcast/mkey/MKeyInvitePopup'
 import PhoneCoins from './pages/PhoneCoins'
 import PhoneMaiPay from './pages/PhoneMaiPay'
 import PhoneTreelz from './pages/PhoneTreelz'
 import PhoneChat from './pages/PhoneChat'
 import PhoneFollowing from './pages/PhoneFollowing'
-import PhoneAdminDashboard from './pages/PhoneAdminDashboard'
+import AdminDashboard from '../pages/admin/AdminDashboard'
 import PhoneSecretary from './pages/PhoneSecretary'
 import PhoneLeadOfficer from './pages/PhoneLeadOfficer'
 import PhoneTrollOfficer from './pages/PhoneTrollOfficer'
@@ -38,7 +41,7 @@ import PhoneAdminPayouts from './pages/PhoneAdminPayouts'
 import PhoneAdminReports from './pages/PhoneAdminReports'
 import PhoneAdminModeration from './pages/PhoneAdminModeration'
 import PhoneAdminSettings from './pages/PhoneAdminSettings'
-import PhoneAdminMobile from './pages/PhoneAdminMobile'
+import PhoneAdminApplications from './pages/PhoneAdminApplications'
 import PhoneRtcAdminMonitor from './pages/PhoneRtcAdminMonitor'
 import PhonePlaceholderPage from './pages/PhonePlaceholderPage'
 import PhoneSearch from './pages/PhoneSearch'
@@ -171,6 +174,12 @@ function PhoneJailRedirect({ children }: { children: React.ReactNode }) {
 
 export default function PhoneApp() {
   const authUser = useAuthStore((state) => state.user)
+  const location = useLocation()
+  const isPhoneBroadcastPage =
+    location.pathname === '/broadcast' ||
+    (location.pathname.startsWith('/broadcast/') &&
+      location.pathname.split('/').filter(Boolean).length === 2 &&
+      location.pathname !== '/broadcast/setup')
 
   // Register native push notifications when user logs in
   useEffect(() => {
@@ -198,6 +207,7 @@ export default function PhoneApp() {
             <Route path="/broadcast/summary/:id" element={<PhoneBroadcastSummaryPage />} />
             <Route path="/auctions" element={<PhoneAuctions />} />
             <Route path="/troll-court" element={<PhoneTrollCourt />} />
+            <Route path="/founder" element={<FounderHub />} />
             <Route path="/store" element={<PhoneStore />} />
             <Route path="/coins" element={<PhoneCoins />} />
             <Route path="/wallet" element={<PhoneMaiPay />} />
@@ -215,8 +225,8 @@ export default function PhoneApp() {
             <Route path="/treelz" element={<PhoneTreelz />} />
             <Route path="/utromail" element={<PhoneChat />} />
             <Route path="/utromail/:threadId" element={<PhoneChat />} />
-            <Route path="/admin" element={<PhoneAdminDashboard />} />
-            <Route path="/admin-mobile" element={<PhoneAdminMobile />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin-mobile" element={<Navigate to="/admin" replace />} />
             <Route path="/rtcadminmonitor" element={<PhoneRtcAdminMonitor />} />
             <Route path="/support" element={<PhoneSupport />} />
             <Route path="/safety" element={<PhoneSafety />} />
@@ -243,6 +253,7 @@ export default function PhoneApp() {
             <Route path="/admin/reports" element={<PhoneAdminReports />} />
             <Route path="/admin/moderation" element={<PhoneAdminModeration />} />
             <Route path="/admin/settings" element={<PhoneAdminSettings />} />
+            <Route path="/admin/applications" element={<PhoneAdminApplications />} />
             <Route path="/search" element={<PhoneSearch />} />
             <Route path="/profile/:username" element={<PhoneProfile />} />
             <Route path="/live/:id" element={<PhoneViewerPage />} />
@@ -274,7 +285,7 @@ export default function PhoneApp() {
 
           <GlobalUtromailPopup />
 
-          <PetFloatingButton />
+          {!isPhoneBroadcastPage && <PetFloatingButton />}
 
           <PhoneBottomNav />
         </div>

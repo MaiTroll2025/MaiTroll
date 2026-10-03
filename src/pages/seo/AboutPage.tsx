@@ -364,7 +364,7 @@ export default function AboutPage() {
               </p>
 
               <p className="text-xl font-medium text-white">
-                MAiTROLL isn't designed for people to simply sit around and
+                MAiTROLL isn&apos;t designed for people to simply sit around and
                 consume content. It is designed to help people build something.
               </p>
             </div>
@@ -524,7 +524,7 @@ export default function AboutPage() {
           <p className="text-center text-sm leading-relaxed text-slate-300">
             School representation is tied to verified educational identity.
             Users do not simply type in a school name and claim representation.
-            MAiTROLL's educational systems are designed to use verified
+            MAiTROLL&apos;s educational systems are designed to use verified
             institution records and server-side eligibility rules.
           </p>
         </div>
@@ -613,9 +613,9 @@ export default function AboutPage() {
             </h3>
 
             <p className="text-sm leading-relaxed text-slate-400">
-              Eligible School Battle activity can contribute to a school's
+              Eligible School Battle activity can contribute to a school&apos;s
               School Pool amount. Activity is tracked and settled through
-              MAiTROLL's financial systems rather than being treated as a
+              MAiTROLL&apos;s financial systems rather than being treated as a
               normal user wallet.
             </p>
           </div>
@@ -960,7 +960,7 @@ export default function AboutPage() {
           </div>
 
           <h2 className="mb-6 text-3xl font-bold text-white md:text-5xl">
-            Don't Just Watch Someone Else Build Their Future.
+            Don&apos;t Just Watch Someone Else Build Their Future.
           </h2>
 
           <p className="mx-auto max-w-3xl text-xl leading-relaxed text-slate-300">

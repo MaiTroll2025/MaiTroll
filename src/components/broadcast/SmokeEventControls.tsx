@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Flame, Users, Gift, Music, Trophy, DollarSign, X, Play, Square } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { MAX_GUEST_SEATS } from '@/config/broadcastCategories';
 
 interface SmokeEventControlsProps {
   streamId: string;
@@ -29,7 +30,7 @@ export default function SmokeEventControls({
 }: SmokeEventControlsProps) {
   const [showDropModal, setShowDropModal] = useState(false);
   const [showSongModal, setShowSongModal] = useState(false);
-  const [seatCount, setSeatCount] = useState(6);
+  const [seatCount, setSeatCount] = useState(MAX_GUEST_SEATS);
   const [dropCoins, setDropCoins] = useState(100);
   const [dropDuration, setDropDuration] = useState(10);
   const [dropBills, setDropBills] = useState(25);
@@ -51,9 +52,9 @@ export default function SmokeEventControls({
           <input
             type="number"
             min={1}
-            max={12}
+            max={MAX_GUEST_SEATS}
             value={seatCount}
-            onChange={(e) => setSeatCount(Math.max(1, Math.min(6, parseInt(e.target.value) || 1)))}
+            onChange={(e) => setSeatCount(Math.max(1, Math.min(MAX_GUEST_SEATS, parseInt(e.target.value) || 1)))}
             className="w-12 bg-transparent text-white text-center text-sm outline-none"
           />
           <span className="text-xs text-zinc-400">seats</span>

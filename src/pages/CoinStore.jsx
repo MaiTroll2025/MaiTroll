@@ -23,6 +23,8 @@ import PayPalPaymentModal from '@/components/broadcast/PayPalPaymentModal';
 import TrollPassBanner from '@/components/ui/TrollPassBanner';
 import { toast } from 'sonner';
 import VerifiedBadgeCard from '@/components/ui/VerifiedBadgeCard';
+import TromocodeInput from '@/components/ui/TromoCodeInput';
+import { calculateTromocodeDiscount } from '@/lib/tromocode';
 
 const coinPackages = COIN_PACKAGES.map(p => ({
   ...p,
@@ -449,7 +451,40 @@ function PortfolioCard({ item, onSell, refreshCoins }) {
 /**
  * Profile Frames Store Embed — Compact view inside CoinStore
  */
-function ProfileFramesStoreEmbed() {
+function TromocodePrice({ amount, promo, className = '' }) {
+  const originalAmount = Number(amount || 0);
+  const discountedAmount = promo
+    ? calculateTromocodeDiscount({
+        promotionType: promo.promotion_type,
+        promotionValue: promo.promotion_value,
+        originalAmount,
+      }).finalAmount
+    : originalAmount;
+
+  return (
+    <span className={`inline-flex items-baseline gap-2 ${className}`}>
+      {discountedAmount < originalAmount && (
+        <span className="text-xs font-medium text-zinc-500 line-through">
+          {formatCoins(originalAmount)}
+        </span>
+      )}
+      <span className="font-bold text-yellow-400">{formatCoins(discountedAmount)}</span>
+    </span>
+  );
+}
+
+function getTromocodeFinalPrice(amount, promo) {
+  const originalAmount = Number(amount || 0);
+  if (!promo) return originalAmount;
+
+  return calculateTromocodeDiscount({
+    promotionType: promo.promotion_type,
+    promotionValue: promo.promotion_value,
+    originalAmount,
+  }).finalAmount;
+}
+
+function ProfileFramesStoreEmbed({ promo }) {
   const { user, profile } = useAuthStore();
   const { troll_coins } = useCoins();
   const [purchasing, setPurchasing] = useState(null);
@@ -478,12 +513,13 @@ function ProfileFramesStoreEmbed() {
   const handlePurchase = async (frame) => {
     if (!user) return;
     if (ownedIds.has(frame.id)) return;
-    if (!useCredit && (troll_coins || 0) < frame.coinCost) {
-      toast.error(`Need ${frame.coinCost.toLocaleString()} coins`);
+    const requiredCoins = getTromocodeFinalPrice(frame.coinCost, promo);
+    if (!useCredit && (troll_coins || 0) < requiredCoins) {
+      toast.error(`Need ${requiredCoins.toLocaleString()} coins`);
       return;
     }
-    if (useCredit && (creditInfo?.available || 0) < frame.coinCost) {
-      toast.error(`Need ${frame.coinCost.toLocaleString()} credit`);
+    if (useCredit && (creditInfo?.available || 0) < requiredCoins) {
+      toast.error(`Need ${requiredCoins.toLocaleString()} credit`);
       return;
     }
     setPurchasing(frame.id);
@@ -550,7 +586,8 @@ function ProfileFramesStoreEmbed() {
         {LAUNCH_FRAMES.map((frame) => {
           const owned = ownedIds.has(frame.id);
           const isEquipped = equippedId === frame.id;
-          const canAfford = (troll_coins || 0) >= frame.coinCost;
+          const requiredCoins = getTromocodeFinalPrice(frame.coinCost, promo);
+          const canAfford = (troll_coins || 0) >= requiredCoins;
           const rarity = RARITY_COLORS[frame.rarity];
 
           return (
@@ -578,7 +615,7 @@ function ProfileFramesStoreEmbed() {
                   >
                     {RARITY_LABELS[frame.rarity]}
                   </span>
-                  <span className="text-xs font-bold text-yellow-400">🪙 {frame.coinCost.toLocaleString()}</span>
+                  <TromocodePrice amount={frame.coinCost} promo={promo} className="text-xs" />
                 </div>
                 {owned ? (
                   <button
@@ -601,7 +638,7 @@ function ProfileFramesStoreEmbed() {
                         : 'bg-white/5 text-slate-500 cursor-not-allowed'
                     }`}
                   >
-                    {purchasing === frame.id ? '⏳' : !canAfford ? '🔒 Need more coins' : '🛒 Purchase'}
+                    {purchasing === frame.id ? '⏳' : !canAfford ? `🔒 Need ${formatCoins(requiredCoins - (troll_coins || 0))} more coins` : '🛒 Purchase'}
                   </button>
                 )}
               </div>
@@ -636,6 +673,7 @@ const { activeLoans, refresh: refreshBank, payCreditCard, creditInfo, _payLoan: 
 
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [paypalPaymentModalOpen, setPaypalPaymentModalOpen] = useState(false);
+  const [activePromoByTab, setActivePromoByTab] = useState({});
 
   const handlePayPalPurchase = async (pkg) => {
     const purchasePkg = {
@@ -1204,6 +1242,7 @@ useEffect(() => {
     try {
       const basePrice = Number(plan.cost || 0);
       const price = basePrice * durationMultiplier;
+      const requiredPrice = getTromocodeFinalPrice(price, activePromoByTab.insurance_plan);
       const baseDuration = Number(plan.duration_hours || 0);
       const durationHours = baseDuration * durationMultiplier;
       
@@ -1213,11 +1252,11 @@ useEffect(() => {
       }
 
       if (!useCredit && troll_coins < price) {
-        toast.error(`Not enough Troll Coins. Need ${price}, have ${troll_coins}`)
+        toast.error(`Not enough Troll Coins. Need ${formatCoins(requiredPrice)}, have ${formatCoins(troll_coins)}`)
         return
       }
       if (useCredit && (creditInfo?.available || 0) < price) {
-        toast.error(`Not enough Credit. Need ${price}, available ${creditInfo?.available}`)
+        toast.error(`Not enough Credit. Need ${formatCoins(requiredPrice)}, available ${formatCoins(creditInfo?.available || 0)}`)
         return
       }
       
@@ -1530,7 +1569,15 @@ useEffect(() => {
           {tab === 'coins' && (
             <>
               <div className="mb-6">
-                <VerifiedBadgeCard />
+                <TromocodeInput
+                  productType="verified_badge"
+                  originalAmount={500}
+                  onApplied={(promo) => setActivePromoByTab((prev) => ({ ...prev, verified_badge: promo }))}
+                />
+              </div>
+
+              <div className="mb-6">
+                <VerifiedBadgeCard promo={activePromoByTab.verified_badge} />
               </div>
 
               <div className="mb-6">
@@ -1896,6 +1943,14 @@ useEffect(() => {
                  </div>
               )}
 
+              <div className="mb-6">
+                <TromocodeInput
+                  productType="perk"
+                  originalAmount={250}
+                  onApplied={(promo) => setActivePromoByTab((prev) => ({ ...prev, perk: promo }))}
+                />
+              </div>
+
               <div className="mb-6 rounded-xl border border-emerald-500/20 bg-black/25 p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
@@ -1985,7 +2040,7 @@ useEffect(() => {
                     <div className="text-sm text-gray-400 mb-2">{perk.description}</div>
                     <div className="text-xs text-purple-300 mb-2">Duration: {duration} mins</div>
                     <div className="flex justify-between items-center mt-4">
-                      <span className="text-yellow-400 font-bold">{formatCoins(price)}</span>
+                      <TromocodePrice amount={price} promo={activePromoByTab.perk} />
                       <button
                         onClick={() => buyPerk(perk)}
                         disabled={isRestricted}
@@ -2012,6 +2067,15 @@ useEffect(() => {
                    {insuranceNote}
                  </div>
               )}
+
+              <div className="mb-6">
+                <TromocodeInput
+                  productType="insurance_plan"
+                  originalAmount={1500}
+                  onApplied={(promo) => setActivePromoByTab((prev) => ({ ...prev, insurance_plan: promo }))}
+                />
+              </div>
+
               
               <div className="mb-6 bg-black/20 p-4 rounded-lg border border-white/10">
                  <label className="text-sm text-gray-400 mb-2 block">Duration Multiplier</label>
@@ -2039,7 +2103,7 @@ useEffect(() => {
                     <div className="text-sm text-gray-400 mb-2">{plan.description}</div>
                     <div className="text-xs text-purple-300 mb-2">Duration: {duration} hours</div>
                     <div className="flex justify-between items-center mt-4">
-                      <span className="text-yellow-400 font-bold">{formatCoins(price)}</span>
+                      <TromocodePrice amount={price} promo={activePromoByTab.insurance_plan} />
                       <button
                         onClick={() => buyInsurance(plan)}
                         className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm font-semibold"
@@ -2157,7 +2221,16 @@ useEffect(() => {
 
           {/* Profile Frames Tab */}
           {tab === 'frames' && (
-            <ProfileFramesStoreEmbed />
+            <>
+              <div className="mb-6">
+                <TromocodeInput
+                  productType="profile_frame"
+                  originalAmount={250}
+                  onApplied={(promo) => setActivePromoByTab((prev) => ({ ...prev, profile_frame: promo }))}
+                />
+              </div>
+              <ProfileFramesStoreEmbed promo={activePromoByTab.profile_frame} />
+            </>
           )}
 
           {/* Merch Tab */}

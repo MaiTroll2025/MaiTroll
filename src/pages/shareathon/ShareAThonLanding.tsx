@@ -468,7 +468,7 @@ function ShareAThonContent() {
                   <AlertTriangle className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                   <h3 className="font-semibold text-yellow-400 mb-1">Not Eligible</h3>
                   <p className="text-xs text-gray-400">
-                    You don't have broadcaster status or signed up after the event started.
+                    You don&apos;t have broadcaster status or signed up after the event started.
                     You can still watch, tip, and participate in chats!
                   </p>
                 </div>

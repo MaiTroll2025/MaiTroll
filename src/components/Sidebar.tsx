@@ -53,7 +53,7 @@ import {
      Waves,
      Zap,
      Wrench,
-    Bell,
+     Bell,
     Mic2
     } from 'lucide-react'
 
@@ -73,6 +73,7 @@ import { useSidebarStore } from '@/stores/useSidebarStore'
 import { STORE_USD_PER_COIN } from '@/lib/coinMath'
 import { NIGHT_WATCH_PATROL_ROLES } from '@/lib/staff'
 import { grantNavCoins } from '@/lib/grantNavCoins'
+import { useIsActiveFounder } from '@/hooks/useFounderProgram'
 
 type GridGlow = 'green' | 'pink' | 'cyan' | 'red' | 'purple' | 'teal'
 
@@ -137,6 +138,10 @@ export default function Sidebar() {
   const location = useLocation()
   const isActive = (path: string) => location.pathname === path
   const isHytroGamingActive = location.pathname === '/hytrogaming' || location.pathname.startsWith('/gaming/watch/')
+
+  // ⭐ Founder Program — nav entry for active Founders. Admin access is added
+  // below once isAdmin is computed.
+  const isActiveFounder = useIsActiveFounder(user?.id)
 
   const [canSeeOfficer, setCanSeeOfficer] = useState(false)
   const [canSeeTrollFamily, setCanSeeTrollFamily] = useState(false)
@@ -203,6 +208,12 @@ export default function Sidebar() {
     !!(profile as { is_superadmin?: boolean })?.is_superadmin
 
   const isCEO = role === 'ceo' || trollRole === 'ceo' || isAdmin
+
+  // ⭐ The Founder page is role-based: active Founders get their hub, and Admins
+  // get it too so they can reach the in-page "Manage Founders" tab. This uses
+  // the Founder STATUS check (not the badge check), so an Admin who is also a
+  // Founder still sees the entry.
+  const canSeeFounderHub = isActiveFounder || isAdmin
   const isCEOAssistant = role === 'ceo_assistant' || trollRole === 'ceo_assistant' || (profile as any)?.is_ceo_assistant
   const isNoahAssistant = role === 'noah_assistant' || trollRole === 'noah_assistant' || (profile as any)?.is_noah_assistant
   const isNoahAdmin = role === 'noah_admin' || trollRole === 'noah_admin' || (profile as any)?.is_noah_admin
@@ -627,6 +638,9 @@ export default function Sidebar() {
               <GridItem collapsed={isSidebarCollapsed} icon={Coins} label="Buy Coins" to="/store" active={isActive('/store')} highlight={isUpdated('/store')} onClick={() => markAsViewed('/store')} tone="green" glow="green" />
               <GridItem collapsed={isSidebarCollapsed} icon={Gavel} label="Live Auctions" to="/auctions" active={isActive('/auctions')} highlight={isUpdated('/auctions')} onClick={() => markAsViewed('/auctions')} className="text-green-400" tone="green" />
               <GridItem collapsed={isSidebarCollapsed} icon={Scale} label="Troll Court" to="/troll-court" active={isActive('/troll-court')} highlight={isUpdated('/troll-court')} onClick={() => markAsViewed('/troll-court')} tone="purple" />
+              {canSeeFounderHub && (
+                <GridItem collapsed={isSidebarCollapsed} icon={Sparkles} label="Founder Hub" to="/founder" active={isActive('/founder')} highlight={isUpdated('/founder')} onClick={() => markAsViewed('/founder')} className="text-yellow-300" tone="orange" />
+              )}
               <GridItem collapsed={isSidebarCollapsed} icon={Building2} label="Neighborhood" to="/neighborhood-setup" active={isActive('/neighborhood-setup')} highlight={isUpdated('/neighborhood-setup')} onClick={() => markAsViewed('/neighborhood-setup')} className="text-cyan-400" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Gamepad2} label="HytroGaming" to="/hytrogaming" active={isHytroGamingActive} highlight={isUpdated('/hytrogaming') || location.pathname.startsWith('/gaming/watch/')} onClick={() => markAsViewed('/hytrogaming')} className="text-purple-400" tone="purple" glow="pink" />
               <GridItem collapsed={isSidebarCollapsed} icon={Trophy} label="Mai Talent Show" to="/mai-sing-off" active={isActive('/mai-sing-off')} highlight={isUpdated('/mai-sing-off')} onClick={() => markAsViewed('/mai-sing-off')} className="text-pink-300" tone="pink" />

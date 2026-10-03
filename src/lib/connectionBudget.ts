@@ -24,7 +24,7 @@ const CRITICAL_PATTERNS = [
 ];
 
 let activeChannels = 0;
-let listeners: Set<() => void> = new Set();
+const listeners: Set<() => void> = new Set();
 let warnedAt = false;
 
 function isCritical(name: string): boolean {

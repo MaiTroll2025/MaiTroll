@@ -51,6 +51,7 @@ import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
+import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
 
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import PetPresence from '@/components/pets/PetPresence'
@@ -77,6 +78,7 @@ import MiniMaiPayCashoutModal from '@/components/broadcast/MiniMaiPayCashoutModa
 import { useCashoutBanner } from '@/hooks/useCashoutBanner'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
+import RandomBattleBanner from '@/components/broadcast/RandomBattleBanner'
 import TrollUpSlideModal from '@/components/trollup/TrollUpSlideModal'
 
 import type { Stream } from '@/types/broadcast'
@@ -157,6 +159,9 @@ export default function PhoneBroadcastPage() {
     useState<FloatingMessage[]>([])
 
   const [showHostSettings, setShowHostSettings] =
+    useState(false)
+
+  const [showRandomBattleBanner, setShowRandomBattleBanner] =
     useState(false)
 
   const [showModActionMenu, setShowModActionMenu] =
@@ -1426,8 +1431,18 @@ export default function PhoneBroadcastPage() {
         return
       }
 
+      setShowRandomBattleBanner(true)
+
       void randomBattle.startQueue()
     }, [randomBattle])
+
+  const handleStopRandomBattleQueue = useCallback(() => {
+    void randomBattle
+      .stopQueue()
+      .finally(() => {
+        setShowRandomBattleBanner(false)
+      })
+  }, [randomBattle])
 
   /*
    * ============================================================
@@ -1561,19 +1576,20 @@ export default function PhoneBroadcastPage() {
 
         const clampedCount = Math.max(
           0,
-          Math.min(6, newSeatCount),
+          Math.min(MAX_GUEST_SEATS, newSeatCount),
         )
 
         const newBoxCount = clampedCount + 1
 
         try {
-          await supabase
+          const { error } = await supabase
             .from('streams')
             .update({
               seat_count: clampedCount,
               box_count: newBoxCount,
             })
             .eq('id', streamId)
+          if (error) throw error
 
           setStream((prev) => {
             if (!prev) return prev
@@ -1583,11 +1599,21 @@ export default function PhoneBroadcastPage() {
               box_count: newBoxCount,
             } as Stream
           })
+          try {
+            await sendStreamBroadcast(streamId, 'box_count_changed', {
+              box_count: newBoxCount,
+              stream_id: streamId,
+            })
+          } catch (broadcastError) {
+            console.warn('[PhoneBroadcastPage] Seat update broadcast failed:', broadcastError)
+          }
+          toast.success(`${clampedCount} guest seat${clampedCount === 1 ? '' : 's'} enabled`)
         } catch (error) {
           console.error(
             '[PhoneBroadcastPage] Failed to update seat count:',
             error,
           )
+          toast.error('Failed to update seats')
         }
       },
       [streamId, stream],
@@ -1835,6 +1861,24 @@ export default function PhoneBroadcastPage() {
       }))
   }, [seats])
 
+  const phoneSeatSlots = useMemo(() => {
+    const configuredSeatCount = stream?.seat_count !== undefined
+      ? Number(stream.seat_count)
+      : Math.max(0, Number(stream?.box_count ?? 1) - 1)
+    const seatCount = Math.max(0, Math.min(MAX_GUEST_SEATS, configuredSeatCount))
+
+    return Array.from({ length: seatCount }, (_, offset) => {
+      const index = offset + 1
+      return occupiedRemoteSeats.find((seat) => seat.index === index) ?? {
+        index,
+        userId: '',
+        username: `Seat ${index}`,
+        avatarUrl: null,
+        userProfile: null,
+      }
+    })
+  }, [occupiedRemoteSeats, stream?.box_count, stream?.seat_count])
+
   if (shouldShowRandomBattleArena) {
     return (
       <ErrorBoundary>
@@ -1955,7 +1999,16 @@ export default function PhoneBroadcastPage() {
         stream?.user_id
       }
     >
-      <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
+      <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black text-white">
+        {/* ======================================================
+            BROADCAST VIDEO REGION
+
+            A real flex region (flex: 1 / min-height: 0) between the top
+            overlays and the bottom control bar + chat input. The camera is
+            clipped to exactly this space, so it can never be letterboxed and
+            centered inside a taller full-screen black canvas.
+        ====================================================== */}
+        <div className="relative z-0 min-h-0 w-full flex-1 overflow-hidden bg-black">
         {pullRefreshing && (
           <div
             className="absolute inset-x-0 top-0 z-[400] flex justify-center pt-3 pointer-events-none"
@@ -2149,23 +2202,54 @@ export default function PhoneBroadcastPage() {
                 </button>
               </div>
             </div>
+
+            {/* Random battle banner — only shown after the broadcaster taps
+                the Random control-bar button, and hidden again once the queue
+                is stopped or the battle ends. */}
+            {showRandomBattleBanner && (
+              randomBattle.isQueueEnabled ||
+              randomBattle.phase === 'starting' ||
+              randomBattle.phase === 'active'
+            ) && (
+              <div className="pointer-events-auto w-full">
+                <RandomBattleBanner
+                  phase={randomBattle.phase}
+                  delayUntil={randomBattle.delayUntil ?? null}
+                  isBroadcaster={true}
+                  onStopQueue={handleStopRandomBattleQueue}
+                  isBusy={randomBattle.isBusy}
+                  mobileSafe={true}
+                />
+              </div>
+            )}
           </div>
         )}
 
         {/* ======================================================
             REMOTE SEATS ROW (top-left, compact)
         ====================================================== */}
-        {occupiedRemoteSeats.length > 0 && (
-          <div className="pointer-events-none absolute left-3 z-20 flex items-start gap-1.5 pt-[calc(env(safe-area-inset-top)+7rem)]">
-            {occupiedRemoteSeats.map((seat) => (
-              <RemoteSeatThumbnail
-                key={`phone-seat-${seat.index}`}
-                userId={seat.userId}
-                username={seat.username}
-                avatarUrl={seat.avatarUrl}
-                remoteUsers={Array.from(session.remoteParticipants.values())}
-                streamId={streamId}
-              />
+        {phoneSeatSlots.length > 0 && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+7rem)]">
+            {phoneSeatSlots.map((seat) => (
+              seat.userId ? (
+                <RemoteSeatThumbnail
+                  key={`phone-seat-${seat.index}`}
+                  userId={seat.userId}
+                  username={seat.username}
+                  avatarUrl={seat.avatarUrl}
+                  remoteUsers={Array.from(session.remoteParticipants.values())}
+                  streamId={streamId}
+                />
+              ) : (
+                <div
+                  key={`phone-seat-${seat.index}`}
+                  aria-label={`Guest seat ${seat.index} available`}
+                  className="pointer-events-auto flex h-16 w-16 shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-cyan-300/50 bg-slate-950/75 text-cyan-100/80 shadow-lg backdrop-blur-sm"
+                >
+                  <span className="text-lg leading-none">+</span>
+                  <span className="mt-1 text-[9px] font-bold">Seat {seat.index}</span>
+                </div>
+              )
             ))}
           </div>
         )}
@@ -2174,13 +2258,18 @@ export default function PhoneBroadcastPage() {
             FLYING CHAT
         ====================================================== */}
         {floatingMessages.length > 0 && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-[calc(160px+env(safe-area-inset-bottom))] z-30 flex flex-col items-center gap-1 px-3">
+          <div className="pointer-events-none absolute inset-x-0 bottom-20 z-30 flex flex-col-reverse items-center gap-1 px-3">
             {floatingMessages
               .slice(0, 8)
               .map((message) => (
                 <div
                   key={message.id}
-                  className="pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  className="pointer-events-auto mobile-rise-chat"
+                  onAnimationEnd={() =>
+                    setFloatingMessages((previous) =>
+                      previous.filter((item) => item.id !== message.id),
+                    )
+                  }
                 >
                   {message.isSystem ? (
                     <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 shadow-lg backdrop-blur-md">
@@ -2218,7 +2307,7 @@ export default function PhoneBroadcastPage() {
              HOST SETTINGS (bottom-right, above control bar)
          ====================================================== */}
          {stream && (
-           <div className="absolute bottom-32 right-3 z-40">
+           <div className="absolute bottom-3 right-3 z-40">
               <MobileBroadcastHostSettings
                isMicOn={session.micEnabled}
                isCamOn={session.cameraEnabled}
@@ -2250,27 +2339,13 @@ onCameraOffAllSeats={cameraOffAllSeats}
           </div>
         )}
 
-        {/* ======================================================
-            CHAT INPUT
-        ====================================================== */}
-        <form
-          onSubmit={handleChatSubmit}
-          className="absolute inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
-        >
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(event) => setChatInput(event.target.value)}
-            placeholder="Say something..."
-            maxLength={280}
-            className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
-          />
-        </form>
+        </div>
+        {/* END BROADCAST VIDEO REGION */}
 
         {/* ======================================================
-            PHONE CONTROL BAR (bottom, above chat input)
+            PHONE CONTROL BAR — own layout row, directly above chat input
         ====================================================== */}
-        <div className="absolute inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-around gap-1.5 bg-slate-950/95 px-2 py-3">
+        <div className="relative z-40 flex w-full shrink-0 items-center justify-around gap-1.5 bg-slate-950/95 px-2 py-3">
           <ControlButton
             active={session.cameraEnabled}
             onClick={session.toggleCamera}
@@ -2320,6 +2395,23 @@ onCameraOffAllSeats={cameraOffAllSeats}
             disabled={isEnding}
           />
         </div>
+
+        {/* ======================================================
+            CHAT INPUT — own layout row, bottom-most, safe-area aware
+        ====================================================== */}
+        <form
+          onSubmit={handleChatSubmit}
+          className="relative z-40 w-full shrink-0 border-t border-white/10 bg-slate-950/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+        >
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(event) => setChatInput(event.target.value)}
+            placeholder="Say something..."
+            maxLength={280}
+            className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+          />
+        </form>
 
         {/* ======================================================
             GIFT MODAL
@@ -2455,9 +2547,23 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
       cleanup()
 
       const videoElement = videoTrack.attach() as HTMLVideoElement
+      // The container is now the real broadcast viewport (flex region sized
+      // between the top overlays and the control bar), so the camera FILLS it
+      // instead of being letterboxed inside a taller full-screen canvas.
+      //
+      // `cover` + `object-position: center top` keeps the frame top-aligned, so
+      // any crop trims the sides/bottom rather than slicing the top of the shot,
+      // and it can never letterbox — which is what produced the large black
+      // bands above and below the camera.
       videoElement.style.width = '100%'
       videoElement.style.height = '100%'
       videoElement.style.objectFit = 'cover'
+      videoElement.style.objectPosition = 'center top'
+      // Mobile webviews mirror the user-facing camera by default, which makes the
+      // broadcaster's self-view move the wrong way. Cancel it with an explicit
+      // horizontal flip — display-only on the broadcaster's own screen and never
+      // published to viewers. Matches the web broadcaster view.
+      videoElement.style.transform = 'scaleX(-1)'
       videoElement.style.position = 'absolute'
       videoElement.style.top = '0'
       videoElement.style.left = '0'
@@ -2468,7 +2574,7 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
       videoElementRef.current = videoElement
       previousTrackRef.current = videoTrack
 
-      // Broadcasters see themselves the way the audience does — never mirror.
+      // The container itself is never transformed — only the video inside it.
       container.style.transform = 'none'
     } catch (err) {
       console.error('[LocalCameraFullVideo] Failed to attach video track:', err)
@@ -2488,7 +2594,7 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 w-full h-full overflow-hidden bg-black"
+      className="relative h-full w-full overflow-hidden bg-black"
     />
   )
 }

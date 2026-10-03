@@ -72,8 +72,14 @@ export default function PetShelterPanel({ compact = false }: { compact?: boolean
       toast.error(error.message)
       return
     }
-    setPet(data as Pet)
+
+    const updatedPet = data as Pet
+    setPet(updatedPet)
     window.dispatchEvent(new Event('pet-updated'))
+
+    const actionText =
+      type === 'feed' ? 'Feed cost 5 TC' : type === 'walk' ? 'Walk cost 1 TC' : 'Play/Care is free and +10% care'
+    toast.success(`${pet.name} is feeling better. ${actionText}`)
   }
 
   if (loading) return <div className="rounded-3xl border border-cyan-300/15 bg-slate-950/70 p-5 text-sm text-cyan-100/60">Loading Troll Animal Shelter...</div>
@@ -88,7 +94,7 @@ export default function PetShelterPanel({ compact = false }: { compact?: boolean
         </div>
         <p className="mt-4 text-sm text-slate-300">{pet.name} {need}.</p>
         <div className="mt-4 h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-cyan-300 to-emerald-300" style={{ width: `${pet.care_status}%` }} /></div>
-        <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => void care('feed')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-sm font-bold text-cyan-100"><Utensils className="h-4 w-4" /> Feed</button><button type="button" onClick={() => void care('walk')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-3 py-2 text-sm font-bold text-emerald-100"><PawPrint className="h-4 w-4" /> Walk</button><button type="button" onClick={() => void care('care')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-pink-300/25 bg-pink-400/10 px-3 py-2 text-sm font-bold text-pink-100"><Heart className="h-4 w-4" /> Play/Care</button>{interaction && <Loader2 className="h-5 w-5 animate-spin self-center text-cyan-200" />}</div>
+        <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => void care('feed')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-sm font-bold text-cyan-100"><Utensils className="h-4 w-4" /> Feed · 5 TC</button><button type="button" onClick={() => void care('walk')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-3 py-2 text-sm font-bold text-emerald-100"><PawPrint className="h-4 w-4" /> Walk · 1 TC</button><button type="button" onClick={() => void care('care')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-pink-300/25 bg-pink-400/10 px-3 py-2 text-sm font-bold text-pink-100"><Heart className="h-4 w-4" /> Play/Care · +10%</button>{interaction && <Loader2 className="h-5 w-5 animate-spin self-center text-cyan-200" />}</div>
         <p className="mt-4 text-xs text-slate-500">Pet level {pet.pet_level}. Raid eligibility unlocks at level 50 through the existing raid system.</p>
       </section>
     )

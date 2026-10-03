@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase, UserProfile } from '../../../lib/supabase'
 import { useAuthStore } from '../../../lib/store'
 import { toast } from 'sonner'
-import { User, Coins, Award, Shield, Save, X, Search, Plus, Trash2, Eye } from 'lucide-react'
+import { User, Coins, Award, Shield, Save, X, Search } from 'lucide-react'
 import UserNameWithAge from '../../../components/UserNameWithAge'
 import UserDetailsModal from '../../../components/admin/UserDetailsModal'
 
@@ -27,15 +27,6 @@ export default function UserManagementPanel({
   const [saving, setSaving] = useState(false)
   const [viewingUser, setViewingUser] = useState<{ id: string; username: string } | null>(null)
   const [notifying, setNotifying] = useState(false)
-
-  // Marketing Users Management - Always loaded for admins
-  const [marketingUsers, setMarketingUsers] = useState<UserProfile[]>([])
-  const [newMarketingEmail, setNewMarketingEmail] = useState('')
-  const [newMarketingUsername, setNewMarketingUsername] = useState('')
-  const [newMarketingPassword, setNewMarketingPassword] = useState('')
-  const [creatingMarketing, setCreatingMarketing] = useState(false)
-  const [searchResults, setSearchResults] = useState<{id: string, username: string}[]>([])
-  const [searching, setSearching] = useState(false)
 
   const canViewEmails = adminProfile?.role === 'admin' || adminProfile?.is_admin === true
   const canViewDetails = adminProfile?.role === 'admin' || adminProfile?.is_admin === true || adminProfile?.role === 'secretary'
@@ -64,7 +55,6 @@ export default function UserManagementPanel({
 
   useEffect(() => {
     loadUsers()
-    loadMarketingUsers()
 
     // Polling every 30s instead of global subscription
     const interval = setInterval(() => {
@@ -75,135 +65,6 @@ export default function UserManagementPanel({
       clearInterval(interval)
     }
   }, [loadUsers])
-
-  // Load marketing users
-  const loadMarketingUsers = useCallback(async () => {
-    try {
-      // Direct SQL query - no edge function needed
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, username, bio, role, created_at')
-        .eq('role', 'marketing_readonly')
-        .order('created_at', { ascending: false })
-      
-      if (error) throw error
-      setMarketingUsers((data as UserProfile[]) || [])
-    } catch (error) {
-      console.error('Error loading marketing users:', error)
-    }
-  }, [])
-
-  // Create NEW marketing account via edge function (creates auth + profile)
-  const handleCreateNewMarketing = async () => {
-    if (!newMarketingEmail || !newMarketingUsername) {
-      toast.error('Username and email required')
-      return
-    }
-    if (!newMarketingEmail.includes('@')) {
-      toast.error('Invalid email format')
-      return
-    }
-
-    setCreatingMarketing(true)
-    try {
-      const { data, error } = await supabase.functions.invoke('admin-actions', {
-        body: {
-          action: 'create_marketing_user',
-          email: newMarketingEmail,
-          username: newMarketingUsername,
-          password: newMarketingPassword || undefined
-        }
-      })
-
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
-
-      const pwd = newMarketingPassword || (data as any)?.password
-      toast.success(`Marketing account created: ${newMarketingUsername}${pwd ? ` (password: ${pwd})` : ''}`)
-      if (pwd) {
-        toast.info(`Share credentials: ${newMarketingEmail} / ${pwd}`)
-      }
-      setNewMarketingEmail('')
-      setNewMarketingUsername('')
-      setNewMarketingPassword('')
-      loadMarketingUsers()
-    } catch (error) {
-      console.error('Error creating marketing:', error)
-      toast.error((error as Error)?.message || 'Failed to create account')
-    } finally {
-      setCreatingMarketing(false)
-    }
-  }
-
-  // Search for existing users to grant marketing access
-  const handleSearchUsers = async (query: string) => {
-    if (query.length < 2) {
-      setSearchResults([])
-      return
-    }
-    setSearching(true)
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, username')
-        .ilike('username', `%${query}%`)
-        .eq('role', 'user')
-        .limit(10)
-      
-      if (error) throw error
-      setSearchResults(data || [])
-    } catch (err) {
-      console.error('Search error:', err)
-    } finally {
-      setSearching(false)
-    }
-  }
-
-  // Grant marketing access to existing user
-  const handleGrantMarketingAccess = async (userId: string, username: string) => {
-    setCreatingMarketing(true)
-    try {
-      const { error: updateError } = await supabase
-        .from('user_profiles')
-        .update({ role: 'marketing_readonly', bio: 'Marketing Agency Read-Only Account' })
-        .eq('id', userId)
-        .eq('role', 'user')
-      
-      if (updateError) throw updateError
-
-      toast.success(`Marketing access granted to ${username}`)
-      setSearchResults([])
-      setNewMarketingEmail('')
-      loadMarketingUsers()
-    } catch (error) {
-      console.error('Error creating marketing user:', error)
-      toast.error((error as Error)?.message || 'Failed to grant marketing access')
-    } finally {
-      setCreatingMarketing(false)
-    }
-  }
-
-  // Delete marketing user
-  const handleDeleteMarketingUser = async (userId: string) => {
-    if (!confirm('Remove marketing access? This will reset user role to user.')) return
-
-    try {
-      // Direct SQL update to remove marketing role
-      const { error: updateError } = await supabase
-        .from('user_profiles')
-        .update({ role: 'user', bio: null })
-        .eq('id', userId)
-        .eq('role', 'marketing_readonly')
-      
-      if (updateError) throw updateError
-
-      toast.success('Marketing access removed')
-      loadMarketingUsers()
-    } catch (error) {
-      console.error('Error deleting marketing user:', error)
-      toast.error((error as Error)?.message || 'Failed to remove marketing access')
-    }
-  }
 
   const handleEditUser = (user: UserProfile) => {
     setSelectedUser(user)
@@ -308,107 +169,6 @@ export default function UserManagementPanel({
         {description && (
           <p className="text-sm text-gray-400">{description}</p>
         )}
-      </div>
-
-      {/* Marketing User Management Section - Always visible for admins */}
-      <div className="bg-zinc-900 border border-amber-800 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-amber-400 flex items-center gap-2">
-            <Eye className="w-5 h-5" />
-            Marketing Read-Only Access
-          </h3>
-        </div>
-
-        <div className="space-y-4">
-            {/* Create NEW Marketing Account */}
-            <div className="p-3 bg-zinc-800/50 rounded-lg border border-amber-700/50">
-              <h4 className="text-sm font-medium text-amber-400 mb-2">Create New Marketing Account</h4>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={newMarketingUsername}
-                  onChange={(e) => setNewMarketingUsername(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-zinc-800 border border-gray-700 rounded-lg text-white text-sm"
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={newMarketingEmail}
-                  onChange={(e) => setNewMarketingEmail(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-zinc-800 border border-gray-700 rounded-lg text-white text-sm"
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={newMarketingPassword || ''}
-                  onChange={(e) => setNewMarketingPassword(e.target.value)}
-                  className="w-24 px-3 py-2 bg-zinc-800 border border-gray-700 rounded-lg text-white text-sm"
-                />
-                <button
-                  onClick={handleCreateNewMarketing}
-                  disabled={creatingMarketing || !newMarketingEmail || !newMarketingUsername}
-                  className="px-3 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 rounded-lg text-white text-sm font-medium"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Creates full account with email/password for login</p>
-            </div>
-
-            {/* Grant access to EXISTING user */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Or search existing users to grant access..."
-                value={searchResults.length === 0 ? newMarketingEmail : ''}
-                onChange={(e) => {
-                  setNewMarketingEmail(e.target.value)
-                  handleSearchUsers(e.target.value)
-                }}
-                onFocus={() => newMarketingEmail && handleSearchUsers(newMarketingEmail)}
-                className="w-full px-3 py-2 bg-zinc-800 border border-gray-700 rounded-lg text-white text-sm"
-              />
-              {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-zinc-800 border border-gray-700 rounded-lg max-h-48 overflow-y-auto">
-                  {searchResults.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => handleGrantMarketingAccess(user.id, user.username)}
-                      disabled={creatingMarketing}
-                      className="w-full px-3 py-2 text-left text-white hover:bg-amber-900/50 text-sm flex items-center gap-2"
-                    >
-                      <User className="w-4 h-4 text-gray-400" />
-                      {user.username}
-                      <span className="text-xs text-gray-500 ml-auto">Grant Access</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Marketing Users List */}
-            <div className="max-h-48 overflow-y-auto space-y-1">
-              {marketingUsers.map((u) => (
-                <div key={u.id} className="flex items-center justify-between px-3 py-2 bg-zinc-800 rounded text-sm">
-                  <div>
-                    <span className="text-white font-medium">{u.username}</span>
-                    <span className="text-gray-400 ml-2">{u.email}</span>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteMarketingUser(u.id)}
-                    className="p-1 text-red-400 hover:text-red-300"
-                    title="Remove access"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              {marketingUsers.length === 0 && (
-                <p className="text-gray-500 text-sm py-2">No marketing accounts</p>
-              )}
-            </div>
-        </div>
       </div>
 
       {canViewDetails && (
@@ -651,7 +411,6 @@ export default function UserManagementPanel({
                   <option value="lead_troll_officer">Lead Troll Officer</option>
                   <option value="troller">Troller</option>
                   <option value="admin">CEO</option>
-                  <option value="marketing_readonly">Marketing Read-Only</option>
                   <option value="empire_partner">Empire Partner</option>
                   <option value="hr_admin">HR Admin</option>
                 </select>

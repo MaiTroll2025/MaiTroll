@@ -39,6 +39,7 @@ import {
   isAnonymousDisplayName,
 } from '../../lib/anonymousIdentity'
 import { awardSharePoint } from '../../lib/weeklyPointsService'
+import { MAX_GUEST_SEATS } from '../../config/broadcastCategories'
 
 import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
 import ErrorBoundary from '../../components/ErrorBoundary'
@@ -46,6 +47,8 @@ import GiftBoxModal from '../../components/broadcast/GiftBoxModal'
 import UserActionModal from '../../components/broadcast/UserActionModal'
 import ViewerUserActionModal from '../../components/broadcast/ViewerUserActionModal'
 import ModActionsPopup from '../../components/broadcast/ModActionsPopup'
+import FounderLiveModerationSheet from '@/components/founder/FounderLiveModerationSheet'
+import { useFounderSelfStatus } from '@/hooks/useFounderProgram'
 import { getGiftVisualConfig } from '../../lib/giftVisuals'
 import { hydrateGiftForOverlay } from '../../lib/gifts'
 import { useTargetedGiftQueue, type StreamGiftEvent } from '../../hooks/useTargetedGiftQueue'
@@ -142,7 +145,7 @@ function isStreamEnded(stream: Stream | null): boolean {
 }
 
 const KICK_BAN_DURATION_MS = 24 * 60 * 60 * 1000
-const MAX_TOTAL_BOXES = 8
+const MAX_TOTAL_BOXES = MAX_GUEST_SEATS + 1
 const CHAT_DEBOUNCE_MS = 1_500
 
 function getKickStorageKey(streamId: string, userId: string) {
@@ -654,7 +657,7 @@ function ViewerPage() {
       let anonId = window.sessionStorage.getItem(storageKey);
       if (anonId) return anonId;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const cryptoObj = (window as any).crypto;
       if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
         anonId = `guest-viewer:${streamId}:${cryptoObj.randomUUID()}`;
@@ -694,6 +697,7 @@ function ViewerPage() {
   }, [streamId])
 
   const { user, profile } = useAuthStore()
+  const founderStatus = useFounderSelfStatus()
   const navigate = useNavigate()
   const location = useLocation()
   const { isMobileWidth, hasMounted } = useIsMobile()
@@ -1228,6 +1232,10 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     modContext?.has_full_staff_tools || isStreamBroadofficer || hasModMenuFromRoles ||
     myProfileAdminFlags.is_admin || myProfileAdminFlags.is_ceo ||
     ['admin', 'ceo', 'owner', 'superadmin', 'staff', 'moderator'].includes(myProfileAdminFlags.role ?? '')
+  )
+  const canUseFounderModeration = Boolean(
+    founderStatus.isFounder &&
+    (founderStatus.permissions.arrest || founderStatus.permissions.release || founderStatus.permissions.summon)
   )
 
   const resolveGiftAmount = useCallback((giftData: any): number => {
@@ -1801,13 +1809,21 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
 
   const handleJoinAvailableSeat = useCallback(async () => {
     if (typeof availableSeatIndex !== 'number') return
+    if ((stream as any)?.are_seats_locked) {
+      toast.error('Seats are currently locked')
+      return
+    }
     await joinSeat(availableSeatIndex, availableSeatPrice, viewerIdentityRef.current)
-  }, [availableSeatIndex, availableSeatPrice, joinSeat])
+  }, [availableSeatIndex, availableSeatPrice, joinSeat, stream])
 
   const joinSeatThrottleRef = useRef<{ lastTime: number; count: number }>({ lastTime: 0, count: 0 })
 
   const handleJoinSeatByIndex = useCallback(async (seatIndex: number) => {
     if (typeof seatIndex !== 'number') return
+    if ((stream as any)?.are_seats_locked) {
+      toast.error('Seats are currently locked')
+      return
+    }
     const now = Date.now()
     const throttle = joinSeatThrottleRef.current
     if (now - throttle.lastTime > 1000) {
@@ -4419,7 +4435,8 @@ useStreamRealtime(
                       <button
                         type="button"
                         onClick={handleAddSeat}
-                        className="rounded-lg border border-cyan-300/30 bg-cyan-500/15 px-3 py-1 text-xs font-black text-cyan-100 transition hover:bg-cyan-500/25"
+                        disabled={effectiveBoxCount >= MAX_TOTAL_BOXES}
+                        className="rounded-lg border border-cyan-300/30 bg-cyan-500/15 px-3 py-1 text-xs font-black text-cyan-100 transition hover:bg-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         + Add Seat
                       </button>
@@ -5859,6 +5876,13 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
                   hostId={hostId}
                   currentUserId={user?.id}
                   onArrestUser={handleArrestUserFromPopup}
+                />
+              ) : canUseFounderModeration && isValidUuid(userActionTarget.userId) ? (
+                <FounderLiveModerationSheet
+                  targetUserId={userActionTarget.userId}
+                  targetUsername={userActionTarget.username || 'User'}
+                  permissions={founderStatus.permissions}
+                  onClose={() => { setUserActionTarget(null); setShowViewerAction(false) }}
                 />
               ) : showViewerAction ? (
                 <ViewerUserActionModal

@@ -2,6 +2,8 @@ import React from 'react'
 import { Crown, Shield, Skull, Star, Verified, Gem, Award, ClipboardList } from 'lucide-react'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
+import FounderBadge from '@/components/founder/FounderBadge'
+import { useFounderIdentity } from '@/hooks/useFounderProgram'
 
 interface NeonGlowUsernameProps {
   username: string
@@ -46,6 +48,10 @@ export default function NeonGlowUsername({
 
   const sizes = sizeClasses[size]
 
+  // Founder Program: active Founders get the gold username treatment.
+  // Admins are excluded (showFounderBadge) so an Admin keeps their role styling.
+  const { showFounderBadge } = useFounderIdentity(userId)
+
   // Check for special username effects
   const now = new Date()
   const hasRgb = profile?.rgb_username_expires_at && new Date(profile.rgb_username_expires_at) > now
@@ -56,6 +62,7 @@ export default function NeonGlowUsername({
   const hasOfficerLevel = isOfficerProfile && profile?.officer_level && profile.officer_level > 0
 
   const getGlowColor = () => {
+    if (showFounderBadge) return 'shadow-[0_0_18px_rgba(255,199,44,0.65)] border-yellow-400/60'
     if (profile?.is_admin || profile?.role === 'admin') return 'shadow-[0_0_15px_rgba(248,113,113,0.6)] border-red-500/50'
     if (profile?.role === 'temp_city_admin') return 'shadow-[0_0_15px_rgba(248,113,113,0.5)] border-red-400/50'
     if (hasOfficerLevel) return 'shadow-[0_0_15px_rgba(96,165,250,0.6)] border-blue-500/50'
@@ -73,7 +80,8 @@ export default function NeonGlowUsername({
   }
 
   const getUsernameColor = () => {
-    if (profile?.is_gold || profile?.username_style === 'gold' || profile?.badge === 'president') 
+    if (showFounderBadge) return 'text-transparent'
+    if (profile?.is_gold || profile?.username_style === 'gold' || profile?.badge === 'president')
       return 'text-yellow-400'
     return 'text-white'
   }
@@ -81,6 +89,7 @@ export default function NeonGlowUsername({
   // Get special username classes
   const getSpecialClasses = () => {
     let classes = ''
+    if (showFounderBadge) return 'founder-username'
     if (hasRgb) classes += ' rgb-username'
     if (glowingColor && !hasRgb) classes += ' glowing-username'
     return classes
@@ -124,6 +133,7 @@ export default function NeonGlowUsername({
         <span className={`font-bold username-readable ${sizes.text} ${getUsernameColor()} ${getSpecialClasses()}`}>
           @{username}
         </span>
+        <FounderBadge userId={userId} compact={size === 'sm'} />
       </div>
     )
   }
@@ -150,6 +160,9 @@ export default function NeonGlowUsername({
           <span className={`font-bold username-readable ${sizes.text} ${getUsernameColor()} ${getSpecialClasses()}`}>
             @{username}
           </span>
+
+          {/* Founder Badge */}
+          <FounderBadge userId={userId} compact={size === 'sm'} />
           
           {/* Primary Role Badge */}
           {primaryBadge && (

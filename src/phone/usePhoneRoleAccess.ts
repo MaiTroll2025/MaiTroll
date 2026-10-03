@@ -6,6 +6,7 @@ import { canAccessTromail } from '../lib/tromail'
 import { useShareAThonRestriction } from '../hooks/useShareAThonRestriction'
 import { useBroadcastLockdown } from '../hooks/useBroadcastLockdown'
 import { useJailMode } from '../hooks/useJailMode'
+import { useIsActiveFounder } from '../hooks/useFounderProgram'
 
 /**
  * Mirrors the exact role/permission computation used by the web Sidebar
@@ -39,6 +40,7 @@ export interface PhoneRoleAccess {
   canAccessNightWatch: boolean
   canAccessTromail: boolean
   isPastor: boolean
+  isFounder: boolean
   isJailed: boolean
   isBroadcastLockedDown: boolean
   isShareAThonRestricted: boolean
@@ -72,6 +74,7 @@ const FALSE_ACCESS: PhoneRoleAccess = {
   canAccessNightWatch: false,
   canAccessTromail: false,
   isPastor: false,
+  isFounder: false,
   isJailed: false,
   isBroadcastLockedDown: false,
   isShareAThonRestricted: false,
@@ -86,6 +89,11 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
   const { restricted: isShareAThonRestricted } = useShareAThonRestriction(user?.id)
   const { isLocked: isBroadcastLockedDown } = useBroadcastLockdown()
   const { isJailed } = useJailMode(profile?.id)
+
+  // ⭐ Founder is NOT a role — it is a separate time-boxed status read from the
+  // Founder directory, exactly like the web Sidebar. Founders gain the Hub and
+  // the Founder badge; they do not inherit any moderation role.
+  const isActiveFounder = useIsActiveFounder(profile?.id)
 
   const [canSeeOfficer, setCanSeeOfficer] = useState(false)
   const [canSeeTrollFamily, setCanSeeTrollFamily] = useState(false)
@@ -354,6 +362,10 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     canAccessNightWatch,
     canAccessTromail: canAccessTromail ? canAccessTromail(profile as any) : false,
     isPastor,
+    // ⭐ Founder Hub is role-based: active Founders AND Admins can open it
+    // (Admins land on the in-page "Manage Founders" tab). `isActiveFounder` is
+    // the status check, not the badge check.
+    isFounder: isActiveFounder || isAdmin,
     isJailed,
     isBroadcastLockedDown,
     isShareAThonRestricted,

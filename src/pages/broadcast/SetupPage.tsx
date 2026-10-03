@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore';
 import requestBroadcastMediaAccess from '@/lib/media/requestBroadcastMediaAccess';
 import { useStreamStore } from '@/lib/streamStore';
-import { LocalAudioTrack, LocalVideoTrack, AudioPresets, VideoPresets, Room, Track } from 'livekit-client';
-import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame, Crown } from 'lucide-react';
+import { LocalAudioTrack, LocalVideoTrack, Room, Track } from 'livekit-client';
+import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useScreenShare, StreamMode, canScreenShare } from '../../hooks/useScreenShare';
+import { useScreenShare } from '../../hooks/useScreenShare';
 import { DraggableCameraOverlay } from '../../components/broadcast/DraggableCameraOverlay';
 import UniverseModeSetup from '../../components/broadcast/UniverseModeSetup';
 import LicenseRecoveryModal from '../../components/LicenseRecoveryModal';
@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { useBroadcastLockdown } from '@/hooks/useBroadcastLockdown';
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap';
 import { startBroadcastWithCapacityCheck } from '@/lib/streamCapacity';
-import { requestLiveKitToken, normalizeLiveKitTokenResponse, type NormalizedLiveKitToken } from '@/lib/livekitToken';
+import { requestLiveKitToken } from '@/lib/livekitToken';
 import { generateUUID } from '../../lib/uuid';
 import { RANDOM_BATTLE_ENABLED } from '../../config/featureFlags';
 import { US_STATES, getStateName } from '../../config/usStates';
@@ -30,10 +30,8 @@ import {
   requiresReligion,
   forceRearCamera,
   allowFrontCamera,
-  getMaxBoxCount,
   AVAILABLE_RELIGIONS,
   BroadcastCategoryId,
-  MAX_ADMIN_SEAT_COUNT,
   MIN_ADMIN_SEAT_COUNT,
   DEFAULT_SEAT_COUNT,
   MAX_GUEST_SEATS,
@@ -234,7 +232,6 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const [selectedReligion, setSelectedReligion] = useState('');
   
   // Battle format state
-  const [battleFormat, setBattleFormat] = useState<'1v1' | '2v2' | '3v3' | '4v4' | '5v5'>('4v4');
   const [universeBattleMode, setUniverseBattleMode] = useState<'multi' | 'troll'>('troll');
   const [selectedMultiBattleFormat, setSelectedMultiBattleFormat] = useState<'1v1' | '2v2' | '3v3' | '4v4'>('4v4');
   
@@ -295,7 +292,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const isTabSwitching = useRef(false);
 
 // LiveKit room state - created in SetupPage and passed to BroadcastPage
-  const [livekitRoom, setLivekitRoom] = useState<Room | null>(null);
+  const [, setLivekitRoom] = useState<Room | null>(null);
   const livekitRoomRef = useRef<Room | null>(null);
   const mountedRef = useRef(true);
 
@@ -335,16 +332,11 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const {
     screenTrack,
     setScreenTrack,
-    screenAudioTrack,
     setScreenAudioTrack,
-    cameraTrack,
     setCameraTrack,
     streamMode,
     setStreamMode,
-    screenPreviewStream,
     setScreenPreviewStream,
-    clearTracks,
-    initializeTracks,
   } = useStreamStore();
 
   // Persist screen share state in sessionStorage for tab switch restoration
@@ -389,7 +381,6 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
    // Permission state - track if camera/mic permissions need to be requested
   const [permissionStatus, setPermissionStatus] = useState<'unknown' | 'granted' | 'denied' | 'prompt'>('unknown');
   const showPermissionPrompt = permissionStatus === 'prompt' || permissionStatus === 'unknown';
-  const [showDriverTestModal, setShowDriverTestModal] = useState(false);
   const [inlineAgreementChecked, setInlineAgreementChecked] = useState(false);
 
 
@@ -606,7 +597,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       } else {
         setPermissionStatus('prompt')
       }
-    } catch (e) {
+    } catch {
       setPermissionStatus('prompt')
     }
   }, []);
@@ -751,52 +742,6 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     });
   };
 
-  // Attach video track to container using LiveKit's attach() method
-  const attachVideoTrack = (videoTrack: LocalVideoTrack, facing: 'user' | 'environment') => {
-    if (!videoContainerRef.current) return;
-    
-    // Clear previous preview first
-    clearVideoContainer();
-    
-    try {
-      const mediaElement = videoTrack.attach();
-      mediaElement.setAttribute('autoplay', '');
-      mediaElement.setAttribute('muted', '');
-      mediaElement.setAttribute('playsinline', '');
-      mediaElement.autoplay = true;
-      mediaElement.muted = true;
-      (mediaElement as any).playsInline = true;
-      mediaElement.style.display = 'block';
-      mediaElement.style.backgroundColor = 'black';
-      mediaElement.style.width = '100%';
-      mediaElement.style.height = '100%';
-      mediaElement.style.objectFit = 'cover';
-      mediaElement.style.transform = facing === 'user' ? 'scaleX(-1)' : 'none';
-
-      videoContainerRef.current.appendChild(mediaElement);
-      mediaElement.onloadedmetadata = () => {
-        mediaElement.play().catch(() => {
-          // Autoplay may still be blocked in some contexts; muted should help.
-        });
-      };
-      mediaElement.onloadeddata = () => {
-        mediaElement.play().catch(() => {
-          // Autoplay may still be blocked in some contexts; muted should help.
-        });
-      };
-      mediaElement.onerror = (event) => {
-        console.error('[SetupPage] LiveKit attach video error:', event);
-      };
-      mediaElement.play().catch(() => {
-        // Autoplay may still be blocked in some contexts; muted should help.
-      });
-    } catch (err) {
-      console.warn('[SetupPage] LiveKit attach failed, falling back to native preview:', err);
-      const stream = new MediaStream([(videoTrack as any).getMediaStreamTrack()]);
-      attachNativePreview(stream, facing);
-    }
-  };
-
   // Detach video track from container using LiveKit's detach() method
   const detachVideoTrack = (videoTrack: LocalVideoTrack) => {
     if (!videoContainerRef.current) return;
@@ -878,18 +823,14 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
           if (err.name === 'NotAllowedError' && isMobilePlatform) {
             console.warn('[acquireMediaStream] Permission denied on mobile, retrying after short delay', err);
             await new Promise(resolve => setTimeout(resolve, 600));
-            try {
-              nativeStream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                  echoCancellation: true,
-                  noiseSuppression: true,
-                  autoGainControl: true
-                },
-                video: enableVideo ? { facingMode: videoFacingMode } : false
-              });
-            } catch (retryErr) {
-              throw retryErr;
-            }
+            nativeStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+              },
+              video: enableVideo ? { facingMode: videoFacingMode } : false
+            });
           } else if (err.name === 'OverconstrainedError' || err.name === 'NotReadableError' || err.name === 'NotFoundError') {
             console.warn('[acquireMediaStream] Advanced video constraints failed, retrying with minimal constraints', err);
             nativeStream = await navigator.mediaDevices.getUserMedia({
@@ -1442,24 +1383,6 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     }
   };
 
-  // Helper functions to check category access
-  const canAccessTCNN = () => {
-    const p: any = profile
-    const isNewsCaster = (p as any)?.is_news_caster || (p as any)?.is_chief_news_caster;
-    const isAdmin = p?.role === 'admin' || p?.is_admin ||
-      p?.role === 'superadmin' || p?.is_superadmin;
-    // Check if they have restricted roles
-    const isRestrictedRole = p?.is_troll_officer || (p as any)?.is_lead_troll_officer ||
-      p?.role === 'troll_officer' || p?.role === 'lead_troll_officer';
-
-    return (isNewsCaster || isAdmin) && !isRestrictedRole;
-  };
-
-  const canAccessElections = () => {
-    const allowedRoles = ['admin', 'secretary', 'lead_troll_officer', 'troll_officer'];
-    return profile?.role && allowedRoles.includes(profile.role);
-  };
-
 const handleStartStream = async () => {
     if (isBroadcastLocked && !canBroadcast()) {
       toast.error('Broadcasting is currently disabled by admin. No one can go live while lockdown is active.');
@@ -1557,8 +1480,8 @@ const handleStartStream = async () => {
       // Success - we have a MediaStream. Wrap into LiveKit tracks and preserve in PreflightStore.
       const mediaStream = (result as any).stream;
       // Stop any existing preflight tracks to avoid duplicates
-      try { if (livekitTracksRef.current[0]) livekitTracksRef.current[0]?.stop(); } catch(e) {}
-      try { if (livekitTracksRef.current[1]) livekitTracksRef.current[1]?.stop(); } catch(e) {}
+      try { if (livekitTracksRef.current[0]) livekitTracksRef.current[0]?.stop(); } catch {}
+      try { if (livekitTracksRef.current[1]) livekitTracksRef.current[1]?.stop(); } catch {}
 
       try {
         const at = mediaStream.getAudioTracks();
@@ -1646,8 +1569,8 @@ const handleStartStream = async () => {
            status: 'starting',
            is_live: false,
            started_at: null,
-            box_count: seatCount === 0 ? 1 : seatCount + 1,
-            seat_count: (seatCount === 0 ? 0 : seatCount),
+            box_count: seatCount === 0 ? 1 : Math.min(MAX_GUEST_SEATS, seatCount) + 1,
+            seat_count: Math.min(MAX_GUEST_SEATS, seatCount),
            layout_mode: layoutMode,
             random_battle_queue_enabled: RANDOM_BATTLE_ENABLED && category === 'general' && (battleMode === 'world' || battleMode === 'state') ? randomBattleQueueEnabled : false,
            random_battle_queued_at: null,
@@ -1799,7 +1722,7 @@ const handleStartStream = async () => {
         try {
             await supabase.rpc('start_smoke_event', {
               p_stream_id: data.id,
-              p_seat_count: seatCount === 0 ? 0 : seatCount,
+              p_seat_count: Math.min(MAX_GUEST_SEATS, seatCount),
             });
           console.log('[SetupPage] Smoke event created for stream:', data.id);
         } catch (smokeErr) {
@@ -2450,7 +2373,7 @@ const handleStartStream = async () => {
                             setUserState(s.code);
                             setShowStateDropdown(false);
                             toast.success(`You now represent ${s.name}!`);
-                          } catch (err) {
+                          } catch {
                             toast.error('Failed to assign state');
                           } finally {
                             setIsAssigningState(false);
@@ -2549,7 +2472,7 @@ const handleStartStream = async () => {
               By starting a broadcast, I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I understand that I am solely responsible for the content I create, stream, share, or display on Mai Troll.
             </p>
             <p>
-              I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Mai Troll's Terms of Service or Community Guidelines.
+              I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Mai Troll&apos;s Terms of Service or Community Guidelines.
             </p>
             <p>
               I further acknowledge that I am of legal age in my jurisdiction to consume any products, substances, beverages, or other items that may be displayed or consumed during my broadcast, and that any such activity is conducted at my own responsibility and in compliance with local laws.

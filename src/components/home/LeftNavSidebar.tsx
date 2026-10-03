@@ -25,8 +25,10 @@ import { grantNavCoins } from '@/lib/grantNavCoins'
 import { useAuthStore } from '@/lib/store'
 import { useCoins } from '@/lib/hooks/useCoins'
 import { useXPStore } from '@/stores/useXPStore'
+import { isAdminEmail } from '@/lib/supabase'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
+import { useIsActiveFounder } from '@/hooks/useFounderProgram'
 import { useTheme } from '@/hooks/useTheme'
 import type { TabType } from '@/types/homeTabs'
 
@@ -68,6 +70,15 @@ export default function LeftNavSidebar({
   const navigate = useNavigate()
 
   const { user, profile } = useAuthStore()
+  const isActiveFounder = useIsActiveFounder(user?.id)
+  const role = String(profile?.role || '').toLowerCase()
+  const trollRole = String(profile?.troll_role || '').toLowerCase()
+  const canSeeFounderHub = isActiveFounder || isAdminEmail(user?.email) || Boolean(
+    profile?.is_admin ||
+    (profile as any)?.is_superadmin ||
+    ['admin', 'superadmin', 'owner', 'ceo', 'hr_admin', 'agency_hr_manager'].includes(role) ||
+    ['admin', 'superadmin', 'owner', 'ceo'].includes(trollRole)
+  )
   const { balances } = useCoins()
   const xpStore = useXPStore()
   const equippedFrame = useUserFrame(user?.id)
@@ -173,6 +184,17 @@ export default function LeftNavSidebar({
       path: '/mai-sing-off',
       description: 'Compete in Mai Talent Show music battles',
     },
+
+    ...(canSeeFounderHub
+      ? [{
+          label: 'Founder Hub',
+          icon: Sparkles,
+          activeGradient: 'from-yellow-500 to-orange-600',
+          isExternal: true,
+          path: '/founder',
+          description: 'Open the Founder hub and administration tools',
+        }]
+      : []),
 
     ]
 

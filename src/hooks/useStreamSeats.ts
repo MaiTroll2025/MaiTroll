@@ -385,6 +385,11 @@ export function useStreamSeats(
         return false
       }
 
+      if (_streamData?.are_seats_locked) {
+        toast.error('Seats are currently locked')
+        return false
+      }
+
       const existing = mySeatRef.current
       if (
         existing &&

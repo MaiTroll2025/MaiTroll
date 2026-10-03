@@ -11,6 +11,7 @@ import { blockUser, unblockUser } from '@/lib/blocking';
 import LevelStatusCard from '@/components/home/LevelStatusCard';
 import ReportModal from '@/components/ReportModal';
 import FileLawsuitModal from '@/components/FileLawsuitModal';
+import FounderBadge from '@/components/founder/FounderBadge';
 import { useTheme } from '@/hooks/useTheme'
 import { toast } from 'sonner';
 import {
@@ -447,9 +448,13 @@ export function ProfileHeader({
                                     </span>
                                 )}
                             </div>
-                            <h1 className={`text-3xl font-black tracking-tight md:text-5xl ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                                {profile.username || profile.display_name}
-                            </h1>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <h1 className={`text-3xl font-black tracking-tight md:text-5xl ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+                                    {profile.username || profile.display_name}
+                                </h1>
+                                {/* ⭐ Founder badge — shown next to the profile name. */}
+                                <FounderBadge userId={profile.id} showMultipliers />
+                            </div>
                             <div className={`mt-2 flex flex-wrap items-center gap-3 text-sm ${theme === 'light' ? 'text-gray-500' : 'text-white/50'}`}>
                                 <span className="font-bold" style={{ color: accentColor }}>
                                     {careerRoleLabel || `@${profile.username}`}

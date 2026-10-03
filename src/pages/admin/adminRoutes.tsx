@@ -35,6 +35,7 @@ const SellerManagement = lazy(() => import('./SellerManagement'))
 const ExecutiveSecretaries = lazy(() => import('./ExecutiveSecretaries'))
 const FirstCashoutMatch = lazy(() => import('./FirstCashoutMatch'))
 const SupabaseUsageDashboard = lazy(() => import('./SupabaseUsageDashboard'))
+const TromocodeAdmin = lazy(() => import('./TromoCodesAdmin'))
 
 export interface AdminRoute {
   id: string
@@ -116,6 +117,19 @@ export const systemManagementRoutes: AdminRoute[] = [
     tileBgColor: 'bg-cyan-500/10',
     tileBorderColor: 'border-cyan-500/30',
     category: 'system'
+  },
+  {
+    id: 'tromocodes-admin',
+    title: 'TromoCodes',
+    path: '/admin/tromocodes',
+    component: TromocodeAdmin,
+    roles: ['admin'],
+    description: 'Create, manage, and monitor TromoCode promotions',
+    icon: <Gift className="w-5 h-5 text-fuchsia-200" />,
+    tileColor: 'text-fuchsia-200',
+    tileBgColor: 'bg-fuchsia-500/10',
+    tileBorderColor: 'border-fuchsia-500/30',
+    category: 'economy'
   },
   {
     id: 'officer-operations',

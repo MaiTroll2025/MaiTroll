@@ -101,6 +101,8 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     { label: 'Neighborhood', path: '/neighborhood-setup', icon: Building2 },
     { label: 'Mai Talent Show', path: '/mai-sing-off', icon: Trophy },
     { label: 'MAI Business', path: '/mai-business', icon: Building2 },
+    // ⭐ Founder Program — shown only to ACTIVE Founders (server-verified).
+    { label: 'Founder Hub', path: '/founder', icon: Sparkles, show: a.isFounder },
   ])
 
   add('City Services', [
@@ -316,7 +318,6 @@ if (a.isAdmin) {
       { label: 'Store Pricing', path: '/admin/store-pricing', icon: Store },
       { label: 'Cashout Manager', path: '/admin/cashout-manager', icon: Lock },
       { label: 'Security Command', path: '/admin/security-command-center', icon: Shield },
-      { label: 'Mobile Admin', path: '/admin-mobile', icon: LayoutDashboard },
       { label: 'Payment Logs', path: '/admin/payment-logs', icon: TrendingUp },
       { label: 'Admin Errors', path: '/admin/errors', icon: Settings },
       { label: 'Database Backup', path: '/admin/system/backup', icon: Database },

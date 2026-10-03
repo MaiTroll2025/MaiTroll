@@ -87,7 +87,7 @@ export default function TreelzHomeRow({ title, icon, sortBy }: { title: string; 
     fetchTrendingTreelz(8)
       .then((data) => {
         if (!cancelled) {
-          let sorted = [...data]
+          const sorted = [...data]
           if (sortBy === 'gifts') {
             sorted.sort((a, b) => (b.gifts_received || 0) - (a.gifts_received || 0))
           } else if (sortBy === 'trolls') {

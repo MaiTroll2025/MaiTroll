@@ -38,7 +38,6 @@ import BroadcastBottomBar from '../../components/broadcast/BroadcastBottomBar'
 import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
 import AudienceBubbleTicker from '@/components/broadcast/AudienceBubbleTicker'
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
-import RandomBattleButton from '@/components/broadcast/RandomBattleButton'
 import BroadcastOfficerModal from '../../components/broadcast/BroadcastOfficerModal'
 import PayBroadOfficersModal from '../../components/broadcast/PayBroadOfficersModal'
 import MoreControlsDrawer from '../../components/broadcast/MoreControlsDrawer'
@@ -58,7 +57,6 @@ import { useResolvedStream, useResolvedStreamId } from '../../contexts/StreamRou
 import { useBroadcastLifecycle, formatCountdown } from '../../hooks/useBroadcastLifecycle'
 import { FeaturedBanner } from '../../components/featured/FeaturedBanner'
 import { FeaturedLeaderboard } from '../../components/featured/FeaturedLeaderboard'
-import { FeaturedLiveOverlay } from '../../components/featured/FeaturedLiveOverlay'
 
 import CashoutProgressBanner from '../../components/broadcast/CashoutProgressBanner'
 import MiniMaiPayCashoutModal from '../../components/broadcast/MiniMaiPayCashoutModal'
@@ -127,13 +125,13 @@ function normalizeIdentityToken(value?: string | null): string {
   return normalizeLiveKitIdentity(value).replace(/^viewer-/, '').trim()
 }
 
-const isRoomUsable = (room: Room | null): room is Room => {
-  return Boolean(
-    room &&
-      room.state !== 'disconnected' &&
-      room.engine &&
-      !room.engine.isClosed,
-  )
+function normalizeSeatStatus(status?: string | null) {
+  return String(status || '').trim().toLowerCase()
+}
+
+function isSeatActiveStatus(status?: string | null) {
+  const normalized = normalizeSeatStatus(status)
+  return ['active', 'live', 'reserved', 'camera_starting'].includes(normalized)
 }
 
 type RemoteParticipantSnapshot = {
@@ -227,12 +225,10 @@ const RemoteSeatSurface = React.memo(function RemoteSeatSurface({
   participant,
   cameraTrack: cameraTrackProp,
   fallback,
-  mirror = false,
 }: {
   participant: RemoteParticipant | null
   cameraTrack?: RemoteVideoTrack | null
   fallback: React.ReactNode
-  mirror?: boolean
 }) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null)
   const audioRef = React.useRef<HTMLAudioElement | null>(null)
@@ -247,7 +243,6 @@ const RemoteSeatSurface = React.memo(function RemoteSeatSurface({
     try {
       videoTrack.attach(videoEl)
       console.log('[Seat Video Attached]', {
-        identity: participant?.identity,
         trackSid: videoTrack.sid,
         elementConnected: videoEl.isConnected,
         width: videoEl.clientWidth,
@@ -298,7 +293,6 @@ const RemoteSeatSurface = React.memo(function RemoteSeatSurface({
 
     console.log('[BroadcastSeatVideoRender]', {
       participantIdentity: participant?.identity ?? null,
-      hasParticipant: Boolean(participant),
       cameraTrackSid: videoTrack?.sid ?? null,
       cameraTrackKind: videoTrack?.kind ?? null,
     })
@@ -475,15 +469,6 @@ function getParticipantLabel(participant: any, fallbackOrSeat: string | any = 'V
   )
 }
 
-function getParticipantList(
-  participants: Map<string, RemoteParticipant> | RemoteParticipant[] | null | undefined,
-): RemoteParticipant[] {
-  if (!participants) return []
-  if (Array.isArray(participants)) return participants
-  if (typeof participants.values === 'function') return Array.from(participants.values())
-  return []
-}
-
 function isGhostParticipant(participant: any): boolean {
   const metadata = getRemoteParticipantMetadata(participant)
   return metadata?.role === 'ghost' || metadata?.hidden === true
@@ -525,7 +510,7 @@ const GhostAudioTrack = React.memo(function GhostAudioTrack({ participant }: { p
 
 import ShareModal from '@/components/broadcast/ShareModal'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import { getCategoryConfig } from '@/config/broadcastCategories'
+import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
 import { useBattleState } from '@/hooks/useBattleState'
 import { useBroadcastAbilities } from '@/hooks/useBroadcastAbilities'
 import { useBroadcastPinnedProducts } from '@/hooks/useBroadcastPinnedProducts'
@@ -535,7 +520,6 @@ import { useBroadcastTextPopup } from '@/hooks/useBroadcastTextPopup'
 import { logActiveChannels } from '@/lib/realtimeChannelDiagnostics'
 import BroadcastTextPopupOverlay from '@/components/broadcast/BroadcastTextPopupOverlay'
 import BroadcastTextPopupComposer from '@/components/broadcast/BroadcastTextPopupComposer'
-import RandomBattleBanner from '@/components/broadcast/RandomBattleBanner'
 import { useStreamRealtime } from '@/hooks/useStreamRealtime'
 import { useStreamSeats } from '@/hooks/useStreamSeats'
 import { useStreamAudiencePresence, StreamAudienceMember } from '@/hooks/useStreamAudiencePresence'
@@ -550,7 +534,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, BadgeCheck, Sparkles, ShoppingBag, BarChart3, Shield, Swords, ArrowLeft, Gamepad2, Image as Image, AlertTriangle, AlertCircle } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, ArrowLeft, Gamepad2, Image as Image, AlertTriangle, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -560,12 +544,14 @@ import CoinStoreModal from '@/components/broadcast/CoinStoreModal'
 import GiftBoxModal from '@/components/broadcast/GiftBoxModal'
 import GiftAnimationLayer from '@/components/broadcast/GiftAnimationLayer'
 import TargetedGiftOverlay from '@/components/broadcast/TargetedGiftOverlay'
-import { useTargetedGiftQueue, getGiftTargetKey, normalizeGiftRow, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
+import { useTargetedGiftQueue, getGiftTargetKey, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
 import { useGiftAnimationPipeline } from '@/hooks/useGiftAnimationPipeline'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import PinProductModal from '@/components/broadcast/PinProductModal'
 import UserActionModal from '@/components/broadcast/UserActionModal'
 import ModActionsPopup from '@/components/broadcast/ModActionsPopup'
+import FounderLiveModerationSheet from '@/components/founder/FounderLiveModerationSheet'
+import { useFounderSelfStatus } from '@/hooks/useFounderProgram'
 import CityStatusPanel from '@/components/city/CityStatusPanel'
 import CityStatusOrb from '@/components/city/CityStatusOrb'
 import { useCityStatusOrb } from '@/lib/hooks/useCityStatusOrb'
@@ -621,58 +607,7 @@ const removeStreamChannels = async (streamId: string) => {
  * Participants join through LiveKit as audience members.
  */
 
-const SUPABASE_PUBLIC_PATH = '/storage/v1/object/public/'
-const SUPABASE_SIGN_PATH = '/storage/v1/object/sign/'
 const DESKTOP_AUDIENCE_TICKER_HEIGHT = 56
-
-function isPlayableUrl(url: unknown): boolean {
-  return (
-    typeof url === 'string' &&
-    url.trim().length > 0 &&
-    (
-      url.startsWith('https://') ||
-      url.startsWith('http://') ||
-      url.startsWith('/') ||
-      url.startsWith('blob:')
-    )
-  )
-}
-
-async function resolvePlayableStorageUrl(url: string | null | undefined): Promise<string | null> {
-  if (!url || typeof url !== 'string') return null
-  const trimmed = url.trim()
-  if (!trimmed) return null
-
-  if (trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('blob:') || trimmed.startsWith('/')) {
-    // Public Supabase storage URLs contain /storage/v1/object/public/ — these
-    // are directly accessible and need no signing.
-    if (trimmed.includes(SUPABASE_PUBLIC_PATH)) {
-      return trimmed
-    }
-
-    // Private storage URLs use /storage/v1/object/sign/ — generate a signed URL.
-    if (trimmed.includes(SUPABASE_SIGN_PATH)) {
-      const match = trimmed.match(new RegExp(`${SUPABASE_SIGN_PATH}([^/]+)/(.+)$`))
-      if (match) {
-        const bucket = match[1]
-        const path = decodeURIComponent(match[2])
-        try {
-          const { data: signed } = await supabase.storage.from(bucket).createSignedUrl(path, 3600)
-          return signed?.signedUrl || trimmed
-        } catch (err) {
-          if (import.meta.env.DEV) {
-            console.warn('[BroadcastGiftVideo] failed to sign private storage URL', { bucket, path, err })
-          }
-          return trimmed
-        }
-      }
-    }
-
-    return trimmed
-  }
-
-  return trimmed
-}
 
 export function BroadcastPage() {
   const params = useParams()
@@ -681,14 +616,14 @@ export function BroadcastPage() {
   const streamId = useResolvedStreamId(params.id || params.streamId)
 
   const { user, profile } = useAuthStore()
-  const { clearTracks, screenTrack, screenAudioTrack, cameraTrack } = useStreamStore()
+  const founderStatus = useFounderSelfStatus()
+  const { clearTracks, screenTrack, cameraTrack } = useStreamStore()
   const { isMobileWidth, hasMounted } = useIsMobile()
   const { recordStreamStarted } = useTrollFamilyActivity()
   const {
     featuredBroadcasters,
     featuredEvent,
     isFeaturedEvent,
-    currentStreamFeatured,
     leaderboardOpen,
     openFeaturedLeaderboard,
     closeFeaturedLeaderboard,
@@ -703,13 +638,11 @@ export function BroadcastPage() {
 
   useEffect(() => {
     DEBUG_COUNTERS.broadcastPageMountCount++
-    console.log(`[BroadcastPage] MOUNT COUNT: ${DEBUG_COUNTERS.broadcastPageMountCount} for streamId: ${streamId}`)
-    if (isStreamAdmin) logActiveChannels(`BroadcastPage:mount:${streamId}`)
+    console.log(`[BroadcastPage] MOUNT COUNT: ${DEBUG_COUNTERS.broadcastPageMountCount}`)
 
     return () => {
       DEBUG_COUNTERS.broadcastPageUnmountCount++
-      console.log(`[BroadcastPage] UNMOUNT COUNT: ${DEBUG_COUNTERS.broadcastPageUnmountCount} for streamId: ${streamId}`)
-      if (isStreamAdmin) logActiveChannels(`BroadcastPage:unmount:${streamId}`)
+      console.log(`[BroadcastPage] UNMOUNT COUNT: ${DEBUG_COUNTERS.broadcastPageUnmountCount}`)
     }
   }, [])
 
@@ -742,14 +675,12 @@ export function BroadcastPage() {
     } else {
       logActiveChannels(`BroadcastPage:live:${streamId}`)
     }
-  }, [stream?.is_battle, stream?.battle_id, streamId]);
+  }, [isStreamAdmin, stream?.is_battle, stream?.battle_id, streamId]);
 
-   const [streamMods, setStreamMods] = useState<string[]>([]);
+  const [, setStreamMods] = useState<string[]>([]);
    // Accumulate gift amounts received while broadcasterProfile is still loading (null);
    // applied once the profile arrives via @see applyPendingGiftsEffect
       const isHost = stream?.user_id === user?.id
-     const isBroadcaster = isHost;
-
      const cashoutBanner = useCashoutBanner({
        userId: user?.id,
        isEligible: isHost,
@@ -809,8 +740,8 @@ const lifecycle = useBroadcastLifecycle(streamId || null, stream, {
   },
 })
 
-const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSeatLive, refreshSeats, removeSeat, removeSeatByUserId } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any)
-    const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id, {
+const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any)
+  const { audience, activeAudience } = useStreamAudiencePresence(streamId || '', user?.id, {
       onPresenceChange: (event) => {
         if (!streamId || !event?.member?.username) return
         const username = event.member.username
@@ -921,29 +852,26 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
     // Broadcast frame - decorative border for host's stream
     const broadcastFrame = useBroadcastFrame(stream?.user_id)
 
-  const normalizeSeatStatus = (status?: string | null) => String(status || '').trim().toLowerCase()
-  const isSeatActiveStatus = (status?: string | null) => {
-    const normalized = normalizeSeatStatus(status)
-
-    return ['active', 'live', 'reserved', 'camera_starting'].includes(normalized)
-  }
+  const configuredSeatCount = stream?.seat_count
+  const configuredBoxCount = stream?.box_count
+  const configuredSeatPrices = stream?.seat_prices
 
   const configuredViewerSeatCount = useMemo(() => {
-    const maxSeats = 6
+    const maxSeats = MAX_GUEST_SEATS
     // seat_count = guest seats only (broadcaster is NOT a seat)
-    const seatCount = stream?.seat_count !== undefined ? Number(stream.seat_count) : undefined
+    const seatCount = configuredSeatCount !== undefined ? Number(configuredSeatCount) : undefined
     if (seatCount !== undefined) {
       if (seatCount === 0) return 0 // broadcaster only, no guest seats
       return Math.max(0, Math.min(maxSeats, seatCount))
     }
 
-    const boxCount = Number(stream?.box_count ?? 0)
+    const boxCount = Number(configuredBoxCount ?? 0)
     if (boxCount > 0) {
       return Math.max(0, Math.min(maxSeats, boxCount - 1))
     }
 
-    const derivedFromPrices = Array.isArray(stream?.seat_prices)
-      ? Math.max(0, stream.seat_prices.length - 1)
+    const derivedFromPrices = Array.isArray(configuredSeatPrices)
+      ? Math.max(0, configuredSeatPrices.length - 1)
       : 0
 
     if (derivedFromPrices > 0) {
@@ -951,7 +879,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
     }
 
     return 0
-  }, [stream?.box_count, stream?.seat_count, stream?.seat_prices])
+  }, [configuredBoxCount, configuredSeatCount, configuredSeatPrices])
 
   // Total boxes including broadcaster (for layout decisions)
   const totalBoxCount = useMemo(() => {
@@ -1014,7 +942,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
         remoteParticipantSnapshot: matchedSnapshot,
       }
     })
-  }, [currentViewerSeatCount, seats, stream?.seat_price, stream?.seat_prices, remoteParticipants, remoteParticipantSnapshots])
+  }, [currentViewerSeatCount, seats, stream, remoteParticipants, remoteParticipantSnapshots])
 
   useEffect(() => {
     if (!import.meta.env.DEV) return
@@ -1031,7 +959,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
   const userIdToLiveKitIdentity = useMemo(() => {
     const mapping: Record<string, string> = {};
     if (!seats) return mapping;
-    Object.entries(seats).forEach(([seatIndex, seat]) => {
+    Object.entries(seats).forEach(([, seat]) => {
       const seatData = seat as any;
       const userId = seatData?.user_id || seatData?.guest_id;
       const identity = seatData?.livekit_participant_identity || seatData?.participant_identity || seatData?.livekit_identity;
@@ -1044,31 +972,19 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
   const roomName = useMemo(() => {
     return getLiveKitRoomName(stream as Stream | null, streamId) || ''
-  }, [stream?.livekit_room_name, stream?.id, streamId]);
+  }, [stream, streamId]);
 
-  const hasValidStreamId = !!streamId && typeof streamId === 'string' && streamId.trim() !== '';
-  const sessionReady = !!user && !!profile && hasValidStreamId && !!roomName;
-
-  // INSTANT JOIN: Set isLoading to false initially to show content immediately
-  // Stream data will load in background while user sees the page
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // INSTANT JOIN: Track if initial stream fetch is complete but don't block UI
-  const [streamLoaded, setStreamLoaded] = useState(false)
+  const [, setStreamLoaded] = useState(false)
   const [isCurrentUserBroadofficer, setIsCurrentUserBroadofficer] = useState(false)
   const canInteractWithSeats = isHost || isOfficer || isCurrentUserBroadofficer
   // Track battle start time to show accurate timer
-  const [battleStartTime, setBattleStartTime] = useState<Date | null>(null)
+  const [, setBattleStartTime] = useState<Date | null>(null)
   
   const audioTrackRef = useRef<LocalAudioTrack | null>(null)
   const videoTrackRef = useRef<LocalVideoTrack | null>(null)
-  const [localTracksVersion, setLocalTracksVersion] = useState(0)
-  const localTracksRef = useRef<[LocalAudioTrack | null, LocalVideoTrack | null] | null>(null)
-  const localTracks = useMemo<[LocalAudioTrack | null, LocalVideoTrack | null] | null>(() => {
-    const audioTrack = audioTrackRef.current
-    const videoTrack = videoTrackRef.current
-    return audioTrack || videoTrack ? [audioTrack, videoTrack] : null
-  }, [localTracksVersion])
+  const [localTracks, setLocalTracksState] = useState<[LocalAudioTrack | null, LocalVideoTrack | null] | null>(null)
 
   // Host users publish through this local track state.
   const combinedLocalTracks = localTracks
@@ -1092,8 +1008,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
 
     audioTrackRef.current = nextAudioTrack
     videoTrackRef.current = nextVideoTrack
-    localTracksRef.current = resolved
-    setLocalTracksVersion((version) => version + 1)
+    setLocalTracksState(nextAudioTrack || nextVideoTrack ? [nextAudioTrack, nextVideoTrack] : null)
   }, [])
   const mountCountRef = useRef(0)
   const livekitRoomCreatedCountRef = useRef(0)
@@ -1103,7 +1018,6 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
   const cameraToggleQueueRef = useRef<Promise<unknown>>(Promise.resolve())
   const microphoneToggleQueueRef = useRef<Promise<unknown>>(Promise.resolve())
   const timeoutsRef = useRef<Set<number>>(new Set())
-  const intervalsRef = useRef<Set<number>>(new Set())
   const [cameraEnabled, setCameraEnabled] = useState(true)
   const [micEnabled, setMicEnabled] = useState(true)
   const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user')
@@ -1119,13 +1033,8 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
     return id
   }
 
-  const trackedInterval = (fn: () => void, ms: number) => {
-    const id = window.setInterval(fn, ms)
-    intervalsRef.current.add(id)
-    return id
-  }
-
    useEffect(() => {
+     const timeouts = timeoutsRef.current
      mountCountRef.current += 1
      console.debug('[BroadcastPage] mount count', mountCountRef.current, 'render count', renderCountRef.current, 'streamId', streamId)
      console.debug('[BroadcastPage] LiveKit debug counts', {
@@ -1136,10 +1045,8 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
      })
      return () => {
        console.debug('[BroadcastPage] BroadcastPage unmounted for streamId', streamId)
-       timeoutsRef.current.forEach(id => clearTimeout(id))
-       intervalsRef.current.forEach(id => clearInterval(id))
-       timeoutsRef.current.clear()
-       intervalsRef.current.clear()
+      timeouts.forEach(id => clearTimeout(id))
+      timeouts.clear()
      }
    }, [streamId])
 
@@ -1172,10 +1079,6 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
   }
 
  
-  useEffect(() => {
-    localTracksRef.current = localTracks
-  }, [localTracks])
-
   useEffect(() => {
     if (sessionStorage.getItem('tc_starting_stream') === 'true') {
 
@@ -1218,69 +1121,13 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
             return;
           }
         }
-      } catch (error) {
+      } catch {
 
       }
     };
 
     checkJailStatus();
   }, [user?.id, navigate]);
-
-  const publishTrackOrClone = async <T extends LocalAudioTrack | LocalVideoTrack>(
-    track: T | undefined,
-    room: Room,
-    kind: 'audio' | 'video'
-  ): Promise<T | undefined> => {
-    if (!track) return undefined
-
-    const tryPublish = async (candidate: T): Promise<T | undefined> => {
-      try {
-        await room.localParticipant.publishTrack(candidate)
-        localTrackPublishedCountRef.current += 1
-        return candidate
-      } catch (err) {
-        const trackIdentifier = (candidate as any).trackId || (candidate as any).sid || 'unknown'
-        console.warn(
-          `[BroadcastPage] Failed to publish ${kind} track`,
-          err,
-          { trackId: trackIdentifier, kind }
-        )
-        return undefined
-      }
-    }
-
-    const published = await tryPublish(track)
-    if (published) return published
-
-    // If direct publication fails, attempt to recreate the LiveKit track from the native MediaStreamTrack
-    try {
-      const trackLike = track as unknown as {
-        getMediaStreamTrack?: () => MediaStreamTrack | undefined
-        mediaStreamTrack?: MediaStreamTrack
-      }
-      const mediaTrack = trackLike.getMediaStreamTrack?.() || trackLike.mediaStreamTrack
-      if (!mediaTrack) {
-        console.warn('[BroadcastPage] No native media track available for clone publish', { kind })
-        return undefined
-      }
-
-      console.log('[BroadcastPage] Cloning preflight track from native MediaStreamTrack', {
-        kind,
-        label: mediaTrack.label,
-        enabled: mediaTrack.enabled,
-      })
-
-      const clonedTrack = kind === 'video'
-        ? (new LocalVideoTrack(mediaTrack) as T)
-        : (new LocalAudioTrack(mediaTrack) as T)
-
-      localTrackCreatedCountRef.current += 1
-      return await tryPublish(clonedTrack)
-    } catch (err) {
-      console.warn('[BroadcastPage] Failed to clone and publish preflight track', err)
-      return undefined
-    }
-  }
 
   const handleLiveKitParticipantConnected = useCallback((participant: RemoteParticipant) => {
     if (!participant?.identity) return
@@ -1317,7 +1164,6 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
   }, [])
 
   const handleLiveKitParticipantDisconnected = useCallback((participant: RemoteParticipant) => {
-    const identity = participant.identity
     setRemoteParticipants(prev => {
       const next = new Map(prev)
       next.delete(participant.identity)
@@ -1588,7 +1434,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
           if (pub.track) {
             room.localParticipant.unpublishTrack(pub.track).catch(() => {})
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
@@ -1597,14 +1443,14 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
     // 3) Remove all LiveKit room-level listeners
     try {
       room.removeAllListeners()
-    } catch (e) {
+    } catch {
       // ignore
     }
 
     // 4) Disconnect the WebSocket
     try {
       room.disconnect().catch(() => {})
-    } catch (e) {
+    } catch {
       // ignore
     }
 
@@ -1626,7 +1472,7 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
     return Boolean(session && session.room && session.room.state === 'connected')
   }, [])
 
-  const { endBroadcast: endBroadcastShutdown, endingBroadcastRef } = useBroadcastShutdown({
+  const { endBroadcast: endBroadcastShutdown } = useBroadcastShutdown({
     streamId,
     userId: user?.id,
     isLive: stream?.status === 'live' && stream?.is_live === true,
@@ -1690,8 +1536,8 @@ const { seats, mySeat, joiningSeatId, leavingSeatId, joinSeat, leaveSeat, markSe
    const [cameraOverlayTrackState, setCameraOverlayTrackState] = useState<LocalVideoTrack | null>(null)
 
      // Ghost participants - separate collection for ghost mode (not merged with remoteParticipants)
-   const [ghostParticipants, setGhostParticipants] = useState<Map<string, RemoteParticipant>>(new Map())
-   const ghostUsers = useMemo(() => Array.from(ghostParticipants.values()), [ghostParticipants])
+  const [ghostParticipants] = useState<Map<string, RemoteParticipant>>(new Map())
+   
    
    // Debug: Log ghost mode state changes
    useEffect(() => {
@@ -1720,17 +1566,7 @@ useEffect(() => {
       }
     }, [remoteUsers])
    
-   // Filter out ghost participants from remote users for display purposes
-   // BUT keep them for audio - ghost participants need to be heard by viewers
-   const visibleRemoteUsers = useMemo(() => {
-     return remoteUsers.filter(p => {
-       const metadata = getRemoteParticipantMetadata(p)
-       return metadata?.role !== 'ghost' && !metadata?.hidden
-     })
-   }, [remoteUsers])
-   
-// Ghost audio participants - these are ghost participants whose audio we need to render
-    // They are filtered from visibleRemoteUsers but their audio tracks must still be heard
+   // Ghost participants stay out of visible layouts while their audio remains active.
     const ghostAudioParticipants = useMemo(() => {
       return remoteUsers.filter(p => {
         const metadata = getRemoteParticipantMetadata(p)
@@ -1753,7 +1589,7 @@ useEffect(() => {
     const hostParticipantRef = useRef<any>(null)
     
     // Stable host participant lookup — only watches remoteParticipants and hostId directly
-    const hostParticipant = useMemo(() => {
+    const _hostParticipant = useMemo(() => {
       if (!stream?.user_id || !remoteParticipants) return null
       
       const hostId = String(stream.user_id).trim()
@@ -1777,14 +1613,8 @@ useEffect(() => {
       // Keep last known good host participant if no match but we have one cached
       return hostParticipantRef.current
     }, [stream?.user_id, remoteParticipants])
-  // Helper to safely get array from RemoteParticipants Map
-  const getRemoteParticipantsArray = () => {
-    if (!remoteParticipants || typeof remoteParticipants.values !== 'function') return []
-    return Array.from(remoteParticipants.values()) as RemoteParticipant[]
-  }
-  const [isJoining, setIsJoining] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(true)
-  const [canSwipe, setCanSwipe] = useState(false)
+  const [, setCanSwipe] = useState(false)
   const [viewerCount, setViewerCount] = useState(0)
   const [activeViewerProfiles, setActiveViewerProfiles] = useState<Array<{
     user_id: string;
@@ -1799,8 +1629,7 @@ useEffect(() => {
     joined_at: string;
   }>>([])
   const [hostMicMutedByOfficer, setHostMicMutedByOfficer] = useState(false)
-  const [isBattleMode, setIsBattleMode] = useState(stream?.broadcast_mode === 'battle')
-  const [selectedBattleTheme, setSelectedBattleTheme] = useState<string>(DEFAULT_BATTLE_THEME_ID);
+  const [selectedBattleTheme] = useState<string>(DEFAULT_BATTLE_THEME_ID)
   
   const hasJoinedRef = useRef(false)
   const roomRef = useRef<Room | null>(null)
@@ -1856,8 +1685,6 @@ useEffect(() => {
 
   // Tick every second to re-evaluate "Camera unavailable" 8s timeout
   // Removed setInterval to prevent full-page rerenders; timeout UI updates on natural rerenders from seat/participant changes
-  const seatTickRef = useRef(0)
-
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     console.log('[BroadcastSeatState]', {
@@ -1879,7 +1706,7 @@ useEffect(() => {
    const [isGiftModalOpen, setIsGiftModalOpen] = useState(false)
    const [isShareModalOpen, setIsShareModalOpen] = useState(false)
    const [isSeatsModalOpen, setIsSeatsModalOpen] = useState(false)
-  const [smokeEvent, setSmokeEvent] = useState<any>(null)
+  const [, setSmokeEvent] = useState<any>(null)
    const [seatModalCount, setSeatModalCount] = useState(1)
    const [seatModalPrices, setSeatModalPrices] = useState<SeatModalPrice[]>([])
    const [selectedSeatIndex, setSelectedSeatIndex] = useState(0)
@@ -1889,9 +1716,7 @@ useEffect(() => {
     const [isNewMessageMode, setIsNewMessageMode] = useState(false)
     const [isBroadcasterControlsOpen, setIsBroadcasterControlsOpen] = useState(false)
     const [isCashoutModalOpen, setIsCashoutModalOpen] = useState(false)
-    const [isSeatControlsOpen, setIsSeatControlsOpen] = useState(false)
     const [isAuctionMeOpen, setIsAuctionMeOpen] = useState(false)
-    const [selectedSeatForControls, setSelectedSeatForControls] = useState<{ seatIndex: number; seatSessionId?: string } | null>(null)
     const [messagePopupPosition, setMessagePopupPosition] = useState<{ x: number; y: number } | null>(null)
     const [isDraggingMessagePopup, setIsDraggingMessagePopup] = useState(false)
     const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null)
@@ -1949,29 +1774,6 @@ useEffect(() => {
         giftIds: recentGifts.map((gift) => gift.id),
       })
     }, [recentGifts, streamId])
-
-    const visibleGiftTargets = useMemo(() => {
-      const targets = new Set<string>()
-      if (stream?.user_id) {
-        targets.add(`user:${stream.user_id}`)
-      }
-      Object.values(seats).forEach((seat) => {
-        if (seat.user_id) {
-          targets.add(`user:${seat.user_id}`)
-        }
-      })
-      return targets
-    }, [stream?.user_id, seats])
-
-    const participantToUserId = useMemo(() => {
-      const map = new Map<string, string>()
-      Object.values(seats).forEach((seat) => {
-        if (seat.livekit_participant_identity && seat.user_id) {
-          map.set(seat.livekit_participant_identity, seat.user_id)
-        }
-      })
-      return map
-    }, [seats])
 
     const {
      myLeagues,
@@ -2054,8 +1856,6 @@ useEffect(() => {
    useEffect(() => {
      setSelectedSeatIndex((current) => Math.max(0, Math.min(current, Math.max(0, seatModalCount - 1))))
    }, [seatModalCount])
-   const [giftUserPositions, setGiftUserPositions] = useState<Record<string, { top: number; left: number; width: number; height: number }>>({})
-    const getGiftUserPositionsRef = useRef<() => Record<string, { top: number; left: number; width: number; height: number }>>(() => ({}))
     const giftNameMapRef = useRef<Record<string, string>>({})
 const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
   sender_id: string; sender_username: string; sender_avatar_url: string | null; total_gift_coins: number; last_gift_at: string | null
@@ -2107,7 +1907,6 @@ interface FloatingMessage {
 
      const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([])
      const [pinnedMessageIds, setPinnedMessageIds] = useState<Set<string>>(new Set())
-     const [messages, setMessages] = useState<Array<{id: string; username: string; content: string; createdAt: number}>>([])
       const [chatInput, setChatInput] = useState('')
       const [hostChatDisabledByOfficerState, setHostChatDisabledByOfficerState] = useState(false)
       const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(user?.id, streamId)
@@ -2153,7 +1952,6 @@ interface FloatingMessage {
       const [hostChatDisabledUntil, setHostChatDisabledUntil] = useState<string | null>(null)
       const [hostChatDisabledStreamId, setHostChatDisabledStreamId] = useState<string | null>(null)
        const floatingChatContainerRef = useRef<HTMLDivElement>(null)
-       const chatContainerRef = useRef<HTMLDivElement>(null)
        const broadcastChatMessageIdsRef = useRef<Set<string>>(new Set())
        const recentChatKeysRef = useRef<Map<string, number>>(new Map())
        const CHAT_DEBOUNCE_MS = 5000
@@ -2303,7 +2101,7 @@ const ranked = senderIds
            .slice(0, 10);
 
          if (!cancelled) setAllTimeTopGifters(ranked);
-       } catch (err) {
+      } catch {
 
          if (!cancelled) setAllTimeTopGifters([]);
        } finally {
@@ -2365,20 +2163,10 @@ const ranked = senderIds
   } = useBroadcastAbilities(streamId)
   const [isAbilityBoxOpen, setIsAbilityBoxOpen] = useState(false)
 
-  const handleGetUserPositions = useCallback((getPositions: () => Record<string, { top: number; left: number; width: number; height: number }>) => {
-    getGiftUserPositionsRef.current = getPositions;
-  }, []);
-
   useEffect(() => {
     giftNameMapRef.current = giftNameMap;
   }, [giftNameMap]);
 
- const processedGiftIdsRef = useRef<Set<string>>(new Set())
-  // Per-page dedupe of gift animations used by processGiftEvent.
-  // Normalised animationId is always the stream_gifts row UUID, so whether the
-  // source is postgres_changes or the broadcast channel, the second arrival is
-  // caught here and skipped.
-  const seenGiftAnimationIdsRef = useRef<Set<string>>(new Set())
   const { processGiftEvent: pipelineProcessGiftEvent } = useGiftAnimationPipeline()
 
   // Acquire camera overlay stream when enabled for gaming mode
@@ -2437,7 +2225,7 @@ const ranked = senderIds
           overlayTrack = new LocalVideoTrack(overlayStream.getVideoTracks()[0]);
           setCameraOverlayTrackState(overlayTrack);
 
-        } catch (err) {
+        } catch {
 
           toast.error('Failed to access camera for overlay');
           setCameraOverlayEnabled(false);
@@ -2470,60 +2258,6 @@ const ranked = senderIds
     };
    
   }, [cameraOverlayEnabled, isScreenSharing]);
-
-  const resolveGiftAmount = useCallback((giftData: any): number => {
-    const metadata = giftData?.metadata || {};
-    const quantity = Math.max(1, Number(giftData?.quantity ?? metadata.quantity ?? 1) || 1);
-
-    const directAmountCandidates = [
-      giftData?.coins_spent,
-      giftData?.coins_amount,
-      giftData?.total_amount,
-      giftData?.total_coins,
-      metadata.coins_spent,
-      metadata.coins_amount,
-      metadata.total_amount,
-      metadata.total_coins,
-      giftData?.amount,
-      metadata.amount,
-    ];
-
-    for (const candidate of directAmountCandidates) {
-      const value = Number(candidate);
-      if (Number.isFinite(value) && value > 0) return value;
-    }
-
-    const unitAmountCandidates = [
-      giftData?.coin_value,
-      giftData?.gift_value,
-      giftData?.gift_price,
-      giftData?.price,
-      metadata.coin_value,
-      metadata.gift_value,
-      metadata.gift_price,
-      metadata.price,
-    ];
-
-    for (const candidate of unitAmountCandidates) {
-      const value = Number(candidate);
-      if (Number.isFinite(value) && value > 0) return value * quantity;
-    }
-
-    return quantity;
-  }, []);
-
-  const resolveGiftName = useCallback((giftData: any): string => {
-    const metadata = giftData?.metadata || {};
-    return (
-      giftData?.gift_name ||
-      giftData?.name ||
-      giftData?.title ||
-      metadata.gift_name ||
-      metadata.name ||
-      metadata.title ||
-      'Gift'
-    );
-  }, []);
 
   const processGiftEvent = useCallback(async (giftData: any) => {
       if (import.meta.env.DEV) {
@@ -2724,7 +2458,7 @@ const ranked = senderIds
           timestamp: Date.now(),
         }
       }));
-    }, [pipelineProcessGiftEvent, streamId, supabase, enqueueGift, removeGift, getGiftVisualConfig, stream, seats, giftQueues, hydrateGiftForOverlay]);
+    }, [pipelineProcessGiftEvent, streamId, enqueueGift, stream, seats, giftQueues]);
 
   // Use a ref so the broadcast/window listeners always invoke the latest
   // processGiftEvent without tearing down the supabase broadcast channel
@@ -2814,7 +2548,7 @@ const ranked = senderIds
     }
     
     setStream(data)
-  }, [streamId, supabase])
+  }, [streamId])
 
   const [isPinProductModalOpen, setIsPinProductModalOpen] = useState(false)
   const [isTextPopupComposerOpen, setIsTextPopupComposerOpen] = useState(false)
@@ -2867,38 +2601,16 @@ const ranked = senderIds
     onStreamUpdate: updateStreamPatch,
   });
 
-// Battle State
-   const { 
-    battleState: rawBattleState,
-    pickSide,
-    supporters,
-    userTeam,
-    joinWindowOpen,
-    remainingTime,
-    shouldShowSidePicker,
-    sendBattleGift,
-  } = useBattleState({
+// Battle state subscriptions are maintained by the hook for battle transitions.
+  useBattleState({
     streamId: streamId || '',
     localUserId: user?.id || anonymousViewerIdRef.current || '',
     isHost,
     hostId: stream?.user_id,
   })
 
-  // Transform battleState to match BroadcastGrid's expected interface
-  const battleState = useMemo(() => ({
-    active: rawBattleState.active,
-    battleId: rawBattleState.battleId,
-    hostId: rawBattleState.teamACaptain,
-    challengerId: rawBattleState.teamBCaptain,
-    broadcasterScore: rawBattleState.teamAScore,
-    challengerScore: rawBattleState.teamBScore,
-    startedAt: rawBattleState.startedAt,
-    endsAt: rawBattleState.endsAt,
-    suddenDeath: rawBattleState.suddenDeath,
-  }), [rawBattleState])
 
-
-   const cleanupLocalMedia = () => {
+   const cleanupLocalMedia = useCallback(() => {
     const room = roomRef.current
 
     if (cameraOverlayTrackState) {
@@ -2967,37 +2679,7 @@ const ranked = senderIds
     } else {
       console.log('[BroadcastPage] ?? Skipping clearTracks during live transition')
    }
-  };
-
-   // Handle leaving seat with instant track cleanup
-   const handleLeaveSeat = useCallback(async () => {
-     const room = roomRef.current
-     
-     // Instantly stop publishing tracks before clearing seat
-     if (room && room.localParticipant) {
-       try {
-         // Unpublish all tracks instantly - this removes them from other participants immediately
-         for (const pub of room.localParticipant.videoTrackPublications.values()) {
-           if (pub.track) {
-             room.localParticipant.unpublishTrack(pub.track).catch(console.warn)
-           }
-         }
-         for (const pub of room.localParticipant.audioTrackPublications.values()) {
-           if (pub.track) {
-             room.localParticipant.unpublishTrack(pub.track).catch(console.warn)
-           }
-         }
-         console.log('[BroadcastPage] Unpublished all tracks for leaving seat')
-       } catch (e) {
-         console.warn('Error unpublishing tracks on leave:', e)
-       }
-     }
-     
-     // Stop local and published media immediately
-     cleanupLocalMedia()
-
-     console.log('[BroadcastPage] Left seat with instant track cleanup')
-   }, [localTracks, user?.id]) 
+  }, [cameraOverlayTrackState, cameraTrack, clearTracks, combinedLocalTracks, screenTrack, setCameraOverlayTrackState, setLocalTracks])
 
    // Handle leaving the broadcast (for host ending stream or viewer leaving)
   const handleLeave = useCallback(async () => {
@@ -3070,10 +2752,8 @@ const ranked = senderIds
 
     // Navigate away
     navigate('/home', { replace: true })
-  }, [isHost, navigate, disconnectLiveKitRoom, stream, streamId, user?.id])
-  const handleToggleChat = useCallback(() => setIsChatOpen((prev) => !prev), [])
+  }, [cleanupLocalMedia, disconnectLiveKitRoom, isHost, leaveSeat, mySeat, navigate, stream, streamId, user?.id])
 const handleOpenShareModal = useCallback(() => setIsShareModalOpen(true), [])
-    const handlePinProduct = useCallback(() => setIsPinProductModalOpen(true), [])
     const handleClosePinProductModal = useCallback(() => setIsPinProductModalOpen(false), [])
     const handleInviteFollowers = useCallback(async () => {
       try {
@@ -3106,7 +2786,7 @@ const handleOpenShareModal = useCallback(() => setIsShareModalOpen(true), [])
        return ''
      })
 
-      setSeatModalCount(Math.max(0, Math.min(6, currentViewerSeatCount)))
+      setSeatModalCount(Math.max(0, Math.min(MAX_GUEST_SEATS, currentViewerSeatCount)))
      setSeatModalPrices(normalizedPrices)
      setSelectedSeatIndex(0)
      setIsSeatsModalOpen(true)
@@ -3154,7 +2834,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         return;
       }
 
-       const desiredViewerSeats = Math.max(0, Math.min(6, count));
+      const desiredViewerSeats = Math.max(0, Math.min(MAX_GUEST_SEATS, count));
       const totalBoxes = desiredViewerSeats + 1;
       const normalizedPrices = Array.from({ length: desiredViewerSeats }, (_, index) =>
         seatPriceToNumber(prices[index]),
@@ -3245,10 +2925,9 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     setIsCoinStoreOpen(true)
   }, [user?.id])
   const handleCloseCoinStore = useCallback(() => setIsCoinStoreOpen(false), [])
-  const handleOpenAbilityBox = useCallback(() => setIsAbilityBoxOpen(true), [])
   const handleCloseAbilityBox = useCallback(() => setIsAbilityBoxOpen(false), [])
 
-  const fetchHostStreamFallback = async () => {
+  const fetchHostStreamFallback = useCallback(async () => {
     if (!user?.id) return null
 
     try {
@@ -3268,7 +2947,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       console.error('[BroadcastPage] Host fallback stream fetch failed:', fallbackError)
       return null
     }
-  }
+  }, [user?.id])
 
   useEffect(() => {
     if (!streamId) {
@@ -3388,7 +3067,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     return () => {
       mounted = false
     }
-  }, [streamId, navigate, user?.id])
+  }, [fetchHostStreamFallback, navigate, profile?.is_admin, profile?.role, stopLocalTracks, streamId, user?.id])
 
   // Check if current user is broadofficer (stream-scoped, realtime)
   useEffect(() => {
@@ -3540,7 +3219,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     return () => {
       window.clearInterval(pollInterval)
     }
-  }, [streamId, stream?.status, supabase, navigate, disconnectLiveKitRoom, stopLocalTracks, removeStreamChannels])
+  }, [streamId, stream?.status, navigate, disconnectLiveKitRoom, stopLocalTracks])
 
   const areStreamRealtimeUpdatesEqual = useCallback((current: any, next: any) => {
     if (!current || !next) return false;
@@ -4010,7 +3689,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
             joined_at: row.joined_at || row.last_seen || new Date().toISOString(),
           });
         });
-      } catch (err) {
+      } catch {
 
       }
 
@@ -4068,10 +3747,10 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       .on('presence', { event: 'sync' }, () => {
         void updateViewerCountFromPresence();
       })
-      .on('presence', { event: 'join' }, ({ newPresences }) => {
+      .on('presence', { event: 'join' }, () => {
         void updateViewerCountFromPresence();
       })
-      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+      .on('presence', { event: 'leave' }, () => {
         void updateViewerCountFromPresence();
       });
 
@@ -4088,7 +3767,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
                 return { ...prev, box_count: boxData.box_count };
               });
             }
-          } catch (err) {
+          } catch {
 
           }
         }
@@ -4111,7 +3790,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
                 : (prev.total_likes || 0) + 2;
               return { ...prev, total_likes: newTotal };
             });
-          } catch (err) {
+          } catch {
 
           }
         }
@@ -4163,7 +3842,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         supabase.removeChannel(channel);
       }
     };
-    }, [streamId, navigate, user?.id, isHost]);
+    }, [isHost, navigate, streamId, user?.email, user?.id]);
 
   const floatingChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
@@ -4206,9 +3885,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           ].slice(0, 50)
         );
 
-       if (!isHost) {
-       }
-
        const timer = window.setTimeout(() => {
          setFloatingMessages(prev => prev.filter(m => m.id !== msgId));
          timers.delete(timer);
@@ -4237,7 +3913,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         supabase.removeChannel(channel);
       }
     };
-  }, [streamId, supabase]);
+  }, [streamId]);
 
   // Gift animations are driven by both the `stream-gifts:${streamId}` broadcast
   // channel AND the stream_gifts postgres_changes (via useStreamRealtime.onGift).
@@ -4274,9 +3950,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         }
         processedGiftIdsRef.current.add(String(giftId));
       }
-
-      const broadcasterId = streamRef.current?.user_id;
-      const currentUserId = user?.id;
 
       // Balance updates are handled by the realtime user_profiles subscription
       // No need to manually update here - avoids double/triple crediting
@@ -4388,8 +4061,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       liveKitConnectionKeyRef.current = null;
     }
     
-    let mounted = true
-
     const initLiveKit = async () => {
       if (!shouldPublish) {
         // OPTIMIZED: Don't block UI - connect in background without isJoining state
@@ -4498,13 +4169,9 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           const existingMicPublication = preflightRoom.localParticipant.getTrackPublication(Track.Source.Microphone)
           const existingCamPublication = preflightRoom.localParticipant.getTrackPublication(Track.Source.Camera)
           const existingScreenPublication = preflightRoom.localParticipant.getTrackPublication(Track.Source.ScreenShare)
-          const existingScreenAudioPublication = preflightRoom.localParticipant.getTrackPublication(Track.Source.ScreenShareAudio)
-
           const activeAudioTrack = existingMicPublication?.track as LocalAudioTrack | null
           const activeVideoTrack = existingCamPublication?.track as LocalVideoTrack | null
           const activeScreenTrack = existingScreenPublication?.track as LocalVideoTrack | null
-          const activeScreenAudioTrack = existingScreenAudioPublication?.track as LocalAudioTrack | null
-
           // Sync local track state
           if (activeAudioTrack || activeVideoTrack) {
             setLocalTracks([
@@ -4952,16 +4619,8 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       }
 
       initLiveKit()
-
-         return () => {
-           mounted = false
-           // IMPORTANT: do NOT disconnect the LiveKit room here. This cleanup runs
-           // on every re-run of the effect (any dependency change), and
-           // disconnecting would kill the host's camera. Re-connection when the
-           // connection key actually changes is handled at the top of the effect
-           // (see the key-change teardown above). Final teardown on unmount is
-           // handled by the dedicated unmount-only effect below.
-         }
+      // LiveKit teardown is owned by the session lifecycle; this effect does not disconnect on route updates.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [
           stream?.id,
           stream?.status,
@@ -5171,7 +4830,7 @@ const toggleMicrophone = useCallback(async () => {
     if (!isHost || !hostMicMutedByOfficer || !roomRef.current?.localParticipant) return;
     
     console.log('[BroadcastPage] useEffect: hostMicMutedByOfficer is true - forcing mic disabled')
-    roomRef.current.localParticipant.setMicrophoneEnabled(false).catch((err) => {
+    roomRef.current.localParticipant.setMicrophoneEnabled(false).catch(() => {
 
     });
   }, [isHost, hostMicMutedByOfficer]);
@@ -5192,7 +4851,7 @@ const toggleMicrophone = useCallback(async () => {
           toast.error('You have been muted by a moderator.');
         }
         lastMuteState = isMuted;
-      } catch (err) {
+      } catch {
 
       }
     };
@@ -5333,7 +4992,7 @@ const toggleMicrophone = useCallback(async () => {
     
     window.addEventListener('broadcast-balance-update', handleBalanceUpdate);
     return () => window.removeEventListener('broadcast-balance-update', handleBalanceUpdate);
-  }, [user?.id, stream?.user_id, supabase]);
+  }, [user?.id, stream?.user_id]);
 
    // Broadcaster profile updates are now handled in the combined host channel above
 
@@ -5346,10 +5005,6 @@ const toggleMicrophone = useCallback(async () => {
    const handleCloseGiftModal = useCallback(() => {
      setIsGiftModalOpen(false)
      setGiftRecipientId(null)
-   }, [])
-
-   const onGiftAll = useCallback((ids: string[]) => {
-     toast.info(`Gift sent to ${ids.length} users`)
    }, [])
 
    const handleGiftHost = useCallback(() => onGift(stream?.user_id || ''), [onGift, stream?.user_id])
@@ -5373,29 +5028,6 @@ const toggleMicrophone = useCallback(async () => {
 
           setUserActionTarget(info)
         }, [])
-
-    const handleOpenSeatControls = useCallback((seatIndex: number, seatSessionId?: string) => {
-      setSelectedSeatForControls({ seatIndex, seatSessionId })
-      setIsSeatControlsOpen(true)
-    }, [])
-
-    const handleCloseSeatControls = useCallback(() => {
-      setIsSeatControlsOpen(false)
-      setSelectedSeatForControls(null)
-    }, [])
-
-    const handleLeaveSeatFromControls = useCallback(async () => {
-      if (!selectedSeatForControls?.seatSessionId) return
-      try {
-        const { error } = await supabase.rpc('leave_seat_atomic', { p_session_id: selectedSeatForControls.seatSessionId })
-        if (error) throw error
-        toast.success('Left seat')
-      } catch (err: any) {
-        toast.error(err?.message || 'Failed to leave seat')
-      } finally {
-        handleCloseSeatControls()
-      }
-    }, [selectedSeatForControls, handleCloseSeatControls])
 
    const handleOpenFloatingChatUsername = useCallback(async (username: string, userId?: string) => {
     if (!username || isAnonymousDisplayName(username)) return
@@ -5445,45 +5077,20 @@ const toggleMicrophone = useCallback(async () => {
       console.error('[BroadcastPage] Error opening user action:', err)
       toast.error('Failed to open user profile')
     }
-  }, [])
+  }, [handleOpenUserAction])
 
    const handleCloseUserAction = useCallback(() => {
      setUserActionTarget(null)
    }, [])
    const handleCloseShareModal = useCallback(() => setIsShareModalOpen(false), [])
 
-   const handleOpenUserStats = useCallback((statsInfo: {
-     userId: string;
-     username: string;
-     trollCoins: number;
-     trollmonds: number;
-     licensePlate: string | null;
-     isSeatUser: boolean;
-   }) => {
-     setShowUserStats(statsInfo)
-   }, [])
-
    const handleCloseUserStats = useCallback(() => {
      setShowUserStats(null)
-   }, [])
-
-   const handleOpenHostStats = useCallback(() => {
-     setShowHostStats(true)
    }, [])
 
    const handleCloseHostStats = useCallback(() => {
      setShowHostStats(false)
    }, [])
-
-   // Mod actions (for officers) - use same UserActionModal
-   const handleOpenModActions = useCallback((_target: any) => {
-     // For now, officers use the same UserActionModal
-     // In the future, a dedicated mod actions popup could be shown
-   }, [])
-
-    const handleCloseModActions = useCallback(() => {
-      // No-op
-    }, [])
 
     // Authoritative current-user roles from user_profile_roles + user_profiles,
     // fetched from the DB (not derived flags / not gated on staff clock-in), so
@@ -5519,6 +5126,10 @@ const toggleMicrophone = useCallback(async () => {
       isHost || isCurrentUserBroadofficer || hasModMenuFromRoles ||
       myProfileAdminFlags.is_admin || myProfileAdminFlags.is_ceo ||
       ['admin', 'ceo', 'owner', 'superadmin', 'staff', 'moderator'].includes(myProfileAdminFlags.role ?? '')
+    )
+    const canUseFounderModeration = Boolean(
+      founderStatus.isFounder &&
+      (founderStatus.permissions.arrest || founderStatus.permissions.release || founderStatus.permissions.summon)
     )
 
 
@@ -5564,7 +5175,7 @@ const toggleMicrophone = useCallback(async () => {
         }
         trollEffectsChannelRef.current = null
       }
-   }, [streamId, user?.id, isHost, supabase])
+  }, [streamId, user?.id, isHost])
 
    // -- Troll Prank Definitions ---------------------------------------------
    // Each prank is a temporary effect (�10 s) expressed as a broadcast_active_effects
@@ -5578,7 +5189,7 @@ const toggleMicrophone = useCallback(async () => {
      extraData: Record<string, any>
    }
 
-   const TROLL_PRANKS: TrollPrank[] = [
+   const TROLL_PRANKS = useMemo<TrollPrank[]>(() => [
      {
        name:      'Coin Vanish',
        icon:      '??',
@@ -5627,9 +5238,9 @@ const toggleMicrophone = useCallback(async () => {
        targetUserLabel: 'mirror',
        extraData: { prankType: 'mirror', duration: 10 },
      },
-   ]
+   ], [])
 
-   const handleTroll = useCallback(async () => {
+  const _handleTroll = useCallback(async () => {
      if (!user || !stream || isHost) {
        toast.error('Only viewers can troll during a broadcast!')
        return
@@ -5708,10 +5319,10 @@ const toggleMicrophone = useCallback(async () => {
         console.error('[handleTroll] Error:', err)
         toast.error(err.message || 'Troll failed. Try again!')
       }
-    }, [user, stream, streamId, isHost, trollUsedThisBroadcast, profile?.username, supabase])
+    }, [user, stream, streamId, isHost, trollUsedThisBroadcast, profile?.username, TROLL_PRANKS])
 
    const clickHistoryRef = useRef<number[]>([]);
-   const [isClickBlocked, setIsClickBlocked] = useState(false);
+  const [isClickBlocked, _setIsClickBlocked] = useState(false);
    const [isEnding, setIsEnding] = useState(false);
    const pendingLikesRef = useRef(0);
    const flushInProgressRef = useRef(false);
@@ -5768,7 +5379,7 @@ const toggleMicrophone = useCallback(async () => {
      } finally {
        flushInProgressRef.current = false;
      }
-   }, [stream?.id]);
+  }, [stream?.id, user?.id]);
 
     useEffect(() => {
       const interval = window.setInterval(() => {
@@ -5817,7 +5428,7 @@ const toggleMicrophone = useCallback(async () => {
       if (pendingLikesRef.current >= 25) {
         flushLikes();
       }
-    }, [checkClickRate, isClickBlocked, isHost, navigate, stream, user, flushLikes]);
+    }, [checkClickRate, isClickBlocked, isHost, navigate, user, flushLikes]);
 
   const toggleStreamRgb = useCallback(async () => {
     if (!isHost || !stream) return;
@@ -5839,7 +5450,7 @@ const toggleMicrophone = useCallback(async () => {
 
       toast.error(e.message || "Failed to update RGB setting");
     }
-  }, [isHost, stream, stream?.id, stream?.has_rgb_effect]);
+  }, [isHost, stream]);
 
   const isStaff = useMemo(() => isStaffProfile(profile), [profile])
 
@@ -5860,7 +5471,7 @@ const toggleMicrophone = useCallback(async () => {
     // If in an active random battle, forfeit first so the other broadcaster wins
     if (stream?.is_battle && stream?.battle_id && stream?.battle_mode === 'random_queue' && user?.id) {
       try {
-        const { data: forfeitData, error: forfeitError } = await supabase.rpc('forfeit_random_battle', {
+        const { error: forfeitError } = await supabase.rpc('forfeit_random_battle', {
           p_stream_id: stream.id,
           p_broadcaster_id: user.id,
         });
@@ -5882,7 +5493,7 @@ const toggleMicrophone = useCallback(async () => {
     }
   }, [endBroadcastShutdown, isStaff, isEnding, stream?.id, stream?.status, stream?.is_battle, stream?.battle_id, stream?.battle_mode, user?.id]);
 
-  const handleStartBattle = useCallback(async () => {
+  const _handleStartBattle = useCallback(async () => {
     if (!stream || !isHost) return
     
     try {
@@ -6052,7 +5663,7 @@ const toggleMicrophone = useCallback(async () => {
       if (!targetStream?.id) return;
 
       navigate(`/watch/${targetStream.id}`);
-    } catch (err) {
+    } catch {
 
     } finally {
       trackedTimeout(() => {
@@ -6061,13 +5672,13 @@ const toggleMicrophone = useCallback(async () => {
     }
   }, [navigate, stream?.category, stream?.id]);
 
-  const handleStageTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+  const _handleStageTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (isHost || e.touches.length !== 1) return;
     stageTouchStartYRef.current = e.touches[0].clientY;
     stageTouchCurrentYRef.current = e.touches[0].clientY;
   }, [isHost]);
 
-  const handleStageTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+  const _handleStageTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     // If stageTouchStartYRef is null, the touch started on an interactive element, so don't handle it
     if (isHost || stageTouchStartYRef.current === null) return;
     
@@ -6081,7 +5692,7 @@ const toggleMicrophone = useCallback(async () => {
     }
   }, [isHost]);
 
-  const handleStageTouchEnd = useCallback(() => {
+  const _handleStageTouchEnd = useCallback(() => {
     if (isHost || stageTouchStartYRef.current === null || stageTouchCurrentYRef.current === null) {
       stageTouchStartYRef.current = null;
       stageTouchCurrentYRef.current = null;
@@ -6099,35 +5710,25 @@ const toggleMicrophone = useCallback(async () => {
     stageTouchCurrentYRef.current = null;
   }, [isHost, navigateToAdjacentStream]);
 
-  const memoizedViewerId = useMemo(() => 
-    user?.id || anonymousViewerIdRef.current || undefined,
-    [user?.id, anonymousViewerIdRef.current]
-  );
+  const memoizedViewerId = user?.id || anonymousViewerIdRef.current || undefined
 
-  const activeUserIds = useMemo(() => {
-    const ids: string[] = [];
-
-    return ids;
-  }, [stream?.user_id]);
-
+  const streamUserId = stream?.user_id
   const userProfiles = useMemo(() => {
-    if (!stream) return {};
+    if (!streamUserId) return {};
     const profiles: Record<string, { username: string; avatar_url?: string }> = {};
     
     if (broadcasterProfile) {
-      profiles[stream.user_id] = {
+      profiles[streamUserId] = {
         username: broadcasterProfile.username || 'Broadcaster',
         avatar_url: broadcasterProfile.avatar_url,
       };
     }
     
     return profiles;
-  }, [broadcasterProfile, stream?.user_id]);
+  }, [broadcasterProfile, streamUserId]);
 
   // INSTANT JOIN: Show minimal loading state inline instead of blocking entire page
   // This allows users to see the page immediately while data loads in background
-  const categoryConfig = useMemo(() => getCategoryConfig(stream?.category || 'general'), [stream?.category])
-
   // INSTANT JOIN: Show broadcast content immediately
 
   // Only treat as mobile viewer after mount and when actually on mobile width
@@ -6149,29 +5750,8 @@ const toggleMicrophone = useCallback(async () => {
     likes: Number((stream as any)?.total_likes ?? (stream as any)?.like_count ?? 0),
     coinsEarned: Number((stream as any)?.total_gifts_coins ?? (stream as any)?.coin_earnings ?? 0),
     onStage: 0,
-  }), [
-    viewerCount,
-    audienceViewerCount,
-    stream?.current_viewers,
-    stream?.viewer_count,
-    stream?.total_likes,
-    (stream as any)?.like_count,
-    (stream as any)?.total_gifts_coins,
-    (stream as any)?.coin_earnings,
-    remoteParticipants.size,
-    activeAudienceWithAnon.length,
-  ])
+  }), [viewerCount, audienceViewerCount, stream, remoteParticipants.size, activeAudienceWithAnon.length])
   const liveViewerCount = viewerCount > 0 ? viewerCount : (audienceViewerCount > 0 ? audienceViewerCount : Math.max(remoteParticipants.size, activeAudienceWithAnon.length))
-  const visibleViewerCount = Math.max(viewerCount, activeViewerProfiles.length)
-  const viewerBubbleProfiles = useMemo(() => activeViewerProfiles.map((viewer) => ({
-    id: viewer.user_id,
-    username: viewer.username,
-    avatar_url: viewer.avatar_url,
-  })), [activeViewerProfiles])
-  const broadcastGridRemoteUsers = remoteUsers
-  const handleToggleBattleMode = useCallback(() => setIsBattleMode((active) => !active), [])
-   const handleSwipeUp = useCallback(() => navigateToAdjacentStream('up'), [navigateToAdjacentStream])
-
   const [showViewerList, setShowViewerList] = useState(false)
   const onActiveViewersClick = useCallback(() => {
     setShowViewerList(prev => !prev)
@@ -6309,14 +5889,14 @@ const toggleMicrophone = useCallback(async () => {
             })
 
             void refreshSeats()
-         } catch (err) {
+         } catch {
            toast.error('Failed to remove user from seat')
          }
       }
       void doKick()
     }
 
-   function handleArrest(userId: string, reason?: string) {
+  function _handleArrest(userId: string, reason?: string) {
       const doArrest = async () => {
         try {
           const { error } = await supabase.rpc('arrest_user', { p_user_id: userId, p_reason: reason || 'Manual arrest' })
@@ -6325,7 +5905,7 @@ const toggleMicrophone = useCallback(async () => {
           } else {
             toast.success('User arrested')
           }
-        } catch (err) {
+        } catch {
           toast.error('Failed to arrest user')
         }
       }
@@ -6341,7 +5921,7 @@ const toggleMicrophone = useCallback(async () => {
            } else {
              toast.success('User blocked from stream')
            }
-         } catch (err) {
+         } catch {
            toast.error('Failed to block user')
          }
        }
@@ -6359,7 +5939,7 @@ const toggleMicrophone = useCallback(async () => {
              });
              if (error) throw error;
              toast.success('User muted for 5 minutes')
-           } catch (err) {
+           } catch {
              toast.error('Failed to mute user')
            }
          }
@@ -6377,7 +5957,7 @@ const toggleMicrophone = useCallback(async () => {
              });
              if (error) throw error;
              toast.success('User chat disabled for 5 minutes')
-           } catch (err) {
+           } catch {
              toast.error('Failed to disable chat')
            }
          }
@@ -6435,7 +6015,7 @@ const toggleMicrophone = useCallback(async () => {
     setIsAssignOfficerModalOpen(true)
   }, [isHost]);
 
-  function startDrag(event: React.MouseEvent<HTMLDivElement>): void {
+  function _startDrag(event: React.MouseEvent<HTMLDivElement>): void {
     // Start a horizontal resize for the desktop chat panel
     try {
       event.preventDefault();
@@ -6464,7 +6044,7 @@ const toggleMicrophone = useCallback(async () => {
 
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
-    } catch (err) {
+    } catch {
     }
   }
 
@@ -7191,8 +6771,7 @@ const showFallback =
                       <div className="mt-5 flex flex-col gap-2.5">
                           <button
                             onClick={handleOpenSeatsModal}
-                            disabled
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/15 px-5 py-2.5 text-sm font-black text-cyan-200 transition-all opacity-50 cursor-not-allowed"
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/15 px-5 py-2.5 text-sm font-black text-cyan-200 transition-all hover:bg-cyan-500/25"
                         >
                           <Plus className="h-4 w-4" />
                           Add Seats
@@ -7236,7 +6815,7 @@ const showFallback =
                        })
                      }
 
-                      const seatCameraPublication = matchedParticipant
+                      const _seatCameraPublication = matchedParticipant
                         ? (matchedParticipant as any).getTrackPublication?.(Track.Source.Camera) ||
                           (matchedParticipant as any).videoTrackPublications && Array.from((matchedParticipant as any).videoTrackPublications.values()).find((p: any) => p.source === Track.Source.Camera)
                         : null
@@ -7264,11 +6843,11 @@ const showFallback =
                       const isCameraConnecting = seat.isOccupied && !matchedParticipant && (Date.now() - seatConnectedAt < 8000 || seatConnectedAt === 0)
                       const isCameraUnavailable = seat.isOccupied && !matchedParticipant && seatConnectedAt > 0 && (Date.now() - seatConnectedAt >= 8000)
 
-                      const handleRetrySeat = async () => {
+                      const _handleRetrySeat = async () => {
                         await refreshSeats()
                       }
 
-                      const handleRemoveSeatUser = async () => {
+                      const _handleRemoveSeatUser = async () => {
                         if (!seatActionInfo) return
                         await handleGeneralKick()
                       }
@@ -7438,7 +7017,7 @@ const showFallback =
                    ? getParticipantLabel(matchedParticipant, seat.displayName)
                    : seat.displayName
 
-                  const seatCameraPublication = matchedParticipant
+                  const _seatCameraPublication = matchedParticipant
                     ? (matchedParticipant as any).getTrackPublication?.(Track.Source.Camera) ||
                       (matchedParticipant as any).videoTrackPublications && Array.from((matchedParticipant as any).videoTrackPublications.values()).find((p: any) => p.source === Track.Source.Camera)
                     : null
@@ -7463,8 +7042,8 @@ const showFallback =
                     ? { userId: String(seatActionUserId), username: seatActionUsername, role: undefined, seatSessionId: seat.seatSessionId }
                     : null
 
-                const handleRetrySeat = async () => { await refreshSeats() }
-                const handleRemoveSeatUser = async () => {
+                const _handleRetrySeat = async () => { await refreshSeats() }
+                const _handleRemoveSeatUser = async () => {
                   if (!seatActionInfo) return
                   await handleGeneralKick()
                 }
@@ -8561,7 +8140,7 @@ const showFallback =
                          className="h-10 w-10 flex items-center justify-center rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 transition-all"
                          title="Camera off image"
                        >
-                         <ImageIcon size={18} />
+                         <Image size={18} />
                        </button>
                      </div>
                   </div>
@@ -8579,11 +8158,25 @@ const showFallback =
                     unreadMessageCount={0}
                     onToggleMic={toggleMicrophone}
                     onToggleCamera={toggleCamera}
+                    onUpdateSeatCount={(count) => {
+                      const nextCount = Math.max(0, Math.min(MAX_GUEST_SEATS, count))
+                      const fallbackPrice = normalizeSeatPrice(stream?.seat_price)
+                      const currentPrices = Array.isArray(stream?.seat_prices)
+                        ? stream.seat_prices.slice(1, 1 + nextCount)
+                        : []
+                      const nextPrices = Array.from({ length: nextCount }, (_, index) => {
+                        const existingPrice = currentPrices[index]
+                        return existingPrice !== undefined
+                          ? normalizeSeatPrice(existingPrice)
+                          : fallbackPrice
+                      })
+                      void handleApplySeatConfiguration(nextCount, nextPrices)
+                    }}
                     onFlipCamera={() => {
                       // Flip camera is handled by the local tracks
                       if (localTracks?.[1]) {
                         // Toggle front/back camera
-                        const currentFacing = (localTracks[1] as any)?.mediaStreamTrack?.getSettings?.()?.facingMode;
+                        const _currentFacing = (localTracks[1] as any)?.mediaStreamTrack?.getSettings?.()?.facingMode;
                         // Re-create tracks with opposite facing mode would require more complex logic
                         // For now, this is a placeholder
                       }
@@ -8777,12 +8370,13 @@ const showFallback =
                             </button>
                             <div className="text-center">
                                <div className="text-5xl font-black text-white">{seatModalCount}</div>
-                               <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">Max {6}</div>
+                              <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">Max {MAX_GUEST_SEATS}</div>
                             </div>
                             <button
                               type="button"
-                               onClick={() => setSeatModalCount((value) => Math.min(6, value + 1))}
-                              className="grid h-12 w-12 place-items-center rounded-2xl border border-cyan-300/35 bg-cyan-500/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.18)] transition hover:bg-cyan-500/25"
+                              onClick={() => setSeatModalCount((value) => Math.min(MAX_GUEST_SEATS, value + 1))}
+                              disabled={seatModalCount >= MAX_GUEST_SEATS}
+                              className="grid h-12 w-12 place-items-center rounded-2xl border border-cyan-300/35 bg-cyan-500/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.18)] transition hover:bg-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-40"
                               aria-label="Add one seat"
                             >
                               <Plus className="h-6 w-6" />
@@ -8927,6 +8521,13 @@ const showFallback =
                      hostId={stream?.user_id || ''}
                       currentUserId={user?.id}
                     />
+                ) : canUseFounderModeration && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userActionTarget.userId) ? (
+                  <FounderLiveModerationSheet
+                    targetUserId={userActionTarget.userId}
+                    targetUsername={userActionTarget.username || 'User'}
+                    permissions={founderStatus.permissions}
+                    onClose={handleCloseUserAction}
+                  />
                 ) : (
                 <div className="pointer-events-auto">
                 <UserActionModal
@@ -9706,7 +9307,7 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
         videoElRef.current = el;
         div.innerHTML = '';
         div.appendChild(el);
-      } catch (err) {
+      } catch {
 
         setTimeout(doAttach, 100);
       }
