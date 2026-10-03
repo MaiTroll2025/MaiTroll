@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../../lib/supabase'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, XCircle, CheckCircle, Search } from 'lucide-react'
