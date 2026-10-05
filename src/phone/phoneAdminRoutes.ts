@@ -36,6 +36,8 @@ const LazyCriticalAlerts = lazyWithRetry(() => import('@/pages/admin/CriticalAle
 const LazyMediaLibrary = lazyWithRetry(() => import('@/pages/admin/MediaLibrary'))
 const LazyChatModeration = lazyWithRetry(() => import('@/pages/admin/ChatModeration'))
 const LazyAnnouncements = lazyWithRetry(() => import('@/pages/admin/Announcements'))
+const LazyLaunchTrial = lazyWithRetry(() => import('@/pages/admin/LaunchTrial'))
+const LazyStorePriceEditor = lazyWithRetry(() => import('@/pages/admin/components/StorePriceEditor'))
 
 // Economy & Finance
 const LazyFinanceDashboard = lazyWithRetry(() => import('@/pages/admin/AdminFinanceDashboard'))
@@ -137,7 +139,6 @@ const exactRoutes: Array<[string, PhoneAdminRouteEntry]> = [
 
   // Reports & Support
   ['/admin/reports-queue', { Component: LazyReportsQueue, title: 'Reports Queue' }],
-  ['/admin/reports', { Component: LazyReportsQueue, title: 'Reports Queue' }],
   ['/admin/support-tickets', { Component: LazyAdminSupportTickets, title: 'Support Tickets' }],
   ['/admin/customer-service', { Component: LazyCustomerService, title: 'Customer Service' }],
   ['/admin/appeals', { Component: LazyAppeals, title: 'Appeals' }],
@@ -149,8 +150,9 @@ const exactRoutes: Array<[string, PhoneAdminRouteEntry]> = [
   // Content & Media
   ['/admin/media-library', { Component: LazyMediaLibrary, title: 'Media Library' }],
   ['/admin/chat-moderation', { Component: LazyChatModeration, title: 'Chat Moderation' }],
-  ['/admin/moderation', { Component: LazyChatModeration, title: 'Chat Moderation' }],
   ['/admin/announcements', { Component: LazyAnnouncements, title: 'Announcements' }],
+  ['/admin/launch-trial', { Component: LazyLaunchTrial, title: 'Launch Trial' }],
+  ['/admin/store-pricing', { Component: LazyStorePriceEditor, title: 'Store Pricing' }],
 
   // Economy & Finance
   ['/admin/finance', { Component: LazyFinanceDashboard, title: 'Finance Dashboard' }],
@@ -204,7 +206,6 @@ const exactRoutes: Array<[string, PhoneAdminRouteEntry]> = [
   ['/admin/earnings', { Component: LazyAdminEarningsDashboard, title: 'Earnings Dashboard' }],
   ['/admin/docs/policies', { Component: LazyAdminPoliciesDocs, title: 'Policy Docs' }],
   ['/admin/policies', { Component: LazyAdminPoliciesDocs, title: 'Policy Docs' }],
-  ['/admin/settings', { Component: LazyAdminPoliciesDocs, title: 'Admin Settings' }],
   ['/admin/marketplace', { Component: LazyAdminMarketplace, title: 'Admin Marketplace' }],
   ['/admin/marketplace/release-requests', { Component: LazyMarketplaceReleaseRequests, title: 'Release Requests' }],
   ['/admin/troll-town-deeds', { Component: LazyTrollTownDeeds, title: 'Troll Town Deeds' }],
