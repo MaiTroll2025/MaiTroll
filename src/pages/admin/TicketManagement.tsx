@@ -40,7 +40,7 @@ export default function TicketManagement() {
 
       if (error) throw error
 
-      const rows = (data as Ticket[]) || []
+      let rows = (data as Ticket[]) || []
 
       if (filterStatus !== 'all') {
         rows = rows.filter(t => t.status === filterStatus)
