@@ -24,6 +24,12 @@ interface SubscriberRecord {
   is_active: boolean;
 }
 
+interface DiscountTier {
+  id: string;
+  name: string;
+  maipiks_discount_percent: number;
+}
+
 const COLORS = ['#6B7280', '#3B82F6', '#8B5CF6', '#F59E0B'];
 
 export default function SubAnalytics() {
@@ -32,6 +38,9 @@ export default function SubAnalytics() {
   const [topBroadcasters, setTopBroadcasters] = useState<any[]>([]);
   const [recentSubscriptions, setRecentSubscriptions] = useState<SubscriberRecord[]>([]);
   const [tierBreakdown, setTierBreakdown] = useState<any[]>([]);
+  const [discountTiers, setDiscountTiers] = useState<DiscountTier[]>([]);
+  const [discountInputs, setDiscountInputs] = useState<Record<string, string>>({});
+  const [savingTierId, setSavingTierId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
 
@@ -62,7 +71,7 @@ export default function SubAnalytics() {
           startDate = new Date(0).toISOString();
       }
 
-      const [platformStatsData, topBroadcasterData, recentSubsData, tierData] = await Promise.all([
+      const [platformStatsData, topBroadcasterData, recentSubsData, tierData, discountTiersData] = await Promise.all([
         supabase.rpc('get_platform_subscription_stats'),
         supabase
           .from('user_profiles')
@@ -94,6 +103,11 @@ export default function SubAnalytics() {
           `)
           .eq('is_active', true)
           .gte('started_at', startDate)
+        ,
+        supabase
+          .from('subscription_tiers')
+          .select('id, name, maipiks_discount_percent')
+          .order('sort_order', { ascending: true })
       ])
 
       if (platformStatsData.data) {
@@ -122,11 +136,43 @@ export default function SubAnalytics() {
         tierMap[name].count++;
       });
       setTierBreakdown(Object.values(tierMap).sort((a: any, b: any) => b.count - a.count));
+      const discountTierRows = (discountTiersData.data || []) as DiscountTier[];
+      setDiscountTiers(discountTierRows);
+      setDiscountInputs(Object.fromEntries(
+        discountTierRows.map((tier) => [tier.id, String(tier.maipiks_discount_percent ?? 0)])
+      ));
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast.error('Failed to load analytics');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveMaiPiksDiscount = async (tier: DiscountTier) => {
+    const value = Number(discountInputs[tier.id]);
+    if (!Number.isInteger(value) || value < 0 || value > 100) {
+      toast.error('Enter a whole-number discount from 0 to 100');
+      return;
+    }
+
+    setSavingTierId(tier.id);
+    try {
+      const { data, error } = await supabase.rpc('admin_set_subscription_maipiks_discount', {
+        p_tier_id: tier.id,
+        p_discount_percent: value,
+      });
+      if (error || !(data as any)?.success) {
+        throw new Error((data as any)?.error || error?.message || 'Could not save the tier discount');
+      }
+      setDiscountTiers((previous) => previous.map((row) => (
+        row.id === tier.id ? { ...row, maipiks_discount_percent: value } : row
+      )));
+      toast.success(`${tier.name} Mai Piks discount saved`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save the tier discount');
+    } finally {
+      setSavingTierId(null);
     }
   };
 
@@ -186,6 +232,45 @@ export default function SubAnalytics() {
             </button>
           </div>
         </div>
+
+        <section className="rounded-xl border border-orange-500/20 bg-slate-900/50 p-5">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-white">Mai Piks subscriber discounts</h2>
+            <p className="mt-1 text-sm text-slate-400">Set the platform discount applied to paid stories for each active subscription tier.</p>
+          </div>
+          <div className="divide-y divide-white/5">
+            {discountTiers.map((tier) => (
+              <div key={tier.id} className="flex flex-wrap items-center gap-3 py-3">
+                <span className="min-w-24 flex-1 text-sm font-semibold text-white">{tier.name}</span>
+                <label className="flex items-center gap-2 text-xs text-slate-400">
+                  <span>Discount</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    aria-label={`${tier.name} Mai Piks discount percent`}
+                    value={discountInputs[tier.id] ?? String(tier.maipiks_discount_percent)}
+                    onChange={(event) => setDiscountInputs((previous) => ({ ...previous, [tier.id]: event.target.value }))}
+                    className="w-20 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1.5 text-right text-sm text-white"
+                  />
+                  %
+                </label>
+                <button
+                  type="button"
+                  onClick={() => void saveMaiPiksDiscount(tier)}
+                  disabled={savingTierId === tier.id}
+                  className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-bold text-cyan-200 disabled:opacity-50"
+                >
+                  {savingTierId === tier.id ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            ))}
+            {discountTiers.length === 0 && (
+              <p className="py-4 text-sm text-slate-500">No subscription tiers are configured.</p>
+            )}
+          </div>
+        </section>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

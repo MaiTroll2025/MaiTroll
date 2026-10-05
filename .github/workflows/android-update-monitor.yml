@@ -1,0 +1,30 @@
+name: Android production update monitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-production-update-monitor
+  cancel-in-progress: false
+
+jobs:
+  check-production-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Google Play production release
+        env:
+          MONITOR_URL: ${{ vars.ANDROID_UPDATE_MONITOR_URL }}
+          MONITOR_SECRET: ${{ secrets.ANDROID_UPDATE_MONITOR_SECRET }}
+        run: |
+          test -n "$MONITOR_URL" || { echo "ANDROID_UPDATE_MONITOR_URL is not configured"; exit 1; }
+          test -n "$MONITOR_SECRET" || { echo "ANDROID_UPDATE_MONITOR_SECRET is not configured"; exit 1; }
+          curl --fail-with-body --silent --show-error \
+            --request POST "$MONITOR_URL" \
+            --header "Authorization: Bearer $MONITOR_SECRET" \
+            --header "Content-Type: application/json" \
+            --data '{}'

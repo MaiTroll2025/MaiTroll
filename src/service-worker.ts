@@ -308,7 +308,7 @@ self.addEventListener('push', (event) => {
     image: notificationData.image,
     tag: notificationData.tag || 'troll-city-notification',
     requireInteraction: notificationData.requireInteraction || false,
-    silent: notificationData.silent || false,
+    silent: notificationData.silent === true,
     vibrate: notificationData.vibrate || [200, 100, 200],
     data: {
       url: notificationData.url || '/',

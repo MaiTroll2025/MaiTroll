@@ -1,5 +1,5 @@
-import React from 'react'
+import Notifications from '../../pages/Notifications'
 
 export default function MobileNotificationsPage() {
-  return <div>Mobile Notifications Page</div>
+  return <Notifications compact />
 }

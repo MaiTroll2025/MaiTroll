@@ -3,9 +3,24 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import useSEO from '@/hooks/useSEO'
+import HashtagCaption from '@/components/HashtagCaption'
 import { Users, Radio, Store, Award, Gavel, Newspaper, Hash, FileText, User as UserIcon, Search, Briefcase, BookOpen, Shield, Heart } from 'lucide-react'
 
 type TabKey = 'all' | 'posts' | 'users' | 'streams' | 'stores' | 'broadcasters' | 'auctions' | 'articles' | 'hashtags' | 'pages'
+
+interface MaiPiksSearchResult {
+  content_type: 'post' | 'story'
+  content_id: string
+  creator_id: string
+  username: string
+  avatar_url: string | null
+  media_path: string | null
+  media_type: 'photo' | 'video'
+  caption: string | null
+  created_at: string
+  expires_at: string | null
+  media_url?: string | null
+}
 
 const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: 'all', label: 'All', icon: Search },
@@ -46,9 +61,9 @@ export default function ExploreSearchResults() {
   const [auctions, setAuctions] = useState<any[]>([])
   const [articles, setArticles] = useState<any[]>([])
   const [hashtags, setHashtags] = useState<{ tag: string; count: number }[]>([])
+  const [maiPiksResults, setMaiPiksResults] = useState<MaiPiksSearchResult[]>([])
   const [pages] = useState<{ title: string; path: string; icon: any; color: string }[]>([
     { title: 'Careers', path: '/careers', icon: Briefcase, color: 'text-amber-300' },
-    { title: 'Academy', path: '/academy', icon: BookOpen, color: 'text-emerald-300' },
     { title: 'Support', path: '/support', icon: Shield, color: 'text-sky-300' },
     { title: 'Troll Court', path: '/troll-court', icon: Gavel, color: 'text-violet-300' },
     { title: 'Church', path: '/church', icon: Heart, color: 'text-pink-300' },
@@ -94,6 +109,22 @@ export default function ExploreSearchResults() {
       setBroadcasters(broadRes.data || [])
       setAuctions(auctionsRes.data || [])
       setArticles(articlesRes.data || [])
+
+      if (term.startsWith('#')) {
+        const { data: maiPiksData, error: maiPiksError } = await supabase.rpc('search_maipiks_by_hashtag', {
+          p_tag: term,
+          p_limit: 20,
+        })
+        if (maiPiksError) throw maiPiksError
+        const signedMaiPiks = await Promise.all(((maiPiksData || []) as MaiPiksSearchResult[]).map(async (item) => {
+          if (!item.media_path) return { ...item, media_url: null }
+          const { data: signed, error } = await supabase.storage.from('maipiks').createSignedUrl(item.media_path, 60 * 60)
+          return { ...item, media_url: error ? null : signed?.signedUrl || null }
+        }))
+        setMaiPiksResults(signedMaiPiks.filter((item) => item.media_url))
+      } else {
+        setMaiPiksResults([])
+      }
 
       // Hashtags: count distinct users per tag from recent posts
       const tagCounts: Record<string, Set<string>> = {}
@@ -177,6 +208,26 @@ export default function ExploreSearchResults() {
                     </div>
                   ))}
                 </div>
+              </Section>
+            )}
+
+            {showSection('posts') && maiPiksResults.length > 0 && (
+              <Section title="Mai Piks">
+                <Grid>
+                  {maiPiksResults.map((item) => (
+                    <article key={`${item.content_type}-${item.content_id}`} className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+                      {item.media_type === 'video' ? (
+                        <video src={item.media_url || undefined} controls playsInline className="aspect-square w-full bg-black object-contain" />
+                      ) : (
+                        <img src={item.media_url || ''} alt="Mai Piks hashtag result" loading="lazy" className="aspect-square w-full bg-black object-contain" />
+                      )}
+                      <div className="p-3">
+                        <Link to={`/profile/${encodeURIComponent(item.username)}?tab=maipiks`} className="text-xs font-bold text-cyan-200">@{item.username}</Link>
+                        {item.caption && <p className="mt-1 line-clamp-3 text-xs text-slate-300"><HashtagCaption text={item.caption} /></p>}
+                      </div>
+                    </article>
+                  ))}
+                </Grid>
               </Section>
             )}
 

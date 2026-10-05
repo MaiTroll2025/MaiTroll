@@ -1078,13 +1078,9 @@ const handleViewProfile = () => {
                   <option value="temp_admin">Temp Admin</option>
                   <option value="executive_secretary">Executive Secretary</option>
                   <option value="marketing_readonly">Marketing Read Only</option>
-                  <option value="superadmin">Super Admin</option>
-                  <option value="ceo">CEO</option>
-                  <option value="academy_teacher">Academy Teacher</option>
-                  <option value="academy_student">Academy Student</option>
-                  <option value="academy_director">Academy Director</option>
-                  <option value="admissions_officer">Admissions Officer</option>
-                </select>
+                   <option value="superadmin">Super Admin</option>
+                   <option value="ceo">CEO</option>
+                 </select>
               </div>
 
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">

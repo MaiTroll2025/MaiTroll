@@ -821,7 +821,11 @@ function resolveNotificationDestination(
 
 type ViewMode = 'list' | 'byUser'
 
-export default function Notifications() {
+interface NotificationsProps {
+  compact?: boolean
+}
+
+export default function Notifications({ compact = false }: NotificationsProps) {
   const { profile } = useAuthStore()
   const navigate = useNavigate()
 
@@ -1550,7 +1554,7 @@ case 'stream_live':
   }
 
   return (
-    <div className="min-h-screen bg-[#050714] px-4 pb-8 pt-24 text-white md:px-8">
+    <div className={cn('min-h-screen bg-[#050714] px-4 pb-8 text-white md:px-8', compact ? 'pt-4' : 'pt-24')}>
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(217,70,239,0.14),transparent_36%)]" />
       <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px] opacity-15" />
 

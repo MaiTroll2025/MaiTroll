@@ -68,13 +68,16 @@ import UtromailMessagePopup from '@/components/messaging/UtromailMessagePopup'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { moderation } from '@/services/maitrollModeration'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { registerNativePush } from '@/lib/nativePush'
+import PhoneHeader from './PhoneHeader'
 import PhoneStore from './pages/PhoneStore'
 import PetFloatingButton from '../components/pets/PetFloatingButton'
 import MaiLifePage from '../pages/MaiLifePage'
 import TrollAnimalShelterPage from '../pages/TrollAnimalShelterPage'
 import OwnerPage from '../pages/OwnerPage'
+
+const PhoneNotifications = lazy(() => import('../pages/Notifications'))
 
 function GlobalUtromailPopup() {
   const popup = useUtromailMessagePopup()
@@ -213,6 +216,23 @@ export default function PhoneApp() {
             <Route path="/coins" element={<PhoneCoins />} />
             <Route path="/wallet" element={<PhoneMaiPay />} />
             <Route path="/profile" element={<PhoneProfile />} />
+            <Route
+              path="/notifications"
+              element={
+                <>
+                  <PhoneHeader showTickerLinks={false} />
+                  <Suspense
+                    fallback={
+                      <div className="flex min-h-[60vh] items-center justify-center bg-[#050714] text-sm text-slate-400">
+                        Loading notifications...
+                      </div>
+                    }
+                  >
+                    <PhoneNotifications compact />
+                  </Suspense>
+                </>
+              }
+            />
             <Route path="/mai-life" element={<MaiLifePage />} />
             <Route path="/troll-animal-shelter" element={<TrollAnimalShelterPage />} />
             <Route path="/owner" element={<OwnerPage />} />

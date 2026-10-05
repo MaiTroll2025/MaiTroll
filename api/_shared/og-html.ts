@@ -10,6 +10,8 @@ export interface OGMetaOptions {
   videoUrl?: string | null
   twitterCard?: string
   twitterPlayerUrl?: string | null
+  /** Twitter/X handle including the @, e.g. "@maitroll". Omitted when unknown. */
+  twitterSite?: string | null
   /** Override the auto-generated OG image URL */
   ogImageUrl?: string | null
 }
@@ -18,7 +20,7 @@ export interface OGMetaOptions {
  * Build a dynamic OG image URL pointing to our Vercel edge functions.
  */
 export function buildOGImageUrl(params: {
-  kind: 'profile' | 'tcnn' | 'academy'
+  kind: 'profile' | 'tcnn'
   id?: string
   slug?: string
   username?: string
@@ -33,11 +35,6 @@ export function buildOGImageUrl(params: {
     if (params.id) sp.set('id', params.id)
     if (params.slug) sp.set('slug', params.slug)
     return `${base}/tcnn?${sp.toString()}`
-  }
-  if (params.kind === 'academy') {
-    if (params.id) sp.set('id', params.id)
-    if (params.slug) sp.set('slug', params.slug)
-    return `${base}/academy?${sp.toString()}`
   }
   return `${APP_URL}/images/mai-troll-preview.png`
 }
@@ -66,6 +63,7 @@ export function generateOGHTML(data: OGMetaOptions): string {
     videoUrl,
     twitterCard = 'summary_large_image',
     twitterPlayerUrl,
+    twitterSite,
     ogImageUrl,
   } = data
 
@@ -105,7 +103,7 @@ export function generateOGHTML(data: OGMetaOptions): string {
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${esc(ogImage)}">
   <meta name="twitter:image:alt" content="${esc(title)}">
-  ${site ? `<meta name="twitter:site" content="${esc(site)}">` : ''}
+  ${twitterSite ? `<meta name="twitter:site" content="${esc(twitterSite)}">` : ''}
 
   ${twitterPlayerUrl ? `
   <meta name="twitter:player" content="${esc(twitterPlayerUrl)}">

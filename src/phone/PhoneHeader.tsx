@@ -43,6 +43,14 @@ export default function PhoneHeader({
     }
 
     try {
+      const { data: unreadTotal, error: countError } = await supabase.rpc(
+        'get_unread_notification_count',
+        { p_user_id: profile.id },
+      )
+      if (!countError && typeof unreadTotal === 'number') {
+        setUnreadCount(unreadTotal)
+      }
+
       const { data, error } = await supabase
         .from('notifications')
         .select('id, type, title, message, created_at, is_read, metadata')
@@ -54,7 +62,9 @@ export default function PhoneHeader({
 
       const notifs = data || []
       setNotifications(notifs)
-      setUnreadCount(notifs.filter(n => !n.is_read).length)
+      if (countError || typeof unreadTotal !== 'number') {
+        setUnreadCount(notifs.filter(n => !n.is_read).length)
+      }
     } catch (error) {
       console.error('Failed to load notifications:', error)
     } finally {
@@ -85,6 +95,16 @@ export default function PhoneHeader({
           event: 'UPDATE',
           schema: 'public',
           table: 'notifications',
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => fetchNotifications()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'jail_notifications',
           filter: `user_id=eq.${profile.id}`,
         },
         () => fetchNotifications()

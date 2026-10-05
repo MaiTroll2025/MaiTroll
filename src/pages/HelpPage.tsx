@@ -25,7 +25,6 @@ const PAGE_GUIDE: Record<string, { label: string; icon: any; desc: string; roles
   '/auctions': { label: 'Live Auctions', icon: Gavel, desc: 'Bid on items in live auctions.' },
   '/troll-court': { label: 'Troll Court', icon: Scale, desc: 'Court sessions, cases, and appeals.' },
   '/hytrogaming': { label: 'HydroGaming', icon: Gamepad2, desc: 'Gaming streams and community.' },
-  '/academy': { label: 'Academy', icon: GraduationCap, desc: 'Courses, classes, and certifications.' },
   '/mai-pay': { label: 'MAI Pay', icon: DollarSign, desc: 'Payments, cashouts, and financial tools.' },
   '/leaderboard': { label: 'Leaderboard', icon: Trophy, desc: 'Top users by XP, coins, and activity.' },
   '/family/home': { label: 'Troll Family', icon: Users, desc: 'Your family, chat, and family features.' },
@@ -84,7 +83,7 @@ export default function HelpPage() {
     { title: 'General', paths: ['/home', '/search', '/explore', '/notifications', '/profile', '/safety'] },
     { title: 'Media & Social', paths: ['/broadcast/setup', '/treelz', '/podcast', '/utromail', '/family/home', '/match'] },
     { title: 'Economy', paths: ['/store', '/mai-pay', '/leaderboard', '/marketplace', '/inventory', '/auctions', '/troll-wheel'] },
-    { title: 'Games & Learning', paths: ['/hytrogaming', '/academy', '/ktauto', '/jobs'] },
+    { title: 'Games & Learning', paths: ['/hytrogaming', '/ktauto', '/jobs'] },
     { title: 'City & Government', paths: ['/church', '/troll-court', '/government'] },
     { title: 'Staff & Admin', paths: ['/admin', '/admin/chat-moderation', '/admin/jail-management', '/admin/reports-queue', '/admin/stream-monitor', '/officer/dashboard', '/lead-officer', '/secretary', '/president'] },
   ]

@@ -5,8 +5,7 @@ import { post, API_ENDPOINTS } from '../lib/api'
 import { toast } from 'sonner'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
-import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Building2, Phone, Globe, MapPin, GraduationCap, Briefcase, Shield, Users, ChevronDown, ChevronUp } from 'lucide-react'
-import { validateInstitutionEmail } from '../lib/schoolValidation'
+import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Shield, Users, ChevronDown, ChevronUp } from 'lucide-react'
 import NavBubble from '../components/NavBubble';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { generateUUID } from '../lib/uuid';
@@ -31,9 +30,9 @@ function RoleDropdown({
 }: {
   label: string;
   icon: React.ComponentType<any>;
-  options: Array<{ value: 'student' | 'user' | 'instructor' | 'staff' | 'admin'; label: string; icon: React.ComponentType<any> }>;
-  value: 'student' | 'user' | 'instructor' | 'staff' | 'admin';
-  onChange: (v: 'student' | 'user' | 'instructor' | 'staff' | 'admin') => void;
+  options: Array<{ value: 'user' | 'staff' | 'admin'; label: string; icon: React.ComponentType<any> }>;
+  value: 'user' | 'staff' | 'admin';
+  onChange: (v: 'user' | 'staff' | 'admin') => void;
   className?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -213,7 +212,7 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 const [showPassword, setShowPassword] = useState(false)
    const [platform] = useState('')
-  const [selectedRole, setSelectedRole] = useState<'student' | 'user' | 'instructor' | 'staff' | 'admin'>('student')
+  const [selectedRole, setSelectedRole] = useState<'user' | 'staff' | 'admin'>('user')
 
   // Force Sign In mode for Staff and Admin roles (no public signup)
   useEffect(() => {
@@ -223,17 +222,7 @@ const [showPassword, setShowPassword] = useState(false)
   }, [selectedRole])
 
   const [roleEmailError, setRoleEmailError] = useState('')
-   const [institutionName, setInstitutionName] = useState('')
-   const [institutionEmail, setInstitutionEmail] = useState('')
-   const [institutionDomain, setInstitutionDomain] = useState('')
-   const [schoolValidationResult, setSchoolValidationResult] = useState<any>(null)
-   const [validatingSchool, setValidatingSchool] = useState(false)
-   const [studentInstitutionName, setStudentInstitutionName] = useState('')
-   const [studentInstitutionEmail, setStudentInstitutionEmail] = useState('')
-   const [studentInstitutionDomain, setStudentInstitutionDomain] = useState('')
-   const [studentValidationResult, setStudentValidationResult] = useState<any>(null)
-   const [validatingStudentSchool, setValidatingStudentSchool] = useState(false)
-   const [showAlertAdmin, setShowAlertAdmin] = useState(false)
+  const [showAlertAdmin, setShowAlertAdmin] = useState(false)
   const [alertEmail, setAlertEmail] = useState('')
   const [alertDetails, setAlertDetails] = useState('')
   const [alertSubmitting, setAlertSubmitting] = useState(false)
@@ -389,80 +378,9 @@ const [showPassword, setShowPassword] = useState(false)
     }
   }, [email, selectedRole, isLogin])
 
-  // Validate institution fields when instructor mode is selected
-  React.useEffect(() => {
-    if (selectedRole !== 'instructor') {
-      return
-    }
-
-    if (!institutionName.trim()) {
-      setRoleEmailError('Institution name is required')
-    } else if (!institutionEmail.trim()) {
-      setRoleEmailError('Institution email is required')
-    } else {
-      setRoleEmailError('')
-    }
-  }, [institutionName, institutionEmail, selectedRole])
-
-  // Validate institution fields when student mode is selected
-  React.useEffect(() => {
-    if (selectedRole !== 'student') {
-      return
-    }
-
-    if (!studentInstitutionName.trim()) {
-      setRoleEmailError('School name is required')
-    } else if (!studentInstitutionEmail.trim()) {
-      setRoleEmailError('School email is required')
-    } else {
-      setRoleEmailError('')
-    }
-  }, [studentInstitutionName, studentInstitutionEmail, selectedRole])
-
-  // Validate institution email domain on blur for instructor signup
-  React.useEffect(() => {
-    if (selectedRole !== 'instructor' || !institutionEmail.trim()) {
-      setSchoolValidationResult(null)
-      return
-    }
-
-    setValidatingSchool(true)
-    validateInstitutionEmail(institutionEmail.trim())
-      .then((result) => {
-        setSchoolValidationResult(result)
-      })
-      .catch(() => {
-        setSchoolValidationResult(null)
-      })
-      .finally(() => {
-        setValidatingSchool(false)
-      })
-  }, [institutionEmail, selectedRole])
-
-  // Validate institution email domain on blur for student signup
-  React.useEffect(() => {
-    if (selectedRole !== 'student' || !studentInstitutionEmail.trim()) {
-      setStudentValidationResult(null)
-      return
-    }
-
-    setValidatingStudentSchool(true)
-    validateInstitutionEmail(studentInstitutionEmail.trim())
-      .then((result) => {
-        setStudentValidationResult(result)
-      })
-      .catch(() => {
-        setStudentValidationResult(null)
-      })
-      .finally(() => {
-        setValidatingStudentSchool(false)
-      })
-  }, [studentInstitutionEmail, selectedRole])
-
   const landingForProfile = (prof: any) => {
     const userRole = prof?.role || prof?.troll_role
     if (userRole === 'troll_family') return '/family/home'
-    if (userRole === 'student' || prof?.is_org_student) return '/home'
     return '/home'
   }
 
@@ -521,32 +439,7 @@ try {
           return
         }
 
-        // Check institution fields if signing up as instructor
-        if (selectedRole === 'instructor' && !institutionName.trim()) {
-          toast.error('Institution name is required')
-          setLoading(false)
-          return
-        }
-        if (selectedRole === 'instructor' && !institutionEmail.trim()) {
-          toast.error('Institution email is required')
-          setLoading(false)
-          return
-        }
-
-        // Check institution fields if signing up as student
-        if (selectedRole === 'student' && !studentInstitutionName.trim()) {
-          toast.error('School name is required')
-          setLoading(false)
-          return
-        }
-        if (selectedRole === 'student' && !studentInstitutionEmail.trim()) {
-          toast.error('School email is required')
-          setLoading(false)
-          return
-        }
-
-        // Use instructor credentials for instructor signup; otherwise use user-provided
-        const finalEmail = selectedRole === 'instructor' ? institutionEmail.trim() : email.trim()
+        const finalEmail = email.trim()
         const finalPassword = password
         const finalUsername = username.trim()
 
@@ -563,24 +456,6 @@ try {
           }
         }
 
-        // Include institution details if signing up as instructor
-        if (selectedRole === 'instructor') {
-          signupData.institution_data = {
-            name: institutionName.trim(),
-            email: institutionEmail.trim(),
-            domain: institutionDomain.trim() || (institutionEmail.trim().split('@')[1]?.toLowerCase() || '')
-          }
-        }
-
-        // Include institution details if signing up as student
-        if (selectedRole === 'student') {
-          signupData.institution_data = {
-            name: studentInstitutionName.trim(),
-            email: studentInstitutionEmail.trim(),
-            domain: studentInstitutionDomain.trim() || (studentInstitutionEmail.trim().split('@')[1]?.toLowerCase() || '')
-          }
-        }
-
         const { success, error: signUpError } = await post(API_ENDPOINTS.auth.signup, signupData)
 
         if (!success || signUpError) {
@@ -591,10 +466,7 @@ try {
         }
 
         toast.success('Account created! Logging you in...')
-        // Use instructor/student credentials for instructor/student signup
-        const loginEmail = (selectedRole === 'instructor' || selectedRole === 'student') 
-          ? (selectedRole === 'instructor' ? institutionEmail.trim() : studentInstitutionEmail.trim()) 
-          : email.trim()
+        const loginEmail = email.trim()
         const loginPassword = password
         await executeLogin(loginEmail, loginPassword)
 
@@ -756,23 +628,13 @@ try {
 {/* Role Selection Dropdowns */}
           <div className="space-y-4 mb-8 w-full max-w-md">
             <RoleDropdown
-              label="Institution Access"
-              icon={Building2}
-              value={['student', 'instructor', 'staff'].includes(selectedRole) ? selectedRole : 'student'}
-              onChange={setSelectedRole}
-              options={[
-                { value: 'student', label: 'Student', icon: GraduationCap },
-                { value: 'instructor', label: 'Instructor', icon: Briefcase },
-                { value: 'staff', label: 'Staff', icon: Shield },
-              ]}
-            />
-            <RoleDropdown
-              label="Personal Access"
-              icon={User}
-              value={['user', 'admin'].includes(selectedRole) ? selectedRole : 'user'}
+              label="Access Type"
+              icon={Shield}
+              value={selectedRole}
               onChange={setSelectedRole}
               options={[
                 { value: 'user', label: 'User', icon: Users },
+                { value: 'staff', label: 'Staff', icon: Shield },
                 { value: 'admin', label: 'Admin', icon: Shield },
               ]}
             />
@@ -919,8 +781,8 @@ try {
                     </button>
                   </div>
 
-                  {/* Username Input (Sign Up Only, shown for student/instructor) */}
-                  {!isLogin && selectedRole !== 'staff' && selectedRole !== 'admin' && (
+                   {/* Username Input (Sign Up Only, shown for user) */}
+                   {!isLogin && selectedRole !== 'staff' && selectedRole !== 'admin' && (
                     <div className="relative group">
                       <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
                       <input
@@ -1061,15 +923,12 @@ try {
                         </div>
                       )}
 
-                      <div className="text-sm text-slate-400 mb-4">
-                        {selectedRole === 'student' && 'Create your account to access the city.'}
-                        {selectedRole === 'user' && !isLogin && 'Create your account — $1 administration fee required.'}
-                        {selectedRole === 'user' && isLogin && 'Sign in to access your account.'}
-                        {selectedRole === 'instructor' && !isLogin && 'Sign up to teach at your institution.'}
-                        {selectedRole === 'instructor' && isLogin && 'Sign in with your institution credentials.'}
-                        {selectedRole === 'staff' && 'Staff sign in only — no public sign up available.'}
-                        {selectedRole === 'admin' && 'Admin sign in only — no public sign up available.'}
-                      </div>
+                       <div className="text-sm text-slate-400 mb-4">
+                         {selectedRole === 'user' && !isLogin && 'Create your account — $1 administration fee required.'}
+                         {selectedRole === 'user' && isLogin && 'Sign in to access your account.'}
+                         {selectedRole === 'staff' && 'Staff sign in only — no public sign up available.'}
+                         {selectedRole === 'admin' && 'Admin sign in only — no public sign up available.'}
+                       </div>
 
                      {/* Terms Acceptance (Sign Up Only) */}
                     {!isLogin && (

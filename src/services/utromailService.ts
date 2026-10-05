@@ -475,8 +475,7 @@ export const sendMessage = async (params: {
       await supabase.from('utromail_notifications').insert({
         user_id: params.recipientId,
         message_id: message.id,
-        notification_type: params.messageType === 'academy_notification' ? 'academy_mail' :
-                           params.messageType === 'government' ? 'government_mail' : 'new_message',
+        notification_type: params.messageType === 'government' ? 'government_mail' : 'new_message',
       });
       if (import.meta.env.DEV) console.log('[sendMessage] Notification created for recipient:', params.recipientId);
     } catch (notifErr) {
@@ -577,7 +576,7 @@ export const searchUsers = async (query: string): Promise<MailSearchResult['user
   return (data || []).map((u: any) => ({
     ...u,
     is_staff: u.is_admin || ['admin','ceo','superadmin','troll_officer','lead_troll_officer','secretary',
-      'academy_teacher','academy_director','admissions_officer','moderator','attorney','prosecutor'].includes(u.role),
+      'moderator','attorney','prosecutor'].includes(u.role),
   }));
 };
 

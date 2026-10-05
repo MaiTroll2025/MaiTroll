@@ -20,7 +20,7 @@ export interface BuildingMeta {
 }
 
 interface BuildingMetaExtended extends BuildingMeta {
-  type?: 'home' | 'arcade' | 'bank' | 'school' | 'court' | 'standard' | 'achievement'
+  type?: 'home' | 'arcade' | 'bank' | 'court' | 'standard' | 'achievement'
 }
 
 const DEFAULT_BUILDINGS: BuildingMetaExtended[] = [
@@ -33,7 +33,6 @@ const DEFAULT_BUILDINGS: BuildingMetaExtended[] = [
   { label: 'Hytro Arcade', to: '/hytrogaming', type: 'arcade' },
   { label: 'MAI Pay', to: '/mai-pay', type: 'bank' },
   { label: 'Leaders', to: '/leaderboard', type: 'achievement' },
-  { label: 'MAi School', to: '/school', type: 'school' },
 ]
 
 type Material = 'brick' | 'glass' | 'concrete' | 'stone' | 'darkGlass'
@@ -305,7 +304,7 @@ interface Building {
     person: boolean
     flicker: number
   }[]
-  buildingType: 'home' | 'arcade' | 'bank' | 'school' | 'court' | 'standard' | 'achievement'
+  buildingType: 'home' | 'arcade' | 'bank' | 'court' | 'standard' | 'achievement'
 }
 
 function generateBuildings(
@@ -321,18 +320,14 @@ function generateBuildings(
     const buildingType = metas[i].type || 'standard'
 
     // Give each landmark a silhouette that matches what it actually is.
-    // Homes stay short and wide, schools are broad low campuses, and banks
-    // have a more substantial civic footprint. Other buildings keep the
-    // original randomized skyline proportions.
+    // Homes stay short and wide, and banks have a more substantial civic
+    // footprint. Other buildings keep the original randomized skyline proportions.
     let width: number
     let height: number
 
     if (buildingType === 'home') {
       width = segmentWidth * (0.52 + Math.random() * 0.16)
       height = 105 + Math.random() * 55
-    } else if (buildingType === 'school') {
-      width = segmentWidth * (0.78 + Math.random() * 0.14)
-      height = 125 + Math.random() * 45
     } else if (buildingType === 'bank') {
       width = segmentWidth * (0.72 + Math.random() * 0.18)
       height = 155 + Math.random() * 70
@@ -349,8 +344,6 @@ function generateBuildings(
       material = 'stone'
     } else if (buildingType === 'arcade') {
       material = 'darkGlass'
-    } else if (buildingType === 'school') {
-      material = 'brick'
     } else if (buildingType === 'home') {
       material = 'brick'
     } else {
@@ -370,11 +363,6 @@ function generateBuildings(
       cols = Math.max(2, Math.floor(width / 34))
       rows = Math.max(1, Math.min(2, Math.floor(height / 48)))
       winW = 15
-      winH = 18
-    } else if (buildingType === 'school') {
-      cols = Math.max(4, Math.floor(width / 34))
-      rows = Math.max(2, Math.min(3, Math.floor(height / 42)))
-      winW = 16
       winH = 18
     } else if (buildingType === 'bank') {
       cols = Math.max(4, Math.floor(width / 38))
@@ -1370,78 +1358,6 @@ function drawBuildingDecorations(
     : 'rgba(75,55,45,0.95)'
 
   switch (building.buildingType) {
-    case 'school': {
-      // A recognizable school: broad campus silhouette, pitched center roof,
-      // central entrance, windows arranged like classrooms, and a flagpole.
-      ctx.fillStyle = roofColor
-      ctx.beginPath()
-      ctx.moveTo(building.x - 4, top + 5)
-      ctx.lineTo(building.x + building.width * 0.18, top - 18)
-      ctx.lineTo(building.x + building.width * 0.82, top - 18)
-      ctx.lineTo(building.x + building.width + 4, top + 5)
-      ctx.closePath()
-      ctx.fill()
-
-      // Central school entrance / portico.
-      const entranceW = Math.min(70, building.width * 0.28)
-      const entranceX = building.x + (building.width - entranceW) / 2
-      ctx.fillStyle = isDark
-        ? 'rgba(55,60,70,0.98)'
-        : 'rgba(185,185,180,0.98)'
-      ctx.fillRect(entranceX, groundY - 58, entranceW, 58)
-
-      ctx.fillStyle = isDark
-        ? 'rgba(25,30,38,0.95)'
-        : 'rgba(70,90,105,0.9)'
-      ctx.fillRect(entranceX + entranceW * 0.3, groundY - 45, entranceW * 0.4, 45)
-
-      // Small pediment over the entrance.
-      ctx.fillStyle = roofColor
-      ctx.beginPath()
-      ctx.moveTo(entranceX - 6, groundY - 58)
-      ctx.lineTo(entranceX + entranceW / 2, groundY - 72)
-      ctx.lineTo(entranceX + entranceW + 6, groundY - 58)
-      ctx.closePath()
-      ctx.fill()
-
-      // School sign.
-      ctx.fillStyle = isDark
-        ? 'rgba(225,230,235,0.9)'
-        : 'rgba(245,245,235,0.95)'
-      ctx.fillRect(
-        building.x + building.width * 0.32,
-        top + 4,
-        building.width * 0.36,
-        18,
-      )
-      ctx.fillStyle = isDark
-        ? 'rgba(40,50,65,0.95)'
-        : 'rgba(45,65,85,0.95)'
-      ctx.font = 'bold 9px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText(
-        'MAi SCHOOL',
-        building.x + building.width / 2,
-        top + 17,
-      )
-
-      // Flagpole.
-      ctx.strokeStyle = 'rgba(55,55,55,0.85)'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(building.x + building.width * 0.72, top - 16)
-      ctx.lineTo(building.x + building.width * 0.72, top - 55)
-      ctx.stroke()
-      ctx.fillStyle = 'rgba(210,35,55,0.9)'
-      ctx.beginPath()
-      ctx.moveTo(building.x + building.width * 0.72, top - 54)
-      ctx.lineTo(building.x + building.width * 0.72 + 22, top - 48)
-      ctx.lineTo(building.x + building.width * 0.72, top - 42)
-      ctx.closePath()
-      ctx.fill()
-      break
-    }
-
     case 'bank': {
       // A recognizable real-world bank silhouette: civic facade, flat/parapet
       // roof, prominent sign, tall front windows, and a columned entrance.

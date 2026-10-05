@@ -142,7 +142,6 @@ export default function Sidebar() {
   const [canSeeInmates, setCanSeeInmates] = useState(false)
   const [isBackgroundJailed, setIsBackgroundJailed] = useState(false)
   const [isApprovedAuctioneer, setIsApprovedAuctioneer] = useState(false)
-  const [isTeacher, setIsTeacher] = useState(false)
 
   const [showCourtModal, setShowCourtModal] = useState(false)
 
@@ -351,14 +350,6 @@ export default function Sidebar() {
           .eq('is_active', true)
           .maybeSingle()
         setIsApprovedAuctioneer(!!auctioneerData)
-
-        const { data: teacherData } = await supabase
-          .from('academy_teachers')
-          .select('id')
-          .eq('user_id', profile.id)
-          .eq('is_approved', true)
-          .maybeSingle()
-        setIsTeacher(!!teacherData)
 
         setCanSeeInmates(
           !!officerData ||
@@ -599,24 +590,7 @@ export default function Sidebar() {
               <GridItem collapsed={isSidebarCollapsed} icon={Building2} label="Neighborhood" to="/neighborhood-setup" active={isActive('/neighborhood-setup')} highlight={isUpdated('/neighborhood-setup')} onClick={() => markAsViewed('/neighborhood-setup')} className="text-cyan-400" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Gamepad2} label="HytroGaming" to="/hytrogaming" active={isHytroGamingActive} highlight={isUpdated('/hytrogaming') || location.pathname.startsWith('/gaming/watch/')} onClick={() => markAsViewed('/hytrogaming')} className="text-purple-400" tone="purple" glow="pink" />
 
-              <SectionTitle title="Mai Troll Academy" collapsed={isSidebarCollapsed} />
-              <GridItem collapsed={isSidebarCollapsed} icon={BookOpen} label="Academy" to="/academy" active={isActivePath('/academy')} highlight={isUpdated('/academy')} onClick={() => markAsViewed('/academy')} className="text-emerald-400" tone="green" />
-              <GridItem collapsed={isSidebarCollapsed} icon={GraduationCap} label="Courses" to="/academy/courses" active={isActivePath('/academy/courses')} highlight={isUpdated('/academy/courses')} onClick={() => markAsViewed('/academy/courses')} className="text-teal-400" tone="teal" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Award} label="Certificates" to="/academy/certificates" active={isActivePath('/academy/certificates')} highlight={isUpdated('/academy/certificates')} onClick={() => markAsViewed('/academy/certificates')} className="text-yellow-400" tone="orange" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Users} label="Admissions" to="/academy/admissions" active={isActivePath('/academy/admissions')} highlight={isUpdated('/academy/admissions')} onClick={() => markAsViewed('/academy/admissions')} className="text-cyan-400" tone="cyan" />
-              <GridItem collapsed={isSidebarCollapsed} icon={BookOpen} label="Classroom" to="/academy/classroom" active={isActivePath('/academy/classroom', true)} highlight={isUpdated('/academy/classroom')} onClick={() => markAsViewed('/academy/classroom')} className="text-sky-400" tone="cyan" />
-              {isTeacher && (
-                <GridItem collapsed={isSidebarCollapsed} icon={Users} label="Teacher Dashboard" to="/academy/teacher/dashboard" active={isActivePath('/academy/teacher/dashboard')} highlight={isUpdated('/academy/teacher/dashboard')} onClick={() => markAsViewed('/academy/teacher/dashboard')} className="text-amber-400" tone="orange" />
-              )}
-              {isAdmin && (
-                <GridItem collapsed={isSidebarCollapsed} icon={Shield} label="Board of Education" to="/academy/admin" active={isActivePath('/academy/admin')} highlight={isUpdated('/academy/admin')} onClick={() => markAsViewed('/academy/admin')} className="text-purple-400" tone="purple" />
-              )}
-              <GridItem collapsed={isSidebarCollapsed} icon={FileText} label="Assignments" to="/academy/assignments" active={isActivePath('/academy/assignments', true)} highlight={isUpdated('/academy/assignments')} onClick={() => markAsViewed('/academy/assignments')} className="text-pink-400" tone="pink" />
-              <GridItem collapsed={isSidebarCollapsed} icon={GraduationCap} label="Teachers" to="/academy/teachers" active={isActivePath('/academy/teachers')} highlight={isUpdated('/academy/teachers')} onClick={() => markAsViewed('/academy/teachers')} className="text-amber-400" tone="orange" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Wallet} label="My Loans" to="/academy/loans" active={isActivePath('/academy/loans')} highlight={isUpdated('/academy/loans')} onClick={() => markAsViewed('/academy/loans')} className="text-amber-400" tone="orange" />
-              <GridItem collapsed={isSidebarCollapsed} icon={TrendingUp} label="Transcript" to="/academy/transcript/official" active={isActivePath('/academy/transcript/official')} highlight={isUpdated('/academy/transcript/official')} onClick={() => markAsViewed('/academy/transcript/official')} className="text-blue-400" tone="blue" />
-
-              <SectionTitle title="City Services" collapsed={isSidebarCollapsed} />
+               <SectionTitle title="City Services" collapsed={isSidebarCollapsed} />
               <GridItem collapsed={isSidebarCollapsed} icon={Megaphone} label="Advertise" to="/city-registry/advertise" active={isActivePath('/city-registry/advertise')} highlight={isUpdated('/city-registry/advertise')} onClick={() => markAsViewed('/city-registry/advertise')} tone="pink" />
               <GridItem collapsed={isSidebarCollapsed} icon={Scale} label="Appeals" to="/city-registry" active={isActive('/city-registry')} highlight={isUpdated('/city-registry')} onClick={() => markAsViewed('/city-registry')} tone="purple" />
               {((profile as any)?.is_journalist || (profile as any)?.is_news_caster || (profile as any)?.is_chief_news_caster || isAdmin || role === 'superadmin' || (profile as any)?.is_superadmin) && (

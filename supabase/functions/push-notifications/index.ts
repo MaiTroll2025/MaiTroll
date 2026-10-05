@@ -71,6 +71,166 @@ const NOTIFICATION_CATEGORIES = {
   ]
 };
 
+interface FcmServiceAccount {
+  project_id: string;
+  client_email: string;
+  private_key: string;
+}
+
+let cachedFcmAccessToken: { token: string; expiresAt: number } | null = null;
+
+function base64UrlEncode(value: string | Uint8Array): string {
+  const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : value;
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function decodePemPrivateKey(privateKey: string): Uint8Array {
+  const pem = privateKey
+    .replace(/\\n/g, '\n')
+    .replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, '');
+  return Uint8Array.from(atob(pem), (character) => character.charCodeAt(0));
+}
+
+async function getFcmAccessToken(account: FcmServiceAccount): Promise<string> {
+  if (cachedFcmAccessToken && cachedFcmAccessToken.expiresAt > Date.now() + 60_000) {
+    return cachedFcmAccessToken.token;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claims = base64UrlEncode(JSON.stringify({
+    iss: account.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  }));
+  const unsignedToken = `${header}.${claims}`;
+  const signingKey = await crypto.subtle.importKey(
+    'pkcs8',
+    decodePemPrivateKey(account.private_key),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    signingKey,
+    new TextEncoder().encode(unsignedToken),
+  );
+  const assertion = `${unsignedToken}.${base64UrlEncode(new Uint8Array(signature))}`;
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }),
+  });
+  const result = await response.json();
+  if (!response.ok || typeof result.access_token !== 'string') {
+    throw new Error(`FCM OAuth token request failed (${response.status})`);
+  }
+
+  cachedFcmAccessToken = {
+    token: result.access_token,
+    expiresAt: Date.now() + Number(result.expires_in || 3600) * 1000,
+  };
+  return cachedFcmAccessToken.token;
+}
+
+function fcmData(notification: PushRequest['notification']): Record<string, string> {
+  const data: Record<string, string> = {};
+  let payloadBytes = 0;
+  for (const [key, value] of Object.entries(notification.data || {})) {
+    if (value !== undefined && value !== null) {
+      const serialized = typeof value === 'string' ? value : JSON.stringify(value) ?? String(value);
+      const entryBytes = new TextEncoder().encode(key).length + new TextEncoder().encode(serialized).length;
+      if (payloadBytes + entryBytes <= 2500) {
+        data[key] = serialized;
+        payloadBytes += entryBytes;
+      }
+    }
+  }
+  data.route = String(notification.data?.route || notification.url || '/').slice(0, 500);
+  data.type = String(notification.type || 'notification').slice(0, 80);
+  return data;
+}
+
+async function authorizePushRequest(
+  req: Request,
+  supabase: ReturnType<typeof createClient>,
+  serviceRoleKey: string,
+  targetUserIds: string[],
+  notification: PushRequest['notification'],
+): Promise<{ authorized: boolean; status: number; message: string; targetUserIds: string[] }> {
+  const authorization = req.headers.get('Authorization') || '';
+  const bearerToken = authorization.replace(/^Bearer\s+/i, '').trim();
+  if (!bearerToken) {
+    return { authorized: false, status: 401, message: 'Unauthorized', targetUserIds: [] };
+  }
+
+  if (bearerToken === serviceRoleKey) {
+    return { authorized: true, status: 200, message: 'Authorized', targetUserIds };
+  }
+
+  // Supabase gateway validates the JWT signature before the request reaches this
+  // function (verify_jwt is enabled). Service-role JWTs are not user sessions,
+  // so auth.getUser() rejects them even though their signed role claim is valid.
+  try {
+    const payload = bearerToken.split('.')[1];
+    const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decodedPayload = atob(normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, '='));
+    const claims = JSON.parse(decodedPayload);
+    if (claims.role === 'service_role') {
+      return { authorized: true, status: 200, message: 'Authorized', targetUserIds };
+    }
+  } catch {
+    // Continue with normal user-session validation for non-JWT or malformed tokens.
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser(bearerToken);
+  if (userError || !userData.user) {
+    return { authorized: false, status: 401, message: 'Unauthorized', targetUserIds: [] };
+  }
+
+  const recentSince = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { data: rows, error: notificationError } = await supabase
+    .from('notifications')
+    .select('user_id, type, title, message')
+    .in('user_id', targetUserIds)
+    .gte('created_at', recentSince)
+    .limit(5000);
+
+  if (notificationError) {
+    throw new Error(`Failed to validate notification recipients: ${notificationError.message}`);
+  }
+
+  const matchingTargets = new Set(
+    (rows || [])
+      .filter((row) =>
+        String(row.type || '').toLowerCase() === String(notification.type || '').toLowerCase()
+        && row.title === notification.title
+        && row.message === notification.body,
+      )
+      .map((row) => row.user_id),
+  );
+  const authorizedTargets = targetUserIds.filter((id) => matchingTargets.has(id));
+  if (authorizedTargets.length === 0) {
+    return {
+      authorized: false,
+      status: 403,
+      message: 'No matching recent notification exists for the requested recipient',
+      targetUserIds: [],
+    };
+  }
+
+  return { authorized: true, status: 200, message: 'Authorized', targetUserIds: authorizedTargets };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -91,6 +251,10 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
     const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+    const fcmServiceAccountValue = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON');
+    const fcmProjectId = Deno.env.get('FCM_PROJECT_ID');
+    const fcmClientEmail = Deno.env.get('FCM_CLIENT_EMAIL');
+    const fcmPrivateKey = Deno.env.get('FCM_PRIVATE_KEY');
 
     if (!supabaseUrl || !supabaseServiceKey) {
       return new Response(JSON.stringify({ error: 'Server not configured: missing Supabase credentials' }), {
@@ -99,44 +263,207 @@ serve(async (req) => {
       });
     }
 
-    if (!vapidPublicKey || !vapidPrivateKey) {
-      console.warn('VAPID keys not configured, Web Push notifications will be skipped');
-    }
-
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { userId, user_ids, notification, options }: PushRequest = await req.json();
-
-    if (!userId && !user_ids) {
-      return new Response(JSON.stringify({ error: 'Missing userId or user_ids' }), {
+    const { userId, user_ids, notification, options, platforms: requestedPlatforms }: PushRequest = await req.json();
+    const platforms = requestedPlatforms || ['android', 'web'];
+    if (
+      !Array.isArray(platforms)
+      || platforms.length === 0
+      || platforms.some((platform) => platform !== 'android' && platform !== 'web')
+    ) {
+      return new Response(JSON.stringify({ error: 'Platforms must contain android and/or web' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Normalize to array
-    const targetUserIds = userId ? [userId] : (user_ids || []);
-
-    console.log('[Push] Request received for users:', targetUserIds);
-    console.log('[Push] Notification:', JSON.stringify(notification, null, 2));
-
-    // Check VAPID keys
-    if (!vapidPublicKey || !vapidPrivateKey) {
-      console.warn('[Push] VAPID keys NOT configured - skipping Web Push');
-      return new Response(JSON.stringify({ 
-        success: true, 
-        sent: 0,
-        message: 'Skipped - VAPID keys missing' 
-      }), {
-        status: 200,
+    if (
+      (!userId && !Array.isArray(user_ids))
+      || typeof notification?.title !== 'string'
+      || !notification.title.trim()
+      || typeof notification?.body !== 'string'
+      || !notification.body.trim()
+    ) {
+      return new Response(JSON.stringify({ error: 'Missing target users or notification title/body' }), {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    console.log('[Push] VAPID configured, proceeding with Web Push');
+    // Normalize and bound client-supplied recipient lists.
+    const requestedUserIds = [...new Set(userId ? [userId] : (user_ids || []))];
+    const isUuid = (value: unknown): value is string =>
+      typeof value === 'string'
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+    if (
+      requestedUserIds.length === 0
+      || requestedUserIds.length > 1000
+      || requestedUserIds.some((id) => !isUuid(id))
+    ) {
+      return new Response(JSON.stringify({ error: 'Recipient list must contain 1 to 1000 valid user IDs' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const authorization = await authorizePushRequest(
+      req,
+      supabase,
+      supabaseServiceKey,
+      requestedUserIds,
+      notification,
+    );
+    if (!authorization.authorized) {
+      return new Response(JSON.stringify({ error: authorization.message }), {
+        status: authorization.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const targetUserIds = authorization.targetUserIds;
+
+    console.log('[Push] Request received for', targetUserIds.length, 'users');
+
+    let webSent = 0;
+    let webFailed = 0;
+    let nativeSent = 0;
+    let nativeFailed = 0;
+    const errors: Array<{ platform: string; status?: number; message: string }> = [];
+
+    if (platforms.includes('android') && (fcmServiceAccountValue || (fcmProjectId && fcmClientEmail && fcmPrivateKey))) {
+      try {
+        let fcmAccount: FcmServiceAccount;
+        if (fcmProjectId && fcmClientEmail && fcmPrivateKey) {
+          fcmAccount = {
+            project_id: fcmProjectId,
+            client_email: fcmClientEmail,
+            private_key: fcmPrivateKey,
+          };
+        } else if (fcmServiceAccountValue) {
+          try {
+            fcmAccount = JSON.parse(fcmServiceAccountValue);
+          } catch {
+            throw new Error('FCM_SERVICE_ACCOUNT_JSON is not valid JSON');
+          }
+        } else {
+          throw new Error('FCM credentials are incomplete');
+        }
+        if (!fcmAccount.project_id || !fcmAccount.client_email || !fcmAccount.private_key) {
+          throw new Error('FCM service account is missing required fields');
+        }
+
+        const { data: nativeTokens, error: tokenError } = await supabase
+          .from('native_push_tokens')
+          .select('id, user_id, token')
+          .in('user_id', targetUserIds)
+          .eq('platform', 'android')
+          .eq('is_active', true);
+        if (tokenError) {
+          throw new Error(`Failed to load Android push tokens: ${tokenError.message}`);
+        }
+
+        if (nativeTokens?.length) {
+          const targetIdsWithTokens = [...new Set(nativeTokens.map((item) => item.user_id))];
+          const { data: profiles, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('id, push_notifications_enabled')
+            .in('id', targetIdsWithTokens);
+          if (profileError) {
+            throw new Error(`Failed to load Android push preferences: ${profileError.message}`);
+          }
+          const enabledIds = new Set(
+            (profiles || [])
+              .filter((profile) => profile.push_notifications_enabled !== false)
+              .map((profile) => profile.id),
+          );
+          const eligibleTokens = nativeTokens.filter((item) => enabledIds.has(item.user_id));
+
+          if (eligibleTokens.length) {
+            const accessToken = await getFcmAccessToken(fcmAccount);
+            const data = fcmData(notification);
+            for (const device of eligibleTokens) {
+              try {
+                const response = await fetch(
+                  `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(fcmAccount.project_id)}/messages:send`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      Authorization: `Bearer ${accessToken}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      message: {
+                        token: device.token,
+                        notification: {
+                          title: notification.title,
+                          body: notification.body,
+                          ...(notification.image && /^https:\/\//i.test(notification.image)
+                            ? { image: notification.image }
+                            : {}),
+                        },
+                        data,
+                        android: {
+                          priority: options?.urgency === 'high' ? 'HIGH' : 'NORMAL',
+                          notification: {
+                            channel_id: 'default_v2',
+                            sound: 'notification',
+                          },
+                        },
+                      },
+                    }),
+                  },
+                );
+
+                if (response.ok) {
+                  nativeSent += 1;
+                  continue;
+                }
+
+                const responseBody = await response.json().catch(() => ({}));
+                const fcmError = responseBody?.error;
+                const fcmStatus = typeof fcmError?.status === 'string' ? fcmError.status : '';
+                nativeFailed += 1;
+                errors.push({
+                  platform: 'android',
+                  status: response.status,
+                  message: fcmStatus || 'FCM send failed',
+                });
+                console.error('[Push] Android FCM delivery failed:', response.status, fcmStatus || 'unknown');
+
+                if (fcmStatus === 'UNREGISTERED') {
+                  const { error: deactivateError } = await supabase
+                    .from('native_push_tokens')
+                    .update({ is_active: false, updated_at: new Date().toISOString() })
+                    .eq('id', device.id);
+                  if (deactivateError) {
+                    console.error('[Push] Failed to deactivate invalid Android token:', deactivateError.message);
+                  }
+                }
+              } catch (sendError) {
+                nativeFailed += 1;
+                errors.push({
+                  platform: 'android',
+                  message: sendError instanceof Error ? sendError.message : 'FCM send failed',
+                });
+                console.error('[Push] Android FCM request failed:', sendError);
+              }
+            }
+          }
+        }
+      } catch (nativeSetupError) {
+        nativeFailed += 1;
+        errors.push({
+          platform: 'android',
+          message: nativeSetupError instanceof Error ? nativeSetupError.message : 'FCM setup failed',
+        });
+        console.error('[Push] Android FCM setup failed:', nativeSetupError);
+      }
+    } else if (platforms.includes('android')) {
+      console.warn('[Push] FCM credentials are not fully configured; Android push is skipped');
+    }
 
     // Send Web Push notifications if VAPID is configured
-    if (vapidPublicKey && vapidPrivateKey) {
+    if (platforms.includes('web') && vapidPublicKey && vapidPrivateKey) {
       const vapidDetails = {
         subject: 'mailto:admin@Mai Troll.com',
         publicKey: vapidPublicKey,
@@ -155,7 +482,7 @@ serve(async (req) => {
         console.error('[Push] Error fetching subscriptions:', subsError);
       }
 
-      console.log('[Push] Raw subscriptions found:', subscriptions?.length || 0, subscriptions?.map(s => ({ user_id: s.user_id, endpoint: s.endpoint.substring(0, 50) })));
+      console.log('[Push] Web push subscriptions found:', subscriptions?.length || 0);
 
       // Filter out users who have disabled push notifications
       let filteredSubscriptions = subscriptions || [];
@@ -165,8 +492,6 @@ serve(async (req) => {
           .from('user_profiles')
           .select('id, push_notifications_enabled, role, is_admin, is_troll_officer, is_lead_officer')
           .in('id', userIdsToCheck);
-        
-        console.log('[Push] User push_notifications_enabled status:', enabledUsers);
         
         const enabledUserIds = new Set(enabledUsers?.filter(u => u.push_notifications_enabled !== false).map(u => u.id) || []);
         filteredSubscriptions = subscriptions.filter(s => enabledUserIds.has(s.user_id));
@@ -193,19 +518,13 @@ serve(async (req) => {
             (presenceData || []).filter(p => p.is_online).map(p => p.user_id)
           );
           
-          console.log('[Push] Online admins (skipping push):', Array.from(onlineIds));
-          
           filteredSubscriptions = filteredSubscriptions.filter(s => !onlineIds.has(s.user_id));
         }
         
-        console.log('[Push] Filtered subscriptions (enabled users, excluding online admins):', filteredSubscriptions.length);
+        console.log('[Push] Eligible web push subscriptions:', filteredSubscriptions.length);
       }
 
       if (filteredSubscriptions.length > 0) {
-        let successCount = 0;
-        let failureCount = 0;
-        const errors: any[] = [];
-
         // Build push payload
         const pushPayload = JSON.stringify({
           title: notification.title,
@@ -222,7 +541,6 @@ serve(async (req) => {
 
         // Send to each subscription
         for (const sub of filteredSubscriptions) {
-          console.log(`[Push] Attempting Web Push to user ${sub.user_id}, endpoint: ${sub.endpoint.substring(0, 80)}...`);
           try {
             const subscription = {
               endpoint: sub.endpoint,
@@ -233,8 +551,7 @@ serve(async (req) => {
             };
 
             await webPush.sendNotification(subscription, pushPayload, { vapidDetails });
-            successCount++;
-            console.log(`[Push] ✓ Success for user ${sub.user_id}`);
+            webSent++;
 
             // Log success
             const logResult = await supabase.from('push_notification_logs').insert({
@@ -250,17 +567,13 @@ serve(async (req) => {
               console.warn('Failed to log push success:', logResult.error);
             }
           } catch (sendErr: any) {
-            const errorDetail = {
-              user_id: sub.user_id,
-              endpoint: sub.endpoint.substring(0, 80),
-              statusCode: sendErr?.statusCode,
-              message: sendErr?.message,
-              body: sendErr?.body,
-              fullError: String(sendErr)
-            };
-            errors.push(errorDetail);
-            console.error(`[Push] ✗ Failed for user ${sub.user_id}:`, errorDetail);
-            failureCount++;
+            webFailed++;
+            errors.push({
+              platform: 'web',
+              status: sendErr?.statusCode,
+              message: sendErr?.message || 'Web Push delivery failed',
+            });
+            console.error('[Push] Web Push delivery failed:', sendErr?.statusCode, sendErr?.message);
 
             // Log failure
             const failLogResult = await supabase.from('push_notification_logs').insert({
@@ -286,35 +599,30 @@ serve(async (req) => {
             }
           }
         }
-
-        console.log(`Web Push: ${successCount} sent, ${failureCount} failed`);
-        
-        return new Response(JSON.stringify({ 
-          success: true, 
-          targeted_users: targetUserIds.length,
-          subscriptions_found: filteredSubscriptions.length,
-          subscriptions_enabled: filteredSubscriptions.length,
-          sent: successCount,
-          failed: failureCount,
-          errors: failureCount > 0 ? errors : undefined,
-          message: 'Push notification processing complete'
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
       } else {
         console.log('No active push subscriptions found for target users');
       }
-    } else {
+    } else if (platforms.includes('web')) {
       console.warn('Skipping Web Push: VAPID keys not configured');
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      sent: 0,
+    return new Response(JSON.stringify({
+      success: webFailed + nativeFailed === 0,
+      targeted_users: targetUserIds.length,
+      android_configured: Boolean(
+        fcmServiceAccountValue || (fcmProjectId && fcmClientEmail && fcmPrivateKey),
+      ),
+      web_configured: Boolean(vapidPublicKey && vapidPrivateKey),
+      web_sent: webSent,
+      web_failed: webFailed,
+      android_sent: nativeSent,
+      android_failed: nativeFailed,
+      sent: webSent + nativeSent,
+      failed: webFailed + nativeFailed,
+      errors: errors.length > 0 ? errors : undefined,
       message: 'Push notification processing complete'
     }), {
-      status: 200,
+      status: webFailed + nativeFailed > 0 ? 207 : 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
@@ -345,4 +653,5 @@ interface PushRequest {
     urgency?: 'very-low' | 'low' | 'normal' | 'high';
     topic?: string;
   };
+  platforms?: Array<'android' | 'web'>;
 }

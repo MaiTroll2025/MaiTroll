@@ -41,9 +41,6 @@ const WALKIE_TALKIE_ALLOWED_ROLES = [
   'troller',
   'ceo_assistant',
   'noah_assistant',
-  'academy_teacher',
-  'academy_director',
-  'admissions_officer',
 ]
 
 export function StaffWalkieTalkieProvider({ children }: { children: React.ReactNode }) {

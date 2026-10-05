@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <notification-channels>
     <channel
+        id="default_v2"
+        name="Mai Troll Notifications"
+        description="General app notifications"
+        importance="high"
+        sound="@raw/notification"
+        vibrationPattern="[200, 100, 200]"
+        lightColor="#A855F7"
+        enableVibration="true"
+        enableLights="true"
+        showBadge="true"
+        bypassDnd="false" />
+    <channel
         id="default"
         name="Default Notifications"
         description="General app notifications"

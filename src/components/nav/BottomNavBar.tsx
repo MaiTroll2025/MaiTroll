@@ -197,7 +197,7 @@ function useRoleChecks(profile: any, userEmail?: string) {
       'pastor', 'agency_leader', 'attorney', 'prosecutor', 'journalist',
       'auctioneer', 'troller', 'agency_hr', 'president', 'vice_president',
       'troll_city_secretary', 'troll_city_treasurer', 'executive_secretary',
-      'academy_teacher', 'admissions_officer', 'employee',
+      'employee',
     ]).has(role) ||
     new Set([
       'troll_officer', 'lead_troll_officer', 'secretary', 'ceo_assistant',
@@ -205,7 +205,7 @@ function useRoleChecks(profile: any, userEmail?: string) {
       'pastor', 'agency_leader', 'attorney', 'prosecutor', 'journalist',
       'auctioneer', 'troller', 'agency_hr', 'president', 'vice_president',
       'troll_city_secretary', 'troll_city_treasurer', 'executive_secretary',
-      'academy_teacher', 'admissions_officer', 'employee',
+      'employee',
     ]).has(trollRole)
     ;
 
@@ -868,8 +868,7 @@ export default function BottomNavBar() {
                  <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} size="large" badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
                  <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} size="large" badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
                  <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} size="large" />
-                <NavButton icon={GraduationCap} label="Academy" to="/academy" active={isActive('/academy')} size="large" badge={badges.academy} badgeKey="academy" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={DollarSign} label="MAI Pay" to="/mai-pay" active={isActive('/mai-pay')} size="large" />
+                 <NavButton icon={DollarSign} label="MAI Pay" to="/mai-pay" active={isActive('/mai-pay')} size="large" />
                 <NavButton
                   icon={LayoutGrid}
                   label="More"

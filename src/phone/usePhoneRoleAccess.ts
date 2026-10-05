@@ -32,7 +32,6 @@ export interface PhoneRoleAccess {
   canSeeInmates: boolean
   canSeeCourt: boolean
   canSeeAuctionStudio: boolean
-  isTeacher: boolean
   canSeeAgencyHR: boolean
   canSeeTrollFamily: boolean
   isFamilyMember: boolean
@@ -105,7 +104,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
   const [isProsecutor, setIsProsecutor] = useState(false)
   const [canSeeInmates, setCanSeeInmates] = useState(false)
   const [canSeeAuctionStudio, setCanSeeAuctionStudio] = useState(false)
-  const [isTeacher, setIsTeacher] = useState(false)
   const [canSeeAgencyHR, setCanSeeAgencyHR] = useState(false)
   const [canAccessRtcAdminMonitor, setCanAccessRtcAdminMonitor] = useState(false)
 
@@ -275,15 +273,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
         if (cancelled) return
         setCanSeeAuctionStudio(!!auctioneerData)
 
-        const { data: teacherData } = await supabase
-          .from('academy_teachers')
-          .select('id')
-          .eq('user_id', profile.id)
-          .eq('is_approved', true)
-          .maybeSingle()
-        if (cancelled) return
-        setIsTeacher(!!teacherData)
-
         setCanSeeInmates(
           !!officerData ||
             isAdmin ||
@@ -354,7 +343,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     canSeeInmates,
     canSeeCourt,
     canSeeAuctionStudio,
-    isTeacher,
     canSeeAgencyHR: canSeeAgencyHR,
     canSeeTrollFamily,
     isFamilyMember,

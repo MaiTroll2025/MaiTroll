@@ -10,7 +10,6 @@ export interface NavBadges {
   auctions: number;
   court: number;
   neighborhood: number;
-  academy: number;
   wallet: number;
   family: number;
   shop: number;
@@ -23,7 +22,7 @@ export interface NavBadges {
 const dismissedTabs: Set<keyof NavBadges> = new Set();
 let lastBadgeCounts: NavBadges = {
   home: 0, chats: 0, coins: 0, auctions: 0, court: 0,
-  neighborhood: 0, academy: 0, wallet: 0, family: 0,
+  neighborhood: 0, wallet: 0, family: 0,
   shop: 0, inventory: 0, alerts: 0, careers: 0,
 };
 const listeners: Set<() => void> = new Set();
@@ -145,12 +144,6 @@ const TAB_NOTIFICATION_TYPES: Record<keyof NavBadges, string[]> = {
     'someone_mentioned',
   ],
 
-  // Academy tab: learning/mail events
-  academy: [
-    'academy_mail',
-    'government_mail',
-  ],
-
   // Wallet tab: financial/cashout events
   wallet: [
     'cashout_submitted',
@@ -205,7 +198,6 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
     auctions: 0,
     court: 0,
     neighborhood: 0,
-    academy: 0,
     wallet: 0,
     family: 0,
     shop: 0,
@@ -241,7 +233,6 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
           auctions: 0,
           court: 0,
           neighborhood: 0,
-          academy: 0,
           wallet: 0,
           family: 0,
           shop: 0,
@@ -270,7 +261,6 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
       auctions: 0,
       court: 0,
       neighborhood: 0,
-      academy: 0,
       wallet: 0,
       family: 0,
       shop: 0,
@@ -338,7 +328,7 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
     if (!user?.id) {
       setBadgeCounts({
         home: 0, chats: 0, coins: 0, auctions: 0, court: 0,
-        neighborhood: 0, academy: 0, wallet: 0, family: 0,
+        neighborhood: 0, wallet: 0, family: 0,
         shop: 0, inventory: 0, alerts: 0,
       });
       return;

@@ -70,7 +70,6 @@ export type CoinTransactionType =
   | 'broadcast_theme'
   | 'promotion_purchase'
   | 'marketplace_sale'
-  | 'academy_course'
   | 'game'
   | 'featured_gift_reward'
 
@@ -471,8 +470,7 @@ export async function addCoins(params: {
       entrance_effect: 'paid',
       perk_purchase: 'paid',
       gas_refill: 'paid',
-      troll_town_sale: 'paid',
-      academy_course: 'paid'
+      troll_town_sale: 'paid'
     }
 
     // Special handling for Admin Grants (Secure RPC)

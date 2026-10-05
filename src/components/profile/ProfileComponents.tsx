@@ -699,6 +699,7 @@ export function ProfileTabs({ activeTab, onTabChange, visibleTabs, isOwnProfile 
 
 export const PROFILE_TABS = [
     { key: 'social', label: 'Social', icon: Users },
+    { key: 'maipiks', label: 'Mai Piks', icon: Camera },
     { key: 'broadcasts', label: 'Broadcasts', icon: Video },
     { key: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
     { key: 'auctions', label: 'Auctions', icon: Gavel },

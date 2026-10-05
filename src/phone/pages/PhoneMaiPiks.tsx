@@ -3,7 +3,9 @@ import {
   ArrowLeft,
   Bell,
   Camera,
+  ChevronLeft,
   ChevronRight,
+  Coins,
   Image as ImageIcon,
   Lock,
   Plus,
@@ -24,6 +26,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../lib/supabase'
+import { useUserRestrictions } from '@/hooks/useUserRestrictions'
 import { createNotification } from '../../lib/notifications'
 import StoryViewer from '../components/MaiPiksStoryViewer'
 import {
@@ -31,12 +34,102 @@ import {
   formatRecordClock,
   HOLD_TO_RECORD_MS,
   MAX_VIDEO_MS,
+  SWIPE_TO_LOCK_PX,
   type PiksStory,
   type PiksStoryItem,
+  type StoryMonetizationMode,
   type StoryVisibility,
 } from '../components/maiPiksShared'
 
 type PiksMode = 'feed' | 'camera' | 'story'
+
+/* --------------------------------------------------------------------------
+ * Server clock
+ * --------------------------------------------------------------------------
+ * Story expiry is a 24 hour window measured by the database. Comparing
+ * `expires_at` against the phone clock hid perfectly live stories whenever the
+ * device was even slightly out of sync, so the offset between the two clocks is
+ * measured once and cached for the lifetime of the page.
+ */
+let serverClockOffsetMs: number | null = null
+let serverClockProbe: Promise<number> | null = null
+
+async function fetchServerTime(): Promise<string> {
+  const probeDevice = Date.now()
+
+  if (!serverClockProbe) {
+    serverClockProbe = (async () => {
+      const { data, error } = await supabase.rpc('maipiks_server_now')
+      if (error || !data) return 0
+      const serverMs = new Date(data as string).getTime()
+      if (!Number.isFinite(serverMs)) return 0
+      /* Ignore absurd offsets — a broken response must not hide every story. */
+      const offset = serverMs - probeDevice
+      if (Math.abs(offset) > 7 * 24 * 60 * 60 * 1000) return 0
+      serverClockOffsetMs = offset
+      return offset
+    })().finally(() => {
+      serverClockProbe = null
+    })
+  }
+
+  if (serverClockOffsetMs !== null) {
+    return new Date(Date.now() + serverClockOffsetMs).toISOString()
+  }
+
+  const offset = await serverClockProbe
+  return new Date(Date.now() + offset).toISOString()
+}
+
+async function getMaiPiksMediaUrl(
+  path: string | null | undefined,
+  fallbackUrl: string | null | undefined,
+): Promise<string | null> {
+  let objectPath = path || null
+
+  if (!objectPath && fallbackUrl?.includes('/maipiks/')) {
+    const encodedPath = fallbackUrl.split('/maipiks/').pop()?.split('?')[0]
+    try {
+      objectPath = encodedPath ? decodeURIComponent(encodedPath) : null
+    } catch {
+      objectPath = null
+    }
+  }
+
+  if (objectPath) {
+    const { data, error } = await supabase.storage
+      .from('maipiks')
+      .createSignedUrl(objectPath, 60 * 60)
+
+    if (error) {
+      console.error('[MAIPiks] Could not authorize media:', error)
+      return null
+    }
+
+    return data.signedUrl
+  }
+
+  return fallbackUrl || null
+}
+
+/** Removes an uploaded object that never made it into a story row. */
+async function discardUpload(path: string) {
+  try {
+    await supabase.storage.from('maipiks').remove([path])
+  } catch (err) {
+    console.error('[MAIPiks] Failed to clean up orphaned upload:', err)
+  }
+}
+
+/**
+ * Detects a recoverable auth failure from a PostgREST error. `PostgrestError`
+ * is typed without an HTTP status, so the status is read defensively.
+ */
+function isAuthError(error: { message: string; status?: number } | null): boolean {
+  if (!error) return false
+  if (error.status === 401 || error.status === 403) return true
+  return /jwt|token|not authenticated|authorization/i.test(error.message)
+}
 
 interface PiksNotification {
   id: string
@@ -78,6 +171,8 @@ export default function PhoneMaiPiks() {
   const [selectedFeedItem, setSelectedFeedItem] = useState<PiksFeedItem | null>(null)
 
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const { loading: restrictionsLoading, restrictionFor } = useUserRestrictions(currentUser?.id)
+  const maipiksRestriction = restrictionFor('maipiks')
   const [notifications, setNotifications] = useState<PiksNotification[]>([])
   const [stories, setStories] = useState<PiksStory[]>([])
   const [feed, setFeed] = useState<PiksFeedItem[]>([])
@@ -86,11 +181,24 @@ export default function PhoneMaiPiks() {
   const [cameraReady, setCameraReady] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user')
+  /* The camera that actually opened, which can differ from the requested one
+     when a fallback constraint succeeds. */
+  const [activeFacing, setActiveFacing] = useState<'user' | 'environment'>('user')
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
   const [uploading, setUploading] = useState(false)
   const [recording, setRecording] = useState(false)
+  const [recordingLocked, setRecordingLocked] = useState(false)
+  const [swipeProgress, setSwipeProgress] = useState(0)
   const [recordMs, setRecordMs] = useState(0)
   const [deletingStoryId, setDeletingStoryId] = useState<string | null>(null)
+  const [storyVisibility, setStoryVisibility] = useState<StoryVisibility>('everyone')
+  const [storyDurationHours, setStoryDurationHours] = useState(24)
+  const [customStoryDuration, setCustomStoryDuration] = useState(false)
+  const [storyCaption, setStoryCaption] = useState('')
+  const [monetizationMode, setMonetizationMode] = useState<StoryMonetizationMode>('free')
+  const [basePriceCoins, setBasePriceCoins] = useState(100)
+  const [subscriberDiscountMode, setSubscriberDiscountMode] = useState<'platform' | 'none'>('platform')
+  const [paidAccessDuration, setPaidAccessDuration] = useState('until_story_expiry')
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const recorderRef = useRef<MediaRecorder | null>(null)
@@ -100,6 +208,14 @@ export default function PhoneMaiPiks() {
   const recordStopTimerRef = useRef<number | null>(null)
   const recordStartedAtRef = useRef<number>(0)
   const didRecordRef = useRef(false)
+  const shutterPressXRef = useRef<number | null>(null)
+  const didSwipeRef = useRef(false)
+  const recordingLockedRef = useRef(false)
+  /* The live stream lives in a ref, not just state: the effect cleanup and
+     startCamera both need to release the previous stream, and a state closure
+     from an older render cannot see it. */
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const cameraRequestRef = useRef(0)
 
   /* ---------------------------------------------------------------------- */
   /* Current user & profile                                                 */
@@ -155,7 +271,7 @@ export default function PhoneMaiPiks() {
 
     const { data } = await supabase
       .from('maipiks_posts')
-      .select('id, user_id, media_url, media_type, caption, visibility, created_at, deleted_at')
+      .select('id, user_id, media_url, storage_path, media_type, caption, visibility, created_at, deleted_at')
       .in('user_id', viewerIds)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -171,21 +287,22 @@ export default function PhoneMaiPiks() {
 
     const profileMap = new Map((profiles || []).map((p) => [p.id, p]))
 
-    return data.map((post) => {
+    return Promise.all(data.map(async (post) => {
       const profile = profileMap.get(post.user_id)
+      const mediaUrl = await getMaiPiksMediaUrl(post.storage_path, post.media_url)
       return {
         id: post.id,
         userId: post.user_id,
         username: profile?.username || 'user',
         avatarUrl: profile?.avatar_url,
-        mediaUrl: post.media_url,
+        mediaUrl,
         mediaType: post.media_type,
         caption: post.caption,
         createdAt: post.created_at,
         visibility: post.visibility,
         isOwn: post.user_id === userId,
       }
-    })
+    }))
   }, [])
 
   /* ---------------------------------------------------------------------- */
@@ -193,6 +310,13 @@ export default function PhoneMaiPiks() {
   /* ---------------------------------------------------------------------- */
 
   const fetchStories = useCallback(async (userId: string): Promise<PiksStory[]> => {
+    /*
+     * Expiry is decided by the database clock, never the device clock. A phone
+     * whose clock is off by minutes used to hide live stories entirely, because
+     * the old filter compared `expires_at` against `new Date()` on the client.
+     */
+    const nowIso = await fetchServerTime()
+
     const { data: follows } = await supabase
       .from('user_follows')
       .select('following_id')
@@ -200,27 +324,43 @@ export default function PhoneMaiPiks() {
 
     const followingIds = (follows || []).map((f) => f.following_id)
     const viewerIds = [userId, ...followingIds]
-    const nowIso = new Date().toISOString()
 
-    const { data: storyRows } = await supabase
+    const { data: storyRows, error: storyError } = await supabase
       .from('maipiks_stories')
-      .select('id, user_id, visibility, expires_at, deleted_at, created_at, tips_received_coins')
+      .select('id, user_id, visibility, expires_at, deleted_at, created_at, tips_received_coins, monetization_mode, base_price_coins, subscriber_discount_mode, paid_access_duration')
       .in('user_id', viewerIds)
       .is('deleted_at', null)
       .gt('expires_at', nowIso)
       .order('created_at', { ascending: false })
 
+    if (storyError) {
+      /* Never let a failed query masquerade as "you have no stories". */
+      console.error('[MAIPiks] Story tray query failed:', storyError)
+      throw storyError
+    }
+
     if (!storyRows || storyRows.length === 0) return []
+
+    const pricingRows = await Promise.all(storyRows.map(async (story) => {
+      const { data, error } = await supabase.rpc('maipiks_story_pricing', { p_story_id: story.id })
+      return [story.id, error ? null : data] as const
+    }))
+    const pricingByStoryId = new Map(pricingRows)
 
     const storyIds = storyRows.map((s) => s.id)
 
-    const { data: itemRows } = await supabase
+    const { data: itemRows, error: itemError } = await supabase
       .from('maipiks_story_items')
-      .select('id, story_id, media_url, media_type, thumbnail_url, caption, duration_ms, sort_order, created_at, expires_at')
+      .select('id, story_id, media_url, storage_path, media_type, thumbnail_url, caption, duration_ms, sort_order, created_at, expires_at')
       .in('story_id', storyIds)
       .is('deleted_at', null)
       .gt('expires_at', nowIso)
       .order('sort_order', { ascending: true })
+
+    if (itemError) {
+      console.error('[MAIPiks] Story media query failed:', itemError)
+      throw itemError
+    }
 
     const storyUserIds = [...new Set(storyRows.map((s) => s.user_id))]
     const { data: profiles } = await supabase
@@ -231,28 +371,39 @@ export default function PhoneMaiPiks() {
     const profileMap = new Map((profiles || []).map((p) => [p.id, p]))
     const storyOwner = new Map(storyRows.map((s) => [s.id, s]))
 
-    /* Everything a single user posted in the last 24h is one continuous story. */
+    /* Keep separately configured story containers and purchase rights distinct. */
     const grouped = new Map<string, PiksStory>()
 
-    ;(itemRows || []).forEach((item) => {
+    const signedItems = await Promise.all((itemRows || []).map(async (item) => ({
+      ...item,
+      mediaUrl: await getMaiPiksMediaUrl(item.storage_path, item.media_url),
+      thumbnailUrl: await getMaiPiksMediaUrl(null, item.thumbnail_url),
+    })))
+
+    signedItems.forEach((item) => {
       const story = storyOwner.get(item.story_id)
       if (!story) return
 
       const profile = profileMap.get(story.user_id)
+      const pricing = pricingByStoryId.get(story.id) as Record<string, unknown> | null | undefined
+      const mode = (story.monetization_mode || 'free') as StoryMonetizationMode
+      const hasAccess = pricing
+        ? Boolean(pricing.has_access)
+        : story.user_id === userId || story.visibility !== 'private' && mode === 'free'
 
       const piksItem: PiksStoryItem = {
         id: item.id,
         storyId: item.story_id,
-        mediaUrl: item.media_url,
+        mediaUrl: item.mediaUrl || '',
         mediaType: (item.media_type === 'video' ? 'video' : 'photo') as 'photo' | 'video',
-        thumbnailUrl: item.thumbnail_url,
+        thumbnailUrl: item.thumbnailUrl,
         caption: item.caption,
         durationMs: item.duration_ms,
         createdAt: item.created_at,
         expiresAt: item.expires_at,
       }
 
-      const existing = grouped.get(story.user_id)
+      const existing = grouped.get(story.id)
 
       if (existing) {
         existing.items.push(piksItem)
@@ -261,7 +412,7 @@ export default function PhoneMaiPiks() {
         return
       }
 
-      grouped.set(story.user_id, {
+      grouped.set(story.id, {
         id: item.story_id,
         storyIds: [item.story_id],
         userId: story.user_id,
@@ -269,6 +420,12 @@ export default function PhoneMaiPiks() {
         avatarUrl: profile?.avatar_url,
         thumbnailUrl: piksItem.thumbnailUrl || piksItem.mediaUrl,
         visibility: story.visibility,
+        monetizationMode: mode,
+        basePriceCoins: Number(story.base_price_coins ?? 0),
+        finalPriceCoins: Number(pricing?.final_price_coins ?? story.base_price_coins ?? 0),
+        discountPercent: Number(pricing?.discount_percent ?? 0),
+        paidAccessDuration: story.paid_access_duration,
+        hasAccess,
         isOwn: story.user_id === userId,
         expiresAt: item.expires_at,
         items: [piksItem],
@@ -357,16 +514,43 @@ export default function PhoneMaiPiks() {
 
       setCurrentUser(user)
 
+      /*
+       * Enforce the 24h window before reading, otherwise a viewer still sees
+       * the caller's own expired stories. This is owner-scoped and safe to run
+       * on every load, and it means expiry works even though pg_cron is not
+       * enabled on this project.
+       */
+      try {
+        await supabase.rpc('maipiks_purge_own_expired_stories')
+      } catch (err) {
+        console.error('[MAIPiks] Expired story cleanup failed:', err)
+      }
+
       const [feedData, storyData, notifData] = await Promise.all([
-        fetchFeed(user.id),
-        fetchStories(user.id),
-        fetchNotifications(user.id),
+        fetchFeed(user.id).catch((err) => {
+          console.error('[MAIPiks] Feed load failed:', err)
+          return []
+        }),
+        /*
+         * A failed story query must never be read as "no stories exist" —
+         * that is what made live stories look like they had vanished. Keep the
+         * tray untouched and surface the failure instead.
+         */
+        fetchStories(user.id).catch((err) => {
+          console.error('[MAIPiks] Story load failed:', err)
+          toast.error('Could not load stories. Pull to refresh to try again.')
+          return null
+        }),
+        fetchNotifications(user.id).catch((err) => {
+          console.error('[MAIPiks] Notification load failed:', err)
+          return []
+        }),
       ])
 
       if (cancelled) return
 
       setFeed(feedData)
-      setStories(storyData)
+      if (storyData) setStories(storyData)
       setNotifications(notifData)
       setLoading(false)
     }
@@ -382,11 +566,15 @@ export default function PhoneMaiPiks() {
   /* Navigation                                                             */
   /* ---------------------------------------------------------------------- */
 
-  const stopCamera = () => {
-    if (!mediaStream) return
-    mediaStream.getTracks().forEach((track) => track.stop())
+  const stopCamera = useCallback(() => {
+    /* Bump the token so any in-flight getUserMedia resolves into a discarded
+       stream instead of two streams competing for the same camera. */
+    cameraRequestRef.current += 1
+    const stream = mediaStreamRef.current
+    mediaStreamRef.current = null
+    stream?.getTracks().forEach((track) => track.stop())
     setMediaStream(null)
-  }
+  }, [])
 
   const handleBack = () => {
     stopCamera()
@@ -413,39 +601,100 @@ export default function PhoneMaiPiks() {
   /* Camera                                                                 */
   /* ---------------------------------------------------------------------- */
 
-  const startCamera = async () => {
-    try {
-      setCameraError(null)
+  const startCamera = useCallback(async () => {
+    stopCamera()
+    const requestId = cameraRequestRef.current
+    setActiveFacing(facingMode)
 
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraError('Camera access is not available on this device.')
-        return
-      }
-
-      stopCamera()
-
-      /* Audio is requested so hold-to-record captures sound with the video. */
-      let stream: MediaStream
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode },
-          audio: true,
-        })
-      } catch {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode },
-          audio: false,
-        })
-      }
-
-      setMediaStream(stream)
-      setCameraReady(true)
-    } catch (error) {
-      console.error('MAI Piks camera error:', error)
-      setCameraReady(false)
-      setCameraError('Camera permission is required to use MAI Piks.')
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError('Camera access is not available on this device.')
+      return
     }
-  }
+
+    /*
+     * Android WebView throws NotReadableError when the requested camera is
+     * momentarily busy, and a front camera that is missing or reserved by the
+     * OS fails the constrained request outright. Walk down to less specific
+     * requests instead of giving up on the first refusal.
+     */
+    const attempts: MediaStreamConstraints[] = [
+      { video: { facingMode }, audio: true },
+      { video: { facingMode }, audio: false },
+      { video: true, audio: true },
+      { video: true, audio: false },
+    ]
+
+    let lastError: unknown = null
+
+    for (const constraints of attempts) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+
+        /* A mode switch, camera flip or unmount happened while we were waiting. */
+        if (requestId !== cameraRequestRef.current) {
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+
+        /* A looser fallback may have opened the other camera — keep the
+           preview and the captured photo mirrored against the real one. */
+        const actual = stream.getVideoTracks()[0]?.getSettings?.().facingMode
+        if (actual === 'user' || actual === 'environment') setActiveFacing(actual)
+
+        mediaStreamRef.current = stream
+        setMediaStream(stream)
+        setCameraError(null)
+        setCameraReady(true)
+        return
+      } catch (error) {
+        lastError = error
+        if (requestId !== cameraRequestRef.current) return
+
+        /* Permission and missing-device errors will not improve by retrying. */
+        const name = error instanceof DOMException ? error.name : ''
+        console.warn('[MAI Piks] getUserMedia attempt failed', {
+          video: typeof constraints.video === 'object' ? constraints.video : constraints.video,
+          audio: constraints.audio,
+          error: name || error,
+        })
+        if (name !== 'NotReadableError') break
+
+        /* The previous session may still be releasing the camera. */
+        await new Promise((resolve) => setTimeout(resolve, 400))
+      }
+    }
+
+    if (requestId !== cameraRequestRef.current) return
+
+    console.error('MAI Piks camera error:', lastError)
+
+    /*
+     * Separates "the page cannot see a camera at all" from "a camera exists but
+     * something else is holding it". The two need completely different fixes, so
+     * it is worth knowing which one happened.
+     */
+    const videoInputs = await navigator.mediaDevices
+      .enumerateDevices()
+      .then((devices) => devices.filter((device) => device.kind === 'videoinput'))
+      .catch(() => [])
+    console.warn('[MAI Piks] video inputs visible to the page:', videoInputs.length, videoInputs)
+
+    if (requestId !== cameraRequestRef.current) return
+
+    setCameraReady(false)
+    const name = lastError instanceof DOMException ? lastError.name : ''
+    setCameraError(
+      videoInputs.length === 0 && name !== 'NotAllowedError'
+        ? 'No camera is available to the app. Allow camera access, then reload.'
+        : name === 'NotReadableError'
+          ? 'Another app is holding the camera. Close it and try again.'
+          : name === 'NotAllowedError'
+            ? 'Camera permission is required to use MAI Piks.'
+            : name === 'NotFoundError'
+              ? 'No camera was found on this device.'
+              : 'Could not start the camera. Try again.',
+    )
+  }, [facingMode, stopCamera])
 
   useEffect(() => {
     const video = videoRef.current
@@ -480,9 +729,36 @@ export default function PhoneMaiPiks() {
     return () => {
       stopCamera()
     }
+  }, [mode, facingMode, startCamera, stopCamera])
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, facingMode])
+  /*
+   * Android keeps the camera locked to this WebView until every track is
+   * released, so a stream that is not released on unload — a hot reload, a
+   * backgrounded app, a killed screen — makes every later getUserMedia in the
+   * app fail with NotReadableError.
+   */
+  useEffect(() => {
+    const releaseCamera = () => {
+      stopCamera()
+      setCameraReady(false)
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        releaseCamera()
+        return
+      }
+      if (mode === 'camera' && !mediaStreamRef.current) startCamera()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pagehide', releaseCamera)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pagehide', releaseCamera)
+    }
+  }, [mode, startCamera, stopCamera])
 
   /* ---------------------------------------------------------------------- */
   /* Screenshot lifecycle                                                   */
@@ -565,12 +841,13 @@ export default function PhoneMaiPiks() {
   /* Create post / story                                                    */
   /* ---------------------------------------------------------------------- */
 
-  const createPost = async (mediaUrl: string, caption: string, visibility: StoryVisibility) => {
+  const createPost = async (media: { url: string; path: string }, caption: string, visibility: StoryVisibility) => {
     if (!currentUser) return
 
     const { error } = await supabase.from('maipiks_posts').insert({
       user_id: currentUser.id,
-      media_url: mediaUrl,
+      media_url: media.url,
+      storage_path: media.path,
       media_type: 'photo',
       caption,
       visibility,
@@ -593,37 +870,79 @@ export default function PhoneMaiPiks() {
     media: { url: string; path: string },
     mediaType: 'photo' | 'video',
     visibility: StoryVisibility,
-    durationMs?: number
+    durationMs?: number,
+    caption?: string
   ) => {
     if (!currentUser) return false
 
-    const { data, error } = await supabase.rpc('maipiks_add_story_item', {
+    const payload = {
       p_media_url: media.url,
       p_media_type: mediaType,
       p_visibility: visibility,
       p_storage_path: media.path,
       p_thumbnail_url: null,
-      p_caption: null,
+      p_caption: caption?.trim() || null,
       p_duration_ms: durationMs ?? null,
-    })
+      p_lifetime_hours: storyDurationHours,
+      p_monetization_mode: monetizationMode,
+      p_base_price_coins: ['paid', 'free_for_subscribers'].includes(monetizationMode) ? basePriceCoins : 0,
+      p_subscriber_discount_mode: subscriberDiscountMode,
+      p_paid_access_duration: paidAccessDuration,
+    }
+
+    let { data, error } = await supabase.rpc('maipiks_add_story_item', payload)
+
+    /*
+     * A long recording can outlive the access token, and this RPC is the only
+     * thing that actually creates the story. Refresh once and retry so a
+     * capture is not thrown away over a recoverable auth hiccup.
+     */
+    if (isAuthError(error)) {
+      console.warn('[MAIPiks] Story save hit an auth error, refreshing session and retrying:', error)
+      const { error: refreshError } = await supabase.auth.refreshSession()
+      if (!refreshError) {
+        const retry = await supabase.rpc('maipiks_add_story_item', payload)
+        data = retry.data
+        error = retry.error
+      }
+    }
 
     if (error) {
       console.error('[MAIPiks] Add story media failed:', error)
-      toast.error(error.message || 'Could not add this to your story')
+      /*
+       * The file is already in the bucket but no story row points at it, so the
+       * capture would be invisible and the object would leak forever. Take it
+       * back out so the next attempt starts from a clean slate.
+       */
+      await discardUpload(media.path)
+      toast.error(
+        isAuthError(error)
+          ? 'Your session expired — sign in again and re-record'
+          : error.message || 'Could not add this to your story'
+      )
       return false
     }
 
     const combined = Boolean((data as any)?.combined)
+    const durationLabel = storyDurationHours >= 24
+      ? `${storyDurationHours / 24} ${storyDurationHours === 24 ? 'day' : 'days'}`
+      : `${storyDurationHours} ${storyDurationHours === 1 ? 'hour' : 'hours'}`
     toast.success(
       combined
         ? mediaType === 'video'
           ? 'Video added to your story'
           : 'Photo added to your story'
-        : 'Story started — it disappears in 24h'
+        : `Story started — expires in ${durationLabel}`
     )
 
-    const freshStories = await fetchStories(currentUser.id)
-    setStories(freshStories)
+    try {
+      const freshStories = await fetchStories(currentUser.id)
+      setStories(freshStories)
+    } catch (err) {
+      /* The save itself succeeded — never report a refresh failure as a lost story. */
+      console.error('[MAIPiks] Story tray refresh failed after saving:', err)
+      toast.success('Saved. Refresh to load your stories.')
+    }
     return true
   }
 
@@ -642,7 +961,7 @@ export default function PhoneMaiPiks() {
     const context = canvas.getContext('2d')
     if (!context) return
 
-    if (facingMode === 'user') {
+    if (activeFacing === 'user') {
       context.translate(canvas.width, 0)
       context.scale(-1, 1)
     }
@@ -654,8 +973,11 @@ export default function PhoneMaiPiks() {
 
     if (!media) return
 
-    const ok = await addToStory(media, 'photo', 'everyone')
-    if (ok) setMode('story')
+    const ok = await addToStory(media, 'photo', storyVisibility, undefined, storyCaption)
+    if (ok) {
+      setStoryCaption('')
+      setMode('story')
+    }
   }
 
   /** Picks a container the browser can actually record. */
@@ -724,6 +1046,10 @@ export default function PhoneMaiPiks() {
     recorder.onstop = async () => {
       clearRecordTimers()
       setRecording(false)
+      setRecordingLocked(false)
+      recordingLockedRef.current = false
+      setSwipeProgress(0)
+      shutterPressXRef.current = null
 
       const elapsed = Date.now() - recordStartedAtRef.current
       setRecordMs(0)
@@ -741,8 +1067,11 @@ export default function PhoneMaiPiks() {
       const media = await uploadBlob(blob, ext)
       if (!media) return
 
-      const ok = await addToStory(media, 'video', 'everyone', elapsed)
-      if (ok) setMode('story')
+      const ok = await addToStory(media, 'video', storyVisibility, elapsed, storyCaption)
+      if (ok) {
+        setStoryCaption('')
+        setMode('story')
+      }
     }
 
     recorder.start(250)
@@ -775,13 +1104,34 @@ export default function PhoneMaiPiks() {
     }
   }
 
-  /** Press starts a hold timer: short press = photo, long press = video. */
-  const handleShutterPressStart = () => {
+  /**
+   * Press starts a hold timer: short press = photo, long press = video. Once the
+   * recording is latched, a press stops it instead.
+   */
+  const handleShutterPressStart = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (uploading || !cameraReady) return
 
+    if (recordingLockedRef.current) {
+      setRecordingLocked(false)
+      recordingLockedRef.current = false
+      stopRecording()
+      return
+    }
+
     didRecordRef.current = false
+    didSwipeRef.current = false
+    setSwipeProgress(0)
 
     if (holdTimerRef.current) window.clearTimeout(holdTimerRef.current)
+
+    shutterPressXRef.current = event.clientX
+
+    /* Keep receiving moves once the finger leaves the button. */
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId)
+    } catch {
+      /* capture is best effort */
+    }
 
     holdTimerRef.current = window.setTimeout(() => {
       holdTimerRef.current = null
@@ -789,13 +1139,45 @@ export default function PhoneMaiPiks() {
     }, HOLD_TO_RECORD_MS)
   }
 
+  /**
+   * Sliding left mid-hold latches the recording so lifting the finger no longer
+   * stops it. The latch is one way — sliding back right does not re-arm release.
+   */
+  const handleShutterMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const startX = shutterPressXRef.current
+    if (startX === null || recordingLockedRef.current) return
+
+    const distance = startX - event.clientX
+    if (distance <= 0) {
+      if (swipeProgress !== 0) setSwipeProgress(0)
+      return
+    }
+
+    const progress = Math.min(1, distance / SWIPE_TO_LOCK_PX)
+    setSwipeProgress(progress)
+    didSwipeRef.current = true
+
+    if (progress >= 1 && recording) {
+      recordingLockedRef.current = true
+      setRecordingLocked(true)
+      setSwipeProgress(0)
+      shutterPressXRef.current = null
+    }
+  }
+
   const handleShutterPressEnd = () => {
+    shutterPressXRef.current = null
+    setSwipeProgress(0)
+
+    /* Latched: the recording keeps going until the shutter is tapped again. */
+    if (recordingLockedRef.current) return
+
     if (holdTimerRef.current) {
       window.clearTimeout(holdTimerRef.current)
       holdTimerRef.current = null
 
-      /* Released before the hold threshold — take a photo instead. */
-      if (!didRecordRef.current && !recording) {
+      /* A swipe that never reached the hold threshold is not a photo request. */
+      if (!didRecordRef.current && !recording && !didSwipeRef.current) {
         void capturePhoto()
       }
       return
@@ -821,21 +1203,27 @@ export default function PhoneMaiPiks() {
 
   /*
    * Safety net: if the pointer is released outside the shutter (dragged off with
-   * a mouse, or the browser steals the gesture) the recording still stops.
+   * a mouse, or the browser steals the gesture) the recording still stops — unless
+   * it was latched, where lifting the finger is exactly how it keeps recording.
    */
   useEffect(() => {
     if (!recording) return
 
-    const handleRelease = () => stopRecording()
+    const handleRelease = () => {
+      if (recordingLockedRef.current) return
+      stopRecording()
+    }
+
+    const handleBlur = () => stopRecording()
 
     window.addEventListener('pointerup', handleRelease)
     window.addEventListener('pointercancel', handleRelease)
-    window.addEventListener('blur', handleRelease)
+    window.addEventListener('blur', handleBlur)
 
     return () => {
       window.removeEventListener('pointerup', handleRelease)
       window.removeEventListener('pointercancel', handleRelease)
-      window.removeEventListener('blur', handleRelease)
+      window.removeEventListener('blur', handleBlur)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recording])
@@ -874,8 +1262,63 @@ export default function PhoneMaiPiks() {
   /* Private stories                                                        */
   /* ---------------------------------------------------------------------- */
 
+  const purchaseStory = async (story: PiksStory) => {
+    if (!currentUser) {
+      toast.error('Sign in to unlock this story')
+      return
+    }
+    if (story.monetizationMode === 'subscribers_only') {
+      toast.info('An active subscription is required to view this story')
+      return
+    }
+
+    const { data: quoteData, error: quoteError } = await supabase.rpc(
+      'maipiks_story_pricing',
+      { p_story_id: story.id },
+    )
+    if (quoteError || !quoteData) {
+      toast.error(quoteError?.message || 'Could not check story access')
+      return
+    }
+
+    const quote = quoteData as Record<string, unknown>
+    if (Boolean(quote.has_access)) {
+      const refreshed = await fetchStories(currentUser.id)
+      setStories(refreshed)
+      return
+    }
+
+    const price = Number(quote.final_price_coins ?? 0)
+    const discount = Number(quote.discount_percent ?? 0)
+    const confirmation = price > 0
+      ? `Unlock @${story.username}'s story for ${price.toLocaleString()} Troll Coins${discount > 0 ? ` (${discount}% subscriber discount)` : ''}?`
+      : `Unlock @${story.username}'s story for free?`
+    if (!window.confirm(confirmation)) return
+
+    const { data: purchaseData, error: purchaseError } = await supabase.rpc(
+      'maipiks_purchase_story',
+      { p_story_id: story.id },
+    )
+    if (purchaseError || !purchaseData) {
+      toast.error(purchaseError?.message || 'Story purchase failed')
+      return
+    }
+
+    const purchase = purchaseData as Record<string, unknown>
+    const newBalance = Number(purchase.new_balance)
+    if (Number.isFinite(newBalance)) {
+      setCurrentUser((previous) => previous ? { ...previous, trollCoins: newBalance } : previous)
+    }
+    const refreshed = await fetchStories(currentUser.id)
+    setStories(refreshed)
+    toast.success('Story unlocked')
+  }
+
   const canViewStory = (story: PiksStory) => {
     if (story.isOwn) return true
+    if (story.monetizationMode && story.monetizationMode !== 'free') {
+      return story.hasAccess === true
+    }
     if (story.visibility === 'everyone' || story.visibility === 'followers') return true
     if (story.hasAccess !== undefined) return story.hasAccess
     return false
@@ -890,7 +1333,11 @@ export default function PhoneMaiPiks() {
 
   const openStoryViewer = (story: PiksStory) => {
     if (!canViewStory(story)) {
-      toast.error('This story is private')
+      if (story.monetizationMode === 'paid' || story.monetizationMode === 'free_for_subscribers') {
+        void purchaseStory(story)
+      } else {
+        toast.error('This story requires an active subscription')
+      }
       return
     }
 
@@ -927,8 +1374,12 @@ export default function PhoneMaiPiks() {
 
     toast.success('Deleted from your story')
 
-    const fresh = await fetchStories(currentUser.id)
-    setStories(fresh)
+    try {
+      const fresh = await fetchStories(currentUser.id)
+      setStories(fresh)
+    } catch (err) {
+      console.error('[MAIPiks] Story tray refresh failed after deleting:', err)
+    }
     return true
   }
 
@@ -954,8 +1405,12 @@ export default function PhoneMaiPiks() {
     setViewerIndex(null)
     toast.success('Story deleted')
 
-    const fresh = await fetchStories(currentUser.id)
-    setStories(fresh)
+    try {
+      const fresh = await fetchStories(currentUser.id)
+      setStories(fresh)
+    } catch (err) {
+      console.error('[MAIPiks] Story tray refresh failed after deleting:', err)
+    }
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1015,6 +1470,30 @@ export default function PhoneMaiPiks() {
     return true
   }
 
+  const reportStoryItem = async (
+    _story: PiksStory,
+    item: PiksStoryItem,
+    category: 'minor_harmful' | 'harmful_dangerous' | 'weapons' | 'other_safety_violation',
+    description: string,
+  ) => {
+    if (!currentUser) {
+      toast.error('Sign in to report Mai Piks')
+      return false
+    }
+
+    const { data, error } = await supabase.functions.invoke('maipiks-report-evidence', {
+      body: { storyItemId: item.id, category, description },
+    })
+    if (error || !data?.success) {
+      console.error('[MAIPiks] Report submission failed:', error || data)
+      toast.error(data?.error || error?.message || 'Could not submit the report')
+      return false
+    }
+
+    toast.success('Report submitted for review')
+    return true
+  }
+
   /* ---------------------------------------------------------------------- */
   /* Unread count                                                           */
   /* ---------------------------------------------------------------------- */
@@ -1036,6 +1515,81 @@ export default function PhoneMaiPiks() {
           <Camera size={30} className="text-[#00BFFF] animate-pulse" />
         </div>
         <p className="relative mt-6 text-sm font-black text-zinc-400">Loading MAI Piks...</p>
+      </div>
+    )
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col bg-[#03030a] text-white">
+        <header className="flex h-[62px] shrink-0 items-center border-b border-[#00BFFF]/15 px-4">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-black"
+          >
+            <ArrowLeft size={18} />
+            MaiTroll
+          </button>
+        </header>
+        <main className="flex flex-1 items-center justify-center px-5">
+          <section className="w-full max-w-sm text-center">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-[#00BFFF]/25 bg-[#00BFFF]/10">
+              <Lock size={26} className="text-[#00BFFF]" />
+            </div>
+            <h1 className="mt-5 text-xl font-black">Sign in to Mai Piks</h1>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+              Sign in to view stories, share photos, and connect with creators.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/auth')}
+              className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#1787FF] px-5 text-sm font-black text-white shadow-[0_0_24px_rgba(0,191,255,0.2)]"
+            >
+              Sign in
+            </button>
+          </section>
+        </main>
+      </div>
+    )
+  }
+
+  if (restrictionsLoading) {
+    return (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#03030a] text-white">
+        <Loader2 className="h-6 w-6 animate-spin text-cyan-300" />
+      </div>
+    )
+  }
+
+  if (maipiksRestriction) {
+    const expiresAt = maipiksRestriction.expires_at
+    const durationLabel = expiresAt
+      ? `${Math.max(1, Math.ceil((new Date(expiresAt).getTime() - new Date(maipiksRestriction.created_at).getTime()) / 3_600_000))} hours`
+      : 'Indefinite'
+
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col bg-[#03030a] text-white">
+        <header className="flex h-[62px] shrink-0 items-center border-b border-red-400/15 px-4">
+          <button type="button" onClick={handleBack} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-black">
+            <ArrowLeft size={18} />
+            MaiTroll
+          </button>
+        </header>
+        <main className="flex flex-1 items-center justify-center px-5">
+          <section className="w-full max-w-md rounded-2xl border border-red-400/20 bg-red-950/15 p-5">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-red-400/25 bg-red-400/10 text-red-300">
+              <ShieldCheck size={25} />
+            </div>
+            <h1 className="mt-5 text-center text-lg font-black uppercase text-red-200">You&apos;ve violated Mai Piks</h1>
+            <p className="mt-2 text-center text-sm text-zinc-300">Your Mai Piks access has been restricted.</p>
+            <dl className="mt-5 space-y-3 rounded-xl border border-white/10 bg-black/30 p-4 text-xs">
+              <div><dt className="font-bold uppercase text-zinc-500">Reason</dt><dd className="mt-1 text-white">{maipiksRestriction.reason}</dd></div>
+              <div><dt className="font-bold uppercase text-zinc-500">Duration</dt><dd className="mt-1 text-white">{durationLabel}</dd></div>
+              <div><dt className="font-bold uppercase text-zinc-500">Restriction ends</dt><dd className="mt-1 text-white">{expiresAt ? new Date(expiresAt).toLocaleString() : 'Indefinitely'}</dd></div>
+            </dl>
+          </section>
+        </main>
       </div>
     )
   }
@@ -1196,7 +1750,7 @@ export default function PhoneMaiPiks() {
                 autoPlay
                 muted
                 playsInline
-                className={`h-full w-full object-cover -scale-x-100`}
+                className={`h-full w-full object-cover ${activeFacing === 'user' ? '-scale-x-100' : ''}`}
               />
             ) : (
               <div className="relative flex h-full flex-col items-center justify-center px-8 text-center">
@@ -1264,66 +1818,286 @@ export default function PhoneMaiPiks() {
                   <span className="text-[8px] font-black uppercase tracking-wider text-red-300/70">
                     / 3:00 max
                   </span>
+                  {recordingLocked && (
+                    <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-white">
+                      <Lock size={9} />
+                      Latched
+                    </span>
+                  )}
                 </div>
               )}
 
-              <button
-                type="button"
-                disabled={uploading}
-                onPointerDown={(event) => {
-                  event.preventDefault()
-                  handleShutterPressStart()
-                }}
-                onPointerUp={(event) => {
-                  event.preventDefault()
-                  handleShutterPressEnd()
-                }}
-                onPointerCancel={() => handleShutterPressEnd()}
-                onContextMenu={(event) => event.preventDefault()}
-                className={`group relative grid h-24 w-24 select-none place-items-center rounded-full border-[5px] bg-black/20 transition active:scale-95 disabled:opacity-50 ${
-                  recording
-                    ? 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.45)]'
-                    : 'border-white shadow-[0_0_40px_rgba(0,191,255,0.2)]'
-                }`}
-                style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+              {/* Premium Mai Piks shutter */}
+              <div
+                role="group"
+                aria-label="Story audience"
+                className="mb-5 grid w-full max-w-[310px] grid-cols-3 overflow-hidden rounded-xl border border-white/15 bg-black/50 backdrop-blur-xl"
               >
-                {/* Recording progress ring up to the 3 minute cap */}
-                {recording && (
-                  <svg className="pointer-events-none absolute -inset-2 h-[112px] w-[112px] -rotate-90" viewBox="0 0 112 112">
-                    <circle
-                      cx="56"
-                      cy="56"
-                      r="52"
-                      fill="none"
-                      stroke="rgba(239,68,68,0.9)"
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                      strokeDasharray={2 * Math.PI * 52}
-                      strokeDashoffset={2 * Math.PI * 52 * (1 - Math.min(recordMs / MAX_VIDEO_MS, 1))}
+                {([
+                  { value: 'everyone', label: 'Everyone', icon: Sparkles },
+                  { value: 'followers', label: 'Followers', icon: Users },
+                  { value: 'private', label: 'Subscribers', icon: Lock },
+                ] as const).map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={storyVisibility === value}
+                    disabled={recording || uploading}
+                    onClick={() => setStoryVisibility(value)}
+                    className={`flex min-h-10 items-center justify-center gap-1.5 px-2 text-[9px] font-black transition-colors disabled:opacity-50 ${
+                      storyVisibility === value
+                        ? 'bg-[#00BFFF]/20 text-white shadow-[inset_0_-2px_0_#00BFFF]'
+                        : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={12} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <label className="mb-5 flex w-full max-w-[310px] items-center justify-between rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
+                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">
+                  Story duration
+                </span>
+                <select
+                  aria-label="Story duration"
+                  value={customStoryDuration ? 'custom' : storyDurationHours}
+                  disabled={recording || uploading}
+                  onChange={(event) => {
+                    if (event.target.value === 'custom') {
+                      setCustomStoryDuration(true)
+                    } else {
+                      setCustomStoryDuration(false)
+                      setStoryDurationHours(Number(event.target.value))
+                    }
+                  }}
+                  className="bg-transparent text-right text-[10px] font-black text-white outline-none disabled:opacity-50"
+                >
+                  <option value={1} className="bg-[#090913]">1 hour</option>
+                  <option value={6} className="bg-[#090913]">6 hours</option>
+                  <option value={12} className="bg-[#090913]">12 hours</option>
+                  <option value={24} className="bg-[#090913]">24 hours</option>
+                  <option value={48} className="bg-[#090913]">48 hours</option>
+                  <option value={168} className="bg-[#090913]">7 days</option>
+                  <option value="custom" className="bg-[#090913]">Custom</option>
+                </select>
+              </label>
+
+              {customStoryDuration && (
+                <label className="mb-3 flex w-full max-w-[310px] items-center justify-between rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">Custom hours (max 720)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={720}
+                    step={1}
+                    value={storyDurationHours}
+                    disabled={recording || uploading}
+                    onChange={(event) => setStoryDurationHours(Number(event.target.value))}
+                    aria-label="Custom story duration in hours"
+                    className="w-16 bg-transparent text-right text-[10px] font-black text-white outline-none disabled:opacity-50"
+                  />
+                </label>
+              )}
+
+              <label className="mb-3 flex w-full max-w-[310px] items-center justify-between rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
+                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">
+                  Story access
+                </span>
+                <select
+                  aria-label="Story access"
+                  value={monetizationMode}
+                  disabled={recording || uploading}
+                  onChange={(event) => setMonetizationMode(event.target.value as StoryMonetizationMode)}
+                  className="max-w-[170px] bg-transparent text-right text-[10px] font-black text-white outline-none disabled:opacity-50"
+                >
+                  <option value="free" className="bg-[#090913]">Everyone can view</option>
+                  <option value="paid" className="bg-[#090913]">Paid access</option>
+                  <option value="subscribers_only" className="bg-[#090913]">Subscribers only</option>
+                  <option value="free_for_subscribers" className="bg-[#090913]">Free for subscribers</option>
+                </select>
+              </label>
+
+              {(monetizationMode === 'paid' || monetizationMode === 'free_for_subscribers') && (
+                <div className="mb-5 grid w-full max-w-[310px] grid-cols-2 gap-2">
+                  <label className="flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
+                    <span className="text-[8px] font-black uppercase tracking-wider text-zinc-300">Base coins</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={1000000}
+                      step={1}
+                      value={basePriceCoins}
+                      disabled={recording || uploading}
+                      onChange={(event) => setBasePriceCoins(Number(event.target.value))}
+                      className="w-16 bg-transparent text-right text-[10px] font-black text-white outline-none disabled:opacity-50"
+                      aria-label="Base price in Troll Coins"
                     />
-                  </svg>
+                  </label>
+                  <label className="flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
+                    <span className="text-[8px] font-black uppercase tracking-wider text-zinc-300">Subscribers</span>
+                    <select
+                      aria-label="Subscriber discount"
+                      value={subscriberDiscountMode}
+                      disabled={recording || uploading}
+                      onChange={(event) => setSubscriberDiscountMode(event.target.value as 'platform' | 'none')}
+                      className="max-w-[100px] bg-transparent text-right text-[9px] font-black text-white outline-none disabled:opacity-50"
+                    >
+                      <option value="platform" className="bg-[#090913]">Tier rate</option>
+                      <option value="none" className="bg-[#090913]">No discount</option>
+                    </select>
+                  </label>
+                  <label className="col-span-2 flex items-center justify-between rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
+                    <span className="text-[8px] font-black uppercase tracking-wider text-zinc-300">Buyer access</span>
+                    <select
+                      aria-label="Buyer access duration"
+                      value={paidAccessDuration}
+                      disabled={recording || uploading}
+                      onChange={(event) => setPaidAccessDuration(event.target.value)}
+                      className="bg-transparent text-right text-[9px] font-black text-white outline-none disabled:opacity-50"
+                    >
+                      <option value="until_story_expiry" className="bg-[#090913]">Until story expires</option>
+                      <option value="1h" className="bg-[#090913]">1 hour</option>
+                      <option value="6h" className="bg-[#090913]">6 hours</option>
+                      <option value="24h" className="bg-[#090913]">24 hours</option>
+                      <option value="7d" className="bg-[#090913]">7 days</option>
+                      <option value="permanent" className="bg-[#090913]">Permanent</option>
+                    </select>
+                  </label>
+                </div>
+              )}
+
+              <label className="mb-5 w-full max-w-[310px] space-y-1 rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
+                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">Caption</span>
+                <textarea
+                  value={storyCaption}
+                  onChange={(event) => setStoryCaption(event.target.value)}
+                  maxLength={500}
+                  rows={2}
+                  disabled={recording || uploading}
+                  placeholder="Add a caption or #hashtag"
+                  className="w-full resize-none bg-transparent text-xs text-white outline-none placeholder:text-zinc-600 disabled:opacity-50"
+                />
+              </label>
+
+              <div className="relative flex flex-col items-center">
+                {/* Slide-to-latch rail, revealed while the finger travels left */}
+                {(swipeProgress > 0 || recordingLocked) && (
+                  <div
+                    className="pointer-events-none absolute right-full top-1/2 mr-3 flex -translate-y-1/2 items-center gap-2"
+                    aria-hidden="true"
+                  >
+                    {recordingLocked ? (
+                      <span className="grid h-9 w-9 place-items-center rounded-full border border-white/40 bg-black/60 text-white shadow-[0_0_20px_rgba(0,191,255,0.35)] backdrop-blur-xl">
+                        <Lock size={15} />
+                      </span>
+                    ) : (
+                      <>
+                        <span className="h-1.5 w-14 overflow-hidden rounded-full bg-white/15">
+                          <span
+                            className="block h-full rounded-full bg-gradient-to-r from-[#BF00FF] to-[#00BFFF] transition-[width] duration-75"
+                            style={{ width: `${swipeProgress * 100}%` }}
+                          />
+                        </span>
+                        <ChevronLeft
+                          size={16}
+                          className="text-white/70 transition-opacity duration-150"
+                          style={{ opacity: 0.35 + swipeProgress * 0.65 }}
+                        />
+                      </>
+                    )}
+                  </div>
                 )}
 
-                <span className="absolute -inset-3 rounded-full border border-[#00BFFF]/20 opacity-0 transition group-hover:opacity-100" />
+                <button
+                  type="button"
+                  disabled={uploading || !cameraReady}
+                  onPointerDown={(event) => {
+                    event.preventDefault()
+                    handleShutterPressStart(event)
+                  }}
+                  onPointerMove={handleShutterMove}
+                  onPointerUp={(event) => {
+                    event.preventDefault()
+                    handleShutterPressEnd()
+                  }}
+                  onPointerCancel={() => handleShutterPressEnd()}
+                  onContextMenu={(event) => event.preventDefault()}
+                  aria-label={
+                    recordingLocked
+                      ? 'Tap to stop recording'
+                      : recording
+                        ? 'Release to stop recording, or slide left to keep recording'
+                        : 'Tap for photo, or hold and slide left to record video'
+                  }
+                  className={`group relative grid h-[92px] w-[92px] select-none place-items-center rounded-full transition-all duration-200 active:scale-[0.90] disabled:cursor-not-allowed disabled:opacity-50 ${
+                    recording
+                      ? 'bg-red-500 shadow-[0_0_48px_rgba(239,68,68,0.62)]'
+                      : 'bg-gradient-to-br from-[#00BFFF] via-[#5B5CFF] to-[#BF00FF] shadow-[0_0_42px_rgba(0,191,255,0.38)]'
+                  }`}
+                  style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+                >
+                  {/* Soft outer halo */}
+                  <span
+                    className={`pointer-events-none absolute -inset-3 rounded-full border transition-all duration-300 ${
+                      recording
+                        ? 'border-red-300/70 shadow-[0_0_25px_rgba(239,68,68,0.35)]'
+                        : 'border-white/45 group-hover:border-white/75 group-hover:shadow-[0_0_25px_rgba(0,191,255,0.25)]'
+                    }`}
+                  />
 
-                {recording ? (
-                  <div className="grid h-[54px] w-[54px] place-items-center rounded-2xl bg-red-500 shadow-[0_0_30px_rgba(239,68,68,0.6)]">
-                    <Video size={22} className="text-white" />
-                  </div>
-                ) : (
-                  <div className="h-[68px] w-[68px] rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] p-[3px] shadow-[0_0_30px_rgba(0,191,255,0.45)]">
-                    <div className="h-full w-full rounded-full bg-white" />
-                  </div>
-                )}
-              </button>
+                  {/* Recording progress ring */}
+                  {recording && (
+                    <svg
+                      className="pointer-events-none absolute -inset-[10px] h-[112px] w-[112px] -rotate-90"
+                      viewBox="0 0 112 112"
+                    >
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="51"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.22)"
+                        strokeWidth="3"
+                      />
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="51"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 51}
+                        strokeDashoffset={2 * Math.PI * 51 * (1 - Math.min(recordMs / MAX_VIDEO_MS, 1))}
+                        className="drop-shadow-[0_0_6px_rgba(255,255,255,0.75)]"
+                      />
+                    </svg>
+                  )}
 
-              <p className="mt-4 text-center text-[9px] font-black uppercase tracking-[0.25em] text-white/50">
-                {recording ? 'Release to post video' : 'Tap for photo • Hold for video'}
-              </p>
+                  {/* Recording stop indicator */}
+                  {recording && (
+                    <span className="h-7 w-7 rounded-[8px] bg-white shadow-[0_0_18px_rgba(255,255,255,0.65)]" />
+                  )}
+                </button>
 
-              <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-xl">
+                {/* Mode hint */}
+                <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3.5 py-1.5 backdrop-blur-xl">
+                  <span className={`h-1.5 w-1.5 rounded-full ${recording ? 'animate-pulse bg-red-400 shadow-[0_0_8px_#ef4444]' : 'bg-[#00BFFF] shadow-[0_0_8px_#00BFFF]'}`} />
+                  <span className="text-[9px] font-black uppercase tracking-[0.20em] text-white/70">
+                    {recordingLocked
+                      ? 'Recording  •  Tap to stop'
+                      : recording
+                        ? 'Release to stop  •  Swipe left to keep going'
+                        : 'Tap photo  •  Hold video  •  Swipe left to lock'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 flex max-w-[310px] items-center justify-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-center backdrop-blur-xl">
                 <Sparkles size={11} className="text-[#BF00FF]" />
-                <span className="text-[8px] font-bold text-zinc-500">
+                <span className="text-[8px] font-bold text-zinc-400">
                   Everything you post in 24h joins the same story
                 </span>
               </div>
@@ -1532,11 +2306,15 @@ export default function PhoneMaiPiks() {
 
                           <p className="mt-1 text-[9px] text-zinc-600">
                             {mediaCount} {mediaCount === 1 ? 'piks' : 'piks'} •{' '}
-                            {story.visibility === 'private'
-                              ? hasAccess
-                                ? 'Private • Access granted'
-                                : 'Private • Subscription required'
-                              : 'Public story'}
+                            {story.monetizationMode === 'subscribers_only'
+                              ? hasAccess ? 'Subscribers only • Access granted' : 'Subscribers only'
+                              : story.monetizationMode === 'free_for_subscribers'
+                                ? hasAccess ? 'Free with subscription' : `Paid • ${Number(story.finalPriceCoins ?? story.basePriceCoins ?? 0).toLocaleString()} coins`
+                                : story.monetizationMode === 'paid'
+                                  ? hasAccess ? 'Paid • Unlocked' : `Paid • ${Number(story.finalPriceCoins ?? story.basePriceCoins ?? 0).toLocaleString()} coins`
+                                  : story.visibility === 'private'
+                                    ? hasAccess ? 'Private • Access granted' : 'Private • Subscription required'
+                                    : story.visibility === 'followers' ? 'Followers only' : 'Public story'}
                           </p>
 
                           {/* 24h expiry countdown */}
@@ -1547,7 +2325,20 @@ export default function PhoneMaiPiks() {
                       </button>
 
                       <div className="flex shrink-0 items-center gap-2">
-                        {story.visibility === 'private' ? (
+                        {!hasAccess && !story.isOwn && (story.monetizationMode === 'paid' || story.monetizationMode === 'free_for_subscribers') ? (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              void purchaseStory(story)
+                            }}
+                            aria-label={`Unlock story from @${story.username}`}
+                            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2 text-[8px] font-black text-amber-200"
+                          >
+                            <Coins size={12} />
+                            Unlock
+                          </button>
+                        ) : story.visibility === 'private' || story.monetizationMode === 'subscribers_only' ? (
                           <Lock size={15} className={hasAccess ? 'text-[#00BFFF]' : 'text-[#BF00FF]'} />
                         ) : (
                           <ChevronRight size={16} className="text-zinc-700" />
@@ -1628,6 +2419,7 @@ export default function PhoneMaiPiks() {
           onClose={closeStoryViewer}
           onDeleteItem={deleteStoryItem}
           onTip={sendStoryTip}
+          onReport={reportStoryItem}
           onScreenshot={handleScreenshotDetected}
         />
       )}

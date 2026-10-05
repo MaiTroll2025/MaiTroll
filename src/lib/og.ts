@@ -1,7 +1,7 @@
 const APP_ORIGIN = import.meta.env.VITE_APP_URL || import.meta.env.APP_URL || 'https://www.maitroll.com'
 
 export function buildOGImageUrl(params: {
-  kind: 'profile' | 'tcnn' | 'academy' | 'default'
+  kind: 'profile' | 'tcnn' | 'default'
   id?: string
   slug?: string
   username?: string
@@ -17,12 +17,6 @@ export function buildOGImageUrl(params: {
     if (params.id) sp.set('id', params.id)
     if (params.slug) sp.set('slug', params.slug)
     return `${base}/tcnn?${sp.toString()}`
-  }
-
-  if (params.kind === 'academy') {
-    if (params.id) sp.set('id', params.id)
-    if (params.slug) sp.set('slug', params.slug)
-    return `${base}/academy?${sp.toString()}`
   }
 
   if (params.kind === 'default') {

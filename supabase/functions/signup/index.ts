@@ -26,15 +26,13 @@ Deno.serve(async (req: Request) => {
   try {
     const body = await req.json()
 
-const {
+    const {
       email,
       password,
       username,
       role,
       referral_code,
       data,
-      organization_data,
-      institution_data,
     } = body
 
     if (!email || !password || !username) {
@@ -93,11 +91,12 @@ const {
       }
     }
 
-    const { data: emailUser, error: emailCheckError } = await supabase
-      .from("user_profiles")
-      .select("id")
-      .eq("email", cleanEmail)
-      .maybeSingle()
+    const { data: emailUser, error: emailCheckError } =
+      await supabase
+        .from("user_profiles")
+        .select("id")
+        .eq("email", cleanEmail)
+        .maybeSingle()
 
     if (emailCheckError) {
       console.error(
@@ -127,11 +126,12 @@ const {
       )
     }
 
-    const { data: usernameUser, error: usernameCheckError } = await supabase
-      .from("user_profiles")
-      .select("id")
-      .eq("username", cleanUsername)
-      .maybeSingle()
+    const { data: usernameUser, error: usernameCheckError } =
+      await supabase
+        .from("user_profiles")
+        .select("id")
+        .eq("username", cleanUsername)
+        .maybeSingle()
 
     if (usernameCheckError) {
       console.error(
@@ -197,16 +197,7 @@ const {
       id: newUserId,
       username: cleanUsername,
       email: cleanEmail,
-      role:
-        role === "organization"
-          ? "user"
-          : role || "user",
-      troll_role:
-        role === "organization"
-          ? "troll_family"
-          : role === "student"
-            ? "student"
-            : null,
+      role: role || "user",
       terms_accepted: data?.terms_accepted === true,
       terms_accepted_at: data?.accepted_at || now,
       platform: data?.platform || null,
@@ -229,7 +220,7 @@ const {
     if (profileError) {
       console.error(
         `[Signup ${requestId}] Profile sync error:`,
-        profileError,
+        profileError
       )
 
       return withCors(
@@ -241,110 +232,6 @@ const {
         500,
         req,
       )
-    }
-
-    // Handle institution data for students and instructors
-    if (institution_data && (role === "student" || role === "instructor")) {
-      const { name, email: instEmail, domain } = institution_data
-      
-      // Look up or create institution
-      let institutionId: string | null = null
-      
-      if (domain) {
-        const { data: existingDomain } = await supabase
-          .from("institution_domains")
-          .select("institution_id")
-          .eq("domain", domain.toLowerCase())
-          .maybeSingle()
-        
-        if (existingDomain) {
-          institutionId = existingDomain.institution_id
-        }
-      }
-      
-      if (!institutionId && name) {
-        // Create new institution
-        const { data: newInstitution } = await supabase
-          .from("institutions")
-          .insert({
-            name: name.trim(),
-            type: role === "instructor" ? "university" : "other_educational",
-            is_active: true,
-          })
-          .select("id")
-          .maybeSingle()
-        
-        if (newInstitution) {
-          institutionId = newInstitution.id
-          
-          // Add domain if provided
-          if (domain) {
-            await supabase
-              .from("institution_domains")
-              .insert({
-                institution_id: institutionId,
-                domain: domain.toLowerCase(),
-                is_verified: true,
-                verification_source: "signup",
-              })
-          }
-        }
-      }
-      
-      // Create user institution verification record
-      if (institutionId) {
-        await supabase
-          .from("user_institution_verifications")
-          .insert({
-            user_id: newUserId,
-            institution_id: institutionId,
-            domain: domain || (instEmail?.split("@")[1]?.toLowerCase() || ""),
-            status: "pending",
-          })
-        
-        // Update user profile with institution info
-        await supabase
-          .from("user_profiles")
-          .update({
-            institution_name: name,
-            institution_domain: domain,
-            institution_verification_status: "pending",
-            institution_verified: false,
-          })
-          .eq("id", newUserId)
-      }
-    }
-
-    if (role === "organization" && organization_data) {
-      const { error: orgError } = await supabase
-        .from("organizations")
-        .insert({
-          name: String(
-            organization_data.name || cleanUsername,
-          ),
-          email: String(
-            organization_data.email || cleanEmail,
-          ),
-          phone: organization_data.phone || null,
-          website: organization_data.website || null,
-          country: organization_data.country || null,
-          description:
-            organization_data.description || null,
-          admin_user_id: newUserId,
-          created_by: newUserId,
-          status: "pending",
-          student_limit: 20,
-          current_student_count: 0,
-          created_at: now,
-          updated_at: now,
-        })
-
-      if (orgError) {
-        console.error(
-          `[Signup ${requestId}] Organization error:`,
-          orgError,
-        )
-      }
     }
 
     console.log(

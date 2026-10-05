@@ -9,11 +9,12 @@ import { useStaffWalkieTalkieContext } from '../StaffWalkieTalkieProvider';
 import { toast } from 'sonner';
 import {
   Activity, BarChart3, Bug, Clock, Coins, Mail, Monitor, MoreVertical,
-  Radio, RefreshCw, Send, Pause, Search, Shield, ShieldAlert, TrendingUp,
+  Radio, RefreshCw, Send, Pause, Search, Shield, ShieldAlert, TrendingUp, Flag,
   UserPlus, Users, X, Stamp, FileText, AlertTriangle, Gavel, Lock,
 } from 'lucide-react';
 import { isProtectedPlatformRole } from '@/lib/protectedRoles';
 import BugCenterPanel from './BugCenterPanel';
+import MaiPiksReportsPanel from './MaiPiksReportsPanel';
 import StaffWalkieTalkieButton from '../StaffWalkieTalkieButton';
 
 interface LiveStream {
@@ -128,7 +129,7 @@ interface StreamAnalyticsDaily {
   peak_concurrent_viewers: number;
 }
 
-type MainTab = 'rtc' | 'mod_actions' | 'signups' | 'analytics' | 'cashout' | 'bug_center' | 'tromail' | 'walkie_talkie' | 'notary' | 'arrest';
+type MainTab = 'rtc' | 'mod_actions' | 'maipiks_reports' | 'signups' | 'analytics' | 'cashout' | 'bug_center' | 'tromail' | 'walkie_talkie' | 'notary' | 'arrest';
 
 interface TromailInboxItem {
   id: string;
@@ -182,9 +183,12 @@ const { profile } = useAuthStore();
     canAccessWalkieTalkie: contextCanAccessWalkieTalkie,
   } = useStaffWalkieTalkieContext();
 
-const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'agency_hr_manager', 'ceo', 'superadmin', 'empire_partner', 'auctioneer', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'agency_hr', 'agency_leader', 'ceo_assistant', 'noah_assistant', 'academy_teacher', 'academy_director', 'admissions_officer'];
+const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'agency_hr_manager', 'ceo', 'superadmin', 'empire_partner', 'auctioneer', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'agency_hr', 'agency_leader', 'ceo_assistant', 'noah_assistant'];
    const isStaff = profile?.is_admin === true || staffRoles.includes(profile?.role || '');
   const isFullAdmin = profile?.is_admin === true || ['admin', 'ceo', 'superadmin'].includes(profile?.role || '');
+  const canReviewMaiPiksReports = isFullAdmin
+    || profile?.is_lead_officer === true
+    || [profile?.role, profile?.troll_role].some((role) => String(role || '').toLowerCase() === 'lead_troll_officer');
   const canUseWalkieTalkie = contextCanAccessWalkieTalkie;
 
   const isTargetAdmin = (target: UserListItem | StreamViewer | any): boolean => {
@@ -1892,6 +1896,7 @@ const renderFloatingButton = () => {
      { id: 'rtc', label: 'RTC Monitor', icon: <Radio className="h-3 w-3" /> },
      { id: 'walkie_talkie', label: 'Walkie Talkie', icon: <Radio className="h-3 w-3" /> },
      { id: 'mod_actions', label: 'Mod Actions', icon: <Shield className="h-3 w-3" /> },
+    { id: 'maipiks_reports', label: 'Mai Piks Reports', icon: <Flag className="h-3 w-3" />, staffOnly: true },
      { id: 'signups', label: 'Signups', icon: <UserPlus className="h-3 w-3" />, adminOnly: true },
      { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-3 w-3" />, adminOnly: true },
       { id: 'cashout', label: 'Cashout Bonus', icon: <Coins className="h-3 w-3" />, adminOnly: true },
@@ -1903,6 +1908,7 @@ const renderFloatingButton = () => {
 
    const visibleMonitorTabs = monitorTabs.filter((tab) => {
      if (tab.adminOnly) return isFullAdmin;
+     if (tab.id === 'maipiks_reports') return canReviewMaiPiksReports;
      if (tab.staffOnly) return isStaff;
      if (tab.id === 'walkie_talkie') return canUseWalkieTalkie;
      return true;
@@ -3301,6 +3307,7 @@ const renderRtcTab = () => (
      if (activeMainTab === 'rtc') return renderRtcTab();
      if (activeMainTab === 'walkie_talkie') return <WalkieTalkieTab />;
      if (activeMainTab === 'mod_actions') return renderModActionsTab();
+    if (activeMainTab === 'maipiks_reports' && canReviewMaiPiksReports) return <MaiPiksReportsPanel />;
      if (isFullAdmin && activeMainTab === 'signups') return renderSignupsTab();
       if (isFullAdmin && activeMainTab === 'cashout') return renderCashoutTab();
        if (isFullAdmin && activeMainTab === 'bug_center') return <BugCenterPanel />;

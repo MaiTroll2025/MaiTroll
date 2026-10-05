@@ -54,6 +54,18 @@
       "presentationOptions": ["badge", "sound", "alert"],
       "notificationChannels": [
         {
+          "id": "default_v2",
+          "name": "Mai Troll Notifications",
+          "description": "General app notifications",
+          "importance": 4,
+          "sound": "notification",
+          "vibrationPattern": [200, 100, 200],
+          "lightColor": "#A855F7",
+          "enableVibration": true,
+          "enableLights": true,
+          "showBadge": true
+        },
+        {
           "id": "default",
           "name": "Default Notifications",
           "description": "General app notifications",

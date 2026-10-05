@@ -65,12 +65,27 @@
     <!-- ============================================================ -->
     <!-- Canonical Tag                                                 -->
     <!-- ============================================================ -->
-    <link rel="canonical" href="https://www.maitroll.com/" />
+    <!--
+      Intentionally NOT set here. vercel.json serves this same index.html for
+      every path, so any static canonical would be wrong on every page except
+      one — and a wrong canonical actively deindexes the page. Leaving it unset
+      makes Google canonicalise to the URL it actually requested, which is
+      correct everywhere.
+
+      Pages that need an explicit canonical set it at runtime:
+        src/pages/Profile.tsx, src/pages/broadcast/BroadcastRouter.tsx,
+        src/pages/tcnn/ArticleReader.tsx
+    -->
 
     <!-- ============================================================ -->
-    <!-- Structured Data: WebSite Schema with SearchAction              -->
-    <!-- Enables sitelinks search box in Google search results          -->
+    <!-- Structured Data: WebSite Schema                              -->
     <!-- ============================================================ -->
+    <!--
+      No search-action structured data is declared. /search is a logged-in user
+      directory (robots.txt blocks it), so pointing Google at /search?q=
+      advertised a blocked URL and risked a sitelinks search box that returns
+      nothing. The structured data now only describes the site itself.
+    -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -78,15 +93,7 @@
       "name": "MaiTroll",
       "alternateName": "MaiTroll",
       "url": "https://www.maitroll.com/",
-      "description": "MaiTroll is a live social broadcasting platform where creators go live, battle, build communities, interact with viewers, send gifts and grow their audience.",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": "https://www.maitroll.com/search?q={search_term_string}"
-        },
-        "query-input": "required name=search_term_string"
-      }
+      "description": "MaiTroll is a live social broadcasting platform where creators go live, battle, build communities, interact with viewers, send gifts and grow their audience."
     }
     </script>
 

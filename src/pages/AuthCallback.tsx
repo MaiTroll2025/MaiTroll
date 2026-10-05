@@ -14,7 +14,6 @@ const AuthCallback = () => {
   const landingForProfile = (prof: any) => {
     const userRole = prof?.role || prof?.troll_role
     if (userRole === 'troll_family') return '/family/home'
-    if (userRole === 'organization' || userRole === 'org_admin' || prof?.organization_id) return '/organization/dashboard'
     return '/home'
   }
 

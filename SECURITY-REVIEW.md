@@ -14,6 +14,8 @@ The RPC accepts a caller-supplied user ID, runs with elevated privileges, and is
 
 **Recommended remediation:** Limit these RPCs to the caller's own UUID or authorized staff, and return only information appropriate for the caller's authorization level.
 
+**Remediation added:** Migration [20261005000012_restrict_user_restriction_rpcs.sql](./supabase/migrations/20261005000012_restrict_user_restriction_rpcs.sql) adds caller/staff/service-role authorization checks to both RPCs and removes anonymous/public execution. The migration must be applied to each deployed Supabase project for the fix to take effect.
+
 ## Frontend UUID/auth UID exposure check
 
 No explicit display of a user's profile UUID or auth UID was found in the reviewed frontend surfaces. UUIDs are included in data returned for visible content, such as `creator_id` from `search_maipiks_by_hashtag` and `user_id` selected by the phone feed. These content-associated identifiers were not considered a vulnerability by themselves; UUIDs are identifiers, not authentication credentials. The explicit Go Live action was excluded from the UI display review.

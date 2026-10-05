@@ -3,20 +3,17 @@ import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, PushNotificationSchema } from '@capacitor/push-notifications';
 import { supabase } from '../lib/supabase';
+import { openNotificationDestination } from '../lib/notificationDestination';
 
 let nativeListenerRegistered = false;
 
 export default function GlobalNotificationHandler() {
   const playNotificationSound = useCallback(() => {
-    try {
-      const audio = new Audio('/sounds/click.mp3');
-      audio.volume = 0.6;
-      audio.play().catch(() => {
-        // Ignore autoplay restrictions
-      });
-    } catch (e) {
-      // Audio not available
-    }
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.volume = 0.6;
+    audio.play().catch((error) => {
+      console.warn('[GlobalNotification] Could not play notification sound:', error);
+    });
   }, []);
 
   const showInAppNotification = useCallback((title: string, body: string, data?: any) => {
@@ -34,7 +31,7 @@ export default function GlobalNotificationHandler() {
           <p className="text-gray-600 dark:text-gray-300 text-sm mt-1 line-clamp-2">{body}</p>
           {data?.route && (
             <button
-              onClick={() => window.location.assign(data.route)}
+              onClick={() => void openNotificationDestination(data.route)}
               className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +42,7 @@ export default function GlobalNotificationHandler() {
           )}
         </div>
         <button
-          onClick={() => t.dismiss()}
+          onClick={() => toast.dismiss(t)}
           className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex-shrink-0"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,11 +91,7 @@ export default function GlobalNotificationHandler() {
     const payload = event.detail;
     console.log('[GlobalNotification] Notification action:', payload);
     
-    if (payload.route) {
-      window.location.assign(payload.route);
-    } else if (payload.url) {
-      window.location.assign(payload.url);
-    }
+    void openNotificationDestination(payload.route || payload.url)
   }, []);
 
   useEffect(() => {

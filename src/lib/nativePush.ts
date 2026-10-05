@@ -4,6 +4,7 @@ import {
   type Token,
 } from '@capacitor/push-notifications'
 import { supabase } from './supabase'
+import { openNotificationDestination } from './notificationDestination'
 
 let listenersRegistered = false
 
@@ -51,10 +52,9 @@ export async function registerNativePush(userId: string) {
 
     // Action performed when user taps notification
     await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-      const route = action.notification.data?.route || action.notification.data?.url
-      if (typeof route === 'string' && route.startsWith('/')) {
-        window.location.assign(route)
-      }
+      void openNotificationDestination(
+        action.notification.data?.route || action.notification.data?.url,
+      )
     })
 
     listenersRegistered = true

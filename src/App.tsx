@@ -86,7 +86,12 @@ import { useIsMobile } from "./hooks/useIsMobile";
 import { reportBug } from "./lib/bugReporter";
 import { lazyWithRetry } from "./utils/lazyImport";
 import { useIsPhone } from "./phone/useIsPhone";
+import NotFoundPage from "./pages/NotFoundPage";
+import { requiresWebRenderer } from "@/lib/seo/seoRoutes";
+import { useRobotsMeta } from "@/lib/seo/useRobotsMeta";
+import { useRouteTitle } from "@/lib/seo/useRouteTitle";
 import PhoneApp from "./phone/PhoneApp";
+import { hasPhoneNativeRoute } from "./phone/phoneRoutePatterns";
 
 // Animation components
 import { AnimationsContainer } from "./components/animations";
@@ -98,6 +103,7 @@ import { PageChannelProvider } from "./contexts/PageChannelContext";
 import { StaffWalkieTalkieProvider } from "./components/StaffWalkieTalkieProvider";
 
 const AdminErrors = lazyWithRetry(() => import("./pages/admin/AdminErrors"));
+const SubAnalytics = lazyWithRetry(() => import("./pages/admin/SubAnalytics"));
 import ProfileSetupModal from "./components/ProfileSetupModal";
 import RequireRole from "./components/RequireRole";
 import { RequireLeadOrOwner } from "./components/auth/RequireLeadOrOwner";
@@ -285,28 +291,6 @@ const FounderHub = lazyWithRetry(() => import("./pages/FounderHub"));
 const TMFamilyInviteHandler = lazyWithRetry(() => import("./components/trollmatch/TMFamilyInviteHandler"));
 const EmbedPage = lazyWithRetry(() => import("./pages/broadcast/EmbedPage"));
 
-// MAi School Pages
-const SchoolHome = lazyWithRetry(() => import("./pages/school/SchoolHome"));
-const SchoolSocial = lazyWithRetry(() => import("./pages/school/SchoolSocial"));
-const SchoolProfile = lazyWithRetry(() => import("./pages/school/SchoolProfile"));
-const SchoolConnections = lazyWithRetry(() => import("./pages/school/SchoolConnections"));
-const SchoolTeam = lazyWithRetry(() => import("./pages/school/SchoolTeam"));
-const SchoolPool = lazyWithRetry(() => import("./pages/school/SchoolPool"));
-const SchoolBusiness = lazyWithRetry(() => import("./pages/school/SchoolBusiness"));
-const InstructorHome = lazyWithRetry(() => import("./pages/school/InstructorHome"));
-const PrivacyCompliance = lazyWithRetry(() => import("./pages/school/PrivacyCompliance"));
-const IncidentsCompliance = lazyWithRetry(() => import("./pages/school/IncidentsCompliance"));
-const FinancialCompliance = lazyWithRetry(() => import("./pages/school/FinancialCompliance"));
-const SetupWizard = lazyWithRetry(() => import("./pages/school/SetupWizard"));
-const SchoolInstructorStudents = lazyWithRetry(() => import("./pages/school/SchoolInstructorStudents"));
-const SchoolInstructorNetwork = lazyWithRetry(() => import("./pages/school/SchoolInstructorNetwork"));
-const InstitutionDashboard = lazyWithRetry(() => import("./pages/school/InstitutionDashboard"));
-const InstitutionStudents = lazyWithRetry(() => import("./pages/school/InstitutionStudents"));
-const InstitutionInstructors = lazyWithRetry(() => import("./pages/school/InstitutionInstructors"));
-const InstitutionPrograms = lazyWithRetry(() => import("./pages/school/InstitutionPrograms"));
-const InstitutionTeams = lazyWithRetry(() => import("./pages/school/InstitutionTeams"));
-const InstitutionPool = lazyWithRetry(() => import("./pages/school/InstitutionPool"));
-const InstitutionAnnouncements = lazyWithRetry(() => import("./pages/school/InstitutionAnnouncements"));
 const HomepageBackgroundShowcase = lazyWithRetry(() => import("./pages/dev/HomepageBackgroundShowcase"));
 const BlockedUsers = lazyWithRetry(() => import("./pages/BlockedUsers"));
 
@@ -1654,9 +1638,6 @@ const handleVisibilityChange = async () => {
        {/* Idle Session Prompt */}
        <IdleSessionPrompt />
 
-       {/* Global Push Notification Handler */}
-       <GlobalNotificationHandler />
-
        <SwipeNavigationProvider>
       <LiveContentProvider>
             <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true} isJailed={isJailed}>
@@ -1803,39 +1784,10 @@ const handleVisibilityChange = async () => {
                  <Route path="/troll-court" element={<TrollCourt />} />
                  <Route path="/troll-court/watch/:sessionId" element={<CourtViewerPage />} />
 
-                 {/* 🛰️ Universe Arena Dev Preview — public, fake data, no auth */}
-                 <Route path="/universe/dev-preview" element={<UniverseArenaDevPreview />} />
+                  {/* 🛰️ Universe Arena Dev Preview — public, fake data, no auth */}
+                  <Route path="/universe/dev-preview" element={<UniverseArenaDevPreview />} />
 
-                 {/* 🎓 MAi School - Educational Ecosystem */}
-                 <Route path="/school" element={<SchoolHome />} />
-                 <Route path="/school/social" element={<SchoolSocial />} />
-                 <Route path="/school/profile" element={<SchoolProfile />} />
-                 <Route path="/school/profile/:userId" element={<SchoolProfile />} />
-                 <Route path="/school/connections" element={<SchoolConnections />} />
-                 <Route path="/school/team" element={<SchoolTeam />} />
-                 <Route path="/school/pool" element={<SchoolPool />} />
-                 <Route path="/school/business" element={<SchoolBusiness />} />
-                 {/* Instructor Routes */}
-<Route path="/school/instructor" element={<InstructorHome />} />
-                  <Route path="/school/instructor/students" element={<SchoolInstructorStudents />} />
-                  <Route path="/school/instructor/network" element={<SchoolInstructorNetwork />} />
-<Route path="/school/instructor/privacy" element={<PrivacyCompliance />} />
-                  <Route path="/school/instructor/incidents" element={<IncidentsCompliance />} />
-                  <Route path="/school/instructor/financial" element={<FinancialCompliance />} />
-                  {/* Institution Routes */}
-<Route path="/school/institution/setup" element={<SetupWizard />} />
-                  <Route path="/school/institution" element={<InstitutionDashboard />} />
-                  <Route path="/school/institution/students" element={<InstitutionStudents />} />
-                  <Route path="/school/institution/instructors" element={<InstitutionInstructors />} />
-                  <Route path="/school/institution/programs" element={<InstitutionPrograms />} />
-                  <Route path="/school/institution/teams" element={<InstitutionTeams />} />
-                  <Route path="/school/institution/pool" element={<InstitutionPool />} />
-                  <Route path="/school/institution/announcements" element={<InstitutionAnnouncements />} />
-                  <Route path="/school/institution/privacy" element={<PrivacyCompliance />} />
-                  <Route path="/school/institution/incidents" element={<IncidentsCompliance />} />
-                  <Route path="/school/institution/financial" element={<FinancialCompliance />} />
-
-                 {/* 🔐 Protected Routes */}
+                  {/* 🔐 Protected Routes */}
                  <Route element={<RequireAuth />}>
                   
                   {/* Talent Office Dashboard (Protected) */}
@@ -2696,6 +2648,14 @@ const handleVisibilityChange = async () => {
                       }
                     />
                     <Route
+                      path="/admin/subscriptions"
+                      element={
+                        <RequireRole roles={[UserRole.ADMIN]}>
+                          <SubAnalytics />
+                        </RequireRole>
+                      }
+                    />
+                    <Route
                       path="/admin/manual-orders"
                       element={
                         <RequireRole roles={[UserRole.ADMIN, UserRole.SECRETARY]}>
@@ -2840,7 +2800,16 @@ const handleVisibilityChange = async () => {
                   {/* 🔙 Catch-all - redirect username patterns to profile (PUBLIC ACCESS) */}
                   <Route path="/tickets" element={<Tickets />} />
                   <Route path="/:username" element={<UsernameRedirect />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+
+                  {/*
+                    Genuinely unknown URLs render a real 404 page instead of
+                    silently redirecting to "/". The old redirect produced a soft
+                    404: a 200 response whose body is the homepage, so search
+                    engines could keep such URLs in the index indefinitely.
+                    NotFoundPage renders inside the normal app layout so header,
+                    navigation and providers stay available.
+                  */}
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </PageChannelProvider>
               </Suspense>
@@ -2869,19 +2838,6 @@ const handleVisibilityChange = async () => {
         onClose={() => setProfileModalOpen(false)}
       />
 
-      {/* Toast system */}
-      <Toaster
-        position="top-right"
-        duration={5000}
-        toastOptions={{
-          style: {
-            background: "#2e1065",
-            color: "#fff",
-            border: "1px solid #22c55e",
-          },
-        }}
-      />
-      
        {/* Home page notification permission prompt */}
        <ErrorBoundary>
          <HomeNotificationPrompt />
@@ -2905,9 +2861,37 @@ function App() {
     return cleanup;
   }, []);
 
-  // Screen-size detection: phone-sized screens get the dedicated src/phone
-  // experience instead of the full web application.
+  /*
+   * Keeps a single `<meta name="robots">` in sync with the current route so
+   * private and account pages can never be indexed, even when their URL is
+   * discovered through internal linking.
+   */
+  useRobotsMeta();
+
+  /*
+   * Gives every public route its own <title>. Without this each page is served
+   * the homepage title from index.html, which makes distinct listing pages look
+   * like duplicates of the homepage.
+   */
+  useRouteTitle();
+
+  const location = useLocation();
+
+  /*
+   * Screen-size detection: phone-sized screens get the dedicated src/phone
+   * experience instead of the full web application.
+   *
+   * Public web-only routes are explicitly kept on the web tree at any width.
+   * Any other phone route without a native screen also uses the full web tree,
+   * including account, staff, and admin pages, instead of a placeholder.
+   *
+   * The decision is derived only from the requested path and the viewport. No
+   * user-agent is inspected, so bots and people are served identical HTML.
+   */
   const isPhone = useIsPhone();
+  const useWebTree =
+    requiresWebRenderer(location.pathname) ||
+    (isPhone && !hasPhoneNativeRoute(location.pathname));
 
   return (
     <PageVisibilityProvider>
@@ -2919,7 +2903,7 @@ function App() {
               <ProfileFrameProvider>
                 <TabSwitchHandler>
                   <GhostDropInProvider>
-                    {isPhone ? (
+                    {isPhone && !useWebTree ? (
                       <LiveContentProvider>
                         <StaffWalkieTalkieProvider>
                           <PhoneApp />
@@ -2927,6 +2911,18 @@ function App() {
                       </LiveContentProvider>
                     ) : <AppContent />}
                     <GhostBanner />
+                    <GlobalNotificationHandler />
+                    <Toaster
+                      position="top-right"
+                      duration={5000}
+                      toastOptions={{
+                        style: {
+                          background: "#2e1065",
+                          color: "#fff",
+                          border: "1px solid #22c55e",
+                        },
+                      }}
+                    />
                   </GhostDropInProvider>
                 </TabSwitchHandler>
                 <TMFamilyInviteHandler />
@@ -2951,29 +2947,31 @@ function RedirectWallPost() {
 function UsernameRedirect() {
   const { username } = useParams();
   const navigate = useNavigate();
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    
-    if (!username) return;
-    
-    // Check if this looks like a username (not a known route)
-    const knownRoutes = ['home', 'auth', 'api', 'admin', 'agency', 'auctions',
-      'apply', 'careers', 'live', 'broadcast', 'watch', 'stream', 'gaming', 'hytrogaming',
-      'profile', 'wallet', 'stats', 'support', 'legal', 'church', 'podcast', 'auctions',
-      'government', 'troll-court', 'court', 'meeting', 'team-meeting', 'tromail', 'utromail',
-      'explore', 'leaderboard', 'marketplace', 'pool', 'map', 'settings', 'notifications',
-      'following', 'trollifications', 'trollifieds', 'garage', 'ktauto', 'district', 'living',
-      'mai-business', 'mai-sing-off', 'mai-piks',
-      'insurance', 'neighborhood', 'driver-test', 'inbox', 'shop', 'inventory', 'troting',
-      'match', 'city-hall', 'city-registry', 'universe-event', 'events', 'terms',
-      'access-denied', 'reset-password', 'tax-onboarding', 'verification', 'founding-officer-trial',
-      'under-construction', 'jail', 'inmates', 'wall', 'crowns', 'credit-scores', 'search',
-      'blocked-users', 'pool', 'troll-games', 'troll-wheel', 'decree', 'executive', 'noah'];
-    
-    if (knownRoutes.includes(username)) return;
-    
-    // First look up the user_id from username
+
+    if (!username) {
+      setNotFound(true);
+      return;
+    }
+
+    /*
+     * Look the username up and send the visitor to the live stream when one is
+     * running, otherwise to the profile.
+     *
+     * A name that matches no account is a genuine 404. It used to be pushed to
+     * /profile/<name>, which rendered a profile-shaped page for a user who does
+     * not exist, so junk URLs were served as real content instead of erroring.
+     *
+     * There is deliberately no "known routes" bypass here. React Router ranks
+     * static segments above the dynamic /:username route, so real paths such as
+     * /pool or /church never reach this component, and the old bypass instead
+     * left those names rendering an endless "Loading..." placeholder.
+     */
+    setNotFound(false);
+
     supabase
       .from('user_profiles')
       .select('id')
@@ -2982,10 +2980,10 @@ function UsernameRedirect() {
       .then(({ data: userProfile }) => {
         if (cancelled) return;
         if (!userProfile?.id) {
-          navigate(`/profile/${encodeURIComponent(username)}`, { replace: true });
+          setNotFound(true);
           return;
         }
-        
+
         // Check if user has an active live stream
         return supabase
           .from('streams')
@@ -2997,13 +2995,16 @@ function UsernameRedirect() {
       })
       .then((result) => {
         if (cancelled) return;
+        // `undefined` means the username lookup already failed, so notFound is
+        // set and there is nothing to navigate to.
+        if (result === undefined) return;
         // Handle both the direct stream result and the chained promise result
         const liveStream = result?.data || result;
         const liveStreamData = liveStream as { id?: string; category?: string } | undefined;
         if (liveStreamData?.id) {
           // Gaming streams route to gaming viewer, others to username-based watch URL
           const targetPath = liveStreamData.category === 'gaming'
-            ? `/gaming/watch/${username}` 
+            ? `/gaming/watch/${username}`
             : `/live/${encodeURIComponent(username)}`;
           navigate(targetPath, { replace: true });
         } else {
@@ -3013,6 +3014,8 @@ function UsernameRedirect() {
 
     return () => { cancelled = true };
   }, [username, navigate]);
+
+  if (notFound) return <NotFoundPage />;
 
   return <div className="flex min-h-screen items-center justify-center bg-[#0A0814] text-white"><div>Loading...</div></div>;
 }

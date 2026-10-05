@@ -20,7 +20,6 @@ const SWIPE_DESTINATIONS: SwipeDestination[] = [
   { path: '/auctions', label: 'Auctions' },
   { path: '/troll-court', label: 'Court' },
   { path: '/hytrogaming', label: 'HydroGaming' },
-  { path: '/academy', label: 'Academy' },
   { path: '/mai-pay', label: 'MAI Pay' },
   { path: '/leaderboard', label: 'Leaderboard' },
   { path: '/notifications', label: 'Alerts' },

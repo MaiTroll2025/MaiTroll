@@ -42,8 +42,6 @@ const CAREER_ROLES: string[] = [
   'hr_admin',
   'ceo_assistant',
   'noah_assistant',
-  'academy_teacher',
-  'academy_director',
   'troller',
   'troll_family',
 ];

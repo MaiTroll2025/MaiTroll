@@ -155,7 +155,6 @@ export default function Sidebar() {
   const [canSeeInmates, setCanSeeInmates] = useState(false)
   const [isBackgroundJailed, setIsBackgroundJailed] = useState(false)
   const [isApprovedAuctioneer, setIsApprovedAuctioneer] = useState(false)
-  const [isTeacher, setIsTeacher] = useState(false)
 
   const [showCourtModal, setShowCourtModal] = useState(false)
   const [maiPendingCount, setMaiPendingCount] = useState(0)
@@ -374,14 +373,6 @@ export default function Sidebar() {
           .eq('is_active', true)
           .maybeSingle()
         setIsApprovedAuctioneer(!!auctioneerData)
-
-        const { data: teacherData } = await supabase
-          .from('academy_teachers')
-          .select('id')
-          .eq('user_id', profile.id)
-          .eq('is_approved', true)
-          .maybeSingle()
-        setIsTeacher(!!teacherData)
 
         setCanSeeInmates(
           !!officerData ||

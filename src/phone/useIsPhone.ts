@@ -11,7 +11,13 @@ const PHONE_BREAKPOINT_PX = 900
 const RESIZE_DEBOUNCE_MS = 100
 
 function getWidth() {
-  if (typeof window === 'undefined') return 0
+  /*
+   * There is no viewport during a build-time or server render. Returning 0 there
+   * made every such render compute `0 < 900` and select the phone tree, which
+   * is exactly backwards for anything that needs prerendered HTML. Report a
+   * desktop width instead so the public web tree is the default.
+   */
+  if (typeof window === 'undefined') return Number.POSITIVE_INFINITY
   return window.visualViewport?.width ?? window.innerWidth
 }
 

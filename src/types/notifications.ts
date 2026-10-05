@@ -62,7 +62,6 @@ export type NotificationType =
   | 'request_accepted'
   | 'utromail_received'
   | 'utromail_request'
-  | 'academy_mail'
   | 'government_mail'
 
   // MAI PIKS
@@ -201,6 +200,7 @@ export type NotificationType =
   | 'coin_gifted'
   | 'coin_received'
   | 'system_announcement'
+  | 'app_update'
   | 'support_ticket'
   | 'contract_signed'
   | 'contract_rejected'

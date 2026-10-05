@@ -12,6 +12,7 @@ import {
 
 import { supabase } from '@/lib/supabase'
 import { searchUsers } from '@/lib/filtered'
+import HashtagCaption from '@/components/HashtagCaption'
 import { getPhoneNavSections, type PhoneNavSection } from '../phoneNav'
 import { usePhoneRoleAccess } from '../usePhoneRoleAccess'
 import { neonCard, neonTextGradient } from '../phoneTheme'
@@ -50,6 +51,18 @@ interface WallPost {
   user_liked?: boolean
 }
 
+interface MaiPiksExploreItem {
+  content_id: string
+  content_type: 'post' | 'story'
+  creator_id: string
+  username: string
+  media_path: string
+  media_type: 'photo' | 'video'
+  caption: string | null
+  created_at: string
+  media_url?: string
+}
+
 export default function PhoneExplore() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -59,6 +72,7 @@ export default function PhoneExplore() {
   const [search, setSearch] = useState(initialQuery)
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([])
   const [posts, setPosts] = useState<WallPost[]>([])
+    const [maiPiksResults, setMaiPiksResults] = useState<MaiPiksExploreItem[]>([])
   const [users, setUsers] = useState<{ id: string; username: string; display_name?: string; avatar_url?: string }[]>([])
   const [loadingStreams, setLoadingStreams] = useState(true)
   const [loadingPosts, setLoadingPosts] = useState(true)
@@ -229,6 +243,40 @@ export default function PhoneExplore() {
     return () => {
       cancelled = true
     }
+  }, [search])
+
+  useEffect(() => {
+    const query = search.trim()
+    if (!query.startsWith('#')) {
+      setMaiPiksResults([])
+      return
+    }
+
+    let cancelled = false
+    const loadMaiPiks = async () => {
+      const { data, error } = await supabase.rpc('search_maipiks_by_hashtag', {
+        p_tag: query,
+        p_limit: 20,
+      })
+      if (error) {
+        console.error('[PhoneExplore] Mai Piks hashtag search failed:', error)
+        if (!cancelled) setMaiPiksResults([])
+        return
+      }
+
+      const signed = await Promise.all(((data || []) as MaiPiksExploreItem[]).map(async (item) => {
+        if (!item.media_path) return null
+        const { data: file, error: signError } = await supabase.storage
+          .from('maipiks')
+          .createSignedUrl(item.media_path, 60 * 60)
+        if (signError || !file?.signedUrl) return null
+        return { ...item, media_url: file.signedUrl }
+      }))
+      if (!cancelled) setMaiPiksResults(signed.filter((item): item is MaiPiksExploreItem & { media_url: string } => item !== null))
+    }
+
+    void loadMaiPiks()
+    return () => { cancelled = true }
   }, [search])
 
   const getTimeSince = (timestamp: string) => {
@@ -570,6 +618,31 @@ export default function PhoneExplore() {
                   No results for &quot;{search}&quot;
                 </p>
               )
+            )}
+
+            {maiPiksResults.length > 0 && (
+              <div>
+                <h3 className="px-1 text-sm font-black uppercase tracking-[0.2em] text-zinc-300">Mai Piks</h3>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {maiPiksResults.map((item) => (
+                    <article key={`${item.content_type}-${item.content_id}`} className={`${neonCard} overflow-hidden`}>
+                      {item.media_type === 'video' ? (
+                        <video src={item.media_url} controls playsInline className="aspect-square w-full bg-black object-contain" />
+                      ) : (
+                        <img src={item.media_url} alt="Mai Piks hashtag result" loading="lazy" className="aspect-square w-full bg-black object-contain" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${encodeURIComponent(item.username)}?tab=maipiks`)}
+                        className="w-full px-3 py-2 text-left"
+                      >
+                        <p className="text-[10px] font-black text-cyan-200">@{item.username}</p>
+                        {item.caption && <p className="mt-1 line-clamp-2 text-[9px] text-zinc-400"><HashtagCaption text={item.caption} /></p>}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </div>
             )}
           </section>
         )}

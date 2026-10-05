@@ -10,9 +10,10 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Coins, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Coins, Flag, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react'
 
 import { supabase } from '../../lib/supabase'
+import HashtagCaption from '../../components/HashtagCaption'
 import {
   ExpiryCountdown,
   MaiPiksAvatar,
@@ -35,6 +36,12 @@ interface StoryViewerProps {
   onClose: () => void
   onDeleteItem: (item: PiksStoryItem) => Promise<boolean>
   onTip: (story: PiksStory, item: PiksStoryItem | null, amount: number) => Promise<boolean>
+  onReport: (
+    story: PiksStory,
+    item: PiksStoryItem,
+    category: 'minor_harmful' | 'harmful_dangerous' | 'weapons' | 'other_safety_violation',
+    description: string,
+  ) => Promise<boolean>
   onScreenshot: (payload: {
     contentType: 'story' | 'feed' | 'profile' | 'chat' | 'broadcast'
     contentId?: string
@@ -52,6 +59,7 @@ export default function StoryViewer({
   onClose,
   onDeleteItem,
   onTip,
+  onReport,
   onScreenshot,
 }: StoryViewerProps) {
   const [storyIndex, setStoryIndex] = useState(startIndex)
@@ -59,6 +67,7 @@ export default function StoryViewer({
   const [progress, setProgress] = useState(0)
   const [paused, setPaused] = useState(false)
   const [showTipModal, setShowTipModal] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -446,7 +455,7 @@ export default function StoryViewer({
       {item.caption && (
         <div className="absolute bottom-[104px] left-4 right-4 z-30">
           <p className="rounded-2xl border border-white/10 bg-black/55 px-4 py-2.5 text-xs leading-relaxed text-zinc-100 backdrop-blur-xl">
-            {item.caption}
+            <HashtagCaption text={item.caption} />
           </p>
         </div>
       )}
@@ -487,6 +496,16 @@ export default function StoryViewer({
             Send Tip
           </button>
         )}
+        {currentUser && !isOwn && (
+          <button
+            type="button"
+            onClick={() => setShowReportModal(true)}
+            aria-label="Report this story"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 bg-black/65 text-white/80 backdrop-blur-xl transition active:scale-95"
+          >
+            <Flag size={15} />
+          </button>
+        )}
       </div>
 
       {/* TIP MODAL */}
@@ -503,6 +522,90 @@ export default function StoryViewer({
           }}
         />
       )}
+
+      {showReportModal && (
+        <StoryReportModal
+          onClose={() => setShowReportModal(false)}
+          onSubmit={async (category, description) => {
+            const ok = await onReport(story, item, category, description)
+            if (ok) setShowReportModal(false)
+            return ok
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function StoryReportModal({
+  onClose,
+  onSubmit,
+}: {
+  onClose: () => void
+  onSubmit: (
+    category: 'minor_harmful' | 'harmful_dangerous' | 'weapons' | 'other_safety_violation',
+    description: string,
+  ) => Promise<boolean>
+}) {
+  const [category, setCategory] = useState<'minor_harmful' | 'harmful_dangerous' | 'weapons' | 'other_safety_violation'>('other_safety_violation')
+  const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setSubmitting(true)
+    try {
+      await onSubmit(category, description.trim())
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" role="presentation" onClick={onClose}>
+      <form
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="maipiks-report-title"
+        onSubmit={submit}
+        onClick={(event) => event.stopPropagation()}
+        className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-[#090913] p-5 shadow-2xl"
+      >
+        <div>
+          <h2 id="maipiks-report-title" className="text-base font-black text-white">Report Mai Piks</h2>
+          <p className="mt-1 text-xs text-zinc-400">The media is preserved for authorized review.</p>
+        </div>
+        <label className="block space-y-1.5 text-xs font-bold text-zinc-300">
+          <span>Safety category</span>
+          <select
+            value={category}
+            onChange={(event) => setCategory(event.target.value as typeof category)}
+            className="w-full rounded-xl border border-white/10 bg-black px-3 py-2.5 text-sm text-white"
+          >
+            <option value="minor_harmful">Minor appearing in prohibited or harmful content</option>
+            <option value="harmful_dangerous">Harmful or dangerous content</option>
+            <option value="weapons">Weapons</option>
+            <option value="other_safety_violation">Other Mai Piks safety violation</option>
+          </select>
+        </label>
+        <label className="block space-y-1.5 text-xs font-bold text-zinc-300">
+          <span>Details (optional)</span>
+          <textarea
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            maxLength={2000}
+            rows={3}
+            className="w-full resize-none rounded-xl border border-white/10 bg-black px-3 py-2.5 text-sm text-white placeholder:text-zinc-600"
+            placeholder="Add context for the review team"
+          />
+        </label>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-zinc-300">Cancel</button>
+          <button type="submit" disabled={submitting} className="rounded-lg bg-red-500/90 px-3 py-2 text-xs font-black text-white disabled:opacity-50">
+            {submitting ? 'Submitting...' : 'Submit report'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }

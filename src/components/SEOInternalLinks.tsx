@@ -183,9 +183,8 @@ export function SEOFooter() {
               <li><Link to="/live-swipe" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Live Streams</Link></li>
               <li><Link to="/trending" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Trending</Link></li>
               <li><Link to="/top-creators" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Top Creators</Link></li>
-              <li><Link to="/tcnn" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">TCNN News</Link></li>
-              <li><Link to="/academy" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Academy</Link></li>
-            </ul>
+               <li><Link to="/tcnn" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">TCNN News</Link></li>
+             </ul>
           </div>
           <div>
             <h3 className="text-white font-semibold mb-4">Legal</h3>

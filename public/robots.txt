@@ -64,6 +64,8 @@ Disallow: /blocked-users
 Disallow: /jail
 Disallow: /inmates
 Disallow: /jail/appeal
+# Internal search is a logged-in user directory, not public content, so it is
+# blocked here and also carries a noindex meta tag (see src/lib/seo/seoRoutes.ts).
 Disallow: /search
 Disallow: /beta-feedback
 Disallow: /survey/

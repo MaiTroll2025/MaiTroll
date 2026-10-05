@@ -77,7 +77,6 @@ const APPROVED_ROLES = new Set([
   'hr_admin', 'hr_manager', 'agency_hr_manager', 'pastor', 'agency_leader', 'attorney',
   'prosecutor', 'journalist', 'auctioneer', 'troller', 'agency_hr', 'president',
   'vice_president', 'troll_city_secretary', 'troll_city_treasurer', 'executive_secretary',
-  'academy_teacher', 'admissions_officer',
 ])
 
 export function isEmployeeProfile(p?: EmployeeProfileLike | null): boolean {

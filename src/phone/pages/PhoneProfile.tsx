@@ -53,6 +53,7 @@ import FamilyMinorSettings from '../../components/profile/FamilyMinorSettings'
 import BatterySaverToggle from '../../components/BatterySaverToggle'
 import UserInventory from '../../pages/UserInventory'
 import ProfileFeed from '../../components/profile/ProfileFeed'
+import ProfileMaiPiks from '../../components/profile/ProfileMaiPiks'
 import ProfileBroadcasts from '../../components/profile/ProfileBroadcasts'
 import ProfileMarketplace from '../../components/profile/ProfileMarketplace'
 import ProfileCourt from '../../components/profile/ProfileCourt'
@@ -138,6 +139,7 @@ type ProfileTab = {
 
 const PROFILE_TABS: ProfileTab[] = [
   { id: 'social', label: 'Social', icon: UserRound },
+  { id: 'maipiks', label: 'Mai Piks', icon: Image },
   { id: 'broadcasts', label: 'Broadcasts', icon: Video },
   { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
   { id: 'auctions', label: 'Auctions', icon: Gavel },
@@ -1602,6 +1604,10 @@ export default function PhoneProfile() {
             </div>
           )}
 
+          {activeTab === 'maipiks' && profileTargetId && (
+            <ProfileMaiPiks userId={profileTargetId} username={username} />
+          )}
+
           {activeTab === 'broadcasts' && profileTargetId && (
             <ProfileBroadcasts userId={profileTargetId} />
           )}
@@ -1698,7 +1704,7 @@ export default function PhoneProfile() {
             </div>
           )}
 
-          {activeTab !== 'social' && activeTab !== 'broadcasts' && activeTab !== 'marketplace' && activeTab !== 'auctions' && activeTab !== 'court' && activeTab !== 'agency' && activeTab !== 'church' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'subscriptions' && activeTab !== 'badges' && activeTab !== 'keys' && activeTab !== 'music' && activeTab !== 'albums' && activeTab !== 'tracks' && activeTab !== 'settings' && (
+          {activeTab !== 'social' && activeTab !== 'maipiks' && activeTab !== 'broadcasts' && activeTab !== 'marketplace' && activeTab !== 'auctions' && activeTab !== 'court' && activeTab !== 'agency' && activeTab !== 'church' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'subscriptions' && activeTab !== 'badges' && activeTab !== 'keys' && activeTab !== 'music' && activeTab !== 'albums' && activeTab !== 'tracks' && activeTab !== 'settings' && (
             <div className="text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
                 {(() => {

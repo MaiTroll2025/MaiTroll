@@ -629,7 +629,6 @@ export default function BottomNavigation() {
       { category: 'Careers + Work', label: 'My Earnings', icon: DollarSign, path: '/my-earnings' },
       { category: 'Careers + Work', label: 'My Orders', icon: ClipboardList, path: '/my-orders' },
       { category: 'Careers + Work', label: 'Hytro Gaming', icon: Gamepad2, path: '/hytrogaming' },
-      { category: 'Careers + Work', label: 'Academy', icon: BookOpen, path: '/academy' },
       { category: 'Careers + Work', label: 'Shop', icon: Store, path: '/shop' },
 
       { category: 'City Center', label: 'Appeals', icon: Scale, path: '/city-registry' },

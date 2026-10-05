@@ -17,6 +17,7 @@ import {
   Play,
   Plus,
   Radio,
+  Search,
   Smartphone,
   Sparkles,
   Trophy,
@@ -36,13 +37,13 @@ import { supabase } from '@/lib/supabase'
 import { useWallNotifications } from '@/hooks/useWallNotifications'
 
 const glass =
-  'border border-[#00BFFF]/10 bg-[#070711]/85 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.40)]'
+  'border border-[#FF7A00]/10 bg-[#0D0814]/85 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.40)]'
 
 const neonGradient =
-  'bg-gradient-to-br from-[#00BFFF] via-[#1787FF] to-[#BF00FF]'
+  'bg-gradient-to-br from-[#FF7A00] via-[#F97316] to-[#A855F7]'
 
 const neonBorder =
-  'border border-[#00BFFF]/30 shadow-[0_0_25px_rgba(0,191,255,0.10),0_0_35px_rgba(191,0,255,0.08)]'
+  'border border-[#FF7A00]/30 shadow-[0_0_25px_rgba(0,191,255,0.10),0_0_35px_rgba(191,0,255,0.08)]'
 
 function PhoneSpaceBackground() {
   const stars = Array.from({ length: 48 }, (_, index) => ({
@@ -142,7 +143,7 @@ function PhoneSpaceBackground() {
   }, [])
 
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#01020a] [perspective:900px]">
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#050208] [perspective:900px]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(38,20,116,0.35),transparent_42%),radial-gradient(ellipse_at_10%_65%,rgba(0,136,214,0.18),transparent_38%),linear-gradient(160deg,#02030d_0%,#07152a_48%,#090219_100%)]" />
       <div className="absolute left-[-20%] top-[18%] h-[34%] w-[140%] rotate-[-18deg] rounded-[50%] bg-[radial-gradient(ellipse,rgba(54,210,255,0.2),rgba(116,31,255,0.1)_28%,transparent_67%)] blur-2xl [transform:translateZ(-80px)]" />
       <div className="absolute -left-[30%] top-[8%] h-[32%] w-[95%] rotate-[28deg] rounded-[50%] bg-[radial-gradient(ellipse,rgba(103,41,255,0.2),rgba(27,143,255,0.08)_38%,transparent_70%)] blur-3xl animate-[nebulaDrift_28s_ease-in-out_infinite]" />
@@ -164,7 +165,7 @@ function PhoneSpaceBackground() {
         ))}
       </div>
 
-      <div className="absolute left-[8%] top-[23%] h-10 w-10 overflow-hidden rounded-full bg-[#168ed0] shadow-[-7px_-5px_12px_rgba(187,219,255,0.5),inset_-7px_-5px_12px_rgba(20,38,90,0.85)] [background-image:radial-gradient(ellipse_at_28%_28%,rgba(104,220,255,0.65),transparent_24%),radial-gradient(ellipse_at_68%_42%,#4f9d38 0%,#27782f 38%,transparent 40%),radial-gradient(ellipse_at_32%_76%,#69a844 0%,#287735 34%,transparent 36%),radial-gradient(ellipse_at_78%_78%,#367f35 0%,transparent_26%)] [transform:translateZ(18px)] sm:left-[14%] sm:top-[20%] sm:h-14 sm:w-14">
+      <div className="absolute left-[8%] top-[23%] h-10 w-10 overflow-hidden rounded-full bg-[#3b3148] shadow-[-7px_-5px_12px_rgba(187,219,255,0.5),inset_-7px_-5px_12px_rgba(20,38,90,0.85)] [background-image:radial-gradient(ellipse_at_28%_28%,rgba(104,220,255,0.65),transparent_24%),radial-gradient(ellipse_at_68%_42%,#4f9d38 0%,#27782f 38%,transparent 40%),radial-gradient(ellipse_at_32%_76%,#69a844 0%,#287735 34%,transparent 36%),radial-gradient(ellipse_at_78%_78%,#367f35 0%,transparent_26%)] [transform:translateZ(18px)] sm:left-[14%] sm:top-[20%] sm:h-14 sm:w-14">
         <span className="absolute left-[62%] top-[34%] h-1.5 w-1.5 rounded-full bg-[#174f2a] shadow-[3px_1px_0_#2f7c37,-2px_2px_0_#2f7c37] sm:h-2 sm:w-2" />
         <span className="absolute left-[29%] top-[65%] h-1 w-1 rounded-full bg-[#174f2a] shadow-[3px_0_0_#3d8536] sm:h-1.5 sm:w-1.5" />
         <div className="absolute left-1/2 top-1/2 h-[170%] w-[42%] -translate-x-1/2 -translate-y-1/2 rotate-[28deg] rounded-[50%] border border-white/30 opacity-40 [transform:rotateX(70deg)]" />
@@ -176,7 +177,7 @@ function PhoneSpaceBackground() {
           <div className="absolute inset-[-8%] rounded-full bg-[radial-gradient(ellipse_at_24%_18%,rgba(255,255,255,0.38),transparent_18%),radial-gradient(circle_at_18%_50%,transparent_35%,rgba(0,0,0,0.86)_84%)]" />
           <div className="absolute inset-0 rounded-full border border-white/20 opacity-60 [box-shadow:inset_12px_8px_22px_rgba(255,255,255,0.24),inset_-18px_-10px_30px_rgba(0,0,0,0.92)]" />
           <div className="absolute inset-0 flex items-center justify-center px-4 [transform:translateZ(20px)_rotateY(14deg)]">
-            <span className="whitespace-nowrap text-[clamp(1.1rem,6vw,2rem)] font-black uppercase tracking-[0.18em] text-white/80 [text-shadow:1px_1px_2px_rgba(0,0,0,0.85),-1px_-1px_1px_rgba(255,255,255,0.3)]">Mai Troll</span>
+            <span className="whitespace-nowrap text-[clamp(1.1rem,6vw,2rem)] font-black uppercase tracking-[0.18em] text-white/80 [text-shadow:1px_1px_2px_rgba(0,0,0,0.85),-1px_-1px_1px_rgba(255,255,255,0.3)]">Mai Troll • HAUNTED CITY</span>
           </div>
         </div>
       </div>
@@ -205,9 +206,12 @@ const PhoneLiveTile = React.memo(function PhoneLiveTile({
     <button
       type="button"
       onClick={onClick}
-      className="group relative h-[190px] w-[145px] shrink-0 overflow-hidden rounded-2xl border border-[#00BFFF]/15 bg-[#090914] text-left shadow-[0_8px_30px_rgba(0,0,0,0.40)] transition-all duration-200 active:scale-[0.97] hover:border-[#00BFFF]/40 hover:shadow-[0_0_25px_rgba(0,191,255,0.15)]"
+      className="group relative h-[190px] w-[145px] shrink-0 overflow-hidden rounded-2xl border border-[#FF7A00]/40 bg-[#100914] text-left shadow-[0_8px_30px_rgba(0,0,0,0.40)] transition-all duration-200 active:scale-[0.97] hover:border-[#FF7A00]/40 hover:shadow-[0_0_25px_rgba(0,191,255,0.15)]"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#BF00FF]/25 via-[#070711] to-[#00BFFF]/25" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#A855F7]/30 via-[#0D0814] to-[#FF7A00]/30" />
+      <div className="absolute -right-2 -top-2 z-10 text-xl drop-shadow-[0_0_8px_rgba(255,122,0,.7)]">🎃</div>
+      <div className="absolute -left-1 bottom-14 z-10 text-sm opacity-80">🕷️</div>
+      <div className="absolute inset-0 z-[1] pointer-events-none opacity-25 [background-image:radial-gradient(circle_at_20%_20%,#FF7A00_1px,transparent_1px),radial-gradient(circle_at_80%_70%,#A855F7_1px,transparent_1px)] [background-size:18px_18px]" />
 
       {item.streamerAvatar ? (
         <img
@@ -218,17 +222,17 @@ const PhoneLiveTile = React.memo(function PhoneLiveTile({
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
-            <Play className="h-7 w-7 text-[#00BFFF]/50" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
+            <Play className="h-7 w-7 text-[#FF7A00]/50" />
           </div>
         </div>
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-b from-[#03030a]/10 via-transparent to-[#03030a]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#09050F]/10 via-transparent to-[#09050F]" />
 
       {/* Neon LIVE badge */}
-      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-[#00BFFF]/30 bg-[#05050c]/75 px-2 py-1 text-[8px] font-black tracking-wider text-white backdrop-blur-md">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#00BFFF] shadow-[0_0_8px_#00BFFF]" />
+      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-[#FF7A00]/30 bg-[#05050c]/75 px-2 py-1 text-[8px] font-black tracking-wider text-white backdrop-blur-md">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FF7A00] shadow-[0_0_8px_#FF7A00]" />
         LIVE
       </div>
 
@@ -241,7 +245,7 @@ const PhoneLiveTile = React.memo(function PhoneLiveTile({
           {item.title || 'Live Broadcast'}
         </p>
 
-        <p className="mt-0.5 truncate text-[9px] font-bold text-[#00BFFF]/70">
+        <p className="mt-0.5 truncate text-[9px] font-bold text-[#FF7A00]/70">
           {item.streamerName || 'Unknown'}
         </p>
       </div>
@@ -270,9 +274,10 @@ function PhoneSection({
     <section className="space-y-2.5">
       <div className="flex items-center justify-between px-1">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00BFFF]/20 to-[#BF00FF]/20" />
-            <Icon size={15} className="relative text-[#00BFFF]" />
+          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FF7A00]/25 to-[#A855F7]/25" />
+            <span className="absolute -right-1 -top-1 text-[10px]">🕷️</span>
+            <Icon size={15} className="relative text-[#FF7A00]" />
           </div>
 
           <div className="min-w-0">
@@ -281,7 +286,7 @@ function PhoneSection({
             </h2>
 
             {count !== undefined && (
-              <p className="text-[9px] font-bold text-[#00BFFF]/55">
+              <p className="text-[9px] font-bold text-[#FF7A00]/55">
                 {count} {count === 1 ? 'active stream' : 'active streams'}
               </p>
             )}
@@ -292,7 +297,7 @@ function PhoneSection({
           <button
             type="button"
             onClick={onViewAll}
-            className="group flex shrink-0 items-center gap-0.5 rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#00BFFF] transition hover:bg-[#00BFFF]/10"
+            className="group flex shrink-0 items-center gap-0.5 rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#FF7A00] transition hover:bg-[#FF7A00]/10"
           >
             Explore
             <ChevronRight
@@ -331,7 +336,7 @@ function PhoneLiveNow({
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
-            className="h-[190px] w-[145px] shrink-0 animate-pulse rounded-2xl border border-[#00BFFF]/10 bg-gradient-to-br from-[#00BFFF]/5 to-[#BF00FF]/5"
+            className="h-[190px] w-[145px] shrink-0 animate-pulse rounded-2xl border border-[#FF7A00]/10 bg-gradient-to-br from-[#FF7A00]/5 to-[#A855F7]/5"
           />
         ))}
       </PhoneSection>
@@ -349,10 +354,10 @@ function PhoneLiveNow({
         <button
           type="button"
           onClick={onViewAll}
-          className={`flex h-[150px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl ${neonBorder} bg-gradient-to-br from-[#00BFFF]/5 via-[#070711] to-[#BF00FF]/5 px-5 text-center transition active:scale-[0.98]`}
+          className={`flex h-[150px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl ${neonBorder} bg-gradient-to-br from-[#FF7A00]/5 via-[#0D0814] to-[#A855F7]/5 px-5 text-center transition active:scale-[0.98]`}
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
-            <Radio className="h-6 w-6 text-[#00BFFF]/60" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
+            <Radio className="h-6 w-6 text-[#FF7A00]/60" />
           </div>
 
           <p className="mt-3 text-xs font-black text-zinc-300">
@@ -440,11 +445,11 @@ function PhoneOnlineUsers({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`group flex w-full items-center justify-between rounded-2xl ${neonBorder} bg-gradient-to-r from-[#00BFFF]/5 via-[#070711] to-[#BF00FF]/5 px-4 py-3 transition active:scale-[0.99]`}
+        className={`group flex w-full items-center justify-between rounded-2xl ${neonBorder} bg-gradient-to-r from-[#FF7A00]/5 via-[#0D0814] to-[#A855F7]/5 px-4 py-3 transition active:scale-[0.99]`}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
-            <Users size={17} className="text-[#00BFFF]" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
+            <Users size={17} className="text-[#FF7A00]" />
           </div>
 
           <div className="text-left">
@@ -452,7 +457,7 @@ function PhoneOnlineUsers({
               Online Community
             </p>
 
-            <p className="text-[9px] font-bold text-[#00BFFF]/60">
+            <p className="text-[9px] font-bold text-[#FF7A00]/60">
               {onlineUsers.toLocaleString()} people are online
             </p>
           </div>
@@ -460,20 +465,20 @@ function PhoneOnlineUsers({
 
         <ChevronRight
           size={16}
-          className="text-[#00BFFF]/50 transition-transform group-hover:translate-x-0.5"
+          className="text-[#FF7A00]/50 transition-transform group-hover:translate-x-0.5"
         />
       </button>
 
       {open && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md">
-          <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-hidden rounded-t-3xl border-t border-[#00BFFF]/25 bg-[#070711] shadow-[0_-10px_60px_rgba(0,191,255,0.10)]">
+          <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-hidden rounded-t-3xl border-t border-[#FF7A00]/25 bg-[#0D0814] shadow-[0_-10px_60px_rgba(0,191,255,0.10)]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
               <div>
                 <h3 className="text-sm font-black text-white">
                   Online Community
                 </h3>
 
-                <p className="text-[9px] text-[#00BFFF]/55">
+                <p className="text-[9px] text-[#FF7A00]/55">
                   {onlineUsers.toLocaleString()} people online
                 </p>
               </div>
@@ -493,7 +498,7 @@ function PhoneOnlineUsers({
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div
                       key={i}
-                      className="h-14 animate-pulse rounded-xl bg-gradient-to-r from-[#00BFFF]/5 to-[#BF00FF]/5"
+                      className="h-14 animate-pulse rounded-xl bg-gradient-to-r from-[#FF7A00]/5 to-[#A855F7]/5"
                     />
                   ))}
                 </div>
@@ -518,9 +523,9 @@ function PhoneOnlineUsers({
                           setOpen(false)
                           window.location.href = `/profile/id/${u.id}`
                         }}
-                        className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-[#00BFFF]/5 active:bg-white/5"
+                        className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-[#FF7A00]/5 active:bg-white/5"
                       >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] text-xs font-black text-white shadow-[0_0_15px_rgba(0,191,255,0.15)]">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FF7A00] to-[#A855F7] text-xs font-black text-white shadow-[0_0_15px_rgba(0,191,255,0.15)]">
                           {u.avatar_url ? (
                             <img
                               src={u.avatar_url}
@@ -541,13 +546,13 @@ function PhoneOnlineUsers({
                             {u.display_name || u.username}
 
                             {u.id === currentUserId && (
-                              <span className="ml-1 text-[8px] text-[#00BFFF]">
+                              <span className="ml-1 text-[8px] text-[#FF7A00]">
                                 YOU
                               </span>
                             )}
 
                             {admin && (
-                              <Crown className="ml-1 inline h-3 w-3 text-[#BF00FF]" />
+                              <Crown className="ml-1 inline h-3 w-3 text-[#A855F7]" />
                             )}
                           </p>
 
@@ -556,7 +561,7 @@ function PhoneOnlineUsers({
                           </p>
                         </div>
 
-                        <span className="h-2 w-2 rounded-full bg-[#00BFFF] shadow-[0_0_8px_#00BFFF]" />
+                        <span className="h-2 w-2 rounded-full bg-[#FF7A00] shadow-[0_0_8px_#FF7A00]" />
                       </button>
                     )
                   })}
@@ -598,7 +603,7 @@ function PhoneQuickLinks() {
             Explore MaiTroll
           </h2>
 
-          <p className="text-[9px] font-bold text-[#00BFFF]/45">
+          <p className="text-[9px] font-bold text-[#FF7A00]/45">
             More ways to connect, compete and create
           </p>
         </div>
@@ -613,23 +618,24 @@ function PhoneQuickLinks() {
               key={link.label}
               type="button"
               onClick={() => navigate(link.path)}
-              className="group relative flex min-h-[78px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-[#00BFFF]/10 bg-[#080812] px-1 text-center transition-all active:scale-95 hover:border-[#00BFFF]/25"
+              className="group relative flex min-h-[78px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-[#FF7A00]/35 bg-[#100914] px-1 text-center transition-all active:scale-95 hover:border-[#FF7A00]/25"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#00BFFF]/5 to-[#BF00FF]/5 opacity-0 transition-opacity group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#FF7A00]/15 to-[#A855F7]/15 opacity-70 transition-opacity group-hover:opacity-100" />
+              <span className="absolute right-1 top-1 text-[9px] opacity-70">{index % 2 === 0 ? '🦇' : '🕸️'}</span>
 
               <div
-                className={`relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#00BFFF]/15 bg-gradient-to-br ${
+                className={`relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF7A00]/15 bg-gradient-to-br ${
                   index % 2 === 0
-                    ? 'from-[#00BFFF]/15 to-[#BF00FF]/10'
-                    : 'from-[#BF00FF]/15 to-[#00BFFF]/10'
+                    ? 'from-[#FF7A00]/15 to-[#A855F7]/10'
+                    : 'from-[#A855F7]/15 to-[#FF7A00]/10'
                 }`}
               >
                 <Icon
                   size={16}
                   className={
                     index % 2 === 0
-                      ? 'text-[#00BFFF]'
-                      : 'text-[#BF00FF]'
+                      ? 'text-[#FF7A00]'
+                      : 'text-[#A855F7]'
                   }
                 />
               </div>
@@ -764,19 +770,19 @@ export default function PhoneHomepage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#03030a]">
+      <div className="min-h-screen bg-[#09050F]">
         <PhoneHeader showTickerLinks={false} />
 
         <div className="flex min-h-[70vh] items-center justify-center">
           <div className="text-center">
             <div className="relative mx-auto h-12 w-12">
-              <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] opacity-30 blur-xl" />
+              <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-[#FF7A00] to-[#A855F7] opacity-30 blur-xl" />
 
-              <div className="relative h-12 w-12 animate-spin rounded-full border-2 border-[#BF00FF]/20 border-t-[#00BFFF]" />
+              <div className="relative h-12 w-12 animate-spin rounded-full border-2 border-[#A855F7]/20 border-t-[#FF7A00]" />
             </div>
 
-            <p className="mt-4 text-xs font-black text-[#00BFFF]/50">
-              Loading MaiTroll...
+            <p className="mt-4 text-xs font-black text-[#FF7A00]/50">
+              Entering Haunted MaiTroll...
             </p>
           </div>
         </div>
@@ -785,7 +791,7 @@ export default function PhoneHomepage({
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#03030a] text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#09050F] text-white">
       <PhoneSpaceBackground />
       <PhoneHeader showTickerLinks={false} />
 
@@ -795,13 +801,15 @@ export default function PhoneHomepage({
         {/* ---------------------------------------------------------------- */}
 
         {!user && (
-          <section className="relative mb-4 overflow-hidden rounded-3xl border border-[#00BFFF]/15 bg-gradient-to-br from-[#BF00FF]/15 via-[#070711] to-[#00BFFF]/15 p-4 shadow-[0_0_40px_rgba(0,191,255,0.06)]">
-            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#00BFFF]/15 blur-3xl" />
+          <section className="relative mb-4 overflow-hidden rounded-3xl border border-[#FF7A00]/45 shadow-[0_0_30px_rgba(255,122,0,.10)] bg-gradient-to-br from-[#A855F7]/15 via-[#0D0814] to-[#FF7A00]/15 p-4 shadow-[0_0_40px_rgba(0,191,255,0.06)]">
+            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#FF7A00]/15 blur-3xl" />
 
-            <div className="absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-[#BF00FF]/10 blur-3xl" />
+            <div className="absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-[#A855F7]/10 blur-3xl" />
 
+            <span className="absolute right-3 top-2 text-2xl opacity-80">🎃</span>
+            <span className="absolute left-2 bottom-1 text-lg opacity-50">🕸️</span>
             <div className="relative flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] shadow-[0_0_25px_rgba(0,191,255,0.25)]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF7A00] to-[#A855F7] shadow-[0_0_25px_rgba(0,191,255,0.25)]">
                 <Sparkles size={20} className="text-white" />
               </div>
 
@@ -818,7 +826,7 @@ export default function PhoneHomepage({
               <button
                 type="button"
                 onClick={() => go('/auth?mode=signup')}
-                className="shrink-0 rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] px-3 py-2 text-[9px] font-black text-white shadow-[0_0_18px_rgba(0,191,255,0.20)] transition active:scale-95"
+                className="shrink-0 rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#A855F7] px-3 py-2 text-[9px] font-black text-white shadow-[0_0_18px_rgba(0,191,255,0.20)] transition active:scale-95"
               >
                 Join
               </button>
@@ -835,18 +843,18 @@ export default function PhoneHomepage({
             href="https://play.google.com/store/apps/details?id=com.maitroll.app&pli=1"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex-1 flex items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-[#00BFFF]/30 bg-gradient-to-r from-[#00BFFF]/20 via-[#070711] to-[#1787FF]/20 px-2.5 py-2.5 text-white shadow-[0_0_18px_rgba(0,191,255,0.12)] transition-all active:scale-[0.98] hover:border-[#00BFFF]/50 hover:shadow-[0_0_20px_rgba(0,191,255,0.2)]"
+            className="group relative flex-1 flex items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-[#FF7A00]/30 bg-gradient-to-r from-[#FF7A00]/20 via-[#0D0814] to-[#F97316]/20 px-2.5 py-2.5 text-white shadow-[0_0_18px_rgba(0,191,255,0.12)] transition-all active:scale-[0.98] hover:border-[#FF7A00]/50 hover:shadow-[0_0_20px_rgba(0,191,255,0.2)]"
           >
             <Smartphone size={16} className="text-white drop-shadow-[0_0_4px_rgba(0,191,255,0.6)]" />
             <div className="min-w-0 text-left leading-tight">
-              <p className="text-[7px] font-black uppercase tracking-wider text-[#00BFFF]/70">
+              <p className="text-[7px] font-black uppercase tracking-wider text-[#FF7A00]/70">
                 Get the App
               </p>
               <p className="text-[9px] font-black text-white">
                 Google Play
               </p>
             </div>
-            <ChevronRight size={12} className="text-[#00BFFF]/50 transition-transform group-hover:translate-x-0.5" />
+            <ChevronRight size={12} className="text-[#FF7A00]/50 transition-transform group-hover:translate-x-0.5" />
           </a>
 
           <button
@@ -858,20 +866,20 @@ export default function PhoneHomepage({
                 : 'To add MaiTroll to your Home Screen on iOS:\n1. Open this page in Safari on your iPhone/iPad\n2. Tap the Share button (square with arrow up)\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add" in the top right'
               alert(message)
             }}
-            className="group relative flex-1 flex items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-[#BF00FF]/30 bg-gradient-to-r from-[#BF00FF]/20 via-[#070711] to-[#00BFFF]/20 px-2.5 py-2.5 text-white shadow-[0_0_18px_rgba(191,0,255,0.12)] transition-all active:scale-[0.98] hover:border-[#BF00FF]/50 hover:shadow-[0_0_20px_rgba(191,0,255,0.2)]"
+            className="group relative flex-1 flex items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-[#A855F7]/30 bg-gradient-to-r from-[#A855F7]/20 via-[#0D0814] to-[#FF7A00]/20 px-2.5 py-2.5 text-white shadow-[0_0_18px_rgba(191,0,255,0.12)] transition-all active:scale-[0.98] hover:border-[#A855F7]/50 hover:shadow-[0_0_20px_rgba(191,0,255,0.2)]"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#BF00FF]/30 bg-[#BF00FF]/10">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#A855F7]/30 bg-[#A855F7]/10">
               <Plus size={16} className="text-white drop-shadow-[0_0_4px_rgba(191,0,255,0.6)]" />
             </div>
             <div className="min-w-0 text-left leading-tight">
-              <p className="text-[7px] font-black uppercase tracking-wider text-[#BF00FF]/70">
+              <p className="text-[7px] font-black uppercase tracking-wider text-[#A855F7]/70">
                 Add to Home
               </p>
               <p className="text-[9px] font-black text-white">
                 iOS Safari
               </p>
             </div>
-            <ChevronRight size={12} className="text-[#BF00FF]/50 transition-transform group-hover:translate-x-0.5" />
+            <ChevronRight size={12} className="text-[#A855F7]/50 transition-transform group-hover:translate-x-0.5" />
           </button>
         </section>
 
@@ -879,15 +887,16 @@ export default function PhoneHomepage({
         {/* Stats + Go Live                                                   */}
         {/* ---------------------------------------------------------------- */}
 
-        <section className="mb-5 grid grid-cols-3 gap-2">
-          <div className={`${glass} rounded-2xl p-3`}>
-            <Radio size={14} className="text-[#00BFFF]" />
+        <section className="mb-5 grid grid-cols-3 gap-2 relative">
+          <span className="absolute -top-4 right-1 z-20 text-sm">🦇</span>
+          <div className={`${glass} rounded-2xl border border-[#FF7A00]/30 bg-gradient-to-br from-[#FF7A00]/10 via-[#100914]/90 to-[#A855F7]/10 rounded-2xl p-3 shadow-[inset_0_0_18px_rgba(255,122,0,.06)]`}>
+            <Radio size={14} className="text-[#FF7A00]" />
 
             <p className="mt-2 text-base font-black text-white">
               {totalLive}
             </p>
 
-            <p className="text-[8px] font-black uppercase tracking-wider text-[#00BFFF]/45">
+            <p className="text-[8px] font-black uppercase tracking-wider text-[#FF7A00]/45">
               Live Now
             </p>
           </div>
@@ -896,7 +905,7 @@ export default function PhoneHomepage({
           <button
             type="button"
             onClick={() => go('/go-live')}
-            className="group relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#00BFFF]/50 bg-gradient-to-br from-[#00BFFF] via-[#1787FF] to-[#BF00FF] p-3 text-white shadow-[0_0_25px_rgba(0,191,255,0.30),0_0_35px_rgba(191,0,255,0.20)] transition-all duration-200 active:scale-[0.97] hover:scale-[1.02]"
+            className="group relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#FF7A00]/50 bg-gradient-to-br from-[#FF7A00] via-[#F97316] to-[#A855F7] p-3 text-white shadow-[0_0_25px_rgba(0,191,255,0.30),0_0_35px_rgba(191,0,255,0.20)] transition-all duration-200 active:scale-[0.97] hover:scale-[1.02]"
           >
             <div className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-white/20 blur-2xl transition-transform duration-500 group-hover:scale-150" />
 
@@ -920,14 +929,14 @@ export default function PhoneHomepage({
             </div>
           </button>
 
-          <div className={`${glass} rounded-2xl p-3`}>
-            <Users size={14} className="text-[#BF00FF]" />
+          <div className={`${glass} rounded-2xl border border-[#A855F7]/30 bg-gradient-to-br from-[#A855F7]/10 via-[#100914]/90 to-[#FF7A00]/10 rounded-2xl p-3 shadow-[inset_0_0_18px_rgba(168,85,247,.06)]`}>
+            <Users size={14} className="text-[#A855F7]" />
 
             <p className="mt-2 text-base font-black text-white">
               {onlineUsers.toLocaleString()}
             </p>
 
-            <p className="text-[8px] font-black uppercase tracking-wider text-[#BF00FF]/45">
+            <p className="text-[8px] font-black uppercase tracking-wider text-[#A855F7]/45">
               Online
             </p>
           </div>
@@ -938,7 +947,7 @@ export default function PhoneHomepage({
             type="button"
             disabled={refreshing}
             onClick={refreshLiveContent}
-            className="rounded-xl border border-[#00BFFF]/15 bg-[#00BFFF]/5 px-3 py-2 text-[9px] font-black text-[#00BFFF] transition active:scale-95 disabled:opacity-50"
+            className="rounded-xl border border-[#FF7A00]/15 bg-[#FF7A00]/5 px-3 py-2 text-[9px] font-black text-[#FF7A00] transition active:scale-95 disabled:opacity-50"
           >
             {refreshing ? 'Updating...' : 'Refresh'}
           </button>
@@ -996,9 +1005,9 @@ export default function PhoneHomepage({
             onViewAll={() => go('/battles')}
           >
             {battleItems.length === 0 ? (
-              <div className="flex h-[125px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl border border-[#BF00FF]/15 bg-gradient-to-br from-[#BF00FF]/5 to-[#00BFFF]/5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#BF00FF]/10">
-                  <Sparkles className="h-5 w-5 text-[#BF00FF]/40" />
+              <div className="flex h-[125px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl border border-[#A855F7]/15 bg-gradient-to-br from-[#A855F7]/5 to-[#FF7A00]/5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#A855F7]/10">
+                  <Sparkles className="h-5 w-5 text-[#A855F7]/40" />
                 </div>
 
                 <p className="mt-2 text-[10px] font-black text-zinc-500">
@@ -1015,15 +1024,17 @@ export default function PhoneHomepage({
                   key={item.id}
                   type="button"
                   onClick={() => handleStreamClick(item)}
-                  className="group relative h-[140px] w-[165px] shrink-0 overflow-hidden rounded-2xl border border-[#BF00FF]/25 bg-gradient-to-br from-[#BF00FF]/20 via-[#080812] to-[#00BFFF]/15 p-3 text-left transition active:scale-[0.97]"
+                  className="group relative h-[140px] w-[165px] shrink-0 overflow-hidden rounded-2xl border border-[#A855F7]/50 bg-gradient-to-br from-[#A855F7]/25 via-[#100914] to-[#FF7A00]/20 p-3 text-left shadow-[inset_0_0_25px_rgba(168,85,247,.08),0_0_18px_rgba(255,122,0,.08)] transition active:scale-[0.97]"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#BF00FF]/10 to-[#00BFFF]/10 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#A855F7]/15 to-[#FF7A00]/15 opacity-100 transition-opacity group-hover:opacity-100" />
+                  <span className="absolute bottom-1 right-2 text-lg opacity-60">💀</span>
+                  <span className="absolute left-1 bottom-1 text-xs opacity-50">🕷️</span>
 
-                  <span className="relative rounded-full border border-[#BF00FF]/30 bg-[#BF00FF]/15 px-2 py-1 text-[7px] font-black text-[#BF00FF]">
+                  <span className="relative rounded-full border border-[#A855F7]/30 bg-[#A855F7]/15 px-2 py-1 text-[7px] font-black text-[#A855F7]">
                     {item.battleFormat?.toUpperCase() || 'BATTLE'}
                   </span>
 
-                  <span className="absolute right-2 top-2 rounded-lg border border-[#00BFFF]/30 bg-black/60 px-1.5 py-1 text-[7px] font-black text-white">
+                  <span className="absolute right-2 top-2 rounded-lg border border-[#FF7A00]/30 bg-black/60 px-1.5 py-1 text-[7px] font-black text-white">
                     LIVE
                   </span>
 
@@ -1032,7 +1043,7 @@ export default function PhoneHomepage({
                       {item.title}
                     </p>
 
-                    <p className="mt-1 truncate text-[9px] font-bold text-[#00BFFF]/60">
+                    <p className="mt-1 truncate text-[9px] font-bold text-[#FF7A00]/60">
                       {item.streamerName}
                     </p>
                   </div>
@@ -1052,9 +1063,9 @@ export default function PhoneHomepage({
             onViewAll={() => go('/court')}
           >
             {courtItems.length === 0 ? (
-              <div className="flex h-[120px] w-full min-w-[280px] items-center justify-center rounded-2xl border border-[#00BFFF]/10 bg-[#00BFFF]/[0.02] text-center">
+              <div className="flex h-[120px] w-full min-w-[280px] items-center justify-center rounded-2xl border border-[#FF7A00]/10 bg-[#FF7A00]/[0.02] text-center">
                 <div>
-                  <Gavel className="mx-auto h-7 w-7 text-[#00BFFF]/20" />
+                  <Gavel className="mx-auto h-7 w-7 text-[#FF7A00]/20" />
 
                   <p className="mt-2 text-[9px] font-black text-zinc-600">
                     No court broadcasts live
@@ -1089,9 +1100,9 @@ export default function PhoneHomepage({
             onViewAll={() => go('/tcnn')}
           >
             {tcnnItems.length === 0 ? (
-              <div className="flex h-[120px] w-full min-w-[280px] items-center justify-center rounded-2xl border border-[#BF00FF]/10 bg-[#BF00FF]/[0.02] text-center">
+              <div className="flex h-[120px] w-full min-w-[280px] items-center justify-center rounded-2xl border border-[#A855F7]/10 bg-[#A855F7]/[0.02] text-center">
                 <div>
-                  <MessageCircle className="mx-auto h-7 w-7 text-[#BF00FF]/20" />
+                  <MessageCircle className="mx-auto h-7 w-7 text-[#A855F7]/20" />
 
                   <p className="mt-2 text-[9px] font-black text-zinc-600">
                     No TCNN broadcasts live
@@ -1122,10 +1133,10 @@ export default function PhoneHomepage({
           <button
             type="button"
             onClick={() => go('/community-wall')}
-            className={`group flex w-full items-center gap-3 rounded-2xl ${neonBorder} bg-gradient-to-r from-[#BF00FF]/10 via-[#070711] to-[#00BFFF]/10 p-4 text-left transition active:scale-[0.99]`}
+            className={`group flex w-full items-center gap-3 rounded-2xl ${neonBorder} bg-gradient-to-r from-[#A855F7]/10 via-[#0D0814] to-[#FF7A00]/10 p-4 text-left transition active:scale-[0.99]`}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#BF00FF]/20 bg-[#BF00FF]/10">
-              <MessageCircle size={18} className="text-[#BF00FF]" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#A855F7]/20 bg-[#A855F7]/10">
+              <MessageCircle size={18} className="text-[#A855F7]" />
             </div>
 
             <div className="min-w-0 flex-1">
@@ -1139,14 +1150,14 @@ export default function PhoneHomepage({
             </div>
 
             {newPostCount > 0 && (
-              <span className="rounded-full bg-gradient-to-r from-[#BF00FF] to-[#00BFFF] px-2 py-1 text-[8px] font-black text-white shadow-[0_0_12px_rgba(191,0,255,0.25)]">
+              <span className="rounded-full bg-gradient-to-r from-[#A855F7] to-[#FF7A00] px-2 py-1 text-[8px] font-black text-white shadow-[0_0_12px_rgba(191,0,255,0.25)]">
                 {newPostCount}
               </span>
             )}
 
             <ArrowRight
               size={15}
-              className="text-[#00BFFF]/50 transition-transform group-hover:translate-x-0.5"
+              className="text-[#FF7A00]/50 transition-transform group-hover:translate-x-0.5"
             />
           </button>
 
@@ -1158,14 +1169,14 @@ export default function PhoneHomepage({
             <button
               type="button"
               onClick={() => go('/broadcast/setup')}
-              className="group relative w-full overflow-hidden rounded-2xl border border-[#00BFFF]/20 bg-gradient-to-r from-[#BF00FF]/15 via-[#0d0d19] to-[#00BFFF]/15 p-4 text-left shadow-[0_0_35px_rgba(0,191,255,0.08)] transition active:scale-[0.99]"
+              className="group relative w-full overflow-hidden rounded-2xl border border-[#FF7A00]/20 bg-gradient-to-r from-[#A855F7]/15 via-[#0d0d19] to-[#FF7A00]/15 p-4 text-left shadow-[0_0_35px_rgba(0,191,255,0.08)] transition active:scale-[0.99]"
             >
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#00BFFF]/15 blur-2xl transition-transform duration-500 group-hover:scale-125" />
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#FF7A00]/15 blur-2xl transition-transform duration-500 group-hover:scale-125" />
 
-              <div className="absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-[#BF00FF]/10 blur-2xl" />
+              <div className="absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-[#A855F7]/10 blur-2xl" />
 
               <div className="relative flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] shadow-[0_0_18px_rgba(0,191,255,0.18)]">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF7A00] to-[#A855F7] shadow-[0_0_18px_rgba(0,191,255,0.18)]">
                   <Radio size={20} className="text-white" />
                 </div>
 
@@ -1179,10 +1190,10 @@ export default function PhoneHomepage({
                   </p>
                 </div>
 
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
                   <ChevronRight
                     size={17}
-                    className="text-[#00BFFF] transition-transform group-hover:translate-x-0.5"
+                    className="text-[#FF7A00] transition-transform group-hover:translate-x-0.5"
                   />
                 </div>
               </div>
@@ -1195,7 +1206,21 @@ export default function PhoneHomepage({
           <PhoneQuickLinks />
         </div>
 
-        <footer className="mt-7 border-t border-[#00BFFF]/10 py-5 text-center">
+        {/* Search entry point — hands off to the phone explorer */}
+        <button
+          type="button"
+          onClick={() => navigate('/explore')}
+          aria-label="Search MaiTroll"
+          className="mt-7 flex w-full items-center gap-2.5 rounded-2xl border border-[#FF7A00]/15 bg-[#0D0814]/85 px-4 py-3 text-left backdrop-blur-2xl transition active:scale-[0.98] active:border-[#FF7A00]/40"
+        >
+          <Search size={15} className="shrink-0 text-[#FF7A00]" />
+          <span className="flex-1 text-xs font-bold text-zinc-500">Search</span>
+          <span className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-zinc-600">
+            Explore
+          </span>
+        </button>
+
+        <footer className="mt-7 border-t border-[#FF7A00]/10 py-5 text-center">
           <p className="text-[9px] font-bold text-zinc-700">
             MaiTroll • Troll City
           </p>
@@ -1212,7 +1237,7 @@ export default function PhoneHomepage({
               <Link
                 key={path}
                 to={path}
-                className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wide text-[#00BFFF]/70 transition hover:text-[#BF00FF]"
+                className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wide text-[#FF7A00]/70 transition hover:text-[#A855F7]"
               >
                 <Icon size={10} />
                 {label}
@@ -1234,6 +1259,16 @@ export default function PhoneHomepage({
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes floatSpooky {
+          0%, 100% { transform: translateY(0) rotate(-4deg); }
+          50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        @keyframes halloweenFlicker {
+          0%, 100% { opacity: 1; }
+          48% { opacity: .82; }
+          50% { opacity: .55; }
+          52% { opacity: .95; }
         }
       `}</style>
     </div>

@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Bell, Menu, Search, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../lib/store";
+import { supabase } from "../../lib/supabase";
 
 interface MobileTopBarProps {
   drawerOpen?: boolean;
@@ -16,13 +18,51 @@ export default function MobileTopBar({
   onCloseDrawer,
 }: MobileTopBarProps) {
   const navigate = useNavigate();
+  const profile = useAuthStore((state) => state.profile);
   const [notificationCount, setNotificationCount] = useState(0);
 
+  const refreshNotificationCount = useCallback(async () => {
+    if (!profile?.id) {
+      setNotificationCount(0);
+      return;
+    }
+
+    const { count, error } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("is_read", false);
+
+    if (error) {
+      console.error("[MobileTopBar] Failed to load unread notification count:", error);
+      return;
+    }
+
+    setNotificationCount(count || 0);
+  }, [profile?.id]);
+
   useEffect(() => {
-    // Placeholder for real notification count later.
-    // Keep this here so the top bar is already ready for Supabase wiring.
-    setNotificationCount(0);
-  }, []);
+    void refreshNotificationCount();
+    if (!profile?.id) return;
+
+    const channel = supabase
+      .channel(`mobile-topbar-notifications:${profile.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => void refreshNotificationCount(),
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [profile?.id, refreshNotificationCount]);
 
   const handleMenuClick = () => {
     if (onToggleDrawer) {

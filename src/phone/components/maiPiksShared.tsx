@@ -21,6 +21,12 @@ export const HOLD_TO_RECORD_MS = 250
 /** Hard cap for a single MAI Piks video. */
 export const MAX_VIDEO_MS = 3 * 60 * 1000
 
+/**
+ * While holding the shutter, sliding the finger this far to the left latches the
+ * recording so it keeps going after the finger lifts.
+ */
+export const SWIPE_TO_LOCK_PX = 72
+
 /** Stories live for 24 hours, then they are hard deleted. */
 export const STORY_LIFETIME_MS = 24 * 60 * 60 * 1000
 
@@ -35,6 +41,7 @@ export const TIP_PLATFORM_FEE_PERCENT = 20
 /* -------------------------------------------------------------------------- */
 
 export type StoryVisibility = 'everyone' | 'followers' | 'private'
+export type StoryMonetizationMode = 'free' | 'paid' | 'subscribers_only' | 'free_for_subscribers'
 
 export interface PiksStoryItem {
   id: string
@@ -58,6 +65,11 @@ export interface PiksStory {
   avatarUrl?: string | null
   thumbnailUrl?: string | null
   visibility: StoryVisibility
+  monetizationMode?: StoryMonetizationMode
+  basePriceCoins?: number
+  finalPriceCoins?: number
+  discountPercent?: number
+  paidAccessDuration?: string
   hasAccess?: boolean
   isOwn?: boolean
   /** When the last piece of media in this story disappears. */

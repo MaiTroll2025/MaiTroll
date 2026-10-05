@@ -6,7 +6,17 @@
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/legal/(.*)", "dest": "/api/legal/$1" },
     { "src": "/downloads/MaiTroll-Setup.exe", "dest": "https://github.com/maitroll/maitroll/releases/latest/download/MaiTroll-Setup.exe" },
+
     { "handle": "filesystem" },
+
+    {
+      "src": "/sitemap-dynamic.xml",
+      "dest": "/sitemap-dynamic.xml"
+    },
+    { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
+    { "src": "/robots.txt", "dest": "/robots.txt" },
+    { "src": "/manifest.json", "dest": "/manifest.json" },
+
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "functions": {

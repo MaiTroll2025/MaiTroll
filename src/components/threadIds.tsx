@@ -304,8 +304,7 @@ export const sendMessage = async (params: {
     await supabase.from('utromail_notifications').insert({
       user_id: params.recipientId,
       message_id: message.id,
-      notification_type: params.messageType === 'academy_notification' ? 'academy_mail' :
-                         params.messageType === 'government' ? 'government_mail' : 'new_message',
+      notification_type: params.messageType === 'government' ? 'government_mail' : 'new_message',
     });
   }
 

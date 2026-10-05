@@ -19,12 +19,28 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { writeFileSync } from 'fs'
+import { writeFileSync, readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+/*
+ * `npm run build` does not populate process.env from .env, and Vercel only
+ * supplies the variables configured for the build. Load the local .env as a
+ * fallback so a developer running `npm run build` produces a real sitemap
+ * instead of failing, while CI keeps using its own injected environment.
+ */
+if (!process.env.VITE_SUPABASE_URL && !process.env.SUPABASE_URL) {
+  try {
+    if (typeof process.loadEnvFile === 'function') {
+      process.loadEnvFile(join(__dirname, '..', '.env'))
+    }
+  } catch {
+    /* No readable .env. The validation below reports it clearly. */
+  }
+}
 
 // Supabase configuration
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
@@ -33,7 +49,8 @@ const BASE_URL = process.env.SITEMAP_BASE_URL || 'https://www.maitroll.com'
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('❌ Missing Supabase credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
-  console.error('   Example: VITE_SUPABASE_URL=xxx VITE_SUPABASE_ANON_KEY=xxx node scripts/generate-sitemap.mjs')
+  console.error('   Locally: add them to .env (loaded automatically).')
+  console.error('   On Vercel: add them under Project Settings -> Environment Variables.')
   process.exit(1)
 }
 
@@ -116,6 +133,9 @@ try {
     .from('streams')
     .select('id, updated_at, created_at')
     .gte('created_at', thirtyDaysAgo)
+    // Password protected streams are not public, so they must never be
+    // advertised in a sitemap that search engines can read.
+    .is('password_hash', null)
     .order('created_at', { ascending: false })
     .limit(5000)
   if (error) throw error
@@ -134,34 +154,7 @@ try {
 }
 
 // ============================================================
-// 3. Academy Courses
-// ============================================================
-console.log('📊 Fetching academy courses...')
-try {
-  const { data: courses, error } = await supabase
-    .from('academy_courses')
-    .select('slug, updated_at, created_at')
-    .eq('is_published', true)
-    .not('slug', 'is', null)
-  if (error) throw error
-
-  for (const course of (courses || [])) {
-    if (course.slug) {
-      urls.push(urlEntry(
-        `${BASE_URL}/academy/course/${encodeURIComponent(course.slug)}`,
-        (course.updated_at || course.created_at || today).split('T')[0],
-        'weekly',
-        '0.7'
-      ))
-    }
-  }
-  console.log(`  ✅ ${courses?.length || 0} academy courses`)
-} catch (err) {
-  console.warn(`  ⚠️ Skipping academy courses: ${err.message}`)
-}
-
-// ============================================================
-// 4. Agency Profiles
+// 3. Agency Profiles
 // ============================================================
 console.log('📊 Fetching agency profiles...')
 try {
@@ -218,10 +211,11 @@ try {
 // ============================================================
 console.log('📊 Fetching court sessions...')
 try {
+  // `court_sessions` has no privacy column; sessions are publicly viewable via
+  // /troll-court/watch/:id regardless of status, so no visibility filter applies.
   const { data: sessions, error } = await supabase
     .from('court_sessions')
     .select('id, updated_at, created_at')
-    .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(1000)
   if (error) throw error
@@ -244,10 +238,11 @@ try {
 // ============================================================
 console.log('📊 Fetching wall posts...')
 try {
+  // Posts are public unless soft deleted.
   const { data: posts, error } = await supabase
     .from('troll_wall_posts')
     .select('id, updated_at, created_at')
-    .eq('is_public', true)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(5000)
   if (error) throw error
@@ -270,10 +265,10 @@ try {
 // ============================================================
 console.log('📊 Fetching troll battles...')
 try {
+  // Battles have no privacy column; `status` is lifecycle, not visibility.
   const { data: battles, error } = await supabase
     .from('troll_battles')
     .select('id, updated_at, created_at')
-    .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(2000)
   if (error) throw error
@@ -299,7 +294,7 @@ try {
   const { data: families, error } = await supabase
     .from('families')
     .select('id, updated_at, created_at')
-    .eq('is_public', true)
+    .eq('is_active', true)
     .order('created_at', { ascending: false })
     .limit(2000)
   if (error) throw error
@@ -322,10 +317,10 @@ try {
 // ============================================================
 console.log('📊 Fetching organizations...')
 try {
+  // Organizations have no privacy column; `status` is lifecycle, not visibility.
   const { data: orgs, error } = await supabase
     .from('organizations')
     .select('id, updated_at, created_at')
-    .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(2000)
   if (error) throw error
@@ -351,7 +346,7 @@ try {
   const { data: podcasts, error } = await supabase
     .from('podcasts')
     .select('id, updated_at, created_at')
-    .eq('is_public', true)
+    .eq('is_published', true)
     .order('created_at', { ascending: false })
     .limit(2000)
   if (error) throw error
@@ -374,11 +369,10 @@ try {
 // ============================================================
 console.log('📊 Fetching marketplace listings...')
 try {
+  // The table is `marketplace_items`; there is no `marketplace_listings`.
   const { data: listings, error } = await supabase
-    .from('marketplace_listings')
+    .from('marketplace_items')
     .select('id, updated_at, created_at')
-    .eq('is_public', true)
-    .eq('is_sold', false)
     .order('created_at', { ascending: false })
     .limit(5000)
   if (error) throw error
@@ -420,6 +414,32 @@ writeFileSync(outputPath, sitemap, 'utf-8')
 
 console.log(`\n✅ Sitemap generated: ${outputPath}`)
 console.log(`   Total URLs: ${urls.length}`)
+
+// Fail loudly so a broken sitemap can never ship silently. The build chains on
+// this script's exit code, so a non-zero exit fails the production build.
+if (urls.length === 0) {
+  console.error('\n❌ Refusing to write an empty sitemap: no public URLs were discovered.')
+  console.error('   Every entity query returned nothing, which usually means the Supabase')
+  console.error('   credentials or schema filters are wrong.')
+  process.exit(1)
+}
+
+const written = readFileSync(outputPath, 'utf-8')
+const openTags = (written.match(/<url>/g) || []).length
+const closeTags = (written.match(/<\/url>/g) || []).length
+
+if (!written.startsWith('<?xml version="1.0" encoding="UTF-8"?>')) {
+  console.error('\n❌ Sitemap is missing the XML declaration.')
+  process.exit(1)
+}
+
+if (openTags !== urls.length || closeTags !== urls.length) {
+  console.error(`\n❌ Sitemap XML is malformed: ${openTags} <url> vs ${closeTags} </url> vs ${urls.length} entries.`)
+  process.exit(1)
+}
+
+console.log(`   XML validated: ${openTags} well-formed <url> entries`)
+
 console.log(`\n📌 Next steps:`)
 console.log(`   1. Verify sitemap-dynamic.xml is in /public`)
 console.log(`   2. Submit to Google Search Console`)

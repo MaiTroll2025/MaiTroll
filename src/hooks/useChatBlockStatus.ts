@@ -32,6 +32,27 @@ export function useChatBlockStatus(userId?: string | null, streamId?: string | n
       return;
     }
 
+    const { data: unifiedRestriction } = await supabase.rpc('check_user_chat_restriction', {
+      p_user_id: userId,
+      p_stream_id: streamId || null,
+    });
+    if (unifiedRestriction?.restricted) {
+      const restriction = unifiedRestriction.restriction
+        || unifiedRestriction.jail
+        || unifiedRestriction.chat_block
+        || unifiedRestriction.mute
+        || unifiedRestriction.broadcast_restriction
+        || {};
+      const expiresAt = restriction.expires_at || restriction.scheduled_release_at || null;
+      const permanent = Boolean(restriction.is_permanent) || !expiresAt;
+      applyResolvedStatus(true, expiresAt, permanent);
+      if (expiresAt) {
+        const delay = Math.max(0, new Date(expiresAt).getTime() - Date.now()) + 250;
+        expiryTimerRef.current = window.setTimeout(() => { void refresh() }, delay);
+      }
+      return;
+    }
+
     let highestBlocked = false;
     let highestExpiresAt: string | null = null;
     let highestIsPermanent = false;
@@ -187,6 +208,18 @@ export function useChatBlockStatus(userId?: string | null, streamId?: string | n
           schema: 'public',
           table: 'user_broadcast_restrictions',
           filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          void refresh();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_restrictions',
+          filter: `target_user_id=eq.${userId}`,
         },
         () => {
           void refresh();

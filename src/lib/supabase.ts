@@ -612,10 +612,6 @@ export enum UserRole {
   MARKETING_READONLY = 'marketing_readonly',
   SUPERADMIN = 'superadmin',
   CEO = 'ceo',
-  ACADEMY_TEACHER = 'academy_teacher',
-  ACADEMY_STUDENT = 'academy_student',
-  ACADEMY_DIRECTOR = 'academy_director',
-  ADMISSIONS_OFFICER = 'admissions_officer',
 }
 
 export enum Permission {
@@ -915,29 +911,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.CREATE_CONTENT,
     Permission.MONETIZE
   ],
-  [UserRole.ACADEMY_TEACHER]: [
-    Permission.BROADCAST,
-    Permission.CREATE_CONTENT,
-    Permission.MONETIZE
-  ],
-  [UserRole.ACADEMY_STUDENT]: [
-    Permission.BROADCAST,
-    Permission.CREATE_CONTENT
-  ],
-  [UserRole.ACADEMY_DIRECTOR]: [
-    Permission.MANAGE_USERS,
-    Permission.MANAGE_CONTENT,
-    Permission.MANAGE_FINANCES,
-    Permission.MANAGE_SYSTEM,
-    Permission.BROADCAST,
-    Permission.CREATE_CONTENT,
-    Permission.MONETIZE
-  ],
-  [UserRole.ADMISSIONS_OFFICER]: [
-    Permission.MANAGE_USERS,
-    Permission.BROADCAST,
-    Permission.CREATE_CONTENT
-  ]
 }
 
 // Enhanced role validation with comprehensive checks

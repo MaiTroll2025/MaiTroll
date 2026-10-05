@@ -4,10 +4,10 @@
 
 export type MailPrivacySetting = 'everyone' | 'following' | 'mutual_followers' | 'verified_only';
 export type MailFolder = 'inbox' | 'sent' | 'archive' | 'trash' | 'requests' | 'starred' | 'drafts';
-export type MessageType = 'normal' | 'academy_notification' | 'government' | 'system' | 'report';
+export type MessageType = 'normal' | 'government' | 'system' | 'report';
 export type RequestStatus = 'pending' | 'accepted' | 'ignored' | 'blocked';
 export type ReportStatus = 'pending' | 'reviewed' | 'action_taken' | 'dismissed';
-export type NotificationType = 'new_message' | 'message_request' | 'academy_mail' | 'government_mail' | 'report_update';
+export type NotificationType = 'new_message' | 'message_request' | 'government_mail' | 'report_update';
 
 export interface UtromailAccount {
   id: string;

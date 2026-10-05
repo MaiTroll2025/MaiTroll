@@ -395,6 +395,12 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/moderation-actions/index.ts"
 
+[functions.maipiks-report-evidence]
+enabled = true
+verify_jwt = false
+import_map = "./functions/maipiks-report-evidence/deno.json"
+entrypoint = "./functions/maipiks-report-evidence/index.ts"
+
 [functions.signup]
 enabled = true
 verify_jwt = false
@@ -412,8 +418,13 @@ entrypoint = "./functions/celebrity/index.ts"
 
 [functions.push-notifications]
 enabled = true
-verify_jwt = false
+verify_jwt = true
 entrypoint = "./functions/push-notifications/index.ts"
+
+[functions.android-update-monitor]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/android-update-monitor/index.ts"
 
 [functions.notify-stream-live]
 enabled = true
@@ -424,4 +435,3 @@ entrypoint = "./functions/notify-stream-live/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/notify-admin-event/index.ts"
-
