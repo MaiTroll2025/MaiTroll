@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
 import './index.css'
 import './styles/pwa-mobile.css'
@@ -10,14 +11,15 @@ import './styles/broadcast-themes.css'
 import './styles/battle-themes.css'
 import './styles/leaflet.css'
 import { AuthProvider } from './contexts/AuthProvider'
-import { GlobalAppProvider } from './contexts/GlobalAppContext'
+ import { GlobalAppProvider } from './contexts/GlobalAppContext'
 import { GlobalEventProvider } from './contexts/GlobalEventContext'
+import { ConsentProvider } from './contexts/ConsentContext'
+import ConsentBanner from './components/ConsentBanner'
 import AprilFoolsProvider from './components/april-fools/AprilFoolsProvider'
 import { EasterEggHuntProvider } from './contexts/EasterEggHuntContext'
 import { PWAProvider } from './contexts/PWAContext'
 import { doesUserProfileExist, supabase } from './lib/supabase'
- import { initTelemetry } from './lib/telemetry'
- import { initMobilePlatform, isMobilePlatform } from './lib/mobilePlatform'
+  import { initMobilePlatform, isMobilePlatform } from './lib/mobilePlatform'
  import { reportBug, reportFetchError } from './lib/bugReporter'
 
  // App version for cache busting
@@ -149,11 +151,52 @@ try {
   console.warn('Unable to evaluate app version guard', error)
 }
 
- if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined') {
    (window as any).__ENV = env
-   initTelemetry()
 
-   // ================================================================
+    // =================================================================
+    // CONSENT-GATED ANALYTICS & TELEMETRY INITIALIZATION
+    //
+    // Google Analytics and internal telemetry must NOT initialize until
+    // the user has given analytics consent. Both are checked against the
+    // stored consent preference so that consent given on a later page
+    // load (or changed later) is respected.
+    //
+    // The consent-changed event is dispatched by ConsentContext whenever
+    // the user accepts/rejects updates preferences.
+    // =================================================================
+    import('./lib/consent').then(({ hasAnalyticsConsent }) => {
+      if (hasAnalyticsConsent()) {
+        import('./lib/telemetry').then(({ initTelemetry }) => {
+          try { initTelemetry(); } catch { /* silent: analytics */ }
+        });
+        import('./lib/googleAnalytics').then(({ initializeAnalyticsIfConsented }) => {
+          void initializeAnalyticsIfConsented();
+        });
+      }
+    });
+
+    window.addEventListener('consent-changed', () => {
+      import('./lib/consent').then(({ hasAnalyticsConsent }) => {
+        if (hasAnalyticsConsent()) {
+          import('./lib/telemetry').then(({ initTelemetry }) => {
+            try { initTelemetry(); } catch { /* silent */ }
+          });
+          import('./lib/googleAnalytics').then(({ initializeAnalyticsIfConsented }) => {
+            void initializeAnalyticsIfConsented();
+          });
+        } else {
+          import('./lib/telemetry').then(({ resetTelemetry }) => {
+            try { resetTelemetry(); } catch { /* silent */ }
+          });
+          import('./lib/googleAnalytics').then(({ resetGoogleAnalytics }) => {
+            try { resetGoogleAnalytics(); } catch { /* silent */ }
+          });
+        }
+      });
+    });
+
+    // ================================================================
    // GLOBAL ERROR CATCHERS - Universal Bug Catcher
    // ================================================================
 
@@ -443,20 +486,25 @@ createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       
-      <AuthProvider>
-        <GlobalAppProvider>
-          <GlobalEventProvider>
-            <AprilFoolsProvider>
-              <PWAProvider>
-                <EasterEggHuntProvider>
-                  <App />
-                </EasterEggHuntProvider>
-              </PWAProvider>
-            </AprilFoolsProvider>
-          </GlobalEventProvider>
-        </GlobalAppProvider>
-      </AuthProvider>
-      
+      <HelmetProvider>
+        <AuthProvider>
+          <GlobalAppProvider>
+            <GlobalEventProvider>
+              <ConsentProvider>
+                <AprilFoolsProvider>
+                  <PWAProvider>
+                    <EasterEggHuntProvider>
+                      <App />
+                      <ConsentBanner />
+                    </EasterEggHuntProvider>
+                  </PWAProvider>
+                </AprilFoolsProvider>
+              </ConsentProvider>
+            </GlobalEventProvider>
+          </GlobalAppProvider>
+        </AuthProvider>
+      </HelmetProvider>
+       
     </BrowserRouter>
   </QueryClientProvider>
 )

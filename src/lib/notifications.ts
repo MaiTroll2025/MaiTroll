@@ -26,72 +26,32 @@ export async function notifyAdmins(
   title: string,
   message: string,
   type: NotificationType,
-  metadata: NotificationMetadata = {},
-  targetRoles?: string[]
+  metadata: NotificationMetadata = {}
 ): Promise<{ success: boolean; error?: string }[]> {
   try {
-    const { data: admins, error } = await supabase
-      .from('user_profiles')
-      .select('id, role, is_admin, is_troll_officer, is_lead_officer')
-      .or('is_admin.eq.true,is_troll_officer.eq.true,is_lead_officer.eq.true,role.eq.admin,role.eq.superadmin,role.eq.owner')
-
-    if (error) {
-      console.error('[notifyAdmins] Failed to fetch admin users:', error)
-      return [{ success: false, error: error.message }]
-    }
-
-    if (!admins || admins.length === 0) {
-      console.warn('[notifyAdmins] No admin users found')
-      return [{ success: false, error: 'No admin users found' }]
-    }
-
-    const adminIds = admins.map(a => a.id).filter(Boolean)
-
-    if (adminIds.length === 0) {
-      return [{ success: false, error: 'No valid admin IDs' }]
-    }
-
-    // Use the centralized edge function for admin notifications
-    // This ensures online admins only get in-app notifications,
-    // while offline admins get both in-app and push notifications
     const edgeResult = await supabase.functions.invoke('notify-admin-event', {
       body: {
         type,
         title,
         message,
-        metadata: {
-          ...metadata,
-          audience: 'admin'
-        },
-        targetRoles: targetRoles || [
-          'admin', 'superadmin', 'owner', 'ceo', 'lead_troll_officer',
-          'troll_officer', 'moderator', 'staff', 'secretary',
-          'executive_secretary', 'troll_city_secretary'
-        ]
+        metadata
       }
     })
 
     if (edgeResult.error) {
-      console.warn('[notifyAdmins] Edge function failed, falling back to direct notifications:', edgeResult.error)
-      
-      const results = await Promise.all(
-        admins.map(async (admin: any) => {
-          if (!admin?.id) {
-            return { success: false, error: 'Invalid admin id' }
-          }
-          try {
-            await sendNotification(admin.id, type, title, message, { ...metadata, audience: 'admin' })
-            return { success: true }
-          } catch (sendErr: any) {
-            console.warn('[notifyAdmins] Failed to notify admin:', admin.id, sendErr)
-            return { success: false, error: sendErr?.message || 'Notification send failed' }
-          }
-        })
-      )
-      return results
+      console.error('[notifyAdmins] Notification event function failed:', edgeResult.error)
+      return [{ success: false, error: edgeResult.error.message }]
     }
 
-    return adminIds.map(() => ({ success: true }))
+    if (edgeResult.data?.success !== true) {
+      const error = typeof edgeResult.data?.error === 'string'
+        ? edgeResult.data.error
+        : 'Notification event was not accepted'
+      console.error('[notifyAdmins] Notification event was rejected:', error)
+      return [{ success: false, error }]
+    }
+
+    return [{ success: true }]
   } catch (err: any) {
     console.error('[notifyAdmins] Unexpected error:', err)
     return [{ success: false, error: err?.message || 'Unknown error' }]
@@ -847,7 +807,6 @@ export async function notifyTrollCoinPenalty(
       penalty_amount: penaltyAmount,
       destination: 'Admin Donation',
       action_url: '/admin',
-      audience: 'admin',
     }
   )
 

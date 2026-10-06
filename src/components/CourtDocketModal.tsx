@@ -157,15 +157,6 @@ export default function CourtDocketModal({ isOpen, onClose, onSelectCase, onSent
         return
       }
 
-      const { notifyAdminCourtStarted } = await import('../lib/notifications')
-      notifyAdminCourtStarted(
-        data?.case_id || '',
-        addDefendantId,
-        addUsername || 'Unknown',
-        addReason.trim(),
-        new Date().toLocaleDateString()
-      ).catch((e) => console.warn('[CourtDocketModal] Failed to notify admins:', e))
-
       toast.success(`Case opened against @${addUsername || 'defendant'}. Call them to stand to issue a ruling.`)
       setShowAddCase(false)
       setAddUsername('')

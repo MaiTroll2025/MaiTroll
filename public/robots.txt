@@ -1,21 +1,114 @@
+# ============================================================
+# MAITROLL PRODUCTION ROBOTS.TXT
+# Aligned with Core App.tsx Routes and Static Sitemap Structure
+# ============================================================
+
 User-agent: *
 Allow: /
+Allow: /explore
+Allow: /live-swipe
+Allow: /auctions
+Allow: /marketplace
+Allow: /mai-piks
+Allow: /hytrogaming
+Allow: /troll-wheel
+Allow: /podcast
+Allow: /troll-court
+Allow: /wall
+Allow: /church
+Allow: /neighborhood-map
+Allow: /garage
+Allow: /family/city
+Allow: /family/wars
+Allow: /family/browse
+Allow: /government
+Allow: /seo-government
+Allow: /careers
+Allow: /sell
+Allow: /about
+Allow: /broadcasting
+Allow: /categories
 
-# Sitemaps
-Sitemap: https://www.maitroll.com/sitemap.xml
-Sitemap: https://www.maitroll.com/sitemap-dynamic.xml
+# Sitemaps Reference
+Sitemap: https://maitroll.com
+Sitemap: https://maitroll.com
 
-# Block authentication
+# ------------------------------------------------------------
+# STRICT DISALLOWS: SECURITY & BACKGROUND OPERATIONS
+# ------------------------------------------------------------
 Disallow: /auth/
 Disallow: /reset-password
 Disallow: /verification
+Disallow: /onboarding
+Disallow: /exit
+Disallow: /stream-ended
+Disallow: /beta-feedback
+Disallow: /survey/
+Disallow: /search
+Disallow: /dev/
+Disallow: /debug/
 
-# Block account management
+# Prevent bots from loading setup pages, wizards, or deletion paths
 Disallow: /profile/settings
 Disallow: /profile/delete
 Disallow: /profile/setup
+Disallow: /broadcast/setup
+Disallow: /broadcast/summary/
+Disallow: /live/command-center/
+Disallow: /live/overlay/
+Disallow: /settings/audio
+Disallow: /payouts/setup
 
-# Block admin areas
+# ------------------------------------------------------------
+# STRICT DISALLOWS: PROTECTED BUSINESS & OFFICE MANAGEMENT
+# ------------------------------------------------------------
+# Keep the Business landing page public, but block deep operational dashboard pathways
+Disallow: /features/mai-business/pages/MaiBusinessDashboard
+Disallow: /features/mai-business/pages/MaiBusinessStart
+Disallow: /features/mai-business/pages/MaiBusinessPlan
+Disallow: /features/mai-business/pages/MaiBusinessCredit
+Disallow: /features/mai-business/pages/MaiBusinessFunding
+Disallow: /features/mai-business/pages/MaiBusinessApplication
+Disallow: /features/mai-business/pages/MaiBusinessProgress
+Disallow: /features/mai-business/pages/MaiBusinessDocuments
+Disallow: /features/mai-business/pages/MaiBusinessAdmin
+
+# Block law enforcement/trial/jail operations from public indices
+Disallow: /jail
+Disallow: /inmates
+Disallow: /jail/appeal
+Disallow: /neighborhood-setup
+Disallow: /driver-test
+Disallow: /insurance
+Disallow: /tax-onboarding
+Disallow: /founding-officer-trial
+
+# ------------------------------------------------------------
+# STRICT DISALLOWS: PRIVATE COMMUNICATIONS & ACCOUNT INTERNALS
+# ------------------------------------------------------------
+Disallow: /messages
+Disallow: /utromail
+Disallow: /tromail
+Disallow: /call/
+Disallow: /interview/
+Disallow: /notifications
+Disallow: /following
+Disallow: /blocked-users
+
+# ------------------------------------------------------------
+# STRICT DISALLOWS: INTERNAL APIS & UTILITY CHANNELS
+# ------------------------------------------------------------
+Disallow: /api/admin/
+Disallow: /api/broadcasts/
+Disallow: /api/telemetry
+Disallow: /api/health
+Disallow: /api/paypal/
+Disallow: /api/social/
+Disallow: /api/og/
+
+# ------------------------------------------------------------
+# STRICT DISALLOWS: STAFF CONSOLES & ROLES
+# ------------------------------------------------------------
 Disallow: /admin/
 Disallow: /secretary/
 Disallow: /ceo-assistant-dashboard
@@ -31,95 +124,20 @@ Disallow: /attorney
 Disallow: /prosecutor
 Disallow: /notary
 
-# Block internal tools
-Disallow: /dev/
-Disallow: /debug/
-
-# Block internal broadcast pages
-Disallow: /broadcast/setup
-Disallow: /broadcast/summary/
-Disallow: /live/command-center/
-Disallow: /live/overlay/
-Disallow: /settings/audio
-
-# Block one-time/internal pages
-Disallow: /exit
-Disallow: /stream-ended
-Disallow: /onboarding
-Disallow: /neighborhood-setup
-Disallow: /driver-test
-Disallow: /insurance
-Disallow: /tax-onboarding
-Disallow: /founding-officer-trial
-
-# Block private user areas
-Disallow: /messages
-Disallow: /utromail
-Disallow: /tromail
-Disallow: /call/
-Disallow: /interview/
-Disallow: /notifications
-Disallow: /following
-Disallow: /blocked-users
-Disallow: /jail
-Disallow: /inmates
-Disallow: /jail/appeal
-# Internal search is a logged-in user directory, not public content, so it is
-# blocked here and also carries a noindex meta tag (see src/lib/seo/seoRoutes.ts).
-Disallow: /search
-Disallow: /beta-feedback
-Disallow: /survey/
-
-# Block internal API routes
-Disallow: /api/admin/
-Disallow: /api/broadcasts/
-Disallow: /api/telemetry
-Disallow: /api/health
-Disallow: /api/paypal/
-Disallow: /api/social/
-Disallow: /api/og/
-
-# Block private/economy pages
-Disallow: /bank
-Disallow: /credit-scores
-Disallow: /cashouts
-Disallow: /payouts/
-Disallow: /account/earnings
-Disallow: /shop/
-Disallow: /inventory
-Disallow: /garage
-Disallow: /ktauto
-Disallow: /vehicle-transactions
-Disallow: /troting
-Disallow: /marketplace/orders
-Disallow: /marketplace/sales
-Disallow: /auction/dashboard
-Disallow: /auction/studio
-Disallow: /tcnn/dashboard
-Disallow: /tcnn/setup
-Disallow: /tcnn/broadcaster
-Disallow: /universe-event
-Disallow: /universe/register
-Disallow: /universe/my-battles
-Disallow: /universe/live
-Disallow: /universe/history
-Disallow: /universe/champions
-Disallow: /city-registry/advertise
-
-# AI training crawlers (does NOT affect Google Search indexing)
+# ------------------------------------------------------------
+# CRAWLER PREFERENCES FOR AI DISCOVERY ARCHITECTURES
+# ------------------------------------------------------------
 User-agent: GPTBot
-Disallow: /
+Allow: /
+Disallow: /admin/
+Disallow: /api/
 
 User-agent: ClaudeBot
-Disallow: /
+Allow: /
+Disallow: /admin/
+Disallow: /api/
 
-User-agent: CCBot
-Disallow: /
-
-User-agent: Google-Extended
-Disallow: /
-
-# Rate-limit aggressive bots
+# Scraping Delay Parameters
 User-agent: AhrefsBot
 Crawl-delay: 10
 

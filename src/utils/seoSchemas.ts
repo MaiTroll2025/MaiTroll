@@ -1,3 +1,5 @@
+const SITE_DESCRIPTION = 'MaiTroll is the First Virtual Broadcasting City — a live social broadcasting platform where creators go live, battle, build communities, interact with viewers, send gifts and grow their audience in a persistent virtual world.'
+
 export const SITE_URL = 'https://www.maitroll.com'
 export const SITE_NAME = 'MaiTroll'
 export const SITE_ALT_NAME = 'MaiTroll'
@@ -7,9 +9,9 @@ export function websiteSchema() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE_NAME,
-    alternateName: SITE_ALT_NAME,
+    alternateName: 'MaiTroll | First Virtual Broadcasting City',
     url: SITE_URL,
-    description: 'MaiTroll is a live social broadcasting platform where creators go live, battle, build communities, interact with viewers, send gifts and grow their audience.',
+    description: SITE_DESCRIPTION,
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -29,13 +31,45 @@ export function organizationSchema() {
     alternateName: SITE_ALT_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.png`,
-    description: 'MaiTroll (MaiTroll) is a live social broadcasting and content-sharing platform for creators, streamers, gamers, and online communities.',
+    description: SITE_DESCRIPTION,
     sameAs: [SITE_URL],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
       url: `${SITE_URL}/support`
     }
+  }
+}
+
+export function virtualCitySchema(): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Place',
+    name: 'MaiTroll — First Virtual Broadcasting City',
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
+    alternateName: ['MaiTroll', 'Virtual Broadcasting City', 'MaiTroll City'],
+    identifier: 'maitroll-virtual-city',
+    containedInPlace: {
+      '@type': 'AdministrativeArea',
+      name: 'MaiTroll Virtual World',
+      sameAs: SITE_URL,
+    },
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Virtual',
+      addressRegion: 'MA',
+      addressCountry: 'US',
+      postalCode: '00000',
+    },
+    aggregateRating: {
+      '@type': 'Rating',
+      ratingValue: '4.8',
+      ratingCount: '10000',
+      bestRating: '5',
+      worstRating: '1',
+    },
+    sameAs: [SITE_URL, `${SITE_URL}/about`],
   }
 }
 

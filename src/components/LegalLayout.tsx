@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   ArrowLeft,
+  Cookie,
   DollarSign,
   FileText,
   Scale,
@@ -44,6 +45,12 @@ const navItems = [
     label: 'Safety & Community Guidelines',
     description: 'Conduct and moderation',
     icon: Shield,
+  },
+  {
+    path: '/profile/privacy-settings',
+    label: 'Cookie & Privacy Settings',
+    description: 'Manage your consent preferences',
+    icon: Cookie,
   },
 ]
 

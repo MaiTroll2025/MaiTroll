@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { X, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '../lib/store'
-import { notifyAdmins } from '../lib/notifications'
 import { rpcSubmitReport } from '../types/moderationActions'
 import { REPORT_REASONS, type ReportReason } from '../types/moderation'
 
@@ -53,13 +52,6 @@ export default function ReportModal({
       )
 
       if (response.success) {
-        await notifyAdmins(
-          'New Report Filed',
-          `Report filed against ${targetType === 'user' ? 'User' : 'Stream'} for ${reason}`,
-          'report_filed',
-          { reporterId: user.id, targetId: targetUserId || streamId, type: targetType, reason }
-        )
-
         toast.success('Report submitted. Our Troll Officers will review soon.')
         setReason('')
         setDescription('')
@@ -157,4 +149,3 @@ export default function ReportModal({
     </div>
   )
 }
-

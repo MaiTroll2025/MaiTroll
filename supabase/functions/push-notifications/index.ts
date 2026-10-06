@@ -328,6 +328,8 @@ serve(async (req) => {
     let webFailed = 0;
     let nativeSent = 0;
     let nativeFailed = 0;
+    let nativeTokensFound = 0;
+    let nativeTokensEligible = 0;
     const errors: Array<{ platform: string; status?: number; message: string }> = [];
 
     if (platforms.includes('android') && (fcmServiceAccountValue || (fcmProjectId && fcmClientEmail && fcmPrivateKey))) {
@@ -361,6 +363,7 @@ serve(async (req) => {
         if (tokenError) {
           throw new Error(`Failed to load Android push tokens: ${tokenError.message}`);
         }
+        nativeTokensFound = nativeTokens?.length || 0;
 
         if (nativeTokens?.length) {
           const targetIdsWithTokens = [...new Set(nativeTokens.map((item) => item.user_id))];
@@ -377,6 +380,7 @@ serve(async (req) => {
               .map((profile) => profile.id),
           );
           const eligibleTokens = nativeTokens.filter((item) => enabledIds.has(item.user_id));
+          nativeTokensEligible = eligibleTokens.length;
 
           if (eligibleTokens.length) {
             const accessToken = await getFcmAccessToken(fcmAccount);
@@ -501,8 +505,7 @@ serve(async (req) => {
           (enabledUsers || [])
             .filter(u => {
               const isAdmin = u.role === 'admin' || u.role === 'superadmin' || u.role === 'owner' ||
-                u.role === 'ceo' || u.role === 'secretary' ||
-                u.is_admin === true || u.is_troll_officer === true || u.is_lead_officer === true;
+                u.role === 'ceo' || u.is_admin === true;
               return isAdmin;
             })
             .map(u => u.id)
@@ -617,6 +620,8 @@ serve(async (req) => {
       web_failed: webFailed,
       android_sent: nativeSent,
       android_failed: nativeFailed,
+      android_tokens_found: nativeTokensFound,
+      android_tokens_eligible: nativeTokensEligible,
       sent: webSent + nativeSent,
       failed: webFailed + nativeFailed,
       errors: errors.length > 0 ? errors : undefined,

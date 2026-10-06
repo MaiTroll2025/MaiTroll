@@ -1,6 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
-import webPush from 'https://esm.sh/web-push@3.6.7';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,10 +8,12 @@ const corsHeaders = {
   'Vary': 'Origin'
 };
 
-const ADMIN_ROLES = new Set([
-  'admin', 'superadmin', 'owner', 'ceo', 'lead_troll_officer',
-  'troll_officer', 'moderator', 'staff', 'secretary',
-  'executive_secretary', 'troll_city_secretary'
+const ADMIN_ROLES = new Set(['admin', 'superadmin', 'owner', 'ceo']);
+const STAFF_ROLES = new Set([
+  'lead_troll_officer', 'troll_officer', 'moderator', 'staff', 'secretary',
+  'executive_secretary', 'troll_city_secretary', 'agency_hr', 'agency_hr_manager',
+  'agency_leader', 'ceo_assistant', 'noah_assistant', 'hr_admin',
+  'marketing_readonly', 'academy_director', 'prosecutor', 'attorney',
 ]);
 
 interface StreamLivePayload {
@@ -28,6 +29,12 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Cache-Control': 'max-age=0, s-maxage=0, no-cache, no-store, must-revalidate' }
     });
   }
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 
   try {
     const body = await req.json() as StreamLivePayload;
@@ -42,8 +49,6 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
-    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase environment variables');
@@ -51,11 +56,21 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: streamerProfile } = await supabaseAdmin
+    const bearerToken = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim();
+    const { data: actorData, error: actorError } = await supabaseAdmin.auth.getUser(bearerToken);
+    if (actorError || !actorData.user || actorData.user.id !== userId) {
+      return new Response(
+        JSON.stringify({ error: 'Only the authenticated broadcaster may announce this stream' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: streamerProfile, error: streamerProfileError } = await supabaseAdmin
       .from('user_profiles')
       .select('id, username, display_name, avatar_url')
       .eq('id', userId)
       .maybeSingle();
+    if (streamerProfileError) throw new Error(`Failed to load streamer profile: ${streamerProfileError.message}`);
 
     if (!streamerProfile) {
       return new Response(
@@ -64,11 +79,12 @@ serve(async (req) => {
       );
     }
 
-    const { data: stream } = await supabaseAdmin
+    const { data: stream, error: streamError } = await supabaseAdmin
       .from('streams')
-      .select('id, title, category, status, is_live')
+      .select('id, title, category, status, is_live, user_id, broadcaster_id')
       .eq('id', streamId)
       .maybeSingle();
+    if (streamError) throw new Error(`Failed to load stream: ${streamError.message}`);
 
     if (!stream) {
       return new Response(
@@ -76,24 +92,64 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const { data: adminUsers } = await supabaseAdmin
-      .from('user_profiles')
-      .select('id, role')
-      .in('role', Array.from(ADMIN_ROLES));
-
-    if (!adminUsers || adminUsers.length === 0) {
+    const streamOwnerId = stream.user_id || stream.broadcaster_id;
+    if (
+      streamOwnerId !== userId
+      || (stream.status !== 'live' && stream.is_live !== true)
+    ) {
       return new Response(
-        JSON.stringify({ success: true, message: 'No admin users found', notificationsSent: 0 }),
+        JSON.stringify({ error: 'The authenticated user does not own an active live stream' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: profiles, error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id, role, is_admin, is_super_admin, is_ceo, is_staff, is_troll_officer, is_lead_officer, is_secretary, is_attorney, is_prosecutor');
+    if (profileError) throw new Error(`Failed to load notification recipients: ${profileError.message}`);
+
+    const { data: activeEmployees, error: employeeError } = await supabaseAdmin
+      .from('employee_records')
+      .select('user_id')
+      .eq('employment_status', 'active');
+    if (employeeError) throw new Error(`Failed to load active career staff: ${employeeError.message}`);
+
+    const activeEmployeeIds = new Set((activeEmployees || []).map(employee => employee.user_id));
+    const adminUserIds = (profiles || [])
+      .filter(profile => {
+        const role = String(profile.role || '').toLowerCase();
+        return profile.is_admin === true
+          || profile.is_super_admin === true
+          || profile.is_ceo === true
+          || ADMIN_ROLES.has(role);
+      })
+      .map(profile => profile.id);
+    const staffUserIds = (profiles || [])
+      .filter(profile => {
+        const role = String(profile.role || '').toLowerCase();
+        return profile.is_staff === true
+          || profile.is_troll_officer === true
+          || profile.is_lead_officer === true
+          || profile.is_secretary === true
+          || profile.is_attorney === true
+          || profile.is_prosecutor === true
+          || STAFF_ROLES.has(role)
+          || activeEmployeeIds.has(profile.id);
+      })
+      .map(profile => profile.id);
+    const notifyUserIds = [...new Set([...adminUserIds, ...staffUserIds])];
+
+    if (notifyUserIds.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, message: 'No staff or admin recipients found', notificationsSent: 0 }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const adminUserIds = adminUsers.map(u => u.id);
     const streamerName = streamerProfile.display_name || streamerProfile.username || 'A user';
     const streamTitle = stream.title || 'Untitled Stream';
 
-    const createPromises = adminUserIds.map(adminId =>
+    const createResults = await Promise.all(notifyUserIds.map(adminId =>
       supabaseAdmin.rpc('create_notification', {
         p_user_id: adminId,
         p_type: 'stream_live',
@@ -107,107 +163,20 @@ serve(async (req) => {
           category,
         }
       })
-    );
-
-    await Promise.allSettled(createPromises);
-
-    if (vapidPublicKey && vapidPrivateKey) {
-      const vapidDetails = {
-        subject: 'mailto:admin@Mai Troll.com',
-        publicKey: vapidPublicKey,
-        privateKey: vapidPrivateKey,
-      };
-
-      const { data: subscriptions } = await supabaseAdmin
-        .from('web_push_subscriptions')
-        .select('id, user_id, endpoint, p256dh_key, auth_key, is_active')
-        .in('user_id', adminUserIds)
-        .eq('is_active', true);
-
-      if (subscriptions && subscriptions.length > 0) {
-        // Check which admins are online - skip push for online admins
-        const { data: presenceData } = await supabaseAdmin
-          .from('user_presence')
-          .select('user_id, is_online')
-          .in('user_id', adminUserIds);
-
-        const onlineAdminIds = new Set(
-          (presenceData || []).filter(p => p.is_online).map(p => p.user_id)
-        );
-
-        const pushSubscriptions = subscriptions.filter(s => !onlineAdminIds.has(s.user_id));
-
-        if (pushSubscriptions.length > 0) {
-          const pushPayload = JSON.stringify({
-            title: '🔴 Stream Started',
-            body: `${streamerName} is now live: "${streamTitle}"`,
-            icon: streamerProfile.avatar_url || '/icons/icon-192.png',
-            badge: '/icons/icon-72.png',
-            tag: `stream-live-${streamId}`,
-            data: {
-              streamId,
-              userId,
-              url: `/broadcast/${streamId}`,
-            },
-            actions: [
-              { action: 'view', title: 'View Stream' },
-              { action: 'dismiss', title: 'Dismiss' },
-            ],
-          });
-
-          let successCount = 0;
-          let failureCount = 0;
-
-          for (const sub of pushSubscriptions) {
-            try {
-              await webPush.sendNotification({
-                endpoint: sub.endpoint,
-                keys: {
-                  p256dh: sub.p256dh_key,
-                  auth: sub.auth_key,
-                }
-              }, pushPayload, { vapidDetails });
-              successCount++;
-            } catch (err: any) {
-              failureCount++;
-              if (err.statusCode === 410 || err.statusCode === 404) {
-                await supabaseAdmin
-                  .from('web_push_subscriptions')
-                  .delete()
-                  .eq('id', sub.id);
-              }
-            }
-          }
-
-          await supabaseAdmin.from('push_notification_logs').insert({
-            notification_type: 'stream_live',
-            target_count: pushSubscriptions.length,
-            success_count: successCount,
-            failed_count: failureCount,
-            metadata: { streamId, userId, skipped_online: onlineAdminIds.size },
-          });
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              notificationsSent: successCount,
-              notificationsFailed: failureCount,
-              inAppNotificationsCreated: adminUserIds.length,
-              skippedOnline: onlineAdminIds.size,
-              message: 'In-app + push notifications sent for stream start',
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-      }
+    ));
+    const inAppFailures = createResults.filter(result => result.error).length;
+    if (inAppFailures > 0) {
+      console.error('[notify-stream-live] In-app notification creation failures:', inAppFailures);
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        notificationsSent: 0,
-        inAppNotificationsCreated: adminUserIds.length,
-        message: 'In-app admin notifications created',
+        notificationsSent: createResults.length - inAppFailures,
+        inAppNotificationsCreated: createResults.length - inAppFailures,
+        inAppFailures,
+        pushQueued: createResults.length - inAppFailures,
+        message: 'In-app notification created and queued for platform push delivery',
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

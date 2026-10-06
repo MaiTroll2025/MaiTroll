@@ -62,8 +62,7 @@ import { APP_DATA_REFETCH_EVENT_NAME } from "./lib/appEvents";
 import { autoUnlockPayouts } from "./lib/supabase";
 import { PageVisibilityProvider } from "./contexts/PageVisibilityContext";
 import { LiveContentProvider } from "./contexts/LiveContentContext";
-import TabSwitchHandler from "./components/TabSwitchHandler";
-import { initTelemetry } from "./lib/telemetry";
+import { TabSwitchHandler } from "./components/TabSwitchHandler";
 import {
   getCurrentIP,
   isIPBlocked,
@@ -583,6 +582,7 @@ const VehicleTransactionsPage = lazyWithRetry(() => import("./pages/VehicleTrans
 const UserInventory = lazyWithRetry(() => import("./pages/UserInventory"));
 const Troting = lazyWithRetry(() => import("./pages/Troting"));
 const ProfileSettings = lazyWithRetry(() => import("./pages/ProfileSettings"));
+const PrivacySettings = lazyWithRetry(() => import("./pages/PrivacySettings"));
 const DeleteAccount = lazyWithRetry(() => import("./pages/DeleteAccount"));
 const TrollBank = lazyWithRetry(() => import("./pages/TrollBank"));
 const Leaderboard = lazyWithRetry(() => import("./pages/Leaderboard"));
@@ -2018,6 +2018,7 @@ const handleVisibilityChange = async () => {
                   <Route path="/inventory" element={<UserInventory />} />
           <Route path="/troting" element={<Troting />} />
           <Route path="/profile/settings" element={<ProfileSettings />} />
+          <Route path="/profile/privacy-settings" element={<PrivacySettings />} />
                   <Route path="/profile/delete" element={<DeleteAccount />} />
                   <Route path="/bank" element={<TrollBank />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
@@ -2035,6 +2036,7 @@ const handleVisibilityChange = async () => {
 <Route path="/profile/setup" element={<ProfileSetup />} />
                    <Route path="/onboarding" element={<NewUserOnboarding />} />
                     <Route path="/profile/settings" element={<ProfileSettings />} />
+          <Route path="/profile/privacy-settings" element={<PrivacySettings />} />
                    <Route path="/profile/delete" element={<DeleteAccount />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/blocked-users" element={<BlockedUsers />} />
@@ -2856,9 +2858,37 @@ const handleVisibilityChange = async () => {
 
 function App() {
   useEffect(() => {
-    initTelemetry();
+    // Telemetry is consent-gated: only initialize when analytics consent is present.
+    // The actual init call (with Google Analytics) is dispatched via the
+    // 'consent-changed' event listener in main.tsx. We still listen here so that
+    // consent granted while the app is already running triggers initialization.
+     const handleConsentChanged = () => {
+      import('./lib/consent').then(({ hasAnalyticsConsent }) => {
+        if (hasAnalyticsConsent()) {
+          import('./lib/telemetry').then(({ initTelemetry }) => {
+            try { initTelemetry(); } catch { /* silent */ }
+          });
+          import('./lib/googleAnalytics').then(({ initializeAnalyticsIfConsented }) => {
+            void initializeAnalyticsIfConsented();
+          });
+        } else {
+          import('./lib/telemetry').then(({ resetTelemetry }) => {
+            try { resetTelemetry(); } catch { /* silent */ }
+          });
+          import('./lib/googleAnalytics').then(({ resetGoogleAnalytics }) => {
+            try { resetGoogleAnalytics(); } catch { /* silent */ }
+          });
+        }
+      });
+    };
+
+    window.addEventListener('consent-changed', handleConsentChanged);
+
     const cleanup = initTimeUpdater();
-    return cleanup;
+    return () => {
+      cleanup();
+      window.removeEventListener('consent-changed', handleConsentChanged);
+    };
   }, []);
 
   /*

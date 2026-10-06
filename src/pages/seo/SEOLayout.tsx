@@ -128,7 +128,8 @@ export default function SEOLayout({ children, title, description, keywords = [],
               <ul className="space-y-2">
                 <li><Link to="/privacy" className="text-slate-400 hover:text-purple-300 transition-colors">Privacy Policy</Link></li>
                 <li><Link to="/terms" className="text-slate-400 hover:text-purple-300 transition-colors">Terms of Service</Link></li>
-                <li><Link to="/legal/safety" className="text-slate-400 hover:text-purple-300 transition-colors">Safety Guidelines</Link></li>
+                 <li><Link to="/legal/safety" className="text-slate-400 hover:text-purple-300 transition-colors">Safety Guidelines</Link></li>
+                 <li><Link to="/profile/privacy-settings" className="text-slate-400 hover:text-purple-300 transition-colors">Cookie Settings</Link></li>
               </ul>
             </div>
             <div>

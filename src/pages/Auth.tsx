@@ -924,7 +924,7 @@ try {
                       )}
 
                        <div className="text-sm text-slate-400 mb-4">
-                         {selectedRole === 'user' && !isLogin && 'Create your account — $1 administration fee required.'}
+                         {selectedRole === 'user' && !isLogin && 'Create your account.'}
                          {selectedRole === 'user' && isLogin && 'Sign in to access your account.'}
                          {selectedRole === 'staff' && 'Staff sign in only — no public sign up available.'}
                          {selectedRole === 'admin' && 'Admin sign in only — no public sign up available.'}

@@ -1,6 +1,7 @@
 
 // import { supabase } from './supabase';
 import { generateUUID } from './uuid';
+import { hasAnalyticsConsent } from './consent';
 
 export interface TelemetryEvent {
   event_type: string;
@@ -32,11 +33,27 @@ export interface Breadcrumb {
 
 const BREADCRUMB_LIMIT = 50;
 const breadcrumbs: Breadcrumb[] = [];
-let sessionId = sessionStorage.getItem('telemetry_session_id');
 
-if (!sessionId) {
-  sessionId = generateUUID();
-  sessionStorage.setItem('telemetry_session_id', sessionId);
+let sessionId: string | null = null;
+
+function getSessionId(): string | null {
+  if (sessionId) return sessionId;
+  if (!hasAnalyticsConsent()) return null;
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      const stored = sessionStorage.getItem('telemetry_session_id');
+      if (stored) {
+        sessionId = stored;
+        return sessionId;
+      }
+      sessionId = generateUUID();
+      sessionStorage.setItem('telemetry_session_id', sessionId);
+      return sessionId;
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 const API_ENDPOINT = '/api/telemetry';
@@ -70,9 +87,18 @@ export function addBreadcrumb(breadcrumb: Omit<Breadcrumb, 'timestamp'>) {
 }
 
 export async function trackEvent(event: Omit<TelemetryEvent, 'session_id' | 'device' | 'browser' | 'os' | 'breadcrumbs'>) {
+  // Skip if user has not consented to analytics tracking
+  if (!hasAnalyticsConsent()) {
+    return;
+  }
   // Skip sending telemetry in development to avoid 500 errors when local backend is not running
   if (import.meta.env.DEV) {
     // console.debug('[Telemetry Skipped]', event.event_type, event.message);
+    return;
+  }
+
+  const currentSessionId = getSessionId();
+  if (!currentSessionId) {
     return;
   }
 
@@ -80,7 +106,7 @@ export async function trackEvent(event: Omit<TelemetryEvent, 'session_id' | 'dev
   
   const payload: TelemetryEvent = {
     ...event,
-    session_id: sessionId!,
+    session_id: currentSessionId,
     device,
     browser,
     os,
@@ -105,30 +131,23 @@ export async function trackEvent(event: Omit<TelemetryEvent, 'session_id' | 'dev
   }
 }
 
+export function resetTelemetry(): void {
+  sessionId = null;
+  if (typeof window !== 'undefined') {
+    (window as any).__telemetryInitialized = false;
+  }
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem('telemetry_session_id');
+  }
+}
+
 export function initTelemetry() {
-  window.onerror = (message, source, lineno, colno, error) => {
-    trackEvent({
-      event_type: 'uncaught_error',
-      message: String(message),
-      stack: error?.stack,
-      severity: 'error',
-      fingerprint: `${message}-${source}-${lineno}`,
-      extra: { source, lineno, colno }
-    });
-    addBreadcrumb({ type: 'console', category: 'error', message: String(message) });
-  };
-
-  window.onunhandledrejection = (event) => {
-    trackEvent({
-      event_type: 'unhandled_rejection',
-      message: event.reason?.message || String(event.reason),
-      stack: event.reason?.stack,
-      severity: 'error',
-      fingerprint: `rejection-${event.reason?.message || String(event.reason)}`
-    });
-    addBreadcrumb({ type: 'console', category: 'error', message: 'Unhandled Rejection' });
-  };
-
+  // Breadcrumbs and UI/submit tracking are for analytics purposes only.
+  // They must NOT initialize until analytics consent is given.
+  if (typeof window !== 'undefined' && (window as any).__telemetryInitialized) return;
+  if (typeof window !== 'undefined') {
+    (window as any).__telemetryInitialized = true;
+  }
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     const text = target.innerText?.slice(0, 30) || target.tagName;

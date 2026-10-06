@@ -256,6 +256,66 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error(`[Signup ${requestId}] Admin signup notification skipped: server configuration missing`)
+    } else {
+      try {
+        const notificationResponse = await fetch(
+          `${supabaseUrl.replace(/\/+$/, "")}/functions/v1/notify-admin-event`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${serviceRoleKey}`,
+              apikey: serviceRoleKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              type: "new_user_signup",
+              title: "New User Signup",
+              message: `@${cleanUsername} just joined MaiTroll.`,
+              metadata: {
+                signup_user_id: newUserId,
+                signup_username: cleanUsername,
+                action_url: "/admin/users",
+                route: "/admin/users",
+              },
+            }),
+          },
+        )
+
+        if (!notificationResponse.ok) {
+          console.error(
+            `[Signup ${requestId}] Admin signup notification failed with status ${notificationResponse.status}`,
+          )
+        } else {
+          const notificationResult = await notificationResponse.json().catch(() => null)
+          if (
+            notificationResult?.androidConfigured === false
+            || notificationResult?.androidFailed > 0
+            || notificationResult?.androidSent === 0
+          ) {
+            console.error(
+              `[Signup ${requestId}] Android signup push was not delivered`,
+              {
+                androidConfigured: notificationResult.androidConfigured,
+                androidSent: notificationResult.androidSent,
+                androidFailed: notificationResult.androidFailed,
+                androidTokensFound: notificationResult.androidTokensFound,
+                androidTokensEligible: notificationResult.androidTokensEligible,
+              },
+            )
+          }
+        }
+      } catch (notificationError) {
+        console.error(
+          `[Signup ${requestId}] Admin signup notification request failed:`,
+          notificationError instanceof Error ? notificationError.message : "Unknown notification error",
+        )
+      }
+    }
+
     return withCors(
       {
         success: true,

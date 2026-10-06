@@ -119,7 +119,9 @@ export default function PrivacyPage() {
                 </div>
                 <p className="text-slate-300">
                   We use cookies and similar tracking technologies to enhance your experience, analyze usage, and deliver
-                  personalized content. You can control cookie preferences through your browser settings.
+                  personalized content. Necessary cookies enable core functionality like authentication, security, and
+                  payments. Analytics and marketing cookies require your explicit consent and are disabled by default.
+                  You can manage your preferences at any time in your <Link to="/profile/privacy-settings" className="text-purple-400 hover:text-purple-300">Privacy Settings</Link>.
                 </p>
               </div>
 

@@ -450,14 +450,6 @@ export default function TrollCourt() {
               .update({ case_id: newCase.id })
               .eq('id', activeSessionId)
 
-            const { notifyAdminCourtStarted } = await import('../lib/notifications')
-            notifyAdminCourtStarted(
-              newCase.id,
-              newCase.defendant_id || selectedUser.id,
-              selectedUser.username,
-              newCase.reason || 'Court case opened',
-              newCase.court_date ? new Date(newCase.court_date).toLocaleDateString() : 'TBD'
-            ).catch((e) => console.warn('[TrollCourt] Failed to notify admins:', e))
           }
 
           toast.success(courtSession ? 'Summons issued to current session' : 'Court session opened and case docketed')

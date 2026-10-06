@@ -9,18 +9,24 @@
 
     { "handle": "filesystem" },
 
-    {
-      "src": "/sitemap-dynamic.xml",
-      "dest": "/sitemap-dynamic.xml"
+    { 
+      "src": "/sitemap-dynamic.xml", 
+      "dest": "/api/sitemap-dynamic" 
     },
     { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
     { "src": "/robots.txt", "dest": "/robots.txt" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
 
-    { "src": "/(.*)", "dest": "/index.html" }
+    { 
+      "src": "/(.*)", 
+      "dest": "/index.html",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      }
+    }
   ],
   "functions": {
-    "api/**/*.{ts,tsx}": {
+    "api/**/*.{ts,tsx,js}": {
       "memory": 1024,
       "maxDuration": 10
     }

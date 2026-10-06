@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
         </p>
 
         <p>
-          <strong>Mai Troll</strong> (also referred to as "<strong>MAiTROLL</strong>")
+          <strong>Mai Troll</strong> (also referred to as &ldquo;<strong>MAiTROLL</strong>&rdquo;)
           is a social streaming and virtual broadcast platform. This Privacy Policy
           explains how we collect, use, store, protect, and disclose information when
           you use the MAiTROLL app, website, broadcasts, and related services.
@@ -367,6 +367,53 @@ export default function PrivacyPolicy() {
           and similar technologies to maintain sessions, remember preferences,
           improve functionality, measure performance, maintain security, and
           understand how users interact with the service.
+        </p>
+
+        <h3>10.1 Cookie Categories</h3>
+
+        <p>We use the following categories of cookies and tracking technologies:</p>
+
+        <ul>
+          <li>
+            <strong>Necessary (Always Active):</strong> Cookies and local/session storage
+            required for authentication, security, session management, payments, broadcasting,
+            notifications, and core platform functionality. These cannot be disabled.
+          </li>
+          <li>
+            <strong>Analytics:</strong> Cookies used to understand how visitors interact with
+            the platform, including Google Analytics (<code>_ga</code>, <code>_ga_#</code>) and
+            internal telemetry (<code>telemetry_session_id</code>). These are only activated
+            after you give analytics consent.
+          </li>
+          <li>
+            <strong>Marketing:</strong> Cookies used to deliver advertisements and measure the
+            effectiveness of marketing campaigns. These are only activated after you give
+            marketing consent.
+          </li>
+          <li>
+            <strong>Preferences:</strong> Cookies used to remember your settings such as theme,
+            language, and display preferences. These are only activated after you give
+            preferences consent.
+          </li>
+        </ul>
+
+        <h3>10.2 Managing Your Consent</h3>
+
+        <p>
+          You can manage your cookie and tracking preferences at any time by visiting
+          <a href="/profile/privacy-settings"> /profile/privacy-settings</a> or by clicking the
+          consent banner that appears on your first visit. You may accept all cookies, reject
+          non-essential cookies, or customize your preferences by category. Your choice is
+          stored in your browser&apos;s local storage and applies to all non-essential tracking.
+        </p>
+
+        <h3>10.3 International Data Transfers</h3>
+
+        <p>
+          Some personal data may be transmitted to and processed in the United States and
+          other countries outside your residence. We rely on appropriate safeguards, including
+          standard contractual clauses, to protect data transferred across borders where
+          required by applicable law.
         </p>
 
         <h2>11. Third-Party Services</h2>
