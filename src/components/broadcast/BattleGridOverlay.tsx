@@ -200,7 +200,6 @@ export default function BattleGridOverlay({
   // Fetch battle participants - with debouncing to prevent rapid updates
   useEffect(() => {
     let mounted = true;
-    let pollInterval: ReturnType<typeof setInterval>;
     
     const fetchBattleParticipants = async () => {
       try {
@@ -259,11 +258,11 @@ export default function BattleGridOverlay({
       }
     };
     
+    const pollInterval: ReturnType<typeof setInterval> = setInterval(fetchBattleParticipants, 5000);
+    
     // Initial fetch
     fetchBattleParticipants();
     
-    // Poll for updates - reduced frequency to prevent flashing
-    pollInterval = setInterval(fetchBattleParticipants, 5000);
     return () => {
       mounted = false;
       clearInterval(pollInterval);

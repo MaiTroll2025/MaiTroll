@@ -307,10 +307,10 @@ export function useBattleState({ streamId, localUserId, isHost, hostId }: UseBat
     if (!streamId || streamId === 'undefined') return;
 
     let cancelled = false;
-    let streamBattleCh: ReturnType<typeof supabase.channel>;
+    const streamBattleChannelRefCurrent = streamBattleChannelRef.current;
 
-    if (streamBattleChannelRef.current) {
-      supabase.removeChannel(streamBattleChannelRef.current);
+    if (streamBattleChannelRefCurrent) {
+      supabase.removeChannel(streamBattleChannelRefCurrent);
       streamBattleChannelRef.current = null;
     }
 
@@ -389,9 +389,9 @@ export function useBattleState({ streamId, localUserId, isHost, hostId }: UseBat
       if (newSupporter.user_id === localUserIdRef.current) {
         setUserTeam(newSupporter.team);
       }
-    };
-
-    streamBattleCh = supabase
+};
+ 
+    const streamBattleCh = supabase
       .channel(`stream-battle:${streamId}`)
       .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'streams', filter: `id=eq.${streamId}`,
@@ -421,9 +421,9 @@ export function useBattleState({ streamId, localUserId, isHost, hostId }: UseBat
         event: 'UPDATE', schema: 'public', table: 'battle_supporters',
       }, handleSupporterChange)
       .subscribe();
-
+ 
     streamBattleChannelRef.current = streamBattleCh;
-
+ 
     return () => {
       cancelled = true;
       supabase.removeChannel(streamBattleCh);
@@ -436,7 +436,6 @@ export function useBattleState({ streamId, localUserId, isHost, hostId }: UseBat
     if (!battleState.battleId) return;
 
     const battleId = battleState.battleId;
-    let battleIdCh: ReturnType<typeof supabase.channel>;
 
     if (battleIdChannelRef.current) {
       supabase.removeChannel(battleIdChannelRef.current);
@@ -468,7 +467,7 @@ export function useBattleState({ streamId, localUserId, isHost, hostId }: UseBat
       }, 1500);
     };
 
-    battleIdCh = supabase.channel(`battle-live:${battleId}`)
+    const battleIdCh = supabase.channel(`battle-live:${battleId}`)
       .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'battles', filter: `id=eq.${battleId}`,
       }, handleBattleLiveUpdate)

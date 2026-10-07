@@ -34,7 +34,7 @@ function scanDivSecOnly() {
     }
   }
   console.log('Final running balance div+section:', running);
-  console.log('   open=', L.join().match(/<div[\s>\/]/gi)?.length);
+  console.log('   open=', L.join().match(/<div[\s>]/gi)?.length);
   console.log('       =', L.join().match(/<\/div>/g)?.length);
 }
 scanDivSecOnly();
@@ -44,8 +44,8 @@ for (let kUP = 955; kUP <= 960; kUP++) {
   let divBal = 0, secBal = 0;
   for (let i = 0; i < kUP; i++) {
     const s = (L[i] || '').trim();
-    divBal += (s.match(/<div[\s>\/]/g)||[]).length - (s.match(/<\/div>/g)||[]).length;
-    secBal += (s.match(/<section[\s>\/]/g)||[]).length - (s.match(/<\/section>/g)||[]).length;
+    divBal += (s.match(/<div[\s>]/g)||[]).length - (s.match(/<\/div>/g)||[]).length;
+    secBal += (s.match(/<section[\s>]/g)||[]).length - (s.match(/<\/section>/g)||[]).length;
   }
   console.log('keepUp='+kUP + ' | divBal='+divBal+' secBal='+secBal);
 }

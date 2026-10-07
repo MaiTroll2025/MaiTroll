@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { OFFICIAL_GIFTS } from '@/lib/giftConstants'
 import { useSingOffStore } from '../store/useSingOffStore'
 import type {
   SingOffParticipant,
@@ -153,7 +154,7 @@ export function useSingOffRealtime(sessionId: string | null, userId?: string) {
         const gift = (payload?.payload as any) ?? {}
         const { sender_id, gift_id, gift_name } = gift
         // Resolve gift object from catalog to show icon in popup
-        const catalogGift = require('@/lib/giftConstants').OFFICIAL_GIFTS.find((g: any) => g.id === gift_id)
+        const catalogGift = OFFICIAL_GIFTS.find((g: any) => g.id === gift_id)
         if (catalogGift) setActiveGift(catalogGift, gift.recipient_id ?? sender_id)
         // Also add a chat line for the gift so spectators see it
         addChatMessage({

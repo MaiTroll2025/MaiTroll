@@ -386,7 +386,7 @@ function LiveKitMonitor({
         }`}
       />
 
-      <audio
+      <video
         ref={audioRef}
         autoPlay
         playsInline

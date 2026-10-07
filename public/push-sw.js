@@ -1,4 +1,4 @@
-/* global clients, Audio */
+/* global clients */
 // Push Notification Handler
 self.addEventListener('push', (event) => {
   let data = {};

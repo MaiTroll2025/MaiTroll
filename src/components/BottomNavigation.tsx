@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SafeLink } from '@/hooks/useSafeNavigate'
+import ProfileFrame from '@/components/profile/ProfileFrame'
 import {
   Home,
   MessageSquare,

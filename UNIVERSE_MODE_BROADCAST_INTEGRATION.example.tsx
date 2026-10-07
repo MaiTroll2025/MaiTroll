@@ -165,7 +165,7 @@ const handleUserJoinSeat = useCallback((userId: string, seatIndex: number) => {
     if (existing) return; // Already in battle
 
     // Add new participant
-    const profile = // fetch user profile from database
+    const profile = {}; // fetch user profile from database
     const newParticipant: BattleParticipant = {
       userId,
       username: profile.username,

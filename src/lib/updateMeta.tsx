@@ -105,7 +105,7 @@ export default function ArticleReader() {
       } else {
         el = document.createElement('meta');
         const nameAttr = selector.includes('name=') ? 'name' : 'property';
-        el.setAttribute(nameAttr, selector.match(/"([^\"]+)"/)?.[1] || '');
+        el.setAttribute(nameAttr, selector.match(/"([^"]+)"/)?.[1] || '');
         el.setAttribute(attr, value);
         document.head.appendChild(el);
       }

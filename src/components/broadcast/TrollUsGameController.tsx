@@ -87,7 +87,7 @@ export default function TrollUsGameController({
               Werewolf-style social deduction game
             </p>
             <p className="text-[10px] text-zinc-500">
-              1 troll • Multiple hunters • Find the troll before it's too late
+              1 troll • Multiple hunters • Find the troll before it&apos;s too late
             </p>
           </div>
 
@@ -242,11 +242,11 @@ export default function TrollUsGameController({
                   ELIMINATED
                 </p>
               ) : isMuted ? (
-                <p className="text-sm text-yellow-400">You're muted</p>
+                <p className="text-sm text-yellow-400">You&apos;re muted</p>
               ) : myRole === 'troll' ? (
-                <p className="text-sm text-red-400 font-bold">You're the TROLL</p>
+                <p className="text-sm text-red-400 font-bold">You&apos;re the TROLL</p>
               ) : (
-                <p className="text-sm text-green-400">You're a HUNTER</p>
+                <p className="text-sm text-green-400">You&apos;re a HUNTER</p>
               )}
             </div>
 

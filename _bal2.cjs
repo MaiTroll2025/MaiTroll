@@ -2,9 +2,9 @@ const fs = require('fs');
 const f = 'src/pages/admin/CoinPackPurchasesLedger.tsx';
 const L = fs.readFileSync(f, 'utf8').split('\n');
 
-const divOpen = /<div[\s>\/]/gi;
+const divOpen = /<div[\s>]/gi;
 const divClose = /<\/div>/gi;
-const sectionOpen = /<section[\s>\/]/gi;
+const sectionOpen = /<section[\s>]/gi;
 const sectionClose = /<\/section>/gi;
 
 let openDiv = 0, openSec = 0;

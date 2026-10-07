@@ -485,7 +485,7 @@ export default function TrollBank() {
           <div className="space-y-3">
             {savedCards.length === 0 ? (
               <p className="text-gray-400 text-center py-8">
-                No saved payment methods. Click "Add Card" to save a payment method for faster checkout.
+                 No saved payment methods. Click &quot;Add Card&quot; to save a payment method for faster checkout.
               </p>
             ) : (
               savedCards.map((card) => (

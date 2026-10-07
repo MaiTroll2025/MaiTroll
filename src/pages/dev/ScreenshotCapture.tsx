@@ -95,7 +95,7 @@ export default function ScreenshotCapture() {
                     Navigate to /{page.path} and take a screenshot
                   </p>
                   <p className="text-slate-600 text-sm mt-2">
-                    Use your browser's screenshot tool or extension
+                     Use your browser&apos;s screenshot tool or extension
                   </p>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export default function ScreenshotCapture() {
               <div className="space-y-4 text-slate-300">
                 <div className="p-4 rounded-xl bg-slate-800/50">
                   <h3 className="font-medium text-white mb-2">1. Navigate to each page</h3>
-                  <p className="text-sm">Use the Previous/Next buttons or click "Open in new tab"</p>
+                   <p className="text-sm">Use the Previous/Next buttons or click &quot;Open in new tab&quot;</p>
                 </div>
                 
                 <div className="p-4 rounded-xl bg-slate-800/50">

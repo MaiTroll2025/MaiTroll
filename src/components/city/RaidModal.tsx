@@ -224,7 +224,7 @@ export default function RaidModal({
                     Raid Successful
                   </p>
                   <p className="mt-1 text-[10px] font-bold text-zinc-400">
-                    You raided {targetUsername}'s property!
+                    You raided {targetUsername}&apos;s property!
                   </p>
                 </div>
               </div>

@@ -44,9 +44,10 @@ async function tryHost(host) {
       ];
 
       for (const connStr of connectionStrings) {
+        let client;
         try {
           console.log(`Trying connection: ${connStr.substring(0, 80)}...`);
-          const client = new Client({
+          client = new Client({
             connectionString: connStr,
             ssl: { rejectUnauthorized: false },
           });

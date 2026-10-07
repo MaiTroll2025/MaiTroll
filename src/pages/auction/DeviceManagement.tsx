@@ -775,7 +775,7 @@ export default function DeviceManagement() {
             <div className="py-10 text-center">
               <Printer className="mx-auto mb-3 h-10 w-10 text-slate-700" />
               <p className="text-sm text-slate-500">No printers configured</p>
-              <p className="text-xs text-slate-600 mt-1">Click "Detect Printers" to open your browser print dialog and select a printer.</p>
+               <p className="text-xs text-slate-600 mt-1">Click &quot;Detect Printers&quot; to open your browser print dialog and select a printer.</p>
             </div>
           ) : (
             <div className="space-y-2">

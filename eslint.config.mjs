@@ -66,4 +66,12 @@ export default [
       "@typescript-eslint/no-require-imports": "off",
     },
   },
+  {
+    // Example-only pseudo-code: hooks are shown at module top level, which
+    // crashes react-hooks' code-path analysis. This file is not real app code.
+    files: ["UNIVERSE_MODE_BROADCAST_INTEGRATION.example.tsx"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
 ];

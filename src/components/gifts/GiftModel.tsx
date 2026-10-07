@@ -4,6 +4,8 @@ import { Float, MeshTransmissionMaterial, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { GiftInstance, RARITY_COLORS } from '@/types/gifts';
 
+/* eslint-disable react/no-unknown-property */
+
 interface GiftModelProps {
   gift: GiftInstance;
 }
@@ -16,6 +18,7 @@ const GiftGeometry: React.FC<{ giftName: string; color: string }> = ({ giftName,
   if (lowerName.includes('heart')) {
     return (
       <mesh>
+        
         <torusGeometry args={[0.5, 0.2, 16, 32]} />
         <MeshTransmissionMaterial
           color={color}
@@ -31,8 +34,11 @@ const GiftGeometry: React.FC<{ giftName: string; color: string }> = ({ giftName,
   
   // Star shape
   if (lowerName.includes('star')) {
+    
     return (
-      <mesh rotation={[0, 0, Math.PI / 4]}>
+      <mesh
+        rotation={[0, 0, Math.PI / 4]}>
+        
         <octahedronGeometry args={[0.6, 0]} />
         <MeshTransmissionMaterial
           color={color}
@@ -48,8 +54,11 @@ const GiftGeometry: React.FC<{ giftName: string; color: string }> = ({ giftName,
   
   // Diamond/Crown
   if (lowerName.includes('diamond') || lowerName.includes('crown')) {
+    
     return (
-      <mesh rotation={[0, Math.PI / 4, 0]}>
+      <mesh
+        rotation={[0, Math.PI / 4, 0]}>
+        
         <octahedronGeometry args={[0.5, 1]} />
         <MeshTransmissionMaterial
           color={color}
@@ -68,6 +77,7 @@ const GiftGeometry: React.FC<{ giftName: string; color: string }> = ({ giftName,
     return (
       <group>
         <mesh>
+          
           <dodecahedronGeometry args={[0.5, 0]} />
           <MeshTransmissionMaterial
             color={color}
@@ -88,6 +98,7 @@ const GiftGeometry: React.FC<{ giftName: string; color: string }> = ({ giftName,
   if (lowerName.includes('rose')) {
     return (
       <mesh>
+        
         <sphereGeometry args={[0.4, 32, 32]} />
         <MeshTransmissionMaterial
           color={color}
@@ -104,6 +115,7 @@ const GiftGeometry: React.FC<{ giftName: string; color: string }> = ({ giftName,
   if (lowerName.includes('trophy')) {
     return (
       <mesh>
+        
         <cylinderGeometry args={[0.3, 0.5, 0.8, 32]} />
         <MeshTransmissionMaterial
           color={color}
@@ -122,6 +134,7 @@ const GiftGeometry: React.FC<{ giftName: string; color: string }> = ({ giftName,
     return (
       <group>
         <mesh>
+          
           <sphereGeometry args={[0.5, 32, 32]} />
           <MeshTransmissionMaterial
             color="#8B5CF6"
@@ -140,6 +153,7 @@ const GiftGeometry: React.FC<{ giftName: string; color: string }> = ({ giftName,
   // Default - gift box
   return (
     <mesh>
+      
       <boxGeometry args={[0.6, 0.6, 0.6]} />
       <MeshTransmissionMaterial
         color={color}
@@ -194,8 +208,11 @@ export const GiftModel: React.FC<GiftModelProps> = ({ gift }) => {
     }
   });
   
+  
   return (
+    
     <group ref={groupRef} position={[gift.position.x, gift.position.y, gift.position.z]}>
+      
       <Float
         speed={2}
         rotationIntensity={0.5}
@@ -205,6 +222,7 @@ export const GiftModel: React.FC<GiftModelProps> = ({ gift }) => {
         <GiftGeometry giftName={gift.gift?.name || 'Gift'} color={color} />
         
         {/* Glow effect based on rarity */}
+        
         <pointLight color={color} intensity={2} distance={3} />
       </Float>
       

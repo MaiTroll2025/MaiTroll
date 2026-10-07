@@ -106,7 +106,7 @@ export default function UniverseRegisterPage() {
 
         {!myReg ? (
           <div className="rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md p-5 space-y-4">
-            <p className="text-sm text-slate-300">You will be matched privately (blind) — you won't choose or see your opponent until the battle begins.</p>
+            <p className="text-sm text-slate-300">You will be matched privately (blind) — you won&apos;t choose or see your opponent until the battle begins.</p>
             <label className="flex items-center gap-3 text-sm">
               <input type="checkbox" checked={attendance} onChange={(e) => setAttendance(e.target.checked)} className="h-4 w-4 accent-fuchsia-500" />
               I can attend at 7:00 PM Mountain Time.

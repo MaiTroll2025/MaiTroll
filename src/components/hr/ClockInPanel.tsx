@@ -276,7 +276,7 @@ export default function ClockInPanel({ isHRAdmin, currentUserId, hasApprovedRole
 
       {todaySessions.length > 0 && (
         <div>
-          <h4 className="mb-2 text-sm font-bold text-slate-300">Today's Sessions</h4>
+          <h4 className="mb-2 text-sm font-bold text-slate-300">Today&apos;s Sessions</h4>
           <div className="space-y-2">
             {todaySessions.map(session => {
               const start = new Date(session.clock_in)

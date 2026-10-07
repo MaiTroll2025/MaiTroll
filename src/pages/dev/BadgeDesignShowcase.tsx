@@ -449,7 +449,7 @@ const WallPostMockup = ({ user, design, designName }: { user: typeof mockUsers[0
         <DesignComponent user={user} />
       </div>
       <p className="mt-3 text-white/80 text-sm">
-        This is a sample post showing how the username and badges would look on the Trollo Wall with the "{designName}" design concept.
+        This is a sample post showing how the username and badges would look on the Trollo Wall with the &quot;{designName}&quot; design concept.
       </p>
       <div className="flex items-center gap-4 mt-3 text-white/50 text-sm">
         <span className="flex items-center gap-1"><Heart size={14} /> 24</span>

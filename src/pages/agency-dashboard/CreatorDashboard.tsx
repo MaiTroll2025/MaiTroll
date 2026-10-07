@@ -12,7 +12,7 @@ import { useAgencyMember, useAgencyTransactions, useAgencyWeeklyStats, useAgency
 import { useAgencyApplication } from '../../hooks/useAgency';
 import { TIER_CONFIG } from '../../types/agency';
 import type { AgencyTier } from '../../types/agency';
-import { Crown, TrendingUp, Zap, Gift, Award, ArrowUpRight, History, Trophy } from 'lucide-react';
+import { Crown, TrendingUp, Zap, Gift, Award, ArrowUpRight, History, Trophy, Clock3 } from 'lucide-react';
 import './agency-dashboard.css';
 
 export default function CreatorDashboard() {

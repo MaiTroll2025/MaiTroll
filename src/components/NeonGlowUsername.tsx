@@ -51,6 +51,7 @@ export default function NeonGlowUsername({
   // Founder Program: active Founders get the gold username treatment.
   // Admins are excluded (showFounderBadge) so an Admin keeps their role styling.
   const { showFounderBadge } = useFounderIdentity(userId)
+  const userFrame = useUserFrame(userId)
 
   // Check for special username effects
   const now = new Date()
@@ -125,7 +126,7 @@ export default function NeonGlowUsername({
         onClick={onClick}
       >
         {avatarUrl && userId && (
-          <div style={{ overflow: 'visible' }}><ProfileFrame frame={useUserFrame(userId)} avatarUrl={avatarUrl} username={username} size="xs" /></div>
+          <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={avatarUrl} username={username} size="xs" /></div>
         )}
         {avatarUrl && !userId && (
           <img src={avatarUrl} alt={username} className={`${sizes.avatar} rounded-full`} />
@@ -145,7 +146,7 @@ export default function NeonGlowUsername({
     >
       {/* Avatar */}
       {avatarUrl && userId ? (
-        <div style={{ overflow: 'visible' }}><ProfileFrame frame={useUserFrame(userId)} avatarUrl={avatarUrl} username={username} size={size === 'lg' ? 'sm' : 'xs'} /></div>
+        <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={avatarUrl} username={username} size={size === 'lg' ? 'sm' : 'xs'} /></div>
       ) : avatarUrl ? (
         <img src={avatarUrl} alt={username} className={`${sizes.avatar} rounded-full ring-2 ring-white/20`} />
       ) : (

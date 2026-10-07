@@ -1529,7 +1529,7 @@ function NotInFamilyPrompt({
           <div className="bg-slate-800/30 rounded-xl p-4 border border-white/5">
             <Heart className="w-8 h-8 text-pink-400 mb-2" />
             <h3 className="text-white font-semibold mb-1">Family Heartbeat</h3>
-            <p className="text-gray-400 text-sm">Stay connected with your family's pulse</p>
+            <p className="text-gray-400 text-sm">Stay connected with your family&apos;s pulse</p>
           </div>
         </div>
       </div>

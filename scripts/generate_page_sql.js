@@ -106,7 +106,7 @@ const pageKeywords = {
   'podcast': ['podcast', 'episode', 'rtc'],
   'notary': ['notary', 'document', 'stamp', 'signature'],
   'security': ['security', 'ban', 'risk', 'incident', 'rate_limit'],
-  'call': ['call', 'call_minutes', 'agora'],
+  'calls': ['call', 'call_minutes', 'agora'],
 };
 
 // Extract SQL blocks from files

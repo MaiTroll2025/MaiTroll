@@ -68,7 +68,7 @@ export async function startBroadcast(req, res) {
 
     // Optional: Pre-check room existence via RoomService
     try {
-      const { RoomServiceClient } = require('livekit-server-sdk');
+      const { RoomServiceClient } = LiveKit;
       const roomClient = new RoomServiceClient(livekitUrl, livekitApiKey, livekitApiSecret);
       const roomList = await roomClient.listRooms({ names: [roomName] });
       if (roomList.rooms.length === 0) {

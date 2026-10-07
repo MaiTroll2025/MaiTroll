@@ -408,7 +408,7 @@ export default function AdminCashoutDetailPage() {
               </button>
             </div>
             <div className="bg-red-900/20 border border-red-800 p-4 rounded-lg">
-              <p className="text-sm text-red-200">This will deny the payout and refund coins (including fee) to the user's escrow.</p>
+              <p className="text-sm text-red-200">This will deny the payout and refund coins (including fee) to the user&apos;s escrow.</p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">Reason for Denial</label>

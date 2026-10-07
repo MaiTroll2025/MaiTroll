@@ -2328,7 +2328,6 @@ return (
                           />
                         </JailTimeHostTile>
                       ) : (
-                        false ? (
                           <BattleParticipantTile
                             identity={challengerHostId}
                             name={challengerHostName || 'Challenger'}
@@ -2361,13 +2360,7 @@ return (
                             canToggleCamera={currentUserId === challengerHostId}
                             canToggleMic={currentUserId === challengerHostId}
                           />
-                        ) : (
-                          <div className="h-full min-h-0 rounded-2xl border-2 border-purple-500/30 bg-black/40 flex flex-col items-center justify-center">
-                            <User className="text-purple-500/50" size={48} />
-                            <span className="text-purple-500/50 text-sm mt-2">Waiting for challenger...</span>
-                          </div>
-                        )
-                      )}
+                        )}
                     </div>
                   ) : (
                     <div
@@ -2471,7 +2464,6 @@ return (
                           />
                         </JailTimeHostTile>
                       ) : (
-                        false ? (
                           <BattleParticipantTile
                             identity={opponentHostId}
                             name={opponentHostName || 'Opponent'}
@@ -2504,13 +2496,7 @@ return (
                             canToggleCamera={currentUserId === opponentHostId}
                             canToggleMic={currentUserId === opponentHostId}
                           />
-                        ) : (
-                          <div className="h-full min-h-0 rounded-2xl border-2 border-emerald-500/30 bg-black/40 flex flex-col items-center justify-center">
-                            <User className="text-emerald-500/50" size={48} />
-                            <span className="text-emerald-500/50 text-sm mt-2">Waiting for opponent...</span>
-                          </div>
-                        )
-                      )}
+                        )}
                     </div>
                   ) : (
                     <div

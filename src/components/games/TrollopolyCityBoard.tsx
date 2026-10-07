@@ -1407,7 +1407,7 @@ export const TrollopolyCityBoard: React.FC<TrollopolyCityBoardProps> = ({
           <div className="text-center text-emerald-400 font-black tracking-[0.25em] text-sm">CITY</div>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-slate-950/90 rounded-full border border-slate-600">
-          <span className="text-cyan-300 font-bold text-sm">{activePlayer?.username || 'Player'}'s Turn</span>
+          <span className="text-cyan-300 font-bold text-sm">{activePlayer?.username || 'Player'}&apos;s Turn</span>
           <span className="text-slate-500">|</span>
           <span className="text-white text-sm">Round {Math.max(1, gameState.turnCount || 1)}/40</span>
           <span className="text-slate-500">|</span>
@@ -1587,7 +1587,7 @@ export const TrollopolyCityBoard: React.FC<TrollopolyCityBoardProps> = ({
               )}
               {visibleTile.ownerId && visibleTile.ownerId !== activePlayer?.id && (
                 <p className="mt-3 text-xs text-slate-300">
-                  Rent is paid in-game, and half is credited to the owner's real coin balance.
+                   Rent is paid in-game, and half is credited to the owner&apos;s real coin balance.
                 </p>
               )}
               <div className="mt-4 flex gap-2">
@@ -1695,7 +1695,7 @@ export const TrollopolyCityBoard: React.FC<TrollopolyCityBoardProps> = ({
       {/* Turn Indicator */}
       <div className="hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-20">
         <div className="px-6 py-3 bg-slate-800/90 rounded-full border border-slate-600 shadow-lg">
-          <p className="text-white text-center font-medium">{gameState.players[gameState.currentPlayerIndex]?.username}'s Turn</p>
+           <p className="text-white text-center font-medium">{gameState.players[gameState.currentPlayerIndex]?.username}&apos;s Turn</p>
           <p className="text-slate-400 text-sm text-center capitalize">{gameState.phase.replace(/_/g, ' ')}</p>
         </div>
       </div>

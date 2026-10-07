@@ -477,7 +477,7 @@ export default function LearnAboutMaiTrollModal({
 
               <div className="mt-6 rounded-2xl border border-amber-400/15 bg-amber-500/5 p-5">
                 <p className="text-sm leading-6 text-white/55">
-                  The School Pool is separate from an individual user's
+                   The School Pool is separate from an individual user&apos;s
                   personal Troll Coin balance. School-level activity and
                   school-level financial tracking are handled through the
                   dedicated School Pool system.
@@ -595,7 +595,7 @@ export default function LearnAboutMaiTrollModal({
                     </p>
 
                     <h2 className="mt-3 text-3xl font-bold">
-                      Go live—but don't stop there.
+                      Go live—but don&apos;t stop there.
                     </h2>
 
                     <p className="mt-4 max-w-3xl leading-7 text-white/55">
@@ -719,7 +719,7 @@ export default function LearnAboutMaiTrollModal({
                 <MessageSquare className="mx-auto h-8 w-8 text-purple-300" />
 
                 <blockquote className="mx-auto mt-6 max-w-3xl text-2xl font-semibold leading-9 sm:text-3xl">
-                  “Don't just watch someone else build their future. Build
+                   “Don&apos;t just watch someone else build their future. Build
                   yours.”
                 </blockquote>
 

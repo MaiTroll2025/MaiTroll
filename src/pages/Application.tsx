@@ -818,7 +818,7 @@ export default function Application() {
           </Section>
 
           <Section icon={Users} title="13. Equal Employment Opportunity (Voluntary)">
-            <p className="text-xs text-slate-400">Self-identification is voluntary and used only for federal EEO reporting. Choose "Decline to self-identify" if you prefer not to answer.</p>
+            <p className="text-xs text-slate-400">Self-identification is voluntary and used only for federal EEO reporting. Choose &quot;Decline to self-identify&quot; if you prefer not to answer.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Gender</Label>

@@ -134,7 +134,7 @@ export default function BattleEventOverlay({ battleId, onClose }: BattleEventOve
                   CEO MODE
                 </p>
                 <p className="text-xs text-white/60 mt-1">
-                  This host's gift vault is locked for 10 seconds.
+                  This host&apos;s gift vault is locked for 10 seconds.
                 </p>
               </div>
             )}

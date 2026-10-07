@@ -311,7 +311,7 @@ export default function BroadcastingPage() {
               <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                 Start streaming today on <strong>Mai Troll</strong> (MaiTroll) and reach viewers worldwide. 
                 Our social streaming platform provides powerful broadcasting tools to help you create engaging content. 
-                Whether you're a gamer, musician, or just want to chat – go live on Mai Troll and build your audience.
+                Whether you&apos;re a gamer, musician, or just want to chat – go live on Mai Troll and build your audience.
               </p>
               
               <div className="flex flex-col sm:flex-row items-start gap-4 mb-8">

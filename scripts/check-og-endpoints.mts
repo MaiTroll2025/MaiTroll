@@ -15,9 +15,10 @@ function check(label: string, fn: () => string, assertions: Array<[string, boole
   let html: string
   try {
     html = fn()
-  } catch (err: any) {
+  } catch (err: unknown) {
     failures++
-    console.log(`  FAIL ${label} threw: ${err.constructor.name}: ${err.message}`)
+    const msg = err instanceof Error ? `${err.constructor.name}: ${err.message}` : String(err)
+    console.log(`  FAIL ${label} threw: ${msg}`)
     return
   }
 

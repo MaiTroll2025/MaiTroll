@@ -344,7 +344,7 @@ streamId = null,
                 <div className="h-full w-full flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_30%),#02040a] px-6 text-center">
                   <MonitorPlay className="h-16 w-16 text-cyan-300/40" />
                   <p className="mt-4 text-lg font-black text-white/70">Ready to Share</p>
-                  <p className="mt-2 max-w-sm text-sm text-slate-500">Click "Share Screen" to start broadcasting your gameplay.</p>
+                   <p className="mt-2 max-w-sm text-sm text-slate-500">Click &quot;Share Screen&quot; to start broadcasting your gameplay.</p>
                 </div>
               )}
 

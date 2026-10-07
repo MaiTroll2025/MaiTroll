@@ -215,7 +215,7 @@ export default function SleepPuzzlePage() {
             Sign Up
           </button>
           <p className="text-[11px] text-white/35">
-            Don't wake the troll... 😴
+             Don&apos;t wake the troll... 😴
           </p>
           <p className="text-[11px] text-white/35">
             Come back soon for 16 hours of pure chaos.

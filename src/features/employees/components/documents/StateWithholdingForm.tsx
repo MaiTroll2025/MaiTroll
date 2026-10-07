@@ -1,12 +1,12 @@
 import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
+import { jsPDF } from 'jspdf'
 
 const ATTESTATION =
   'Under penalties of perjury, I declare that the information on this state withholding form is true and correct, and that I have claimed the proper allowances or exemption for my state of residence/work.'
 
 async function generateStateWithholdingPdf(data: any, signatureName: string): Promise<Uint8Array | null> {
   try {
-    const { jsPDF } = require('jspdf')
     const doc = new jsPDF({ unit: 'pt', format: 'letter' })
     const date = new Date().toISOString().slice(0, 10)
 
@@ -68,7 +68,7 @@ export default function StateWithholdingForm(props: DocumentFormProps) {
       {({ data, setField }) => (
         <div className="space-y-4">
           <p className="text-[11px] text-slate-400">
-            State-specific form — complete per your state's requirements.
+            State-specific form — complete per your state&apos;s requirements.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Employee name" value={data.employeeName} onChange={(v) => setField('employeeName', v)} />

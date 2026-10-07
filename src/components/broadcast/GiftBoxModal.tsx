@@ -109,7 +109,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
   const {
     abilities: userAbilities,
     loading: abilitiesLoading,
-    useAbility,
+    useAbility: activateAbility,
     getCooldownRemaining,
     isEffectActive,
     getEffectRemaining,
@@ -596,7 +596,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
                           )}
                           <button
                             type="button"
-                            onClick={() => useAbility(userAbility.ability_id)}
+                            onClick={() => activateAbility(userAbility.ability_id)}
                             disabled={!canUseAbility}
                             className={cn(
                               'w-full rounded-2xl px-4 py-3 text-sm font-semibold transition-all',

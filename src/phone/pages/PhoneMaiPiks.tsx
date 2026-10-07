@@ -22,6 +22,7 @@ import {
   Eye,
   Heart,
   Send,
+  Loader2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -1282,7 +1283,7 @@ export default function PhoneMaiPiks() {
     }
 
     const quote = quoteData as Record<string, unknown>
-    if (Boolean(quote.has_access)) {
+    if (quote.has_access) {
       const refreshed = await fetchStories(currentUser.id)
       setStories(refreshed)
       return

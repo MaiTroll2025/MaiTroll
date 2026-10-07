@@ -532,7 +532,8 @@ export function quickBenchmark(label: string): BenchmarkAPI {
     const lk = (window as any).__MaiTroll_LIVEKIT__;
     if (!lk) return null;
     const rooms: any[] = lk.rooms || (lk.room ? [lk.room] : []);
-    let participantCount = 0, publishedTracks = 0, subscribedTracks = 0, screenShareTracks = 0;
+    let participantCount = 0, publishedTracks = 0, subscribedTracks = 0;
+    const screenShareTracks = 0;
     for (const room of rooms) {
       participantCount += (room.participants || []).length + 1;
       if (room.localParticipant) publishedTracks += (room.localParticipant.trackPublications || []).length;

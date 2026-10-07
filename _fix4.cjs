@@ -79,7 +79,7 @@ function tagBalance(from, to) {
   for(let i=from; i<=to; i++){
     const s=V[i]||'';
     // JSX open tags
-    open += (s.match(/<[A-Za-z][A-Za-z0-9]*[\s\/>]/g)||[]).length;
+    open += (s.match(/<[A-Za-z][A-Za-z0-9]*[\s>/]/g)||[]).length;
     // JSX close tags
     close += (s.match(/<\/[A-Za-z][A-Za-z0-9]*[\s>]/g)||[]).length;
   }

@@ -47,7 +47,7 @@ export default function PayoutRequest() {
         </div>
         <h1 className="text-2xl font-bold mb-4">Redirecting to MAI Pay</h1>
         <p className="text-gray-300 mb-6">
-          You're being redirected to MAI Pay for secure payout processing.
+           You&apos;re being redirected to MAI Pay for secure payout processing.
         </p>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto"></div>
       </div>

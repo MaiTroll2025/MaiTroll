@@ -281,7 +281,7 @@ export default function Safety() {
 
           <PolicyCard icon={AlertTriangle} title="Reporting Violations" accent="yellow">
             <p className="mb-4 text-sm leading-6 text-slate-300">
-              Use Mai Troll's reporting tools when you see a genuine violation.
+               Use Mai Troll&apos;s reporting tools when you see a genuine violation.
               Give staff enough information to understand what happened.
             </p>
 

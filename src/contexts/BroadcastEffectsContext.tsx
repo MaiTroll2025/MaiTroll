@@ -52,7 +52,7 @@ function effectsReducer(state: EffectsState, action: EffectsAction): EffectsStat
           [action.payload.seatId]: Math.max(0, Math.min(100, action.payload.value)),
         },
       };
-    case 'BOOST_SEAT_HEAT':
+    case 'BOOST_SEAT_HEAT': {
       const currentValue = state.seatHeatValues[action.payload.seatId] || 0;
       return {
         ...state,
@@ -61,6 +61,7 @@ function effectsReducer(state: EffectsState, action: EffectsAction): EffectsStat
           [action.payload.seatId]: Math.max(0, Math.min(100, currentValue + action.payload.value)),
         },
       };
+    }
     case 'DECAY_HEAT':
       return {
         ...state,

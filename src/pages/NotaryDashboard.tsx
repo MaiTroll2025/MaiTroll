@@ -637,7 +637,7 @@ export default function NotaryDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-xl p-6">
             <h3 className="text-lg font-bold mb-2">Sign Document</h3>
-            <p className="text-sm text-gray-400 mb-4">"{selectedDoc.title}"</p>
+            <p className="text-sm text-gray-400 mb-4">&quot;{selectedDoc.title}&quot;</p>
             <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 mb-4 text-sm text-yellow-300">
               <AlertTriangle size={14} className="inline mr-2" />
               By signing, you confirm you have read and agree to the terms.
@@ -661,7 +661,7 @@ export default function NotaryDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-xl p-6">
             <h3 className="text-lg font-bold mb-2">Reject Document</h3>
-            <p className="text-sm text-gray-400 mb-4">"{selectedDoc.title}"</p>
+            <p className="text-sm text-gray-400 mb-4">&quot;{selectedDoc.title}&quot;</p>
             <div className="mb-4">
               <label className="text-xs text-gray-400 block mb-1">Rejection Reason</label>
               <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} rows={3} className="w-full px-3 py-2 bg-zinc-800 border border-gray-700 rounded-lg text-white text-sm resize-none" placeholder="Reason for rejection..." />

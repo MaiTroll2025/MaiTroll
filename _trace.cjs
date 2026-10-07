@@ -90,7 +90,7 @@ for (let idx = 869; idx < 1047; idx++) {
   const Lidx = idx + 1;
   const s = L[idx];
   const re = /<([div|section])[ >]/gi; // just <div  or <section
-  m = null;
+  let m = null;
   re.lastIndex = 0;
   while ((m = re.exec(s)) !== null && m[1]) {
     const indent = s.match(/^ */)[0].length;

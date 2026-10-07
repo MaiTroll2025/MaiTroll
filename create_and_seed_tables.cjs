@@ -90,7 +90,7 @@ INSERT INTO perks (id, name, cost, description, duration_minutes, perk_type) VAL
   ('perk_ban_shield', 'Ban Shield (2hrs)', 1700, 'Immunity from kick, mute, or ban for 2 hours', 120, 'protection'),
   ('perk_double_xp', 'Double XP Mode (1h)', 1300, 'Earn 2x XP for the next hour', 60, 'boost'),
   ('perk_flex_banner', 'Golden Flex Banner (100h)', 3500, 'Golden crown banner on all your messages', 6000, 'cosmetic'),
-  ('perk_troll_spell', 'Troll Spell (1h)', 2800, 'Randomly change another user\'s username style & emoji for 100 hour', 60, 'cosmetic'),
+  ('perk_troll_spell', 'Troll Spell (1h)', 2800, 'Randomly change another user's username style & emoji for 100 hour', 60, 'cosmetic'),
   ('citizen_badge', 'Citizen Badge', 0, 'Show off your status', 52560000, 'cosmetic'),
   ('profile_border_basic', 'Basic Profile Border', 0, 'Decorate your avatar', 52560000, 'cosmetic'),
   ('coin_boost_2', '+2% Coin Boost', 0, 'Earn more coins passively', 52560000, 'boost'),

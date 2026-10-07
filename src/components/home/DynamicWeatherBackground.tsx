@@ -491,16 +491,16 @@ function drawTree(
 
   const foliageColors = isDark
     ? {
-        dark: 'rgba(15,50,30,0.85)',
-        base: 'rgba(25,70,40,0.8)',
-        mid: 'rgba(35,85,50,0.7)',
-        light: 'rgba(50,105,60,0.6)',
+        dark: 'rgba(28,22,38,0.92)',
+        base: 'rgba(55,35,48,0.86)',
+        mid: 'rgba(92,48,38,0.76)',
+        light: 'rgba(165,76,28,0.68)',
       }
     : {
-        dark: 'rgba(20,80,35,0.75)',
-        base: 'rgba(40,110,55,0.7)',
-        mid: 'rgba(60,140,70,0.6)',
-        light: 'rgba(80,165,85,0.5)',
+        dark: 'rgba(38,55,34,0.78)',
+        base: 'rgba(70,85,38,0.72)',
+        mid: 'rgba(135,86,35,0.68)',
+        light: 'rgba(220,125,35,0.58)',
       }
 
   /* trunk with taper */
@@ -1598,26 +1598,127 @@ function drawAirplanes(
   }
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* Halloween atmosphere                                                      */
+/* -------------------------------------------------------------------------- */
+
+function drawHalloweenAtmosphere(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  groundY: number,
+  time: number,
+  isDark: boolean,
+) {
+  /* Spooky purple/orange atmospheric glow behind the city. */
+  const skyGlow = ctx.createLinearGradient(0, 0, 0, groundY)
+  skyGlow.addColorStop(0, isDark ? 'rgba(18,5,35,0.30)' : 'rgba(75,20,90,0.10)')
+  skyGlow.addColorStop(0.55, isDark ? 'rgba(45,8,55,0.18)' : 'rgba(120,35,70,0.06)')
+  skyGlow.addColorStop(1, 'rgba(255,105,0,0.03)')
+  ctx.fillStyle = skyGlow
+  ctx.fillRect(0, 0, width, groundY)
+
+  /* Slow-moving fog along the street. */
+  const fogY = groundY + 18
+  for (let i = 0; i < 5; i++) {
+    const offset = ((time * (5 + i * 1.5) * (i % 2 ? -1 : 1)) + i * 190) % (width + 360)
+    const x = offset - 180
+    const fog = ctx.createRadialGradient(x, fogY, 0, x, fogY, 190 + i * 25)
+    fog.addColorStop(0, isDark ? 'rgba(210,195,235,0.09)' : 'rgba(255,245,255,0.10)')
+    fog.addColorStop(1, 'rgba(210,195,235,0)')
+    ctx.fillStyle = fog
+    ctx.fillRect(x - 210, fogY - 55, 420, 120)
+  }
+
+  /* Small bats crossing the upper skyline. */
+  for (let i = 0; i < 5; i++) {
+    const travel = (time * (8 + i * 2) + i * 180) % (width + 180)
+    const x = travel - 90
+    const y = 70 + Math.sin(time * 0.7 + i * 1.8) * 16 + i * 28
+    const flap = Math.sin(time * 7 + i) * 4
+    const size = 5 + (i % 3)
+
+    ctx.save()
+    ctx.translate(x, y)
+    ctx.strokeStyle = isDark ? 'rgba(8,5,14,0.90)' : 'rgba(35,18,45,0.65)'
+    ctx.lineWidth = 1.7
+    ctx.lineCap = 'round'
+
+    ctx.beginPath()
+    ctx.moveTo(-size * 1.7, 0)
+    ctx.quadraticCurveTo(-size, -size - flap, 0, 0)
+    ctx.quadraticCurveTo(size, -size + flap, size * 1.7, 0)
+    ctx.stroke()
+
+    ctx.fillStyle = isDark ? 'rgba(8,5,14,0.90)' : 'rgba(35,18,45,0.65)'
+    ctx.beginPath()
+    ctx.ellipse(0, 1, size * 0.38, size * 0.65, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  }
+
+  /* Pumpkins on the sidewalk: each building gets a nearby glowing jack-o'-lantern. */
+  const pumpkinCount = Math.max(5, Math.floor(width / 150))
+  for (let i = 0; i < pumpkinCount; i++) {
+    const x = ((i + 0.5) * width) / pumpkinCount
+    const bob = Math.sin(time * 1.4 + i) * 0.8
+    const y = groundY + 9 + bob
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, 28)
+    glow.addColorStop(0, 'rgba(255,130,20,0.20)')
+    glow.addColorStop(1, 'rgba(255,80,0,0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(x - 30, y - 30, 60, 60)
+
+    ctx.save()
+    ctx.translate(x, y)
+    ctx.fillStyle = '#e87516'
+    ctx.beginPath()
+    ctx.ellipse(-5, 0, 7, 9, 0, 0, Math.PI * 2)
+    ctx.ellipse(5, 0, 7, 9, 0, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.fillStyle = '#6b3b16'
+    ctx.fillRect(-1.5, -11, 3, 4)
+
+    ctx.fillStyle = '#160d1d'
+    ctx.beginPath()
+    ctx.moveTo(-7, -2); ctx.lineTo(-2, -5); ctx.lineTo(-3, 0); ctx.closePath(); ctx.fill()
+    ctx.beginPath()
+    ctx.moveTo(2, -5); ctx.lineTo(7, -2); ctx.lineTo(3, 0); ctx.closePath(); ctx.fill()
+    ctx.fillRect(-5, 4, 10, 2)
+    ctx.restore()
+  }
+
+  /* A subtle orange/purple horizon wash. */
+  const horizon = ctx.createLinearGradient(0, groundY - 55, 0, groundY + 30)
+  horizon.addColorStop(0, 'rgba(255,105,0,0)')
+  horizon.addColorStop(0.65, isDark ? 'rgba(255,80,0,0.055)' : 'rgba(255,120,0,0.035)')
+  horizon.addColorStop(1, 'rgba(120,40,180,0.07)')
+  ctx.fillStyle = horizon
+  ctx.fillRect(0, groundY - 55, width, 90)
+
+  void height
+}
+
 /* -------------------------------------------------------------------------- */
 /* City                                                                       */
 /* -------------------------------------------------------------------------- */
 
 function drawCity(
   ctx: CanvasRenderingContext2D,
-  buildings: Building[],
+  _buildings: Building[],
   trees: Tree[],
   groundY: number,
-  isNight: boolean,
+  _isNight: boolean,
   time: number,
   isDark: boolean,
 ) {
   /*
-   * IMPORTANT:
-   *
-   * Trees are drawn FIRST.
-   * Buildings are drawn SECOND.
-   *
-   * This makes the trees appear behind the skyline.
+   * Buildings are rendered as real HTML/CSS elements in the React layer.
+   * Keeping them outside the canvas gives each building proper depth,
+   * responsive text, hover states, clickable navigation, and richer
+   * architecture while the canvas continues to handle the animated world.
    */
   drawTrees(
     ctx,
@@ -1626,488 +1727,498 @@ function drawCity(
     isDark,
     time,
   )
-
-  const streetTop =
-    groundY +
-    SIDEWALK_HEIGHT
-
-  const curbCenterY =
-    streetTop +
-    CURB_HEIGHT / 2
-
-  const segmentWidth =
-    ctx.canvas.width /
-    Math.max(1, buildings.length)
-
-  for (const b of buildings) {
-    const top =
-      groundY -
-      b.height
-
-    const mc =
-      getMaterialColors(
-        b.material,
-        isDark,
-      )
-
-    const isLiveBuilding =
-      b.label === 'Live'
-
-    /* live building glow */
-
-    if (isLiveBuilding) {
-      const pulse =
-        0.6 +
-        Math.sin(
-          time * 3,
-        ) *
-          0.4
-
-      ctx.shadowColor =
-        `rgba(255,30,30,${pulse})`
-
-      ctx.shadowBlur =
-        25 +
-        Math.sin(
-          time * 3,
-        ) *
-          10
-    }
-
-    /* building */
-
-    ctx.fillStyle = isLiveBuilding
-      ? isDark
-        ? 'rgba(160,30,30,0.95)'
-        : 'rgba(200,40,40,0.9)'
-      : mc.base
-
-    ctx.fillRect(
-      b.x,
-      top,
-      b.width,
-      b.height,
-    )
-
-    ctx.strokeStyle =
-      isLiveBuilding
-        ? 'rgba(255,80,80,0.7)'
-        : mc.stroke
-
-    ctx.lineWidth = 1
-
-    ctx.strokeRect(
-      b.x,
-      top,
-      b.width,
-      b.height,
-    )
-
-    if (isLiveBuilding) {
-      ctx.shadowBlur = 0
-    }
-
-    /* building-specific decorations */
-    drawBuildingDecorations(
-      ctx,
-      b,
-      top,
-      groundY,
-      isDark,
-      mc,
-    )
-
-    /* brick / stone texture */
-
-    if (mc.texture) {
-      const mortar = isDark
-        ? 'rgba(75,42,32,0.28)'
-        : 'rgba(95,55,38,0.18)'
-
-      const brickH = 14
-      const brickW = 24
-
-      ctx.strokeStyle =
-        mortar
-
-      ctx.lineWidth = 1
-
-      for (
-        let y = top;
-        y < groundY;
-        y += brickH
-      ) {
-        ctx.beginPath()
-        ctx.moveTo(
-          b.x,
-          y,
-        )
-        ctx.lineTo(
-          b.x + b.width,
-          y,
-        )
-        ctx.stroke()
-      }
-
-      for (
-        let y = top;
-        y < groundY;
-        y += brickH
-      ) {
-        const rowEven =
-          Math.round(
-            (y - top) /
-              brickH,
-          ) %
-            2 ===
-          0
-
-        const offset =
-          rowEven
-            ? brickW / 2
-            : 0
-
-        ctx.beginPath()
-
-        for (
-          let x =
-            b.x + offset;
-          x <=
-          b.x + b.width;
-          x += brickW
-        ) {
-          ctx.moveTo(
-            x,
-            y,
-          )
-          ctx.lineTo(
-            x,
-            y + brickH,
-          )
-        }
-
-        ctx.stroke()
-      }
-    }
-
-    /* windows */
-
-    const cols = b.cols
-    const rows = b.rows
-    const winW = b.winW
-    const winH = b.winH
-
-    const gapX =
-      (b.width -
-        cols * winW) /
-      (cols + 1)
-
-    const gapY =
-      (b.height -
-        rows * winH) /
-      (rows + 1)
-
-    for (
-      let r = 0;
-      r < rows;
-      r++
-    ) {
-      for (
-        let c = 0;
-        c < cols;
-        c++
-      ) {
-        const idx =
-          r * cols + c
-
-        const wx =
-          b.x +
-          gapX +
-          c *
-            (winW + gapX)
-
-        const wy =
-          top +
-          gapY +
-          r *
-            (winH + gapY)
-
-        const win =
-          b.windows[idx]
-
-        if (!win) continue
-
-        if (isNight) {
-          if (win.lit) {
-            const flicker =
-              Math.max(
-                0,
-                1 -
-                  (time %
-                    (3 +
-                      idx *
-                        0.1)) *
-                    win.flicker,
-              )
-
-            const alpha =
-              0.8 +
-              Math.sin(
-                time * 0.5 +
-                  idx,
-              ) *
-                0.2
-
-            ctx.shadowColor =
-              `rgba(${mc.windowLitRgb},0.7)`
-
-            ctx.shadowBlur =
-              isDark ? 8 : 4
-
-            ctx.fillStyle =
-              `rgba(${mc.windowLitRgb},${Math.max(
-                0.35,
-                alpha *
-                  flicker,
-              )})`
-
-            ctx.fillRect(
-              wx,
-              wy,
-              winW,
-              winH,
-            )
-
-            ctx.shadowBlur = 0
-
-            if (win.person) {
-              ctx.fillStyle =
-                isDark
-                  ? 'rgba(5,5,15,0.9)'
-                  : 'rgba(230,230,240,0.5)'
-
-              const move =
-                Math.sin(
-                  time * 1.5 +
-                    idx,
-                ) * 2.5
-
-              ctx.fillRect(
-                wx +
-                  2 +
-                  move,
-                wy + 3,
-                3,
-                3,
-              )
-
-              ctx.fillRect(
-                wx +
-                  1 +
-                  move,
-                wy + 6,
-                5,
-                2,
-              )
-            }
-          } else {
-            ctx.fillStyle =
-              mc.windowUnlitNight
-
-            ctx.fillRect(
-              wx,
-              wy,
-              winW,
-              winH,
-            )
-          }
-        } else {
-          ctx.fillStyle =
-            mc.windowUnlitDay
-
-          ctx.fillRect(
-            wx,
-            wy,
-            winW,
-            winH,
-          )
-        }
-      }
-    }
-
-    /* door */
-
-    const doorW = Math.max(18, b.width * 0.18)
-    const doorH = Math.max(28, b.height * 0.12)
-    const doorX = b.x + (b.width - doorW) / 2
-    const doorY = groundY - doorH
-
-    ctx.fillStyle = isDark
-      ? 'rgba(101,67,33,0.95)'
-      : 'rgba(139,90,43,0.95)'
-
-    ctx.fillRect(
-      doorX,
-      doorY,
-      doorW,
-      doorH,
-    )
-
-    ctx.strokeStyle = isDark
-      ? 'rgba(60,40,20,0.9)'
-      : 'rgba(80,50,25,0.9)'
-
-    ctx.lineWidth = 2
-
-    ctx.strokeRect(
-      doorX,
-      doorY,
-      doorW,
-      doorH,
-    )
-
-    /* door handle */
-
-    ctx.fillStyle = isDark
-      ? 'rgba(255,200,50,0.8)'
-      : 'rgba(255,210,60,0.9)'
-
-    ctx.beginPath()
-
-    ctx.arc(
-      doorX + doorW * 0.75,
-      doorY + doorH * 0.55,
-      2,
-      0,
-      Math.PI * 2,
-    )
-
-    ctx.fill()
-
-    /* building label */
-
-    const labelX =
-      b.x +
-      b.width / 2
-
-    const fontSize =
-      Math.max(
-        12,
-        Math.min(
-          16,
-          segmentWidth *
-            0.1,
-        ),
-      )
-
-    ctx.font =
-      `700 ${fontSize}px ui-sans-serif, system-ui, -apple-system, sans-serif`
-
-    ctx.textAlign =
-      'center'
-
-    ctx.textBaseline =
-      'middle'
-
-    const maxTextW =
-      segmentWidth *
-      0.82
-
-    let label = b.label
-
-    if (
-      ctx.measureText(
-        label,
-      ).width >
-      maxTextW
-    ) {
-      while (
-        label.length > 1 &&
-        ctx.measureText(
-          label + '…',
-        ).width >
-          maxTextW
-      ) {
-        label =
-          label.slice(
-            0,
-            -1,
-          )
-      }
-
-      label += '…'
-    }
-
-    const textW =
-      ctx.measureText(
-        label,
-      ).width
-
-    const textH =
-      fontSize * 1.1
-
-    const padX = 6
-    const padY = 3
-    const radius = 7
-
-    const labelY =
-      doorY - 12
-
-    const pillX =
-      labelX -
-      textW / 2 -
-      padX
-
-    const pillY =
-      labelY -
-      textH / 2 -
-      padY
-
-    const pillW =
-      textW +
-      padX * 2
-
-    const pillH =
-      textH +
-      padY * 2
-
-    ctx.fillStyle =
-      'rgba(0,0,0,0.65)'
-
-    ctx.strokeStyle =
-      'rgba(255,50,50,0.6)'
-
-    ctx.lineWidth = 1
-
-    roundRectPath(
-      ctx,
-      pillX,
-      pillY,
-      pillW,
-      pillH,
-      radius,
-    )
-
-    ctx.fill()
-    ctx.stroke()
-
-    ctx.fillStyle =
-      '#ff3333'
-
-    ctx.fillText(
-      label,
-      labelX,
-      labelY,
-    )
-  }
-
-  ctx.textAlign =
-    'start'
-
-  ctx.textBaseline =
-    'alphabetic'
 }
 
+/* -------------------------------------------------------------------------- */
+/* Realistic HTML buildings                                                     */
+/* -------------------------------------------------------------------------- */
+
+interface RealisticBuildingProps {
+  building: Building
+  isDark: boolean
+  isNight: boolean
+  onClick: (to: string) => void
+}
+
+function getBuildingFacade(
+  building: Building,
+  isDark: boolean,
+): {
+  background: string
+  border: string
+  trim: string
+  shadow: string
+  windowFrame: string
+} {
+  switch (building.buildingType) {
+    case 'home':
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #7f3f32 0%, #9f5541 48%, #693229 100%)'
+          : 'linear-gradient(135deg, #a95f48 0%, #c8795a 48%, #8d4637 100%)',
+        border: isDark ? 'rgba(55,25,22,.9)' : 'rgba(95,45,34,.7)',
+        trim: isDark ? '#e5d5bd' : '#f2e3c8',
+        shadow: 'rgba(25,15,12,.5)',
+        windowFrame: '#38271f',
+      }
+    case 'bank':
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #4e5967 0%, #707b89 50%, #38414d 100%)'
+          : 'linear-gradient(135deg, #d8d4c8 0%, #f0ede3 50%, #c3c0b5 100%)',
+        border: isDark ? 'rgba(20,25,32,.9)' : 'rgba(85,82,75,.65)',
+        trim: isDark ? '#d8d4c9' : '#fffdf4',
+        shadow: 'rgba(20,25,30,.48)',
+        windowFrame: '#27303a',
+      }
+    case 'court':
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #62636c 0%, #858691 50%, #50515a 100%)'
+          : 'linear-gradient(135deg, #b9b6ad 0%, #ddd9ce 50%, #aaa79f 100%)',
+        border: isDark ? 'rgba(35,35,40,.9)' : 'rgba(85,82,76,.7)',
+        trim: isDark ? '#dedbd1' : '#f7f3e8',
+        shadow: 'rgba(25,25,28,.48)',
+        windowFrame: '#3d3e46',
+      }
+    case 'arcade':
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #111c36 0%, #213866 48%, #0b1328 100%)'
+          : 'linear-gradient(135deg, #243f70 0%, #456aa5 48%, #172a4b 100%)',
+        border: 'rgba(80,145,255,.55)',
+        trim: '#62e6ff',
+        shadow: 'rgba(15,30,70,.58)',
+        windowFrame: '#0b1224',
+      }
+    case 'achievement':
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #3e4654 0%, #606b7c 50%, #2c3441 100%)'
+          : 'linear-gradient(135deg, #8792a3 0%, #aeb7c5 50%, #717c8d 100%)',
+        border: isDark ? 'rgba(20,25,34,.9)' : 'rgba(70,78,90,.7)',
+        trim: '#e8d27a',
+        shadow: 'rgba(25,30,38,.5)',
+        windowFrame: '#28303c',
+      }
+    default:
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #46515f 0%, #667484 50%, #35404d 100%)'
+          : 'linear-gradient(135deg, #9ba8b7 0%, #c0cbd7 50%, #8794a3 100%)',
+        border: isDark ? 'rgba(20,25,32,.9)' : 'rgba(70,78,90,.65)',
+        trim: '#e7e9eb',
+        shadow: 'rgba(20,25,30,.45)',
+        windowFrame: '#303945',
+      }
+  }
+}
+
+function RealisticBuilding({
+  building,
+  isDark,
+  isNight,
+  onClick,
+}: RealisticBuildingProps) {
+  const facade = getBuildingFacade(building, isDark)
+  const isHome = building.buildingType === 'home'
+  const isBank = building.buildingType === 'bank'
+  const isCourt = building.buildingType === 'court'
+  const isArcade = building.buildingType === 'arcade'
+  const isAchievement = building.buildingType === 'achievement'
+
+  const windows = building.windows.map((win, index) => {
+    const row = Math.floor(index / building.cols)
+    const col = index % building.cols
+    const gapX =
+      (building.width - building.cols * building.winW) /
+      (building.cols + 1)
+    const gapY =
+      (building.height - building.rows * building.winH) /
+      (building.rows + 1)
+
+    return {
+      ...win,
+      left:
+        gapX +
+        col * (building.winW + gapX),
+      top:
+        gapY +
+        row * (building.winH + gapY),
+    }
+  })
+
+  const livePulse =
+    building.label.toLowerCase().includes('live')
+
+  return (
+    <button
+      type="button"
+      aria-label={`Open ${building.label}`}
+      onClick={() => onClick(building.to)}
+      className="group absolute block cursor-pointer appearance-none border-0 bg-transparent p-0 text-left"
+      style={{
+        left: building.x,
+        bottom: 80,
+        width: building.width,
+        height: building.height + (isHome ? 48 : isCourt ? 34 : 16),
+        pointerEvents: 'auto',
+        zIndex: 6,
+        filter: `drop-shadow(0 18px 14px ${facade.shadow})`,
+      }}
+    >
+      <div
+        className="absolute inset-x-0 bottom-0 transition-transform duration-200 ease-out group-hover:-translate-y-1"
+        style={{
+          height: building.height,
+        }}
+      >
+        {/* Main facade */}
+        <div
+          className="absolute inset-0 overflow-hidden rounded-t-[3px]"
+          style={{
+            background: facade.background,
+            border: `1px solid ${facade.border}`,
+            boxShadow: `
+              inset 8px 0 16px rgba(255,255,255,.08),
+              inset -10px 0 18px rgba(0,0,0,.18),
+              inset 0 -12px 20px rgba(0,0,0,.16)
+            `,
+          }}
+        >
+          {/* Subtle facade texture */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-30"
+            style={{
+              backgroundImage:
+                building.material === 'brick'
+                  ? 'repeating-linear-gradient(0deg, transparent 0 13px, rgba(60,30,20,.32) 14px), repeating-linear-gradient(90deg, transparent 0 23px, rgba(70,35,25,.25) 24px)'
+                  : building.material === 'stone'
+                    ? 'repeating-linear-gradient(0deg, transparent 0 21px, rgba(45,45,50,.18) 22px), repeating-linear-gradient(90deg, transparent 0 42px, rgba(255,255,255,.08) 43px)'
+                    : 'linear-gradient(90deg, rgba(255,255,255,.08), transparent 18%, transparent 82%, rgba(0,0,0,.08))',
+            }}
+          />
+
+          {/* Windows */}
+          {windows.map((win, index) => {
+            const lit = isNight && win.lit
+            return (
+              <span
+                key={`${building.label}-window-${index}`}
+                className="absolute overflow-hidden rounded-[2px] transition-all duration-300"
+                style={{
+                  left: win.left,
+                  top: win.top,
+                  width: building.winW,
+                  height: building.winH,
+                  background: lit
+                    ? `linear-gradient(145deg, rgba(${getMaterialColors(building.material, isDark).windowLitRgb},.98), rgba(${getMaterialColors(building.material, isDark).windowLitRgb},.58))`
+                    : isNight
+                      ? getMaterialColors(building.material, isDark).windowUnlitNight
+                      : getMaterialColors(building.material, isDark).windowUnlitDay,
+                  border: `2px solid ${facade.windowFrame}`,
+                  boxShadow: lit
+                    ? `0 0 10px rgba(${getMaterialColors(building.material, isDark).windowLitRgb},.55), inset 0 0 4px rgba(255,255,255,.35)`
+                    : 'inset 0 0 4px rgba(0,0,0,.28)',
+                }}
+              >
+                {lit && win.person && (
+                  <span
+                    className="absolute left-1/2 top-1/2 h-[35%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                    style={{
+                      background: isDark
+                        ? 'rgba(12,15,24,.9)'
+                        : 'rgba(40,45,55,.55)',
+                    }}
+                  />
+                )}
+              </span>
+            )
+          })}
+
+          {/* Ground-level entrance */}
+          <div
+            className="absolute bottom-0 left-1/2 -translate-x-1/2"
+            style={{
+              width: Math.max(22, building.width * 0.18),
+              height: Math.max(34, building.height * 0.13),
+              background:
+                'linear-gradient(90deg, #34251d, #65432d 45%, #2d211b)',
+              border: '2px solid rgba(20,15,12,.8)',
+              boxShadow: 'inset 0 0 10px rgba(0,0,0,.5)',
+            }}
+          >
+            <span
+              className="absolute right-[18%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full"
+              style={{ background: '#f5cf68', boxShadow: '0 0 5px #f5cf68' }}
+            />
+          </div>
+        </div>
+
+        {/* Home pitched roof */}
+        {isHome && (
+          <>
+            <div
+              className="absolute -left-[5%] -top-10 h-0 w-0"
+              style={{
+                borderLeft: `${building.width * 0.55}px solid transparent`,
+                borderRight: `${building.width * 0.55}px solid transparent`,
+                borderBottom: `52px solid ${isDark ? '#3a2725' : '#5b3830'}`,
+                filter: 'drop-shadow(0 -3px 3px rgba(0,0,0,.3))',
+              }}
+            />
+            <div
+              className="absolute right-[17%] -top-10 w-[9%] min-w-[8px]"
+              style={{
+                height: 30,
+                background: isDark ? '#513832' : '#865547',
+                border: '1px solid rgba(40,25,20,.55)',
+              }}
+            />
+            <div
+              className="absolute left-[26%] right-[26%] bottom-[38%] h-1"
+              style={{ background: facade.trim, opacity: .9 }}
+            />
+          </>
+        )}
+
+        {/* Bank parapet, sign, columns and entrance canopy */}
+        {isBank && (
+          <>
+            <div
+              className="absolute -left-[2%] -right-[2%] -top-2 h-3"
+              style={{
+                background: facade.trim,
+                border: `1px solid ${facade.border}`,
+                boxShadow: '0 3px 5px rgba(0,0,0,.25)',
+              }}
+            />
+            <div
+              className="absolute left-[14%] right-[14%] top-3 flex h-7 items-center justify-center rounded-sm px-1 text-center text-[10px] font-black uppercase tracking-[.08em]"
+              style={{
+                background: isDark
+                  ? 'rgba(235,232,220,.9)'
+                  : 'rgba(255,252,240,.98)',
+                color: '#26384a',
+                boxShadow: '0 2px 5px rgba(0,0,0,.2)',
+              }}
+            >
+              {building.label.includes('Bank') ? building.label : 'MAI Troll Bank'}
+            </div>
+            <div className="absolute inset-x-[8%] bottom-0 top-[16%] flex justify-around">
+              {[0, 1, 2, 3].map((column) => (
+                <span
+                  key={column}
+                  className="h-full w-[3%] min-w-[4px]"
+                  style={{
+                    background: `linear-gradient(90deg, ${isDark ? '#9aa0aa' : '#f4f0e5'}, ${isDark ? '#e0e1dc' : '#ffffff'}, ${isDark ? '#858b95' : '#d0ccc1'})`,
+                    boxShadow: '1px 0 3px rgba(0,0,0,.25)',
+                  }}
+                />
+              ))}
+            </div>
+            <div
+              className="absolute bottom-[13%] left-[30%] right-[30%] h-[3%] rounded-full"
+              style={{
+                background: facade.trim,
+                boxShadow: '0 2px 4px rgba(0,0,0,.25)',
+              }}
+            />
+          </>
+        )}
+
+        {/* Court house portico */}
+        {isCourt && (
+          <>
+            <div
+              className="absolute -left-[2%] -right-[2%] -top-7 h-7"
+              style={{
+                clipPath: 'polygon(50% 0, 100% 100%, 0 100%)',
+                background: facade.trim,
+                boxShadow: '0 -2px 4px rgba(0,0,0,.25)',
+              }}
+            />
+            <div
+              className="absolute left-[12%] right-[12%] top-0 h-3"
+              style={{ background: facade.trim }}
+            />
+            {[0, 1, 2, 3].map((column) => (
+              <span
+                key={column}
+                className="absolute bottom-0 top-0 w-[3%] min-w-[4px]"
+                style={{
+                  left: `${20 + column * 20}%`,
+                  background: `linear-gradient(90deg, ${isDark ? '#85868d' : '#aaa79f'}, ${isDark ? '#eeeae0' : '#f7f3e8'}, ${isDark ? '#777880' : '#9b988f'})`,
+                }}
+              />
+            ))}
+          </>
+        )}
+
+        {/* Arcade neon marquee */}
+        {isArcade && (
+          <div
+            className="absolute left-[5%] right-[5%] top-4 rounded-md border px-2 py-1 text-center text-[10px] font-black tracking-[.18em]"
+            style={{
+              color: '#fff',
+              borderColor: 'rgba(98,230,255,.85)',
+              background: 'linear-gradient(90deg, rgba(255,0,120,.7), rgba(80,80,255,.75), rgba(0,220,255,.7))',
+              boxShadow: '0 0 14px rgba(98,230,255,.6), inset 0 0 10px rgba(255,255,255,.15)',
+              textShadow: '0 0 8px rgba(255,255,255,.9)',
+            }}
+          >
+            HYTRO ARCADE
+          </div>
+        )}
+
+        {/* Leaders / achievement crown */}
+        {isAchievement && (
+          <div
+            className="absolute left-1/2 top-2 -translate-x-1/2 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-wider"
+            style={{
+              color: '#fff4b0',
+              background: 'linear-gradient(180deg, #8c6b1d, #4e3b13)',
+              border: '1px solid rgba(255,225,110,.7)',
+              boxShadow: '0 0 12px rgba(255,210,60,.25)',
+            }}
+          >
+            LEADERS
+          </div>
+        )}
+
+        {/* Halloween building decorations */}
+        <div
+          className="pointer-events-none absolute inset-0 overflow-visible"
+          aria-hidden="true"
+        >
+          {/* Purple/orange haunted trim */}
+          <div
+            className="absolute left-[3%] right-[3%] top-0 h-1 rounded-full"
+            style={{
+              background: 'linear-gradient(90deg, rgba(255,112,0,.9), rgba(126,34,206,.95), rgba(255,112,0,.9))',
+              boxShadow: '0 0 10px rgba(255,90,0,.45), 0 0 14px rgba(126,34,206,.35)',
+            }}
+          />
+
+          {/* Spider webs in upper corners */}
+          <div
+            className="absolute left-1 top-1 h-10 w-10 opacity-80"
+            style={{
+              backgroundImage: `
+                radial-gradient(circle at 0 0, transparent 0 2px, rgba(245,245,245,.55) 2px 3px, transparent 3px),
+                repeating-conic-gradient(from 0deg at 0 0, rgba(245,245,245,.38) 0deg 2deg, transparent 2deg 22deg)
+              `,
+              borderRadius: '0 0 100% 0',
+            }}
+          />
+          <div
+            className="absolute right-1 top-1 h-10 w-10 rotate-90 opacity-80"
+            style={{
+              backgroundImage: `
+                radial-gradient(circle at 0 0, transparent 0 2px, rgba(245,245,245,.55) 2px 3px, transparent 3px),
+                repeating-conic-gradient(from 0deg at 0 0, rgba(245,245,245,.38) 0deg 2deg, transparent 2deg 22deg)
+              `,
+              borderRadius: '0 0 100% 0',
+            }}
+          />
+
+          {/* Jack-o'-lantern */}
+          <div
+            className="absolute bottom-[8%] left-[7%] flex h-7 w-8 items-center justify-center rounded-[45%] border border-orange-300/60 bg-orange-500 shadow-[0_0_12px_rgba(255,120,0,.55)] animate-pulse"
+          >
+            <span className="absolute -top-1 h-1.5 w-1 rounded-full bg-green-700" />
+            <span className="text-[8px] leading-none text-black">⌁⌁</span>
+          </div>
+
+          {/* Hanging ghost */}
+          <div
+            className="absolute right-[7%] top-[13%] text-[20px] opacity-80 animate-pulse"
+            style={{ filter: 'drop-shadow(0 0 7px rgba(210,190,255,.45))' }}
+          >
+            👻
+          </div>
+
+          {/* Type-specific Halloween accent */}
+          {isBank && (
+            <div
+              className="absolute right-[8%] bottom-[12%] rounded-full px-1.5 py-0.5 text-[7px] font-black uppercase"
+              style={{
+                color: '#ffd166',
+                background: 'rgba(60,15,75,.82)',
+                border: '1px solid rgba(255,166,0,.6)',
+                boxShadow: '0 0 8px rgba(255,120,0,.3)',
+              }}
+            >
+              Spooky Savings
+            </div>
+          )}
+
+          {isCourt && (
+            <div
+              className="absolute left-1/2 top-[16%] -translate-x-1/2 text-[18px]"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(126,34,206,.55))' }}
+            >
+              ☠
+            </div>
+          )}
+
+          {isArcade && (
+            <div
+              className="absolute bottom-[18%] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[7px] font-black tracking-widest"
+              style={{
+                color: '#ffb347',
+                background: 'rgba(22,7,40,.86)',
+                border: '1px solid rgba(255,102,0,.65)',
+                boxShadow: '0 0 10px rgba(255,70,0,.45), 0 0 10px rgba(126,34,206,.35)',
+              }}
+            >
+              HALLOWEEN ARCADE
+            </div>
+          )}
+
+          {isAchievement && (
+            <div
+              className="absolute right-[7%] top-[12%] text-[18px]"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(255,180,40,.55))' }}
+            >
+              🕸️
+            </div>
+          )}
+        </div>
+
+        {/* Building label plaque */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-center text-[11px] font-bold shadow-lg transition-all duration-200 group-hover:-translate-y-1 group-hover:scale-105"
+          style={{
+            bottom: -34,
+            maxWidth: Math.max(90, building.width * .92),
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            color: isDark ? '#f8fafc' : '#0f172a',
+            background: isDark
+              ? 'rgba(5,10,18,.86)'
+              : 'rgba(255,255,255,.92)',
+            border: `1px solid ${livePulse ? 'rgba(255,65,65,.8)' : facade.border}`,
+            boxShadow: livePulse
+              ? '0 0 16px rgba(255,45,45,.4)'
+              : '0 5px 12px rgba(0,0,0,.22)',
+          }}
+        >
+          {building.label}
+        </div>
+
+        {/* Foundation / sidewalk contact */}
+        <div
+          className="absolute -bottom-[1px] left-0 right-0 h-2"
+          style={{
+            background: `linear-gradient(to bottom, ${facade.trim}, rgba(0,0,0,.25))`,
+            borderTop: `1px solid ${facade.border}`,
+          }}
+        />
+      </div>
+    </button>
+  )
+}
 /* -------------------------------------------------------------------------- */
 /* Street                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -2757,6 +2868,9 @@ export default function DynamicWeatherBackground({
   const buildingsRef =
     useRef<Building[]>([])
 
+  const [renderedBuildings, setRenderedBuildings] =
+    useState<Building[]>([])
+
   const treesRef =
     useRef<Tree[]>([])
 
@@ -3023,11 +3137,14 @@ export default function DynamicWeatherBackground({
         cityCanvas.height -
         80
 
-      buildingsRef.current =
+      const nextBuildings =
         generateBuildings(
           buildingMetasRef.current,
           cityCanvas.width,
         )
+
+      buildingsRef.current = nextBuildings
+      setRenderedBuildings(nextBuildings)
 
       /*
        * Tall trees are generated relative to
@@ -3225,6 +3342,22 @@ export default function DynamicWeatherBackground({
       )
 
       /* -------------------------------------------------------------- */
+      /* Halloween atmosphere                                           */
+      /* -------------------------------------------------------------- */
+
+      const halloweenGroundY =
+        cityCanvas.height - 80
+
+      drawHalloweenAtmosphere(
+        cityCtx,
+        cityCanvas.width,
+        cityCanvas.height,
+        halloweenGroundY,
+        time,
+        isDark,
+      )
+
+      /* -------------------------------------------------------------- */
       /* Rain / snow                                                     */
       /* -------------------------------------------------------------- */
 
@@ -3343,6 +3476,24 @@ export default function DynamicWeatherBackground({
         cityCtx,
         groundY,
         isDark,
+      )
+
+      /* Halloween road glow and scattered candles */
+      const halloweenRoad = cityCtx.createLinearGradient(
+        0,
+        groundY + SIDEWALK_HEIGHT + CURB_HEIGHT,
+        0,
+        cityCanvas.height,
+      )
+      halloweenRoad.addColorStop(0, 'rgba(126,34,206,0.035)')
+      halloweenRoad.addColorStop(0.5, 'rgba(255,100,0,0.02)')
+      halloweenRoad.addColorStop(1, 'rgba(15,5,25,0.08)')
+      cityCtx.fillStyle = halloweenRoad
+      cityCtx.fillRect(
+        0,
+        groundY + SIDEWALK_HEIGHT + CURB_HEIGHT,
+        cityCanvas.width,
+        cityCanvas.height - (groundY + SIDEWALK_HEIGHT + CURB_HEIGHT),
       )
 
       /* -------------------------------------------------------------- */
@@ -3502,51 +3653,18 @@ export default function DynamicWeatherBackground({
     displayWeather?.condition,
     displayWeather?.time,
     isDark,
+    buildingMetas,
   ])
 
   /* ------------------------------------------------------------------------ */
-  /* Building click                                                           */
+  /* Building navigation                                                       */
   /* ------------------------------------------------------------------------ */
 
-  const handleCityClick = (
-    e: React.MouseEvent<HTMLCanvasElement>,
-  ) => {
-    const canvas =
-      cityCanvasRef.current
-
-    if (!canvas) return
-
-    const rect =
-      canvas.getBoundingClientRect()
-
-    const x =
-      e.clientX -
-      rect.left
-
-    const building =
-      buildingsRef.current.find(
-        (b) =>
-          x >= b.x &&
-          x <=
-            b.x +
-              b.width,
-      )
-
-    if (!building) {
-      return
-    }
-
-    const target =
-      building.to
-
-    if (
-      onBuildingClickRef.current
-    ) {
-      onBuildingClickRef.current(
-        target,
-      )
+  const handleBuildingClick = (to: string) => {
+    if (onBuildingClickRef.current) {
+      onBuildingClickRef.current(to)
     } else {
-      navigate(target)
+      navigate(to)
     }
   }
 
@@ -3562,7 +3680,7 @@ export default function DynamicWeatherBackground({
         }
       : {
           background:
-            'linear-gradient(to bottom, #0f172a 0%, #1e293b 100%)',
+            'linear-gradient(to bottom, #12071f 0%, #261034 48%, #3a1828 100%)',
         }
 
   const isNight =
@@ -3576,9 +3694,20 @@ export default function DynamicWeatherBackground({
   return (
     <div
       ref={backgroundRef}
-      className="pointer-events-none fixed inset-0"
+      className="pointer-events-none fixed inset-0 overflow-hidden"
       style={skyStyle}
     >
+      {/* Halloween color wash — weather colors remain underneath. */}
+      <div
+        className="absolute inset-0"
+        aria-hidden="true"
+        style={{
+          background: isNight
+            ? 'radial-gradient(circle at 78% 12%, rgba(220,190,255,.10), transparent 18%), linear-gradient(180deg, rgba(34,8,55,.28), rgba(75,12,45,.10) 55%, rgba(255,82,0,.045))'
+            : 'linear-gradient(180deg, rgba(95,20,105,.08), rgba(255,100,0,.025) 70%, rgba(126,34,206,.08))',
+          mixBlendMode: 'screen',
+        }}
+      />
       {/* -------------------------------------------------------------- */}
       {/* Stars                                                           */}
       {/* -------------------------------------------------------------- */}
@@ -3668,22 +3797,35 @@ export default function DynamicWeatherBackground({
       {/* -------------------------------------------------------------- */}
 
       <div className="absolute inset-x-0 bottom-0 z-[2] h-[840px]">
+        {/* Animated canvas world: trees, street, sky objects, weather, walkers */}
         <canvas
-          ref={
-            cityCanvasRef
-          }
-          onClick={
-            handleCityClick
-          }
-          className="absolute inset-0 h-full w-full cursor-pointer"
+          ref={cityCanvasRef}
+          className="absolute inset-0 h-full w-full"
           style={{
-            pointerEvents:
-              'auto',
+            pointerEvents: 'none',
           }}
         />
 
+        {/* Realistic buildings sit above the canvas so they can be true interactive UI */}
         <div
-          className="absolute inset-x-0 bottom-0 h-6"
+          className="absolute inset-0 overflow-visible"
+          style={{
+            pointerEvents: 'none',
+          }}
+        >
+          {renderedBuildings.map((building) => (
+            <RealisticBuilding
+              key={`${building.label}-${building.to}`}
+              building={building}
+              isDark={isDark}
+              isNight={isNight}
+              onClick={handleBuildingClick}
+            />
+          ))}
+        </div>
+
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-6"
           style={{
             background: isDark
               ? 'linear-gradient(to top, rgba(10,15,30,0.9), transparent)'

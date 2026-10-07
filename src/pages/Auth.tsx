@@ -5,7 +5,7 @@ import { post, API_ENDPOINTS } from '../lib/api'
 import { toast } from 'sonner'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
-import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Shield, Users, ChevronDown, ChevronUp } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Shield, Users, ChevronDown, ChevronUp, Building2, Globe } from 'lucide-react'
 import NavBubble from '../components/NavBubble';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { generateUUID } from '../lib/uuid';

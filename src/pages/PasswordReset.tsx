@@ -148,7 +148,7 @@ export default function PasswordReset() {
               </div>
               <h1 className="text-2xl font-bold">Forgot Password?</h1>
               <p className="text-sm text-slate-400">
-                No worries — enter your email and we'll send you a reset link.
+                No worries — enter your email and we&apos;ll send you a reset link.
               </p>
             </div>
 
@@ -198,7 +198,7 @@ export default function PasswordReset() {
               Click the link in the email to set a new password.
             </p>
             <div className="bg-slate-800/50 border border-white/10 rounded-xl p-4 text-left space-y-2">
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Didn't get it?</p>
+              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Didn&apos;t get it?</p>
               <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
                 <li>Check your spam / junk folder</li>
                 <li>Make sure <span className="text-slate-300">{email}</span> is correct</li>

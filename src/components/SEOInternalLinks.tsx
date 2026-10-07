@@ -117,7 +117,7 @@ export default function InternalLinkHub() {
                 </div>
                 <div>
                   <span className="text-white text-sm font-medium group-hover:text-cyan-300 transition-colors">Trending</span>
-                  <p className="text-slate-500 text-xs mt-0.5">What's hot right now</p>
+                  <p className="text-slate-500 text-xs mt-0.5">What&apos;s hot right now</p>
                 </div>
               </Link>
               <Link

@@ -19,7 +19,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 function cleanEnvValue(value) {
   if (typeof value !== 'string') return value;
-  return value.trim().replace(/^[\'"]|[\'"]$/g, '');
+  return value.trim().replace(/^['"]|['"]$/g, '');
 }
 
 function normalizeLiveKitHost(value) {

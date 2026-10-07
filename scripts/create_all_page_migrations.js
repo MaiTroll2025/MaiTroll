@@ -78,7 +78,7 @@ for (const page of pageFiles.sort((a, b) => a.name.localeCompare(b.name))) {
       functions.add(m[1]);
     }
     
-    const pageKey = page.name.replace(/\.(tsx|ts|jsx)$/, '').replace(/[\/\\]/g, '_').replace(/[^a-zA-Z0-9_]/g, '_');
+    const pageKey = page.name.replace(/\.(tsx|ts|jsx)$/, '').replace(/[/\\]/g, '_').replace(/[^a-zA-Z0-9_]/g, '_');
     
     let sql = `-- Page: ${page.name}\n`;
     sql += `-- Component: ${page.componentName}\n`;

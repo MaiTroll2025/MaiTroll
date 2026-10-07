@@ -236,7 +236,7 @@ function ReadOnlyEmployerBlock({
       </h4>
       <p className="mt-1 text-xs text-amber-100/70">
         HR completes Section 2 (document examination) and Section 3 (reverification/rehire) at
-        review. Upload your identity documents in the separate "I-9 Identity Documents" form.
+        review. Upload your identity documents in the separate &quot;I-9 Identity Documents&quot; form.
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <ListBlock title="List A — Identity & Employment Auth." items={listA} />

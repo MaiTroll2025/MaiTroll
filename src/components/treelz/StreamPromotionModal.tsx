@@ -77,7 +77,7 @@ export default function StreamPromotionModal({
 
         <div className="mb-4 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-3">
           <p className="text-xs text-yellow-300">
-            This will create a 15-second preview clip from your stream with a "Join Live" button on Treelz.
+            This will create a 15-second preview clip from your stream with a &quot;Join Live&quot; button on Treelz.
           </p>
         </div>
 

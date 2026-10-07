@@ -80,7 +80,7 @@ export default function PayoutPolicy() {
 
         <p>
           A cashout request may be placed into a pending or review status while
-          MAiTROLL verifies the user's eligibility, account standing, eligible
+           MAiTROLL verifies the user&apos;s eligibility, account standing, eligible
           coin balance, payout information, and transaction history.
         </p>
 
@@ -294,7 +294,7 @@ export default function PayoutPolicy() {
         <p>
           MAiTROLL may request tax information or documentation when required
           by applicable law, payment providers, financial regulations, or
-          MAiTROLL's compliance procedures.
+           MAiTROLL&apos;s compliance procedures.
         </p>
 
         <p>
@@ -344,7 +344,7 @@ export default function PayoutPolicy() {
         </p>
 
         <p>
-          The School Pool Funding Reserve is separate from a user's Troll Coin
+          The School Pool Funding Reserve is separate from a user&apos;s Troll Coin
           balance and is not available for individual user withdrawal.
         </p>
 

@@ -235,7 +235,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             <div className="p-6 space-y-6">
               {/* Report Type Selection */}
               <div className="space-y-3">
-                <label className="text-sm font-bold text-white">What's the issue?</label>
+                <label className="text-sm font-bold text-white">What&apos;s the issue?</label>
                 <div className="space-y-2">
                   {REPORT_TYPES.map((type) => (
                     <button

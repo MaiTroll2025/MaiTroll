@@ -24,6 +24,16 @@ export default function PresidentialToolsModal() {
     currentPresident
   } = usePresidentSystem();
 
+  const [announcement, setAnnouncement] = useState('');
+  const [proposalTitle, setProposalTitle] = useState('');
+  const [proposalDesc, setProposalDesc] = useState('');
+  const [proposalType, setProposalType] = useState('tax_change');
+  const [spendAmount, setSpendAmount] = useState('');
+  const [spendReason, setSpendReason] = useState('');
+  const [flagTargetId, setFlagTargetId] = useState('');
+  const [flagReason, setFlagReason] = useState('');
+  const [loading, setLoading] = useState(false);
+
   // Only president and vice president get access (not admin or secretary)
   const hasPresidentAccess =
     isPresident ||
@@ -41,16 +51,6 @@ export default function PresidentialToolsModal() {
     profileBadge: profile?.badge,
     isAdmin: profile?.is_admin
   });
-
-  const [announcement, setAnnouncement] = useState('');
-  const [proposalTitle, setProposalTitle] = useState('');
-  const [proposalDesc, setProposalDesc] = useState('');
-  const [proposalType, setProposalType] = useState('tax_change');
-  const [spendAmount, setSpendAmount] = useState('');
-  const [spendReason, setSpendReason] = useState('');
-  const [flagTargetId, setFlagTargetId] = useState('');
-  const [flagReason, setFlagReason] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleAnnouncement = async () => {
     if (!announcement) return;

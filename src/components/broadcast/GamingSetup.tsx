@@ -119,6 +119,7 @@ streamId,
   const [gameSearchQuery, setGameSearchQuery] = React.useState('')
   const [selectedGame, setSelectedGame] = React.useState<string>('')
   const [showScenePanel, setShowScenePanel] = React.useState(false)
+  const userFrame = useUserFrame(userId)
 
   const POPULAR_GAMES = [
     'Fortnite','Apex Legends','Call of Duty: Warzone','Valorant','League of Legends',
@@ -160,7 +161,7 @@ streamId,
             <div className="hidden rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-5 py-2.5 text-sm font-black text-emerald-200 shadow-[0_0_24px_rgba(74,222,128,0.18)] md:flex md:items-center md:gap-2"><Gamepad2 className="h-4 w-4" />HytroGaming</div>
           </div>
           <div className="hidden items-center gap-3 rounded-2xl border border-cyan-400/15 bg-white/[0.04] px-3 py-2 md:flex">
-            {userAvatar ? <div style={{ overflow: 'visible' }}><ProfileFrame frame={useUserFrame(userId)} avatarUrl={userAvatar} username={username} size="sm" /></div> : <div className="grid h-10 w-10 place-items-center rounded-xl border border-purple-300/40 bg-gradient-to-br from-purple-600 to-cyan-500 text-sm font-black">{username.slice(0, 2).toUpperCase()}</div>}
+            {userAvatar ? <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={userAvatar} username={username} size="sm" /></div> : <div className="grid h-10 w-10 place-items-center rounded-xl border border-purple-300/40 bg-gradient-to-br from-purple-600 to-cyan-500 text-sm font-black">{username.slice(0, 2).toUpperCase()}</div>}
             <div><p className="text-sm font-black">{username}</p><p className="text-xs font-bold text-cyan-300">LVL {userLevel}</p></div>
             <ChevronDown className="h-4 w-4 text-slate-400" />
           </div>
@@ -290,7 +291,7 @@ streamId,
                 </div>
                 <div className="max-h-28 overflow-y-auto rounded-lg bg-zinc-800/60 border border-zinc-700 p-2 mb-2 text-[10px] text-zinc-300 leading-relaxed space-y-1.5">
                   <p>By starting a broadcast, I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I understand that I am solely responsible for the content I create, stream, share, or display on Mai Troll.</p>
-                  <p>I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Mai Troll's Terms of Service or Community Guidelines.</p>
+                  <p>I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Mai Troll&apos;s Terms of Service or Community Guidelines.</p>
                   <p>I further acknowledge that I am of legal age in my jurisdiction to consume any products, substances, beverages, or other items that may be displayed or consumed during my broadcast, and that any such activity is conducted at my own responsibility and in compliance with local laws.</p>
                   <p>Mai Troll reserves the right to remove content, suspend broadcasts, restrict features, or terminate accounts that violate these rules.</p>
                 </div>
@@ -423,7 +424,7 @@ streamId,
                 <div className="h-full w-full flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_30%),#02040a] px-6 text-center">
                   <MonitorPlay className="h-16 w-16 text-cyan-300/40" />
                   <p className="mt-4 text-lg font-black text-white/70">Ready to Share</p>
-                  <p className="mt-2 max-w-sm text-sm text-slate-500">Click "Start Preview" to capture your screen and see it locally before going live.</p>
+                   <p className="mt-2 max-w-sm text-sm text-slate-500">Click &quot;Start Preview&quot; to capture your screen and see it locally before going live.</p>
                   <p className="mt-3 text-xs text-slate-600">Browser → Agora RTC → HytroGaming Viewers</p>
                 </div>
               )}
@@ -451,7 +452,7 @@ streamId,
 
               {/* Stream info overlay */}
               <div className="absolute bottom-5 left-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/60 p-3 backdrop-blur-xl">
-                {userAvatar ? <div style={{ overflow: 'visible' }}><ProfileFrame frame={useUserFrame(userId)} avatarUrl={userAvatar} username={username} size="sm" /></div> : <div className="grid h-11 w-11 place-items-center rounded-xl border border-purple-300/30 bg-purple-500/20 text-xs font-black">{username.slice(0, 2).toUpperCase()}</div>}
+                {userAvatar ? <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={userAvatar} username={username} size="sm" /></div> : <div className="grid h-11 w-11 place-items-center rounded-xl border border-purple-300/30 bg-purple-500/20 text-xs font-black">{username.slice(0, 2).toUpperCase()}</div>}
                 <div>
                   <p className="text-xs font-black uppercase">{username}</p>
                   <div className="mt-1 h-2 w-40 rounded-full bg-white/15"><div className="h-full w-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" /></div>

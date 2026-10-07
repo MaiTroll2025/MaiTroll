@@ -264,7 +264,7 @@ export const FloatingUserBackground: React.FC<FloatingUserBackgroundProps> = ({
       }
 
       updatedBubbles = updatedBubbles.map(bubble => {
-        let { x, y, vx, vy, radius } = bubble;
+        const { x, y, vx, vy, radius } = bubble;
 
         x += vx;
         y += vy;

@@ -110,12 +110,12 @@ export function SeatRequestModal({
               📹 Your camera and microphone will turn on next.
             </p>
             <p className="text-xs text-blue-800 dark:text-blue-200 mt-2">
-              You'll see a permission prompt. Please allow camera and microphone access.
+              You&apos;ll see a permission prompt. Please allow camera and microphone access.
             </p>
           </div>
 
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Once you accept, you'll be live in the seat alongside other viewers.
+            Once you accept, you&apos;ll be live in the seat alongside other viewers.
           </p>
 
           <div className="flex gap-2">
@@ -155,7 +155,7 @@ export function SeatRequestModal({
               Initializing your camera and microphone. Please wait...
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">
-              If you see a permission prompt, please click "Allow"
+              If you see a permission prompt, please click &quot;Allow&quot;
             </p>
           </div>
         </div>

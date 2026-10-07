@@ -167,7 +167,7 @@ function DoubleXpEffect({ team, username }: { team?: string; username: string })
         <div className="bg-yellow-500/30 backdrop-blur-xl border border-yellow-400/50 rounded-2xl px-6 py-4 shadow-2xl shadow-yellow-500/30">
           <Zap size={48} className="text-yellow-300 mx-auto mb-2" />
           <div className="text-2xl font-black text-yellow-200">2X XP!</div>
-          <div className="text-xs text-yellow-300/80 mt-1">@{username} doubled Team {team}'s score!</div>
+          <div className="text-xs text-yellow-300/80 mt-1">@{username} doubled Team {team}&apos;s score!</div>
         </div>
       </motion.div>
     </motion.div>

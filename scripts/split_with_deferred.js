@@ -8,7 +8,7 @@ const original = readFileSync(join(process.cwd(), 'frontend_schema.sql'), 'utf8'
 
 // Split into table blocks
 const tableBlocks = [];
-const blockRegex = /(--\s*Table:\s*\w+[\s\S]*?)(?=--\s*Table:\s*\w+|\Z)/gi;
+const blockRegex = /(--\s*Table:\s*\w+[\s\S]*?)(?=--\s*Table:\s*\w+)/gi;
 let m;
 
 while ((m = blockRegex.exec(original)) !== null) {

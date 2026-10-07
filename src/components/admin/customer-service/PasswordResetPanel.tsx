@@ -113,7 +113,7 @@ if (!isAdmin) {
         </div>
 
         <p className="mt-2 text-[10px] text-slate-600">
-          Reset link is sent to user's email via secure edge function. No password is ever shown or stored.
+          Reset link is sent to user&apos;s email via secure edge function. No password is ever shown or stored.
         </p>
       </div>
 

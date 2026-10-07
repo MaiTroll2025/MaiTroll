@@ -1244,7 +1244,7 @@ export default function JobsHowToPage() {
             </div>
             {userApplications.length === 0 ? (
               <p className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-400">
-                You haven't applied to any positions yet. Browse the openings below to get started.
+                You haven&apos;t applied to any positions yet. Browse the openings below to get started.
               </p>
             ) : (
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1537,7 +1537,7 @@ function I9Section2AdminPanel({
         <div>
           <h2 className="text-2xl font-black text-white">I-9 Section 2 — Employer Verification</h2>
           <p className="text-sm text-slate-400">
-            HR completes document examination and generates the employee's completed I-9 Section 2 record.
+            HR completes document examination and generates the employee&apos;s completed I-9 Section 2 record.
           </p>
         </div>
       </div>

@@ -938,7 +938,7 @@ export const TrollopolyGame: React.FC<TrollopolyGameProps> = ({
       <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
         <div className="px-6 py-3 bg-slate-800/90 rounded-full border border-slate-600">
           <p className="text-white text-center">
-            {gameState.players[gameState.currentPlayerIndex]?.username}'s Turn
+            {gameState.players[gameState.currentPlayerIndex]?.username}&apos;s Turn
           </p>
           <p className="text-slate-400 text-sm text-center capitalize">
             {gameState.phase.replace(/_/g, ' ')}

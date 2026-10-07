@@ -239,7 +239,7 @@ for (const file of allFiles.sort((a, b) => {
   
   if (uniqueTables.length === 0 && uniqueFunctions.length === 0) continue;
   
-  const fileKey = file.name.replace(/\.(tsx|ts|jsx)$/, '').replace(/[\/\\]/g, '_').replace(/[^a-zA-Z0-9_]/g, '_');
+  const fileKey = file.name.replace(/\.(tsx|ts|jsx)$/, '').replace(/[\\/]/g, '_').replace(/[^a-zA-Z0-9_]/g, '_');
   
   let sql = `-- File: ${file.name}\n`;
   sql += `-- Migration: ${timestamp}_file_${fileKey}\n\n`;

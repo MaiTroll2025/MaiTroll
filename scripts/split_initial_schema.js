@@ -51,10 +51,6 @@ for (const line of lines) {
     }
     currentBlock = [line];
     currentType = 'table';
-  } else if (currentType === 'table' && trimmed.match(/^CREATE\s+TABLE/)) {
-    // New table starting
-    blocks.push({ type: 'table', sql: currentBlock.join('\n') });
-    currentBlock = [line];
   } else {
     currentBlock.push(line);
     if (!trimmed.match(/^CREATE\s+TABLE/)) {

@@ -127,7 +127,7 @@ export default function HRCenter() {
             <div>
               <h3 className="text-lg font-black text-white">Welcome to HR Center</h3>
               <p className="text-xs text-slate-400">
-                Mai Troll's central hub for employment, roles, payroll, time tracking, and HR resources.
+                Mai Troll&apos;s central hub for employment, roles, payroll, time tracking, and HR resources.
               </p>
             </div>
 

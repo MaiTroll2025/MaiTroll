@@ -88,7 +88,7 @@ export async function safeDelete(
   tableName: string,
   options: any = {},
   context: SafeQueryOptions = {}
-): Promise<PostgrestResponse<{}>> {
+): Promise<PostgrestResponse<Record<string, never>>> {
   const query = supabase.from(tableName).delete(options);
 
   const { data, error } = await query;
@@ -101,7 +101,7 @@ export async function safeDelete(
     });
   }
 
-  return { data, error } as PostgrestResponse<{}>;
+  return { data, error } as PostgrestResponse<Record<string, never>>;
 }
 
 /**

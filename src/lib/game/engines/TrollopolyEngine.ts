@@ -514,7 +514,7 @@ export class TrollopolyEngine implements InternetGameEngine<TrollopolyGameState>
         player.position = 10;
         break;
       
-      case 'pay':
+      case 'pay': {
         const payAction = card.action as { type: 'pay'; amount: number; target?: 'bank' | 'players' };
         if (payAction.target === 'bank') {
           player.coins -= payAction.amount;
@@ -526,8 +526,9 @@ export class TrollopolyEngine implements InternetGameEngine<TrollopolyGameState>
           });
         }
         break;
+      }
       
-      case 'receive':
+      case 'receive': {
         const receiveAction = card.action as { type: 'receive'; amount: number; from?: 'bank' | 'players' };
         if (receiveAction.from === 'bank') {
           player.coins += receiveAction.amount;
@@ -540,6 +541,7 @@ export class TrollopolyEngine implements InternetGameEngine<TrollopolyGameState>
           });
         }
         break;
+      }
       
       case 'get_out_of_jail_free':
         player.hasGetOutOfJailFree = true;

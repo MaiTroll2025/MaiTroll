@@ -583,7 +583,7 @@ export default function TrollmersBattleControls({ currentStream, onBattleAccepte
               Searching for Opponent...
             </p>
             <p className="text-amber-300 text-xs text-center mt-1">
-              You'll be matched automatically when another broadcaster clicks Find Match!
+              You&apos;ll be matched automatically when another broadcaster clicks Find Match!
             </p>
             <div className="flex justify-center mt-2">
               <Loader2 className="animate-spin text-amber-500" size={20} />

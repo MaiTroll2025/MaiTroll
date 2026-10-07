@@ -6,7 +6,7 @@ import { useCoins } from '@/lib/hooks/useCoins';
 import { useBank as useBankHook } from '../lib/hooks/useBank';
 import { useAllCreditScores } from '../lib/hooks/useAllCreditScores';
 // import { toast } from 'sonner';
-import { Coins, CreditCard, Landmark, History, CheckCircle, AlertCircle, ChevronDown, X, Crown, Flame, RefreshCw, Sparkles, Wallet, ShoppingBag } from 'lucide-react';
+import { Coins, CreditCard, Landmark, History, CheckCircle, AlertCircle, ChevronDown, X, Crown, Flame, RefreshCw, Sparkles, Wallet, ShoppingBag, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatCoins, COIN_PACKAGES } from '../lib/coinMath';
 import { getBroadcastTheme } from '../lib/broadcastThemes';
 import { deductCoins } from '@/lib/coinTransactions';
@@ -484,7 +484,7 @@ function getTromocodeFinalPrice(amount, promo) {
   }).finalAmount;
 }
 
-function ProfileFramesStoreEmbed({ promo }) {
+function ProfileFramesStoreEmbed({ promo, useCredit, creditInfo }) {
   const { user, profile } = useAuthStore();
   const { troll_coins } = useCoins();
   const [purchasing, setPurchasing] = useState(null);
@@ -2229,7 +2229,7 @@ useEffect(() => {
                   onApplied={(promo) => setActivePromoByTab((prev) => ({ ...prev, profile_frame: promo }))}
                 />
               </div>
-              <ProfileFramesStoreEmbed promo={activePromoByTab.profile_frame} />
+              <ProfileFramesStoreEmbed promo={activePromoByTab.profile_frame} useCredit={useCredit} creditInfo={creditInfo} />
             </>
           )}
 

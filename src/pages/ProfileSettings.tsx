@@ -739,7 +739,7 @@ export default function ProfileSettings() {
                   <div>
                     <p className="font-semibold text-green-300">Verification Email Sent</p>
                     <p className="text-sm text-green-400/80">
-                      We've sent a verification link to your new email address. Please check your inbox and click the link to confirm the change. Your email will be updated once you click the verification link.
+                      We&apos;ve sent a verification link to your new email address. Please check your inbox and click the link to confirm the change. Your email will be updated once you click the verification link.
                     </p>
                     <button
                       type="button"

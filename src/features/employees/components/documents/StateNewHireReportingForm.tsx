@@ -1,12 +1,12 @@
 import React from 'react'
 import { DocumentFormShell, DocumentFormProps } from './DocumentFormShell'
+import { jsPDF } from 'jspdf'
 
 const ATTESTATION =
   'Under penalties of perjury, I declare that the information provided on this new hire report is true and correct to the best of my knowledge.'
 
 function generateNewHirePdf(data: any, signatureName: string): Uint8Array | null {
   try {
-    const { jsPDF } = require('jspdf')
     const doc = new jsPDF({ unit: 'pt', format: 'letter' })
     const date = new Date().toISOString().slice(0, 10)
 

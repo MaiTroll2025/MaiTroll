@@ -95,7 +95,7 @@ for (const [page, tables] of Object.entries(pageTables)) {
     const content = file.content;
     
     // Find all comment blocks and their following SQL
-    const commentRegex = /--\s*([^\n]*)\n([\s\S]*?)(?=\n--|\Z)/g;
+    const commentRegex = /--\s*([^\n]*)\n([\s\S]*?)(?=\n--)/g;
     let commentMatch;
     
     while ((commentMatch = commentRegex.exec(content)) !== null) {

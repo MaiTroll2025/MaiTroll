@@ -665,7 +665,7 @@ export default function HytroGaming() {
               <Clock3 className="mx-auto h-8 w-8 text-amber-300" />
               <h3 className="mt-3 text-lg font-black text-amber-100">Agency Application Pending</h3>
               <p className="mt-2 text-sm text-slate-400">
-                Your agency application is under review. You'll be able to access HytroGaming once approved.
+                 Your agency application is under review. You&apos;ll be able to access HytroGaming once approved.
               </p>
               <button
                 type="button"

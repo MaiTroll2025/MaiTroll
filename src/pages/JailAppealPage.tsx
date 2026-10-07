@@ -256,7 +256,7 @@ export default function JailAppealPage() {
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 text-center">
             <Clock className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">Appeal Pending</h2>
-            <p className="text-gray-400">Your appeal is being reviewed. You'll be notified once a decision is made.</p>
+            <p className="text-gray-400">Your appeal is being reviewed. You&apos;ll be notified once a decision is made.</p>
           </div>
         )}
 

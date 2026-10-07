@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { Heart, MessageSquare, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { WallPost } from '@/types/trollWall'
+import ProfileFrame from '@/components/profile/ProfileFrame'
+import { useUserFrame } from '@/hooks/useUserFrame'
 
 interface TrollWallCardProps {
   post: WallPost
@@ -25,6 +27,7 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function TrollWallCard({ post, onClick, className }: TrollWallCardProps) {
+  const userFrame = useUserFrame(post.user_id)
   const preview = post.content
     ? post.content.split(/\s+/).slice(0, 10).join(' ') + (post.content.split(/\s+/).length > 10 ? '…' : '')
     : ''
@@ -53,7 +56,7 @@ export default function TrollWallCard({ post, onClick, className }: TrollWallCar
         </div>
       ) : (
         <div className="h-20 bg-gradient-to-br from-purple-900/30 to-cyan-900/20 flex items-center justify-center px-3">
-          <p className="text-[10px] text-white/50 line-clamp-3 leading-tight italic">"{preview}"</p>
+           <p className="text-[10px] text-white/50 line-clamp-3 leading-tight italic">&quot;{preview}&quot;</p>
         </div>
       )}
 
@@ -67,7 +70,7 @@ export default function TrollWallCard({ post, onClick, className }: TrollWallCar
             className="w-6 h-6 rounded-full flex-shrink-0 overflow-visible ring-1 ring-white/10 hover:ring-purple-400/50 transition-all"
           >
             {post.avatar_url ? (
-              <ProfileFrame frame={useUserFrame(post.user_id)} avatarUrl={post.avatar_url} username={post.username || 'User'} size="xs" fillParent />
+              <ProfileFrame frame={userFrame} avatarUrl={post.avatar_url} username={post.username || 'User'} size="xs" fillParent />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
                 <span className="text-[8px] font-bold text-white">

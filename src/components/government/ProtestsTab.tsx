@@ -336,7 +336,7 @@ export default function ProtestsTab(props: any) {
           <h3 className="text-2xl font-bold text-slate-300 mb-2">No Protests Yet</h3>
           <p className="text-slate-400 mb-2">The city is peaceful... for now.</p>
           <p className="text-slate-500 text-sm max-w-md mx-auto">
-            Unhappy with a new law? Think the government isn't listening? Start a protest
+            Unhappy with a new law? Think the government isn&apos;t listening? Start a protest
             and rally your fellow citizens to make your voice heard.
           </p>
           <button
@@ -419,7 +419,7 @@ export default function ProtestsTab(props: any) {
                     <option key={law.id} value={law.id}>{law.title}</option>
                   ))}
                 </select>
-                <p className="text-xs text-slate-500 mt-1">Targeting a law increases the protest's effect on that law</p>
+                <p className="text-xs text-slate-500 mt-1">Targeting a law increases the protest&apos;s effect on that law</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">Location</label>

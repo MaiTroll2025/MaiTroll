@@ -66,25 +66,6 @@ const CEOAssistantDashboard = () => {
   const assistantUsername = profile?.username || (isNoahAssistant ? 'noah_assistant' : 'ceo_assistant')
   const reportsViewMode = isNoahAssistant ? 'noah_assistant' : 'ceo_assistant'
 
-  if (!canAccess) {
-    return (
-      <div className="min-h-screen bg-[#050507] px-4 py-10 text-white">
-        <div className="mx-auto max-w-3xl rounded-[2rem] border border-red-400/30 bg-red-500/10 p-8 shadow-2xl shadow-red-950/30">
-          <div className="flex items-center gap-3 text-red-100">
-            <ShieldAlert className="h-6 w-6" />
-            <h1 className="text-2xl font-black">{dashboardTitle} access required</h1>
-          </div>
-          <p className="mt-4 text-sm leading-7 text-red-100/90">
-            Your current role is {profile?.role || 'unknown'}. This page is restricted to {dashboardRoleName}, Admin, and CEO roles.
-          </p>
-          <a href="/" className="mt-6 inline-flex rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black text-white">
-            Return home
-          </a>
-        </div>
-      </div>
-    )
-  }
-
   const loadDashboardStats = async () => {
     try {
       setLoading(true)
@@ -214,6 +195,25 @@ const CEOAssistantDashboard = () => {
   useEffect(() => {
     loadDashboardStats()
   }, [])
+
+  if (!canAccess) {
+    return (
+      <div className="min-h-screen bg-[#050507] px-4 py-10 text-white">
+        <div className="mx-auto max-w-3xl rounded-[2rem] border border-red-400/30 bg-red-500/10 p-8 shadow-2xl shadow-red-950/30">
+          <div className="flex items-center gap-3 text-red-100">
+            <ShieldAlert className="h-6 w-6" />
+            <h1 className="text-2xl font-black">{dashboardTitle} access required</h1>
+          </div>
+          <p className="mt-4 text-sm leading-7 text-red-100/90">
+            Your current role is {profile?.role || 'unknown'}. This page is restricted to {dashboardRoleName}, Admin, and CEO roles.
+          </p>
+          <a href="/" className="mt-6 inline-flex rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black text-white">
+            Return home
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   // Load pending payouts for review
   const loadPendingPayouts = async () => {

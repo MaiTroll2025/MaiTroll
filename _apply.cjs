@@ -97,8 +97,7 @@ try {
   const r = execSync('npx tsc --noEmit --pretty 2>&1 | Select-Object -First 15', {shell:'powershell'});
   console.log('\nTS compiled output:', r.toString().trim().slice(0, 500));
 } catch(e) {
-  err ||= 'error';
-  console.log('\nTS check output:', (err.stdout || '').toString().trim().slice(0, 500));
+  console.log('\nTS check output:', (e.stdout || '').toString().trim().slice(0, 500));
 }
 
 // ── show context ──

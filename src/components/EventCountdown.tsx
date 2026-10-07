@@ -37,7 +37,7 @@ const COUNTDOWN_STYLES = `
   }
 `;
 
-const EventCountdown: React.FC = React.memo(() => {
+const EventCountdown: React.FC = React.memo(function EventCountdown() {
   const { isActive, primaryColor, secondaryColor } = useEventTheme()
   const [timeLeft, setTimeLeft] = useState<{
     hours: number;

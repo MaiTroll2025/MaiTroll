@@ -209,7 +209,7 @@ export default function EnhancedPublicProfile() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">User Not Found</h2>
-          <p className="text-white/50">This profile doesn't exist.</p>
+           <p className="text-white/50">This profile doesn&apos;t exist.</p>
         </div>
       </div>
     );

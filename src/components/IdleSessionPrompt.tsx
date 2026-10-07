@@ -25,7 +25,7 @@ export default function IdleSessionPrompt() {
               onClick={handleBroadcasterVerify}
               className="rounded-xl bg-green-600 px-6 py-3 font-bold text-white transition hover:bg-green-500"
             >
-              Yes, I'm Still Broadcasting
+              Yes, I&apos;m Still Broadcasting
             </button>
           ) : (
             <button

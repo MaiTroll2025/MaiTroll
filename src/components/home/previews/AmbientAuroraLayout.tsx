@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Play, Eye, Radio, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import LiveStreamsModule from '@/components/home/LiveStreamsModule';

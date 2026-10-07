@@ -431,7 +431,7 @@ export default function BroadcastRestrictionControl() {
       <div className="flex items-start gap-2 text-xs text-slate-500 px-1">
         <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
         <span>
-          Admins are not counted in viewer/broadcaster caps. "Remove All Restrictions"
+          Admins are not counted in viewer/broadcaster caps. &quot;Remove All Restrictions&quot;
           overrides all other broadcast settings. Changes take effect immediately for
           new streams; existing streams are not affected until they restart.
         </span>

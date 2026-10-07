@@ -83,7 +83,7 @@ export default function MapPage() {
                 <h3 className="font-semibold text-white">Officer Patrols</h3>
               </div>
               <p className="text-slate-400 text-sm mb-4">
-                Monitor your ZIP code's safety and crime levels.
+                Monitor your ZIP code&apos;s safety and crime levels.
               </p>
               <Button variant="outline" className="w-full" disabled>
                 Coming Soon

@@ -119,7 +119,7 @@ export default function TrollzBalanceDisplay({ showConversion = true, compact = 
         {/* How to earn */}
         <div className="mt-4 pt-4 border-t border-slate-700">
           <p className="text-xs text-slate-400 text-center">
-            Earn Trollz by sending gifts! You'll receive <span className="text-yellow-400">50%</span> of the gift value in Trollz.
+            Earn Trollz by sending gifts! You&apos;ll receive <span className="text-yellow-400">50%</span> of the gift value in Trollz.
           </p>
         </div>
       </div>
@@ -193,7 +193,7 @@ export default function TrollzBalanceDisplay({ showConversion = true, compact = 
             {/* Preview */}
             <div className="bg-slate-800/50 rounded-lg p-3 mb-4">
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">You'll receive:</span>
+                <span className="text-slate-400">You&apos;ll receive:</span>
                 <span className="text-xl font-bold text-yellow-400">+{coinsToReceive.toLocaleString()} Bonus Coins</span>
               </div>
             </div>

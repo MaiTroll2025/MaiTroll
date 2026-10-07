@@ -84,9 +84,9 @@ export default function DeleteAccount() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-6 h-6 text-red-400 shrink-0 mt-0.5" />
                 <div>
-                  <h2 className="font-bold text-lg">We're sorry to see you go</h2>
-                  <p className="text-red-200/70 text-sm mt-1">
-                    Before you leave, please tell us why you're deleting your account.
+                   <h2 className="font-bold text-lg">We&apos;re sorry to see you go</h2>
+                   <p className="text-red-200/70 text-sm mt-1">
+                     Before you leave, please tell us why you&apos;re deleting your account.
                     This helps us improve Mai Troll.
                   </p>
                 </div>
@@ -159,9 +159,9 @@ export default function DeleteAccount() {
                 <div className="flex items-start gap-3">
                   <Shield className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">You'll need to start over</p>
+                    <p className="font-medium">You&apos;ll need to start over</p>
                     <p className="text-red-200/70 text-sm">
-                      If you come back, you'll need to create a new account from scratch.
+                      If you come back, you&apos;ll need to create a new account from scratch.
                     </p>
                   </div>
                 </div>

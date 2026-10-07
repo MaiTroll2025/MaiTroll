@@ -1304,7 +1304,7 @@ export default function CourtRoom() {
                 onClick={handleImHere}
                 className="rounded-xl bg-green-500 px-6 py-3 font-black text-white shadow-[0_0_30px_rgba(34,197,94,0.35)] hover:bg-green-400"
               >
-                I'M HERE
+                I&apos;M HERE
               </button>
               <p className="text-xs text-green-200/70">
                 You have 30 seconds to confirm your appearance.

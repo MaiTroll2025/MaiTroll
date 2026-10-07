@@ -200,7 +200,7 @@ export function DocumentFormShell({
       theme: 'grid',
     })
 
-    // @ts-ignore autoTable adds finalY
+    // @ts-expect-error autoTable adds finalY
     const afterY = (doc as any).lastAutoTable?.finalY ?? 300
     doc.setFontSize(10)
     doc.text('Attestation', 40, afterY + 28)

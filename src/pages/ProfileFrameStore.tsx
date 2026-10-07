@@ -301,7 +301,7 @@ export default function ProfileFrameStore() {
               {ownedFrameList.length === 0 ? (
                 <div className="text-center py-20">
                   <Crown className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400 mb-2">You don't own any frames yet</p>
+                   <p className="text-slate-400 mb-2">You don&apos;t own any frames yet</p>
                   <button
                     onClick={() => setActiveTab('store')}
                     className="px-4 py-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 text-sm font-semibold hover:bg-purple-500/30 transition-all"

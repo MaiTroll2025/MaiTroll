@@ -11,7 +11,7 @@ if (!existsSync(OUTPUT_DIR)) {
 const content = readFileSync(INPUT_FILE, 'utf8');
 
 // Extract all CREATE TABLE statements with their preceding comment
-const tableRegex = /(--\s*Table:\s*\w+[\s\S]*?)(?=--\s*Table:\s*\w+|\Z)/gi;
+const tableRegex = /(--\s*Table:\s*\w+[\s\S]*?)(?=--\s*Table:\s*\w+)/gi;
 const tables = [];
 let m;
 
@@ -40,9 +40,7 @@ let inTableBlock = false;
 for (const line of lines) {
   const trimmed = line.trim();
   if (trimmed.startsWith('-- Table:')) {
-    inTableBlock = true;
-  } else if (trimmed.startsWith('-- Table:') && inTableBlock) {
-    inTableBlock = false;
+    inTableBlock = !inTableBlock;
   }
   
   if (!inTableBlock) {

@@ -461,7 +461,7 @@ export default function AuctionSales() {
               <Scan className="h-4 w-4" />
               Scan Barcode to Find Orders
             </div>
-            <p className="mt-1 text-xs text-slate-400">Scan an item barcode to look up the winner's orders.</p>
+            <p className="mt-1 text-xs text-slate-400">Scan an item barcode to look up the winner&apos;s orders.</p>
             <div className="mt-2 flex gap-2">
               <input
                 value={scanInput}

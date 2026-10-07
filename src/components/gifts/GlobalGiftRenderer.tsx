@@ -6,6 +6,8 @@ import { useGiftStore } from '@/lib/stores/useGiftStore';
 import GiftModel from './GiftModel';
 import { supabase } from '@/lib/supabase';
 
+/* eslint-disable react/no-unknown-property */
+
 interface GlobalGiftRendererProps {
   position?: 'center' | 'bottom-right' | 'top-center';
 }

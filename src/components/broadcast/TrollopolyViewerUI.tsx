@@ -61,7 +61,7 @@ export default function TrollopolyViewerUI({
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-sm text-white/80">
-              <span className="font-bold text-amber-400">{currentPlayer.username}</span>'s turn
+              <span className="font-bold text-amber-400">{currentPlayer.username}</span>&apos;s turn
             </span>
           </div>
           

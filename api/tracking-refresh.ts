@@ -79,7 +79,7 @@ function parseUSPSTrackResponse(xml: string, trackingNumber: string): CarrierTra
 
     const summaryText = statusEl?.textContent?.trim() || ''
     const status = detectStatusFromSummary(summaryText)
-    const estimatedMatch = summaryText.match(/Expected Delivery(?: by)?(?: is)?(?: on)?\s*(?:January|February|March|April|May|June|July|August|September|October|November|December)?\s*([\d\/]+)/i)
+    const estimatedMatch = summaryText.match(/Expected Delivery(?: by)?(?: is)?(?: on)?\s*(?:January|February|March|April|May|June|July|August|September|October|November|December)?\s*([\d/]+)/i)
     const estimatedDelivery = estimatedMatch ? estimatedMatch[1] : undefined
 
     const detailEls = trackInfo.querySelectorAll('TrackDetail')
