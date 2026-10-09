@@ -140,7 +140,7 @@ export function useStaffWalkieTalkie({
       }
       throw err
     }
-  }, [profile, user.id])
+  }, [profile, user?.id])
 
   const initAgoraClient = useCallback(async () => {
     if (clientRef.current) {
