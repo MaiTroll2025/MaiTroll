@@ -32,6 +32,7 @@ export const PUBLIC_WEB_ONLY_ROUTES: string[] = [
   '/faq',
   '/privacy',
   '/terms-of-service',
+  '/app-downloads',
   '/terms-of-service-web',
   '/privacy-policy',
   '/payment-terms',

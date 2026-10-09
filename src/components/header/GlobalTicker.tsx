@@ -6,7 +6,7 @@ import { useTCNNRoles } from '../../hooks/useTCNNRoles'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Home, Mail, HelpCircle, MessageCircle, Shield, FileText } from 'lucide-react'
+import { Home, Mail, HelpCircle, MessageCircle, Shield, FileText, Download } from 'lucide-react'
 import '../../styles/ticker.css'
 
 const seoLinks = [
@@ -16,6 +16,7 @@ const seoLinks = [
   { path: '/faq', label: 'FAQ', icon: MessageCircle },
   { path: '/privacy', label: 'Privacy', icon: Shield },
   { path: '/terms', label: 'Terms', icon: FileText },
+  { path: '/app-downloads', label: 'App Downloads', icon: Download },
 ]
 
 const GlobalTicker = ({ showSeoLinks = true }: { showSeoLinks?: boolean }) => {

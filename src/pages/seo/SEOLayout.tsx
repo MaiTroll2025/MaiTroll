@@ -153,6 +153,7 @@ export default function SEOLayout({ children, title, description, keywords = [],
             <div className="flex items-center gap-4">
               <Link to="/privacy" className="text-slate-500 hover:text-purple-400 text-sm transition-colors">Privacy</Link>
               <Link to="/terms" className="text-slate-500 hover:text-purple-400 text-sm transition-colors">Terms</Link>
+              <Link to="/app-downloads" className="text-slate-500 hover:text-purple-400 text-sm transition-colors">App Downloads</Link>
               <a href="/sitemap.xml" className="text-slate-500 hover:text-purple-400 text-sm transition-colors">Sitemap</a>
             </div>
           </div>

@@ -207,6 +207,7 @@ const SEOSupportPage = lazyWithRetry(() => import("./pages/seo/SupportPage"));
 const SEOFAQPage = lazyWithRetry(() => import("./pages/seo/FAQPage"));
 const SEOPrivacyPage = lazyWithRetry(() => import("./pages/seo/PrivacyPage"));
 const SEOTermsPage = lazyWithRetry(() => import("./pages/seo/TermsPage"));
+const SEOAppDownloadsPage = lazyWithRetry(() => import("./pages/seo/AppDownloadsPage"));
 
 const _ReportDetailsPage = lazyWithRetry(() => import("./pages/ReportDetailsPage"));
 const PasswordReset = lazyWithRetry(() => import("./pages/PasswordReset"));
@@ -1730,6 +1731,7 @@ const appShell = (
                 <Route path="/faq" element={<SEOFAQPage />} />
                 <Route path="/privacy" element={<SEOPrivacyPage />} />
                 <Route path="/terms" element={<SEOTermsPage />} />
+                <Route path="/app-downloads" element={<SEOAppDownloadsPage />} />
 
                 {/* 🏢 Talent Offices (Public) */}
                 <Route path="/agencies" element={<AgenciesPage />} />

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronRight, Crown, Gavel, MessageCircle, FileText, HelpCircle, Home, Mail, Play, Plus, Radio, Search, Smartphone, Sparkles, Trophy, Users, Shield, Gamepad2 } from 'lucide-react';
+import { ArrowRight, ChevronRight, Crown, Gavel, MessageCircle, FileText, HelpCircle, Home, Mail, Play, Plus, Radio, Search, Smartphone, Sparkles, Trophy, Users, Shield, Gamepad2, Download } from 'lucide-react';
 
 import PhoneHeader from '../PhoneHeader'
 import { useAuthStore } from '@/lib/store'
@@ -1189,6 +1189,7 @@ export default function PhoneHomepage({
               { label: 'FAQ', path: '/faq', icon: MessageCircle },
               { label: 'Privacy', path: '/privacy', icon: Shield },
               { label: 'Terms', path: '/terms', icon: FileText },
+              { label: 'App Downloads', path: '/app-downloads', icon: Download },
             ].map(({ label, path, icon: Icon }) => (
               <Link
                 key={path}

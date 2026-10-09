@@ -18,6 +18,7 @@ const TITLES: Record<string, string> = {
   '/faq': 'Frequently Asked Questions | Mai Troll',
   '/privacy': 'Privacy Policy | Mai Troll',
   '/terms': 'Terms of Service | Mai Troll',
+  '/app-downloads': 'App Downloads | Mai Troll',
   '/terms-of-service': 'Terms of Service | Mai Troll',
   '/privacy-policy': 'Privacy Policy | Mai Troll',
   '/payment-terms': 'Payment Terms | Mai Troll',

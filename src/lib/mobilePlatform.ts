@@ -24,6 +24,14 @@ export async function initMobilePlatform() {
 
   console.log(`[Mobile] Initializing platform: ${platform}`);
 
+  // Dismiss the native splash before optional plugin setup so a plugin failure
+  // cannot leave the app hidden behind a blank launch screen.
+  try {
+    await SplashScreen.hide();
+  } catch (error) {
+    console.error('[Mobile] Failed to hide splash screen:', error);
+  }
+
   try {
     // Lock the app to portrait so device rotation never exposes the
     // underlying page background while the web layout re-renders.
@@ -94,9 +102,6 @@ export async function initMobilePlatform() {
         window.location.href = fullPath;
       }
     });
-
-    // Hide splash screen after initialization
-    await SplashScreen.hide();
 
     console.log('[Mobile] Platform initialization complete');
   } catch (error) {
