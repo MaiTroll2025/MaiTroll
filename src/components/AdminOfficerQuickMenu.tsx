@@ -12,11 +12,14 @@ const AdminOfficerQuickMenu: React.FC = () => {
   const [loadingDuty, setLoadingDuty] = useState(false);
 
   const checkDutyStatus = useCallback(async () => {
+    const profileId = profile?.id;
+    if (!profileId) return;
+
     try {
       const { data, error: _error } = await supabase
         .from('user_profiles')
         .select('on_duty')
-        .eq('id', profile!.id)
+        .eq('id', profileId)
         .maybeSingle();
       
       if (data) {
@@ -25,7 +28,7 @@ const AdminOfficerQuickMenu: React.FC = () => {
     } catch (error) {
       console.error('Error checking duty status:', error);
     }
-  }, [profile]);
+  }, [profile?.id]);
 
   useEffect(() => {
     if (isOpen && profile?.id) {
