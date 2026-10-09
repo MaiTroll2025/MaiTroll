@@ -94,7 +94,7 @@ function DiamondSparkles() {
 }
 
 /* ─── HLS Video Preview ─── */
-function LivePreview({ stream, isActive, onClick }: { stream: LiveStream; isActive: boolean; onClick: () => void }) {
+function LivePreview({ stream, isActive, onClick: _onClick }: { stream: LiveStream; isActive: boolean; onClick: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [hasError, setHasError] = useState(false);
@@ -188,7 +188,7 @@ function BroadcasterCard({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const broadcaster = stream.broadcaster;
 
   const streamUrl = getStreamUrl(stream.id, broadcaster?.username);
@@ -428,7 +428,7 @@ export default function HighBcastersPage() {
   const [loading, setLoading] = useState(true);
   const [activeStreamId, setActiveStreamId] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   const fetchTopBroadcasters = useCallback(async () => {
     try {

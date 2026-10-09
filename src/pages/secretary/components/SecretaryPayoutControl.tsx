@@ -2,19 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuthStore } from '../../../lib/store';
 import { toast } from 'sonner';
-import { 
-  DollarSign, 
-  Clock, 
-  Users, 
-  Bell, 
-  PlayCircle, 
-  StopCircle, 
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle,
-  Timer,
-  ClipboardList
-} from 'lucide-react';
+import { DollarSign, Users, Bell, PlayCircle, StopCircle, RefreshCw, AlertTriangle, CheckCircle, Timer, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface PayoutWindowStatus {

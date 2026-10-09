@@ -150,7 +150,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const toggleCart = () => dispatch({ type: "TOGGLE_CART" })
   const setCartOpen = (open: boolean) => dispatch({ type: "SET_CART_OPEN", payload: open })
 
-  const getVariantForItem = (productId: string, variantId: string): PrintifyVariant | undefined => {
+  const getVariantForItem = (_productId: string, _variantId: string): PrintifyVariant | undefined => {
     // This would need access to product data - handled at component level
     return undefined
   }

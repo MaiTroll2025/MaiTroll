@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { isStaffProfile } from '@/lib/staff';
 
 export type ModerationAction =
   | 'mute'
@@ -43,7 +42,7 @@ function resolveModerationAuthority(profile: any): string {
   if (!profile) return 'unauthorized';
 
   const role = String(profile.role || '').toLowerCase();
-  const trollRole = String(profile.troll_role || '').toLowerCase();
+  const _trollRole = String(profile.troll_role || '').toLowerCase();
 
   if (profile.is_admin === true || role === 'admin') return 'admin';
   if (role === 'ceo' || profile.is_ceo === true) return 'ceo';

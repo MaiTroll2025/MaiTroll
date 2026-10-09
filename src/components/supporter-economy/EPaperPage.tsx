@@ -4,9 +4,7 @@ import { useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Newspaper, Star, Clock, ArrowLeft, Heart, MessageCircle, TrendingUp, Eye } from 'lucide-react';
-import type { EPaperStory, EPaperStoryTip } from '@/types/supporterEconomy';
+import { Newspaper, Star, Clock, Heart, TrendingUp, Eye } from 'lucide-react';
 
 export function EPaperPage() {
   const { data: stories, isLoading } = useEPaperStories(10, 0, 'published');

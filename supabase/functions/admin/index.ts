@@ -362,7 +362,7 @@ Deno.serve(async (req: Request) => {
           });
         }
         
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile, error: _profileError } = await supabase
           .from('user_profiles')
           .select('role, is_admin, is_troll_officer, is_lead_officer')
           .eq('id', user.id)
@@ -704,7 +704,7 @@ Deno.serve(async (req: Request) => {
           });
         }
         
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile, error: _profileError } = await supabase
           .from('user_profiles')
           .select('role, is_admin, is_troll_officer, is_lead_officer')
           .eq('id', user.id)

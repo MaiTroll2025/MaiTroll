@@ -1,19 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowRight,
-  Camera,
-  CheckCircle2,
-  ChevronLeft,
-  Mic,
-  MonitorUp,
-  Radio,
-  Save,
-  ShieldCheck,
-  Sparkles,
-  Video,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2, Mic, MonitorUp, Radio, Save, ShieldCheck, Sparkles, Video, Zap } from "lucide-react";
 import MobilePageShell from "../components/MobilePageShell";
 
 type StreamMode = "camera" | "obs" | "screen";

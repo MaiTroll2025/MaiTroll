@@ -110,11 +110,11 @@ export async function GET({ params }: { params: { slug: string[] } }) {
   const slugStr = slug.join('/').toLowerCase();
 
   let html = privacyPolicyHTML;
-  let title = 'Privacy Policy';
+  let _title = 'Privacy Policy';
 
   if (slugStr === 'terms' || slugStr === 'terms-of-service') {
     html = termsOfServiceHTML;
-    title = 'Terms of Service';
+    _title = 'Terms of Service';
   }
 
   return new Response(html, {

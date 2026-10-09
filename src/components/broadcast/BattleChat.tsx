@@ -41,7 +41,7 @@ export default function BattleChat({
   opponentStream, 
   currentStreamId,
   currentUserId,
-  participantRole 
+  participantRole: _participantRole 
 }: BattleChatProps) {
    const [messages, setMessages] = useState<ChatMessage[]>([]);
    const [nowMs, setNowMs] = useState(Date.now());

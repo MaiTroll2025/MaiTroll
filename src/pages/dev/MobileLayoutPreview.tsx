@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, MessageSquare, Video, User, Settings, Compass, Store, Trophy, Bell, Search, Menu, X, ChevronLeft, Plus, Heart, Send, Users, Sparkles, Crown, Wallet, Shield, Globe, Play, Grid3X3, List, MapPin, Building2, Warehouse, Package, Coins, TrendingUp, Scale, BookOpen, Lock, LifeBuoy, ShoppingBag, Banknote, Mic, Radio, Waves, Gamepad2, FileText, Calendar, DollarSign, Star, AlertTriangle, Eye, Siren, ClipboardList, BarChart3, MonitorDot, ScrollText, Megaphone, Database, LogOut } from 'lucide-react';
+import { Home, MessageSquare, Video, User, Compass, Store, Trophy, Bell, Search, Menu, X, ChevronLeft, Plus, Crown, Wallet, Building2, Scale, BookOpen, Lock, LifeBuoy, Mic } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 
 type LayoutVariant = 1 | 2 | 3 | 4 | 5;
@@ -14,7 +14,7 @@ const LAYOUTS: { id: LayoutVariant; name: string; description: string }[] = [
 ];
 
 function MockHeader({ variant, showSearch = true }: { variant: LayoutVariant; showSearch?: boolean }) {
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [_searchOpen, _setSearchOpen] = useState(false);
   
   if (variant === 2) {
     return (
@@ -404,7 +404,7 @@ function MockContent({ variant }: { variant: LayoutVariant }) {
 
 export default function MobileLayoutPreview() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const [layout, setLayout] = useState<LayoutVariant>(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
 

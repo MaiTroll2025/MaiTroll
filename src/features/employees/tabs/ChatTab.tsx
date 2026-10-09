@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../../lib/store'
 
-export default function ChatTab({ profile, realProfile }: { profile?: any; realProfile?: any }) {
+export default function ChatTab({ profile: _profile, realProfile: _realProfile }: { profile?: any; realProfile?: any }) {
   const { user } = useAuthStore()
   const [channels, setChannels] = useState<any[]>([])
   const [activeChannel, setActiveChannel] = useState<string | null>(null)

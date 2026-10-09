@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { SellerTier } from '../../lib/sellerTiers';
-import { evaluateSellerTier, recordFraudFlag, recordDispute } from '../../lib/sellerApi';
-import { notifySellerTierUpgraded, notifySellerTierDowngraded } from '../../lib/notifications';
 import SellerTierBadge from '../../components/SellerTierBadge';
+import { toast } from 'sonner';
 
 interface SellerProfile {
   id: string;
@@ -11,15 +10,8 @@ interface SellerProfile {
   avatar_url: string | null;
   seller_tier: SellerTier;
   completed_sales: number;
-  fraud_flags: number;
-  dispute_count: number;
   positive_reviews: number;
   negative_reviews: number;
-  total_positive_reviews: number;
-  total_negative_reviews: number;
-  rating: number | null;
-  total_reviews: number;
-  tier_updated_at: string | null;
   created_at: string;
 }
 
@@ -42,6 +34,7 @@ interface SellerMarketSummary {
 export default function SellerManagement() {
   const [sellers, setSellers] = useState<SellerProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeller, setSelectedSeller] = useState<SellerProfile | null>(null);
@@ -51,6 +44,7 @@ export default function SellerManagement() {
 
   const loadSellers = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       let query = supabase
         .from('user_profiles')
@@ -60,15 +54,8 @@ export default function SellerManagement() {
           avatar_url,
           seller_tier,
           completed_sales,
-          fraud_flags,
-          dispute_count,
           positive_reviews,
           negative_reviews,
-          total_positive_reviews,
-          total_negative_reviews,
-          rating,
-          total_reviews,
-          tier_updated_at,
           created_at
         `)
         .order('completed_sales', { ascending: false })
@@ -84,6 +71,7 @@ export default function SellerManagement() {
       setSellers(data || []);
     } catch (err) {
       console.error('Error loading sellers:', err);
+      setLoadError(err instanceof Error ? err.message : 'Failed to load current seller profiles.');
     } finally {
       setLoading(false);
     }
@@ -130,6 +118,7 @@ export default function SellerManagement() {
       }));
     } catch (err) {
       console.error('Error loading marketplace data:', err);
+      toast.error(err instanceof Error ? `Failed to load marketplace data: ${err.message}` : 'Failed to load marketplace data');
     } finally {
       setMarketDataLoading(false);
     }
@@ -150,93 +139,20 @@ export default function SellerManagement() {
     try {
       const { error } = await supabase
         .from('user_profiles')
-        .update({ 
-          seller_tier: newTier,
-          tier_updated_at: new Date().toISOString()
-        })
+        .update({ seller_tier: newTier })
         .eq('id', sellerId);
 
       if (error) throw error;
       
       // Refresh the list
-      loadSellers();
+      await loadSellers();
       
       if (selectedSeller && selectedSeller.id === sellerId) {
         setSelectedSeller({ ...selectedSeller, seller_tier: newTier });
       }
     } catch (err) {
       console.error('Error updating tier:', err);
-      alert('Failed to update seller tier');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleEvaluateTier = async (sellerId: string) => {
-    setActionLoading(true);
-    try {
-      const result = await evaluateSellerTier(sellerId);
-      
-      if (result.upgraded) {
-        await notifySellerTierUpgraded(sellerId, result.old_tier, result.new_tier);
-      } else if (result.downgraded) {
-        await notifySellerTierDowngraded(sellerId, result.old_tier, result.new_tier, 'Automatic evaluation');
-      }
-      
-      // Refresh data
-      loadSellers();
-      
-      if (selectedSeller && selectedSeller.id === sellerId) {
-        const updated = sellers.find(s => s.id === sellerId);
-        if (updated) setSelectedSeller({ ...updated, seller_tier: result.new_tier });
-      }
-      
-      alert(`Tier evaluation complete: ${result.old_tier} → ${result.new_tier}`);
-    } catch (err) {
-      console.error('Error evaluating tier:', err);
-      alert('Failed to evaluate tier');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleRecordFraud = async (sellerId: string) => {
-    if (!confirm('Are you sure you want to record a fraud flag for this seller?')) return;
-    
-    setActionLoading(true);
-    try {
-      const result = await recordFraudFlag(sellerId, 1);
-      
-      if (result.downgraded) {
-        await notifySellerTierDowngraded(sellerId, result.old_tier, result.new_tier, 'Fraud flag recorded');
-      }
-      
-      loadSellers();
-      alert('Fraud flag recorded');
-    } catch (err) {
-      console.error('Error recording fraud:', err);
-      alert('Failed to record fraud flag');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleRecordDispute = async (sellerId: string) => {
-    if (!confirm('Are you sure you want to record a dispute for this seller?')) return;
-    
-    setActionLoading(true);
-    try {
-      const result = await recordDispute(sellerId);
-      
-      if (result.downgraded) {
-        await notifySellerTierDowngraded(sellerId, result.old_tier, result.new_tier, 'Dispute recorded');
-      }
-      
-      loadSellers();
-      alert('Dispute recorded');
-    } catch (err) {
-      console.error('Error recording dispute:', err);
-      alert('Failed to record dispute');
+      toast.error(err instanceof Error ? `Failed to update seller tier: ${err.message}` : 'Failed to update seller tier');
     } finally {
       setActionLoading(false);
     }
@@ -295,6 +211,11 @@ export default function SellerManagement() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Seller List */}
         <div className="lg:col-span-2">
+          {loadError && (
+            <div role="alert" className="mb-4 rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+              Failed to load sellers: {loadError}
+            </div>
+          )}
           {loading ? (
             <div className="text-center py-8">Loading...</div>
           ) : filteredSellers.length === 0 ? (
@@ -328,20 +249,9 @@ export default function SellerManagement() {
                         <SellerTierBadge tier={seller.seller_tier} size="sm" />
                       </div>
                       <div className="text-sm text-gray-500">
-                        {seller.completed_sales} stored sales • {seller.total_reviews || 0} reviews
+                        {seller.completed_sales} stored sales • {seller.positive_reviews + seller.negative_reviews} reviews
+                        {' • '}{seller.positive_reviews} positive
                       </div>
-                    </div>
-                    
-                    <div className="text-right text-sm">
-                      {seller.rating && (
-                        <div className="text-yellow-500">★ {seller.rating.toFixed(1)}</div>
-                      )}
-                      {(seller.fraud_flags > 0 || seller.dispute_count > 0) && (
-                        <div className="text-red-500">
-                          {seller.fraud_flags > 0 && `${seller.fraud_flags} fraud `}
-                          {seller.dispute_count > 0 && `${seller.dispute_count} disputes`}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -382,15 +292,6 @@ export default function SellerManagement() {
                   </select>
                 </div>
 
-                {/* Evaluate Button */}
-                <button
-                  onClick={() => handleEvaluateTier(selectedSeller.id)}
-                  disabled={actionLoading}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {actionLoading ? 'Processing...' : 'Auto-Evaluate Tier'}
-                </button>
-
                 {/* Stats */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h3 className="font-medium mb-2">Statistics</h3>
@@ -412,32 +313,17 @@ export default function SellerManagement() {
                         : sellerMarketSummary[selectedSeller.id]?.pendingReleaseRequests ?? 0}
                     </div>
 
-                    <div>Fraud Flags:</div>
-                    <div className={`font-semibold ${selectedSeller.fraud_flags > 0 ? 'text-red-500' : ''}`}>
-                      {selectedSeller.fraud_flags}
-                    </div>
-                    
-                    <div>Disputes:</div>
-                    <div className={`font-semibold ${selectedSeller.dispute_count > 0 ? 'text-yellow-500' : ''}`}>
-                      {selectedSeller.dispute_count}
-                    </div>
-                    
-                    <div>Rating:</div>
-                    <div className="font-semibold">
-                      {selectedSeller.rating ? `★ ${selectedSeller.rating.toFixed(1)}` : 'N/A'}
-                    </div>
-                    
                     <div>Total Reviews:</div>
-                    <div className="font-semibold">{selectedSeller.total_reviews || 0}</div>
+                    <div className="font-semibold">{selectedSeller.positive_reviews + selectedSeller.negative_reviews}</div>
                     
                     <div>Positive Reviews:</div>
                     <div className="font-semibold text-green-500">
-                      {selectedSeller.total_positive_reviews || 0}
+                      {selectedSeller.positive_reviews}
                     </div>
                     
                     <div>Negative Reviews:</div>
                     <div className="font-semibold text-red-500">
-                      {selectedSeller.total_negative_reviews || 0}
+                      {selectedSeller.negative_reviews}
                     </div>
                   </div>
                 </div>
@@ -472,33 +358,6 @@ export default function SellerManagement() {
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
-                  <h3 className="font-medium mb-2">Actions</h3>
-                  
-                  <button
-                    onClick={() => handleRecordFraud(selectedSeller.id)}
-                    disabled={actionLoading}
-                    className="w-full px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 disabled:opacity-50"
-                  >
-                    Record Fraud Flag
-                  </button>
-                  
-                  <button
-                    onClick={() => handleRecordDispute(selectedSeller.id)}
-                    disabled={actionLoading}
-                    className="w-full px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 disabled:opacity-50"
-                  >
-                    Record Dispute
-                  </button>
-                </div>
-
-                {/* Tier Updated */}
-                {selectedSeller.tier_updated_at && (
-                  <div className="text-xs text-gray-500">
-                    Last tier update: {new Date(selectedSeller.tier_updated_at).toLocaleString()}
-                  </div>
-                )}
               </div>
             </div>
           ) : (

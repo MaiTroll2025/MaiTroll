@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { OFFICIAL_GIFTS, GiftItem } from '@/lib/giftConstants'
 import * as Service from '../services/singoffService'
 import { useSingOffStore } from '../store/useSingOffStore'
-import type { SingOffQueueEntry } from '../types'
 
 export function useSingOffActions() {
   const { user, profile } = useAuthStore()

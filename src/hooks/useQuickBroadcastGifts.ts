@@ -30,7 +30,7 @@ interface UseQuickBroadcastGiftsOptions {
  * This is a unique Mai Troll feature: "live rotating quick gifts"
  */
 export function useQuickBroadcastGifts({
-  streamId,
+  streamId: _streamId,
   recentGifts = [],
   limit = 6,
 }: UseQuickBroadcastGiftsOptions) {

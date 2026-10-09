@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 // Notification categories (for future grouping)
-const NOTIFICATION_CATEGORIES = {
+const _NOTIFICATION_CATEGORIES = {
   ACCOUNT_SECURITY: [
     'new_login_detected', 'password_changed', 'email_changed', 'profile_updated',
     'account_warning', 'account_restriction_started', 'account_restriction_expired',

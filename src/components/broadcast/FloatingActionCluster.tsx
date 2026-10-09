@@ -20,7 +20,7 @@ export default function FloatingActionCluster({
   isLiked,
   likesCount = 0,
   onLike,
-  onGift,
+  onGift: _onGift,
   onShare,
   onMenu,
   onParticipants,
@@ -112,7 +112,7 @@ export default function FloatingActionCluster({
 // Horizontal action bar for landscape mode
 export function HorizontalActionBar({
   onLike,
-  onGift,
+  onGift: _onGift,
   onChat,
   onShare: _onShare,
   onMenu,

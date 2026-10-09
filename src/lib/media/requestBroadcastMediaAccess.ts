@@ -15,7 +15,7 @@ function isIOS() {
     const platform = (navigator as any).platform || '';
     const maxTouch = navigator.maxTouchPoints || 0;
     return /iP(hone|ad|od)/i.test(ua) || (/Mac/.test(platform) && maxTouch > 1);
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }

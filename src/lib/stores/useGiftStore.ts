@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GiftInstance, GiftCatalogItem, AnimationType, GiftRarity } from '@/types/gifts';
+import { GiftInstance, GiftCatalogItem, GiftRarity } from '@/types/gifts';
 
 interface GiftState {
   // Active gift animations currently playing

@@ -445,7 +445,7 @@ function hasModerationPermission(
 // The returned user is the ONLY source of actor identity.
 // ============================================================================
 
-async function authenticateRequest(
+async function _authenticateRequest(
   req: Request,
 ) {
   const authorization =
@@ -1486,7 +1486,7 @@ async function executeDirectAction(
   >,
   action: string,
   body: JsonObject,
-  userId: string,
+  _userId: string,
 ): Promise<JsonObject> {
   const streamId =
     optionalString(
@@ -2667,6 +2667,71 @@ async function executeTakeAction(
   );
 }
 
+async function notifyStaffOfModerationAction(
+  supabaseAdmin: ReturnType<typeof createAdminClient>,
+  actorId: string,
+  action: string,
+  body: JsonObject,
+  result: JsonObject,
+): Promise<void> {
+  if (result.success !== true) return;
+
+  const actionType = (action === "take_action"
+    ? stringValue(body.action_type)
+    : action).toLowerCase();
+
+  if (["arrest", "kick", "submit_report", "list_reports", "reject_report"].includes(actionType)) {
+    return;
+  }
+
+  const targetUserId = optionalString(body.target_user_id, 100);
+  const streamId = optionalString(body.stream_id, 100);
+  const reason = optionalString(body.reason, MAX_REASON_LENGTH);
+  const profileIds = [actorId, targetUserId].filter((id): id is string => Boolean(id));
+  const { data: profiles, error: profilesError } = await supabaseAdmin
+    .from("user_profiles")
+    .select("id, username")
+    .in("id", profileIds);
+
+  if (profilesError) {
+    console.error("[moderation-actions] Failed to load names for staff notification:", profilesError.message);
+    result.notification_warning = `Action succeeded, but staff notification could not load user details: ${profilesError.message}`;
+    return;
+  }
+
+  const actorName = profiles?.find((profile) => profile.id === actorId)?.username || "Staff";
+  const targetName = targetUserId
+    ? profiles?.find((profile) => profile.id === targetUserId)?.username || "Unknown user"
+    : null;
+  const label = actionType.replaceAll("_", " ");
+  const subject = targetName
+    ? `@${targetName}`
+    : streamId
+      ? `stream ${streamId}`
+      : "the stream";
+  const { error } = await supabaseAdmin.rpc("notify_staff", {
+    p_type: "moderation_action",
+    p_title: "Moderation Action Taken",
+    p_message: `@${actorName} performed ${label} against ${subject}.${reason ? ` Reason: ${reason}` : ""}`,
+    p_metadata: {
+      audience: "staff",
+      action_type: actionType,
+      actor_id: actorId,
+      actor_username: actorName,
+      target_user_id: targetUserId,
+      target_username: targetName,
+      stream_id: streamId,
+      reason,
+      route: streamId ? `/watch/${streamId}` : "/admin/moderation",
+    },
+  });
+
+  if (error) {
+    console.error("[moderation-actions] Action succeeded, but staff notification failed:", error.message);
+    result.notification_warning = `Action succeeded, but staff notification could not be queued: ${error.message}`;
+  }
+}
+
 // ============================================================================
 // MAIN HANDLER
 // ============================================================================
@@ -3052,6 +3117,14 @@ Deno.serve(
             body,
           );
 
+        await notifyStaffOfModerationAction(
+          supabaseAdmin,
+          userId,
+          action,
+          body,
+          result,
+        );
+
         return jsonResponse(
           result,
           result.success
@@ -3072,6 +3145,14 @@ Deno.serve(
           body,
           userId,
         );
+
+      await notifyStaffOfModerationAction(
+        supabaseAdmin,
+        userId,
+        action,
+        body,
+        result,
+      );
 
       return jsonResponse(
         result,

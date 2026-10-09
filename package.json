@@ -72,6 +72,8 @@
     "@remotion/cli": "^4.0.443",
     "@remotion/player": "^4.0.443",
     "@rive-app/react-canvas": "^4.27.3",
+    "@stream-io/video-client": "^1.61.1",
+    "@stream-io/video-react-sdk": "^1.43.3",
     "@stripe/stripe-js": "^3.3.0",
     "@tanstack/react-query": "^5.90.16",
     "@tsparticles/engine": "^3.9.1",

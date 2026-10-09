@@ -1,9 +1,7 @@
 import React from 'react';
-import { Play, Eye, Radio, Sparkles } from 'lucide-react';
-import LiveStreamsModule from '@/components/home/LiveStreamsModule';
+import { Eye } from 'lucide-react';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
 import { useAuthStore } from '@/lib/store';
-import { cn } from '@/lib/utils';
 
 interface NeonNoirLayoutProps {
   liveItems: any[];
@@ -19,7 +17,7 @@ export default function NeonNoirLayout({
   onLiveItemClick,
   onRequireAuth,
 }: NeonNoirLayoutProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   return (
     <div className="relative min-h-[calc(100vh-12rem)] bg-black overflow-hidden">

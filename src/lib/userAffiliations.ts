@@ -11,24 +11,24 @@ export interface UserAffiliation {
   role?: string | null
 }
 
-interface AgencyMemberRow {
+interface _AgencyMemberRow {
   role: string | null
   agency_id: string | null
 }
 
-interface AgencyRow {
+interface _AgencyRow {
   id: string
   name: string
   slug: string
   public_slug: string | null
 }
 
-interface FamilyMemberRow {
+interface _FamilyMemberRow {
   role: string | null
   family_id: string | null
 }
 
-interface FamilyRow {
+interface _FamilyRow {
   id: string
   name: string
   slug: string

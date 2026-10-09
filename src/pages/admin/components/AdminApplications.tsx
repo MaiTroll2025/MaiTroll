@@ -571,7 +571,7 @@ export default function AdminApplications() {
     }
   }, [user, loadApplications])
 
-  const handleScheduleJobInterview = useCallback(async (app: JobApplication) => {
+  const _handleScheduleJobInterview = useCallback(async (app: JobApplication) => {
     if (!user) return toast.error('You must be logged in')
     try {
       setLoading(true)
@@ -1407,14 +1407,27 @@ export default function AdminApplications() {
                             onClick={async () => {
                               setLoading(true)
                               try {
+                                if (!careerApp.position_id) {
+                                  throw new Error('Career application is missing its role.')
+                                }
+
+                                const { error: roleError } = await supabase.rpc('set_user_role', {
+                                  target_user: careerApp.user_id,
+                                  new_role: careerApp.position_id,
+                                  reason: `Approved career application ${careerApp.id}`,
+                                  acting_admin_id: user.id,
+                                })
+                                if (roleError) throw roleError
+
                                 const { error } = await supabase
                                   .from('career_applications')
                                   .update({ status: 'approved', reviewed_by: user.id, reviewed_at: new Date().toISOString() })
                                   .eq('id', careerApp.id)
                                 if (error) throw error
-                                toast.success('Career application approved')
+                                toast.success('Career application approved and role assigned')
                                 await loadApplications()
                               } catch (err: any) {
+                                console.error('[AdminApplications] career approval failed:', err)
                                 toast.error(err.message || 'Failed to approve career application')
                               } finally {
                                 setLoading(false)

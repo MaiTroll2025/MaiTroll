@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react'
-import L from 'leaflet'
 import {
   CircleMarker,
   MapContainer,

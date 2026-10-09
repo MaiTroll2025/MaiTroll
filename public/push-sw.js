@@ -31,7 +31,7 @@ self.addEventListener('push', (event) => {
       const audio = new Audio('/sounds/click.mp3');
       audio.volume = 0.5;
       audio.play().catch(() => {}); // Ignore autoplay restrictions
-    } catch (e) {
+    } catch (_e) {
       // Audio not supported in this context
     }
   }

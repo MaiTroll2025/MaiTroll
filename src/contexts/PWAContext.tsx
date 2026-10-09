@@ -105,7 +105,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
 
   // Install state
   const {
-    deferredPrompt,
+    deferredPrompt: _deferredPrompt,
     canPromptInstall,
     promptInstall,
     clearPrompt
@@ -176,7 +176,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
     
     // Check for iOS/Safari
     const isIOSSystem = isIos();
-    const isSafariBrowser = isSafari();
+    const _isSafariBrowser = isSafari();
     
     // Show iOS instructions if appropriate (all iOS browsers need manual A2HS)
     if (isIOSSystem && !isStandalone()) {

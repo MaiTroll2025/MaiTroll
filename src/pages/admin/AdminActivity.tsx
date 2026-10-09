@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { RefreshCw, Search, ChevronDown, ChevronUp, AlertTriangle, Monitor, Clock, User as UserIcon, X, Trash2, Bell } from 'lucide-react'
 import { toast } from 'sonner'
@@ -159,6 +159,8 @@ export default function AdminActivity() {
   const [presenceMap, setPresenceMap] = useState<Record<string, PresenceRow>>({})
   const [profileMap, setProfileMap] = useState<Record<string, ProfileRow>>({})
   const [errorsByUser, setErrorsByUser] = useState<Record<string, SystemErrorRow[]>>({})
+  const activityStateRef = useRef({ errorsByUser, presenceMap, profileMap })
+  activityStateRef.current = { errorsByUser, presenceMap, profileMap }
 
   const deleteError = useCallback(async (errorId: string) => {
     setDeletingErrors((prev) => new Set(prev).add(errorId))
@@ -189,6 +191,7 @@ export default function AdminActivity() {
   }, [])
 
   const cleanupStaleErrors = useCallback(async () => {
+    const { errorsByUser, presenceMap, profileMap } = activityStateRef.current
     const staleErrorIds: string[] = []
     for (const [userId, errors] of Object.entries(errorsByUser)) {
       const userLastSeen = presenceMap[userId]?.last_seen_at || profileMap[userId]?.last_active || null
@@ -214,10 +217,10 @@ export default function AdminActivity() {
         return next
       })
       toast.info(`Cleaned up ${staleErrorIds.length} stale error${staleErrorIds.length === 1 ? '' : 's'}`)
-    } catch (err: any) {
+    } catch (_err: any) {
       toast.error('Failed to cleanup stale errors')
     }
-  }, [errorsByUser, presenceMap, profileMap])
+  }, [])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -246,21 +249,28 @@ export default function AdminActivity() {
         profilePromise,
         errorPromise,
       ])
+      const queryErrors: string[] = []
+      const settledData = <T,>(
+        result: PromiseSettledResult<{ data: T | null; error: { message: string } | null }>,
+        source: string,
+      ): T | null => {
+        if (result.status === 'rejected') {
+          const message = result.reason instanceof Error ? result.reason.message : String(result.reason)
+          queryErrors.push(`${source}: ${message}`)
+          return null
+        }
+        if (result.value.error) {
+          queryErrors.push(`${source}: ${result.value.error.message}`)
+          return null
+        }
+        return result.value.data
+      }
 
-      const presenceData: PresenceRow[] =
-        presenceRes.status === 'fulfilled' && !presenceRes.value.error
-          ? (presenceRes.value.data as PresenceRow[]) || []
-          : []
+      const presenceData = (settledData(presenceRes, 'Presence') as PresenceRow[] | null) || []
 
-      const profileData: ProfileRow[] =
-        profileRes.status === 'fulfilled' && !profileRes.value.error
-          ? (profileRes.value.data as ProfileRow[]) || []
-          : []
+      const profileData = (settledData(profileRes, 'Profiles') as ProfileRow[] | null) || []
 
-      const errorData: (SystemErrorRow & { user_id: string })[] =
-        errorRes.status === 'fulfilled' && !errorRes.value.error
-          ? ((errorRes.value.data as any[]) || [])
-          : []
+      const errorData = (settledData(errorRes, 'System errors') as (SystemErrorRow & { user_id: string })[] | null) || []
 
       const newPresenceMap: Record<string, PresenceRow> = {}
       for (const row of presenceData) {
@@ -297,6 +307,9 @@ export default function AdminActivity() {
       setPresenceMap(newPresenceMap)
       setProfileMap(newProfileMap)
       setErrorsByUser(newErrorsByUser)
+      if (queryErrors.length > 0) {
+        setError(`Some activity data could not be loaded: ${queryErrors.join('; ')}`)
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to load activity data')
     } finally {
@@ -420,7 +433,7 @@ export default function AdminActivity() {
     return allUsers.filter((u) => getStatus(u.lastSeenAt) !== 'offline')
   }, [allUsers])
 
-  const selectedUser = expandedUserId
+  const _selectedUser = expandedUserId
     ? allUsers.find((u) => u.userId === expandedUserId) || null
     : null
 

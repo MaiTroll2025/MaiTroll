@@ -58,7 +58,7 @@ export const handler = async (req: Request): Promise<Response> => {
       })
       .eq('id', battle_id);
 
-    const { data: activeEvents, error: eventsError } = await supabase
+    const { data: activeEvents, error: _eventsError } = await supabase
       .from('battle_random_events')
       .select('id, event_type, status')
       .eq('battle_id', battle_id)

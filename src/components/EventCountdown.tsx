@@ -45,7 +45,7 @@ const EventCountdown: React.FC = React.memo(function EventCountdown() {
     seconds: number;
     totalSeconds: number;
   } | null>(null);
-  const [eventActive, setEventActive] = useState(false);
+  const [_eventActive, setEventActive] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
 

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react';
 import { X, Gavel, User } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
-import { normalizeTextArray } from '../lib/courtUtils'
 
 // Stream type for the stream-based interface
 interface StreamRow {
@@ -50,9 +49,9 @@ function isUserProps(props: SummonModalProps): props is SummonModalUserProps {
 
 export default function SummonModal(props: SummonModalProps) {
   const { profile } = useAuthStore()
-  const [participants, setParticipants] = useState<StreamParticipant[]>([])
-  const [loading, setLoading] = useState(false)
-  const [selectedUserId, setSelectedUserId] = useState('')
+  const [participants, _setParticipants] = useState<StreamParticipant[]>([])
+  const [_loading, _setLoading] = useState(false)
+  const [selectedUserId, _setSelectedUserId] = useState('')
   const [reason, setReason] = useState('Disorderly Conduct')
   const [submitting, setSubmitting] = useState(false)
 
@@ -66,7 +65,7 @@ export default function SummonModal(props: SummonModalProps) {
   const stream = isUserMode ? null : (props as SummonModalStreamProps).stream
   
   // For user mode, we directly have the user
-  const targetUserId = isUserMode ? props.userId : ''
+  const _targetUserId = isUserMode ? props.userId : ''
   const targetUsername = isUserMode ? props.username : ''
 
    const handleSummon = async () => {
@@ -107,11 +106,11 @@ export default function SummonModal(props: SummonModalProps) {
 
     setSubmitting(true)
     try {
-      let docketDescription: string
+      let _docketDescription: string
       if (isUserMode) {
-        docketDescription = `Direct summon for @${props.username}`
+        _docketDescription = `Direct summon for @${props.username}`
       } else {
-        docketDescription = `Government control stream ${stream?.id}`
+        _docketDescription = `Government control stream ${stream?.id}`
       }
 
       const { data, error } = await supabase.rpc('summon_user_to_court', {

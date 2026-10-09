@@ -38,7 +38,7 @@ interface BattleBox {
 const LiveKitVideoPlayer = React.memo(function LiveKitVideoPlayer({ 
   videoTrack, 
   isLocal,
-  identity
+  identity: _identity
 }: { 
   videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined; 
   isLocal: boolean;
@@ -63,7 +63,7 @@ const LiveKitVideoPlayer = React.memo(function LiveKitVideoPlayer({
     if (containerRef.current.querySelector('video')) {
       try {
         videoTrack.detach();
-      } catch (e) {}
+      } catch (_e) {}
     }
     
     try {
@@ -91,7 +91,7 @@ const LiveKitVideoPlayer = React.memo(function LiveKitVideoPlayer({
           videoElementRef.current = null;
           attachedTrackIdRef.current = null;
         }
-      } catch (e) {}
+      } catch (_e) {}
     };
   }, [videoTrack, isLocal]);
   
@@ -108,7 +108,7 @@ const VideoBox = React.memo(function VideoBox({
   team: 'broadcaster' | 'challenger';
   userId: string;
 }) {
-  const isCurrentUser = box.userId === userId;
+  const _isCurrentUser = box.userId === userId;
   
   return (
     <div
@@ -176,7 +176,7 @@ const VideoBox = React.memo(function VideoBox({
 
 export default function BattleGridOverlay({
   battleId,
-  streamId,
+  streamId: _streamId,
   isHost,
   localTracks,
   remoteParticipants,

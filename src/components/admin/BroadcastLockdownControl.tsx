@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 import { useBroadcastLockdown } from '@/hooks/useBroadcastLockdown';
 import { Lock, Unlock, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';

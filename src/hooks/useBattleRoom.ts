@@ -1,15 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
-import { 
-  Room, 
-  RoomEvent, 
-  LocalVideoTrack, 
-  LocalAudioTrack, 
-  RemoteParticipant,
-  RemoteVideoTrack,
-  RemoteAudioTrack,
-  RemoteTrackPublication,
-  Track,
-} from 'livekit-client';
+import { Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack, RemoteTrackPublication } from 'livekit-client';
 import { supabase } from '../lib/supabase';
 
 interface UseBattleRoomOptions {
@@ -43,7 +33,7 @@ const generateDeterministicRoomId = (userId1: string, userId2: string): string =
 };
 
 export function useBattleRoom({
-  battleId,
+  battleId: _battleId,
   challengerUserId,
   opponentUserId,
   currentUserId,

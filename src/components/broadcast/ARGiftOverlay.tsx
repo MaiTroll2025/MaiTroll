@@ -24,8 +24,8 @@ interface ARGiftOverlayProps {
 
 export default function ARGiftOverlay({
   videoElement,
-  streamId,
-  broadcasterId,
+  streamId: _streamId,
+  broadcasterId: _broadcasterId,
   isStreamerView = false,
   onGiftExpired,
   className,
@@ -42,7 +42,7 @@ export default function ARGiftOverlay({
     settings,
     updateSettings,
     activeGifts,
-    addActiveGift,
+    addActiveGift: _addActiveGift,
     removeActiveGift,
     isOverlayVisible,
     setOverlayVisible,

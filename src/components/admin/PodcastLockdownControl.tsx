@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { usePodcastLockdown } from '@/hooks/useFeatureLockdown';
-import { Mic, Lock, Unlock, Loader2, AlertTriangle } from 'lucide-react';
+import { Lock, Unlock, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PodcastLockdownControl() {

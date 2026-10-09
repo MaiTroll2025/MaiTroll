@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { CreditCard, Loader2, CheckCircle } from 'lucide-react'
+import { CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'

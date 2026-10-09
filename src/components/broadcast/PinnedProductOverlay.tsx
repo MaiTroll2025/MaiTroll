@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingCart, Package, Coins, Check } from 'lucide-react';
+import { X, ShoppingCart, Coins } from 'lucide-react';
 import { PinnedProductWithItem, ShopItem } from '../../types/liveCommerce';
 import { useAuthStore } from '../../lib/store';
 import { useLiveCommerceOrders } from '../../hooks/useLiveCommerceOrders';

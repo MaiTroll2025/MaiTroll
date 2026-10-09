@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { usePageVisibilityContext } from '../../contexts/PageVisibilityContext';
@@ -21,10 +21,10 @@ const createTimerAnimation = (container: HTMLDivElement, timeLeft: number, isSud
   container.appendChild(renderer.domElement);
 
   // Create 3D text geometry for the timer
-  const loader = (THREE as any).FontLoader ? new (THREE as any).FontLoader() : null;
+  const _loader = (THREE as any).FontLoader ? new (THREE as any).FontLoader() : null;
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const _timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
   // Create glowing ring around timer
   const ringGeometry = new THREE.TorusGeometry(3, 0.1, 16, 100);
@@ -219,7 +219,7 @@ const createSuddenDeathAnimation = (container: HTMLDivElement) => {
 };
 
 // Box Added Animation - 3D box appearing
-const createBoxAddedAnimation = (container: HTMLDivElement, boxNumber: number) => {
+const createBoxAddedAnimation = (container: HTMLDivElement, _boxNumber: number) => {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -437,7 +437,7 @@ const createCrownAnimation = (container: HTMLDivElement) => {
 };
 
 // Streak Achieved Animation - Fire trail
-const createStreakAnimation = (container: HTMLDivElement, streakCount: number) => {
+const createStreakAnimation = (container: HTMLDivElement, _streakCount: number) => {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });

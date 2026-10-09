@@ -3,11 +3,7 @@
 // ============================================================
 
 import { supabase } from '@/lib/supabase';
-import type {
-  UtromailThread, UtromailMessage, UtromailAttachment, UtromailBlock,
-  UtromailRequest, UtromailReport, UtromailNotification, UtromailAccount,
-  TromailRoleAccount, MailFolder, MailSearchResult,
-} from '@/types/mail';
+import type { UtromailThread, UtromailMessage, UtromailBlock, UtromailRequest, UtromailReport, UtromailNotification, UtromailAccount, TromailRoleAccount, MailFolder, MailSearchResult } from '@/types/mail';
 
 // ============================================================
 // ACCOUNTS

@@ -1,16 +1,9 @@
 // src/hooks/useSeatFocus.ts
 // React hook for MaiTroll Seat Focus (personalized audio)
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/lib/store';
-import {
-  getSeatFocus,
-  setSeatFocus,
-  clearSeatFocus,
-  createSeatFocusKey,
-  type SeatFocusConfig,
-  type SeatFocusState,
-} from '@/lib/seatFocus';
+import { getSeatFocus, setSeatFocus, clearSeatFocus, type SeatFocusConfig, type SeatFocusState } from '@/lib/seatFocus';
 
 export interface SeatInfo {
   seatIndex: number;
@@ -22,7 +15,7 @@ export interface SeatInfo {
 
 export function useSeatFocus(
   streamId: string | undefined,
-  seats: Record<number, SeatInfo> = {},
+  _seats: Record<number, SeatInfo> = {},
   audioTracksRef: React.MutableRefObject<Map<string, { audioTrack: any; audioEl: HTMLAudioElement | null }>>
 ) {
   const [focusedUserId, setFocusedUserId] = useState<SeatFocusState>('all');
@@ -38,7 +31,7 @@ export function useSeatFocus(
   }, [streamId, user?.id]);
 
   const applyAudioFocus = useCallback(
-    (targetUserId: SeatFocusState, targetSeatIndex: number | null) => {
+    (targetUserId: SeatFocusState, _targetSeatIndex: number | null) => {
       const tracks = audioTracksRef.current;
       tracks.forEach((trackData, key) => {
         const { audioTrack, audioEl } = trackData;
@@ -140,7 +133,7 @@ export function useSeatFocus(
     focusOnAll,
     clear,
     getSeatLabel,
-    isFocused: (seatIndex: number, seatUserId?: string) =>
+    isFocused: (seatIndex: number, _seatUserId?: string) =>
       focusedUserId !== 'all' && focusedSeatIndex === seatIndex,
   };
 }

@@ -4,9 +4,9 @@ const lines = fs.readFileSync(f, 'utf8').split('\n');
 console.log('Total lines:', lines.length);
 
 // Looking for JSX tags by scanning for <TAG 
-function findJSX(limit) {
+function findJSX(_limit) {
   const results = [];
-  const re = /<(?:([A-Z][a-zA-Z]*)\b[^>]*>|(\/[A-Z][a-zA-Z]*))(?:[\s])>/g;
+  const _re = /<(?:([A-Z][a-zA-Z]*)\b[^>]*>|(\/[A-Z][a-zA-Z]*))(?:[\s])>/g;
   // Actually just scan for <{a-zA-Z}...> and </{a-zA-Z}...>
   const reOpen = /<([A-Z][a-zA-Z]*)\b[^>]*?>/g;
   const reClose = /<\/([A-Z][a-zA-Z]*)>/g;
@@ -29,11 +29,11 @@ function findJSX(limit) {
   // Print only JSX-related lines after 960 onwards
   function tagString(a){return a.open ? '<'+a.tag+'>' : '</'+a.tag+'>';}
   console.log('\n=== JSX TAGS (after line 955) ===');
-  const seen = {}; let done=0;
+  const seen = {}; let _done=0;
   for (const a of results) {
     if(a.line < 955) continue;
     const str = a.line+'| '+tagString(a);
-    if(!seen[str]) { seen[str]=true; console.log(str+' at line '+a.line); done++; }
+    if(!seen[str]) { seen[str]=true; console.log(str+' at line '+a.line); _done++; }
   }
   return results;
 }

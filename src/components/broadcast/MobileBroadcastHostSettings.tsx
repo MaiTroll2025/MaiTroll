@@ -1,26 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  Settings,
-  X,
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  Camera,
-  Gift,
-  Share2,
-  Mail,
-  Power,
-  Sparkles,
-  Megaphone,
-  Users,
-  ShieldCheck,
-  Coins,
-  UserPlus,
-  Circle,
-  MessageSquare,
-  Zap,
-} from 'lucide-react';
+import { Settings, X, Mic, MicOff, Video, VideoOff, Camera, Gift, Share2, Mail, Power, Sparkles, Megaphone, Users, ShieldCheck, Coins, UserPlus, MessageSquare, Zap } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { MAX_GUEST_SEATS } from '../../config/broadcastCategories';
 
@@ -45,6 +24,7 @@ interface MobileBroadcastHostSettingsProps {
   onOpenMessage: () => void;
   onEndStream: () => void;
   onOpenCoinStore: () => void;
+  onOpenWebCoinStore: () => void;
   onInviteFollowers: () => void;
   onToggleRGB?: () => void;
   onTextPopup?: () => void;
@@ -66,6 +46,7 @@ interface MobileBroadcastHostSettingsProps {
     onToggleCamera: () => void
   }>
   disabled?: boolean;
+  showCoinStore?: boolean;
 }
 
 // ─── Grid Item Definition ────────────────────────────────────────────────────
@@ -177,6 +158,7 @@ export default function MobileBroadcastHostSettings({
   onOpenMessage,
   onEndStream,
   onOpenCoinStore,
+  onOpenWebCoinStore,
   onInviteFollowers,
   onToggleRGB,
   onTextPopup,
@@ -191,6 +173,7 @@ export default function MobileBroadcastHostSettings({
   onTrollUp,
   seatControls = [],
   disabled = false,
+  showCoinStore = true,
 }: MobileBroadcastHostSettingsProps) {
   const [isGridOpen, setIsGridOpen] = useState(false);
   const [activePopup, setActivePopup] = useState<string | null>(null);
@@ -296,15 +279,6 @@ export default function MobileBroadcastHostSettings({
       hasPopup: true,
     },
     {
-      id: 'coins',
-      label: 'Coins',
-      icon: Coins,
-      color: 'text-yellow-400',
-      bgColor: 'bg-yellow-500/15',
-      borderColor: 'border-yellow-400/30',
-      action: onOpenCoinStore,
-    },
-    {
       id: 'trollup',
       label: 'Troll Up',
       icon: Zap,
@@ -313,6 +287,15 @@ export default function MobileBroadcastHostSettings({
       borderColor: 'border-cyan-400/30',
       action: () => { onTrollUp?.() },
     },
+    ...(showCoinStore ? [{
+      id: 'coins',
+      label: 'Coins',
+      icon: Coins,
+      color: 'text-yellow-400',
+      bgColor: 'bg-yellow-500/15',
+      borderColor: 'border-yellow-400/30',
+      action: onOpenWebCoinStore,
+    }] : []),
     {
       id: 'officer',
       label: 'Officer',

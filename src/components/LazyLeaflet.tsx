@@ -1,11 +1,11 @@
-import React, { Suspense, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 
 let leafletCache: typeof import('leaflet') | null = null
 let reactLeafletCache: typeof import('react-leaflet') | null = null
 
 async function loadLeaflet() {
   if (leafletCache && reactLeafletCache) return { L: leafletCache, RL: reactLeafletCache }
-  const [L, RL, css] = await Promise.all([
+  const [L, RL, _css] = await Promise.all([
     import('leaflet'),
     import('react-leaflet'),
     import('leaflet/dist/leaflet.css?inline'),
@@ -47,7 +47,7 @@ export function LazyMapContainer({
     )
   }
 
-  const { MapContainer, TileLayer, Marker, Popup, useMap } = libs.RL
+  const { MapContainer, TileLayer: _TileLayer, Marker: _Marker, Popup: _Popup, useMap: _useMap } = libs.RL
   const L = libs.L
 
   return (

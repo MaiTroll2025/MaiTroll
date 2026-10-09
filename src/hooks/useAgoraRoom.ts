@@ -35,7 +35,7 @@ function isRetryableJoinError(err: any): boolean {
 export function useAgoraRoom({
   channelName,
   userId,
-  userName = 'User',
+  userName: _userName = 'User',
   role = 'publisher',
   onUserJoined,
   onUserLeft,
@@ -78,7 +78,7 @@ export function useAgoraRoom({
   }
 
   // Initialize Agora client (lazy-loads SDK on first call)
-  const initAgoraClient = useCallback(async () => {
+  const _initAgoraClient = useCallback(async () => {
     try {
       const appId = getAgoraAppId();
       if (!appId) {

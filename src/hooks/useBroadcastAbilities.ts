@@ -3,14 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
 import { toast } from 'sonner';
-import {
-  AbilityId,
-  UserAbility,
-  BroadcastActiveEffect,
-  AbilityLog,
-  getAbilityById,
-  BROADCAST_ABILITIES,
-} from '../types/broadcastAbilities';
+import { AbilityId, UserAbility, BroadcastActiveEffect, AbilityLog, getAbilityById } from '../types/broadcastAbilities';
 
 export function useBroadcastAbilities(streamId: string | undefined, userId?: string) {
   const { profile } = useAuthStore();
@@ -269,7 +262,7 @@ function buildSystemMessage(
   abilityId: AbilityId,
   activator: string,
   target?: string,
-  extra?: Record<string, any>
+  _extra?: Record<string, any>
 ): string {
   const at = `@${activator}`;
   const targetAt = target ? `@${target}` : '';

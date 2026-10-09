@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
-import { isProtectedPlatformRole } from '@/lib/protectedRoles'
 
 export interface ModLogEntry {
   id: string

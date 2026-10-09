@@ -8,7 +8,7 @@ import { MaiTrollTheme } from '../styles/trollCityTheme'
 import { flushSync } from 'react-dom'
 
 export default function TermsAgreement() {
-  const { profile, session, setProfile, refreshProfile } = useAuthStore()
+  const { profile, session, setProfile, refreshProfile: _refreshProfile } = useAuthStore()
   const navigate = useNavigate()
   const [submitting, setSubmitting] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)

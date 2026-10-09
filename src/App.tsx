@@ -26,7 +26,6 @@ const MaiBusinessDocuments = lazyWithRetry(() => import("./features/mai-business
 const MaiBusinessMarketplace = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessMarketplace"));
 const MaiBusinessHelp = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessHelp"));
 const MaiBusinessAdmin = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessAdmin"));
-import { SingOffJudgeApplicationsAdmin } from "./features/mai-sing-off/pages/SingOffJudgeApplicationsAdmin";
 import { GlobalEventProvider } from "./contexts/GlobalEventContext";
 import { BatterySaverProvider } from "./contexts/BatterySaverContext";
 import { ProfileFrameProvider } from "./contexts/ProfileFrameContext";
@@ -34,7 +33,7 @@ import PetFloatingButton from "./components/pets/PetFloatingButton";
 
 import { useEligibilityStore } from "./lib/eligibilityStore";
 import { useJailMode } from "./hooks/useJailMode";
-import { supabase, UserRole, reportError } from "./lib/supabase";
+import { supabase, UserRole } from "./lib/supabase";
 import { NIGHT_WATCH_PATROL_ROLES } from "./lib/staff";
 import { Toaster, toast } from "sonner";
 import GlobalLoadingOverlay from "./components/GlobalLoadingOverlay";
@@ -49,14 +48,12 @@ import BugAlertPopup from './components/BugAlertPopup';
 
 import { useBugAlertStore } from "./stores/useBugAlertStore";
 import DailyChurchNotification from "./components/church/DailyChurchNotification";
-import TeamMeetingNotification from "./components/TeamMeetingRoom/TeamMeetingNotification";
 import SurveyNotification from "./components/SurveyNotification";
 import KeyDiscovery from "./components/keys/KeyDiscovery";
 import { useKeyDiscoveryStore } from "./stores/useKeyDiscoveryStore";
 
 import { useGlobalApp } from "./contexts/GlobalAppContext";
 import { updateRoute } from "./utils/sessionStorage";
-import { useDebouncedProfileUpdate } from "./hooks/useDebouncedProfileUpdate";
 import { initTimeUpdater } from "./hooks/useGlobalTime";
 import { APP_DATA_REFETCH_EVENT_NAME } from "./lib/appEvents";
 import { autoUnlockPayouts } from "./lib/supabase";
@@ -76,7 +73,6 @@ import GlobalPresenceTracker from "./components/GlobalPresenceTracker";
 import ChatBubble from "./components/ChatBubble";
 import IdleSessionPrompt from "./components/IdleSessionPrompt";
 import GlobalNotificationHandler from "./components/GlobalNotificationHandler";
-import { useChatStore } from "./lib/chatStore";
 import {
   getAnonymousDisplayName,
 } from './lib/anonymousIdentity';
@@ -103,9 +99,9 @@ import { StaffWalkieTalkieProvider } from "./components/StaffWalkieTalkieProvide
 
 const AdminErrors = lazyWithRetry(() => import("./pages/admin/AdminErrors"));
 const SubAnalytics = lazyWithRetry(() => import("./pages/admin/SubAnalytics"));
+const MarketingPage = lazyWithRetry(() => import("./pages/admin/MarketingPage"));
 import ProfileSetupModal from "./components/ProfileSetupModal";
 import RequireRole from "./components/RequireRole";
-import { RequireLeadOrOwner } from "./components/auth/RequireLeadOrOwner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GrandCityEntrance from "./components/entrance/GrandCityEntrance";
 import UnderConstructionPage from "./components/UnderConstructionPage";
@@ -123,7 +119,7 @@ const HytroGamingContract = lazyWithRetry(() => import("./pages/gaming/HytroGami
 const AgencyHRDashboard = lazyWithRetry(() => import("./pages/agency-hr-dashboard"));
 const AttorneyDashboard = lazyWithRetry(() => import("./pages/attorney/AttorneyDashboard"));
 const ProsecutorDashboard = lazyWithRetry(() => import("./pages/prosecutor/ProsecutorDashboard"));
-const Support = lazyWithRetry(() => import("./pages/Support"));
+const _Support = lazyWithRetry(() => import("./pages/Support"));
 const Tickets = lazyWithRetry(() => import("./pages/Tickets"));
 const BetaFeedback = lazyWithRetry(() => import("./pages/BetaFeedback"));
 const SurveyPage = lazyWithRetry(() => import("./pages/SurveyPage"));
@@ -174,10 +170,9 @@ const NotaryDashboard = lazyWithRetry(() => import("./pages/NotaryDashboard"));
 
 
 const CreatorOnboarding = lazyWithRetry(() => import("./pages/CreatorOnboarding"));
-const CreatorSwitchProgram = lazyWithRetry(() => import("./pages/CreatorSwitchProgram"));
-const JoinPage = lazyWithRetry(() => import("./pages/Join"));
+const _JoinPage = lazyWithRetry(() => import("./pages/Join"));
 const KickFeePage = lazyWithRetry(() => import("./pages/broadcast/KickFeePage"));
-const KickFee = lazyWithRetry(() => import("./pages/KickFee"));
+const _KickFee = lazyWithRetry(() => import("./pages/KickFee"));
 const CourtViewerPage = lazyWithRetry(() => import("./pages/CourtViewerPage"));
 
 const Call = lazyWithRetry(() => import("./pages/Call"));
@@ -187,8 +182,8 @@ const HytroGamingViewer = lazyWithRetry(() => import("./pages/gaming/HytroGaming
 const Trollifications = lazyWithRetry(() => import("./pages/Trollifications"));
 const Trollifieds = lazyWithRetry(() => import("./pages/Trollifieds"));
 const HowToVideosPage = lazyWithRetry(() => import("./pages/JobsHowToPage"));
-const JobsPage = lazyWithRetry(() => import("./pages/Jobs"));
-const OfficerScheduling = lazyWithRetry(() => import("./pages/OfficerScheduling"));
+const _JobsPage = lazyWithRetry(() => import("./pages/Jobs"));
+const _OfficerScheduling = lazyWithRetry(() => import("./pages/OfficerScheduling"));
 const PolicyCenter = lazyWithRetry(() => import("./pages/PolicyCenter"));
 const UniverseEventPage = lazyWithRetry(() => import("./pages/UniverseEventPage"));
 const UniverseBattlesPage = lazyWithRetry(() => import("./pages/UniverseBattlesPage"));
@@ -212,7 +207,7 @@ const SEOFAQPage = lazyWithRetry(() => import("./pages/seo/FAQPage"));
 const SEOPrivacyPage = lazyWithRetry(() => import("./pages/seo/PrivacyPage"));
 const SEOTermsPage = lazyWithRetry(() => import("./pages/seo/TermsPage"));
 
-const ReportDetailsPage = lazyWithRetry(() => import("./pages/ReportDetailsPage"));
+const _ReportDetailsPage = lazyWithRetry(() => import("./pages/ReportDetailsPage"));
 const PasswordReset = lazyWithRetry(() => import("./pages/PasswordReset"));
 const CreditScorePage = lazyWithRetry(() => import("./pages/CreditScorePage"));
 const DepartmentToolsPage = lazyWithRetry(() => import("./pages/department-tools/DepartmentToolsPage"));
@@ -243,11 +238,11 @@ const CreateSchedule = lazyWithRetry(() => import("./pages/admin/CreateSchedule"
 const ReferralBonuses = lazyWithRetry(() => import("./pages/admin/ReferralBonuses"));
 const ControlPanel = lazyWithRetry(() => import("./pages/admin/ControlPanel"));
 const AdminPageVisibility = lazyWithRetry(() => import("./pages/admin/AdminPageVisibility"));
-const ShareAThonLanding = lazyWithRetry(() => import("./pages/shareathon/ShareAThonLanding"));
-const ShareAThonSubmit = lazyWithRetry(() => import("./pages/shareathon/ShareAThonSubmit"));
-const ShareAThonLeaderboard = lazyWithRetry(() => import("./pages/shareathon/ShareAThonLeaderboard"));
-const ShareAThonAdminDashboard = lazyWithRetry(() => import("./pages/shareathon/ShareAThonAdminDashboard"));
-const ShareAThonVerification = lazyWithRetry(() => import("./pages/shareathon/ShareAThonVerification"));
+const _ShareAThonLanding = lazyWithRetry(() => import("./pages/shareathon/ShareAThonLanding"));
+const _ShareAThonSubmit = lazyWithRetry(() => import("./pages/shareathon/ShareAThonSubmit"));
+const _ShareAThonLeaderboard = lazyWithRetry(() => import("./pages/shareathon/ShareAThonLeaderboard"));
+const _ShareAThonAdminDashboard = lazyWithRetry(() => import("./pages/shareathon/ShareAThonAdminDashboard"));
+const _ShareAThonVerification = lazyWithRetry(() => import("./pages/shareathon/ShareAThonVerification"));
 
  const TestDiagnosticsPage = lazyWithRetry(() => import("./pages/admin/TestDiagnosticsPage"));
 const ResetMaintenance = lazyWithRetry(() => import("./pages/admin/ResetMaintenance"));
@@ -265,7 +260,6 @@ const UserFormsTab = lazyWithRetry(() => import("./pages/admin/components/UserFo
 const BucketsDashboard = lazyWithRetry(() => import("./pages/admin/BucketsDashboard"));
 const GrantCoins = lazyWithRetry(() => import("./pages/admin/GrantCoins"));
 const OfficerOperations = lazyWithRetry(() => import("./pages/admin/OfficerOperations"));
-const CreatorSwitchApprovals = lazyWithRetry(() => import("./pages/admin/components/CreatorSwitchApprovals"));
 const MobileAdminDashboard = lazyWithRetry(() => import("./pages/admin/MobileAdminDashboard"));
 const PaymentsDashboard = lazyWithRetry(() => import("./pages/admin/PaymentsDashboard"));
 const EconomyDashboard = lazyWithRetry(() => import("./pages/admin/EconomyDashboard"));
@@ -299,10 +293,10 @@ const AuthenticatedHome = lazyWithRetry(() => import("./pages/Home"));
 const TromailPage = lazyWithRetry(() => import("./pages/tromail/TromailPage"));
 const TroMailOfficePage = lazyWithRetry(() => import("./pages/office/TroMailOfficePage"));
 const UtromailPage = lazyWithRetry(() => import("./pages/utromail/UtromailPage"));
-const UtromailThreadView = lazyWithRetry(() => import("./pages/utromail/UtromailThreadView"));
-const UtromailCompose = lazyWithRetry(() => import("./pages/utromail/UtromailCompose"));
+const _UtromailThreadView = lazyWithRetry(() => import("./pages/utromail/UtromailThreadView"));
+const _UtromailCompose = lazyWithRetry(() => import("./pages/utromail/UtromailCompose"));
 
-const LoadingScreen = () => (
+const _LoadingScreen = () => (
     <div className="min-h-screen flex items-center justify-center bg-[#0A0814] text-white">
       <div className="animate-pulse px-6 py-3 rounded bg-[#121212] border border-[#2C2C2C]">
         Loading…
@@ -341,6 +335,14 @@ const isPublicRoute = (pathname: string) => {
 
   // Podcast routes are public — anyone can listen without signing in
   if (pathname === '/podcast' || pathname.startsWith('/podcast/')) return true
+  if (
+    pathname === '/hytro' ||
+    pathname.startsWith('/hytro/') ||
+    pathname === '/hytrogaming' ||
+    pathname.startsWith('/hytrogaming/')
+  ) return true
+  if (pathname.startsWith('/gaming/watch/')) return true
+  if (pathname === '/treelz' || pathname.startsWith('/treelz/')) return true
 
   // Court routes are public (Agreed access handled by /allowedPaths guard)
   if (pathname === '/court') return true
@@ -369,7 +371,7 @@ const isPublicRoute = (pathname: string) => {
      const user = useAuthStore((s) => s.user);
      const profile = useAuthStore((s) => s.profile);
      const isLoading = useAuthStore((s) => s.isLoading);
-     const isRefreshing = useAuthStore((s) => s.isRefreshing);
+     const _isRefreshing = useAuthStore((s) => s.isRefreshing);
       const { isJailed } = useJailMode(user?.id);
       const location = useLocation();
      
@@ -537,6 +539,7 @@ const AdminManualOrders = lazyWithRetry(() => import("./pages/admin/AdminManualO
 const OfficerManager = lazyWithRetry(() => import("./pages/admin/OfficerManager.js"));
 const ThemePreviewPage = lazyWithRetry(() => import("./pages/dev/ThemePreviewPage.js"));
 const ExecutiveIntake = lazyWithRetry(() => import("./pages/admin/ExecutiveIntake.js"));
+const CriticalAlertsManager = lazyWithRetry(() => import("./pages/admin/CriticalAlertsManager"));
 const AdminCashoutDetailPage = lazyWithRetry(() => import("./pages/admin/CashoutDetailPage.js"));
 const CashoutManager = lazyWithRetry(() => import("./pages/admin/CashoutManager.js"));
 const CourtRoom = lazyWithRetry(() => import("./pages/CourtRoom.js"));
@@ -550,7 +553,7 @@ const AuthCallback = lazyWithRetry(() => import("./pages/AuthCallback.js"));
 const ExitPage = lazyWithRetry(() => import("./pages/ExitPage.js"));
 const FoundingOfficerTrial = lazyWithRetry(() => import("./pages/FoundingOfficerTrial.js"));
 const AppLayout = lazyWithRetry(() => import("./components/layout/AppLayout.js"));
-const ExploreFeed = lazyWithRetry(() => import("./pages/ExploreFeed.js"));
+const _ExploreFeed = lazyWithRetry(() => import("./pages/ExploreFeed.js"));
 const HighBcastersPage = lazyWithRetry(() => import("./pages/HighBcasters"));
 const ExploreSearchResults = lazyWithRetry(() => import("./pages/ExploreSearchResults.js"));
 const StreamSwipePage = lazyWithRetry(() => import("./pages/StreamSwipePage.js"));
@@ -602,24 +605,24 @@ const SearchPage = lazyWithRetry(() => import("./pages/SearchPage.tsx"));
 const Marketplace = lazyWithRetry(() => import("./pages/Marketplace.js"));
 const PodcastCentral = lazyWithRetry(() => import("./pages/PodcastCentral.js"));
 const PodcastRoom = lazyWithRetry(() => import("./pages/PodcastRoom.js"));
-const AuctionStudio = lazyWithRetry(() => import("./pages/auction/AuctionStudio.js"));
-const AuctionStudioLots = lazyWithRetry(() => import("./pages/auction/AuctionStudioLots.js"));
-const AuctioneerDashboard = lazyWithRetry(() => import("./pages/auction/AuctioneerDashboard.js"));
-const MyAuctionShows = lazyWithRetry(() => import("./pages/auction/MyAuctionShows.js"));
-const AuctionReports = lazyWithRetry(() => import("./pages/auction/AuctionReports.js"));
-const AdminAuctionApps = lazyWithRetry(() => import("./pages/auction/AdminAuctionApps.js"));
+const _AuctionStudio = lazyWithRetry(() => import("./pages/auction/AuctionStudio.js"));
+const _AuctionStudioLots = lazyWithRetry(() => import("./pages/auction/AuctionStudioLots.js"));
+const _AuctioneerDashboard = lazyWithRetry(() => import("./pages/auction/AuctioneerDashboard.js"));
+const _MyAuctionShows = lazyWithRetry(() => import("./pages/auction/MyAuctionShows.js"));
+const _AuctionReports = lazyWithRetry(() => import("./pages/auction/AuctionReports.js"));
+const _AdminAuctionApps = lazyWithRetry(() => import("./pages/auction/AdminAuctionApps.js"));
 const LiveAuctionRoom = lazyWithRetry(() => import("./pages/auction/LiveAuctionRoom.js"));
 const AuctionWon = lazyWithRetry(() => import("./pages/auction/AuctionWon.js"));
-const AuctionBidders = lazyWithRetry(() => import("./pages/auction/AuctionBidders.js"));
-const AuctionSales = lazyWithRetry(() => import("./pages/auction/AuctionSales.js"));
-const AuctionAnalytics = lazyWithRetry(() => import("./pages/auction/AuctionAnalytics.js"));
-const AuctionSettings = lazyWithRetry(() => import("./pages/auction/AuctionSettings.js"));
-const AuctionInventory = lazyWithRetry(() => import("./pages/auction/AuctionInventory.js"));
-const AuctionOrderManagement = lazyWithRetry(() => import("./pages/auction/AuctionOrderManagement.js"));
-const PackingStation = lazyWithRetry(() => import("./pages/auction/PackingStation.js"));
-const DeviceManagement = lazyWithRetry(() => import("./pages/auction/DeviceManagement.js"));
-const AuctioneerScanner = lazyWithRetry(() => import("./pages/auction/AuctioneerScanner.js"));
-const AuctionApp = lazyWithRetry(() => import("./pages/auction/AuctionApp.js"));
+const _AuctionBidders = lazyWithRetry(() => import("./pages/auction/AuctionBidders.js"));
+const _AuctionSales = lazyWithRetry(() => import("./pages/auction/AuctionSales.js"));
+const _AuctionAnalytics = lazyWithRetry(() => import("./pages/auction/AuctionAnalytics.js"));
+const _AuctionSettings = lazyWithRetry(() => import("./pages/auction/AuctionSettings.js"));
+const _AuctionInventory = lazyWithRetry(() => import("./pages/auction/AuctionInventory.js"));
+const _AuctionOrderManagement = lazyWithRetry(() => import("./pages/auction/AuctionOrderManagement.js"));
+const _PackingStation = lazyWithRetry(() => import("./pages/auction/PackingStation.js"));
+const _DeviceManagement = lazyWithRetry(() => import("./pages/auction/DeviceManagement.js"));
+const _AuctioneerScanner = lazyWithRetry(() => import("./pages/auction/AuctioneerScanner.js"));
+const _AuctionApp = lazyWithRetry(() => import("./pages/auction/AuctionApp.js"));
 const CoinStore = lazyWithRetry(() => import("./pages/CoinStore.jsx"));
 const MerchStore = lazyWithRetry(() => import("./components/MerchStore"));
 const ProfileFrameStore = lazyWithRetry(() => import("./pages/ProfileFrameStore"));
@@ -635,8 +638,8 @@ const TrollFamilyHome = lazyWithRetry(() => import("./pages/TrollFamilyHome.js")
 const FamilyWarsHub = lazyWithRetry(() => import("./pages/FamilyWarsHub.js"));
 const FamilyLeaderboard = lazyWithRetry(() => import("./pages/FamilyLeaderboard.js"));
 const FamilyShop = lazyWithRetry(() => import("./pages/FamilyShop.js"));
-const TrollOfficerLounge = lazyWithRetry(() => import("./pages/TrollOfficerLounge.js"));
-const OfficerModeration = lazyWithRetry(() => import("./pages/OfficerModeration.js"));
+const _TrollOfficerLounge = lazyWithRetry(() => import("./pages/TrollOfficerLounge.js"));
+const _OfficerModeration = lazyWithRetry(() => import("./pages/OfficerModeration.js"));
 const HomeNotificationPrompt = lazyWithRetry(() => import("./components/HomeNotificationPrompt.js"));
 import { GhostDropInProvider } from "./context/GhostDropInContext";
 const GhostBanner = lazyWithRetry(() => import("./components/home/GhostBanner"));
@@ -685,17 +688,17 @@ function AppContent() {
   const userId = useAuthStore((s) => s.user?.id);
   const user = useAuthStore((s) => s.user); // Keep full user object for components that need it
   const userRole = useAuthStore((s) => s.profile?.role);
-  const isAdmin = useAuthStore((s) => s.profile?.is_admin);
-  const isLeadOfficer = useAuthStore((s) => s.profile?.is_lead_officer);
-  const isTrollOfficer = useAuthStore((s) => s.profile?.is_troll_officer);
-  const isPastor = useAuthStore((s) => s.profile?.is_pastor);
+  const _isAdmin = useAuthStore((s) => s.profile?.is_admin);
+  const _isLeadOfficer = useAuthStore((s) => s.profile?.is_lead_officer);
+  const _isTrollOfficer = useAuthStore((s) => s.profile?.is_troll_officer);
+  const _isPastor = useAuthStore((s) => s.profile?.is_pastor);
   const { isJailed: isJailedFromHook } = useJailMode(userId);
   const isJailedProfile = useAuthStore((s) => (s.profile as any)?.is_jailed);
   const isJailed = isJailedFromHook || isJailedProfile;
-  const isBanned = useAuthStore((s) => s.profile?.is_banned);
-  const isKicked = useAuthStore((s) => s.profile?.is_kicked);
-  const hasActiveWarrant = useAuthStore((s) => s.profile?.has_active_warrant);
-  const username = useAuthStore((s) => s.profile?.username);
+  const _isBanned = useAuthStore((s) => s.profile?.is_banned);
+  const _isKicked = useAuthStore((s) => s.profile?.is_kicked);
+  const _hasActiveWarrant = useAuthStore((s) => s.profile?.has_active_warrant);
+  const _username = useAuthStore((s) => s.profile?.username);
   const profileRole = useAuthStore((s) => s.profile?.role);
 
   // Some legacy logic needs the full profile object in several effects
@@ -713,10 +716,10 @@ function AppContent() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileModalLoading] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const { isMobile, isMobileWidth } = useIsMobile();
+  const { isMobile: _isMobile, isMobileWidth } = useIsMobile();
   const isMobileUI = isMobileWidth || isStandalone;
   const [initialProfileLoaded, setInitialProfileLoaded] = useState(false);
-  const [activeMeetingNotification, setActiveMeetingNotification] = useState<{
+  const [_activeMeetingNotification, _setActiveMeetingNotification] = useState<{
     meetingId: string;
     meetingTitle: string;
   } | null>(null);
@@ -1442,7 +1445,7 @@ function AppContent() {
             }
 
             return value
-          } catch (e) {
+          } catch (_e) {
             return String(value)
           }
         }
@@ -2125,7 +2128,6 @@ const handleVisibilityChange = async () => {
                    
                   {/* 📝 Creator Onboarding */}
                   <Route path="/onboarding/creator" element={<CreatorOnboarding />} />
-                  <Route path="/creator-switch" element={<CreatorSwitchProgram />} />
 
 {/* 🏳️‍🌈 Pride Shop */}
                    <Route path="/pride-shop" element={<PrideShop />} />
@@ -2189,6 +2191,20 @@ const handleVisibilityChange = async () => {
                      }
                    />
                    <Route
+                     path="/admin/marketing"
+                     element={
+                       <RequireRole roles={[
+                         UserRole.ADMIN,
+                         UserRole.SUPERADMIN,
+                         UserRole.OWNER,
+                         UserRole.CEO,
+                         UserRole.MARKETING_AGENT,
+                       ]}>
+                         <MarketingPage />
+                       </RequireRole>
+                     }
+                   />
+                   <Route
                      path="/admin/security-command-center"
                      element={
                        <RequireRole roles={[UserRole.ADMIN]}>
@@ -2196,14 +2212,6 @@ const handleVisibilityChange = async () => {
                        </RequireRole>
                      }
                    />
-                  <Route
-                    path="/admin/creator-approvals"
-                    element={
-                      <RequireRole roles={[UserRole.ADMIN, UserRole.SECRETARY, UserRole.LEAD_TROLL_OFFICER]}>
-                        <CreatorSwitchApprovals />
-                      </RequireRole>
-                    }
-                  />
                   <Route
                     path="/admin/officer-operations"
                     element={
@@ -2535,14 +2543,14 @@ const handleVisibilityChange = async () => {
                          </RequireRole>
                        }
                      />
-                      <Route
-                        path="/admin/mai-singoff-judges"
-                        element={
-                          <RequireRole roles={[UserRole.ADMIN, UserRole.CEO]}>
-                            <SingOffJudgeApplicationsAdmin />
-                          </RequireRole>
-                        }
-                      />
+                     <Route
+                       path="/admin/critical-alerts"
+                       element={
+                         <RequireRole roles={[UserRole.ADMIN]}>
+                           <CriticalAlertsManager />
+                         </RequireRole>
+                       }
+                     />
 
                      <Route
                        path="/admin/export-data"

@@ -448,7 +448,7 @@ export default function TrollOfficerLounge() {
       officerName: profile.username || 'Officer',
       rank: officerStats.rank,
       totalEarned: officerStats.coinsEarned,
-      payPeriod: 'Jan 1 - Jan 15, 2026',
+      perkPeriod: 'Jan 1 - Jan 15, 2026',
       logs: payrollReports
     })
     toast.success('Payroll PDF downloaded!')

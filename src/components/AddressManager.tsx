@@ -67,7 +67,7 @@ export function useCreateAddress() {
       if (error) throw error
       return data as ShippingAddress
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_, _variables) => {
       queryClient.invalidateQueries({
         queryKey: ["saved-addresses"],
       })

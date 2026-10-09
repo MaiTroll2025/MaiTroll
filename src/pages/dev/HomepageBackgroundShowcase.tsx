@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react'
-import { Check, X, Eye, Sparkles, Zap, Flame, Wave, Gradient, Layout, List, Menu, CheckSquare, Radio, Users, Play, ChevronRight } from 'lucide-react'
+import { Check, Eye, Sparkles, Zap, Layout, Menu, Users, Play } from 'lucide-react';
 
 interface BackgroundOption {
   id: string
@@ -83,7 +83,7 @@ interface LayoutOption {
   icon: React.ComponentType<any>
 }
 
-const layoutOptions: LayoutOption[] = [
+const _layoutOptions: LayoutOption[] = [
   {
     id: 'default',
     name: 'Default Layout',
@@ -152,8 +152,8 @@ const featureToggles: FeatureToggle[] = [
 
 export default function HomepageBackgroundShowcase() {
   const [selectedBg, setSelectedBg] = useState<string | null>('neon-purple-pink')
-  const [selectedLayout, setSelectedLayout] = useState<string | null>('default')
-  const [featureStates, setFeatureStates] = useState<Record<string, boolean>>(() => {
+  const [_selectedLayout, _setSelectedLayout] = useState<string | null>('default')
+  const [_featureStates, _setFeatureStates] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {}
     featureToggles.forEach(toggle => {
       initialState[toggle.id] = toggle.defaultValue

@@ -24,7 +24,7 @@ const SEAT_USERS = [
   { id: 6, name: "Chatter99", role: "guest", hasInsurance: true },
 ];
 
-function MockVideo({ className, label = "", gradient = "from-purple-900/40 to-blue-900/40", showSeats = false, isBroadcaster = false, onSeatClick }: { 
+function MockVideo({ className, label = "", gradient = "from-purple-900/40 to-blue-900/40", showSeats = false, isBroadcaster: _isBroadcaster = false, onSeatClick }: { 
   className?: string; 
   label?: string; 
   gradient?: string; 
@@ -169,7 +169,7 @@ function MobileLayout1_Classic({ isBroadcaster = false }: { isBroadcaster?: bool
   const [showBroadcastMenu, setShowBroadcastMenu] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [broadOfficers, setBroadOfficers] = useState([1, 2]);
+  const [broadOfficers, _setBroadOfficers] = useState([1, 2]);
   
   const handleSeatClick = (user: any) => {
     if (isBroadcaster) {

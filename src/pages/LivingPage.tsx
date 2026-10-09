@@ -1,28 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import {
-  AlertTriangle,
-  Building,
-  Calculator,
-  CheckCircle,
-  CreditCard,
-  Droplets,
-  Edit2,
-  FileText,
-  Home,
-  Hotel,
-  Key,
-  Landmark,
-  Loader2,
-  Tent,
-  Trash2,
-  UserMinus,
-  Users,
-  Warehouse,
-  X,
-  Zap,
-} from 'lucide-react'
+import { Building, Calculator, Edit2, FileText, Home, Hotel, Key, Landmark, Loader2, Tent, Trash2, UserMinus, Users, Warehouse, X } from 'lucide-react';
 
 import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
@@ -310,7 +289,7 @@ export default function LivingPage() {
   }, [profile])
 
   const neighborhoodId = profile?.neighborhood_id || myNeighborhood?.id || null
-  const houseId = profile?.house_id || myHouse?.id || null
+  const _houseId = profile?.house_id || myHouse?.id || null
 
   useEffect(() => {
     setIsAdmin(adminStatus)

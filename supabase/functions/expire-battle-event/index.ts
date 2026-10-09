@@ -90,7 +90,7 @@ export const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-    const { data: battle, error: battleError } = await supabase
+    const { data: battle, error: _battleError } = await supabase
       .from('battles')
       .select('active_event_type, active_event_ends_at')
       .eq('id', targetEvent.battle_id)

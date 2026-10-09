@@ -5,12 +5,12 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "jsr:@supabase/supabase-js@2"
 import { withCors, handleCorsPreflight, unauthorizedResponse } from "../_shared/cors.ts"
 
-const PAYPAL_API_URL = "https://api.paypal.com"
-const PAYPAL_SANDBOX_URL = "https://api.sandbox.paypal.com"
-const PRINTIFY_API_BASE = "https://api.printify.com"
-const REQUEST_TIMEOUT_MS = 30000
+const _PAYPAL_API_URL = "https://api.paypal.com"
+const _PAYPAL_SANDBOX_URL = "https://api.sandbox.paypal.com"
+const _PRINTIFY_API_BASE = "https://api.printify.com"
+const _REQUEST_TIMEOUT_MS = 30000
 
-interface ShippingAddress {
+interface _ShippingAddress {
   first_name: string
   last_name: string
   email: string
@@ -23,13 +23,13 @@ interface ShippingAddress {
   country: string
 }
 
-interface OrderItem {
+interface _OrderItem {
   printify_product_id: string
   printify_variant_id: string
   quantity: number
 }
 
-async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+async function _fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -39,23 +39,23 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
   }
 }
 
-function getShopId(): string | null {
+function _getShopId(): string | null {
   return Deno.env.get("PRINTIFY_SHOP_ID") || null
 }
 
-function getApiKey(): string | null {
+function _getApiKey(): string | null {
   return Deno.env.get("PRINTIFY_API_KEY") || null
 }
 
-function getPayPalClientId(): string | null {
+function _getPayPalClientId(): string | null {
   return Deno.env.get("PAYPAL_CLIENT_ID") || null
 }
 
-function getPayPalSecret(): string | null {
+function _getPayPalSecret(): string | null {
   return Deno.env.get("PAYPAL_CLIENT_SECRET") || null
 }
 
-function getPayPalMode(): string {
+function _getPayPalMode(): string {
   return (Deno.env.get("PAYPAL_MODE") || Deno.env.get("PAYPAL_ENV") || "live").toLowerCase()
 }
 

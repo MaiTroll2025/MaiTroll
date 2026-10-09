@@ -33,7 +33,7 @@ const formatHours = (hours: number): string => {
   return `${h}h ${m}m`
 }
 
-export default function ClockInPanel({ isHRAdmin, currentUserId, hasApprovedRole }: ClockInPanelProps) {
+export default function ClockInPanel({ isHRAdmin: _isHRAdmin, currentUserId, hasApprovedRole }: ClockInPanelProps) {
   const [activeSession, setActiveSession] = useState<WorkSession | null>(null)
   const [todaySessions, setTodaySessions] = useState<WorkSession[]>([])
   const [weekSessions, setWeekSessions] = useState<WorkSession[]>([])

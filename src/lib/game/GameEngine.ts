@@ -1,4 +1,4 @@
-import { GameState, ReactionSpeedGameState, ReactionSpeedPhase, ReactionSpeedPlayerState } from './types';
+import { GameState, ReactionSpeedGameState, ReactionSpeedPlayerState } from './types';
 import { GameType } from './gameTypes';
 
 interface GameEngineInterface<T extends GameState> {
@@ -18,8 +18,9 @@ export class ReactionSpeedGameEngine implements GameEngineInterface<ReactionSpee
       username: p.username,
       score: 0,
       isHost: false, // Will be set by MatchController based on match creation
-      reactionTime: null,
+      reactionTime: null as number | null,
       hasReacted: false,
+      isConnected: true,
     }));
 
     return {
@@ -146,7 +147,7 @@ class PlaceholderGameEngine implements GameEngineInterface<GameState> {
   initializeGame(players: { id: string; username: string }[]): GameState {
     return {
       matchId: '',
-      gameType: 'placeholder',
+      gameType: 'two-truths-lie' as GameType,
       players: players.map(p => ({
         id: p.id,
         username: p.username,

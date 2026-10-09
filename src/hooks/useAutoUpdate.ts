@@ -70,7 +70,7 @@ export function useAutoUpdate() {
   const cancelUpdate = useCallback(async () => {
     if (!window.electronAPI) return
     const status = await window.electronAPI.cancelUpdate()
-    setUpdateStatus(status)
+    setUpdateStatus(status as UpdateStatus)
   }, [])
 
   const dismissUpdate = useCallback(() => {

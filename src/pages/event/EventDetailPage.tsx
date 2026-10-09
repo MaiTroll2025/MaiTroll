@@ -1,27 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Users,
-  MapPin,
-  Bell,
-  BellOff,
-  Share2,
-  UserPlus,
-  UserMinus,
-  Radio,
-  Trophy,
-  Shield,
-  Star,
-  Edit,
-  Trash2,
-  Lock,
-  Send,
-  Download,
-} from 'lucide-react';
-import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
+import { ArrowLeft, Calendar, Clock, Users, MapPin, Bell, BellOff, Share2, Radio, Trophy, Shield, Star, Edit, Trash2, Lock, Send, Download } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { useAuthStore } from '@/lib/store';
 import type { CalendarEvent, EventParticipant } from '@/types/calendar';
 import { EVENT_CATEGORIES } from '@/types/calendar';

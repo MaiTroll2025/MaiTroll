@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { EPaperStory, EPaperStoryTip, CreateEPaperStoryInput, TipEPaperStoryInput, UniverseNewspaperEvent } from '@/types/supporterEconomy';
+import type { EPaperStory, CreateEPaperStoryInput, TipEPaperStoryInput, UniverseNewspaperEvent } from '@/types/supporterEconomy';
 
 export function useEPaperStories(p_limit: number = 10, p_offset: number = 0, p_status: string = 'published') {
   return useQuery<EPaperStory[]>({

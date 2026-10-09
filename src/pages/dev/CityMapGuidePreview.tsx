@@ -15,18 +15,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../../lib/store'
-import { supabase } from '../../lib/supabase'
 import { cn } from '../../lib/utils'
-import {
-  Radio, Users, Play, Zap, Sparkles, Gift, Sword,
-  Crown, Castle, Badge, Shield, Eye, Compass, Mic,
-  ArrowRight, ChevronLeft, ChevronRight, X, MapPin,
-  Video, Coins, ScrollText, GraduationCap, ShoppingBag,
-  Building2, Newspaper, Briefcase, Gem, Star, Flame,
-  Repeat, Home as HomeIcon, Lock, Unlock, Heart, Trophy, Flag,
-  Hourglass, Layout, MessageSquare, Send, Landmark, Megaphone
-} from 'lucide-react'
-import { MaiTrollTheme } from '../../styles/trollCityTheme'
+import { Radio, Users, Play, Sparkles, Gift, Sword, Crown, Shield, Eye, Compass, Mic, ArrowRight, ChevronLeft, ChevronRight, X, MapPin, Coins, ScrollText, Building2, Newspaper, Briefcase, Gem, Star, Flame, Home as HomeIcon, Lock, Flag, MessageSquare, Landmark, Megaphone } from 'lucide-react';
+import { useGlobalActivity, type ActivityEvent } from '../../hooks/useGlobalActivity'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEMO / MOCK DATA
@@ -265,7 +256,7 @@ interface FeatureExplain {
   icon: React.ReactNode
   title: string
   content: string
-  color: 'cyan' | 'pink' | 'purple' | 'gold' | 'green'
+  color: 'cyan' | 'pink' | 'purple' | 'gold' | 'green' | 'amber'
 }
 
 const FEATURES: FeatureExplain[] = [
@@ -397,7 +388,7 @@ const stepAccent = [
 
 export default function CityMapGuidePreview() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
 
   // ── Live events (useGlobalActivity with demo fallback) ────────────────────
   const liveEvents = useGlobalActivity()
@@ -688,7 +679,7 @@ export default function CityMapGuidePreview() {
             </p>
 
             <div className="space-y-3">
-              {getDefaultSteps().map((step, i) => {
+              {getDefaultSteps().map((step, _i) => {
                 const done = checkedSteps.has(step.step)
                 const accent = stepAccent[step.step - 1] || stepAccent[0]
                 return (
@@ -846,8 +837,8 @@ export default function CityMapGuidePreview() {
 /* ═════════════════════════════════════════════════════════════════════════════
    GLOW ORB BACKGROUND
 ════════════════════════════════════════════════════════════════════════════ */
-function GlowOrb({ size, top, left, color, delay }: {
-  size: string; top: string; left: string; color: string; delay: string
+function GlowOrb({ size, top, left, right, color, delay }: {
+  size: string; top: string; left?: string; right?: string; color: string; delay: string
 }) {
   const colorMap: Record<string, string> = {
     purple: 'rgba(139,92,246,0.28)',
@@ -858,7 +849,7 @@ function GlowOrb({ size, top, left, color, delay }: {
   return (
     <div
       className={cn('absolute rounded-full blur-3xl', size)}
-      style={{ top, left, background: colorMap[color] || colorMap.cyan, animationDelay: delay }}
+      style={{ top, left, right, background: colorMap[color] || colorMap.cyan, animationDelay: delay }}
     />
   )
 }
@@ -879,7 +870,7 @@ function DevPreviewBadge() {
 /* ═════════════════════════════════════════════════════════════════════════════
    HOLOGRAPHIC MAP PIN DOT (spins around center in hero)
 ════════════════════════════════════════════════════════════════════════════ */
-function MapPinDot({ district, index, color }: {
+function MapPinDot({ district, index, color: _color }: {
   district: District; index: number; color: string
 }) {
   const angle = (index * 360 / DISTRICTS.length) - 90       // start at top

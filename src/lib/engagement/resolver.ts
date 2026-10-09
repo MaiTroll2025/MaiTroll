@@ -1,9 +1,9 @@
 import type { StreamType, EngagementTarget } from '../../types/engagement';
 
-const BROADCAST_PAGE_PATHS = ['/broadcast', '/broadcast/'];
-const VIEWER_PAGE_PATHS = ['/viewer', '/viewer/'];
-const HYTRO_GAME_PATHS = ['/hytro', '/hytro/'];
-const PODCAST_PATHS = ['/podcast', '/podcast/'];
+const _BROADCAST_PAGE_PATHS = ['/broadcast', '/broadcast/'];
+const _VIEWER_PAGE_PATHS = ['/viewer', '/viewer/'];
+const _HYTRO_GAME_PATHS = ['/hytro', '/hytro/'];
+const _PODCAST_PATHS = ['/podcast', '/podcast/'];
 
 const PATH_TO_STREAM_TYPE: Record<string, StreamType> = {
   '/broadcast': 'broadcast',

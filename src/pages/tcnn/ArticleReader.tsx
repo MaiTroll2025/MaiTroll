@@ -50,18 +50,15 @@ interface RelatedArticle {
   headline: string;
   featured_image_url: string | null;
   published_at: string;
-  author: {
-    stage_name: string;
-    avatar_url: string | null;
-  } | null;
+  author: any;
 }
 
 export default function ArticleReader() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, profile } = useAuthStore();
-  const { canTip, checkCanTip } = useTCNNTipping();
-  const { hasAnyRole } = useTCNNRoles(user?.id);
+  const { user, profile: _profile } = useAuthStore();
+  const { canTip: _canTip, checkCanTip } = useTCNNTipping();
+  const { hasAnyRole: _hasAnyRole } = useTCNNRoles(user?.id);
   
   const [article, setArticle] = useState<TCNNArticle | null>(null);
   const sanitizedContent = article?.content ? DOMPurify.sanitize(article.content) : '';
@@ -73,7 +70,7 @@ export default function ArticleReader() {
   const [tipMessage, setTipMessage] = useState('');
   const [isTipping, setIsTipping] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [canUserTip, setCanUserTip] = useState(false);
+  const [_canUserTip, setCanUserTip] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -287,7 +284,7 @@ export default function ArticleReader() {
         setIsBookmarked(true);
         toast.success('Added to bookmarks');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to update bookmark');
     }
   };

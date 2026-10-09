@@ -37,7 +37,7 @@ function parseFile(filename) {
   let rawContent;
   try {
     rawContent = fs.readFileSync(filepath, 'utf-8');
-  } catch (e) {
+  } catch (_e) {
     return { error: `File not found: ${filepath}` };
   }
 
@@ -155,7 +155,7 @@ for (const f of requestedFiles) {
 }
 
 let totalTables = 0, totalFuncs = 0;
-for (const [file, data] of Object.entries(results)) {
+for (const [_file, data] of Object.entries(results)) {
   if (!data.error) {
     totalTables += data.tablesCreated.length;
     totalFuncs += data.functionsCreated.length;

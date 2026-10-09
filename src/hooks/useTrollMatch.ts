@@ -45,7 +45,7 @@ function normalizeAllUser(
   profile: any,
   activeSessionsMap: Map<string, { isActive: boolean; lastActive: string }>,
   liveStreamsMap: Map<string, { stream_id: string; current_viewers: number }>,
-  now: Date
+  _now: Date
 ): TMAllUser {
   const streamInfo = liveStreamsMap.get(profile.id);
   const sessionInfo = activeSessionsMap.get(profile.id);

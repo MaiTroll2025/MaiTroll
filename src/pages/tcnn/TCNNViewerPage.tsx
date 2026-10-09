@@ -11,20 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Room, RoomEvent, RemoteParticipant } from 'livekit-client';
 import { toast } from 'sonner';
-import {
-  Radio,
-  Eye,
-  Heart,
-  MessageSquare,
-  X,
-  Send,
-  User,
-  ArrowLeft,
-  ThumbsUp,
-  Sparkles,
-  Volume2,
-  Maximize,
-} from 'lucide-react';
+import { Radio, Eye, Heart, MessageSquare, X, Send, User, ArrowLeft, Maximize } from 'lucide-react';
 import { generateUUID } from '@/lib/uuid';
 
 interface TCNNStream {
@@ -77,7 +64,7 @@ export default function TCNNViewerPage() {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Lower third
-  const [lowerThird, setLowerThird] = useState<LowerThirdData>({
+  const [lowerThird, _setLowerThird] = useState<LowerThirdData>({
     headline: 'BREAKING NEWS',
     subtext: 'MaiTroll LAUNCHES \u2013 A NEW ERA OF LIVE STREAMING',
   });
@@ -172,7 +159,7 @@ export default function TCNNViewerPage() {
         const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
         if (!livekitUrl) return;
 
-        await room.connect(livekitUrl, tokenData.token, { name: streamId, identity: viewerIdentity });
+        await room.connect(livekitUrl, tokenData.token);
         const existing = Array.from(room.remoteParticipants.values());
         setRemoteParticipants(existing);
       } catch (err) {

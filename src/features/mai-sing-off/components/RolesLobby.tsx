@@ -18,7 +18,7 @@ interface Props {
   staffView?: boolean
 }
 
-export function RolesLobby({ staffView = false }: Props) {
+export function RolesLobby({ staffView: _staffView = false }: Props) {
   const { user, profile } = useAuthStore()
   const actions = useSingOffActions()
 

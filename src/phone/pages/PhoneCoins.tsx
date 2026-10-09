@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
-import { ArrowLeft, Coins, ShoppingBag, History, TrendingUp, Award, Zap } from 'lucide-react'
+import { ArrowLeft, Coins, ShoppingBag, History, TrendingUp, Zap } from 'lucide-react';
 
 interface CoinPackage {
   id: string
@@ -16,7 +16,7 @@ interface CoinPackage {
 export default function PhoneCoins() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const profile = useAuthStore((s) => s.profile)
+  const _profile = useAuthStore((s) => s.profile)
   const [balance, setBalance] = useState<number>(0)
   const [packages, setPackages] = useState<CoinPackage[]>([])
   const [loading, setLoading] = useState(true)

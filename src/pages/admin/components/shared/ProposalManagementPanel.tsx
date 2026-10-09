@@ -1,12 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../../lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import { Badge } from '../../../../components/ui/badge';
-import { ScrollArea } from '../../../../components/ui/scroll-area';
-import { Tabs, TabsList, TabsTrigger } from '../../../../components/ui/tabs';
 import { toast } from 'sonner';
-import { FileText, Check, X } from 'lucide-react';
+import { Check, FileText, RefreshCw, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Proposal {
@@ -33,10 +28,12 @@ interface ProposalManagementPanelProps {
 export default function ProposalManagementPanel({ viewMode: _viewMode }: ProposalManagementPanelProps) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('pending');
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeModule, setActiveModule] = useState('pending');
 
   const fetchProposals = async () => {
     setLoading(true);
+    setRefreshing(true);
     try {
       const { data, error } = await supabase
         .from('president_proposals')
@@ -53,6 +50,7 @@ export default function ProposalManagementPanel({ viewMode: _viewMode }: Proposa
       toast.error('Failed to load proposals');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -83,114 +81,226 @@ export default function ProposalManagementPanel({ viewMode: _viewMode }: Proposa
     }
   };
 
-  const filteredProposals = proposals.filter(p => 
-    activeTab === 'all' ? true : p.status === activeTab
+  const counts = useMemo(() => ({
+    pending: proposals.filter((p) => p.status === 'pending').length,
+    approved: proposals.filter((p) => p.status === 'approved').length,
+    rejected: proposals.filter((p) => p.status === 'rejected').length,
+    all: proposals.length,
+  }), [proposals]);
+
+  const filteredProposals = proposals.filter((p) =>
+    activeModule === 'all' ? true : p.status === activeModule
   );
 
   const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50',
-    approved: 'bg-green-500/20 text-green-500 border-green-500/50',
-    rejected: 'bg-red-500/20 text-red-500 border-red-500/50',
-    expired: 'bg-slate-500/20 text-slate-500 border-slate-500/50',
+    pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
+    approved: 'bg-green-500/20 text-green-400 border-green-500/50',
+    rejected: 'bg-red-500/20 text-red-400 border-red-500/50',
+    expired: 'bg-slate-500/20 text-slate-400 border-slate-500/50',
   };
 
+  const modules = [
+    {
+      id: 'pending',
+      label: 'Pending',
+      icon: <FileText className="w-4 h-4" />,
+      color: 'text-yellow-400',
+      bgColor: 'bg-yellow-500/20',
+      borderColor: 'border-yellow-500/30',
+      count: counts.pending,
+    },
+    {
+      id: 'approved',
+      label: 'Approved',
+      icon: <Check className="w-4 h-4" />,
+      color: 'text-green-400',
+      bgColor: 'bg-green-500/20',
+      borderColor: 'border-green-500/30',
+      count: counts.approved,
+    },
+    {
+      id: 'rejected',
+      label: 'Rejected',
+      icon: <X className="w-4 h-4" />,
+      color: 'text-red-400',
+      bgColor: 'bg-red-500/20',
+      borderColor: 'border-red-500/30',
+      count: counts.rejected,
+    },
+    {
+      id: 'all',
+      label: 'All History',
+      icon: <FileText className="w-4 h-4" />,
+      color: 'text-slate-400',
+      bgColor: 'bg-slate-500/20',
+      borderColor: 'border-slate-500/30',
+      count: counts.all,
+    },
+  ];
+
+  const activeModuleConfig = modules.find((m) => m.id === activeModule) || modules[0];
+
   return (
-    <Card className="bg-slate-900/50 border-slate-800">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-            <div>
-                <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-purple-400" />
-                    Presidential Proposals
-                </CardTitle>
-                <CardDescription>Review and manage proposals from the President</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" onClick={fetchProposals}>
-                Refresh
-            </Button>
+    <div className="bg-[#141414] border border-[#2C2C2C] rounded-xl p-6 mb-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-purple-500/20 border border-purple-500/30 rounded-lg flex items-center justify-center">
+            <FileText className="w-5 h-5 text-purple-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white">Presidential Proposals</h3>
+            <p className="text-sm text-gray-400">Review and manage proposals from the President</p>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="pending" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-slate-950 border border-slate-800 mb-4">
-                <TabsTrigger value="pending">Pending ({proposals.filter(p => p.status === 'pending').length})</TabsTrigger>
-                <TabsTrigger value="approved">Approved</TabsTrigger>
-                <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                <TabsTrigger value="all">All History</TabsTrigger>
-            </TabsList>
-            
-            <ScrollArea className="h-[500px] pr-4">
-                {loading ? (
-                    <div className="text-center py-12 text-slate-500">Loading proposals...</div>
-                ) : filteredProposals.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500 border border-dashed border-slate-800 rounded-lg">
-                        No proposals found in this category
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        {filteredProposals.map((proposal) => (
-                            <div key={proposal.id} className="p-4 bg-slate-950 rounded-lg border border-slate-800">
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <Badge variant="outline" className="uppercase text-xs tracking-wider">
-                                            {proposal.type}
-                                        </Badge>
-                                        <h3 className="font-bold text-white text-lg">{proposal.title}</h3>
-                                    </div>
-                                    <div className={`px-2 py-1 rounded text-xs font-bold border uppercase ${statusColors[proposal.status]}`}>
-                                        {proposal.status}
-                                    </div>
-                                </div>
-                                
-                                <p className="text-slate-400 mb-4 text-sm leading-relaxed">
-                                    {proposal.description}
-                                </p>
+        <button
+          onClick={fetchProposals}
+          disabled={refreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-[#2C2C2C] hover:bg-[#3C3C3C] rounded-lg font-semibold text-white transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
+      </div>
 
-                                <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800 pt-3">
-                                    <div className="flex items-center gap-2">
-                                        <span>Submitted by {proposal.creator?.username || 'Unknown'}</span>
-                                        <span>•</span>
-                                        <span>{format(new Date(proposal.created_at), 'MMM d, yyyy HH:mm')}</span>
-                                    </div>
-                                    
-                                    {proposal.status === 'pending' && (
-                                        <div className="flex gap-2">
-                                            <Button 
-                                                size="sm" 
-                                                variant="destructive" 
-                                                className="h-8"
-                                                onClick={() => handleReview(proposal.id, 'rejected')}
-                                            >
-                                                <X className="w-3 h-3 mr-1" />
-                                                Reject
-                                            </Button>
-                                            <Button 
-                                                size="sm" 
-                                                className="h-8 bg-green-600 hover:bg-green-700"
-                                                onClick={() => handleReview(proposal.id, 'approved')}
-                                            >
-                                                <Check className="w-3 h-3 mr-1" />
-                                                Approve
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
+      {/* Module Selector */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {modules.map((module) => (
+          <button
+            key={module.id}
+            onClick={() => setActiveModule(module.id)}
+            className={`relative p-4 rounded-lg border transition-all duration-200 ${
+              activeModule === module.id
+                ? `${module.bgColor} ${module.borderColor} border-opacity-100`
+                : 'bg-[#0A0814] border-[#2C2C2C] hover:border-[#3C3C3C]'
+            }`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  activeModule === module.id ? module.bgColor : 'bg-[#2C2C2C]'
+                }`}
+              >
+                <div className={activeModule === module.id ? module.color : 'text-gray-400'}>
+                  {module.icon}
+                </div>
+              </div>
+              <div className="text-left">
+                <div
+                  className={`text-sm font-medium ${
+                    activeModule === module.id ? 'text-white' : 'text-gray-300'
+                  }`}
+                >
+                  {module.label}
+                </div>
+                <div className="text-xs text-gray-400">{module.count}</div>
+              </div>
+            </div>
+            {activeModule === module.id && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+            )}
+          </button>
+        ))}
+      </div>
 
-                                {(proposal.review_note || proposal.reviewed_at) && (
-                                    <div className="mt-3 p-2 bg-slate-900/50 rounded text-xs text-slate-400 border border-slate-800">
-                                        <span className="font-bold text-slate-300">Review Note:</span> {proposal.review_note || 'No notes'}
-                                        <div className="mt-1 text-slate-600">
-                                            Reviewed {proposal.reviewed_at ? format(new Date(proposal.reviewed_at), 'MMM d, HH:mm') : ''}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+      {/* Active Module Content */}
+      <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-medium text-white flex items-center gap-2">
+            <span className={activeModuleConfig.color}>{activeModuleConfig.icon}</span>
+            {activeModuleConfig.label} ({activeModuleConfig.count})
+          </h4>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8 text-gray-400">
+            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+            Loading proposals...
+          </div>
+        ) : filteredProposals.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            No proposals found in this category
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+            {filteredProposals.map((proposal) => (
+              <div key={proposal.id} className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-4">
+                <div className="flex justify-between items-start mb-3 gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="shrink-0 px-2 py-1 rounded text-xs font-bold border border-slate-700 text-slate-300 bg-slate-500/10 uppercase tracking-wider">
+                      {proposal.type}
+                    </span>
+                    <h3 className="truncate font-bold text-white">{proposal.title}</h3>
+                  </div>
+                  <div className={`shrink-0 px-2 py-1 rounded text-xs font-bold border uppercase ${statusColors[proposal.status]}`}>
+                    {proposal.status}
+                  </div>
+                </div>
+
+                <p className="text-gray-400 mb-4 text-sm leading-relaxed">
+                  {proposal.description}
+                </p>
+
+                <div className="flex items-center justify-between text-xs text-gray-500 border-t border-[#2C2C2C] pt-3">
+                  <div className="flex items-center gap-2">
+                    <span>Submitted by {proposal.creator?.username || 'Unknown'}</span>
+                    <span>•</span>
+                    <span>{format(new Date(proposal.created_at), 'MMM d, yyyy HH:mm')}</span>
+                  </div>
+
+                  {proposal.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleReview(proposal.id, 'rejected')}
+                        className="flex items-center gap-1 px-3 py-1 text-xs bg-red-600 hover:bg-red-500 rounded transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handleReview(proposal.id, 'approved')}
+                        className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600 hover:bg-green-500 rounded transition-colors"
+                      >
+                        <Check className="w-3 h-3" />
+                        Approve
+                      </button>
                     </div>
+                  )}
+                </div>
+
+                {(proposal.review_note || proposal.reviewed_at) && (
+                  <div className="mt-3 p-2 bg-[#141414] border border-[#2C2C2C] rounded text-xs text-gray-400">
+                    <span className="font-bold text-gray-300">Review Note:</span> {proposal.review_note || 'No notes'}
+                    <div className="mt-1 text-gray-600">
+                      Reviewed {proposal.reviewed_at ? format(new Date(proposal.reviewed_at), 'MMM d, HH:mm') : ''}
+                    </div>
+                  </div>
                 )}
-            </ScrollArea>
-        </Tabs>
-      </CardContent>
-    </Card>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Quick Stats Bar */}
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-yellow-400">{counts.pending}</div>
+          <div className="text-xs text-gray-400">Pending</div>
+        </div>
+        <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-green-400">{counts.approved}</div>
+          <div className="text-xs text-gray-400">Approved</div>
+        </div>
+        <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-red-400">{counts.rejected}</div>
+          <div className="text-xs text-gray-400">Rejected</div>
+        </div>
+        <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-slate-400">{counts.all}</div>
+          <div className="text-xs text-gray-400">Total</div>
+        </div>
+      </div>
+    </div>
   );
 }

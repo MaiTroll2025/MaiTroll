@@ -1,4 +1,4 @@
-import { Crown, Gavel } from 'lucide-react'
+import { Crown } from 'lucide-react';
 import { RemoteVideoRenderer } from './RemoteVideoRenderer'
 import type { SingOffUser } from '../types'
 

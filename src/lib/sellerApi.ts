@@ -8,62 +8,8 @@ import type {
   SellerTier, 
   MarketplaceReview, 
   CreateReviewInput, 
-  TierEvaluationResult,
   MediaMetadata 
 } from './sellerTiers';
-
-// ==========================================
-// TIER MANAGEMENT
-// ==========================================
-
-/**
- * Evaluate and update a seller's tier based on their metrics
- */
-export async function evaluateSellerTier(sellerId: string): Promise<TierEvaluationResult> {
-  const { data, error } = await supabase.rpc('evaluate_seller_tier', {
-    p_seller_id: sellerId,
-  });
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Record a completed sale and re-evaluate tier
- */
-export async function recordCompletedSale(sellerId: string): Promise<TierEvaluationResult> {
-  const { data, error } = await supabase.rpc('record_completed_sale', {
-    p_seller_id: sellerId,
-  });
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Record a fraud flag on a seller
- */
-export async function recordFraudFlag(sellerId: string, flagCount: number = 1): Promise<TierEvaluationResult> {
-  const { data, error } = await supabase.rpc('record_fraud_flag', {
-    p_seller_id: sellerId,
-    p_flag_count: flagCount,
-  });
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Record a dispute against a seller
- */
-export async function recordDispute(sellerId: string): Promise<TierEvaluationResult> {
-  const { data, error } = await supabase.rpc('record_dispute', {
-    p_seller_id: sellerId,
-  });
-
-  if (error) throw error;
-  return data;
-}
 
 /**
  * Get seller profile with tier information
@@ -77,15 +23,8 @@ export async function getSellerProfile(sellerId: string) {
       avatar_url,
       seller_tier,
       completed_sales,
-      fraud_flags,
-      dispute_count,
       positive_reviews,
       negative_reviews,
-      total_positive_reviews,
-      total_negative_reviews,
-      rating,
-      total_reviews,
-      tier_updated_at,
       created_at
     `)
     .eq('id', sellerId)
@@ -107,8 +46,8 @@ export async function getTopSellers(tier?: SellerTier, limit: number = 10) {
       avatar_url,
       seller_tier,
       completed_sales,
-      rating,
-      total_reviews
+      positive_reviews,
+      negative_reviews
     `)
     .eq('is_banned', false)
     .order('completed_sales', { ascending: false })
@@ -267,7 +206,7 @@ export async function uploadReviewImage(
   const fileExt = file.name.split('.').pop();
   const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
   
-  const { data, error } = await supabase.storage
+  const { data: _data, error } = await supabase.storage
     .from('review-images')
     .upload(fileName, file, {
       cacheControl: '3600',
@@ -312,7 +251,7 @@ export async function uploadAppealMedia(
   const fileExt = file.name.split('.').pop();
   const fileName = `${userId}/${isVideo ? 'videos' : 'images'}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
   
-  const { data, error } = await supabase.storage
+  const { data: _data, error } = await supabase.storage
     .from(bucket)
     .upload(fileName, file, {
       cacheControl: '3600',
@@ -367,7 +306,7 @@ async function extractImageMetadata(file: File): Promise<Partial<MediaMetadata>>
       upload_time: now.toISOString(),
       metadata_available,
     };
-  } catch (e) {
+  } catch (_e) {
     return {
       upload_time: new Date().toISOString(),
       metadata_available: false,

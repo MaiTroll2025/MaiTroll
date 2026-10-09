@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState } from 'react';
 
 interface GamingStreamContextValue {
   streamId: string | null

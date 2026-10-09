@@ -21,27 +21,7 @@ import React, {
   useState,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Briefcase,
-  ChevronRight,
-  Clock3,
-  Crown,
-  Eye,
-  Flame,
-  Gamepad2,
-  Loader2,
-  MonitorPlay,
-  Play,
-  Radio,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  Trophy,
-  Users,
-  WifiOff,
-  Zap,
-} from 'lucide-react';
+import { ArrowLeft, Briefcase, ChevronRight, Clock3, Crown, Eye, Flame, Gamepad2, Loader2, MonitorPlay, Play, Radio, Search, ShieldCheck, Sparkles, Trophy, Users, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { supabase } from '@/lib/supabase';
@@ -192,7 +172,7 @@ function GamingStreamCard({
   onClick: () => void;
   featured?: boolean;
 }) {
-  const viewers = getStreamViewers(stream);
+  const _viewers = getStreamViewers(stream);
 
   return (
     <button

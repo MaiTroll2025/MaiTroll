@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 import globals from "globals";
 
 export default [
-  { ignores: ["dist", "node_modules", "android", "ios", "**/__MACOSX/**", "**/src/types/supabase.ts"] },
+  { ignores: ["dist", "node_modules", "android", "ios", "**/__MACOSX/**", "**/src/types/supabase.ts", ".kilo/", "playwright-report/", "**/*.generated.*"] },
 
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -50,6 +50,7 @@ export default [
         { 
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
           ignoreRestSiblings: true
         },
       ],

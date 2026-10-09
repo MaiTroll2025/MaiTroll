@@ -3,12 +3,6 @@
  * Unified PWA install button for Android (native prompt) and iOS (instruction modal)
  */
 
-import React, { useState } from 'react';
-import { Download, CheckCircle } from 'lucide-react';
-import { useInstallPrompt } from '../pwa/useInstallPrompt';
-import { getInstallStatus, type InstallStatus } from '../pwa/install';
-import IosInstallModal from './IosInstallModal';
-import { toast } from 'sonner';
 
 interface InstallButtonProps {
   /** Custom className for styling */
@@ -28,11 +22,11 @@ interface InstallButtonProps {
 }
 
 export default function InstallButton({
-  className = '',
-  compact = false,
-  text = 'Install App',
-  hideWhenInstalled = true,
-  showInstalledBadge = false,
+  className: _className = '',
+  compact: _compact = false,
+  text: _text = 'Install App',
+  hideWhenInstalled: _hideWhenInstalled = true,
+  showInstalledBadge: _showInstalledBadge = false,
 }: InstallButtonProps) {
   return null;
 }

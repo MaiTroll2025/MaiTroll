@@ -9,36 +9,7 @@ import React, {
   type ComponentType,
   type ReactNode,
 } from 'react'
-import {
-  AlertCircle,
-  BadgeCheck,
-  Banknote,
-  BriefcaseBusiness,
-  CheckCircle2,
-  ChevronRight,
-  ClipboardCheck,
-  Clock3,
-  Download,
-  Eye,
-  FileCheck2,
-  FileText,
-  Filter,
-  Loader2,
-  Lock,
-  Mail,
-  RefreshCw,
-  RotateCcw,
-  Search,
-  Send,
-  ShieldAlert,
-  ShieldCheck,
-  UserCheck,
-  UserMinus,
-  UserPlus,
-  UserRound,
-  UsersRound,
-  XCircle,
-} from 'lucide-react'
+import { AlertCircle, BadgeCheck, Banknote, BriefcaseBusiness, ChevronRight, ClipboardCheck, Download, Eye, FileCheck2, FileText, Loader2, Lock, Mail, RefreshCw, RotateCcw, Search, Send, ShieldAlert, ShieldCheck, UserCheck, UserMinus, UserPlus, UsersRound, XCircle } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../../lib/supabase'
@@ -1646,7 +1617,7 @@ function AddEmployeeSection({ onAdded }: { onAdded: () => void }) {
 
     setSaving(true)
     try {
-      const now = new Date().toISOString()
+      const _now = new Date().toISOString()
 
       const { error } = await supabase
         .from('employee_records')
@@ -1733,7 +1704,7 @@ function AddEmployeeSection({ onAdded }: { onAdded: () => void }) {
                 </label>
                 <select
                   value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
+                  onChange={(e) => setSelectedRole(e.target.value as typeof selectedRole)}
                   className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-cyan-400/50"
                 >
                   {EMPLOYEE_ROLES.map((role) => (

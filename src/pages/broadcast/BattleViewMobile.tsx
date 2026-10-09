@@ -1,13 +1,12 @@
 import React, { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Coins, X, Swords, LogOut } from "lucide-react";
+import { Coins, X, LogOut } from "lucide-react";
 import { Track } from "livekit-client";
 
-import { useBattleViewController } from "../../hooks/useBattleViewController";
 import type { BattleViewController } from "../../hooks/useBattleViewController";
 import useTrollTime from "../../hooks/useTrollTime";
 import TrollTimeBanner from "../../components/battle/TrollTimeBanner";
-import { getTrackPublications, safeParseMetadata } from "../../components/broadcast/BattleArena";
+import { getTrackPublications } from "../../components/broadcast/BattleArena";
 import QuickGiftRow from "../../components/broadcast/QuickGiftRow";
 import type { ActiveBattle } from "../../components/broadcast/battle/ActiveBattlesPanel";
 
@@ -66,9 +65,9 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     battleParticipants,
     participantContributions,
     remoteUsers,
-    userIdToLiveKitIdentity,
+    userIdToLiveKitIdentity: _userIdToLiveKitIdentity,
     effectiveUserId,
-    isBroadcaster,
+    isBroadcaster: _isBroadcaster,
     profile,
     challengerStream,
     opponentStream,
@@ -83,13 +82,13 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     handleSelectBattle,
     handleReturnToStream,
     followBroadcaster,
-    shareBroadcast,
+    shareBroadcast: _shareBroadcast,
     loading,
     error,
     showResults,
     preBattleCountdown,
     onToggleCamera,
-    onToggleMic,
+    onToggleMic: _onToggleMic,
     battleLocalVideoTrack,
     battleLocalAudioTrack,
   } = battleView;

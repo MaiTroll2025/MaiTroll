@@ -72,7 +72,7 @@ export default function AdminErrors() {
         .eq('id', row.id)
       if (error) throw error
       if (row.user_id) {
-        await createNotification(row.user_id, 'system_update', 'Issue Resolved', message, { error_id: row.id })
+        await createNotification(row.user_id, 'system', 'Issue Resolved', message, { error_id: row.id })
       }
       toast.success('Response sent')
       setResponseMap((prev) => ({ ...prev, [row.id]: '' }))
@@ -160,4 +160,3 @@ export default function AdminErrors() {
     </div>
   )
 }
-

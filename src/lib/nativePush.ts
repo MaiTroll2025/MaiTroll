@@ -35,7 +35,7 @@ const saveToken = async (userId: string, token: string) => {
   }
 }
 
-export async function registerNativePush(userId: string) {
+export async function registerNativePush(_userId: string) {
   if (!nativePlatform()) return
 
   if (!listenersRegistered) {

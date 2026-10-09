@@ -6,7 +6,7 @@ import {
   BarChart3, TrendingUp, Users, Coins, 
   Calendar, Filter, Loader2, Download, RefreshCw
 } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface SubStats {
   total_subscribers: number;

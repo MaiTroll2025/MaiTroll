@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { X, MessageSquare, User, Shield } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { blockUser } from '../../lib/blocking'
-import { getThreads, findOrCreateDirectThread } from '../../services/utromailService'
+import { findOrCreateDirectThread } from '../../services/utromailService';
 import { cn } from '../../lib/utils'
 
 interface IncomingMessagePopupProps {
@@ -27,7 +26,7 @@ export default function IncomingMessagePopup({
   onOpenThread,
   onViewProfile,
 }: IncomingMessagePopupProps) {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const [isBlocking, setIsBlocking] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const popupRef = useRef<HTMLDivElement>(null)

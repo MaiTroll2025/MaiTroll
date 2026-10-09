@@ -13,6 +13,7 @@ import {
   Play,
   Radio,
   ShieldCheck,
+  Share2,
   Users,
   Volume2,
   VolumeX,
@@ -28,6 +29,7 @@ import { MaiTrollBroadcastTheme as theme } from '@/styles/broadcastTheme'
 import { usePodcastStore } from '@/stores/podcastStore'
 import { usePodcastAgora } from '@/hooks/usePodcastAgora'
 import { cn } from '@/lib/utils'
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
 
 type PodcastStatus =
   | 'scheduled'
@@ -81,7 +83,7 @@ export default function PodcastRoom() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, profile } = useAuthStore()
-  const { isMobileWidth } = useIsMobile()
+  const { isMobileWidth: _isMobileWidth } = useIsMobile()
 
   const [podcast, setPodcast] = useState<Podcast | null>(null)
   const [loading, setLoading] = useState(true)
@@ -143,7 +145,7 @@ export default function PodcastRoom() {
   }, [id, user?.id, navigate])
   const [endingPodcast, setEndingPodcast] = useState(false)
 
-  const activePodcast = usePodcastStore((state) => state.activePodcast)
+  const _activePodcast = usePodcastStore((state) => state.activePodcast)
   const setActivePodcast = usePodcastStore((state) => state.setActivePodcast)
   const setShowMiniPlayer = usePodcastStore((state) => state.setShowMiniPlayer)
   const isPlaying = usePodcastStore((state) => state.isPlaying)
@@ -163,6 +165,21 @@ export default function PodcastRoom() {
     return podcast ? LIVE_STATUSES.includes(podcast.status) : false
   }, [podcast])
 
+  const handleShare = useCallback(async () => {
+    if (!podcast?.id) return
+    const url = `${window.location.origin}/podcast/${encodeURIComponent(podcast.id)}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: podcast.title, text: 'Listen live on Mai Troll', url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        toast.success('Podcast link copied.')
+      }
+    } catch (error) {
+      console.warn('[PodcastRoom] Share failed:', error)
+    }
+  }, [podcast?.id, podcast?.title])
+
   const agoraEnabled = Boolean(podcast?.agora_channel_name && podcast?.id && isLive)
 
   // Broadcast lifecycle for 50-minute reset
@@ -178,8 +195,8 @@ export default function PodcastRoom() {
 
   const {
     isConnected,
-    isMuted: hookIsMuted,
-    joinPodcast,
+    isMuted: _hookIsMuted,
+    joinPodcast: _joinPodcast,
     leavePodcast,
     toggleMute: hookToggleMute,
     error: agoraError,
@@ -430,6 +447,19 @@ export default function PodcastRoom() {
             {isHost ? <Radio className="h-3.5 w-3.5" /> : <Headphones className="h-3.5 w-3.5" />}
             {isHost ? 'Host Studio' : 'Listener Room'}
           </div>
+          {podcast && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-white/10"
+              >
+                <Share2 className="h-4 w-4" />
+                Share
+              </button>
+              {isLive && <FacebookPublishButton sourceType="podcast" sourceId={podcast.id} compact />}
+            </div>
+          )}
         </div>
 
         <header className={cn(neonCard, 'relative overflow-hidden p-5 md:p-7')}>

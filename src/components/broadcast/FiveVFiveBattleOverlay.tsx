@@ -2,12 +2,12 @@ import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack } from 'livekit-client';
-import { Swords, Shield, Clock, Coins, Gift, Zap, Snowflake, RotateCcw, Star, Timer, Users, Trophy, Flame, User, Crown, Home, Flag, Wifi, MicOff } from 'lucide-react';
+import { Swords, Shield, Coins, Gift, Zap, Snowflake, RotateCcw, Trophy, Flame, User, Crown, Home, Flag, Wifi, MicOff } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { FiveVFiveBattleState, BattleParticipant } from '../../hooks/useFiveVFiveBattle';
 import type { UserAbility } from '../../types/broadcastAbilities';
-import { getAbilityById } from '../../types/broadcastAbilities';
 import BattleAbilityVisuals from './BattleAbilityVisuals';
+import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation';
 
 interface BattleAbilityEffect {
   id: string;
@@ -68,6 +68,10 @@ function LiveKitVideoPlayer({
       videoElement.autoplay = true;
       videoElement.playsInline = true;
       if (isLocal) videoElement.muted = true;
+      applyCameraVideoPresentation(videoElement, {
+        track: videoTrack.mediaStreamTrack,
+        isLocal,
+      });
 
       containerRef.current.appendChild(videoElement);
       videoElementRef.current = videoElement;
@@ -87,10 +91,7 @@ function LiveKitVideoPlayer({
     };
   }, [videoTrack, isLocal]);
 
-  const mediaTrack = videoTrack?.mediaStreamTrack;
-  const trackSettings = mediaTrack ? (mediaTrack.getSettings?.() || {}) : {};
-  const shouldMirror = isLocal && (trackSettings as any).facingMode !== 'environment';
-  return <div ref={containerRef} className="absolute inset-0" style={shouldMirror ? { transform: 'scaleX(-1)' } : undefined} />;
+  return <div ref={containerRef} className="absolute inset-0" />;
 }
 
 // ─── PREMIUM BATTLE SLOT ───
@@ -98,7 +99,7 @@ function LiveKitVideoPlayer({
 function PremiumBattleSlot({
   participant,
   videoTrack,
-  audioTrack,
+  audioTrack: _audioTrack,
   hasVideo,
   hasAudio,
   isLocal,
@@ -219,10 +220,10 @@ function EmptyBattleSlot({ teamColor, slotIndex }: { teamColor: 'red' | 'blue'; 
   );
 }
 
-function BattleParticipantCard({
+function _BattleParticipantCard({
   participant,
   videoTrack,
-  audioTrack,
+  audioTrack: _audioTrack,
   hasVideo,
   hasAudio,
   isLocal,
@@ -292,7 +293,7 @@ export default function FiveVFiveBattleOverlay({
   onBroadcastEffect,
   localTracks,
   remoteParticipants = [],
-  isHost = false,
+  isHost: _isHost = false,
   teamAName = 'Team A',
   teamBName = 'Team B',
 }: FiveVFiveBattleOverlayProps) {
@@ -340,7 +341,7 @@ export default function FiveVFiveBattleOverlay({
   const timerSeconds = state.timerSeconds % 60;
   const timerPercent = state.totalDuration > 0 ? (state.timerSeconds / state.totalDuration) * 100 : 0;
 
-  const scoreDiff = state.teamAScore - state.teamBScore;
+  const _scoreDiff = state.teamAScore - state.teamBScore;
 
   // ─── LIVEKIT TRACK HELPERS ───
   const findRemoteParticipant = useCallback((userId: string): RemoteParticipant | undefined => {

@@ -3,9 +3,6 @@
   "appName": "Maitroll",
   "webDir": "dist",
   "bundledWebRuntime": false,
-  "server": {
-    "hostname": "maitroll.com"
-  },
   "android": {
     "buildOptions": {
       "keystorePath": "C:/Users/kainm/TrollCity-upload-key.keystore",
@@ -23,7 +20,6 @@
     "contentInset": "always",
     "allowMixedContent": false,
     "preferredContentMode": "mobile",
-    "hostname": "maitroll.com",
     "devices": ["iphone"]
   },
   "plugins": {

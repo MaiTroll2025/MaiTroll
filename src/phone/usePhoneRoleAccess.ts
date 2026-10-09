@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase, UserRole } from '../lib/supabase'
+import { isMarketingAgent, supabase, UserRole } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { NIGHT_WATCH_PATROL_ROLES } from '../lib/staff'
 import { canAccessTromail } from '../lib/tromail'
@@ -15,10 +15,11 @@ import { useIsActiveFounder } from '../hooks/useFounderProgram'
  * pages, regular user => only public/user pages, etc.
  */
 export interface PhoneRoleAccess {
-  [x: string]: boolean
+  [x: string]: any
   role: string
   trollRole: string
   isAdmin: boolean
+  isMarketingAgent: boolean
   isCEO: boolean
   isCEOAssistant: boolean
   isNoahAssistant: boolean
@@ -52,6 +53,7 @@ const FALSE_ACCESS: PhoneRoleAccess = {
   role: '',
   trollRole: '',
   isAdmin: false,
+  isMarketingAgent: false,
   isCEO: false,
   isCEOAssistant: false,
   isNoahAssistant: false,
@@ -122,6 +124,7 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     trollRole === 'owner' ||
     trollRole === 'ceo' ||
     !!(profile as any)?.is_superadmin
+  const hasMarketingAccess = isMarketingAgent(profile)
 
   const isCEO = role === 'ceo' || trollRole === 'ceo' || isAdmin
   const isCEOAssistant =
@@ -135,11 +138,11 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     !!(profile as any)?.is_lead_officer ||
     trollRole === String(UserRole.LEAD_TROLL_OFFICER) ||
     isAdmin
-  const isSecretary = role === String(UserRole.SECRETARY) || trollRole === String(UserRole.SECRETARY)
+  const _isSecretary = role === String(UserRole.SECRETARY) || trollRole === String(UserRole.SECRETARY)
   const isPastor = !!profile?.is_pastor || role === 'pastor' || trollRole === 'pastor' || isAdmin
   const canSeeCourt = !!user && !!profile
 
-  const canSeeAttorneyDashboard = Boolean(
+  const _canSeeAttorneyDashboard = Boolean(
     isAttorney || (profile as any)?.is_attorney || role === 'attorney' || trollRole === 'attorney'
   )
   const canSeeProsecutorDashboard = Boolean(
@@ -330,6 +333,7 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     role,
     trollRole,
     isAdmin,
+    isMarketingAgent: hasMarketingAccess,
     isCEO,
     isCEOAssistant,
     isNoahAssistant,

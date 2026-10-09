@@ -8,6 +8,58 @@ export const getLiveKitRoomName = (
 };
 
 /**
+ * Determines the RTC provider for a stream.
+ * Returns 'getstream' for staff/official broadcasts, 'livekit' for normal users.
+ * The rtc_provider field on the stream is the source of truth (server-authoritative).
+ */
+export function getRTCProvider(stream?: { rtc_provider?: string | null } | null): 'livekit' | 'getstream' {
+  if (!stream?.rtc_provider) return 'livekit';
+  return stream.rtc_provider === 'getstream' ? 'getstream' : 'livekit';
+}
+
+/**
+ * Checks if a stream should use GetStream RTC based on broadcaster's staff status.
+ * This is a fallback when rtc_provider is not set on the stream.
+ */
+export function isStaffStream(stream?: { broadcaster?: { is_staff?: boolean; role?: string; troll_role?: string; is_admin?: boolean; is_superadmin?: boolean; is_troll_officer?: boolean; is_lead_officer?: boolean; is_secretary?: boolean; is_prosecutor?: boolean; is_attorney?: boolean } } | null): boolean {
+  if (!stream?.broadcaster) return false;
+  const profile = stream.broadcaster;
+  const role = String(profile.role || '').toLowerCase();
+  const trollRole = String(profile.troll_role || '').toLowerCase();
+
+  return Boolean(
+    profile.is_staff ||
+      profile.is_admin ||
+      (profile as any)?.is_superadmin === true ||
+      profile.is_troll_officer ||
+      profile.is_lead_officer ||
+      profile.is_secretary ||
+      profile.is_prosecutor ||
+      profile.is_attorney ||
+      STAFF_ROLES.has(role) ||
+      STAFF_ROLES.has(trollRole)
+  );
+}
+
+const STAFF_ROLES = new Set([
+  'admin',
+  'superadmin',
+  'owner',
+  'ceo',
+  'staff',
+  'lead_troll_officer',
+  'troll_officer',
+  'secretary',
+  'prosecutor',
+  'attorney',
+  'agency_hr_manager',
+  'agency_hr',
+  'hr_admin',
+  'marketing_agent',
+  'empire_partner',
+]);
+
+/**
  * Check if a user is currently live by their user ID
  * @param userId - The user's ID to check
  * @returns Promise<boolean> - True if the user is live, false otherwise

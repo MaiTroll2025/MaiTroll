@@ -43,7 +43,7 @@ interface WeeklyPayout {
   rank: number;
   payout_coins: number;
   username: string;
-  paid_at: string;
+  created_at: string;
 }
 
 export default function TrollmersTournament() {
@@ -151,27 +151,37 @@ export default function TrollmersTournament() {
       }
 
       // Get last 10 weekly payouts
-      const { data: payoutData } = await supabase
+      const { data: payoutData, error: payoutError } = await supabase
         .from('trollmers_weekly_payouts')
         .select(`
           week_start,
           user_id,
           rank,
           payout_coins,
-          paid_at,
-          user:user_profiles!trollmers_weekly_payouts_user_id_fkey(username)
+          created_at
         `)
         .order('week_start', { ascending: false })
         .order('rank')
         .limit(30);
+      if (payoutError) throw payoutError;
+
+      const payoutUserIds = [...new Set((payoutData || []).map((payout) => payout.user_id))];
+      const { data: payoutUsers, error: payoutUsersError } = payoutUserIds.length
+        ? await supabase
+            .from('user_profiles')
+            .select('id, username')
+            .in('id', payoutUserIds)
+        : { data: [], error: null };
+      if (payoutUsersError) throw payoutUsersError;
+      const payoutUserById = new Map((payoutUsers || []).map((profile) => [profile.id, profile.username]));
 
       setWeeklyPayouts((payoutData || []).map((p: any) => ({
         week_start: p.week_start,
         user_id: p.user_id,
         rank: p.rank,
         payout_coins: p.payout_coins,
-        username: p.user?.username || 'Unknown',
-        paid_at: p.paid_at
+        username: payoutUserById.get(p.user_id) || 'Unknown',
+        created_at: p.created_at
       })));
 
     } catch (error: any) {
@@ -479,7 +489,7 @@ export default function TrollmersTournament() {
                     <td className="py-2 font-bold">{payout.username}</td>
                     <td className="py-2 text-green-400 font-bold">{payout.payout_coins} 🪙</td>
                     <td className="py-2 text-sm text-gray-400">
-                      {new Date(payout.paid_at).toLocaleString()}
+                      {new Date(payout.created_at).toLocaleString()}
                     </td>
                   </tr>
                 ))}

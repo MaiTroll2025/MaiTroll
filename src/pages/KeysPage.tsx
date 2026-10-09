@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Key, Lock, Unlock, Trophy, Coins, Shield, RefreshCw, ShoppingBag, History, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,34 +29,43 @@ interface KeysPageProps {
   isOwnProfile: boolean;
 }
 
+type PublicKeyInstance = Omit<KeyInstance, 'value' | 'cashout_available_at' | 'is_transferable' | 'source'>;
+
 export default function KeysPage({ profileId, isOwnProfile }: KeysPageProps) {
-  const [keys, setKeys] = useState<KeyInstance[]>([]);
+  const [ownedKeys, setOwnedKeys] = useState<KeyInstance[]>([]);
+  const [publicKeys, setPublicKeys] = useState<PublicKeyInstance[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSetCashoutModal, setShowSetCashoutModal] = useState(false);
   const [cashingOut, setCashingOut] = useState(false);
   const [activeView, setActiveView] = useState<'collection' | 'marketplace' | 'trades' | 'history'>('collection');
 
-  const summary = calculateUserKeysSummary(keys);
+  const keys: Array<KeyInstance | PublicKeyInstance> = isOwnProfile ? ownedKeys : publicKeys;
+  const summary = isOwnProfile ? calculateUserKeysSummary(ownedKeys) : null;
+  const lettersOwned = summary?.letters_owned ??
+    Array.from(new Set(publicKeys.filter(key => key.status === 'active').map(key => key.key_letter)));
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadKeys();
-    supabase.auth.getUser().then(r => setCurrentUserId(r.data.user?.id || null));
-  }, [profileId, isOwnProfile]);
-
-  const loadKeys = async () => {
+  const loadKeys = useCallback(async () => {
     setLoading(true);
     try {
-      const data = isOwnProfile
-        ? await getUserKeysPrivate(profileId)
-        : await getUserKeysPublic(profileId);
-      setKeys(data);
+      if (isOwnProfile) {
+        setOwnedKeys(await getUserKeysPrivate(profileId));
+        setPublicKeys([]);
+      } else {
+        setPublicKeys(await getUserKeysPublic(profileId));
+        setOwnedKeys([]);
+      }
     } catch (e) {
       console.warn('Failed to load keys:', e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isOwnProfile, profileId]);
+
+  useEffect(() => {
+    void loadKeys();
+    void supabase.auth.getUser().then(r => setCurrentUserId(r.data.user?.id || null));
+  }, [loadKeys]);
 
   const handleCashoutKey = async (keyId: string) => {
     if (!currentUserId) return;
@@ -106,10 +115,11 @@ export default function KeysPage({ profileId, isOwnProfile }: KeysPageProps) {
     );
   };
 
-  const renderKeyCard = (key: KeyInstance, showValue: boolean = false) => {
+  const renderKeyCard = (key: KeyInstance | PublicKeyInstance, showValue: boolean = false) => {
     const colors = KEY_RARITY_COLORS[key.rarity];
-    const available = isCashoutAvailable(key.cashout_available_at);
-    const daysLeft = getDaysUntilCashout(key.cashout_available_at);
+    const cashoutAvailableAt = 'cashout_available_at' in key ? key.cashout_available_at : null;
+    const available = cashoutAvailableAt ? isCashoutAvailable(cashoutAvailableAt) : false;
+    const daysLeft = cashoutAvailableAt ? getDaysUntilCashout(cashoutAvailableAt) : null;
 
     return (
       <div
@@ -135,7 +145,7 @@ export default function KeysPage({ profileId, isOwnProfile }: KeysPageProps) {
             </div>
           </div>
 
-          {showValue && (
+          {showValue && 'value' in key && (
             <div className="text-right">
               <p className="text-xs text-white/50">Value</p>
               <p className="font-bold text-yellow-300">{key.value.toLocaleString()} TC</p>
@@ -145,14 +155,16 @@ export default function KeysPage({ profileId, isOwnProfile }: KeysPageProps) {
 
         <div className="mt-3 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1 text-white/60">
-            {available ? (
+            {!cashoutAvailableAt ? (
+              <>Cashout details private</>
+            ) : available ? (
               <><Unlock size={12} className="text-green-400" /> Available</>
             ) : (
               <><Lock size={12} className="text-yellow-400" /> {daysLeft}d left</>
             )}
           </div>
           <span className="text-white/40">
-            {formatCashoutDate(key.cashout_available_at)}
+            {cashoutAvailableAt ? formatCashoutDate(cashoutAvailableAt) : 'Private'}
           </span>
         </div>
 
@@ -190,22 +202,22 @@ export default function KeysPage({ profileId, isOwnProfile }: KeysPageProps) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-center">
           <Key className="mx-auto h-6 w-6 text-purple-400" />
-          <p className="mt-1 text-2xl font-black text-white">{summary.total_keys}</p>
+          <p className="mt-1 text-2xl font-black text-white">{summary?.total_keys ?? publicKeys.length}</p>
           <p className="text-xs text-white/50">Total Keys</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-center">
           <Coins className="mx-auto h-6 w-6 text-yellow-400" />
-          <p className="mt-1 text-2xl font-black text-white">{summary.total_value.toLocaleString()}</p>
+          <p className="mt-1 text-2xl font-black text-white">{summary ? summary.total_value.toLocaleString() : 'Private'}</p>
           <p className="text-xs text-white/50">Total Value (TC)</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-center">
           <Trophy className="mx-auto h-6 w-6 text-orange-400" />
-          <p className="mt-1 text-2xl font-black text-white">{summary.rare_keys}</p>
+          <p className="mt-1 text-2xl font-black text-white">{summary?.rare_keys ?? publicKeys.filter(key => ['RARE', 'VERY_RARE', 'LEGENDARY'].includes(key.rarity)).length}</p>
           <p className="text-xs text-white/50">Rare Keys</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-center">
           <Shield className="mx-auto h-6 w-6 text-cyan-400" />
-          <p className="mt-1 text-2xl font-black text-white">{summary.complete_sets}/1</p>
+          <p className="mt-1 text-2xl font-black text-white">{summary ? `${summary.complete_sets}/1` : 'Private'}</p>
           <p className="text-xs text-white/50">Complete Sets</p>
         </div>
       </div>
@@ -215,7 +227,7 @@ export default function KeysPage({ profileId, isOwnProfile }: KeysPageProps) {
         <h3 className="mb-3 text-sm font-bold text-white/80">MAITROLL Set Progress</h3>
         <div className="flex items-center gap-2">
           {(['M', 'A', 'I', 'T', 'R'] as const).map(letter => {
-            const has = summary.letters_owned.includes(letter);
+            const has = lettersOwned.includes(letter);
             return (
               <div
                 key={letter}
@@ -230,7 +242,7 @@ export default function KeysPage({ profileId, isOwnProfile }: KeysPageProps) {
             );
           })}
         </div>
-        {isOwnProfile && summary.complete_sets === 1 && (
+        {isOwnProfile && summary?.complete_sets === 1 && (
           <button
             onClick={() => setShowSetCashoutModal(true)}
             className="mt-3 w-full rounded-xl bg-gradient-to-r from-yellow-600 to-orange-600 px-4 py-3 text-sm font-black text-white hover:from-yellow-500 hover:to-orange-500"
@@ -293,10 +305,10 @@ export default function KeysPage({ profileId, isOwnProfile }: KeysPageProps) {
       {activeView === 'history' && <HistoryView userId={profileId} />}
 
       {/* Set Cashout Modal */}
-      {showSetCashoutModal && (
+      {showSetCashoutModal && summary && (
         <SetCashoutModal
           summary={summary}
-          keys={keys.filter(k => k.status === 'active')}
+          keys={ownedKeys.filter(k => k.status === 'active')}
           onConfirm={handleSetCashout}
           onClose={() => setShowSetCashoutModal(false)}
           cashingOut={cashingOut}
@@ -315,11 +327,7 @@ function MarketplaceView({ userId, isOwnProfile, onUpdate }: { userId: string; i
   const [myListings, setMyListings] = useState<KeyMarketplaceListing[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, [userId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [marketListings, userListings] = await Promise.all([
@@ -331,7 +339,11 @@ function MarketplaceView({ userId, isOwnProfile, onUpdate }: { userId: string; i
     } finally {
       setLoading(false);
     }
-  };
+  }, [isOwnProfile, userId]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const handlePurchase = async (listingId: string) => {
     const result = await purchaseKey(listingId, userId);
@@ -425,15 +437,11 @@ function MarketplaceView({ userId, isOwnProfile, onUpdate }: { userId: string; i
 // TRADES VIEW
 // =========================================================================
 
-function TradesView({ userId, isOwnProfile, onUpdate }: { userId: string; isOwnProfile: boolean; onUpdate: () => void }) {
+function TradesView({ userId, isOwnProfile: _isOwnProfile, onUpdate }: { userId: string; isOwnProfile: boolean; onUpdate: () => void }) {
   const [trades, setTrades] = useState<(KeyTradeRequest & { trade_items: KeyTradeItem[] })[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadTrades();
-  }, [userId]);
-
-  const loadTrades = async () => {
+  const loadTrades = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getTradeRequests(userId);
@@ -441,7 +449,11 @@ function TradesView({ userId, isOwnProfile, onUpdate }: { userId: string; isOwnP
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void loadTrades();
+  }, [loadTrades]);
 
   const handleAccept = async (tradeId: string) => {
     const result = await acceptTradeRequest(tradeId, userId);
@@ -535,11 +547,7 @@ function HistoryView({ userId }: { userId: string }) {
   const [transactions, setTransactions] = useState<KeyTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadHistory();
-  }, [userId]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getUserKeyTransactions(userId);
@@ -547,7 +555,11 @@ function HistoryView({ userId }: { userId: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-10"><RefreshCw className="h-6 w-6 animate-spin text-white/50" /></div>;
@@ -579,7 +591,7 @@ function HistoryView({ userId }: { userId: string }) {
 // =========================================================================
 
 function SetCashoutModal({
-  summary,
+  summary: _summary,
   keys,
   onConfirm,
   onClose,

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { RemoteParticipant } from 'livekit-client';
 import { cn } from '@/lib/utils';
-import { X, LogOut, Volume2, VolumeX } from 'lucide-react';
+import { X, Volume2, VolumeX } from 'lucide-react';
 import BattleScoreBar from './BattleScoreBar';
 import TrollBattleParticipantGrid from './TrollBattleParticipantGrid';
 import BattleResultsOverlay from './BattleResultsOverlay';
@@ -37,13 +37,13 @@ interface TrollBattleRoomProps {
 
 export default function TrollBattleRoom({
   battleId,
-  isHost,
+  isHost: _isHost,
   participants,
   remoteParticipants,
   teamAScore,
   teamBScore,
   timerSeconds,
-  isActive,
+  isActive: _isActive,
   phase,
   winningTeam,
   muxPlaybackId,

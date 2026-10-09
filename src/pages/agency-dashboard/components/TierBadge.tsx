@@ -1,6 +1,6 @@
 import React from 'react';
-import { AgencyTier, TIER_CONFIG } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { AgencyTier, TIER_CONFIG } from '@/types/agency';
+import { cn } from '@/lib/utils';
 import { Crown, Shield, Award, Star, Circle } from 'lucide-react';
 
 const tierIcons: Record<AgencyTier, React.ElementType> = {

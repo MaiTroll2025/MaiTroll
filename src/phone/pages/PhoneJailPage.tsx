@@ -1,27 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Ban,
-  Building2,
-  CalendarDays,
-  CheckCircle2,
-  DollarSign,
-  Gavel,
-  Hash,
-  Lock,
-  Loader2,
-  MessageSquare,
-  Phone,
-  Scale,
-  Send,
-  Shield,
-  ShieldCheck,
-  Timer,
-  UserCheck,
-  UserX,
-  XCircle,
-} from 'lucide-react'
+import { Building2, CalendarDays, CheckCircle2, DollarSign, Gavel, Hash, Lock, Loader2, MessageSquare, Phone, Scale, Send, Shield, ShieldCheck, Timer, UserCheck, UserX, XCircle } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
@@ -504,7 +483,7 @@ export default function PhoneJailPage() {
     return map[jailState?.severity || 'moderate'] || map.moderate
   }, [jailState?.severity])
 
-  const displayUsername =
+  const _displayUsername =
     user?.user_metadata?.username ||
     user?.user_metadata?.full_name ||
     'MaiTroll User'

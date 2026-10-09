@@ -3,6 +3,8 @@ const STAFF_ROLES = new Set([
   'superadmin',
   'owner',
   'ceo',
+  'ceo_assistant',
+  'noah_assistant',
   'staff',
   'lead_troll_officer',
   'troll_officer',
@@ -12,7 +14,7 @@ const STAFF_ROLES = new Set([
   'agency_hr_manager',
   'agency_hr',
   'hr_admin',
-  'marketing_readonly',
+  'marketing_agent',
   'empire_partner',
 ]);
 
@@ -66,6 +68,7 @@ export const NIGHT_WATCH_PATROL_ROLES = [
   'agency_hr',
   'agency_hr_manager',
   'hr_admin',
+  'marketing_agent',
   'secretary'
 ] as const;
 

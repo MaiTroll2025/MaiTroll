@@ -1,7 +1,6 @@
 import React from 'react'
 import { X, Mic, MicOff, Video, VideoOff, Users, Gift, Share2, Mail, LogOut, Sparkles } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import { toast } from 'sonner'
 
 interface SeatUserControlsModalProps {
   isOpen: boolean

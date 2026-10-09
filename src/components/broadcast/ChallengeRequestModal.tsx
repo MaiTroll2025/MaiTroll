@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Swords, Zap, Crown, Users, Clock, AlertTriangle } from 'lucide-react';
+import { X, Swords, Zap, Crown, Users, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../lib/store';

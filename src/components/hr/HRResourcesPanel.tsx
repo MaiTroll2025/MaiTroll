@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, DollarSign, CalendarOff, Users, UserPlus, HelpCircle, AlertCircle, Mail } from 'lucide-react'
+import { BookOpen, DollarSign, CalendarOff, Users, UserPlus, Mail } from 'lucide-react';
 
 interface ResourceItem {
   id: string

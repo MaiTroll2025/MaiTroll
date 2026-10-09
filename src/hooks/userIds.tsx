@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import SEOLayout, { Breadcrumb, CTASection } from './SEOLayout'
-import { Crown, TrendingUp, Users, Star, ArrowRight, Play, Radio, DollarSign, Award, Flame, Zap } from 'lucide-react'
+import SEOLayout, { Breadcrumb, CTASection } from '@/pages/seo/SEOLayout'
+import { Crown, Users, ArrowRight, Play, Radio, DollarSign, Award, Flame } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 
 interface Creator {

@@ -7,7 +7,7 @@ function getIsTouchDevice() {
   return (navigator.maxTouchPoints ?? 0) > 0
 }
 
-function getIsMobileWidth() {
+function _getIsMobileWidth() {
   if (typeof window === 'undefined') return true // Default to mobile for SSR
   // Use visual viewport if available for more accurate mobile sizing
   const width = window.visualViewport?.width ?? window.innerWidth

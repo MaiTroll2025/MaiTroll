@@ -219,7 +219,7 @@ function StatusBadge({ status }: { status: DraftStatus }) {
 }
 
 export default function FrontendStudioTab({
-  profile,
+  profile: _profile,
   realProfile,
 }: {
   profile?: any

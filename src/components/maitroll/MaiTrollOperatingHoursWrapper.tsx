@@ -26,7 +26,7 @@ export function MaiTrollOperatingHoursWrapper({
   onStateChange,
 }: MaiTrollOperatingHoursWrapperProps) {
   const { profile } = useAuthStore()
-  const { state, isOpen, isClosed, isClosingSoon } = useMaiTrollOperatingHours()
+  const { state, isOpen: _isOpen, isClosed, isClosingSoon } = useMaiTrollOperatingHours()
 
   const [showWakeUpAnimation, setShowWakeUpAnimation] = useState(false)
   const [previousState, setPreviousState] = useState<MaiTrollOperatingState | null>(null)

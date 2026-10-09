@@ -19,7 +19,7 @@ export async function downloadLoanApplicationPDF(data: LoanApplicationPDFData): 
     const autoTable = (autoTableModule as any).default || autoTableModule;
 
     const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
+    const _pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(18);
     doc.text('MaiTroll Academy Loan Application', 14, 24);

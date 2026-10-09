@@ -170,7 +170,7 @@ export function useStreamSlaStatus(streamId?: string) {
 
     setLoading(true)
     try {
-      const result = await invokeSlaMonitor({ action: 'check', streamId })
+      const result: any = await invokeSlaMonitor({ action: 'check', streamId })
 
       if (!result.ok || !result.data?.ok) {
         const errMsg = (result.data as any)?.error || result.error || 'Failed to fetch SLA status'
@@ -207,7 +207,7 @@ export function useBroadcasterSlaSummary(broadcasterId?: string) {
 
     setLoading(true)
     try {
-      const result = await invokeSlaMonitor({ action: 'broadcaster', broadcasterId })
+      const result: any = await invokeSlaMonitor({ action: 'broadcaster', broadcasterId })
 
       if (!result.ok || !result.data?.ok) {
         const errMsg = (result.data as any)?.error || result.error || 'Failed to fetch broadcaster SLA summary'
@@ -244,7 +244,7 @@ export function useSlaViolations(broadcasterId?: string) {
 
     setLoading(true)
     try {
-      const result = await invokeSlaMonitor({ action: 'broadcaster', broadcasterId })
+      const result: any = await invokeSlaMonitor({ action: 'broadcaster', broadcasterId })
 
       if (!result.ok || !result.data?.ok) {
         const errMsg = (result.data as any)?.error || result.error || 'Failed to fetch SLA violations'
@@ -281,7 +281,7 @@ export function useSubscriptionSlaStatus(subscriptionId?: string) {
 
     setLoading(true)
     try {
-      const result = await invokeSlaMonitor({ action: 'subscription', subscriptionId })
+      const result: any = await invokeSlaMonitor({ action: 'subscription', subscriptionId })
 
       if (!result.ok || !result.data?.ok) {
         const errMsg = (result.data as any)?.error || result.error || 'Failed to fetch subscription SLA status'

@@ -23,7 +23,7 @@ interface PendingItem {
 }
 
 export default function NeighborApprovals() {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const [activeSubTab, setActiveSubTab] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const [pendingBusinesses, setPendingBusinesses] = useState<any[]>([])
   const [pendingEvents, setPendingEvents] = useState<any[]>([])

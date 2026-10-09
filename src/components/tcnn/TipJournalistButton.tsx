@@ -27,7 +27,7 @@ export default function TipJournalistButton({
   className = ''
 }: TipJournalistButtonProps) {
   const { user } = useAuth();
-  const { canTip, checkCanTip } = useTCNNTipping();
+  const { canTip: _canTip, checkCanTip } = useTCNNTipping();
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState<string>('10');
   const [message, setMessage] = useState('');

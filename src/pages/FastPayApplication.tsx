@@ -54,7 +54,7 @@ const MAX_ID_FILE_SIZE = 5 * 1024 * 1024;
 export default function FastPayApplication() {
   const { profile } = useAuthStore();
   const xpStore = useXPStore();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

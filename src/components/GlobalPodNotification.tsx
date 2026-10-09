@@ -23,7 +23,7 @@ export default function GlobalPodNotification() {
         'broadcast',
         { event: 'pod_started' },
         (payload) => {
-          const { title, host_username, room_id } = payload.payload;
+          const { title, host_username, room_id: _room_id } = payload.payload;
           
           toast.custom((t) => (
             <div 

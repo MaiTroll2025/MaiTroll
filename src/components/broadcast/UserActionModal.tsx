@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Gift, MicOff, Ban, Shield, X, UserPlus, MessageSquare, Eye, AlertTriangle, Wand2, MessageSquareOff, Coins, Lock, Crown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
@@ -59,7 +59,7 @@ export default function UserActionModal({
   onGift,
   onGiftAll,
   onKickStage,
-  onFollowSuccess,
+  onFollowSuccess: _onFollowSuccess,
 }: UserActionModalProps) {
   const [fetchedUsername, setFetchedUsername] = React.useState<string | null>(null);
   const [fetchedCreatedAt, setFetchedCreatedAt] = React.useState<string | null>(null);
@@ -476,7 +476,7 @@ export default function UserActionModal({
           strikeInfo = ' (permanent after this)';
         }
       }
-    } catch (_e) {
+    } catch (__e) {
       // fallback to default 5 min
     }
 
@@ -565,45 +565,7 @@ export default function UserActionModal({
               created_at: new Date().toISOString(),
               type: 'system',
               user_profiles: { username: 'System', avatar_url: '' }
-   };
-
-  const handleRoleInvite = async () => {
-    if (!selectedRole) {
-      toast.error('Please select a role');
-      return;
-    }
-    setIsInviting(true);
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) {
-        navigate('/auth?mode=signup');
-        return;
-      }
-
-      const { data, error } = await supabase.rpc('create_role_invite', {
-        p_inviter_id: currentUser.id,
-        p_invitee_id: userId,
-        p_role: selectedRole
-      });
-
-      if (error) throw error;
-
-      const result = data as any;
-      if (result?.success) {
-        const { notifyRoleInviteReceived } = await import('../../lib/notifications');
-        await notifyRoleInviteReceived(userId, displayName, selectedRole, result.invite_id);
-        toast.success(`Role invitation sent to ${displayName}`);
-        setShowRoleInviteModal(false);
-        setSelectedRole('');
-      } else {
-        toast.error(result?.error || 'Failed to send invite');
-      }
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to send invite');
-    } finally {
-      setIsInviting(false);
-    }
-  };
+    };
 
           void supabase.from('stream_messages').insert({
               stream_id: streamId,
@@ -698,6 +660,44 @@ export default function UserActionModal({
     }
     openChatBubble(userId, displayName, fetchedAvatar);
     onClose();
+  };
+
+  const handleRoleInvite = async () => {
+    if (!selectedRole) {
+      toast.error('Please select a role');
+      return;
+    }
+    setIsInviting(true);
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        navigate('/auth?mode=signup');
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('create_role_invite', {
+        p_inviter_id: currentUser.id,
+        p_invitee_id: userId,
+        p_role: selectedRole
+      });
+
+      if (error) throw error;
+
+      const result = data as any;
+      if (result?.success) {
+        const { notifyRoleInviteReceived } = await import('../../lib/notifications');
+        await notifyRoleInviteReceived(userId, displayName, selectedRole, result.invite_id);
+        toast.success(`Role invitation sent to ${displayName}`);
+        setShowRoleInviteModal(false);
+        setSelectedRole('');
+      } else {
+        toast.error(result?.error || 'Failed to send invite');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to send invite');
+    } finally {
+      setIsInviting(false);
+    }
   };
 
 const handleViewProfile = () => {
@@ -1077,7 +1077,7 @@ const handleViewProfile = () => {
                   <option value="temp_city_admin">Temp City Admin</option>
                   <option value="temp_admin">Temp Admin</option>
                   <option value="executive_secretary">Executive Secretary</option>
-                  <option value="marketing_readonly">Marketing Read Only</option>
+                  <option value="marketing_agent">Marketing Agent</option>
                    <option value="superadmin">Super Admin</option>
                    <option value="ceo">CEO</option>
                  </select>

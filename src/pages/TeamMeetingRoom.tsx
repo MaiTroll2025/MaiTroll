@@ -159,7 +159,7 @@ export const TeamMeetingRoom: React.FC = () => {
 
     try {
       // Call the bulk notifications function
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/send-bulk-notifications`, {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-bulk-notifications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,6 +174,7 @@ export const TeamMeetingRoom: React.FC = () => {
             meeting_title: meeting?.title,
             action_url: `/meeting/${meetingId}`
           },
+          sendToAll: false,
           targetUserIds: staffIds
         })
       });
@@ -190,7 +191,7 @@ export const TeamMeetingRoom: React.FC = () => {
 
   // Guard refs to prevent duplicate joins
   const hasJoinedRef = useRef(false);
-  const hasInitializedRef = useRef(false);
+  const _hasInitializedRef = useRef(false);
 
    // Fetch meeting details
    useEffect(() => {
@@ -582,8 +583,8 @@ export const TeamMeetingRoom: React.FC = () => {
     }, [meetingId]);
 
   // Get mic and camera state from track properties
-  const isMicMuted = !isPublishing || (localAudioTrack && !('enabled' in localAudioTrack ? localAudioTrack.enabled : true));
-  const isCameraMuted = !isPublishing || (localVideoTrack && !('enabled' in localVideoTrack ? localVideoTrack.enabled : true));
+  const _isMicMuted = !isPublishing || (localAudioTrack && !('enabled' in localAudioTrack ? localAudioTrack.enabled : true));
+  const _isCameraMuted = !isPublishing || (localVideoTrack && !('enabled' in localVideoTrack ? localVideoTrack.enabled : true));
 
   if (isLoading) {
     return (

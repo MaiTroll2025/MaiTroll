@@ -74,8 +74,8 @@ export default function JailTimeManager({
   // ── State ────────────────────────────────────────────────────
   const [challengerLosing, setChallengerLosing] = useState(false);
   const [opponentLosing, setOpponentLosing] = useState(false);
-  const [challengerLocked, setChallengerLocked] = useState(false);
-  const [opponentLocked, setOpponentLocked] = useState(false);
+  const [_challengerLocked, setChallengerLocked] = useState(false);
+  const [_opponentLocked, setOpponentLocked] = useState(false);
 
   // Refs for tracking previous state
   const prevChallengerLosing = useRef(false);

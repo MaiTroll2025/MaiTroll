@@ -14,14 +14,7 @@ import FileLawsuitModal from '@/components/FileLawsuitModal';
 import FounderBadge from '@/components/founder/FounderBadge';
 import { useTheme } from '@/hooks/useTheme'
 import { toast } from 'sonner';
-import {
-    Gavel, FileText, Mic, Radio, ShoppingBag, Video,
-    Star, Award, Users, TrendingUp, Clock, DollarSign, Eye,
-    CheckCircle, Shield, Crown, Heart, MessageCircle, UserPlus,
-    Settings, Package, History, Bookmark, Send, MoreHorizontal,
-    ShoppingCart, Hammer, BookOpen, Newspaper, Scale, Ticket, AlertTriangle, ShieldAlert,
-    Camera, Music, Disc3, Mic2, Key, Ban, Coins
-} from 'lucide-react';
+import { Gavel, FileText, Radio, ShoppingBag, Video, Star, Award, Users, TrendingUp, Clock, DollarSign, Eye, CheckCircle, Shield, Crown, Heart, MessageCircle, UserPlus, Settings, Package, History, Send, MoreHorizontal, ShoppingCart, Hammer, BookOpen, Newspaper, Scale, AlertTriangle, ShieldAlert, Camera, Key, Ban, Coins } from 'lucide-react';
 
 interface UserProfile {
     id: string;
@@ -504,7 +497,7 @@ export function ProfileHeader({
                 </div>
 
                 {/* Level System — moved from home left nav sidebar; shown next to Mod Actions */}
-                <LevelStatusCard />
+                <LevelStatusCard userId={profile.id} />
 
                 {/* Stats */}
                 <div className="mt-6 grid grid-cols-3 gap-2 md:max-w-xl md:gap-3">
@@ -670,7 +663,7 @@ interface ProfileTabsProps {
     isOwnProfile: boolean;
 }
 
-export function ProfileTabs({ activeTab, onTabChange, visibleTabs, isOwnProfile }: ProfileTabsProps) {
+export function ProfileTabs({ activeTab, onTabChange, visibleTabs, isOwnProfile: _isOwnProfile }: ProfileTabsProps) {
     return (
         <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/70 backdrop-blur-2xl p-3">
             <div className="flex flex-wrap gap-2">
@@ -713,9 +706,6 @@ export const PROFILE_TABS = [
     { key: 'inventory', label: 'Inventory & Perks', icon: Package },
     { key: 'purchases', label: 'Purchase History', icon: History },
     { key: 'settings', label: 'Settings', icon: Settings },
-    { key: 'music', label: 'Music', icon: Music },
-    { key: 'albums', label: 'Albums', icon: Disc3 },
-    { key: 'tracks', label: 'Tracks', icon: Mic2 },
 ];
 
 export default ProfileComponents;

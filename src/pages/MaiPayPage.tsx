@@ -99,7 +99,7 @@ export default function MaiPayPage() {
   const [battleCrowns, setBattleCrowns] = useState(0);
 
   // Crown redemption
-  const [crownRedemptions, setCrownRedemptions] = useState<RedemptionRecord[]>([]);
+  const [crownRedemptions, _setCrownRedemptions] = useState<RedemptionRecord[]>([]);
   const [crownConvertAmount, setCrownConvertAmount] = useState('');
   const [crownConverting, setCrownConverting] = useState(false);
 
@@ -114,7 +114,7 @@ export default function MaiPayPage() {
   const [selectedProvider, setSelectedProvider] = useState<PayoutMethod | 'ach' | 'check'>('paypal');
   const [providerUsername, setProviderUsername] = useState('');
   const [submittingCashout, setSubmittingCashout] = useState(false);
-  const [cashoutRequests, setCashoutRequests] = useState<CashoutRequest[]>([]);
+  const [cashoutRequests, _setCashoutRequests] = useState<CashoutRequest[]>([]);
   const [successfulCashoutsLast24Hours, setSuccessfulCashoutsLast24Hours] = useState(0);
   const [nextCashoutAvailableAt, setNextCashoutAvailableAt] = useState<string | null>(null);
   const [achBankName, setAchBankName] = useState('');
@@ -123,7 +123,7 @@ export default function MaiPayPage() {
 
   // First Cashout Match promotion
   const [promotion, setPromotion] = useState<any>(null);
-  const [promotionLoading, setPromotionLoading] = useState(false);
+  const [_promotionLoading, setPromotionLoading] = useState(false);
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
   const [matchDetails, setMatchDetails] = useState<{ amount: number; coins: number; winnerNumber: number } | null>(null);
 
@@ -132,8 +132,8 @@ export default function MaiPayPage() {
   const [promoAnalyticsLoading, setPromoAnalyticsLoading] = useState(false);
 
   // Transactions
-  const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
-  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [transactions, _setTransactions] = useState<CoinTransaction[]>([]);
+  const [transactionsLoading, _setTransactionsLoading] = useState(false);
   const [txFilter, setTxFilter] = useState<string>('all');
 
   // ── Derived ──────────────────────────────────────────────────────────────
@@ -146,7 +146,7 @@ export default function MaiPayPage() {
     []
   );
 
-  const cashoutLimit = 1;
+  const _cashoutLimit = 1;
 
   const hasFeeProvider = selectedProvider === 'venmo' || selectedProvider === 'cash_app';
   const isPayPalProvider = selectedProvider === 'paypal';
@@ -169,6 +169,10 @@ export default function MaiPayPage() {
     );
   }, [giftedUsers, giftedSearch]);
 
+  // ID Verification
+  const [idDocumentUrl, setIdDocumentUrl] = useState<string | null>(null)
+  const [_idVerificationStatus, setIdVerificationStatus] = useState<string>('not_submitted')
+
   // ── Data Loading ─────────────────────────────────────────────────────────
 
   const loadAllData = useCallback(async () => {
@@ -178,7 +182,7 @@ export default function MaiPayPage() {
       // Load profile balances
       const { data: profileData } = await supabase
         .from('user_profiles')
-        .select('troll_coins, hype_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method')
+        .select('troll_coins, hype_coins, battle_crowns, paypal_email, cashapp_handle, venmo_handle, preferred_payout_method, id_verification_status, id_document_url')
         .eq('id', user.id)
         .single();
 
@@ -186,6 +190,8 @@ export default function MaiPayPage() {
         setTrollCoins(profileData.troll_coins ?? 0);
         setHypeCoins(profileData.hype_coins ?? 0);
         setBattleCrowns(profileData.battle_crowns ?? 0);
+        setIdVerificationStatus(profileData.id_verification_status ?? 'not_submitted')
+        setIdDocumentUrl(profileData.id_document_url ?? null)
 
         // Pre-fill provider username
         const preferred = profileData.preferred_payout_method as PayoutMethod | null;
@@ -453,7 +459,7 @@ export default function MaiPayPage() {
         p_provider_type: selectedProvider,
         p_provider_username: providerDetails,
         p_user_tag: null,
-        p_id_verification_url: null,
+        p_id_verification_url: idDocumentUrl,
       });
       if (error) throw error;
       if (data?.success === false) throw new Error(data.error || 'Cashout request failed');

@@ -4,11 +4,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { moderation } from '@/services/maitrollModeration';
-import type {
-  UtromailThread, UtromailMessage, UtromailAttachment, UtromailBlock,
-  UtromailRequest, UtromailReport, UtromailNotification, UtromailAccount,
-  TromailRoleAccount, MailFolder, MailSearchResult,
-} from '@/types/mail';
+import type { UtromailThread, UtromailMessage, UtromailBlock, UtromailRequest, UtromailReport, UtromailNotification, UtromailAccount, TromailRoleAccount, MailFolder, MailSearchResult } from '@/types/mail';
 
 export const UTROMAIL_SYSTEM_SENDER_ID = '00000000-0000-0000-0000-000000000000';
 export const UTROMAIL_SYSTEM_SENDER_MAIL = 'system@tromail.Mai Troll';
@@ -98,7 +94,7 @@ export const getThreads = async (userId: string, folder: MailFolder = 'inbox'): 
 
     // Deduplicate messages by sender_id to find all participants
     const seenSenders = new Set<string>();
-    const uniqueSenders = msgs.filter(m => {
+    const _uniqueSenders = msgs.filter(m => {
       if (seenSenders.has(m.sender_id)) return false;
       seenSenders.add(m.sender_id);
       return true;
@@ -373,7 +369,7 @@ export const sendMessage = async (params: {
 
    // Check permission
   if (params.recipientId) {
-    const { data: canSend, error: rpcError } = await supabase.rpc('can_send_utromail', {
+    const { data: canSend, error: _rpcError } = await supabase.rpc('can_send_utromail', {
       sender_id: params.senderId,
       recipient_id: params.recipientId,
     });
@@ -667,7 +663,7 @@ export const deleteThread = async (threadId: string, userId: string): Promise<vo
   await moveThreadToFolder(threadId, userId, 'trash')
 };
 
-export const getOtherParticipant = (thread: UtromailThread, userId: string) => {
+export const getOtherParticipant = (thread: UtromailThread, _userId: string) => {
   return {
     id: thread.other_user_id || null,
     username: thread.other_username || null,

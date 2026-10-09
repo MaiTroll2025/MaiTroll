@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getContractsByRecipient, getContractsBySender } from '../lib/tromail';
 
 export const useGetContractsByRecipient = (recipientUserId) => {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   
   return useQuery({
     queryKey: ['contracts', 'recipient', recipientUserId],
@@ -12,7 +12,7 @@ export const useGetContractsByRecipient = (recipientUserId) => {
 };
 
 export const useGetContractsBySender = (senderUserId) => {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   
   return useQuery({
     queryKey: ['contracts', 'sender', senderUserId],

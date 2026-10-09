@@ -2,8 +2,8 @@ import React from 'react';
 import { Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function RolesTab(props: any) {
-  const navigate = useNavigate();
+export default function RolesTab(_props: any) {
+  const _navigate = useNavigate();
   const roleHierarchy = [
     { role: 'President', level: 1, color: 'text-yellow-400', description: 'Highest authority, can use emergency powers' },
     { role: 'Lead Officer', level: 2, color: 'text-blue-400', description: 'Commands officer operations' },

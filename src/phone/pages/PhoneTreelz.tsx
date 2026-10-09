@@ -1,11 +1,4 @@
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Bookmark,
@@ -1695,7 +1688,7 @@ export default function PhoneTreelz() {
      OPEN SPECIFIC POST
   ======================================================= */
 
-  const openPost = useCallback(
+  const _openPost = useCallback(
     (postId: string) => {
       const index = posts.findIndex(
         (post) => post.id === postId,
@@ -1731,7 +1724,7 @@ export default function PhoneTreelz() {
      ACTIVE POST
   ======================================================= */
 
-  const currentPost =
+  const _currentPost =
     posts[activeIndex] || null
 
   /* =======================================================
@@ -1983,7 +1976,7 @@ export default function PhoneTreelz() {
      CREATOR PROFILE
   ======================================================= */
 
-  const openCreatorProfile =
+  const _openCreatorProfile =
     useCallback(
       async (authorId: string) => {
         try {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Crown, Trophy, RotateCcw } from 'lucide-react';
+import { Crown, RotateCcw } from 'lucide-react';
 
 interface BattleResultsOverlayProps {
   isVisible: boolean;

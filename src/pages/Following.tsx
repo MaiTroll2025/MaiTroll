@@ -4,7 +4,6 @@ import { useAuthStore } from '../lib/store'
 import { supabase, UserProfile } from '../lib/supabase'
 import { getGlowingTextStyle } from '../lib/perkEffects'
 import { toast } from 'sonner'
-import ClickableUsername from '../components/ClickableUsername'
 import {
   Users,
   UserPlus,

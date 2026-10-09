@@ -1,7 +1,7 @@
 import React from 'react';
 import { useConsent } from '../contexts/ConsentContext';
 import { ConsentPreferences } from '../lib/consent';
-import { Shield, BarChart3, Share2, Settings, RefreshCw, Download, Trash2 } from 'lucide-react';
+import { Shield, BarChart3, Share2, Settings, RefreshCw, Download } from 'lucide-react';
 
 export default function PrivacySettings() {
   const {

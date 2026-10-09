@@ -157,7 +157,7 @@ export default function ThemeSelector({ streamId, currentThemeUrl, onClose }: Th
                                                 if (!user) { toast.error('Sign in to purchase'); return; }
                                                 setPurchasing(theme.id);
                                                 try {
-                                                    const { data: rpcData, error: rpcError } = await supabase.rpc('purchase_broadcast_theme', { p_theme_id: theme.id, p_set_active: true });
+                                                    const { data: _rpcData, error: rpcError } = await supabase.rpc('purchase_broadcast_theme', { p_theme_id: theme.id, p_set_active: true });
                                                     if (rpcError) throw rpcError;
                                                     toast.success('Purchased and activated');
                                                     fetchThemes();

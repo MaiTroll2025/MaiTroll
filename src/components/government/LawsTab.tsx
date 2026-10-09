@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '@/lib/store';
-import {
-  Law,
-  LawVote,
-  PoliticalParty,
-  Bribe,
-  Protest,
-  GovernmentReputation,
-  CityReputation,
-} from '@/hooks/useGovernmentSystem';
-import { Scroll, Plus, ThumbsUp, ThumbsDown, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Law, PoliticalParty, Bribe, Protest, GovernmentReputation, CityReputation } from '@/hooks/useGovernmentSystem';
+import { Scroll, Plus, ThumbsUp, ThumbsDown, Clock, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface LawsTabProps {
@@ -55,13 +47,13 @@ const EFFECT_TYPES = [
 
 export default function LawsTab({
   laws,
-  activeLaw,
-  onSetActiveLaw,
+  activeLaw: _activeLaw,
+  onSetActiveLaw: _onSetActiveLaw,
   onCreateLaw,
   onVoteOnLaw,
   roleLevel
 }: LawsTabProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newLaw, setNewLaw] = useState({
     title: '',
@@ -96,7 +88,7 @@ export default function LawsTab({
         effect_value: {},
         required_votes: 10
       });
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to create law');
     }
   };
@@ -106,7 +98,7 @@ export default function LawsTab({
     try {
       await onVoteOnLaw(lawId, vote);
       toast.success(`Vote recorded: ${vote.toUpperCase()}`);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to record vote');
     }
     setVotingLawId(null);

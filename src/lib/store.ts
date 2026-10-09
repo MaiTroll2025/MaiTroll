@@ -1,13 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Session, User } from '@supabase/supabase-js'
-import {
-  supabase,
-  type UserProfile,
-  UserRole,
-  validateProfile,
-  ensureSupabaseSession,
-} from '../lib/supabase'
+import { supabase, type UserProfile, UserRole, validateProfile } from '../lib/supabase';
 import { handleConcurrentLogin, resetConcurrentLoginCheck } from './sessionUtils'
 import { generateUUID } from './uuid'
 import { globalRequestScheduler } from './requestScheduler'
@@ -64,12 +58,12 @@ const PROFILE_IGNORED_KEYS = new Set([
   'last_sign_in_at',
 ])
 
-const COIN_KEYS = new Set([
+const _COIN_KEYS = new Set([
   'troll_coins',
   'total_earned_coins',
 ])
 
-const profilePatchKeys = [
+const _profilePatchKeys = [
   'troll_coins',
   'total_earned_coins',
   'credit_score',
@@ -91,7 +85,7 @@ const profilePatchKeys = [
   'updated_at',
 ]
 
-function didProfilePatchActuallyChange(currentProfile: any, patch: any) {
+function _didProfilePatchActuallyChange(currentProfile: any, patch: any) {
   if (!currentProfile || !patch) return true
 
   return Object.keys(getProfilePatchDiff(currentProfile, patch)).length > 0
@@ -141,7 +135,7 @@ function normalizeProfileCoins(profile: any) {
   }
 }
 
-function shouldApplyRealtimeProfilePatch(currentProfile: any, patch: any) {
+function _shouldApplyRealtimeProfilePatch(currentProfile: any, patch: any) {
   return Object.keys(getProfilePatchDiff(currentProfile, patch)).length > 0
 }
 
@@ -151,10 +145,12 @@ const USER_PROFILE_SELECT = `
   username,
   display_name,
   avatar_url,
+  cover_url,
+  banner_url,
   role,
   troll_role,
   job_title,
-is_admin,
+  is_admin,
   is_troll_officer,
   is_officer_active,
   is_lead_officer,

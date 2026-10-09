@@ -6,8 +6,6 @@ import { useGetUserTromailAccount } from '../../hooks/useGetUserTromailAccount';
 import { UserSearchInput } from '../UserSearchDropdown';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
-import { useGetContractById } from '../../hooks/useGetContractById';
 import { useGetContractsBySender } from '../../hooks/useGetContracts';
 import { useUploadOrganizationDocument } from '../../hooks/useUploadOrganizationDocument';
 
@@ -24,11 +22,11 @@ export const FileCabinet = () => {
   
   const [selectedUser, setSelectedUser] = useState(null);
   const [documents, setDocuments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [_isLoading, setIsLoading] = useState(true);
+  const [_uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [selectedContract, setSelectedContract] = useState(null);
-  const [contracts, setContracts] = useState([]);
+  const [selectedContract, _setSelectedContract] = useState(null);
+  const [_contracts, setContracts] = useState([]);
 
   const {
     data: directoryData,
@@ -43,7 +41,7 @@ export const FileCabinet = () => {
   const {
     data: documentsData,
     isLoading: documentsLoading,
-    error: documentsError
+    error: _documentsError
   } = useGetUserDocuments(filters.userId, {
     document_type: filters.document_type || undefined,
     visibility: filters.visibility || undefined,
@@ -78,11 +76,11 @@ export const FileCabinet = () => {
     setFilters(prev => ({ ...prev, document_type: '', visibility: '', status: '' }));
   };
 
-  const handleFilterChange = (filter, value) => {
+  const _handleFilterChange = (filter, value) => {
     setFilters(prev => ({ ...prev, [filter]: value }));
   };
 
-  const handleUploadDocument = async (file, metadata) => {
+  const _handleUploadDocument = async (file, metadata) => {
     if (!selectedUser) {
       alert('Please select a user first');
       return;

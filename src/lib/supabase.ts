@@ -164,7 +164,7 @@ export type Platform = typeof PLATFORM_OPTIONS[number]['value'];
 
 export interface UserProfile {
   is_live: import("react/jsx-runtime").JSX.Element
-  verification_expires_at: boolean
+  verification_expires_at: string | null
   verified_since: any
   trollmonds: number
   display_name: string
@@ -401,6 +401,58 @@ export interface UserProfile {
   preference?: string[];
   message_price?: number;
   last_active?: string | null;
+
+  // Extended role / staff flags used across the app
+  is_og_user?: boolean
+  is_staff?: boolean
+  is_moderator?: boolean
+  is_owner?: boolean
+  is_troll_family?: boolean
+  is_troller?: boolean
+  is_troll_family_leader?: boolean
+  is_agency_leader?: boolean
+  is_noah_admin?: boolean
+  is_ceo_assistant?: boolean
+  is_noah_assistant?: boolean
+  is_journalist?: boolean
+  is_news_caster?: boolean
+  is_chief_news_caster?: boolean
+  is_tcnn_news_caster?: boolean
+  is_tcnn_chief_news_caster?: boolean
+  is_pro_bono?: boolean
+  attorney_fee?: number | null
+  attorney_cases_count?: number
+  vice_president?: boolean
+  referred_by_user_id?: string | null
+  is_background_jailed?: boolean
+
+  // Credit / financial
+  credit_score?: number
+  homeowners_insurance_deductible?: number
+
+  // Onboarding status flags; tax identity data is stored in user_tax_info.
+  onboarding_completed?: boolean
+  w9_status?: string | null
+
+  // Notification preferences
+  church_notifications_enabled?: boolean
+  banner_notifications_enabled?: boolean
+  incoming_message_popups_enabled?: boolean
+
+  // Bank statement fields
+  stmt_apr_percent?: number | null
+  stmt_statement_date?: string | null
+  stmt_due_date?: string | null
+  stmt_balance?: number | null
+  stmt_minimum_payment?: number | null
+  stmt_past_due?: number | null
+  stmt_late_fees_accrued?: number | null
+  stmt_interest_accrued?: number | null
+  stmt_on_time_payments?: number | null
+  stmt_late_payments?: number | null
+
+  // Broadcast / camera
+  camera_off_image_url?: string | null
 }
 
 
@@ -609,7 +661,7 @@ export enum UserRole {
   TROLL_CITY_TREASURER = 'troll_city_treasurer',
   TEMP_ADMIN = 'temp_admin',
   EXECUTIVE_SECRETARY = 'executive_secretary',
-  MARKETING_READONLY = 'marketing_readonly',
+  MARKETING_AGENT = 'marketing_agent',
   SUPERADMIN = 'superadmin',
   CEO = 'ceo',
 }
@@ -840,9 +892,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.CREATE_CONTENT,
     Permission.MONETIZE
   ],
-  [UserRole.MARKETING_READONLY]: [
-    // Marketing read-only: Can only view data, no write permissions
-    Permission.VIEW_ONLY
+  [UserRole.MARKETING_AGENT]: [
+    Permission.CREATE_CONTENT
   ],
   [UserRole.HR_MANAGER]: [
     Permission.MANAGE_USERS,
@@ -1035,10 +1086,10 @@ export const hasRole = (
   return false
 }
 
-// Check if user is marketing read-only (external agency access)
-export const isMarketingReadonly = (profile: UserProfile | null): boolean => {
+// Marketing agents can create approved marketing content but cannot use general write surfaces.
+export const isMarketingAgent = (profile: UserProfile | null): boolean => {
   if (!profile) return false
-  return profile.role === UserRole.MARKETING_READONLY
+  return profile.role === UserRole.MARKETING_AGENT || profile.troll_role === UserRole.MARKETING_AGENT
 }
 
 // Check if user can perform write operations
@@ -1046,8 +1097,7 @@ export const canWrite = (profile: UserProfile | null): boolean => {
   if (!profile) return false
   // Admin can write
   if (profile.role === UserRole.ADMIN || profile.is_admin) return true
-  // Marketing readonly cannot write
-  if (profile.role === UserRole.MARKETING_READONLY) return false
+  if (isMarketingAgent(profile)) return false
   return true
 }
 
@@ -1058,7 +1108,7 @@ export const isAdminOrSecretary = (profile: UserProfile | null): boolean => {
 }
 
 // Role display name formatter - maps internal role values to user-friendly labels
-export const getRoleDisplayName = (role?: string | null, isAdmin?: boolean): string => {
+export const getRoleDisplayName = (role?: string | null, _isAdmin?: boolean): string => {
   if (!role) return 'User'
   
   // Map internal roles to display names
@@ -1081,7 +1131,7 @@ export const getRoleDisplayName = (role?: string | null, isAdmin?: boolean): str
     'troll_city_secretary': 'City Secretary',
     'troll_city_treasurer': 'City Treasurer',
     'empire_partner': 'Empire Partner',
-    'marketing_readonly': 'Marketing Agency',
+    'marketing_agent': 'Marketing Agent',
     'user': 'User'
   }
   

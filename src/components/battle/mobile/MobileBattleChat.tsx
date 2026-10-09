@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Send, Smile, X } from "lucide-react";
 import BattleChat from "../../../components/broadcast/BattleChat";
 
 /**

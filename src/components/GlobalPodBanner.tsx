@@ -15,7 +15,7 @@ interface PodNotification {
 
 export default function GlobalPodBanner() {
   const { profile } = useAuthStore();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [notification, setNotification] = useState<PodNotification | null>(null);
 
   useEffect(() => {

@@ -41,7 +41,7 @@ interface PayoutRequest {
 }
 
 const PayoutBatches = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [batches, setBatches] = useState<PayoutBatch[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
   const [requests, setRequests] = useState<PayoutRequest[]>([]);

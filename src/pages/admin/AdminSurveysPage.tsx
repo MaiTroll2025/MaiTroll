@@ -1,34 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ClipboardList,
-  Plus,
-  Trash2,
-  Eye,
-  Download,
-  Send,
-  Loader2,
-  X,
-  CheckCircle2,
-  BarChart3,
-  Users,
-  Calendar,
-  ToggleLeft,
-  ToggleRight,
-  FileText,
-} from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Eye, Download, Send, Loader2, BarChart3, Users, Calendar, ToggleLeft, ToggleRight, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/lib/store';
-import {
-  getAllSurveys,
-  getSurveyResponses,
-  createSurvey,
-  deleteSurvey,
-  toggleSurveyActive,
-  exportResponsesCSV,
-  notifySurveyAvailable,
-} from '@/lib/survey';
+import { getAllSurveys, getSurveyResponses, getAllResponses, createSurvey, deleteSurvey, toggleSurveyActive, exportResponsesCSV } from '@/lib/survey';
 import { getTromailRoleDirectory, sendTromailMessage, getUserTromailAccount } from '@/lib/tromail';
 import type { SurveyWithResponseCount, SurveyResponse } from '@/types/survey';
 import type { TromailAccount } from '@/lib/tromail';

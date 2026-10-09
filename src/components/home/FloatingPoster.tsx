@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { CASHOUT_TIERS, COIN_PACKAGES } from '@/config/coinConfig';
 import { formatCoins } from '@/lib/coinMath';
-import { toast } from 'sonner';
 import CoinStoreModal from '@/components/broadcast/CoinStoreModal';
 
 // Shape of a tier pulled from site_content or fallback
@@ -194,7 +193,7 @@ export default function FloatingPoster({ className }: FloatingPosterProps) {
   }, []);
 
   const handleQuickBuy = useCallback(
-    (pkg: typeof COIN_PACKAGES[number]) => {
+    (_pkg: typeof COIN_PACKAGES[number]) => {
       if (!user?.id) {
         navigate('/auth');
         return;

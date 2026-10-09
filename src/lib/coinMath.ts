@@ -73,7 +73,7 @@ export function calculateCashoutUsd(coinAmount: number): number {
 /**
  * Check if a cashout requires manual review
  */
-export function requiresManualReview(coinAmount: number): boolean {
+export function requiresManualReview(_coinAmount: number): boolean {
   return false;
 }
 

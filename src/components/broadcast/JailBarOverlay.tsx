@@ -15,7 +15,7 @@
  * for 60 fps performance. No JS animation libraries needed.
  */
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './JailBarOverlay.css';
 
@@ -193,7 +193,7 @@ export default function JailBarOverlay({
   if (animState === 'hidden' && !isLosing) return null;
 
   // ─── Side-specific accent color for warning lights ─────────────
-  const warningColor = side === 'challenger'
+  const _warningColor = side === 'challenger'
     ? 'rgba(16, 185, 129, 0.8)'
     : 'rgba(192, 38, 211, 0.8)';
 

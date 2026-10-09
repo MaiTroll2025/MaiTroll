@@ -1,9 +1,7 @@
 import React, { useMemo } from 'react';
-import { Play, Eye, Radio, Sparkles, Settings, Crown } from 'lucide-react';
+import { Play, Eye, Sparkles, Crown } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
-import LiveStreamsModule from '@/components/home/LiveStreamsModule';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
-import FeaturedBroadcasts from '@/components/broadcast/FeaturedBroadcasts';
 import { cn } from '@/lib/utils';
 import { preloadStreamData, preloadBroadcasterProfile, preloadImage } from '@/lib/streamPreload'
 
@@ -18,12 +16,12 @@ interface SwissMinimal2Props {
 // Alternative: Dashboard Grid Layout
 export default function DashboardGridLayout({
   liveItems,
-  totalViewers,
-  loadingLive,
+  totalViewers: _totalViewers,
+  loadingLive: _loadingLive,
   onLiveItemClick,
   onRequireAuth,
 }: SwissMinimal2Props) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   const featured = useMemo(() => liveItems[0], [liveItems]);
   const leftCol = useMemo(() => liveItems.slice(1, 4), [liveItems]);
@@ -185,7 +183,7 @@ export default function DashboardGridLayout({
   );
 }
 
-function StreamCard({ item, onClick, size = 'md', variant = 'default' }: any) {
+function StreamCard({ item, onClick, size = 'md', variant: _variant = 'default' }: any) {
   const handlePointerDown = React.useCallback(async () => {
     if (!item?.id) return
     const data = await preloadStreamData(item.id)

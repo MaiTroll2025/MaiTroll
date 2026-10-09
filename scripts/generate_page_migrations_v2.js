@@ -56,7 +56,7 @@ function findSqlFiles(dir, baseDir) {
         sqlFiles.push({ path: fullPath, name: relativePath });
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // skip
   }
 }
@@ -79,7 +79,7 @@ for (const file of relevantFiles) {
   try {
     const content = readFileSync(file.path, 'utf8');
     allSql.push({ name: file.name, content });
-  } catch (e) {
+  } catch (_e) {
     // skip
   }
 }

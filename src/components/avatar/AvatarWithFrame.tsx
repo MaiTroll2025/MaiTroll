@@ -89,7 +89,7 @@ export default function AvatarWithFrame({
         alt={alt}
         className={`object-cover ${roundedClass} ${className}`}
         style={style}
-        onClick={onClick}
+      onClick={onClick as unknown as () => void}
         draggable={false}
       />
     );
@@ -103,7 +103,7 @@ export default function AvatarWithFrame({
       size={size}
       username={alt}
       className={className}
-      onClick={onClick}
+      onClick={onClick as unknown as () => void}
     />
   );
 }

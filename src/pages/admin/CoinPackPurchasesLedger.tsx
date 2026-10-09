@@ -29,7 +29,7 @@ import {
 // TYPES
 // ════════════════════════════════════════════════════════════════════════════
 
-type CoinPurchaseStatus = 'completed' | 'credited' | 'pending' | 'failed' | 'refunded' | 'canceled'
+type CoinPurchaseStatus = 'completed' | 'credited' | 'paid' | 'pending' | 'failed' | 'refunded' | 'canceled'
 
 interface PayPalLedgerRow {
   id: string
@@ -109,11 +109,10 @@ function formatCoins(n: number) {
 
 function buildRealName(p: any): string | null {
   if (!p) return null
-  if (p.legal_full_name?.trim()) return p.legal_full_name.trim()
+  if (typeof p.legal_full_name === 'string' && p.legal_full_name.trim()) {
+    return p.legal_full_name.trim()
+  }
   if (p.full_name?.trim()) return p.full_name.trim()
-  const fn = String(p.legal_first_name || '').trim()
-  const ln = String(p.legal_last_name || '').trim()
-  if (fn && ln) return `${fn} ${ln}`
   return null
 }
 
@@ -211,7 +210,7 @@ export default function CoinPackPurchasesLedger() {
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [selectedPurchaseForUpload, setSelectedPurchaseForUpload] = useState<string | null>(null)
   const [uploadPreview, setUploadPreview] = useState<{ name: string; type: string; data: string } | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
+  const [_refreshing, setRefreshing] = useState(false)
 
   useEffect(() => { saveLS(LS_NOTES_KEY, notes) }, [notes])
   useEffect(() => { saveLS(LS_FILES_KEY, files) }, [files])
@@ -267,11 +266,24 @@ export default function CoinPackPurchasesLedger() {
       const profilesMap = new Map<string, any>()
       const userIdArr = [...allUserIds]
       if (userIdArr.length > 0) {
-        const { data: profiles } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from('user_profiles')
-          .select('id, username, display_name, full_name, legal_full_name, legal_first_name, legal_last_name, email')
+          .select('id, username, display_name, full_name, email')
           .in('id', userIdArr)
+        if (profilesError) throw profilesError
         for (const p of (profiles ?? [])) profilesMap.set(p.id, p)
+
+        const { data: taxProfiles, error: taxProfilesError } = await supabase
+          .from('user_tax_info')
+          .select('user_id, legal_full_name')
+          .in('user_id', userIdArr)
+        if (taxProfilesError) throw taxProfilesError
+        for (const taxProfile of taxProfiles ?? []) {
+          const current = profilesMap.get(taxProfile.user_id) || {}
+          if (typeof taxProfile.legal_full_name === 'string' && taxProfile.legal_full_name.trim()) {
+            profilesMap.set(taxProfile.user_id, { ...current, legal_full_name: taxProfile.legal_full_name })
+          }
+        }
       }
 
       const getProfile = (uid: string) => profilesMap.get(uid) || {}
@@ -486,7 +498,7 @@ export default function CoinPackPurchasesLedger() {
     setSelectedPurchaseForUpload(null)
   }
 
-  const deleteAttachment = (id: string) => { setFiles(prev => prev.filter(f => f.id !== id)) }
+  const _deleteAttachment = (id: string) => { setFiles(prev => prev.filter(f => f.id !== id)) }
 
   // ════════════════════════════════════════════════════════════════════════
   // RENDER
@@ -620,7 +632,11 @@ export default function CoinPackPurchasesLedger() {
                           <td className="px-3 py-2.5 text-slate-300 whitespace-nowrap">{formatDate(p.purchaseDate)}</td>
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-1.5">
-                              {isMissingName && <AlertTriangle size={12} className="text-amber-400 shrink-0" title="Real name missing" />}
+                              {isMissingName && (
+                                <span title="Real name missing">
+                                  <AlertTriangle size={12} className="text-amber-400 shrink-0" />
+                                </span>
+                              )}
                               <span className={`font-medium whitespace-nowrap ${isMissingName ? 'text-amber-300' : 'text-white'}`}>
                                 {p.realName ?? <span className="text-amber-400 italic">Missing real name</span>}
                               </span>

@@ -15,19 +15,14 @@ import { useCoins } from '../lib/hooks/useCoins';
 import { deductCoins, addCoins } from '../lib/coinTransactions';
 import { toast } from 'sonner';
 import { moderation } from '@/services/maitrollModeration';
-import { 
-  Crown, Users, MessageSquare, Phone, Video, Send, 
-  Circle, ChevronLeft, MoreVertical, Mic, MicOff,
-  VideoOff, PhoneOff, Plus, Gift, Sparkles,
-  Activity, ArrowLeft, Clock, ShoppingCart
-} from 'lucide-react';
+import { Crown, Users, MessageSquare, Phone, Video, Send, Circle, Mic, MicOff, VideoOff, PhoneOff, Gift, Activity, ArrowLeft, Clock, ShoppingCart } from 'lucide-react';
 
 // Family Minutes Store Modal - Buy call minutes with coins
 function FamilyMinutesStoreModal({
   isOpen,
   onClose,
   familyId,
-  familyName,
+  familyName: _familyName,
   familyMinutes,
   onPurchaseComplete
 }: {
@@ -385,7 +380,7 @@ interface FamilyData {
   level: number;
 }
 
-interface FamilyMember {
+interface _FamilyMember {
   id: string;
   user_id: string;
   role: string;
@@ -461,9 +456,9 @@ export default function TrollFamilyChat() {
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [familyMinutes, setFamilyMinutes] = useState<{ audio_minutes: number; video_minutes: number }>({ audio_minutes: 0, video_minutes: 0 });
   const [showBuyMinutesModal, setShowBuyMinutesModal] = useState(false);
-  const [showCoinStore, setShowCoinStore] = useState(false);
+  const [_showCoinStore, _setShowCoinStore] = useState(false);
   const [showGiftModal, setShowGiftModal] = useState(false);
-  const [giftRecipient, setGiftRecipient] = useState<{id: string, username: string} | null>(null);
+  const [_giftRecipient, _setGiftRecipient] = useState<{id: string, username: string} | null>(null);
   const { troll_coins, refreshCoins } = useCoins();
 
   // Refs
@@ -570,7 +565,7 @@ export default function TrollFamilyChat() {
     if (!familyId) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error: _error } = await supabase
         .from('family_calls')
         .select('*')
         .eq('family_id', familyId)
@@ -595,7 +590,7 @@ export default function TrollFamilyChat() {
         setActiveCall(null);
         setIsInCall(false);
       }
-    } catch (err) {
+    } catch (_err) {
       setActiveCall(null);
     }
   }, [familyId, user]);
@@ -831,7 +826,7 @@ export default function TrollFamilyChat() {
     if (!activeCall || !user) return;
 
     try {
-      const { data, error } = await supabase.rpc('leave_family_call', {
+      const { data: _data, error } = await supabase.rpc('leave_family_call', {
         p_call_id: activeCall.id,
         p_user_id: user.id
       });
@@ -850,7 +845,7 @@ export default function TrollFamilyChat() {
     if (!activeCall || !user) return;
 
     try {
-      const { data, error } = await supabase.rpc('end_family_call', {
+      const { data: _data, error } = await supabase.rpc('end_family_call', {
         p_call_id: activeCall.id,
         p_user_id: user.id
       });
@@ -1246,10 +1241,10 @@ function ChatArea({
 // Message Item Component
 function MessageItem({ message, isNew }: { message: ChatMessage; isNew: boolean }) {
   const isSystem = message.message_type === 'system' || message.message_type === 'call';
-  const isCallEvent = message.message_type === 'call';
+  const _isCallEvent = message.message_type === 'call';
 
   // Check if message is from the same user as the previous one
-  const showAvatar = true; // For simplicity, always show avatar
+  const _showAvatar = true; // For simplicity, always show avatar
 
   if (isSystem) {
     return (
@@ -1366,9 +1361,9 @@ function RightSidebar({
   onEndCall,
   isLeader,
   familyMinutes,
-  showBuyMinutesModal,
+  showBuyMinutesModal: _showBuyMinutesModal,
   setShowBuyMinutesModal,
-  purchaseFamilyMinutes,
+  purchaseFamilyMinutes: _purchaseFamilyMinutes,
   troll_coins
 }: {
   onlineMembers: OnlineMember[];
@@ -1387,8 +1382,8 @@ function RightSidebar({
   purchaseFamilyMinutes?: (audio: number, video: number, cost: number) => Promise<void>;
   troll_coins?: number;
 }) {
-  const onlineCount = onlineMembers.filter(m => !m.is_in_call).length;
-  const inCallCount = callMembers.length;
+  const _onlineCount = onlineMembers.filter(m => !m.is_in_call).length;
+  const _inCallCount = callMembers.length;
 
   return (
     <div className="w-72 border-l border-white/10 bg-slate-900/50 flex flex-col overflow-hidden hidden lg:flex">
@@ -1649,6 +1644,7 @@ function CallOverlay({
 }
 
 // Buy Minutes Modal Component
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function BuyMinutesModal({
   familyMinutes,
   troll_coins,

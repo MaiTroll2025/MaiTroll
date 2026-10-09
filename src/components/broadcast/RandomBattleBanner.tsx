@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Zap, Trophy, Users, X } from 'lucide-react';
+import { Swords, Zap, Trophy, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type QueuePhase = 'regular' | 'queue' | 'starting' | 'active' | 'ended';
+export type QueuePhase = 'regular' | 'queue' | 'starting' | 'active' | 'ended';
 
 interface RandomBattleBannerProps {
   phase: QueuePhase;

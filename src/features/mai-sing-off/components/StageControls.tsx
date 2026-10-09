@@ -1,4 +1,4 @@
-import { Play, Pause, SkipForward, Square, UserX } from 'lucide-react'
+import { Play, Pause, SkipForward, Square } from 'lucide-react';
 import { useSingOffStore } from '../store/useSingOffStore'
 import { useSingOffActions } from '../hooks/useSingOffActions'
 

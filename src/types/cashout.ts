@@ -1,5 +1,4 @@
 // Types for Enhanced Cashout System
-import { UserProfile } from '../lib/supabase';
 
 export type PayoutMethod = 'cash_app' | 'paypal' | 'venmo' | 'ach' | 'check';
 

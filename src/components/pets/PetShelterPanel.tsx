@@ -9,6 +9,9 @@ type Pet = {
   pet_type: 'dog' | 'cat'
   name: string
   care_status: number
+  hunger_status: number
+  walk_status: number
+  attention_status: number
   needs: { hunger?: boolean; walk?: boolean; care?: boolean }
   pet_level: number
   training_xp: number
@@ -30,7 +33,7 @@ export default function PetShelterPanel({ compact = false }: { compact?: boolean
     if (!userData.user) return
     const { data } = await supabase
       .from('pets')
-      .select('id, pet_type, name, care_status, needs, pet_level, training_xp')
+      .select('id, pet_type, name, care_status, hunger_status, walk_status, attention_status, needs, pet_level, training_xp')
       .eq('owner_id', userData.user.id)
       .eq('is_primary', true)
       .eq('is_active', true)
@@ -40,7 +43,23 @@ export default function PetShelterPanel({ compact = false }: { compact?: boolean
 
   useEffect(() => {
     void loadPet().finally(() => setLoading(false))
+    const channel = supabase
+      .channel('troll-pet-care-shelter')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pets' }, () => { void loadPet() })
+      .subscribe()
+    const handlePetUpdated = () => { void loadPet() }
+    window.addEventListener('pet-updated', handlePetUpdated)
+    return () => {
+      window.removeEventListener('pet-updated', handlePetUpdated)
+      void supabase.removeChannel(channel)
+    }
   }, [])
+
+  const careBars = pet ? [
+    { label: 'Hunger', value: pet.hunger_status, color: 'from-amber-300 to-orange-400' },
+    { label: 'Walks', value: pet.walk_status, color: 'from-emerald-300 to-green-500' },
+    { label: 'Attention', value: pet.attention_status, color: 'from-pink-300 to-fuchsia-500' },
+  ] : []
 
   const adopt = async () => {
     if (!petName.trim() || !agreed) return
@@ -78,7 +97,7 @@ export default function PetShelterPanel({ compact = false }: { compact?: boolean
     window.dispatchEvent(new Event('pet-updated'))
 
     const actionText =
-      type === 'feed' ? 'Feed cost 5 TC' : type === 'walk' ? 'Walk cost 1 TC' : 'Play/Care is free and +10% care'
+      type === 'feed' ? 'Feed cost 5 TC' : type === 'walk' ? 'Walk cost 1 TC' : 'Play/Care is free and +10% attention'
     toast.success(`${pet.name} is feeling better. ${actionText}`)
   }
 
@@ -94,7 +113,15 @@ export default function PetShelterPanel({ compact = false }: { compact?: boolean
         </div>
         <p className="mt-4 text-sm text-slate-300">{pet.name} {need}.</p>
         <div className="mt-4 h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-cyan-300 to-emerald-300" style={{ width: `${pet.care_status}%` }} /></div>
-        <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => void care('feed')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-sm font-bold text-cyan-100"><Utensils className="h-4 w-4" /> Feed · 5 TC</button><button type="button" onClick={() => void care('walk')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-3 py-2 text-sm font-bold text-emerald-100"><PawPrint className="h-4 w-4" /> Walk · 1 TC</button><button type="button" onClick={() => void care('care')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-pink-300/25 bg-pink-400/10 px-3 py-2 text-sm font-bold text-pink-100"><Heart className="h-4 w-4" /> Play/Care · +10%</button>{interaction && <Loader2 className="h-5 w-5 animate-spin self-center text-cyan-200" />}</div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {careBars.map((bar) => (
+            <div key={bar.label} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="mb-2 flex justify-between text-xs font-bold text-slate-300"><span>{bar.label}</span><span>{bar.value}%</span></div>
+              <div className="h-2 rounded-full bg-white/10"><div className={`h-2 rounded-full bg-gradient-to-r ${bar.color}`} style={{ width: `${bar.value}%` }} /></div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => void care('feed')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-sm font-bold text-cyan-100"><Utensils className="h-4 w-4" /> Feed · 5 TC</button><button type="button" onClick={() => void care('walk')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-3 py-2 text-sm font-bold text-emerald-100"><PawPrint className="h-4 w-4" /> Walk · 1 TC</button><button type="button" onClick={() => void care('care')} disabled={!!interaction} className="inline-flex items-center gap-2 rounded-xl border border-pink-300/25 bg-pink-400/10 px-3 py-2 text-sm font-bold text-pink-100"><Heart className="h-4 w-4" /> Play/Care · +10% attention</button>{interaction && <Loader2 className="h-5 w-5 animate-spin self-center text-cyan-200" />}</div>
         <p className="mt-4 text-xs text-slate-500">Pet level {pet.pet_level}. Raid eligibility unlocks at level 50 through the existing raid system.</p>
       </section>
     )

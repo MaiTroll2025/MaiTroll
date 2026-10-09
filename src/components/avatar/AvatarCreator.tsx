@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { Save, Palette, Shirt, Crown, Sparkles } from 'lucide-react'
 import { Button } from '../ui/button'
 
-interface AvatarPreviewProps {
+interface _AvatarPreviewProps {
   avatarUrl: string | null
 }
 
@@ -51,7 +51,7 @@ const ACCESSORIES = [
 ]
 
 export default function AvatarCreator({ onComplete, compact = false }: AvatarCreatorProps) {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const [selectedStyle, setSelectedStyle] = useState(TROLL_AVATAR_STYLES[0])
   const [selectedHair, setSelectedHair] = useState(HAIRSTYLES[0])
   const [selectedOutfit, setSelectedOutfit] = useState(OUTFITS[0])

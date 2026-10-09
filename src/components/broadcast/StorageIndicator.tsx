@@ -29,7 +29,7 @@ export function StorageIndicator({ userId, storageType = 'broadcast', className 
   const borderColor = isExceeded ? 'border-red-400/30' : isWarning || isRestricted ? 'border-amber-400/30' : 'border-cyan-400/30'
   const bgColor = isExceeded ? 'bg-red-500/10' : isWarning || isRestricted ? 'bg-amber-500/10' : 'bg-cyan-500/10'
 
-  const getCategoryLabel = (category: string) => {
+  const _getCategoryLabel = (category: string) => {
     if (storageType === 'hytro_gaming') {
       if (category === 'Broadcast Recordings') return 'Game Files'
       if (category === 'Screenshots') return 'Screenshots'

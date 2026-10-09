@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../supabase'
 import { useAuthStore } from '../store'
-import { toast } from 'sonner'
-import type { Neighborhood, NeighborhoodMember, House, HouseUpgrade, HouseLoan, HouseRaid, HouseFees } from '../../types/neighborhood'
+import type { Neighborhood, NeighborhoodMember, House, HouseRaid, HouseFees } from '../../types/neighborhood';
 
 const DEFAULT_HOUSE_FEES: HouseFees = {
   deed_fee: 500,
@@ -553,7 +552,7 @@ export function useHouseRaids(houseId: string | null) {
     }
   }
 
-  const repairHouse = async (repairUserId: string) => {
+  const repairHouse = async (_repairUserId: string) => {
     if (!houseId) return { success: false, error: 'No house' }
 
     try {

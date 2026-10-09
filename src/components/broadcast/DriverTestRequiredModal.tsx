@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Car, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface DriverTestRequiredModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ export default function DriverTestRequiredModal({
   onClose,
   onConfirm,
 }: DriverTestRequiredModalProps) {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
 
   if (!isOpen) return null;
 

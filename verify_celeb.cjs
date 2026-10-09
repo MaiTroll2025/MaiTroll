@@ -22,7 +22,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
                     'celeb_cashout_tiers', 'celeb_cashout_requests', 'celeb_audit_logs'];
     
     for (const table of tables) {
-      const { data, error } = await supabase.from(table).select('count', { count: 'exact', head: true });
+      const { data: _data, error } = await supabase.from(table).select('count', { count: 'exact', head: true });
       if (error) {
         console.log(`Table ${table}: ERROR - ${error.message}`);
       } else {
@@ -31,7 +31,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
     }
     
     // Check if celeb_role column exists on user_profiles
-    const { data: profiles, error: profilesError } = await supabase
+    const { data: _profiles, error: profilesError } = await supabase
       .from('user_profiles')
       .select('id')
       .eq('celeb_role', 'host')
@@ -48,7 +48,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
     }
     
     // Check if the RPC function exists
-    const { data: rpcData, error: rpcError } = await supabase.rpc('get_celeb_applications', {
+    const { data: _rpcData, error: rpcError } = await supabase.rpc('get_celeb_applications', {
       p_status: 'all',
       p_limit: 1,
       p_offset: 0

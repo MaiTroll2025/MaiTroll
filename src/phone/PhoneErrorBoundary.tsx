@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode } from 'react'
+import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom'
 import ErrorBoundary from '@/components/ErrorBoundary'
 

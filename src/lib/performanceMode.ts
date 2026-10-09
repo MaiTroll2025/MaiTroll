@@ -37,5 +37,5 @@ export function shouldSkipNonCriticalFetch(url: string, mode: BatterySaverMode) 
   const nonCriticalKeywords = ['promo', 'ad', 'ads', 'ticker', 'leaderboard', 'stock', 'market', 'campaign', 'analytics', 'banner', 'background', 'wallet/refresh', 'profile/refresh']
   const isNonCritical = nonCriticalKeywords.some((keyword) => lower.includes(keyword))
   if (!isNonCritical) return false
-  return mode !== 'normal'
+  return true
 }

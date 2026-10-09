@@ -29,7 +29,7 @@ interface UseGamingHeartbeatReturn {
 
 export function useGamingHeartbeat({
   streamId,
-  channelName,
+  channelName: _channelName,
   enabled,
   chatTimeoutMs = 10 * 60 * 1000,
   audioTimeoutMs = 8 * 60 * 1000,

@@ -14,7 +14,7 @@ interface BugAlertPopupProps {
 
 export function BugAlertPopup({ maxVisible = 3 }: BugAlertPopupProps) {
   const { 
-    unreadAlerts, 
+    unreadAlerts: _unreadAlerts, 
     activeAlerts,
     markAsRead, 
     acknowledgeAlert, 

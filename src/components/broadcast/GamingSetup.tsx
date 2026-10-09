@@ -1,31 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import {
-  BarChart3,
-  ChevronDown,
-  Gamepad2,
-  Loader2,
-  Mail,
-  Mic,
-  MicOff,
-  MonitorPlay,
-  MoreVertical,
-  Pause,
-  Play,
-  Power,
-  Radio,
-  Settings,
-  ShieldCheck,
-  Square,
-  Users,
-  Video,
-  VideoOff,
-  Volume2,
-  VolumeX,
-  AlertTriangle,
-  Eye,
-  Activity,
-  Layout,
-} from 'lucide-react'
+import { BarChart3, ChevronDown, Gamepad2, Loader2, Mail, Mic, MicOff, MonitorPlay, Pause, Power, Radio, Settings, ShieldCheck, Users, Video, VideoOff, Volume2, VolumeX, AlertTriangle, Eye, Activity, Layout } from 'lucide-react';
 import { cn } from '@/lib/utils'
 import { SceneConfig } from '@/components/broadcast/GamingSceneManager'
 import TipBanner from '@/components/broadcast/TipBanner'
@@ -40,6 +14,13 @@ interface GamingSetupProps {
   isMicEnabled?: boolean
   hasMicTrack?: boolean
   onToggleMic?: () => void
+  onStartPreview?: () => void | Promise<void>
+  onStopPreview?: () => void | Promise<void>
+  onGoLive?: () => void | Promise<void>
+  onEndStream?: () => void | Promise<void>
+  isPreviewing?: boolean
+  isLive?: boolean
+  isConnecting?: boolean
   errorMessage?: string | null
   className?: string
   viewerCount?: number
@@ -64,6 +45,30 @@ interface GamingSetupProps {
   onUpdateTextOverlay?: (sceneId: string, overlayId: string, updates: Partial<SceneConfig['textOverlays'][0]>) => void
   onDeleteTextOverlay?: (sceneId: string, overlayId: string) => void
   onSetBackgroundImage?: (sceneId: string, imageUrl: string | null) => void
+  screenStream?: MediaStream | null
+  cameraStream?: MediaStream | null
+  micStream?: MediaStream | null
+  screenAudioTrack?: unknown | null
+  hasScreenAudioTrack?: boolean
+  hasCameraTrack?: boolean
+  isCameraEnabled?: boolean
+  onToggleCamera?: () => void
+  inlineAgreementChecked?: boolean
+  onInlineAgreementChange?: (checked: boolean) => void
+  streamId?: string
+  userId?: string
+  rtmpUrl?: string
+  streamKey?: string
+  agoraChannel?: string
+  cameraPreview?: React.ReactNode
+  obsStatus?: string
+  isGeneratingCredentials?: boolean
+  isObsConnected?: boolean
+  bitrate?: string | number
+  streamHealth?: string
+  onGenerateCredentials?: () => void | Promise<void>
+  onRegenerateCredentials?: () => void | Promise<void>
+  onTestStream?: () => void | Promise<void>
 }
 
 // Two-phase flow: preview → live
@@ -71,7 +76,7 @@ interface GamingSetupProps {
 export function GamingSetup({
   streamTitle = 'Ranked Grind to Top 1 | Mai Troll',
   isMicEnabled = true,
-  hasMicTrack = false,
+  hasMicTrack: _hasMicTrack = false,
   onToggleMic,
   onStartPreview,
   onStopPreview,
@@ -94,20 +99,20 @@ export function GamingSetup({
   heartbeatStatus,
   scenes = [],
   activeSceneId = null,
-  onCreateScene,
-  onDeleteScene,
+  onCreateScene: _onCreateScene,
+  onDeleteScene: _onDeleteScene,
   onSwitchScene,
   onUpdateScene,
   onAddTextOverlay,
   onUpdateTextOverlay,
-  onDeleteTextOverlay,
-  onSetBackgroundImage,
+  onDeleteTextOverlay: _onDeleteTextOverlay,
+  onSetBackgroundImage: _onSetBackgroundImage,
   screenStream = null,
   cameraStream = null,
-  micStream = null,
-  screenAudioTrack = null,
+  micStream: _micStream = null,
+  screenAudioTrack: _screenAudioTrack = null,
   hasScreenAudioTrack = false,
-  hasCameraTrack = false,
+  hasCameraTrack: _hasCameraTrack = false,
   isCameraEnabled = false,
   onToggleCamera,
   inlineAgreementChecked = false,
@@ -556,7 +561,7 @@ function StatusMetric({ label, value, good, icon }: { label: string; value: stri
 }
 
 /** Shows when screen is actively being shared */
-function ScreenShareActiveIndicator({ isLive }: { isLive: boolean }) {
+function _ScreenShareActiveIndicator({ isLive }: { isLive: boolean }) {
   return (
     <div className="flex flex-col items-center gap-4 px-6 text-center">
       <div className="relative">

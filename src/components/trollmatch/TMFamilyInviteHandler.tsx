@@ -12,7 +12,7 @@ interface TMFamilyInviteHandlerProps {
   onInviteSent?: () => void;
 }
 
-export function TMFamilyInviteHandler({ targetUserId, onInviteSent }: TMFamilyInviteHandlerProps) {
+export function TMFamilyInviteHandler({ targetUserId: _targetUserId, onInviteSent: _onInviteSent }: TMFamilyInviteHandlerProps) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [pendingInvites, setPendingInvites] = useState<TMFamilyInvite[]>([]);
@@ -57,7 +57,7 @@ export function TMFamilyInviteHandler({ targetUserId, onInviteSent }: TMFamilyIn
           table: 'family_invites',
           filter: `invitee_id=eq.${user.id}`
         },
-        (payload) => {
+        (_payload) => {
           // New invite received - refetch
           fetchPendingInvites();
         }
@@ -70,7 +70,7 @@ export function TMFamilyInviteHandler({ targetUserId, onInviteSent }: TMFamilyIn
           table: 'family_invites',
           filter: `invitee_id=eq.${user.id}`
         },
-        (payload) => {
+        (_payload) => {
           // Invite updated - refetch
           fetchPendingInvites();
         }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { isMarketingAgent, supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { X, LogOut } from 'lucide-react'
 import LevelStatusCard from '../components/home/LevelStatusCard'
@@ -27,7 +27,12 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
   const [coins, setCoins] = useState<number | null>(null)
 
   const sections = useMemo(() => {
-    const isAdmin = (profile as any)?.is_admin || (profile as any)?.role === 'admin'
+    const adminRoles = new Set(['admin', 'superadmin', 'owner', 'ceo'])
+    const isAdmin = Boolean(
+      profile?.is_admin ||
+      adminRoles.has(String(profile?.role || '').toLowerCase()) ||
+      adminRoles.has(String(profile?.troll_role || '').toLowerCase()),
+    )
     const items: { title: string; items: { label: string; path: string; icon: string; show?: boolean }[] }[] = []
 
     const add = (title: string, data: { label: string; path: string; icon: string; show?: boolean }[]) => {
@@ -41,6 +46,7 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
       { label: 'Profile', path: '/profile', icon: 'User', show: !!user },
       { label: 'MaiLife', path: '/mai-life', icon: 'Sparkles', show: !!user },
       { label: 'Troll Animal Shelter', path: '/troll-animal-shelter', icon: 'PawPrint', show: !!user },
+      { label: 'Marketing', path: '/admin/marketing', icon: 'Megaphone', show: isAdmin || isMarketingAgent(profile) },
       { label: 'Coins', path: '/store', icon: 'Coins' },
       { label: 'Mai Pay', path: '/wallet', icon: 'Wallet' },
       { label: 'Mai Piks', path: '/mai-piks', icon: 'Image' },

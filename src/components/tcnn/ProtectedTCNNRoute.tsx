@@ -29,7 +29,7 @@ export default function ProtectedTCNNRoute({
     isJournalist, 
     isNewsCaster, 
     isChiefNewsCaster, 
-    canPublish,
+    canPublish: _canPublish,
     loading: rolesLoading 
   } = useTCNNRoles(user?.id);
 

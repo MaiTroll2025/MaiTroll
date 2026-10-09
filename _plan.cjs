@@ -8,7 +8,7 @@ const L = orig.split('\n');
  * Those lines currently contain: <div className="grid..."> + <InfoCard label="Source Alignment"...> + corruption.
  * The close </div> and </section> for the schema section are inserted, then we close the purchase table JSX.
  */
-const cleanSchema = [
+const _cleanSchema = [
   // replace lines 1049-1070 (1-based 1049..1070)
   // The opening <div className="grid..."> (at this point) is at indent 12 and should be kept+closed
   // Since 1071 is the grid opening, we only need content for 1072-1099
@@ -36,7 +36,7 @@ const cleanSchema = [
   '',  // 1070 blank
 ];
 
-const SchemaHeader = [
+const _SchemaHeader = [
   '              <InfoCard',
   '                label="Schema Validation"',
   '                items={["Database","Passed (6/6)","Column coverage","Complete"]}',

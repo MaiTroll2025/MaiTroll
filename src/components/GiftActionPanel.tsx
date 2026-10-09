@@ -21,7 +21,7 @@ const ALL_GIFTS = [
   { id: 'insurance', name: '🛡 Troller Insurance', cost: 750 },
 ]
 
-export default function GiftActionPanel({ streamerId, streamId }: GiftActionPanelProps) {
+export default function GiftActionPanel({ streamerId, streamId: _streamId }: GiftActionPanelProps) {
   const { sendGift, isSending } = useGiftSystem()
 
   const handleSend = async (gift: any) => {

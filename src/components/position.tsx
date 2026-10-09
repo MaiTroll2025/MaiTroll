@@ -4,39 +4,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { addCoins } from '@/lib/coinTransactions';
-import type {
-  AcademyCategory,
-  AcademyTeacher,
-  AcademyTeacherApplication,
-  AcademyCourse,
-  AcademyClassroom,
-  AcademyEnrollment,
-  AcademyWaitlist,
-  AcademySession,
-  AcademyAttendance,
-  AcademyAssignment,
-  AcademySubmission,
-  AcademyQuiz,
-  AcademyQuizQuestion,
-  AcademyQuizAttempt,
-  AcademyGrade,
-  AcademyCertificate,
-  AcademyMaterial,
-  AcademyAnnouncement,
-  AcademyNote,
-  AcademyCoinReward,
-  AcademyStudentId,
-  AcademyAdmissionsApplication,
-  AcademyLearningPathway,
-  AcademyGraduateBadge,
-  AcademyTeacherRating,
-  AcademyTeacherReference,
-  AcademyMetrics,
-  EnrollmentStatus,
-  TeacherApplicationStatus,
-  AdmissionsStatus,
-  CourseStatus,
-} from '@/types/academy';
+import type { AcademyCategory, AcademyTeacher, AcademyTeacherApplication, AcademyCourse, AcademyClassroom, AcademyEnrollment, AcademySession, AcademyAttendance, AcademyAssignment, AcademySubmission, AcademyQuiz, AcademyQuizQuestion, AcademyQuizAttempt, AcademyGrade, AcademyCertificate, AcademyMaterial, AcademyAnnouncement, AcademyCoinReward, AcademyAdmissionsApplication, AcademyLearningPathway, AcademyGraduateBadge, AcademyTeacherRating, AcademyMetrics, EnrollmentStatus, TeacherApplicationStatus, AdmissionsStatus } from '@/types/academy';
 
 // ============================================================
 // CATEGORIES

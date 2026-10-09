@@ -22,7 +22,7 @@ export default function ExploreProfileCard() {
   const trollCoins = Number((balances as any)?.troll_coins ?? 0)
   const trollmonds = Number((profile as any)?.trollmonds ?? 0)
   const crowns = Number((profile as any)?.crowns ?? 0)
-  const currentLevel = xpStore.level
+  const _currentLevel = xpStore.level
   const displayName = profile?.display_name || profile?.username || 'Citizen'
   const avatarUrl = profile?.avatar_url
 

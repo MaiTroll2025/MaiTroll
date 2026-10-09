@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { formatDuration } from '@/utils/time';
-import { Lock, Clock, User, AlertTriangle, ArrowLeft, Hand } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 const JailPreviewPage: React.FC = () => {

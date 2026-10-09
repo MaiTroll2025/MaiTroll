@@ -3,11 +3,11 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Gamepad2, X, Dice5 } from 'lucide-react'
+import { Gamepad2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface GamePickerProps {
-  onSelectGame: (game: 'troll_us' | 'trollopoly') => void
+  onSelectGame: (game: 'troll_us') => void
   activeGame: string | null
   onClose: () => void
   category?: string
@@ -23,21 +23,10 @@ const TROLL_US_GAME = {
   glowColor: 'shadow-green-500/20',
 }
 
-const TROLLOPOLY_GAME = {
-  id: 'trollopoly' as const,
-  name: 'Trollopoly',
-  description: 'Monopoly-style board game with 3D board',
-  icon: Dice5,
-  color: 'from-amber-600 to-orange-600',
-  borderColor: 'border-amber-500/30',
-  glowColor: 'shadow-amber-500/20',
-}
-
-const GENERAL_CHAT_GAMES = [TROLL_US_GAME, TROLLOPOLY_GAME]
-const OTHER_GAMES = [TROLL_US_GAME]
+const GAMES = [TROLL_US_GAME]
 
 export default function GamePicker({ onSelectGame, activeGame, onClose, category }: GamePickerProps) {
-  const GAMES = category === 'general' ? GENERAL_CHAT_GAMES : OTHER_GAMES
+  void category
 
   return (
     <motion.div

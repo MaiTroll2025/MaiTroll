@@ -396,7 +396,7 @@ export default function AgencyProfilePage() {
                    ? 'border-b-2 border-cyan-500 text-cyan-300'
                    : 'text-slate-400 hover:text-white'
                }`}
-               onClick={() => navigate(`/agency/${agencyId}`)}
+               onClick={() => navigate(`/agency/${agencyIdOrSlug}`)}
              >
                Overview
              </button>

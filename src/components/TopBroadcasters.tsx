@@ -34,9 +34,9 @@ export default function TopBroadcasters() {
 
       const { data, error } = await supabase
         .from('gift_transactions')
-        .select('recipient_id, amount', { count: 'exact' })
+        .select('recipient_id, coins_spent', { count: 'exact' })
         .gte('created_at', yesterday.toISOString())
-        .order('amount', { ascending: false })
+        .order('coins_spent', { ascending: false })
         .limit(100);
 
       if (error) {
@@ -68,13 +68,13 @@ export default function TopBroadcasters() {
         const existing = aggregated.get(userId);
         
         if (existing) {
-          existing.total_gifts += transaction.amount;
+          existing.total_gifts += transaction.coins_spent;
         } else {
           aggregated.set(userId, {
             user_id: userId,
             username: profile?.username || 'Unknown',
             avatar_url: profile?.avatar_url,
-            total_gifts: transaction.amount,
+            total_gifts: transaction.coins_spent,
             level: profile?.level
           });
         }

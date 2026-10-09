@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { DollarSign, ExternalLink } from 'lucide-react'
 import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'

@@ -1,5 +1,5 @@
 import { HTMLAttributes, forwardRef } from 'react';
-import { motion, HTMLMotionProps } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 
 interface AnimatedCardProps extends HTMLAttributes<HTMLDivElement> {
@@ -18,7 +18,7 @@ const glassStyles = `
 `;
 
 // Neon card variant
-const neonStyles = (color: string) => `
+const _neonStyles = (color: string) => `
   bg-zinc-900/90
   border-2 border-${color}-400/50
   shadow-[0_0_20px_rgba(0,0,0,0.3),0_0_30px_rgba(255,255,255,0.05)]
@@ -72,13 +72,13 @@ const AnimatedCard = forwardRef<HTMLDivElement, AnimatedCardProps>(
     const whileHover = {
       y: hoverEffect === 'lift' ? -8 : hoverEffect === 'scale' ? 1.02 : 0,
       scale: hoverEffect === 'scale' ? 1.02 : 1,
-      transition: { type: 'spring', stiffness: 400, damping: 25 }
+      transition: { type: 'spring' as const, stiffness: 400, damping: 25 }
     };
     
     const whileTap = {
       scale: hoverEffect === 'scale' ? 0.98 : 1,
       y: hoverEffect === 'lift' ? -4 : 0,
-      transition: { type: 'spring', stiffness: 400, damping: 25 }
+      transition: { type: 'spring' as const, stiffness: 400, damping: 25 }
     };
 
     // Build the card className based on variant
@@ -122,7 +122,7 @@ const AnimatedCard = forwardRef<HTMLDivElement, AnimatedCardProps>(
           stiffness: 300, 
           damping: 30 
         }}
-        {...(props as HTMLMotionProps<'div'>)}
+        {...(props as any)}
       >
         {/* Decorative corner accents for cyber variant */}
         {variant === 'cyber' && (

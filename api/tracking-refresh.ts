@@ -60,7 +60,7 @@ async function fetchUSPSTracking(trackingNumber: string): Promise<CarrierTrackin
   }
 }
 
-function parseUSPSTrackResponse(xml: string, trackingNumber: string): CarrierTrackingResponse | null {
+function parseUSPSTrackResponse(xml: string, _trackingNumber: string): CarrierTrackingResponse | null {
   try {
     const parser = new DOMParser()
     const doc = parser.parseFromString(xml, 'text/xml')
@@ -223,7 +223,7 @@ export default async function handler(req: any, res: any) {
     const status = mapCarrierStatus(trackingData.status, carrier)
     
     // Update tracking in database
-    const { error: updateError } = await supabase.rpc('update_tracking_status', {
+    const { error: _updateError } = await supabase.rpc('update_tracking_status', {
       p_carrier: carrier,
       p_tracking_number: trackingNumber,
       p_status: trackingData.status,

@@ -24,7 +24,7 @@ const getGiftPosition = (index: number, total: number): { x: number; y: number; 
 };
 
 // Loading fallback
-const LoadingGift: React.FC = () => (
+const _LoadingGift: React.FC = () => (
   <div className="flex items-center justify-center w-20 h-20">
     <div className="w-10 h-10 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin" />
   </div>

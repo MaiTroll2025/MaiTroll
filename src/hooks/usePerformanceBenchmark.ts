@@ -154,7 +154,7 @@ declare global {
   }
 }
 
-const globalBenchmarks = new Map<string, BenchmarkAPI>();
+const _globalBenchmarks = new Map<string, BenchmarkAPI>();
 
 // ─── Grading Helpers ─────────────────────────────────────────────────────────
 
@@ -190,7 +190,7 @@ function patchSetInterval(): void {
   window.__MaiTroll_INTERVAL_REGISTRY__ = registry;
   window.__MaiTroll_SETINTERVAL_PATCHED__ = true;
 
-  window.setInterval = function (callback: TimerHandler, delay?: number, ...args: any[]): number {
+  window.setInterval = (function (callback: TimerHandler, delay?: number, ...args: any[]) {
     const id = originalSetInterval.call(this, callback, delay, ...args);
     const stack = new Error().stack || '';
     const source = stack
@@ -200,7 +200,7 @@ function patchSetInterval(): void {
       .find(s => s !== null) || null;
     registry.set(id, { id, delay: delay || 0, source, createdAt: Date.now() });
     return id;
-  };
+  }) as unknown as typeof window.setInterval;
 
   const originalClearInterval = window.clearInterval;
   window.clearInterval = function (id?: number): void {

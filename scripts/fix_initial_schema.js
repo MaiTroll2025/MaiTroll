@@ -43,15 +43,15 @@ for (const part of parts) {
 }
 
 // Create a migration to add all foreign key constraints
-let fkSql = '-- Add Foreign Key Constraints\n';
-fkSql += '-- This migration adds all foreign key constraints after tables are created\n\n';
+let _fkSql = '-- Add Foreign Key Constraints\n';
+_fkSql += '-- This migration adds all foreign key constraints after tables are created\n\n';
 
 for (const part of parts) {
   const content = part.content;
   // Find all lines that originally had REFERENCES
   const lines = content.split('\n');
   for (const line of lines) {
-    const originalLine = line;
+    const _originalLine = line;
     // Check if this line had a REFERENCES clause (before we removed it)
     if (line.match(/REFERENCES|ON DELETE|ON UPDATE/)) {
       // Skip - these were removed
@@ -60,11 +60,11 @@ for (const part of parts) {
 }
 
 // Actually, let's extract REFERENCES from the ORIGINAL content
-const originalContent = parts.map(p => p.content).join('\n');
-const fkRegex = /(ALTER\s+TABLE\s+[\w.]+\s+ADD\s+COLUMN[^;]+REFERENCES[^;]+;)|(ALTER\s+TABLE\s+[\w.]+\s+ADD\s+CONSTRAINT[^;]+REFERENCES[^;]+;)|(CREATE\s+TABLE[^;]*?REFERENCES[^;]*?\);\s*--\s*Table:\s*(\w+))/gi;
+const _originalContent = parts.map(p => p.content).join('\n');
+const _fkRegex = /(ALTER\s+TABLE\s+[\w.]+\s+ADD\s+COLUMN[^;]+REFERENCES[^;]+;)|(ALTER\s+TABLE\s+[\w.]+\s+ADD\s+CONSTRAINT[^;]+REFERENCES[^;]+;)|(CREATE\s+TABLE[^;]*?REFERENCES[^;]*?\);\s*--\s*Table:\s*(\w+))/gi;
 
 // Instead, let's use a simpler approach: extract all column definitions with REFERENCES from original
-const columnFkRegex = /(\w+)\s+(?:uuid|text|integer|boolean|timestamp|date|jsonb|numeric|decimal|int|varchar|char|float|double|bigint|smallint|serial|bigserial|uuid|inet|macaddr|tsvector|tsquery|xml|json|money|bytea|interval|time|timetz|timestampz|point|circle|box|path|polygon|line|lseg|bit|varbit|cidr|inet|macaddr|uuid|jsonb|jsonpath|regconfig|regdictionary|regnamespace|regoper|regoperator|regproc|regprocedure|regrole|regtype|text|varchar|char|integer|int|smallint|bigint|decimal|numeric|real|double|float|boolean|bool|date|timestamp|timestamptz|time|timetz|interval|uuid|json|jsonb|xml|money|bytea|tsvector|tsquery|point|circle|box|path|polygon|line|lseg|bit|varbit|cidr|inet|macaddr|regconfig|regdictionary|regnamespace|regoper|regoperator|regproc|regprocedure|regrole|regtype|text|varchar|char|integer|int|smallint|bigint|decimal|numeric|real|double|float|boolean|bool|date|timestamp|timestamptz|time|timetz|interval|uuid|json|jsonb|xml|money|bytea|tsvector|tsquery|point|circle|box|path|polygon|line|lseg|bit|varbit|cidr|inet|macaddr|regconfig|regdictionary|regnamespace|regoper|regoperator|regproc|regprocedure|regrole|regtype)\s+(?:NOT\s+NULL\s+)?DEFAULT\s+[^,]+(?:,\s*REFERENCES\s+[\w.]+(?:\([^)]+\))?(?:\s+ON\s+DELETE\s+\w+(?:\s+\w+)?)?)?/gi;
+const _columnFkRegex = /(\w+)\s+(?:uuid|text|integer|boolean|timestamp|date|jsonb|numeric|decimal|int|varchar|char|float|double|bigint|smallint|serial|bigserial|uuid|inet|macaddr|tsvector|tsquery|xml|json|money|bytea|interval|time|timetz|timestampz|point|circle|box|path|polygon|line|lseg|bit|varbit|cidr|inet|macaddr|uuid|jsonb|jsonpath|regconfig|regdictionary|regnamespace|regoper|regoperator|regproc|regprocedure|regrole|regtype|text|varchar|char|integer|int|smallint|bigint|decimal|numeric|real|double|float|boolean|bool|date|timestamp|timestamptz|time|timetz|interval|uuid|json|jsonb|xml|money|bytea|tsvector|tsquery|point|circle|box|path|polygon|line|lseg|bit|varbit|cidr|inet|macaddr|regconfig|regdictionary|regnamespace|regoper|regoperator|regproc|regprocedure|regrole|regtype|text|varchar|char|integer|int|smallint|bigint|decimal|numeric|real|double|float|boolean|bool|date|timestamp|timestamptz|time|timetz|interval|uuid|json|jsonb|xml|money|bytea|tsvector|tsquery|point|circle|box|path|polygon|line|lseg|bit|varbit|cidr|inet|macaddr|regconfig|regdictionary|regnamespace|regoper|regoperator|regproc|regprocedure|regrole|regtype)\s+(?:NOT\s+NULL\s+)?DEFAULT\s+[^,]+(?:,\s*REFERENCES\s+[\w.]+(?:\([^)]+\))?(?:\s+ON\s+DELETE\s+\w+(?:\s+\w+)?)?)?/gi;
 
 // This is getting too complex. Let me just read the original schema file and extract REFERENCES
 const originalSchema = readFileSync(join(process.cwd(), 'frontend_schema.sql'), 'utf8');
@@ -72,8 +72,8 @@ const originalSchema = readFileSync(join(process.cwd(), 'frontend_schema.sql'), 
 // Find all REFERENCES patterns
 const refPattern = /(?:ADD\s+COLUMN|)\s*(\w+)\s+(?:\w+(?:\([^)]*\))?\s+)(?:NOT\s+NULL\s+)?(?:DEFAULT\s+[^,]+\s*)?(?:,\s*)?REFERENCES\s+([\w.]+)(?:\(([^)]+)\))?(?:\s+ON\s+DELETE\s+(CASCADE|SET\s+NULL|SET\s+DEFAULT|RESTRICT|NO\s+ACTION))?/gi;
 
-let refMatch;
-while ((refMatch = refPattern.exec(originalSchema)) !== null) {
+let _refMatch;
+while ((_refMatch = refPattern.exec(originalSchema)) !== null) {
   // This is getting too complex
 }
 

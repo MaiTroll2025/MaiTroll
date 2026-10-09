@@ -13,7 +13,7 @@ const FEED_PAGE_SIZE = 10
 const DOWNLOAD_COST = 10
 
 // ─── Feed Algorithm (Mai Troll-style) ───
-function calculateFeedScore(post: TreelzPost): number {
+function _calculateFeedScore(post: TreelzPost): number {
   const likes = post.likes_count || 0
   const comments = post.comments_count || 0
   const shares = post.shares_count || 0
@@ -253,12 +253,10 @@ export async function uploadTreelzVideo(
     .upload(path, file, {
       cacheControl: '3600',
       upsert: false,
-      onUploadProgress: (progress) => {
-        onProgress?.(Math.round((progress.loaded / progress.total) * 100))
-      },
     })
 
   if (uploadError) throw uploadError
+  onProgress?.(100)
 
   const {
     data: { publicUrl },
@@ -467,10 +465,8 @@ export async function getTreelzAnalytics(postId: string): Promise<TreelzAnalytic
     .single()
 
   if (error) throw error
-  const d = data as any
   return {
-    id: d.id,
-    post_id: d.id,
+    post_id: data.post_id,
     views: data.views_count || 0,
     watch_time_seconds: data.watch_time_seconds || 0,
     completion_rate: data.completion_rate || 0,

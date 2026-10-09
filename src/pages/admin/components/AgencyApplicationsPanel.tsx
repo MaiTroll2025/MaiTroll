@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useAdminAgencyApplications } from '../../hooks/useAdminAgency';
-import type { AgencyApplication } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { useAdminAgencyApplications } from '@/hooks/useAdminAgency';
+import type { AgencyApplication } from '@/types/agency';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { FileText, Check, X, Loader2, User, Clock, Eye, EyeOff } from 'lucide-react';
+import { FileText, Check, X, Loader2, Clock, Eye, EyeOff } from 'lucide-react';
 
 interface ApplicationWithProfile extends AgencyApplication {
   username?: string;
@@ -157,7 +156,7 @@ export default function AgencyApplicationsPanel() {
       await approve((modalState.application as any).id, notes);
       toast.success('Application approved successfully');
       setModalState(null);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to approve application');
     } finally {
       setProcessingId(null);
@@ -171,7 +170,7 @@ export default function AgencyApplicationsPanel() {
       await reject((modalState.application as any).id, reason);
       toast.success('Application rejected');
       setModalState(null);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to reject application');
     } finally {
       setProcessingId(null);

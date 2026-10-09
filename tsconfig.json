@@ -17,14 +17,11 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "allowImportingTsExtensions": true,
-    "types": ["vite/client"],
-    "downlevelIteration": true,
-      "ignoreDeprecations": "5.0"
+    "types": ["vite/client"]
   },
   "include": [
     "src"

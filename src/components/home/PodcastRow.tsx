@@ -12,7 +12,7 @@ interface PodcastRowProps {
   onItemClick?: (id: string) => void
 }
 
-export default function PodcastRow({ onItemClick }: PodcastRowProps) {
+export default function PodcastRow({ onItemClick: _onItemClick }: PodcastRowProps) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const user = useAuthStore((state) => state.user)

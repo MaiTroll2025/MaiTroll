@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
-import { Award, Video, Mic, Radio, ShoppingBag, Save } from 'lucide-react';
+import { Award, Video, Radio, ShoppingBag, Save } from 'lucide-react';
 
 interface FeaturedContent {
     featured_badge_id: string | null;
@@ -31,7 +31,7 @@ export default function FeaturedContentManager() {
     
     const [badges, setBadges] = useState<any[]>([]);
     const [broadcasts, setBroadcasts] = useState<any[]>([]);
-    const [podcasts, setPodcasts] = useState<any[]>([]);
+    const [_podcasts, _setPodcasts] = useState<any[]>([]);
     const [streams, setStreams] = useState<any[]>([]);
     const [marketplaceItems, setMarketplaceItems] = useState<any[]>([]);
 

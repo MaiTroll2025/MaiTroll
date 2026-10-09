@@ -3,6 +3,8 @@
  * @param score - The risk score (0-100+)
  * @returns risk level string
  */
+import { supabase } from './supabase';
+
 export const calculateRiskLevel = (score: number): 'low' | 'medium' | 'high' | 'critical' => {
   if (score >= 90) return 'critical';
   if (score >= 60) return 'high';

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
-import { X, Gavel, Plus, Trash2, Coins, AlertTriangle, CheckCircle } from 'lucide-react'
+import { X, Gavel, Plus, Trash2, Coins, AlertTriangle } from 'lucide-react';
 
 interface JudgeSentencingModalProps {
   isOpen: boolean
@@ -30,7 +30,7 @@ interface SentenceItem {
 }
 
 export default function JudgeSentencingModal({ isOpen, onClose, caseData, onSuccess }: JudgeSentencingModalProps) {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const [sentences, setSentences] = useState<SentenceItem[]>([])
   const [selectedType, setSelectedType] = useState<SentenceType>('jail')
   const [durationMinutes, setDurationMinutes] = useState(1440)
@@ -74,7 +74,7 @@ export default function JudgeSentencingModal({ isOpen, onClose, caseData, onSucc
 
     setLoading(true)
     try {
-      const { data, error } = await supabase.rpc('issue_court_sentence', {
+      const { data: _data, error } = await supabase.rpc('issue_court_sentence', {
         p_case_id: caseData.id,
         p_sentences: sentences,
         p_fine_amount: fineAmount,

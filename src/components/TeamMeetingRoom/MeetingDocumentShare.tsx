@@ -11,7 +11,7 @@ import {
   removeMeetingDocument,
   MeetingDocumentWithDetails,
 } from '@/lib/meetingDocuments';
-import type { OrganizationDocument } from '@/pages/tromail/TromailPage';
+import type { OrganizationDocument } from '@/types/contracts';
 
 interface MeetingDocumentShareProps {
   meetingId: string;
@@ -25,7 +25,7 @@ export default function MeetingDocumentShare({ meetingId, isOpen, onClose }: Mee
   const [sharedDocs, setSharedDocs] = useState<MeetingDocumentWithDetails[]>([]);
   const [availableDocs, setAvailableDocs] = useState<OrganizationDocument[]>([]);
   const [showBrowse, setShowBrowse] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
   const [sharing, setSharing] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 

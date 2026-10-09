@@ -22,9 +22,12 @@ import { toast } from 'sonner'
 import { cn, formatCompactNumber } from '@/lib/utils'
 import ModActionsPopup from '@/components/broadcast/ModActionsPopup'
 import ViewerUserActionModal from '@/components/broadcast/ViewerUserActionModal'
+import UserMiniProfile from '@/components/user/UserMiniProfile'
+import { useBlockedUsers } from '@/hooks/useBlockedUsers'
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import ShareModal from '@/components/broadcast/ShareModal'
 import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
 
 type FloatingMessage = {
   id: string
@@ -120,11 +123,14 @@ export default function PhoneHytroGameViewer() {
   const [chatInput, setChatInput] = useState('')
   const [showModActionMenu, setShowModActionMenu] = useState(false)
   const [userActionTarget, setUserActionTarget] = useState<UserActionTarget | null>(null)
+  const [miniProfile, setMiniProfile] = useState<{ userId: string; username: string; avatarUrl: string } | null>(null)
 
   const floatingChatChannelRef = useRef<any>(null)
   const viewerIdentity = useMemo(() => user?.id || `guest-${streamId}-${getAnonymousDisplayName()}`, [user?.id, streamId])
 
   const canClickFloatingChatUsername = hasModActionsAccess(profile)
+
+  const { blockedUsernames } = useBlockedUsers()
 
   const broadcasterProfile = useMemo(() => currentStream?.broadcaster_profile || null, [currentStream])
   const hostName = broadcasterProfile?.username || broadcasterProfile?.display_name || 'Gamer'
@@ -166,7 +172,7 @@ export default function PhoneHytroGameViewer() {
   }, [streamId])
 
   useEffect(() => {
-    if (!streamId || !currentStream || !channelName || !viewerIdentity) return
+    if (!streamId || !currentStream?.id || !channelName || !viewerIdentity) return
 
     const isActive = String(currentStream?.status || '').toLowerCase() === 'live'
     if (!isActive) {
@@ -180,7 +186,7 @@ export default function PhoneHytroGameViewer() {
     const channelKey = `${channelName}:${viewerIdentity}`
     if (joinedChannelRef.current === channelKey) return
 
-    void joinRef.current(channelName, viewerIdentity)
+    void joinRef.current(channelName, viewerIdentity, currentStream.id)
     joinedChannelRef.current = channelKey
 
     return () => {
@@ -199,6 +205,7 @@ export default function PhoneHytroGameViewer() {
       .on('broadcast', { event: 'floating_chat' }, (payload: any) => {
         const { username, content } = payload.payload || {}
         if (!username || !content) return
+        if (blockedUsernames.has(username.toLowerCase())) return
 
         const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         setFloatingMessages((prev) => [{ id: msgId, username, content, timestamp: Date.now() }, ...prev].slice(0, 50))
@@ -212,7 +219,7 @@ export default function PhoneHytroGameViewer() {
     return () => {
       if (channel) supabase.removeChannel(channel)
     }
-   }, [streamId])
+   }, [streamId, blockedUsernames])
 
   const handleSendChat = useCallback(
     async (e: React.FormEvent) => {
@@ -265,31 +272,23 @@ export default function PhoneHytroGameViewer() {
     async (username: string) => {
       if (!username) return
 
-      if (isAnonymousDisplayName(username)) {
-        if (!canClickFloatingChatUsername) return
-        await handleOpenUserAction({
-          userId: `anon-${username.toLowerCase()}`,
-          username,
-          role: 'anonymous',
-          createdAt: null,
-        })
-        return
-      }
+      if (isAnonymousDisplayName(username)) return
 
       try {
-        const { data } = await supabase.from('user_profiles').select('id, username, role, troll_role, created_at').eq('username', username).maybeSingle()
+        const { data } = await supabase.from('user_profiles').select('id, username, avatar_url').eq('username', username).maybeSingle()
 
-        await handleOpenUserAction({
-          userId: data?.id || username,
-          username: data?.username || username,
-          role: data?.role || data?.troll_role || 'viewer',
-          createdAt: data?.created_at || null,
-        })
+        if (data?.id) {
+          setMiniProfile({
+            userId: data.id,
+            username: data.username || username,
+            avatarUrl: data.avatar_url || '',
+          })
+        }
       } catch {
         toast.error('Failed to open user profile')
       }
     },
-    [canClickFloatingChatUsername, handleOpenUserAction],
+    [],
   )
 
   const handleTip = useCallback(
@@ -478,6 +477,9 @@ export default function PhoneHytroGameViewer() {
             </div>
             <span className="text-[9px] font-black text-white/80">Share</span>
           </button>
+          {currentStream?.id && (
+            <FacebookPublishButton sourceType="gaming_stream" sourceId={currentStream.id} compact />
+          )}
         </div>
 
         {/* Chat toggle */}
@@ -642,6 +644,23 @@ export default function PhoneHytroGameViewer() {
             />
           )}
         </>
+      )}
+
+      {miniProfile && (
+        <UserMiniProfile
+          userId={miniProfile.userId}
+          username={miniProfile.username}
+          avatarUrl={miniProfile.avatarUrl}
+          onClose={() => setMiniProfile(null)}
+          onModerate={(targetUserId, targetUsername) => {
+            handleOpenUserAction({
+              userId: targetUserId,
+              username: targetUsername,
+              role: '',
+              createdAt: null,
+            })
+          }}
+        />
       )}
 
       {/* Featured gift banner */}

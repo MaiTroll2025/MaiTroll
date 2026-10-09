@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
-import { toast } from 'sonner';
 
 interface SeatRequestModalProps {
   isOpen: boolean;

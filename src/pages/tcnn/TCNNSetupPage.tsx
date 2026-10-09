@@ -9,18 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  ArrowLeft,
-  Radio,
-  Video,
-  Mic,
-  Settings,
-  Play,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
-  RefreshCw
-} from 'lucide-react';
+import { ArrowLeft, Radio, Video, Mic, Settings, Play, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function TCNNSetupPage() {
@@ -39,7 +28,7 @@ export default function TCNNSetupPage() {
   const [cameraEnabled, setCameraEnabled] = useState(true);
 
   const studioRef = useRef<any>(null);
-  const studioInitializedRef = useRef(false);
+  const _studioInitializedRef = useRef(false);
 
   // Access check
   useEffect(() => {

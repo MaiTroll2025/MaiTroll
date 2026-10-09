@@ -28,7 +28,7 @@ function scanPages(dir) {
         });
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // skip
   }
 }

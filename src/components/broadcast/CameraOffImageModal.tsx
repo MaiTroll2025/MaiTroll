@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { X, Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface CameraOffImageModalProps {
   isOpen: boolean;

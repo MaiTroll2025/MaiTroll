@@ -23,7 +23,7 @@ interface TrollBattleParticipantGridProps {
 
 export default function TrollBattleParticipantGrid({
   participants,
-  remoteParticipants,
+  remoteParticipants: _remoteParticipants,
   onParticipantClick
 }: TrollBattleParticipantGridProps) {
   // Split participants by team

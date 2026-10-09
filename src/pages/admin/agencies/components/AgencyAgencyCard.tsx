@@ -28,7 +28,7 @@ interface AgencyAgencyCardProps {
 export default function AgencyAgencyCard({ 
   agency, 
   onStatusChange, 
-  onRemoveCreator 
+  onRemoveCreator: _onRemoveCreator 
 }: AgencyAgencyCardProps) {
   const navigate = useNavigate();
   const statusColors: Record<string, string> = {

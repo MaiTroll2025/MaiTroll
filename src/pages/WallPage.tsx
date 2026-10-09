@@ -1,16 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  MessageCircle,
-  Heart,
-  Gift,
-  Send,
-  Image,
-  Smile,
-  Video,
-  Pin,
-  ArrowLeft,
-} from 'lucide-react'
+import { MessageCircle, Heart, Gift, Image, Smile, Video, Pin, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'

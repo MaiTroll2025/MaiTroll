@@ -26,8 +26,8 @@ const PLATFORMS = [
 
 export default function ShareAThonSubmit() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
-  const { event, myEligibility, isEligible, submitShare, mySubmissions, loading } = useShareAThon()
+  const { user: _user } = useAuthStore()
+  const { event, myEligibility: _myEligibility, isEligible, submitShare, mySubmissions, loading } = useShareAThon()
 
   const [platform, setPlatform] = useState('')
   const [shareUrl, setShareUrl] = useState('')

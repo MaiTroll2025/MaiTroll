@@ -96,7 +96,7 @@ function getOtherParticipant(thread: UtromailThread, userId: string) {
 
 export default function ChatBubble() {
   const { user, profile } = useAuthStore()
-  const { isOpen, isMinimized, activeUserId, activeUsername, activeUserAvatar, closeChatBubble, toggleMinimize } = useChatStore()
+  const { isOpen, isMinimized, activeUserId, activeUsername, activeUserAvatar: _activeUserAvatar, closeChatBubble, toggleMinimize } = useChatStore()
   const onlineUserIds = usePresenceStore(s => s.onlineUserIds)
 
   const [view, setView] = useState<'inbox' | 'chat'>('inbox')

@@ -40,11 +40,11 @@ export default function ARBroadcastIntegration({
     }
   }, [videoRef]);
 
-  const handleGiftExpired = useCallback((instanceId: string) => {
+  const handleGiftExpired = useCallback((_instanceId: string) => {
     // Gift expired naturally
   }, []);
 
-  const showNotification = useCallback(
+  const _showNotification = useCallback(
     (gift: ARGiftInstance) => {
       if (notificationTimerRef.current) {
         window.clearTimeout(notificationTimerRef.current);

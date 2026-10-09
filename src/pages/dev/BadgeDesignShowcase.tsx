@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react'
-import { Crown, Shield, Skull, Star, Verified, Award, Zap, Heart, MessageSquare, Users, Flame, Gem, Sparkles, Hexagon, Circle, Square } from 'lucide-react'
+import { Crown, Shield, Skull, Star, Verified, Award, Zap, Heart, MessageSquare, Users, Gem, Sparkles } from 'lucide-react';
 
 // Mock user data for demonstration
 const mockUsers = [

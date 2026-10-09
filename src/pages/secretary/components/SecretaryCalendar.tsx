@@ -2,10 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuthStore } from '../../../lib/store';
 import { toast } from 'sonner';
-import {
-  Calendar, ChevronLeft, ChevronRight, Plus, X, Clock,
-  MapPin, Users, CheckCircle, AlertCircle
-} from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Plus, X, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import {
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   addDays, addMonths, subMonths, isSameMonth, isSameDay, isToday, parseISO
@@ -143,7 +140,7 @@ export default function SecretaryCalendar() {
       if (error) throw error;
       toast.success('Event deleted');
       fetchEvents();
-    } catch (err: any) {
+    } catch (_err: any) {
       toast.error('Failed to delete event');
     }
   };

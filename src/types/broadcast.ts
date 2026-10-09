@@ -1,6 +1,8 @@
 export type StreamStatus = 'pending' | 'starting' | 'live' | 'ended' | 'failed';
 export type LayoutMode = 'grid' | 'battle' | 'spotlight';
 
+export type RTCProvider = 'livekit' | 'getstream';
+
 export interface Stream {
   [x: string]: any;
   stream_type: string;
@@ -37,6 +39,7 @@ export interface Stream {
   broadcast_mode?: string | null;
   broadcast_format?: string | null;
   livekit_room_name?: string | null;
+  rtc_provider?: RTCProvider;
   // Viewer playback goes through HLS; hosts and seat users stay on LiveKit RTC.
   hls_path?: string;
   hls_url?: string;

@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Gift, Glasses } from 'lucide-react';
 import type { BroadcastGift } from '../../hooks/useBroadcastRealtime';
-import { AR_GIFTS, getARGiftById } from '../../data/arGiftCatalog';
+import { getARGiftById } from '../../data/arGiftCatalog';
 import { useARGiftStore } from '../../stores/arGiftStore';
 import type { ARGiftHistoryEntry } from '../../stores/arGiftStore';
 
@@ -39,10 +39,10 @@ export default function ARGiftVideoOverlay({
   gifts,
   onFinish,
   nameMap = {},
-  videoElement,
-  streamId = '',
-  broadcasterId = '',
-  isStreamerView = false,
+  videoElement: _videoElement,
+  streamId: _streamId = '',
+  broadcasterId: _broadcasterId = '',
+  isStreamerView: _isStreamerView = false,
 }: ARGiftVideoOverlayProps) {
   const { addGiftHistory, addActiveGift } = useARGiftStore();
   const processedARgiftsRef = useRef<Set<string>>(new Set());

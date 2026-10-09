@@ -87,6 +87,7 @@ const PENDING_STATUSES = new Set(['pending', 'applied', 'submitted', 'under_revi
 
 const CAREER_ROLE_LABELS: Record<string, string> = {
   broadcaster: 'Broadcaster',
+  marketing_agent: 'Marketing Agent',
   lead_troll_officer: 'Lead Troll Officer',
   troll_officer: 'Troll Officer',
   secretary: 'Secretary',
@@ -283,15 +284,23 @@ export default function PhoneAdminApplications() {
 
   const grantCareerRole = useCallback(async (app: CareerApplication) => {
     const position = app.position_id
-    if (!position) return
+    if (!position) throw new Error('Career application is missing its role.')
+
+    const { error: roleError } = await supabase.rpc('set_user_role', {
+      target_user: app.user_id,
+      new_role: position,
+      reason: `Approved career application ${app.id}`,
+      acting_admin_id: user?.id ?? null,
+    })
+    if (roleError) throw roleError
 
     const patch: Record<string, unknown> = { job_title: position }
     const flags = CAREER_ROLE_PROFILE_COLUMNS[position]
     if (flags) Object.assign(patch, flags)
 
     const { error } = await supabase.from('user_profiles').update(patch).eq('id', app.user_id)
-    if (error) console.error('[PhoneAdminApplications] role grant failed:', error)
-  }, [])
+    if (error) throw error
+  }, [user?.id])
 
   const reviewCareer = useCallback(
     async (app: CareerApplication, decision: 'approve' | 'deny') => {

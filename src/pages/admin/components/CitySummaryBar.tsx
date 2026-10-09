@@ -190,7 +190,7 @@ export default function CitySummaryBar({ stats, liveStreamsCount, financeLoading
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {summaryItems.map((item, index) => (
+          {summaryItems.map((item, _index) => (
             <button
               key={item.id}
               type="button"

@@ -1,4 +1,4 @@
-import { Mic, PauseCircle, Camera, CameraOff, MicOff, Trophy } from 'lucide-react'
+import { Mic, Camera, CameraOff, MicOff, Trophy } from 'lucide-react';
 import { RemoteVideoRenderer } from './RemoteVideoRenderer'
 import type { SingOffUser } from '../types'
 

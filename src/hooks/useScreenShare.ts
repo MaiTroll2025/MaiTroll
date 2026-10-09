@@ -40,7 +40,7 @@ export async function createScreenTrack(): Promise<LocalVideoTrack> {
   // Create LiveKit LocalVideoTrack from the stream
   const videoTrack = new LocalVideoTrack(stream.getVideoTracks()[0], {
     name: 'screen-share'
-  });
+  } as any);
 
   return videoTrack;
 }
@@ -89,7 +89,7 @@ export function useScreenShare() {
       // Create LiveKit LocalVideoTrack from the stream
       const videoTrack = new LocalVideoTrack(stream.getVideoTracks()[0], {
         name: 'screen-share'
-      });
+      } as any);
 
       screenTrackRef.current = videoTrack;
 

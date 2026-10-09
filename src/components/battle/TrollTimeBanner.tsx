@@ -33,7 +33,7 @@ export default function TrollTimeBanner({
   active,
   multiplier,
   endsAt,
-  eventId,
+  eventId: _eventId,
   reducedMotion = false,
 }: TrollTimeBannerProps) {
   const [remainingMs, setRemainingMs] = useState(0);

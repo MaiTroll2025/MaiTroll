@@ -22,7 +22,7 @@ import PhoneMaiPay from './pages/PhoneMaiPay'
 import PhoneTreelz from './pages/PhoneTreelz'
 import PhoneChat from './pages/PhoneChat'
 import PhoneFollowing from './pages/PhoneFollowing'
-import AdminDashboard from '../pages/admin/AdminDashboard'
+import PhoneAdminDashboard from './pages/PhoneAdminDashboard'
 import PhoneSecretary from './pages/PhoneSecretary'
 import PhoneLeadOfficer from './pages/PhoneLeadOfficer'
 import PhoneTrollOfficer from './pages/PhoneTrollOfficer'
@@ -44,7 +44,6 @@ import PhoneAdminSettings from './pages/PhoneAdminSettings'
 import PhoneAdminApplications from './pages/PhoneAdminApplications'
 import PhoneAdminPage from './pages/PhoneAdminPage'
 import PhoneRtcAdminMonitor from './pages/PhoneRtcAdminMonitor'
-import PhonePlaceholderPage from './pages/PhonePlaceholderPage'
 import PhoneSearch from './pages/PhoneSearch'
 import PhoneFamily from './pages/PhoneFamily'
 import PhoneGovernment from './pages/PhoneGovernment'
@@ -55,6 +54,8 @@ import PhoneCeoDashboard from './pages/PhoneCeoDashboard'
 import PhoneSupport from './pages/PhoneSupport'
 import PhoneSafety from './pages/PhoneSafety'
 import PhoneLegal from './pages/PhoneLegal'
+import TermsOfService from '../pages/legal/TermsOfService'
+import PrivacyPolicy from '../pages/legal/PrivacyPolicy'
 import PhoneJailPage from './pages/PhoneJailPage'
 import PhoneBroadcastSummaryPage from './pages/PhoneBroadcastSummaryPage'
 import PhoneExplore from './pages/PhoneExplore'
@@ -62,11 +63,13 @@ import PhoneErrorBoundary from './PhoneErrorBoundary'
 import PhoneBottomNav from './layout/PhoneBottomNav'
 import PhoneCareers from './pages/PhoneCareers'
 import PhoneTrollUp from './pages/PhoneTrollUp'
+import MarketingPage from '../pages/admin/MarketingPage'
+import RequireRole from '../components/RequireRole'
 import { useUtromailMessagePopup } from '@/hooks/useUtromailMessagePopup'
 import UtromailMessagePopup from '@/components/messaging/UtromailMessagePopup'
 
 import { useAuthStore } from '@/lib/store'
-import { supabase } from '@/lib/supabase'
+import { supabase, UserRole } from '@/lib/supabase'
 import { moderation } from '@/services/maitrollModeration'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { registerNativePush } from '@/lib/nativePush'
@@ -76,6 +79,7 @@ import PetFloatingButton from '../components/pets/PetFloatingButton'
 import MaiLifePage from '../pages/MaiLifePage'
 import TrollAnimalShelterPage from '../pages/TrollAnimalShelterPage'
 import OwnerPage from '../pages/OwnerPage'
+import TromailPage from '../pages/tromail/TromailPage'
 
 const PhoneNotifications = lazy(() => import('../pages/Notifications'))
 
@@ -246,12 +250,27 @@ export default function PhoneApp() {
             <Route path="/treelz" element={<PhoneTreelz />} />
             <Route path="/utromail" element={<PhoneChat />} />
             <Route path="/utromail/:threadId" element={<PhoneChat />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<PhoneAdminDashboard />} />
+            <Route path="/admin/marketing"
+              element={
+                <RequireRole roles={[
+                  UserRole.ADMIN,
+                  UserRole.SUPERADMIN,
+                  UserRole.OWNER,
+                  UserRole.CEO,
+                  UserRole.MARKETING_AGENT,
+                ]}>
+                  <MarketingPage />
+                </RequireRole>
+              }
+            />
             <Route path="/admin-mobile" element={<Navigate to="/admin" replace />} />
             <Route path="/rtcadminmonitor" element={<PhoneRtcAdminMonitor />} />
             <Route path="/support" element={<PhoneSupport />} />
             <Route path="/safety" element={<PhoneSafety />} />
             <Route path="/legal" element={<PhoneLegal />} />
+            <Route path="/legal/terms" element={<TermsOfService />} />
+            <Route path="/legal/privacy" element={<PrivacyPolicy />} />
             <Route path="/jail" element={<PhoneJailPage />} />
             <Route path="/phone-secretary" element={<PhoneSecretary />} />
             <Route path="/phone-lead-officer" element={<PhoneLeadOfficer />} />
@@ -286,8 +305,8 @@ export default function PhoneApp() {
             <Route path="/court/:id" element={<PhoneTrollCourt />} />
             <Route path="/agency/:id" element={<PhoneAgency />} />
             <Route path="/agency-apply/:id" element={<PhoneAgencyApply />} />
-            <Route path="/tromail" element={<PhoneChat />} />
-            <Route path="/tromail/:threadId" element={<PhoneChat />} />
+            <Route path="/tromail" element={<TromailPage />} />
+            <Route path="/tromail/:threadId" element={<TromailPage />} />
             <Route path="/family/:id" element={<PhoneFamily />} />
             <Route path="/government/:id" element={<PhoneGovernment />} />
             <Route path="/president/:id" element={<PhonePresident />} />

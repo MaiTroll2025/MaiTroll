@@ -68,7 +68,7 @@ export default function UserManagementPanel({
 
   const handleEditUser = (user: UserProfile) => {
     setSelectedUser(user)
-    setEditingCoins({ paid: user.troll_coins || 0 })
+    setEditingCoins({ paid: user.troll_coins || 0, free: 0 })
     setEditingLevel(user.level || 1)
     setEditingRole(user.role || 'user')
     setEditingBypassBroadcast(user.bypass_broadcast_restriction || false)
@@ -463,4 +463,3 @@ export default function UserManagementPanel({
     </div>
   )
 }
-

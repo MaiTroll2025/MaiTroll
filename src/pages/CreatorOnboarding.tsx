@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { FileText, ArrowRight, Loader2 } from 'lucide-react'
 
 export default function CreatorOnboarding() {
-  const { user, profile } = useAuthStore()
+  const { user } = useAuthStore()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -29,22 +29,39 @@ export default function CreatorOnboarding() {
       return
     }
 
-    // Load existing data if any
-    if (profile) {
+    let cancelled = false
+    const loadTaxInfo = async () => {
+      const { data, error } = await supabase
+        .from('user_tax_info')
+        .select('legal_full_name, date_of_birth, country, address_line1, address_line2, city, state_region, postal_code, tax_id_last4, tax_classification')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (error) {
+        console.error('Error loading creator tax information:', error)
+        toast.error(`Failed to load saved tax information: ${error.message}`)
+        return
+      }
+      if (cancelled || !data) return
       setFormData({
-        legal_full_name: profile.legal_full_name || '',
-        date_of_birth: profile.date_of_birth || '',
-        country: profile.country || 'US',
-        address_line1: profile.address_line1 || '',
-        address_line2: profile.address_line2 || '',
-        city: profile.city || '',
-        state_region: profile.state_region || '',
-        postal_code: profile.postal_code || '',
-        tax_id_last4: profile.tax_id_last4 || '',
-        tax_classification: profile.tax_classification || 'individual',
+        legal_full_name: data.legal_full_name || '',
+        date_of_birth: data.date_of_birth || '',
+        country: data.country || 'US',
+        address_line1: data.address_line1 || '',
+        address_line2: data.address_line2 || '',
+        city: data.city || '',
+        state_region: data.state_region || '',
+        postal_code: data.postal_code || '',
+        tax_id_last4: data.tax_id_last4 || '',
+        tax_classification: data.tax_classification || 'individual',
       })
     }
-  }, [user, profile, navigate])
+
+    void loadTaxInfo()
+    return () => {
+      cancelled = true
+    }
+  }, [user, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -323,4 +340,3 @@ export default function CreatorOnboarding() {
     </div>
   )
 }
-

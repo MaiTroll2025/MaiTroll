@@ -1,11 +1,11 @@
-import { isMarketingReadonly } from './supabase'
+import { isMarketingAgent } from './supabase'
 import { useAuthStore } from './store'
 
 export function maskEmail(email: string | null | undefined): string {
   if (!email) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return email
+  if (!isMarketingAgent(profile)) return email
   
   const [local, domain] = email.split('@')
   if (!domain) return email
@@ -18,7 +18,7 @@ export function maskPhone(phone: string | null | undefined): string {
   if (!phone) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return phone
+  if (!isMarketingAgent(profile)) return phone
   
   const digits = phone.replace(/\D/g, '')
   if (digits.length < 4) return '***'
@@ -29,7 +29,7 @@ export function maskCreditCard(cardNumber: string | null | undefined): string {
   if (!cardNumber) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return cardNumber
+  if (!isMarketingAgent(profile)) return cardNumber
   
   const digits = cardNumber.replace(/\D/g, '')
   if (digits.length < 4) return '****'
@@ -40,7 +40,7 @@ export function maskSSN(ssn: string | null | undefined): string {
   if (!ssn) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return ssn
+  if (!isMarketingAgent(profile)) return ssn
   
   const digits = ssn.replace(/\D/g, '')
   if (digits.length < 4) return '***-**'
@@ -51,7 +51,7 @@ export function maskAddress(address: string | null | undefined): string {
   if (!address) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return address
+  if (!isMarketingAgent(profile)) return address
   
   const parts = address.split(',')
   if (parts.length >= 2) {
@@ -64,7 +64,7 @@ export function maskName(name: string | null | undefined): string {
   if (!name) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return name
+  if (!isMarketingAgent(profile)) return name
   
   const parts = name.split(' ')
   if (parts.length === 1) {
@@ -77,7 +77,7 @@ export function maskUsername(username: string | null | undefined): string {
   if (!username) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return username
+  if (!isMarketingAgent(profile)) return username
   
   if (username.length <= 3) return '*'.repeat(username.length)
   return username.substring(0, 2) + '*'.repeat(username.length - 2)
@@ -87,7 +87,7 @@ export function maskAmount(amount: number | null | undefined, showPartial = fals
   if (amount === null || amount === undefined) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile) || showPartial) return amount.toString()
+  if (!isMarketingAgent(profile) || showPartial) return amount.toString()
   
   return '$***'
 }
@@ -96,14 +96,14 @@ export function maskBalance(balance: number | null | undefined): string {
   if (balance === null || balance === undefined) return ''
   
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return balance.toString()
+  if (!isMarketingAgent(profile)) return balance.toString()
   
   return '********'
 }
 
 export function getMaskedUserData<T extends Record<string, unknown>>(user: T): T {
   const profile = useAuthStore.getState().profile
-  if (!isMarketingReadonly(profile)) return user
+  if (!isMarketingAgent(profile)) return user
   
   return {
     ...user,

@@ -142,7 +142,7 @@ export default function TrollCardSaver({
       if (cardInstance) {
         try {
           cardInstance.destroy()
-        } catch (e) {
+        } catch (_e) {
           // Ignore cleanup errors
         }
       }

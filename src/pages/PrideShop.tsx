@@ -268,8 +268,8 @@ export default function PrideShop() {
       setActiveThemeId(theme.id);
       await refreshCoins();
       toast.success(`${theme.name} purchased & equipped!`);
-      try { await trackPrideAction(user.id, 'purchase_item'); } catch (e) { /* silent */ }
-      try { await trackPrideAction(user.id, 'equip_frame'); } catch (e) { /* silent */ }
+      try { await trackPrideAction(user.id, 'purchase_item'); } catch (_e) { /* silent */ }
+      try { await trackPrideAction(user.id, 'equip_frame'); } catch (_e) { /* silent */ }
     } catch (err) {
       toast.error(err?.message || 'Purchase failed');
     } finally {
@@ -288,8 +288,8 @@ export default function PrideShop() {
       if (error) throw error;
       setActiveThemeId(theme.id);
       toast.success(`${theme.name} equipped!`);
-      try { await trackPrideAction(user.id, 'equip_frame'); } catch (e) { /* silent */ }
-    } catch (err) {
+      try { await trackPrideAction(user.id, 'equip_frame'); } catch (_e) { /* silent */ }
+    } catch (_err) {
       toast.error('Failed to equip theme');
     } finally {
       setEquipping(null);

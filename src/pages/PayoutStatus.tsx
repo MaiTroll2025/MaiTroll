@@ -1,5 +1,5 @@
 import React from 'react'
-import { ExternalLink, DollarSign, Shield } from 'lucide-react'
+import { ExternalLink, Shield } from 'lucide-react';
 import MAIPayCard from '../components/MAIPayCard'
 import { useAuthStore } from '../lib/store'
 

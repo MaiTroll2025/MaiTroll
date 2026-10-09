@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, Coins, Crown, Flame, Skull, X, RefreshCw, LogOut, MessageCircle, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { useBattleViewController } from "../../hooks/useBattleViewController";
 import type { BattleViewController } from "../../hooks/useBattleViewController";
 import useTrollTime from "../../hooks/useTrollTime";
 import TrollTimeBanner from "../../components/battle/TrollTimeBanner";

@@ -16,7 +16,7 @@ export default function EmergencyTab(props: any) {
   const [submitting, setSubmitting] = useState(false);
 
   const votingLaws = laws.filter((l: any) => l.status === 'voting');
-  const activeLaws = laws.filter((l: any) => l.status === 'active');
+  const _activeLaws = laws.filter((l: any) => l.status === 'active');
   const activeProtests = protests.filter((p: any) => ['active', 'growing', 'crisis'].includes(p.status));
 
   const emergencyPowers = [

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { sendMessage } from '../../services/utromailService'
 import { cn } from '../../lib/utils'
 import { toast } from 'sonner'
-import { X, Send, Mail, Coins, Loader2, CheckCircle, Clock } from 'lucide-react'
+import { X, Send, Mail, Coins, Loader2, CheckCircle } from 'lucide-react';
 import { RealtimeChannel } from '@supabase/supabase-js'
 
 interface BroadcastMessageModalProps {
@@ -55,8 +55,8 @@ export default function BroadcastMessageModal({
   isOpen,
   onClose,
   broadcasterId,
-  broadcasterProfile,
-  streamId,
+  broadcasterProfile: _broadcasterProfile,
+  streamId: _streamId,
 }: BroadcastMessageModalProps) {
   const { user } = useAuthStore()
   const [activeTab, setActiveTab] = useState<'followers' | 'following' | 'chats'>('followers')
@@ -68,7 +68,7 @@ export default function BroadcastMessageModal({
   const [isPaidMessage, setIsPaidMessage] = useState(false)
   const [wiredAmount, setWiredAmount] = useState(50)
   const [chats, setChats] = useState<MessageThread[]>([])
-  const [loading, setLoading] = useState(false)
+  const [_loading, _setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
 

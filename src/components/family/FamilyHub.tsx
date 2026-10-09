@@ -3,14 +3,9 @@
 // Dark + Neon Theme with Glassmorphism Cards
 // =============================================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Trophy, Star, Flame, Users, MessageCircle, Phone, 
-  Coins, Gift, Zap, Crown, Shield, ChevronRight,
-  Lock, Unlock, Target, Award, TrendingUp, Calendar,
-  Play, Radio, Video, Clock, Sparkles, ShieldCheck
-} from 'lucide-react';
+import { Trophy, Flame, Users, MessageCircle, Phone, Coins, Gift, Zap, Lock, Target, Award, TrendingUp, Calendar, Clock, Sparkles, ShieldCheck } from 'lucide-react';
 import { 
   useFamilyStats, 
   useAchievementTiers, 
@@ -28,7 +23,7 @@ import { useAuthStore } from '../../lib/store';
 import { cn } from '../../lib/utils';
 
 // Tier Colors
-const TIER_COLORS: Record<number, string> = {
+const _TIER_COLORS: Record<number, string> = {
   1: '#4CAF50',
   2: '#2196F3',
   3: '#9C27B0',
@@ -405,7 +400,7 @@ function WeeklyGoalCard({ goal }: { goal: WeeklyGoal }) {
 }
 
 // Member List Item
-function MemberItem({ 
+function _MemberItem({ 
   username, 
   avatar, 
   role, 
@@ -476,13 +471,13 @@ export default function FamilyHub({
   isInCall = false,
   activeCallMembers = 0
 }: FamilyHubProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const { stats, loading: statsLoading } = useFamilyStats(familyId);
   const { tiers, loading: tiersLoading } = useAchievementTiers();
-  const { achievements, loading: achievementsLoading } = useFamilyAchievements(familyId);
-  const { goals, loading: goalsLoading } = useWeeklyGoals(familyId);
-  const { unlocks, loading: unlocksLoading } = useLevelUnlocks(stats?.level || 1);
-  const { leaderboard, loading: leaderboardLoading } = useFamilyLeaderboard(10);
+  const { achievements, loading: _achievementsLoading } = useFamilyAchievements(familyId);
+  const { goals, loading: _goalsLoading } = useWeeklyGoals(familyId);
+  const { unlocks, loading: _unlocksLoading } = useLevelUnlocks(stats?.level || 1);
+  const { leaderboard, loading: _leaderboardLoading } = useFamilyLeaderboard(10);
   
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'goals' | 'leaderboard'>('overview');
   const [showSecrets, setShowSecrets] = useState(false);
@@ -767,5 +762,3 @@ function StatCard({
     </motion.div>
   );
 }
-
-export default FamilyHub;

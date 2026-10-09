@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Eye, Radio, Users, Building2, Sparkles, Play, TrendingUp, DollarSign, Home, ChevronRight, Settings } from 'lucide-react'
+import { Eye, Radio, Building2, Sparkles, Play, TrendingUp, DollarSign, Home, ChevronRight, Settings } from 'lucide-react';
 
 interface SEOPageProps {
   children: React.ReactNode

@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { 
-  Home, Wrench, Zap, Droplets, Wifi, Gift, 
-  AlertTriangle, Check, Shield, Hammer
-} from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { Home, Wrench, AlertTriangle, Shield, Hammer } from 'lucide-react';
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { toast } from 'sonner'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
-import { motion, useTransform, useCycle } from 'framer-motion'
-import HouseRaidAnimation from './HouseRaidAnimation'
 
 interface BroadcastHouseIconProps {
   broadcasterId: string
@@ -160,7 +155,7 @@ export default function BroadcastHouseIcon({
        setIsRaidDialogOpen(false)
        
        // Trigger raid animation
-       const animationEndTime = Date.now() + 4000; // 4 seconds
+       const _animationEndTime = Date.now() + 4000; // 4 seconds
        // Animation will be handled via CSS classes that respond to isRaided state
     } catch (error: any) {
       toast.error(error.message)

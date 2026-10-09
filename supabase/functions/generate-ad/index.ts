@@ -309,7 +309,7 @@ serve(async (req) => {
   }
 
   try {
-    const { source_id, generation_type, asset_type } = await req.json();
+    const { source_id, generation_type, asset_type: _asset_type } = await req.json();
     if (!source_id) throw new Error("source_id is required");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

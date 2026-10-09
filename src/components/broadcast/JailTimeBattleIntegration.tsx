@@ -15,10 +15,9 @@
  *    for granular control.
  */
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React from 'react';
 import JailBarOverlay from './JailBarOverlay';
 import { useJailTime } from '../../hooks/useJailTime';
-import { JailTimeSounds } from '../../lib/jailTimeSounds';
 
 // ─── Approach A: Arena Wrapper ───────────────────────────────────
 // Wraps the entire battle arena and auto-injects overlays on the

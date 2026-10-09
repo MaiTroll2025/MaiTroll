@@ -20,7 +20,7 @@ export interface PresidentElection {
 }
 
 export interface PresidentCandidate {
-  [x: string]: string;
+  [x: string]: any
   id: string;
   election_id: string;
   user_id: string;

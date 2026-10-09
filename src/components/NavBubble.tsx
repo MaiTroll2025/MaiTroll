@@ -1,37 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  Menu,
-  Home,
-  LogIn,
-  UserPlus,
-  X,
-  Video,
-  Coins,
-  Trophy,
-  Gavel,
-  Shield,
-  Store,
-  Wallet,
-  Users,
-  Newspaper,
-  Briefcase,
-  Building2,
-  Landmark,
-  Mail,
-  Search,
-  Sparkles,
-  Radio,
-  Gamepad2,
-  Megaphone,
-  Scale,
-  Crown,
-  Package,
-  Star,
-  Waves,
-  LifeBuoy,
-  Church,
-} from 'lucide-react'
+import { Menu, Home, LogIn, UserPlus, X, Video, Coins, Trophy, Gavel, Shield, Store, Wallet, Users, Newspaper, Briefcase, Building2, Landmark, Mail, Search, Radio, Gamepad2, Megaphone, Scale, Crown, Package, Waves, LifeBuoy, Church } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
 import { useCoins } from '@/lib/hooks/useCoins'

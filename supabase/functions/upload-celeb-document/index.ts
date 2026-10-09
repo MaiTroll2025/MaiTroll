@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
 
     const userId = user.id
     const body = await req.json()
-    const { document_type, file_name, content_type, file_size } = body
+    const { document_type, file_name, content_type, file_size: _file_size } = body
 
     if (!document_type || !file_name) {
       return withCors(

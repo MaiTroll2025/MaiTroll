@@ -76,7 +76,7 @@ export default function TromocodeAdmin() {
         p_created_by: createdBy,
       }
 
-      const { data, error } = await supabase.rpc('create_tromocode', payload)
+      const { data: _data, error } = await supabase.rpc('create_tromocode', payload)
       if (error) throw error
 
       await loadCodes()

@@ -134,7 +134,7 @@ const DEFAULT_DURATION_MS = 15000
 
 async function logGiftAnimationTest({
   gift,
-  visual,
+  visual: _visual,
   resolvedUrl,
   resolvedSource,
   status,

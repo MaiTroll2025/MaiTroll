@@ -15,7 +15,7 @@ function playTone(frequency: number, duration: number, type: OscillatorType = 's
     gain.connect(audioCtx.destination);
     osc.start();
     osc.stop(audioCtx.currentTime + duration);
-  } catch (_) { /* ignore audio errors */ }
+  } catch (__) { /* ignore audio errors */ }
 }
 
 export const BattleSounds = {

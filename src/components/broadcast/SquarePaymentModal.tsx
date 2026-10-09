@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,8 +48,8 @@ export default function SquarePaymentModal({
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentResult, setPaymentResult] = useState<any>(null);
-  const [cardNonce, setCardNonce] = useState<string | null>(null);
-  const [paymentMethodError, setPaymentMethodError] = useState<string | null>(null);
+  const [cardNonce, _setCardNonce] = useState<string | null>(null);
+  const [paymentMethodError, _setPaymentMethodError] = useState<string | null>(null);
   
   // Card input fields
   const [cardNumber, setCardNumber] = useState('');
@@ -239,7 +239,7 @@ export default function SquarePaymentModal({
     }
   };
 
-   const processStoredCardPayment = async () => {
+   const _processStoredCardPayment = async () => {
      if (!userId) {
        toast.error('Please sign in to continue');
        return;
@@ -401,9 +401,9 @@ export default function SquarePaymentModal({
            return false;
          };
 
-         let attempts = 0;
-         const pollInterval = setInterval(async () => {
-           attempts++;
+          let _attempts = 0;
+          const pollInterval = setInterval(async () => {
+            _attempts++;
            await checkPayment();
          }, 500);
 

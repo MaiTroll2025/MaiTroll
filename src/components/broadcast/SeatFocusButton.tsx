@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, X, Volume2, VolumeX } from 'lucide-react';
 import type { SeatInfo } from '@/hooks/useSeatFocus';
 
-interface SeatFocusButtonProps {
+interface _SeatFocusButtonProps {
   seats: Record<number, SeatInfo>;
   focusedUserId: string;
   focusedSeatIndex: number | null;
@@ -19,7 +19,7 @@ interface SeatFocusButtonProps {
 export default function SeatFocusButton({
   seats,
   focusedUserId,
-  focusedSeatIndex,
+  focusedSeatIndex: _focusedSeatIndex,
   onToggle,
   onFocusAll,
   getSeatLabel,

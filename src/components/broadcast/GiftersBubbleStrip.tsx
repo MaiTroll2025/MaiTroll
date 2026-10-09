@@ -18,7 +18,7 @@ interface GiftersBubbleStripProps {
   hostId: string;
 }
 
-function GiftersBubbleStrip({ streamId, hostId }: GiftersBubbleStripProps) {
+function GiftersBubbleStrip({ streamId, hostId: _hostId }: GiftersBubbleStripProps) {
   const [gifters, setGifters] = useState<GifterBubble[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGifter, setSelectedGifter] = useState<GifterBubble | null>(null);

@@ -6,8 +6,8 @@ console.log('Current lines:', L.length);
 // Lines to replace: 1072-1131 (1-based) which are 0-indexed 1071-1130
 // Everything from "Source Alignment" InfoCard to the end of file
 
-const keepUpTo = 1071;   // keep lines 1-1071 (0-indexed 0-1070) — up to the grid opening
-const keepFrom = 961;    // no, keep lines 1-1071 means slice(0,1071) 
+const _keepUpTo = 1071;   // keep lines 1-1071 (0-indexed 0-1070) — up to the grid opening
+const _keepFrom = 961;    // no, keep lines 1-1071 means slice(0,1071) 
 
 // actually: we want to keep [0, 1070] (0-indexed) → slice(0, 1071)
 // then delete [1071, 1130]

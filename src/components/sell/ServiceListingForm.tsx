@@ -21,7 +21,7 @@ const SERVICE_CATEGORIES = [
   'entertainment', 'tech_support', 'design', 'consulting', 'other'
 ]
 
-export default function ServiceListingForm({ user, businessId, onListingCreated }: ServiceListingFormProps) {
+export default function ServiceListingForm({ user: _user, businessId, onListingCreated }: ServiceListingFormProps) {
   const [submitting, setSubmitting] = useState(false)
 
   const [title, setTitle] = useState('')

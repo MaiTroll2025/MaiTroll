@@ -42,7 +42,7 @@ export async function uploadCover(file: Blob, userId: string): Promise<UploadCov
     const filePath = `${userId}/${timestamp}.jpg`
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { data: _data, error } = await supabase.storage
       .from('covers')
       .upload(filePath, file, {
         contentType: 'image/jpeg',

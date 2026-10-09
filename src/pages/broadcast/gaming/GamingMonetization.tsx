@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, DollarSign, Gift, TrendingUp, Wallet, Clock } from 'lucide-react'
+import { ArrowLeft, DollarSign, Gift, TrendingUp, Wallet } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { useGamingStreamId } from '@/contexts/GamingStreamContext'

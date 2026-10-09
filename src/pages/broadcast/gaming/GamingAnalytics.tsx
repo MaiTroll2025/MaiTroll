@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'
-import { ArrowLeft, BarChart3, Eye, Gift, Coins, Users, Clock, TrendingUp } from 'lucide-react'
+import { ArrowLeft, BarChart3, Eye, Gift, Coins, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { useGamingStreamId } from '@/contexts/GamingStreamContext'

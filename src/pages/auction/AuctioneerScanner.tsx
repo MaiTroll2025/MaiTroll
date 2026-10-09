@@ -1,27 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import {
-  ArrowLeft,
-  Camera,
-  CameraOff,
-  CheckCircle2,
-  ChevronDown,
-  Clipboard,
-  Flashlight,
-  FlashlightOff,
-  Loader2,
-  Monitor,
-  QrCode,
-  RefreshCw,
-  Scan,
-  Send,
-  Settings,
-  Smartphone,
-  Unlink,
-  Wifi,
-  WifiOff,
-  X,
-  Zap,
-} from 'lucide-react'
+import { Camera, CameraOff, CheckCircle2, ChevronDown, Clipboard, Flashlight, FlashlightOff, Loader2, Monitor, RefreshCw, Scan, Send, Settings, Smartphone, Unlink, Wifi, X } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
@@ -57,7 +35,7 @@ interface ScanResult {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function generateSessionToken(): string {
+function _generateSessionToken(): string {
   return generateUUID()
 }
 

@@ -1,9 +1,7 @@
 import React, { useMemo } from 'react';
 import { Play, Eye, Radio, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
-import LiveStreamsModule from '@/components/home/LiveStreamsModule';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
-import FeaturedBroadcasts from '@/components/broadcast/FeaturedBroadcasts';
 import { cn } from '@/lib/utils';
 
 interface SpreadMagazineLayoutProps {
@@ -17,15 +15,15 @@ interface SpreadMagazineLayoutProps {
 export default function SpreadMagazineLayout({
   liveItems,
   totalViewers,
-  loadingLive,
+  loadingLive: _loadingLive,
   onLiveItemClick,
   onRequireAuth,
 }: SpreadMagazineLayoutProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   const featured = useMemo(() => liveItems.filter(i => i.isFeatured).slice(0, 2), [liveItems]);
   const battles = useMemo(() => liveItems.filter(i => i.isBattle).slice(0, 4), [liveItems]);
-  const rest = useMemo(() => liveItems.slice(6), [liveItems]);
+  const _rest = useMemo(() => liveItems.slice(6), [liveItems]);
 
   return (
     <div className="relative min-h-[calc(100vh-12rem)] bg-black">

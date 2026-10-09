@@ -48,12 +48,12 @@ interface BattleData {
   };
 }
 
-export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, broadcasterCoins }: BattleSwipeCardProps) {
+export default function BattleSwipeCard({ stream, isActive, isMuted, onClose: _onClose, broadcasterCoins }: BattleSwipeCardProps) {
   const navigate = useNavigate();
-  const { user, profile } = useAuthStore();
+  const { user, profile: _profile } = useAuthStore();
   
   const [remoteUsers, setRemoteUsers] = useState<RemoteParticipant[]>([]);
-  const [viewerCount, setViewerCount] = useState(stream.current_viewers || stream.viewer_count || 0);
+  const [viewerCount, _setViewerCount] = useState(stream.current_viewers || stream.viewer_count || 0);
   const [likeCount, setLikeCount] = useState(stream.total_likes || (stream as any).like_count || 0);
   const [battleData, setBattleData] = useState<BattleData | null>(null);
   const [isJoining, setIsJoining] = useState(false);
@@ -93,7 +93,7 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
     const fetchBattleData = async () => {
       if (!stream.battle_id) return;
       
-      const { data, error } = await supabase
+      const { data, error: _error } = await supabase
         .from('battles')
         .select(`
           *,
@@ -318,7 +318,7 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
    }, [flushLikes]);
    
    // Handle tap to view full stream
-  const handleTap = () => {
+  const _handleTap = () => {
     const isGaming = stream.agora_channel || stream.category === 'gaming';
     const username = stream.broadcaster?.username
     if (username) {
@@ -328,8 +328,8 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose, br
     }
   };
   
-  const broadcaster = stream.broadcaster;
-  const isHost = user?.id === stream.user_id;
+  const _broadcaster = stream.broadcaster;
+  const _isHost = user?.id === stream.user_id;
 
   useEffect(() => {
     const updatedLikes = stream.total_likes ?? (stream as any).like_count;

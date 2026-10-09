@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { Database, Shield, RefreshCw, Settings, FileText, AlertTriangle, Phone, Gavel, Trophy, DollarSign, Lock, Zap, MapPin, ShoppingCart, Megaphone, Share2, Image, TrendingUp, PieChart, HeadphonesIcon, Gift, Calendar, Crown, Award, Activity, Coins, Flame } from 'lucide-react'
+import { Database, Shield, RefreshCw, Settings, FileText, AlertTriangle, Phone, Gavel, Trophy, DollarSign, Lock, Zap, ShoppingCart, Megaphone, TrendingUp, PieChart, HeadphonesIcon, Gift, Crown, Award, Activity, Coins, Flame } from 'lucide-react';
 
 const CustomerServiceDashboard = lazy(() => import('./CustomerServiceDashboard'))
 
@@ -16,10 +16,10 @@ const AdminActivity = lazy(() => import('./AdminActivity'))
 
 const UserFormsTab = lazy(() => import('./components/UserFormsTab'))
 const AdminErrors = lazy(() => import('./AdminErrors'))
+const CriticalAlertsManager = lazy(() => import('./CriticalAlertsManager'))
 const AdminCallsTab = lazy(() => import('./components/AdminCallsTab'))
 const OfficerOperations = lazy(() => import('./OfficerOperations'))
 const OfficerPayrollReports = lazy(() => import('./OfficerPayrollReports'))
-const ZipGovernanceDashboard = lazy(() => import('./ZipGovernanceDashboard'))
 const AdminSupportTicketsPage = lazy(() => import('./AdminSupportTicketsPage'))
 const AdminSurveysPage = lazy(() => import('./AdminSurveysPage'))
 const CourtDocketsManager = lazy(() => import('./CourtDocketsManager'))
@@ -77,6 +77,19 @@ export const systemManagementRoutes: AdminRoute[] = [
     tileColor: 'text-yellow-200',
     tileBgColor: 'bg-yellow-500/10',
     tileBorderColor: 'border-yellow-500/30',
+    category: 'system'
+  },
+  {
+    id: 'critical-alerts',
+    title: 'Critical Alerts',
+    path: '/admin/critical-alerts',
+    component: CriticalAlertsManager,
+    roles: ['admin', 'superadmin', 'ceo', 'lead_troll_officer', 'troll_officer', 'secretary'],
+    description: 'Review serious moderation reports and resolve current critical alerts',
+    icon: <AlertTriangle className="w-5 h-5 text-red-200" />,
+    tileColor: 'text-red-200',
+    tileBgColor: 'bg-red-500/10',
+    tileBorderColor: 'border-red-500/30',
     category: 'system'
   },
   {
@@ -182,19 +195,6 @@ export const systemManagementRoutes: AdminRoute[] = [
     tileBgColor: 'bg-emerald-500/10',
     tileBorderColor: 'border-emerald-500/30',
     category: 'economy'
-  },
-  {
-    id: 'zip-governance',
-    title: 'Zip Governance',
-    path: '/admin/zip-governance',
-    component: ZipGovernanceDashboard,
-    roles: ['admin'],
-    description: 'Manage zip jurisdictions and officer hierarchy',
-    icon: <MapPin className="w-5 h-5 text-amber-200" />,
-    tileColor: 'text-amber-200',
-    tileBgColor: 'bg-amber-500/10',
-    tileBorderColor: 'border-amber-500/30',
-    category: 'system'
   },
   {
     id: 'advertisements',
@@ -419,19 +419,6 @@ export const systemManagementRoutes: AdminRoute[] = [
     tileColor: 'text-blue-200',
     tileBgColor: 'bg-blue-500/10',
     tileBorderColor: 'border-blue-500/30',
-    category: 'moderation'
-  },
-  {
-    id: 'jail-test-simulator',
-    title: 'Jail Test Simulator',
-    path: '/admin/jail-test',
-    component: AdminJailManagement,
-    roles: ['admin'],
-    description: 'Test jail system functionality',
-    icon: <Lock className="w-5 h-5 text-red-200" />,
-    tileColor: 'text-red-200',
-    tileBgColor: 'bg-red-500/10',
-    tileBorderColor: 'border-red-500/30',
     category: 'moderation'
   },
   {

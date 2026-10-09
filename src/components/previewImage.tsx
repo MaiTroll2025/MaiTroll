@@ -3,8 +3,8 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Loader2, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { supabase } from '../../lib/supabase'
-import { useAuthStore } from '../../lib/store'
+import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/lib/store'
 import { Stream } from '../types/broadcast'
 import { BroadcastPage } from '../pages/broadcast/BroadcastPage'
 import ViewerPage from '../pages/broadcast/ViewerPage'
@@ -277,7 +277,7 @@ function BroadcastRouter() {
    const profileAccess = useMemo(() => getProfileAccessSnapshot(profile), [profile])
 
   const [stream, setStream] = useState<Stream | null>(null)
-  const [broadcaster, setBroadcaster] = useState<BroadcasterMeta | null>(null)
+  const [_broadcaster, setBroadcaster] = useState<BroadcasterMeta | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

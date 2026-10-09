@@ -10,11 +10,7 @@ import { useAuthStore } from '@/lib/store';
 import { buildOGImageUrl } from '@/lib/og';
 import { getLevelName } from '@/lib/xp';
 import { Share2 } from 'lucide-react';
-import {
-  MapPin, Calendar, Users, UserPlus, MessageCircle,
-  Crown, BadgeCheck, Zap, Video, Mic, ShoppingBag,
-  Trophy, Globe, ExternalLink
-} from 'lucide-react';
+import { MapPin, Calendar, UserPlus, MessageCircle, BadgeCheck, Video, Mic, ShoppingBag, Trophy, Globe, ExternalLink } from 'lucide-react';
 
 interface SocialLink {
   id: string;

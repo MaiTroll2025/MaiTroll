@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Shield, AlertTriangle, Scale, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import { Shield, AlertTriangle, Scale, Clock, TrendingUp } from 'lucide-react';
 import { MaiTrollTheme } from '../../styles/trollCityTheme';
 
 interface BackgroundCheckViewProps {

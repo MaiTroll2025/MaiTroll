@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
 import TrollCharacter from './TrollCharacter';
 import TrollPanel from './TrollPanel';
 import { useFeedTheTroll } from './useFeedTheTroll';
-import type { TrollPersonalityState, TrollRealtimeEvent } from '@/types/feedTheTroll';
+import type { TrollPersonalityState } from '@/types/feedTheTroll';
 import './trollAnimations.css';
 
 interface FeedTheTrollProps {
@@ -38,7 +36,7 @@ const ANIMATION_VARIANTS_BY_SIZE: Record<string, string[]> = {
   legendary: ['royal_feast', 'firework_pose', 'crown_glow', 'stage_transformation'],
 };
 
-function pickVariant(size?: string): string {
+function _pickVariant(size?: string): string {
   const list = ANIMATION_VARIANTS_BY_SIZE[size ?? 'small'] ?? ANIMATION_VARIANTS_BY_SIZE.small;
   return list[Math.floor(Math.random() * list.length)];
 }

@@ -14,7 +14,7 @@ export function SingOffCoinStore({ open, onClose }: CoinStoreProps) {
   const { user, profile } = useAuthStore()
   const [selectedPack, setSelectedPack] = useState<any>(null)
   const [showPay, setShowPay] = useState(false)
-  const [showCard, setShowCard] = useState(false)
+  const [_showCard, setShowCard] = useState(false)
   const [customCoins, setCustomCoins] = useState('')
   const payProgressRef = useRef(false)
 

@@ -6,10 +6,7 @@ import {
   AlertTriangle,
   Users,
   Shield,
-  Clock,
-  CheckCircle2,
   FileText,
-  Building2,
   Briefcase
 } from 'lucide-react'
 
@@ -22,7 +19,6 @@ const intakeCategories = [
     icon: Briefcase,
     color: 'text-blue-400',
     bg: 'bg-blue-500/10 border-blue-500/20',
-    stats: '14 Open'
   },
   {
     title: 'Operations Escalations',
@@ -30,7 +26,6 @@ const intakeCategories = [
     icon: AlertTriangle,
     color: 'text-red-400',
     bg: 'bg-red-500/10 border-red-500/20',
-    stats: '3 Critical'
   },
   {
     title: 'Secretary Intake',
@@ -38,7 +33,6 @@ const intakeCategories = [
     icon: ClipboardList,
     color: 'text-cyan-400',
     bg: 'bg-cyan-500/10 border-cyan-500/20',
-    stats: '9 Pending'
   },
   {
     title: 'HR & Personnel',
@@ -46,7 +40,6 @@ const intakeCategories = [
     icon: Users,
     color: 'text-purple-400',
     bg: 'bg-purple-500/10 border-purple-500/20',
-    stats: '5 Active'
   },
   {
     title: 'Compliance & Legal',
@@ -54,7 +47,6 @@ const intakeCategories = [
     icon: Shield,
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10 border-emerald-500/20',
-    stats: '7 Under Review'
   },
   {
     title: 'Documentation',
@@ -62,28 +54,6 @@ const intakeCategories = [
     icon: FileText,
     color: 'text-yellow-400',
     bg: 'bg-yellow-500/10 border-yellow-500/20',
-    stats: '12 Drafts'
-  }
-]
-
-const quickStats = [
-  {
-    label: 'Open Cases',
-    value: '42',
-    icon: Clock,
-    color: 'text-orange-400'
-  },
-  {
-    label: 'Resolved Today',
-    value: '18',
-    icon: CheckCircle2,
-    color: 'text-green-400'
-  },
-  {
-    label: 'Departments',
-    value: '6',
-    icon: Building2,
-    color: 'text-blue-400'
   }
 ]
 
@@ -133,37 +103,6 @@ export default function ExecutiveIntake() {
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-3 w-full lg:w-auto">
-            {quickStats.map((stat) => {
-              const Icon = stat.icon
-
-              return (
-                <div
-                  key={stat.label}
-                  className="
-                    bg-slate-900
-                    border border-slate-800
-                    rounded-xl
-                    p-4
-                    min-w-[120px]
-                  "
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Icon className={`w-5 h-5 ${stat.color}`} />
-                  </div>
-
-                  <div className="text-2xl font-bold">
-                    {stat.value}
-                  </div>
-
-                  <div className="text-xs text-slate-400">
-                    {stat.label}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
         </header>
 
         {/* Intake Categories */}
@@ -200,18 +139,6 @@ export default function ExecutiveIntake() {
                     <Icon className={`w-5 h-5 ${category.color}`} />
                   </div>
 
-                  <span
-                    className="
-                      text-xs
-                      px-2 py-1
-                      rounded-full
-                      bg-slate-950/50
-                      border border-slate-800
-                      text-slate-300
-                    "
-                  >
-                    {category.stats}
-                  </span>
                 </div>
 
                 <div className="space-y-2">

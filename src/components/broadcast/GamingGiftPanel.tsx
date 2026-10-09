@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { Gift, Send, Coins } from 'lucide-react'
+import { Send, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/lib/store'
 import { useGiftSystem, type GiftItem } from '@/lib/hooks/useGiftSystem'

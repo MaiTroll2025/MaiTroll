@@ -72,7 +72,7 @@ export default function NeonGlowUsername({
     return 'shadow-[0_0_10px_rgba(107,114,128,0.3)] border-zinc-500/30'
   }
 
-  const getRoleColor = () => {
+  const _getRoleColor = () => {
     if (profile?.is_admin || profile?.role === 'admin') return 'text-red-400'
     if (profile?.role === 'temp_city_admin') return 'text-red-400'
     if (hasOfficerLevel) return 'text-blue-400'

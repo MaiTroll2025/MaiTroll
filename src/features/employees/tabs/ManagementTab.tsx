@@ -15,7 +15,7 @@ export default function ManagementTab({ profile, realProfile }: { profile?: any;
   )
 }
 
-function AssistantWorkspace({ profile }: { profile?: any }) {
+function AssistantWorkspace({ profile: _profile }: { profile?: any }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
       <h2 className="mb-3 text-lg font-bold">Assistant Workspace</h2>
@@ -31,7 +31,7 @@ function AssistantWorkspace({ profile }: { profile?: any }) {
   )
 }
 
-function DisciplinaryActions({ profile }: { profile?: any }) {
+function DisciplinaryActions({ profile: _profile }: { profile?: any }) {
   const { user } = useAuthStore()
   const [items, setItems] = useState<any[]>([])
   const [target, setTarget] = useState('')

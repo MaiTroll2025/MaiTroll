@@ -108,7 +108,7 @@ const REGEX_REPLACEMENTS = [
 ];
 
 // Additional patterns for specific context matching
-const CONTEXT_REPLACEMENTS = [
+const _CONTEXT_REPLACEMENTS = [
   // In title tags, meta descriptions, etc.
   {
     from: /maitroll(\s*["""'`]?)/gi,
@@ -128,7 +128,7 @@ function countReplacement(str) {
   stats.replacements[str] = (stats.replacements[str] || 0) + 1;
 }
 
-function addSample(file, original, replaced) {
+function _addSample(file, original, replaced) {
   if (stats.samples.length < 8) {
     stats.samples.push({ file, original: original.trim(), replaced: replaced.trim() });
   }
@@ -137,7 +137,7 @@ function addSample(file, original, replaced) {
 function processFile(filePath) {
   try {
     let content = fs.readFileSync(filePath, 'utf8');
-    const original = content;
+    const _original = content;
     let changed = false;
     let localSamples = [];
 
@@ -182,7 +182,7 @@ function processFile(filePath) {
         });
       }
     }
-  } catch (err) {
+  } catch (_err) {
     // Skip files that can't be read/written
     stats.filesSkipped++;
     stats.skipReasons['read/write error'] = (stats.skipReasons['read/write error'] || 0) + 1;

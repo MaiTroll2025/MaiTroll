@@ -26,6 +26,7 @@ import WallShareModal from '@/components/trollWall/WallShareModal'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 import { notifySomeoneMentioned } from '@/lib/notifications'
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
 
 /** Small avatar component for reply items — extracts useUserFrame out of .map() */
 function ReplyAvatar({ userId, avatarUrl, username }: { userId?: string; avatarUrl: string; username: string }) {
@@ -506,6 +507,16 @@ export default function TrollWallPostModal({
                 <source src={currentPost.metadata.video_url} type="video/mp4" />
                 <source src={currentPost.metadata.video_url} type="video/webm" />
               </video>
+            </div>
+          )}
+
+          {!currentPost.reply_to_post_id && (
+            <div className="px-4 pt-3">
+              <FacebookPublishButton
+                sourceType="wall_post"
+                sourceId={currentPost.id}
+                featured={currentPost.is_facebook_featured}
+              />
             </div>
           )}
 

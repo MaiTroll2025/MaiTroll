@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Swords, Zap, Crown } from 'lucide-react';
+import { ArrowLeft, Swords, Zap } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 
 export default function BattleScoreboard({

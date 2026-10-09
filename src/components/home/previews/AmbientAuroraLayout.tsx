@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Eye, Radio, Sparkles } from 'lucide-react';
-import { useAuthStore } from '@/lib/store';
-import LiveStreamsModule from '@/components/home/LiveStreamsModule';
+import { Play, Eye, Radio } from 'lucide-react';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
 import { cn } from '@/lib/utils';
 
@@ -21,7 +19,7 @@ export default function AmbientAuroraLayout({
   onRequireAuth,
 }: AmbientAuroraLayoutProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const [_mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const featured = liveItems[0];
@@ -137,7 +135,7 @@ export default function AmbientAuroraLayout({
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {secondary.map((item, idx) => (
+              {secondary.map((item, _idx) => (
                 <div
                   key={item.id}
                   onClick={() => onLiveItemClick(item)}

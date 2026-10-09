@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Gift, Sparkles, Crown, Gem, Zap, Heart, Users, UserCircle, Radio, Coins, Glasses } from 'lucide-react';
+import { X, Search, Gift, Sparkles, Crown, Zap, Users, UserCircle, Radio, Coins, Glasses } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { useGiftSystem, GiftItem } from '../../lib/hooks/useGiftSystem';
 import { useBroadcastAbilities } from '../../hooks/useBroadcastAbilities';
 import { getAbilityById } from '../../types/broadcastAbilities';
 import CoinStoreModal from './CoinStoreModal';
-import { getGiftVisualConfig, GiftRarity } from '../../lib/giftVisuals';
+import { getGiftVisualConfig } from '../../lib/giftVisuals';
 import { AR_GIFTS, AR_GIFT_CATEGORIES, getARGiftById } from '../../data/arGiftCatalog';
 import MKeyGiftCard from './mkey/MKeyGiftCard';
 import MKeySendPanel from './mkey/MKeySendPanel';
@@ -65,7 +65,7 @@ const CATEGORIES: { id: GiftCategory; label: string; icon: React.ReactNode }[] =
   { id: 'seasonal', label: 'Seasonal', icon: '🌸' },
 ];
 
-const RARITY_COLORS: Record<Rarity, string> = {
+const _RARITY_COLORS: Record<Rarity, string> = {
   common: 'border-gray-500 bg-gray-500/10',
   uncommon: 'border-green-500 bg-green-500/10',
   rare: 'border-blue-500 bg-blue-500/10',
@@ -74,7 +74,7 @@ const RARITY_COLORS: Record<Rarity, string> = {
   mythic: 'border-yellow-400 bg-yellow-400/20',
 };
 
-const RARITY_LABELS: Record<Rarity, string> = {
+const _RARITY_LABELS: Record<Rarity, string> = {
   common: 'Common',
   uncommon: 'Uncommon',
   rare: 'Rare',
@@ -92,7 +92,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
   activeUserIds = [],
   userProfiles = {},
   onGiftSent,
-  sharedChannel
+  sharedChannel: _sharedChannel
 }: GiftBoxModalProps) {
   const { user, profile } = useAuthStore();
   
@@ -946,7 +946,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
                 </div>
                 
                 <button
-                  onClick={() => setQuantity(q => Math.min(99, Math.floor((profile?.troll_coins || 0) / selectedGift.coinCost)))}
+                  onClick={() => setQuantity(_q => Math.min(99, Math.floor((profile?.troll_coins || 0) / selectedGift.coinCost)))}
                   className="px-2 sm:px-3 py-1 text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg"
                 >
                   Max
@@ -995,7 +995,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
 }
 
 // Helper function to determine rarity based on cost
-function getGiftRarity(cost: number): Rarity {
+function _getGiftRarity(cost: number): Rarity {
   if (cost >= 5000) return 'mythic';
   if (cost >= 2500) return 'legendary';
   if (cost >= 500) return 'epic';

@@ -3,14 +3,9 @@ import { useAuthStore } from './store';
 import { supabase } from './supabase';
 import { getUserAffiliation, UserAffiliation } from './userAffiliations';
 import { useNavigate } from 'react-router-dom';
-import { 
-  User, MessageCircle, Gift, Flag, Camera, 
-  Crown, Check, X, Heart, Users, Loader2
-} from 'lucide-react';
+import { User, MessageCircle, Gift, Flag, Camera, Crown, X, Users, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import SubscribeButton from '../components/user/SubscribeButton';
-import ProfileFrame from '@/components/profile/ProfileFrame';
-import { useUserFrame } from '@/hooks/useUserFrame';
 
 interface UserMiniProfileProps {
   userId: string;
@@ -31,7 +26,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
   liveStreamId,
   onClose
 }) => {
-  const { user, profile } = useAuthStore();
+  const { user, profile: _profile } = useAuthStore();
   const navigate = useNavigate();
   const [targetProfile, setTargetProfile] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
@@ -93,7 +88,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
         .eq('is_active', true)
         .single();
       setSubscription(data);
-    } catch (error) {
+    } catch (_error) {
       // No subscription
     }
   };

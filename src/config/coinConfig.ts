@@ -109,6 +109,6 @@ export function isValidCashoutAmount(coinAmount: number): boolean {
 /**
  * Check if user is admin or secretary
  */
-export function isAdminOrSecretary(userId: string): boolean {
+export function isAdminOrSecretary(_userId: string): boolean {
   return false;
 }

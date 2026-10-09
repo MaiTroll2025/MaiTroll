@@ -41,13 +41,13 @@ console.log(`Found ${sqlFiles.length} SQL files to search`);
 
 // Search for CREATE TABLE statements
 const foundDefinitions = {}; // tableName -> { filePath, sql, lines }
-const foundAlterTable = {};  // tableName -> { filePath, sql }
+const _foundAlterTable = {};  // tableName -> { filePath, sql }
 
 for (const file of sqlFiles) {
   let content;
   try {
     content = fs.readFileSync(file, 'utf8');
-  } catch (e) {
+  } catch (_e) {
     continue;
   }
 

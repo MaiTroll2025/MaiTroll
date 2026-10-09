@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SectionCard } from './SectionCard';
-import { Activity, MessageSquare, Zap, Play, Square, Trash2, BarChart3 } from 'lucide-react';
+import { Activity, MessageSquare, Play, Square, Trash2, BarChart3 } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 
 interface MockMessage {

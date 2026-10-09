@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Mic, MicOff, Video, VideoOff, MessageSquare, Heart, Eye, Send, Users, Coins, Crown, Gem, Settings, ChevronRight, Maximize2, Minimize2, ArrowLeftRight, PanelRightOpen, PanelRightClose, LayoutDashboard, Columns2, Square, Monitor, Layers, Sparkles, Shield, Swords, Gift, Share2, Power, GripVertical } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mic, MicOff, Video, VideoOff, MessageSquare, Heart, Eye, Send, Users, Coins, Crown, Gem, Settings, Maximize2, LayoutDashboard, Sparkles, Swords, Gift, Share2, Power } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 // ═══════════════════════════════════════════════════════════════
@@ -372,7 +372,7 @@ function Layout4_Immersive() {
   );
 }
 
-function FloatingAction({ icon: Icon, label, color, onClick }: any) {
+function FloatingAction({ icon: Icon, label, color: _color, onClick }: any) {
   return (
     <button onClick={onClick} className="flex flex-col items-center gap-0.5">
       <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all">
@@ -460,7 +460,7 @@ function Layout5_VerticalMobile() {
   );
 }
 
-function VertAction({ icon: Icon, value, color }: any) {
+function VertAction({ icon: Icon, value, color: _color }: any) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       <div className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/80">

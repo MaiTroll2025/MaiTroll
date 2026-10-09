@@ -85,7 +85,7 @@ export default function JailTab(props: any) {
         .limit(10);
       if (error) throw error;
       setSearchResults(data || []);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to search users');
     } finally {
       setSearching(false);
@@ -171,7 +171,7 @@ export default function JailTab(props: any) {
           p_target_id: selectedUser.id,
           p_description: `${activeAction.toUpperCase()} on @${selectedUser.username}: ${reason.trim()}`,
         });
-      } catch (_) { /* noop */ }
+      } catch (__) { /* noop */ }
 
       setActiveAction(null);
       setSelectedUser(null);
@@ -187,7 +187,7 @@ export default function JailTab(props: any) {
           p_target_id: selectedUser.id,
           p_description: `${activeAction.toUpperCase()} on @${selectedUser.username}: ${reason.trim()}`,
         });
-      } catch (_) { /* noop */ }
+      } catch (__) { /* noop */ }
       toast.error(err?.message || `Failed to ${activeAction} user`);
     } finally {
       setSubmitting(false);

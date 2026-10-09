@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, memo } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../lib/store';
 import { cn } from '../../lib/utils';
-import { User, MoreHorizontal } from 'lucide-react';
+import { User } from 'lucide-react';
 
 interface Viewer {
   id: string;

@@ -76,7 +76,7 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
   const [isLive, setIsLive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, _setIsPaused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [channelName, setChannelName] = useState<string | null>(null);
   const [streamId, setStreamId] = useState<string | null>(null);

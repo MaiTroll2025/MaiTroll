@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import Hls from 'hls.js';
 
@@ -30,7 +30,7 @@ interface HLSPlayerProps {
   isGuest: boolean;
 }
 
-function HLSPlayer({ stream, hlsUrl, onClose, userId, username, isGuest }: HLSPlayerProps) {
+function HLSPlayer({ stream: _stream, hlsUrl, onClose, userId: _userId, username: _username, isGuest: _isGuest }: HLSPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isLoading, setIsLoading] = useState(true);

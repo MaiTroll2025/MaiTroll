@@ -2,67 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SafeLink } from '@/hooks/useSafeNavigate'
 import ProfileFrame from '@/components/profile/ProfileFrame'
-import {
-  Home,
-  MessageSquare,
-  Video,
-  Shield,
-  Gavel,
-  LogOut,
-  FileText,
-  ShoppingBag,
-  Banknote,
-  Menu,
-  X,
-  LogIn,
-  UserPlus,
-  Trash2,
-  Building2,
-  Landmark,
-  Warehouse,
-  Package,
-  Store,
-  Coins,
-  TrendingUp,
-  Shuffle,
-  Scale,
-  Crown,
-  LifeBuoy,
-  Waves,
-  Gamepad2,
-  Lock,
-  BookOpen,
-  Mic,
-  Radio,
-  LayoutDashboard,
-  Newspaper,
-  DollarSign,
-  Users,
-  AlertTriangle,
-  Settings,
-  Star,
-  Eye,
-  Siren,
-  ClipboardList,
-  BarChart3,
-  MonitorDot,
-  ScrollText,
-  Calendar,
-  Wallet,
-  Trophy,
-  Bell,
-  Megaphone,
-  Database,
-  Heart,
-  User,
-  Search,
-  Compass,
-  Mail,
-  Briefcase,
-  Sparkles,
-  Smartphone,
-  Wrench,
-} from 'lucide-react'
+import { Home, MessageSquare, Video, Shield, Gavel, LogOut, FileText, ShoppingBag, Banknote, Menu, X, LogIn, UserPlus, Trash2, Building2, Landmark, Warehouse, Package, Store, Coins, TrendingUp, Scale, Crown, LifeBuoy, Waves, Gamepad2, Lock, BookOpen, Mic, Radio, LayoutDashboard, Newspaper, DollarSign, Users, AlertTriangle, Settings, Star, Eye, Siren, ClipboardList, BarChart3, MonitorDot, ScrollText, Calendar, Wallet, Trophy, Bell, Megaphone, Database, Heart, User, Search, Mail, Briefcase, Sparkles, Smartphone, Wrench, Scan } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 
@@ -70,9 +10,8 @@ import { useAuthStore } from '../lib/store'
 import { useBroadcastLockdown } from '@/hooks/useBroadcastLockdown'
 import { usePresidentSystem } from '@/hooks/usePresidentSystem'
 import { useCoins } from '@/lib/hooks/useCoins'
-import { supabase, UserRole } from '@/lib/supabase'
+import { isMarketingAgent, supabase, UserRole } from '@/lib/supabase'
 import { canAccessTromail } from '@/lib/tromail'
-import { List } from '@radix-ui/react-tabs'
 
 interface RecentMessage {
   id: string
@@ -219,7 +158,7 @@ export default function BottomNavigation() {
     profileTrollRole === 'ceo_assistant' ||
     !!(profile as any)?.is_ceo_assistant
 
-  const isNoahAssistant =
+  const _isNoahAssistant =
     profileRole === 'noah_assistant' ||
     profileTrollRole === 'noah_assistant' ||
     !!(profile as any)?.is_noah_assistant
@@ -657,6 +596,7 @@ export default function BottomNavigation() {
 
       { category: 'News + Ads', label: 'Advertise', icon: Megaphone, path: '/city-registry/advertise' },
       { category: 'News + Ads', label: 'Trollified', icon: ShoppingBag, path: '/trollifieds' },
+      { category: 'News + Ads', label: 'Marketing', icon: Megaphone, path: '/admin/marketing', show: isAdmin || isMarketingAgent(profile) },
 
       { category: 'Podcast', label: 'Podcast Central', icon: Mic, path: '/podcast' },
 
@@ -979,9 +919,9 @@ export default function BottomNavigation() {
               </div>
             )}
 
-            {totalUnreadCount > 0 && (
+            {notificationCount > 0 && (
               <div className="absolute -right-1 -top-1 flex h-6 w-6 animate-pulse items-center justify-center rounded-full border-2 border-[#0D0D0D] bg-red-500 text-xs font-bold text-white">
-                {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                {notificationCount > 9 ? '9+' : notificationCount}
               </div>
             )}
 

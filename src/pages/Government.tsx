@@ -1,27 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import {
-  Activity,
-  AlertTriangle,
-  Building2,
-  ChevronRight,
-  DollarSign,
-  Gavel,
-  Hand,
-  History,
-  Lock,
-  Menu,
-  PartyPopper,
-  Scale,
-  Scroll,
-  Shield,
-  Siren,
-  TrendingUp,
-  Users,
-  Vote,
-  X,
-} from 'lucide-react'
-import { toast } from 'sonner'
+import { Activity, AlertTriangle, Building2, ChevronRight, DollarSign, Hand, History, Lock, Menu, PartyPopper, Scale, Scroll, Shield, Siren, TrendingUp, Vote, X } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
 import { cn } from '@/lib/utils'

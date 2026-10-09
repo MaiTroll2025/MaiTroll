@@ -44,7 +44,7 @@ const fmt = (n: number) => Math.round(n).toLocaleString();
 const TrollPanel: React.FC<TrollPanelProps> = ({
   open,
   onClose,
-  broadcasterId,
+  broadcasterId: _broadcasterId,
   state,
   leaderboard,
   recentFeedings,
@@ -52,8 +52,8 @@ const TrollPanel: React.FC<TrollPanelProps> = ({
   milestones,
   settings,
   giftTrain,
-  lastEvent,
-  battleMode,
+  lastEvent: _lastEvent,
+  battleMode: _battleMode,
 }) => {
   const [tab, setTab] = useState<Tab>('status');
   const [hofWindow, setHofWindow] = useState<HallOfFameWindow>('live');

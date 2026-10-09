@@ -34,7 +34,7 @@ export interface AgoraGamingViewerState {
 }
 
 export interface AgoraGamingViewerActions {
-  join: (channelName: string, userId: string) => Promise<void>;
+  join: (channelName: string, userId: string, streamId: string) => Promise<void>;
   leave: () => Promise<void>;
 }
 
@@ -75,13 +75,15 @@ export function useAgoraGamingViewer(): AgoraGamingViewerState & AgoraGamingView
     if (import.meta.env.DEV) console.log('[AgoraGamingViewer]', ...args);
   };
 
-  const fetchToken = useCallback(async (channel: string, uid: UID): Promise<string> => {
+  const fetchToken = useCallback(async (channel: string, uid: UID, streamId: string): Promise<string> => {
     const { data, error: tokenError } = await supabase.functions.invoke('agora-token', {
       body: {
         channel,
         userId: uid.toString(),
         tokenType: 'rtc',
         role: 'subscriber',
+        roomType: 'gaming',
+        streamId,
       },
     });
 
@@ -99,7 +101,7 @@ export function useAgoraGamingViewer(): AgoraGamingViewerState & AgoraGamingView
     return data.token;
   }, []);
 
-  const join = useCallback(async (channelName: string, userId: string) => {
+  const join = useCallback(async (channelName: string, userId: string, streamId: string) => {
     if (joinedRef.current || joiningRef.current) return;
 
     joiningRef.current = true;
@@ -230,7 +232,7 @@ export function useAgoraGamingViewer(): AgoraGamingViewerState & AgoraGamingView
           }
           try {
             await client.subscribe(user, 'audio');
-          } catch (e) {
+          } catch (_e) {
             // ignore audio subscribe errors
           }
         })();
@@ -270,7 +272,7 @@ export function useAgoraGamingViewer(): AgoraGamingViewerState & AgoraGamingView
 
       const uid = hashToUid(userId);
       debug('fetching agora token', { channelName, uid });
-      const token = await fetchToken(channelName, uid);
+      const token = await fetchToken(channelName, uid, streamId);
       debug('fetched agora token', { channelName, uid, tokenLen: token?.length ?? 0 });
       const joinPromise = client.join(appId, channelName, token, uid);
       const timeoutPromise = new Promise<never>((_, reject) =>

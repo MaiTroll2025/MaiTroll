@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const isApprovedCeleb = profile.celeb_role === "approved"
-    const isStaff = profile.role === "admin" || profile.is_admin === true
+    const _isStaff = profile.role === "admin" || profile.is_admin === true
 
     const body = await req.json()
     const { action } = body
@@ -380,7 +380,7 @@ Deno.serve(async (req: Request) => {
         pricing_value: priceCoins,
       }
 
-      const { data, error } = await supabase.from("streams").insert(insertData).select().maybeSingle()
+      const { data: _data, error } = await supabase.from("streams").insert(insertData).select().maybeSingle()
 
       if (error) {
         console.error(`[Celebrity ${requestId}] create_stream error:`, error)

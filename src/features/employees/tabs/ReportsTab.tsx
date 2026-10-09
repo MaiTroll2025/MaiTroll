@@ -6,7 +6,7 @@ import { PermissionGate } from '../components/PermissionGate'
 
 const STATUSES = ['submitted', 'received', 'under_review', 'more_info_needed', 'action_taken', 'closed', 'escalated']
 
-export default function ReportsTab({ profile, realProfile }: { profile?: any; realProfile?: any }) {
+export default function ReportsTab({ profile: _profile, realProfile }: { profile?: any; realProfile?: any }) {
   const { user } = useAuthStore()
   const [reports, setReports] = useState<any[]>([])
   const [subject, setSubject] = useState('')

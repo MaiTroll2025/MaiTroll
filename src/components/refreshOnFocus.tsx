@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Gamepad2 } from 'lucide-react'
 import GamingSetup from '@/components/broadcast/GamingSetup'
 import { supabase } from '@/lib/supabase'
@@ -204,7 +204,6 @@ export default function GamingSetupPage() {
 }
 
 function GamingSetupPageInner() {
-  const navigate = useNavigate()
   const location = useLocation()
   const { user, profile } = useAuthStore()
   const setGamingStreamId = useSetGamingStreamId()
@@ -213,6 +212,8 @@ function GamingSetupPageInner() {
 
   const [streamTitle, setStreamTitle] = useState('')
   const [selectedGame, setSelectedGame] = useState('')
+  const selectedGameRef = useRef(selectedGame)
+  selectedGameRef.current = selectedGame
   const [streamId] = useState(() => generateUUID())
   const [streamData, setStreamData] = useState<StreamData | null>(null)
   const [obsStatus, setObsStatus] = useState<ObsStatus>('idle')
@@ -245,7 +246,7 @@ function GamingSetupPageInner() {
   // The health check interval (runHealthCheck) polls the backend to detect OBS.
   // Once detected, the heartbeat keeps updated_at fresh so the stream doesn't
   // get marked stale. Enabling it before OBS is connected causes false positives.
-  const heartbeat = useObsHeartbeat({
+  const _heartbeat = useObsHeartbeat({
     streamId: streamData?.id || null,
     enabled: Boolean(streamData?.id && (isObsConnected || isLive)),
     interval: 5000,
@@ -599,7 +600,6 @@ function GamingSetupPageInner() {
 
           if (stream.stream_key) {
             setObsStatus('waiting')
-            void runHealthCheck({ silent: true, forceStream: stream })
           }
 
           return
@@ -611,7 +611,7 @@ function GamingSetupPageInner() {
             id: streamId,
             user_id: user.id,
             title: defaultTitle,
-            game_title: selectedGame || '',
+            game_title: selectedGameRef.current || '',
             category: 'gaming',
             status: 'starting',
             is_live: false,
@@ -980,18 +980,11 @@ function GamingSetupPageInner() {
       setIsObsConnected(true)
       setErrorMessage(null)
 
-      await supabase.functions.invoke('notify-stream-live', {
-        body: {
-          streamId: streamData.id,
-          userId: user.id,
-          category: 'gaming',
-        },
-      })
     } catch (err: any) {
       console.error('[GamingSetupPage] Failed to go live:', err)
       toast.error(err?.message || 'Failed to go live')
     }
-  }, [streamData, user?.id, runHealthCheck, applyStreamState, navigate])
+  }, [streamData, user?.id, runHealthCheck, applyStreamState])
 
   const handleTestStream = useCallback(async () => {
     if (!streamData?.id) {

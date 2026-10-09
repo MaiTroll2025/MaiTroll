@@ -19,7 +19,7 @@ interface BattleGiftPanelProps {
 }
 
 export default function BattleGiftPanel({
-  streamId,
+  streamId: _streamId,
   battleId,
   challengerStreamId,
   opponentStreamId,
@@ -29,14 +29,14 @@ export default function BattleGiftPanel({
   opponentTitle = 'Side B',
   onGiftSent,
 }: BattleGiftPanelProps) {
-  const { user, profile } = useAuthStore();
+  const { user, profile: _profile } = useAuthStore();
   const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [selectedSide, setSelectedSide] = useState<'A' | 'B'>('A');
   const [isLoading, setIsLoading] = useState(true);
   const [sendingGiftId, setSendingGiftId] = useState<string | null>(null);
 
   const recipientId = selectedSide === 'A' ? challengerHostId : opponentHostId;
-  const targetStreamId = selectedSide === 'A' ? challengerStreamId : opponentStreamId;
+  const _targetStreamId = selectedSide === 'A' ? challengerStreamId : opponentStreamId;
 
   const { sendGift, isSending } = useGiftSystem();
 

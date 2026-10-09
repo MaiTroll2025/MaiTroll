@@ -213,7 +213,7 @@ export function useBroadcastRealtime({
         },
         (payload) => {
           const newData = payload.new as any;
-          const oldData = payload.old as any;
+          const _oldData = payload.old as any;
 
           setState(prev => {
             if (newData.status === 'ended' || newData.is_live === false) {

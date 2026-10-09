@@ -36,8 +36,10 @@ export function useCityStatus(userId?: string | null) {
     setLoading(true)
     setError(null)
 
-    void supabase
-      .rpc('get_city_status', { p_user_id: targetUserId })
+    void Promise.resolve(
+      supabase
+        .rpc('get_city_status', { p_user_id: targetUserId })
+    )
       .then(({ data, error: rpcError }) => {
         if (cancelled) return
         if (rpcError) throw rpcError

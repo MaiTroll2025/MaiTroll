@@ -22,13 +22,7 @@ import { toast } from 'sonner'
 import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../../lib/store'
 import type { EmployeeProfileLike } from '../permissions'
-import {
-  canViewDocument,
-  getDocumentSensitivity,
-  isAdmin as isAdminProfile,
-  isLeadOrSecretary,
-  type AccessProfileLike,
-} from '../../../lib/documentAccess'
+import { getDocumentSensitivity, isAdmin as isAdminProfile, isLeadOrSecretary, type AccessProfileLike } from '../../../lib/documentAccess';
 import type { DocumentFormProps } from '../components/documents/DocumentFormShell'
 
 const DOCS_BUCKET = 'employee-documents'
@@ -268,7 +262,7 @@ export default function DocumentsTab({
   const viewerIsLeadOrSecretary =
     !viewerIsAdmin && isLeadOrSecretary(viewerProfile)
 
-  const [templates, setTemplates] = useState<DocTemplate[]>([])
+  const [_templates, setTemplates] = useState<DocTemplate[]>([])
   const [items, setItems] = useState<DocItem[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)

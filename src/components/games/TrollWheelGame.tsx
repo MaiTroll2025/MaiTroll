@@ -1,11 +1,12 @@
 // TrollWheelGame.tsx - Enhanced Troll Wheel with Bankruptcy, Special Items, Ghost Mode, and Broadcast Abilities
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coins, Gem, RotateCw, Ghost, Star, Package, Zap, Shield, ShieldCheck, Sparkles } from 'lucide-react';
-import { BROADCAST_ABILITIES, getAbilityById, getRarityColor, getRarityGlow, AbilityId } from '@/types/broadcastAbilities';
+import { Coins, Gem, RotateCw, Package, Zap } from 'lucide-react';
+import { BROADCAST_ABILITIES, getAbilityById, AbilityId } from '@/types/broadcastAbilities';
+import { useNavigate } from 'react-router-dom';
 
 // Sound effects using Web Audio API for generating sounds
 const playSpinSound = () => {
@@ -25,7 +26,7 @@ const playSpinSound = () => {
     
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.3);
-  } catch (e) { console.warn('Sound not available'); }
+  } catch (_e) { console.warn('Sound not available'); }
 };
 
 const playWinSound = () => {
@@ -49,7 +50,7 @@ const playWinSound = () => {
       oscillator.start(audioContext.currentTime + i * 0.1);
       oscillator.stop(audioContext.currentTime + i * 0.1 + 0.3);
     });
-  } catch (e) { console.warn('Sound not available'); }
+  } catch (_e) { console.warn('Sound not available'); }
 };
 
 const playBankruptSound = () => {
@@ -73,7 +74,7 @@ const playBankruptSound = () => {
       oscillator.start(audioContext.currentTime + i * 0.15);
       oscillator.stop(audioContext.currentTime + i * 0.15 + 0.2);
     });
-  } catch (e) { console.warn('Sound not available'); }
+  } catch (_e) { console.warn('Sound not available'); }
 };
 
 const playTrolledSound = () => {
@@ -97,7 +98,7 @@ const playTrolledSound = () => {
       oscillator.start(audioContext.currentTime + i * 0.2);
       oscillator.stop(audioContext.currentTime + i * 0.2 + 0.25);
     });
-  } catch (e) { console.warn('Sound not available'); }
+  } catch (_e) { console.warn('Sound not available'); }
 };
 
 interface TrollWheelProps {
@@ -140,11 +141,11 @@ const WHEEL_REWARDS: WheelReward[] = [
   // Special rewards
   { id: 14, type: 'bankrupt', coins: 0, label: 'BANKRUPT', description: 'Lose ALL your Trollmonds!', rarity: 'special', color: '#1a1a1a', glowColor: '#000000', icon: '💀' },
   { id: 15, type: 'trolled', coins: 0, label: 'TROLLED!', description: 'No spins for 24 hours!', rarity: 'special', color: '#dc2626', glowColor: '#ef4444', icon: '🤡' },
-  { id: 21, type: 'blockers', coins: 0, label: '+5 BLOCKERS', description: '5 Property Blockers!', rarity: 'rare', color: '#06b6d4', glowColor: '#22d3ee', icon: '🛡️' },
+  { id: 16, type: 'blockers', coins: 0, label: '+5 BLOCKERS', description: '5 Property Blockers!', rarity: 'rare', color: '#06b6d4', glowColor: '#22d3ee', icon: '🛡️' },
 ];
 
 // Additional special items that can be won (weighted lower)
-const SPECIAL_REWARDS: WheelReward[] = [
+const _SPECIAL_REWARDS: WheelReward[] = [
   { id: 16, type: 'ghost_mode', coins: 0, label: 'GHOST MODE', description: 'Hide from broadcast for 24 hours!', rarity: 'special', color: '#6b7280', glowColor: '#9ca3af', icon: '👻' },
   { id: 17, type: 'free_perk', coins: 0, label: 'FREE PERK', description: 'Get a free perk from Coin Store!', rarity: 'special', color: '#14b8a6', glowColor: '#2dd4bf', icon: '✨' },
    { id: 18, type: 'free_jail', coins: 0, label: 'JAIL FREE', description: 'Get out of jail free card!', rarity: 'special', color: '#10b981', glowColor: '#34d399', icon: '🚪' },
@@ -169,7 +170,7 @@ const FULL_WHEEL_REWARDS: WheelReward[] = [...WHEEL_REWARDS, ...ABILITY_REWARDS]
 
 const SPIN_COST = 10;
 const FREE_SPINS_PER_DAY = 5;
-const SEGMENT_ANGLE = 360 / WHEEL_REWARDS.length;
+const _SEGMENT_ANGLE = 360 / WHEEL_REWARDS.length;
 
 
 // Dynamic bid multipliers - cost scales with bid amount
@@ -463,7 +464,7 @@ const TireSparks = () => {
 };
 
 // Coin Particles
-const CoinParticles = ({ show }: { show: boolean }) => {
+const _CoinParticles = ({ show }: { show: boolean }) => {
   if (!show) return null;
   return (
     <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
@@ -501,20 +502,21 @@ interface WheelInventoryItem {
 
 export default function TrollWheelGame({ 
   userBalance, 
-  trollmondBalance = 0, 
+  trollmondBalance: _trollmondBalance = 0, 
   onBalanceChange,
-  onTrollmondChange,
+  onTrollmondChange: _onTrollmondChange,
 }: TrollWheelProps) {
   const { profile } = useAuthStore();
+  const navigate = useNavigate();
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinKey, setSpinKey] = useState(0); // Force re-render after spin
   const [rotation, setRotation] = useState(0);
   const [selectedMultiplier, setSelectedMultiplier] = useState(1);
-  const [winningIndex, setWinningIndex] = useState<number | null>(null);
+  const [_winningIndex, setWinningIndex] = useState<number | null>(null);
   
   // Wheel balance state (separate from user's trollmonds)
   const [wheelBalance, setWheelBalance] = useState(0);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [_sessionId, setSessionId] = useState<string | null>(null);
   const [sessionData, setSessionData] = useState<{ bankrupt_landed: boolean; total_spins: number } | null>(null);
   const [freeSpinsUsed, setFreeSpinsUsed] = useState(0);
   
@@ -589,7 +591,7 @@ export default function TrollWheelGame({
         const { data: spinsUsed } = await supabase
           .rpc('get_daily_free_spins', { p_user_id: profile.id });
         setFreeSpinsUsed(spinsUsed || 0);
-      } catch (e) {
+      } catch (_e) {
         // Fallback: query the table directly
         try {
           const { data: record } = await supabase
@@ -706,7 +708,7 @@ export default function TrollWheelGame({
     setFreeSpinsUsed(prev => prev + 1);
     try {
       await supabase.rpc('use_daily_free_spin', { p_user_id: profile.id });
-    } catch (e) {
+    } catch (_e) {
       // Fallback: direct upsert
       try {
         const today = new Date().toISOString().split('T')[0];
@@ -843,7 +845,7 @@ export default function TrollWheelGame({
                  trollmonds: 0
                })
                .eq('id', profile.id);
-           } catch (e) { /* ignore */ }
+           } catch (_e) { /* ignore */ }
            message = `💸 BANKRUPT! Lost ALL Trollmonds (-${trollmondsLost.toLocaleString()})!`;
         } else if (result.type === 'trolled') {
         playTrolledSound();
@@ -898,7 +900,7 @@ export default function TrollWheelGame({
           reward_type: result.type,
           reward_amount: finalCoins,
         });
-      } catch (e) { console.warn('Failed to record spin'); }
+      } catch (_e) { console.warn('Failed to record spin'); }
     } catch (err) {
       console.error('[TrollWheel] Error in finishSpin:', err);
     } finally {
@@ -981,7 +983,7 @@ export default function TrollWheelGame({
      }
    };
   
-  const collectWheelBalance = async () => {
+  const _collectWheelBalance = async () => {
     if (wheelBalance <= 0) return;
     
     try {

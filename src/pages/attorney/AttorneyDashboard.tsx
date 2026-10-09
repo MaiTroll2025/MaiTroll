@@ -3,27 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../lib/store'
 import { supabase } from '../../lib/supabase'
 import { toast } from 'sonner'
-import {
-  BadgeCheck,
-  Banknote,
-  Briefcase,
-  Building2,
-  CheckCircle,
-  Clock,
-  FileText,
-  Gavel,
-  Loader2,
-  LockKeyhole,
-  Plus,
-  Save,
-  Scale,
-  ScrollText,
-  Shield,
-  Trash2,
-  User,
-  Users,
-  X
-} from 'lucide-react'
+import { Banknote, Briefcase, Building2, Clock, FileText, Gavel, Loader2, LockKeyhole, Plus, Save, Scale, ScrollText, Shield, Trash2, User, Users, X } from 'lucide-react';
 
 interface AttorneyCase {
   id: string

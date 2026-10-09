@@ -25,6 +25,7 @@ function isPublicRoute(pathname: string): boolean {
   if (pathname.startsWith('/music/')) return true
   if (pathname.startsWith('/utromail/')) return true
   if (pathname.startsWith('/tromail/')) return true
+  if (pathname.startsWith('/legal/')) return true
   if (pathname.startsWith('/mai-business')) return true
   if (pathname.startsWith('/family/')) return true
   if (pathname.startsWith('/government/')) return true

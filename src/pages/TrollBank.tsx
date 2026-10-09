@@ -6,11 +6,10 @@ import { useCoins } from '@/lib/hooks/useCoins'
 import { toast } from 'sonner'
 import { Coins, CreditCard, Landmark, History, AlertCircle, CheckCircle, Lock, Plus, ArrowUpRight, CalendarClock, AlertTriangle, Clock, TrendingDown } from 'lucide-react'
 import { MaiTrollTheme } from '@/styles/trollCityTheme'
-import SquarePaymentModal from '@/components/broadcast/SquarePaymentModal'
 import TrollCardSaver from '@/components/payments/TrollCardSaver'
 import { useAuthStore } from '@/lib/store'
 
-function getDaysUntilDue(dueDate: string | null): number | null {
+function _getDaysUntilDue(dueDate: string | null): number | null {
   if (!dueDate) return null;
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -533,7 +532,7 @@ export default function TrollBank() {
 
                             setSavedCards(prev => prev.map(c => ({ ...c, is_default: c.id === card.id })))
                             toast.success('Default payment method updated')
-                          } catch (err: any) {
+                          } catch (_err: any) {
                             toast.error('Failed to set default')
                           }
                         }}
@@ -557,7 +556,7 @@ export default function TrollBank() {
 
                           setSavedCards(prev => prev.filter(c => c.id !== card.id))
                           toast.success('Payment method removed')
-                        } catch (err: any) {
+                        } catch (_err: any) {
                           toast.error('Failed to remove payment method')
                         }
                       }}

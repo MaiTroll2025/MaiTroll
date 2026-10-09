@@ -1,5 +1,11 @@
-import { supabase, PostgrestError, PostgrestResponse } from './supabase';
+import { supabase } from './supabase';
 import { reportSupabaseError } from './bugReporter';
+
+type PostgrestError = any;
+type PostgrestResponse<T> = {
+  data: T | null;
+  error: PostgrestError | null;
+};
 
 type SafeQueryOptions = {
   table?: string;
@@ -28,7 +34,7 @@ export async function safeSelect<T>(
     });
   }
 
-  return { data, error } as PostgrestResponse<T>;
+  return { data: data as T | null, error };
 }
 
 /**
@@ -53,7 +59,7 @@ export async function safeInsert<T>(
     });
   }
 
-  return { data, error } as PostgrestResponse<T[] | T>;
+  return { data: data as T[] | T | null, error };
 }
 
 /**
@@ -78,7 +84,7 @@ export async function safeUpdate<T>(
     });
   }
 
-  return { data, error } as PostgrestResponse<T[] | T>;
+  return { data: data as T[] | T | null, error };
 }
 
 /**
@@ -101,7 +107,7 @@ export async function safeDelete(
     });
   }
 
-  return { data, error } as PostgrestResponse<Record<string, never>>;
+  return { data: data as Record<string, never> | null, error };
 }
 
 /**

@@ -9,7 +9,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Trophy, MapPin, X, Flag } from 'lucide-react';
+import { Swords, X, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getStateName } from '@/config/usStates';
 
@@ -33,7 +33,7 @@ export default function StateBattleBanner({
   scoreA,
   scoreB,
   battleEndTime,
-  isBroadcaster,
+  isBroadcaster: _isBroadcaster,
   onDismiss,
 }: StateBattleBannerProps) {
   const [now, setNow] = useState(Date.now());

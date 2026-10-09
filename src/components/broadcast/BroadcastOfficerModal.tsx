@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Shield, UserPlus, UserMinus, Search, RefreshCw, Coins, Gift } from 'lucide-react'
+import { X, Shield, UserMinus, Search, RefreshCw, Coins, Gift } from 'lucide-react';
 import { supabase } from '../../lib/supabase'
 import { toast } from 'sonner'
 import PayBroadOfficersModal from './PayBroadOfficersModal'

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, LogOut, UserCircle, Zap, Monitor, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
+import { Bell, BellRing, LogOut, Zap, Monitor, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
@@ -11,7 +11,6 @@ import { useUserFrame } from '@/hooks/useUserFrame'
 
 import ProfileDropdown from './ui/ProfileDropdown'
 import PresidentialToolsModal from './PresidentialToolsModal'
-import { TMButton } from './trollmatch/TMButton'
 import MaiNetworkSwitcher from './mai-network/MaiNetworkSwitcher'
 import RGBSearchBar from './header/RGBSearchBar'
 import GlobalTicker from './header/GlobalTicker'
@@ -52,7 +51,7 @@ const Header = () => {
     setShowDesktopDownload(isDesktopPlatform())
   }, [])
 
-  const { isElectron, updateStatus, checkForUpdate, downloadUpdate, installUpdate, dismissUpdate } = useAutoUpdate()
+  const { isElectron, updateStatus, checkForUpdate: _checkForUpdate, downloadUpdate, installUpdate, dismissUpdate: _dismissUpdate } = useAutoUpdate()
   const showMobileButtons = !isElectron && isPhone
 
   const canDebugPush =

@@ -2,7 +2,7 @@
 // Auction Me UI component for broadcast and viewer
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Crown, X, Play, AlertCircle, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/store';
@@ -17,8 +17,8 @@ interface AuctionMePanelProps {
 export default function AuctionMePanel({ streamId, onClose }: AuctionMePanelProps) {
   const [selectedTitle, setSelectedTitle] = useState<AuctionMeTitleType>('husband');
   const [startingBid, setStartingBid] = useState(10);
-  const { state, timeRemaining, timeRemainingFormatted, loading, error, start, bid, end, cancel, refreshState, isBroadcaster, isHighestBidder } = useAuctionMe(streamId);
-  const user = useAuthStore((s) => s.profile);
+  const { state, timeRemaining: _timeRemaining, timeRemainingFormatted, loading, error, start, bid, end, cancel, refreshState: _refreshState, isBroadcaster, isHighestBidder } = useAuctionMe(streamId);
+  const _user = useAuthStore((s) => s.profile);
   const [bidInput, setBidInput] = useState('');
 
   const handleStart = async () => {
@@ -64,7 +64,7 @@ export default function AuctionMePanel({ streamId, onClose }: AuctionMePanelProp
     }
   };
 
-  const getWinnerTitle = () => {
+  const _getWinnerTitle = () => {
     if (!state?.title_type || !state?.broadcaster_name) return '';
     return `${state.broadcaster_name}'s ${state.title_type === 'husband' ? 'Husband' : 'Wife'}`;
   };

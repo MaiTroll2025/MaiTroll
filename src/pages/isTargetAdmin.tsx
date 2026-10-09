@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
@@ -7,11 +7,7 @@ import { usePresenceStore } from '@/lib/presenceStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useStaffWalkieTalkieContext } from '@/components/StaffWalkieTalkieProvider';
 import { toast } from 'sonner';
-import {
-  Activity, BarChart3, Bug, Clock, Coins, Mail, Monitor, MoreVertical,
-  Radio, RefreshCw, Send, Pause, Search, Shield, ShieldAlert, TrendingUp,
-  UserPlus, Users, X, Stamp, FileText,
-} from 'lucide-react';
+import { Activity, BarChart3, Bug, Clock, Coins, Mail, Monitor, MoreVertical, Radio, RefreshCw, Send, Pause, Search, Shield, ShieldAlert, TrendingUp, UserPlus, Users, X, Stamp } from 'lucide-react';
 import BugCenterPanel from '../components/admin/BugCenterPanel';
 import StaffWalkieTalkieButton from '@/components/StaffWalkieTalkieButton';
 import NotaryDashboard from './NotaryDashboard';
@@ -166,14 +162,14 @@ const { profile } = useAuthStore();
   const onlineCount = usePresenceStore((state) => state.onlineCount);
   
   const {
-    isConnected,
-    isSpeaking,
-    isJoining,
-    remoteUsers,
-    error,
-    joinWalkieTalkie,
-    leaveWalkieTalkie,
-    toggleSpeaking,
+    isConnected: _isConnected,
+    isSpeaking: _isSpeaking,
+    isJoining: _isJoining,
+    remoteUsers: _remoteUsers,
+    error: _error,
+    joinWalkieTalkie: _joinWalkieTalkie,
+    leaveWalkieTalkie: _leaveWalkieTalkie,
+    toggleSpeaking: _toggleSpeaking,
     canAccessWalkieTalkie: contextCanAccessWalkieTalkie,
   } = useStaffWalkieTalkieContext();
 
@@ -209,7 +205,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
 
   // State to track if we should show a flashing notification for new signups
   const [showSignupFlash, setShowSignupFlash] = useState(false);
-  const prevTotalUsersRef = useRef<number | null>(null);
+  const _prevTotalUsersRef = useRef<number | null>(null);
 
   const [actionTarget, setActionTarget] = useState<UserListItem | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
@@ -262,15 +258,15 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     const [lastTromailFetch, setLastTromailFetch] = useState<Date>(new Date());
 
     // Notary state
-    const [notarySubTab, setNotarySubTab] = useState<'pending' | 'approved' | 'rejected' | 'logs'>('pending');
-    const [notaryDocuments, setNotaryDocuments] = useState<any[]>([]);
-    const [notaryLoading, setNotaryLoading] = useState(false);
+    const [_notarySubTab, _setNotarySubTab] = useState<'pending' | 'approved' | 'rejected' | 'logs'>('pending');
+    const [_notaryDocuments, setNotaryDocuments] = useState<any[]>([]);
+    const [_notaryLoading, setNotaryLoading] = useState(false);
 
     // Walkie-talkie state for LiveKit mic muting coordination
-   const [walkieTalkieMutedLiveKit, setWalkieTalkieMutedLiveKit] = useState(false);
+   const [_walkieTalkieMutedLiveKit, _setWalkieTalkieMutedLiveKit] = useState(false);
 
 // Walkie-talkie allowed roles (same as in StaffWalkieTalkieProvider)
-    const WALKIE_TALKIE_ALLOWED_ROLES = [
+    const _WALKIE_TALKIE_ALLOWED_ROLES = [
       'admin', 'ceo', 'staff', 'officer', 'broadofficer',
       'troll_officer', 'lead_troll_officer', 'secretary', 'president',
       'agency_hr', 'agency_hr_manager', 'agency_leader', 'attorney',
@@ -773,7 +769,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
              const courtDateStr = nextCourtDate.toISOString().split('T')[0];
 
               // 1. Create jail record
-              const arrestDate = new Date().toISOString();
+              const _arrestDate = new Date().toISOString();
 
               // Look up arrested user's IP geolocation for geofence device tracking
               const { data: userIpRecords } = await supabase

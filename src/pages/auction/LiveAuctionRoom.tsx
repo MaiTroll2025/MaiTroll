@@ -6,45 +6,7 @@ import AgoraRTC, {
   type ICameraVideoTrack,
   type IMicrophoneAudioTrack,
 } from 'agora-rtc-sdk-ng'
-import {
-  AlertCircle,
-  ArrowLeft,
-  BadgeCheck,
-  Bell,
-  CalendarDays,
-  CheckCircle,
-  ChevronRight,
-  Clock,
-  Coins,
-  Eye,
-  EyeOff,
-  Flag,
-  Gavel,
-  Heart,
-  Loader2,
-  Lock,
-  Maximize2,
-  Megaphone,
-  MessageCircle,
-  Mic,
-  MicOff,
-  Package,
-  Send,
-  Share2,
-  Shield,
-  SlidersHorizontal,
-  Sparkles,
-  Store,
-  Truck,
-  Trophy,
-  Users,
-  Video,
-  VideoOff,
-  Volume2,
-  VolumeX,
-  XCircle,
-  Zap,
-} from 'lucide-react'
+import { AlertCircle, ArrowLeft, BadgeCheck, Bell, CalendarDays, CheckCircle, ChevronRight, Clock, Coins, Eye, EyeOff, Flag, Gavel, Heart, Loader2, Lock, Maximize2, Megaphone, MessageCircle, Mic, MicOff, Package, Send, Share2, Shield, SlidersHorizontal, Sparkles, Store, Truck, Trophy, Video, VideoOff, Volume2, VolumeX, XCircle, Zap } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -147,7 +109,7 @@ interface PlaceBidResult {
   new_highest_bid?: number
 }
 
-  const MIN_COINS_TO_BID = 0
+  const _MIN_COINS_TO_BID = 0
   const GLOBAL_AGORA_JOIN_LOCKS = new Set<string>()
 
 const CATEGORY_CHIPS = [
@@ -277,7 +239,7 @@ export default function LiveAuctionRoom() {
   const [agoraConnected, setAgoraConnected] = useState(false)
   const [remoteReady, setRemoteReady] = useState(false)
   const [agoraError, setAgoraError] = useState<string | null>(null)
-  const [agoraReadyToRetry, setAgoraReadyToRetry] = useState(false)
+  const [_agoraReadyToRetry, setAgoraReadyToRetry] = useState(false)
 
   // Display text (announcement from auctioneer)
   const [displayText, setDisplayText] = useState<string>('')

@@ -8,7 +8,7 @@ export default function HomeTab({ profile }: { profile?: any; realProfile?: any 
   const [stats, setStats] = useState<any>({
     tasks: 0, announcements: 0, pendingReports: 0,
   })
-  const [loading, setLoading] = useState(true)
+  const [_loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return

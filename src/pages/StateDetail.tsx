@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Trophy, Crown, Swords, TrendingUp, TrendingDown, Users, Loader2, Flag } from 'lucide-react';
+import { ChevronLeft, Trophy, Crown, Swords, TrendingUp, TrendingDown, Loader2, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { getStateName } from '@/config/usStates';

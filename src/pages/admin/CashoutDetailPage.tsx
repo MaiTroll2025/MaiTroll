@@ -1,18 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import {
-  DollarSign,
-  Coins,
-  Upload,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  ArrowLeft,
-  FileText,
-  User as UserIcon,
-  ShieldCheck,
-} from 'lucide-react';
+import { DollarSign, Upload, CheckCircle, XCircle, Clock, AlertCircle, ArrowLeft, FileText, User as UserIcon, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
@@ -94,6 +82,7 @@ export default function AdminCashoutDetailPage() {
           paid_at: d.paid_at,
           payment_reference: d.payment_reference,
            fee_coins: d.fee_coins || 0,
+          rejection_reason: d.rejection_reason,
           notes: d.notes,
           troll_coins: d.user_profiles?.troll_coins || 0,
         });

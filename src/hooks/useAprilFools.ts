@@ -7,25 +7,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  isAprilFoolsActive,
-  canTriggerPrank,
-  recordPrankUsed,
-  selectRandomPrank,
-  getRandomPopup,
-  getRandomLoadingMessage,
-  getRandomRealityMessage,
-  getRandomPresidentAnnouncement,
-  getRandomFakeNotification,
-  getRandomFakeItem,
-  getRandomFakeCharge,
-  getRemainingPranks,
-  getMsUntilAprilFoolsEnds,
-  APRIL_FOOLS_CSS,
-  type PrankType,
-  type PopupMessage,
-  type PrankDefinition,
-} from '../lib/events/aprilFools';
+import { isAprilFoolsActive, canTriggerPrank, recordPrankUsed, selectRandomPrank, getRandomPopup, getRandomLoadingMessage, getRandomRealityMessage, getRandomPresidentAnnouncement, getRandomFakeNotification, getRemainingPranks, getMsUntilAprilFoolsEnds, APRIL_FOOLS_CSS, type PrankType, type PopupMessage, type PrankDefinition } from '../lib/events/aprilFools';
 
 export interface AprilFoolsState {
   isActive: boolean;

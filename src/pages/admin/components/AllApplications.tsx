@@ -30,11 +30,11 @@ export default function AllApplications() {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Modal State
-  const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
-  const [scheduleDate, setScheduleDate] = useState('')
-  const [scheduleTime, setScheduleTime] = useState('')
-  const [isScheduling, setIsScheduling] = useState(false)
+  const [_showScheduleModal, _setShowScheduleModal] = useState(false)
+  const [_selectedApp, _setSelectedApp] = useState<Application | null>(null)
+  const [_scheduleDate, _setScheduleDate] = useState('')
+  const [_scheduleTime, _setScheduleTime] = useState('')
+  const [_isScheduling, _setIsScheduling] = useState(false)
 
   const loadApplications = async (skipLoadingState = false) => {
     if (loadingRef.current) return
@@ -147,7 +147,7 @@ export default function AllApplications() {
   }, [])
 
    // APPROVE via Edge Function
-   const handleApprove = async (app: Application) => {
+   const _handleApprove = async (app: Application) => {
      if (!user) return toast.error("You must be logged in")
      try {
        setLoading(true)
@@ -474,7 +474,7 @@ export default function AllApplications() {
                           ) : (
                             <>
                               <button 
-                                onClick={() => initiateApprove(app)} 
+                                onClick={() => _handleApprove(app)} 
                                 className="px-3 py-2 bg-green-600 text-white text-xs rounded-lg flex items-center gap-1"
                               >
                                 <Check className="w-3 h-3" /> Approve

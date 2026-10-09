@@ -176,6 +176,11 @@ export default function NightWatchDashboard() {
   const [reports, setReports] = useState<PatrolReport[]>([])
   const [liveKitError, setLiveKitError] = useState<string | null>(null)
 
+  const [recordings, setRecordings] = useState<PatrolRecording[]>([])
+  const [recorder, _setRecorder] = useState<any>(null)
+  const [recordingActive, setRecordingActive] = useState(false)
+  const [recordingSessionId, setRecordingSessionId] = useState<string | null>(null)
+
   const selectedStreamId = selectedStream?.id || ''
 
   const patrolRoomName = useMemo(() => {

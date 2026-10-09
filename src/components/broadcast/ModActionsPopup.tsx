@@ -1,11 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, Gift, Shield, Gavel, Ban, Eye, Clock, UserCheck, User,
-  AlertTriangle, Building2, Wallet, FileText, Users,
-  Mic, MicOff, AlertCircle, MessageSquareOff, LogOut, Power,
-  Search, Car, UserPlus, MessageSquare, Flag, Crown
-} from 'lucide-react';
+import { X, Gift, Shield, UserCheck, User, Wallet, FileText, Users, Mic, MicOff, AlertCircle, MessageSquareOff, LogOut, Power, Search, Car, UserPlus, MessageSquare, Flag, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
@@ -167,10 +162,10 @@ const ModActionsPopup = memo(function ModActionsPopup({
    const [licenseSuspendReason, setLicenseSuspendReason] = useState('');
    
    // License grant state
-   const [isGrantingLicense, setIsGrantingLicense] = useState(false);
+   const [_isGrantingLicense, setIsGrantingLicense] = useState(false);
 
    // Kick state
-   const [isKicking, setIsKicking] = useState(false);
+   const [_isKicking, setIsKicking] = useState(false);
    const [hasInsuranceProtection, setHasInsuranceProtection] = useState(false);
   
   // End stream state
@@ -181,10 +176,10 @@ const ModActionsPopup = memo(function ModActionsPopup({
   
   // Social state
   const [isFollowing, setIsFollowing] = useState(false);
-  const [showSocialReportModal, setShowSocialReportModal] = useState(false);
+  const [_showSocialReportModal, setShowSocialReportModal] = useState(false);
   const [socialReportReason, setSocialReportReason] = useState('');
   const [socialReportDescription, setSocialReportDescription] = useState('');
-  const [isSubmittingSocialReport, setIsSubmittingSocialReport] = useState(false);
+  const [_isSubmittingSocialReport, setIsSubmittingSocialReport] = useState(false);
 
   // Role invite state
   const [showRoleInviteModal, setShowRoleInviteModal] = useState(false);
@@ -204,7 +199,7 @@ const ModActionsPopup = memo(function ModActionsPopup({
    const isActorBroadcasterOrOfficer = isBroadcasterOrBroadofficer(profile);
    const isActorAdmin = profile?.role === 'admin' || profile?.troll_role === 'admin' || profile?.is_admin === true;
    const isAuthorizedRole = isActorAdmin ||
-     profile?.role === 'judge' || profile?.troll_role === 'judge' ||
+      (profile?.role as string) === 'judge' || profile?.troll_role === 'judge' ||
      profile?.role === 'lead_troll_officer' || profile?.troll_role === 'lead_troll_officer' || profile?.is_lead_officer === true ||
      profile?.role === 'secretary' || profile?.troll_role === 'secretary' || profile?.is_secretary === true ||
      profile?.role === 'troll_officer' || profile?.troll_role === 'troll_officer' || profile?.is_troll_officer === true;
@@ -292,7 +287,7 @@ const ModActionsPopup = memo(function ModActionsPopup({
   };
 
   // Check if target is host
-  const isTargetHost = targetUserId === hostId;
+  const _isTargetHost = targetUserId === hostId;
 
   // Check insurance status for kick
   useEffect(() => {
@@ -383,13 +378,11 @@ const ModActionsPopup = memo(function ModActionsPopup({
         return;
       }
       toast.success(res.message || `${targetUsername} has been unmuted`);
-      setShowUnmuteModal(false);
       onUnmuteUser?.(targetUserId);
     } catch (error) {
       console.error('[ModActions] Error unmuting user:', error);
       toast.error('Failed to unmute user');
     } finally {
-      setIsUnmuting(false);
     }
   };
 
@@ -809,7 +802,7 @@ const handleEndStream = async () => {
     setShowSocialReportModal(true);
   };
 
-  const submitSocialReport = async () => {
+  const _submitSocialReport = async () => {
     if (!socialReportReason || !user) return;
     setIsSubmittingSocialReport(true);
     try {

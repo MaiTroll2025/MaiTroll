@@ -1,5 +1,5 @@
-import { useAdminAgencyAuditLog } from '../../hooks/useAdminAgency';
-import { cn } from '../../lib/utils';
+import { useAdminAgencyAuditLog } from '@/hooks/useAdminAgency';
+import { cn } from '@/lib/utils';
 import { ScrollText, Loader2, Clock, User, FileText, AlertTriangle, CheckCircle2, XCircle, Settings, Shield } from 'lucide-react';
 
 const actionConfig: Record<string, { icon: typeof ScrollText; color: string; bg: string }> = {

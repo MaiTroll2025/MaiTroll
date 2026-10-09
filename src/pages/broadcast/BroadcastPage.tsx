@@ -15,6 +15,8 @@ import { useAuthStore } from '../../lib/store'
 import { useStreamStore } from '../../lib/streamStore'
 import { cn } from '../../lib/utils'
 import { getLiveKitRoomName } from '../../lib/liveUtils'
+import { applyCameraVideoPresentation, getCameraFacingMode } from '../../lib/cameraVideoPresentation'
+import { useGetStreamRoom } from '../../hooks/useGetStreamRoom'
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration'
 import {
   getAnonymousDisplayName,
@@ -242,6 +244,10 @@ const RemoteSeatSurface = React.memo(function RemoteSeatSurface({
 
     try {
       videoTrack.attach(videoEl)
+      applyCameraVideoPresentation(videoEl, {
+        track: videoTrack.mediaStreamTrack,
+        isLocal: false,
+      })
       console.log('[Seat Video Attached]', {
         trackSid: videoTrack.sid,
         elementConnected: videoEl.isConnected,
@@ -610,6 +616,11 @@ const removeStreamChannels = async (streamId: string) => {
 const DESKTOP_AUDIENCE_TICKER_HEIGHT = 56
 
 export function BroadcastPage() {
+  useEffect(() => {
+    document.body.classList.add('broadcast-overlay-no-blur')
+    return () => document.body.classList.remove('broadcast-overlay-no-blur')
+  }, [])
+
   const params = useParams()
   const navigate = useNavigate()
   const resolvedStream = useResolvedStream()
@@ -680,8 +691,30 @@ export function BroadcastPage() {
   const [, setStreamMods] = useState<string[]>([]);
    // Accumulate gift amounts received while broadcasterProfile is still loading (null);
    // applied once the profile arrives via @see applyPendingGiftsEffect
-      const isHost = stream?.user_id === user?.id
-     const cashoutBanner = useCashoutBanner({
+const isHost = stream?.user_id === user?.id
+
+  // GetStream RTC for staff/official broadcasters
+  const getStreamRoom = useGetStreamRoom({
+    roomId: streamId || '',
+    roomType: 'broadcast',
+    role: 'publisher',
+    audioOnly: false,
+    publish: true,
+    userName: profile?.username || 'Broadcaster',
+    identity: `host_${streamId}`,
+    initialAudioEnabled: true,
+    onUserJoined: (participant) => {
+      console.log('[BroadcastPage:GetStream] User joined:', participant.userId)
+    },
+    onUserLeft: (participant) => {
+      console.log('[BroadcastPage:GetStream] User left:', participant.userId)
+    },
+    onError: (error) => {
+      console.error('[BroadcastPage:GetStream] Error:', error)
+    },
+  })
+
+  const cashoutBanner = useCashoutBanner({
        userId: user?.id,
        isEligible: isHost,
        streamId: streamId || null,
@@ -1020,9 +1053,29 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
   const timeoutsRef = useRef<Set<number>>(new Set())
   const [cameraEnabled, setCameraEnabled] = useState(true)
   const [micEnabled, setMicEnabled] = useState(true)
-  const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user')
+  const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>(() => (
+    sessionStorage.getItem('tc_camera_facing_mode') === 'environment'
+      ? 'environment'
+      : 'user'
+  ))
   const isGoingLiveRef = useRef(false)
   const streamEndedRef = useRef(false)
+
+  useEffect(() => {
+    const activeCameraTrack =
+      stream?.rtc_provider === 'getstream'
+        ? getStreamRoom.localVideoTrack
+        : localTracks?.[1]
+    if (activeCameraTrack) {
+      setCameraFacingMode(
+        getCameraFacingMode(activeCameraTrack, cameraFacingMode),
+      )
+    }
+  }, [
+    stream?.rtc_provider,
+    getStreamRoom.localVideoTrack,
+    localTracks?.[1],
+  ])
 
   const trackedTimeout = (fn: () => void, ms: number) => {
     const id = window.setTimeout(() => {
@@ -1633,6 +1686,7 @@ useEffect(() => {
   
   const hasJoinedRef = useRef(false)
   const roomRef = useRef<Room | null>(null)
+  const handleStreamEndRef = useRef<() => Promise<void>>(() => Promise.resolve())
   const liveKitConnectionKeyRef = useRef<string | null>(null)
   const anonymousViewerIdRef = useRef(`anon-viewer-${Math.random().toString(36).slice(2, 10)}`)
   const viewerCountUpdateRef = useRef(0)
@@ -3201,7 +3255,12 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
         if (error || !data?.id) return
 
-        if (data.status === 'ended' || data.is_live === false) {
+        const status = String(data.status || '').toLowerCase()
+        const isStarting = ['starting', 'pending', 'scheduled', 'created'].includes(status)
+        const isTerminal =
+          ['ended', 'failed', 'cancelled', 'canceled', 'completed'].includes(status)
+
+        if (isTerminal || (data.is_live === false && !isStarting)) {
           streamEndedRef.current = true
           stopLocalTracksRef.current()
           disconnectLiveKitRoom()
@@ -4062,6 +4121,21 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     }
     
     const initLiveKit = async () => {
+      // Check if this stream should use GetStream instead of LiveKit
+      const isGetStream = stream?.rtc_provider === 'getstream'
+      if (isGetStream && !shouldPublish) {
+        console.log('[BroadcastPage] Using GetStream for viewer')
+        try {
+          await getStreamRoom.joinAsAudience(userIdentity)
+          hasJoinedRef.current = true
+          liveKitConnectionKeyRef.current = connectionKey
+          console.log('[BroadcastPage] GetStream viewer joined successfully')
+        } catch (err) {
+          console.error('[BroadcastPage] GetStream viewer join failed:', err)
+        }
+        return
+      }
+
       if (!shouldPublish) {
         // OPTIMIZED: Don't block UI - connect in background without isJoining state
         try {
@@ -4149,7 +4223,12 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         const preflightRoom = usePreflightStore.getState().room || PreflightStore.getLivekitRoom()
         const preflightRoomName = usePreflightStore.getState().roomName || transferSession?.roomName
 
-        if (preflightRoom && preflightRoom.state === 'connected' && preflightRoomName) {
+        if (
+          stream?.rtc_provider !== 'getstream' &&
+          preflightRoom &&
+          preflightRoom.state === 'connected' &&
+          preflightRoomName
+        ) {
           console.log('[BroadcastPage] Adopting transferred SetupPage LiveKit room', {
             roomName: preflightRoom.name,
             roomState: preflightRoom.state,
@@ -4206,6 +4285,42 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
             hasVideo: !!activeVideoTrack,
             hasScreen: !!activeScreenTrack,
           })
+          return
+        }
+
+        // Check if this stream should use GetStream instead of LiveKit
+        const isGetStream = stream?.rtc_provider === 'getstream'
+        if (isGetStream) {
+          console.log('[BroadcastPage] Using GetStream for staff/official broadcast')
+          try {
+            await getStreamRoom.joinAsPublisher(userIdentity)
+            const startedAt = stream.started_at || new Date().toISOString()
+            const { error: liveError } = await supabase
+              .from('streams')
+              .update({
+                status: 'live',
+                is_live: true,
+                started_at: startedAt,
+              })
+              .eq('id', stream.id)
+              .eq('broadcaster_id', userIdentity)
+
+            if (liveError) {
+              await getStreamRoom.leaveRoom()
+              throw liveError
+            }
+
+            setStream((previous) => previous?.id === stream.id
+              ? { ...previous, status: 'live', is_live: true, started_at: startedAt }
+              : previous)
+            isGoingLiveRef.current = true
+            hasJoinedRef.current = true
+            liveKitConnectionKeyRef.current = `${stream.id}:${userIdentity}:publisher`
+            console.log('[BroadcastPage] GetStream publisher joined successfully')
+          } catch (err) {
+            console.error('[BroadcastPage] GetStream publisher join failed:', err)
+            toast.error('Unable to start the GetStream broadcast. Please try again.')
+          }
           return
         }
 
@@ -4713,6 +4828,45 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
       }
     }
   }, [cameraFacingMode, setLocalTracks])
+
+  // Camera-off auto-end (5 minutes) — works for both web and phone
+  useEffect(() => {
+    if (!isHost || !streamId || !user?.id || !stream) return
+    if (stream.status !== 'live') return
+
+    const CAMERA_OFF_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+
+    const cameraOffSinceRef = { current: null as number | null }
+    const isHostAwayRef = { current: false }
+
+    if (!cameraEnabled) {
+      if (!cameraOffSinceRef.current) {
+        cameraOffSinceRef.current = Date.now()
+      }
+    } else {
+      cameraOffSinceRef.current = null
+      if (isHostAwayRef.current) isHostAwayRef.current = false
+    }
+
+    const checkInterval = setInterval(() => {
+      if (!cameraEnabled && cameraOffSinceRef.current) {
+        const elapsed = Date.now() - cameraOffSinceRef.current
+        if (elapsed >= CAMERA_OFF_TIMEOUT_MS && !isHostAwayRef.current) {
+          isHostAwayRef.current = true
+          toast.error('Camera off for 5 minutes — ending stream')
+          void handleStreamEndRef.current()
+        } else if (elapsed >= 60 * 1000 && !isHostAwayRef.current) {
+          isHostAwayRef.current = true
+        }
+      } else {
+        if (isHostAwayRef.current) isHostAwayRef.current = false
+      }
+    }, 10_000)
+
+    return () => {
+      clearInterval(checkInterval)
+    }
+  }, [isHost, streamId, user?.id, stream?.status, cameraEnabled])
 
 const toggleMicrophone = useCallback(async () => {
     const participant = roomRef.current?.localParticipant
@@ -5492,6 +5646,7 @@ const toggleMicrophone = useCallback(async () => {
       setIsEnding(false);
     }
   }, [endBroadcastShutdown, isStaff, isEnding, stream?.id, stream?.status, stream?.is_battle, stream?.battle_id, stream?.battle_mode, user?.id]);
+  handleStreamEndRef.current = handleStreamEnd;
 
   const _handleStartBattle = useCallback(async () => {
     if (!stream || !isHost) return
@@ -6372,6 +6527,15 @@ const toggleMicrophone = useCallback(async () => {
                           alt={`${broadcasterProfile.username || 'Broadcaster'} camera off`}
                           className="h-full w-full object-cover"
                         />
+                        {!cameraEnabled && isHost && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/60 p-4">
+                            <div className="text-center">
+                              <div className="text-2xl mb-2">📵</div>
+                              <p className="text-lg font-bold text-white">Host is Away</p>
+                              <p className="text-sm text-white/70 mt-1">The host has turned off their camera. Stream will end if camera remains off for 5 minutes.</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )
                   })()}
@@ -6380,7 +6544,9 @@ const toggleMicrophone = useCallback(async () => {
                   {(() => {
                     const hostParticipant = hostParticipantRef.current
                     const hostCamTrack = isHost
-                      ? (localTracks?.[1] ?? null)
+                      ? (stream?.rtc_provider === 'getstream'
+                          ? getStreamRoom.localVideoTrack
+                          : localTracks?.[1] ?? null)
                       : (() => {
                           if (!hostParticipant) return null
                           const pubs = (hostParticipant as any).videoTrackPublications
@@ -6427,7 +6593,13 @@ const toggleMicrophone = useCallback(async () => {
                   })()}
                   {/* Host video element */}
                   <TrackAttach
-                    track={isHost ? ((localTracks?.[1] && cameraEnabled) ? localTracks[1] : null) : (() => {
+                    track={isHost
+                      ? (cameraEnabled
+                          ? stream?.rtc_provider === 'getstream'
+                            ? getStreamRoom.localVideoTrack
+                            : localTracks?.[1] ?? null
+                          : null)
+                      : (() => {
                       const hostParticipant = hostParticipantRef.current
                       if (!hostParticipant) return null
                       const pubs = (hostParticipant as any).videoTrackPublications
@@ -6438,6 +6610,8 @@ const toggleMicrophone = useCallback(async () => {
                       }
                       return null
                     })()}
+                    isLocal={isHost}
+                    facingMode={cameraFacingMode}
                   />
 
                   <TargetedGiftOverlay
@@ -6564,7 +6738,9 @@ const toggleMicrophone = useCallback(async () => {
                 {(() => {
                   const hostParticipant = hostParticipantRef.current
                   const hostCamTrack = isHost
-                    ? (localTracks?.[1] ?? null)
+                    ? (stream?.rtc_provider === 'getstream'
+                        ? getStreamRoom.localVideoTrack
+                        : localTracks?.[1] ?? null)
                     : (() => {
                         if (!hostParticipant) return null
                         const pubs = (hostParticipant as any).videoTrackPublications
@@ -6591,6 +6767,15 @@ const showFallback =
                           alt={`${broadcasterProfile.username || 'Broadcaster'} camera off`}
                           className="h-full w-full object-cover"
                         />
+                        {!cameraEnabled && isHost && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/60 p-4">
+                            <div className="text-center">
+                              <div className="text-2xl mb-2">📵</div>
+                              <p className="text-lg font-bold text-white">Host is Away</p>
+                              <p className="text-sm text-white/70 mt-1">The host has turned off their camera. Stream will end if camera remains off for 5 minutes.</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )
                   }
@@ -6614,7 +6799,13 @@ const showFallback =
 
                 {/* Host video element � mounted via TrackAttach, covers card when track available */}
                 <TrackAttach
-                  track={isHost ? ((localTracks?.[1] && cameraEnabled) ? localTracks[1] : null) : (() => {
+                  track={isHost
+                    ? (cameraEnabled
+                        ? stream?.rtc_provider === 'getstream'
+                          ? getStreamRoom.localVideoTrack
+                          : localTracks?.[1] ?? null
+                        : null)
+                    : (() => {
                     const hostParticipant = hostParticipantRef.current
                     if (!hostParticipant) return null
                     const pubs = (hostParticipant as any).videoTrackPublications
@@ -6625,6 +6816,8 @@ const showFallback =
                     }
                     return null
                   })()}
+                  isLocal={isHost}
+                  facingMode={cameraFacingMode}
                 />
 
                 {/* Gradient overlay � sits above video/fallback */}
@@ -8186,6 +8379,7 @@ const showFallback =
                       onOpenMessage={() => setIsMessagePopupOpen(true)}
                      onEndStream={handleStreamEnd}
                      onOpenCoinStore={user?.id ? handleOpenCoinStore : () => {}}
+                     onOpenWebCoinStore={user?.id ? handleOpenCoinStore : () => {}}
                      onInviteFollowers={handleInviteFollowers}
                      onToggleRGB={toggleStreamRgb}
                      onTextPopup={() => {
@@ -9259,7 +9453,15 @@ function isStaffProfile(profile: any) {
  * Attaches the video element to a permanent div via `track.attach()` in a useEffect.
  * Mirrors spin-off from BroadcastGrid.tsx LiveKitVideoPlayer for minimal standalone use.
  */
-const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVideoTrack | RemoteVideoTrack | null }) {
+const TrackAttach = React.memo(function TrackAttach({
+  track,
+  isLocal = false,
+  facingMode = 'user',
+}: {
+  track: LocalVideoTrack | RemoteVideoTrack | MediaStreamTrack | null
+  isLocal?: boolean
+  facingMode?: 'user' | 'environment'
+}) {
   const divRef = React.useRef<HTMLDivElement>(null);
   const videoElRef = React.useRef<HTMLVideoElement | null>(null);
   const hadTrackRef = React.useRef<boolean>(false);
@@ -9282,8 +9484,10 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
     const wasPresent = hadTrackRef.current;
     hadTrackRef.current = true;
 
-    const previousTrackId = (videoElRef.current?.srcObject as any)?.mediaStreamTrack?.id || (videoElRef.current?.srcObject as any)?.id || null;
-    const nextTrackId = (track as any)?.mediaStreamTrack?.id || (track as any)?.sid || null;
+    const previousTrackId = (videoElRef.current?.srcObject as MediaStream | null)?.getVideoTracks()[0]?.id || null;
+    const nextTrackId = track instanceof MediaStreamTrack
+      ? track.id
+      : (track as any)?.mediaStreamTrack?.id || (track as any)?.sid || null;
 
     if (wasPresent && previousTrackId && nextTrackId && previousTrackId === nextTrackId) {
       return;
@@ -9293,16 +9497,21 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
     const doAttach = () => {
       if (cancelled) return;
       try {
-        const el = (track as any).attach();
+        const isNativeTrack = track instanceof MediaStreamTrack;
+        const el = isNativeTrack
+          ? document.createElement('video')
+          : (track as LocalVideoTrack | RemoteVideoTrack).attach();
         if (!el || !(el instanceof HTMLVideoElement)) return;
         el.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:center;position:absolute;top:0;left:0;display:block;background:#000;';
-        // Un-mirror local front-facing camera so broadcaster sees natural movement
-        el.style.transform = track instanceof LocalVideoTrack ? 'scaleX(-1)' : 'none';
-        el.autoplay = true;
+            el.autoplay = true;
         el.muted = true;
+        el.playsInline = true;
+        if (isNativeTrack) el.srcObject = new MediaStream([track]);
         el.play?.().catch(() => {});
         if (videoElRef.current && videoElRef.current !== el) {
-          try { track.detach(videoElRef.current); } catch { /* ignore */ }
+          if (!isNativeTrack) {
+            try { (track as LocalVideoTrack | RemoteVideoTrack).detach(videoElRef.current); } catch { /* ignore */ }
+          }
         }
         videoElRef.current = el;
         div.innerHTML = '';
@@ -9318,11 +9527,27 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
     return () => {
       cancelled = true;
       if (videoElRef.current && track) {
-        try { track.detach(videoElRef.current); } catch { /* ignore */ }
+        if (track instanceof MediaStreamTrack) {
+          videoElRef.current.srcObject = null;
+        } else {
+          try { track.detach(videoElRef.current); } catch { /* ignore */ }
+        }
         videoElRef.current = null;
       }
     };
   }, [track]);
+
+  React.useEffect(() => {
+    const video = videoElRef.current
+    if (!video || !track) return
+    applyCameraVideoPresentation(video, {
+      track: track instanceof MediaStreamTrack
+        ? track
+        : (track as LocalVideoTrack | RemoteVideoTrack).mediaStreamTrack,
+      facingMode,
+      isLocal,
+    })
+  }, [track, facingMode, isLocal]);
 
   if (!track) return null;
 
@@ -9333,4 +9558,3 @@ const TrackAttach = React.memo(function TrackAttach({ track }: { track: LocalVid
       />
     );
   })
-

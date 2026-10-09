@@ -26,9 +26,9 @@ export default function PinProductModal({
   isOpen,
   onClose,
   onProductPinned,
-  shopId,
+  shopId: _shopId,
 }: PinProductModalProps) {
-  const { user, profile } = useAuthStore();
+  const { user, profile: _profile } = useAuthStore();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,7 +40,7 @@ export default function PinProductModal({
     if (!user) return;
 
     const fetchUserShop = async () => {
-      const { data, error } = await supabase
+      const { data, error: _error } = await supabase
         .from('MaiTroll_shops')
         .select('id')
         .eq('owner_id', user.id)

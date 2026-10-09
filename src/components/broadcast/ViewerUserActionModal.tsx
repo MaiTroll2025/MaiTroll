@@ -128,7 +128,7 @@ export default function ViewerUserActionModal({
             <div>
               <label className="block text-xs font-bold text-zinc-400 mb-2">Reason</label>
               <div className="space-y-2">
-                {REPORT_REASONS.map((reason) => (
+                {REPORT_REASONS.map((reason: any) => (
                   <button
                     key={reason.id}
                     type="button"

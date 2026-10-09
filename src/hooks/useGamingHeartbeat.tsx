@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 
 /**
  * useGamingHeartbeat
@@ -40,7 +39,7 @@ interface UseGamingHeartbeatReturn {
 
 export function useGamingHeartbeat({
   streamId,
-  channelName,
+  channelName: _channelName,
   enabled,
   chatTimeoutMs = 5 * 60 * 1000,    // 5 minutes
   audioTimeoutMs = 3 * 60 * 1000,    // 3 minutes
@@ -61,7 +60,7 @@ export function useGamingHeartbeat({
   const chatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const micStreamRef = useRef<MediaStream | null>(null);
+  const _micStreamRef = useRef<MediaStream | null>(null);
   const isMountedRef = useRef(true);
 
   // Reset all timers (e.g., when stream resumes)

@@ -10,6 +10,7 @@ import GiftModal from '../trollWall/GiftModal';
 import WallShareModal from '../trollWall/WallShareModal';
 import { parseTextWithLinks } from '../../lib/utils';
 import MentionTextarea from '../MentionTextarea';
+import FacebookPublishButton from '../marketing/FacebookPublishButton';
 
 interface Comment {
   id: string;
@@ -52,7 +53,7 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [_gifting, setGifting] = useState(false);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const _inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -457,6 +458,21 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <FacebookPublishButton
+          sourceType="troll_post"
+          sourceId={post.id}
+        />
+        <button
+          type="button"
+          onClick={() => setShowShareModal(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <Share2 className="h-4 w-4" />
+          Share
+        </button>
       </div>
 
       {showGiftModal && (

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
-import { Users, Crown, Search, Star, ArrowUpDown, ChevronDown, ChevronUp, Zap } from 'lucide-react'
+import { Users, Crown, Search, Star, ArrowUpDown, ChevronDown, Zap } from 'lucide-react';
 
 // Optimized types - only select needed columns
 interface FamilyRow {
@@ -39,7 +39,7 @@ export default function FamilyBrowse() {
   const [page, setPage] = useState(0)
   
   // User membership state
-  const [userFamilyId, setUserFamilyId] = useState<string | null>(null)
+  const [_userFamilyId, setUserFamilyId] = useState<string | null>(null)
   const [membershipChecked, setMembershipChecked] = useState(false)
   const [hasFamily, setHasFamily] = useState(false)
 
@@ -468,7 +468,7 @@ interface FamilyCardProps {
 }
 
 function FamilyCard({ family, onJoin, onView }: FamilyCardProps) {
-  const [showJoinConfirm, setShowJoinConfirm] = useState(false)
+  const [_showJoinConfirm, _setShowJoinConfirm] = useState(false)
   const badgeEmoji = family.emoji || '👑'
   const members = family.member_count ?? 0
 

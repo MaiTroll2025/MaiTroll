@@ -11,11 +11,6 @@ export interface SellerTierInfo {
   bgColor: string;
   borderColor: string;
   icon: string;
-  requirements: {
-    minSales: number;
-    maxFraudFlags: number;
-    maxDisputes?: number;
-  };
 }
 
 // Badge colors - Blue is reserved for Troll Officers ONLY
@@ -27,10 +22,6 @@ export const SELLER_TIER_CONFIG: Record<SellerTier, SellerTierInfo> = {
     bgColor: 'rgba(156, 163, 175, 0.1)',
     borderColor: '#9ca3af',
     icon: '📦',
-    requirements: {
-      minSales: 0,
-      maxFraudFlags: 999,
-    },
   },
   verified: {
     tier: 'verified',
@@ -39,10 +30,6 @@ export const SELLER_TIER_CONFIG: Record<SellerTier, SellerTierInfo> = {
     bgColor: 'rgba(251, 191, 36, 0.1)',
     borderColor: '#fbbf24',
     icon: '✓',
-    requirements: {
-      minSales: 20,
-      maxFraudFlags: 1,
-    },
   },
   verified_pro: {
     tier: 'verified_pro',
@@ -51,11 +38,6 @@ export const SELLER_TIER_CONFIG: Record<SellerTier, SellerTierInfo> = {
     bgColor: 'rgba(245, 158, 11, 0.1)',
     borderColor: '#f59e0b',
     icon: '⭐',
-    requirements: {
-      minSales: 20,
-      maxFraudFlags: 0,
-      maxDisputes: 3,
-    },
   },
   merchant: {
     tier: 'merchant',
@@ -64,10 +46,6 @@ export const SELLER_TIER_CONFIG: Record<SellerTier, SellerTierInfo> = {
     bgColor: 'rgba(249, 115, 22, 0.1)',
     borderColor: '#f97316',
     icon: '🏪',
-    requirements: {
-      minSales: 100,
-      maxFraudFlags: 0,
-    },
   },
   enterprise: {
     tier: 'enterprise',
@@ -76,10 +54,6 @@ export const SELLER_TIER_CONFIG: Record<SellerTier, SellerTierInfo> = {
     bgColor: 'rgba(168, 85, 247, 0.1)',
     borderColor: '#a855f7',
     icon: '🏢',
-    requirements: {
-      minSales: 500,
-      maxFraudFlags: 0,
-    },
   },
 };
 
@@ -178,33 +152,3 @@ export type SellerNotificationType =
 // ==========================================
 // TIER EVALUATION RESULT
 // ==========================================
-
-export interface TierEvaluationResult {
-  success: boolean;
-  seller_id: string;
-  old_tier: SellerTier;
-  new_tier: SellerTier;
-  upgraded: boolean;
-  downgraded: boolean;
-  completed_sales: number;
-  fraud_flags: number;
-  dispute_count: number;
-  error?: string;
-}
-
-// ==========================================
-// SELLER STATS
-// ==========================================
-
-export interface SellerStats {
-  sellerId: string;
-  sellerTier: SellerTier;
-  completedSales: number;
-  fraudFlags: number;
-  disputeCount: number;
-  positiveReviews: number;
-  negativeReviews: number;
-  averageRating: number | null;
-  totalReviews: number;
-  tierUpdatedAt: string | null;
-}

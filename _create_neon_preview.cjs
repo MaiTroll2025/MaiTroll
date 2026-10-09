@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-const fs = require('fs');
+const _fs = require('fs');
 
 (async () => {
   try {

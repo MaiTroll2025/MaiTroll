@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
-import { Coins, Play, XCircle, CheckCircle, AlertCircle, Users } from 'lucide-react';
+import { Coins, XCircle, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type AuctionShowStatus = 'draft' | 'scheduled' | 'live' | 'ended' | 'cancelled';
+type _AuctionShowStatus = 'draft' | 'scheduled' | 'live' | 'ended' | 'cancelled';
 type AuctionLotStatus = 'upcoming' | 'live' | 'sold' | 'unsold' | 'cancelled';
 
 interface AuctionShow {
@@ -88,7 +88,7 @@ function formatCoins(value?: number | null) {
   return Number(value || 0).toLocaleString();
 }
 
-function getDisplayName(profile?: UserProfile | null) {
+function _getDisplayName(profile?: UserProfile | null) {
   return profile?.username || profile?.display_name || 'Troll Citizen';
 }
 
@@ -97,13 +97,13 @@ interface LiveAuctionMiniWindowProps {
   onRequireAuth: (intent?: string) => boolean;
 }
 
-export default function LiveAuctionMiniWindow({ auction, onRequireAuth }: LiveAuctionMiniWindowProps) {
+export default function LiveAuctionMiniWindow({ auction, onRequireAuth: _onRequireAuth }: LiveAuctionMiniWindowProps) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  const [lots, setLots] = useState<AuctionLot[]>([]);
+  const [_lots, setLots] = useState<AuctionLot[]>([]);
   const [currentLot, setCurrentLot] = useState<AuctionLot | null>(null);
-  const [bids, setBids] = useState<AuctionBid[]>([]);
+  const [_bids, setBids] = useState<AuctionBid[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -113,7 +113,7 @@ export default function LiveAuctionMiniWindow({ auction, onRequireAuth }: LiveAu
   const [bidStatus, setBidStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [bidError, setBidError] = useState('');
 
-  const [isMuted, setIsMuted] = useState(false);
+  const [_isMuted, _setIsMuted] = useState(false);
 
   const isAuctioneer = useMemo(() => {
     if (!user?.id || !auction) return false;
@@ -270,7 +270,7 @@ export default function LiveAuctionMiniWindow({ auction, onRequireAuth }: LiveAu
     }
   }, [auction.id, bidAmount, currentLot, fetchLiveState, fetchUserProfile, minimumBid, user?.id, userProfile?.troll_coins]);
 
-  const quickBid = useCallback((extra: number) => {
+  const _quickBid = useCallback((extra: number) => {
     setBidAmount(String(minimumBid + extra));
   }, [minimumBid]);
 

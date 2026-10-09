@@ -1,6 +1,6 @@
 import React from 'react';
-import { AgencyTier, TIER_CONFIG } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { AgencyTier, TIER_CONFIG } from '@/types/agency';
+import { cn } from '@/lib/utils';
 import { CheckCircle2, Lock, ArrowRight } from 'lucide-react';
 
 const tierOrder: AgencyTier[] = ['none', 'bronze', 'silver', 'gold', 'legend'];

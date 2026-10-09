@@ -48,7 +48,7 @@ export function useCustomerServiceUsers() {
       const { data: profiles, error: profilesError } = await supabase
         .from("user_profiles")
         .select(
-          "id, username, display_name, email, role, license_status, created_at, is_banned, banned_until"
+          "id, username, display_name, email, role, license_status, created_at, is_banned"
         )
         .order("username", { ascending: true });
 
@@ -70,7 +70,7 @@ export function useCustomerServiceUsers() {
       // Fetch jail status
       const { data: jailData } = await supabase
         .from("jail")
-        .select("user_id, release_time, status")
+        .select("user_id, scheduled_release_at, status")
         .in(
           "user_id",
           (profiles || []).map((p) => p.id)
@@ -78,7 +78,7 @@ export function useCustomerServiceUsers() {
 
       const jailMap = new Map(
         (jailData || [])
-          .filter((j) => new Date(j.release_time) > new Date())
+          .filter((j) => new Date(j.scheduled_release_at) > new Date())
           .map((j) => [j.user_id, j])
       );
 
@@ -135,7 +135,7 @@ export function useCustomerServiceUsers() {
         const isOnline = lastSeen ? now - lastSeen < ONLINE_THRESHOLD_MS : false;
 
         let account_status = "active";
-        if (p.is_banned || (p.banned_until && new Date(p.banned_until) > new Date())) {
+        if (p.is_banned) {
           account_status = "banned";
         } else if (jail) {
           account_status = "jailed";

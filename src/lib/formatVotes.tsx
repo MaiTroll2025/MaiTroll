@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import SEOLayout, { Breadcrumb, SEOContentSection, CTASection } from './SEOLayout'
-import { Building2, Vote, Users, Scale, BookOpen, Shield, MessageSquare, Bell, Crown, Star, ArrowRight, CheckCircle, ChevronRight, Calendar, FileText, Target, UsersRound } from 'lucide-react'
+import SEOLayout, { Breadcrumb, SEOContentSection, CTASection } from '@/pages/seo/SEOLayout'
+import { Building2, Vote, Users, Scale, Shield, MessageSquare, Crown, Calendar, FileText } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 
 const governmentRoles = [
@@ -130,7 +130,7 @@ function ActiveElectionsSection() {
     }
   }, [])
 
-  const formatVotes = (num: number): string => {
+  const _formatVotes = (num: number): string => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M+'
     if (num >= 1000) return (num / 1000).toFixed(0) + 'K+'
     return num.toString()

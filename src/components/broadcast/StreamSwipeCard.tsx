@@ -9,7 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { Stream } from '../../types/broadcast';
 import { toast } from 'sonner';
-import { Eye, Heart, MessageCircle, Gift, Share2, Users, UserPlus, Coins } from 'lucide-react';
+import { Eye, MessageCircle, Gift, Share2, Users, UserPlus, Coins } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Room, RoomEvent, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack } from 'livekit-client';
 import { getLiveKitRoomName } from '../../lib/liveUtils';
@@ -68,7 +68,7 @@ interface StreamSwipeCardProps {
 }
 
 // Extended stream type with broadcaster info
-type StreamWithProfile = Stream & {
+type _StreamWithProfile = Stream & {
   broadcaster?: {
     username: string;
     avatar_url: string | null;
@@ -76,15 +76,15 @@ type StreamWithProfile = Stream & {
   };
 };
 
-export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, broadcasterCoins }: StreamSwipeCardProps) {
+export default function StreamSwipeCard({ stream, isActive, isMuted, onClose: _onClose, broadcasterCoins }: StreamSwipeCardProps) {
   const navigate = useNavigate();
-  const { user, profile } = useAuthStore();
+  const { user, profile: _profile } = useAuthStore();
   
   const [remoteUsers, setRemoteUsers] = useState<any[]>([]);
-  const [viewerCount, setViewerCount] = useState(stream.current_viewers || stream.viewer_count || 0);
-  const [likeCount, setLikeCount] = useState(stream.total_likes || 0);
+  const [viewerCount, _setViewerCount] = useState(stream.current_viewers || stream.viewer_count || 0);
+  const [_likeCount, setLikeCount] = useState(stream.total_likes || 0);
   const [isJoining, setIsJoining] = useState(false);
-  const [showJoinPrompt, setShowJoinPrompt] = useState(false);
+  const [_showJoinPrompt, _setShowJoinPrompt] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   const roomRef = useRef<Room | null>(null);
@@ -276,9 +276,9 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
        navigate('/auth?mode=signup');
        return;
      }
-     // Navigate to full stream view for gifting
-    navigate(isGaming ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`);
-   };
+      // Navigate to full stream view for gifting
+     navigate((stream.agora_channel || stream.category === 'gaming') ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`);
+    };
    
    const flushLikes = useCallback(async () => {
      if (flushInProgressRef.current) return;
@@ -328,7 +328,7 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose, br
    }, [flushLikes]);
    
    // Handle tap to view full stream
-  const handleTap = () => {
+  const _handleTap = () => {
     const isGaming = stream.agora_channel || stream.category === 'gaming';
     navigate(isGaming ? `/gaming/watch/${stream.id}?from=swipe` : `/watch/${stream.id}?from=swipe`);
   };

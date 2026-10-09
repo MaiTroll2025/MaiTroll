@@ -1,7 +1,7 @@
 /**
  * Staff Action Logging Utility
  *
- * Logs every action performed by staff members to the `staff_action_audit_log` table.
+ * Logs staff actions into the current `action_logs` JSON payload.
  * This ensures a complete audit trail of all staff activity.
  *
  * Usage:
@@ -153,7 +153,7 @@ export async function logStaffAction(log: StaffActionLog): Promise<string | null
       'pastor', 'journalist', 'ceo_assistant', 'noah_assistant',
       'president', 'vice_president', 'hr_admin', 'hr_manager',
       'agency_hr', 'agency_hr_manager', 'agency_leader',
-      'marketing_readonly', 'empire_partner', 'notary', 'broadofficer',
+      'marketing_agent', 'empire_partner', 'notary', 'broadofficer',
       'temp_city_admin', 'temp_admin', 'moderator',
       'tcnn_news_caster', 'tcnn_chief_news_caster',
     ]);
@@ -183,25 +183,34 @@ export async function logStaffAction(log: StaffActionLog): Promise<string | null
 
     if (!isStaff) return null;
 
-    // Use RPC to log (server-side captures user identity securely)
-    const { data, error } = await supabase.rpc('log_staff_action', {
-      p_action_type: log.actionType,
-      p_action_category: log.actionCategory,
-      p_target_type: log.targetType || null,
-      p_target_id: log.targetId || null,
-      p_target_name: log.targetName || null,
-      p_details: log.details || {},
-      p_route_path: log.routePath || null,
-      p_result: log.result || 'success',
-      p_error_message: log.errorMessage || null,
-    });
+    const { data, error } = await supabase
+      .from('action_logs')
+      .insert({
+        user_id: profile.id,
+        data: {
+          staff_user_id: profile.id,
+          staff_role: role || trollRole || 'staff',
+          staff_email: profile.email || null,
+          action_type: log.actionType,
+          action_category: log.actionCategory,
+          target_type: log.targetType || null,
+          target_id: log.targetId || null,
+          target_name: log.targetName || null,
+          details: log.details || {},
+          route_path: log.routePath || null,
+          result: log.result || 'success',
+          error_message: log.errorMessage || null,
+        },
+      })
+      .select('id')
+      .single();
 
     if (error) {
       console.error('[StaffAudit] Failed to log action:', error);
       return null;
     }
 
-    return data as string;
+    return data.id as string;
   } catch (err) {
     console.error('[StaffAudit] Exception logging action:', err);
     return null;

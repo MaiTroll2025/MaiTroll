@@ -2,29 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import {
-  AlertCircle,
-  ArrowRight,
-  BadgeCheck,
-  Calendar,
-  ChevronRight,
-  Clock,
-  Coins,
-  Eye,
-  Filter,
-  Gavel,
-  Loader2,
-  Play,
-  RefreshCw,
-  Scan,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  Trophy,
-  Users,
-  Video,
-  Zap,
-} from 'lucide-react'
+import { AlertCircle, ArrowRight, BadgeCheck, Calendar, ChevronRight, Clock, Coins, Eye, Filter, Gavel, Loader2, Play, RefreshCw, Scan, Search, ShieldCheck, Sparkles, Trophy, Video, Zap } from 'lucide-react';
 
 import { supabase } from '../lib/supabase'
 import { cn } from '../lib/utils'
@@ -84,7 +62,7 @@ const primaryButton =
 const secondaryButton =
   'inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-300/22 bg-cyan-400/10 px-5 py-3 text-sm font-black text-cyan-100 transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:bg-cyan-400/18 hover:text-white active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50'
 
-const darkButton =
+const _darkButton =
   'inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-5 py-3 text-sm font-black text-slate-200 transition hover:-translate-y-0.5 hover:border-cyan-300/30 hover:bg-cyan-400/10 hover:text-cyan-100 active:translate-y-0'
 
 const input =
@@ -654,7 +632,7 @@ function LoadingState() {
 
 function EmptyState({
   activeTab,
-  setActiveTab,
+  setActiveTab: _setActiveTab,
 }: {
   activeTab: TabType
   setActiveTab: (tab: TabType) => void

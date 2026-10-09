@@ -4,11 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
-import { 
-  Package, Truck, Clock, Search, 
-  ExternalLink, Coins, MapPin, Calendar,
-  ChevronDown, ChevronUp, CheckCircle
-} from 'lucide-react';
+import { Package, Truck, Clock, Search, Coins, Calendar, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 type OrderStatus = 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'refunded';

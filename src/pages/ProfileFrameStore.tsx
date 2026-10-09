@@ -11,7 +11,7 @@ import { useCoins } from '../lib/hooks/useCoins';
 import { useProfileFrameStore } from '../stores/useProfileFrameStore';
 import ProfileFrame from '../components/profile/ProfileFrame';
 import type { ProfileFrame as ProfileFrameType, FrameRarity } from '../config/profileFrames';
-import { RARITY_COLORS, RARITY_LABELS, RARITY_ORDER, sortFramesByRarity } from '../config/profileFrames';
+import { RARITY_COLORS, RARITY_LABELS, sortFramesByRarity } from '../config/profileFrames';
 import { toast } from 'sonner';
 
 const RARITY_FILTERS: { key: FrameRarity | 'all'; label: string }[] = [
@@ -30,7 +30,7 @@ export default function ProfileFrameStore() {
   const { balances } = useCoins();
   const {
     catalog,
-    ownedFrames,
+    ownedFrames: _ownedFrames,
     equippedFrame,
     loadCatalog,
     loadUserFrames,

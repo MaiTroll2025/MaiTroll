@@ -41,13 +41,13 @@ export default function PayPalPaymentModal({
   onClose,
   pkg,
   userId,
-  profile,
+  profile: _profile,
   onPaymentSuccess,
-  onSaveCard = false,
-  requireCardOnFile = false,
-  onCardSaved,
+  onSaveCard: _onSaveCard = false,
+  requireCardOnFile: _requireCardOnFile = false,
+  onCardSaved: _onCardSaved,
   saveOnly = false,
-  onProfileUpdate,
+  onProfileUpdate: _onProfileUpdate,
   requireCoins = true,
 }: PayPalPaymentModalProps) {
   const [step, setStep] = useState<PaymentStep>('select')
@@ -163,7 +163,7 @@ export default function PayPalPaymentModal({
     safelyClosePayPalButtons()
     clearPayPalContainer()
 
-    const container = paypalButtonsRef.current
+    const _container = paypalButtonsRef.current
     const localRenderKey = modalRenderKey
     renderKeyRef.current = localRenderKey
 

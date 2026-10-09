@@ -29,10 +29,10 @@ interface UserStats {
 
 export default function ExpandedStatsPanel({ isOpen, onClose }: ExpandedStatsPanelProps) {
   const { user, profile } = useAuthStore()
-  const { level, xpTotal, xpToNext, progress } = useXPStore()
+  const { level, xpTotal, xpToNext, progress: _progress } = useXPStore()
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const prevXPData = useRef({ level: 0, xpTotal: 0 })
+  const _prevXPData = useRef({ level: 0, xpTotal: 0 })
 
   useEffect(() => {
     if (!isOpen || !user?.id) return

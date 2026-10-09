@@ -6,26 +6,7 @@ import React, {
   useState,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Activity,
-  AlertTriangle,
-  Eye,
-  Gavel,
-  Loader2,
-  MessageSquareOff,
-  MicOff,
-  Radio,
-  RefreshCw,
-  Shield,
-  ShieldAlert,
-  StopCircle,
-  Users,
-  Video,
-  Waves,
-  Volume2,
-  VolumeX,
-  X,
-} from 'lucide-react'
+import { Activity, Eye, Gavel, Loader2, MessageSquareOff, MicOff, Radio, RefreshCw, Shield, ShieldAlert, StopCircle, Users, Video, Waves, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner'
 import {
   Room,
@@ -40,7 +21,6 @@ import { useAuthStore } from '@/lib/store'
 import { isBroadcastChatLockActive } from '@/lib/broadcastModeration'
 import { requestLiveKitToken } from '@/lib/livekitToken'
 
-import UserNameWithAge from '@/components/UserNameWithAge'
 
 interface OfficerLog {
   officer_id: string
@@ -104,7 +84,7 @@ function isCurrentStreamChatDisabled(stream: StreamRow) {
   })
 }
 
-function getChatLockRemainingSeconds(stream: StreamRow) {
+function _getChatLockRemainingSeconds(stream: StreamRow) {
   const until =
     stream.broadcaster?.broadcast_chat_disabled_until
 
@@ -139,7 +119,7 @@ function LiveKitMonitor({
   onDisconnected,
 }: LiveKitMonitorProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioRef = useRef<HTMLVideoElement | null>(null)
 
   const roomRef = useRef<Room | null>(null)
 

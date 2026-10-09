@@ -1,21 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Coins,
-  Gift,
-  Heart,
-  MessageCircle,
-  MoreHorizontal,
-  Radio,
-  Send,
-  Share2,
-  Sofa,
-  Sparkles,
-  UserPlus,
-  Volume2,
-  Zap,
-} from "lucide-react";
+import { ArrowLeft, Coins, Gift, Heart, MessageCircle, MoreHorizontal, Radio, Send, Share2, Sofa, UserPlus, Volume2, Zap } from "lucide-react";
 
 type ViewerTab = "chat" | "gifts" | "seats";
 

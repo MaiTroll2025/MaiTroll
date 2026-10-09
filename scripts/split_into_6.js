@@ -105,7 +105,7 @@ for (let i = 1; i <= 9; i++) {
   const filePath = join(OUTPUT_DIR, `20260727180000_initial_schema_part${partNum}.sql`);
   try {
     unlinkSync(filePath);
-  } catch (e) {
+  } catch (_e) {
     // File doesn't exist, skip
   }
 }

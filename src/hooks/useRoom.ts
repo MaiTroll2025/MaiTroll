@@ -134,8 +134,8 @@ export function useRoom({ url, token, isAdmin = false, onConnected, onDisconnect
         // Set up event listeners
         livekitRoom.on(RoomEvent.ParticipantConnected, handleParticipantConnected);
         livekitRoom.on(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected);
-        livekitRoom.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
-        livekitRoom.on(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed);
+        livekitRoom.on(RoomEvent.TrackSubscribed, handleTrackSubscribed as any);
+        livekitRoom.on(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed as any);
 
         // Get LiveKit URL from env
         const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
@@ -149,7 +149,7 @@ export function useRoom({ url, token, isAdmin = false, onConnected, onDisconnect
         await livekitRoom.connect(livekitUrl, actualToken, {
           name: roomName,
           identity: userId
-        });
+        } as any);
 
         _setRoom(livekitRoom);
         setIsConnected(true);

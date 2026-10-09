@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useFeaturedGift } from '@/hooks/useFeaturedGift'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
-import { generateUUID } from '@/lib/uuid'
 
 function formatTime(ms: number) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000))

@@ -14,12 +14,13 @@ interface ProtectionOrderFilingProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
+  initialRespondents?: Respondent[]
 }
 
 const BASE_FEE = 100
 const ADDITIONAL_FEE = 10
 
-export default function ProtectionOrderFiling({ isOpen, onClose, onSuccess }: ProtectionOrderFilingProps) {
+export default function ProtectionOrderFiling({ isOpen, onClose, onSuccess, initialRespondents }: ProtectionOrderFilingProps) {
   const { user, profile } = useAuthStore()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Respondent[]>([])
@@ -27,6 +28,15 @@ export default function ProtectionOrderFiling({ isOpen, onClose, onSuccess }: Pr
   const [searching, setSearching] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [expedited, setExpedited] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setRespondents(initialRespondents && initialRespondents.length > 0 ? initialRespondents : [])
+      setQuery('')
+      setResults([])
+      setExpedited(false)
+    }
+  }, [isOpen, initialRespondents])
 
   const total = respondents.length ? BASE_FEE + (respondents.length - 1) * ADDITIONAL_FEE : 0
   const balance = Number(profile?.troll_coins || 0)

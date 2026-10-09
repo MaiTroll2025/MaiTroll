@@ -1,11 +1,7 @@
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Play, Eye, Radio, Users, Sparkles, Crown } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { Play, Eye, Radio } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
-import LiveStreamsModule from '@/components/home/LiveStreamsModule';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
-import FeaturedBroadcasts from '@/components/broadcast/FeaturedBroadcasts';
 import { cn } from '@/lib/utils';
 
 interface GlassBentoLayoutProps {
@@ -19,11 +15,11 @@ interface GlassBentoLayoutProps {
 export default function GlassBentoLayout({
   liveItems,
   totalViewers,
-  loadingLive,
+  loadingLive: _loadingLive,
   onLiveItemClick,
   onRequireAuth,
 }: GlassBentoLayoutProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   const featured = useMemo(() => liveItems.filter(i => i.isFeatured).slice(0, 2), [liveItems]);
   const battles = useMemo(() => liveItems.filter(i => i.isBattle).slice(0, 3), [liveItems]);

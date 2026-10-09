@@ -3,22 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { toast } from 'sonner'
-import { 
-  Shield, 
-  Clock, 
-  Radio, 
-  Gavel, 
-  FileText, 
-  Gift, 
-  Megaphone,
-  BarChart,
-  AlertTriangle,
-  CheckCircle,
-  Users,
-  UserPlus,
-  UserMinus,
-  Search,
-} from 'lucide-react'
+import { Shield, Clock, Radio, Gavel, FileText, Gift, Megaphone, BarChart, AlertTriangle, CheckCircle, Users, UserMinus, Search } from 'lucide-react';
 import { MaiTrollTheme } from '../../styles/trollCityTheme'
 import { formatDistanceToNow } from 'date-fns'
 

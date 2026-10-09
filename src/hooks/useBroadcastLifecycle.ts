@@ -31,7 +31,7 @@ export interface BroadcastLifecycleActions {
 
 const BROADCAST_DURATION_MS = 50 * 60 * 1000;
 const WARNING_START_MS = 45 * 60 * 1000;
-const ENDING_START_MS = 50 * 60 * 1000;
+const _ENDING_START_MS = 50 * 60 * 1000;
 
 function getServerTimeOffset(): number {
   if (typeof window === 'undefined') return 0;
@@ -63,8 +63,8 @@ export function useBroadcastLifecycle(
     sourceType?: 'stream' | 'podcast';
   } = {}
 ): BroadcastLifecycleState & BroadcastLifecycleActions {
-  const { isBroadcaster = false, onPhaseChange, sourceType = 'stream' } = options;
-  const { user } = useAuthStore();
+  const { isBroadcaster: _isBroadcaster = false, onPhaseChange, sourceType = 'stream' } = options;
+  const { user: _user } = useAuthStore();
 
   const [phase, setPhase] = useState<BroadcastPhase>('active');
   const [startedAt, setStartedAt] = useState<Date | null>(null);

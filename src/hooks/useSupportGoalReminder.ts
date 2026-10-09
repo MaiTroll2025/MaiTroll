@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { UserProfile } from '@/lib/supabase';
 
 interface SupportGoalReminderData {
   broadcaster_user_id: string;
@@ -140,9 +139,9 @@ export const useSupportGoalReminder = () => {
           display_name: profile.full_name || profile.username,
           username: profile.username,
           avatar_url: profile.avatar_url || '',
-          current_balance,
+          current_balance: currentBalance,
           next_cashout_tier: nextTier.coin_amount,
-          coins_needed,
+          coins_needed: coinsNeeded,
           cashout_label: cashLabel
         });
       }

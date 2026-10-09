@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
@@ -28,6 +28,7 @@ interface LiveStream {
   ended_at: string | null;
   category: string | null;
   agora_channel: string | null;
+  rtc_provider: string | null;
 }
 
 interface RTSSession {
@@ -38,6 +39,7 @@ interface RTSSession {
   ended_at: string | null;
   duration_seconds: number | null;
   is_active: boolean | null;
+  rtc_provider: string | null;
 }
 
 interface StreamDetail {
@@ -53,6 +55,7 @@ interface StreamDetail {
   minutesUsed?: number;
   minutesRemaining?: number;
   giftExtensionMinutes?: number;
+  rtc_provider?: string;
 }
 
  interface StreamViewer {
@@ -172,14 +175,14 @@ const { profile } = useAuthStore();
   const onlineCount = usePresenceStore((state) => state.onlineCount);
   
   const {
-    isConnected,
-    isSpeaking,
-    isJoining,
-    remoteUsers,
-    error,
-    joinWalkieTalkie,
-    leaveWalkieTalkie,
-    toggleSpeaking,
+    isConnected: _isConnected,
+    isSpeaking: _isSpeaking,
+    isJoining: _isJoining,
+    remoteUsers: _remoteUsers,
+    error: _error,
+    joinWalkieTalkie: _joinWalkieTalkie,
+    leaveWalkieTalkie: _leaveWalkieTalkie,
+    toggleSpeaking: _toggleSpeaking,
     canAccessWalkieTalkie: contextCanAccessWalkieTalkie,
   } = useStaffWalkieTalkieContext();
 
@@ -259,22 +262,22 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   // Track the last fetch time so live-creation events don't trigger a full counter reset
   const lastRtcFetchRef = useRef<number>(0);
 
-  const [userListType, setUserListType] = useState<UserListType>(null);
+  const [_userListType, setUserListType] = useState<UserListType>(null);
   const [userList, setUserList] = useState<UserListItem[]>([]);
   const [userListLoading, setUserListLoading] = useState(false);
   const [userSearch, setUserSearch] = useState('');
 
   // State to track if we should show a flashing notification for new signups
   const [showSignupFlash, setShowSignupFlash] = useState(false);
-  const prevTotalUsersRef = useRef<number | null>(null);
+  const _prevTotalUsersRef = useRef<number | null>(null);
 
   // State to track error flash (red)
   const [showErrorFlash, setShowErrorFlash] = useState(false);
 
   // State to track new non-admin user coming online (white flash)
-  const [showOnlineFlash, setShowOnlineFlash] = useState(false);
-  const prevOnlineUserIdsRef = useRef<Set<string>>(new Set());
-  const isFirstOnlineCheckRef = useRef(true);
+  const [showOnlineFlash, _setShowOnlineFlash] = useState(false);
+  const _prevOnlineUserIdsRef = useRef<Set<string>>(new Set());
+  const _isFirstOnlineCheckRef = useRef(true);
 
   // State to track new live stream (black ring flash)
   const [showLiveFlash, setShowLiveFlash] = useState(false);
@@ -289,7 +292,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [actionAmount, setActionAmount] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [modActionLogs, setModActionLogs] = useState<ModerationActionLog[]>([]);
-  const [modLogsLoading, setModLogsLoading] = useState(false);
+  const [_modLogsLoading, setModLogsLoading] = useState(false);
 
   // Username editing state
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -310,7 +313,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [courtSummonsDefendants, setCourtSummonsDefendants] = useState<any[]>([]);
   const [courtSummonsSearch, setCourtSummonsSearch] = useState('');
   const [courtSummonsResults, setCourtSummonsResults] = useState<any[]>([]);
-  const [courtSummonsLoading, setCourtSummonsLoading] = useState(false);
+  const [_courtSummonsLoading, setCourtSummonsLoading] = useState(false);
   const [courtSummonsReason, setCourtSummonsReason] = useState('');
   const [courtSummonsCaseType, setCourtSummonsCaseType] = useState('criminal');
   const [courtSummonsSummary, setCourtSummonsSummary] = useState('');
@@ -361,10 +364,10 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     const [notaryLoading, setNotaryLoading] = useState(false);
 
     // Walkie-talkie state for LiveKit mic muting coordination
-   const [walkieTalkieMutedLiveKit, setWalkieTalkieMutedLiveKit] = useState(false);
+   const [_walkieTalkieMutedLiveKit, _setWalkieTalkieMutedLiveKit] = useState(false);
 
 // Walkie-talkie allowed roles (same as in StaffWalkieTalkieProvider)
-    const WALKIE_TALKIE_ALLOWED_ROLES = [
+    const _WALKIE_TALKIE_ALLOWED_ROLES = [
       'admin', 'ceo', 'staff', 'officer', 'broadofficer',
       'troll_officer', 'lead_troll_officer', 'secretary', 'president',
       'agency_hr', 'agency_hr_manager', 'agency_leader', 'attorney',
@@ -424,7 +427,7 @@ const fetchRTCStats = useCallback(async () => {
      try {
         const { data: allStreamsData, error: streamsError } = await supabase
           .from('streams')
-          .select('id, broadcaster_id, user_id, title, is_live, status, started_at, ended_at, category, agora_channel')
+          .select('id, broadcaster_id, user_id, title, is_live, status, started_at, ended_at, category, agora_channel, rtc_provider')
           .order('started_at', { ascending: false });
 
         if (streamsError) throw streamsError;
@@ -452,26 +455,27 @@ const fetchRTCStats = useCallback(async () => {
              .eq('id', stream.id)
              .maybeSingle();
 
-           return {
-             id: stream.id,
-             title: stream.title || 'Untitled',
-             startedAt: stream.started_at || new Date().toISOString(),
-             viewers: count || 0,
-             duration: Math.floor((currentTime - startedAt) / 1000),
-             isLive: Boolean(stream.is_live || stream.status === 'live'),
-             broadcasterId: stream.broadcaster_id,
-             userId: stream.user_id,
-             totalMinutesAllowed: Number(streamData?.total_minutes_allowed) || 360,
-             minutesUsed: Number(streamData?.minutes_used) || 0,
-             minutesRemaining: streamData?.minutes_remaining !== null ? Number(streamData?.minutes_remaining) : undefined,
-             giftExtensionMinutes: Number(streamData?.gift_extension_minutes) || 0,
-           };
+return {
+              id: stream.id,
+              title: stream.title || 'Untitled',
+              startedAt: stream.started_at || new Date().toISOString(),
+              viewers: count || 0,
+              duration: Math.floor((currentTime - startedAt) / 1000),
+              isLive: Boolean(stream.is_live || stream.status === 'live'),
+              broadcasterId: stream.broadcaster_id,
+              userId: stream.user_id,
+              totalMinutesAllowed: Number(streamData?.total_minutes_allowed) || 360,
+              minutesUsed: Number(streamData?.minutes_used) || 0,
+              minutesRemaining: streamData?.minutes_remaining !== null ? Number(streamData?.minutes_remaining) : undefined,
+              giftExtensionMinutes: Number(streamData?.gift_extension_minutes) || 0,
+              rtc_provider: stream.rtc_provider || 'livekit',
+            };
          }),
        );
 
         const { data: sessions } = await supabase
           .from('rtc_sessions')
-          .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active');
+          .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active, rtc_provider');
 
         const rtcSessions = (sessions || []) as RTSSession[];
 
@@ -535,7 +539,7 @@ const fetchRTCStats = useCallback(async () => {
 
     setSavingTotalMinutes(true);
     try {
-      const { data, error } = await supabase.rpc('set_rtc_minute_total', {
+      const { data: _data, error } = await supabase.rpc('set_rtc_minute_total', {
         p_minutes: parsed,
       });
 
@@ -699,7 +703,7 @@ const fetchRTCStats = useCallback(async () => {
     }
   }, []);
 
-  const closeUserList = useCallback(() => {
+  const _closeUserList = useCallback(() => {
     setUserListType(null);
     setUserList([]);
     setUserSearch('');
@@ -926,7 +930,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
              const courtDateStr = nextCourtDate.toISOString().split('T')[0];
 
               // 1. Create jail record
-              const arrestDate = new Date().toISOString();
+              const _arrestDate = new Date().toISOString();
 
               // Look up arrested user's IP geolocation for geofence device tracking
               const { data: userIpRecords } = await supabase
@@ -2050,28 +2054,31 @@ const renderRtcTab = () => (
            ) : (
              streamDetailsWithDuration.map((stream) => {
                const totalAllowed = stream.totalMinutesAllowed || 360;
-               const minutesUsed = stream.minutesUsed || 0;
+               const _minutesUsed = stream.minutesUsed || 0;
                const minutesRemaining = stream.minutesRemaining ?? totalAllowed;
                const giftExtension = stream.giftExtensionMinutes || 0;
                const pctRemaining = totalAllowed > 0 ? (minutesRemaining / totalAllowed) * 100 : 100;
                const isLow = minutesRemaining <= 30 && minutesRemaining > 0;
                const isCritical = minutesRemaining <= 0;
 
-               return (
-                 <button
-                   key={stream.id}
-                   type="button"
-                   onClick={() => openStreamModal(stream)}
-                   className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition-colors hover:bg-white/10"
-                 >
-                   <div className="flex items-center justify-between gap-2">
-                     <span className="truncate text-sm font-semibold text-white">{stream.title}</span>
-                     <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-300">LIVE</span>
-                   </div>
-                   <div className="mt-1 flex items-center gap-3 text-[11px] text-gray-400">
-                     <span>{stream.viewers} viewers</span>
-                     <span>{formatDuration(stream.duration)}</span>
-                   </div>
+return (
+                  <button
+                    key={stream.id}
+                    type="button"
+                    onClick={() => openStreamModal(stream)}
+                    className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition-colors hover:bg-white/10"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-semibold text-white">{stream.title}</span>
+                      <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-300">LIVE</span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-3 text-[11px] text-gray-400">
+                      <span>{stream.viewers} viewers</span>
+                      <span>{formatDuration(stream.duration)}</span>
+                      <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[9px] font-bold text-blue-300">
+                        {stream.rtc_provider?.toUpperCase() || 'LIVEKIT'}
+                      </span>
+                    </div>
                    <div className="mt-2 flex items-center gap-2">
                      <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
                        <div
@@ -2548,7 +2555,7 @@ const renderRtcTab = () => (
                                     prev.map((d) => (d.id === doc.id ? { ...d, status: 'approved' } : d))
                                   );
                                   toast.success(`Document "${doc.title}" approved`);
-                                } catch (err) {
+                                } catch (_err) {
                                   toast.error('Failed to approve document');
                                 }
                               }}
@@ -2565,7 +2572,7 @@ const renderRtcTab = () => (
                                     prev.map((d) => (d.id === doc.id ? { ...d, status: 'rejected' } : d))
                                   );
                                   toast.success(`Document "${doc.title}" rejected`);
-                                } catch (err) {
+                                } catch (_err) {
                                   toast.error('Failed to reject document');
                                 }
                               }}

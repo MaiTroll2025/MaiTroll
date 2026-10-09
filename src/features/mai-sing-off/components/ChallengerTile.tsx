@@ -1,4 +1,4 @@
-import { Video, Send, Coins, Crown } from 'lucide-react'
+import { Video, Send, Crown } from 'lucide-react';
 import type { SingOffUser } from '../types'
 import type { GiftItem } from '@/lib/giftConstants'
 import { RemoteVideoRenderer } from './RemoteVideoRenderer'

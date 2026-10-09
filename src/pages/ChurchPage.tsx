@@ -1,21 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  BookOpen,
-  Calendar,
-  Church,
-  Clock,
-  Gift,
-  Info,
-  Loader2,
-  Shield,
-  Sparkles,
-  XCircle,
-  Radio,
-  Video,
-  UsersRound,
-  Play,
-} from 'lucide-react';
+import { BookOpen, Calendar, Church, Clock, Gift, Info, Loader2, Shield, Sparkles, XCircle, Radio, Play } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
@@ -72,7 +57,7 @@ export default function ChurchPage() {
   const [_pastorId, setPastorId] = useState<string | null>(null);
 
   const [liveSession, setLiveSession] = useState<LiveSession | null>(null);
-  const [sessionLoading, setSessionLoading] = useState(false);
+  const [_sessionLoading, setSessionLoading] = useState(false);
 
   const checkTime = useCallback(() => {
     const now = new Date();

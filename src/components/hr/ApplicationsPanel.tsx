@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { CheckCircle2, XCircle, Clock3, Archive, RefreshCw, User, Send } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock3, Archive, RefreshCw, User } from 'lucide-react';
 
 interface Application {
   id: string

@@ -83,7 +83,7 @@ async function hardDeleteUser(userId: string, reason: string, awarenessConfirmed
 }
 
 serve(async (req) => {
-  const { action, userId, reason } = await req.json();
+  const { action, userId: _userId, reason } = await req.json();
 
   // Verify authorization
   const authHeader = req.headers.get("Authorization");

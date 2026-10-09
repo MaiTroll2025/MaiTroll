@@ -1,31 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Camera,
-  CameraOff,
-  Crown,
-  Expand,
-  Mic,
-  MicOff,
-  MoreHorizontal,
-  Plus,
-  Send,
-  Settings,
-  Sparkles,
-  MessageCircle,
-  Smile,
-  Eye,
-  Users,
-  X,
-  Gift,
-  Crosshair,
-  UserRound,
-  Radio,
-  Heart,
-  Share2,
-  Sofa,
-  UserPlus,
-} from 'lucide-react';
+import { Camera, CameraOff, Crown, Expand, Mic, MicOff, MoreHorizontal, Send, Settings, Sparkles, MessageCircle, Smile, Eye, Users, X, Gift, Crosshair, UserRound, Radio, Heart, Share2, Sofa } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -287,7 +262,7 @@ export default function MobileBroadcastFullscreen({
   chatInput,
   onChatInputChange,
   onSendChat,
-  isChatOpen,
+  isChatOpen: _isChatOpen,
   onToggleChat,
   onToggleMic,
   onToggleCamera,

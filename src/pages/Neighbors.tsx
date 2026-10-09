@@ -625,7 +625,7 @@ export default function NeighborsPage() {
     await Promise.all([loadBusinesses(), refreshProfile()])
   }
 
-  const handleEditBusiness = (business: any) => {
+  const _handleEditBusiness = (business: any) => {
     setEditingBusiness(business)
     setBusinessFormData({
       business_name: business.business_name || '',
@@ -677,7 +677,7 @@ export default function NeighborsPage() {
     await Promise.all([loadBusinesses(), refreshProfile()])
   }
 
-  const handleDeleteBusiness = async (businessId: string) => {
+  const _handleDeleteBusiness = async (businessId: string) => {
     const { error } = await supabase.from('neighbors_businesses').delete().eq('id', businessId)
     if (error) {
       console.error('[NeighborsPage] Error deleting business:', error)
@@ -1402,7 +1402,7 @@ function EventForm({ eventFormData, setEventFormData, onSubmit, onClear, submitL
               <SelectTrigger className={tcInput}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent position="popper" sideOffset={8} className={tcSelectContent}>
+              <SelectContent sideOffset={8} className={tcSelectContent}>
                 {eventCategories.map((category) => (
                   <SelectItem key={category} value={category} className="cursor-pointer focus:bg-cyan-400/20">
                     {category}

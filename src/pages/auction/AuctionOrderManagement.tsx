@@ -1,19 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  CheckCircle2,
-  ChevronDown,
-  Clock,
-  Coins,
-  Eye,
-  Filter,
-  Package,
-  RefreshCw,
-  Search,
-  Send,
-  ShoppingBag,
-  Truck,
-  X,
-} from 'lucide-react'
+import { CheckCircle2, ChevronDown, Clock, Coins, Package, RefreshCw, Search, ShoppingBag, Truck } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -84,13 +70,13 @@ const panel =
   'rounded-[1.65rem] border border-cyan-300/15 bg-[#0b1628]/85 shadow-[0_0_45px_rgba(34,211,238,0.12)] backdrop-blur-2xl'
 const input =
   'w-full rounded-xl border border-cyan-300/20 bg-[#07101f]/85 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/15'
-const primary =
+const _primary =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-200/40 bg-cyan-300 px-4 py-2.5 text-sm font-black text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.28)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50'
-const secondary =
+const _secondary =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2.5 text-sm font-bold text-cyan-100 transition hover:border-cyan-300/35 hover:bg-cyan-400/18 hover:text-white disabled:cursor-not-allowed disabled:opacity-50'
 const ghost =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-cyan-300/25 hover:bg-cyan-400/10 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-50'
-const danger =
+const _danger =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-red-300/25 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-100 transition hover:bg-red-500/20'
 
 function formatCoins(value: number | null | undefined) {
@@ -117,7 +103,7 @@ export default function AuctionOrders() {
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [activeTab, setActiveTab] = useState<string>('all')
-  const [auctioneerId, setAuctioneerId] = useState<string | null>(null)
+  const [_auctioneerId, setAuctioneerId] = useState<string | null>(null)
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
 
   const fetchOrders = useCallback(async () => {

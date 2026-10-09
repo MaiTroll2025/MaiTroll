@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '../../lib/utils';
-import { Trophy } from 'lucide-react';
 import { useStreamRealtime } from '../../hooks/useStreamRealtime';
 
 interface BroadcastLevelBarProps {
@@ -99,7 +98,7 @@ export default function BroadcastLevelBar({ broadcasterId, streamId, className }
   }, []);
 
   const progress = Math.min(100, (barCoins / MAX_BAR_COINS) * 100);
-  const level = Math.floor(totalSessionGiftCoins / 1000) + 1;
+  const _level = Math.floor(totalSessionGiftCoins / 1000) + 1;
 
   return (
     <div className={cn("w-full", className)}>

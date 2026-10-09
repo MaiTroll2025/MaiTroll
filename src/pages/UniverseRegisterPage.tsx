@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { getUniverseEventSummary, universeRegister, universeWithdraw, universeInviteSeat, universeRespondSeat, universeRemoveSeat, fetchMyRegistrations, fetchMySeats } from '../lib/api/universe'
-import { Sparkles, Check, X, UserPlus, Crown, ShieldCheck, Clock, ArrowLeft, Users } from 'lucide-react'
+import { Sparkles, Check, X, UserPlus, ShieldCheck, Clock, ArrowLeft, Users } from 'lucide-react';
 import { toast } from 'sonner'
 
 function mdLabel(d: Date) {
@@ -135,7 +135,7 @@ function CaptainDashboard({ reg, seats, event, onChanged, onWithdraw }: any) {
   const { user } = useAuthStore()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<any[]>([])
-  const [searching, setSearching] = useState(false)
+  const [_searching, setSearching] = useState(false)
 
   const search = useCallback(async (q: string) => {
     setQuery(q)

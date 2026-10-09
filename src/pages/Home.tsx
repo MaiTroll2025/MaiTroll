@@ -2,25 +2,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import { lazyWithRetry } from '@/utils/lazyImport'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import {
-  BookOpen,
-  ChevronRight,
-  Crown,
-  FileText,
-  MessageCircle,
-  Music,
-  PenSquare,
-  Play,
-  Radio,
-  Scale,
-  Shield,
-  Sparkles,
-  Sun,
-  Trophy,
-  Tv,
-  Users,
-  X,
-} from 'lucide-react'
+import { BookOpen, Crown, FileText, MessageCircle, PenSquare, Play, Radio, Sparkles, Sun, Trophy, Users, X } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
 import useSEO from '@/hooks/useSEO'
@@ -32,7 +14,6 @@ import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
 import { MaiTrollOperatingHoursWrapper } from '@/components/maitroll/MaiTrollOperatingHoursWrapper'
 import useGlobalActivity from '@/hooks/useGlobalActivity'
-import type { ActivityEvent } from '@/hooks/useGlobalActivity'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
 import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
@@ -133,7 +114,7 @@ const LiveGrid = React.memo(function LiveGrid({
            .select('id, username, display_name, avatar_url, role, is_admin')
            .in('id', userIds)
          setOnlineUserList((data || []) as any[])
-       } catch (e) {
+       } catch (_e) {
          setOnlineUserList([])
        } finally {
          setLoadingUsers(false)
@@ -344,7 +325,7 @@ const LiveNowTile = React.memo(function LiveNowTile({
 
 /* Troll Court & TCNN — active broadcasts from the existing stream system,
    rendered as rows of tiles matching the Broadcasters / Podcasts row. */
-const CareerBroadcastRow = React.memo(function CareerBroadcastRow({
+const _CareerBroadcastRow = React.memo(function CareerBroadcastRow({
   title,
   subtitle,
   icon: Icon,
@@ -396,7 +377,7 @@ const CareerBroadcastRow = React.memo(function CareerBroadcastRow({
   )
 })
 
-const BattleGrid = React.memo(function BattleGrid({ items, onClickItem }: { items: LiveItem[]; onClickItem: (item: LiveItem) => void }) {
+const _BattleGrid = React.memo(function BattleGrid({ items, onClickItem }: { items: LiveItem[]; onClickItem: (item: LiveItem) => void }) {
   return (
     <div className={`${glass} rounded-2xl p-4`}>
       <h2 className="flex items-center gap-2 text-xl font-black text-white">
@@ -486,7 +467,7 @@ const MobileTabBar = React.memo(function MobileTabBar({
   liveCount,
   battleCount,
   wallNotificationCount,
-  navigate,
+  navigate: _navigate,
 }: {
   activeTab: TabType
   setActiveTab: (tab: TabType) => void
@@ -546,7 +527,7 @@ export default function Home() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const isLoading = useAuthStore((state) => state.isLoading)
-  const { isMobile, isMobileWidth } = useIsMobile()
+  const { isMobile, isMobileWidth: _isMobileWidth } = useIsMobile()
   const { theme, toggleTheme } = useTheme()
 
   useSEO({
@@ -612,7 +593,7 @@ export default function Home() {
   const {
     reminder: supportReminder,
     loading: reminderLoadingState,
-    refetch: fetchSupportReminder,
+    refetch: _fetchSupportReminder,
   } = useSupportGoalReminder()
   const { currentElection, currentPresident } = usePresidentSystem()
 
@@ -628,11 +609,11 @@ export default function Home() {
 
   // Active Troll Court & TCNN broadcasts already live in liveItems (realtime-fed
   // by LiveContentContext). Reuse them rather than adding duplicate subscriptions.
-  const trollCourtItems = useMemo(
+  const _trollCourtItems = useMemo(
     () => liveItems.filter((item) => item.category === 'court'),
     [liveItems],
   )
-  const tcnnItems = useMemo(
+  const _tcnnItems = useMemo(
     () => liveItems.filter((item) => item.category === 'tcnn'),
     [liveItems],
   )
@@ -672,12 +653,12 @@ export default function Home() {
      navigate(`/watch/${targetId}`)
    }, [navigate, user])
 
-    const handleTrollCourtClick = useCallback((item: LiveItem) => {
+    const _handleTrollCourtClick = useCallback((item: LiveItem) => {
       const sessionId = item.id.startsWith('court-') ? item.id.slice('court-'.length) : item.id
       navigate(`/court/${sessionId}`)
     }, [navigate])
 
-   const handleTcnnClick = useCallback((item: LiveItem) => {
+   const _handleTcnnClick = useCallback((item: LiveItem) => {
      navigate(`/tcnn/viewer/${item.id}`)
    }, [navigate])
 

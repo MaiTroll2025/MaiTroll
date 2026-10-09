@@ -7,7 +7,7 @@ interface PageChannelState {
   currentPage: PageType
   currentPageId: string | null
   switchPage: (type: PageType, id?: string | null) => void
-  getPageStats: ReturnType<typeof getPageChannelStats>
+  getPageStats: () => ReturnType<typeof getPageChannelStats>
 }
 
 const PageChannelContext = createContext<PageChannelState | null>(null)
@@ -82,7 +82,7 @@ export function usePageChannelSubscription(
   useEffect(() => {
     switchPage(pageType, pageId || null)
 
-    const unsubscribe = subscribePageChannel(pageType, subscriberId, builder, pageId)
+    const unsubscribe = subscribePageChannel(pageType as Parameters<typeof subscribePageChannel>[0], subscriberId, builder, pageId)
 
     return () => {
       unsubscribe()

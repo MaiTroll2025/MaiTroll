@@ -20,7 +20,7 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
   const [loading, setLoading] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const rotationTimeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const _rotationTimeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fetchedPlacementRef = useRef<AdPlacement | null>(null);
   const hasFetchedRef = useRef(false);
 
@@ -31,7 +31,7 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
       console.log('[PromoSlot] Fetching ads for placement:', placement);
       
       // Fetch official city ads
-      const { data: officialAds, error: officialError } = await supabase
+      const { data: officialAds, error: _officialError } = await supabase
         .from('city_ads')
         .select('*')
         .eq('placement', placement)
@@ -42,7 +42,7 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
         .order('display_order', { ascending: true });
 
       // Fetch user submitted active ads
-      const { data: userAds, error: userError } = await supabase
+      const { data: userAds, error: _userError } = await supabase
         .from('user_advertisements')
         .select('*')
         .eq('status', 'active')

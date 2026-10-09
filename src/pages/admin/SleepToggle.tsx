@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { setSleepAsleep, resetSleepState } from '@/lib/appSleep'
 import { useAuthStore } from '@/lib/store'
-import { supabase } from '@/lib/supabase'
 import { PowerOff, RotateCcw, Loader2 } from 'lucide-react'
 
 export default function SleepToggle() {

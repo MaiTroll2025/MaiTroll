@@ -8,7 +8,7 @@ interface UseBoxCountOptions {
   isHost: boolean;
 }
 
-export function useBoxCount({ streamId, initialBoxCount, isHost }: UseBoxCountOptions) {
+export function useBoxCount({ streamId, initialBoxCount, isHost: _isHost }: UseBoxCountOptions) {
   // Local state for instant UI updates - separate from stream object
   // Clamp initial value to valid range
   const clampedInitial = Math.max(MIN_ADMIN_SEAT_COUNT, Math.min(MAX_ADMIN_SEAT_COUNT, initialBoxCount));

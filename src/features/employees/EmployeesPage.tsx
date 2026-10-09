@@ -1,20 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  AlertTriangle,
-  ArrowRight,
-  BadgeCheck,
-  CheckCircle2,
-  Clock3,
-  HandHeart,
-  Search,
-  Shield,
-  Users,
-  XCircle,
-} from 'lucide-react'
+import { BadgeCheck, HandHeart, Search, Shield, Users } from 'lucide-react';
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
 import {
   getEmployeeTabs,
   isAdmin,
@@ -202,7 +190,7 @@ const STAFF_ROLES: StaffRole[] = [
 ]
 
 export default function EmployeesPage() {
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const { user, profile } = useAuthStore()
 
   const employeeProfile = profile as EmployeeProfileLike | null
@@ -210,14 +198,14 @@ export default function EmployeesPage() {
 
   const [activeTab, setActiveTab] = useState<EmployeeTabId>('home')
   const [previewRole, setPreviewRole] = useState<string | null>(null)
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [_mobileNavOpen, setMobileNavOpen] = useState(false)
   const [staffSearch, setStaffSearch] = useState('')
   const [staffFilter, setStaffFilter] = useState('all')
-  const [selectedRole, setSelectedRole] = useState<StaffRole | null>(null)
+  const [_selectedRole, _setSelectedRole] = useState<StaffRole | null>(null)
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([])
   const [loadingStaff, setLoadingStaff] = useState(true)
 
-  const previewProfile = useMemo<EmployeeProfileLike | null>(() => {
+  const _previewProfile = useMemo<EmployeeProfileLike | null>(() => {
     if (!employeeProfile) return null
     if (!previewRole) return employeeProfile
     return { ...employeeProfile, role: previewRole }
@@ -277,7 +265,7 @@ export default function EmployeesPage() {
     return () => { alive = false }
   }, [user])
 
-   const selectedStaffTab = useMemo(
+   const _selectedStaffTab = useMemo(
     () => authorizedTabs.find((tab) => tab.id === activeTab) ?? authorizedTabs[0],
     [activeTab, authorizedTabs],
   )
@@ -334,7 +322,7 @@ export default function EmployeesPage() {
     return <NoStaffModules />
   }
 
-  const handleTabChange = (tabId: EmployeeTabId) => {
+  const _handleTabChange = (tabId: EmployeeTabId) => {
     const hasAccess = authorizedTabs.some((tab) => tab.id === tabId)
     if (!hasAccess) {
       console.warn(`Blocked unauthorized staff tab navigation: ${tabId}`)

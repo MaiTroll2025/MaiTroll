@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { toast } from 'sonner';
-import { Car, ArrowLeft, DollarSign, Info, X, Warehouse, Sparkles } from 'lucide-react';
+import { Car, ArrowLeft, DollarSign, X, Warehouse, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCoins } from '../lib/hooks/useCoins';
 import { useVehicleAssets } from '../lib/hooks/useVehicleAssets';

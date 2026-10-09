@@ -2,27 +2,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import { lazyWithRetry } from '@/utils/lazyImport'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import {
-  Bell,
-  BookOpen,
-  Crown,
-  FileText,
-  Gamepad2,
-  Gavel,
-  Gift,
-  Heart,
-  MessageCircle,
-  Play,
-  Radio,
-  Shield,
-  Sparkles,
-  Star,
-  Trophy,
-  Users,
-  Vote,
-  X,
-  Zap,
-} from 'lucide-react'
+import { BookOpen, Crown, FileText, Gamepad2, Gift, Heart, MessageCircle, Radio, Shield, Sparkles, Star, Trophy, Users, Vote, X, Zap } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
@@ -31,11 +11,9 @@ import TrollWallFeed from '@/components/home/TrollWallFeed'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
 import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
-import LiveAuctionMiniWindow from '@/components/home/LiveAuctionMiniWindow'
 import SupportGoalReminderModal from '@/components/SupportGoalReminderModal'
 import { useSupportGoalReminder } from '@/hooks/useSupportGoalReminder'
 import { usePresidentSystem } from '@/hooks/usePresidentSystem'
-import FloatingPoster from '@/components/home/FloatingPoster'
 import JoinPoster from '@/components/home/JoinPoster'
 import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail'
 
@@ -76,7 +54,7 @@ const PWAInstallPrompt = lazyWithRetry(() => import('../components/PWAInstallPro
 const TCNNPopupWidget = lazyWithRetry(() => import('@/components/tcnn/TCNNPopupWidget'))
 const FeaturedBroadcasts = lazyWithRetry(() => import('@/components/broadcast/FeaturedBroadcasts'))
 const PromoSlot = lazyWithRetry(() => import('@/components/promo/PromoSlot'))
-const AdRail = lazyWithRetry(() => import('@/components/promo/AdRail'))
+const _AdRail = lazyWithRetry(() => import('@/components/promo/AdRail'))
 
 const glass =
   'border border-white/10 bg-[#070b19]/70 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]'
@@ -210,7 +188,7 @@ function TopPrideHero({
   )
 }
 
-function PrideAdRail() {
+function _PrideAdRail() {
   return (
     <aside className={`${neonCard} ${rainbowBorder} hidden rounded-2xl p-3 lg:block`}>
       <div className="flex min-h-[230px] flex-col items-center justify-between rounded-xl border border-white/10 bg-black/25 p-4 text-center">
@@ -234,7 +212,7 @@ function PrideAdRail() {
   )
 }
 
-function LevelStatusCard() {
+function _LevelStatusCard() {
   return (
     <section className={`${neonCard} rounded-2xl p-4`}>
       <div className="flex items-center justify-between">
@@ -281,7 +259,7 @@ function LevelStatusCard() {
   )
 }
 
-function PrideCollectionCard({ onOpenStore }: { onOpenStore: () => void }) {
+function _PrideCollectionCard({ onOpenStore }: { onOpenStore: () => void }) {
   return (
     <section className={`${glass} ${rainbowBorder} rounded-2xl p-4`}>
       <div className="relative z-10">
@@ -304,7 +282,7 @@ function PrideCollectionCard({ onOpenStore }: { onOpenStore: () => void }) {
   )
 }
 
-function PrideChallengesCard({ onOpenChallenges }: { onOpenChallenges: () => void }) {
+function _PrideChallengesCard({ onOpenChallenges }: { onOpenChallenges: () => void }) {
   const now = new Date()
   const currentWeek = Math.min(4, Math.max(1, Math.ceil(now.getDate() / 7)))
   const dayOfWeek = now.getDay()
@@ -410,7 +388,7 @@ function PrideChallengesCard({ onOpenChallenges }: { onOpenChallenges: () => voi
   )
 }
 
-function CityAnnouncementCard() {
+function _CityAnnouncementCard() {
   return (
     <section className={`${glass} rounded-2xl p-4`}>
       <div className="flex items-start justify-between gap-4">
@@ -428,7 +406,7 @@ function CityAnnouncementCard() {
   )
 }
 
-function CashOutCard() {
+function _CashOutCard() {
   return (
     <section className={`${glass} rounded-2xl p-4`}>
       <div className="mb-3 flex items-center justify-between">
@@ -470,7 +448,7 @@ function HomeTabs({
   setActiveTab,
   liveCount,
   battleCount,
-  presidentTabLabel,
+  presidentTabLabel: _presidentTabLabel,
 }: {
   activeTab: TabType
   setActiveTab: (tab: TabType) => void
@@ -831,7 +809,7 @@ function LeftSidebar({ liveItems, user }: { liveItems: LiveItem[]; user: any }) 
   )
 }
 
-function RightSidebar({ user, liveAuctions, liveItems, isPride, onOpenStore, onOpenChallenges }: { user: any; liveAuctions: AuctionShow[]; liveItems: LiveItem[]; isPride: boolean; onOpenStore: () => void; onOpenChallenges: () => void }) {
+function RightSidebar({ user, liveAuctions: _liveAuctions, liveItems, isPride, onOpenStore: _onOpenStore, onOpenChallenges }: { user: any; liveAuctions: AuctionShow[]; liveItems: LiveItem[]; isPride: boolean; onOpenStore: () => void; onOpenChallenges: () => void }) {
   const [userProfile, setUserProfile] = useState(user)
   const battleItems = liveItems.filter((item) => item.isBattle)
 
@@ -947,7 +925,7 @@ export default function Home() {
 
   const [activeTab, setActiveTab] = useState<TabType>('wall')
   const [liveItems, setLiveItems] = useState<LiveItem[]>([])
-  const [totalViewers, setTotalViewers] = useState(0)
+  const [_totalViewers, setTotalViewers] = useState(0)
   const [loadingLive, setLoadingLive] = useState(true)
   const [showLiveGrid, setShowLiveGrid] = useState<boolean | null>(null)
   const [liveAuctions, setLiveAuctions] = useState<AuctionShow[]>([])
@@ -1069,9 +1047,9 @@ export default function Home() {
   }, [supportReminder, reminderLoadingState])
 
   useEffect(() => {
-    let mounted = true
+    let _mounted = true
     // Move fetchLiveContent to component scope so it can be invoked by realtime handlers.
-    mounted = true
+    _mounted = true
     fetchLiveContent()
 
     // Poll as a fallback for visibility edge cases
@@ -1109,7 +1087,7 @@ export default function Home() {
     channel.subscribe()
 
     return () => {
-      mounted = false
+      _mounted = false
       clearInterval(interval)
       if (channel) {
         supabase.removeChannel(channel)

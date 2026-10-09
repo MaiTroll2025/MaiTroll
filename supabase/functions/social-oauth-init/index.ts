@@ -27,7 +27,7 @@ interface OAuthConfig {
   };
 }
 
-function getOAuthConfig(): OAuthConfig {
+function _getOAuthConfig(): OAuthConfig {
   const clientId = Deno.env.get("SOCIAL_OAUTH_CLIENT_ID") || "";
   const clientSecret = Deno.env.get("SOCIAL_OAUTH_CLIENT_SECRET") || "";
   const siteUrl = Deno.env.get("SITE_URL") || "https://maiMai Troll.com";
@@ -70,7 +70,7 @@ serve(async (req) => {
 
     // Use env vars for credentials
     const finalClientId = Deno.env.get("SOCIAL_OAUTH_CLIENT_ID") || "";
-    const finalClientSecret = Deno.env.get("SOCIAL_OAUTH_CLIENT_SECRET") || "";
+    const _finalClientSecret = Deno.env.get("SOCIAL_OAUTH_CLIENT_SECRET") || "";
     const finalRedirectUri = (Deno.env.get("SITE_URL") || "https://maiMai Troll.com").replace(/\/$/, "") + '/admin/x-ads/oauth-callback';
 
     log('Input', { platform, hasCodeChallenge: !!code_challenge });

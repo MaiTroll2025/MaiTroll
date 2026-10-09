@@ -1,27 +1,8 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { ShareAThonProvider, useShareAThon } from '../../contexts/ShareAThonContext'
-import { toast } from 'sonner'
-import {
-  Share2,
-  Radio,
-  Trophy,
-  Users,
-  Clock,
-  Zap,
-  CheckCircle,
-  XCircle,
-  Info,
-  ArrowRight,
-  Shield,
-  Gift,
-  Star,
-  TrendingUp,
-  AlertTriangle,
-  ExternalLink
-} from 'lucide-react'
+import { Share2, Radio, Trophy, Users, Zap, CheckCircle, XCircle, Info, ArrowRight, Shield, Gift, Star, TrendingUp, AlertTriangle, ExternalLink } from 'lucide-react';
 
 const PLATFORMS = [
   { id: 'tiktok', label: 'TikTok', color: 'from-pink-500 to-rose-500' },
@@ -50,7 +31,7 @@ function ShareAThonContent() {
     toggleRestrictNewBroadcasters
   } = useShareAThon()
 
-  const isBroadcaster = profile?.is_troller || profile?.role === 'user'
+  const _isBroadcaster = profile?.is_troller || profile?.role === 'user'
 
   useEffect(() => {
     if (user && event?.status !== 'inactive') {
@@ -88,7 +69,7 @@ function ShareAThonContent() {
   }
 
   const progressPercent = Math.min(100, (event.current_live_broadcasters / event.goal_live_broadcasters) * 100)
-  const approvedShares = mySubmissions.filter(s => s.status === 'approved').length
+  const _approvedShares = mySubmissions.filter(s => s.status === 'approved').length
   const uniquePlatforms = new Set(mySubmissions.filter(s => s.status === 'approved').map(s => s.platform)).size
 
   const qualificationChecks = [
@@ -118,7 +99,7 @@ function ShareAThonContent() {
     }
   ]
 
-  const allQualified = qualificationChecks.every(c => c.complete) && myEligibility?.is_qualified
+  const _allQualified = qualificationChecks.every(c => c.complete) && myEligibility?.is_qualified
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A0814] via-[#0D0D1A] to-[#14061A] text-white">

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { createMarketplaceReview, uploadReviewImage, deleteReviewImage } from '../lib/sellerApi';
 import type { MarketplaceReview, CreateReviewInput } from '../lib/sellerTiers';
-import SellerTierBadge from './SellerTierBadge';
 
 interface ReviewCardProps {
   review: MarketplaceReview;

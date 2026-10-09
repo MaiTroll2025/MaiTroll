@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { X, ShieldAlert, Coins, CheckCircle } from 'lucide-react'
 
 export default function PayWarrantModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const [warrant, setWarrant] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)

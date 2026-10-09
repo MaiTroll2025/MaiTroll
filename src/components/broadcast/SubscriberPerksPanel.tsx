@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { useSubscriberBadges } from '../../hooks/useCreatorSubscription'
 import { toast } from 'sonner'
-import { Crown, Gift, Megaphone, Mail, Send, X } from 'lucide-react'
+import { Crown, Gift, Megaphone, Mail, Send } from 'lucide-react';
 
 interface SubscriberPerksPanelProps {
   broadcasterId: string
@@ -11,7 +11,7 @@ interface SubscriberPerksPanelProps {
   onClose: () => void
 }
 
-interface ShoutoutForm {
+interface _ShoutoutForm {
   subscriberUsername: string
   message: string
 }
@@ -65,7 +65,7 @@ export default function SubscriberPerksPanel({ broadcasterId, streamId, onClose 
     if (!selectedSubscriber || !user) return
     setSendingGift(true)
     try {
-      const { data, error } = await supabase.rpc('credit_coins', {
+      const { data: _data, error } = await supabase.rpc('credit_coins', {
         p_user_id: selectedSubscriber,
         p_coins: 1000,
         p_reason: 'monthly_subscriber_gift',

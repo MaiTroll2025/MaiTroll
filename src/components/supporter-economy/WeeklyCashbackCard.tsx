@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWeeklyCashback } from '@/hooks/useWeeklyCashback';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Coins, TrendingUp, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Coins, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 
 export function WeeklyCashbackCard() {
   const { data: statuses, isLoading, error } = useWeeklyCashback();

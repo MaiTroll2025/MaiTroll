@@ -38,6 +38,7 @@ export const getLiveKitUrl = (): string | undefined => {
 export interface LiveBroadcastSession {
   roomRef: React.MutableRefObject<Room | null>
   localTracks: [LocalAudioTrack | null, LocalVideoTrack | null] | null
+  cameraFacingMode: 'user' | 'environment'
   cameraEnabled: boolean
   micEnabled: boolean
   isConnecting: boolean
@@ -465,6 +466,7 @@ export function useLiveBroadcast({
   return {
     roomRef,
     localTracks,
+    cameraFacingMode: currentFacingMode,
     cameraEnabled,
     micEnabled,
     isConnecting,

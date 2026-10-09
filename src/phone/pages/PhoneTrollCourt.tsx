@@ -1,24 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Calendar,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  FileText,
-  Gavel,
-  Landmark,
-  Scale,
-  Search,
-  Shield,
-  ShieldAlert,
-  Stamp,
-  Users,
-  X,
-} from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { AlertTriangle, ArrowLeft, Calendar, CheckCircle, ChevronLeft, ChevronRight, Eye, FileText, Gavel, Landmark, Scale, Search, Shield, ShieldAlert, Stamp, X } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../../lib/store'
@@ -56,6 +38,17 @@ const CASE_TYPES = Object.keys(CASE_TYPE_MAP)
 export default function PhoneTrollCourt() {
   const navigate = useNavigate()
   const { user, profile } = useAuthStore()
+  const location = useLocation()
+  const [poPrefill, setPoPrefill] = useState<{ id: string; username: string; avatar_url?: string | null }[]>([])
+
+  useEffect(() => {
+    const respondent = (location.state as any)?.poRespondent
+    if (respondent && respondent.id && respondent.username) {
+      setPoPrefill([{ id: respondent.id, username: respondent.username, avatar_url: respondent.avatar_url || null }])
+      setIsProtectionOrderOpen(true)
+      window.history.replaceState({}, '')
+    }
+  }, [location.state])
 
   const [courtSession, setCourtSession] = useState<any>(null)
   const [pendingSummons, setPendingSummons] = useState<any[]>([])
@@ -106,7 +99,7 @@ export default function PhoneTrollCourt() {
       String(profile?.troll_role || ''),
     )
 
-  const canAddCase =
+  const _canAddCase =
     profile?.is_admin === true ||
     profile?.is_judge === true ||
     profile?.is_lead_officer === true ||
@@ -1450,6 +1443,7 @@ export default function PhoneTrollCourt() {
         isOpen={isProtectionOrderOpen}
         onClose={() => setIsProtectionOrderOpen(false)}
         onSuccess={loadMyCases}
+        initialRespondents={poPrefill}
       />
 
       <PayWarrantModal

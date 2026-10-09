@@ -24,8 +24,8 @@ const VideoTile: React.FC<VideoTileProps> = ({
 }) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const [isPublished, setIsPublished] = useState(false);
-  const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [isVideoMuted, setIsVideoMuted] = useState(false);
+  const [_isAudioMuted, _setIsAudioMuted] = useState(false);
+  const [_isVideoMuted, _setIsVideoMuted] = useState(false);
 
   // Get video track from user or local
   const getVideoTrack = () => {

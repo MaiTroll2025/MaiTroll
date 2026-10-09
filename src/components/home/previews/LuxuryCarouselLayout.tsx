@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Play, Eye, Radio, Sparkles, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useAuthStore } from '@/lib/store';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
 import { cn } from '@/lib/utils';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SellerTier, SELLER_TIER_CONFIG, getSellerTierInfo, canDisplaySellerTier } from '../lib/sellerTiers';
+import { SellerTier, getSellerTierInfo, canDisplaySellerTier } from '../lib/sellerTiers';
 
 interface SellerTierBadgeProps {
   tier: SellerTier | string | null;

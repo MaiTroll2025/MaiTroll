@@ -213,7 +213,9 @@
 }
 
 .animate-slide-right-to-left {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   animation: slide-right-to-left 15s linear infinite;
 }
 

@@ -1,31 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import {
-  BarChart3,
-  ChevronDown,
-  Gamepad2,
-  Loader2,
-  Mail,
-  Mic,
-  MicOff,
-  MonitorPlay,
-  MoreVertical,
-  Pause,
-  Play,
-  Power,
-  Radio,
-  Settings,
-  ShieldCheck,
-  Square,
-  Users,
-  Video,
-  VideoOff,
-  Volume2,
-  VolumeX,
-  AlertTriangle,
-  Eye,
-  Activity,
-  Layout,
-} from 'lucide-react'
+import { BarChart3, ChevronDown, Gamepad2, Loader2, Mail, Mic, MicOff, MonitorPlay, Power, Radio, Settings, ShieldCheck, Users, Video, VideoOff, Volume2, VolumeX, AlertTriangle, Eye, Activity, Layout } from 'lucide-react';
 import { cn } from '@/lib/utils'
 import { SceneConfig } from '@/components/broadcast/GamingSceneManager'
 
@@ -73,12 +47,22 @@ interface GamingSetupProps {
   onDeleteTextOverlay?: (sceneId: string, overlayId: string) => void
   onSetBackgroundImage?: (sceneId: string, imageUrl: string | null) => void
   screenStream?: MediaStream | null
+  onStartPreview?: () => void | Promise<void>
+  onStopPreview?: () => void | Promise<void>
+  isPreviewing?: boolean
+  cameraStream?: MediaStream | null
+  micStream?: MediaStream | null
+  hasCameraTrack?: boolean
+  isCameraEnabled?: boolean
+  onToggleCamera?: () => void
+  streamId?: string
+  userId?: string
 }
 
 export function GamingSetup({
   streamTitle = 'Ranked Grind to Top 1 | Mai Troll',
   isMicEnabled = true,
-  hasMicTrack = false,
+  hasMicTrack: _hasMicTrack = false,
   onToggleMic,
   onStartPreview,
   onStopPreview,
@@ -104,21 +88,21 @@ export function GamingSetup({
   heartbeatStatus,
   scenes = [],
   activeSceneId = null,
-  onCreateScene,
-  onDeleteScene,
+  onCreateScene: _onCreateScene,
+  onDeleteScene: _onDeleteScene,
   onSwitchScene,
   onUpdateScene,
   onAddTextOverlay,
   onUpdateTextOverlay,
-  onDeleteTextOverlay,
-  onSetBackgroundImage,
+  onDeleteTextOverlay: _onDeleteTextOverlay,
+  onSetBackgroundImage: _onSetBackgroundImage,
   screenStream = null,
   cameraStream = null,
-  micStream = null,
-  hasCameraTrack = false,
+  micStream: _micStream = null,
+  hasCameraTrack: _hasCameraTrack = false,
   isCameraEnabled = false,
   onToggleCamera,
-streamId = null,
+streamId: _streamId = null,
   }: GamingSetupProps) {
   const [showGameSearch, setShowGameSearch] = React.useState(false)
   const [gameSearchQuery, setGameSearchQuery] = React.useState('')
@@ -423,7 +407,6 @@ streamId = null,
   )
 }
 
-import { Save } from 'lucide-react'
 
 function Panel({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return <div style={style} className={cn('rounded-2xl border border-cyan-400/20 bg-[#07111d]/82 shadow-[0_0_30px_rgba(0,0,0,0.35)] backdrop-blur-xl', className)}>{children}</div>
@@ -443,7 +426,7 @@ function StatusMetric({ label, value, good, icon }: { label: string; value: stri
   return <div><div className="flex items-center gap-1">{icon}<p className={cn('text-xs font-black', good ? 'text-emerald-300' : 'text-white')}>{value}</p></div><p className="mt-1 text-[10px] font-semibold text-slate-500">{label}</p></div>
 }
 
-function ScreenShareActiveIndicator({ isLive, isPaused }: { isLive: boolean; isPaused: boolean }) {
+function _ScreenShareActiveIndicator({ isLive, isPaused: _isPaused }: { isLive: boolean; isPaused: boolean }) {
   return (
     <div className="flex flex-col items-center gap-4 px-6 text-center">
       <div className="relative">
@@ -473,6 +456,7 @@ function ScreenShareActiveIndicator({ isLive, isPaused }: { isLive: boolean; isP
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ScreenSharePreview({ track }: { track: any }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 

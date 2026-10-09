@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { toast } from 'sonner'
-import {
-  Search, Download, FileText, Coins, DollarSign, Users,
-  ArrowUp, ArrowDown, Calendar, Filter, X, Loader2, FileDown
-} from 'lucide-react'
+import { Search, Download, FileText, Coins, DollarSign, Users, ArrowUp, ArrowDown, Loader2, FileDown } from 'lucide-react';
 
 interface UserSearchResult {
   id: string
@@ -41,22 +38,22 @@ interface CoinTransaction {
 interface CoinPurchase {
   id: string
   user_id: string
-  coins: number
-  amount: number
-  order_id: string
-  status: string
+  data: Record<string, unknown> | null
+  coins: number | null
+  amount: number | null
+  order_id: string | null
+  status: string | null
   created_at: string
 }
 
 interface GiftsSent {
   id: string
-  from_user_id: string
-  from_user_name: string
-  to_user_id: string
-  to_user_name: string
-  gift_name: string
-  coin_amount: number
-  usd_amount: number | null
+  sender_id: string
+  receiver_id: string
+  sender_name: string
+  receiver_name: string
+  gift_id: string
+  coins_spent: number
   created_at: string
 }
 
@@ -90,10 +87,58 @@ export default function ExportData() {
   // Platform revenue state
   const [platformRevenue, setPlatformRevenue] = useState<{
     totalRevenue: number
-    totalCoinsSold: number
+    totalCoinsSold: number | null
     totalGiftsSent: number
-    totalGiftsUsd: number
-  }>({ totalRevenue: 0, totalCoinsSold: 0, totalGiftsSent: 0, totalGiftsUsd: 0 })
+    totalGiftCoins: number
+  }>({ totalRevenue: 0, totalCoinsSold: null, totalGiftsSent: 0, totalGiftCoins: 0 })
+
+  const asObject = (value: unknown): Record<string, unknown> =>
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? value as Record<string, unknown>
+      : {}
+
+  const numericField = (record: Record<string, unknown>, ...keys: string[]): number | null => {
+    for (const key of keys) {
+      const value = record[key]
+      if (typeof value === 'number' && Number.isFinite(value)) return value
+      if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) return Number(value)
+    }
+    return null
+  }
+
+  const normalizePurchases = (rows: Array<{ id: string; user_id: string; data: unknown; created_at: string }>): CoinPurchase[] =>
+    rows.map(row => {
+      const payload = asObject(row.data)
+      return {
+        id: row.id,
+        user_id: row.user_id,
+        data: payload,
+        coins: numericField(payload, 'coins', 'coin_amount', 'coins_purchased'),
+        amount: numericField(payload, 'amount', 'amount_usd', 'usd_amount'),
+        order_id: typeof payload.order_id === 'string' ? payload.order_id : null,
+        status: typeof payload.status === 'string' ? payload.status : null,
+        created_at: row.created_at,
+      }
+    })
+
+  const hydrateGifts = async (
+    rows: Array<{ id: string; sender_id: string; receiver_id: string; gift_id: string; coins_spent: number; created_at: string }>,
+  ): Promise<GiftsSent[]> => {
+    const userIds = [...new Set(rows.flatMap(row => [row.sender_id, row.receiver_id]))]
+    const { data: profiles, error } = userIds.length
+      ? await supabase.from('user_profiles').select('id, username, display_name').in('id', userIds)
+      : { data: [], error: null }
+    if (error) throw error
+    const names = new Map((profiles || []).map(profile => [
+      profile.id,
+      profile.display_name || profile.username || profile.id,
+    ]))
+    return rows.map(row => ({
+      ...row,
+      sender_name: names.get(row.sender_id) || row.sender_id,
+      receiver_name: names.get(row.receiver_id) || row.receiver_id,
+    }))
+  }
 
   // Search users
   const handleSearch = async (query: string) => {
@@ -140,35 +185,36 @@ export default function ExportData() {
       // 2. Coin purchases
       const { data: purchaseData, error: purchaseError } = await supabase
         .from('coin_purchases')
-        .select('*')
+        .select('id, user_id, data, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1000)
 
       if (purchaseError) throw purchaseError
-      setPurchases((purchaseData as CoinPurchase[]) || [])
+      const normalizedPurchases = normalizePurchases(purchaseData || [])
+      setPurchases(normalizedPurchases)
 
       // 3. Gifts sent
       const { data: sentData, error: sentError } = await supabase
         .from('gift_transactions')
-        .select('*')
-        .eq('from_user_id', userId)
+        .select('id, sender_id, receiver_id, gift_id, coins_spent, created_at')
+        .eq('sender_id', userId)
         .order('created_at', { ascending: false })
         .limit(1000)
 
       if (sentError) throw sentError
-      setGiftsSent((sentData as GiftsSent[]) || [])
+      setGiftsSent(await hydrateGifts(sentData || []))
 
       // 4. Gifts received
       const { data: receivedData, error: receivedError } = await supabase
         .from('gift_transactions')
-        .select('*')
-        .eq('to_user_id', userId)
+        .select('id, sender_id, receiver_id, gift_id, coins_spent, created_at')
+        .eq('receiver_id', userId)
         .order('created_at', { ascending: false })
         .limit(1000)
 
       if (receivedError) throw receivedError
-      setGiftsReceived((receivedData as GiftsSent[]) || [])
+      setGiftsReceived(await hydrateGifts(receivedData || []))
 
       // 5. Background check data
       const { data: profileData, error: profileError } = await supabase
@@ -201,10 +247,10 @@ export default function ExportData() {
       }
 
       // Build aggregated user object for summary
-      const userTx = txData as CoinTransaction[]
-      const userPurchases = purchaseData as CoinPurchase[]
-      const userGiftsSent = sentData as GiftsSent[]
-      const userGiftsReceived = receivedData as GiftsSent[]
+      const _userTx = txData as CoinTransaction[]
+      const _userPurchases = normalizedPurchases
+      const _userGiftsSent = sentData as GiftsSent[]
+      const _userGiftsReceived = receivedData as GiftsSent[]
 
       setSelectedUser({
         id: userId,
@@ -237,34 +283,39 @@ export default function ExportData() {
           .select('platform_profit')
           .not('platform_profit', 'is', null)
 
-        if (!profitError && profitData) {
-          const total = profitData.reduce((sum, row) => sum + Number(row.platform_profit || 0), 0)
-          setPlatformRevenue(prev => ({ ...prev, totalRevenue: total }))
-        }
+        if (profitError) throw profitError
+        const total = (profitData || []).reduce((sum, row) => sum + Number(row.platform_profit || 0), 0)
+        setPlatformRevenue(prev => ({ ...prev, totalRevenue: total }))
 
         // Total coins purchased
         const { data: coinsData, error: coinsError } = await supabase
           .from('coin_purchases')
-          .select('coins, amount')
+          .select('data')
 
-        if (!coinsError && coinsData) {
-          const totalCoins = coinsData.reduce((sum, row) => sum + Number(row.coins || 0), 0)
-          const totalAmount = coinsData.reduce((sum, row) => sum + Number(row.amount || 0), 0)
-          setPlatformRevenue(prev => ({ ...prev, totalCoinsSold: totalCoins }))
-        }
+        if (coinsError) throw coinsError
+        const purchasePayloads = (coinsData || []).map(row => asObject(row.data))
+        const reportedCoins = purchasePayloads.map(payload =>
+          numericField(payload, 'coins', 'coin_amount', 'coins_purchased'),
+        )
+        setPlatformRevenue(prev => ({
+          ...prev,
+          totalCoinsSold: reportedCoins.every(value => value !== null)
+            ? reportedCoins.reduce<number>((sum, value) => sum + (value ?? 0), 0)
+            : null,
+        }))
 
-        // Gifts total USD
+        // Gift value is recorded as coins spent, not a USD amount.
         const { data: giftsData, error: giftsError } = await supabase
           .from('gift_transactions')
-          .select('usd_amount')
+          .select('coins_spent')
 
-        if (!giftsError && giftsData) {
-          const totalUsd = giftsData.reduce((sum, row) => sum + Number(row.usd_amount || 0), 0)
-          setPlatformRevenue(prev => ({ ...prev, totalGiftsUsd: totalUsd }))
-        }
+        if (giftsError) throw giftsError
+        const totalGiftCoins = (giftsData || []).reduce((sum, row) => sum + Number(row.coins_spent || 0), 0)
+        setPlatformRevenue(prev => ({ ...prev, totalGiftCoins, totalGiftsSent: giftsData?.length || 0 }))
 
       } catch (error) {
         console.error('Failed to load platform revenue:', error)
+        toast.error(error instanceof Error ? `Failed to load platform revenue: ${error.message}` : 'Failed to load platform revenue')
       }
     }
 
@@ -284,19 +335,19 @@ export default function ExportData() {
         csv += `"${tx.id}","${tx.type}",${tx.amount},"${tx.coin_type}","${tx.source || ''}","${(tx.description || '').replace(/"/g, '""')}","${tx.from_user_name || ''}","${tx.to_user_name || ''}",${tx.usd_amount || 0},${tx.platform_profit || 0},"${tx.created_at}"\n`
       })
     } else if (type === 'purchases') {
-      csv = 'ID,Coins,Amount (USD),Order ID,Status,Created At\n'
+      csv = 'ID,Coins,Amount,Order ID,Status,Created At\n'
       purchases.forEach(p => {
-        csv += `"${p.id}",${p.coins},${p.amount || 0},"${p.order_id}","${p.status}","${p.created_at}"\n`
+        csv += `"${p.id}",${p.coins ?? ''},${p.amount ?? ''},"${p.order_id || ''}","${p.status || ''}","${p.created_at}"\n`
       })
     } else if (type === 'gifts_sent') {
-      csv = 'ID,To User,Gift Name,Coin Amount,USD Amount,Created At\n'
+      csv = 'ID,To User,Gift ID,Coins Spent,Created At\n'
       giftsSent.forEach(g => {
-        csv += `"${g.id}","${g.to_user_name || ''}","${g.gift_name}",${g.coin_amount},${g.usd_amount || 0},"${g.created_at}"\n`
+        csv += `"${g.id}","${g.receiver_name}","${g.gift_id}",${g.coins_spent},"${g.created_at}"\n`
       })
     } else if (type === 'gifts_received') {
-      csv = 'ID,From User,Gift Name,Coin Amount,USD Amount,Created At\n'
+      csv = 'ID,From User,Gift ID,Coins Spent,Created At\n'
       giftsReceived.forEach(g => {
-        csv += `"${g.id}","${g.from_user_name || ''}","${g.gift_name}",${g.coin_amount},${g.usd_amount || 0},"${g.created_at}"\n`
+        csv += `"${g.id}","${g.sender_name}","${g.gift_id}",${g.coins_spent},"${g.created_at}"\n`
       })
     }
 
@@ -334,24 +385,24 @@ export default function ExportData() {
        sections.push(`"${tx.id}","${tx.type}",${tx.amount},"${tx.coin_type}","${tx.source || ''}","${(tx.description || '').replace(/"/g, '""')}","${tx.from_user_name || ''}","${tx.to_user_name || ''}",${tx.usd_amount || 0},${tx.platform_profit || 0},"${tx.created_at}"`)
      })
      sections.push(`\n=== COIN PURCHASES ===`)
-     sections.push(`ID,Coins,Amount (USD),Order ID,Status,Created At`)
+     sections.push(`ID,Coins,Amount,Order ID,Status,Created At`)
      purchases.forEach(p => {
-       sections.push(`"${p.id}",${p.coins},${p.amount || 0},"${p.order_id}","${p.status}","${p.created_at}"`)
+       sections.push(`"${p.id}",${p.coins ?? ''},${p.amount ?? ''},"${p.order_id || ''}","${p.status || ''}","${p.created_at}"`)
      })
      sections.push(`\n=== GIFTS SENT ===`)
-     sections.push(`ID,To User,Gift Name,Coin Amount,USD Amount,Created At`)
+     sections.push(`ID,To User,Gift ID,Coins Spent,Created At`)
      giftsSent.forEach(g => {
-       sections.push(`"${g.id}","${g.to_user_name || ''}","${g.gift_name}",${g.coin_amount},${g.usd_amount || 0},"${g.created_at}"`)
+       sections.push(`"${g.id}","${g.receiver_name}","${g.gift_id}",${g.coins_spent},"${g.created_at}"`)
      })
      sections.push(`\n=== GIFTS RECEIVED ===`)
-     sections.push(`ID,From User,Gift Name,Coin Amount,USD Amount,Created At`)
+     sections.push(`ID,From User,Gift ID,Coins Spent,Created At`)
      giftsReceived.forEach(g => {
-       sections.push(`"${g.id}","${g.from_user_name || ''}","${g.gift_name}",${g.coin_amount},${g.usd_amount || 0},"${g.created_at}"`)
+       sections.push(`"${g.id}","${g.sender_name}","${g.gift_id}",${g.coins_spent},"${g.created_at}"`)
      })
      sections.push(`\n=== PLATFORM REVENUE SUMMARY ===`)
      sections.push(`Total Platform Profit,$${platformRevenue.totalRevenue.toFixed(2)}`)
-     sections.push(`Total Coins Sold,${platformRevenue.totalCoinsSold}`)
-     sections.push(`Total Gifts USD,$${platformRevenue.totalGiftsUsd.toFixed(2)}`)
+     sections.push(`Total Coins Sold,${platformRevenue.totalCoinsSold ?? ''}`)
+     sections.push(`Total Gift Coins Spent,${platformRevenue.totalGiftCoins}`)
 
      const csv = sections.join('\n')
      downloadCSV(csv, `${selectedUser.username}_FULL_REPORT_${new Date().toISOString().split('T')[0]}.csv`)
@@ -376,8 +427,8 @@ export default function ExportData() {
        // 1. Platform Revenue Summary
        lines.push('--- PLATFORM REVENUE SUMMARY ---')
        lines.push(`Total Platform Profit: $${platformRevenue.totalRevenue.toFixed(2)}`)
-       lines.push(`Total Coins Sold: ${platformRevenue.totalCoinsSold.toLocaleString()}`)
-       lines.push(`Total Gifts Revenue (USD): $${platformRevenue.totalGiftsUsd.toFixed(2)}`)
+       lines.push(`Total Coins Sold: ${platformRevenue.totalCoinsSold?.toLocaleString() ?? 'Unavailable'}`)
+       lines.push(`Total Gift Coins Spent: ${platformRevenue.totalGiftCoins.toLocaleString()}`)
        lines.push('')
 
        // 2. All User Profiles Summary
@@ -429,9 +480,10 @@ export default function ExportData() {
 
        if (!purchasesError && allPurchases) {
          lines.push(`Total Purchases: ${allPurchases.length}`)
-         lines.push(`ID,User ID,Coins,Amount (USD),Order ID,Status,Created At`)
+         lines.push(`ID,User ID,Coins,Amount,Order ID,Status,Created At`)
          allPurchases.forEach(p => {
-           lines.push(`"${p.id}","${p.user_id || ''}",${p.coins},${p.amount || 0},"${p.order_id}","${p.status}","${p.created_at}"`)
+           const [purchase] = normalizePurchases([p])
+           lines.push(`"${purchase.id}","${purchase.user_id}",${purchase.coins ?? ''},${purchase.amount ?? ''},"${purchase.order_id || ''}","${purchase.status || ''}","${purchase.created_at}"`)
          })
        } else {
          lines.push(`Error loading purchases: ${purchasesError?.message || 'Unknown error'}`)
@@ -448,9 +500,9 @@ export default function ExportData() {
 
        if (!giftsError && allGifts) {
          lines.push(`Total Gifts: ${allGifts.length}`)
-         lines.push(`ID,From User,To User,Gift Name,Coin Amount,USD Amount,Created At`)
+         lines.push(`ID,Sender ID,Receiver ID,Gift ID,Coins Spent,Created At`)
          allGifts.forEach(g => {
-           lines.push(`"${g.id}","${g.from_user_name || ''}","${g.to_user_name || ''}","${g.gift_name}",${g.coin_amount},${g.usd_amount || 0},"${g.created_at}"`)
+           lines.push(`"${g.id}","${g.sender_id}","${g.receiver_id}","${g.gift_id}",${g.coins_spent},"${g.created_at}"`)
          })
        } else {
          lines.push(`Error loading gifts: ${giftsError?.message || 'Unknown error'}`)
@@ -474,10 +526,10 @@ export default function ExportData() {
              lines.push(`Error: ${bug.error_message}`)
              if (bug.stack_trace) lines.push(`Stack: ${bug.stack_trace}`)
              lines.push(`Created: ${bug.created_at}`)
-             lines.push('-' * 40)
-           })
-         } else {
-           lines.push(`Bug reports not available: ${bugsError?.message || 'Table may not exist'}`)
+              lines.push('-'.repeat(40))
+            })
+          } else {
+            lines.push(`Bug reports not available: ${bugsError?.message || 'Table may not exist'}`)
          }
        } catch (e: any) {
          lines.push(`Error loading bug reports: ${e.message}`)
@@ -499,7 +551,7 @@ export default function ExportData() {
              lines.push(`Officer: ${r.officer_name || r.officer_id} | Week: ${r.week_start} | Status: ${r.status}`)
              lines.push(`Actions Taken: ${r.actions_taken || 'None'}`)
              lines.push(`Issues: ${r.issues_encountered || 'None'}`)
-             lines.push('-' * 40)
+              lines.push('-'.repeat(40))
            })
          } else {
            lines.push(`Weekly reports not available: ${weeklyError?.message || 'Table may not exist'}`)
@@ -561,16 +613,16 @@ export default function ExportData() {
             <div className="w-px h-10 bg-gray-700" />
             <div className="text-center">
               <div className="text-2xl font-bold text-cyan-400">
-                {platformRevenue.totalCoinsSold.toLocaleString()}
+                {platformRevenue.totalCoinsSold?.toLocaleString() ?? '—'}
               </div>
               <div className="text-xs text-gray-400">Coins Sold</div>
             </div>
             <div className="w-px h-10 bg-gray-700" />
             <div className="text-center">
               <div className="text-2xl font-bold text-pink-400">
-                ${platformRevenue.totalGiftsUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {platformRevenue.totalGiftCoins.toLocaleString()}
               </div>
-              <div className="text-xs text-gray-400">Gifts Revenue (USD)</div>
+              <div className="text-xs text-gray-400">Gift Coins Spent</div>
             </div>
           </div>
         </div>
@@ -819,7 +871,7 @@ export default function ExportData() {
                       <thead className="bg-zinc-900 sticky top-0">
                         <tr>
                           <th className="p-3 text-left text-gray-400">Coins</th>
-                          <th className="p-3 text-left text-gray-400">Amount (USD)</th>
+                          <th className="p-3 text-left text-gray-400">Amount</th>
                           <th className="p-3 text-left text-gray-400">Order ID</th>
                           <th className="p-3 text-left text-gray-400">Status</th>
                           <th className="p-3 text-left text-gray-400">Date</th>
@@ -828,12 +880,12 @@ export default function ExportData() {
                       <tbody>
                         {purchases.map((p) => (
                           <tr key={p.id} className="border-t border-gray-800 hover:bg-green-900/10">
-                            <td className="p-3 text-purple-300 font-semibold">{p.coins.toLocaleString()}</td>
-                            <td className="p-3 text-green-300">${(p.amount || 0).toFixed(2)}</td>
-                            <td className="p-3 text-gray-300 font-mono text-xs">{p.order_id}</td>
+                            <td className="p-3 text-purple-300 font-semibold">{p.coins?.toLocaleString() ?? '—'}</td>
+                            <td className="p-3 text-green-300">{p.amount?.toLocaleString() ?? '—'}</td>
+                            <td className="p-3 text-gray-300 font-mono text-xs">{p.order_id || '—'}</td>
                             <td className="p-3">
                               <span className={`px-2 py-1 rounded text-xs ${p.status === 'completed' ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'}`}>
-                                {p.status}
+                                {p.status || '—'}
                               </span>
                             </td>
                             <td className="p-3 text-gray-400 text-xs">{new Date(p.created_at).toLocaleString()}</td>
@@ -858,18 +910,16 @@ export default function ExportData() {
                         <thead className="bg-zinc-900 sticky top-0">
                           <tr>
                             <th className="p-3 text-left text-gray-400">To</th>
-                            <th className="p-3 text-left text-gray-400">Gift</th>
-                            <th className="p-3 text-left text-gray-400">Coins</th>
-                            <th className="p-3 text-left text-gray-400">USD</th>
+                            <th className="p-3 text-left text-gray-400">Gift ID</th>
+                            <th className="p-3 text-left text-gray-400">Coins Spent</th>
                           </tr>
                         </thead>
                         <tbody>
                           {giftsSent.map((g) => (
                             <tr key={g.id} className="border-t border-gray-800 hover:bg-pink-900/10">
-                              <td className="p-3 text-white">{g.to_user_name}</td>
-                              <td className="p-3 text-gray-300">{g.gift_name}</td>
-                              <td className="p-3 text-pink-300">{g.coin_amount.toLocaleString()}</td>
-                              <td className="p-3 text-cyan-300">${g.usd_amount?.toFixed(2) || 0}</td>
+                              <td className="p-3 text-white">{g.receiver_name}</td>
+                              <td className="p-3 text-gray-300">{g.gift_id}</td>
+                              <td className="p-3 text-pink-300">{g.coins_spent.toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -889,18 +939,16 @@ export default function ExportData() {
                         <thead className="bg-zinc-900 sticky top-0">
                           <tr>
                             <th className="p-3 text-left text-gray-400">From</th>
-                            <th className="p-3 text-left text-gray-400">Gift</th>
-                            <th className="p-3 text-left text-gray-400">Coins</th>
-                            <th className="p-3 text-left text-gray-400">USD</th>
+                            <th className="p-3 text-left text-gray-400">Gift ID</th>
+                            <th className="p-3 text-left text-gray-400">Coins Spent</th>
                           </tr>
                         </thead>
                         <tbody>
                           {giftsReceived.map((g) => (
                             <tr key={g.id} className="border-t border-gray-800 hover:bg-cyan-900/10">
-                              <td className="p-3 text-white">{g.from_user_name}</td>
-                              <td className="p-3 text-gray-300">{g.gift_name}</td>
-                              <td className="p-3 text-cyan-300">{g.coin_amount.toLocaleString()}</td>
-                              <td className="p-3 text-green-300">${g.usd_amount?.toFixed(2) || 0}</td>
+                              <td className="p-3 text-white">{g.sender_name}</td>
+                              <td className="p-3 text-gray-300">{g.gift_id}</td>
+                              <td className="p-3 text-cyan-300">{g.coins_spent.toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>

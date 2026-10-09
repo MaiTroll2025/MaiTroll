@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, Trophy, Users, Vote } from 'lucide-react'
+import { BarChart3, Trophy, Vote } from 'lucide-react';
 import { useSingOffStore } from '../store/useSingOffStore'
 import { useShallow } from 'zustand/react/shallow'
 import { useSingOffActions } from '../hooks/useSingOffActions'

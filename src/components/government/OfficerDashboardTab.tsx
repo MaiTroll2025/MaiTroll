@@ -2,7 +2,7 @@ import React from 'react';
 import { Activity, Scale, Gavel, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function OfficerDashboardTab(props: any) {
+export default function OfficerDashboardTab(_props: any) {
   const navigate = useNavigate();
   
   return (

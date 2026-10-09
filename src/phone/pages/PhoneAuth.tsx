@@ -490,22 +490,46 @@ export default function PhoneAuth() {
 
             {/* Terms */}
             {!isLogin && (
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.05] bg-white/[0.02] p-3">
+              <div className="flex flex-col gap-2">
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.05] bg-white/[0.02] p-3">
 
-                <input
-                  type="checkbox"
-                  checked={acceptedTerms}
-                  onChange={(e) =>
-                    setAcceptedTerms(e.target.checked)
-                  }
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#00BFFF]"
-                />
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) =>
+                      setAcceptedTerms(e.target.checked)
+                    }
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[#00BFFF]"
+                  />
 
-                <span className="text-[9px] leading-4 text-zinc-500">
-                  I accept the Terms and Agreements and acknowledge
-                  the Privacy Policy.
-                </span>
-              </label>
+                  <span className="text-[9px] leading-4 text-zinc-500">
+                    I accept the{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/legal/terms')}
+                      className="text-[#00BFFF] underline hover:text-[#66d9ff]"
+                    >
+                      Terms and Agreements
+                    </button>
+                    {' '}and acknowledge the{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/legal/privacy')}
+                      className="text-[#00BFFF] underline hover:text-[#66d9ff]"
+                    >
+                      Privacy Policy
+                    </button>.
+                  </span>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/legal/terms')}
+                  className="self-start text-[10px] font-bold uppercase tracking-wider text-[#00BFFF] hover:text-[#66d9ff]"
+                >
+                  Read Terms &amp; Agreements →
+                </button>
+              </div>
             )}
 
             {/* Submit */}
@@ -628,7 +652,7 @@ export default function PhoneAuth() {
           <button
             type="button"
             onClick={() => {
-              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream
               const message = isIOS
                 ? 'To add MaiTroll to your Home Screen:\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right'
                 : 'To add MaiTroll to your Home Screen on iOS:\n1. Open this page in Safari on your iPhone/iPad\n2. Tap the Share button (square with arrow up)\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add" in the top right'

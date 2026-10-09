@@ -21,7 +21,7 @@ const TIP_BANNER_DURATION_MS = 4000;
  */
 export function useTipBanner(streamId: string | null | undefined) {
   const [activeTip, setActiveTip] = useState<TipBannerData | null>(null);
-  const [queue, setQueue] = useState<TipBannerData[]>([]);
+  const [_queue, setQueue] = useState<TipBannerData[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isShowingRef = useRef(false);
 

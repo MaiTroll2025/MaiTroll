@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
-import { BadgeCheck, Coins, Shield, Sparkles, CheckCircle, Clock } from 'lucide-react';
+import { BadgeCheck, Coins, Sparkles, CheckCircle, Clock } from 'lucide-react';
 import { calculateTromocodeDiscount } from '@/lib/tromocode';
 
 const VERIFICATION_COST_COINS = 500;

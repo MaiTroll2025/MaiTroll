@@ -66,7 +66,7 @@ export async function getUserFamily(): Promise<TrollFamily | null> {
 
   if (memberError || !member?.family_id) return null;
 
-  const { data: family, error: familyError } = await supabase
+  const { data: family, error: _familyError } = await supabase
     .from('troll_families')
     .select('*')
     .eq('id', member.family_id)
@@ -79,7 +79,7 @@ export async function getUserFamily(): Promise<TrollFamily | null> {
  * Get family details by ID
  */
 export async function getFamilyById(familyId: string): Promise<TrollFamily | null> {
-  const { data, error } = await supabase
+  const { data, error: _error } = await supabase
     .from('troll_families')
     .select('*')
     .eq('id', familyId)
@@ -116,7 +116,7 @@ export async function getUserFamilyMembership(): Promise<FamilyMember | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data, error } = await supabase
+  const { data, error: _error } = await supabase
     .from('family_members')
     .select(`
       *,
@@ -338,7 +338,7 @@ export async function checkAndUnlockAchievements(
  * Get family streaks
  */
 export async function getFamilyStreaks(familyId: string): Promise<FamilyStreak | null> {
-  const { data, error } = await supabase
+  const { data, error: _error } = await supabase
     .from('family_streaks')
     .select('*')
     .eq('family_id', familyId)
@@ -351,7 +351,7 @@ export async function getFamilyStreaks(familyId: string): Promise<FamilyStreak |
  * Get family vault
  */
 export async function getFamilyVault(familyId: string): Promise<FamilyVault | null> {
-  const { data, error } = await supabase
+  const { data, error: _error } = await supabase
     .from('family_vault')
     .select('*')
     .eq('family_id', familyId)
@@ -364,7 +364,7 @@ export async function getFamilyVault(familyId: string): Promise<FamilyVault | nu
  * Get family's weekly reward total (for cap enforcement)
  */
 export async function getFamilyWeeklyRewardTotal(familyId: string): Promise<number> {
-  const { data, error } = await supabase.rpc('get_family_weekly_reward_total', {
+  const { data, error: _error } = await supabase.rpc('get_family_weekly_reward_total', {
     p_family_id: familyId,
   });
 
@@ -571,7 +571,7 @@ export async function getFamilySongs(familyId: string): Promise<FamilySong[]> {
  * Get featured family song
  */
 export async function getFeaturedFamilySong(familyId: string): Promise<FamilySong | null> {
-  const { data, error } = await supabase
+  const { data, error: _error } = await supabase
     .from('family_songs')
     .select('*')
     .eq('family_id', familyId)
@@ -637,7 +637,7 @@ export async function getFamilyMemberExtended(
   familyId: string,
   userId: string
 ): Promise<FamilyMemberExtended | null> {
-  const { data, error } = await supabase
+  const { data, error: _error } = await supabase
     .from('family_members_extended')
     .select('*')
     .eq('family_id', familyId)

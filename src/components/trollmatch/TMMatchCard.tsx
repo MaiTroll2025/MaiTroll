@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, Video, UserPlus, Star, Heart, Eye, Users } from 'lucide-react';
+import { MessageCircle, UserPlus, Heart, Eye, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TMMatch } from '../../types/trollMatch';
 import { useAuthStore } from '../../lib/store';
@@ -23,7 +23,7 @@ interface FamilyOption {
 export function TMMatchCard({ match, type, onMessage }: TMMatchCardProps) {
   const navigate = useNavigate();
   const { user, profile } = useAuthStore();
-  const { pricing, loading: pricingLoading } = useTMMessagePricing(match.user_id);
+  const { pricing, loading: _pricingLoading } = useTMMessagePricing(match.user_id);
   const { recordView } = useTMRecordView();
   const { createInvite } = useTMFamilyInvites();
 
@@ -128,7 +128,7 @@ export function TMMatchCard({ match, type, onMessage }: TMMatchCardProps) {
     }
   };
 
-  const handleFollow = () => {
+  const _handleFollow = () => {
     toast.success(`Followed @${match.username}`);
   };
 

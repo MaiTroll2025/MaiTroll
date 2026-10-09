@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ExternalLink, Settings } from 'lucide-react'
+import { Settings } from 'lucide-react';
 import { useAuthStore } from '../lib/store'
 
 export default function PayoutSetupPage() {
   const navigate = useNavigate()
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
 
   useEffect(() => {
     // Redirect to MAI Pay setup

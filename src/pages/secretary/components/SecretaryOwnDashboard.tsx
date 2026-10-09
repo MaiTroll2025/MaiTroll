@@ -77,8 +77,8 @@ export default function SecretaryOwnDashboard() {
   const fetchStats = async () => {
     try {
       const [intakeRes, alertsRes, electionsRes] = await Promise.all([
-        supabase.from('executive_intake').select('id', { count: 'exact', head: true }).in('status', ['new', 'in_progress']),
-        supabase.from('critical_alerts').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        supabase.from('executive_intake').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_review']),
+        supabase.from('critical_alerts').select('id', { count: 'exact', head: true }).eq('resolved', false),
         supabase.from('president_elections').select('id', { count: 'exact', head: true }).in('status', ['draft', 'open']),
       ]);
       setStats({
@@ -137,7 +137,7 @@ export default function SecretaryOwnDashboard() {
       setTasks((prev) =>
         prev.map((t) => (t.id === taskId ? { ...t, status: newStatus as any } : t))
       );
-    } catch (err: any) {
+    } catch (_err: any) {
       toast.error('Failed to update task');
     }
   };
@@ -148,7 +148,7 @@ export default function SecretaryOwnDashboard() {
       if (error) throw error;
       toast.success('Task deleted');
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
-    } catch (err: any) {
+    } catch (_err: any) {
       toast.error('Failed to delete task');
     }
   };

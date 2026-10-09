@@ -1,7 +1,6 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Particles from '@tsparticles/react';
-import { Engine } from 'tsparticles-engine';
 import { useAnimationStore, type CoinExplosionData } from '../../lib/animationManager';
 import { Coins } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -11,7 +10,7 @@ interface CoinExplosionProps {
 }
 
 const CoinExplosion = ({ explosion }: CoinExplosionProps) => {
-  const { reducedMotion, isMobile, particleDensity } = useAnimationStore();
+  const { reducedMotion, isMobile: _isMobile, particleDensity } = useAnimationStore();
   
   // Calculate particle count based on amount and device
   const particleCount = useMemo(() => {
@@ -19,13 +18,6 @@ const CoinExplosion = ({ explosion }: CoinExplosionProps) => {
     const multiplier = particleDensity === 'low' ? 0.3 : particleDensity === 'medium' ? 0.6 : 1;
     return Math.floor(baseAmount * multiplier);
   }, [explosion.amount, particleDensity]);
-
-  // Particle configuration
-  const particlesInit = useCallback(async (engine: Engine) => {
-    // Load basic particle functionality
-    await engine.addShape('circle');
-    await engine.addShape('square');
-  }, []);
 
   // Custom particle options for coin explosion
   const options = useMemo(() => ({
@@ -145,8 +137,7 @@ const CoinExplosion = ({ explosion }: CoinExplosionProps) => {
     >
       <Particles
         id={`coin-explosion-${explosion.id}`}
-        options={options}
-        init={particlesInit}
+        options={options as any}
       />
       
       {/* Amount display overlay */}

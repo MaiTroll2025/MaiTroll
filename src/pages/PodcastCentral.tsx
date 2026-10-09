@@ -1,26 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-  AlertCircle,
-  BarChart3,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  Headphones,
-  Loader2,
-  Lock,
-  Mic,
-  Play,
-  Radio,
-  RefreshCw,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  TrendingUp,
-  Users,
-  Volume2,
-  Zap,
-} from 'lucide-react'
+import { BarChart3, CheckCircle2, ChevronRight, Clock, Headphones, Loader2, Lock, Mic, Play, Radio, RefreshCw, ShieldCheck, Sparkles, Star, TrendingUp, Users, Zap } from 'lucide-react';
 import { toast } from 'sonner'
 import useSEO from '@/hooks/useSEO';
 
@@ -58,6 +38,7 @@ interface Podcast {
   created_at: string
   updated_at: string
   host_username?: string | null
+  recording_url?: string | null
 }
 
 const LIVE_PODCAST_STATUSES: PodcastStatus[] = ['live', 'active']
@@ -83,7 +64,7 @@ const asNumber = (value: unknown, fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
-const formatTime = (seconds?: number | null) => {
+const _formatTime = (seconds?: number | null) => {
   const safeSeconds = Math.max(0, Number(seconds || 0))
   const mins = Math.floor(safeSeconds / 60)
   const secs = safeSeconds % 60

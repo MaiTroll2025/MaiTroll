@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, Eye, EyeOff, Glasses, Crown, Shirt, Sparkles, Shield, ChevronDown } from 'lucide-react';
+import { Settings, X, Glasses, Crown, Shirt, Sparkles, Shield, ChevronDown } from 'lucide-react';
 import { useARGiftStore } from '../../stores/arGiftStore';
 import { cn } from '../../lib/utils';
 

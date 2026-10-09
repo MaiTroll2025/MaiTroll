@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Megaphone, Image, Video, FileText, Share2, Clock, 
-  CheckCircle, XCircle, Download, Edit, Trash2, 
-  RefreshCw, Plus, Layout, Link, Hash, Users, 
-  BarChart3, Calendar, Send, FolderOpen, AlertTriangle,
-  Instagram, Twitter, Sparkles, Brain, Zap, Eye, Check,
-  Facebook
-} from 'lucide-react';
+import { Megaphone, Image, Video, FileText, Share2, Clock, CheckCircle, XCircle, Download, Trash2, RefreshCw, Plus, Layout, Link, Users, BarChart3, Calendar, Send, FolderOpen, Instagram, Twitter, Sparkles, Brain, Zap, Eye, Check, Facebook } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { validateFile, FILE_VALIDATION } from '../../lib/fileValidation';
 import { toast } from 'sonner';
@@ -105,7 +98,7 @@ const contentTypeLabels: Record<ContentSourceType, string> = {
   broadcast: 'Broadcast Setup'
 };
 
-const ctaOptions: Record<ContentSourceType, string> = {
+const _ctaOptions: Record<ContentSourceType, string> = {
   stream: 'Go live on Mai Troll',
   trollpod: 'Join the conversation',
   wall_post: 'Join Mai Troll',
@@ -143,9 +136,9 @@ export default function XAdsStudio() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [urlInput, setUrlInput] = useState('');
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [_selectedJob, _setSelectedJob] = useState<string | null>(null);
   const [oauthClientId, setOauthClientId] = useState('');
   const [oauthClientSecret, setOauthClientSecret] = useState('');
   const [showOauthConfig, setShowOauthConfig] = useState(false);
@@ -295,7 +288,7 @@ export default function XAdsStudio() {
 
   const publishToSocial = async (queueId: string, platform: 'x' | 'instagram' | 'facebook') => {
     try {
-      const { data, error } = await supabase.functions.invoke('publish-social', {
+      const { data: _data, error } = await supabase.functions.invoke('publish-social', {
         body: { queue_id: queueId, platform }
       });
 
@@ -372,7 +365,7 @@ export default function XAdsStudio() {
       await supabase.from('connected_social_accounts').delete().eq('id', accountId);
       toast.success('Account disconnected');
       fetchData();
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to disconnect');
     }
   };
@@ -389,7 +382,7 @@ export default function XAdsStudio() {
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
       
-      const { data, error } = await supabase.storage
+      const { data: _data, error } = await supabase.storage
         .from('ad-assets')
         .upload(`${assetId}/${file.name}`, uint8Array, { upsert: true });
       
@@ -456,7 +449,7 @@ export default function XAdsStudio() {
     }
   };
 
-  const schedulePost = async (queueId: string, scheduledAt: Date) => {
+  const _schedulePost = async (queueId: string, scheduledAt: Date) => {
     try {
       await supabase.from('social_publish_queue').update({
         publish_status: 'scheduled',
@@ -465,7 +458,7 @@ export default function XAdsStudio() {
       
       toast.success('Post scheduled');
       fetchData();
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to schedule');
     }
   };
@@ -492,7 +485,7 @@ export default function XAdsStudio() {
         publish_status: 'draft'
       };
 
-      const { data, error } = await supabase.from('social_publish_queue').insert(queueItem).select().single();
+      const { data: _data, error } = await supabase.from('social_publish_queue').insert(queueItem).select().single();
       
       if (error) throw error;
       
@@ -726,8 +719,8 @@ export default function XAdsStudio() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 <button
               onClick={() => generateAds('image_ad')}
-              disabled={!selectedSource || generating}
-              className="p-6 bg-gray-900 rounded-xl border border-gray-800 hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                disabled={Boolean(!selectedSource || generating)}
+                className="p-6 bg-gray-900 rounded-xl border border-gray-800 hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -745,7 +738,7 @@ export default function XAdsStudio() {
 
                 <button
                 onClick={() => generateAds('video_promo')}
-                disabled={!selectedSource || generating}
+                disabled={Boolean(!selectedSource || generating)}
                 className="p-6 bg-gray-900 rounded-xl border border-gray-800 hover:border-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left"
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -778,7 +771,7 @@ export default function XAdsStudio() {
 
               <button
                 onClick={() => generateAds('full_campaign')}
-                disabled={!selectedSource || generating}
+                disabled={Boolean(!selectedSource || generating)}
                 className="p-6 bg-gray-900 rounded-xl border border-gray-800 hover:border-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left"
               >
                 <div className="flex items-center gap-3 mb-3">

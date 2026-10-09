@@ -6,10 +6,9 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Swords, TrendingUp, TrendingDown, Minus, MapPin, Users, Crown, ChevronLeft, Loader2, Flag } from 'lucide-react';
+import { Trophy, Swords, TrendingUp, TrendingDown, Crown, ChevronLeft, Loader2, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
-import { getStateName } from '@/config/usStates';
 import type { StateLeaderboardEntry } from '@/types/stateBattle';
 import { subscribeToStateLeaderboard } from '@/services/stateBattleService';
 
@@ -33,7 +32,7 @@ export default function StateRankings() {
   useEffect(() => {
     fetchLeaderboard();
 
-    const channel = subscribeStateLeaderboard(() => {
+    const channel = subscribeToStateLeaderboard(() => {
       fetchLeaderboard();
     });
 

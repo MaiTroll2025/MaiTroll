@@ -2,11 +2,8 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 // import { TUTORIAL_PAGES, CREATOR_TUTORIAL_PAGES } from '@/components/TutorialWalkthrough'
 const TUTORIAL_PAGES = []
-const CREATOR_TUTORIAL_PAGES = []
-import { 
-  X, Camera, Image, ExternalLink, Home, Users, MessageSquare, 
-  Gift, Trophy, Wallet, Play, Video, Sparkles
-} from 'lucide-react'
+const _CREATOR_TUTORIAL_PAGES = []
+import { X, Camera, Image, ExternalLink } from 'lucide-react';
 
 const SCREENSHOT_PAGES = [
   { id: 'home', path: '/', title: 'Homepage', aspect: 'desktop' },
@@ -21,9 +18,9 @@ const SCREENSHOT_PAGES = [
 ]
 
 export default function ScreenshotCapture() {
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const [currentPage, setCurrentPage] = useState(0)
-  const [captureMode, setCaptureMode] = useState(false)
+  const [_captureMode, _setCaptureMode] = useState(false)
   
   const page = SCREENSHOT_PAGES[currentPage]
   

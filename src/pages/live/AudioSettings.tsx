@@ -10,7 +10,7 @@ export default function AudioSettings() {
     <div className="min-h-screen bg-zinc-950">
       <AudioSettingsPanel
         userId={user.id}
-        currentLevel={profile?.level || 1}
+        userLevel={profile?.level || 1}
       />
     </div>
   )

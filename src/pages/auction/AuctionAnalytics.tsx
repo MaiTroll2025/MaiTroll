@@ -1,13 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  BarChart3,
-  Clock3,
-  Coins,
-  Gavel,
-  Loader2,
-  TrendingUp,
-  Users,
-} from 'lucide-react'
+import { BarChart3, Coins, Gavel, Loader2, TrendingUp, Users } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'

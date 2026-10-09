@@ -1,5 +1,5 @@
 import React from 'react'
-import { Calendar, Clock, Users } from 'lucide-react'
+import { Clock, Users } from 'lucide-react';
 import { cn } from '@/lib/utils'
 
 interface EventCardProps {

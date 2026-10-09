@@ -25,10 +25,7 @@ import {
   Coins,
 } from 'lucide-react'
 
-import {
-  CityStatusOrbData,
-  CityStatusOrbOptions,
-} from '../../lib/hooks/useCityStatusOrb'
+import { CityStatusOrbData } from '../../lib/hooks/useCityStatusOrb';
 import { cn } from '../../lib/utils'
 
 import {
@@ -274,7 +271,7 @@ export default function CityStatusOrb({
    */
 
   if (compact) {
-    const raidBorderClass = data.recentlyRaided
+    const _raidBorderClass = data.recentlyRaided
       ? 'border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)]'
       : 'border-white/10';
 

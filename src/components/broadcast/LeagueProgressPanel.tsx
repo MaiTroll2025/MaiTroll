@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Trophy, Zap, Gift, Clock, ChevronRight, Star, Target, TrendingUp, Award } from 'lucide-react'
+import { Trophy, Zap, Gift, ChevronRight, Star, Target, TrendingUp, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
 import { useLeagueProgress, type LevelUpEvent } from '../../hooks/useLeagueProgress'

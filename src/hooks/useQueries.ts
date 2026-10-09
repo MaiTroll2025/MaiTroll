@@ -1,6 +1,5 @@
  import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { useAuthStore } from '../lib/store'
 import { usePageVisibilityContext } from '../contexts/PageVisibilityContext'
 
 // Query keys
@@ -60,7 +59,7 @@ export function useNewUsers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, username, avatar_url, tier, level, troll_coins, created_at, role, is_banned, banned_until, rgb_username_expires_at, glowing_username_color')
+        .select('id, username, avatar_url, tier, level, troll_coins, created_at, role, is_banned, rgb_username_expires_at, glowing_username_color')
         .order('created_at', { ascending: false })
         .limit(25)
 
@@ -76,7 +75,7 @@ export function useNewUsers() {
                          !username.includes('demo') &&
                          !username.includes('mock')
 
-        const isNotBanned = !user.is_banned && (!user.banned_until || new Date(user.banned_until) < new Date())
+        const isNotBanned = !user.is_banned
 
         return isRealUser && isNotBanned
       }).slice(0, 20) // Take top 20

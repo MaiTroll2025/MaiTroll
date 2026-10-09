@@ -631,7 +631,7 @@ serve(async (req) => {
     // Send push notification via Web Push (VAPID) using our push-notifications Edge Function
     try {
       // Get stream title and broadcaster info for push notifications
-      const { data: streamData, error: streamDataError } = await supabase
+      const { data: streamData, error: _streamDataError } = await supabase
         .from("streams")
         .select("title, user_id, broadcaster_id")
         .eq("id", stream_id)

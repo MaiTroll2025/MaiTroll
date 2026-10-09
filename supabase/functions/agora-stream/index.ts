@@ -105,7 +105,7 @@ async function createRtlsStreamKey(channel: string): Promise<{ streamKey: string
 }
 
 /** Delete an Agora RTLS stream key */
-async function deleteRtlsStreamKey(streamKey: string): Promise<void> {
+async function _deleteRtlsStreamKey(streamKey: string): Promise<void> {
   const url = `${AGORA_API_BASE}/rtls/ingress/streamkeys/${encodeURIComponent(streamKey)}`;
   console.log(`[agora-stream] deleteRtlsStreamKey: key=${streamKey.slice(0, 8)}...`);
   await fetch(url, {
@@ -209,7 +209,7 @@ async function handleStartStream(body: any, supabase: any) {
   // OBS will push to: rtmp://rtls-ingress-prod-{region}.agoramdn.com/live
   // with the stream key returned by this API call
   console.log(`[agora-stream] handleStartStream: creating Agora RTLS stream key for channel=${agoraChannel}`);
-  const { streamKey, createdAt } = await createRtlsStreamKey(agoraChannel);
+  const { streamKey, createdAt: _createdAt } = await createRtlsStreamKey(agoraChannel);
   const rtmpUrl = RTLS_INGRESS_URL;
   console.log(`[agora-stream] handleStartStream: Agora stream key created, rtmpUrl=${rtmpUrl}`);
 

@@ -40,13 +40,13 @@ for (let i = 0; i < L.length; i++) {
 console.log('End state: openDiv=', openDiv, 'openSec=', openSec);
 
 // Show where we go from balanced to unbalanced
-let maxBalDiv = 0, maxBalSec = 0;
+let _maxBalDiv = 0, _maxBalSec = 0;
 for (let i = 0; i < ev.length; i++) {
   const e = ev[i];
   // track running balance
-  const bal = openDiv; // we know the end value
+  const _bal = openDiv; // we know the end value
   if (!e.open && openDiv <= 0) break;
-  if (e.tag === 'div') maxBalDiv = i;
+  if (e.tag === 'div') _maxBalDiv = i;
 }
 
 function findLineOf(type, val) {

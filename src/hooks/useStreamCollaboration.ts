@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import {
-  MAX_COLLAB_BROADCASTERS,
-  MAX_COLLAB_GUEST_SEATS,
-  normalizeCollaborationPlatform,
-  type CollaborationBroadcasterOption,
-  type CollaborationRequestRow,
-  validateCollaborationRequestInput,
-} from '../lib/streamCollaboration'
+import { MAX_COLLAB_BROADCASTERS, normalizeCollaborationPlatform, type CollaborationBroadcasterOption, type CollaborationRequestRow, validateCollaborationRequestInput } from '../lib/streamCollaboration';
 
 interface UseStreamCollaborationOptions {
   currentUserId?: string | null

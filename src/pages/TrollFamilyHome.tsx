@@ -15,13 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
 import { useCoins } from '../lib/hooks/useCoins';
-import { 
-  Crown, Users, Trophy, Target, Heart, 
-  ChevronRight, Activity, Zap, Gift, MessageSquare,
-  TrendingUp, Shield, Music, Video, Clock, AlertTriangle,
-  CheckCircle, Lock, Plus, Sparkles, RefreshCw, Eye,
-  Settings, LogOut, X
-} from 'lucide-react';
+import { Crown, Users, Trophy, Target, Heart, ChevronRight, Activity, Gift, MessageSquare, TrendingUp, Shield, Video, Clock, AlertTriangle, CheckCircle, Lock, Plus, Sparkles, RefreshCw, Eye, Settings, LogOut, X } from 'lucide-react';
 import OrgModerationModal from '../components/moderation/OrgModerationModal';
 
 // Types for aggregated family data from RPC

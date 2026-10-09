@@ -1,31 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  AlertTriangle,
-  Calendar,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Eye,
-  FileText,
-  Gavel,
-  Landmark,
-  Scale,
-  Search,
-  Shield,
-  ShieldAlert,
-  Stamp,
-  Users,
-  X,
-} from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { AlertTriangle, Calendar, CheckCircle, ChevronLeft, ChevronRight, Eye, FileText, Gavel, Landmark, Scale, Search, Shield, ShieldAlert, Stamp, Users, X } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 import useSEO from '@/hooks/useSEO';
 import { startCourtSession } from '../lib/courtSessions'
-import { MaiTrollTheme } from '../styles/trollCityTheme'
 import FileLawsuitModal from '../components/FileLawsuitModal'
 import JudgeRulingModal from '../components/JudgeRulingModal'
 import PayWarrantModal from '../components/PayWarrantModal'
@@ -73,6 +54,17 @@ const CASE_TYPES = [
 export default function TrollCourt() {
   const { user, profile } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [poPrefill, setPoPrefill] = useState<{ id: string; username: string; avatar_url?: string | null }[]>([])
+
+  useEffect(() => {
+    const respondent = (location.state as any)?.poRespondent
+    if (respondent && respondent.id && respondent.username) {
+      setPoPrefill([{ id: respondent.id, username: respondent.username, avatar_url: respondent.avatar_url || null }])
+      setIsProtectionOrderOpen(true)
+      window.history.replaceState({}, '')
+    }
+  }, [location.state])
 
   useSEO({
     title: 'Troll Court | Community Court & Social Justice | Mai Troll',
@@ -161,7 +153,8 @@ export default function TrollCourt() {
 
       if (data) setMyCivilCases(data)
 
-      if (profile?.role === 'admin' || profile?.role === 'lead_troll_officer' || profile?.role === 'judge') {
+      const role = String(profile?.role || '')
+      if (role === 'admin' || role === 'lead_troll_officer' || role === 'judge') {
         const { data: assigned } = await supabase
           .from('troll_court_cases')
           .select('*, defendant:defendant_id!left(username, avatar_url), plaintiff:plaintiff_id!left(username, avatar_url)')
@@ -628,6 +621,9 @@ export default function TrollCourt() {
                 </p>
 
                 <div className="grid gap-3 sm:grid-cols-2">
+                  {courtSession.is_public !== false && (
+                    <CourtActionButton icon={<Eye size={17} />} label="Watch Court" onClick={() => navigate(`/troll-court/watch/${courtSession.id}`)} />
+                  )}
                   <CourtActionButton icon={<Users size={17} />} label="Enter Courtroom" onClick={() => navigate(`/court/${courtSession.id}`)} />
                   <CourtActionButton icon={<Gavel size={17} />} label="File Civil Lawsuit" onClick={() => setIsFileLawsuitModalOpen(true)} tone="red" />
                   <CourtActionButton icon={<Shield size={17} />} label="File Protection Order" onClick={() => setIsProtectionOrderOpen(true)} tone="gold" />
@@ -930,6 +926,7 @@ export default function TrollCourt() {
       <ProtectionOrderFiling
         isOpen={isProtectionOrderOpen}
         onClose={() => setIsProtectionOrderOpen(false)}
+        initialRespondents={poPrefill}
       />
 
       <PayWarrantModal

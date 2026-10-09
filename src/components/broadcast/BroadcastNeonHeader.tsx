@@ -1,17 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Coins,
-  Crown,
-  Gift,
-  Plus,
-  BadgeCheck,
-  UserPlus,
-  MessageSquare,
-  Flag,
-  Heart,
-  Circle,
-  Users,
-} from 'lucide-react'
+import { Coins, Crown, Gift, Plus, BadgeCheck, UserPlus, MessageSquare, Flag, Heart, Users } from 'lucide-react';
 import { useAuthStore } from '../../lib/store'
 import { supabase } from '../../lib/supabase'
 import { getCategoryConfig } from '../../config/broadcastCategories'
@@ -26,8 +14,9 @@ import { useUserFrame } from '@/hooks/useUserFrame'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useStreamSlaStatus } from '../../hooks/useSlaStatus'
 import { SlaStatusIndicator } from './SlaBadge'
-import AudienceBubbleTicker from './AudienceBubbleTicker'
 import RandomBattleBanner from './RandomBattleBanner'
+import { QueuePhase } from './RandomBattleBanner'
+import { ModerateUserInfo } from './AudienceBubbleTicker'
 
 const LIVE_DOT_CLASS = 'h-2 w-2 rounded-full bg-red-500 animate-pulse'
 
@@ -64,13 +53,13 @@ export interface BroadcastNeonHeaderProps {
    onActiveViewersClick?: () => void
    onGiftUser?: (userId: string) => void
    onModerateUser?: (info: ModerateUserInfo) => void
-   randomBattleQueue?: {
-     phase: string
-     delayUntil?: number | null
-     isBusy?: boolean
-     startQueue: () => void
-     stopQueue: () => void
-   }
+    randomBattleQueue?: {
+      phase: QueuePhase
+      delayUntil?: number | null
+      isBusy?: boolean
+      startQueue: () => void
+      stopQueue: () => void
+    }
   }
 
 function formatTimer(ms: number): string {
@@ -101,12 +90,12 @@ export default function BroadcastNeonHeader({
     onLiveKitMicMute,
     onLiveKitMicUnmute,
     onActiveViewersClick,
-    audience,
-    audienceCurrentUserId,
-    audienceHostUserId,
-    audienceMaxVisible = 8,
-    onGiftUser,
-    onModerateUser,
+    audience: _audience,
+    audienceCurrentUserId: _audienceCurrentUserId,
+    audienceHostUserId: _audienceHostUserId,
+    audienceMaxVisible: _audienceMaxVisible = 8,
+    onGiftUser: _onGiftUser,
+    onModerateUser: _onModerateUser,
     randomBattleQueue,
 }: BroadcastNeonHeaderProps) {
     const { profile } = useAuthStore()

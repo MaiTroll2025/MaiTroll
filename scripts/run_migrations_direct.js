@@ -21,7 +21,7 @@ async function runMigration(filePath) {
   
   try {
     // Try using rpc to execute raw SQL
-    const { data, error } = await supabase.rpc('exec_sql', { sql });
+    const { data: _data, error } = await supabase.rpc('exec_sql', { sql });
     
     if (error) {
       // If exec_sql doesn't exist, try another approach
@@ -34,7 +34,7 @@ async function runMigration(filePath) {
           if (trimmed) {
             try {
               await supabase.rpc('exec_sql', { sql: trimmed + ';' });
-            } catch (e) {
+            } catch (_e) {
               // Try direct query for simple statements
             }
           }

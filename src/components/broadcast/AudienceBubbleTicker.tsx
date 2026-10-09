@@ -32,7 +32,7 @@ export function AudienceBubbleTicker({
   hostUserId,
   maxVisible = 10,
   className = '',
-  onGiftUser,
+  onGiftUser: _onGiftUser,
   onModerateUser,
 }: AudienceBubbleTickerProps) {
   const { profile: currentProfile } = useAuthStore()

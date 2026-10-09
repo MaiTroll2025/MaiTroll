@@ -9,7 +9,7 @@
  * - Transparent background for clean overlay
  */
 
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { detectGiftTheme, getThemeParticleEmojis, getThemeColor, getThemeAnimationType, GiftTheme } from '../../lib/giftThemeEngine';
 import { playGiftSound } from '../../lib/giftSoundMap';

@@ -1,22 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  CheckCircle2,
-  Coins,
-  Loader2,
-  Package,
-  Printer,
-  Scan,
-  Search,
-  Truck,
-  User,
-} from 'lucide-react'
+import React, { useCallback, useState } from 'react';
+import { CheckCircle2, Loader2, Package, Printer, Scan, Search, Truck } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { cn } from '../../lib/utils'
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner'
-import { LotSticker, PackingSlip, ShippingLabel, printElement } from '../../components/auction/LabelPrinter'
+import { PackingSlip } from '../../components/auction/LabelPrinter';
 
 interface ScannedLotData {
   found: boolean
@@ -89,7 +79,7 @@ function formatCoins(value: number | null | undefined) {
 }
 
 export default function PackingStation() {
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const [scanInput, setScanInput] = useState('')
   const [scanning, setScanning] = useState(false)
   const [scannedData, setScannedData] = useState<ScannedLotData | null>(null)

@@ -6,7 +6,6 @@ import { useSingOffActions } from '../hooks/useSingOffActions'
 import { useShallow } from 'zustand/react/shallow'
 import { useSingOffLiveKit } from '../hooks/useSingOffLiveKit'
 import { useSingOffRealtime } from '../hooks/useSingOffRealtime'
-import { RemoteVideoRenderer } from './RemoteVideoRenderer'
 import { MicStand } from './MicStand'
 import { ChallengerTile } from './ChallengerTile'
 import { HostTile } from './HostTile'
@@ -43,7 +42,7 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
   )
   const {
     setHostPosition,
-    setCountdown,
+    setCountdown: _setCountdown,
     clearCountdown,
     setCoinStoreOpen,
     clearMaiWinnerEffect,
@@ -62,7 +61,7 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
     isConnected,
     isPublishing,
     localVideoTrack,
-    localAudioTrack,
+    localAudioTrack: _localAudioTrack,
     remoteUsers,
     connect,
     publish,
@@ -95,7 +94,7 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
   // Challenger publishes after the 10s countdown resolves
   const [published, setPublished] = useState(false)
   const myCountdown = store.countdown?.targetUserId === user?.id ? store.countdown : null
-  const [tick, setTick] = useState(0)
+  const [_tick, setTick] = useState(0)
   const countdownRemaining = myCountdown ? Math.max(0, Math.ceil((myCountdown.startAt - Date.now()) / 1000)) : null
 
   useEffect(() => {
@@ -137,7 +136,7 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
   }
 
   const isHostOrStaff = store.authority.is_host || store.authority.is_staff
-  const canSeeGift = isHostOrStaff || store.authority.is_judge
+  const _canSeeGift = isHostOrStaff || store.authority.is_judge
 
   const [giftTarget, setGiftTarget] = useState<{ userId: string; name: string } | null>(null)
 

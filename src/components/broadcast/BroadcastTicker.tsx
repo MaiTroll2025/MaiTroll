@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useTickerStore } from '../../stores/tickerStore';
 import { cn } from '../../lib/utils';
 import {
@@ -9,7 +9,7 @@ import {
   SPEED_MAP,
 } from '../../types/ticker';
 import PriorityTickerMessage from './PriorityTickerMessage';
-import { GripVertical, X, Maximize2, Minimize2, Edit3 } from 'lucide-react';
+import { GripVertical, X, Minimize2, Edit3 } from 'lucide-react';
 
 interface BroadcastTickerProps {
   className?: string;
@@ -44,12 +44,12 @@ const THEME_STYLES: Record<
   },
 };
 
-export default function BroadcastTicker({ className }: BroadcastTickerProps) {
+export default function BroadcastTicker({ className: _className }: BroadcastTickerProps) {
   const { messages, settings, priorityMessage, isPaused, screenshareActive } = useTickerStore();
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [_dragOffset, _setDragOffset] = useState({ x: 0, y: 0 });
   const [position, setPosition] = useState({ x: 0, y: 80 });
   const [height, setHeight] = useState(32);
   const [isResizing, setIsResizing] = useState(false);
@@ -68,7 +68,7 @@ export default function BroadcastTicker({ className }: BroadcastTickerProps) {
   }, [messages, screenshareActive]);
 
   const themeStyle = THEME_STYLES[settings.theme] || THEME_STYLES.neon;
-  const speedPxPerSec = SPEED_MAP[settings.speed] || SPEED_MAP.medium;
+  const _speedPxPerSec = SPEED_MAP[settings.speed] || SPEED_MAP.medium;
 
   // During screenshare: no animation duplication, just show messages statically
   const scrollingMessages = useMemo(() => {

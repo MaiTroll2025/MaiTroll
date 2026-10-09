@@ -1,7 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ShoppingBag, Coins, Zap, Crown, Star, Gift, Gamepad2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { ArrowLeft, ShoppingBag, Coins, Gift } from 'lucide-react';
 
 const STORE_ITEMS = [
   { name: 'GG Pack', icon: '👋', coins: 100, price: '$0.99', desc: '10 GG gifts' },

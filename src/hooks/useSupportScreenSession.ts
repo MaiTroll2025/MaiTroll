@@ -195,7 +195,7 @@ export function useSupportScreenSession() {
 
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const { data: _data, error } = await supabase
           .from("support_screen_sessions")
           .update({
             status: "declined",

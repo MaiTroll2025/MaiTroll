@@ -61,7 +61,7 @@ export const SendGiftButton: React.FC<SendGiftButtonProps> = ({
       } else {
         onError?.(result.message);
       }
-    } catch (err) {
+    } catch (_err) {
       onError?.('Failed to send gift');
     } finally {
       setIsSending(false);

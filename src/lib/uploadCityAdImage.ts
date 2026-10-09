@@ -47,7 +47,7 @@ export async function uploadCityAdImage(file: Blob, userId: string): Promise<Upl
     const filePath = `${userId}/${timestamp}.${extension}`;
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { data: _data, error } = await supabase.storage
       .from('city-ads')
       .upload(filePath, file, {
         contentType: file.type,

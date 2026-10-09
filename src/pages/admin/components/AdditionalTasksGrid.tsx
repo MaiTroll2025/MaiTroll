@@ -1,37 +1,5 @@
 import React from 'react'
-import {
-  Settings,
-  Database,
-  Shield,
-  BarChart3,
-  Users,
-  MessageSquare,
-  Coins,
-  ShoppingCart,
-  Calendar,
-  Bell,
-  Download,
-  RefreshCw,
-  Ban,
-  Flag,
-  UserCheck,
-  Monitor,
-  Camera,
-  TrendingUp,
-  DollarSign,
-  CreditCard,
-  Clock,
-  Activity,
-  Award,
-  Zap,
-  Home,
-  PieChart,
-  Shuffle,
-  Vote,
-  Mic,
-  FileText,
-  Trophy
-} from 'lucide-react'
+import { Settings, Database, Shield, BarChart3, Users, MessageSquare, Coins, Calendar, Bell, Download, RefreshCw, Flag, UserCheck, Monitor, Camera, TrendingUp, DollarSign, CreditCard, Clock, Activity, Award, Zap, PieChart, Vote, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
 import { systemManagementRoutes } from '../adminRoutes'
 
@@ -44,7 +12,6 @@ interface AdditionalTasksGridProps {
   onOpenFinanceDashboard?: () => void
   onOpenCreateSchedule?: () => void
   onOpenResetPanel?: () => void
-  onOpenEmpireApplications?: () => void
   onOpenReferralBonuses?: () => void
   onOpenApplications?: () => void
   onOpenAdminPool?: () => void
@@ -57,7 +24,6 @@ interface AdditionalTasksGridProps {
     reports?: number
     user_forms?: number
     tax_reviews?: number
-    empire_apps?: number
     referrals?: number
     [key: string]: number | undefined
   }
@@ -72,7 +38,6 @@ export default function AdditionalTasksGrid({
   onOpenFinanceDashboard,
   onOpenCreateSchedule,
   onOpenResetPanel,
-  onOpenEmpireApplications,
   onOpenReferralBonuses,
   onOpenApplications,
   onOpenAdminPool,
@@ -176,14 +141,6 @@ export default function AdditionalTasksGrid({
           color: 'text-blue-400',
           bgColor: 'bg-blue-500/20'
         },
-         {
-           icon: <Shuffle className="w-5 h-5" />,
-           label: 'Creator Switch',
-           description: 'Review migration claims',
-           action: () => navigate('/admin/creator-approvals'),
-           color: 'text-green-400',
-           bgColor: 'bg-green-500/20'
-         },
          {
            icon: <Flag className="w-5 h-5" />,
            label: 'Reports Queue',
@@ -346,15 +303,6 @@ export default function AdditionalTasksGrid({
           color: 'text-orange-400',
           bgColor: 'bg-orange-500/20'
         },
-         {
-           icon: <Shield className="w-5 h-5" />,
-           label: 'Empire Applications',
-           description: 'Review empire partnerships',
-           action: onOpenEmpireApplications,
-           color: 'text-purple-400',
-           bgColor: 'bg-purple-500/20',
-           count: counts.empire_apps
-         },
         {
           icon: <FileText className="w-5 h-5" />,
           label: 'Applications',
@@ -363,14 +311,6 @@ export default function AdditionalTasksGrid({
           color: 'text-cyan-400',
           bgColor: 'bg-cyan-500/20',
           count: counts.applications
-        },
-        {
-          icon: <Trophy className="w-5 h-5" />,
-          label: 'Mai Talent Show Judges',
-          description: 'Review judge applications',
-          action: () => navigate('/admin/mai-singoff-judges'),
-          color: 'text-pink-400',
-          bgColor: 'bg-pink-500/20'
         },
         {
           icon: <Award className="w-5 h-5" />,

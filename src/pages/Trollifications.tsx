@@ -2,40 +2,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Virtuoso } from 'react-virtuoso'
 import { toast } from 'sonner'
-import {
-  AlertTriangle,
-  Bell,
-  Briefcase,
-  Car,
-  Check,
-  CheckCircle,
-  CircleDollarSign,
-  Clock,
-  ExternalLink,
-  FileText,
-  Gift,
-  Gavel,
-  Home,
-  Megaphone,
-  MessageCircle,
-  Radio,
-  Shield,
-  ShieldOff,
-  ShoppingBag,
-  Siren,
-  Sword,
-  Trash2,
-  Trophy,
-  User,
-  Video,
-  X,
-  Zap,
-} from 'lucide-react'
+import { AlertTriangle, Bell, Briefcase, Check, CheckCircle, CircleDollarSign, Clock, Gift, Gavel, Home, Megaphone, MessageCircle, Radio, Shield, ShieldOff, Siren, Sword, Trash2, Trophy, User, Video, X, Zap } from 'lucide-react';
 
 import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 import { cn } from '../lib/utils'
-import { Notification, NotificationType } from '../types/notifications'
+import { Notification } from '../types/notifications';
 import { useAdminVoiceNotifications } from '../hooks/useAdminVoiceNotifications'
 
 const MAX_NOTIFICATIONS = 150
@@ -515,7 +487,7 @@ export default function Trollifications() {
     }
   }
 
-  const getRoute = (notification: EnhancedNotification) => {
+  const _getRoute = (notification: EnhancedNotification) => {
     const metadata = notification.metadata || {}
     const type = String(notification.type)
 

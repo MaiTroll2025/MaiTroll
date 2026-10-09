@@ -1,7 +1,6 @@
 import React from 'react'
 import { X, Mic, MicOff, Video, VideoOff, Users, Gift, Share2, Mail, MoreHorizontal, Radio, Sparkles } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import { toast } from 'sonner'
 
 interface BroadcasterControlsModalProps {
   isOpen: boolean
@@ -38,7 +37,7 @@ export default function BroadcasterControlsModal({
   onOpenMoreMenu,
   onEndStream,
   onInviteFollowers,
-  onOpenCoinStore,
+  onOpenCoinStore: _onOpenCoinStore,
 }: BroadcasterControlsModalProps) {
   const ActionButton = ({
     icon: Icon,

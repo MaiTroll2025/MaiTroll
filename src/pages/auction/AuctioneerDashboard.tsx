@@ -5,34 +5,7 @@ import AgoraRTC, {
   type ICameraVideoTrack,
   type IMicrophoneAudioTrack,
 } from 'agora-rtc-sdk-ng'
-import {
-  ArrowLeft,
-  Barcode,
-  Bell,
-  CheckCircle,
-  Clock,
-  Coins,
-  Eye,
-  EyeOff,
-  Flag,
-  Gavel,
-  Loader2,
-  Lock,
-  Maximize2,
-  Megaphone,
-  Mic,
-  MicOff,
-  Pause,
-  Play,
-  Scan,
-  Send,
-  Shield,
-  Users,
-  Video,
-  VideoOff,
-  Volume2,
-  VolumeX,
-} from 'lucide-react'
+import { ArrowLeft, CheckCircle, Clock, Eye, EyeOff, Gavel, Loader2, Lock, Megaphone, Mic, MicOff, Pause, Play, Scan, Send, Users, Video, VideoOff } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -107,8 +80,8 @@ export default function AuctioneerDashboard() {
   const [lots, setLots] = useState<AuctionLot[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [_isMuted, _setIsMuted] = useState(false)
+  const [_isFullscreen, _setIsFullscreen] = useState(false)
   const [auctioneerMicOn, setAuctioneerMicOn] = useState(true)
   const [auctioneerCamOn, setAuctioneerCamOn] = useState(true)
   const [auctioneerConnecting, setAuctioneerConnecting] = useState(false)
@@ -122,14 +95,14 @@ export default function AuctioneerDashboard() {
   const [displayTextDraft, setDisplayTextDraft] = useState('')
   const [savingDisplayText, setSavingDisplayText] = useState(false)
   const [displayTextSaved, setDisplayTextSaved] = useState(false)
-  const [agoraDebugLog, setAgoraDebugLog] = useState<string[]>([])
+  const [_agoraDebugLog, setAgoraDebugLog] = useState<string[]>([])
   const MAX_DISPLAY_LENGTH = 5000
 
   // Live current-bid display for the auctioneer (issue #1).
   const [currentBidderName, setCurrentBidderName] = useState<string | null>(null)
   const [bidCount, setBidCount] = useState(0)
 
-  const logAgora = useCallback((msg: string) => {
+  const _logAgora = useCallback((msg: string) => {
     console.log(msg)
     setAgoraDebugLog((prev) => [...prev.slice(-19), `${new Date().toLocaleTimeString()} ${msg}`])
   }, [])

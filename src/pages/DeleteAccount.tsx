@@ -3,7 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
-import { AlertTriangle, ArrowLeft, Check, X, Shield, Coins, Trash2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Shield, Coins, Trash2 } from 'lucide-react';
 
 const DELETE_REASONS = [
   { value: 'privacy', label: 'Privacy concerns' },

@@ -98,7 +98,7 @@ async function tryHost(host) {
           }
         } catch (err) {
           console.error(`Connection failed: ${err.message}`);
-          try { await client.end(); } catch(e) {}
+          try { await client.end(); } catch(_e) {}
         }
       }
     }

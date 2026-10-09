@@ -32,7 +32,7 @@ const DEFAULT_BUILDINGS: BuildingMetaExtended[] = [
   { label: 'Court House', to: '/troll-court', type: 'court' },
   { label: 'Hytro Arcade', to: '/hytrogaming', type: 'arcade' },
   { label: 'MAI Pay', to: '/mai-pay', type: 'bank' },
-  { label: 'Leaders', to: '/leaderboard', type: 'achievement' },
+  { label: 'Careers', to: '/careers', type: 'standard' },
 ]
 
 type Material = 'brick' | 'glass' | 'concrete' | 'stone' | 'darkGlass'
@@ -233,7 +233,7 @@ function getSunPosition(
   }
 }
 
-function roundRectPath(
+function _roundRectPath(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -432,7 +432,7 @@ interface Tree {
   swayOffset: number
 }
 
-interface Leaf {
+interface _Leaf {
   x: number
   y: number
   vx: number
@@ -446,7 +446,7 @@ interface Leaf {
 
 function generateTrees(
   width: number,
-  groundY: number,
+  _groundY: number,
 ): Tree[] {
   const trees: Tree[] = []
 
@@ -485,7 +485,7 @@ function drawTree(
     ? 'rgba(45,30,20,0.95)'
     : 'rgba(70,45,25,0.9)'
 
-  const trunkHighlight = isDark
+  const _trunkHighlight = isDark
     ? 'rgba(60,40,28,0.9)'
     : 'rgba(95,65,40,0.85)'
 
@@ -1345,13 +1345,13 @@ function drawAirplane(
   ctx.restore()
 }
 
-function drawBuildingDecorations(
+function _drawBuildingDecorations(
   ctx: CanvasRenderingContext2D,
   building: Building,
   top: number,
   groundY: number,
   isDark: boolean,
-  mc: MaterialColors,
+  _mc: MaterialColors,
 ) {
   const roofColor = isDark
     ? 'rgba(45,35,32,0.98)'
@@ -1598,108 +1598,6 @@ function drawAirplanes(
   }
 }
 
-
-/* -------------------------------------------------------------------------- */
-/* Halloween atmosphere                                                      */
-/* -------------------------------------------------------------------------- */
-
-function drawHalloweenAtmosphere(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  groundY: number,
-  time: number,
-  isDark: boolean,
-) {
-  /* Spooky purple/orange atmospheric glow behind the city. */
-  const skyGlow = ctx.createLinearGradient(0, 0, 0, groundY)
-  skyGlow.addColorStop(0, isDark ? 'rgba(18,5,35,0.30)' : 'rgba(75,20,90,0.10)')
-  skyGlow.addColorStop(0.55, isDark ? 'rgba(45,8,55,0.18)' : 'rgba(120,35,70,0.06)')
-  skyGlow.addColorStop(1, 'rgba(255,105,0,0.03)')
-  ctx.fillStyle = skyGlow
-  ctx.fillRect(0, 0, width, groundY)
-
-  /* Slow-moving fog along the street. */
-  const fogY = groundY + 18
-  for (let i = 0; i < 5; i++) {
-    const offset = ((time * (5 + i * 1.5) * (i % 2 ? -1 : 1)) + i * 190) % (width + 360)
-    const x = offset - 180
-    const fog = ctx.createRadialGradient(x, fogY, 0, x, fogY, 190 + i * 25)
-    fog.addColorStop(0, isDark ? 'rgba(210,195,235,0.09)' : 'rgba(255,245,255,0.10)')
-    fog.addColorStop(1, 'rgba(210,195,235,0)')
-    ctx.fillStyle = fog
-    ctx.fillRect(x - 210, fogY - 55, 420, 120)
-  }
-
-  /* Small bats crossing the upper skyline. */
-  for (let i = 0; i < 5; i++) {
-    const travel = (time * (8 + i * 2) + i * 180) % (width + 180)
-    const x = travel - 90
-    const y = 70 + Math.sin(time * 0.7 + i * 1.8) * 16 + i * 28
-    const flap = Math.sin(time * 7 + i) * 4
-    const size = 5 + (i % 3)
-
-    ctx.save()
-    ctx.translate(x, y)
-    ctx.strokeStyle = isDark ? 'rgba(8,5,14,0.90)' : 'rgba(35,18,45,0.65)'
-    ctx.lineWidth = 1.7
-    ctx.lineCap = 'round'
-
-    ctx.beginPath()
-    ctx.moveTo(-size * 1.7, 0)
-    ctx.quadraticCurveTo(-size, -size - flap, 0, 0)
-    ctx.quadraticCurveTo(size, -size + flap, size * 1.7, 0)
-    ctx.stroke()
-
-    ctx.fillStyle = isDark ? 'rgba(8,5,14,0.90)' : 'rgba(35,18,45,0.65)'
-    ctx.beginPath()
-    ctx.ellipse(0, 1, size * 0.38, size * 0.65, 0, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
-  }
-
-  /* Pumpkins on the sidewalk: each building gets a nearby glowing jack-o'-lantern. */
-  const pumpkinCount = Math.max(5, Math.floor(width / 150))
-  for (let i = 0; i < pumpkinCount; i++) {
-    const x = ((i + 0.5) * width) / pumpkinCount
-    const bob = Math.sin(time * 1.4 + i) * 0.8
-    const y = groundY + 9 + bob
-    const glow = ctx.createRadialGradient(x, y, 0, x, y, 28)
-    glow.addColorStop(0, 'rgba(255,130,20,0.20)')
-    glow.addColorStop(1, 'rgba(255,80,0,0)')
-    ctx.fillStyle = glow
-    ctx.fillRect(x - 30, y - 30, 60, 60)
-
-    ctx.save()
-    ctx.translate(x, y)
-    ctx.fillStyle = '#e87516'
-    ctx.beginPath()
-    ctx.ellipse(-5, 0, 7, 9, 0, 0, Math.PI * 2)
-    ctx.ellipse(5, 0, 7, 9, 0, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.fillStyle = '#6b3b16'
-    ctx.fillRect(-1.5, -11, 3, 4)
-
-    ctx.fillStyle = '#160d1d'
-    ctx.beginPath()
-    ctx.moveTo(-7, -2); ctx.lineTo(-2, -5); ctx.lineTo(-3, 0); ctx.closePath(); ctx.fill()
-    ctx.beginPath()
-    ctx.moveTo(2, -5); ctx.lineTo(7, -2); ctx.lineTo(3, 0); ctx.closePath(); ctx.fill()
-    ctx.fillRect(-5, 4, 10, 2)
-    ctx.restore()
-  }
-
-  /* A subtle orange/purple horizon wash. */
-  const horizon = ctx.createLinearGradient(0, groundY - 55, 0, groundY + 30)
-  horizon.addColorStop(0, 'rgba(255,105,0,0)')
-  horizon.addColorStop(0.65, isDark ? 'rgba(255,80,0,0.055)' : 'rgba(255,120,0,0.035)')
-  horizon.addColorStop(1, 'rgba(120,40,180,0.07)')
-  ctx.fillStyle = horizon
-  ctx.fillRect(0, groundY - 55, width, 90)
-
-  void height
-}
 
 /* -------------------------------------------------------------------------- */
 /* City                                                                       */
@@ -2085,106 +1983,6 @@ function RealisticBuilding({
             LEADERS
           </div>
         )}
-
-        {/* Halloween building decorations */}
-        <div
-          className="pointer-events-none absolute inset-0 overflow-visible"
-          aria-hidden="true"
-        >
-          {/* Purple/orange haunted trim */}
-          <div
-            className="absolute left-[3%] right-[3%] top-0 h-1 rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, rgba(255,112,0,.9), rgba(126,34,206,.95), rgba(255,112,0,.9))',
-              boxShadow: '0 0 10px rgba(255,90,0,.45), 0 0 14px rgba(126,34,206,.35)',
-            }}
-          />
-
-          {/* Spider webs in upper corners */}
-          <div
-            className="absolute left-1 top-1 h-10 w-10 opacity-80"
-            style={{
-              backgroundImage: `
-                radial-gradient(circle at 0 0, transparent 0 2px, rgba(245,245,245,.55) 2px 3px, transparent 3px),
-                repeating-conic-gradient(from 0deg at 0 0, rgba(245,245,245,.38) 0deg 2deg, transparent 2deg 22deg)
-              `,
-              borderRadius: '0 0 100% 0',
-            }}
-          />
-          <div
-            className="absolute right-1 top-1 h-10 w-10 rotate-90 opacity-80"
-            style={{
-              backgroundImage: `
-                radial-gradient(circle at 0 0, transparent 0 2px, rgba(245,245,245,.55) 2px 3px, transparent 3px),
-                repeating-conic-gradient(from 0deg at 0 0, rgba(245,245,245,.38) 0deg 2deg, transparent 2deg 22deg)
-              `,
-              borderRadius: '0 0 100% 0',
-            }}
-          />
-
-          {/* Jack-o'-lantern */}
-          <div
-            className="absolute bottom-[8%] left-[7%] flex h-7 w-8 items-center justify-center rounded-[45%] border border-orange-300/60 bg-orange-500 shadow-[0_0_12px_rgba(255,120,0,.55)] animate-pulse"
-          >
-            <span className="absolute -top-1 h-1.5 w-1 rounded-full bg-green-700" />
-            <span className="text-[8px] leading-none text-black">⌁⌁</span>
-          </div>
-
-          {/* Hanging ghost */}
-          <div
-            className="absolute right-[7%] top-[13%] text-[20px] opacity-80 animate-pulse"
-            style={{ filter: 'drop-shadow(0 0 7px rgba(210,190,255,.45))' }}
-          >
-            👻
-          </div>
-
-          {/* Type-specific Halloween accent */}
-          {isBank && (
-            <div
-              className="absolute right-[8%] bottom-[12%] rounded-full px-1.5 py-0.5 text-[7px] font-black uppercase"
-              style={{
-                color: '#ffd166',
-                background: 'rgba(60,15,75,.82)',
-                border: '1px solid rgba(255,166,0,.6)',
-                boxShadow: '0 0 8px rgba(255,120,0,.3)',
-              }}
-            >
-              Spooky Savings
-            </div>
-          )}
-
-          {isCourt && (
-            <div
-              className="absolute left-1/2 top-[16%] -translate-x-1/2 text-[18px]"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(126,34,206,.55))' }}
-            >
-              ☠
-            </div>
-          )}
-
-          {isArcade && (
-            <div
-              className="absolute bottom-[18%] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[7px] font-black tracking-widest"
-              style={{
-                color: '#ffb347',
-                background: 'rgba(22,7,40,.86)',
-                border: '1px solid rgba(255,102,0,.65)',
-                boxShadow: '0 0 10px rgba(255,70,0,.45), 0 0 10px rgba(126,34,206,.35)',
-              }}
-            >
-              HALLOWEEN ARCADE
-            </div>
-          )}
-
-          {isAchievement && (
-            <div
-              className="absolute right-[7%] top-[12%] text-[18px]"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(255,180,40,.55))' }}
-            >
-              🕸️
-            </div>
-          )}
-        </div>
 
         {/* Building label plaque */}
         <div
@@ -3342,22 +3140,6 @@ export default function DynamicWeatherBackground({
       )
 
       /* -------------------------------------------------------------- */
-      /* Halloween atmosphere                                           */
-      /* -------------------------------------------------------------- */
-
-      const halloweenGroundY =
-        cityCanvas.height - 80
-
-      drawHalloweenAtmosphere(
-        cityCtx,
-        cityCanvas.width,
-        cityCanvas.height,
-        halloweenGroundY,
-        time,
-        isDark,
-      )
-
-      /* -------------------------------------------------------------- */
       /* Rain / snow                                                     */
       /* -------------------------------------------------------------- */
 
@@ -3476,24 +3258,6 @@ export default function DynamicWeatherBackground({
         cityCtx,
         groundY,
         isDark,
-      )
-
-      /* Halloween road glow and scattered candles */
-      const halloweenRoad = cityCtx.createLinearGradient(
-        0,
-        groundY + SIDEWALK_HEIGHT + CURB_HEIGHT,
-        0,
-        cityCanvas.height,
-      )
-      halloweenRoad.addColorStop(0, 'rgba(126,34,206,0.035)')
-      halloweenRoad.addColorStop(0.5, 'rgba(255,100,0,0.02)')
-      halloweenRoad.addColorStop(1, 'rgba(15,5,25,0.08)')
-      cityCtx.fillStyle = halloweenRoad
-      cityCtx.fillRect(
-        0,
-        groundY + SIDEWALK_HEIGHT + CURB_HEIGHT,
-        cityCanvas.width,
-        cityCanvas.height - (groundY + SIDEWALK_HEIGHT + CURB_HEIGHT),
       )
 
       /* -------------------------------------------------------------- */
@@ -3697,17 +3461,6 @@ export default function DynamicWeatherBackground({
       className="pointer-events-none fixed inset-0 overflow-hidden"
       style={skyStyle}
     >
-      {/* Halloween color wash — weather colors remain underneath. */}
-      <div
-        className="absolute inset-0"
-        aria-hidden="true"
-        style={{
-          background: isNight
-            ? 'radial-gradient(circle at 78% 12%, rgba(220,190,255,.10), transparent 18%), linear-gradient(180deg, rgba(34,8,55,.28), rgba(75,12,45,.10) 55%, rgba(255,82,0,.045))'
-            : 'linear-gradient(180deg, rgba(95,20,105,.08), rgba(255,100,0,.025) 70%, rgba(126,34,206,.08))',
-          mixBlendMode: 'screen',
-        }}
-      />
       {/* -------------------------------------------------------------- */}
       {/* Stars                                                           */}
       {/* -------------------------------------------------------------- */}

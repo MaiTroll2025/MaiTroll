@@ -17,7 +17,7 @@ function Frame({ title, children }: { title: string; children: React.ReactNode }
 
 export default function DepartmentToolsTab({ profile }: { profile?: any; realProfile?: any }) {
   const navigate = useNavigate()
-  const { profile: p } = useAuthStore()
+  const { profile: _p } = useAuthStore()
   const officer = profile?.role === 'troll_officer' || profile?.role === 'lead_troll_officer' || profile?.is_troll_officer || profile?.is_lead_officer
 
   return (

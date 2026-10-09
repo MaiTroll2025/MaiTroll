@@ -32,7 +32,7 @@ let totalRemoved = 0
 
 const isDev = () => import.meta.env.DEV
 
-function getChannelName(nameOrConfig: string | { name: string }): string {
+function _getChannelName(nameOrConfig: string | { name: string }): string {
   if (typeof nameOrConfig === 'string') return nameOrConfig
   return nameOrConfig.name || 'unknown'
 }

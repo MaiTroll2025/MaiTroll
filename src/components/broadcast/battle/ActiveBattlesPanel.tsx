@@ -138,12 +138,12 @@ export function useActiveBattles(currentBattleId?: string | null) {
 export default function ActiveBattlesPanel({
   battles,
   loading,
-  currentBattleId,
+  currentBattleId: _currentBattleId,
   onSelectBattle,
-  challengerName,
-  opponentName,
-  currentRole,
-  viewerCount,
+  challengerName: _challengerName,
+  opponentName: _opponentName,
+  currentRole: _currentRole,
+  viewerCount: _viewerCount,
 }: {
   battles: ActiveBattle[];
   loading: boolean;

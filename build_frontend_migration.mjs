@@ -266,7 +266,7 @@ if (enableRlsBlocks.size > 0) {
 // Indexes
 output.push('-- ==================== INDEXES ====================');
 const allIndexes = [];
-for (const [t, idxs] of indexBlocks) {
+for (const [_t, idxs] of indexBlocks) {
   allIndexes.push(...new Set(idxs));
 }
 if (allIndexes.length > 0) {
@@ -277,7 +277,7 @@ if (allIndexes.length > 0) {
 // Foreign Keys
 output.push('-- ==================== FOREIGN KEYS ====================');
 const allFks = [];
-for (const [t, fks] of fkBlocks) {
+for (const [_t, fks] of fkBlocks) {
   allFks.push(...new Set(fks));
 }
 if (allFks.length > 0) {
@@ -298,7 +298,7 @@ for (const r of [...rpcs].sort()) {
 // Grants
 output.push('-- ==================== FUNCTION GRANTS ====================');
 const allGrants = [];
-for (const [r, grants] of grantBlocks) {
+for (const [_r, grants] of grantBlocks) {
   allGrants.push(...new Set(grants));
 }
 if (allGrants.length > 0) {
@@ -309,7 +309,7 @@ if (allGrants.length > 0) {
 // Policies
 output.push('-- ==================== RLS POLICIES ====================');
 const allPolicies = [];
-for (const [t, policies] of policyBlocks) {
+for (const [_t, policies] of policyBlocks) {
   allPolicies.push(...policies);
 }
 if (allPolicies.length > 0) {

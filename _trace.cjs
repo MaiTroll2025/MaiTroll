@@ -4,17 +4,17 @@ const file = 'src/pages/admin/CoinPackPurchasesLedger.tsx';
 const L = fs.readFileSync(file, 'utf8').split('\n');
 
 const events = [];
-let open = [];
+let _open = [];
 
 for (let i = 0; i < L.length; i++) {
   const line = i + 1;
   const s = L[i];
-  const match = s.match(/<\/?([A-Za-z][A-Za-z0-9:]*) | <(input|img|br|hr|area|base|col|embed|link|meta|param|source|track|wbr)[\s>]/g);
+  const _match = s.match(/<\/?([A-Za-z][A-Za-z0-9:]*) | <(input|img|br|hr|area|base|col|embed|link|meta|param|source|track|wbr)[\s>]/g);
   
   // match any JSX tag
-  const re = /[<]([A-Za-z][A-Za-z0-9:-]*)/g;   // open
-  const re2 = /<\/([A-Za-z][A-Za-z0-9:-]*)>/g; // close
-  const re3 = /<([A-Za-z][A-Za-z0-9:-]*)[^>]*\//g; // self-close: <.../>
+  const _re = /[<]([A-Za-z][A-Za-z0-9:-]*)/g;   // open
+  const _re2 = /<\/([A-Za-z][A-Za-z0-9:-]*)>/g; // close
+  const _re3 = /<([A-Za-z][A-Za-z0-9:-]*)[^>]*\//g; // self-close: <.../>
   const re4 = /<([A-Za-z][A-Za-z0-9:-]*)>/g;      // open or close
   
   let m;
@@ -27,15 +27,15 @@ for (let i = 0; i < L.length; i++) {
 // Hard-code the critical scanning: scan only from lines 777 to end
 console.log('=== JSX TAGS 1040 to 1076 ===');
 let depth = 0;
-let stack = [];
+let _stack = [];
 for (let idx = 1039; idx < 1076; idx++) {
   const Lidx = idx + 1;
   const s = L[idx];
   if (!s.trim() || s.trim().startsWith('//') || s.trim().startsWith('/*') || s.trim().startsWith('*') || s.trim() === '}' || s.trim() === '}' || s.trim() === '=>' || s.includes('{') || s.includes('}') || s.includes('showFileUpload') || s.includes('showNotePanel')) continue;
   
   // find all <tag or </tag
-  const reOpen = /<([A-Za-z][A-Za-z0-9:]*)>/g;
-  const reClose = /<\/([A-Za-z][A-Za-z0-9:]*)>/g;
+  const _reOpen = /<([A-Za-z][A-Za-z0-9:]*)>/g;
+  const _reClose = /<\/([A-Za-z][A-Za-z0-9:]*)>/g;
   
   // walk string char by char to find <tag and </tag without regex overlap
   const entries = [];

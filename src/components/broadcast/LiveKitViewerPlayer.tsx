@@ -10,7 +10,7 @@ interface LiveKitViewerPlayerProps {
   roomName: string;
 }
 
-const LiveKitViewerPlayer: React.FC<LiveKitViewerPlayerProps> = ({ streamId, broadcasterId, roomName }) => {
+const LiveKitViewerPlayer: React.FC<LiveKitViewerPlayerProps> = ({ streamId, broadcasterId: _broadcasterId, roomName }) => {
   const navigate = useNavigate();
   const roomRef = useRef<Room | null>(null);
   const [remoteParticipants, setRemoteParticipants] = useState<RemoteParticipant[]>([]);

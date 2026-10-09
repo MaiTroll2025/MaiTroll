@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stream } from '../../types/broadcast';
 import { supabase } from '../../lib/supabase';
-import { Plus, Minus, LayoutGrid, Settings2, Coins, Lock, Unlock, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Sparkles, Palette, Gift, UserX, ImageIcon, LogOut, ChevronDown, ChevronUp, Share2, Package, Swords, Star, GripVertical, X, MoreHorizontal,   Sliders, Shield, PlusCircle, Users, Bell, Crown } from 'lucide-react';
+import { Settings2, Coins, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Palette, UserX, ImageIcon, LogOut, Share2, Package, Swords, Star, X, Sliders, Shield, PlusCircle, Bell, Crown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
 import { getCategoryConfig, MAX_GUEST_SEATS } from '../../config/broadcastCategories';
@@ -12,12 +12,10 @@ import BattleThemeSelector from './BattleThemeSelector';
 import BroadcastOfficerModal from './BroadcastOfficerModal';
 import SubscriberPerksPanel from './SubscriberPerksPanel';
 import { useAuthStore } from '../../lib/store';
-import { PreflightStore } from '../../lib/preflightStore';
 import { useParticipantAttributes } from '../../hooks/useParticipantAttributes';
 import { useBroadcastViewerCap } from '../../hooks/useBroadcastViewerCap';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LocalVideoTrack, LocalAudioTrack } from 'livekit-client';
-import { MaiTrollTheme } from '../../styles/trollCityTheme';
+import { LocalAudioTrack } from 'livekit-client';
 
 interface BroadcastControlsProps {
   stream: Stream;
@@ -69,18 +67,18 @@ interface BroadcastControlsProps {
 function BroadcastControls({
   stream,
   isHost,
-  isModerator = false,
+  isModerator: _isModerator = false,
   isOnStage,
   chatOpen,
   toggleChat,
-  onGiftHost,
+  onGiftHost: _onGiftHost,
   onLeave,
   onShare,
   requiredBoxes = 1,
   onBoxCountUpdate,
   onStreamEnd,
   handleLike,
-  toggleBattleMode,
+  toggleBattleMode: _toggleBattleMode,
   liveViewerCount,
   localTracks,
   toggleCamera,
@@ -91,7 +89,7 @@ function BroadcastControls({
   isCamOn: propCamOn,
   boxCount: parentBoxCount,
   setBoxCount: parentSetBoxCount,
-  onRefreshStream,
+  onRefreshStream: _onRefreshStream,
   onStartBattle,
   isBattleActive = false,
   isLive = false,
@@ -101,7 +99,7 @@ function BroadcastControls({
   onOpenStagePass,
   onInviteFollowers,
 }: BroadcastControlsProps) {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const renderCountRef = useRef(0);
   renderCountRef.current += 1;
   if (renderCountRef.current % 10 === 1 && import.meta.env.DEV) {
@@ -180,8 +178,8 @@ function BroadcastControls({
   const [showPaidChatSettings, setShowPaidChatSettings] = useState(false);
   const [showSubscriberPerks, setShowSubscriberPerks] = useState(false);
   const [likes, setLikes] = useState(0);
-  const [isLiking, setIsLiking] = useState(false);
-  const [isFeatureLoading, setIsFeatureLoading] = useState(false);
+  const [isLiking, _setIsLiking] = useState(false);
+  const [_isFeatureLoading, setIsFeatureLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
 
@@ -191,7 +189,7 @@ function BroadcastControls({
   const [paidChatPrice, setPaidChatPrice] = useState(100);
 
   const categoryConfig = getCategoryConfig(stream.category || 'general');
-  const canModifyBoxes = categoryConfig.allowAddBox || categoryConfig.allowDeductBox;
+  const _canModifyBoxes = categoryConfig.allowAddBox || categoryConfig.allowDeductBox;
 
   const isElectionCategory = stream.category === 'election';
   const isOfficerOrAdmin =
@@ -209,15 +207,15 @@ function BroadcastControls({
     profile?.troll_role === 'pastor' ||
     profile?.troll_role === 'ceo' ||
     false;
-  const canEditElectionBoxes = !isElectionCategory || isOfficerOrAdmin;
+  const _canEditElectionBoxes = !isElectionCategory || isOfficerOrAdmin;
 
   // Check if user can use paid chat features
   const canUsePaidChat = profile?.level && profile.level >= 420;
-  const canUsePaidChatPerUser = isOfficerOrAdmin || canUsePaidChat;
+  const _canUsePaidChatPerUser = isOfficerOrAdmin || canUsePaidChat;
   const canUsePaidChatPerChat = isOfficerOrAdmin || canUsePaidChat;
 
   const [localBoxCount, setLocalBoxCount] = useState(stream.box_count || 1);
-  const boxCount = parentBoxCount !== undefined ? parentBoxCount : localBoxCount;
+  const _boxCount = parentBoxCount !== undefined ? parentBoxCount : localBoxCount;
   const setBoxCount = parentSetBoxCount !== undefined ? parentSetBoxCount : setLocalBoxCount;
 
   useEffect(() => {
@@ -321,7 +319,7 @@ function BroadcastControls({
     }
   };
 
-  const togglePerk = async (perkId: string) => {
+  const _togglePerk = async (perkId: string) => {
     if (!user) return;
     const isActive = activePerks.includes(perkId as any);
     try {
@@ -423,7 +421,7 @@ function BroadcastControls({
 
   const [enablePerBoxPricing, setEnablePerBoxPricing] = useState(false);
 
-  const updateBoxCount = async (newCount: number) => {
+  const _updateBoxCount = async (newCount: number) => {
     if (!canEditStream) return;
     const effectiveMaxBoxes = seatCap.enabled ? Math.min(MAX_GUEST_SEATS + 1, seatCap.max) : MAX_GUEST_SEATS + 1;
     if (newCount > effectiveMaxBoxes) {
@@ -1010,7 +1008,7 @@ function OrbBtn({ active, onClick, icon: Icon, label, glow, size, disabled, tool
   );
 }
 
-function SideOrb({ onClick, icon: Icon, color, active, disabled, label }: any) {
+function _SideOrb({ onClick, icon: Icon, color: _color, active: _active, disabled, label }: any) {
   const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();

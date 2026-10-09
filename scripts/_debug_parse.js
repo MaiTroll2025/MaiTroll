@@ -1,7 +1,7 @@
 // Direct TypeScript parser test
 const ts = require('typescript');
 const fs = require('fs');
-const path = require('path');
+const _path = require('path');
 
 const filePath = 'src/components/broadcast/StagePassRequestsPanel.tsx';
 const c = fs.readFileSync(filePath, 'utf8');

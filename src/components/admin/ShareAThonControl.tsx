@@ -2,19 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
-import {
-  Share2,
-  Zap,
-  Shield,
-  ShieldOff,
-  Loader2,
-  Users,
-  Radio,
-  CheckCircle,
-  XCircle,
-  ExternalLink,
-  Settings
-} from 'lucide-react';
+import { Share2, Zap, Shield, ShieldOff, Loader2, Radio, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ShareAThonEvent {
@@ -27,6 +15,8 @@ interface ShareAThonEvent {
   peak_simultaneous_broadcasters: number;
   total_shares_submitted: number;
   bonus_amount: number;
+  event_start_at?: string | null;
+  event_end_at?: string | null;
 }
 
 export default function ShareAThonControl() {
@@ -36,7 +26,7 @@ export default function ShareAThonControl() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [liveCount, setLiveCount] = useState(0);
 
-  const isAdmin = profile?.role === 'admin' || profile?.is_admin === true;
+  const _isAdmin = profile?.role === 'admin' || profile?.is_admin === true;
 
   useEffect(() => {
     fetchEvent();

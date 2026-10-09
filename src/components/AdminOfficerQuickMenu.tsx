@@ -128,7 +128,6 @@ const AdminOfficerQuickMenu: React.FC = () => {
       // Content & Apps
       { label: 'Reports Queue', action: () => navigate('/admin/reports-queue'), icon: '📋' },
       { label: 'Applications', action: () => navigate('/admin/applications'), icon: '📝' },
-      { label: 'Empire Applications', action: () => navigate('/admin/empire-applications'), icon: '🏰' },
       { label: 'Marketplace', action: () => navigate('/admin/marketplace'), icon: '🛍️' },
       { label: 'Support Tickets', action: () => navigate('/admin/support-tickets'), icon: '🎫' },
       

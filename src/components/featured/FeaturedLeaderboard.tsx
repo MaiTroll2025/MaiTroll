@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Crown, Flame, Gift, Medal, X } from 'lucide-react'
+import { Crown, Flame, Gift, X } from 'lucide-react';
 import type { FeaturedBroadcaster } from '../../types/featuredLive'
 
 interface FeaturedLeaderboardProps {

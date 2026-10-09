@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { GameState, ReactionSpeedGameState, PlayerState, MatchStatus } from './types';
+import { GameState } from './types';
 import { getGameEngine } from './GameEngine';
 import { GameType } from './gameTypes';
 
@@ -176,7 +176,7 @@ export class MatchController {
     this.onStateChange(this._gameState);
   }
 
-  private handlePresenceChange(presences: any[], type: 'join' | 'leave') {
+  private handlePresenceChange(_presences: any[], _type: 'join' | 'leave') {
     if (!this._gameState) return;
     // Re-sync all presences to get the most accurate state
     this.handlePresenceSync();
@@ -186,7 +186,7 @@ export class MatchController {
     if (!this._gameState) return { success: false, error: 'Match not initialized' };
 
     // Call RPC to add player to game_state in DB
-    const { data, error } = await supabase.rpc('join_game_match', {
+    const { data: _data, error } = await supabase.rpc('join_game_match', {
       p_match_id: this.matchId,
       p_user_id: playerId,
       p_username: username,

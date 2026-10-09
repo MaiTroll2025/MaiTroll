@@ -1,20 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Users,
-  Shield,
-  Search,
-  Circle,
-  MapPin,
-  Clock,
-  AlertTriangle,
-  KeyRound,
-  Monitor,
-  FileText,
-  StickyNote,
-  Save,
-  RefreshCw,
-  HeadphonesIcon,
-} from "lucide-react";
+import { Users, Shield, Search, Circle, MapPin, Clock, AlertTriangle, FileText, StickyNote, Save, RefreshCw, HeadphonesIcon } from "lucide-react";
 import { useAuthStore } from "../../lib/store";
 import { supabase } from "../../lib/supabase";
 import { toast } from "sonner";

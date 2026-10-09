@@ -21,7 +21,7 @@ const GrantCoins: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [loadingUser, setLoadingUser] = useState(false)
   const [targetUser, setTargetUser] = useState<TargetUser | null>(null)
-  const [grantType, setGrantType] = useState<GrantType>('paid')
+  const [grantType, _setGrantType] = useState<GrantType>('paid')
   const [amountInput, setAmountInput] = useState('')
   const [reason, setReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -422,7 +422,7 @@ const GrantCoins: React.FC = () => {
             >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>
-                Grant {grantType === 'free' ? 'Free' : 'Paid'} Coins
+                Grant Paid Coins
               </span>
             </button>
           </div>

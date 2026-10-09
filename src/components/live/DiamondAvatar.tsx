@@ -330,7 +330,7 @@ function StatusOverlay({ specialType, size }: { specialType: SpecialType; size: 
   );
 }
 
-function SpecialGlow({ specialType, size }: { specialType: SpecialType; size: number }) {
+function SpecialGlow({ specialType, size: _size }: { specialType: SpecialType; size: number }) {
   if (!specialType) return null;
 
   const glowMap: Record<string, { color: string; intensity: number }> = {

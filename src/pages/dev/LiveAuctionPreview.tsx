@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Gavel, Users, Clock, Coins, Trophy, AlertCircle, CheckCircle, XCircle, MessageSquare, Bell, Shield } from 'lucide-react';
+import { ArrowLeft, Gavel, Users, Clock, Coins, AlertCircle, CheckCircle, XCircle, Bell, Shield } from 'lucide-react';
 
 const mockAuctionShow = {
   id: '1',
@@ -54,7 +54,7 @@ const LiveAuctionPreview: React.FC = () => {
   const navigate = useNavigate();
   const [bidAmount, setBidAmount] = useState('');
   const [timeLeft, setTimeLeft] = useState(45);
-  const [lastBid, setLastBid] = useState<{ amount: number; bidder: string } | null>(null);
+  const [_lastBid, setLastBid] = useState<{ amount: number; bidder: string } | null>(null);
   const [bidStatus, setBidStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [selectedTab, setSelectedTab] = useState<'bids' | 'info' | 'chat'>('bids');
 

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const f = 'src/pages/admin/CoinPackPurchasesLedger.tsx';
-const L = fs.readFileSync(f, 'utf8').split('\n');
+const _L = fs.readFileSync(f, 'utf8').split('\n');
 
 // ── Strategy: one-shot replace exactly the corrupt area ──
 // Corrupt lines are 1049–1071 (1-based). After that the remaining JSX is correct borrow from backup.

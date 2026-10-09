@@ -1,30 +1,5 @@
 ﻿import React, { useEffect, useRef, useState, useCallback, memo } from 'react'
-import {
-  MessageCircle,
-  Share2,
-  Bookmark,
-  Gift,
-  MoreHorizontal,
-  Volume2,
-  VolumeX,
-  Play,
-  Shield,
-  Ban,
-  Eye,
-  Trash2,
-  UserX,
-  Send,
-  Download,
-  Copy,
-  MessageSquare,
-  Sparkles,
-  Flame,
-  X,
-  Coins,
-  Crown,
-  Pin,
-  Star,
-} from 'lucide-react'
+import { MessageCircle, Share2, Bookmark, Gift, MoreHorizontal, Volume2, VolumeX, Play, Shield, Ban, Eye, Trash2, UserX, Send, Download, Copy, MessageSquare, Sparkles, X, Coins, Pin, Star } from 'lucide-react';
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import type { TreelzPost, TreelzComment } from '@/types/treelz'
@@ -42,6 +17,7 @@ import {
 } from '@/services/treelzService'
 import { useAuthStore } from '@/lib/store'
 import { toast } from 'sonner'
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
 
 function formatCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
@@ -336,6 +312,12 @@ export function TreelzVideoPlayer({ post, isActive, autoPlay, onView }: TreelzVi
             <span className="rounded-full border border-fuchsia-300/20 bg-fuchsia-300/10 px-2 py-1 text-fuchsia-100">for you</span>
             <span className="rounded-full border border-white/10 bg-white/10 px-2 py-1">{scrubLabel}{duration ? ` / ${formatDuration(Math.floor(duration))}` : ''}</span>
           </div>
+          <FacebookPublishButton
+            sourceType="treelz_post"
+            sourceId={post.id}
+            compact
+            className="mt-2"
+          />
         </div>
       </div>
 

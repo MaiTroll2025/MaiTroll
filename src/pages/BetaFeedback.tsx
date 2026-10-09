@@ -1,24 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
-import {
-  ClipboardList,
-  ShieldAlert,
-  CheckCircle2,
-  AlertTriangle,
-  Search,
-  X,
-  ChevronDown,
-  Archive,
-  ArchiveRestore,
-  Link2,
-  Copy,
-  Send,
-  Loader2,
-  UserCog,
-  Filter,
-  Inbox,
-} from 'lucide-react'
+import { ClipboardList, ShieldAlert, AlertTriangle, Search, X, ChevronDown, Archive, ArchiveRestore, Link2, Send, Loader2, Filter, Inbox } from 'lucide-react';
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { validateFile, FILE_VALIDATION } from '@/lib/fileValidation'
@@ -449,7 +432,7 @@ function RepliesSection({
 function FeedbackDetail({
   feedback,
   isModerator,
-  currentUserId,
+  currentUserId: _currentUserId,
   reloadToken,
   onChanged,
   onBack,
@@ -887,7 +870,7 @@ function ModeratorView({ userId, reloadToken, onReload }: { userId: string; relo
   const [groupFeedback, setGroupFeedback] = useState<Record<string, BetaFeedbackWithUser[]>>({})
   const [items, setItems] = useState<BetaFeedbackWithUser[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [_selectedId, setSelectedId] = useState<string | null>(null)
   const [selected, setSelected] = useState<BetaFeedbackWithUser | null>(null)
   const [selection, setSelection] = useState<Set<string>>(new Set())
   const [bulk, setBulk] = useState<{ status?: BetaFeedbackStatus | ''; priority?: BetaFeedbackPriority | ''; category?: string; archive?: boolean | null }>({})
@@ -1221,7 +1204,7 @@ function ModeratorView({ userId, reloadToken, onReload }: { userId: string; relo
 // Main page
 // ----------------------------------------------------------------------------
 export default function BetaFeedbackPage() {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const [isModerator, setIsModerator] = useState(false)
   const [chatDisabled, setChatDisabled] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)

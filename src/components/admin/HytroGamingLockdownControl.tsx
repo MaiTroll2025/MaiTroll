@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useHytroGamingLockdown } from '@/hooks/useFeatureLockdown';
-import { Gamepad2, Lock, Unlock, Loader2, AlertTriangle } from 'lucide-react';
+import { Lock, Unlock, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function HytroGamingLockdownControl() {

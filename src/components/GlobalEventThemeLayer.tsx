@@ -197,7 +197,7 @@ export const useEventTheme = (): UseEventThemeReturn => {
 // Event Theme CSS (injected into document)
 // ============================================================================
 
-const cssInjected = false;
+const _cssInjected = false;
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const injectEventThemeCSS = (_theme?: EventTheme): void => {

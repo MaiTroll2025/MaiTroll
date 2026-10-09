@@ -14,7 +14,7 @@ const content = readFileSync(INPUT_FILE, 'utf8');
 const sections = content.split(/\n-- =+ /);
 
 // Extract preamble (extensions, enums, sequences)
-const preamble = sections[0] || '';
+const _preamble = sections[0] || '';
 
 // Extract all CREATE TABLE statements with their preceding comments
 const tableRegex = /--\s*Table:\s*(\w+)[\s\S]*?CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public\.)?(\w+)\s*\(([\s\S]*?)\);/gi;
@@ -22,7 +22,7 @@ const tables = [];
 let m;
 
 while ((m = tableRegex.exec(content)) !== null) {
-  const comment = m[0].match(/--\s*Table:\s*(\w+)/)?.[1] || m[2];
+  const _comment = m[0].match(/--\s*Table:\s*(\w+)/)?.[1] || m[2];
   const fullTable = m[0];
   tables.push({ comment: m[1], name: m[2], sql: fullTable });
 }
@@ -30,10 +30,10 @@ while ((m = tableRegex.exec(content)) !== null) {
 console.log(`Found ${tables.length} tables`);
 
 // Extract non-table SQL (functions, indexes, RLS, etc.)
-const nonTableBlocks = [];
-const blockRegex = /--\s*(Table:\s*\w+)?[\s\S]*?(CREATE\s+(?:OR\s+REPLACE\s+)?(?:FUNCTION|INDEX|VIEW|TRIGGER|POLICY|GRANT|ALTER\s+TABLE|DO\s+\$)[\s\S]*?;(?:\s*END\s*\$\$)?)/gi;
-let lastIndex = 0;
-let blockMatch;
+const _nonTableBlocks = [];
+const _blockRegex = /--\s*(Table:\s*\w+)?[\s\S]*?(CREATE\s+(?:OR\s+REPLACE\s+)?(?:FUNCTION|INDEX|VIEW|TRIGGER|POLICY|GRANT|ALTER\s+TABLE|DO\s+\$)[\s\S]*?;(?:\s*END\s*\$\$)?)/gi;
+let _lastIndex = 0;
+let _blockMatch;
 
 // This is tricky - let's just extract everything that's not a CREATE TABLE
 const lines = content.split('\n');

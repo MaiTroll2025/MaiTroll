@@ -59,7 +59,7 @@ export async function playGiftSound(tier: GiftTier): Promise<void> {
     // In that case, we just silently fail (no crash)
     try {
       await soundClone.play();
-    } catch (playError) {
+    } catch (_playError) {
       // Autoplay blocked - silently ignore
       console.log('[GiftSoundEngine] Autoplay blocked, skipping sound');
     }

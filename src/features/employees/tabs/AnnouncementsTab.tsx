@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../../lib/store'
 import { PermissionGate } from '../components/PermissionGate'
 
-export default function AnnouncementsTab({ profile, realProfile }: { profile?: any; realProfile?: any }) {
+export default function AnnouncementsTab({ profile: _profile, realProfile }: { profile?: any; realProfile?: any }) {
   const { user } = useAuthStore()
   const [items, setItems] = useState<any[]>([])
   const [acks, setAcks] = useState<Record<string, boolean>>({})

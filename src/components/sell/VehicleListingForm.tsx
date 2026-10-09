@@ -26,7 +26,7 @@ const PHOTO_CATEGORIES = [
   { key: 'interior', label: 'Interior' },
 ]
 
-export default function VehicleListingForm({ user, shopId, onListingCreated }: VehicleListingFormProps) {
+export default function VehicleListingForm({ user, shopId: _shopId, onListingCreated }: VehicleListingFormProps) {
   const [submitting, setSubmitting] = useState(false)
   const [uploadingPdf, setUploadingPdf] = useState(false)
   const [vinPdfUrl, setVinPdfUrl] = useState<string | null>(null)

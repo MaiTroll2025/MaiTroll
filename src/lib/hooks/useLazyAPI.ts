@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { useTabVisibility } from '../components/TabSwitchHandler';
+import { useTabVisibility } from '@/components/TabSwitchHandler';
 
 interface UseLazyAPIOptions {
   /** Whether to run the API call immediately when becoming visible */
@@ -24,7 +24,7 @@ export function useLazyAPI<TData, TArgs extends any[]>(
     runOnVisible = false,
     debounceMs = 500,
     skipWhenHidden = true,
-    showLoadingWhenHidden = false
+    showLoadingWhenHidden: _showLoadingWhenHidden = false
   } = options;
 
   const { isVisible, wasHidden, timeSinceLastVisible } = useTabVisibility();
@@ -163,7 +163,7 @@ export function useBatchedState<T>(
     }
 
     // Batch the update
-    batchedUpdatesRef.current.push(typeof update === 'function' ? update : () => update);
+    batchedUpdatesRef.current.push(typeof update === 'function' ? (update as (prev: T) => T) : (() => update) as (prev: T) => T);
 
     // Clear existing timeout
     if (timeoutRef.current) {

@@ -25,12 +25,14 @@ export default function AccessPurchasePanel({ recipientId }: { recipientId: stri
 
   useEffect(() => {
     let active = true
-    void supabase
-      .from('access_products')
-      .select('access_type, enabled, price_coins')
-      .eq('owner_id', recipientId)
-      .eq('enabled', true)
-      .gt('price_coins', 0)
+    void Promise.resolve(
+      supabase
+        .from('access_products')
+        .select('access_type, enabled, price_coins')
+        .eq('owner_id', recipientId)
+        .eq('enabled', true)
+        .gt('price_coins', 0)
+    )
       .then(({ data }) => {
         if (active) setProducts((data || []) as AccessProduct[])
       })

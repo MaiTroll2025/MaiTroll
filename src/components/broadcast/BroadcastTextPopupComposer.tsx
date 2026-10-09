@@ -59,7 +59,7 @@ export default function BroadcastTextPopupComposer({
     try {
       await onSend(trimmedMessage, style, durationMs);
       onOpenChange(false);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to send popup. Please try again.');
     }
   }, [canSubmit, trimmedMessage, style, durationMs, onSend, onOpenChange]);

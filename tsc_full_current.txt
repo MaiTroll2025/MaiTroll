@@ -1,0 +1,99 @@
+﻿src/components/refreshOnFocus.tsx(1106,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/components/TeamMeetingRoom/index.ts(3,10): error TS2305: Module '"../TeamMeetingRoom"' has no exported member 'default'.
+src/hooks/useNavBadges.ts(56,7): error TS2741: Property 'careers' is missing in type '{ home: undefined[]; chats: undefined[]; coins: string[]; auctions: string[]; court: string[]; neighborhood: string[]; wallet: string[]; family: string[]; shop: string[]; inventory: string[]; alerts: undefined[]; }' but required in type 'Record<keyof NavBadges, string[]>'.
+src/hooks/useNavBadges.ts(328,22): error TS2345: Argument of type '{ home: number; chats: number; coins: number; auctions: number; court: number; neighborhood: number; wallet: number; family: number; shop: number; inventory: number; alerts: number; }' is not assignable to parameter of type 'SetStateAction<NavBadges>'.
+  Property 'careers' is missing in type '{ home: number; chats: number; coins: number; auctions: number; court: number; neighborhood: number; wallet: number; family: number; shop: number; inventory: number; alerts: number; }' but required in type 'NavBadges'.
+src/lib/grantNavCoins.ts(29,100): error TS2339: Property 'catch' does not exist on type 'PromiseLike<void>'.
+src/lib/profileCache.ts(45,34): error TS2345: Argument of type 'PromiseLike<any[] | Profile[]>' is not assignable to parameter of type 'Promise<any>'.
+  Type 'PromiseLike<any[] | Profile[]>' is missing the following properties from type 'Promise<any>': catch, finally, [Symbol.toStringTag]
+src/lib/realtime/streamRealtimeManager.ts(178,3): error TS2322: Type 'Promise<void | RealtimeChannelSendResponse>' is not assignable to type 'Promise<void>'.
+  Type 'void | RealtimeChannelSendResponse' is not assignable to type 'void'.
+    Type 'string' is not assignable to type 'void'.
+src/lib/supabaseWrapper.ts(21,12): error TS2315: Type 'PostgrestResponse' is not generic.
+src/lib/supabaseWrapper.ts(34,29): error TS2315: Type 'PostgrestResponse' is not generic.
+src/lib/supabaseWrapper.ts(45,12): error TS2315: Type 'PostgrestResponse' is not generic.
+src/lib/supabaseWrapper.ts(59,29): error TS2315: Type 'PostgrestResponse' is not generic.
+src/lib/supabaseWrapper.ts(70,12): error TS2315: Type 'PostgrestResponse' is not generic.
+src/lib/supabaseWrapper.ts(84,29): error TS2315: Type 'PostgrestResponse' is not generic.
+src/lib/supabaseWrapper.ts(94,12): error TS2315: Type 'PostgrestResponse' is not generic.
+src/lib/supabaseWrapper.ts(107,29): error TS2315: Type 'PostgrestResponse' is not generic.
+src/lib/update.tsx(476,39): error TS2322: Type 'string' is not assignable to type 'number'.
+src/pages/admin/AdminErrors.tsx(75,47): error TS2345: Argument of type '"system_update"' is not assignable to parameter of type 'NotificationType'.
+src/pages/admin/agencies/index.tsx(191,15): error TS2322: Type '{ children: Element[]; value: string; onValueChange: Dispatch<SetStateAction<string>>; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; value: string; onValueChange: (value: string) => void; required?: boolean; }'.
+  Property 'className' does not exist on type 'IntrinsicAttributes & { children: ReactNode; value: string; onValueChange: (value: string) => void; required?: boolean; }'.
+src/pages/admin/agencies/index.tsx(204,15): error TS2322: Type '{ children: Element[]; value: string; onValueChange: Dispatch<SetStateAction<string>>; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; value: string; onValueChange: (value: string) => void; required?: boolean; }'.
+  Property 'className' does not exist on type 'IntrinsicAttributes & { children: ReactNode; value: string; onValueChange: (value: string) => void; required?: boolean; }'.
+src/pages/admin/BucketsDashboard.tsx(191,23): error TS2345: Argument of type '{ id: any; user_id: any; type: any; amount: any; coin_type: any; description: any; created_at: any; }[]' is not assignable to parameter of type 'SetStateAction<LedgerTransaction[]>'.
+  Type '{ id: any; user_id: any; type: any; amount: any; coin_type: any; description: any; created_at: any; }[]' is not assignable to type 'LedgerTransaction[]'.
+    Type '{ id: any; user_id: any; type: any; amount: any; coin_type: any; description: any; created_at: any; }' is missing the following properties from type 'LedgerTransaction': transaction_type, source_type, source_id, usd_amount, coin_amount
+src/pages/admin/CashoutDetailPage.tsx(66,20): error TS2345: Argument of type '{ id: any; user_id: any; username: any; email: any; coin_amount: any; cash_amount: any; net_amount: any; status: any; provider_type: any; provider_username: any; user_tag: any; id_verification_url: any; ... 7 more ...; troll_coins: any; }' is not assignable to parameter of type 'SetStateAction<PayoutDetails>'.
+  Property 'rejection_reason' is missing in type '{ id: any; user_id: any; username: any; email: any; coin_amount: any; cash_amount: any; net_amount: any; status: any; provider_type: any; provider_username: any; user_tag: any; id_verification_url: any; ... 7 more ...; troll_coins: any; }' but required in type 'PayoutDetails'.
+src/pages/admin/CoinPackPurchasesLedger.tsx(388,99): error TS2367: This comparison appears to be unintentional because the types '"pending" | "failed" | "refunded" | "canceled"' and '"paid"' have no overlap.
+src/pages/admin/CoinPackPurchasesLedger.tsx(623,110): error TS2322: Type '{ size: number; className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/pages/admin/components/StaffManagement.tsx(147,16): error TS2345: Argument of type '{ id: any; username: any; avatar_url: any; role: any; troll_role: any; is_troll_officer: any; is_lead_officer: any; is_admin: any; is_secretary: any; is_ceo: any; is_pastor: any; is_prosecutor: any; ... 6 more ...; officer_role: any; }[]' is not assignable to parameter of type 'SetStateAction<StaffMember[]>'.
+  Type '{ id: any; username: any; avatar_url: any; role: any; troll_role: any; is_troll_officer: any; is_lead_officer: any; is_admin: any; is_secretary: any; is_ceo: any; is_pastor: any; is_prosecutor: any; ... 6 more ...; officer_role: any; }[]' is not assignable to type 'StaffMember[]'.
+    Property 'is_moderator' is missing in type '{ id: any; username: any; avatar_url: any; role: any; troll_role: any; is_troll_officer: any; is_lead_officer: any; is_admin: any; is_secretary: any; is_ceo: any; is_pastor: any; is_prosecutor: any; ... 6 more ...; officer_role: any; }' but required in type 'StaffMember'.
+src/pages/admin/components/UserManagementPanel.tsx(71,21): error TS2345: Argument of type '{ paid: number; }' is not assignable to parameter of type 'SetStateAction<{ paid: number; free: number; }>'.
+  Property 'free' is missing in type '{ paid: number; }' but required in type '{ paid: number; free: number; }'.
+src/pages/admin/GrantCoins.tsx(425,24): error TS2367: This comparison appears to be unintentional because the types '"paid"' and '"free"' have no overlap.
+src/pages/admin/NightWatchDashboard.tsx(205,20): error TS2345: Argument of type '{ roomId: string; roomType: string; role: string; audioOnly: true; publish: false; isAdmin: boolean; userName: string; identity: string; initialAudioEnabled: false; onError: (err: any) => void; }' is not assignable to parameter of type '{ roomId: any; roomType?: string; role?: string; audioOnly?: boolean; publish?: boolean; isAdmin?: boolean; userName: any; identity?: string; initialAudioEnabled?: boolean; onUserJoined: any; onUserLeft: any; onError: any; }'.
+  Type '{ roomId: string; roomType: string; role: string; audioOnly: true; publish: false; isAdmin: boolean; userName: string; identity: string; initialAudioEnabled: false; onError: (err: any) => void; }' is missing the following properties from type '{ roomId: any; roomType?: string; role?: string; audioOnly?: boolean; publish?: boolean; isAdmin?: boolean; userName: any; identity?: string; initialAudioEnabled?: boolean; onUserJoined: any; onUserLeft: any; onError: any; }': onUserJoined, onUserLeft
+src/pages/agency-apply/[agencyId]/index.tsx(310,17): error TS2322: Type '{ name: string; label: string; placeholder: string; value: string; onChange: (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => void; minRows: number; required: true; }' is not assignable to type 'IntrinsicAttributes & TextareaProps'.
+  Property 'minRows' does not exist on type 'IntrinsicAttributes & TextareaProps'.
+src/pages/Call.tsx(259,44): error TS2345: Argument of type '(track: any, _participant: RemoteParticipant) => void' is not assignable to parameter of type '(track: RemoteTrack<Kind>, publication: RemoteTrackPublication, participant: RemoteParticipant) => void'.
+  Types of parameters '_participant' and 'publication' are incompatible.
+    Type 'RemoteTrackPublication' is missing the following properties from type 'RemoteParticipant': audioTrackPublications, videoTrackPublications, trackPublications, signalClient, and 36 more.
+src/pages/Call.tsx(270,11): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'Partial<InternalRoomConnectOptions>'.
+src/pages/church/ChurchLivePage.tsx(152,22): error TS2345: Argument of type '{ roomId: string; roomType: string; role: string; publish: false; audioOnly: true; userName: string; onError: (err: { message: string; }) => void; }' is not assignable to parameter of type '{ roomId: any; roomType?: string; role?: string; audioOnly?: boolean; publish?: boolean; isAdmin?: boolean; userName: any; identity?: string; initialAudioEnabled?: boolean; onUserJoined: any; onUserLeft: any; onError: any; }'.
+  Type '{ roomId: string; roomType: string; role: string; publish: false; audioOnly: true; userName: string; onError: (err: { message: string; }) => void; }' is missing the following properties from type '{ roomId: any; roomType?: string; role?: string; audioOnly?: boolean; publish?: boolean; isAdmin?: boolean; userName: any; identity?: string; initialAudioEnabled?: boolean; onUserJoined: any; onUserLeft: any; onError: any; }': onUserJoined, onUserLeft
+src/pages/church/PastorDashboard.tsx(86,22): error TS2345: Argument of type '{ roomId: string; roomType: string; role: string; publish: false; userName: string; }' is not assignable to parameter of type '{ roomId: any; roomType?: string; role?: string; audioOnly?: boolean; publish?: boolean; isAdmin?: boolean; userName: any; identity?: string; initialAudioEnabled?: boolean; onUserJoined: any; onUserLeft: any; onError: any; }'.
+  Type '{ roomId: string; roomType: string; role: string; publish: false; userName: string; }' is missing the following properties from type '{ roomId: any; roomType?: string; role?: string; audioOnly?: boolean; publish?: boolean; isAdmin?: boolean; userName: any; identity?: string; initialAudioEnabled?: boolean; onUserJoined: any; onUserLeft: any; onError: any; }': onUserJoined, onUserLeft, onError
+src/pages/government/GovernmentStreams.tsx(370,9): error TS2322: Type 'MutableRefObject<HTMLAudioElement>' is not assignable to type 'LegacyRef<HTMLVideoElement>'.
+  Type 'MutableRefObject<HTMLAudioElement>' is not assignable to type 'RefObject<HTMLVideoElement>'.
+    Types of property 'current' are incompatible.
+      Type 'HTMLAudioElement' is missing the following properties from type 'HTMLVideoElement': disablePictureInPicture, height, onenterpictureinpicture, onleavepictureinpicture, and 9 more.
+src/pages/Home.tsx(485,7): error TS2322: Type '"academy"' is not assignable to type 'TabType'.
+src/pages/Home.tsx(883,14): error TS2367: This comparison appears to be unintentional because the types 'TabType' and '"academy"' have no overlap.
+src/pages/Jobs.tsx(266,5): error TS2367: This comparison appears to be unintentional because the types 'UserRole.USER | UserRole.MODERATOR | UserRole.OWNER | UserRole.AGENCY_HR_MANAGER | UserRole.HR_ADMIN | UserRole.HR_MANAGER | UserRole.PASTOR | UserRole.AGENCY_LEADER | UserRole.ATTORNEY | ... 20 more ... | UserRole.CEO' and 'UserRole.ADMIN' have no overlap.
+src/pages/KeysPage.tsx(53,15): error TS2345: Argument of type 'Omit<KeyInstance, "value" | "source" | "cashout_available_at" | "is_transferable">[]' is not assignable to parameter of type 'SetStateAction<KeyInstance[]>'.
+  Type 'Omit<KeyInstance, "value" | "source" | "cashout_available_at" | "is_transferable">[]' is not assignable to type 'KeyInstance[]'.
+    Type 'Omit<KeyInstance, "value" | "source" | "cashout_available_at" | "is_transferable">' is missing the following properties from type 'KeyInstance': value, cashout_available_at, source, is_transferable
+src/pages/lead-officer/LeadOfficerDashboard.tsx(734,17): error TS2741: Property 'onSchedule' is missing in type '{ onApprove: (appId: string, _userId: string) => Promise<void>; onReject: (applicationId: string) => Promise<void>; }' but required in type '{ onApprove: (applicationId: string, userId: string) => void; onReject: (applicationId: string) => void; onSchedule: (applicant: Applicant) => void; }'.
+src/pages/live/AudioSettings.tsx(13,9): error TS2322: Type '{ userId: string; currentLevel: number; }' is not assignable to type 'IntrinsicAttributes & AudioSettingsPanelProps'.
+  Property 'currentLevel' does not exist on type 'IntrinsicAttributes & AudioSettingsPanelProps'.
+src/pages/Neighbors.tsx(1405,30): error TS2322: Type '{ children: Element[]; position: string; sideOffset: number; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'position' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/pages/Neighbors.tsx(1496,28): error TS2322: Type '{ children: Element[]; position: string; sideOffset: number; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'position' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/pages/Neighbors.tsx(1538,28): error TS2322: Type '{ children: Element[]; position: string; sideOffset: number; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'position' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/pages/Neighbors.tsx(1612,28): error TS2322: Type '{ children: any; position: string; sideOffset: number; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'position' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/pages/Neighbors.tsx(1640,30): error TS2322: Type '{ children: Element[]; position: string; sideOffset: number; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'position' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/pages/PodcastCentral.tsx(267,33): error TS2339: Property 'recording_url' does not exist on type 'Podcast'.
+src/pages/President.tsx(30,54): error TS2367: This comparison appears to be unintentional because the types 'UserRole.USER | UserRole.MODERATOR | UserRole.ADMIN | UserRole.OWNER | UserRole.AGENCY_HR_MANAGER | UserRole.HR_ADMIN | UserRole.HR_MANAGER | UserRole.PASTOR | UserRole.AGENCY_LEADER | ... 20 more ... | UserRole.CEO' and '"vp"' have no overlap.
+src/pages/tcnn/TCNNViewerPage.tsx(162,59): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'Partial<InternalRoomConnectOptions>'.
+src/pages/TeamMeetingRoom.tsx(162,48): error TS2445: Property 'supabaseUrl' is protected and only accessible within class 'SupabaseClient<Database, SchemaNameOrClientOptions, SchemaName, Schema, ClientOptions>' and its subclasses.
+src/pages/TrollCourt.tsx(156,82): error TS2367: This comparison appears to be unintentional because the types 'UserRole.USER | UserRole.MODERATOR | UserRole.OWNER | UserRole.AGENCY_HR_MANAGER | UserRole.HR_ADMIN | UserRole.HR_MANAGER | UserRole.PASTOR | UserRole.AGENCY_LEADER | UserRole.ATTORNEY | ... 19 more ... | UserRole.CEO' and '"judge"' have no overlap.
+src/pages/TrollOfficerLounge.tsx(451,7): error TS2353: Object literal may only specify known properties, and 'payPeriod' does not exist in type 'PerkReport'.
+src/pages/UniverseCalendarPage.tsx(45,13): error TS2345: Argument of type '() => () => Promise<"error" | "ok" | "timed out">' is not assignable to parameter of type 'EffectCallback'.
+  Type '() => Promise<"error" | "ok" | "timed out">' is not assignable to type 'void | Destructor'.
+    Type '() => Promise<"error" | "ok" | "timed out">' is not assignable to type 'Destructor'.
+      Type 'Promise<"error" | "ok" | "timed out">' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+src/pages/utromail/UtromailThreadView.tsx(260,68): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/pages/VerifyStampPage.tsx(62,13): error TS2322: Type '(verifyCode?: string) => Promise<void>' is not assignable to type 'MouseEventHandler<HTMLButtonElement>'.
+  Types of parameters 'verifyCode' and 'event' are incompatible.
+    Type 'MouseEvent<HTMLButtonElement, MouseEvent>' is not assignable to type 'string'.
+src/phone/components/PhoneBadge.tsx(84,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | ForwardRefExoticComponent<...> | ((iconName: string, iconNode: IconNode) => ForwardRefExoticComponent<...>) | typeof index' is not assignable to parameter of type 'string | FunctionComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | ComponentClass<Omit<LucideProps, "ref"> & RefAttributes<...>, any>'.
+      Type '(iconName: string, iconNode: IconNode) => ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'string | FunctionComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | ComponentClass<Omit<LucideProps, "ref"> & RefAttributes<...>, any>'.
+        Type '(iconName: string, iconNode: IconNode) => ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'FunctionComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>'.
+          Types of parameters 'iconName' and 'props' are incompatible.
+            Type 'Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>' is not assignable to type 'string'.
+src/phone/pages/PhoneAuth.tsx(631,85): error TS2339: Property 'MSStream' does not exist on type 'Window & typeof globalThis'.
+src/services/treelzService.ts(256,7): error TS2353: Object literal may only specify known properties, and 'onUploadProgress' does not exist in type 'FileOptions'.
+src/services/treelzService.ts(472,5): error TS2353: Object literal may only specify known properties, and 'id' does not exist in type 'TreelzAnalytics'.

@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
-import { Room } from 'livekit-client';
+import { Room, LocalAudioTrack, LocalVideoTrack } from 'livekit-client';
+import type { ILocalVideoTrack, IRemoteVideoTrack, ILocalAudioTrack } from 'agora-rtc-sdk-ng';
 import { toast } from 'sonner';
 import { PhoneOff, Mic, MicOff, Video, VideoOff } from 'lucide-react';
 
@@ -33,7 +34,7 @@ const JailVisitRoom: React.FC = () => {
 
     const [localAudioTrack, setLocalAudioTrack] = useState<ILocalAudioTrack | null>(null);
     const [localVideoTrack, setLocalVideoTrack] = useState<ILocalVideoTrack | null>(null);
-    const [remoteUser, setRemoteUser] = useState<IRemoteUser | null>(null);
+    const [remoteUser, setRemoteUser] = useState<any | null>(null);
     const [isJoining, setIsJoining] = useState(true);
 
     useEffect(() => {
@@ -43,7 +44,7 @@ const JailVisitRoom: React.FC = () => {
             return;
         }
 
-        const client = new Room({ mode: 'rtc', codec: 'vp8' });
+        const client = new Room({ mode: 'rtc', codec: 'vp8' } as any);
 
         const joinCall = async () => {
             setIsJoining(true);
@@ -54,10 +55,10 @@ const JailVisitRoom: React.FC = () => {
 
                 if (error) throw new Error('Failed to get token');
 
-                await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_APP_ID!, visitId, data.token, user.id);
+                await (client as any).connect(process.env.NEXT_PUBLIC_LIVEKIT_APP_ID!, visitId, data.token, user.id);
 
-                const audioTrack = await  LocalAudioTrack.create();
-                const videoTrack = await  LocalVideoTrack.create();
+                const audioTrack = await (LocalAudioTrack as any).create();
+                const videoTrack = await (LocalVideoTrack as any).create();
 
                 setLocalAudioTrack(audioTrack);
                 setLocalVideoTrack(videoTrack);
@@ -74,7 +75,7 @@ const JailVisitRoom: React.FC = () => {
             }
         };
 
-        const handleUserPublished = async (user: IRemoteUser, mediaType: 'audio' | 'video') => {
+        const handleUserPublished = async (user: any, mediaType: 'audio' | 'video') => {
             await (client as any).subscribe(user, mediaType);
             setRemoteUser(user);
         };
@@ -83,17 +84,17 @@ const JailVisitRoom: React.FC = () => {
             setRemoteUser(null);
         };
 
-        client.on('user-published', handleUserPublished);
-        client.on('user-unpublished', handleUserUnpublished);
+        client.on('user-published' as any, handleUserPublished);
+        client.on('user-unpublished' as any, handleUserUnpublished);
 
         joinCall();
 
         return () => {
-            client.off('user-published', handleUserPublished);
-            client.off('user-unpublished', handleUserUnpublished);
+            client.off('user-published' as any, handleUserPublished);
+            client.off('user-unpublished' as any, handleUserUnpublished);
             localAudioTrack?.close();
             localVideoTrack?.close();
-            room.disconnect();
+            (client as any).disconnect();
         };
     }, [visitId, user, navigate, localAudioTrack, localVideoTrack]);
 

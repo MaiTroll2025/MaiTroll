@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../lib/store';
 import { Loader } from '../../components/ui/loader';
-import { agencyService } from '../../services/agencyService';
 import { useAgencyApplication } from '../../hooks/useAgency';
 import { useAgencyMember } from '../../hooks/useAgency';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, CheckCircle2, Clock3, XCircle } from 'lucide-react';
+import { ArrowLeft, Send, Clock3, XCircle } from 'lucide-react';
 
 const PLATFORMS = ['twitch', 'youtube', 'tiktok', 'kick', 'other'];
 const CATEGORIES = ['Gaming', 'IRL', 'Music', 'Art', 'Sports', 'Tech', 'Education', 'Comedy', 'ASMR', 'Cooking'];

@@ -22,7 +22,7 @@ export default function TrollFamily() {
 
   const [checking, setChecking] = useState(true)
   const [isLeader, setIsLeader] = useState(false)
-  const [userFamilyId, setUserFamilyId] = useState<string | null>(null)
+  const [_userFamilyId, _setUserFamilyId] = useState<string | null>(null)
 
   const [families, setFamilies] = useState<TrollFamily[]>([])
   const [loadingFamilies, setLoadingFamilies] = useState(true)

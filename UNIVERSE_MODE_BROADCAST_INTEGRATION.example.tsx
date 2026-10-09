@@ -13,7 +13,7 @@ import TrollBattleRoom from '@/components/broadcast/TrollBattleRoom';
 
 // Add these state variables to your BroadcastPage component:
 const [battleActive, setBattleActive] = useState(false);
-const [battleParticipants, setBattleParticipants] = useState<BattleParticipant[]>([]);
+const [_battleParticipants, setBattleParticipants] = useState<BattleParticipant[]>([]);
 
 // Initialize the battle hook
 const battle = useTrollBattle({
@@ -85,7 +85,7 @@ useEffect(() => {
 // ============================================================================
 
 // In your existing gift-received handler:
-const handleGiftReceived = useCallback((gift: GiftData) => {
+const _handleGiftReceived = useCallback((gift: GiftData) => {
   // ... existing gift logic ...
 
   // If troll battle is active, update scores
@@ -151,7 +151,7 @@ return (
 // ============================================================================
 
 // In your seat-join handler:
-const handleUserJoinSeat = useCallback((userId: string, seatIndex: number) => {
+const _handleUserJoinSeat = useCallback((userId: string, seatIndex: number) => {
   // ... existing seat logic ...
 
   // If battle active, update participants
@@ -186,7 +186,7 @@ const handleUserJoinSeat = useCallback((userId: string, seatIndex: number) => {
 // ============================================================================
 
 // In your seat-leave handler:
-const handleUserLeaveSeat = useCallback((userId: string) => {
+const _handleUserLeaveSeat = useCallback((userId: string) => {
   // ... existing seat logic ...
 
   // Mark as inactive in battle

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { supabase } from '../../lib/supabase'
 
 type GiftEvent = {
   id: string
@@ -25,7 +24,7 @@ interface Props {
   className?: string
 }
 
-export default function GiftAnimationLayer({ streamId, recipientUserId, recipientType = 'seat', className = '' }: Props) {
+export default function GiftAnimationLayer({ streamId, recipientUserId, recipientType: _recipientType = 'seat', className = '' }: Props) {
   const [queue, setQueue] = useState<GiftEvent[]>([])
   const playingRef = useRef<boolean>(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -175,7 +174,7 @@ export default function GiftAnimationLayer({ streamId, recipientUserId, recipien
         try {
           video.load();
           await video.play();
-        } catch (err) {
+        } catch (_err) {
           try {
             video.muted = true;
             video.load();

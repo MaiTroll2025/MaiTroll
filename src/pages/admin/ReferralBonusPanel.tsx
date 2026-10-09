@@ -14,6 +14,19 @@ interface ReferralData {
   status: 'paid' | 'pending' | 'not_eligible'
 }
 
+function jsonObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+}
+
+function bonusMonth(row: { data: unknown; created_at: string }): string {
+  const value = jsonObject(row.data).month
+  return typeof value === 'string' && /^\d{4}-\d{2}/.test(value)
+    ? value.slice(0, 7)
+    : row.created_at.slice(0, 7)
+}
+
 export default function ReferralBonusPanel() {
   const [referrals, setReferrals] = useState<ReferralData[]>([])
   const [loading, setLoading] = useState(true)
@@ -25,54 +38,66 @@ export default function ReferralBonusPanel() {
       // Get all referrals with user info
       const { data: allReferrals, error: referralsError } = await supabase
         .from('referrals')
-        .select(`
-          recruiter_id,
-          referred_user_id,
-          recruiter:user_profiles!referrals_recruiter_id_fkey (
-            username
-          ),
-          referred_user:user_profiles!referrals_referred_user_id_fkey (
-            username
-          )
-        `)
+        .select('referrer_id, referred_user_id')
 
       if (referralsError) throw referralsError
 
-      // Get bonuses for selected month
+      const userIds = [...new Set((allReferrals || []).flatMap(ref => [
+        ref.referrer_id,
+        ref.referred_user_id,
+      ]))]
+      const { data: profiles, error: profilesError } = userIds.length
+        ? await supabase.from('profiles').select('user_id, data').in('user_id', userIds)
+        : { data: [], error: null }
+      if (profilesError) throw profilesError
+
+      const profileNames = new Map((profiles || []).map(profile => {
+        const data = jsonObject(profile.data)
+        const username = data.username
+        return [profile.user_id, typeof username === 'string' ? username : 'Unknown']
+      }))
+
+      // The current table stores legacy bonus columns inside its data payload.
       const { data: bonusesData, error: bonusesError } = await supabase
         .from('referral_monthly_bonus')
-        .select('*')
-        .eq('month', month)
+        .select('user_id, data, created_at')
 
       if (bonusesError) throw bonusesError
 
       // Build referral data with stats
       const referralDataPromises = (allReferrals || []).map(async (ref: any) => {
-        const recruiter = Array.isArray(ref.recruiter) ? ref.recruiter[0] : ref.recruiter
-        const referredUser = Array.isArray(ref.referred_user) ? ref.referred_user[0] : ref.referred_user
-
         // Get monthly coins earned
-        const { data: coinsData } = await supabase.rpc('get_user_monthly_coins_earned', {
+        const { data: coinsData, error: coinsError } = await supabase.rpc('get_user_monthly_coins_earned', {
           p_user_id: ref.referred_user_id,
           p_month: month
         })
+        if (coinsError) throw coinsError
 
         const monthlyCoins = Number(coinsData) || 0
         const isEligible = monthlyCoins >= 40000
 
         // Check if bonus already paid
-        const existingBonus = (bonusesData || []).find(
-          (b: any) => b.referred_user_id === ref.referred_user_id && b.month === month
-        )
+        const existingBonus = (bonusesData || []).find((bonus) => {
+          const data = jsonObject(bonus.data)
+          return data.referred_user_id === ref.referred_user_id
+            && bonusMonth(bonus) === month
+        })
+        const bonusAmount = existingBonus
+          ? Number(
+              jsonObject(existingBonus.data).bonus_paid_coins
+              ?? jsonObject(existingBonus.data).bonus_troll_coins
+              ?? 0,
+            )
+          : 0
 
         return {
-          recruiter_id: ref.recruiter_id,
-          recruiter_username: recruiter?.username || 'Unknown',
+          recruiter_id: ref.referrer_id,
+          recruiter_username: profileNames.get(ref.referrer_id) || 'Unknown',
           referred_user_id: ref.referred_user_id,
-          referred_username: referredUser?.username || 'Unknown',
+          referred_username: profileNames.get(ref.referred_user_id) || 'Unknown',
           month,
           coins_earned: monthlyCoins,
-          bonus_paid: existingBonus?.bonus_troll_coins || 0,
+          bonus_paid: bonusAmount,
           status: existingBonus ? 'paid' : (isEligible ? 'pending' : 'not_eligible') as 'paid' | 'pending' | 'not_eligible'
         }
       })
@@ -89,13 +114,15 @@ export default function ReferralBonusPanel() {
     setLoading(true)
     try {
       // Get all unique months from bonuses
-      const { data: bonusesData } = await supabase
+      const { data: bonusesData, error: bonusesError } = await supabase
         .from('referral_monthly_bonus')
-        .select('month')
-        .order('month', { ascending: false })
+        .select('data, created_at')
+        .order('created_at', { ascending: false })
+
+      if (bonusesError) throw bonusesError
 
       const uniqueMonths = Array.from(
-        new Set((bonusesData || []).map((b: any) => b.month))
+        new Set((bonusesData || []).map(bonusMonth))
       ) as string[]
       setMonths(uniqueMonths)
 

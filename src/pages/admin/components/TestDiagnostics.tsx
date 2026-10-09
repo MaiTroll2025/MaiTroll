@@ -54,8 +54,6 @@ export default function TestDiagnostics() {
     const requiredRPCs = [
       'deny_application',
       'approve_officer_application',
-      'approve_empire_partner',
-      'reject_empire_partner',
       'admin_process_payout',
       'troll_bank_pay_officer',
       'get_admin_user_wallets_secure',
@@ -68,8 +66,6 @@ export default function TestDiagnostics() {
     const rpcTestParams: Record<string, any> = {
       'deny_application': { p_app_id: DUMMY_UUID, p_reviewer_id: DUMMY_UUID },
       'approve_officer_application': { p_user_id: DUMMY_UUID },
-      'approve_empire_partner': { p_application_id: DUMMY_UUID, p_reviewer_id: DUMMY_UUID },
-      'reject_empire_partner': { p_application_id: DUMMY_UUID, p_reviewer_id: DUMMY_UUID },
       'admin_process_payout': { p_payout_id: DUMMY_UUID, p_admin_id: DUMMY_UUID, p_action: 'approve' },
       'troll_bank_pay_officer': { p_officer_id: DUMMY_UUID, p_admin_id: DUMMY_UUID },
       'get_admin_user_wallets_secure': { p_search: '', p_limit: 1 },
@@ -139,10 +135,9 @@ export default function TestDiagnostics() {
     const requiredTables = [
       'user_profiles',
       'applications',
-      'empire_applications',
       'payout_requests',
       'coin_transactions',
-      'officer_shift_logs',
+      'officer_work_sessions',
       'officer_shift_slots',
       'officer_orientation_results',
       'weekly_officer_reports',
@@ -206,8 +201,6 @@ export default function TestDiagnostics() {
       'id',
       'username',
       'role',
-      'empire_role',
-      'troll_coins',
       'troll_coins',
       'is_troll_officer',
       'is_lead_officer',
@@ -505,4 +498,3 @@ export default function TestDiagnostics() {
     </div>
   )
 }
-

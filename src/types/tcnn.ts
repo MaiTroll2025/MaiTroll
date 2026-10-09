@@ -8,6 +8,15 @@
 export type ArticleStatus = 'draft' | 'pending_review' | 'approved' | 'published' | 'rejected';
 export type ArticleCategory = 'news' | 'sports' | 'entertainment' | 'politics' | 'technology' | 'community';
 
+export interface TCNNArticleInput {
+  title: string;
+  content: string;
+  excerpt: string;
+  category: string;
+  featuredImageUrl?: string;
+  tags?: string[];
+}
+
 export interface TCNNArticle {
   id: string;
   title: string;
@@ -34,6 +43,13 @@ export interface TCNNArticle {
   metaDescription?: string;
   createdAt: string;
   updatedAt: string;
+  // snake_case aliases (DB row shape)
+  author_id?: string;
+  author?: any;
+  published_at?: string;
+  created_at?: string;
+  view_count?: number;
+  featured_image_url?: string;
 }
 
 // Journalist Types

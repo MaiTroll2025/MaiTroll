@@ -7,24 +7,7 @@ import React, {
   useState,
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Bell,
-  ChevronDown,
-  Gift,
-  Heart,
-  MessageCircle,
-  Mic,
-  MicOff,
-  Plus,
-  Radio,
-  Share2,
-  Users,
-  Video,
-  VideoOff,
-  X,
-  Zap,
-} from 'lucide-react'
+import { ArrowLeft, Bell, Gift, Heart, Mic, MicOff, Plus, Radio, Share2, Users, Video, VideoOff, Zap } from 'lucide-react';
 
 import {
   RoomEvent,
@@ -38,6 +21,9 @@ import {
 import {
   useAuthStore,
 } from '@/lib/store'
+import UserMiniProfile from '@/components/user/UserMiniProfile'
+import { useBlockedUsers } from '@/hooks/useBlockedUsers'
+import ProtectionOrderGate from '@/components/ProtectionOrderGate'
 
 import {
   supabase,
@@ -53,6 +39,10 @@ import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
 import {
   useLiveKitRoom,
 } from '@/hooks/useLiveKitRoom'
+import { useGetStreamRoom } from '@/hooks/useGetStreamRoom'
+import { getLiveKitRoomName, getRTCProvider } from '@/lib/liveUtils'
+import { useLiveStreams } from '@/hooks/useQueries'
+import { applyCameraVideoPresentation } from '@/lib/cameraVideoPresentation'
 
 import {
   useStreamSeats,
@@ -89,10 +79,6 @@ import ShareModal from '@/components/broadcast/ShareModal'
 import {
   useCityStatusOrb,
 } from '@/lib/hooks/useCityStatusOrb'
-
-import {
-  getLiveKitRoomName,
-} from '@/lib/liveUtils'
 
 import {
   sendStreamBroadcast,
@@ -205,7 +191,8 @@ function getParticipantIdentity(
   participant: any,
 ): string {
   return String(
-    participant?.identity ||
+    participant?.userId ||
+      participant?.identity ||
       participant?.participantIdentity ||
       participant?.name ||
       participant?.metadata?.user_id ||
@@ -262,7 +249,8 @@ function resolveSeatParticipant(
   const check = (participant: any) => {
     const participantIdentity =
       String(
-        participant?.identity ||
+        participant?.userId ||
+          participant?.identity ||
           participant?.participantIdentity ||
           participant?.name ||
           '',
@@ -365,6 +353,7 @@ function participantMatchesUser(
 
   return (
     identity === userId ||
+    participant?.userId === userId ||
     identity.includes(userId) ||
     identity.endsWith(`-${userId}`) ||
     identity.startsWith(`${userId}-`) ||
@@ -548,13 +537,11 @@ const PhoneRemoteVideo = memo(
     room,
     className,
     fallback,
-    mirror = false,
   }: {
     participant: any
     room?: any
     className?: string
     fallback: React.ReactNode
-    mirror?: boolean
   }) {
     const videoRef =
       useRef<HTMLVideoElement | null>(null)
@@ -581,6 +568,16 @@ const PhoneRemoteVideo = memo(
           participant?.name ||
           '',
       ).trim()
+
+    useEffect(() => {
+      const video = videoRef.current
+      const sessionId = participant?.sessionId
+      if (!video || !sessionId || typeof room?.bindVideoElement !== 'function') {
+        return
+      }
+
+      return room.bindVideoElement(video, sessionId, 'videoTrack')
+    }, [room, participant?.sessionId])
 
     useEffect(() => {
       if (!room) return
@@ -716,16 +713,28 @@ const PhoneRemoteVideo = memo(
       getAudioTrackFromParticipant(
         participant,
       )
-
     const videoTrackId =
       videoTrack?.mediaStreamTrack?.id ||
       videoTrack?.sid ||
       null
+    const getStreamVideo = participant?.videoStream
 
     const audioTrackId =
       audioTrack?.mediaStreamTrack?.id ||
       audioTrack?.sid ||
       null
+
+    useEffect(() => {
+      const video = videoRef.current
+      if (!video) return
+      const nativeTrack =
+        getStreamVideo?.getVideoTracks?.()[0] ||
+        videoTrack?.mediaStreamTrack
+      applyCameraVideoPresentation(video, {
+        track: nativeTrack,
+        isLocal: true,
+      })
+    }, [getStreamVideo, videoTrack, videoTrackId, trackTick])
 
     useEffect(() => {
       const video =
@@ -735,6 +744,31 @@ const PhoneRemoteVideo = memo(
 
       const previous =
         attachedVideoRef.current
+
+      if (getStreamVideo instanceof MediaStream) {
+        if (previous) {
+          try {
+            previous.detach(video)
+          } catch {
+            // ignore
+          }
+          attachedVideoRef.current = null
+        }
+
+        video.srcObject = getStreamVideo
+        video.autoplay = true
+        video.playsInline = true
+        video.muted = true
+        void video.play().catch((error) => {
+          console.warn('[PhoneViewerPage] GetStream video playback failed', error)
+        })
+
+        return () => {
+          if (video.srcObject === getStreamVideo) {
+            video.srcObject = null
+          }
+        }
+      }
 
       const previousId =
         previous?.mediaStreamTrack?.id ||
@@ -822,6 +856,8 @@ const PhoneRemoteVideo = memo(
         }
       }
     }, [
+      getStreamVideo,
+      videoTrack,
       videoTrackId,
       trackTick,
     ])
@@ -831,6 +867,20 @@ const PhoneRemoteVideo = memo(
         audioRef.current
 
       if (!audio) return
+
+      const getStreamAudio = participant?.audioStream
+      if (getStreamAudio instanceof MediaStream) {
+        audio.srcObject = getStreamAudio
+        audio.autoplay = true
+        void audio.play().catch((error) => {
+          console.warn('[PhoneViewerPage] GetStream audio playback failed', error)
+        })
+        return () => {
+          if (audio.srcObject === getStreamAudio) {
+            audio.srcObject = null
+          }
+        }
+      }
 
       if (
         audioTrackId ===
@@ -858,8 +908,12 @@ const PhoneRemoteVideo = memo(
     }, [
       audioTrack,
       audioTrackId,
+      participant?.audioStream,
       trackTick,
     ])
+
+    const hasGetStreamVideo =
+      participant?.videoStream instanceof MediaStream
 
     return (
       <div
@@ -875,7 +929,7 @@ const PhoneRemoteVideo = memo(
           muted
           controls={false}
           disablePictureInPicture
-          className={cn('absolute inset-0 h-full w-full object-cover', mirror && '-scale-x-100')}
+          className="absolute inset-0 h-full w-full object-cover"
         />
 
         <audio
@@ -884,6 +938,7 @@ const PhoneRemoteVideo = memo(
         />
 
         {!videoTrack &&
+          !hasGetStreamVideo &&
           !attachedVideoRef.current && (
             <div className="absolute inset-0">
               {fallback}
@@ -919,6 +974,10 @@ function PhoneLocalVideo({
 
     try {
       videoTrack.attach(video)
+      applyCameraVideoPresentation(video, {
+        track: videoTrack.mediaStreamTrack,
+        isLocal: true,
+      })
 
       video.play().catch(
         () => {},
@@ -936,6 +995,15 @@ function PhoneLocalVideo({
     }
   }, [videoTrack])
 
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !videoTrack) return
+    applyCameraVideoPresentation(video, {
+      track: videoTrack.mediaStreamTrack,
+      isLocal: true,
+    })
+  }, [videoTrack])
+
   return (
     <div
       className={cn(
@@ -949,7 +1017,7 @@ function PhoneLocalVideo({
           autoPlay
           playsInline
           muted
-          className="h-full w-full object-cover -scale-x-100"
+          className="h-full w-full object-cover"
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center">
@@ -975,6 +1043,10 @@ export default function PhoneViewerPage() {
     params.streamId ||
     params.id ||
     ''
+  const { data: liveStreamsData } = useLiveStreams()
+  const swipeStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
+  const swipeHandledRef = useRef(false)
+  const swipeLockedRef = useRef(false)
 
   const [stream, setStream] =
     useState<Stream | null>(null)
@@ -986,6 +1058,7 @@ export default function PhoneViewerPage() {
     user,
     profile,
   } = useAuthStore()
+  const leaveCurrentRoomRef = useRef<() => Promise<void>>(async () => {})
 
   const {
     featuredBroadcasters,
@@ -1002,6 +1075,72 @@ export default function PhoneViewerPage() {
 
   const hostId =
     stream?.user_id || ''
+
+  useEffect(() => {
+    const root = document.documentElement
+    const body = document.body
+    const previousRootOverflow = root.style.overflow
+    const previousBodyOverflow = body.style.overflow
+
+    root.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+
+    return () => {
+      root.style.overflow = previousRootOverflow
+      body.style.overflow = previousBodyOverflow
+    }
+  }, [])
+
+  const navigateStreamBySwipe = useCallback((direction: 'next' | 'previous') => {
+    if (!Array.isArray(liveStreamsData) || liveStreamsData.length < 2) return
+
+    const currentIndex = liveStreamsData.findIndex(
+      (liveStream: any) => String(liveStream.id) === String(resolvedStreamId),
+    )
+    if (currentIndex < 0) return
+
+    const targetIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1
+    const targetStream = liveStreamsData[targetIndex]
+    if (!targetStream?.id) return
+
+    swipeHandledRef.current = true
+    swipeLockedRef.current = true
+    navigate(`/watch/${targetStream.id}`, { replace: true })
+  }, [liveStreamsData, navigate, resolvedStreamId])
+
+  const handleStreamSwipeStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    if (swipeLockedRef.current || event.touches.length !== 1) return
+    const touch = event.touches[0]
+    swipeStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: performance.now(),
+    }
+  }, [])
+
+  const handleStreamSwipeEnd = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current
+    swipeStartRef.current = null
+    if (!start || swipeLockedRef.current || event.changedTouches.length !== 1) return
+
+    const touch = event.changedTouches[0]
+    const deltaX = touch.clientX - start.x
+    const deltaY = touch.clientY - start.y
+    const elapsed = Math.max(1, performance.now() - start.time)
+
+    if (Math.abs(deltaY) < 48 || Math.abs(deltaY) <= Math.abs(deltaX) * 1.15) return
+
+    const velocity = Math.abs(deltaY) / elapsed
+    if (Math.abs(deltaY) < 90 && velocity < 0.35) return
+
+    navigateStreamBySwipe(deltaY < 0 ? 'next' : 'previous')
+  }, [navigateStreamBySwipe])
+
+  useEffect(() => {
+    swipeLockedRef.current = false
+    swipeHandledRef.current = false
+    swipeStartRef.current = null
+  }, [resolvedStreamId])
 
   useEffect(() => {
     const isActive = stream?.status === 'live' && stream?.is_live !== false
@@ -1072,8 +1211,7 @@ export default function PhoneViewerPage() {
   const [floatingMessages, setFloatingMessages] =
     useState<Array<{id: string, username: string, content: string, timestamp: number, isSystem?: boolean}>>([])
 
-  const [blockedUsernames, setBlockedUsernames] =
-    useState<Set<string>>(new Set())
+  const { blockedUsernames } = useBlockedUsers()
 
   const [chatInput, setChatInput] =
     useState('')
@@ -1124,6 +1262,15 @@ export default function PhoneViewerPage() {
     username?: string
     role?: string
     createdAt?: string
+  } | null>(null)
+
+  const [
+    miniProfile,
+    setMiniProfile,
+  ] = useState<{
+    userId: string
+    username: string
+    avatarUrl: string
   } | null>(null)
 
   const [
@@ -1184,7 +1331,7 @@ export default function PhoneViewerPage() {
   const audienceJoinAttemptedKeyRef =
     useRef<string | null>(null)
 
-  const audienceFailedUntilRef =
+  const _audienceFailedUntilRef =
     useRef<number>(0)
 
   /*
@@ -1748,49 +1895,39 @@ export default function PhoneViewerPage() {
      [canClickFloatingChatUsername],
    )
 
-   const handleOpenFloatingChatUsername = useCallback(
-     async (username: string) => {
-       if (!username) return
+    const handleOpenFloatingChatUsername = useCallback(
+      async (username: string) => {
+        if (!username) return
 
-       if (isAnonymousDisplayName(username)) {
-         if (!canClickFloatingChatUsername) return
-         await handleOpenUserAction({
-           userId: `anon-${username}`,
-           username,
-           role: 'anonymous',
-           createdAt: null,
-         })
-         return
-       }
+        if (isAnonymousDisplayName(username)) return
 
-       try {
-         const { data, error } = await supabase
-           .from('user_profiles')
-           .select('id, username, created_at, role, troll_role')
-           .eq('username', username)
-           .maybeSingle()
+        try {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select('id, username, avatar_url')
+            .eq('username', username)
+            .maybeSingle()
 
-         if (error || !data?.id) {
-           toast.error('User not found')
-           return
-         }
+          if (error || !data?.id) {
+            toast.error('User not found')
+            return
+          }
 
-         await handleOpenUserAction({
-           userId: data.id,
-           username: data.username || username,
-           role: data.role || data.troll_role,
-           createdAt: data.created_at,
-         })
-       } catch (err) {
-         console.error(
-           '[PhoneViewerPage] Error opening floating chat username:',
-           err,
-         )
-         toast.error('Failed to open user profile')
-       }
-     },
-     [canClickFloatingChatUsername, handleOpenUserAction],
-   )
+          setMiniProfile({
+            userId: data.id,
+            username: data.username || username,
+            avatarUrl: data.avatar_url || '',
+          })
+        } catch (err) {
+          console.error(
+            '[PhoneViewerPage] Error opening floating chat username:',
+            err,
+          )
+          toast.error('Failed to open user profile')
+        }
+      },
+      [],
+    )
 
    /* ========================================================================
       SEATS
@@ -1803,16 +1940,22 @@ export default function PhoneViewerPage() {
      leaveSeat,
      markSeatLive,
     } = useStreamSeats(
-     resolvedStreamId || '',
-     user?.id,
-     broadcasterProfile,
-     stream as any,
-   )
+      resolvedStreamId || '',
+      user?.id,
+      broadcasterProfile,
+      stream as any,
+    )
+
+    const protectionOrderParticipantIds = useMemo(
+      () =>
+        Object.values(seats || {}).map((seat: any) => seat?.user_id || seat?.guest_id).filter(Boolean) as string[],
+      [seats],
+    )
 
   const userIdToLiveKitIdentity = useMemo(() => {
     const mapping: Record<string, string> = {};
     if (!seats) return mapping;
-    Object.entries(seats).forEach(([seatIndex, seat]) => {
+    Object.entries(seats).forEach(([_seatIndex, seat]) => {
       const seatData = seat as any;
       const userId = seatData?.user_id || seatData?.guest_id;
       const identity = seatData?.livekit_participant_identity || seatData?.participant_identity || seatData?.livekit_identity;
@@ -1926,6 +2069,9 @@ export default function PhoneViewerPage() {
       resolvedStreamId,
     ])
 
+  // Determine RTC provider from stream metadata
+  const rtcProvider = useMemo(() => getRTCProvider(stream), [stream?.rtc_provider])
+
   const audienceName =
     useMemo(() => {
       if (user) {
@@ -1968,20 +2114,9 @@ export default function PhoneViewerPage() {
    *
    * DO NOT change this identity to the battle identity.
    */
-  const {
-    remoteUsers,
-    localVideoTrack,
-    localAudioTrack,
-    room: liveKitRoom,
-    isConnected,
-    isPublishing,
-    setMicEnabled,
-    setCameraEnabled,
-    leaveRoom: leaveLiveKitRoom,
-    joinAsAudience,
-    publishLocalTracks,
-    unpublishLocalTracks,
-  } = useLiveKitRoom({
+
+  // LiveKit hook (for normal streams)
+  const liveKitRoom = useLiveKitRoom({
     roomId,
     roomType: 'broadcast',
     role: 'viewer',
@@ -1993,6 +2128,36 @@ export default function PhoneViewerPage() {
     onUserLeft: noop,
     onError: handleLiveKitError,
   })
+
+  // GetStream hook (for staff/official streams)
+  const getStreamRoom = useGetStreamRoom({
+    roomId: resolvedStreamId || roomId,
+    roomType: 'broadcast',
+    role: 'viewer',
+    audioOnly: false,
+    publish: false,
+    userName: audienceName,
+    identity: viewerIdentity,
+    onUserJoined: noop,
+    onUserLeft: noop,
+    onError: handleLiveKitError,
+  })
+
+  // Select the appropriate room based on provider
+  const isGetStream = rtcProvider === 'getstream'
+  const remoteUsers = isGetStream ? getStreamRoom.remoteUsers : liveKitRoom.remoteUsers
+  const room = isGetStream ? getStreamRoom.call : liveKitRoom.room
+  const isConnected = isGetStream ? getStreamRoom.isConnected : liveKitRoom.isConnected
+  const isPublishing = isGetStream ? getStreamRoom.isPublishing : liveKitRoom.isPublishing
+  const setMicEnabled = isGetStream ? getStreamRoom.setMicrophoneEnabled : liveKitRoom.setMicEnabled
+  const setCameraEnabled = isGetStream ? getStreamRoom.setCameraEnabled : liveKitRoom.setCameraEnabled
+  const leaveRoom = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.leaveRoom
+  const joinAsAudience = isGetStream ? getStreamRoom.joinAsAudience : liveKitRoom.joinAsAudience
+  const publishLocalTracks = isGetStream ? getStreamRoom.joinAsAudience : liveKitRoom.publishLocalTracks
+  const unpublishLocalTracks = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.unpublishLocalTracks
+  leaveCurrentRoomRef.current = async () => {
+    await leaveRoom()
+  }
 
   const remoteParticipants =
     useMemo(() => {
@@ -2036,7 +2201,7 @@ export default function PhoneViewerPage() {
     void joinAsAudience({
       userId: viewerIdentity,
       streamId: resolvedStreamId,
-      roomName: roomId,
+      roomName: isGetStream ? resolvedStreamId : roomId,
       viewerIdentity,
       publishCapable: false,
     })
@@ -2073,6 +2238,7 @@ export default function PhoneViewerPage() {
      resolvedStreamId,
      stream,
      roomId,
+     isGetStream,
      viewerIdentity,
      joinAsAudience,
      viewerError,
@@ -2096,7 +2262,7 @@ export default function PhoneViewerPage() {
         const hoursRemaining = Math.ceil(remainingMs / (60 * 60 * 1000))
 
         void leaveAudience()
-        void leaveLiveKitRoom().catch(() => {})
+        void leaveCurrentRoomRef.current().catch(() => {})
 
         hasJoinedAudienceRef.current = false
         joiningAudienceRef.current = false
@@ -2140,7 +2306,7 @@ export default function PhoneViewerPage() {
             }))
 
             void leaveAudience()
-            void leaveLiveKitRoom().catch(() => {})
+            void leaveCurrentRoomRef.current().catch(() => {})
 
             hasJoinedAudienceRef.current = false
             joiningAudienceRef.current = false
@@ -2157,7 +2323,7 @@ export default function PhoneViewerPage() {
     return () => {
       void supabase.removeChannel(channel)
     }
-   }, [resolvedStreamId, user?.id, navigate, leaveAudience, leaveLiveKitRoom])
+   }, [resolvedStreamId, user?.id, navigate, leaveAudience])
 
   /* ========================================================================
       STREAM REALTIME
@@ -2324,7 +2490,7 @@ export default function PhoneViewerPage() {
               await unpublishLocalTracks()
             }
             await leaveAudience()
-            await leaveLiveKitRoom()
+            await leaveCurrentRoomRef.current()
           } catch {
             // ignore cleanup errors
           }
@@ -2363,7 +2529,7 @@ export default function PhoneViewerPage() {
                   await unpublishLocalTracks()
                 }
                 await leaveAudience()
-                await leaveLiveKitRoom()
+                await leaveCurrentRoomRef.current()
               } catch {
                 // ignore cleanup errors
               }
@@ -2398,7 +2564,7 @@ export default function PhoneViewerPage() {
                   await unpublishLocalTracks()
                 }
                 await leaveAudience()
-                await leaveLiveKitRoom()
+                await leaveCurrentRoomRef.current()
               } catch {
                 // ignore cleanup errors
               }
@@ -2435,7 +2601,7 @@ export default function PhoneViewerPage() {
                 await unpublishLocalTracks()
               }
               await leaveAudience()
-              await leaveLiveKitRoom()
+              await leaveCurrentRoomRef.current()
             } catch {
               // ignore cleanup errors
             }
@@ -2552,6 +2718,7 @@ export default function PhoneViewerPage() {
           getAudioTrackFromParticipant(
             participant,
           )
+        const participantSnapshot = { ...participant }
 
         setBroadcasterState(
           previous => {
@@ -2570,6 +2737,8 @@ export default function PhoneViewerPage() {
                 ?.id ||
               previous.videoTrack
                 ?.sid ||
+              previous.participant?.videoStream
+                ?.getVideoTracks?.()[0]?.id ||
               null
 
             const nextVideoId =
@@ -2577,6 +2746,8 @@ export default function PhoneViewerPage() {
                 ?.mediaStreamTrack
                 ?.id ||
               videoTrack?.sid ||
+              participantSnapshot.videoStream
+                ?.getVideoTracks?.()[0]?.id ||
               null
 
             const previousAudioId =
@@ -2585,6 +2756,8 @@ export default function PhoneViewerPage() {
                 ?.id ||
               previous.audioTrack
                 ?.sid ||
+              previous.participant?.audioStream
+                ?.getAudioTracks?.()[0]?.id ||
               null
 
             const nextAudioId =
@@ -2592,6 +2765,8 @@ export default function PhoneViewerPage() {
                 ?.mediaStreamTrack
                 ?.id ||
               audioTrack?.sid ||
+              participantSnapshot.audioStream
+                ?.getAudioTracks?.()[0]?.id ||
               null
 
             if (
@@ -2606,7 +2781,7 @@ export default function PhoneViewerPage() {
             }
 
             return {
-              participant,
+              participant: participantSnapshot,
               videoTrack,
               audioTrack,
             }
@@ -2677,13 +2852,13 @@ export default function PhoneViewerPage() {
     return host
   }
 
-   useEffect(() => {
-     const host = resolveBroadcasterParticipant(
-       remoteParticipants,
-       liveKitRoom,
-       resolvedStreamId,
-       hostId,
-     )
+useEffect(() => {
+      const host = resolveBroadcasterParticipant(
+        remoteParticipants,
+        room,
+        resolvedStreamId,
+        hostId,
+      )
 
     if (host) {
       hostParticipantRef.current =
@@ -2694,12 +2869,12 @@ export default function PhoneViewerPage() {
       )
     }
    }, [
-     remoteParticipants,
-     liveKitRoom,
-     resolvedStreamId,
-     hostId,
-     updateBroadcasterState,
-   ])
+      remoteParticipants,
+      room,
+      resolvedStreamId,
+      hostId,
+      updateBroadcasterState,
+    ])
 
   /* ========================================================================
      SEAT TRACKS
@@ -2714,7 +2889,8 @@ export default function PhoneViewerPage() {
     >({})
 
   useEffect(() => {
-    if (!liveKitRoom) {
+    // Skip seat sync for GetStream - staff/official streams don't use LiveKit seat system
+    if (isGetStream || !room) {
       return
     }
 
@@ -2761,7 +2937,7 @@ export default function PhoneViewerPage() {
                 resolveSeatParticipant(
                   seat,
                   remoteParticipants,
-                  liveKitRoom,
+                  room,
                 )
 
               next[seatIndex] = {
@@ -2796,52 +2972,56 @@ export default function PhoneViewerPage() {
       )
     }
 
-    syncSeats()
-
-    liveKitRoom.on(
-      RoomEvent.TrackSubscribed,
-      syncSeats,
-    )
-
-    liveKitRoom.on(
-      RoomEvent.TrackUnsubscribed,
-      syncSeats,
-    )
-
-    liveKitRoom.on(
-      RoomEvent.ParticipantConnected,
-      syncSeats,
-    )
-
-    liveKitRoom.on(
-      RoomEvent.ParticipantDisconnected,
-      syncSeats,
-    )
-
-    return () => {
-      liveKitRoom.off(
+    // Only set up LiveKit event listeners for LiveKit streams
+    if (!isGetStream && liveKitRoom.room) {
+      const activeLiveKitRoom = liveKitRoom.room
+      activeLiveKitRoom.on(
         RoomEvent.TrackSubscribed,
         syncSeats,
       )
 
-      liveKitRoom.off(
+      activeLiveKitRoom.on(
         RoomEvent.TrackUnsubscribed,
         syncSeats,
       )
 
-      liveKitRoom.off(
+      activeLiveKitRoom.on(
         RoomEvent.ParticipantConnected,
         syncSeats,
       )
 
-      liveKitRoom.off(
+      activeLiveKitRoom.on(
         RoomEvent.ParticipantDisconnected,
         syncSeats,
       )
+
+      return () => {
+        activeLiveKitRoom.off(
+          RoomEvent.TrackSubscribed,
+          syncSeats,
+        )
+
+        activeLiveKitRoom.off(
+          RoomEvent.TrackUnsubscribed,
+          syncSeats,
+        )
+
+        activeLiveKitRoom.off(
+          RoomEvent.ParticipantConnected,
+          syncSeats,
+        )
+
+        activeLiveKitRoom.off(
+          RoomEvent.ParticipantDisconnected,
+          syncSeats,
+        )
+      }
     }
   }, [
-    liveKitRoom,
+    isGetStream,
+    liveKitRoom.room,
     remoteParticipants,
+    room,
     seats,
   ])
 
@@ -2872,7 +3052,8 @@ export default function PhoneViewerPage() {
   }, [mySeat, user?.id])
 
   useEffect(() => {
-    if (!liveKitRoom || !isConnected) {
+    // Skip seat publish/unpublish for GetStream - handled differently
+    if (isGetStream || !room || !isConnected) {
       return
     }
 
@@ -2884,7 +3065,7 @@ export default function PhoneViewerPage() {
       joiningPublisherRef.current = true
       currentRoomKeyRef.current = `${resolvedStreamId}:${roomId}`
 
-      void publishLocalTracks()
+      void liveKitRoom.publishLocalTracks()
         .then(async () => {
           if (mySeat?.seat_index != null) {
             try {
@@ -2894,7 +3075,7 @@ export default function PhoneViewerPage() {
             }
           }
         })
-        .catch((err: any) => {
+        .catch((_err: any) => {
         })
         .finally(() => {
           joiningPublisherRef.current = false
@@ -2906,30 +3087,30 @@ export default function PhoneViewerPage() {
       joiningPublisherRef.current = true
 
       void unpublishLocalTracks()
-        .catch((err: any) => {
+        .catch((_err: any) => {
         })
         .finally(() => {
           joiningPublisherRef.current = false
         })
 
-      void leaveLiveKitRoom().catch(() => {})
+      void leaveCurrentRoomRef.current().catch(() => {})
       hasJoinedAudienceRef.current = false
       joiningAudienceRef.current = false
       currentRoomKeyRef.current = null
       return
     }
-   }, [
-     isUserOnStage,
-     isConnected,
-     isPublishing,
-     liveKitRoom,
-     publishLocalTracks,
-     unpublishLocalTracks,
-     leaveLiveKitRoom,
-     resolvedStreamId,
-     roomId,
-     mySeat?.seat_index,
-   ])
+}, [
+      isUserOnStage,
+      isConnected,
+      isPublishing,
+      room,
+      publishLocalTracks,
+      unpublishLocalTracks,
+      leaveRoom,
+      resolvedStreamId,
+      roomId,
+      mySeat?.seat_index,
+    ])
 
   const wasOnStageRef = useRef(isUserOnStage)
 
@@ -2961,7 +3142,7 @@ export default function PhoneViewerPage() {
         })
 
         if (!isBattleMode) {
-          await publishLocalTracks()
+          await liveKitRoom.publishLocalTracks()
           if (mySeat?.seat_index != null) {
             try {
               await markSeatLive(mySeat.seat_index, viewerIdentityRef.current || viewerIdentity)
@@ -2973,7 +3154,7 @@ export default function PhoneViewerPage() {
 
         if (typeof result === 'string') {
         }
-      } catch (err) {
+      } catch (_err) {
         // ignore join errors
       } finally {
         joiningAudienceRef.current = false
@@ -3084,7 +3265,7 @@ export default function PhoneViewerPage() {
                await unpublishLocalTracks()
                await leaveSeat?.()
                await leaveAudience()
-               await leaveLiveKitRoom().catch(
+               await leaveCurrentRoomRef.current().catch(
                  () => {},
                )
                hasJoinedAudienceRef.current =
@@ -3132,7 +3313,6 @@ export default function PhoneViewerPage() {
      mySeat,
      leaveSeat,
      leaveAudience,
-     leaveLiveKitRoom,
      unpublishLocalTracks,
      navigate,
    ])
@@ -3149,7 +3329,7 @@ export default function PhoneViewerPage() {
         )
       }
 
-      void leaveLiveKitRoom().catch(() => {})
+      void leaveCurrentRoomRef.current().catch(() => {})
 
       if (
         hasJoinedAudienceRef.current ||
@@ -3164,7 +3344,6 @@ export default function PhoneViewerPage() {
     }
   }, [
     isPublishing,
-    leaveLiveKitRoom,
     unpublishLocalTracks,
     leaveAudience,
   ])
@@ -3572,7 +3751,7 @@ export default function PhoneViewerPage() {
   const lastTapRef =
     useRef(0)
 
-  const handleBroadcasterTap =
+  const _handleBroadcasterTap =
     useCallback(() => {
       /*
        * Do not process broadcast double-tap likes
@@ -3618,6 +3797,11 @@ export default function PhoneViewerPage() {
   const handleVideoTap =
     useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
+        if (swipeHandledRef.current) {
+          swipeHandledRef.current = false
+          return
+        }
+
         const rect =
           e.currentTarget.getBoundingClientRect()
 
@@ -4081,7 +4265,7 @@ export default function PhoneViewerPage() {
               battleId={stream.battle_id!}
               currentStreamId={streamId}
               viewerId={user?.id || anonViewerId}
-              remoteUsers={remoteUsers}
+              remoteUsers={liveKitRoom.remoteUsers}
               userIdToLiveKitIdentity={userIdToLiveKitIdentity}
               returnPathTemplate="/watch/:id"
               onReturnToStream={() => {
@@ -4169,7 +4353,8 @@ export default function PhoneViewerPage() {
       <FeaturedLiveOverlay active={!!currentStreamFeatured} className="left-4 top-4" />
       {!shouldShowRandomBattleArena && <FeaturedGiftBanner streamId={resolvedStreamId} broadcasterId={hostId} isMobile={true} />}
       <div
-        className="relative h-[100dvh] w-full overflow-hidden bg-[#02030a] text-white"
+        className="fixed inset-0 h-[100dvh] w-full overflow-hidden overscroll-none bg-[#02030a] text-white"
+        style={{ scrollbarWidth: 'none' }}
         onClick={() => {
           if (!showControls) {
             setShowControls(true)
@@ -4191,16 +4376,20 @@ export default function PhoneViewerPage() {
             FULL-SCREEN BROADCASTER VIDEO
         ================================================================= */}
 
-        <div className="absolute inset-0 z-0">
+        <div
+          className="absolute inset-0 z-0"
+          style={{ touchAction: 'none' }}
+          onTouchStart={handleStreamSwipeStart}
+          onTouchEnd={handleStreamSwipeEnd}
+        >
           <PhoneRemoteVideo
             participant={
               broadcasterState.participant
             }
             room={
-              liveKitRoom
+              room
             }
             className="h-full w-full"
-            mirror={true}
             fallback={
               <div className="flex h-full w-full flex-col items-center justify-center bg-[#050711]">
                 <div className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-cyan-300/20 bg-cyan-500/10 shadow-[0_0_50px_rgba(34,211,238,0.12)]">
@@ -4218,7 +4407,9 @@ export default function PhoneViewerPage() {
             }
           />
           {/* Camera-off image fallback */}
-          {!broadcasterState.videoTrack && (broadcasterProfile as any)?.camera_off_image_url && (
+          {!broadcasterState.videoTrack &&
+            !(broadcasterState.participant?.videoStream instanceof MediaStream) &&
+            (broadcasterProfile as any)?.camera_off_image_url && (
             <div className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-hidden bg-black">
               <img
                 src={(broadcasterProfile as any).camera_off_image_url}
@@ -4508,9 +4699,7 @@ export default function PhoneViewerPage() {
                           {seat.isOccupied ? (
                             seat.isMine ? (
                               <PhoneLocalVideo
-                                videoTrack={
-                                  localVideoTrack
-                                }
+                                videoTrack={liveKitRoom.localVideoTrack}
                                 className="absolute inset-0"
                               />
                             ) : (
@@ -4519,7 +4708,7 @@ export default function PhoneViewerPage() {
                                   participant
                                 }
                                 room={
-                                  liveKitRoom
+                                  room
                                 }
                                 className="absolute inset-0"
                                 fallback={
@@ -4795,6 +4984,7 @@ export default function PhoneViewerPage() {
                   // ignore
                 }
               }}
+              className="flex items-center gap-2"
             >
               <input
                 type="text"
@@ -4802,8 +4992,9 @@ export default function PhoneViewerPage() {
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder="Say something..."
                 maxLength={280}
-                className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+                className="h-10 min-w-0 flex-1 rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
               />
+              <TrollUpFloatingButton />
             </form>
           </div>
         )}
@@ -4986,7 +5177,29 @@ export default function PhoneViewerPage() {
             )}
           </>
         )}
-        <TrollUpFloatingButton />
+
+        {miniProfile && (
+          <UserMiniProfile
+            userId={miniProfile.userId}
+            username={miniProfile.username}
+            avatarUrl={miniProfile.avatarUrl}
+            onClose={() => setMiniProfile(null)}
+            onModerate={(targetUserId, targetUsername) => {
+              handleOpenUserAction({
+                userId: targetUserId,
+                username: targetUsername,
+                role: '',
+                createdAt: null,
+              })
+            }}
+          />
+        )}
+
+        <ProtectionOrderGate
+          streamId={resolvedStreamId}
+          broadcasterId={(stream as any)?.user_id || null}
+          participantIds={protectionOrderParticipantIds}
+        />
       </div>
     </GiftSystemProvider>
   )
@@ -4998,7 +5211,7 @@ function TrollUpFloatingButton() {
     <button
       type="button"
       onClick={() => navigate('/troll-up')}
-      className="fixed bottom-20 right-4 z-[60] flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-950/90 px-4 py-2.5 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl active:scale-95"
+      className="h-10 shrink-0 flex items-center gap-1.5 rounded-lg border border-cyan-400/40 bg-slate-950/90 px-3 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl active:scale-95"
     >
       <Zap className="h-4 w-4" /> Troll Up
     </button>

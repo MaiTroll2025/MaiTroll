@@ -219,6 +219,10 @@ export const PRIVATE_ROUTE_PREFIXES: string[] = [
   '/hytrogaming/apply',
   '/hytrogaming/contract',
 
+  // MAi School account and learning pages are private.
+  '/school',
+  '/mai-school',
+
   // Auctions: only the public show/viewer pages are indexable
   '/auction/dashboard',
   '/auction/studio',

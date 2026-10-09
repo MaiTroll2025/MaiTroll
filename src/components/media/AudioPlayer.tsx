@@ -1,9 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { 
-  Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, 
-  Heart, Coins, MessageCircle, Share2, Minimize2, Maximize2, 
-  X, Repeat, Shuffle, ListMusic 
-} from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Coins, Share2, Minimize2, Maximize2, X, Repeat, Shuffle, ListMusic } from 'lucide-react';
 import { Howl } from 'howler';
 import { MaiTrollTheme } from '@/styles/trollCityTheme';
 import type { Song } from '@/types/media';
@@ -41,7 +37,7 @@ export default function AudioPlayer({
   const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
   const [shuffleMode, setShuffleMode] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
-  const [showQueue, setShowQueue] = useState(false);
+  const [_showQueue, _setShowQueue] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   

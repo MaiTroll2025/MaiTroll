@@ -1,28 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
 import { useAuthStore } from '../../../lib/store';
 import { toast } from 'sonner';
-import {
-  Coins, DollarSign, Users, TrendingUp, AlertTriangle,
-  Search, Filter, Download, ChevronRight, Loader2,
-  Clock, CheckCircle, XCircle, AlertCircle, Info,
-  Shield, Eye, ArrowUpRight, ArrowDownRight, RefreshCw,
-  ChevronDown, ChevronUp, X, FileText, BarChart3,
-  PieChart, Activity, DollarSign as DollarIcon,
-  Zap, Target, Award, Gift, Send, RotateCcw,
-  ShieldCheck, ShieldAlert, Ban, Clock4,
-  Calendar, Hash, Mail, Tag, User as UserIcon,
-  ArrowLeft, ArrowRight, ChevronsLeft, ChevronsRight
-} from 'lucide-react';
+import { Coins, DollarSign, AlertTriangle, Search, Filter, Download, ChevronRight, Loader2, Clock, CheckCircle, RefreshCw, X, BarChart3, Zap, Target, Award, Gift, ShieldAlert, Ban } from 'lucide-react';
 
-type CoinCategory = 'cashable_earned' | 'purchased_spending' | 'promotional' | 'mayor_promo' | 'test' | 'pending' | 'reversed' | 'already_cashed_out';
+type _CoinCategory = 'cashable_earned' | 'purchased_spending' | 'promotional' | 'mayor_promo' | 'test' | 'pending' | 'reversed' | 'already_cashed_out';
 
 type SortField = 'cashable_coin_balance' | 'estimated_liability' | 'total_gifts_received' | 'last_transaction_date' | 'pending_payout_coins' | 'username';
 type SortDir = 'asc' | 'desc';
 
-type AlertStatus = 'open' | 'under_review' | 'resolved' | 'dismissed' | 'escalated';
-type AlertType = 'cashout_threshold_reached' | 'cashout_tier_reached' | 'high_balance' | 'multiple_large_gifts' | 'payout_requested' | 'pending_payout_too_long' | 'approved_payout_unpaid' | 'balance_mismatch' | 'non_cashable_source' | 'refund_affects_gifted' | 'potential_self_gifting' | 'coordinated_manipulation';
+type _AlertStatus = 'open' | 'under_review' | 'resolved' | 'dismissed' | 'escalated';
+type _AlertType = 'cashout_threshold_reached' | 'cashout_tier_reached' | 'high_balance' | 'multiple_large_gifts' | 'payout_requested' | 'pending_payout_too_long' | 'approved_payout_unpaid' | 'balance_mismatch' | 'non_cashable_source' | 'refund_affects_gifted' | 'potential_self_gifting' | 'coordinated_manipulation';
 
 interface SummaryData {
   total_cashable_coins: number;
@@ -71,7 +60,7 @@ interface LiabilityEstimate {
   total_cashable_coin_exposure: number;
 }
 
-const CASHOUT_THRESHOLD = 2000;
+const _CASHOUT_THRESHOLD = 2000;
 const PAGE_SIZE = 25;
 const AUTHORIZED_ROLES = ['admin', 'owner', 'ceo', 'secretary', 'executive_secretary', 'troll_city_secretary', 'troll_city_treasurer'];
 
@@ -89,8 +78,8 @@ function isAuthorized(profile: any): boolean {
 }
 
 export default function CoinLiabilityPage() {
-  const { user, profile } = useAuthStore();
-  const navigate = useNavigate();
+  const { user: _user, profile } = useAuthStore();
+  const _navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [loading, setLoading] = useState(true);
@@ -107,15 +96,15 @@ export default function CoinLiabilityPage() {
   const [userDetailLoading, setUserDetailLoading] = useState(false);
   const [userTab, setUserTab] = useState<'transactions' | 'gifts_received' | 'gifts_sent' | 'purchases' | 'payouts' | 'adjustments'>('transactions');
   const [userDetailPage, setUserDetailPage] = useState(1);
-  const [userDetailTotal, setUserDetailTotal] = useState(0);
+  const [_userDetailTotal, _setUserDetailTotal] = useState(0);
   const [liability, setLiability] = useState<LiabilityEstimate | null>(null);
   const [cashoutTiers, setCashoutTiers] = useState<CashoutTier[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
-  const [alertsLoading, setAlertsLoading] = useState(false);
-  const [showRevenuePanel, setShowRevenuePanel] = useState(false);
+  const [_alertsLoading, setAlertsLoading] = useState(false);
+  const [_showRevenuePanel, _setShowRevenuePanel] = useState(false);
   const [dateFilter, setDateFilter] = useState('30d');
   const [exportLoading, setExportLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, _setRefreshing] = useState(false);
 
   const isAdmin = isAuthorized(profile);
 

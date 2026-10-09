@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React from 'react';
 
 let rechartsCache: typeof import('recharts') | null = null
 

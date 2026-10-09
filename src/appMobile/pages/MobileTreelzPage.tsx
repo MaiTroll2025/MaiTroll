@@ -18,10 +18,10 @@ export default function MobileTreelzPage() {
   const [showTip, setShowTip] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showMore, setShowMore] = useState(false)
-  const [settings, setSettings] = useState(loadTreelzSettings())
-  const [direction, setDirection] = useState<'left' | 'right' | null>(null)
-  const touchStartX = useRef(0)
-  const touchStartY = useRef(0)
+  const [settings, _setSettings] = useState(loadTreelzSettings())
+  const [_direction, setDirection] = useState<'left' | 'right' | null>(null)
+  const _touchStartX = useRef(0)
+  const _touchStartY = useRef(0)
 
   const loadFeed = useCallback(async () => {
     setLoading(true)

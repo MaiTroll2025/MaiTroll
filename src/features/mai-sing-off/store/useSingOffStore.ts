@@ -1,17 +1,5 @@
 import { create } from 'zustand'
-import type {
-  SingOffSession,
-  SingOffUser,
-  SingOffQueueEntry,
-  SingOffRound,
-  SingOffDecision,
-  SingOffChatMessage,
-  SingOffGiftEvent,
-  SingOffAuthority,
-  SingOffSessionState,
-  SingOffView,
-  Decision,
-} from '../types'
+import type { SingOffSession, SingOffUser, SingOffQueueEntry, SingOffRound, SingOffDecision, SingOffChatMessage, SingOffAuthority, SingOffSessionState, SingOffView } from '../types';
 import type { GiftItem } from '@/lib/giftConstants'
 
 export interface SingOffState {
@@ -110,7 +98,7 @@ export const useSingOffStore = create<SingOffStore>()((set, get) => ({
 
   initFromState: (state) => {
     const hostId = state.session?.host_id ?? null
-    const userId = state.authority.is_host ? hostId : null
+    const _userId = state.authority.is_host ? hostId : null
     set((s) => ({
       session: state.session,
       participants: state.participants,

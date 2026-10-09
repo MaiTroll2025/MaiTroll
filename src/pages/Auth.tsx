@@ -8,8 +8,6 @@ import { useAuthStore } from '../lib/store'
 import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Shield, Users, ChevronDown, ChevronUp, Building2, Globe } from 'lucide-react'
 import NavBubble from '../components/NavBubble';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
-import { generateUUID } from '../lib/uuid';
-import { handleConcurrentLogin, resetConcurrentLoginCheck } from '../lib/sessionUtils';
 import { moderation } from '@/services/maitrollModeration';
 import { checkAndAutoArrestNewAccount, getCurrentIP } from '@/services/ipTracking';
 
@@ -107,7 +105,7 @@ const trackMobileError = (error: Error, context: string, userId?: string) => {
 }
 
 // Check for jail IP violations and ban if necessary
-const checkJailIpViolations = async (userId: string, ipAddress: string) => {
+const _checkJailIpViolations = async (userId: string, ipAddress: string) => {
   try {
     // Check if there are any jailed users on this IP (excluding current user)
     const { data: jailedUsers } = await supabase
@@ -213,6 +211,16 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
 const [showPassword, setShowPassword] = useState(false)
    const [platform] = useState('')
   const [selectedRole, setSelectedRole] = useState<'user' | 'staff' | 'admin'>('user')
+  const [institutionName, setInstitutionName] = useState('')
+  const [institutionEmail, setInstitutionEmail] = useState('')
+  const [institutionDomain, setInstitutionDomain] = useState('')
+  const [schoolValidationResult, _setSchoolValidationResult] = useState<any>(null)
+  const [validatingSchool, _setValidatingSchool] = useState(false)
+  const [studentInstitutionName, setStudentInstitutionName] = useState('')
+  const [studentInstitutionEmail, setStudentInstitutionEmail] = useState('')
+  const [studentInstitutionDomain, setStudentInstitutionDomain] = useState('')
+  const [studentValidationResult, _setStudentValidationResult] = useState<any>(null)
+  const [validatingStudentSchool, _setValidatingStudentSchool] = useState(false)
 
   // Force Sign In mode for Staff and Admin roles (no public signup)
   useEffect(() => {
@@ -233,7 +241,7 @@ const [showPassword, setShowPassword] = useState(false)
    const [queueUsername, setQueueUsername] = useState('')
    const [nextWindow, setNextWindow] = useState<Date | null>(null)
   const navigate = useNavigate()
-  const { user, profile, setAuth, setProfile } = useAuthStore()
+  const { user, profile, setAuth: _setAuth, setProfile } = useAuthStore()
   
   // Check active event and signup limits
   useEffect(() => {
@@ -740,7 +748,7 @@ try {
             ) : (
                <>
 {/* Email Input (shown for all roles; institution email used for instructor) */}
-                  {selectedRole !== 'instructor' && (
+                  {selectedRole as string !== 'instructor' && (
                     <div className="relative group">
                       <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
                       <input
@@ -800,7 +808,7 @@ try {
                   )}
 
                   {/* Institution Fields (Instructor Sign Up Only) */}
-                  {selectedRole === 'instructor' && !isLogin && (
+                  {selectedRole as string === 'instructor' && !isLogin && (
                     <div className="space-y-4">
                       <div className="relative group">
                         <Building2 className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
@@ -859,7 +867,7 @@ try {
                   )}
 
                   {/* Institution Fields (Student Sign Up Only) */}
-                  {selectedRole === 'student' && !isLogin && (
+                  {selectedRole as string === 'student' && !isLogin && (
                     <div className="space-y-4">
                       <div className="relative group">
                         <Building2 className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
@@ -930,44 +938,53 @@ try {
                          {selectedRole === 'admin' && 'Admin sign in only — no public sign up available.'}
                        </div>
 
-                     {/* Terms Acceptance (Sign Up Only) */}
+{/* Terms Acceptance (Sign Up Only) */}
                     {!isLogin && (
-                      <div className="flex items-start gap-3 px-1">
-                      <div className="relative flex items-center pt-1">
-                        <input
-                          type="checkbox"
-                          id="accept-terms"
-                          checked={acceptedTerms}
-                          onChange={(e) => setAcceptedTerms(e.target.checked)}
-                          className="peer h-5 w-5 appearance-none rounded border border-purple-500/30 bg-slate-800/50 checked:bg-purple-600 checked:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all cursor-pointer"
-                        />
-                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 transition-opacity">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3.5 w-3.5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                      <div className="flex flex-col gap-3 px-1">
+                      <div className="relative flex items-start gap-3">
+                        <div className="relative flex items-center pt-1">
+                          <input
+                            type="checkbox"
+                            id="accept-terms"
+                            checked={acceptedTerms}
+                            onChange={(e) => setAcceptedTerms(e.target.checked)}
+                            className="peer h-5 w-5 appearance-none rounded border border-purple-500/30 bg-slate-800/50 checked:bg-purple-600 checked:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all cursor-pointer"
+                          />
+                          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 transition-opacity">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3.5 w-3.5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
                         </div>
+                        <label htmlFor="accept-terms" className="text-sm text-slate-300 cursor-pointer select-none">
+                          I accept the{' '}
+                          <Link to="/legal/terms" target="_blank" className="text-purple-400 hover:text-purple-300 hover:underline">
+                            Terms and Agreements
+                          </Link>
+                          {' '}and acknowledge the{' '}
+                          <Link to="/legal/privacy" target="_blank" className="text-purple-400 hover:text-purple-300 hover:underline">
+                            Privacy Policy
+                          </Link>.
+                        </label>
                       </div>
-                      <label htmlFor="accept-terms" className="text-sm text-slate-300 cursor-pointer select-none">
-                        I accept the{' '}
-                        <Link to="/legal/terms" target="_blank" className="text-purple-400 hover:text-purple-300 hover:underline">
-                          Terms and Agreements
-                        </Link>
-                        {' '}and acknowledge the{' '}
-                        <Link to="/legal/privacy" target="_blank" className="text-purple-400 hover:text-purple-300 hover:underline">
-                          Privacy Policy
-                        </Link>.
-                       </label>
-                     </div>
-)}
+                      <Link
+                        to="/legal/terms"
+                        target="_blank"
+                        className="self-start text-xs font-semibold text-purple-400 hover:text-purple-300 hover:underline"
+                      >
+                        Read Terms & Agreements →
+                      </Link>
+                    </div>
+                    )}
 
                   {/* Submit Button */}
                 <button

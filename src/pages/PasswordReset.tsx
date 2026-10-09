@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Mail, Lock, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,13 +8,13 @@ type Step = 'request' | 'check-email' | 'reset' | 'success';
 
 export default function PasswordReset() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [step, setStep] = useState<Step>('request');
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
+  const [_sessionReady, setSessionReady] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
 
   // Listen for auth state changes — Supabase recovery links put the token in the URL hash.
@@ -51,7 +51,7 @@ export default function PasswordReset() {
     });
 
     // Fallback: if nothing fires within 3s, assume no recovery session
-    const timeout = setTimeout(() => {
+    const _timeout = setTimeout(() => {
       if (!resolved) {
         resolved = true;
         setAuthResolved(true);

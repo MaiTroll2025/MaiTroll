@@ -21,7 +21,7 @@ const TrollCharacter: React.FC<TrollCharacterProps> = ({
   seasonalTheme,
   className,
 }) => {
-  const skin = 'var(--troll-skin, #6b8e23)';
+  const _skin = 'var(--troll-skin, #6b8e23)';
   return (
     <div
       className={`troll-character troll-${stage} troll-state-${state} ${className ?? ''}`}

@@ -1,22 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Car,
-  Check,
-  MapPin,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  Trophy,
-  Zap,
-} from 'lucide-react'
+import { Check, MapPin, ShieldCheck, Sparkles, Star, Trophy, Zap } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { useNeighborhood } from '../lib/hooks/useNeighborhood'
 import { useVehicleSystem, useDriverTest } from '../lib/hooks/useVehicleSystem'
-import { deductCoins } from '../lib/coinTransactions'
 
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'

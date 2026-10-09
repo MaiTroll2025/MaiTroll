@@ -67,7 +67,7 @@ export default function SendGiftModal({
   isOpen, 
   onClose, 
   streamerId, 
-  streamId = null, 
+  streamId: _streamId = null, 
   inline = false, 
   onBonusAwarded,
   activeBattleId = null,

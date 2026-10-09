@@ -1,29 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { ShareAThonProvider, useShareAThon } from '../../contexts/ShareAThonContext'
 import { toast } from 'sonner'
-import {
-  ArrowLeft,
-  Users,
-  Share2,
-  Zap,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  TrendingUp,
-  DollarSign,
-  Award,
-  Radio,
-  Loader2,
-  Search,
-  Eye,
-  Shield,
-  Gift,
-  BarChart3
-} from 'lucide-react'
+import { ArrowLeft, Users, Share2, Zap, Clock, CheckCircle, XCircle, DollarSign, Radio, Loader2, Search, Eye, Shield, BarChart3 } from 'lucide-react';
 
 function AdminDashboardContent() {
   const navigate = useNavigate()

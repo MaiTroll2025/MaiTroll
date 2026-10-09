@@ -1,8 +1,5 @@
 import type { ComponentType } from 'react'
-import {
-  LayoutDashboard, MessagesSquare, ListTodo, FileText,
-  Megaphone, Palette, Wrench, Shield, UserPlus, Users, BadgeCheck, AlertTriangle, ShieldAlert,
-} from 'lucide-react'
+import { LayoutDashboard, MessagesSquare, ListTodo, FileText, Megaphone, Palette, Wrench, Shield, UserPlus, BadgeCheck, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 export type EmployeeAction =
   | 'publish_frontend'

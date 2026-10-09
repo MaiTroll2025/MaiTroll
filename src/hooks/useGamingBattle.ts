@@ -26,7 +26,7 @@ interface UseGamingBattleOptions {
 }
 
 export function useGamingBattle({ streamId, userId }: UseGamingBattleOptions) {
-  const { profile } = useAuthStore()
+  const { profile: _profile } = useAuthStore()
 
   const [state, setState] = useState<GamingBattleState>({
     phase: 'idle',

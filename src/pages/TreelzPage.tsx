@@ -1,31 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import {
-  ArrowLeft,
-  ArrowRight,
-  Bell,
-  Bookmark,
-  ChevronRight,
-  Coins,
-  Eye,
-  Flame,
-  Gift,
-  Heart,
-  History,
-  Home,
-  MessageCircle,
-  MoreHorizontal,
-  Play,
-  Radio,
-  Search,
-  Share2,
-  Sparkles,
-  TrendingUp,
-  Upload,
-  User,
-  Users,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, Bell, Bookmark, ChevronRight, Eye, Flame, Gift, Heart, History, MessageCircle, MoreHorizontal, Play, Radio, Search, Sparkles, TrendingUp, Upload, User, Users } from 'lucide-react';
 import {
   TreelzVideoPlayer,
   TreelzActions,
@@ -246,7 +222,7 @@ export default function TreelzPage() {
     }
   }, [currentPost?.author, user?.id])
 
-  const handleFollowAuthor = useCallback(async (authorId: string) => {
+  const _handleFollowAuthor = useCallback(async (authorId: string) => {
     if (!user) {
       toast.error('Please sign in to follow users')
       return
@@ -755,8 +731,8 @@ function CreatorOverlay({
   post,
   onCreatorClick,
   onMore,
-  onFollow,
-  isFollowing,
+  onFollow: _onFollow,
+  isFollowing: _isFollowing,
 }: {
   post: TreelzPost
   onCreatorClick: () => void

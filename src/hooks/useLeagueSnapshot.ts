@@ -40,8 +40,8 @@ interface UseLeagueSnapshotOptions {
 
 export function useLeagueSnapshot({
   streamId,
-  category,
-  broadcasterId,
+  category: _category,
+  broadcasterId: _broadcasterId,
   limit = 10,
 }: UseLeagueSnapshotOptions) {
   const { user, profile } = useAuthStore()
@@ -73,7 +73,7 @@ export function useLeagueSnapshot({
 
       // Fetch active league event
       const now = new Date().toISOString()
-      const { data: eventData, error: eventError } = await supabase
+      const { data: eventData, error: _eventError } = await supabase
         .from('league_events')
         .select('id, name, slug, type, status, starts_at, ends_at, metadata, points_multiplier')
         .eq('status', 'active')

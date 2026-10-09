@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Home, Trophy, Coins, Gift, Heart, UserPlus, Loader2, Play, Bookmark } from 'lucide-react';
+import { Home, Trophy, Coins, Gift, Heart, UserPlus, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 
@@ -32,7 +32,7 @@ function looksLikeUUID(value: unknown): boolean {
 
 export default function StreamSummary() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const _location = useLocation();
   const { id: streamId } = useParams<{ id?: string }>()
   const { user, profile } = useAuthStore();
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export default function StreamSummary() {
     newFollowers: 0
   });
   const [isBroadcaster, setIsBroadcaster] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, _setIsSaved] = useState(false);
 
   useEffect(() => {
     if (!streamId) {
@@ -99,7 +99,7 @@ export default function StreamSummary() {
         setBroadcasterName(broadcasterName);
 
         if (user?.id) {
-          const { data: streamGiftsSpent, error: streamGiftsSpentError } = await supabase
+          const { data: streamGiftsSpent, error: _streamGiftsSpentError } = await supabase
             .from('stream_gifts')
             .select('id, trollmonds_spent, metadata')
             .eq('stream_id', streamId)
@@ -112,7 +112,7 @@ export default function StreamSummary() {
             }, 0);
           }
 
-          const { data: streamGiftsReceived, error: streamGiftsReceivedError } = await supabase
+          const { data: streamGiftsReceived, error: _streamGiftsReceivedError } = await supabase
             .from('stream_gifts')
             .select('id, quantity')
             .eq('stream_id', streamId)

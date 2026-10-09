@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync: _execSync } = require('child_process');
 
 const WORKSPACE = 'c:\\Users\\kainm\\TC ONLY\\Mai Troll';
 
@@ -46,7 +46,7 @@ function getAllSqlFiles(dir, files = []) {
         files.push(fullPath);
       }
     }
-  } catch (e) {}
+  } catch (_e) {}
   return files;
 }
 
@@ -54,7 +54,7 @@ function getAllSqlFiles(dir, files = []) {
 function safeReadFile(filePath) {
   try {
     return fs.readFileSync(filePath, 'utf8');
-  } catch (e) {
+  } catch (_e) {
     return '';
   }
 }
@@ -74,7 +74,7 @@ function findTableReferences(content, table) {
     rlsPolicies: []
   };
 
-  const lowerContent = content.toLowerCase();
+  const _lowerContent = content.toLowerCase();
   const lowerTable = table.toLowerCase();
 
   // Check for CREATE FUNCTION / CREATE OR REPLACE FUNCTION

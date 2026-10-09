@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, Sparkles, Zap, ChevronRight, Settings2, Globe, Crown, Shield, Flame, LayoutGrid, Columns, Rows, Square, Maximize2, ArrowRight, Layers } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Lock, Radio, ChevronRight, ArrowRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 // ═══════════════════════════════════════════════════════════════

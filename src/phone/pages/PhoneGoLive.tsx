@@ -15,6 +15,7 @@ import {
   MicOff,
   Radio,
   RefreshCw,
+  Settings,
   VideoOff,
   X,
 } from 'lucide-react'
@@ -37,6 +38,8 @@ import { useKeyDiscoveryStore } from '@/stores/useKeyDiscoveryStore'
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap'
 import CameraOffImageUpload from '@/components/broadcast/CameraOffImageUpload'
 import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
+import { isStaffProfile } from '@/lib/staff'
+import { applyCameraVideoPresentation } from '@/lib/cameraVideoPresentation'
 
 type BroadcastCategory =
   | 'general'
@@ -97,12 +100,23 @@ export default function PhoneGoLive() {
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [permissionError, setPermissionError] = useState<string | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const [cameraTrack, setCameraTrack] =
     useState<LocalVideoTrack | null>(null)
 
   const [microphoneTrack, setMicrophoneTrack] =
     useState<LocalAudioTrack | null>(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    applyCameraVideoPresentation(video, {
+      track: cameraTrack?.mediaStreamTrack,
+      facingMode,
+      isLocal: true,
+    })
+  }, [cameraTrack, facingMode])
 
   const {
     startCapEnabled,
@@ -132,9 +146,14 @@ export default function PhoneGoLive() {
     video.srcObject = mediaStream
     video.muted = true
     video.playsInline = true
+    applyCameraVideoPresentation(video, {
+      track: mediaStream.getVideoTracks()[0],
+      facingMode,
+      isLocal: true,
+    })
 
     video.play().catch(() => {})
-  }, [])
+  }, [facingMode])
 
   /*
    * Stop all currently owned media.
@@ -445,7 +464,9 @@ export default function PhoneGoLive() {
       return
     }
 
-    if (!import.meta.env.VITE_LIVEKIT_URL) {
+    const rtcProvider = isStaffProfile(profile) ? 'getstream' : 'livekit'
+
+    if (rtcProvider === 'livekit' && !import.meta.env.VITE_LIVEKIT_URL) {
       toast.error('LiveKit is not configured.')
       return
     }
@@ -482,19 +503,29 @@ export default function PhoneGoLive() {
         }
       }
 
-      const {
-        audioTrack,
-        videoTrack,
-      } = createLiveKitTracks(mediaStream)
-
-      if (!audioTrack || !videoTrack) {
+      if (
+        !mediaStream.getAudioTracks()[0] ||
+        !mediaStream.getVideoTracks()[0]
+      ) {
         throw new Error(
-          'Camera and microphone tracks could not be created.'
+          'Camera and microphone tracks are unavailable.'
         )
       }
 
-      setMicrophoneTrack(audioTrack)
-      setCameraTrack(videoTrack)
+      let audioTrack: LocalAudioTrack | null = null
+      let videoTrack: LocalVideoTrack | null = null
+      if (rtcProvider === 'livekit') {
+        const liveKitTracks = createLiveKitTracks(mediaStream)
+        audioTrack = liveKitTracks.audioTrack
+        videoTrack = liveKitTracks.videoTrack
+        if (!audioTrack || !videoTrack) {
+          throw new Error(
+            'Camera and microphone tracks could not be prepared for LiveKit.'
+          )
+        }
+        setMicrophoneTrack(audioTrack)
+        setCameraTrack(videoTrack)
+      }
 
       /*
        * Generate a unique stream/room ID.
@@ -516,6 +547,7 @@ export default function PhoneGoLive() {
 
         title: title.trim(),
         category,
+        rtc_provider: rtcProvider,
 
         stream_type: 'standard',
 
@@ -559,59 +591,37 @@ export default function PhoneGoLive() {
        * Request LiveKit token using the same backend
        * endpoint/function used by the desktop setup.
        */
-      const tokenData = await requestLiveKitToken(roomName, user.id)
+      if (rtcProvider === 'livekit') {
+        if (!audioTrack || !videoTrack) {
+          throw new Error('LiveKit media tracks are unavailable.')
+        }
 
-      /*
-       * Connect to LiveKit.
-       */
-      room = new Room({
-        audioCaptureOptions: {
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-        videoCaptureOptions: {
-          facingMode,
-        },
-        dynacast: true,
-      } as any)
+        const tokenData = await requestLiveKitToken(roomName, user.id)
 
-      await room.connect(
-        import.meta.env.VITE_LIVEKIT_URL,
-        tokenData.token
-      )
+        room = new Room({
+          audioCaptureOptions: {
+            echoCancellation: true,
+            noiseSuppression: true,
+          },
+          videoCaptureOptions: {
+            facingMode,
+          },
+          dynacast: true,
+        } as any)
 
-      roomRef.current = room
+        await room.connect(
+          import.meta.env.VITE_LIVEKIT_URL,
+          tokenData.token
+        )
 
-      /*
-       * Publish microphone and camera.
-       */
-      await room.localParticipant.publishTrack(
-        audioTrack
-      )
+        roomRef.current = room
+        await room.localParticipant.publishTrack(audioTrack)
+        await room.localParticipant.publishTrack(videoTrack)
 
-      await room.localParticipant.publishTrack(
-        videoTrack
-      )
-
-      /*
-       * Preserve the exact LiveKit objects so
-       * BroadcastPage can reuse the existing connection.
-       */
-      PreflightStore.setLivekitRoom(room)
-
-      PreflightStore.setLivekitTracks([
-        audioTrack,
-        videoTrack,
-      ])
-
-      PreflightStore.setTrackEnabledStates(
-        true,
-        true
-      )
-
-      usePreflightStore
-        .getState()
-        .setPreflightConnection({
+        PreflightStore.setLivekitRoom(room)
+        PreflightStore.setLivekitTracks([audioTrack, videoTrack])
+        PreflightStore.setTrackEnabledStates(true, true)
+        usePreflightStore.getState().setPreflightConnection({
           room,
           audioTrack,
           videoTrack,
@@ -619,49 +629,39 @@ export default function PhoneGoLive() {
           roomName,
         })
 
-      PreflightStore.setTransferSession({
-        room,
-        roomName,
-        streamId,
-        participantIdentity:
-          tokenData.participantIdentity ||
-          user.id,
-
-        cameraTrack: videoTrack,
-        microphoneTrack: audioTrack,
-
-        screenTrack: null,
-        screenAudioTrack: null,
-
-        mode: 'camera',
-
-        cameraOverlayEnabled: false,
-
-        transferredAt: Date.now(),
-
-        ownership: 'broadcast-page',
-
-        transitionInProgress: true,
-      })
-
-      /*
-       * Mark the Supabase stream LIVE only after
-       * LiveKit has connected and tracks published.
-       */
-      const {
-        error: liveError,
-      } = await supabase
-        .from('streams')
-        .update({
-          status: 'live',
-          is_live: true,
-          started_at:
-            new Date().toISOString(),
+        PreflightStore.setTransferSession({
+          room,
+          roomName,
+          streamId,
+          participantIdentity: tokenData.participantIdentity || user.id,
+          cameraTrack: videoTrack,
+          microphoneTrack: audioTrack,
+          screenTrack: null,
+          screenAudioTrack: null,
+          mode: 'camera',
+          cameraOverlayEnabled: false,
+          transferredAt: Date.now(),
+          ownership: 'broadcast-page',
+          transitionInProgress: true,
         })
-        .eq('id', streamId)
 
-      if (liveError) {
-        throw liveError
+        const { error: liveError } = await supabase
+          .from('streams')
+          .update({
+            status: 'live',
+            is_live: true,
+            started_at: new Date().toISOString(),
+          })
+          .eq('id', streamId)
+
+        if (liveError) throw liveError
+      } else {
+        mediaStream.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
+        PreflightStore.setLivekitRoom(null)
+        PreflightStore.setLivekitTracks([null, null])
+        PreflightStore.clearTransferSession()
+        usePreflightStore.getState().clearPreflightConnection()
       }
 
       if (!keyAwardedRef.current) {
@@ -772,6 +772,7 @@ export default function PhoneGoLive() {
     navigate,
     title,
     user?.id,
+    profile,
   ])
 
   /*
@@ -815,174 +816,134 @@ export default function PhoneGoLive() {
   }, [stopMedia])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#090014] via-black to-[#090014] text-white">
-      {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-fuchsia-500/20 bg-black/90 px-4 backdrop-blur-xl">
-        <button
-          type="button"
-          onClick={handleClose}
-          disabled={starting}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
-        >
-          <ArrowLeft size={26} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-        </button>
+    <div className="relative h-dvh overflow-hidden bg-black text-white">
+      <style>{`
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
 
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-fuchsia-500 shadow-[0_0_18px_rgba(168,85,247,.35)]">
-            <Radio size={16} />
-          </div>
+        .scrollbar-none {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
 
-          <div>
-            <h1 className="text-sm font-black">
-              Go Live
-            </h1>
+      {/* Full-screen camera preview */}
+      <video
+        ref={videoRef}
+        muted
+        autoPlay
+        playsInline
+        className={`absolute inset-0 h-full w-full object-cover ${
+          cameraOn && !permissionError ? '' : 'opacity-0'
+        }`}
+      />
 
-            <p className="text-[9px] uppercase tracking-widest text-zinc-500">
-              Broadcast Setup
-            </p>
-          </div>
+      {/* Camera off overlay */}
+      {!cameraOn && !permissionError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-zinc-950">
+          <VideoOff size={48} className="text-zinc-700" />
         </div>
+      )}
 
-        <button
-          type="button"
-          onClick={handleClose}
-          disabled={starting}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
-        >
-          <X size={26} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-        </button>
-      </header>
+      {/* Permission error overlay */}
+      {permissionError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 p-6 text-center">
+          <CameraOff size={46} className="mb-4 text-red-400" />
 
-      <main className="mx-auto w-full max-w-xl space-y-4 p-4 pb-8">
-        {/* Camera */}
-        <section className="relative mx-auto aspect-video max-h-[28vh] w-full max-w-sm overflow-hidden rounded-3xl border border-fuchsia-500/20 bg-zinc-950 shadow-[0_0_40px_rgba(168,85,247,.12)]">
-          {permissionError ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-              <CameraOff
-                size={46}
-                className="mb-4 text-red-400"
-              />
+          <h2 className="mb-2 text-base font-bold">
+            Camera Access Required
+          </h2>
 
-              <h2 className="mb-2 text-base font-bold">
-                Camera Access Required
-              </h2>
+          <p className="mb-5 max-w-xs text-xs leading-relaxed text-zinc-400">
+            {permissionError}
+          </p>
 
-              <p className="mb-5 max-w-xs text-xs leading-relaxed text-zinc-400">
-                {permissionError}
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                setPermissionError(null)
+                await acquireMedia(facingMode)
+              } catch (error: any) {
+                setPermissionError(
+                  error?.message ||
+                    'Unable to access camera.'
+                )
+              }
+            }}
+            className="rounded-xl bg-gradient-to-r from-cyan-400 to-fuchsia-500 px-5 py-3 text-xs font-black text-black"
+          >
+            Allow Camera & Mic
+          </button>
+        </div>
+      )}
+
+      {/* Preview badge */}
+      {!permissionError && (
+        <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-3 py-1.5 text-[10px] font-bold backdrop-blur">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.8)]" />
+          PREVIEW
+        </div>
+      )}
+
+      {/* Overlay UI */}
+      <div className="relative z-10 flex h-full flex-col">
+        {/* Header */}
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-black/60 px-4 backdrop-blur-xl">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={starting}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
+          >
+            <ArrowLeft size={26} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+          </button>
+
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-fuchsia-500 shadow-[0_0_18px_rgba(168,85,247,.35)]">
+              <Radio size={16} />
+            </div>
+
+            <div>
+              <h1 className="text-sm font-black">
+                Go Live
+              </h1>
+
+              <p className="text-[9px] uppercase tracking-widest text-zinc-500">
+                Broadcast Setup
               </p>
-
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    setPermissionError(null)
-                    await acquireMedia(
-                      facingMode
-                    )
-                  } catch (error: any) {
-                    setPermissionError(
-                      error?.message ||
-                        'Unable to access camera.'
-                    )
-                  }
-                }}
-                className="rounded-xl bg-gradient-to-r from-cyan-400 to-fuchsia-500 px-5 py-3 text-xs font-black text-black"
-              >
-                Allow Camera & Mic
-              </button>
             </div>
-          ) : (
-            <video
-              ref={videoRef}
-              muted
-              autoPlay
-              playsInline
-              className={`absolute inset-0 h-full w-full object-cover -scale-x-100 ${
-                cameraOn
-                  ? ''
-                  : 'opacity-0'
-              }`}
-            />
-          )}
-
-          {!cameraOn && !permissionError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950">
-              <VideoOff
-                size={48}
-                className="text-zinc-700"
-              />
-            </div>
-          )}
-
-          {/* Preview badge */}
-          <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-3 py-1.5 text-[10px] font-bold backdrop-blur">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.8)]" />
-            PREVIEW
           </div>
 
-          {/* Camera controls */}
-          {!permissionError && (
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-              <button
-                type="button"
-                onClick={toggleMic}
-                className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-xl transition ${
-                  micOn
-                    ? 'border-white/10 bg-black/70'
-                    : 'border-red-500/40 bg-red-600/80'
-                }`}
-              >
-                {micOn ? (
-                  <Mic size={20} />
-                ) : (
-                  <MicOff size={20} />
-                )}
-              </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              disabled={starting}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
+              aria-label="Open stream settings"
+            >
+              <Settings size={24} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+            </button>
 
-              <button
-                type="button"
-                onClick={toggleCamera}
-                className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-xl transition ${
-                  cameraOn
-                    ? 'border-white/10 bg-black/70'
-                    : 'border-red-500/40 bg-red-600/80'
-                }`}
-              >
-                {cameraOn ? (
-                  <Camera size={20} />
-                ) : (
-                  <CameraOff size={20} />
-                )}
-              </button>
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={starting}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
+              aria-label="Close setup"
+            >
+              <X size={26} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+            </button>
+          </div>
+        </header>
 
-              <button
-                type="button"
-                onClick={flipCamera}
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/70 backdrop-blur-xl"
-              >
-                <RefreshCw size={20} />
-              </button>
-            </div>
-          )}
-        </section>
+        <div className="flex-1" />
 
-        {/* Camera Off Image */}
-        <section className="space-y-2">
-          <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            Camera Off Image
-          </label>
-          <p className="px-1 text-[10px] text-zinc-600">
-            Show this image when your camera is off during broadcast
-          </p>
-          <CameraOffImageUpload />
-        </section>
-
-        {/* Title */}
-        <section className="space-y-2">
-          <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            Stream Title
-          </label>
-
+        {/* Bottom controls */}
+        <div className="shrink-0 space-y-3 p-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+          {/* Stream title */}
           <input
             value={title}
             onChange={e =>
@@ -991,213 +952,269 @@ export default function PhoneGoLive() {
             disabled={starting}
             maxLength={120}
             placeholder="What are you doing?"
-            className="w-full rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-3.5 text-sm outline-none transition placeholder:text-zinc-600 focus:border-fuchsia-500/50"
+            className="w-full rounded-2xl border border-white/10 bg-black/70 px-4 py-3.5 text-sm text-white outline-none backdrop-blur-xl transition placeholder:text-zinc-500 focus:border-fuchsia-500/50"
           />
-        </section>
 
-        {/* Category */}
-        <section className="space-y-2">
-          <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            Category
-          </label>
-
-          <div className="relative">
-            <select
-              value={category}
-              onChange={e =>
-                setCategory(
-                  e.target.value as BroadcastCategory
-                )
-              }
-              disabled={starting}
-              className="w-full appearance-none rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-3.5 pr-10 text-sm font-semibold outline-none focus:border-fuchsia-500/50"
-            >
-              {CATEGORIES.map(item => (
-                <option
-                  key={item.id}
-                  value={item.id}
-                  className="bg-zinc-900"
-                >
-                  {item.icon} {item.name}
-                </option>
-              ))}
-            </select>
-
-            <ChevronDown
-              size={18}
-              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500"
-            />
-          </div>
-        </section>
-
-        {/* Guest seats */}
-        <section className="space-y-2">
-          <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            Guest Seats
-          </label>
-          <div className="flex items-center justify-between rounded-2xl border border-cyan-500/15 bg-cyan-500/5 px-4 py-3">
-            <div>
-              <p className="text-sm font-bold text-white">Available seats</p>
-              <p className="mt-0.5 text-[10px] text-zinc-500">Host is not included</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSeatCount(Math.max(0, configuredSeatCount - 1))}
-                disabled={starting || configuredSeatCount <= 0}
-                className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-white disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Remove a guest seat"
-              >
-                -
-              </button>
-              <span className="min-w-12 text-center text-sm font-black text-cyan-200">
-                {configuredSeatCount} / {maxGuestSeats}
-              </span>
-              <button
-                type="button"
-                onClick={() => setSeatCount(Math.min(maxGuestSeats, configuredSeatCount + 1))}
-                disabled={starting || configuredSeatCount >= maxGuestSeats}
-                className="grid h-9 w-9 place-items-center rounded-lg border border-cyan-300/25 bg-cyan-400/10 text-cyan-100 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Add a guest seat"
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Broadcast Limits */}
-        {!capLoading && !allRestrictionsDisabled && (
-          <section className="space-y-2">
-            <p className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-              Broadcast Limits
-            </p>
-
-            <div className="grid grid-cols-2 gap-2">
-              {startCapEnabled && (
-                <div className="rounded-2xl border border-amber-500/10 bg-amber-500/5 px-3 py-2.5">
-                  <p className="text-[9px] font-black uppercase tracking-wider text-amber-400/80">
-                    Start Cap
-                  </p>
-                  <p className="mt-1 text-sm font-black text-amber-300">
-                    {startCapMax} live
-                  </p>
-                  <p className="text-[9px] text-zinc-500">
-                    Max concurrent broadcasts
-                  </p>
-                </div>
-              )}
-
-              {viewerCapEnabled && (
-                <div className="rounded-2xl border border-fuchsia-500/10 bg-fuchsia-500/5 px-3 py-2.5">
-                  <p className="text-[9px] font-black uppercase tracking-wider text-fuchsia-400/80">
-                    Viewer Cap
-                  </p>
-                  <p className="mt-1 text-sm font-black text-fuchsia-300">
-                    {viewerCapMax} viewers
-                  </p>
-                  <p className="text-[9px] text-zinc-500">
-                    Per stream for {viewerCapHours}h
-                  </p>
-                </div>
-              )}
-
-              {seatCapEnabled && (
-                <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/5 px-3 py-2.5">
-                  <p className="text-[9px] font-black uppercase tracking-wider text-cyan-400/80">
-                    Seat Cap
-                  </p>
-                  <p className="mt-1 text-sm font-black text-cyan-300">
-                    {seatCapMax} boxes
-                  </p>
-                  <p className="text-[9px] text-zinc-500">
-                    Max seats per broadcast
-                  </p>
-                </div>
-              )}
-
-              {allRestrictionsDisabled && (
-                <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/5 px-3 py-2.5">
-                  <p className="text-[9px] font-black uppercase tracking-wider text-emerald-400/80">
-                    Restrictions
-                  </p>
-                  <p className="mt-1 text-sm font-black text-emerald-300">
-                    Off
-                  </p>
-                  <p className="text-[9px] text-zinc-500">
-                    All limits removed
-                  </p>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* Status */}
-        <div className="flex items-center justify-between rounded-2xl border border-cyan-500/10 bg-cyan-500/5 px-4 py-3">
-          <div>
-            <p className="text-xs font-bold">
-              Camera & Microphone
-            </p>
-
-            <p className="mt-0.5 text-[10px] text-zinc-500">
-              Ready for LiveKit
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 text-[10px] font-bold">
-            <span
-              className={
-                micOn
-                  ? 'text-emerald-400'
-                  : 'text-red-400'
-              }
-            >
-              MIC
-            </span>
-
-            <span
-              className={
-                cameraOn
-                  ? 'text-emerald-400'
-                  : 'text-red-400'
-              }
-            >
-              CAM
-            </span>
-          </div>
+          {/* Go live */}
+          <button
+            type="button"
+            onClick={startBroadcast}
+            disabled={
+              starting ||
+              loading ||
+              !title.trim() ||
+              !!permissionError ||
+              !cameraOn ||
+              !micOn
+            }
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-purple-600 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,.25)] transition active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {starting ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Starting Broadcast...
+              </>
+            ) : (
+              <>
+                <Radio size={20} />
+                GO LIVE
+              </>
+            )}
+          </button>
         </div>
+      </div>
 
-        {/* Go Live */}
-        <button
-          type="button"
-          onClick={startBroadcast}
-          disabled={
-            starting ||
-            loading ||
-            !title.trim() ||
-            !!permissionError ||
-            !cameraOn ||
-            !micOn
-          }
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-purple-600 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,.25)] transition active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {starting ? (
-            <>
-              <Loader2
-                size={20}
-                className="animate-spin"
-              />
-              Starting Broadcast...
-            </>
-          ) : (
-            <>
-              <Radio size={20} />
-              GO LIVE
-            </>
-          )}
-        </button>
-      </main>
+      {/* Settings sheet */}
+      {settingsOpen && (
+        <div className="fixed inset-0 z-50">
+          <button
+            type="button"
+            aria-label="Close settings"
+            onClick={() => setSettingsOpen(false)}
+            className="absolute inset-0 bg-black/70"
+          />
+
+          <aside className="scrollbar-none absolute bottom-0 left-0 right-0 mx-auto max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0a0a0a] p-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/15" />
+
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-black">Stream Settings</h2>
+                <p className="text-[10px] text-zinc-500">
+                  Category, seats, camera and microphone
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(false)}
+                disabled={starting}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
+                aria-label="Close settings"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Category */}
+            <section className="space-y-2">
+              <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                Category
+              </label>
+
+              <div className="relative">
+                <select
+                  value={category}
+                  onChange={e =>
+                    setCategory(
+                      e.target.value as BroadcastCategory
+                    )
+                  }
+                  disabled={starting}
+                  className="w-full appearance-none rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-3.5 pr-10 text-sm font-semibold outline-none focus:border-fuchsia-500/50"
+                >
+                  {CATEGORIES.map(item => (
+                    <option
+                      key={item.id}
+                      value={item.id}
+                      className="bg-zinc-900"
+                    >
+                      {item.icon} {item.name}
+                    </option>
+                  ))}
+                </select>
+
+                <ChevronDown
+                  size={18}
+                  className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500"
+                />
+              </div>
+            </section>
+
+            {/* Guest seats */}
+            <section className="mt-4 space-y-2">
+              <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                Guest Seats
+              </label>
+
+              <div className="flex items-center justify-between rounded-2xl border border-cyan-500/15 bg-cyan-500/5 px-4 py-3">
+                <div>
+                  <p className="text-sm font-bold text-white">Available seats</p>
+                  <p className="mt-0.5 text-[10px] text-zinc-500">Host is not included</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSeatCount(Math.max(0, configuredSeatCount - 1))}
+                    disabled={starting || configuredSeatCount <= 0}
+                    className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-white disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Remove a guest seat"
+                  >
+                    -
+                  </button>
+
+                  <span className="min-w-12 text-center text-sm font-black text-cyan-200">
+                    {configuredSeatCount} / {maxGuestSeats}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setSeatCount(Math.min(maxGuestSeats, configuredSeatCount + 1))}
+                    disabled={starting || configuredSeatCount >= maxGuestSeats}
+                    className="grid h-9 w-9 place-items-center rounded-lg border border-cyan-300/25 bg-cyan-400/10 text-cyan-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Add a guest seat"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* Camera */}
+            <section className="mt-4 space-y-2">
+              <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                Camera
+              </label>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={toggleCamera}
+                  disabled={starting}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition disabled:opacity-40 ${
+                    cameraOn
+                      ? 'border-white/10 bg-white/5 text-white'
+                      : 'border-red-500/40 bg-red-600/80 text-white'
+                  }`}
+                >
+                  {cameraOn ? <Camera size={18} /> : <CameraOff size={18} />}
+                  {cameraOn ? 'Camera On' : 'Camera Off'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={flipCamera}
+                  disabled={starting}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition disabled:opacity-40"
+                >
+                  <RefreshCw size={18} />
+                  Flip Camera
+                </button>
+              </div>
+
+              <p className="px-1 text-[10px] text-zinc-600">
+                Using {facingMode === 'user' ? 'front' : 'rear'} camera
+              </p>
+            </section>
+
+            {/* Microphone */}
+            <section className="mt-4 space-y-2">
+              <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                Microphone
+              </label>
+
+              <button
+                type="button"
+                onClick={toggleMic}
+                disabled={starting}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition disabled:opacity-40 ${
+                  micOn
+                    ? 'border-white/10 bg-white/5 text-white'
+                    : 'border-red-500/40 bg-red-600/80 text-white'
+                }`}
+              >
+                {micOn ? <Mic size={18} /> : <MicOff size={18} />}
+                {micOn ? 'Microphone On' : 'Microphone Off'}
+              </button>
+            </section>
+
+            {/* Camera off image */}
+            <section className="mt-4 space-y-2">
+              <label className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                Camera Off Image
+              </label>
+              <p className="px-1 text-[10px] text-zinc-600">
+                Show this image when your camera is off during broadcast
+              </p>
+              <CameraOffImageUpload />
+            </section>
+
+            {/* Broadcast limits */}
+            {!capLoading && !allRestrictionsDisabled && (
+              <section className="mt-4 space-y-2">
+                <p className="px-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                  Broadcast Limits
+                </p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {startCapEnabled && (
+                    <div className="rounded-2xl border border-amber-500/10 bg-amber-500/5 px-3 py-2.5">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-amber-400/80">
+                        Start Cap
+                      </p>
+                      <p className="mt-1 text-sm font-black text-amber-300">
+                        {startCapMax} live
+                      </p>
+                      <p className="text-[9px] text-zinc-500">
+                        Max concurrent broadcasts
+                      </p>
+                    </div>
+                  )}
+
+                  {viewerCapEnabled && (
+                    <div className="rounded-2xl border border-fuchsia-500/10 bg-fuchsia-500/5 px-3 py-2.5">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-fuchsia-400/80">
+                        Viewer Cap
+                      </p>
+                      <p className="mt-1 text-sm font-black text-fuchsia-300">
+                        {viewerCapMax} viewers
+                      </p>
+                      <p className="text-[9px] text-zinc-500">
+                        Per stream for {viewerCapHours}h
+                      </p>
+                    </div>
+                  )}
+
+                  {seatCapEnabled && (
+                    <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/5 px-3 py-2.5">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-cyan-400/80">
+                        Seat Cap
+                      </p>
+                      <p className="mt-1 text-sm font-black text-cyan-300">
+                        {seatCapMax} boxes
+                      </p>
+                      <p className="text-[9px] text-zinc-500">
+                        Max seats per broadcast
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+          </aside>
+        </div>
+      )}
     </div>
   )
 }

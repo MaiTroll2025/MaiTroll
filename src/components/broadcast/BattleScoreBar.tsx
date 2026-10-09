@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Clock, Crown } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface BattleScoreBarProps {
   teamAScore: number;
@@ -37,7 +37,7 @@ export default function BattleScoreBar({
   // Determine winner/leader
   const isTeamALeading = teamAScore > teamBScore;
   const isTeamBLeading = teamBScore > teamAScore;
-  const isTied = teamAScore === teamBScore;
+  const _isTied = teamAScore === teamBScore;
 
   return (
     <div className="w-full bg-gradient-to-b from-slate-900/80 to-slate-900/40 backdrop-blur-md border-b border-white/10 p-2 md:p-4 space-y-2">

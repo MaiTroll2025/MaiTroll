@@ -10,7 +10,7 @@ type Profile = {
 }
 
 const profileCache = new Map<string, Profile>()
-const inflightRequests = new Map<string, Promise<Profile[]>>()
+const inflightRequests = new Map<string, Promise<any>>()
 
 export async function getProfiles(userIds: string[]): Promise<Profile[]> {
   const ids = Array.from(new Set(userIds.filter(Boolean)))
@@ -27,10 +27,12 @@ export async function getProfiles(userIds: string[]): Promise<Profile[]> {
     return [...cached, ...results]
   }
 
-  const promise = supabase
-    .from('user_profiles')
-    .select('*')
-    .in('id', missingIds)
+  const promise = Promise.resolve(
+    supabase
+      .from('user_profiles')
+      .select('*')
+      .in('id', missingIds)
+  )
     .then(({ data, error }) => {
       inflightRequests.delete(cacheKey)
       if (error || !data) return []

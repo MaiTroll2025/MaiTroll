@@ -13,7 +13,7 @@ const STAFF_ROLES = new Set([
   'lead_troll_officer', 'troll_officer', 'moderator', 'staff', 'secretary',
   'executive_secretary', 'troll_city_secretary', 'agency_hr', 'agency_hr_manager',
   'agency_leader', 'ceo_assistant', 'noah_assistant', 'hr_admin',
-  'marketing_readonly', 'academy_director', 'prosecutor', 'attorney',
+  'marketing_agent', 'academy_director', 'prosecutor', 'attorney',
 ]);
 const STAFF_EVENT_TYPES = new Set([
   'career_application_submitted',
@@ -201,7 +201,11 @@ serve(async (req) => {
 
     if (recipientIds.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, message: 'No eligible staff or admin recipients found', notificationsCreated: 0 }),
+        JSON.stringify({
+          success: false,
+          error: 'No eligible staff or admin recipients found',
+          notificationsCreated: 0
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -255,7 +259,12 @@ serve(async (req) => {
       inAppFailures: notificationFailures.length,
       audience: staffEvent ? 'staff_and_admin' : 'admin',
       success: notificationFailures.length === 0,
-      message: 'Notifications created and queued for platform push delivery'
+      message: notificationFailures.length === 0
+        ? 'Notifications created and queued for platform push delivery'
+        : 'Some staff notifications could not be created',
+      error: notificationFailures.length > 0
+        ? 'Failed to create one or more staff notifications'
+        : undefined
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

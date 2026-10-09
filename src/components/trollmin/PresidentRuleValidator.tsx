@@ -85,7 +85,7 @@ const PRESIDENT_RULES: Omit<PresidentRule, 'isViolated'>[] = [
 
 export function PresidentRuleValidator({ 
   actionType, 
-  targetUserId, 
+  targetUserId: _targetUserId, 
   targetUsername, 
   details,
   onValidate,

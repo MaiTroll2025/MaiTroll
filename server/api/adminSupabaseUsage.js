@@ -1,5 +1,4 @@
 const { createClient } = require('@supabase/supabase-js');
-const { calculateSupabaseMonthlyEstimate } = require('../../src/lib/supabasePricing.cjs');
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
@@ -7,9 +6,7 @@ const supabase = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false, autoRefreshToken: false } })
   : null;
 
-const CACHE_TTL_MS = 60 * 1000;
 const rateLimitStore = new Map();
-const allowedRanges = new Set(['24h', '7d', '30d', 'billing_period']);
 
 function getClientIp(req) {
   return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
@@ -117,144 +114,27 @@ async function verifyAdmin(req, res, next) {
   next();
 }
 
-let summaryCache = null;
-let summaryCacheExpiresAt = 0;
-
-async function persistSnapshot(snapshot) {
-  if (!supabase) {
-    return null;
-  }
-
-  const payload = buildSnapshotPayload(snapshot);
-  const { error } = await supabase
-    .from('admin_supabase_metric_snapshots')
-    .insert({
-      project_key: payload.project_key,
-      billing_period_start: payload.billing_period_start,
-      billing_period_end: payload.billing_period_end,
-      captured_at: payload.captured_at,
-      metrics: payload.metrics,
-      estimated_monthly_cost: payload.estimated_monthly_cost,
-      confidence: payload.confidence,
-      source: payload.source,
-      summary: payload.summary,
-    });
-
-  if (error) {
-    console.warn('[Admin Supabase Usage] snapshot insert failed', error.message);
-    return null;
-  }
-
-  await supabase.rpc('prune_admin_supabase_metric_snapshots');
-  return payload;
-}
-
-function buildSnapshotPayload(snapshot) {
-  const estimate = calculateSupabaseMonthlyEstimate(snapshot);
-  return {
-    project_key: snapshot.projectKey || 'Mai Troll-prod',
-    billing_period_start: snapshot.billingPeriodStart || null,
-    billing_period_end: snapshot.billingPeriodEnd || null,
-    captured_at: new Date().toISOString(),
-    metrics: {
-      database_gb_hours: snapshot.databaseGbHours || 0,
-      database_cpu_hours: snapshot.databaseCpuHours || 0,
-      storage_gb: snapshot.storageGb || 0,
-      storage_egress_gb: snapshot.storageEgressGb || 0,
-      storage_bucket_gb: snapshot.storageBucketGb || 0,
-      auth_monthly_active_users: snapshot.authMonthlyActiveUsers || 0,
-      realtime_channels: snapshot.realtimeChannels || 0,
-      realtime_messages: snapshot.realtimeMessages || 0,
-      telemetry_events: snapshot.telemetryEvents || 0,
-    },
-    estimated_monthly_cost: estimate.totalMonthlyCost,
-    confidence: estimate.confidence,
-    source: estimate.source,
-    summary: estimate.summary,
-  };
-}
-
-async function getSummary(req, res) {
-  const now = Date.now();
-  if (summaryCache && now < summaryCacheExpiresAt) {
-    return res.status(200).json(summaryCache);
-  }
-
-  const snapshot = {
-    projectKey: 'Mai Troll-prod',
-    billingPeriodStart: '2026-07-01',
-    billingPeriodEnd: '2026-07-31',
-    databaseGbHours: 120,
-    databaseCpuHours: 420,
-    storageGb: 80,
-    storageEgressGb: 250,
-    storageBucketGb: 40,
-    authMonthlyActiveUsers: 1800,
-    realtimeChannels: 14,
-    realtimeMessages: 5400,
-    telemetryEvents: 42000,
-    confidence: 'high',
-    source: 'estimated',
-  };
-
-  const payload = buildSnapshotPayload(snapshot);
-  summaryCache = payload;
-  summaryCacheExpiresAt = now + CACHE_TTL_MS;
-  return res.status(200).json(payload);
-}
-
-async function getBreakdown(req, res) {
-  const snapshot = {
-    projectKey: 'Mai Troll-prod',
-    billingPeriodStart: '2026-07-01',
-    billingPeriodEnd: '2026-07-31',
-    databaseGbHours: 120,
-    databaseCpuHours: 420,
-    storageGb: 80,
-    storageEgressGb: 250,
-    storageBucketGb: 40,
-    authMonthlyActiveUsers: 1800,
-    realtimeChannels: 14,
-    realtimeMessages: 5400,
-    telemetryEvents: 42000,
-    confidence: 'high',
-    source: 'estimated',
-  };
-  return res.status(200).json({
-    project_key: 'Mai Troll-prod',
-    items: calculateSupabaseMonthlyEstimate(snapshot).items,
+function unavailable(res) {
+  return res.status(503).json({
+    code: 'USAGE_SOURCE_UNAVAILABLE',
+    error: 'Live Supabase usage metrics are not configured for this deployment. No usage figures or historical snapshots are being fabricated.',
   });
 }
 
-async function getHistorical(req, res) {
-  const range = String(req.query.range || '24h');
-  if (!allowedRanges.has(range)) {
-    return res.status(400).json({ error: 'Unsupported range. Allowed values: 24h, 7d, 30d, billing_period' });
-  }
-  return res.status(200).json({ range, points: [] });
+async function getSummary(_req, res) {
+  return unavailable(res);
 }
 
-async function refreshSnapshot(req, res) {
-  const snapshot = {
-    projectKey: 'Mai Troll-prod',
-    billingPeriodStart: '2026-07-01',
-    billingPeriodEnd: '2026-07-31',
-    databaseGbHours: 120,
-    databaseCpuHours: 420,
-    storageGb: 80,
-    storageEgressGb: 250,
-    storageBucketGb: 40,
-    authMonthlyActiveUsers: 1800,
-    realtimeChannels: 14,
-    realtimeMessages: 5400,
-    telemetryEvents: 42000,
-    confidence: 'high',
-    source: 'refresh',
-  };
-  const persisted = await persistSnapshot(snapshot);
-  summaryCache = persisted || buildSnapshotPayload(snapshot);
-  summaryCacheExpiresAt = Date.now() + CACHE_TTL_MS;
-  return res.status(200).json({ success: true, snapshot: summaryCache });
+async function getBreakdown(_req, res) {
+  return unavailable(res);
+}
+
+async function getHistorical(_req, res) {
+  return unavailable(res);
+}
+
+async function refreshSnapshot(_req, res) {
+  return unavailable(res);
 }
 
 module.exports = {
@@ -264,5 +144,4 @@ module.exports = {
   getBreakdown,
   getHistorical,
   refreshSnapshot,
-  buildSnapshotPayload,
 };

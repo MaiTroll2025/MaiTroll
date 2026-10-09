@@ -8,7 +8,6 @@ import type {
   TrackingData,
   ARSettings,
 } from '@/types/arGifts';
-import { DEFAULT_AR_SETTINGS } from '@/types/arGifts';
 
 // Dynamic import for face-api.js to enable lazy loading
 let faceapi: any = null;
@@ -183,8 +182,8 @@ export class TrackingEngine {
         z: 0,
       };
 
-      const jawOpenness = this.getDistance(positions[62], positions[66]);
-      const eyeDistance = this.getDistance(leftEye, rightEye);
+      const _jawOpenness = this.getDistance(positions[62], positions[66]);
+      const _eyeDistance = this.getDistance(leftEye, rightEye);
 
       const pitch = Math.atan2(chin.y - forehead.y, chin.x - forehead.x) - Math.PI / 2;
       const yaw = ((leftEye.x + rightEye.x) / 2 - this.video.width / 2) / (this.video.width / 2) * 0.5;

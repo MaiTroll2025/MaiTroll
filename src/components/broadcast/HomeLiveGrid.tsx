@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { Users, Radio, Star, TrendingUp, Zap } from 'lucide-react';
 import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail';
 import { toast } from 'sonner';
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton';
 
 interface Stream {
   id: string;
@@ -91,7 +92,7 @@ export default function HomeLiveGrid() {
         return
       }
 
-      const now = new Date().toISOString()
+      const _now = new Date().toISOString()
 
       const { data, error } = await supabase
         .from('streams')
@@ -276,6 +277,11 @@ export default function HomeLiveGrid() {
                       </div>
                     )}
                   </div>
+                  <FacebookPublishButton
+                    sourceType="stream"
+                    sourceId={stream.id}
+                    className="mt-3"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-white font-medium truncate group-hover:text-cyan-400 transition-colors">

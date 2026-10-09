@@ -3,7 +3,6 @@
 // Uses PRINTIFY_API_KEY and PRINTIFY_SHOP_ID secrets.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { createClient } from "jsr:@supabase/supabase-js@2"
 import { withCors, handleCorsPreflight, unauthorizedResponse } from "../_shared/cors.ts"
 
 const PRINTIFY_API_BASE = "https://api.printify.com"

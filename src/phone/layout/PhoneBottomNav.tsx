@@ -1,19 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom'
-import {
-  ChevronUp,
-  Coins,
-  Home,
-  LogOut,
-  MessageCircle,
-  MoreHorizontal,
-  Radio,
-  Search,
-  Store,
-  User,
-  X,
-} from 'lucide-react'
+import { ChevronUp, Home, LogOut, MessageCircle, MoreHorizontal, Radio, Search, Store, User, X } from 'lucide-react';
 
+import { PhoneButton } from '../components/PhoneButton'
 import { useAuthStore } from '@/lib/store'
 import { getPhoneNavSections, type PhoneNavSection } from '../phoneNav'
 import { usePhoneRoleAccess } from '../usePhoneRoleAccess'
@@ -234,14 +223,15 @@ export default function PhoneBottomNav() {
             ))}
 
             <div className="mt-4 border-t border-white/10 pt-3">
-              <button
-                type="button"
+              <PhoneButton
+                variant="danger"
+                size="md"
+                icon={<LogOut size={14} />}
                 onClick={handleSignOut}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs font-black text-red-400"
+                fullWidth
               >
-                <LogOut size={14} />
                 Sign Out
-              </button>
+              </PhoneButton>
             </div>
           </div>
         </div>

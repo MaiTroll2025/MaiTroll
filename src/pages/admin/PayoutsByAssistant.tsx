@@ -1,10 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { 
-  DollarSign, User, Coins, Calendar, 
-  ChevronRight, CheckCircle, XCircle, 
-  Clock, AlertCircle, RefreshCw, Eye, CreditCard
-} from 'lucide-react'
+import { DollarSign, User, Coins, Calendar, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, Eye, CreditCard } from 'lucide-react';
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { cn } from '../../lib/utils'
@@ -113,7 +109,7 @@ export default function PayoutsByAssistant() {
     const toastId = toast.loading('Processing PayPal payout...')
 
     try {
-      const { data, error } = await supabase.functions.invoke('process-payout-batch', {
+      const { data: _data, error } = await supabase.functions.invoke('process-payout-batch', {
         body: { requestId }
       })
 

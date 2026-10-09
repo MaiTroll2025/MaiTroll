@@ -3,14 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import {
-  ArrowLeft,
-  CheckCircle2,
-  FileSignature,
-  Loader2,
-  ScrollText,
-  XCircle,
-} from 'lucide-react';
+import { ArrowLeft, CheckCircle2, FileSignature, Loader2, ScrollText } from 'lucide-react';
 
 export default function HytroGamingContract() {
   const navigate = useNavigate();

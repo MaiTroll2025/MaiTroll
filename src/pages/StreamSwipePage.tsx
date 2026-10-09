@@ -50,8 +50,8 @@ interface StreamWithProfile extends Stream {
 
 export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipePageProps) {
   const navigate = useNavigate();
-  const { user, profile } = useAuthStore();
-  const [searchParams] = useSearchParams();
+  const { user: _user, profile: _profile } = useAuthStore();
+  const [_searchParams] = useSearchParams();
 
   useSEO({
     title: 'Live Streams | Mai Troll - Swipe & Watch Live Gaming & Podcasts',
@@ -68,10 +68,10 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
   const [streams, setStreams] = useState<StreamWithProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isSwiping, setIsSwiping] = useState(false);
+  const [_isSwiping, setIsSwiping] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [_isDesktop, setIsDesktop] = useState(false);
   
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -324,7 +324,7 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
   
   // Get current stream
   const currentStream = streams[currentIndex];
-  const isBattleStream = currentStream?.is_battle || currentStream?.category === 'trollmers';
+  const _isBattleStream = currentStream?.is_battle || currentStream?.category === 'trollmers';
 
   useEffect(() => {
     if (!currentStream?.id) return;

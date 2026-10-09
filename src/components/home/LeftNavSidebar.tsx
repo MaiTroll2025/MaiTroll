@@ -1,25 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  MessageCircle,
-  Mic,
-  Music,
-  Radio,
-  Sparkles,
-  FileText,
-  Trophy,
-  BookOpen,
-  PenSquare,
-  Shuffle,
-  Newspaper,
-  Coins,
-  Gem,
-  Crown,
-  Plus,
-  Building2,
-} from 'lucide-react'
+import { MessageCircle, Mic, Radio, Sparkles, FileText, Trophy, PenSquare, Shuffle, Newspaper, Coins, Gem, Crown, Plus, Building2 } from 'lucide-react';
 
-import { useLiveContent } from '@/contexts/LiveContentContext'
 import FloatingPoster from './FloatingPoster'
 import { grantNavCoins } from '@/lib/grantNavCoins'
 import { useAuthStore } from '@/lib/store'
@@ -63,7 +45,7 @@ export default function LeftNavSidebar({
   liveCount,
   battleCount,
   followersLiveCount,
-  showPresidentTab,
+  showPresidentTab: _showPresidentTab,
   wallNotificationCount = 0,
   onMoreClick,
 }: LeftNavSidebarProps) {
@@ -80,7 +62,7 @@ export default function LeftNavSidebar({
     ['admin', 'superadmin', 'owner', 'ceo'].includes(trollRole)
   )
   const { balances } = useCoins()
-  const xpStore = useXPStore()
+  const _xpStore = useXPStore()
   const equippedFrame = useUserFrame(user?.id)
   const { theme } = useTheme()
 

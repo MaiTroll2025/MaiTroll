@@ -33,7 +33,7 @@ function originFromUrl(u) {
   try {
     const url = new URL(u)
     return `${url.protocol}//${url.host}`
-  } catch (e) {
+  } catch (_e) {
     return null
   }
 }
@@ -68,14 +68,14 @@ function getAnimationKeyFromName(name = '', slug = '') {
 }
 
 function resolveGiftName(gift) {
-  const metadata = (gift.metadata && typeof gift.metadata === 'string') ? (() => { try { return JSON.parse(gift.metadata) } catch (e) { return {} } })() : (gift.metadata || {})
+  const metadata = (gift.metadata && typeof gift.metadata === 'string') ? (() => { try { return JSON.parse(gift.metadata) } catch (_e) { return {} } })() : (gift.metadata || {})
   return (
     gift.gift_name || gift.name || gift.title || metadata.gift_name || metadata.name || metadata.title || 'Gift'
   )
 }
 
 function candidateAnimationUrl(gift, animationKey) {
-  const metadata = (gift.metadata && typeof gift.metadata === 'string') ? (() => { try { return JSON.parse(gift.metadata) } catch (e) { return {} } })() : (gift.metadata || {})
+  const metadata = (gift.metadata && typeof gift.metadata === 'string') ? (() => { try { return JSON.parse(gift.metadata) } catch (_e) { return {} } })() : (gift.metadata || {})
   const candidates = []
   if (gift.animationUrl) candidates.push(gift.animationUrl)
   if (gift.animation_url) candidates.push(gift.animation_url)
@@ -116,9 +116,9 @@ async function urlExists(url) {
 function buildFullUrlsForCandidate(candidate) {
   if (!candidate) return []
   try {
-    const parsed = new URL(candidate)
+    const _parsed = new URL(candidate)
     return [candidate]
-  } catch (e) {
+  } catch (_e) {
     // relative path - try ASSETS_BASE_URL and SUPABASE origin
     const urls = []
     if (FALLBACK_ASSETS_BASE) urls.push((FALLBACK_ASSETS_BASE.replace(/\/+$/,'') + candidate))
@@ -200,7 +200,7 @@ async function run() {
 
   // write report
   const outDir = path.join(process.cwd(), 'diagnostic_outputs')
-  try { fs.mkdirSync(outDir, { recursive: true }) } catch (e) {}
+  try { fs.mkdirSync(outDir, { recursive: true }) } catch (_e) {}
   const outPath = path.join(outDir, 'gift_asset_report.json')
   fs.writeFileSync(outPath, JSON.stringify(report, null, 2))
 

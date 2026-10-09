@@ -1,17 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import {
-  Bell,
-  Check,
-  Clock3,
-  Coins,
-  Eye,
-  Loader2,
-  Save,
-  Shield,
-  Trophy,
-  User,
-  Zap,
-} from 'lucide-react'
+import { Bell, Coins, Eye, Loader2, Save, Shield, Trophy, Zap } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -46,13 +34,13 @@ const shell =
   'relative min-h-screen overflow-y-auto overflow-x-hidden md:overflow-hidden bg-[#07101f] px-3 pb-8 pt-20 text-white sm:px-4 md:px-6'
 const panel =
   'rounded-[1.65rem] border border-cyan-300/15 bg-[#0b1628]/85 shadow-[0_0_45px_rgba(34,211,238,0.12)] backdrop-blur-2xl'
-const panelSoft =
+const _panelSoft =
   'rounded-[1.4rem] border border-cyan-300/12 bg-[#0d1a2f]/78 shadow-[0_0_28px_rgba(34,211,238,0.08)] backdrop-blur-xl'
 const input =
   'w-full rounded-xl border border-cyan-300/20 bg-[#07101f]/85 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/15'
 const primary =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-200/40 bg-cyan-300 px-4 py-2.5 text-sm font-black text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.28)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50'
-const secondary =
+const _secondary =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2.5 text-sm font-bold text-cyan-100 transition hover:border-cyan-300/35 hover:bg-cyan-400/18 hover:text-white disabled:cursor-not-allowed disabled:opacity-50'
 
 export default function AuctionSettings() {
@@ -146,7 +134,7 @@ export default function AuctionSettings() {
 
       if (error) throw error
       toast.success('Settings saved')
-    } catch (error: any) {
+    } catch (_error: any) {
       toast.error('Failed to save settings')
     } finally {
       setSaving(false)

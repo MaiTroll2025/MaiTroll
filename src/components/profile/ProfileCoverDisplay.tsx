@@ -13,9 +13,9 @@ interface ProfileCoverDisplayProps {
 
 export default function ProfileCoverDisplay({
   coverPhotoUrl,
-  positionX = 50,
-  positionY = 50,
-  zoom = 1,
+  positionX: _positionX = 50,
+  positionY: _positionY = 50,
+  zoom: _zoom = 1,
   className,
   showPlaceholder = true
 }: ProfileCoverDisplayProps) {

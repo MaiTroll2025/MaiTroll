@@ -14,7 +14,7 @@ export function TabSwitchHandler({
   showWelcomeBack = true,
   pauseOnHidden = true
 }: TabSwitchHandlerProps) {
-  const { isVisible, wasHidden, timeSinceLastVisible } = usePageVisibilityContext();
+  const { isVisible, wasHidden: _wasHidden, timeSinceLastVisible: _timeSinceLastVisible } = usePageVisibilityContext();
   const hasShownWelcomeBack = useRef(false);
 
   // Use the refresh prevention hooks

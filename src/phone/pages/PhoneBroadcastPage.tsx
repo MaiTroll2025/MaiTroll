@@ -6,38 +6,21 @@
   useState,
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  Crown,
-  Gem,
-  Coins,
-  Gift,
-  Heart,
-  Mic,
-  MicOff,
-  PhoneOff,
-  RefreshCw,
-  Swords,
-  Video,
-  VideoOff,
-  X,
-  AlertTriangle,
-  AlertCircle,
-} from 'lucide-react'
-import {
-  LocalAudioTrack,
-  LocalVideoTrack,
-  RemoteParticipant,
-  RemoteVideoTrack,
-  Track,
-} from 'livekit-client'
+import { Crown, Gem, Gift, Heart, Mic, MicOff, PhoneOff, RefreshCw, Swords, Video, VideoOff, X, AlertTriangle, AlertCircle } from 'lucide-react';
+import type { LocalAudioTrack, LocalVideoTrack } from 'livekit-client'
 
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
+import UserMiniProfile from '@/components/user/UserMiniProfile'
+import { useBlockedUsers } from '@/hooks/useBlockedUsers'
 import { toast } from 'sonner'
 import { awardInvitePoint } from '@/lib/weeklyPointsService'
 
 import { useStreamSeats } from '@/hooks/useStreamSeats'
 import { useLiveBroadcast } from '@/hooks/useLiveBroadcast'
+import { useGetStreamBroadcast } from '@/hooks/useGetStreamBroadcast'
+import { applyCameraVideoPresentation } from '@/lib/cameraVideoPresentation'
+import { useRTCProvider } from '@/hooks/useRTCProvider'
 import { useStreamAudiencePresence, type StreamAudienceMember } from '@/hooks/useStreamAudiencePresence'
 import { useStreamRealtime } from '@/hooks/useStreamRealtime'
 import { useRandomBattleQueueController } from '@/hooks/useRandomBattleQueueController'
@@ -68,9 +51,6 @@ import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import ShareModal from '@/components/broadcast/ShareModal'
 import { useFeaturedLive } from '@/hooks/useFeaturedLive'
 import { useBroadcastLifecycle, formatCountdown } from '@/hooks/useBroadcastLifecycle'
-import { FeaturedBanner } from '@/components/featured/FeaturedBanner'
-import { FeaturedLeaderboard } from '@/components/featured/FeaturedLeaderboard'
-import { FeaturedLiveOverlay } from '@/components/featured/FeaturedLiveOverlay'
 import UserActionModal from '@/components/broadcast/UserActionModal'
 import { hasModActionsAccess } from '@/types/moderationActions'
 import CashoutProgressBanner from '@/components/broadcast/CashoutProgressBanner'
@@ -120,6 +100,11 @@ function isGhostParticipant(participant: any): boolean {
 }
 
 export default function PhoneBroadcastPage() {
+  useEffect(() => {
+    document.body.classList.add('broadcast-overlay-no-blur')
+    return () => document.body.classList.remove('broadcast-overlay-no-blur')
+  }, [])
+
   const { id, streamId: routeStreamIdParam } = useParams()
   const navigate = useNavigate()
 
@@ -133,13 +118,13 @@ export default function PhoneBroadcastPage() {
   const [stream, setStream] = useState<Stream | null>(null)
 
   const {
-    featuredBroadcasters,
-    featuredEvent,
-    isFeaturedEvent,
-    currentStreamFeatured,
-    leaderboardOpen,
-    openFeaturedLeaderboard,
-    closeFeaturedLeaderboard,
+    featuredBroadcasters: _featuredBroadcasters,
+    featuredEvent: _featuredEvent,
+    isFeaturedEvent: _isFeaturedEvent,
+    currentStreamFeatured: _currentStreamFeatured,
+    leaderboardOpen: _leaderboardOpen,
+    openFeaturedLeaderboard: _openFeaturedLeaderboard,
+    closeFeaturedLeaderboard: _closeFeaturedLeaderboard,
   } = useFeaturedLive({ streamId: routeStreamId || stream?.id || null, enabled: !!(routeStreamId || stream?.id) })
 
   const [isGiftModalOpen, setIsGiftModalOpen] =
@@ -173,11 +158,19 @@ export default function PhoneBroadcastPage() {
   const [selectedActionUsername, setSelectedActionUsername] =
     useState<string | null>(null)
 
+  const [miniProfile, setMiniProfile] = useState<{
+    userId: string
+    username: string
+    avatarUrl: string
+  } | null>(null)
+
   const [chatInput, setChatInput] =
     useState('')
 
   const [recentGifts, setRecentGifts] =
     useState<BroadcastGift[]>([])
+
+  const [isHostAway, setIsHostAway] = useState(false)
 
   const processedGiftIdsRef =
     useRef<Set<string>>(new Set())
@@ -193,12 +186,16 @@ export default function PhoneBroadcastPage() {
 
   const streamEndedRef =
     useRef(false)
+  const activatedGetStreamIdRef = useRef<string | null>(null)
 
   const lastVideoTapRef =
     useRef<{ time: number; x: number; y: number } | null>(null)
 
   const videoTapTimeoutRef =
     useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const cameraOffSinceRef = useRef<number | null>(null)
+  const endStreamRef = useRef<() => Promise<void>>(() => Promise.resolve())
 
   // Safety net: if endStream hangs (e.g. slow network), force-reset the
   // guard so the button never stays permanently disabled.
@@ -293,11 +290,91 @@ export default function PhoneBroadcastPage() {
    * ============================================================
    */
 
-  const session = useLiveBroadcast({
+  // Determine RTC provider from stream
+  const { provider: rtcProvider } = useRTCProvider(stream);
+
+  // Unified session interface that works for both LiveKit and GetStream
+  interface UnifiedBroadcastSession {
+    roomRef: React.MutableRefObject<any>;
+    callRef: React.MutableRefObject<any>;
+    clientRef: React.MutableRefObject<any>;
+    localTracks: [
+      LocalAudioTrack | MediaStreamTrack | null,
+      LocalVideoTrack | MediaStreamTrack | null,
+    ] | null;
+    localVideoTrack: MediaStreamTrack | LocalVideoTrack | null;
+    localAudioTrack: MediaStreamTrack | LocalAudioTrack | null;
+    cameraFacingMode: 'user' | 'environment';
+    cameraEnabled: boolean;
+    micEnabled: boolean;
+    isConnecting: boolean;
+    isConnected: boolean;
+    remoteParticipants: Map<string, any>;
+    connect: () => Promise<void>;
+    toggleCamera: () => Promise<void>;
+    toggleMicrophone: () => Promise<void>;
+    flipCamera: () => Promise<void>;
+    disconnect: () => void;
+  }
+
+  // Use the appropriate broadcast hook based on RTC provider
+  const liveKitSession = useLiveBroadcast({
     streamId: streamId || '',
     isHost: true,
     facingMode: 'user',
-  })
+  });
+
+  const getStreamSession = useGetStreamBroadcast({
+    streamId: streamId || '',
+    isHost: true,
+    facingMode: 'user',
+  });
+
+  // Select the active session based on provider
+  const session: UnifiedBroadcastSession = useMemo(() => {
+    if (rtcProvider === 'getstream') {
+      return {
+        roomRef: { current: null } as any,
+        callRef: getStreamSession.callRef,
+        clientRef: getStreamSession.clientRef,
+        localTracks: getStreamSession.localAudioTrack || getStreamSession.localVideoTrack
+          ? [getStreamSession.localAudioTrack, getStreamSession.localVideoTrack]
+          : null,
+        localVideoTrack: getStreamSession.localVideoTrack,
+        localAudioTrack: getStreamSession.localAudioTrack,
+        cameraFacingMode: getStreamSession.cameraFacingMode,
+        cameraEnabled: getStreamSession.cameraEnabled,
+        micEnabled: getStreamSession.micEnabled,
+        isConnecting: getStreamSession.isConnecting,
+        isConnected: getStreamSession.isConnected,
+        remoteParticipants: getStreamSession.remoteParticipants,
+        connect: getStreamSession.connect,
+        toggleCamera: getStreamSession.toggleCamera,
+        toggleMicrophone: getStreamSession.toggleMicrophone,
+        flipCamera: getStreamSession.flipCamera,
+        disconnect: getStreamSession.disconnect,
+      };
+    }
+    return {
+      roomRef: liveKitSession.roomRef,
+      callRef: { current: null } as any,
+      clientRef: { current: null } as any,
+      localTracks: liveKitSession.localTracks,
+      localVideoTrack: liveKitSession.localTracks?.[1] || null,
+      localAudioTrack: liveKitSession.localTracks?.[0] || null,
+      cameraFacingMode: liveKitSession.cameraFacingMode,
+      cameraEnabled: liveKitSession.cameraEnabled,
+      micEnabled: liveKitSession.micEnabled,
+      isConnecting: liveKitSession.isConnecting,
+      isConnected: liveKitSession.isConnected,
+      remoteParticipants: liveKitSession.remoteParticipants,
+      connect: liveKitSession.connect,
+      toggleCamera: liveKitSession.toggleCamera,
+      toggleMicrophone: liveKitSession.toggleMicrophone,
+      flipCamera: liveKitSession.flipCamera,
+      disconnect: liveKitSession.disconnect,
+    };
+  }, [rtcProvider, liveKitSession, getStreamSession]);
 
   /*
    * ============================================================
@@ -307,8 +384,8 @@ export default function PhoneBroadcastPage() {
 
   const {
     seats,
-    joinSeat,
-    leaveSeat,
+    joinSeat: _joinSeat,
+    leaveSeat: _leaveSeat,
   } = useStreamSeats(
     streamId || '',
     user?.id,
@@ -892,6 +969,8 @@ export default function PhoneBroadcastPage() {
     },
   )
 
+  const { blockedUsernames } = useBlockedUsers()
+
   /*
    * ============================================================
    * FLOATING CHAT CHANNEL
@@ -921,6 +1000,10 @@ export default function PhoneBroadcastPage() {
             payload?.payload || {}
 
           if (!username || !content) {
+            return
+          }
+
+          if (blockedUsernames.has(username.toLowerCase())) {
             return
           }
 
@@ -988,16 +1071,20 @@ export default function PhoneBroadcastPage() {
         channel,
       )
     }
-  }, [streamId])
+  }, [streamId, blockedUsernames])
 
   /*
    * ============================================================
-   * LIVEKIT SEAT IDENTITY MAP
+   * LIVEKIT SEAT IDENTITY MAP (only for LiveKit streams)
    * ============================================================
    */
 
   const userIdToLiveKitIdentity =
     useMemo(() => {
+      if (rtcProvider !== 'livekit') {
+        return {}
+      }
+
       const mapping: Record<
         string,
         string
@@ -1029,7 +1116,7 @@ export default function PhoneBroadcastPage() {
       )
 
       return mapping
-    }, [seats])
+    }, [seats, rtcProvider])
 
   /*
    * ============================================================
@@ -1038,6 +1125,7 @@ export default function PhoneBroadcastPage() {
    */
 
   const shouldShowRandomBattleArena =
+    rtcProvider === 'livekit' &&
     stream?.battle_mode ===
       'random_queue' &&
     !!stream?.battle_id &&
@@ -1058,41 +1146,27 @@ export default function PhoneBroadcastPage() {
 
   const battleLocalTracks =
     useMemo(() => {
-      const tracks =
-        session.localTracks
+      const tracks = liveKitSession.localTracks
 
       if (!tracks) {
         return null
       }
 
-      const audio =
-        tracks.find(
-          (track) =>
-            track?.kind === 'audio',
-        ) as
-          | LocalAudioTrack
-          | undefined
-
-      const video =
-        tracks.find(
-          (track) =>
-            track?.kind === 'video',
-        ) as
-          | LocalVideoTrack
-          | undefined
+      const audio = tracks[0]
+      const video = tracks[1]
 
       if (!audio && !video) {
         return null
       }
 
       return [
-        audio,
-        video,
+        audio || undefined,
+        video || undefined,
       ] as [
         LocalAudioTrack | undefined,
         LocalVideoTrack | undefined,
       ]
-    }, [session.localTracks])
+    }, [liveKitSession.localTracks])
 
   /*
    * ============================================================
@@ -1111,7 +1185,10 @@ export default function PhoneBroadcastPage() {
       localVideo: !!session.localTracks?.[1],
       localAudio: !!session.localTracks?.[0],
     })
-    void session.connect()
+    void session.connect().catch((error) => {
+      console.error('[PhoneBroadcastPage] Broadcast session connection failed:', error)
+      toast.error(error?.message || 'Unable to connect to the broadcast service.')
+    })
 
     return () => {
       /*
@@ -1125,6 +1202,43 @@ export default function PhoneBroadcastPage() {
     // when the stream ID changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamId])
+
+  useEffect(() => {
+    if (
+      rtcProvider !== 'getstream' ||
+      !streamId ||
+      !user?.id ||
+      !session.isConnected ||
+      activatedGetStreamIdRef.current === streamId
+    ) {
+      return
+    }
+
+    const startedAt = new Date().toISOString()
+    void (async () => {
+      try {
+        const { error } = await supabase
+          .from('streams')
+          .update({
+            status: 'live',
+            is_live: true,
+            started_at: startedAt,
+          })
+          .eq('id', streamId)
+          .eq('broadcaster_id', user.id)
+          .eq('rtc_provider', 'getstream')
+
+        if (error) throw error
+        activatedGetStreamIdRef.current = streamId
+        setStream((previous) => previous?.id === streamId
+          ? { ...previous, status: 'live', is_live: true, started_at: startedAt }
+          : previous)
+      } catch (error) {
+        console.error('[PhoneBroadcastPage] Failed to mark GetStream broadcast live:', error)
+        toast.error('Connected, but could not mark the broadcast live. Please retry.')
+      }
+    })()
+  }, [rtcProvider, streamId, user?.id, session.isConnected])
 
   /*
    * ============================================================
@@ -1162,6 +1276,46 @@ export default function PhoneBroadcastPage() {
 
   /*
    * ============================================================
+   * CAMERA OFF AUTO-END (5 minutes)
+   * ============================================================
+   */
+  useEffect(() => {
+    if (!streamId || !user?.id) return
+    if (!session.isConnected) return
+
+    const CAMERA_OFF_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+
+    if (!session.cameraEnabled) {
+      if (!cameraOffSinceRef.current) {
+        cameraOffSinceRef.current = Date.now()
+      }
+    } else {
+      cameraOffSinceRef.current = null
+      if (isHostAway) setIsHostAway(false)
+    }
+
+    const checkInterval = setInterval(() => {
+      if (!session.cameraEnabled && cameraOffSinceRef.current) {
+        const elapsed = Date.now() - cameraOffSinceRef.current
+        if (elapsed >= CAMERA_OFF_TIMEOUT_MS && !isHostAway) {
+          setIsHostAway(true)
+          toast.error('Camera off for 5 minutes — ending stream')
+          void endStreamRef.current()
+        } else if (elapsed >= 60 * 1000 && !isHostAway) {
+          setIsHostAway(true)
+        }
+      } else {
+        if (isHostAway) setIsHostAway(false)
+      }
+    }, 10_000)
+
+    return () => {
+      clearInterval(checkInterval)
+    }
+  }, [session.cameraEnabled, session.isConnected, streamId, user?.id, isHostAway])
+
+  /*
+   * ============================================================
    * GIFTS
    * ============================================================
    */
@@ -1174,6 +1328,12 @@ export default function PhoneBroadcastPage() {
 
     setIsGiftModalOpen(true)
   }, [navigate, user])
+
+  const handleOpenWebCoinStore = useCallback(() => {
+    // Open web coin store in system browser - session cookies will be shared
+    const webUrl = typeof window !== 'undefined' ? window.location.origin : 'https://trollcity.app'
+    window.open(`${webUrl}/store`, '_blank')
+  }, [])
 
   const handleOpenShareModal = useCallback(() => {
     setIsShareModalOpen(true)
@@ -1333,6 +1493,7 @@ export default function PhoneBroadcastPage() {
                   user.id,
               },
             )
+            endStreamRef.current = endStream
           } catch (error) {
             console.warn(
               '[PhoneBroadcastPage] forfeit_random_battle failed:',
@@ -1829,14 +1990,16 @@ export default function PhoneBroadcastPage() {
     try {
       const { data } = await supabase
         .from('user_profiles')
-        .select('id, username')
+        .select('id, username, avatar_url')
         .eq('username', username)
         .maybeSingle()
 
       if (data?.id) {
-        setSelectedActionUserId(data.id)
-        setSelectedActionUsername(data.username)
-        setShowModActionMenu(true)
+        setMiniProfile({
+          userId: data.id,
+          username: data.username || username,
+          avatarUrl: data.avatar_url || '',
+        })
       }
     } catch (err) {
       console.warn('[PhoneBroadcastPage] Failed to lookup user:', err)
@@ -1901,9 +2064,7 @@ export default function PhoneBroadcastPage() {
                 localTracks={
                   battleLocalTracks
                 }
-                remoteUsers={Array.from(
-                  session.remoteParticipants.values(),
-                )}
+                remoteUsers={Array.from(liveKitSession.remoteParticipants.values())}
                 userIdToLiveKitIdentity={
                   userIdToLiveKitIdentity
                 }
@@ -2022,13 +2183,16 @@ export default function PhoneBroadcastPage() {
 
         {!shouldShowRandomBattleArena && <FeaturedGiftBanner streamId={streamId} broadcasterId={stream?.user_id} isMobile={true} />}
 
-        {/*
-         * ============================================================
-         * FULL-SCREEN BROADCASTER CAMERA (single authoritative render)
-         * ============================================================
-         */}
+{/*
+          * ============================================================
+          * FULL-SCREEN BROADCASTER CAMERA (single authoritative render)
+          * ============================================================
+          */}
         <div className="absolute inset-0 z-0">
-          <LocalCameraFullVideo videoTrack={session.localTracks?.[1]} />
+          <LocalCameraFullVideo
+            videoTrack={session.localVideoTrack}
+            facingMode={session.cameraFacingMode}
+          />
           {/* Camera-off image fallback */}
           {!session.cameraEnabled && (broadcasterProfile as any)?.camera_off_image_url && (
             <div className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-hidden bg-black">
@@ -2037,6 +2201,15 @@ export default function PhoneBroadcastPage() {
                 alt={`${broadcasterProfile?.username || 'Broadcaster'} camera off`}
                 className="h-full w-full object-cover"
               />
+              {isHostAway && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 p-4">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">📵</div>
+                    <p className="text-lg font-bold text-white">Host is Away</p>
+                    <p className="text-sm text-white/70 mt-1">The host has turned off their camera. Stream will end if camera remains off for 5 minutes.</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {/* Clickable overlay for broadcaster interactions */}
@@ -2308,34 +2481,36 @@ export default function PhoneBroadcastPage() {
          ====================================================== */}
          {stream && (
            <div className="absolute bottom-3 right-3 z-40">
-              <MobileBroadcastHostSettings
-               isMicOn={session.micEnabled}
-               isCamOn={session.cameraEnabled}
-               isLive={stream.status === 'live'}
-               hasRgbEffect={!!stream.has_rgb_effect}
-               isChatLocked={!!stream.is_chat_locked}
-               unreadMessageCount={0}
-               seatCount={stream?.seat_count ?? 0}
-               onUpdateSeatCount={handleUpdateSeatCount}
-               onToggleMic={session.toggleMicrophone}
-               onToggleCamera={session.toggleCamera}
-               onFlipCamera={session.flipCamera}
-               onGift={handleGift}
-               onShare={handleOpenShareModal}
-               onOpenMessage={() => {}}
-               onEndStream={endStream}
-               onOpenCoinStore={() => {}}
-               onInviteFollowers={handleInviteFollowers}
-               onToggleRGB={() => {}}
-               onTextPopup={() => {}}
-               onMuteAllSeats={muteAllSeats}
-               onUnmuteAllSeats={unmuteAllSeats}
-onCameraOffAllSeats={cameraOffAllSeats}
-                 onCameraOnAllSeats={cameraOnAllSeats}
-                 seatControls={seatControls}
-                 onTrollUp={() => setShowTrollUpModal(true)}
-                 disabled={isEnding}
-               />
+<MobileBroadcastHostSettings
+                isMicOn={session.micEnabled}
+                isCamOn={session.cameraEnabled}
+                isLive={stream.status === 'live'}
+                hasRgbEffect={!!stream.has_rgb_effect}
+                isChatLocked={!!stream.is_chat_locked}
+                unreadMessageCount={0}
+                seatCount={stream?.seat_count ?? 0}
+                onUpdateSeatCount={handleUpdateSeatCount}
+                onToggleMic={session.toggleMicrophone}
+                onToggleCamera={session.toggleCamera}
+                onFlipCamera={session.flipCamera}
+                onGift={handleGift}
+                onShare={handleOpenShareModal}
+                onOpenMessage={() => {}}
+                onEndStream={endStream}
+                onOpenCoinStore={() => {}}
+                onOpenWebCoinStore={handleOpenWebCoinStore}
+                onInviteFollowers={handleInviteFollowers}
+                onToggleRGB={() => {}}
+                onTextPopup={() => {}}
+                onMuteAllSeats={muteAllSeats}
+                onUnmuteAllSeats={unmuteAllSeats}
+                onCameraOffAllSeats={cameraOffAllSeats}
+                onCameraOnAllSeats={cameraOnAllSeats}
+                seatControls={seatControls}
+                onTrollUp={() => setShowTrollUpModal(true)}
+                disabled={isEnding}
+                showCoinStore={false}
+              />
           </div>
         )}
 
@@ -2477,6 +2652,7 @@ onCameraOffAllSeats={cameraOffAllSeats}
                 onOpenMessage={() => {}}
                 onEndStream={endStream}
                 onOpenCoinStore={() => {}}
+                onOpenWebCoinStore={handleOpenWebCoinStore}
                 onInviteFollowers={handleInviteFollowers}
                 onToggleRGB={() => {}}
                 onTextPopup={() => {}}
@@ -2507,6 +2683,20 @@ onCameraOffAllSeats={cameraOffAllSeats}
             onGift={() => {}}
           />
         )}
+
+        {miniProfile && (
+          <UserMiniProfile
+            userId={miniProfile.userId}
+            username={miniProfile.username}
+            avatarUrl={miniProfile.avatarUrl}
+            onClose={() => setMiniProfile(null)}
+            onModerate={(targetUserId, targetUsername) => {
+              setSelectedActionUserId(targetUserId)
+              setSelectedActionUsername(targetUsername || null)
+              setShowModActionMenu(true)
+            }}
+          />
+        )}
       </div>
     </GiftSystemProvider>
   )
@@ -2518,10 +2708,16 @@ onCameraOffAllSeats={cameraOffAllSeats}
  * ================================================================
  */
 
-function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | null | undefined }) {
+function LocalCameraFullVideo({
+  videoTrack,
+  facingMode,
+}: {
+  videoTrack: any
+  facingMode: 'user' | 'environment'
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoElementRef = useRef<HTMLVideoElement | null>(null)
-  const previousTrackRef = useRef<LocalVideoTrack | null>(null)
+  const previousTrackRef = useRef<any>(null)
 
   useEffect(() => {
     const container = containerRef.current
@@ -2529,6 +2725,7 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
 
     const cleanup = () => {
       if (videoElementRef.current) {
+        videoElementRef.current.srcObject = null
         videoElementRef.current = null
       }
       container.innerHTML = ''
@@ -2546,40 +2743,49 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
     try {
       cleanup()
 
-      const videoElement = videoTrack.attach() as HTMLVideoElement
-      // The container is now the real broadcast viewport (flex region sized
-      // between the top overlays and the control bar), so the camera FILLS it
-      // instead of being letterboxed inside a taller full-screen canvas.
-      //
-      // `cover` + `object-position: center top` keeps the frame top-aligned, so
-      // any crop trims the sides/bottom rather than slicing the top of the shot,
-      // and it can never letterbox — which is what produced the large black
-      // bands above and below the camera.
+      const videoElement = document.createElement('video')
+
+      // Handle both LiveKit LocalVideoTrack (has .attach()) and GetStream MediaStreamTrack
+      if (typeof videoTrack.attach === 'function') {
+        // LiveKit track
+        const attachedElement = videoTrack.attach() as HTMLVideoElement
+        videoElementRef.current = attachedElement
+        container.appendChild(attachedElement)
+      } else {
+        // GetStream MediaStreamTrack or standard MediaStreamTrack
+        const stream = new MediaStream()
+        stream.addTrack(videoTrack)
+        videoElement.srcObject = stream
+        videoElementRef.current = videoElement
+        container.appendChild(videoElement)
+      }
+
       videoElement.style.width = '100%'
       videoElement.style.height = '100%'
       videoElement.style.objectFit = 'cover'
       videoElement.style.objectPosition = 'center top'
-      // Mobile webviews mirror the user-facing camera by default, which makes the
-      // broadcaster's self-view move the wrong way. Cancel it with an explicit
-      // horizontal flip — display-only on the broadcaster's own screen and never
-      // published to viewers. Matches the web broadcaster view.
-      videoElement.style.transform = 'scaleX(-1)'
       videoElement.style.position = 'absolute'
       videoElement.style.top = '0'
       videoElement.style.left = '0'
       videoElement.autoplay = true
       videoElement.playsInline = true
       videoElement.muted = true
-      container.appendChild(videoElement)
-      videoElementRef.current = videoElement
       previousTrackRef.current = videoTrack
 
-      // The container itself is never transformed — only the video inside it.
-      container.style.transform = 'none'
     } catch (err) {
       console.error('[LocalCameraFullVideo] Failed to attach video track:', err)
     }
   }, [videoTrack])
+
+  useEffect(() => {
+    const video = videoElementRef.current
+    if (!video || !videoTrack) return
+    applyCameraVideoPresentation(video, {
+      track: videoTrack,
+      facingMode,
+      isLocal: true,
+    })
+  }, [videoTrack, facingMode])
 
   useEffect(() => {
     return () => {
@@ -2602,6 +2808,7 @@ function LocalCameraFullVideo({ videoTrack }: { videoTrack: LocalVideoTrack | nu
 /*
  * ================================================================
  * REMOTE SEAT THUMBNAIL — small video tile for remote participants on phone
+ * Works with both LiveKit RemoteParticipant and GetStream StreamVideoParticipant
  * ================================================================
  */
 
@@ -2610,43 +2817,58 @@ function RemoteSeatThumbnail({
   username,
   avatarUrl,
   remoteUsers,
-  streamId,
+  streamId: _streamId,
 }: {
   userId: string
   username: string
   avatarUrl: string | null
-  remoteUsers: RemoteParticipant[]
+  remoteUsers: any[]
   streamId?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoElementRef = useRef<HTMLVideoElement | null>(null)
-  const previousTrackRef = useRef<RemoteVideoTrack | null>(null)
+  const previousTrackRef = useRef<MediaStream | null>(null)
 
   const participant = useMemo(() => {
     const normalizedUserId = userId.replace(/-/g, '').toLowerCase()
     const shortUserId = normalizedUserId.substring(0, 8)
     return remoteUsers.find((u) => {
-      const identityStr = String(u.identity || '')
-      const normalizedIdentity = identityStr.replace(/-/g, '').toLowerCase()
-      const normUid = identityStr.replace(/^viewer-/, '').toLowerCase()
-      return (
-        identityStr === userId ||
-        normUid === userId ||
-        normalizedIdentity === normalizedUserId ||
-        normalizedIdentity.startsWith(shortUserId) ||
-        normalizedIdentity.includes(shortUserId) ||
-        normalizedIdentity.endsWith(shortUserId) ||
-        normalizedUserId.startsWith(normalizedIdentity.substring(0, 8))
-      )
+      // LiveKit participant
+      if (u.identity !== undefined) {
+        const identityStr = String(u.identity || '')
+        const normalizedIdentity = identityStr.replace(/-/g, '').toLowerCase()
+        const normUid = identityStr.replace(/^viewer-/, '').toLowerCase()
+        return (
+          identityStr === userId ||
+          normUid === userId ||
+          normalizedIdentity === normalizedUserId ||
+          normalizedIdentity.startsWith(shortUserId) ||
+          normalizedIdentity.includes(shortUserId) ||
+          normalizedIdentity.endsWith(shortUserId) ||
+          normalizedUserId.startsWith(normalizedIdentity.substring(0, 8))
+        )
+      }
+      // GetStream participant
+      if (u.userId !== undefined || u.user_id !== undefined) {
+        return (u.userId || u.user_id) === userId
+      }
+      return false
     })
   }, [userId, remoteUsers])
 
-  const videoTrack = useMemo(() => {
+  const videoStream = useMemo(() => {
     if (!participant) return null
-    const videoPubs = participant.videoTrackPublications
-    if (!videoPubs) return null
-    const pub = Array.from(videoPubs.values()).find((p: any) => p.track && p.track.kind === Track.Kind.Video)
-    return (pub?.track as RemoteVideoTrack) || null
+    if (participant.videoStream instanceof MediaStream) {
+      return participant.videoStream
+    }
+
+    if (participant.videoTrackPublications) {
+      const publication = Array.from(participant.videoTrackPublications.values())
+        .find((item: any) => item.track?.mediaStreamTrack?.kind === 'video')
+      const track = (publication as any)?.track?.mediaStreamTrack as MediaStreamTrack | undefined
+      return track ? new MediaStream([track]) : null
+    }
+    return null
   }, [participant])
 
   useEffect(() => {
@@ -2654,22 +2876,27 @@ function RemoteSeatThumbnail({
     if (!container) return
 
     const cleanup = () => {
-      videoElementRef.current = null
+      if (videoElementRef.current) {
+        videoElementRef.current.srcObject = null
+        videoElementRef.current = null
+      }
       container.innerHTML = ''
     }
 
-    if (!videoTrack) {
+    if (!videoStream) {
       cleanup()
       return
     }
 
-    if (previousTrackRef.current === videoTrack && videoElementRef.current) {
+    if (previousTrackRef.current === videoStream && videoElementRef.current) {
       return
     }
 
     try {
       cleanup()
-      const videoElement = videoTrack.attach() as HTMLVideoElement
+
+      const videoElement = document.createElement('video')
+      videoElement.srcObject = videoStream
       videoElement.style.width = '100%'
       videoElement.style.height = '100%'
       videoElement.style.objectFit = 'cover'
@@ -2678,13 +2905,17 @@ function RemoteSeatThumbnail({
       videoElement.style.left = '0'
       videoElement.autoplay = true
       videoElement.playsInline = true
+      videoElement.muted = true
       container.appendChild(videoElement)
+      void videoElement.play().catch((error) => {
+        console.warn('[RemoteSeatThumbnail] Video playback failed:', error)
+      })
       videoElementRef.current = videoElement
-      previousTrackRef.current = videoTrack
+      previousTrackRef.current = videoStream
     } catch (err) {
       console.error('[RemoteSeatThumbnail] Failed to attach video track:', err)
     }
-  }, [videoTrack])
+  }, [videoStream])
 
   useEffect(() => {
     return () => {
@@ -2699,7 +2930,7 @@ function RemoteSeatThumbnail({
   return (
     <div className="pointer-events-auto relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-black/60 shadow-lg">
       <div ref={containerRef} className="absolute inset-0" />
-      {!videoTrack && (
+      {!videoStream && (
         <div className="absolute inset-0 flex items-center justify-center">
           {avatarUrl ? (
             <img src={avatarUrl} alt={username} className="h-full w-full object-cover" />
@@ -2717,44 +2948,89 @@ function RemoteSeatThumbnail({
 /*
  * ================================================================
  * REMOTE AUDIO MANAGER — attaches remote participant audio tracks
+ * Works with both LiveKit RemoteParticipant and GetStream StreamVideoParticipant
  * ================================================================
  */
 
 function RemoteAudioManager({
   remoteUsers,
-  hostUserId,
+  hostUserId: _hostUserId,
 }: {
-  remoteUsers: RemoteParticipant[]
+  remoteUsers: any[]
   hostUserId?: string
 }) {
-  const attachedIdentitiesRef = useRef<Set<string>>(new Set())
+  const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map())
 
   useEffect(() => {
-    const attachedIdentities = attachedIdentitiesRef.current
+    const activeIdentities = new Set<string>()
 
     remoteUsers.forEach((participant) => {
-      const identity = participant.identity
-      if (attachedIdentities.has(identity)) return
+      const identity = String(
+        participant.identity || participant.userId || participant.user_id || '',
+      )
+      if (!identity) return
+      activeIdentities.add(identity)
+      if (audioElementsRef.current.has(identity)) return
 
-      const audioPubs = participant.audioTrackPublications
-      if (!audioPubs) return
-      const audioPub = Array.from(audioPubs.values()).find((p: any) => p.track && p.track.kind === Track.Kind.Audio)
-      if (!audioPub?.track) return
+      let audioStream: MediaStream | null =
+        participant.audioStream instanceof MediaStream
+          ? participant.audioStream
+          : null
+
+      if (!audioStream) {
+        let audioTrack: MediaStreamTrack | null = null
+        const legacyTrack = participant.tracks?.microphone?.track
+        if (legacyTrack instanceof MediaStreamTrack) {
+          audioTrack = legacyTrack
+        } else if (legacyTrack?.mediaStreamTrack instanceof MediaStreamTrack) {
+          audioTrack = legacyTrack.mediaStreamTrack
+        } else if (participant.audioTrackPublications) {
+          const publications = Array.from(
+            participant.audioTrackPublications.values(),
+          ) as Array<{ track?: { mediaStreamTrack?: MediaStreamTrack | null } | null }>
+          audioTrack =
+            publications.find(
+              (publication) =>
+                publication.track?.mediaStreamTrack?.kind === 'audio',
+            )?.track?.mediaStreamTrack || null
+        }
+        if (audioTrack) audioStream = new MediaStream([audioTrack])
+      }
+
+      if (!audioStream) return
 
       try {
-        const audioElement = audioPub.track.attach()
+        const audioElement = new Audio()
+        audioElement.srcObject = audioStream
         audioElement.style.display = 'none'
+        audioElement.autoplay = true
         document.body.appendChild(audioElement)
-        attachedIdentities.add(identity)
+        audioElementsRef.current.set(identity, audioElement)
+        void audioElement.play().catch((error) => {
+          console.warn('[RemoteAudioManager] Audio playback failed:', error)
+        })
       } catch (err) {
         console.warn('[RemoteAudioManager] Failed to attach audio:', err)
       }
+    })
+
+    audioElementsRef.current.forEach((audioElement, identity) => {
+      if (activeIdentities.has(identity)) return
+      audioElement.pause()
+      audioElement.srcObject = null
+      audioElement.remove()
+      audioElementsRef.current.delete(identity)
     })
   }, [remoteUsers])
 
   useEffect(() => {
     return () => {
-      attachedIdentitiesRef.current.clear()
+      audioElementsRef.current.forEach((audioElement) => {
+        audioElement.pause()
+        audioElement.srcObject = null
+        audioElement.remove()
+      })
+      audioElementsRef.current.clear()
     }
   }, [])
 

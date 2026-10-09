@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Award,
-  ChevronRight,
-  Clock,
-  Loader2,
-  Lock,
-  Rainbow,
-  Sparkles,
-  Trophy,
-  Zap,
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { ChevronRight, Clock, Loader2, Rainbow, Sparkles, Trophy, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -101,7 +90,7 @@ function ProgressBar({ percentage, isCompleted }: { percentage: number; isComple
 
 function ChallengeCard({
   challenge,
-  onClaim,
+  onClaim: _onClaim,
 }: {
   challenge: PrideChallengeWithProgress;
   onClaim?: () => void;
@@ -195,7 +184,7 @@ interface PrideChallengesProps {
 }
 
 export default function PrideChallenges({ compact = false, className }: PrideChallengesProps) {
-  const { user, profile } = useAuthStore();
+  const { user, profile: _profile } = useAuthStore();
   const [challenges, setChallenges] = useState<PrideChallengeWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalXpEarned, setTotalXpEarned] = useState(0);

@@ -26,6 +26,8 @@ import ProfileFeed from '../components/profile/ProfileFeed';
 
 import ProfileWatchlist from '../components/profile/ProfileWatchlist';
 
+import ProfileMaiPiks from '../components/profile/ProfileMaiPiks';
+
 import UserInventory from './UserInventory';
 
 import ProfileSettings from './ProfileSettings';
@@ -126,7 +128,7 @@ function ProfileInner() {
 
     const [isSubscribed, setIsSubscribed] = useState(false);
 
-    const [equippedFrame, setEquippedFrame] = useState<any | null>(null);
+    const [_equippedFrame, _setEquippedFrame] = useState<any | null>(null);
 
     const initialLoadRef = useRef(true);
 
@@ -312,13 +314,13 @@ function ProfileInner() {
 
             if (currentUser && currentUser.id !== data.id) {
 
-                const { data: subData } = await supabase.rpc('get_user_active_subscription', {
-
-                    p_subscriber_id: currentUser.id,
-
-                    p_creator_id: data.id
-
-                });
+                const { data: subData } = await supabase
+                    .from('user_subscriptions')
+                    .select('id')
+                    .eq('subscriber_id', currentUser.id)
+                    .eq('broadcaster_id', data.id)
+                    .eq('is_active', true)
+                    .maybeSingle();
 
                 subscribed = !!subData;
 
@@ -715,8 +717,10 @@ if (loading) {
 
                 return <ProfileBroadcasts userId={profile.id} />;
 
-            case 'watchlist':
+            case 'maipiks':
+                return <ProfileMaiPiks userId={profile.id} username={profile.username} />;
 
+            case 'auctions':
                 return <ProfileWatchlist userId={profile.id} />;
 
             case 'inventory':
@@ -852,18 +856,6 @@ if (loading) {
             case 'keys':
 
                 return <KeysPage profileId={profile.id} isOwnProfile={isOwnProfile} />;
-
-            case 'music':
-
-                return <div className="text-center text-white/50 p-8">Music features coming soon.</div>;
-
-            case 'albums':
-
-                return <div className="text-center text-white/50 p-8">Album features coming soon.</div>;
-
-            case 'tracks':
-
-                return <div className="text-center text-white/50 p-8">Track features coming soon.</div>;
 
             case 'purchases':
 

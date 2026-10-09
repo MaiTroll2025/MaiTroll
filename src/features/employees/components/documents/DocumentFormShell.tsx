@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useState } from 'react';
 import { Download, FileSignature, ShieldCheck } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -200,7 +200,6 @@ export function DocumentFormShell({
       theme: 'grid',
     })
 
-    // @ts-expect-error autoTable adds finalY
     const afterY = (doc as any).lastAutoTable?.finalY ?? 300
     doc.setFontSize(10)
     doc.text('Attestation', 40, afterY + 28)

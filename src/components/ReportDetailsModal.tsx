@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X, Shield, Ban, EyeOff, AlertTriangle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
-import { ModerationReport, TakeActionPayload } from '../types/moderation'
+import { ModerationReport } from '../types/moderation';
 import { rpcRejectReport, rpcTakeAction } from '../types/moderationActions'
 
 interface ReportDetailsModalProps {
@@ -74,8 +74,7 @@ export default function ReportDetailsModal({
         actionReason,
         actionDetails.trim() || null,
         expiresAt,
-        banDurationHours || null,
-        true
+        banDurationHours || null
       )
 
       if (response.success) {

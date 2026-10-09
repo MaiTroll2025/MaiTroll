@@ -7,13 +7,7 @@
 
 import React from 'react'
 import { create } from 'zustand'
-import {
-  getChicagoTime,
-  getMaiTrollOperatingState,
-  getOperatingHoursInfo,
-  MaiTrollOperatingState,
-  type OperatingHoursInfo,
-} from '@/lib/maitrollOperatingHours'
+import { getChicagoTime, getOperatingHoursInfo, MaiTrollOperatingState, type OperatingHoursInfo } from '@/lib/maitrollOperatingHours';
 
 interface MaiTrollOperatingStore {
   operatingHoursInfo: OperatingHoursInfo | null

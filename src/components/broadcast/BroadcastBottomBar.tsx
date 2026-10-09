@@ -1,34 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  MessageSquare,
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  Share2,
-  MoreHorizontal,
-  Radio,
-  Gift,
-  Sparkles,
-  Skull,
-  Bell,
-  Mail,
-  Users,
-} from 'lucide-react';
-import { LocalVideoTrack, LocalAudioTrack } from 'livekit-client';
+import React from 'react';
+import { Mic, MicOff, Video, VideoOff, Share2, MoreHorizontal, Radio, Gift, Sparkles, Skull, Bell, Mail, Users } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { toast } from 'sonner';
-import GiftTray from './GiftTray';
-import { GiftItem } from '../../lib/hooks/useGiftSystem';
-import BroadcastOfficerModal from './BroadcastOfficerModal';
 import { MaiTrollBroadcastTheme, bottomBarShell, bottomBarAmbient, hostActionButtonCenter } from '../../styles/broadcastTheme'
 
 /**
  * Generic "icon grid" button used in host action bottom bar.
  */
 function HostActionButton({
-  active,
+  active: _active,
   onClick,
   icon: Icon,
   label,
@@ -136,9 +115,9 @@ export default function BroadcastBottomBar({
   isCamOn,
   isLive,
   liveViewerCount = 0,
-  liveTimer = '00:00',
+  liveTimer: _liveTimer = '00:00',
   isGiftTrayOpen,
-  isOfficerModalOpen,
+  isOfficerModalOpen: _isOfficerModalOpen,
   onToggleMic,
   onToggleCam,
   onGift,
@@ -146,8 +125,8 @@ export default function BroadcastBottomBar({
   onOpenMoreMenu,
   onEndStream,
   onOpenMessage,
-  onManageMessage,
-  onOpenCoinStore,
+  onManageMessage: _onManageMessage,
+  onOpenCoinStore: _onOpenCoinStore,
 onTroll,
     isHost = false,
     onInviteFollowers,

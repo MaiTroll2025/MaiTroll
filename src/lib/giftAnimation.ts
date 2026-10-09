@@ -75,41 +75,41 @@ export function normaliseGiftEvent(
 
   // row UUID — the single birthmark shared by both channels
   const rawId =
-    _firstStr(['id', 'stream_gift_id', 'gift_transaction_id', 'transaction_id'].map((k) => rawGift as any))
+    _firstStr(['id', 'stream_gift_id', 'gift_transaction_id', 'transaction_id'].map((_k) => rawGift as any))
 
   // Sender field name varies across sources
   const senderId = _firstStr(
-    ['sender_id', 'from_user_id', 'senderId', 's'].map((k) => rawGift as any),
+    ['sender_id', 'from_user_id', 'senderId', 's'].map((_k) => rawGift as any),
   )
   if (!senderId) return null
 
   // Receiver field name varies too
   const receiverId = _firstStr(
-    ['receiver_id', 'recipient_id', 'receiverId', 'recipientId'].map((k) => rawGift as any),
+    ['receiver_id', 'recipient_id', 'receiverId', 'recipientId'].map((_k) => rawGift as any),
   )
   if (!receiverId) return null
 
   // If we cannot stabilise the event we do not enqueue
   if (!rawId) return null
 
-  const streamId = _firstStr(['stream_id', 'streamId'].map((k) => rawGift as any)) || ''
+  const streamId = _firstStr(['stream_id', 'streamId'].map((_k) => rawGift as any)) || ''
   const streamGiftId = rawId
 
   const giftItemId = _firstStr(
-    ['gift_id', 'gift_item_id', 'giftId', 'giftItemId', 'gift_type'].map((k) => rawGift as any),
+    ['gift_id', 'gift_item_id', 'giftId', 'giftItemId', 'gift_type'].map((_k) => rawGift as any),
   ) || ''
 
   const giftName = _firstStr(
-    ['gift_name', 'name', 'title', 'message'].map((k) => rawGift as any),
+    ['gift_name', 'name', 'title', 'message'].map((_k) => rawGift as any),
   ) || 'Gift'
 
-  const slug = _firstStr(['gift_slug', 'slug'].map((k) => rawGift as any)) || ''
+  const slug = _firstStr(['gift_slug', 'slug'].map((_k) => rawGift as any)) || ''
 
   const animationUrl = _firstStr(
-    ['animation_url', 'video_url', 'animationUrl', 'videoUrl', 'icon_url'].map((k) => rawGift as any),
+    ['animation_url', 'video_url', 'animationUrl', 'videoUrl', 'icon_url'].map((_k) => rawGift as any),
   ) || null
 
-  const createdAt = _firstStr(['timestamp', 'created_at'].map((k) => rawGift as any)) || new Date().toISOString()
+  const createdAt = _firstStr(['timestamp', 'created_at'].map((_k) => rawGift as any)) || new Date().toISOString()
 
   return {
     animationId: rawId,

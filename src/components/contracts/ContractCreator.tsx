@@ -46,7 +46,7 @@ export const ContractCreator = () => {
   } = useGetUserTromailAccount(user?.id);
 
   const {
-    data: directoryData,
+    data: _directoryData,
     isLoading: directoryLoading
   } = useGetTromailRoleDirectory();
 

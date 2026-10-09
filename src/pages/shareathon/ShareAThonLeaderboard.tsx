@@ -2,20 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ShareAThonProvider, useShareAThon } from '../../contexts/ShareAThonContext'
 import { toast } from 'sonner'
-import {
-  Trophy,
-  ArrowLeft,
-  Users,
-  Share2,
-  Zap,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Medal,
-  Crown,
-  Star,
-  Loader2
-} from 'lucide-react'
+import { Trophy, ArrowLeft, Users, Share2, Zap, Clock, CheckCircle, Medal, Crown, Star, Loader2 } from 'lucide-react';
 
 interface LeaderboardEntry {
   user_id: string

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
-import { Crown, Heart, Loader2, Check } from 'lucide-react';
+import { Crown, Heart, Loader2 } from 'lucide-react';
 import { useCoins } from '../../lib/hooks/useCoins';
 
 interface SubscribeButtonProps {

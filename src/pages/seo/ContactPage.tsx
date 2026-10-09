@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SEOLayout, { Breadcrumb, CTASection } from './SEOLayout'
-import { Mail, MessageSquare, MapPin, Clock, Send, CheckCircle, HelpCircle, Shield, Users } from 'lucide-react'
+import { Mail, MessageSquare, Clock, Send, CheckCircle, HelpCircle, Users } from 'lucide-react';
 
 const contactMethods = [
   {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'sonner';
-import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, XCircle, PauseCircle, PlayCircle, Clock, Users, Bell, Timer } from 'lucide-react';
+import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, XCircle, PauseCircle, PlayCircle, Users, Bell, Timer } from 'lucide-react';
 
 interface PayoutRun {
   id: string;

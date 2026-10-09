@@ -4,34 +4,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store'
 import { supabase, UserRole } from '@/lib/supabase'
 import useSEO from '@/hooks/useSEO'
-import {
-  Briefcase,
-  Search,
-  Shield,
-  Church,
-  Video,
-  FileText,
-  Star,
-  Newspaper,
-  Radio,
-  Mic,
-  Users,
-  Crown,
-  ChevronRight,
-  Sparkles,
-  Gavel,
-  Building2,
-  Save,
-  Lock,
-  Unlock,
-  RefreshCw,
-  UserCheck,
-  CheckCircle2,
-  XCircle,
-  Clock3,
-  Mail,
-  ClipboardCheck,
-} from 'lucide-react'
+import { Briefcase, Search, Shield, Church, Video, FileText, Star, Newspaper, Radio, Mic, Users, Crown, ChevronRight, Sparkles, Gavel, Building2, Save, Lock, Unlock, RefreshCw, UserCheck, ClipboardCheck } from 'lucide-react';
 
 interface JobPosition {
   id: string
@@ -61,7 +34,7 @@ interface JobApplication {
   created_at: string
 }
 
-const EMPLOYEE_ROLES = new Set([
+const _EMPLOYEE_ROLES = new Set([
   'troll_officer',
   'lead_troll_officer',
   'secretary',
@@ -269,7 +242,7 @@ const positionToRoleCheck: Record<string, { field: string; message: string }> = 
 
 export default function JobsPage() {
   const navigate = useNavigate()
-  const location = useLocation()
+  const _location = useLocation()
   const { profile, user } = useAuthStore()
 
   useSEO({
@@ -290,7 +263,6 @@ export default function JobsPage() {
   const isAdminOrLead =
     profile?.role === 'admin' ||
     profile?.troll_role === 'admin' ||
-    profile?.role === UserRole.ADMIN ||
     profile?.role === UserRole.HR_ADMIN ||
     profile?.role === UserRole.AGENCY_HR_MANAGER ||
     profile?.is_admin ||

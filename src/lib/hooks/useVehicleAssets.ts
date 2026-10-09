@@ -5,7 +5,7 @@
 // INDEPENDENT from Neighborhood vehicle system
 // =====================================================
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 import { useAuthStore } from '../store';
@@ -18,7 +18,7 @@ import type {
   VehicleStats,
   AdminVehicleParams,
   AdminVehicleUpdateParams,
-} from '../types/vehicleAssets';
+} from '@/types/vehicleAssets';
 
 // Query keys for cache management
 export const vehicleAssetKeys = {

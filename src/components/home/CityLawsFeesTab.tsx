@@ -1,20 +1,6 @@
 import React, { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  FileText,
-  Gavel,
-  Vote,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  Shield,
-  Crown,
-  Users,
-  ChevronRight,
-  Plus,
-  Eye,
-  Calendar,
-} from 'lucide-react'
+import { FileText, Gavel, Vote, Clock, AlertTriangle, CheckCircle, Shield, Crown, ChevronRight, Plus, Calendar } from 'lucide-react';
 import { useGovernmentSystem, Law } from '@/hooks/useGovernmentSystem'
 import { useAuthStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
@@ -34,10 +20,10 @@ interface FeeItem {
 }
 
 export default function CityLawsFeesTab() {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const {
     laws,
-    cityReputation,
+    cityReputation: _cityReputation,
     protests,
     loading,
     getUserRoleLevel,
@@ -45,7 +31,7 @@ export default function CityLawsFeesTab() {
 
   const roleLevel = getUserRoleLevel()
   const canCreateLaw = ['secretary', 'president', 'admin'].includes(roleLevel)
-  const canViewEnforcement = ['officer', 'lead', 'secretary', 'president', 'admin'].includes(roleLevel)
+  const _canViewEnforcement = ['officer', 'lead', 'secretary', 'president', 'admin'].includes(roleLevel)
 
   const activeLaws = useMemo(() => laws.filter((l) => l.status === 'active'), [laws])
   const votingLaws = useMemo(() => laws.filter((l) => l.status === 'voting'), [laws])

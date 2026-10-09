@@ -4,10 +4,7 @@
  */
 
 import React from 'react';
-import { 
-    MapPin, Link2, Calendar, Users, UserPlus, 
-    MessageCircle, Crown, BadgeCheck, Zap
-} from 'lucide-react';
+import { MapPin, Link2, Calendar, UserPlus, MessageCircle, BadgeCheck } from 'lucide-react';
 
 interface ProfilePreviewProps {
     profile: any;

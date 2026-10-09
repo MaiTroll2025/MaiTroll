@@ -1,4 +1,4 @@
-import { User, Clock, Skull, ArrowUpLeft, Users } from 'lucide-react'
+import { Clock, Skull, ArrowUpLeft, Users } from 'lucide-react';
 import { useAuthStore } from '@/lib/store'
 import { useSingOffStore } from '../store/useSingOffStore'
 import { useSingOffActions } from '../hooks/useSingOffActions'

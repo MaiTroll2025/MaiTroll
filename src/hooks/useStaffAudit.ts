@@ -57,6 +57,43 @@ export interface StaffAuditFilters {
   search?: string;
 }
 
+type ActionLogRow = {
+  id: string;
+  user_id: string;
+  data: unknown;
+  created_at: string;
+};
+
+function objectValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function textValue(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function normalizeActionLog(row: ActionLogRow): StaffAuditEntry {
+  const data = objectValue(row.data);
+  return {
+    id: row.id,
+    staff_user_id: textValue(data.staff_user_id, row.user_id),
+    staff_role: textValue(data.staff_role, 'unknown'),
+    staff_email: textValue(data.staff_email),
+    action_type: textValue(data.action_type, textValue(data.action, 'unknown')),
+    action_category: textValue(data.action_category, 'unknown'),
+    target_type: textValue(data.target_type) || null,
+    target_id: textValue(data.target_id) || null,
+    target_name: textValue(data.target_name) || null,
+    details: objectValue(data.details),
+    route_path: textValue(data.route_path) || null,
+    result: textValue(data.result, 'unknown'),
+    error_message: textValue(data.error_message) || null,
+    created_at: row.created_at,
+  };
+}
+
 // ─── Hook ────────────────────────────────────────────────────
 
 export function useStaffAudit(filters?: StaffAuditFilters) {
@@ -64,6 +101,7 @@ export function useStaffAudit(filters?: StaffAuditFilters) {
   const [entries, setEntries] = useState<StaffAuditEntry[]>([]);
   const [summary, setSummary] = useState<StaffAuditSummary[]>([]);
   const [permissions, setPermissions] = useState<PermissionEntry[]>([]);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
@@ -88,25 +126,25 @@ export function useStaffAudit(filters?: StaffAuditFilters) {
 
     try {
       let query = supabase
-        .from('staff_action_audit_log')
+        .from('action_logs')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (filters?.staffRole) {
-        query = query.eq('staff_role', filters.staffRole);
+        query = query.filter('data->>staff_role', 'eq', filters.staffRole);
       }
       if (filters?.actionType) {
-        query = query.eq('action_type', filters.actionType);
+        query = query.filter('data->>action_type', 'eq', filters.actionType);
       }
       if (filters?.actionCategory) {
-        query = query.eq('action_category', filters.actionCategory);
+        query = query.filter('data->>action_category', 'eq', filters.actionCategory);
       }
       if (filters?.targetType) {
-        query = query.eq('target_type', filters.targetType);
+        query = query.filter('data->>target_type', 'eq', filters.targetType);
       }
       if (filters?.result) {
-        query = query.eq('result', filters.result);
+        query = query.filter('data->>result', 'eq', filters.result);
       }
       if (filters?.dateFrom) {
         query = query.gte('created_at', filters.dateFrom);
@@ -115,16 +153,20 @@ export function useStaffAudit(filters?: StaffAuditFilters) {
         query = query.lte('created_at', filters.dateTo);
       }
       if (filters?.search) {
-        query = query.or(
-          `target_name.ilike.%${filters.search}%,staff_email.ilike.%${filters.search}%,action_type.ilike.%${filters.search}%`
-        );
+        const term = filters.search.trim().replace(/[^\w@.\- ]/g, '');
+        if (term) {
+          const pattern = `%${term}%`;
+          query = query.or(
+            `data->>target_name.ilike.${pattern},data->>staff_email.ilike.${pattern},data->>action_type.ilike.${pattern}`
+          );
+        }
       }
 
       const { data, error: fetchError, count } = await query;
 
       if (fetchError) throw fetchError;
 
-      setEntries((data || []) as StaffAuditEntry[]);
+      setEntries(((data || []) as ActionLogRow[]).map(normalizeActionLog));
       setTotalCount(count || 0);
     } catch (err: any) {
       console.error('[useStaffAudit] Fetch error:', err);
@@ -139,15 +181,33 @@ export function useStaffAudit(filters?: StaffAuditFilters) {
     if (!isAdmin) return;
 
     try {
-      const { data, error: summaryError } = await supabase.rpc(
-        'get_staff_audit_summary',
-        { p_days: days }
-      );
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      const { data, error: summaryError } = await supabase
+        .from('action_logs')
+        .select('id, user_id, data, created_at')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(1000);
 
       if (summaryError) throw summaryError;
-      setSummary((data || []) as StaffAuditSummary[]);
+      const groups = new Map<string, StaffAuditSummary>();
+      ((data || []) as ActionLogRow[]).map(normalizeActionLog).forEach(entry => {
+        const key = `${entry.staff_role}\u0000${entry.action_type}`;
+        const group = groups.get(key) || {
+          staff_role: entry.staff_role,
+          action_type: entry.action_type,
+          action_count: 0,
+          last_action: entry.created_at,
+          denied_count: 0,
+        };
+        group.action_count += 1;
+        if (entry.result === 'denied') group.denied_count += 1;
+        groups.set(key, group);
+      });
+      setSummary([...groups.values()].sort((left, right) => right.action_count - left.action_count));
     } catch (err: any) {
       console.error('[useStaffAudit] Summary error:', err);
+      setError(err.message || 'Failed to fetch audit summary');
     }
   }, [isAdmin]);
 
@@ -155,6 +215,7 @@ export function useStaffAudit(filters?: StaffAuditFilters) {
   const fetchPermissions = useCallback(async () => {
     if (!isAdmin) return;
 
+    setPermissionError(null);
     try {
       const { data, error: permError } = await supabase
         .from('role_permission_matrix')
@@ -166,6 +227,7 @@ export function useStaffAudit(filters?: StaffAuditFilters) {
       setPermissions((data || []) as PermissionEntry[]);
     } catch (err: any) {
       console.error('[useStaffAudit] Permissions error:', err);
+      setPermissionError(err.message || 'Failed to load the current permission matrix.');
     }
   }, [isAdmin]);
 
@@ -252,6 +314,7 @@ export function useStaffAudit(filters?: StaffAuditFilters) {
     entries,
     summary,
     permissions,
+    permissionError,
     loading,
     error,
     totalCount,

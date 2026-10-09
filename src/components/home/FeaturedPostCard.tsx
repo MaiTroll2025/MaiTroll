@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { Heart, MessageSquare, Gift, Pin, Star, Play } from 'lucide-react'
+import { Heart, MessageSquare, Gift, Star, Play } from 'lucide-react';
 import { WallPost } from '@/types/trollWall'
 
 interface FeaturedPostCardProps {

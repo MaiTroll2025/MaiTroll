@@ -153,8 +153,7 @@ export const GAME_TYPES = {
   TROLL_IDENTITY_HUNT: 'troll-identity-hunt',
   REACTION_SPEED: 'reaction-speed',
   MULTIPLAYER_SOLITAIRE: 'multiplayer-solitaire',
-  MULTIPLAYER_DOMINOES: 'multiplayer-dominoes',
-  TROLLOPOLY: 'trollopoly'
+  MULTIPLAYER_DOMINOES: 'multiplayer-dominoes'
 } as const
 
 // Game metadata
@@ -192,12 +191,6 @@ export const GAME_METADATA: Record<string, { name: string; description: string; 
   [GAME_TYPES.MULTIPLAYER_DOMINOES]: {
     name: 'Multiplayer Dominoes',
     description: 'Classic dominoes with real players',
-    minPlayers: 2,
-    maxPlayers: 4
-  },
-  [GAME_TYPES.TROLLOPOLY]: {
-    name: 'Trollopoly',
-    description: 'Monopoly-style board game with Mai Troll branding',
     minPlayers: 2,
     maxPlayers: 4
   }

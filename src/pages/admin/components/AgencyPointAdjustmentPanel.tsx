@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useAdminAgencyTransactions } from '../../hooks/useAdminAgency';
-import { cn } from '../../lib/utils';
+import { supabase } from '@/lib/supabase';
+import { useAdminAgencyTransactions } from '@/hooks/useAdminAgency';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Coins, Search, Loader2, Plus, Minus, History, User, ArrowRight } from 'lucide-react';
+import { Coins, Search, Loader2, Plus, Minus, History, ArrowRight } from 'lucide-react';
 
 interface UserSearchResult {
   id: string;
@@ -82,7 +82,7 @@ export default function AgencyPointAdjustmentPanel() {
       );
       setPointsInput('');
       setReasonInput('');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to adjust points');
     } finally {
       setSubmitting(false);

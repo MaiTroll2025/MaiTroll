@@ -24,9 +24,10 @@ import {
   Send,
   User,
   ArrowLeft,
+  Share2,
   Volume2,
 } from 'lucide-react';
-import { generateUUID } from '@/lib/uuid';
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
 
 interface CourtSession {
   id: string;
@@ -78,59 +79,32 @@ type CourtRoleKey = (typeof COURT_ROLES)[number]['key'];
 async function getAgoraCourtToken({
   channelName,
   uid,
+  courtSessionId,
   role,
 }: {
   channelName: string
-  uid: string
+  uid: string | number
+  courtSessionId: string
   role: 'publisher' | 'audience'
-}): Promise<any> {
+}): Promise<{ appId: string; token: string | null; channelName: string; uid: string | number }> {
   const payload = {
     channelName,
     channel: channelName,
     uid,
     role,
     roomType: 'court',
+    courtSessionId,
   };
 
-  const candidates = ['agora-token', 'agora-rtc-token', 'rtc-token'];
-
-  for (const functionName of candidates) {
-    try {
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body: payload,
-      });
-
-      if (error) continue;
-
-      if (data?.appId || import.meta.env.VITE_AGORA_APP_ID) {
-        return {
-          appId: data?.appId || import.meta.env.VITE_AGORA_APP_ID,
-          token: data?.token ?? null,
-          channel: data?.channel || data?.channelName || channelName,
-          channelName: data?.channelName || data?.channel || channelName,
-          uid: data?.uid || uid,
-          role,
-        };
-      }
-    } catch {
-      // no-op
-    }
-  }
-
-  const fallbackAppId = import.meta.env.VITE_AGORA_APP_ID;
-
-  if (fallbackAppId) {
-    return {
-      appId: fallbackAppId,
-      token: null,
-      channel: channelName,
-      channelName,
-      uid,
-      role,
-    };
-  }
-
-  throw new Error('Agora app ID is missing. Check VITE_AGORA_APP_ID.');
+  const { data, error } = await supabase.functions.invoke('agora-token', { body: payload });
+  if (error) throw error;
+  if (!data?.appId || !data?.token) throw new Error('Agora did not return a valid court viewer token.');
+  return {
+    appId: data.appId,
+    token: data.token,
+    channelName: data.channelName || data.channel || channelName,
+    uid: data.uid ?? uid,
+  };
 }
 
 export default function CourtViewerPage() {
@@ -143,7 +117,7 @@ export default function CourtViewerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
-  const [viewerCount, setViewerCount] = useState(0);
+  const [viewerCount, _setViewerCount] = useState(0);
   const [totalLikes, setTotalLikes] = useState(0);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
@@ -156,6 +130,7 @@ export default function CourtViewerPage() {
   const clientRef = useRef<IAgoraRTCClient | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const clickHistoryRef = useRef<number[]>([]);
+  const [anonymousAgoraUid] = useState(() => Math.floor(Math.random() * 4_000_000_000) + 1);
 
   const cleanSessionId = sessionId?.replace(/^court-/, '') || sessionId;
   const agoraChannel = `troll-court-${cleanSessionId}`;
@@ -316,15 +291,11 @@ export default function CourtViewerPage() {
 
     const joinChannel = async () => {
       try {
-        if (!user?.id) {
-          toast.error('Please sign in to watch court sessions');
-          navigate('/auth?mode=login');
-          return;
-        }
-
+        const viewerUid = user?.id || anonymousAgoraUid;
         const tokenResponse = await getAgoraCourtToken({
           channelName: agoraChannel,
-          uid: user.id,
+          uid: viewerUid,
+          courtSessionId: cleanSessionId || '',
           role: 'audience',
         });
 
@@ -332,7 +303,7 @@ export default function CourtViewerPage() {
           tokenResponse.appId,
           tokenResponse.channelName || agoraChannel,
           tokenResponse.token,
-          user.id
+          tokenResponse.uid
         );
 
         setIsConnected(true);
@@ -354,7 +325,7 @@ export default function CourtViewerPage() {
       setIsConnected(false);
       setRemoteUsers([]);
     };
-  }, [courtSession?.id, agoraChannel, user?.id]);
+  }, [courtSession?.id, agoraChannel, cleanSessionId, user?.id, anonymousAgoraUid]);
 
   useEffect(() => {
     if (!cleanSessionId || !user) return;
@@ -652,6 +623,28 @@ export default function CourtViewerPage() {
             >
               <MessageSquare className="w-5 h-5" />
             </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const url = `${window.location.origin}/troll-court/watch/${encodeURIComponent(String(courtSession?.id || cleanSessionId || ''))}`
+                try {
+                  if (navigator.share) await navigator.share({ title: courtSession?.title || 'Troll Court Live', url })
+                  else {
+                    await navigator.clipboard.writeText(url)
+                    toast.success('Court link copied.')
+                  }
+                } catch (error) {
+                  console.warn('[CourtViewer] Share failed:', error)
+                }
+              }}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Share court session"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+            {courtSession?.id && (
+              <FacebookPublishButton sourceType="court_session" sourceId={courtSession.id} compact />
+            )}
           </div>
         </div>
       </div>

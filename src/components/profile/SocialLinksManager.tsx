@@ -7,10 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
-import { 
-    GripVertical, Plus, Trash2, Eye, EyeOff, 
-    ExternalLink, Check, X, Link2
-} from 'lucide-react';
+import { GripVertical, Plus, Trash2, Eye, EyeOff, ExternalLink, Link2 } from 'lucide-react';
 
 interface SocialLink {
     id: string;

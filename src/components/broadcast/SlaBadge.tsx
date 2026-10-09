@@ -77,7 +77,7 @@ export function SlaStatusIndicator({ slaStatus, className }: SlaStatusIndicatorP
         <span className="text-slate-500"> / </span>
         {slaStatus.sla_target_uptime_pct.toFixed(1)}%
       </div>
-      {hasViolations > 0 && (
+      {hasViolations && (
         <span className="text-xs text-rose-400 font-bold">⚠ {slaStatus.violation_count}</span>
       )}
     </div>

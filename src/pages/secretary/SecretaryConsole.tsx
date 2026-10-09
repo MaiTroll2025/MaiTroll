@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, AlertTriangle, ChevronRight, ClipboardList, Crown, LayoutDashboard, LogOut, Shield, Coins } from 'lucide-react'
+import { AlertTriangle, ChevronRight, ClipboardList, Crown, LogOut, Shield, Coins } from 'lucide-react';
 import { navigation } from './navigationConfig.tsx'
 import { supabase } from '../../lib/supabase'
 
@@ -38,7 +38,7 @@ import SecretaryCrownRedemptions from './components/SecretaryCrownRedemptions'
    Types
 ============================== */
 
-type Section =
+type _Section =
   | 'dashboard'
   | 'intake'
   | 'governance'
@@ -118,7 +118,7 @@ export default function ExecutiveOperationsConsole() {
     const fetchCounts = async () => {
       try {
         const [intakeRes, alertsRes, coinRes] = await Promise.all([
-          supabase.from('executive_intake').select('id', { count: 'exact', head: true }).in('status', ['new', 'in_progress']),
+          supabase.from('executive_intake').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_review']),
           supabase.from('critical_alerts').select('id', { count: 'exact', head: true }).eq('resolved', false),
           supabase.from('payout_requests').select('id', { count: 'exact', head: true }).in('status', ['pending', 'approved'])
         ])

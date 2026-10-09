@@ -1,16 +1,10 @@
 // src/pages/admin/StartupExpenseTracker.tsx
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../lib/store'
-import { supabase, hasRole } from '../../lib/supabase'
+import { hasRole } from '../../lib/supabase';
 import { toast } from 'sonner'
-import {
-  Wallet, Receipt, BarChart3, Coins, ShieldCheck, Plus, Trash2, Edit3, Save, X,
-  Upload, FileText, FolderOpen, DollarSign, TrendingDown, TrendingUp, AlertTriangle,
-  StickyNote, Download, Search, Server, Zap, Globe, Package, Headphones, Gift,
-  Landmark, PiggyBank, Eye, EyeOff,
-  Megaphone
-} from 'lucide-react'
+import { Wallet, Receipt, Plus, Trash2, Edit3, Save, X, Upload, FileText, FolderOpen, DollarSign, TrendingDown, TrendingUp, AlertTriangle, StickyNote, Search, Server, Zap, Gift, PiggyBank, Megaphone } from 'lucide-react';
 
 // ── Types ──
 
@@ -439,9 +433,9 @@ export default function StartupExpenseTracker() {
   // ── File Manager ──
   // Supabase Storage bucket: 'admin-files' (create in Supabase Dashboard → Storage → New bucket 'admin-files', private)
   // Storage RLS note: Add policies allowing admin/ceo roles full access via service-role or allow authenticated admins
-  const BUCKET_NAME = 'admin-files'
+  const _BUCKET_NAME = 'admin-files'
 
-  const readFileAsDataURL = (file: File): Promise<string> =>
+  const _readFileAsDataURL = (file: File): Promise<string> =>
     new Promise((res, rej) => {
       const r = new FileReader()
       r.onload = () => res(r.result as string)
@@ -467,14 +461,6 @@ export default function StartupExpenseTracker() {
   }
 
   const deleteFile = (id: string) => { setFiles(prev => prev.filter(f => f.id !== id)) }
-
-  const filteredFiles = useMemo(() => {
-    return files.filter(f => {
-      if (fileFilter !== 'all' && f.category !== fileFilter) return false
-      if (fileSearch && !f.name.toLowerCase().includes(fileSearch.toLowerCase())) return false
-      return true
-    })
-  }, [files, fileFilter, fileSearch])
 
   if (!allowed) return null
 
@@ -907,6 +893,7 @@ export default function StartupExpenseTracker() {
         {/* ══════════════════════════════════════════════════ */}
         <FileManager
           files={files}
+          setFiles={setFiles}
           fileFilter={fileFilter}
           setFileFilter={setFileFilter}
           fileSearch={fileSearch}
@@ -923,7 +910,6 @@ export default function StartupExpenseTracker() {
           setEditingFileNote={setEditingFileNote}
           newFileNote={newFileNote}
           setNewFileNote={setNewFileNote}
-          filteredFiles={filteredFiles}
           onUpload={handleFileUpload}
           onDelete={deleteFile}
         />
@@ -1058,7 +1044,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 // ─────────────────────────────────────────────────────────────────────────────
 
 function NotesSection({
-  notes, noteTitle, setNoteTitle, noteBody, setNoteBody, editingNoteId, setEditingNoteId, onSave, onEdit, onDelete,
+  notes, noteTitle, setNoteTitle, noteBody, setNoteBody, editingNoteId, setEditingNoteId: _setEditingNoteId, onSave, onEdit, onDelete,
 }: {
   notes: NoteItem[]
   noteTitle: string; setNoteTitle: (v: string) => void
@@ -1142,13 +1128,14 @@ function NotesSection({
 // that keeps all file data accessible immediately while the bucket is being set up.
 
 function FileManager({
-  files, fileFilter, setFileFilter, fileSearch, setFileSearch,
+  files, setFiles, fileFilter, setFileFilter, fileSearch, setFileSearch,
   showFileUpload, setShowFileUpload, uploadFile, setUploadFile,
   editingFileName, setEditingFileName, newFileName, setNewFileName,
   editingFileNote, setEditingFileNote, newFileNote, setNewFileNote,
   onUpload, onDelete,
 }: {
   files: FileItem[]
+  setFiles: (v: React.SetStateAction<FileItem[]>) => void
   fileFilter: string; setFileFilter: (v: string) => void
   fileSearch: string; setFileSearch: (v: string) => void
   showFileUpload: boolean; setShowFileUpload: (v: boolean) => void

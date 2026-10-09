@@ -121,7 +121,7 @@ export async function currentIdentity(userId: string) {
     // Calculate level info using the unified xp.ts functions
     const xpTotal = lvl?.xp_total || 0
     const level = calculateLevel(xpTotal)
-    const { needed, percentage } = getXPForNextLevel(xpTotal)
+    const { needed, percentage: _percentage } = getXPForNextLevel(xpTotal)
     const xpIntoLevel = needed > 0 ? xpTotal - (getXPForNextLevel(xpTotal - 1).current) : 0
 
     const levelData = {
@@ -147,7 +147,7 @@ export async function getLevelProfile(userId: string) {
       // Calculate level info using the unified xp.ts functions
       const xpTotal = data.xp_total || 0
       const level = calculateLevel(xpTotal)
-      const { needed, percentage } = getXPForNextLevel(xpTotal)
+      const { needed, percentage: _percentage } = getXPForNextLevel(xpTotal)
       const xpIntoLevel = needed > 0 ? Math.max(0, xpTotal - Math.max(0, xpTotal - needed)) : 0
       return {
         level: level,

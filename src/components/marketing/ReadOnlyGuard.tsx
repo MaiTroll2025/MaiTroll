@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAuthStore } from '../../lib/store'
-import { isMarketingReadonly, canWrite } from '../../lib/supabase'
-import { Eye, Lock } from 'lucide-react'
+import { isMarketingAgent, canWrite } from '../../lib/supabase'
+import { Eye } from 'lucide-react';
 import { cn } from '../../lib/utils'
 
 interface ReadOnlyGuardProps {
@@ -14,7 +14,7 @@ interface ReadOnlyGuardProps {
 export function ReadOnlyGuard({ children, action = 'any', showBadge = true, className }: ReadOnlyGuardProps) {
   const profile = useAuthStore((state) => state.profile)
 
-  const isReadOnly = isMarketingReadonly(profile)
+  const isReadOnly = isMarketingAgent(profile)
   const actionCanWrite = canWriteAction(profile, action)
 
   if (!isReadOnly || actionCanWrite) {
@@ -67,7 +67,7 @@ interface ReadOnlyOverlayProps {
 
 export function ReadOnlyOverlay({ message = 'Read-only access - View only' }: ReadOnlyOverlayProps) {
   const profile = useAuthStore((state) => state.profile)
-  const isReadOnly = isMarketingReadonly(profile)
+  const isReadOnly = isMarketingAgent(profile)
 
   if (!isReadOnly) return null
 
@@ -89,7 +89,7 @@ interface ReadOnlyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 export const ReadOnlyButton = React.forwardRef<HTMLButtonElement, ReadOnlyButtonProps>(
   ({ children, action = 'any', showBadge = true, disabled, className, ...props }, ref) => {
     const profile = useAuthStore((state) => state.profile)
-    const isReadOnly = isMarketingReadonly(profile)
+    const isReadOnly = isMarketingAgent(profile)
     const actionCanWrite = canWriteAction(profile, action)
 
     const isDisabled = disabled || (isReadOnly && !actionCanWrite)
@@ -121,7 +121,7 @@ export function useCanWrite() {
   return canWrite(profile) ?? true
 }
 
-export function useIsMarketingReadonly() {
+export function useIsMarketingAgent() {
   const profile = useAuthStore((state) => state.profile)
-  return isMarketingReadonly(profile)
+  return isMarketingAgent(profile)
 }

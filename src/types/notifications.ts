@@ -12,6 +12,7 @@ export type NotificationType =
   | 'account_warning'
   | 'account_restriction_started'
   | 'account_restriction_expired'
+  | 'system'
 
   // JAIL / RESTRICTIONS
   | 'jail_sentence_started'

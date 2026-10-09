@@ -6,7 +6,7 @@ const L = fs.readFileSync(f, 'utf8').split('\n');
 function countTags(limit) {
   let divO = 0, divC = 0, sectionO = 0, sectionC = 0;
   const reDO = /<div[\s>]/gi, reDC = /<\/div>/gi;
-  const reSO = /<section[\s>]/gi, reSC = /<\/section>/g;
+  const _reSO = /<section[\s>]/gi, reSC = /<\/section>/g;
 
   for (let i = 0; i < limit; i++) {
     const s = L[i];

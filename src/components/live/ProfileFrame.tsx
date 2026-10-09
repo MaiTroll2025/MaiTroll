@@ -172,7 +172,7 @@ function FrameStyleRenderer({
   animStyle: React.CSSProperties;
 }) {
   const { border_color, border_gradient, glow_color, glow_intensity, frame_style } = tier;
-  const boxSize = size.container;
+  const _boxSize = size.container;
   const bw = size.borderWidth;
 
   const glowShadow =

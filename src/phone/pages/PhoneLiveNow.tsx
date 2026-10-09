@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 import { supabase } from '../../lib/supabase'
 import UserNameWithAge from '../../components/UserNameWithAge'
 import { neonCard, neonTextGradient } from '../phoneTheme'
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
 
 interface Broadcast {
   id: string
@@ -889,6 +890,11 @@ export default function PhoneLiveNow() {
                         {viewerCount.toLocaleString()}
                       </div>
                     </div>
+                    <FacebookPublishButton
+                      sourceType="stream"
+                      sourceId={broadcast.id}
+                      className="mt-3"
+                    />
                   </div>
                 </article>
               )

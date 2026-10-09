@@ -22,7 +22,7 @@ export default function BroadcastRestrictionControl() {
     seatCapMax,
     allRestrictionsDisabled,
     loading,
-    isAdmin,
+    isAdmin: _isAdmin,
     setViewerCapEnabled,
     setViewerCapMax,
     setStartCapEnabled,

@@ -3,66 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileFrame from '@/components/profile/ProfileFrame';
 import { useUserFrame } from '@/hooks/useUserFrame';
-import {
-  Home,
-  Video,
-  Coins,
-  Gavel,
-  Scale,
-  Scan,
-  Gamepad2,
-  GraduationCap,
-  LayoutGrid,
-  Store,
-  Users,
-  Crown,
-  BookOpen,
-  Trophy,
-  Vote,
-  Shield,
-  Star,
-  Heart,
-  MessageCircle,
-  Search,
-  Compass,
-  Activity,
-  BarChart3,
-  Settings,
-  ScrollText,
-  Wallet,
-  Newspaper,
-  Megaphone,
-  ClipboardList,
-  MonitorDot,
-  Lock,
-  Mic,
-  Eye,
-  DollarSign,
-  Bell,
-  User,
-  LogOut,
-  ChevronUp,
-  X,
-  TrendingUp,
-  Building2,
-  Landmark,
-  Waves,
-  Package,
-  Shuffle,
-  Car,
-  Briefcase,
-  Receipt,
-  Sparkles,
-  Radio,
-  RefreshCw,
-  Gem,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react';
+import { Home, Video, Coins, Gavel, Scale, Scan, Gamepad2, LayoutGrid, Store, Users, Crown, BookOpen, Trophy, Vote, Shield, Star, Heart, MessageCircle, Search, Compass, Activity, BarChart3, Settings, ScrollText, Newspaper, ClipboardList, MonitorDot, Lock, Mic, Eye, DollarSign, Bell, User, LogOut, X, TrendingUp, Building2, Landmark, Waves, Package, Shuffle, Car, Briefcase, Sparkles, Radio, RefreshCw, Gem, Zap, Megaphone } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { useCoins } from '@/lib/hooks/useCoins';
 import { useXPStore } from '@/stores/useXPStore';
-import { isAdminEmail, supabase, UserRole } from '@/lib/supabase';
+import { isAdminEmail, isMarketingAgent, UserRole } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavBadges } from '@/hooks/useNavBadges';
 import { useIsActiveFounder } from '@/hooks/useFounderProgram';
@@ -305,11 +250,11 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
   const xpStore = useXPStore();
   const { balances } = useCoins();
   const navigate = useNavigate_fixed();
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [isMobile, _setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const trollCoins = Number((balances as any)?.troll_coins ?? 0);
   const trollmonds = Number((profile as any)?.trollmonds ?? 0);
   const crowns = Number((profile as any)?.crowns ?? 0);
-  const currentLevel = xpStore.level;
+  const _currentLevel = xpStore.level;
   const displayName = profile?.display_name || profile?.username || 'Citizen';
   const avatarUrl = profile?.avatar_url;
   const equippedFrame = useUserFrame(user?.id);
@@ -317,9 +262,9 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
   const nextXp = xpStore.xpToNext ?? profile?.next_level_xp ?? 1;
   const progress = xpStore.progress ?? (nextXp > 0 ? Math.min((currentXp / nextXp) * 100, 100) : 0);
   const {
-    isAdmin, isSecretary, isLead, isOfficer, isPresident, isBroadcaster, isAgencyHR, isHRAdmin,
+    isAdmin, isSecretary, isLead, isOfficer, isPresident, isBroadcaster: _isBroadcaster, isAgencyHR, isHRAdmin,
     isAgencyLeader, isAttorney, isProsecutor, isPastor, isJournalist, isNewsCaster,
-    isChiefNewsCaster, isCEOAssistant, isNoahAssistant, isAuctioneer, isEmployee,
+    isChiefNewsCaster, isCEOAssistant, isNoahAssistant: _isNoahAssistant, isAuctioneer, isEmployee: _isEmployee,
   } = useRoleChecks(profile, user?.email);
   const [search, setSearch] = useState('');
 
@@ -329,6 +274,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
   // "Manage Founders" tab). Status check, not the badge check.
   const isActiveFounder = useIsActiveFounder(user?.id);
   const canSeeFounderHub = isActiveFounder || isAdmin;
+  const canSeeMarketingPage = isAdmin || isMarketingAgent(profile);
 
   const allPages = useMemo(() => {
     const pages: { category: string; items: PageEntry[] }[] = [
@@ -389,6 +335,9 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
             { label: 'Proposals', icon: ScrollText, path: '/government/proposals' },
             { label: 'Openings', icon: Briefcase, path: '/government/openings' },
             { label: 'Careers', icon: Briefcase, path: '/careers' },
+            ...(canSeeMarketingPage
+              ? [{ label: 'Marketing', icon: Megaphone, path: '/admin/marketing' }]
+              : []),
             { label: 'Newspaper', icon: Newspaper, path: '/government/newspaper' },
           ...(isOfficer || isSecretary || isAdmin
             ? [{ label: 'City Government (Staff)', icon: Landmark as any, path: '/government' }]
@@ -493,7 +442,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
       ...cat,
       items: cat.items.filter((item) => item.show !== false),
     }));
-  }, [isAdmin, isSecretary, isLead, isOfficer, isPresident, isAgencyHR, isHRAdmin, profile?.username, canSeeFounderHub]);
+  }, [isAdmin, isSecretary, isLead, isOfficer, isPresident, isAgencyHR, isHRAdmin, profile?.username, canSeeFounderHub, canSeeMarketingPage]);
 
   const filteredPages = useMemo(() => {
     if (!search.trim()) return allPages;
@@ -802,9 +751,9 @@ function DoorNavButton({ letter, label, to, active, variant = 'default' }: DoorN
 /* --- Main Bottom Navigation Bar --- */
 export default function BottomNavBar() {
   const location = useLocation();
-  const { user, profile } = useAuthStore();
-  const { isBroadcaster } = useRoleChecks(profile);
-  const xpStore = useXPStore();
+  const { user: _user, profile } = useAuthStore();
+  const { isBroadcaster: _isBroadcaster } = useRoleChecks(profile);
+  const _xpStore = useXPStore();
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const badges = useNavBadges();
 
@@ -922,4 +871,3 @@ export default function BottomNavBar() {
     </>
   );
 }
-

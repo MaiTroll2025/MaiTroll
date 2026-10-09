@@ -44,14 +44,13 @@ export default function GamingSetupPage() {
 }
 
 function GamingSetupPageInner() {
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const location = useLocation()
   const { user, profile } = useAuthStore()
   const setGamingStreamId = useSetGamingStreamId()
   const isSubPage = location.pathname !== '/broadcast/setup/gaming'
 
   const [streamTitle, setStreamTitle] = useState('')
-  const [selectedGame, setSelectedGame] = useState('')
   const [streamId] = useState(() => generateUUID())
   const [streamData, setStreamData] = useState<StreamData | null>(null)
   const [agoraSessionId, setAgoraSessionId] = useState<string | null>(null)
@@ -76,7 +75,7 @@ function GamingSetupPageInner() {
   const goLiveInProgressRef = useRef(false)
 
   // Heartbeat only when OBS is actually connected
-  const heartbeat = useObsHeartbeat({
+  const _heartbeat = useObsHeartbeat({
     streamId: streamData?.id || null,
     sessionId: agoraSessionId,
     enabled: Boolean(agoraSessionId && (isObsConnected || isLive)),
@@ -223,13 +222,13 @@ function GamingSetupPageInner() {
               if (sessionData.session.rtmp_url) setRtmpUrl(sessionData.session.rtmp_url)
             }
           } catch (e) { console.warn('[GamingSetupPage] Session restore failed:', e) }
-          if (existing.stream_key) { setObsStatus('waiting'); void runHealthCheck() }
+          if (existing.stream_key) setObsStatus('waiting')
           return
         }
 
         const { data: newStream, error: createError } = await supabase.from('streams').insert({
           id: streamId, user_id: user.id, title: defaultTitle,
-          game_title: selectedGame || '', category: 'gaming', status: 'starting', is_live: false,
+          game_title: '', category: 'gaming', status: 'starting', is_live: false,
         }).select('id,title,game_title,status,is_live,stream_key,agora_channel,current_viewers,started_at,ended_at,created_at,user_id,category').single()
 
         if (createError) throw createError
@@ -392,7 +391,7 @@ function GamingSetupPageInner() {
     }
 
     try {
-      const { data: liveData, error: liveError } = await supabase.functions.invoke('agora-stream', {
+      const { data: _liveData, error: liveError } = await supabase.functions.invoke('agora-stream', {
         body: { action: 'goLive', sessionId: agoraSessionId },
       })
 
@@ -410,9 +409,6 @@ function GamingSetupPageInner() {
       setIsObsConnected(true)
       setErrorMessage(null)
 
-      await supabase.functions.invoke('notify-stream-live', {
-        body: { streamId: streamData.id, userId: user.id, category: 'gaming' },
-      })
     } catch (err: any) {
       console.error('[GamingSetupPage] Go live failed:', err)
       toast.error(err?.message || 'Failed to go live')

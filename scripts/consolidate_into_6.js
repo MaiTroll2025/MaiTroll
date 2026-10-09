@@ -70,10 +70,10 @@ console.log(`Consolidating into ${chunks.length} files`);
 
 // Remove old individual files
 for (const file of files) {
-  try { unlinkSync(join(OUTPUT_DIR, file)); } catch (e) {}
+  try { unlinkSync(join(OUTPUT_DIR, file)); } catch (_e) {}
 }
 for (const file of pageFiles) {
-  try { unlinkSync(join(OUTPUT_DIR, file)); } catch (e) {}
+  try { unlinkSync(join(OUTPUT_DIR, file)); } catch (_e) {}
 }
 
 // Write consolidated files

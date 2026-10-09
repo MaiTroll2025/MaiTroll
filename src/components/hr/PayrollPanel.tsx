@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { DollarSign, Clock, RefreshCw, TrendingUp, Award, AlertTriangle } from 'lucide-react'
+import { DollarSign, Clock, RefreshCw, TrendingUp, Award } from 'lucide-react';
 
 interface PayrollLog {
   id: string

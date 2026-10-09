@@ -18,12 +18,23 @@ const NOTIFICATION_TYPES: { value: NotificationType; label: string }[] = [
   { value: 'troll_drop', label: 'Troll Drop' },
 ];
 
+interface Recipient {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+}
+
 export default function SendNotifications() {
   const [type, setType] = useState<NotificationType>('stream_live');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [metadata, setMetadata] = useState('{}');
   const [sendToAll, setSendToAll] = useState(true);
+  const [recipientSearch, setRecipientSearch] = useState('');
+  const [recipientResults, setRecipientResults] = useState<Recipient[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<Map<string, Recipient>>(new Map());
+  const [searchingRecipients, setSearchingRecipients] = useState(false);
+  const [recipientSearchError, setRecipientSearchError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
@@ -32,9 +43,41 @@ export default function SendNotifications() {
     message?: string;
   } | null>(null);
 
+  const searchRecipients = async () => {
+    const term = recipientSearch.trim().replace(/[,%()]/g, '');
+    if (term.length < 2) {
+      setRecipientSearchError('Enter at least two characters to search for recipients.');
+      setRecipientResults([]);
+      return;
+    }
+
+    setSearchingRecipients(true);
+    setRecipientSearchError(null);
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, username, display_name')
+        .or(`username.ilike.%${term}%,display_name.ilike.%${term}%,id.eq.${term}`)
+        .order('username', { ascending: true })
+        .limit(50);
+      if (error) throw error;
+      setRecipientResults(data || []);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to search users.';
+      setRecipientSearchError(errorMessage);
+      toast.error(`Failed to search users: ${errorMessage}`);
+    } finally {
+      setSearchingRecipients(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) {
       toast.error('Please enter both title and message');
+      return;
+    }
+    if (!sendToAll && selectedRecipients.size === 0) {
+      toast.error('Select at least one user to receive this notification.');
       return;
     }
 
@@ -58,15 +101,17 @@ export default function SendNotifications() {
       if (!token) {
         throw new Error('Not authenticated');
       }
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if (!supabaseUrl || !anonKey) {
+        throw new Error('Bulk notifications are unavailable because the Supabase endpoint is not configured.');
+      }
 
-      const functionsUrl = import.meta.env.VITE_SUPABASE_URL 
-        ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
-        : 'https://gejtbllazzighxwxudyu.supabase.co/functions/v1';
-
-      const response = await fetch(`${functionsUrl}/send-bulk-notifications`, {
+      const response = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/send-bulk-notifications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'apikey': anonKey,
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -74,29 +119,39 @@ export default function SendNotifications() {
           title: title.trim(),
           message: message.trim(),
           metadata: metadataObj,
-          targetUserIds: sendToAll ? [] : undefined,
+          sendToAll,
+          targetUserIds: sendToAll ? [] : [...selectedRecipients.keys()],
         }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: Record<string, any>;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error(`Bulk notification service returned an invalid response (HTTP ${response.status}).`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to send notifications');
       }
 
       setResult({
-        success: true,
+        success: data.success === true,
         notificationCount: data.notificationCount,
         failedCount: data.failedCount,
-        message: data.message,
+        message: data.message || 'Notification request completed.',
       });
 
-      toast.success(`✅ ${data.message}`);
-      
-      // Reset form on success
-      setTitle('');
-      setMessage('');
-      setMetadata('{}');
+      if (data.success === true) {
+        toast.success(data.message || 'Notifications sent.');
+        setTitle('');
+        setMessage('');
+        setMetadata('{}');
+        setSelectedRecipients(new Map());
+      } else {
+        toast.error(data.message || 'Some notifications could not be created.');
+      }
 
     } catch (error: any) {
       console.error('Error sending notifications:', error);
@@ -219,9 +274,65 @@ export default function SendNotifications() {
                       onChange={() => setSendToAll(false)}
                       className="w-4 h-4 text-purple-500"
                     />
-                    <span>Specific Users (Coming Soon)</span>
+                    <span>Selected Users</span>
                   </label>
                 </div>
+                {!sendToAll && (
+                  <div className="mt-4 space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        value={recipientSearch}
+                        onChange={(event) => setRecipientSearch(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            void searchRecipients();
+                          }
+                        }}
+                        placeholder="Search by username, display name, or user ID"
+                        className="min-w-0 flex-1 rounded-lg border border-gray-600 bg-[#0A0814] px-4 py-2 text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void searchRecipients()}
+                        disabled={searchingRecipients}
+                        className="rounded-lg bg-gray-700 px-4 py-2 disabled:opacity-50"
+                      >
+                        {searchingRecipients ? 'Searching...' : 'Search'}
+                      </button>
+                    </div>
+                    {recipientSearchError && <p role="alert" className="text-sm text-red-300">{recipientSearchError}</p>}
+                    {recipientResults.length > 0 && (
+                      <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-gray-700 p-2">
+                        {recipientResults.map((recipient) => {
+                          const checked = selectedRecipients.has(recipient.id);
+                          const label = recipient.display_name || recipient.username || recipient.id;
+                          return (
+                            <label key={recipient.id} className="flex cursor-pointer items-center gap-3 rounded px-2 py-1.5 hover:bg-white/5">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  setSelectedRecipients((current) => {
+                                    const next = new Map(current);
+                                    if (checked) next.delete(recipient.id);
+                                    else next.set(recipient.id, recipient);
+                                    return next;
+                                  });
+                                }}
+                              />
+                              <span>{label}</span>
+                              <span className="ml-auto text-xs text-gray-500">{recipient.username ? `@${recipient.username}` : recipient.id}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <p className="text-sm text-gray-400">
+                      {selectedRecipients.size} recipient{selectedRecipients.size === 1 ? '' : 's'} selected
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Send Button */}

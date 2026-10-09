@@ -3,26 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
 import { getRoleDisplayName, supabase } from '@/lib/supabase'
 import { isAgencyHRProfile } from '@/lib/staff'
-import {
-  Activity,
-  AlertTriangle,
-  ArrowRight,
-  BriefcaseBusiness,
-  Building2,
-  CheckCircle2,
-  Clock3,
-  FileSignature,
-  FileText,
-  Gavel,
-  PencilLine,
-  RefreshCw,
-  Send,
-  ShieldAlert,
-  ShieldCheck,
-  Sparkles,
-  Users,
-  XCircle,
-} from 'lucide-react'
+import { Activity, AlertTriangle, ArrowRight, Building2, CheckCircle2, Clock3, FileSignature, FileText, Gavel, PencilLine, RefreshCw, Send, ShieldAlert, ShieldCheck, Sparkles, Users, XCircle } from 'lucide-react';
 
 type DashboardTab = 'overview' | 'applications' | 'contracts' | 'fees' | 'agencies' | 'reports' | 'audit'
 
@@ -163,7 +144,7 @@ const safeDate = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? 'Not set' : date.toLocaleString()
 }
 
-const safeShortDate = (value?: string | null) => {
+const _safeShortDate = (value?: string | null) => {
   if (!value) return ''
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString()

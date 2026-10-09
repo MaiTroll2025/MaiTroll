@@ -4,19 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { isStaffProfile } from '@/lib/staff'
 import { toast } from 'sonner'
-import {
-  Coins,
-  Music,
-  Trophy,
-  Gift,
-  Users,
-  Video,
-  Search,
-  Play,
-  SkipForward,
-  Trash2,
-  ExternalLink,
-} from 'lucide-react'
+import { Coins, Music, Trophy, Gift, Search, Play, SkipForward, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils'
 
 interface SmokeathonEvent {

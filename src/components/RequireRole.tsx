@@ -64,7 +64,7 @@ const RequireRole: React.FC<RequireRoleProps> = ({
   const isAdminByEmail = user?.email && isAdminEmail(user.email)
 
   // Check role permissions with enhanced validation
-  const hasRequiredRole = isAdminByEmail || hasRole(profile, roles, {
+  const hasRequiredRole = isAdminByEmail || hasRole(profile, roles as string | string[], {
     allowAdminOverride: true
   });
 

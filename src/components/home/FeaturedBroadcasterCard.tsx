@@ -1,5 +1,5 @@
 import React from 'react'
-import { Radio, Users, Heart, Gamepad2 } from 'lucide-react'
+import { Radio, Users } from 'lucide-react';
 
 interface FeaturedBroadcasterCardProps {
   broadcaster: {

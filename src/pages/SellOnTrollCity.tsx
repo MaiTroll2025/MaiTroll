@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { validateFile, FILE_VALIDATION } from '../lib/fileValidation'
 import { toast } from 'sonner'
 import useSEO from '@/hooks/useSEO';
-import { Store, ShoppingCart, ShoppingBag, Car, Coins, DollarSign, Truck, FileText, TrendingUp, AlertTriangle, CheckCircle, XCircle, Clock, Plus, Edit, Trash, Package, Wrench, Eye, EyeOff } from 'lucide-react'
+import { Store, ShoppingCart, ShoppingBag, Car, Coins, Truck, FileText, TrendingUp, AlertTriangle, CheckCircle, XCircle, Clock, Plus, Edit, Trash, Package, Wrench, Eye, EyeOff } from 'lucide-react';
 import VehicleListingForm from '../components/sell/VehicleListingForm'
 import BusinessProfileForm from '../components/sell/BusinessProfileForm'
 

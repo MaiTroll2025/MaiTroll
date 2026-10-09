@@ -1,8 +1,8 @@
-import { useMemo, useState, useRef, useEffect, useCallback, memo, type CSSProperties, type ReactNode } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback, memo, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack, Track } from 'livekit-client';
 import { StagePass, Stream } from '../../types/broadcast';
-import { User, Users, Coins, Plus, Minus, MicOff, VideoOff, Gift, Gem, Crown, Swords, Shield, Palette, X, Circle, Cloud } from 'lucide-react';
+import { Users, Coins, Plus, Minus, MicOff, VideoOff, Gem, Crown, Swords, Shield, Palette } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import BroadcastHouseIcon from './BroadcastHouseIcon';
 
@@ -22,8 +22,8 @@ import SeatHeatBar from './SeatHeatBar';
 import BroadcastStageLayout from './BroadcastStageLayout';
 import { SeatSession } from '@/hooks/useStreamSeats';
 import ProfileFrame from '@/components/profile/ProfileFrame';
-import { useUserFrame } from '@/hooks/useUserFrame';
 import UserMiniProfile from '@/components/user/UserMiniProfile';
+import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation';
 
 function getVideoTrackFromRemoteParticipant(participant: any): RemoteVideoTrack | null {
   if (!participant) return null
@@ -152,8 +152,8 @@ function LiveKitVideoPlayer({
   isLocal = false,
   isScreenShare: isScreenShareProp = false,
   themeUrl,
-  isCEO = false,
-  isRgbEnabled = false,
+  isCEO: _isCEO = false,
+  isRgbEnabled: _isRgbEnabled = false,
   broadcasterProfile = null,
   cameraOffImageUrl = null,
 }: {
@@ -243,14 +243,14 @@ function LiveKitVideoPlayer({
       if (isLocal) {
         videoElement.muted = true;
       }
+      applyCameraVideoPresentation(videoElement, {
+        track: track.mediaStreamTrack,
+        isLocal: isLocal && !isScreenShare,
+      });
       
       containerRef.current.appendChild(videoElement);
       videoElementRef.current = videoElement;
       
-      if (containerRef.current) {
-        containerRef.current.style.transform = '';
-      }
-
       if (import.meta.env.DEV) if (import.meta.env.DEV) console.debug('[LiveKitVideoPlayer] Video track attached successfully');
       return true;
     } catch (err) {
@@ -357,7 +357,7 @@ function LiveKitVideoPlayer({
   // For CEO users, show theme background when camera is off (disabled when RGB is enabled)
   // IMPORTANT: Never show theme background inside broadcast boxes - theme is only for page frame
   // Broadcasters and participants should see generic camera-off placeholder, never the theme
-  const isCEOUser = false; // Disabled: theme should never show inside video players
+  const _isCEOUser = false; // Disabled: theme should never show inside video players
   const showThemeBackground = false; // Disabled: never show inside broadcast boxes
 
   // Get broadcast theme for fallback styling
@@ -476,10 +476,10 @@ LiveKitAudioPlayer.displayName = 'LiveKitAudioPlayer';
 const BroadcastGridComponent = function BroadcastGrid({
   stream,
   isHost,
-  isModerator,
-  isOfficer,
+  isModerator: _isModerator,
+  isOfficer: _isOfficer,
   maxItems,
-  onGift,
+  onGift: _onGift,
   onGiftAll: _onGiftAll,
   mode: _mode = 'stage',
   seats = {},
@@ -492,12 +492,12 @@ const BroadcastGridComponent = function BroadcastGrid({
   cameraOverlayTrack,
   remoteUsers,
   localUserId,
-  toggleCamera,
-  toggleMicrophone,
-  flipCamera,
-  isCameraOn,
-  isMicOn,
-  cameraFacingMode = 'user',
+  toggleCamera: _toggleCamera,
+  toggleMicrophone: _toggleMicrophone,
+  flipCamera: _flipCamera,
+  isCameraOn: _isCameraOn,
+  isMicOn: _isMicOn,
+  cameraFacingMode: _cameraFacingMode = 'user',
   userIdToLiveKitIdentity = {},
   onGetUserPositions,
   streamStatus,
@@ -507,9 +507,9 @@ const BroadcastGridComponent = function BroadcastGrid({
   onPickSide,
   joinWindowOpen = false,
   userTeam,
-  remainingTime = 0,
+  remainingTime: _remainingTime = 0,
   shouldShowSidePicker = false,
-  onBattleGift,
+  onBattleGift: _onBattleGift,
   battleFormat,
   isBattleActive = false,
   battleStartedAt = null,
@@ -530,11 +530,11 @@ const BroadcastGridComponent = function BroadcastGrid({
     // Modal handlers
     onOpenUserAction,
     onOpenUserStats,
-    onCloseUserStats,
+    onCloseUserStats: _onCloseUserStats,
     onOpenHostStats,
-    onCloseHostStats,
-    onOpenModActions,
-    onCloseModActions,
+    onCloseHostStats: _onCloseHostStats,
+    onOpenModActions: _onOpenModActions,
+    onCloseModActions: _onCloseModActions,
     onOpenPassModal,
   }: BroadcastGridProps) {
    if (import.meta.env.DEV) {
@@ -1098,7 +1098,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
     return { effectiveBoxCount, boxes };
   }, [seats, boxCountProp, stream.box_count, stream.battle_mode, isUniversalBattle, battleFormat, maxItems, hideEmptySeats, localUserId, stream.user_id, isTrollBattleUniverseMode, trollBattleBoxCount]);
 
-  const enforceSquareOnMobile = effectiveBoxCount > 1;
+  const _enforceSquareOnMobile = effectiveBoxCount > 1;
   const isSingleBoxLayout = effectiveBoxCount === 1;
 
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
@@ -1511,7 +1511,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
           );
 
           // Get received gifts for this user
-          const userGiftAmount = userId ? (userReceivedGifts[userId] || 0) : 0;
+          const _userGiftAmount = userId ? (userReceivedGifts[userId] || 0) : 0;
 
           return (
             <div
@@ -1631,14 +1631,14 @@ boxClass,
                 // Remote users who exist but have camera off or no track
                 if (participant) {
                   const seatUserFrame = userId ? frameCacheRef.current.get(userId) ?? null : null
-                  const hasCameraOffImage = displayProfile?.camera_off_image_url;
+                   const hasCameraOffImage = (displayProfile as any)?.camera_off_image_url;
                   
                   // If user has a custom camera-off image, display it fullscreen
                   if (hasCameraOffImage) {
                     return (
                       <div className="absolute inset-0 w-full h-full overflow-hidden">
                         <img
-                          src={displayProfile.camera_off_image_url}
+                           src={(displayProfile as any).camera_off_image_url}
                           alt={displayProfile?.username || 'Camera Off'}
                           className="w-full h-full object-cover"
                         />

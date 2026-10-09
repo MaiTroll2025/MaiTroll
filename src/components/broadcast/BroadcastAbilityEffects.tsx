@@ -1,5 +1,5 @@
 // BroadcastAbilityEffects - Visual overlay for active broadcast abilities
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BroadcastActiveEffect, getAbilityById, getRarityColor } from '../../types/broadcastAbilities';
 
@@ -100,7 +100,7 @@ function GoldFrameEffect({ remaining }: { remaining: number }) {
 }
 
 // Mute Hammer - slam effect
-function MuteHammerEffect({ effect }: { effect: BroadcastActiveEffect }) {
+function MuteHammerEffect({ effect: _effect }: { effect: BroadcastActiveEffect }) {
   return (
     <motion.div
       className="absolute inset-0 flex items-center justify-center"
@@ -207,7 +207,7 @@ function VIPChatEffect({ remaining }: { remaining: number }) {
 }
 
 // Citywide Broadcast - giant alert
-function CitywideEffect({ effect, remaining }: { effect: BroadcastActiveEffect; remaining: number }) {
+function CitywideEffect({ effect: _effect, remaining }: { effect: BroadcastActiveEffect; remaining: number }) {
   return (
     <div className="absolute inset-0">
       <motion.div
@@ -295,7 +295,7 @@ function CoinDropEffect({ effect, remaining }: { effect: BroadcastActiveEffect; 
 }
 
 // Raid Effect - portal animation
-function RaidEffect({ effect, remaining }: { effect: BroadcastActiveEffect; remaining: number }) {
+function RaidEffect({ effect: _effect, remaining }: { effect: BroadcastActiveEffect; remaining: number }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       <motion.div

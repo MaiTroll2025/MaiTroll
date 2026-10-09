@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { RefreshCw, Key, TrendingUp, AlertTriangle } from 'lucide-react';
-import { getKeySupplyStats, getUserKeyTransactions, getUserSetCompletions } from '../services/keyService';
-import type { KeySupply, KeyTransaction, KeySetCompletion } from '../types/keys';
+import { getKeySupplyStats, getUserKeyTransactions, getUserSetCompletions } from '@/services/keyService';
+import type { KeySupply, KeyTransaction, KeySetCompletion } from '@/types/keys';
 
 export default function AdminKeysDashboard() {
   const [supplyStats, setSupplyStats] = useState<KeySupply[]>([]);
-  const [recentTransactions, setRecentTransactions] = useState<KeyTransaction[]>([]);
-  const [recentCompletions, setRecentCompletions] = useState<KeySetCompletion[]>([]);
+  const [_recentTransactions, _setRecentTransactions] = useState<KeyTransaction[]>([]);
+  const [_recentCompletions, _setRecentCompletions] = useState<KeySetCompletion[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export default function AdminKeysDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [supply, transactions, completions] = await Promise.all([
+      const [supply, _transactions, _completions] = await Promise.all([
         getKeySupplyStats(),
         getUserKeyTransactions('all'), // This would need a special RPC for admin
         getUserSetCompletions('all'), // This would need a special RPC for admin

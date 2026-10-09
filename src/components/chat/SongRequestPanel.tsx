@@ -18,7 +18,7 @@ interface SongRequestPanelProps {
 }
 
 export default function SongRequestPanel({
-  streamId,
+  streamId: _streamId,
   smokeEventId,
   songQueue,
   onRequestSong,

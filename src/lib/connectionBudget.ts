@@ -68,7 +68,7 @@ export const connectionBudget = {
   /**
    * Release a slot when channel is removed.
    */
-  release(name: string): void {
+  release(_name: string): void {
     activeChannels = Math.max(0, activeChannels - 1);
     if (activeChannels < WARN_THRESHOLD) {
       warnedAt = false;

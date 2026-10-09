@@ -27,9 +27,9 @@ export default function MobileBattleFloatingChat({
   battleId,
   challengerStream,
   opponentStream,
-  currentStreamId,
+  currentStreamId: _currentStreamId,
   currentUserId,
-  participantRole,
+  participantRole: _participantRole,
   broadcasterName,
 }: {
   battleId: string;
@@ -193,7 +193,7 @@ export default function MobileBattleFloatingChat({
       <div className="pointer-events-none absolute inset-x-0 bottom-full mb-1 flex flex-col items-start justify-end gap-1 px-2">
         <AnimatePresence initial={false}>
           {visibleMessages.map((msg) => {
-            const isCurrentUser = msg.user_id === currentUserId;
+            const _isCurrentUser = msg.user_id === currentUserId;
             return (
               <motion.div
                 key={msg.id}

@@ -13,7 +13,7 @@
  *   6. Badges
  */
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { ProfileFrame as ProfileFrameType, AnimationSpeed } from '../../config/profileFrames';
 import { ANIMATION_DURATIONS, RARITY_COLORS } from '../../config/profileFrames';
@@ -250,7 +250,7 @@ function BubbleParticle({ index, total, color, speed, containerSize }: {
 }
 
 // ─── Heart Particle ────────────────────────────────────────────
-function HeartParticle({ index, total, color, speed, containerSize }: {
+function HeartParticle({ index, total, color: _color, speed, containerSize }: {
   index: number; total: number; color: string; speed: AnimationSpeed; containerSize: number;
 }) {
   const duration = ANIMATION_DURATIONS[speed] * 1.6;
@@ -437,7 +437,7 @@ function PetalParticle({ index, total, color, speed, containerSize }: {
 }
 
 // ─── Halloween Ghost/Bat Particle ──────────────────────────────
-function HalloweenParticle({ index, total, color, speed, containerSize }: {
+function HalloweenParticle({ index, total, color: _color, speed, containerSize }: {
   index: number; total: number; color: string; speed: AnimationSpeed; containerSize: number;
 }) {
   const duration = ANIMATION_DURATIONS[speed] * 1.8;
@@ -771,7 +771,7 @@ function DiamondSparkle({ index, total, color, speed, containerSize }: {
 }
 
 // ─── Shadow Void Particle ──────────────────────────────────────
-function ShadowVoidParticle({ index, total, color, speed, containerSize }: {
+function _ShadowVoidParticle({ index, total, color, speed, containerSize }: {
   index: number; total: number; color: string; speed: AnimationSpeed; containerSize: number;
 }) {
   const duration = ANIMATION_DURATIONS[speed] * 1.4;
@@ -903,7 +903,7 @@ export default function ProfileFrame({
     ? `0 0 ${frame.glowIntensity * 8}px ${frame.glowColor}, 0 0 ${frame.glowIntensity * 16}px ${frame.glowColor}40`
     : 'none';
 
-  const borderStyle = frame?.borderGradient
+  const _borderStyle = frame?.borderGradient
     ? undefined
     : frame?.borderColor;
 

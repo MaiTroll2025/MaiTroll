@@ -45,7 +45,7 @@ export function useCreatorSubscription(broadcasterId?: string, userId?: string) 
 
       setIsSubscribed(!!data)
       if (data?.tier) {
-        setTier(data.tier as SubscriptionTierInfo)
+        setTier(data.tier as unknown as SubscriptionTierInfo)
       } else {
         setTier(null)
       }

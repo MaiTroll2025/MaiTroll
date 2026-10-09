@@ -3,7 +3,6 @@ import { Play, Eye, Radio, Sparkles, Gem } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
-import { cn } from '@/lib/utils';
 
 interface DarkCrystallineLayoutProps {
   liveItems: any[];
@@ -19,7 +18,7 @@ export default function DarkCrystallineLayout({
   onLiveItemClick,
   onRequireAuth,
 }: DarkCrystallineLayoutProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   const featured = useMemo(() => liveItems.find(i => i.isFeatured) || liveItems[0], [liveItems]);
   const battles = useMemo(() => liveItems.filter(i => i.isBattle).slice(0, 4), [liveItems]);
@@ -243,7 +242,7 @@ export default function DarkCrystallineLayout({
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {others.map((item, idx) => (
+              {others.map((item, _idx) => (
                 <div
                   key={item.id}
                   onClick={() => onLiveItemClick(item)}

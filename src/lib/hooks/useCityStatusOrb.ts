@@ -1,17 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../supabase';
 import { useAuthStore } from '../store';
-import {
-  getSubTierFromScore,
-  getSubTierProgress,
-  getNextSubTier,
-  getScoreForNextSubTier,
-  getLeagueLevel,
-  getNextLeagueLevel,
-  getLeagueLevelProgress,
-  getSubTierColor,
-  TLeagueTier,
-} from '../../config/T_LEAGUE_CONFIG';
+import { getSubTierFromScore, getSubTierProgress, getNextSubTier, getLeagueLevel, getSubTierColor, TLeagueTier } from '../../config/T_LEAGUE_CONFIG';
 
 export interface CityStatusOrbData {
   // User profile data

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAuthStore } from '@/lib/store'
-import { getAvailableDashboardRoles, getRoleLabel, resolveDashboardComponent, type RoleDashboardEntry } from '@/lib/departmentDashboardMap'
+import { getAvailableDashboardRoles, getRoleLabel, resolveDashboardComponent } from '@/lib/departmentDashboardMap';
 import { hasRole } from '@/lib/supabase'
 
 const ROLE_SWITCHER_ROLES = [
@@ -46,7 +46,7 @@ function RoleSwitcher({ currentRole, availableRoles, onSwitch }: { currentRole: 
 }
 
 export default function DepartmentToolsPage() {
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, profile } = useAuthStore()
 

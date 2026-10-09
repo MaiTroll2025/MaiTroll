@@ -6,9 +6,9 @@ const issues = [];
 
 // Check balanced CREATE TABLE statements
 const createTableRegex = /CREATE TABLE IF NOT EXISTS\s+(?:public\.)?(\w+)\s*\([\s\S]*?\);/gi;
-let m;
+let _m;
 let createTableCount = 0;
-while ((m = createTableRegex.exec(content)) !== null) {
+while ((_m = createTableRegex.exec(content)) !== null) {
   createTableCount++;
 }
 console.log('Balanced CREATE TABLE statements:', createTableCount);

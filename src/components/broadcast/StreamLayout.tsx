@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { cn } from '../../lib/utils'
-import { Eye, Heart, Coins, Users, LayoutDashboard, Maximize2, Minimize2, Clock, ShoppingBag } from 'lucide-react'
+import { Eye, Heart, Coins, Users, LayoutDashboard, Maximize2, Minimize2, Clock } from 'lucide-react';
 
 interface Props {
   header: React.ReactNode
@@ -38,7 +38,7 @@ export default function StreamLayout({
   chat,
   isChatOpen,
   onToggleChat,
-  onLike,
+  onLike: _onLike,
   overlays,
   modals,
   hideHeader = false,

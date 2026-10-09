@@ -1,11 +1,8 @@
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Gamepad2, Users, Play, Pause, SkipForward, Trophy, 
-  AlertTriangle, X, Crown, Vote, HandMetal
-} from 'lucide-react'
+import { motion } from 'framer-motion';
+import { Gamepad2, Users, Play, SkipForward, Trophy, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils'
-import { useTrollUsGame, GamePlayer } from '@/hooks/useTrollUsGame'
+import { useTrollUsGame } from '@/hooks/useTrollUsGame';
 import { useAuthStore } from '@/lib/store'
 
 interface TrollUsGameControllerProps {
@@ -31,7 +28,7 @@ export default function TrollUsGameController({
 
   const { user } = useAuthStore()
 
-  const [selectedSeat, setSelectedSeat] = useState<number | null>(null)
+  const [_selectedSeat, setSelectedSeat] = useState<number | null>(null)
 
   const {
     gameId,

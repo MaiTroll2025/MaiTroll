@@ -102,7 +102,7 @@ const closing = [
   '',
 ];
 
-const hookFunc = [
+const _hookFunc = [
   // ─ truncate the function entirely to the placeholder ─────────────────────
   // We don't need to re-open anything here since hooks are inside the function but
   // are already in the before zone — keep them as they are.

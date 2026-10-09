@@ -22,7 +22,7 @@ lines.forEach(line => {
 });
 
 // Try to read the password using PowerShell + Windows Credential Manager
-for (const target of targets) {
+for (const _target of targets) {
   try {
     const psResult = execSync(
       `powershell -Command "Add-Type -AssemblyName System.Runtime.InteropServices; ` +
@@ -31,7 +31,7 @@ for (const target of targets) {
       { encoding: 'utf8', timeout: 5000 }
     );
     console.log(psResult);
-  } catch(e) {
+  } catch(_e) {
     // Try another approach
   }
 }

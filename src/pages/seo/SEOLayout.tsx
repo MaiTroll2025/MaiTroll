@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Eye, Home, Mail, HelpCircle, Shield, FileText, MessageCircle, ChevronRight, Share2 } from 'lucide-react'
+import { Eye, Home, Mail, HelpCircle, MessageCircle, ChevronRight, Share2 } from 'lucide-react';
 import useSEO from '@/hooks/useSEO'
 
 interface SEOPageProps {

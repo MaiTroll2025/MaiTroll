@@ -15,7 +15,7 @@ interface CourtDocketModalProps {
   courtId: string
 }
 
-export default function CourtDocketModal({ isOpen, onClose, onSelectCase, onSentenceCase, isJudge, courtId }: CourtDocketModalProps) {
+export default function CourtDocketModal({ isOpen, onClose, onSelectCase, onSentenceCase, isJudge, courtId: _courtId }: CourtDocketModalProps) {
   const [dockets, setDockets] = useState<any[]>([])
   const [selectedDocketId, setSelectedDocketId] = useState<string | null>(null)
   const [cases, setCases] = useState<any[]>([])

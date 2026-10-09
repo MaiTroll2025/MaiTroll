@@ -70,7 +70,7 @@ async function getStreamKeyStatus(streamKey: string): Promise<{
   return { exists: true, expired: false, expiresAt: null };
 }
 
-async function getRtlsStreamStatus(channel: string, streamKey: string): Promise<{
+async function getRtlsStreamStatus(channel: string, _streamKey: string): Promise<{
   isActive: boolean;
   bitrateKbps: number | null;
   fps: number | null;
@@ -355,7 +355,7 @@ serve(async (req) => {
     if (action === "renewStreamKey") {
       const streamId: string = body?.streamId;
       const channel: string = body?.channel;
-      const oldStreamKey: string = body?.oldStreamKey;
+      const _oldStreamKey: string = body?.oldStreamKey;
       const ttlSeconds: number = body?.ttlSeconds ?? 86400;
 
       if (!channel) {

@@ -38,7 +38,7 @@ export const GAMING_GIFTS: GamingGiftItem[] = [
   },
 ]
 
-const RARITY_ORDER: Record<string, number> = {
+const _RARITY_ORDER: Record<string, number> = {
   common: 0,
   uncommon: 1,
   rare: 2,

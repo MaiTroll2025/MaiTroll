@@ -1,16 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import {
-  ImageIcon,
-  Layout,
-  MonitorPlay,
-  Music,
-  Pause,
-  Plus,
-  Trash2,
-  Type,
-  Volume2,
-  VolumeX,
-} from 'lucide-react';
+import { ImageIcon, Layout, Plus, Trash2, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -136,7 +125,7 @@ export default function GamingSceneManager({
   scenes,
   activeSceneId,
   isSharing,
-  isPaused,
+  isPaused: _isPaused,
   onCreateScene,
   onDeleteScene,
   onSwitchScene,

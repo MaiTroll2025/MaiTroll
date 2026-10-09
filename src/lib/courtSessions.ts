@@ -80,7 +80,7 @@ export async function startCourtSession(params: StartCourtSessionParams): Promis
       return { data: null, error: waitingError }
     }
 
-    const targetId = waitingSession ? waitingSession.id : sessionId
+    const _targetId = waitingSession ? waitingSession.id : sessionId
 
     const payload = {
       status: 'active',

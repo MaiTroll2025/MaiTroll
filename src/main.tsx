@@ -18,7 +18,7 @@ import ConsentBanner from './components/ConsentBanner'
 import AprilFoolsProvider from './components/april-fools/AprilFoolsProvider'
 import { EasterEggHuntProvider } from './contexts/EasterEggHuntContext'
 import { PWAProvider } from './contexts/PWAContext'
-import { doesUserProfileExist, supabase } from './lib/supabase'
+import { supabase } from './lib/supabase';
   import { initMobilePlatform, isMobilePlatform } from './lib/mobilePlatform'
  import { reportBug, reportFetchError } from './lib/bugReporter'
 
@@ -279,8 +279,12 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
     url.includes('/collect?v=2') ||
     url.includes('facebook.net') ||
     url.includes('connect.facebook.net') ||
-    // Non-critical catalog fetches with graceful fallback — already caught by callers
-    url.includes('/rest/v1/profile_frames')
+// Non-critical catalog fetches with graceful fallback — already caught by callers
+     url.includes('/rest/v1/profile_frames') ||
+      // native_push_tokens upsert runs on every phone app start; a 403 from a
+      // missing/mismatched RLS policy is non-critical and saveToken already
+      // swallows the error. Don't let it spam the Bug Center.
+      url.includes('/rest/v1/native_push_tokens')
   )
 }
 
@@ -451,8 +455,8 @@ if (typeof window !== 'undefined') {
   // In prod, only register SW on HTTPS and not on localhost preview unless explicitly forced.
   // In dev, only register if explicitly enabled.
   const forceLocalhostSw = localStorage.getItem('force_sw') === '1'
-  const enableDevSw = env.DEV && localStorage.getItem('enable_sw_dev') === '1'
-  const enableProdSw = env.PROD && (isHttps && (!isLocalhost || forceLocalhostSw))
+  const _enableDevSw = env.DEV && localStorage.getItem('enable_sw_dev') === '1'
+  const _enableProdSw = env.PROD && (isHttps && (!isLocalhost || forceLocalhostSw))
 
    // PWA registration is handled by vite-plugin-pwa via VitePWA in vite.config.ts
    console.log('[SW] registration config', {

@@ -1,26 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import {
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  Camera,
-  Shield,
-  LogOut,
-  Gift,
-  Share2,
-  Ban,
-  UserMinus,
-  Radio,
-  Sparkles,
-  X,
-  Megaphone,
-  MessageSquareOff,
-  MessageSquare,
-  Users,
-  RefreshCw,
-  Zap,
-} from 'lucide-react'
+import { Mic, MicOff, Video, VideoOff, Camera, Shield, LogOut, Gift, Share2, Ban, UserMinus, Radio, Sparkles, X, Megaphone, MessageSquareOff, MessageSquare, Users, Zap } from 'lucide-react';
 import { cn } from '../../lib/utils'
 import RecoveryBanner from './RecoveryBanner'
 

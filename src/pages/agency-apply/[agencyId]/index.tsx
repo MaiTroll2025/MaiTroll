@@ -4,9 +4,7 @@ import { isUuid } from '../../../lib/validators';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../hooks/useAuth';
 import { Button } from '../../../components/ui/button';
-import { Card } from '../../../components/ui/card';
 import { Loader } from '../../../components/ui/loader';
-import { EmptyState } from '../../../components/ui/empty-state';
 import { Checkbox } from '../../../components/ui/checkbox';
 import { Textarea } from '../../../components/ui/textarea';
 import { Input } from '../../../components/ui/input';
@@ -241,7 +239,7 @@ export default function AgencyApplyPage() {
           <Button 
             variant="outline" 
             className="px-6 py-2 bg-transparent border border-cyan-500/30 hover:bg-cyan-500/10"
-            onClick={() => navigate(`/agency/${agencyId}`)}
+            onClick={() => navigate(`/agency/${agencyIdOrSlug}`)}
           >
             View Agency
           </Button>

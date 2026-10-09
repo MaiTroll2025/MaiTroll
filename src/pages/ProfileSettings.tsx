@@ -1,21 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  Ban,
-  Boxes,
-  CreditCard,
-  KeyRound,
-  Lock,
-  Mail,
-  Save,
-  Settings,
-  Sparkles,
-  Trash2,
-  UserRound,
-  Image as ImageIcon,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
+import { Ban, Boxes, CreditCard, KeyRound, Lock, Mail, Save, Settings, Trash2, UserRound, Image as ImageIcon, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/lib/supabase";

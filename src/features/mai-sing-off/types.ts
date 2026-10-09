@@ -1,4 +1,3 @@
-import type { UserProfile } from '@/lib/supabase'
 
 export type SingOffStatus = 'setup' | 'scheduled' | 'active' | 'ended' | 'cancelled'
 

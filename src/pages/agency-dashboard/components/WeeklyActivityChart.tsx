@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { AgencyWeeklyStats, TIER_CONFIG } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { AgencyWeeklyStats, TIER_CONFIG } from '@/types/agency';
+import { cn } from '@/lib/utils';
 
 interface WeeklyActivityChartProps {
   data: AgencyWeeklyStats[];
@@ -50,8 +50,8 @@ export default function WeeklyActivityChart({ data }: WeeklyActivityChartProps) 
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
       <h3 className="mb-4 text-lg font-black text-cyan-300">Weekly Activity</h3>
       <div className="flex items-end gap-2 sm:gap-3">
-        {sortedData.map((week, index) => {
-          const heightPercent = (week.total_points / maxTotal) * 100;
+        {sortedData.map((week, _index) => {
+          const _heightPercent = (week.total_points / maxTotal) * 100;
           const tierConfig = TIER_CONFIG[week.tier_at_end];
 
           return (

@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { CreditCard, Loader2, CheckCircle, Trash2 } from 'lucide-react'
+import { CreditCard, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 
 const PROVIDER_SQUARE = 'square'
 
-type SquarePayments = {
-  cashAppPay: (options: any) => Promise<any>
-}
-
 declare global {
   interface Window {
-    Square?: { payments: (appId: string, locationId: string) => SquarePayments }
+    Square?: any
   }
 }
 

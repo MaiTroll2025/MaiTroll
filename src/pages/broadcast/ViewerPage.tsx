@@ -1,29 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import {
-  ArrowLeft,
-  BadgeCheck,
-  Crown,
-  Gift,
-  Loader2,
-  LogOut,
-  MessageSquare,
-  Pin,
-  Plus,
-  Share2,
-  Users,
-  Video,
-  VideoOff,
-  Mic,
-  MicOff,
-  MonitorPlay,
-  Shield,
-  X,
-  Gamepad2,
-  Zap,
-} from 'lucide-react'
-import type { LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteTrackPublication, RemoteVideoTrack } from 'livekit-client'
+import { ArrowLeft, Crown, Gift, MessageSquare, Pin, Plus, Share2, Users, Video, VideoOff, Mic, MicOff, Shield, X, Gamepad2, Zap } from 'lucide-react';
+import type { LocalAudioTrack, LocalVideoTrack, RemoteTrackPublication, RemoteVideoTrack } from 'livekit-client';
 import { RoomEvent, Track } from 'livekit-client'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -32,8 +11,10 @@ import type { BroadcastGift } from '../../hooks/useBroadcastRealtime'
 import { supabase, getBlockedUserIds } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { cn } from '../../lib/utils'
-import { getLiveKitRoomName } from '../../lib/liveUtils'
+import { getLiveKitRoomName, getRTCProvider } from '../../lib/liveUtils'
+import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation'
 import { isStaffProfile } from '../../lib/staff'
+import { useGetStreamRoom } from '../../hooks/useGetStreamRoom'
 import {
   getAnonymousDisplayName,
   isAnonymousDisplayName,
@@ -76,10 +57,9 @@ import PetPresence from '../../components/pets/PetPresence'
 import { AudienceBubbleTicker } from '../../components/broadcast/AudienceBubbleTicker'
 import MobileAudienceTicker from '../../components/broadcast/MobileAudienceTicker'
 import { TopSubscribersBar } from '../../components/broadcast/TopSubscribersBar'
-import { useSubscriberUsernames, useCreatorSubscription } from '../../hooks/useCreatorSubscription'
+import { useSubscriberUsernames } from '../../hooks/useCreatorSubscription';
 import SubscriptionTierSelector from '../../components/user/SubscriptionTierSelector'
 import { useStreamTopGifters } from '../../hooks/useStreamTopGifters'
-import { resolveUsername, DEFAULT_USERNAME } from '../../lib/chatUtils'
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration'
 import { isValidUuid } from '../../lib/courtUtils'
 import { useTrollFamilyActivity } from '../../hooks/useTrollFamilyActivity'
@@ -107,12 +87,12 @@ import { admitViewerToStream, releaseViewerSlot } from '@/lib/streamCapacity'
 import CashoutProgressBanner from '../../components/broadcast/CashoutProgressBanner'
 import MiniMaiPayCashoutModal from '../../components/broadcast/MiniMaiPayCashoutModal'
 import { useCashoutBanner } from '../../hooks/useCashoutBanner'
-import { getThreads, getThreadMessages, sendMessage, searchUsers, findOrCreateDirectThread } from '../../services/utromailService'
+import { getThreads, getThreadMessages, sendMessage } from '../../services/utromailService';
 import { awardKeyToUser } from '../../services/keyService'
 import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore'
 import AuctionMePanel from '@/components/broadcast/AuctionMePanel'
 import SeatFocusButton from '@/components/broadcast/SeatFocusButton'
-import { useSeatFocus, type SeatInfo } from '@/hooks/useSeatFocus'
+import { useSeatFocus } from '@/hooks/useSeatFocus';
 import { recordSignalEventInBackground } from '@/lib/signalEngine'
 
 // Import theme constants
@@ -121,6 +101,7 @@ import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import MaiBag from '../../components/mai-bag/MaiBag'
 import RecoveryBanner from '../../components/broadcast/RecoveryBanner'
 import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
+import ProtectionOrderGate from '@/components/ProtectionOrderGate'
 
 const theme = MaiTrollBroadcastTheme
 
@@ -224,7 +205,7 @@ function participantMatchesUser(participant: any, userId?: string | null) {
 }
 
 // Interfaces for isolated track state management
-interface SeatState {
+interface _SeatState {
   participant: any
   videoTrack: any
   audioTrack: any
@@ -232,7 +213,7 @@ interface SeatState {
   userId: string | null
 }
 
-interface BroadcasterState {
+interface _BroadcasterState {
   participant: any
   videoTrack: any
   audioTrack: any
@@ -322,7 +303,6 @@ function getAudioTrackFromParticipant(participant: any): any {
 
 const RemoteVideoSurface = memo(function RemoteVideoSurface({
   participant,
-  mirror = false,
   className,
   fallback,
   onTap,
@@ -330,7 +310,6 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   room,
 }: {
   participant: any
-  mirror?: boolean
   className?: string
   fallback: React.ReactNode
   onTap?: () => void
@@ -368,15 +347,12 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   const videoTrack = getVideoTrackFromParticipant(participant)
   const audioTrack = getAudioTrackFromParticipant(participant)
 
-  const shouldMirror = Boolean(mirror)
-
   // Dev logging for track detection on mobile/PWA
   if (import.meta.env.DEV && trackTick > 0 && trackTick % 5 === 0) {
     console.debug('[RemoteVideoSurface] track check:', {
       participantIdentity: getParticipantIdentity(participant),
       hasVideo: !!videoTrack,
       hasAudio: !!audioTrack,
-      shouldMirror,
       trackTick,
     })
   }
@@ -386,35 +362,6 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
    // unrelated room events (e.g. another participant joining a seat).
    const videoTrackId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
    const audioTrackId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
-
-   // DEBUG: Log mirror prop and track info for diagnosing mirrored broadcaster
-   useEffect(() => {
-     const identity = getParticipantIdentity(participant)
-     console.log('[RemoteVideoSurface] DEBUG mirror state:', {
-       identity,
-       mirrorProp: mirror,
-       shouldMirror,
-       videoTrackId,
-       videoTrackSid: videoTrack?.sid,
-       videoTrackSource: videoTrack?.source,
-       participantMetadata: getParticipantMetadata(participant),
-     })
-
-     const videoEl = videoRef.current
-     if (videoEl) {
-       const computedStyle = window.getComputedStyle(videoEl)
-       const parentStyle = videoEl.parentElement ? window.getComputedStyle(videoEl.parentElement) : null
-       console.log('[RemoteVideoSurface] DEBUG video element styles:', {
-         identity,
-         videoTransform: computedStyle.transform,
-         videoClassName: videoEl.className,
-         parentTransform: parentStyle?.transform,
-         parentClassName: videoEl.parentElement?.className,
-         parentScaleX: parentStyle?.scale,
-         videoInlineStyle: videoEl.getAttribute('style'),
-       })
-     }
-   }, [mirror, shouldMirror, videoTrackId, videoTrack?.sid, videoTrack?.source, participant])
 
    // Use refs to track what we actually attached, so we only detach/reattach
    // when the underlying track truly changes.
@@ -460,6 +407,10 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
          videoEl.setAttribute('playsinline', '')
          videoEl.setAttribute('webkit-playsinline', '')
          videoTrack.attach(videoEl)
+         applyCameraVideoPresentation(videoEl, {
+           track: videoTrack.mediaStreamTrack,
+           isLocal: false,
+         })
          attachedVideoTrackRef.current = videoTrack
 
          if (!cancelled) {
@@ -486,7 +437,16 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
        }
      }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mirror, videoTrackId, trackTick])
+    }, [videoTrackId, trackTick])
+
+  useEffect(() => {
+    const videoEl = videoRef.current
+    if (!videoEl || !videoTrack) return
+    applyCameraVideoPresentation(videoEl, {
+      track: videoTrack.mediaStreamTrack,
+      isLocal: false,
+    })
+  }, [videoTrack, videoTrackId, trackTick])
 
   useEffect(() => {
     const audioEl = audioRef.current
@@ -541,7 +501,6 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
       }}
       className={cn(
         'relative h-full w-full overflow-hidden bg-black',
-        mirror && '[&>video]:scale-x-[-1]',
         (onTap || onDoubleTap) && 'cursor-pointer',
         className,
       )}
@@ -568,13 +527,13 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
 function LocalVideoSurface({
   videoTrack,
   audioTrack,
-  mirror = false,
+  facingMode = 'user',
   className,
   fallback,
 }: {
-  videoTrack: LocalVideoTrack | null
-  audioTrack: LocalAudioTrack | null
-  mirror?: boolean
+  videoTrack: LocalVideoTrack | MediaStreamTrack | null
+  audioTrack: LocalAudioTrack | MediaStreamTrack | null
+  facingMode?: 'user' | 'environment'
   className?: string
   fallback: React.ReactNode
 }) {
@@ -586,8 +545,17 @@ function LocalVideoSurface({
     if (!videoEl || !videoTrack) return
 
     try {
-      videoTrack.attach(videoEl)
-      videoEl.style.transform = mirror ? 'scaleX(-1)' : 'none'
+      const mediaTrack = videoTrack instanceof MediaStreamTrack ? videoTrack : videoTrack.mediaStreamTrack
+      if (videoTrack instanceof MediaStreamTrack) {
+        videoEl.srcObject = new MediaStream([videoTrack])
+      } else {
+        videoTrack.attach(videoEl)
+      }
+      applyCameraVideoPresentation(videoEl, {
+        track: mediaTrack,
+        facingMode,
+        isLocal: true,
+      })
       videoEl.play().catch(() => {})
     } catch (err) {
       console.warn('[ViewerPage] Failed to attach local video track:', err)
@@ -595,19 +563,37 @@ function LocalVideoSurface({
 
     return () => {
       try {
-        videoTrack.detach(videoEl)
+        if (videoTrack instanceof MediaStreamTrack) {
+          videoEl.srcObject = null
+        } else {
+          videoTrack.detach(videoEl)
+        }
       } catch {
         // ignore detach errors
       }
     }
-  }, [videoTrack])
+  }, [videoTrack, facingMode])
+
+  useEffect(() => {
+    const videoEl = videoRef.current
+    if (!videoEl || !videoTrack) return
+    applyCameraVideoPresentation(videoEl, {
+      track: videoTrack instanceof MediaStreamTrack ? videoTrack : videoTrack.mediaStreamTrack,
+      facingMode,
+      isLocal: true,
+    })
+  }, [videoTrack, facingMode])
 
   useEffect(() => {
     const audioEl = audioRef.current
     if (!audioEl || !audioTrack) return
 
     try {
-      audioTrack.attach(audioEl)
+      if (audioTrack instanceof MediaStreamTrack) {
+        audioEl.srcObject = new MediaStream([audioTrack])
+      } else {
+        audioTrack.attach(audioEl)
+      }
       audioEl.play().catch(() => {})
     } catch (err) {
       console.warn('[ViewerPage] Failed to attach local audio track:', err)
@@ -615,7 +601,11 @@ function LocalVideoSurface({
 
     return () => {
       try {
-        audioTrack.detach(audioEl)
+        if (audioTrack instanceof MediaStreamTrack) {
+          audioEl.srcObject = null
+        } else {
+          audioTrack.detach(audioEl)
+        }
       } catch {
         // ignore detach errors
       }
@@ -631,7 +621,7 @@ function LocalVideoSurface({
             autoPlay
             playsInline
             muted={true}
-            className={cn('h-full w-full object-contain', mirror && '-scale-x-100')}
+            className="h-full w-full object-contain"
           />
           <audio ref={audioRef} autoPlay />
         </>
@@ -715,7 +705,7 @@ function ViewerPage() {
   } = useFeaturedLive({ streamId, enabled: !!streamId })
 
   // Ghost drop-in mode: detect ?ghost=true from URL (set by GhostDropInRouter)
-  const [isGhostDropIn, setIsGhostDropIn] = useState(false)
+  const [_isGhostDropIn, setIsGhostDropIn] = useState(false)
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     if (params.get('ghost') === 'true' && !user) {
@@ -850,7 +840,7 @@ function ViewerPage() {
   // Mobile layout constants
   const MOBILE_CONTROL_BAR_HEIGHT = 76
   const MOBILE_CHAT_INPUT_HEIGHT = 68
-  const MOBILE_SAFE_BOTTOM = 'env(safe-area-inset-bottom)'
+  const _MOBILE_SAFE_BOTTOM = 'env(safe-area-inset-bottom)'
   const CHAT_FLOAT_MS = 30000
 
   const [stream, setStream] = useState<Stream | null>(resolvedStream)
@@ -871,17 +861,17 @@ function ViewerPage() {
 
 const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     const [error, setError] = useState<string | null>(null)
-    const [streamLoaded, setStreamLoaded] = useState(false)
+    const [_streamLoaded, setStreamLoaded] = useState(false)
     const [viewerCount, setViewerCount] = useState(0)
     // Broadcast frame - decorative border for viewer page
     const broadcastFrame = useBroadcastFrame(stream?.user_id)
     // Local tracks for publishing when in a seat
    const audioTrackRef = useRef<LocalAudioTrack | null>(null)
    const videoTrackRef = useRef<LocalVideoTrack | null>(null)
-   const [localTracksVersion, setLocalTracksVersion] = useState(0)
+   const [_localTracksVersion, setLocalTracksVersion] = useState(0)
    const localTracksRef = useRef<[LocalAudioTrack | null, LocalVideoTrack | null] | null>(null)
 
-   const setLocalTracks = useCallback((
+   const _setLocalTracks = useCallback((
      next:
        | [LocalAudioTrack | null, LocalVideoTrack | null]
        | null
@@ -904,14 +894,14 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
      localTracksRef.current = resolved
      setLocalTracksVersion((version) => version + 1)
    }, [])
-   const [isChatOpen, setIsChatOpen] = useState(true)
+   const [_isChatOpen, setIsChatOpen] = useState(true)
     const [chatTab, setChatTab] = useState<'chat' | 'progress' | 'league' | 'gifts' | 'top-fans'>('chat')
    const [isGiftModalOpen, setIsGiftModalOpen] = useState(false)
    const [isCashoutModalOpen, setIsCashoutModalOpen] = useState(false)
    const [giftRecipientId, setGiftRecipientId] = useState<string | null>(null)
    const { myLeagues, myMemberships, leagueMissions, isLoading: isUserLeaguesLoading } = useUserLeagues()
     const [recentGifts, setRecentGifts] = useState<BroadcastGift[]>([])
-    const [streamMods, setStreamMods] = useState<string[]>([])
+    const [_streamMods, setStreamMods] = useState<string[]>([])
     const processedGiftIdsRef = useRef<Set<string>>(new Set())
     const { enqueueGift } = useTargetedGiftQueue()
    // Floating chat
@@ -931,10 +921,10 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
    const [hostChatDisabledStreamId, setHostChatDisabledStreamId] = useState<string | null>(null)
     const [hostChatDisableRemainingMs, setHostChatDisableRemainingMs] = useState(0)
     const [isMessagePopupOpen, setIsMessagePopupOpen] = useState(false)
-    const [isNewMessageMode, setIsNewMessageMode] = useState(false)
+    const [_isNewMessageMode, setIsNewMessageMode] = useState(false)
     const [isAuctionMeOpen, setIsAuctionMeOpen] = useState(false)
-    const [searchQuery, setSearchQuery] = useState('')
-    const [searchResults, setSearchResults] = useState<any[]>([])
+    const [_searchQuery, setSearchQuery] = useState('')
+    const [_searchResults, _setSearchResults] = useState<any[]>([])
     const [recentThreads, setRecentThreads] = useState<any[]>([])
     const [selectedThread, setSelectedThread] = useState<any | null>(null)
     const [threadMessages, setThreadMessages] = useState<any[]>([])
@@ -1591,17 +1581,23 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     const {
       seats,
       mySeat,
-      joiningSeatId,
-      leavingSeatId,
+      joiningSeatId: _joiningSeatId,
+      leavingSeatId: _leavingSeatId,
       joinSeat,
       leaveSeat,
       markSeatLive,
-      refreshSeats,
-      removeSeat,
-      removeSeatByUserId,
+      refreshSeats: _refreshSeats,
+      removeSeat: _removeSeat,
+      removeSeatByUserId: _removeSeatByUserId,
       handleParticipantDisconnected,
     } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any, refreshStageConfig)
-    const { audience, activeAudience, topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id, {
+
+    const protectionOrderParticipantIds = useMemo(
+      () =>
+        Object.values(seats || {}).map((seat: any) => seat?.user_id || seat?.guest_id).filter(Boolean) as string[],
+      [seats],
+    )
+    const { audience, activeAudience, topAudience: _topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal: _incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id, {
       onPresenceChange: (event) => {
         if (!streamId || !event?.member?.username) return
         const username = event.member.username
@@ -1691,7 +1687,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
             void (async () => {
               try {
                 await unpublishLocalTracksRef.current?.()
-              } catch (err) {
+              } catch (_err) {
                 // ignore
               }
               hasJoinedAudienceRef.current = false
@@ -1714,7 +1710,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
      const normalized = normalizeSeatStatus(status)
      return ['reserved', 'camera_starting', 'active', 'live'].includes(normalized)
    }
-   const isSeatOpenStatus = (status?: string | null) => {
+   const _isSeatOpenStatus = (status?: string | null) => {
      const normalized = normalizeSeatStatus(status)
      return ['empty', 'failed', 'left', 'cancelled', 'expired'].includes(normalized)
    }
@@ -1725,7 +1721,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
        (mySeat.user_id === user?.id || mySeat.guest_id === user?.id),
    )
 
-  const [isBattleButtonBusy, setIsBattleButtonBusy] = useState(false)
+  const [_isBattleButtonBusy, setIsBattleButtonBusy] = useState(false)
 
   const [seatMicOn, setSeatMicOn] = useState(true)
   const [seatCamOn, setSeatCamOn] = useState(true)
@@ -1736,7 +1732,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
   const moderatorMuteTimestampRef = useRef(0)
   const moderatorMuteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const handleStartSeatBattle = useCallback(async () => {
+  const _handleStartSeatBattle = useCallback(async () => {
     if (!stream?.id || !user?.id || !isUserOnStage) return
 
     setIsBattleButtonBusy(true)
@@ -1788,7 +1784,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
   const userIdToLiveKitIdentity = useMemo(() => {
     const mapping: Record<string, string> = {};
     if (!seats) return mapping;
-    Object.entries(seats).forEach(([seatIndex, seat]) => {
+    Object.entries(seats).forEach(([_seatIndex, seat]) => {
       const seatData = seat as any;
       const userId = seatData?.user_id || seatData?.guest_id;
       const identity = seatData?.livekit_participant_identity || seatData?.participant_identity || seatData?.livekit_identity;
@@ -1807,7 +1803,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       : (stream as any)?.seat_price ?? 0
   }, [availableSeatIndex, stream])
 
-  const handleJoinAvailableSeat = useCallback(async () => {
+  const _handleJoinAvailableSeat = useCallback(async () => {
     if (typeof availableSeatIndex !== 'number') return
     if ((stream as any)?.are_seats_locked) {
       toast.error('Seats are currently locked')
@@ -1942,9 +1938,12 @@ const isActive = isStreamActive(stream)
    }, [hostId, isActive, stream?.category, stream?.id, stream?.stream_type])
    const { subscriberUsernames } = useSubscriberUsernames(hostId)
 
-    const roomId = useMemo(() => {
-     return String(getLiveKitRoomName(stream as Stream | null, streamId) || '')
-   }, [stream?.livekit_room_name, stream?.id, streamId])
+const roomId = useMemo(() => {
+      return String(getLiveKitRoomName(stream as Stream | null, streamId) || '')
+    }, [stream?.livekit_room_name, stream?.id, streamId])
+
+    // Determine RTC provider from stream metadata
+    const rtcProvider = useMemo(() => getRTCProvider(stream), [stream?.rtc_provider])
 
     const stableAnonId = anonViewerId;
 
@@ -2004,52 +2003,92 @@ const isActive = isStreamActive(stream)
 
   const noopCallback = useCallback(() => {}, [])
 
-     const {
-      remoteUsers,
-      localVideoTrack,
-      localAudioTrack,
-      isPublishing,
-      joinAsAudience,
-      leaveRoom: leaveLiveKitRoom,
-      publishLocalTracks,
-      unpublishLocalTracks,
-      setMicEnabled,
-      setCameraEnabled,
-      room: liveKitRoom,
-      lastJoinDebug,
-    } = useLiveKitRoom({
-      roomId,
-      roomType: 'broadcast',
-      role: 'viewer',
-      publish: false,
-      audioOnly: false,
-      userName: audienceName,
-      identity: viewerIdentity,
-      onUserJoined: noopCallback,
-      onUserLeft: useCallback((participant: any) => {
-        const identity = participant?.identity || null
-        if (identity) {
-          handleParticipantDisconnected(identity)
-        }
-      }, [handleParticipantDisconnected]),
-      onError: handleLiveKitError,
-    })
+  // LiveKit hook (for normal streams)
+  const liveKitRoom = useLiveKitRoom({
+    roomId,
+    roomType: 'broadcast',
+    role: 'viewer',
+    publish: false,
+    audioOnly: false,
+    userName: audienceName,
+    identity: viewerIdentity,
+    onUserJoined: noopCallback,
+    onUserLeft: useCallback((participant: any) => {
+      const identity = participant?.identity || null
+      if (identity) {
+        handleParticipantDisconnected(identity)
+      }
+    }, [handleParticipantDisconnected]),
+    onError: handleLiveKitError,
+  })
 
-    const audioTracksRef = useRef<Map<string, { audioTrack: any; audioEl: HTMLAudioElement | null }>>(new Map())
+  // GetStream hook (for staff/official streams)
+  const getStreamRoom = useGetStreamRoom({
+    roomId,
+    roomType: 'broadcast',
+    role: 'viewer',
+    audioOnly: false,
+    publish: false,
+    userName: audienceName,
+    identity: viewerIdentity,
+    onUserJoined: noopCallback,
+    onUserLeft: useCallback((participant: any) => {
+      const identity = participant?.user_id || null
+      if (identity) {
+        handleParticipantDisconnected(identity)
+      }
+    }, [handleParticipantDisconnected]),
+    onError: handleLiveKitError,
+  })
 
-    const {
-      focusedUserId,
-      focusedSeatIndex,
-      toggle: toggleSeatFocus,
-      focusOnAll: focusAllSeats,
-      isFocused: isSeatFocused,
-      getSeatLabel,
-    } = useSeatFocus(streamId, seats as any, audioTracksRef)
+  // Select the appropriate room based on provider
+  const isGetStream = rtcProvider === 'getstream'
+  const remoteUsers = isGetStream ? getStreamRoom.remoteUsers : liveKitRoom.remoteUsers
+  const localVideoTrack = isGetStream ? getStreamRoom.localVideoTrack : liveKitRoom.localVideoTrack
+  const localAudioTrack = isGetStream ? getStreamRoom.localAudioTrack : liveKitRoom.localAudioTrack
+  const isPublishing = isGetStream ? getStreamRoom.isPublishing : liveKitRoom.isPublishing
+  const joinAsAudience = isGetStream ? getStreamRoom.joinAsAudience : liveKitRoom.joinAsAudience
+  const leaveRoom = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.leaveRoom
+  const setMicEnabled = isGetStream ? getStreamRoom.setMicrophoneEnabled : liveKitRoom.setMicEnabled
+  const setCameraEnabled = isGetStream ? getStreamRoom.setCameraEnabled : liveKitRoom.setCameraEnabled
+  const room = isGetStream ? null : liveKitRoom.room
+  const joinGetStreamAsAudience = getStreamRoom.joinAsAudience
+  const publishLiveKitTracks = liveKitRoom.publishLocalTracks
+  const unpublishLocalTracks = useCallback(async () => {
+    await unpublishLocalTracksRef.current?.()
+  }, [])
+  const leaveLiveKitRoom = useCallback(async () => {
+    await leaveLiveKitRoomRef.current?.()
+  }, [])
+  const lastJoinDebug = liveKitRoom.lastJoinDebug
+  const publishLocalTracks = useCallback(async () => {
+    if (isGetStream) {
+      return joinGetStreamAsAudience({
+        userId: viewerIdentity,
+        streamId,
+        roomName: roomId,
+        viewerIdentity,
+        publishCapable: true,
+      })
+    }
+    return publishLiveKitTracks()
+  }, [isGetStream, joinGetStreamAsAudience, publishLiveKitTracks, roomId, streamId, viewerIdentity])
 
-    // Populate refs so the seat_left handler (defined before this hook) can call them
-     unpublishLocalTracksRef.current = unpublishLocalTracks
-     leaveLiveKitRoomRef.current = leaveLiveKitRoom
-     localAudioTrackRef.current = localAudioTrack
+  const audioTracksRef = useRef<Map<string, { audioTrack: any; audioEl: HTMLAudioElement | null }>>(new Map())
+
+  const {
+    focusedUserId,
+    focusedSeatIndex,
+    toggle: toggleSeatFocus,
+    focusOnAll: focusAllSeats,
+    isFocused: isSeatFocused,
+    getSeatLabel,
+  } = useSeatFocus(streamId, seats as any, audioTracksRef)
+
+  // Populate refs so the seat_left handler (defined before this hook) can call them
+  unpublishLocalTracksRef.current = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.unpublishLocalTracks
+  leaveLiveKitRoomRef.current = leaveRoom
+  localAudioTrackRef.current = localAudioTrack
 
   // Expose dev-only join debug overlay for mobile PWA troubleshooting
     const [showJoinDebug, setShowJoinDebug] = useState(true);
@@ -2121,8 +2160,8 @@ const isActive = isStreamActive(stream)
   // Never clears host state due to seat joins/leaves or temporary lookup failures
   useEffect(() => {
     let exactHost = remoteParticipants.find((p: any) => participantMatchesUser(p, hostId))
-    if (!exactHost && liveKitRoom?.remoteParticipants) {
-      exactHost = Array.from(liveKitRoom.remoteParticipants.values()).find((p: any) => participantMatchesUser(p, hostId))
+    if (!exactHost && !isGetStream && liveKitRoom.room?.remoteParticipants) {
+      exactHost = Array.from(liveKitRoom.room.remoteParticipants.values()).find((p: any) => participantMatchesUser(p, hostId))
     }
     if (exactHost) {
       updateBroadcasterState(exactHost)
@@ -2132,7 +2171,7 @@ const isActive = isStreamActive(stream)
       // Do NOT clear broadcasterState — host may be temporarily missing from
       // remoteParticipants during reconnect/subscribe. Only clear on stream end.
     }
-  }, [remoteParticipants, hostId, updateBroadcasterState, liveKitRoom])
+  }, [remoteParticipants, hostId, updateBroadcasterState, liveKitRoom.room, isGetStream])
 
   // DEBUG: Log broadcaster state changes to diagnose mirroring
   useEffect(() => {
@@ -2179,7 +2218,7 @@ const isActive = isStreamActive(stream)
   }, [])
 
   // Update a specific seat's state — guarded to only affect the target seat
-  const updateSeatState = useCallback((seatId: number, participant: any, loading: boolean) => {
+  const _updateSeatState = useCallback((seatId: number, participant: any, loading: boolean) => {
     if (!isValidSeatId(seatId)) {
       console.warn('[ViewerPage] updateSeatState: invalid seatId', seatId, 'ignoring')
       return
@@ -2211,7 +2250,7 @@ const isActive = isStreamActive(stream)
   }, [isValidSeatId])
 
   // Clear a specific seat's state — only clears the target seat
-  const clearSeatState = useCallback((seatId: number) => {
+  const _clearSeatState = useCallback((seatId: number) => {
     if (!isValidSeatId(seatId)) {
       console.warn('[ViewerPage] clearSeatState: invalid seatId', seatId, 'ignoring')
       return
@@ -2228,7 +2267,7 @@ const isActive = isStreamActive(stream)
   useEffect(() => {
     if (!seats) return
 
-    const validSeatIds = new Set(Object.keys(seats).map(Number).filter(isValidSeatId))
+    const _validSeatIds = new Set(Object.keys(seats).map(Number).filter(isValidSeatId))
     const updates: Record<number, SeatState> = {}
     const toClear = new Set<number>()
 
@@ -2246,7 +2285,7 @@ const isActive = isStreamActive(stream)
       }
 
       const participant = remoteParticipants.find((p: any) => {
-        const pIdentity = String(p?.identity || '')
+        const pIdentity = getParticipantIdentity(p)
         return (
           participantMatchesUser(p, seatUserId) ||
           participantMatchesUser(p, seatIdentity) ||
@@ -2263,7 +2302,7 @@ const isActive = isStreamActive(stream)
       const isLoading = normalizeSeatStatus(seat?.status) === 'camera_starting'
       const videoTrack = getVideoTrackFromParticipant(participant)
       const audioTrack = getAudioTrackFromParticipant(participant)
-      const userId = participant ? (participant.identity || participant.name || null) : null
+      const userId = participant ? getParticipantIdentity(participant) || null : null
 
       updates[seatId] = { participant, videoTrack, audioTrack, isLoading, userId }
     })
@@ -2325,7 +2364,7 @@ const isActive = isStreamActive(stream)
   )
 
   // Debug panel: show last join debug when in dev and user toggles overlay
-  const JoinDebugOverlay = () => {
+  const _JoinDebugOverlay = () => {
     if (!import.meta.env.DEV) return null;
     if (!lastJoinDebug) return null;
     return (
@@ -2352,15 +2391,15 @@ const isActive = isStreamActive(stream)
 
    // Ghost Mode hook for CEOs
   const {
-    ghostSession,
-    isJoiningGhost,
-    isLeavingGhost,
-    isMicEnabled: isGhostMicEnabled,
-    isCameraEnabled: isGhostCameraEnabled,
-    joinGhostMode,
-    leaveGhostMode,
-    toggleMic: toggleGhostMic,
-    toggleCamera: toggleGhostCamera,
+    ghostSession: _ghostSession,
+    isJoiningGhost: _isJoiningGhost,
+    isLeavingGhost: _isLeavingGhost,
+    isMicEnabled: _isGhostMicEnabled,
+    isCameraEnabled: _isGhostCameraEnabled,
+    joinGhostMode: _joinGhostMode,
+    leaveGhostMode: _leaveGhostMode,
+    toggleMic: _toggleGhostMic,
+    toggleCamera: _toggleGhostCamera,
   } = useGhostMode({
     streamId: streamId || '',
     userId: user?.id,
@@ -2500,7 +2539,7 @@ const isActive = isStreamActive(stream)
     }).catch(() => {})
   }, [profile?.username, user?.email])
 
-  const handleFollowBroadcaster = useCallback((targetLabel: string) => {
+  const _handleFollowBroadcaster = useCallback((targetLabel: string) => {
     const broadcasterLabel = targetLabel || hostName || 'the broadcaster'
     pushFloatingSystemMessage(`${profile?.username || 'A viewer'} followed ${broadcasterLabel}`)
     }, [hostName, profile?.username, pushFloatingSystemMessage])
@@ -2544,7 +2583,7 @@ const isActive = isStreamActive(stream)
      }
    }, [isModOrHigher])
 
-   const handleArrestUserFromPopup = useCallback((targetUserId: string, reason: string, severity: string, bailAmount: number) => {
+   const handleArrestUserFromPopup = useCallback((_targetUserId: string, _reason: string, _severity: string, _bailAmount: number) => {
      setUserActionTarget(null)
      setShowViewerAction(false)
      toast.success('Arrest action completed.')
@@ -2657,7 +2696,7 @@ const isActive = isStreamActive(stream)
     }
   }, [leaveSeat, unpublishLocalTracks])
 
-   const handleToggleChat = useCallback(() => setIsChatOpen((prev) => !prev), [])
+   const _handleToggleChat = useCallback(() => setIsChatOpen((prev) => !prev), [])
 
    const pendingLikesRef = useRef(0);
    const flushInProgressRef = useRef(false);
@@ -3628,7 +3667,7 @@ useStreamRealtime(
     return () => { cancelled = true }
   }, [streamId, stream?.id, stream?.status, stream?.is_live, roomId, user?.id, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage])
 
-   const stageSlots = useMemo(() => {
+   const _stageSlots = useMemo(() => {
     const liveSeats = activeSeats.slice(0, Math.max(0, effectiveBoxCount - 1))
     const emptyCount = Math.max(1, effectiveBoxCount - 1 - liveSeats.length)
     return { liveSeats, emptyCount }
@@ -3719,7 +3758,7 @@ useStreamRealtime(
   }, [stream?.is_battle, stream?.battle_id, streamId]);
 
   // ── Seat Debug Overlay (dev only) ──
-  const [seatDebugOpen, setSeatDebugOpen] = useState(false)
+  const [seatDebugOpen, _setSeatDebugOpen] = useState(false)
   const prevEffectiveBoxCountRef = useRef(effectiveBoxCount)
   const prevSeatCountRef = useRef(Object.keys(seats).length)
 
@@ -3770,7 +3809,7 @@ useStreamRealtime(
               battleId={stream.battle_id!}
               currentStreamId={streamId}
               viewerId={user?.id || stableAnonId}
-              remoteUsers={remoteUsers}
+              remoteUsers={isGetStream ? [] : liveKitRoom.remoteUsers}
               userIdToLiveKitIdentity={userIdToLiveKitIdentity}
               onReturnToStream={() => {
                 refreshStream();
@@ -3784,16 +3823,12 @@ useStreamRealtime(
     );
   }
 
-  function onLiveKitMicMute(): void {
-    if (localAudioTrack) {
-      localAudioTrack.mute().catch(() => {});
-    }
+  function _onLiveKitMicMute(): void {
+    void setMicEnabled(false)
   }
 
-  function onLiveKitMicUnmute(): void {
-    if (localAudioTrack) {
-      localAudioTrack.unmute().catch(() => {});
-    }
+  function _onLiveKitMicUnmute(): void {
+    void setMicEnabled(true)
   }
 
   // Broadofficer appointment popup (realtime)
@@ -4118,11 +4153,10 @@ useStreamRealtime(
                     {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (grid):', { mirror: false, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
                   <RemoteVideoSurface
                     participant={broadcasterState.participant}
-                    mirror={false}
                     className="absolute inset-0"
                     onTap={handleLike}
                     onDoubleTap={handleNextBroadcast}
-                    room={liveKitRoom}
+                    room={room}
                     fallback={
                      isActive && broadcasterProfile?.camera_off_image_url ? (
                        <div className="absolute inset-0 h-full w-full overflow-hidden bg-black">
@@ -4297,11 +4331,10 @@ useStreamRealtime(
                     {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (split):', { mirror: false, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
  <RemoteVideoSurface
                   participant={broadcasterState.participant}
-                  mirror={false}
                   className="absolute inset-0"
                   onTap={handleLike}
                   onDoubleTap={handleNextBroadcast}
-                  room={liveKitRoom}
+                  room={room}
                   fallback={
                    isActive && broadcasterProfile?.camera_off_image_url ? (
                      <div className="absolute inset-0 h-full w-full overflow-hidden bg-black">
@@ -4449,14 +4482,14 @@ useStreamRealtime(
 
                 <div className="grid min-h-0 flex-1 grid-cols-2 gap-5 auto-rows-fr">
                   {seatCards.map((seat) => {
-                    const seatStatus = String(seat.seat?.status || '').toLowerCase()
+                    const _seatStatus = String(seat.seat?.status || '').toLowerCase()
                     const seatUserId = seat.seat?.user_id || seat.seat?.guest_id || null
                     const isMine = Boolean(user?.id && (seat.seat?.user_id === user.id || seat.seat?.guest_id === user.id))
 
                     // Use isolated seat state — each seat only accesses its own track
                     const seatState = seatTracks[seat.seatIndex] || null
                     const seatParticipant = !isMine && seatState ? seatState.participant : null
-                    const seatIsLoading = seatState?.isLoading || false
+                    const _seatIsLoading = seatState?.isLoading || false
 
                     const statusLabel = isMine
                       ? 'You'
@@ -4531,7 +4564,6 @@ useStreamRealtime(
                           <LocalVideoSurface
                             videoTrack={localVideoTrack}
                             audioTrack={localAudioTrack}
-                            mirror={true}
                             className="absolute inset-0"
                             fallback={
                               <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
@@ -4547,9 +4579,8 @@ useStreamRealtime(
                           <>
                             <RemoteVideoSurface
                               participant={seatParticipant}
-                              mirror={false}
                               className="absolute inset-0"
-                              room={liveKitRoom}
+                              room={room}
                               fallback={
                                 <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
                                   <div className="grid h-12 w-12 place-items-center rounded-2xl border border-purple-300/30 bg-purple-500/10">
@@ -4632,7 +4663,7 @@ useStreamRealtime(
 
             {/* ── GRID MODE: Individual seat tiles rendered as direct grid children -- */}
             {hasMounted && layoutMode === 'grid' && seatCards.map((seat) => {
-              const seatStatus = String(seat.seat?.status || '').toLowerCase()
+              const _seatStatus = String(seat.seat?.status || '').toLowerCase()
               const seatUserId = seat.seat?.user_id || seat.seat?.guest_id || null
               const seatIdentity = seat.seat?.livekit_participant_identity || seatUserId
               const isMine = Boolean(user?.id && (seat.seat?.user_id === user.id || seat.seat?.guest_id === user.id))
@@ -4649,7 +4680,7 @@ useStreamRealtime(
                   })
                 : null
 
-              const statusLabel = isMine
+              const _statusLabel = isMine
                 ? 'You'
                 : seat.isOccupied
                   ? seat.displayName
@@ -4722,7 +4753,6 @@ useStreamRealtime(
                     <LocalVideoSurface
                       videoTrack={localVideoTrack}
                       audioTrack={localAudioTrack}
-                      mirror={true}
                       className="absolute inset-0"
                       fallback={
                         <div className={cn(
@@ -4740,12 +4770,11 @@ useStreamRealtime(
                       }
                     />
                   ) : seat.isOccupied ? (
-                          <RemoteVideoSurface
+<RemoteVideoSurface
                             participant={seatParticipant}
-                            mirror={false}
                             className="absolute inset-0"
-                      room={liveKitRoom}
-                      fallback={
+                            room={room}
+                            fallback={
                         <div className={cn(
                           'flex h-full w-full flex-col items-center justify-center text-center',
                           isMobileViewer ? 'gap-0.5' : 'gap-3'
@@ -4880,7 +4909,7 @@ useStreamRealtime(
                    )}
                  >
                    {seatCards.map((seat) => {
-                     const seatStatus = String(seat.seat?.status || '').toLowerCase()
+                     const _seatStatus = String(seat.seat?.status || '').toLowerCase()
                      const seatUserId = seat.seat?.user_id || seat.seat?.guest_id || null
                      const seatIdentity = seat.seat?.livekit_participant_identity || seatUserId
                      const isMine = Boolean(user?.id && (seat.seat?.user_id === user.id || seat.seat?.guest_id === user.id))
@@ -4915,7 +4944,6 @@ useStreamRealtime(
                           <LocalVideoSurface
                             videoTrack={localVideoTrack}
                             audioTrack={localAudioTrack}
-                            mirror={true}
                             className="absolute inset-0"
                             fallback={
                               <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-center">
@@ -4928,9 +4956,8 @@ useStreamRealtime(
                         ) : seat.isOccupied ? (
                           <RemoteVideoSurface
                             participant={seatParticipant}
-                            mirror={false}
                             className="absolute inset-0"
-                            room={liveKitRoom}
+                            room={room}
                             fallback={
                               <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-center">
                                 <Users className="h-5 w-5 text-purple-300/70" />
@@ -5979,7 +6006,7 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
            broadcasterId={hostId}
            broadcasterUsername={getDisplayName(broadcasterProfile, 'Broadcaster')}
            onClose={() => setShowSubscribeModal(false)}
-           onSelect={(tierId) => {
+           onSelect={(_tierId) => {
              setShowSubscribeModal(false)
              const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
              pushFloatingSystemMessage(`${username} subscribed to ${hostName}`)
@@ -6192,9 +6219,14 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
         )}
       </AnimatePresence>
 
-     </ErrorBoundary>
-     <TrollUpFloatingButton />
-   </GiftSystemProvider>
+      </ErrorBoundary>
+      <ProtectionOrderGate
+        streamId={streamId}
+        broadcasterId={(stream as any)?.user_id || null}
+        participantIds={protectionOrderParticipantIds}
+      />
+      <TrollUpFloatingButton />
+    </GiftSystemProvider>
  )
 }
 
@@ -6212,6 +6244,3 @@ function TrollUpFloatingButton() {
     </button>
   )
 }
-
-
-

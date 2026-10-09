@@ -45,7 +45,7 @@ export async function getSurveyById(surveyId: string): Promise<WeeklySurvey | nu
 
 export async function hasUserRespondedToSurvey(surveyId: string, userId: string): Promise<boolean> {
   const { data, error } = await supabase
-    .from('survey_responses')
+    .from('weekly_survey_responses')
     .select('id')
     .eq('survey_id', surveyId)
     .eq('user_id', userId)
@@ -64,7 +64,7 @@ export async function submitSurveyResponse(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
-      .from('survey_responses')
+      .from('weekly_survey_responses')
       .insert({
         survey_id: surveyId,
         user_id: userId,
@@ -126,7 +126,7 @@ export async function getAllSurveys(): Promise<SurveyWithResponseCount[]> {
     .from('weekly_surveys')
     .select(`
       *,
-      survey_responses(count)
+      weekly_survey_responses(count)
     `)
     .order('created_at', { ascending: false })
 
@@ -136,7 +136,7 @@ export async function getAllSurveys(): Promise<SurveyWithResponseCount[]> {
   }
   return (data || []).map((s: any) => ({
     ...s,
-    response_count: s.survey_responses?.[0]?.count || 0,
+    response_count: s.weekly_survey_responses?.[0]?.count || 0,
   })) as SurveyWithResponseCount[]
 }
 
@@ -148,13 +148,13 @@ export async function getSurveyResponses(surveyId: string): Promise<SurveyRespon
 
   // DEBUG: Count all responses for this survey (no RLS filter on user)
   const { count: totalCount } = await supabase
-    .from('survey_responses')
+    .from('weekly_survey_responses')
     .select('*', { count: 'exact', head: true })
     .eq('survey_id', surveyId);
   console.log('[survey DEBUG] Total rows in DB for this survey (with RLS):', totalCount);
 
   const { data, error } = await supabase
-    .from('survey_responses')
+    .from('weekly_survey_responses')
     .select('*')
     .eq('survey_id', surveyId)
     .order('submitted_at', { ascending: false })
@@ -170,7 +170,7 @@ export async function getSurveyResponses(surveyId: string): Promise<SurveyRespon
 
 export async function getAllResponses(): Promise<SurveyResponse[]> {
   const { data, error } = await supabase
-    .from('survey_responses')
+    .from('weekly_survey_responses')
     .select(`
       *,
       weekly_surveys(title, week_start_date)

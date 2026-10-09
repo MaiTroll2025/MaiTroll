@@ -54,9 +54,9 @@ export function useIdleSession() {
   const [showIdlePrompt, setShowIdlePrompt] = useState(false)
   const [isBroadcasterVerified, setIsBroadcasterVerified] = useState(false)
   const [countdown, setCountdown] = useState(0)
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const location = useLocation()
-  const { user, logout } = useAuthStore()
+  const { user, logout: _logout } = useAuthStore()
   const activeStreamId = useLiveContextStore((s) => s.activeStreamId)
 
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)

@@ -26,7 +26,8 @@ export function grantNavCoins(target?: string) {
     .then(({ data }) => {
       const userId = data.user?.id
       if (!userId) return
-      supabase.rpc('add_troll_coins', { p_user_id: userId, p_amount: COIN_REWARD }).catch(() => {})
+      void Promise.resolve(supabase.rpc('add_troll_coins', { p_user_id: userId, p_amount: COIN_REWARD }))
+        .then(() => undefined)
     })
     .catch(() => {})
 }

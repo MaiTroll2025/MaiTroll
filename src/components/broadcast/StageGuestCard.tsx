@@ -19,7 +19,7 @@ export default function StageGuestCard({
   pass,
   isMicOn,
   isCamOn,
-  onRemove,
+  onRemove: _onRemove,
   onMenuOpen,
   menuOpen = false,
 }: StageGuestCardProps) {

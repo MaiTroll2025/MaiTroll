@@ -5,7 +5,7 @@ interface EmbedPageProps {
   embedded?: boolean
 }
 
-export default function EmbedPage({ embedded = false }: EmbedPageProps) {
+export default function EmbedPage({ embedded: _embedded = false }: EmbedPageProps) {
   const { id: streamId } = useParams<{ id: string }>()
 
   if (!streamId) {

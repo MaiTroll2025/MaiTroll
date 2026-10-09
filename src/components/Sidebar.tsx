@@ -1,61 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom';
 import UserPresenceCounter from '@/components/sidebar/UserPresenceCounter'
 import { SafeLink } from '@/hooks/useSafeNavigate'
-import {
-    AlertTriangle,
-    Award,
-    Banknote,
-    BookOpen,
-    Briefcase,
-    Building2,
-    Calendar,
-    ChevronLeft,
-    ChevronRight,
-    Church,
-    Coins,
-    Crown,
-    Database,
-    DollarSign,
-    FileText,
-    Gamepad2,
-    Gavel,
-    GraduationCap,
-    Home,
-    Landmark,
-    LayoutDashboard,
-    LifeBuoy,
-    List,
-    Lock,
-    Mail,
-     Megaphone,
-     MessageSquare,
-     Music,
-     Newspaper,
-       Package,
-       PawPrint,
-       Phone,
-       Radio,
-       Scale,
-    Settings,
-    Shield,
-    ShoppingBag,
-    Shuffle,
-    Sparkles,
-    Star,
-    Store,
-    TrendingUp,
-    Trophy,
-     Users,
-     Video,
-     Wallet,
-     Warehouse,
-     Waves,
-     Zap,
-     Wrench,
-     Bell,
-    Mic2
-    } from 'lucide-react'
+import { AlertTriangle, Banknote, BookOpen, Briefcase, Building2, Calendar, ChevronLeft, ChevronRight, Church, Coins, Crown, Database, DollarSign, FileText, Gamepad2, Gavel, Home, Landmark, LayoutDashboard, LifeBuoy, List, Lock, Mail, Megaphone, Newspaper, Package, PawPrint, Radio, Scale, Settings, Shield, ShoppingBag, Shuffle, Sparkles, Store, TrendingUp, Trophy, Users, Video, Warehouse, Waves, Zap, Wrench } from 'lucide-react';
 
 import CourtEntryModal from './CourtEntryModal'
 import UserProfileWidget from './sidebar/UserProfileWidget'
@@ -146,10 +93,10 @@ export default function Sidebar() {
   const [canSeeOfficer, setCanSeeOfficer] = useState(false)
   const [canSeeTrollFamily, setCanSeeTrollFamily] = useState(false)
   const [hasFamily, setHasFamily] = useState(false)
-  const [isFamilyLeader, setIsFamilyLeader] = useState(false)
+  const [_isFamilyLeader, setIsFamilyLeader] = useState(false)
   const [isFamilyMember, setIsFamilyMember] = useState(false)
   const [canSeeSecretary, setCanSeeSecretary] = useState(false)
-  const [isStaff, setIsStaff] = useState(false)
+  const [_isStaff, setIsStaff] = useState(false)
   const [isAttorney, setIsAttorney] = useState(false)
   const [isProsecutor, setIsProsecutor] = useState(false)
   const [canSeeInmates, setCanSeeInmates] = useState(false)
@@ -157,7 +104,7 @@ export default function Sidebar() {
   const [isApprovedAuctioneer, setIsApprovedAuctioneer] = useState(false)
 
   const [showCourtModal, setShowCourtModal] = useState(false)
-  const [maiPendingCount, setMaiPendingCount] = useState(0)
+  const [_maiPendingCount, setMaiPendingCount] = useState(0)
 
   const { isCollapsed, setCollapsed, expandGroup } = useSidebarStore()
   const isSidebarCollapsed = isCollapsed
@@ -215,7 +162,7 @@ export default function Sidebar() {
   const canSeeFounderHub = isActiveFounder || isAdmin
   const isCEOAssistant = role === 'ceo_assistant' || trollRole === 'ceo_assistant' || (profile as any)?.is_ceo_assistant
   const isNoahAssistant = role === 'noah_assistant' || trollRole === 'noah_assistant' || (profile as any)?.is_noah_assistant
-  const isNoahAdmin = role === 'noah_admin' || trollRole === 'noah_admin' || (profile as any)?.is_noah_admin
+  const _isNoahAdmin = role === 'noah_admin' || trollRole === 'noah_admin' || (profile as any)?.is_noah_admin
 
   const showAdminPagesTab = Boolean(
     isAdmin ||
@@ -240,7 +187,7 @@ export default function Sidebar() {
     (profile as any)?.is_agency_hr_manager
   )
 
-  const isSecretary = role === String(UserRole.SECRETARY) || trollRole === String(UserRole.SECRETARY)
+  const _isSecretary = role === String(UserRole.SECRETARY) || trollRole === String(UserRole.SECRETARY)
 
   const isLead =
     role === String(UserRole.LEAD_TROLL_OFFICER) ||
@@ -427,8 +374,8 @@ export default function Sidebar() {
     }
   }, [location.pathname, expandGroup])
 
-  const mainPaths = ['/', '/inventory', '/marketplace', '/leaderboard', '/credit-scores', '/store', '/creator-switch', '/troll-court', '/troll-games']
-  const supportPaths = ['/support', '/safety']
+  const _mainPaths = ['/', '/inventory', '/marketplace', '/leaderboard', '/credit-scores', '/store', '/troll-court', '/troll-games']
+  const _supportPaths = ['/support', '/safety']
   const socialPaths = ['/utromail', '/pool']
   if (profile?.role === 'troll_family') {
     socialPaths.push('/family/home')
@@ -443,8 +390,8 @@ export default function Sidebar() {
   if (canSeeSecretary || isAdmin) specialAccessPaths.push('/secretary')
   if (isAdmin) specialAccessPaths.push('/admin/applications')
   if (profile?.role === UserRole.PRESIDENT || profile?.troll_role === UserRole.PRESIDENT) specialAccessPaths.push('/government')
-    const systemPaths = ['/apply', '/wallet']
-  const isAnyUpdated = (paths: string[]) => paths.some(path => isUpdated(path))
+    const _systemPaths = ['/apply', '/wallet']
+  const _isAnyUpdated = (paths: string[]) => paths.some(path => isUpdated(path))
 
   const jailedLocked = isJailed && !(profile?.role === 'admin' || profile?.is_admin)
 
@@ -650,7 +597,6 @@ export default function Sidebar() {
                 <GridItem collapsed={isSidebarCollapsed} icon={Gavel} label="Auction Studio" to="/auctions/studio" active={location.pathname.startsWith('/auctions/studio')} highlight={isUpdated('/auctions/studio')} onClick={() => markAsViewed('/auctions/studio')} className="text-green-400" tone="green" />
               )}
               <GridItem collapsed={isSidebarCollapsed} icon={TrendingUp} label="Credit" to="/credit-scores" active={isActive('/credit-scores')} highlight={isUpdated('/credit-scores')} onClick={() => markAsViewed('/credit-scores')} tone="green" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Shuffle} label="Creator" to="/creator-switch" active={isActive('/creator-switch')} highlight={isUpdated('/creator-switch')} onClick={() => markAsViewed('/creator-switch')} tone="purple" />
               {canSeeCourt && (
                 <GridItem collapsed={isSidebarCollapsed} icon={Gavel} label="Dockets" to="/admin/court-dockets" active={location.pathname.startsWith('/admin/court-dockets')} highlight={isUpdated('/admin/court-dockets')} onClick={() => markAsViewed('/admin/court-dockets')} className="text-pink-300" tone="pink" />
               )}

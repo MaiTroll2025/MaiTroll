@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Shield, Snowflake, RotateCcw, Zap, Gift, Coins, Users, Clock, Info, X } from 'lucide-react';
+import { Swords, Shield, Snowflake, Zap, Gift, Coins, Users, Clock, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { BattleParticipant } from '../../hooks/useFiveVFiveBattle';
 import type { UserAbility } from '../../types/broadcastAbilities';

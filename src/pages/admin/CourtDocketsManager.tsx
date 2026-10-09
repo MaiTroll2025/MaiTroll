@@ -1,18 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import {
-  AlertCircle,
-  Calendar,
-  FileText,
-  Gavel,
-  Plus,
-  Scale,
-  Search,
-  ShieldAlert,
-  Trash2,
-  Users,
-  X,
-} from 'lucide-react'
+import { Calendar, FileText, Gavel, Plus, Scale, Search, ShieldAlert, Trash2, Users, X } from 'lucide-react';
 import { toast } from 'sonner'
 import { useAuthStore } from '../../lib/store'
 import UserNameWithAge from '../../components/UserNameWithAge'

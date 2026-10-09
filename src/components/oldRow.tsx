@@ -2,27 +2,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import { lazyWithRetry } from '@/utils/lazyImport'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import {
-  Bell,
-  BookOpen,
-  Crown,
-  FileText,
-  Gamepad2,
-  Gavel,
-  Gift,
-  Heart,
-  MessageCircle,
-  Play,
-  Radio,
-  Shield,
-  Sparkles,
-  Star,
-  Trophy,
-  Users,
-  Vote,
-  X,
-  Zap,
-} from 'lucide-react'
+import { BookOpen, Crown, FileText, Gamepad2, Gavel, Gift, Heart, MessageCircle, Play, Radio, Shield, Sparkles, Star, Trophy, Users, Vote, X, Zap } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
@@ -426,7 +406,7 @@ function CityAnnouncementCard() {
   )
 }
 
-function CashOutCard() {
+function _CashOutCard() {
   return (
     <section className={`${glass} rounded-2xl p-4`}>
       <div className="mb-3 flex items-center justify-between">
@@ -468,7 +448,7 @@ function HomeTabs({
   setActiveTab,
   liveCount,
   battleCount,
-  presidentTabLabel,
+  presidentTabLabel: _presidentTabLabel,
 }: {
   activeTab: TabType
   setActiveTab: (tab: TabType) => void
@@ -691,7 +671,7 @@ function BattleGrid({ items, onClickItem }: { items: LiveItem[]; onClickItem: (i
   )
 }
 
-function LeftSidebar({ liveItems }: { liveItems: LiveItem[] }) {
+function _LeftSidebar({ liveItems }: { liveItems: LiveItem[] }) {
   const topLive = liveItems.slice(0, 5)
   
   return (
@@ -780,7 +760,7 @@ function LeftSidebar({ liveItems }: { liveItems: LiveItem[] }) {
   )
 }
 
-function RightSidebar({ user, liveAuctions, isPride, onOpenStore, onOpenChallenges }: { user: any; liveAuctions: AuctionShow[]; isPride: boolean; onOpenStore: () => void; onOpenChallenges: () => void }) {
+function _RightSidebar({ user: _user, liveAuctions: _liveAuctions, isPride, onOpenStore: _onOpenStore, onOpenChallenges }: { user: any; liveAuctions: AuctionShow[]; isPride: boolean; onOpenStore: () => void; onOpenChallenges: () => void }) {
   return (
     <aside className="hidden space-y-3 md:block">
       {/* Pride Month Widget */}
@@ -888,7 +868,7 @@ export default function Home() {
 
   const [activeTab, setActiveTab] = useState<TabType>('wall')
   const [liveItems, setLiveItems] = useState<LiveItem[]>([])
-  const [totalViewers, setTotalViewers] = useState(0)
+  const [_totalViewers, setTotalViewers] = useState(0)
   const [loadingLive, setLoadingLive] = useState(true)
   const [showLiveGrid, setShowLiveGrid] = useState<boolean | null>(null)
   const [liveAuctions, setLiveAuctions] = useState<AuctionShow[]>([])
@@ -1010,9 +990,9 @@ export default function Home() {
   }, [supportReminder, reminderLoadingState])
 
   useEffect(() => {
-    let mounted = true
+    let _mounted = true
     // Move fetchLiveContent to component scope so it can be invoked by realtime handlers.
-    mounted = true
+    _mounted = true
     fetchLiveContent()
 
     // Poll as a fallback for visibility edge cases
@@ -1050,7 +1030,7 @@ export default function Home() {
     channel.subscribe()
 
     return () => {
-      mounted = false
+      _mounted = false
       clearInterval(interval)
       if (channel) {
         supabase.removeChannel(channel)

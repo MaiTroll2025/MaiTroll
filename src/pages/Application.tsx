@@ -4,20 +4,7 @@ import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { encryptPII } from '../lib/piiEncryption'
-import {
-  Shield,
-  XCircle,
-  User as UserIcon,
-  MapPin,
-  Briefcase,
-  CalendarDays,
-  GraduationCap,
-  Building2,
-  CheckCircle2,
-  Users,
-  HelpCircle,
-  FileSignature,
-} from 'lucide-react'
+import { Shield, User as UserIcon, MapPin, Briefcase, CalendarDays, Building2, CheckCircle2, Users, HelpCircle, FileSignature } from 'lucide-react';
 import { notifyCareerApplicationSubmitted } from '../lib/notifications'
 import AuthModal from '../components/auth/AuthModal'
 
@@ -207,7 +194,10 @@ export default function Application() {
     agreed_to_terms: false,
   })
 
-  const set = (patch: Partial<typeof form>) => setForm((prev) => ({ ...prev, ...patch }))
+  const set = useCallback(
+    (patch: Partial<typeof form>) => setForm((prev) => ({ ...prev, ...patch })),
+    [],
+  )
 
   useEffect(() => {
     if (!isLoading && user && positionId) {
@@ -236,7 +226,7 @@ export default function Application() {
     if (profile?.phone && !form.phone) {
       set({ phone: profile.phone })
     }
-  }, [profile])
+  }, [profile?.email, profile?.phone, form.email, form.phone, set])
 
   const age = useMemo(() => {
     if (!form.date_of_birth) return null
@@ -270,7 +260,12 @@ export default function Application() {
   }
   const removeEmployment = (i: number) => set({ employment_history: form.employment_history.filter((_, idx) => idx !== i) })
 
-  const addReference = () => set({ references: [...form.references, { name: '', relationship: '', title: '', company: '', email: '', phone: '', years_known: '' }] })
+  const addReference = useCallback(() => {
+    setForm((prev) => ({
+      ...prev,
+      references: [...prev.references, { name: '', relationship: '', title: '', company: '', email: '', phone: '', years_known: '' }],
+    }))
+  }, [])
   const updateReference = (i: number, patch: any) => {
     const next = [...form.references]
     next[i] = { ...next[i], ...patch }
@@ -280,11 +275,11 @@ export default function Application() {
 
   useEffect(() => {
     if (form.references.length === 0 && user) addReference()
-  }, [user])
+  }, [user, form.references.length, addReference])
 
   const customQuestions = positionId ? CUSTOM_QUESTIONS[positionId] || [] : []
 
-  const validate = (): string | null => {
+  const validate = useCallback((): string | null => {
     if (!form.legal_first_name.trim()) return 'Legal first name is required.'
     if (!form.legal_last_name.trim()) return 'Legal last name is required.'
     if (!form.date_of_birth) return 'Date of birth is required.'
@@ -315,7 +310,7 @@ export default function Application() {
     if (!form.signature_name.trim()) return 'Type your full legal name as a signature.'
     if (!form.agreed_to_terms) return 'You must agree to the terms to submit.'
     return null
-  }
+  }, [age, form, position])
 
   const handleSubmit = useCallback(async () => {
     if (!user || !position) return
@@ -388,7 +383,7 @@ export default function Application() {
     } finally {
       setLoading(false)
     }
-  }, [user, position, form, navigate])
+  }, [user, position, form, navigate, validate])
 
   const noPosition = !positionId || !position
 

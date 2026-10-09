@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Gift, Plus, CheckCircle2, TrendingUp, Clock, AlertCircle, Star } from 'lucide-react';
-import type { BroadcasterWishlist, WishlistItem } from '@/types/supporterEconomy';
+import { Gift, Plus, CheckCircle2 } from 'lucide-react';
+import type { BroadcasterWishlist } from '@/types/supporterEconomy';
 
 export function BroadcasterWishlistPanel() {
   const { profile } = useAuthStore();
@@ -17,8 +17,8 @@ export function BroadcasterWishlistPanel() {
   const broadcasterId = profile?.id;
   const { data: wishlists, isLoading } = useBroadcasterWishlist(broadcasterId);
   const createWishlist = useCreateWishlist();
-  const addItem = useAddWishlistItem();
-  const backItem = useBackWishlistItem();
+  const _addItem = useAddWishlistItem();
+  const _backItem = useBackWishlistItem();
 
   const handleCreateWishlist = () => {
     if (!newTitle.trim() || !broadcasterId) return;

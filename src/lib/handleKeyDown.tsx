@@ -76,12 +76,12 @@ function getOtherParticipant(thread: UtromailThread, userId: string) {
 
 export default function UtromailPage() {
   const navigate = useNavigate();
-  const { threadId } = useParams();
+  const { threadId: _threadId } = useParams();
   const { user, profile } = useAuthStore();
   const [threads, setThreads] = useState<UtromailThread[]>([]);
   const [requests, setRequests] = useState<UtromailRequest[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [_unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCompose, setShowCompose] = useState(false);
@@ -230,7 +230,7 @@ export default function UtromailPage() {
   };
 
   const activeThread = threads.find(t => t.id === activeConversationId);
-  const activeParticipant = activeThread ? getOtherParticipant(activeThread, user?.id || '') : null;
+  const _activeParticipant = activeThread ? getOtherParticipant(activeThread, user?.id || '') : null;
 
   const filteredThreads = threads.filter(t => {
     if (!searchQuery) return true;

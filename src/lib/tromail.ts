@@ -129,7 +129,7 @@ export const canSendAdminEmail = (profile: any): boolean => {
 }
 
 // Generate Tromail address from role and username
-export const generateTromailAddress = (role: string, username: string): string => {
+export const generateTromailAddress = (role: string, _username: string): string => {
   // Convert role to address format
   const roleSlug = role.toLowerCase().replace(/_/g, '-')
   return `${roleSlug}@tromail.Mai Troll`
@@ -168,13 +168,13 @@ export const createTromailAccount = async (
         display_name: displayName,
         email_address: altAddress,
         is_active: true,
-      }).select().single().then(({ data, error }) => {
+      }).select().single().then(({ data: _data, error }) => {
         if (error) throw error
         return { success: true, address: altAddress }
       })
     }
 
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('tromail_accounts')
       .insert({
         user_id: userId,
@@ -680,7 +680,7 @@ export const createContract = async (params: {
 
 export const updateContract = async (contractId: string, updates: Partial<TromailContract>): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('tromail_contracts')
       .update(updates)
       .eq('id', contractId)
@@ -774,7 +774,7 @@ export const sendContract = async (contractId: string, recipientUserIds: string[
     });
 
     // Send Tromail notification
-    const { success, message_id, error: sendError } = await sendTromailMessage({
+    const { success: _success, message_id, error: sendError } = await sendTromailMessage({
       sender_user_id: contract.sent_by,
       sender_role: '', // We'll get this from the user's profile if needed
       sender_tromail_address: '', // We'll get this from the user's Tromail account

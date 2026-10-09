@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React from 'react';
 import { usePresidentSystem } from '@/hooks/usePresidentSystem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Check, X, Calendar, Play, Gavel, History, Users } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 
 export default function SecretaryDashboard() {
-  const { user, profile } = useAuthStore();
+  const { user: _user, profile: _profile } = useAuthStore();
   const {
     currentElection,
     createElection,
@@ -16,7 +16,7 @@ export default function SecretaryDashboard() {
     endElection,
     deleteElection,
     allElections,
-    fetchAllElections,
+    fetchAllElections: _fetchAllElections,
     approveCandidate,
     rejectCandidate,
     loading,

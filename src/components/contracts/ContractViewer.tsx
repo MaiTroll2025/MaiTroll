@@ -7,8 +7,6 @@ import { useSignContract } from '../../hooks/useSignContract';
 import { useRejectContract } from '../../hooks/useRejectContract';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
-import { useGetTromailRoleDirectory } from '../../hooks/useGetTromailRoleDirectory';
 
 export const ContractViewer = () => {
   const { user } = useAuthStore();
@@ -28,7 +26,7 @@ export const ContractViewer = () => {
 
   const {
     data: userAccountData,
-    isLoading: accountLoading
+    isLoading: _accountLoading
   } = useGetUserTromailAccount(user?.id);
 
   const signMutation = useSignContract();

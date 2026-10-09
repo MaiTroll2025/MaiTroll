@@ -36,7 +36,7 @@ export default function StagePassRequestsPanel({
       <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto scrollbar-hide">
         {requests.map((req) => {
           const name = req.user_profile?.username || 'Unknown';
-          const initials = name.slice(0, 2).toUpperCase();
+          const _initials = name.slice(0, 2).toUpperCase();
 
           return (
             <div

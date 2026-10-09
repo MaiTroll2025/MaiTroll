@@ -21,18 +21,18 @@ interface BroadcastHeaderProps {
 
 export default function BroadcastHeader({
     stream,
-    isHost,
+    isHost: _isHost,
     liveViewerCount,
     handleLike,
-    hasPendingChallenge,
-    onAddBox,
-    onRemoveBox,
-    boxCount,
+    hasPendingChallenge: _hasPendingChallenge,
+    onAddBox: _onAddBox,
+    onRemoveBox: _onRemoveBox,
+    boxCount: _boxCount,
     onClose
 }: BroadcastHeaderProps) {
     const { profile, setProfile } = useAuthStore();
     const { isMobileWidth: isMobile } = useIsMobile();
-    const [isLiking, setIsLiking] = React.useState(false);
+    const [isLiking, _setIsLiking] = React.useState(false);
     const profileRef = React.useRef(profile);
 
     // Keep profileRef up to date

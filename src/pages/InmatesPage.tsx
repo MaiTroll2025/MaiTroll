@@ -1,20 +1,6 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  AlertTriangle,
-  CalendarClock,
-  Coins,
-  Handshake,
-  Lock,
-  MessageSquare,
-  Phone,
-  RefreshCw,
-  Search,
-  Shield,
-  Unlock,
-  Users,
-  X,
-} from 'lucide-react'
+import { Coins, Handshake, Lock, MessageSquare, Phone, RefreshCw, Search, Shield, Unlock, Users, X } from 'lucide-react';
 import { toast } from 'sonner'
 import { moderation } from '@/services/maitrollModeration'
 

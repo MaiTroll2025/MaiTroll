@@ -3,19 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import './admin.css'
 import { useAuthStore } from '../../lib/store'
 import { supabase, isAdminEmail, UserRole } from '../../lib/supabase'
-import {
-  Shield,
-  LogOut,
-  RotateCcw,
-  RefreshCw,
-  DollarSign,
-  Coins,
-  CreditCard,
-  Activity,
-  Radio,
-  AlertTriangle,
-  HeadphonesIcon,
-} from 'lucide-react'
+import { RefreshCw, DollarSign, Coins, CreditCard, Activity, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import FinanceEconomyCenter from './components/FinanceEconomyCenter'
@@ -59,23 +47,12 @@ type StatState = {
 }
 
 interface EconomySummary {
-  troll_coins: {
+  trollCoins: {
     totalPurchased: number
-    totalSpent: number
     outstandingLiability: number
   }
   broadcasters: {
     totalUsdOwed: number
-    pendingCashoutsUsd: number
-    paidOutUsd: number
-  }
-  officers: {
-    totalUsdPaid: number
-  }
-  messages?: {
-    totalPayments: number
-    totalIncome: number
-    transactionCount: number
   }
 }
 
@@ -102,7 +79,6 @@ type TabId =
   | 'create_schedule'
   | 'officer_shifts'
   | 'shift_requests_approval'
-  | 'empire_applications'
   | 'referral_bonuses'
   | 'control_panel'
   | 'test_diagnostics'
@@ -513,14 +489,14 @@ export default function AdminDashboard() {
 
   const {
     financeSummary,
-    isLoading: financeLoading,
-    isConnected,
-    lastSync,
-    refreshFinance,
-    reconciliation,
+    isLoading: economyLoading,
+    isConnected: _isConnected,
+    lastSync: _lastSync,
+    refreshFinance: loadEconomySummary,
+    reconciliation: _reconciliation,
   } = useAdminFinanceRealtime()
 
-  const { metrics: dashboardMetrics, refreshMetrics } = useAdminDashboardMetrics()
+  const { metrics: dashboardMetrics, refreshMetrics: _refreshMetrics } = useAdminDashboardMetrics()
 
    const [coinPurchases, setCoinPurchases] = useState<CoinPurchaseRow[]>([])
    const [coinPurchasesLoading, setCoinPurchasesLoading] = useState(false)
@@ -579,8 +555,6 @@ export default function AdminDashboard() {
        }
 
    const [activeTab, setActiveTab] = useState<TabId>('connections')
-   const [economySummary, setEconomySummary] = useState<EconomySummary | null>(null)
-   const [economyLoading, setEconomyLoading] = useState(false)
    const [liveStreams, setLiveStreams] = useState<LiveStream[]>([])
    const [streamsLoading, setStreamsLoading] = useState(false)
 
@@ -607,6 +581,19 @@ export default function AdminDashboard() {
       console.error('Failed to load career apps count:', err)
     }
   }, [])
+
+  const economySummary = useMemo<EconomySummary | null>(() => {
+    if (!financeSummary) return null
+    return {
+      trollCoins: {
+        totalPurchased: financeSummary.economy.purchasedCoins,
+        outstandingLiability: financeSummary.financial.total_liability_coins / 100,
+      },
+      broadcasters: {
+        totalUsdOwed: financeSummary.economy.totalPayouts,
+      },
+    }
+  }, [financeSummary])
 
   useEffect(() => {
     if (['payouts', 'payout_queue', 'purchases', 'stream_monitor', 'send_notifications'].includes(activeTab)) {
@@ -885,110 +872,6 @@ export default function AdminDashboard() {
     }
   }, [])
 
-  const loadEconomySummary = useCallback(async () => {
-    try {
-      setEconomyLoading(true)
-
-      const { error: summaryError } = await supabase
-        .from('economy_summary')
-        .select('*')
-        .maybeSingle()
-
-      if (summaryError) console.warn('Failed to load economy_summary view:', summaryError)
-
-      const json = await (await import('../../lib/api')).default.get('/admin/economy/summary')
-      if (!json.success) throw new Error(json?.error || 'Failed to load economy summary')
-
-      setEconomySummary(json.data)
-    } catch (err: unknown) {
-      console.error('Failed to load economy summary:', err)
-
-      try {
-        // Use public.transactions for purchase data (real money purchases)
-        const { data: purchaseTx } = await supabase
-          .from('transactions')
-          .select('user_id, amount, coins_used, metadata')
-          .or('transaction_type.eq.purchase,description.ilike.%coin%')
-
-        // Also check paypal_transactions for authoritative PayPal purchase data
-        const { data: paypalTx } = await supabase
-          .from('paypal_transactions')
-          .select('user_id, amount, coins, status, created_at')
-
-        const purchaseMap: Record<string, { purchased: number }> = {}
-
-        // Process transactions
-        ;(purchaseTx || []).forEach((tx: any) => {
-          const userId = tx.user_id || 'unknown'
-          const existing = purchaseMap[userId] || { purchased: 0 }
-          const coins = Number(tx.coins_used || tx.metadata?.coins || tx.metadata?.coins_awarded || 0)
-          existing.purchased += Math.abs(coins)
-          purchaseMap[userId] = existing
-        })
-
-        // Process paypal_transactions
-        ;(paypalTx || []).forEach((p: any) => {
-          const userId = p.user_id || 'unknown'
-          const existing = purchaseMap[userId] || { purchased: 0 }
-          const coins = Number(p.coins || 0)
-          existing.purchased += Math.abs(coins)
-          purchaseMap[userId] = existing
-        })
-
-        let totalPurchased = 0
-        Object.values(purchaseMap).forEach((v) => {
-          totalPurchased += v.purchased
-        })
-
-        const { data: broadcasterEarnings } = await supabase
-          .from('earnings_payouts')
-          .select('amount, status')
-
-        let totalUsdOwed = 0
-        let paidOutUsd = 0
-
-        ;(broadcasterEarnings || []).forEach((e: { amount: number | null; status: string }) => {
-          const amt = Number(e.amount || 0)
-          if (e.status === 'paid') paidOutUsd += amt
-          totalUsdOwed += amt
-        })
-
-        const { data: officerPayments } = await supabase
-          .from('coin_transactions')
-          .select('amount')
-          .eq('type', 'officer_payment')
-
-        const totalUsdPaid = (officerPayments || []).reduce(
-          (sum: number, p: { amount: number | null }) => sum + Number(p.amount || 0),
-          0
-        )
-
-        setEconomySummary({
-          troll_coins: {
-            totalPurchased,
-            totalSpent: 0,
-            outstandingLiability: totalPurchased,
-          },
-          broadcasters: {
-            totalUsdOwed,
-            pendingCashoutsUsd: totalUsdOwed - paidOutUsd,
-            paidOutUsd,
-          },
-          officers: { totalUsdPaid },
-          messages: {
-            totalPayments: 0,
-            totalIncome: 0,
-            transactionCount: 0,
-          },
-        })
-      } catch (e) {
-        console.error('Economy fallback failed:', e)
-      }
-    } finally {
-      setEconomyLoading(false)
-    }
-  }, [])
-
   const loadLiveStreams = useCallback(async () => {
     setStreamsLoading(true)
 
@@ -1156,7 +1039,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleLogout = async () => {
+  const _handleLogout = async () => {
     try {
       localStorage.clear()
       const introSeen = sessionStorage.getItem('trollIntroSeen')
@@ -1179,7 +1062,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleResetApp = () => {
+  const _handleResetApp = () => {
     try {
       localStorage.clear()
       sessionStorage.clear()
@@ -1203,7 +1086,6 @@ export default function AdminDashboard() {
   const handleOpenFinanceDashboard = () => navigate('/admin/finance')
   const handleOpenCreateSchedule = () => navigate('/admin/create-schedule')
   const handleOpenResetPanel = () => navigate('/admin/reset-maintenance')
-  const handleOpenEmpireApplications = () => navigate('/admin/empire-applications')
   const handleOpenReferralBonuses = () => navigate('/admin/referral-bonuses')
   const handleOpenApplications = () => navigate('/admin/applications')
   const handleOpenAdminPool = () => navigate('/admin/pool')
@@ -1236,7 +1118,6 @@ export default function AdminDashboard() {
          create_schedule: '/admin/create-schedule',
          officer_shifts: '/admin/officer-shifts',
          shift_requests_approval: '/admin/officer-shifts',
-         empire_applications: '/admin/empire-applications',
          applications: '/admin/applications',
          referral_bonuses: '/admin/referral-bonuses',
          control_panel: '/admin/control-panel',
@@ -1395,12 +1276,10 @@ export default function AdminDashboard() {
               onOpenFinanceDashboard={handleOpenFinanceDashboard}
               onOpenCreateSchedule={handleOpenCreateSchedule}
               onOpenResetPanel={handleOpenResetPanel}
-              onOpenEmpireApplications={handleOpenEmpireApplications}
               onOpenReferralBonuses={handleOpenReferralBonuses}
               onOpenApplications={handleOpenApplications}
               onSelectTab={_handleSelectTab}
               counts={{
-                empire_apps: stats.pendingApps,
                 cashouts: stats.pendingPayouts,
                 reports: stats.aiFlags,
                 alerts: taskCounts.alerts,

@@ -4,33 +4,39 @@ import { useAuthStore } from '@/lib/store'
 import { useXPStore } from '@/stores/useXPStore'
 import { getLevelName } from '@/lib/xp'
 
+interface LevelStatusCardProps {
+  userId?: string;
+}
+
 const neonCard =
   'border border-cyan-400/20 bg-[#071020]/80 backdrop-blur-2xl shadow-[0_0_28px_rgba(34,211,238,0.08)]'
 
-export default function LevelStatusCard() {
-  const { user, profile } = useAuthStore()
+export default function LevelStatusCard({ userId }: LevelStatusCardProps) {
+  const { profile } = useAuthStore()
   const { level, progress, xpToNext, fetchXP, subscribeToXP } = useXPStore()
   const [loading, setLoading] = React.useState(true)
 
+  const targetUserId = userId || profile?.id;
+
   useEffect(() => {
-    if (profile?.id) {
-      fetchXP(profile.id)
+    if (targetUserId) {
+      fetchXP(targetUserId)
       setLoading(false)
     } else {
       setLoading(false)
     }
-  }, [profile?.id, fetchXP])
+  }, [targetUserId, fetchXP])
 
   useEffect(() => {
-    if (profile?.id) {
-      subscribeToXP(profile.id)
+    if (targetUserId) {
+      subscribeToXP(targetUserId)
     }
     return () => {
       useXPStore.getState().unsubscribe()
     }
-  }, [profile?.id, subscribeToXP])
+  }, [targetUserId, subscribeToXP])
 
-  if (!user) {
+  if (!targetUserId) {
     return (
       <section className={`${neonCard} rounded-2xl p-3`}>
         <div className="flex items-center justify-between">

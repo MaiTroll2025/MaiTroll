@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Coins, Image as ImageIcon, Loader2, Lock, Play, Sparkles } from 'lucide-react'
+import { Coins, Image as ImageIcon, Loader2, Lock, Sparkles } from 'lucide-react';
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'

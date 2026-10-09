@@ -9,16 +9,14 @@ export interface ExecutiveIntake {
   id: string
   created_at: string
   category: string
-  severity: 'low' | 'medium' | 'high' | 'critical'
-  status: 'new' | 'in_progress' | 'resolved' | 'escalated'
+  severity: 'low' | 'normal' | 'high' | 'critical'
+  status: 'open' | 'in_review' | 'resolved' | 'escalated'
   assigned_secretary: string | null
   secretary_notes: string | null
   escalated_to_admin: boolean
-  description?: string
+  description: string
   submitted_by?: string
-  title?: string
-  type?: string
-  metadata?: any
+  title: string
 }
 
 export interface ExecutiveReport {
@@ -60,13 +58,15 @@ export interface GiftCardFulfillment {
 
 export interface CriticalAlert {
   id: string
+  user_id?: string | null
+  data?: Record<string, unknown> | null
   created_at: string
   message: string
-  severity: 'critical' | 'warning' | 'info'
+  severity: 'critical' | 'high' | 'warning' | 'info' | string
   resolved: boolean
   resolved_by: string | null
   resolved_at: string | null
-  source: string
+  source: string | null
 }
 
 export interface RoleChangeLog {

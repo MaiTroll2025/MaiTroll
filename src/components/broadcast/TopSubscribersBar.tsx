@@ -23,7 +23,7 @@ export const TopSubscribersBar: React.FC<TopSubscribersBarProps> = ({
   broadcasterId,
   maxSubscribers = 3
 }) => {
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const [subscribers, setSubscribers] = useState<TopSubscriber[]>([])
   const [loading, setLoading] = useState(true)
 

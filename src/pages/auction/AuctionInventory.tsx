@@ -1,19 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  AlertTriangle,
-  Box,
-  Coins,
-  Filter,
-  ImagePlus,
-  Loader2,
-  Package,
-  Plus,
-  Search,
-  Tag,
-  Trash2,
-  Upload,
-  X,
-} from 'lucide-react'
+import { ImagePlus, Loader2, Package, Plus, Search, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -61,7 +47,7 @@ const shell =
   'relative min-h-screen overflow-y-auto overflow-x-hidden md:overflow-hidden bg-[#07101f] px-3 pb-8 pt-20 text-white sm:px-4 md:px-6'
 const panel =
   'rounded-[1.65rem] border border-cyan-300/15 bg-[#0b1628]/85 shadow-[0_0_45px_rgba(34,211,238,0.12)] backdrop-blur-2xl'
-const panelSoft =
+const _panelSoft =
   'rounded-[1.4rem] border border-cyan-300/12 bg-[#0d1a2f]/78 shadow-[0_0_28px_rgba(34,211,238,0.08)] backdrop-blur-xl'
 const input =
   'w-full rounded-xl border border-cyan-300/20 bg-[#07101f]/85 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/15'
@@ -82,7 +68,7 @@ export default function AuctionInventory() {
   const [items, setItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterCategory, setFilterCategory] = useState<string>('all')
+  const [filterCategory, _setFilterCategory] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [showCreator, setShowCreator] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -225,7 +211,7 @@ export default function AuctionInventory() {
       const { data } = supabase.storage.from('auction-items').getPublicUrl(path)
       setForm((prev) => ({ ...prev, image_url: data.publicUrl }))
       toast.success('Image uploaded')
-    } catch (error: any) {
+    } catch (_error: any) {
       toast.error('Image upload failed')
     } finally {
       setUploadingImage(false)

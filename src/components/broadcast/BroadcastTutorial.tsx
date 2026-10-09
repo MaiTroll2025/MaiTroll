@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ChevronLeft, SkipForward } from 'lucide-react'
+import { ChevronLeft, SkipForward } from 'lucide-react';
 import { cn } from '../../lib/utils'
-import { useBroadcastTutorial, BROADCAST_TUTORIAL_STEPS, TutorialStep } from '../../hooks/useBroadcastTutorial'
+import { useBroadcastTutorial } from '../../hooks/useBroadcastTutorial';
 
 interface SpotlightOverlayProps {
   targetId: string | null

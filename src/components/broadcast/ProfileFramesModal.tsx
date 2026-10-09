@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { useProfileFrameStore } from '@/stores/useProfileFrameStore';
-import { LAUNCH_FRAMES } from '@/config/profileFrames';
 import type { ProfileFrame } from '@/config/profileFrames';
 
 interface ProfileFramesModalProps {

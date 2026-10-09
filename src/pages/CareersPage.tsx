@@ -92,6 +92,16 @@ const volunteerRoles: VolunteerRole[] = [
     requirements: ['Organization', 'Attention to detail', 'Good communication'],
   },
   {
+    id: 'marketing_agent',
+    roleKey: 'marketing_agent',
+    title: 'Marketing Agent',
+    category: 'Marketing',
+    description: 'Create and publish approved Mai Troll marketing content, including selected public posts and stream promotions.',
+    responsibilities: ['Prepare approved promotional content', 'Publish selected public content to official channels', 'Follow brand and privacy guidelines'],
+    powers: ['Marketing content creation and approved Facebook publishing'],
+    requirements: ['Clear writing', 'Good judgment', 'Respect for user privacy and publishing guidelines'],
+  },
+  {
     id: 'prosecutor',
     roleKey: 'prosecutor',
     title: 'Prosecutor',

@@ -89,7 +89,7 @@ export interface UseFiveVFiveBattleProps {
 }
 
 export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveBattleProps) {
-  const { user, profile } = useAuthStore();
+  const { user, profile: _profile } = useAuthStore();
   const [state, setState] = useState<FiveVFiveBattleState>(INITIAL_STATE);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -395,7 +395,7 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
   const startBattleTimer = useCallback((
     battleId: string,
     participants: BattleParticipant[],
-    abilities: Record<string, AbilityState>
+    _abilities: Record<string, AbilityState>
   ) => {
     // Store started_at in DB so both sides use the same server timestamp (fire-and-forget)
     const dbStartedAt = new Date().toISOString();
@@ -613,7 +613,7 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
     senderId: string,
     receiverId: string,
     giftAmount: number,
-    giftName: string
+    _giftName: string
   ) => {
     if (!state.active || state.phase !== 'active') return;
 
@@ -911,7 +911,7 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
         break;
       }
       case 'ability_used': {
-        const { userId, ability, team, targetTeam } = data;
+        const { userId: _userId, ability, team, targetTeam } = data;
         if (ability === 'team_freeze' && targetTeam) {
           toast(`❄️ Team ${targetTeam} has been frozen!`, { icon: '❄️' });
         } else if (ability === 'double_xp') {

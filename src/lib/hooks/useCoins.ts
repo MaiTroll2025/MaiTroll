@@ -423,7 +423,7 @@ export function useCoins() {
     setOptimisticUntil(Date.now() + 8000)
   }, [user?.id, balances.troll_coins])
 
-  const depositToCashout = useCallback(async (amount: number): Promise<{ success: boolean; error?: string }> => {
+  const depositToCashout = useCallback(async (_amount: number): Promise<{ success: boolean; error?: string }> => {
     // All troll coins are now cashout-eligible. The deposit step is no longer needed.
     toast.info('All troll coins are cashout-eligible. No deposit step needed.')
     return { success: true }

@@ -556,7 +556,7 @@ const TrollsTownPage: React.FC = () => {
     });
 
     // Listen for property purchase broadcasts from other tabs
-    const unsubscribeBroadcast = listenForPurchaseBroadcasts((data) => {
+    const _unsubscribeBroadcast = listenForPurchaseBroadcasts((data) => {
       if (data.type === 'property_purchased' && data.userId === user.id) {
         console.log('Property purchase detected from another tab:', data);
         loadData();

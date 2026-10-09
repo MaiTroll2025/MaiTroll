@@ -72,7 +72,7 @@ export function useBroadcastPinnedProducts({
       }
 
       try {
-        const { data, error } = await supabase.rpc('pin_product_to_broadcast', {
+        const { data: _data, error } = await supabase.rpc('pin_product_to_broadcast', {
           p_stream_id: streamId,
           p_product_id: productId,
           p_pinned_by: userId,

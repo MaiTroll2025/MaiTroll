@@ -78,8 +78,8 @@ export function createBatchWriter(config: Partial<BatchConfig> = {}) {
 
 // --- city_ads batching (aggregated per ad) ---
 
-const adImpressionCounts = new Map<number, number>()
-const adClickCounts = new Map<number, number>()
+const adImpressionCounts = new Map<string | number, number>()
+const adClickCounts = new Map<string | number, number>()
 let cityAdsFlushTimer: ReturnType<typeof setInterval> | null = null
 
 async function flushCityAds() {
@@ -90,7 +90,7 @@ async function flushCityAds() {
     const { error } = await supabase.rpc('increment_ad_impressions', { ad_id: adId, count })
     if (error) {
       const msg = typeof error === 'string' ? error : error?.message || ''
-      if (msg.includes('not found', true)) {
+      if (msg.includes('not found')) {
         adImpressionCounts.delete(adId)
         continue
       }
@@ -101,7 +101,7 @@ async function flushCityAds() {
     const { error } = await supabase.rpc('increment_ad_clicks', { ad_id: adId, count })
     if (error) {
       const msg = typeof error === 'string' ? error : error?.message || ''
-      if (msg.includes('not found', true)) {
+      if (msg.includes('not found')) {
         adClickCounts.delete(adId)
         continue
       }
@@ -120,7 +120,7 @@ function startCityAdsFlush() {
  * Record a city ad impression. Counts are aggregated per ad ID and flushed
  * every 60s or before unload. 50,000 impressions → ~100 writes instead of 50,000.
  */
-export function queueCityAdImpression(adId: number) {
+export function queueCityAdImpression(adId: string | number) {
   adImpressionCounts.set(adId, (adImpressionCounts.get(adId) || 0) + 1)
   startCityAdsFlush()
 }
@@ -129,7 +129,7 @@ export function queueCityAdImpression(adId: number) {
  * Record a city ad click. Counts are aggregated per ad ID and flushed
  * every 60s or before unload.
  */
-export function queueCityAdClick(adId: number) {
+export function queueCityAdClick(adId: string | number) {
   adClickCounts.set(adId, (adClickCounts.get(adId) || 0) + 1)
   startCityAdsFlush()
 }

@@ -64,14 +64,14 @@ export function useIncomingMessagePopup() {
   }, [clearTimers])
 
   const handleBlockUser = useCallback(async () => {
-    if (!state.message?.sender_id) return
+    if (!user?.id || !state.message?.sender_id) return
     const { blockUser } = await import('@/lib/blocking')
-    const ok = await blockUser(state.message.sender_id)
+    const ok = await blockUser(user.id, state.message.sender_id)
     if (ok) {
       toast.success('User blocked')
     }
     dismiss()
-  }, [state.message?.sender_id, dismiss])
+  }, [user?.id, state.message?.sender_id, dismiss])
 
   useEffect(() => {
     if (!user?.id) return

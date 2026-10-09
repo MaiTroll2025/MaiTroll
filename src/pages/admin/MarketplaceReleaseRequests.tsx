@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase'
 import { toast } from 'sonner'
 import {
@@ -40,7 +40,7 @@ export default function MarketplaceReleaseRequests() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending')
   const [processing, setProcessing] = useState<string | null>(null)
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({})
-  const [showDetail, setShowDetail] = React.useState<ReleaseRequest | null>(null)
+  const [_showDetail, _setShowDetail] = React.useState<ReleaseRequest | null>(null)
 
   const fetchRequests = async () => {
     setLoading(true)
@@ -89,7 +89,7 @@ export default function MarketplaceReleaseRequests() {
         throw new Error('Unable to determine current admin user')
       }
 
-      const { data, error } = await supabase.rpc('admin_approve_marketplace_release', {
+      const { data: _data, error } = await supabase.rpc('admin_approve_marketplace_release', {
         p_request_id: request.id,
         p_admin_id: authData.user.id,
         p_admin_notes: adminNotes[request.id] || null,
@@ -119,7 +119,7 @@ export default function MarketplaceReleaseRequests() {
         throw new Error('Unable to determine current admin user')
       }
 
-      const { data, error } = await supabase.rpc('admin_reject_marketplace_release', {
+      const { data: _data, error } = await supabase.rpc('admin_reject_marketplace_release', {
         p_request_id: request.id,
         p_admin_id: authData.user.id,
         p_rejection_reason: adminNotes[request.id] || null,

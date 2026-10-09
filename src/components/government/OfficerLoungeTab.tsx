@@ -2,7 +2,7 @@ import React from 'react';
 import { Gavel, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function OfficerLoungeTab(props: any) {
+export default function OfficerLoungeTab(_props: any) {
   const navigate = useNavigate();
   
   return (

@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const THUMIO_API_KEY = Deno.env.get("THUMIO_API_KEY");
+const _THUMIO_API_KEY = Deno.env.get("THUMIO_API_KEY");
 
 async function captureScreenshot(url: string, supabaseClient: any, sourceId: string): Promise<string | null> {
   try {
@@ -34,7 +34,7 @@ async function captureScreenshot(url: string, supabaseClient: any, sourceId: str
             console.log('Screenshot captured, size:', uint8Array.length);
             
             const path = `screenshots/${sourceId}_${Date.now()}.png`;
-            const { data, error } = await supabaseClient.storage
+            const { data: _data, error } = await supabaseClient.storage
               .from('ad-assets')
               .upload(path, uint8Array, {
                 contentType: 'image/png',

@@ -33,7 +33,7 @@ export function useActiveBroadcasts() {
             inactiveCountRef.current += 1;
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Silently fail — non-critical
       }
     };

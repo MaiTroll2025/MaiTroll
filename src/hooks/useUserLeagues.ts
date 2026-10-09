@@ -204,7 +204,7 @@ export function useUserLeagues(): UseUserLeaguesResult {
     // Client-side level check (server also enforces)
     const userLevel = profile?.level ?? 0
     const isAdmin = profile?.is_admin === true || profile?.role === 'admin' || profile?.role === 'ceo' || profile?.role === 'superadmin'
-    const isRole = profile?.role != null && profile.role !== '' && profile.role !== 'user'
+    const isRole = profile?.role != null && profile.role !== 'user'
 
     if (userLevel < 10 && !isAdmin && !isRole) {
       setError('You must be level 10 to create a league')
@@ -299,7 +299,7 @@ export function useUserLeagues(): UseUserLeaguesResult {
     setError(null)
 
     try {
-      const { data, error: claimError } = await supabase.rpc('claim_user_league_mission', {
+      const { data: _data, error: claimError } = await supabase.rpc('claim_user_league_mission', {
         p_mission_id: missionId,
       })
 

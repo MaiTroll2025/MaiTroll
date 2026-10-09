@@ -172,14 +172,14 @@ export function subscribeToStreamRealtime(
   }
 }
 
-export function sendStreamBroadcast(streamId: string, event: string, payload: Record<string, any>) {
+export function sendStreamBroadcast(streamId: string, event: string, payload: Record<string, any>): Promise<void> {
   const entry = entries.get(streamId)
-  if (!entry) return
-  entry.channel.send({
-    type: 'broadcast',
-    event,
-    payload,
-  }).catch(() => {})
+  if (!entry) return Promise.resolve()
+  return Promise.resolve(entry.channel.send({
+      type: 'broadcast',
+      event,
+      payload,
+    })).then(() => undefined)
 }
 
 export function getStreamRealtimeDebugState() {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, Eye, EyeOff } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 
 export default function CorruptionTab(props: any) {
   const bribes = props.bribes || [];

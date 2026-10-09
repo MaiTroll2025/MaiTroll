@@ -46,7 +46,7 @@ const connectionString = `postgresql://postgres:${serviceRoleKey}@db.gejtbllazzi
   } catch (err) {
     console.error('Error:', err.message);
     console.error(err.stack);
-    try { await client.end(); } catch (e) {}
+    try { await client.end(); } catch (_e) {}
     process.exit(1);
   }
 })();

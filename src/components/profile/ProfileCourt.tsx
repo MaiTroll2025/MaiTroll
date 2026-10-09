@@ -64,7 +64,7 @@ export default function ProfileCourt({ userId }: { userId: string }) {
         ]);
 
         if (isMounted) {
-          setCases((casesRes.data || []) as CourtCase[]);
+          setCases((casesRes.data || []) as unknown as CourtCase[]);
           if (isAdmin) setDockets((docketsRes.data || []) as Docket[]);
         }
       } catch (err) {

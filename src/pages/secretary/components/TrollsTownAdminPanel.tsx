@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'sonner';
 import { Home, Hammer, RefreshCw, Search, User } from 'lucide-react';
-import { formatCompactNumber } from '../../../lib/utils';
 
 interface PropertyWithOwner {
   id: string;

@@ -4,7 +4,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../lib/store';
 
 // Types
 export interface AchievementTier {

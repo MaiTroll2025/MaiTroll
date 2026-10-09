@@ -1,15 +1,6 @@
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft,
-  BarChart3,
-  Box,
-  Calendar,
-  CheckCircle2,
-  Package,
-  Settings,
-  Users,
-} from 'lucide-react'
+import { ArrowLeft, BarChart3, Calendar, CheckCircle2, Package, Settings, Users } from 'lucide-react';
 import { cn } from '../../lib/utils'
 
 interface AuctionNavProps {
@@ -36,7 +27,7 @@ export default function AuctionNav({ active, extra }: AuctionNavProps) {
   const location = useLocation()
 
   // Determine if we're on the studio page itself to show the back button differently
-  const isStudio = location.pathname === '/auctions/studio'
+  const _isStudio = location.pathname === '/auctions/studio'
 
   return (
     <div className={cn(panel, 'overflow-hidden p-3')}>

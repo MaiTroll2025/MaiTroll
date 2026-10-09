@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, MessageCircle, Link2 } from 'lucide-react';
+import { X, Copy, Check, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/store';
 import { awardSharePoint } from '../../lib/weeklyPointsService';
 
@@ -54,7 +53,7 @@ const SOCIAL_PLATFORMS = [
     id: 'linkedin', 
     name: 'LinkedIn', 
     color: '#0A66C2',
-    shares: (url: string, title: string) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
+    shares: (url: string, _title: string) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
   },
   { 
     id: 'messenger', 
@@ -91,7 +90,7 @@ const SOCIAL_PLATFORMS = [
 
 export default function ShareModal({ isOpen, onClose, streamTitle, streamUrl, broadcasterName }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   if (!isOpen) return null;
 
@@ -129,12 +128,12 @@ export default function ShareModal({ isOpen, onClose, streamTitle, streamUrl, br
         text: `Check out this live stream by ${broadcasterName || 'someone'}!`,
         url: streamUrl
       });
-    } catch (error) {
+    } catch (_error) {
       // User cancelled or error
     }
   };
 
-  const shareText = `Check out this live stream by ${broadcasterName || 'someone'}! ${streamUrl}`;
+  const _shareText = `Check out this live stream by ${broadcasterName || 'someone'}! ${streamUrl}`;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center">

@@ -247,7 +247,7 @@ Deno.serve(async (req) => {
 
       case "update_user_profile": {
         if (!isAdmin) throw new Error("Unauthorized: Admin only");
-        const { userId, updates, coinAdjustment, roleUpdate } = params;
+        const { userId, updates, coinAdjustment, roleUpdate: _roleUpdate } = params;
         if (!userId) throw new Error("Missing userId");
         if (updates && Object.keys(updates).length > 0) {
           const { error } = await supabaseAdmin.rpc('admin_update_any_profile_field', { p_user_id: userId, p_updates: updates, p_admin_id: user.id, p_reason: 'Admin Panel Update' });
@@ -294,7 +294,7 @@ Deno.serve(async (req) => {
         if (!isAdmin) throw new Error("Unauthorized: Admin only");
         const { userId } = params;
         if (!userId) throw new Error("Missing userId");
-        const { data: rpcResult, error } = await supabaseAdmin.rpc('admin_update_any_profile_field', { p_user_id: userId, p_updates: { is_banned: false, banned_until: null }, p_admin_id: user.id, p_reason: 'Unbanned by admin' });
+        const { error } = await supabaseAdmin.rpc('admin_update_any_profile_field', { p_user_id: userId, p_updates: { is_banned: false }, p_admin_id: user.id, p_reason: 'Unbanned by admin' });
         if (error) throw error;
         result = { success: true };
         break;
@@ -492,7 +492,7 @@ Deno.serve(async (req) => {
 
       case "admin_force_end_stream": {
         if (!isAdmin) throw new Error("Unauthorized");
-        const { streamId, reason } = params;
+        const { streamId, reason: _reason } = params;
         if (!streamId) throw new Error("Missing streamId");
         const { error } = await supabaseAdmin.from("streams").update({ is_live: false, status: "ended", end_time: new Date().toISOString() }).eq("id", streamId);
         if (error) throw error;

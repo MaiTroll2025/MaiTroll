@@ -16,7 +16,7 @@ export default function TeamMeetingNotification({
   onDismiss,
   onJoin,
 }: TeamMeetingNotificationProps) {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [cameraOn, setCameraOn] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);

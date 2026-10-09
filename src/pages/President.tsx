@@ -1,20 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Calendar,
-  ChevronRight,
-  Crown,
-  Landmark,
-  Lock,
-  ShieldCheck,
-  Sparkles,
-  Users,
-  Vote,
-  Zap,
-  FileText,
-  Plus,
-  Gavel,
-} from 'lucide-react'
+import { Calendar, ChevronRight, Crown, Landmark, Lock, ShieldCheck, Sparkles, Users, Vote, Zap, FileText, Plus } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { useAuthStore } from '@/lib/store'
@@ -41,7 +27,8 @@ export default function PresidentPage() {
   const isAdmin = profile?.role === 'admin' || profile?.is_admin === true
   const isPresident = profile?.role === 'president'
   const isSecretary = profile?.role === 'secretary'
-  const isVP = profile?.role === 'vice_president' || profile?.role === 'vp' || profile?.vice_president
+  const role = String(profile?.role || '')
+  const isVP = role === 'vice_president' || role === 'vp' || profile?.vice_president
   const pollsOpen = currentElection?.status === 'open'
 
   const alreadyCandidate = useMemo(() => {
@@ -425,7 +412,7 @@ function OfficeCard({
 
 // Law Office Section for President/Admin
 function LawOfficeSection() {
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const { laws, createLaw, loading } = useGovernmentSystem()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newLaw, setNewLaw] = useState({
@@ -457,7 +444,7 @@ function LawOfficeSection() {
         effect_value: {},
         required_votes: 10,
       })
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to create law')
     }
   }

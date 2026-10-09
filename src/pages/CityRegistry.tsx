@@ -3,24 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
 import { toast } from 'sonner';
-import { 
-  FileText, 
-  AlertTriangle, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Package,
-  DollarSign,
-  ChevronRight,
-  Search,
-  Filter,
-  RefreshCw,
-  Eye,
-  Scale,
-  Gavel,
-  Building2,
-  Video
-} from 'lucide-react';
+import { FileText, AlertTriangle, Clock, CheckCircle, XCircle, Package, Search, RefreshCw, Eye, Scale, Building2 } from 'lucide-react';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
 
 type AppealCategory = 'non_delivery' | 'not_as_described' | 'damaged_item' | 'seller_issue' | 'buyer_issue' | 'payment_issue' | 'other';
@@ -80,16 +63,16 @@ const STATUS_COLORS: Record<AppealStatus, string> = {
 
 export default function CityRegistry() {
   const { user, profile } = useAuthStore();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // Check for tab query parameter
-  const tabParam = searchParams.get('tab');
+  const _tabParam = searchParams.get('tab');
   
   const [activeTab, setActiveTab] = useState<'file' | 'history'>('file');
   
   // Check if user is staff (Admin, CEO, Lead Troll Officers, Troll Officers, Secretary)
-  const isStaffUser = profile && (
+  const _isStaffUser = profile && (
     profile.role === 'admin' ||
     profile.is_admin ||
     profile.is_lead_officer ||
@@ -300,7 +283,7 @@ export default function CityRegistry() {
     }
   };
 
-  const getStatusIcon = (status: AppealStatus) => {
+  const _getStatusIcon = (status: AppealStatus) => {
     switch (status) {
       case 'pending': return <Clock className="w-4 h-4" />;
       case 'under_review': return <Eye className="w-4 h-4" />;

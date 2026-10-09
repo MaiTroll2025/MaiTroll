@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Share2, Settings2, Plus, Minus, Coins, LayoutGrid, Palette, Package, UserX, ImageIcon, Star, LogOut, Swords, ChevronDown, ChevronUp, GripVertical, X, Zap, MoreHorizontal, Radio, CircleDot, Volume2, Camera, Monitor, Aperture, Layers, Maximize2, Minimize2, RotateCcw, Sliders, Flame, Crown, Shield, Sparkles, Activity, Signal } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Share2, Plus, Minus, Coins, LayoutGrid, Palette, Package, UserX, ImageIcon, Star, Swords, X, MoreHorizontal, CircleDot, Camera, Monitor, Sliders, Crown, Shield, Sparkles, Activity, Signal } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 // ═══════════════════════════════════════════════════════════════

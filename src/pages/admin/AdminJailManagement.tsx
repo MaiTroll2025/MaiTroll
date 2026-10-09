@@ -80,7 +80,7 @@ export default function AdminJailManagement() {
     }
   };
 
-  const handleRelease = async (inmate: JailInmate, refundCoins: boolean = false) => {
+  const handleRelease = async (inmate: JailInmate, _refundCoins: boolean = false) => {
     try {
       const now = new Date().toISOString();
       const { error: jailError } = await supabase
@@ -129,7 +129,7 @@ export default function AdminJailManagement() {
     }
   };
 
-  const handleAssignAttorney = async (inmate: JailInmate, attorneyId: string) => {
+  const _handleAssignAttorney = async (inmate: JailInmate, attorneyId: string) => {
     try {
       const { error } = await supabase
         .from('jail')

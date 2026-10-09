@@ -9,7 +9,7 @@ const missingSet = new Set(missingTables);
 const frontendSchema = fs.readFileSync('C:/Users/kainm/TC ONLY/Mai Troll/frontend_schema.sql', 'utf8');
 
 // Search for ALTER TABLE statements that reference our missing tables
-const alterRegex = new RegExp(
+const _alterRegex = new RegExp(
   `ALTER\\s+TABLE\\s+(?:IF\\s+EXISTS\\s+)?(?:public\\.)?(${missingTables.join('|')})\\s+`,
   'gi'
 );

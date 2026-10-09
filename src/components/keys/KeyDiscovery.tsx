@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Key, Sparkles, Lock, Unlock } from 'lucide-react';
-import type { KeyInstance, KeyRarity } from '../../types/keys';
+import { Key, Sparkles, Lock } from 'lucide-react';
+import type { KeyRarity } from '../../types/keys';
 import { KEY_RARITY_COLORS } from '../../types/keys';
 
 interface KeyDiscoveryProps {

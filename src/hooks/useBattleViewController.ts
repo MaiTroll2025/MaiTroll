@@ -16,7 +16,7 @@ import { useActiveBattles, ActiveBattle } from "../components/broadcast/battle/A
 import { getTrackPublications, CrownInfo } from "../components/broadcast/BattleArena";
 
 const MAIN_BATTLE_DURATION_MS = 180_000;
-const SUDDEN_DEATH_DURATION_MS = 10_000;
+const _SUDDEN_DEATH_DURATION_MS = 10_000;
 const MAX_CONNECTION_RETRIES = 5;
 const CONNECTION_TIMEOUT_MS = 3000;
 
@@ -78,9 +78,9 @@ export function useBattleViewController({
   // Track connection phases to avoid repeated renders from track events
   const [trackRevision, setTrackRevision] = useState(0);
   const trackRevisionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastTrackRevisionRef = useRef(0);
+  const _lastTrackRevisionRef = useRef(0);
   const preflightSetInBattleRef = useRef(false);
-  const [battleTick, setBattleTick] = useState(0);
+  const [battleTick, _setBattleTick] = useState(0);
   const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bumpTrackRevision = useCallback(() => {
@@ -115,11 +115,11 @@ export function useBattleViewController({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [battlePhase, setBattlePhase] = useState<BattlePhase>("IDLE");
+  const [_battlePhase, setBattlePhase] = useState<BattlePhase>("IDLE");
   const battlePhaseRef = useRef<BattlePhase>("IDLE");
 
   // Get coin/crown balances for display
-  const { troll_coins: userCoins, crowns: userCrowns, trollmonds: userTrollmonds } = useCoins() as any;
+  const { troll_coins: _userCoins, crowns: _userCrowns, trollmonds: _userTrollmonds } = useCoins() as any;
   
   // Family activity recording
   const { recordBattleWon, recordBattleLost, recordBattleJoined } = useTrollFamilyActivity();
@@ -146,7 +146,7 @@ export function useBattleViewController({
   // Real, authoritative per-recipient battle-point contributions aggregated from
   // realtime gift_sent events (gift coin value credited to the recipient). Never mocked.
   const [participantContributions, setParticipantContributions] = useState<Record<string, number>>({});
-  const [arenaReadyAtMs, setArenaReadyAtMs] = useState<number | null>(null);
+  const [_arenaReadyAtMs, setArenaReadyAtMs] = useState<number | null>(null);
   const [arenaReady, setArenaReady] = useState(false);
   const [preBattleCountdown, setPreBattleCountdown] = useState<number | null>(null);
   const hasHandledReturnRef = useRef(false);
@@ -421,7 +421,7 @@ export function useBattleViewController({
         for (const pub of tracks) {
           try {
             if (pub.track) await localParticipant.unpublishTrack(pub.track);
-          } catch (e) {
+          } catch (_e) {
             // ignore
           }
         }
@@ -491,7 +491,7 @@ export function useBattleViewController({
         bumpTrackRevision();
       };
 
-      const handleTrackPublished = (publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+      const handleTrackPublished = (publication: RemoteTrackPublication, _participant: RemoteParticipant) => {
         publication.setSubscribed(true);
         bumpTrackRevision();
       };
@@ -816,7 +816,7 @@ export function useBattleViewController({
     }
   }, [isBroadcaster, effectiveUserId, isMobileViewport]);
 
-  const myStream = useMemo(() => {
+  const _myStream = useMemo(() => {
     if (!participantInfo?.team) return null;
     if (participantInfo.team === 'challenger') return challengerStream;
     if (participantInfo.team === 'opponent') return opponentStream;
@@ -1426,7 +1426,7 @@ export function useBattleViewController({
   // Timer Logic - 3 minutes with 10 second sudden death
   const [timeLeft, setTimeLeft] = useState<number>(180);
   const [isSuddenDeath, setIsSuddenDeath] = useState(false);
-  const [hasEnded, setHasEnded] = useState(false);
+  const [_hasEnded, setHasEnded] = useState(false);
   const [showRematchOption, setShowRematchOption] = useState(false);
 
   const handleRematch = useCallback(async () => {
@@ -1662,7 +1662,7 @@ export function useBattleViewController({
           for (const pub of tracks) {
             try {
               if (pub.track) await localParticipant.unpublishTrack(pub.track);
-            } catch (e) {
+            } catch (_e) {
               // ignore unpublish errors during cleanup
             }
           }
@@ -1890,7 +1890,7 @@ export function useBattleViewController({
         for (const pub of tracks) {
           try {
             if (pub.track) await localParticipant.unpublishTrack(pub.track);
-          } catch (e) {
+          } catch (_e) {
             // ignore unpublish errors during cleanup
           }
         }
@@ -1925,7 +1925,7 @@ export function useBattleViewController({
   // When streamEnded is true, the user on the ended stream goes home, winner goes to broadcast
   useEffect(() => {
     if (!battleId) return;
-    const ch = getBattleBroadcastChannel()
+    const _ch = getBattleBroadcastChannel()
       .on('broadcast', { event: 'return_to_broadcast' }, (payload) => {
         if (hasHandledReturnRef.current) return;
         hasHandledReturnRef.current = true;

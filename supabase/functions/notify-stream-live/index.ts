@@ -13,7 +13,7 @@ const STAFF_ROLES = new Set([
   'lead_troll_officer', 'troll_officer', 'moderator', 'staff', 'secretary',
   'executive_secretary', 'troll_city_secretary', 'agency_hr', 'agency_hr_manager',
   'agency_leader', 'ceo_assistant', 'noah_assistant', 'hr_admin',
-  'marketing_readonly', 'academy_director', 'prosecutor', 'attorney',
+  'marketing_agent', 'academy_director', 'prosecutor', 'attorney',
 ]);
 
 interface StreamLivePayload {
@@ -141,7 +141,33 @@ serve(async (req) => {
 
     if (notifyUserIds.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, message: 'No staff or admin recipients found', notificationsSent: 0 }),
+        JSON.stringify({
+          success: false,
+          error: 'No staff or admin recipients found',
+          notificationsSent: 0
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: existingNotifications, error: existingError } = await supabaseAdmin
+      .from('notifications')
+      .select('user_id')
+      .in('user_id', notifyUserIds)
+      .eq('type', 'stream_live')
+      .filter('metadata->>stream_id', 'eq', streamId);
+    if (existingError) throw new Error(`Failed to check duplicate stream alerts: ${existingError.message}`);
+
+    const alreadyNotified = new Set((existingNotifications || []).map((notification) => notification.user_id));
+    const recipientsToNotify = notifyUserIds.filter((id) => !alreadyNotified.has(id));
+    if (recipientsToNotify.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Stream alert already created',
+          notificationsSent: 0,
+          pushQueued: 0,
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -149,7 +175,7 @@ serve(async (req) => {
     const streamerName = streamerProfile.display_name || streamerProfile.username || 'A user';
     const streamTitle = stream.title || 'Untitled Stream';
 
-    const createResults = await Promise.all(notifyUserIds.map(adminId =>
+    const createResults = await Promise.all(recipientsToNotify.map(adminId =>
       supabaseAdmin.rpc('create_notification', {
         p_user_id: adminId,
         p_type: 'stream_live',
@@ -171,12 +197,17 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        success: true,
+        success: inAppFailures === 0,
         notificationsSent: createResults.length - inAppFailures,
         inAppNotificationsCreated: createResults.length - inAppFailures,
         inAppFailures,
         pushQueued: createResults.length - inAppFailures,
-        message: 'In-app notification created and queued for platform push delivery',
+        message: inAppFailures === 0
+          ? 'In-app notification created and queued for platform push delivery'
+          : 'One or more staff notifications could not be created',
+        error: inAppFailures > 0
+          ? 'Failed to create one or more staff notifications'
+          : undefined,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

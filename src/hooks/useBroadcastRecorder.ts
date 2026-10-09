@@ -29,7 +29,7 @@ interface UseBroadcastRecorderOptions {
 }
 
 export function useBroadcastRecorder(options: UseBroadcastRecorderOptions = {}): UseBroadcastRecorderReturn {
-  const { sourceStream, sourceStreamCleanup = false, sourceUrl, replaySource, replayTitlePrefix } = options
+  const { sourceStream, sourceStreamCleanup: _sourceStreamCleanup = false, sourceUrl, replaySource, replayTitlePrefix } = options
   const [isRecording, setIsRecording] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)

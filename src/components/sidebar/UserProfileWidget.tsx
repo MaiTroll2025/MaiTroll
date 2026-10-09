@@ -31,7 +31,7 @@ function formatNumber(value: number) {
   return value.toLocaleString()
 }
 
-function WalletRow({
+function _WalletRow({
   icon,
   label,
   value,

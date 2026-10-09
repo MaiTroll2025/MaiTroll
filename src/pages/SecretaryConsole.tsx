@@ -3,21 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
-import {
-  LayoutDashboard,
-  Inbox,
-  DollarSign,
-  Gift,
-  Bell,
-  FileText,
-  LogOut,
-  ShieldAlert,
-  Home,
-  Calendar,
-  CreditCard,
-  Scale,
-  Music
-} from 'lucide-react'
+import { LayoutDashboard, Inbox, DollarSign, Gift, Bell, FileText, LogOut, ShieldAlert, Home, Calendar, CreditCard, Scale } from 'lucide-react';
 import OfficerShiftCalendar from '../components/officer/OfficerShiftCalendar'
 import ExecutiveIntakeList from './admin/components/shared/ExecutiveIntakeList'
 import CashoutRequestsList from './admin/components/shared/CashoutRequestsList'
@@ -45,7 +31,7 @@ export default function SecretaryConsole() {
   const fetchCounts = useCallback(async () => {
     try {
         const [intakeRes, cashoutRes, alertsRes, manualRes, coinSalesRes] = await Promise.all([
-            supabase.from('executive_intake').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+            supabase.from('executive_intake').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_review']),
             supabase.from('payout_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
             supabase.from('critical_alerts').select('id', { count: 'exact', head: true }).eq('resolved', false),
             supabase.from('manual_coin_orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
@@ -279,7 +265,7 @@ const SecretaryCoinSalesList: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('coin_transactions')
-        .select('id,user_id,amount,metadata,status,created_at,user_profiles:user_id(username,square_card_id)')
+        .select('id,user_id,amount,metadata,status,created_at')
         .eq('type', 'store_purchase')
         .order('created_at', { ascending: false })
         .limit(500)
@@ -288,10 +274,17 @@ const SecretaryCoinSalesList: React.FC = () => {
         throw error
       }
 
+      const userIds = [...new Set((data || []).map(tx => tx.user_id).filter(Boolean))]
+      const { data: profiles, error: profilesError } = userIds.length
+        ? await supabase.from('user_profiles').select('id, username, square_card_id').in('id', userIds)
+        : { data: [], error: null }
+      if (profilesError) throw profilesError
+      const profileMap = new Map((profiles || []).map(profile => [profile.id, profile]))
+
       setTransactions((data || []).map((tx: any) => ({
         ...tx,
-        username: tx.user_profiles?.username || 'Unknown',
-        card_last4: tx.user_profiles?.square_card_id ? `•••• ${String(tx.user_profiles.square_card_id).slice(-4)}` : 'N/A'
+        username: profileMap.get(tx.user_id)?.username || 'Unknown',
+        card_last4: profileMap.get(tx.user_id)?.square_card_id ? `•••• ${String(profileMap.get(tx.user_id)?.square_card_id).slice(-4)}` : 'N/A'
       })))
     } catch (err: any) {
       console.error('Failed to load coin sales:', err)

@@ -58,7 +58,7 @@ serve(async (req) => {
 
     try {
       const selectedCaption = queueItem.caption_variants?.find((c: any) => c.is_selected) || queueItem.caption_variants?.[0];
-      const assetUrl = queueItem.ad_assets?.[0]?.public_url;
+      const _assetUrl = queueItem.ad_assets?.[0]?.public_url;
       
       const postText = selectedCaption 
         ? `${selectedCaption.caption_text}${selectedCaption.hashtags ? '\n\n' + selectedCaption.hashtags : ''}`

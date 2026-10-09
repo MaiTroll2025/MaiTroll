@@ -283,7 +283,7 @@ function BroadcastRouter() {
    const profileAccess = useMemo(() => getProfileAccessSnapshot(profile), [profile])
 
   const [stream, setStream] = useState<Stream | null>(null)
-  const [broadcaster, setBroadcaster] = useState<BroadcasterMeta | null>(null)
+  const [_broadcaster, setBroadcaster] = useState<BroadcasterMeta | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

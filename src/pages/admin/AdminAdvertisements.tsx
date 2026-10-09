@@ -104,7 +104,7 @@ export default function AdminAdvertisements() {
       if (error) throw error;
       toast.success(`Queue rotated: ${data.rotations_performed} changes`);
       fetchAds();
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to rotate queue');
     }
   };

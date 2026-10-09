@@ -6,26 +6,7 @@ import SEOLayout, {
   SEOContentSection,
   CTASection,
 } from './SEOLayout'
-import {
-  HelpCircle,
-  Mail,
-  MessageSquare,
-  BookOpen,
-  Shield,
-  Zap,
-  Users,
-  AlertTriangle,
-  Settings,
-  User,
-  CreditCard,
-  GraduationCap,
-  BriefcaseBusiness,
-  Trophy,
-  Landmark,
-  Wallet,
-  Radio,
-  Smartphone,
-} from 'lucide-react'
+import { HelpCircle, Mail, MessageSquare, BookOpen, Shield, Zap, Users, AlertTriangle, User, CreditCard, GraduationCap, BriefcaseBusiness, Trophy, Landmark, Radio, Smartphone } from 'lucide-react';
 
 const helpCategories = [
   {

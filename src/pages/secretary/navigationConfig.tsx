@@ -1,4 +1,4 @@
-import { LayoutDashboard, ClipboardList, AlertTriangle, DollarSign, CreditCard, Shield, Landmark, Crown, FileText, Building2, Users, Bell, Briefcase, LogOut, ChevronRight, Activity, CalendarDays, CheckSquare, Coins, Music } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, AlertTriangle, DollarSign, Landmark, Crown, FileText, Building2, Users, Bell, Briefcase, Activity, CalendarDays, CheckSquare, Coins } from 'lucide-react';
 
 type Section =
   | 'dashboard'

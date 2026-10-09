@@ -21,7 +21,7 @@ export function useBattleEvents(battleId: string | null | undefined): BattleEven
   const [timerRate, setTimerRate] = useState<number>(1);
   const [giftLockedHostId, setGiftLockedHostId] = useState<string | null>(null);
   const [eventSequence, setEventSequence] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, _setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const mountedRef = useRef(true);
@@ -103,7 +103,7 @@ export function useBattleEvents(battleId: string | null | undefined): BattleEven
       schema: 'public',
       table: 'battle_random_events',
       filter: `battle_id=eq.${battleId}`,
-    }, async (payload) => {
+    }, async (_payload) => {
       if (!mountedRef.current) return;
       await refreshEvents();
     });

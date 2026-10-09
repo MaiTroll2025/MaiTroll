@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../../../lib/supabase'
 import { ExecutiveIntake } from '../../../../types/admin'
 import { toast } from 'sonner'
-import { AlertTriangle, CheckCircle, Clock, ArrowUpCircle, BadgeCheck } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Clock, ArrowUpCircle } from 'lucide-react'
 import { useAuthStore } from '../../../../lib/store'
 
 interface ExecutiveIntakeListProps {
@@ -17,11 +17,6 @@ export default function ExecutiveIntakeList({ viewMode }: ExecutiveIntakeListPro
   const [filterSeverity, setFilterSeverity] = useState<string>('all')
   const [selectedItem, setSelectedItem] = useState<ExecutiveIntake | null>(null)
   const [notes, setNotes] = useState('')
-
-  const handleSignTitle = async (id: string, carId: string) => {
-      console.log('Signing title for', id, carId)
-      toast.info('Title signing not yet implemented')
-  }
 
   const fetchIntake = useCallback(async () => {
     setLoading(true)
@@ -159,8 +154,8 @@ export default function ExecutiveIntakeList({ viewMode }: ExecutiveIntakeListPro
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             <option value="all">All Status</option>
-            <option value="new">New</option>
-            <option value="in_progress">In Progress</option>
+            <option value="open">Open</option>
+            <option value="in_review">In Review</option>
             <option value="resolved">Resolved</option>
             <option value="escalated">Escalated</option>
           </select>
@@ -172,7 +167,7 @@ export default function ExecutiveIntakeList({ viewMode }: ExecutiveIntakeListPro
             <option value="all">All Severity</option>
             <option value="critical">Critical</option>
             <option value="high">High</option>
-            <option value="medium">Medium</option>
+            <option value="normal">Normal</option>
             <option value="low">Low</option>
           </select>
         </div>
@@ -195,9 +190,9 @@ export default function ExecutiveIntakeList({ viewMode }: ExecutiveIntakeListPro
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     {item.severity === 'critical' && <AlertTriangle className="w-4 h-4 text-red-500" />}
-                    <span className="font-semibold text-white">{item.title || 'Untitled Request'}</span>
+                    <span className="font-semibold text-white">{item.title}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      item.status === 'new' ? 'bg-blue-500/20 text-blue-300' :
+                      item.status === 'open' ? 'bg-blue-500/20 text-blue-300' :
                       item.status === 'resolved' ? 'bg-green-500/20 text-green-300' :
                       item.status === 'escalated' ? 'bg-purple-500/20 text-purple-300' :
                       'bg-yellow-500/20 text-yellow-300'
@@ -262,24 +257,15 @@ export default function ExecutiveIntakeList({ viewMode }: ExecutiveIntakeListPro
                   )}
 
                   {item.status !== 'resolved' && (
-                    item.type === 'vehicle_title' && item.metadata?.car_id ? (
-                        <button 
-                            onClick={() => handleSignTitle(item.id, item.metadata.car_id)}
-                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded transition-colors flex items-center justify-center gap-1"
-                        >
-                            <BadgeCheck className="w-3 h-3" /> Notarize Title
-                        </button>
-                    ) : (
-                        <button 
-                        onClick={() => handleUpdateStatus(item.id, 'resolved')}
-                        className="px-3 py-1 bg-green-600/20 hover:bg-green-600/30 text-green-300 border border-green-600/50 text-xs rounded transition-colors flex items-center justify-center gap-1"
-                        >
-                        <CheckCircle className="w-3 h-3" /> Resolve
-                        </button>
-                    )
+                    <button
+                      onClick={() => handleUpdateStatus(item.id, 'resolved')}
+                      className="px-3 py-1 bg-green-600/20 hover:bg-green-600/30 text-green-300 border border-green-600/50 text-xs rounded transition-colors flex items-center justify-center gap-1"
+                    >
+                      <CheckCircle className="w-3 h-3" /> Resolve
+                    </button>
                   )}
 
-                  {item.status !== 'escalated' && !item.escalated_to_admin && item.type !== 'vehicle_title' && (
+                  {item.status !== 'escalated' && !item.escalated_to_admin && (
                     <button 
                       onClick={() => handleEscalate(item.id)}
                       className="px-3 py-1 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-600/50 text-xs rounded transition-colors flex items-center justify-center gap-1"

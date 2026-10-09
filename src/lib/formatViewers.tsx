@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'
-import SEOLayout, { Breadcrumb, CTASection } from './SEOLayout'
-import { Sparkles, Gamepad2, Music, Palette, MessageCircle, Utensils, Dumbbell, Code, Camera, Heart, Target, TrendingUp, ArrowRight, Search, Users, Play } from 'lucide-react'
+import SEOLayout, { Breadcrumb, CTASection } from '@/pages/seo/SEOLayout'
+import { Sparkles, Gamepad2, Music, Palette, MessageCircle, Utensils, Dumbbell, Code, Camera, Heart, TrendingUp, ArrowRight, Search, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 
 const categories = [

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase'
 import { X, Loader2, Trash2, Mic, MicOff, AlertCircle, MessageSquareOff, LogOut, Ban, Shield, UserCheck, Car, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'

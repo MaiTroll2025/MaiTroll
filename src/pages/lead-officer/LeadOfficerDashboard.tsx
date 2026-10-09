@@ -400,7 +400,7 @@ export default function LeadOfficerDashboard() {
     }
   }
 
-  const bypassHireJobApplication = async (app: any) => {
+  const _bypassHireJobApplication = async (app: any) => {
     if (!profile?.id) return
 
     setLoading(true)
@@ -732,7 +732,7 @@ export default function LeadOfficerDashboard() {
 
             <Panel title="Lead Officer Application Queue" icon={FileText}>
                <PendingApplicationsList
-                 onApprove={async (appId, userId) => {
+                 onApprove={async (appId, _userId) => {
                    await approveApplication(appId)
                  }}
                  onReject={rejectApplication}
@@ -1090,11 +1090,11 @@ function ActionButton({
 function PendingApplicationsList({
   onApprove,
   onReject,
-  onSchedule,
+  onSchedule: _onSchedule,
 }: {
   onApprove: (applicationId: string, userId: string) => void
   onReject: (applicationId: string) => void
-  onSchedule: (applicant: Applicant) => void
+  onSchedule?: (applicant: Applicant) => void
 }) {
   const [applications, setApplications] = useState<any[]>([])
   const [loading, setLoading] = useState(false)

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Sparkles, Play, Eye, Gift, MessageCircle } from 'lucide-react'
+import { Play, Eye, Gift } from 'lucide-react';
 import { fetchTrendingTreelz } from '@/services/treelzService'
 import type { TreelzPost } from '@/types/treelz'
 

@@ -1,10 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import {
-  Radio, Gamepad2, Gavel, ShoppingCart, Mic, Landmark,
-  Users, Church, MapPin, Car, Sparkles, Trophy, DollarSign,
-  Building2, Swords, Headphones, Home
-} from 'lucide-react'
+import { Radio, Gamepad2, Gavel, ShoppingCart, Mic, Landmark, Users, Church, Car, Sparkles, Trophy, DollarSign, Building2, Swords, Headphones, Home } from 'lucide-react';
 
 const platformLinks = [
   { path: '/explore', label: 'Explore Live Streams', icon: Radio, description: 'Discover trending content' },

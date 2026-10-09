@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Clock, Users, X, Minus, Plus } from 'lucide-react';
+import { Trophy, Clock, Users, Minus, Plus } from 'lucide-react';
 
 interface RaffleBannerProps {
   raffle: {
@@ -52,10 +52,10 @@ export default function RaffleBanner({ raffle, tickets, onBuy, onDraw, isAdmin }
   const handleDraw = async () => {
     if (!onDraw) return;
     try {
-      const result = await onDraw(raffle.id);
+      const _result = await onDraw(raffle.id);
       setShowResult('Winners drawn!');
       setTimeout(() => setShowResult(null), 3000);
-    } catch (err: any) {
+    } catch (_err: any) {
       setShowResult('Draw failed');
       setTimeout(() => setShowResult(null), 2000);
     }

@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
 
 interface AdminRealtimeState {
   // cached data
@@ -37,7 +36,7 @@ export const useAdminRealtimeStore = create<AdminRealtimeState>((set, get) => ({
   refreshAll: async () => {
     // Refresh all admin data via REST queries instead of realtime
     // This keeps all admin pages in sync without duplicate subscriptions
-    const { coinPurchases, applications, payoutRequests, supportTickets, onlineUsers } = get();
+    const { coinPurchases: _coinPurchases, applications: _applications, payoutRequests: _payoutRequests, supportTickets: _supportTickets, onlineUsers: _onlineUsers } = get();
 
     // Each component can still fetch its own data
     // This store just coordination point if needed

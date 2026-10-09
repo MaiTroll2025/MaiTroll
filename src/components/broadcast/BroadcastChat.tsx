@@ -13,6 +13,7 @@ import GiftBoxModal from './GiftBoxModal';
 import ModActionsPopup from './ModActionsPopup';
 import ProfileFrame from '@/components/profile/ProfileFrame';
 import { useUserFrame } from '@/hooks/useUserFrame';
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import UserMiniProfile from '@/components/user/UserMiniProfile';
 
 import { isStaffProfile } from '../../lib/staff';
@@ -265,8 +266,8 @@ function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disap
 
     let giftType = msg.gift_type || 'gift';
     let giftAmount = msg.gift_amount || 1;
-    let parsedGiftValue = 0;
-    let parsedCoinsBack = 0;
+    let _parsedGiftValue = 0;
+    let _parsedCoinsBack = 0;
     const senderName = msg.sender_name || msg.user_profiles?.username || 'Someone';
     const receiverName = msg.receiver_name || 'user';
     const parsedTrollmondsTransferred = msg.trollmonds_transferred || (msg.content ? (parseGiftMessage(msg.content)?.trollmondsTransferred || 0) : 0);
@@ -276,8 +277,8 @@ function ChatMessageItem({ msg, isHost, isOfficer, user, showGoldenBanner, disap
       if (parsed) {
         giftType = parsed.giftName;
         giftAmount = parsed.quantity;
-        parsedGiftValue = parsed.giftValue;
-        parsedCoinsBack = parsed.coinsBack;
+        _parsedGiftValue = parsed.giftValue;
+        _parsedCoinsBack = parsed.coinsBack;
       }
     }
 
@@ -418,7 +419,7 @@ export default function BroadcastChat({
   hostId,
   isModerator,
   isHost,
-  isViewer = false,
+  isViewer: _isViewer = false,
   isGuest = false,
   onStreamEnd,
   onChallengeBroadcaster,
@@ -428,8 +429,8 @@ export default function BroadcastChat({
   onDenyChallenge,
   isBattleActive = false,
   isChatOpen = true,
-  seats = {},
-  broadcasterProfile,
+  seats: _seats = {},
+  broadcasterProfile: _broadcasterProfile,
   onMessageSent,
   hideEmotePicker = false,
   hideSendButton = false,
@@ -466,7 +467,7 @@ export default function BroadcastChat({
   }, [messages, pinnedMessageIds]);
 
   // Scroll to bottom (index 0 in reversed list) when new messages arrive
-  const scrollToBottom = useCallback(() => {
+  const _scrollToBottom = useCallback(() => {
     virtuosoRef.current?.scrollToIndex({ index: 0, behavior: 'smooth' });
   }, []);
   const [streamMods, setStreamMods] = useState<string[]>([]);
@@ -619,6 +620,12 @@ export default function BroadcastChat({
   const [unreadCount, setUnreadCount] = useState(0);
   const [isChatFocused, setIsChatFocused] = useState(true);
   const userIdRef = useRef<string | undefined>(user?.id);
+  const { blockedIds } = useBlockedUsers();
+  const blockedIdsRef = useRef<Set<string>>(blockedIds);
+
+  useEffect(() => {
+    blockedIdsRef.current = blockedIds;
+  }, [blockedIds]);
   const isChatOpenRef = useRef(isChatOpen);
   const isChatFocusedRef = useRef(isChatFocused);
   const [giftRecipientId, setGiftRecipientId] = useState<string | null>(null);
@@ -1059,7 +1066,9 @@ const fetchMessages = async () => {
           if (cancelled) return
 
           if (data) {
-              const processedMessages = data.reverse().map((m: any) => {
+              const processedMessages = data
+                  .filter((m: any) => !m.user_id || !blockedIdsRef.current.has(m.user_id))
+                  .reverse().map((m: any) => {
                   const uProfile = {
                       username:
                           m.user_name ||
@@ -1195,6 +1204,10 @@ const fetchMessages = async () => {
             (payload: any) => {
                 const msg = normalizeIncomingMessage(payload.payload);
                 if (!msg) return;
+
+                if (msg.user_id && blockedIdsRef.current.has(msg.user_id)) {
+                    return;
+                }
                 
                 if (import.meta.env.DEV) console.debug('[BroadcastChat] 💬 Received chat-message:', msg.type, msg.content, 'from user:', msg.user_id);
                 
@@ -1659,7 +1672,7 @@ const fetchMessages = async () => {
       }
   };
 
-  const renderBadge = (userId: string, role?: string, troll_role?: string) => {
+  const _renderBadge = (userId: string, role?: string, troll_role?: string) => {
       // Host
       if (userId === hostId) {
           return <Crown size={12} className="text-yellow-500 inline mr-1" />;

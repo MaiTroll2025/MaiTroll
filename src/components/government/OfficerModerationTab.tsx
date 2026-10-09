@@ -2,7 +2,7 @@ import React from 'react';
 import { Scale, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function OfficerModerationTab(props: any) {
+export default function OfficerModerationTab(_props: any) {
   const navigate = useNavigate();
   
   return (

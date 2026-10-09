@@ -2,8 +2,8 @@ import React, { useCallback, useEffect } from 'react'
 import { useAuthStore } from '@/lib/store'
 import { useXPStore } from '@/stores/useXPStore'
 import { getLevelName } from '@/lib/xp'
-import { getUnlockedPerks, getUpcomingPerks, calculateNextLevelXp, getLevelUpReward } from '@/config/levelSystem'
-import { Star, Shield, Zap, Gift, Crown, Radio, MessageCircle, Music, Palette } from 'lucide-react'
+import { getUnlockedPerks, getUpcomingPerks } from '@/config/levelSystem';
+import { Star } from 'lucide-react';
 import { MaiTrollTheme } from '@/styles/trollCityTheme'
 
 interface LevelSystemShowcaseProps {

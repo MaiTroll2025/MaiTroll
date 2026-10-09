@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 
 interface CountdownOverlayProps {
   remaining: number | null

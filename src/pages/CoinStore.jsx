@@ -6,7 +6,7 @@ import { useCoins } from '@/lib/hooks/useCoins';
 import { useBank as useBankHook } from '../lib/hooks/useBank';
 import { useAllCreditScores } from '../lib/hooks/useAllCreditScores';
 // import { toast } from 'sonner';
-import { Coins, CreditCard, Landmark, History, CheckCircle, AlertCircle, ChevronDown, X, Crown, Flame, RefreshCw, Sparkles, Wallet, ShoppingBag, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Coins, CreditCard, Landmark, History, AlertCircle, ChevronDown, X, Flame, Sparkles, Wallet, ShoppingBag, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatCoins, COIN_PACKAGES } from '../lib/coinMath';
 import { getBroadcastTheme } from '../lib/broadcastThemes';
 import { deductCoins } from '@/lib/coinTransactions';
@@ -190,6 +190,7 @@ function MiniSparkline({ data, positive, className = "" }) {
 }
 
 // Stock card component
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function StockCard({ stock, onBuy, userCoins, refreshCoins }) {
   const isPositive = stock.price_change_pct_24h >= 0;
   const [showBuyModal, setShowBuyModal] = useState(false);
@@ -223,7 +224,7 @@ function StockCard({ stock, onBuy, userCoins, refreshCoins }) {
       } else {
         toast.error(result.message);
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error('Purchase failed');
     }
     setBuying(false);
@@ -318,6 +319,7 @@ function StockCard({ stock, onBuy, userCoins, refreshCoins }) {
 }
 
 // Portfolio item component
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PortfolioCard({ item, onSell, refreshCoins }) {
   const [showSellModal, setShowSellModal] = useState(false);
   const [sellAmount, setSellAmount] = useState('all');
@@ -342,7 +344,7 @@ function PortfolioCard({ item, onSell, refreshCoins }) {
       } else {
         toast.error(result.message);
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error('Sale failed');
     }
     setSelling(false);
@@ -548,7 +550,7 @@ function ProfileFramesStoreEmbed({ promo, useCredit, creditInfo }) {
 
       setOwnedIds((prev) => new Set(prev).add(frame.id));
       toast.success(`🎉 Purchased ${frame.name}!`);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Purchase failed');
     } finally {
       setPurchasing(null);
@@ -655,7 +657,7 @@ export default function CoinStore() {
   const { scores: allCreditScores, loading: loadingScores } = useAllCreditScores(user?.id);
   const navigate = useNavigate();
   const { troll_coins, refreshCoins } = useCoins();
-const { activeLoans, refresh: refreshBank, payCreditCard, creditInfo, _payLoan: _payLoan, applyForLoan, ledger = [] } = useBankHook();
+const { activeLoans, refresh: _refreshBank, payCreditCard, creditInfo, _payLoan: _payLoan, applyForLoan: _applyForLoan, ledger = [] } = useBankHook();
 
   const [loading, setLoading] = useState(true);
   const [loadingPackage, setLoadingPackage] = useState(null);
@@ -663,13 +665,13 @@ const { activeLoans, refresh: refreshBank, payCreditCard, creditInfo, _payLoan: 
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [useCredit, setUseCredit] = useState(false);
-  const [_applying, setApplying] = useState(false);
+  const [_applying, _setApplying] = useState(false);
   
   // Bank State
-  const [showActiveLoanModal, setShowActiveLoanModal] = useState(false);
+  const [_showActiveLoanModal, _setShowActiveLoanModal] = useState(false);
 
   const [_payAmount, _setPayAmount] = useState('');
-  const [requestedAmount, setRequestedAmount] = useState(100);
+  const [_requestedAmount, _setRequestedAmount] = useState(100);
 
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [paypalPaymentModalOpen, setPaypalPaymentModalOpen] = useState(false);
@@ -687,39 +689,39 @@ const { activeLoans, refresh: refreshBank, payCreditCard, creditInfo, _payLoan: 
   };
 
   const [durationMultiplier, setDurationMultiplier] = useState(1);
-  const [effects, setEffects] = useState([]);
-  const [selectedEffectCategory, setSelectedEffectCategory] = useState('All');
+  const [_effects, setEffects] = useState([]);
+  const [_selectedEffectCategory, _setSelectedEffectCategory] = useState('All');
   const [perks, setPerks] = useState([]);
   const [plans, setPlans] = useState([]);
-  const [effectsNote, setEffectsNote] = useState(null);
+  const [_effectsNote, setEffectsNote] = useState(null);
   const [perksNote, setPerksNote] = useState(null);
   const [insuranceNote, setInsuranceNote] = useState(null);
-  const [callSounds, setCallSounds] = useState([]);
-  const [ownedCallSoundIds, setOwnedCallSoundIds] = useState(new Set());
-  const [activeCallSounds, setActiveCallSounds] = useState({});
-const [callSoundPurchasing, setCallSoundPurchasing] = useState(null);
+  const [_callSounds, setCallSounds] = useState([]);
+  const [_ownedCallSoundIds, setOwnedCallSoundIds] = useState(new Set());
+  const [_activeCallSounds, setActiveCallSounds] = useState({});
+const [_callSoundPurchasing, setCallSoundPurchasing] = useState(null);
    const activeStreamId = useLiveContextStore((s) => s.activeStreamId);
    const [liveStreamIsLive, setLiveStreamIsLive] = useState(false);
-   const [snackLoading, setSnackLoading] = useState(null);
-   const [promotionPurchaseLoading, setPromotionPurchaseLoading] = useState({});
+   const [_snackLoading, setSnackLoading] = useState(null);
+   const [_promotionPurchaseLoading, _setPromotionPurchaseLoading] = useState({});
    const [lastSnackAt, setLastSnackAt] = useState({});
    const [showPurchaseComplete, setShowPurchaseComplete] = useState(() => {
      if (typeof window === 'undefined') return false;
      return Boolean(sessionStorage.getItem('tc-store-show-complete'));
    });
-const [selectedPostId, setSelectedPostId] = useState(null);
-    const [selectedPodcastId, setSelectedPodcastId] = useState(null);
-    const [selectedAuctionId, setSelectedAuctionId] = useState(null);
-    const [selectedStreamId, setSelectedStreamId] = useState(null);
-    const [userPosts, setUserPosts] = useState([]);
-    const [userPodcasts, setUserPodcasts] = useState([]);
-    const [userAuctions, setUserAuctions] = useState([]);
-    const [userStreams, setUserStreams] = useState([]);
+const [_selectedPostId, _setSelectedPostId] = useState(null);
+    const [_selectedPodcastId, _setSelectedPodcastId] = useState(null);
+    const [_selectedAuctionId, _setSelectedAuctionId] = useState(null);
+    const [_selectedStreamId, _setSelectedStreamId] = useState(null);
+    const [_userPosts, setUserPosts] = useState([]);
+    const [_userPodcasts, setUserPodcasts] = useState([]);
+    const [_userAuctions, setUserAuctions] = useState([]);
+    const [_userStreams, setUserStreams] = useState([]);
 
   const isAdmin = profile?.role === 'admin' || profile?.is_admin === true;
   const isSecretary = profile?.role === 'secretary' || profile?.troll_role === 'secretary';
   const isOfficer = profile?.role === 'troll_officer' || profile?.role === 'lead_troll_officer' || profile?.is_lead_officer === true || profile?.troll_role === 'troll_officer' || profile?.troll_role === 'lead_troll_officer';
-  const isEmployee = isAdmin || isSecretary || isOfficer;
+  const _isEmployee = isAdmin || isSecretary || isOfficer;
 
   // New user state - check if user has made any previous coin purchases
   const [isNewUser, setIsNewUser] = useState(true);
@@ -981,7 +983,7 @@ useEffect(() => {
     return Date.now() - ts > 30 * 1000;
   };
 
-  const buySnack = async (snackKey) => {
+  const _buySnack = async (snackKey) => {
     if (!activeStreamId || !showLiveSnacks) {
       toast.error('Live Snacks are only available inside a live stream');
       return;
@@ -1311,7 +1313,7 @@ useEffect(() => {
   }
 }
 
-  const buyCallSound = async (sound) => {
+  const _buyCallSound = async (sound) => {
     if (!user?.id) {
       toast.error('Please log in to purchase a chat sound');
       return;
@@ -1354,7 +1356,7 @@ useEffect(() => {
     }
   };
 
-  const equipSound = async (sound) => {
+  const _equipSound = async (sound) => {
     if (!user?.id) return;
     try {
       await supabase.from('user_call_sounds').update({ is_active: false }).eq('user_id', user.id);
@@ -1412,7 +1414,7 @@ useEffect(() => {
   };
 
   // Format large numbers
-  const formatMarketCap = (value) => {
+  const _formatMarketCap = (value) => {
     if (!value) return '0 Troll Coins';
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M Troll Coins`;
     if (value >= 1000) return `${(value / 1000).toFixed(1)}K Troll Coins`;

@@ -174,7 +174,7 @@ const tcInput =
   'w-full rounded-xl border border-cyan-300/20 bg-slate-950/80 px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-cyan-300/45 focus:ring-2 focus:ring-cyan-300/20'
 const tcButton =
   'rounded-lg border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-cyan-100 transition hover:bg-cyan-400/20 hover:text-white'
-const tcPrimary = 'rounded-lg bg-cyan-300 px-4 py-2 font-bold text-slate-950 transition hover:bg-cyan-200'
+const _tcPrimary = 'rounded-lg bg-cyan-300 px-4 py-2 font-bold text-slate-950 transition hover:bg-cyan-200'
 const tcDanger = 'rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-700'
 
 function getShipment(order: MarketplacePurchase): Shipment | null {
@@ -1066,7 +1066,7 @@ function StatCard({ label, value, className }: { label: string; value: number; c
   )
 }
 
-function AlertBox({ icon, title, tone, children }: { icon: React.ReactNode; title: string; tone: 'yellow'; children: React.ReactNode }) {
+function AlertBox({ icon, title, tone: _tone, children }: { icon: React.ReactNode; title: string; tone: 'yellow'; children: React.ReactNode }) {
   return (
     <div className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-400">
       <div className="mb-2 flex items-center gap-2 font-bold">

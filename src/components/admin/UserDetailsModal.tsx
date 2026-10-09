@@ -117,11 +117,12 @@ export default function UserDetailsModal({ userId, username, onClose }: UserDeta
       setLicenseStatus(profile.drivers_license_status || 'none')
 
       // Fetch tax info
-      const { data: taxInfo } = await supabase
+      const { data: taxInfo, error: taxInfoError } = await supabase
         .from('user_tax_info')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle()
+      if (taxInfoError) throw taxInfoError
 
       // Fetch agreements
       const { data: agreements } = await supabase

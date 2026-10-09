@@ -17,26 +17,26 @@ export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KE
 })
 
 export const OFFICER_ROLES = new Set(['admin', 'lead_troll_officer', 'troll_officer', 'officer'])
-export const MARKETING_READONLY_ROLE = 'marketing_readonly'
+export const MARKETING_AGENT_ROLE = 'marketing_agent'
 
-export function isMarketingReadonlyProfile(profile: AuthorizedProfile | null): boolean {
+export function isMarketingAgentProfile(profile: AuthorizedProfile | null): boolean {
   if (!profile) return false
-  return profile.role === MARKETING_READONLY_ROLE
+  return profile.role === MARKETING_AGENT_ROLE
 }
 
-export function assertNotMarketingReadonly(profile: AuthorizedProfile | null): void {
-  if (isMarketingReadonlyProfile(profile)) {
-    const err = new Error('Read-only access: Cannot perform write operations')
+export function assertMarketingAgentScope(profile: AuthorizedProfile | null): void {
+  if (isMarketingAgentProfile(profile)) {
+    const err = new Error('Marketing agents may only publish through approved marketing workflows')
     ;(err as any).status = 403
     throw err
   }
 }
 
 export function enforceReadOnly(req: any, profile: AuthorizedProfile): void {
-  if (isMarketingReadonlyProfile(profile)) {
+  if (isMarketingAgentProfile(profile)) {
     const method = req.method?.toUpperCase() || 'GET'
     if (method !== 'GET') {
-      const err = new Error(`Read-only access: ${method} requests not allowed for marketing users`)
+      const err = new Error(`Marketing agents may not use ${method} on this endpoint`)
       ;(err as any).status = 403
       throw err
     }

@@ -4,7 +4,7 @@ import type { LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTr
 import { supabase } from '../lib/supabase';
 import { getLiveKitRoomName } from '../lib/liveUtils';
 import { toast } from 'sonner';
-import { LIVEKIT_BETA_LIMITS, CAMERA_CAPTURE_OPTIONS, CAMERA_PUBLISH_OPTIONS } from '@/config/livekitBetaLimits';
+import { LIVEKIT_BETA_LIMITS } from '@/config/livekitBetaLimits';
 
 /**
  * Unified hook for LiveKit rooms
@@ -20,20 +20,35 @@ import { LIVEKIT_BETA_LIMITS, CAMERA_CAPTURE_OPTIONS, CAMERA_PUBLISH_OPTIONS } f
  * @param config.onUserLeft - Callback when user leaves
  * @param config.onError - Error callback
  */
+interface UseLiveKitRoomOptions {
+  roomId: string
+  roomType?: string
+  role?: string
+  audioOnly?: boolean
+  publish?: boolean
+  isAdmin?: boolean
+  userName: string
+  identity?: string
+  initialAudioEnabled?: boolean
+  onUserJoined?: (participant: RemoteParticipant) => void
+  onUserLeft?: (participant: RemoteParticipant) => void
+  onError?: (error: Error) => void
+}
+
 export function useLiveKitRoom({
   roomId,
   roomType = 'broadcast',
-  role = 'viewer',
+  role: _role = 'viewer',
   audioOnly = false,
   publish = false,
-  isAdmin = false,
+  isAdmin: _isAdmin = false,
   userName,
   identity = '',
   initialAudioEnabled = true,
   onUserJoined,
   onUserLeft,
   onError
-}) {
+}: UseLiveKitRoomOptions) {
   // State
   const [isConnected, setIsConnected] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -69,7 +84,7 @@ export function useLiveKitRoom({
     // Track last failed join to prevent infinite retry loops
     const lastFailedJoinRef = useRef<{ roomId: string; userId: string; error: string; timestamp: number } | null>(null);
     // Track seat upgrade in progress to prevent clearing participants during the transition
-    const isSeatUpgradingRef = useRef(false);
+    const _isSeatUpgradingRef = useRef(false);
 
 // Module-level: tracks failed joins across component remounts (e.g. ErrorBoundary recovery).
 // Key = `${roomId}:${userId}`, Value = { error, timestamp }
@@ -80,7 +95,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
   const getLiveKitApiKey = () => import.meta.env.VITE_LIVEKIT_API_KEY;
   
   // Check if LiveKit is configured
-  const isLiveKitConfigured = !!getLiveKitUrl() && !!getLiveKitApiKey();
+  const _isLiveKitConfigured = !!getLiveKitUrl() && !!getLiveKitApiKey();
 
   // Fetch LiveKit token via edge function with retry and timeout
   // mode: 'broadcaster' | 'audience' | 'seat-publisher' | 'battle-watch'
@@ -237,7 +252,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
   const videoPreset = VideoPresets.h720;
 
 // Create local tracks based on room type
-  const createLocalTracks = useCallback(async () => {
+  const _createLocalTracks = useCallback(async () => {
     try {
 // Audio track - always create for publishers
        const audioTrack = await createLocalAudioTrack();
@@ -350,8 +365,8 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
   };
 
   const replaceOrAppendParticipant = (prev: RemoteParticipant[], participant: RemoteParticipant) => {
-    const sid = participant?.sid || null;
-    const identity = participant?.identity || null;
+    const _sid = participant?.sid || null;
+    const _identity = participant?.identity || null;
     const exists = prev.some((item: any) => participantMatches(item, participant));
     if (!exists) {
       return [...prev, participant];
@@ -398,7 +413,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
       }
 
       return { message: String(err) };
-    } catch (e) {
+    } catch (_e) {
       return { message: String(err) };
     }
   };
@@ -646,7 +661,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
 
    // Join LiveKit as publisher
    const joinAsPublisher = useCallback(async (userId: string, tokenOverride?: string | null) => {
-     const t0 = Date.now()
+     const _t0 = Date.now()
      // Guard: prevent multiple simultaneous connection attempts
      if (joinedRef.current) {
        console.warn('[useLiveKitRoom] Join prevented: already joined');
@@ -727,7 +742,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
         }
       });
 
-       const roomName = getLiveKitRoomName(roomId);
+       const roomName = getLiveKitRoomName({ id: roomId });
        const tToken = Date.now()
        const token = tokenOverride || await fetchToken(roomName, userId, userName, true, undefined, 'broadcaster');
        console.log(`[useLiveKitRoom] Token fetched in ${Date.now() - tToken}ms`)
@@ -937,7 +952,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
     console.log('[useLiveKitRoom] AUDIENCE_CONNECT_START', { roomId, userId, publishCapable })
 
     try {
-      const t0 = Date.now()
+      const _t0 = Date.now()
       const room = new Room({
         adaptiveStream: true,
         dynacast: true
@@ -1249,7 +1264,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
           ...videoPreset,
           facingMode: 'user',
         })
-      } catch (err) {
+      } catch (_err) {
 
       }
     }
@@ -1517,7 +1532,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
         if (room) {
           room.disconnect()
         }
-      } catch (err) {
+      } catch (_err) {
 
       }
 
@@ -1561,4 +1576,3 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
 }
 
 export default useLiveKitRoom;
-

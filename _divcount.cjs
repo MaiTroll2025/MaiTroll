@@ -5,7 +5,7 @@ const L = fs.readFileSync(file, 'utf8').split('\n');
 
 // Count JSX blocks that open with z banner divs/labels
 // Basic approach: find JSX tag open/close pairs
-function tagAt(line) {
+function _tagAt(line) {
   return L[line-1] ? L[line-1].trim().replace(/\n/,'') : '';
 }
 

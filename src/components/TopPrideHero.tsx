@@ -2,26 +2,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import { lazyWithRetry } from '@/utils/lazyImport'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import {
-  Bell,
-  BookOpen,
-  Crown,
-  FileText,
-  Gamepad2,
-  Gift,
-  Heart,
-  MessageCircle,
-  Play,
-  Radio,
-  Shield,
-  Sparkles,
-  Star,
-  Trophy,
-  Users,
-  Vote,
-  X,
-  Zap,
-} from 'lucide-react'
+import { BookOpen, Crown, FileText, Gamepad2, Gift, Heart, MessageCircle, Play, Radio, Shield, Sparkles, Star, Trophy, Users, Vote, X, Zap } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
 import { isPrideMonth } from '@/lib/prideMonth'
@@ -412,7 +393,7 @@ const CityAnnouncementCard = React.memo(function CityAnnouncementCard() {
   )
 })
 
-const CashOutCard = React.memo(function CashOutCard() {
+const _CashOutCard = React.memo(function CashOutCard() {
   return (
     <section className={`${glass} rounded-2xl p-4`}>
       <div className="mb-3 flex items-center justify-between">
@@ -454,7 +435,7 @@ const HomeTabs = React.memo(function HomeTabs({
   setActiveTab,
   liveCount,
   battleCount,
-  presidentTabLabel,
+  presidentTabLabel: _presidentTabLabel,
 }: {
   activeTab: TabType
   setActiveTab: (tab: TabType) => void
@@ -650,7 +631,7 @@ const BattleGrid = React.memo(function BattleGrid({ items, onClickItem }: { item
   )
 })
 
-const LeftSidebar = React.memo(function LeftSidebar({ liveItems }: { liveItems: LiveItem[] }) {
+const _LeftSidebar = React.memo(function LeftSidebar({ liveItems }: { liveItems: LiveItem[] }) {
   const topLive = liveItems.slice(0, 5)
   
   return (

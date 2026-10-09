@@ -6,7 +6,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { CityAd } from '../../types/cityAds';
-import { supabase } from '../../lib/supabase';
 import { queueCityAdClick } from '../../lib/batchWrites';
 
 const AUTO_REDIRECT_DELAY = 3000;
@@ -23,7 +22,7 @@ export default function PromoAdCard({ ad, variant = 'sidebar', onClick }: PromoA
   const [isHovered, setIsHovered] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxVisible, setLightboxVisible] = useState(false);
-  const redirectTimerRef = useRef<number | null>(null);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [countdown, setCountdown] = useState(AUTO_REDIRECT_DELAY / 1000);
 
   const isSidebar = variant === 'sidebar';

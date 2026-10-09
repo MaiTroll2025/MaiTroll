@@ -11,7 +11,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
-import { Flame, X, DollarSign, Trophy, Music } from 'lucide-react';
+import { X, DollarSign, Trophy, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { MAX_GUEST_SEATS } from '../../config/broadcastCategories';
 
@@ -30,11 +30,11 @@ interface SmokeEvent {
 }
 
 export function SmokeEventBroadcastWrapper() {
-  const { user, profile } = useAuthStore();
+  const { user: _user, profile } = useAuthStore();
   const [smokeEvent, setSmokeEvent] = useState<SmokeEvent | null>(null);
   const [showDropModal, setShowDropModal] = useState(false);
   const [showSongModal, setShowSongModal] = useState(false);
-  const [seatCount, setSeatCount] = useState(MAX_GUEST_SEATS);
+  const [_seatCount, _setSeatCount] = useState(MAX_GUEST_SEATS);
 
   // Check if user is admin or stream host
   const isAdmin = profile?.role === 'admin' || profile?.is_admin === true || profile?.role === 'owner';
@@ -59,7 +59,7 @@ export function SmokeEventBroadcastWrapper() {
       await supabase.rpc('end_smoke_event', { p_stream_id: smokeEvent.stream_id });
       setSmokeEvent(null);
       toast.success('Smoke Event ended');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to end event');
     }
   }, [smokeEvent]);

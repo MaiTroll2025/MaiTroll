@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Play, Calendar, Clock, HardDrive, Trash2, Loader2 } from 'lucide-react';
+import { Play, Calendar, HardDrive, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../lib/store';
 import { useNavigate } from 'react-router-dom';
@@ -52,7 +52,7 @@ export default function ProfileReplays({ userId }: ProfileReplaysProps) {
     if (userId) fetchReplays();
   }, [userId, fetchReplays]);
 
-  const handleDelete = async (replayId: string, streamId: string) => {
+  const handleDelete = async (replayId: string, _streamId: string) => {
     try {
       const { error } = await supabase
         .from('broadcast_replays')

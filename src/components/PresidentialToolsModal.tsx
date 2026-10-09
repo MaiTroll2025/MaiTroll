@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 
 export default function PresidentialToolsModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, profile } = useAuthStore();
+  const { user: _user, profile } = useAuthStore();
   const {
     isPresident,
     isVP,
@@ -21,7 +21,7 @@ export default function PresidentialToolsModal() {
     createProposal,
     spendTreasury,
     flagUser,
-    currentPresident
+    currentPresident: _currentPresident
   } = usePresidentSystem();
 
   const [announcement, setAnnouncement] = useState('');

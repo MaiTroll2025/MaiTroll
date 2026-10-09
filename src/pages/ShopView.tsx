@@ -5,12 +5,11 @@ import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { Store, ShoppingCart, Coins, ArrowLeft, Package, Receipt, X } from 'lucide-react'
 import { MaiTrollTheme } from '../styles/trollCityTheme'
-import { addCoins } from '../lib/coinTransactions'
 import { useLiveContextStore } from '../lib/liveContextStore'
 
 export default function ShopView() {
   const { username } = useParams<{ username: string }>()
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const activeStreamId = useLiveContextStore((s) => s.activeStreamId)
   const navigate = useNavigate()
   const [shop, setShop] = useState<any>(null)
@@ -235,7 +234,7 @@ export default function ShopView() {
        if (inventoryError) throw inventoryError
 
        // Create payout hold in escrow (seller net after platform fee)
-       const { data: holdData, error: holdError } = await supabase.rpc('create_marketplace_payout_hold', {
+       const { data: _holdData, error: holdError } = await supabase.rpc('create_marketplace_payout_hold', {
          p_order_id: purchaseData.id,
          p_amount: sellerEarnings
        })

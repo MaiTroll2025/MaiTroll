@@ -1,15 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
-import {
-  Home, Search, Compass, Bell, User, Video, Coins, MessageCircle,
-  Sparkles, Mic, Gavel, Scale, Map, Gamepad2, GraduationCap,
-  DollarSign, Trophy, Users, Store, Package, BookOpen, Shield,
-  Car, Briefcase, Shuffle, Heart, Radio, Crown, Vote,
-  LayoutGrid, Settings, Activity, ClipboardList, MonitorDot,
-  Lock, Eye, Ban, FileText, Newspaper, Megaphone, Zap,
-  Building2, Landmark, Waves, Receipt, BarChart3, TrendingUp,
-} from 'lucide-react'
+import { Home, Search, Compass, Bell, User, Video, Coins, MessageCircle, Sparkles, Mic, Gavel, Scale, Gamepad2, DollarSign, Trophy, Users, Store, Package, BookOpen, Shield, Car, Briefcase, Shuffle, Heart, Crown, Vote, Settings, ClipboardList, MonitorDot, Lock, FileText, Landmark } from 'lucide-react';
 
 const PAGE_GUIDE: Record<string, { label: string; icon: any; desc: string; roles?: string[] }> = {
   '/home': { label: 'Home', icon: Home, desc: 'Main feed with live streams, posts, and city updates.' },
@@ -48,7 +40,7 @@ const PAGE_GUIDE: Record<string, { label: string; icon: any; desc: string; roles
   '/president': { label: 'President', icon: Vote, desc: 'President dashboard and executive orders.', roles: ['president'] },
 }
 
-const ROLE_LABELS: Record<string, string> = {
+const _ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
   officer: 'Troll Officer',
   lead_officer: 'Lead Officer',
@@ -74,7 +66,7 @@ export default function HelpPage() {
   const isSecretary = userRoles.has('secretary') || profile?.is_secretary
   const isPresident = userRoles.has('president') || profile?.is_president
 
-  const visiblePages = Object.entries(PAGE_GUIDE).filter(([, page]) => {
+  const _visiblePages = Object.entries(PAGE_GUIDE).filter(([, page]) => {
     if (!page.roles) return true
     return page.roles.some((r) => userRoles.has(r) || (r === 'admin' && isAdmin) || (r === 'officer' && isOfficer) || (r === 'lead_officer' && isLead) || (r === 'secretary' && isSecretary) || (r === 'president' && isPresident))
   })

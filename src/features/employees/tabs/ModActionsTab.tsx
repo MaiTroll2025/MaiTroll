@@ -24,7 +24,7 @@ function formatDate(iso: string) {
   return d.toLocaleString()
 }
 
-export default function ModActionsTab({ profile, realProfile }: { profile?: EmployeeProfileLike | null; realProfile: EmployeeProfileLike }) {
+export default function ModActionsTab({ profile: _profile, realProfile }: { profile?: EmployeeProfileLike | null; realProfile: EmployeeProfileLike }) {
   const [rows, setRows] = useState<ModActionRow[]>([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')

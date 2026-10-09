@@ -2,7 +2,7 @@ import React from 'react';
 import { PartyPopper, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function ElectionsTab(props: any) {
+export default function ElectionsTab(_props: any) {
   const navigate = useNavigate();
   
   return (

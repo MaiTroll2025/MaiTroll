@@ -3,17 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import {
-  ArrowLeft,
-  Briefcase,
-  CheckCircle2,
-  Clock3,
-  Gamepad2,
-  Loader2,
-  Sparkles,
-  XCircle,
-  AlertTriangle,
-} from 'lucide-react';
+import { ArrowLeft, Briefcase, CheckCircle2, Clock3, Gamepad2, Loader2, XCircle, AlertTriangle } from 'lucide-react';
 import GamingLoanModal from '@/components/broadcast/GamingLoanModal';
 
 const REQUIRED_COINS = 5000;
@@ -43,7 +33,7 @@ export default function HytroGamingApply() {
   const [existingApp, setExistingApp] = useState<any>(null);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [hasLoan, setHasLoan] = useState(false);
-  const [insufficientBalance, setInsufficientBalance] = useState(false);
+  const [_insufficientBalance, setInsufficientBalance] = useState(false);
 
   const [displayName, setDisplayName] = useState('');
   const [primaryPlatform, setPrimaryPlatform] = useState('twitch');
@@ -80,7 +70,7 @@ export default function HytroGamingApply() {
     }
   }, [user]);
 
-  const checkBalanceAndLoan = useCallback(() => {
+  const _checkBalanceAndLoan = useCallback(() => {
     const balance = profile?.troll_coins ?? 0;
     if (balance < REQUIRED_COINS) {
       setInsufficientBalance(true);

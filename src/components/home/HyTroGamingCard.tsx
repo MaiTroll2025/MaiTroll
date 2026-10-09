@@ -1,5 +1,5 @@
 import React from 'react'
-import { Play, Users, Gamepad2, Flame, Radio } from 'lucide-react'
+import { Play, Users, Gamepad2, Flame } from 'lucide-react';
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 

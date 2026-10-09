@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'sonner';
 import { Car, RefreshCw, Search, User } from 'lucide-react';
-import { formatCompactNumber } from '../../../lib/utils';
 
 interface VehicleWithOwner {
   id: string;
@@ -34,7 +33,7 @@ const TIER_MAP: Record<number, string> = {
 
 export default function KTAutoAdminPanel() {
   const [vehicles, setVehicles] = useState<VehicleWithOwner[]>([]);
-  const [catalog, setCatalog] = useState<CarCatalogItem[]>([]);
+  const [_catalog, setCatalog] = useState<CarCatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 

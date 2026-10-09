@@ -1,12 +1,6 @@
 import { useMemo } from 'react';
-import {
-  Calendar,
-  Clock,
-  Users,
-  Bell,
-  ChevronChevronsRight,
-} from 'lucide-react';
-import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
+import { Calendar, ChevronsRight } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import type { CalendarEvent } from '@/types/calendar';
 import { EVENT_CATEGORIES } from '@/types/calendar';
 
@@ -17,9 +11,9 @@ interface UpcomingEventsWidgetProps {
   isAdmin?: boolean
 }
 
-export default function UpcomingEventsWidget({ events = [], onViewAll, maxEvents = 5, isAdmin }: UpcomingEventsWidgetProps) {
+export default function UpcomingEventsWidget({ events = [], onViewAll, maxEvents = 5, isAdmin: _isAdmin }: UpcomingEventsWidgetProps) {
   const upcomingEvents = useMemo(() => {
-    const now = new Date();
+    const _now = new Date();
     return events
       .filter(e => e.status === 'upcoming' || e.status === 'live')
       .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
@@ -132,7 +126,7 @@ export default function UpcomingEventsWidget({ events = [], onViewAll, maxEvents
           className="flex w-full items-center justify-center gap-1 text-[10px] font-bold text-violet-400 transition hover:text-violet-300"
         >
           View All Events
-          <ChevronChevronsRight className="h-3 w-3" />
+          <ChevronsRight className="h-3 w-3" />
         </button>
       )}
     </div>

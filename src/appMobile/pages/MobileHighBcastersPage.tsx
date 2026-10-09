@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Hls from 'hls.js';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { Crown, Eye, Users, Heart, Clock, Play, Verified, Radio, ChevronRight } from 'lucide-react';
+import { Crown, Eye, Clock, Play, Verified, Radio, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /* ─── Types ─── */
@@ -183,7 +183,7 @@ function BroadcasterCard({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const broadcaster = stream.broadcaster;
   const streamUrl = getStreamUrl(stream.id, broadcaster?.username);
 

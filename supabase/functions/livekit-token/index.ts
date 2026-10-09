@@ -878,7 +878,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    const isLive = isBattleRoom ? true : streamIsLive(stream);
+    const _isLive = isBattleRoom ? true : streamIsLive(stream);
 
     const participantName =
       cleanString(body.displayName || body.name || body.participantName) ||

@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   Radio,
 } from "lucide-react";
-import { supabase } from "../../../lib/supabase";
 import { useAuthStore } from "../../../lib/store";
 import { toast } from "sonner";
 import { CSUser } from "../../../hooks/useCustomerServiceUsers";
@@ -20,7 +19,7 @@ interface SupportScreenSharePanelProps {
 export default function SupportScreenSharePanel({
   user,
 }: SupportScreenSharePanelProps) {
-  const { profile } = useAuthStore();
+  const { profile: _profile } = useAuthStore();
   const {
     activeSession,
     incomingRequest,

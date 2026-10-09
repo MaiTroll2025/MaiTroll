@@ -1,6 +1,6 @@
 import React from 'react';
-import { AgencyTier, TIER_CONFIG } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { AgencyTier, TIER_CONFIG } from '@/types/agency';
+import { cn } from '@/lib/utils';
 
 const tierFillGradient: Record<AgencyTier, string> = {
   none: 'from-slate-500 to-slate-400',

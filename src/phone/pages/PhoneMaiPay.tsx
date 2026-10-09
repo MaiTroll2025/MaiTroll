@@ -1,29 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft,
-  ArrowDownLeft,
-  ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
-  Coins,
-  Crown,
-  CreditCard,
-  DollarSign,
-  FileText,
-  History,
-  Loader2,
-  RefreshCw,
-  Search,
-  Send,
-  User,
-  Wallet,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  Building,
-} from 'lucide-react'
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, ChevronDown, ChevronUp, Coins, Crown, CreditCard, DollarSign, FileText, History, Loader2, RefreshCw, Search, Send, User, Wallet, CheckCircle, XCircle, Clock, Building } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -197,6 +174,9 @@ export default function PhoneMaiPay() {
 
   const [showMore, setShowMore] = useState(false)
 
+  const [idDocumentUrl, setIdDocumentUrl] = useState<string | null>(null)
+  const [_idVerificationStatus, setIdVerificationStatus] = useState<string>('not_submitted')
+
   const cashoutTiers = useMemo<CashoutTier[]>(
     () => TIERS.map((tier) => ({ ...tier } as CashoutTier)),
     [],
@@ -270,7 +250,9 @@ export default function PhoneMaiPay() {
           paypal_email,
           cashapp_handle,
           venmo_handle,
-          preferred_payout_method
+          preferred_payout_method,
+          id_verification_status,
+          id_document_url
         `,
         )
         .eq('id', user.id)
@@ -282,6 +264,8 @@ export default function PhoneMaiPay() {
         setTrollCoins(Number(data.troll_coins ?? 0))
         setHypeCoins(Number(data.hype_coins ?? 0))
         setBattleCrowns(Number(data.battle_crowns ?? 0))
+        setIdVerificationStatus(data.id_verification_status ?? 'not_submitted')
+        setIdDocumentUrl(data.id_document_url ?? null)
 
         const preferred =
           data.preferred_payout_method as
@@ -765,7 +749,7 @@ export default function PhoneMaiPay() {
             p_provider_username:
               providerDetails,
             p_user_tag: null,
-            p_id_verification_url: null,
+            p_id_verification_url: idDocumentUrl,
           },
         )
 

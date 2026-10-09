@@ -1,30 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import {
-  ArrowRight,
-  BookOpen,
-  ChevronRight,
-  Crown,
-  Download,
-  Gavel,
-  MessageCircle,
-  FileText,
-  HelpCircle,
-  Home,
-  Mail,
-  Music,
-  Play,
-  Plus,
-  Radio,
-  Search,
-  Smartphone,
-  Sparkles,
-  Trophy,
-  Users,
-  Shield,
-  Gamepad2,
-} from 'lucide-react'
+import { ArrowRight, ChevronRight, Crown, Gavel, MessageCircle, FileText, HelpCircle, Home, Mail, Play, Plus, Radio, Search, Smartphone, Sparkles, Trophy, Users, Shield, Gamepad2 } from 'lucide-react';
 
 import PhoneHeader from '../PhoneHeader'
 import { useAuthStore } from '@/lib/store'
@@ -35,11 +12,12 @@ import {
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
 import { useWallNotifications } from '@/hooks/useWallNotifications'
+import { PhoneButton } from '../components/PhoneButton'
 
 const glass =
   'border border-[#FF7A00]/10 bg-[#0D0814]/85 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.40)]'
 
-const neonGradient =
+const _neonGradient =
   'bg-gradient-to-br from-[#FF7A00] via-[#F97316] to-[#A855F7]'
 
 const neonBorder =
@@ -823,13 +801,13 @@ export default function PhoneHomepage({
                 </p>
               </div>
 
-              <button
-                type="button"
+              <PhoneButton
+                variant="primary"
+                size="sm"
                 onClick={() => go('/auth?mode=signup')}
-                className="shrink-0 rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#A855F7] px-3 py-2 text-[9px] font-black text-white shadow-[0_0_18px_rgba(0,191,255,0.20)] transition active:scale-95"
               >
                 Join
-              </button>
+              </PhoneButton>
             </div>
           </section>
         )}
@@ -1166,38 +1144,19 @@ export default function PhoneHomepage({
           {/* -------------------------------------------------------------- */}
 
           {user && (
-            <button
-              type="button"
+            <PhoneButton
+              variant="primary"
+              size="lg"
+              icon={<Radio size={20} />}
               onClick={() => go('/broadcast/setup')}
-              className="group relative w-full overflow-hidden rounded-2xl border border-[#FF7A00]/20 bg-gradient-to-r from-[#A855F7]/15 via-[#0d0d19] to-[#FF7A00]/15 p-4 text-left shadow-[0_0_35px_rgba(0,191,255,0.08)] transition active:scale-[0.99]"
+              className="w-full justify-start gap-3 px-4 py-3 shadow-[0_0_35px_rgba(0,191,255,0.08)]"
             >
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#FF7A00]/15 blur-2xl transition-transform duration-500 group-hover:scale-125" />
-
-              <div className="absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-[#A855F7]/10 blur-2xl" />
-
-              <div className="relative flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF7A00] to-[#A855F7] shadow-[0_0_18px_rgba(0,191,255,0.18)]">
-                  <Radio size={20} className="text-white" />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-black text-white">
-                    Ready to Go Live?
-                  </p>
-
-                  <p className="mt-0.5 text-[9px] font-bold text-zinc-500">
-                    Start your broadcast and join the Troll City network.
-                  </p>
-                </div>
-
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
-                  <ChevronRight
-                    size={17}
-                    className="text-[#FF7A00] transition-transform group-hover:translate-x-0.5"
-                  />
-                </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-black text-white">Ready to Go Live?</p>
+                <p className="mt-0.5 text-[9px] font-bold text-zinc-500">Start your broadcast and join the Troll City network.</p>
               </div>
-            </button>
+              <ChevronRight size={17} className="text-[#FF7A00] shrink-0" />
+            </PhoneButton>
           )}
         </div>
 
@@ -1207,18 +1166,17 @@ export default function PhoneHomepage({
         </div>
 
         {/* Search entry point — hands off to the phone explorer */}
-        <button
-          type="button"
+        <PhoneButton
+          variant="outline"
+          size="lg"
+          icon={<Search size={15} />}
           onClick={() => navigate('/explore')}
           aria-label="Search MaiTroll"
-          className="mt-7 flex w-full items-center gap-2.5 rounded-2xl border border-[#FF7A00]/15 bg-[#0D0814]/85 px-4 py-3 text-left backdrop-blur-2xl transition active:scale-[0.98] active:border-[#FF7A00]/40"
+          className="w-full justify-start gap-2.5 px-4 py-3"
         >
-          <Search size={15} className="shrink-0 text-[#FF7A00]" />
           <span className="flex-1 text-xs font-bold text-zinc-500">Search</span>
-          <span className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-zinc-600">
-            Explore
-          </span>
-        </button>
+          <span className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-zinc-600">Explore</span>
+        </PhoneButton>
 
         <footer className="mt-7 border-t border-[#FF7A00]/10 py-5 text-center">
           <p className="text-[9px] font-bold text-zinc-700">

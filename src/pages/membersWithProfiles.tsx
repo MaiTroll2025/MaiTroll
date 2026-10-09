@@ -3,11 +3,7 @@
 // ============================================================
 
 import { supabase } from '@/lib/supabase';
-import type {
-  UtromailThread, UtromailMessage, UtromailAttachment, UtromailBlock,
-  UtromailRequest, UtromailReport, UtromailNotification, UtromailAccount,
-  TromailRoleAccount, MailFolder, MailSearchResult,
-} from '@/types/mail';
+import type { UtromailThread, UtromailMessage, UtromailBlock, UtromailRequest, UtromailReport, UtromailNotification, UtromailAccount, TromailRoleAccount, MailFolder, MailSearchResult } from '@/types/mail';
 
 // ============================================================
 // ACCOUNTS
@@ -94,7 +90,7 @@ export const getThreads = async (userId: string, folder: MailFolder = 'inbox'): 
 
     // Deduplicate messages by sender_id to find all participants
     const seenSenders = new Set<string>();
-    const uniqueSenders = msgs.filter(m => {
+    const _uniqueSenders = msgs.filter(m => {
       if (seenSenders.has(m.sender_id)) return false;
       seenSenders.add(m.sender_id);
       return true;

@@ -197,7 +197,7 @@ export function ShippingLabel({
   shippingCountry = 'US',
   trackingNumber,
   carrier,
-  barcode,
+  barcode: _barcode,
 }: ShippingLabelProps) {
   const barcodeRef = useRef<HTMLCanvasElement>(null)
 

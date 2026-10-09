@@ -1,22 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Users,
-  MapPin,
-  Radio,
-  Plus,
-  Bell,
-  Filter,
-  List,
-  Grid3X3,
-  Eye,
-  X,
-  ExternalLink,
-} from 'lucide-react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, addWeeks, subWeeks, isSameMonth, isSameDay, isToday, isBefore, parseISO } from 'date-fns';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Users, MapPin, Plus, List, Grid3X3, X } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, addWeeks, subWeeks, isSameMonth, isSameDay, isToday, parseISO } from 'date-fns';
 import type { CalendarEvent, CalendarViewType, EventCategory } from '@/types/calendar';
 import { EVENT_CATEGORIES } from '@/types/calendar';
 import { supabase } from '@/lib/supabase';

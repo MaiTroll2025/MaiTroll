@@ -416,7 +416,7 @@ export function useStreamSeats(
 
       const broadcasterId = _streamData?.user_id || _broadcasterProfile?.id || _broadcasterProfile?.user_id
       let finalPrice = safeNumber(price, 0)
-      let discountApplied = false
+      let _discountApplied = false
 
       // Check subscription discount in parallel with optimistic UI — don't block the visual feedback
       const discountPromise = (async () => {
@@ -428,7 +428,7 @@ export function useStreamSeats(
               Math.floor(finalPrice * (1 - SUBSCRIBER_DISCOUNT_PERCENT)),
             )
             if (discountedPrice !== finalPrice) {
-              discountApplied = true
+              _discountApplied = true
               finalPrice = discountedPrice
             }
           }
@@ -566,7 +566,7 @@ export function useStreamSeats(
     }
 
      safeSetLeavingSeatId(seatIndex)
-     const t0 = Date.now()
+     const _t0 = Date.now()
 
      const previousSeat = { ...seatsRef.current }
      const previousMySeat = mySeatRef.current

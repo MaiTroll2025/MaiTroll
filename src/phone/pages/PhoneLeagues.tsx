@@ -1,24 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft,
-  ArrowRight,
-  Crown,
-  Eye,
-  Flame,
-  Gift,
-  Lock,
-  Medal,
-  Plus,
-  Radio,
-  ShieldCheck,
-  Sparkles,
-  Timer,
-  Trophy,
-  Users,
-  X,
-  Zap,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, Crown, Eye, Flame, Gift, Lock, Plus, Radio, ShieldCheck, Sparkles, Timer, Trophy, Users, X, Zap } from 'lucide-react';
 import { formatDistanceToNowStrict, isAfter, isBefore } from 'date-fns'
 
 import { useLeagueSnapshot } from '@/hooks/useLeagueSnapshot'

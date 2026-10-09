@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { RotateCcw, Gift, Coins, Sparkles, Star, Zap } from 'lucide-react'
+import { RotateCcw, Gift, Coins, Sparkles, Zap } from 'lucide-react';
 import { useTrollz } from '@/lib/hooks/useTrollz'
 
 interface WheelSegment {
@@ -30,7 +30,7 @@ const WHEEL_SEGMENTS: WheelSegment[] = [
 ]
 
 const SPIN_DURATION = 5000 // 5 seconds
-const SPIN_COST = 100
+const _SPIN_COST = 100
 
 export default function TrollzWheel() {
   const { balances, spinning, spinWheel, refreshBalances, getSpinCost } = useTrollz()

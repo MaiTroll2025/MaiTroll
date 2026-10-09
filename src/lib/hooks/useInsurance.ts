@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabase'
 import { useAuthStore } from '../store'
-import { getInsurancePlans, purchaseInsurance as purchaseBasicInsurance, type ProtectionType } from './insuranceSystem'
-import { toast } from 'sonner'
 import type { HomeownersInsurance, CarInsurance, BroadcastInsurance } from '../../types/neighborhood'
 
 interface InsuranceOption {

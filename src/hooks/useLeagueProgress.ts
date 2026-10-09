@@ -3,22 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { useXPStore } from '../stores/useXPStore'
 import { sendStreamBroadcast } from '../lib/realtime/streamRealtimeManager'
-import {
-  T_LEAGUE_TIERS,
-  LEAGUE_LEVELS,
-  getSubTierFromScore,
-  getSubTierProgress,
-  getNextSubTier,
-  getScoreForNextSubTier,
-  getLeagueLevel,
-  getNextLeagueLevel,
-  getLeagueLevelProgress,
-  getSubTierColor,
-  getWeeklyGoalsForTier,
-  type TLeagueTier,
-  type LeagueLevel,
-  type WeeklyGoal,
-} from '../config/T_LEAGUE_CONFIG'
+import { T_LEAGUE_TIERS, LEAGUE_LEVELS, getSubTierFromScore, getSubTierProgress, getNextSubTier, getScoreForNextSubTier, getLeagueLevel, getNextLeagueLevel, getLeagueLevelProgress, getSubTierColor, getWeeklyGoalsForTier } from '../config/T_LEAGUE_CONFIG';
 
 export interface WeeklyGoalProgress {
   id: string
@@ -101,7 +86,7 @@ function getLeagueLevelReward(level: number): RewardInfo {
     xp: level * 100,
     trollmonds: level * 75,
     perk: lvl?.perk || 'Level up!',
-    label: `League Level ${level} — ${lbl?.label || 'Level up!'} +${level * 200} coins, +${level * 100} XP`,
+    label: `League Level ${level} — ${lvl?.label || 'Level up!'} +${level * 200} coins, +${level * 100} XP`,
   }
 }
 
@@ -239,7 +224,7 @@ export function useLeagueProgress(streamId?: string | null) {
       if (!isInitialLoad.current) {
         if (prevTierRef.current && currentFullTier !== prevTierRef.current) {
           const prevMain = prevTierRef.current.replace(/[a-d]$/, '')
-          const prevSub = prevTierRef.current.slice(-1)
+          const _prevSub = prevTierRef.current.slice(-1)
           const prevMainIdx = T_LEAGUE_TIERS.findIndex(t => t.tier === prevMain)
           const curMainIdx = T_LEAGUE_TIERS.findIndex(t => t.tier === mainTier)
 

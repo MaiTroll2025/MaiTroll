@@ -2,25 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import {
-  ArrowLeft,
-  BarChart3,
-  CalendarClock,
-  Coins,
-  Crown,
-  Gavel,
-  Hash,
-  Home,
-  Loader2,
-  Mic2,
-  Play,
-  Sparkles,
-  Trophy,
-  Tv,
-  Users,
-  Video,
-  X,
-} from 'lucide-react';
+import { ArrowLeft, BarChart3, Coins, Crown, Gavel, Hash, Home, Loader2, Mic2, Play, Sparkles, Trophy, Tv, Users, Video, X } from 'lucide-react';
 
 import { useShallow } from 'zustand/react/shallow';
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, ShoppingCart, Coins } from 'lucide-react';
+import { X, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/store';
 import { useProfileFrameStore } from '@/stores/useProfileFrameStore';
@@ -128,7 +128,7 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
       return numPrice;
     };
   
-  const handlePaymentSuccess = (data: any) => {
+  const handlePaymentSuccess = (_data: any) => {
     paymentInProgressRef.current = false;
     toast.success(`Successfully purchased ${selectedPack?.coins.toLocaleString()} coins!`);
     setShowPayPalPayment(false);

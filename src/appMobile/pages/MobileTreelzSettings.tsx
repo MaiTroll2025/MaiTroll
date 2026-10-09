@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Play, Volume2, Sparkles, Eye, Heart, Gift, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Play, Sparkles, Eye, Heart, Gift, BarChart3 } from 'lucide-react';
 import { loadTreelzSettings, saveTreelzSettings, getUserTreelzAnalytics } from '@/services/treelzService'
 import { useAuthStore } from '@/lib/store'
 
@@ -11,7 +11,7 @@ function formatCount(n: number): string {
 }
 
 export default function MobileTreelzSettingsPage() {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const [settings, setSettings] = useState(loadTreelzSettings())
   const [analytics, setAnalytics] = useState<any>(null)
 

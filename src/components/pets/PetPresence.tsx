@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
-type Pet = { id: string; pet_type: 'dog' | 'cat'; name: string; care_status: number }
+type Pet = { id: string; pet_type: 'dog' | 'cat'; name: string; care_status: number; hunger_status: number; walk_status: number; attention_status: number }
 
 export function petImage(type: 'dog' | 'cat') {
   return type === 'dog' ? '🐕' : '🐈'
@@ -17,17 +17,20 @@ export default function PetPresence({ ownerId, streamId, className = '' }: { own
     const loadPet = async () => {
       const { data } = await supabase
         .from('pets')
-        .select('id, pet_type, name, care_status')
+        .select('id, pet_type, name, care_status, hunger_status, walk_status, attention_status')
         .eq('owner_id', ownerId)
         .eq('is_primary', true)
         .eq('is_active', true)
         .maybeSingle()
       if (active) setPet((data as Pet | null) || null)
     }
-    const channel = supabase.channel(`pet-gift-reaction:${streamId || ownerId}:${ownerId}`).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gifts', filter: `receiver_id=eq.${ownerId}` }, () => {
-      setReaction(true)
-      window.setTimeout(() => setReaction(false), 1800)
-    }).subscribe()
+    const channel = supabase.channel(`pet-presence:${streamId || ownerId}:${ownerId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gifts', filter: `receiver_id=eq.${ownerId}` }, () => {
+        setReaction(true)
+        window.setTimeout(() => setReaction(false), 1800)
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pets', filter: `owner_id=eq.${ownerId}` }, () => { void loadPet() })
+      .subscribe()
     const handlePetUpdated = () => { void loadPet() }
     window.addEventListener('pet-updated', handlePetUpdated)
     void loadPet()
@@ -40,7 +43,7 @@ export default function PetPresence({ ownerId, streamId, className = '' }: { own
 
   if (!pet) return null
   return (
-    <div className={`pointer-events-none absolute bottom-2 right-2 z-20 flex items-end gap-1 ${className}`} aria-label={`${pet.name}, pet status ${pet.care_status}%`}>
+    <div className={`pointer-events-none absolute bottom-2 right-2 z-20 flex items-end gap-1 ${className}`} aria-label={`${pet.name}, overall care ${pet.care_status}%, hunger ${pet.hunger_status}%, walks ${pet.walk_status}%, attention ${pet.attention_status}%`}>
       <div className={`relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/25 bg-slate-950/80 p-1 shadow-[0_0_18px_rgba(34,211,238,0.3)] ${reaction ? 'animate-bounce' : 'animate-[pet-float_3s_ease-in-out_infinite]'}`}>
         <span role="img" aria-label={pet.pet_type} className="text-[26px] leading-none">{petImage(pet.pet_type)}</span>
         <span className={`absolute -bottom-1 -left-1 rounded-full px-1 text-[8px] font-black text-white ${pet.care_status < 80 ? 'bg-amber-500' : 'bg-emerald-500'}`}>{pet.care_status}%</span>

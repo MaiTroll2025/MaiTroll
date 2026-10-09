@@ -1,20 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import {
-  ChevronDown,
-  ChevronUp,
-  Coins,
-  Home,
-  LogOut,
-  MessageCircle,
-  Radio,
-  Sparkles,
-  Store,
-  User,
-  Upload,
-  Wallet,
-  Zap,
-} from "lucide-react";
+import { Coins, LogOut, Radio, Sparkles, Wallet, Zap } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import ProfileFrame from "@/components/profile/ProfileFrame";

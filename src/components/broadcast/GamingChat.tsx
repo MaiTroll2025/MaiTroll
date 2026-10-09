@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { Send, Smile, User } from 'lucide-react'
+import { Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { useNavigate } from 'react-router-dom'
@@ -42,7 +42,7 @@ export function GamingChat({ streamId, className }: GamingChatProps) {
   const navigate = useNavigate()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [isVisible, setIsVisible] = useState(true)
+  const [_isVisible, _setIsVisible] = useState(true)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 

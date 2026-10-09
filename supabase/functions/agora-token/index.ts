@@ -83,15 +83,93 @@ function generateAgoraToken(params: {
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return handleCorsPreflight(req);
 
-  const { error: authError } = await requireAuth(req);
-  if (authError) return authError;
-
   try {
     const body = await req.json();
 
     const channelName = body.channelName || body.channel || 'staff_meeting';
     const userIdStr = String(body.userId || body.user_id || body.uid || '0');
     const uid = userIdStr;
+    const publicCourtSessionId = body.roomType === 'court' &&
+      body.role === 'audience' &&
+      typeof body.courtSessionId === 'string'
+      ? body.courtSessionId
+      : null;
+    const publicPodcastId = body.roomType === 'podcast' &&
+      body.role === 'subscriber' &&
+      typeof body.podcastId === 'string'
+      ? body.podcastId
+      : null;
+    const publicGamingStreamId = body.roomType === 'gaming' &&
+      body.role === 'subscriber' &&
+      typeof body.streamId === 'string'
+      ? body.streamId
+      : null;
+
+    if (publicCourtSessionId) {
+      const { data: session, error: sessionError } = await authSupabase
+        .from('court_sessions')
+        .select('id, status, is_public')
+        .eq('id', publicCourtSessionId)
+        .maybeSingle();
+
+      if (sessionError) {
+        console.error('[agora-token] Public court session lookup failed:', sessionError);
+        return withCors({ error: 'Unable to verify public court session' }, 500, req);
+      }
+      if (
+        !session ||
+        session.is_public !== true ||
+        !['active', 'live'].includes(String(session.status).toLowerCase()) ||
+        channelName !== `troll-court-${session.id}`
+      ) {
+        return withCors({ error: 'Court session is not publicly available' }, 403, req);
+      }
+    } else if (publicPodcastId) {
+      const { data: podcast, error: podcastError } = await authSupabase
+        .from('podcasts')
+        .select('id, status, agora_channel_name')
+        .eq('id', publicPodcastId)
+        .maybeSingle();
+
+      if (podcastError) {
+        console.error('[agora-token] Public podcast lookup failed:', podcastError);
+        return withCors({ error: 'Unable to verify public podcast' }, 500, req);
+      }
+      if (
+        !podcast ||
+        !['live', 'active'].includes(String(podcast.status).toLowerCase()) ||
+        channelName !== podcast.agora_channel_name
+      ) {
+        return withCors({ error: 'Podcast is not publicly available' }, 403, req);
+      }
+    } else if (publicGamingStreamId) {
+      const { data: stream, error: streamError } = await authSupabase
+        .from('streams')
+        .select('id, category, status, is_live, audience_type, is_private, is_paid, pricing_type, agora_channel')
+        .eq('id', publicGamingStreamId)
+        .maybeSingle();
+
+      if (streamError) {
+        console.error('[agora-token] Public gaming stream lookup failed:', streamError);
+        return withCors({ error: 'Unable to verify public gaming stream' }, 500, req);
+      }
+      if (
+        !stream ||
+        String(stream.category || '').toLowerCase() !== 'gaming' ||
+        !(stream.is_live === true || String(stream.status || '').toLowerCase() === 'live') ||
+        String(stream.audience_type || '').toLowerCase() !== 'public' ||
+        stream.is_private === true ||
+        stream.is_paid === true ||
+        String(stream.pricing_type || '').toLowerCase() === 'paid' ||
+        channelName !== (stream.agora_channel || stream.id)
+      ) {
+        return withCors({ error: 'Gaming stream is not publicly available' }, 403, req);
+      }
+    } else {
+      const { error: authError } = await requireAuth(req);
+      if (authError) return authError;
+    }
+
     // Accept 'audience' (auction viewer) and map it to subscriber.
     const role: 'publisher' | 'subscriber' | 'audience' =
       body.role === 'publisher' ? 'publisher' : 'subscriber';

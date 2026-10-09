@@ -90,7 +90,7 @@ export default function ChallengeManager({
           .is('is_challenger', false);
       } else {
         // Insert new seat for challenger - profile data will be fetched via JOIN in get_stream_seats
-        const { data: seatData, error: seatError } = await supabase
+        const { data: _seatData, error: seatError } = await supabase
           .from('stream_seat_sessions')
           .insert({
             stream_id: broadcasterStream.id,

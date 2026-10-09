@@ -34,7 +34,7 @@ interface UseTrollBattleProps {
 const BATTLE_DURATION = 180; // 3 minutes
 const PRE_BATTLE_COUNTDOWN = 5; // 5 seconds
 
-export function useTrollBattle({ streamId, userId, isHost }: UseTrollBattleProps) {
+export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTrollBattleProps) {
   const [state, setState] = useState<TrollBattleState>({
     phase: 'idle',
     battleId: null,

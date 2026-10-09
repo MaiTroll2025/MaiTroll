@@ -20,7 +20,7 @@ async function inspectPdf(path: string, name: string) {
       try {
         const value = textField.getText()
         if (value) console.log(`    Current value: ${value}`)
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
     }
@@ -30,7 +30,7 @@ async function inspectPdf(path: string, name: string) {
       try {
         const value = checkbox.isChecked()
         console.log(`    Checked: ${value}`)
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
     }
@@ -40,7 +40,7 @@ async function inspectPdf(path: string, name: string) {
       try {
         const value = radio.getValue()
         console.log(`    Selected: ${value}`)
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
     }

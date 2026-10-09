@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
-import { ArrowLeft, Coins, History, TrendingUp, Users, DollarSign, Crown, ShoppingCart, Car, Home, MessageSquare, Gift as GiftIcon } from 'lucide-react'
+import { ArrowLeft, Coins, History, TrendingUp, Users, DollarSign, Crown, Home, MessageSquare, Gift as GiftIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
 
 interface LedgerEntry {
@@ -25,17 +25,17 @@ interface RevenueSource {
 }
 
 export default function AdminPoolPage() {
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const navigate = useNavigate()
   const [poolBalance, setPoolBalance] = useState<number>(0)
   const [totalLiability, setTotalLiability] = useState<number>(0)
   const [totalPaidUsd, setTotalPaidUsd] = useState<number>(0)
   const [ledger, setLedger] = useState<LedgerEntry[]>([])
   const [revenueSources, setRevenueSources] = useState<RevenueSource[]>([])
-  const [totalSubRevenue, setTotalSubRevenue] = useState<number>(0)
-  const [totalChatRevenue, setTotalChatRevenue] = useState<number>(0)
-  const [totalGiftRevenue, setTotalGiftRevenue] = useState<number>(0)
-  const [totalPropertyRevenue, setTotalPropertyRevenue] = useState<number>(0)
+  const [_totalSubRevenue, setTotalSubRevenue] = useState<number>(0)
+  const [_totalChatRevenue, setTotalChatRevenue] = useState<number>(0)
+  const [_totalGiftRevenue, setTotalGiftRevenue] = useState<number>(0)
+  const [_totalPropertyRevenue, setTotalPropertyRevenue] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 

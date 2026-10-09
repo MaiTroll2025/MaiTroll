@@ -458,7 +458,7 @@ export default function LeaguesTab({ streamId, category }: LeaguesTabProps) {
   })
 
   const [taskProgressSnapshot, setTaskProgressSnapshot] = useState<TaskProgressSnapshot>(DEFAULT_SNAPSHOT)
-  const [isClaimingTaskId, setIsClaimingTaskId] = useState<string | null>(null)
+  const [isClaimingTaskId, _setIsClaimingTaskId] = useState<string | null>(null)
 
   // League browse/create state
   const [showBrowseLeagues, setShowBrowseLeagues] = useState(false)

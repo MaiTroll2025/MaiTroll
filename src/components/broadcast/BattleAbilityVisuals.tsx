@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Snowflake, RotateCcw, Zap, Shield, Swords } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { Snowflake, RotateCcw, Zap } from 'lucide-react';
 
 interface BattleAbilityEffect {
   id: string;
@@ -205,7 +204,7 @@ function MuteHammerEffect({ username }: { username: string }) {
   );
 }
 
-function GoldFrameEffect({ username }: { username: string }) {
+function GoldFrameEffect({ username: _username }: { username: string }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}

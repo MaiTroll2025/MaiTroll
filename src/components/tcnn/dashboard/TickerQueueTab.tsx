@@ -60,7 +60,7 @@ export default function TickerQueueTab() {
         const ticker = payload.payload as any;
         setDisplayingTickers(prev => {
           const filtered = prev.filter(t => t.id !== ticker.id);
-          return [{ id: ticker.id, message: ticker.message.replace(/^🚨 BREAKING: |^📰 /, ''), type: ticker.priority === 'breaking' ? 'breaking' : 'standard', status: 'approved', submitted_by: '', submitter_name: 'Live', priority: ticker.priority === 'breaking' ? 3 : 1, created_at: ticker.created_at }, ...filtered].slice(0, 10);
+          return [({ id: ticker.id, message: ticker.message.replace(/^🚨 BREAKING: |^📰 /, ''), type: (ticker.priority === 'breaking' ? 'breaking' : 'standard') as 'breaking' | 'standard', status: 'approved', submitted_by: '', submitter_name: 'Live', priority: ticker.priority === 'breaking' ? 3 : 1, created_at: ticker.created_at } as TickerItem), ...filtered].slice(0, 10);
         });
         loadTickerQueue();
       })

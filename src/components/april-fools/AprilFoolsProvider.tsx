@@ -12,7 +12,7 @@
  * Does NOT modify real coin balances. Coin pranks are visual only.
  */
 
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAprilFools } from '../../hooks/useAprilFools';
 import AprilFoolsPopup from './AprilFoolsPopup';

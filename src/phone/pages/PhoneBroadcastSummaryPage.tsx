@@ -37,7 +37,7 @@ function formatValue(value: number): string {
 export default function PhoneBroadcastSummaryPage() {
   const navigate = useNavigate()
   const { id: streamId } = useParams<{ id?: string }>()
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
 
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState<string | null>(null)
@@ -48,7 +48,7 @@ export default function PhoneBroadcastSummaryPage() {
     giftsReceived: 0,
     newFollowers: 0,
   })
-  const [isBroadcaster, setIsBroadcaster] = useState(false)
+  const [_isBroadcaster, setIsBroadcaster] = useState(false)
 
   useEffect(() => {
     if (!streamId) {

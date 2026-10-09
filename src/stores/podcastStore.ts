@@ -35,7 +35,7 @@ interface PodcastState {
 
 export const usePodcastStore = create<PodcastState>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       activePodcast: null,
       showMiniPlayer: false,
       isPlaying: false,

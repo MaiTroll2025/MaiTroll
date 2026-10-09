@@ -18,7 +18,7 @@ export default function PaidChatSettingsModal({
   isOpen,
   onClose,
   streamId,
-  isHost,
+  isHost: _isHost,
   onSave,
   streamCategory,
 }: PaidChatSettingsModalProps) {
@@ -27,7 +27,7 @@ export default function PaidChatSettingsModal({
   const [saving, setSaving] = useState(false);
   const [streamerLevel, setStreamerLevel] = useState<number | null>(null);
   const [loadingLevel, setLoadingLevel] = useState(true);
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [_isEnabled, setIsEnabled] = useState(false);
 
   const isPodcast = streamCategory === 'podcast' || streamCategory === 'hytro_gaming';
 

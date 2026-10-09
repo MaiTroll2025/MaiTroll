@@ -5,38 +5,7 @@ import SEOLayout, {
   SEOContentSection,
   CTASection,
 } from './SEOLayout'
-import {
-  Radio,
-  Building2,
-  GraduationCap,
-  BriefcaseBusiness,
-  Sparkles,
-  TrendingUp,
-  DollarSign,
-  MessageCircle,
-  Gift,
-  Shield,
-  Zap,
-  Star,
-  ArrowRight,
-  Globe,
-  Smartphone,
-  Monitor,
-  Laptop,
-  Tablet,
-  Chrome,
-  RefreshCw,
-  Cpu,
-  Wifi,
-  CircleAlert,
-  CheckCircle2,
-  School,
-  Trophy,
-  Landmark,
-  Store,
-  Users,
-  Lightbulb,
-} from 'lucide-react'
+import { Radio, Building2, GraduationCap, BriefcaseBusiness, Sparkles, TrendingUp, DollarSign, MessageCircle, Shield, Zap, Star, ArrowRight, Smartphone, Monitor, Laptop, Tablet, Chrome, RefreshCw, Cpu, Wifi, CircleAlert, CheckCircle2, School, Trophy, Landmark, Store, Users, Lightbulb } from 'lucide-react';
 
 const features = [
   {

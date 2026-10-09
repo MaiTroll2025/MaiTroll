@@ -1,22 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
-import {
-  Briefcase,
-  BookOpen,
-  TrendingUp,
-  Award,
-  FileText,
-  LifeBuoy,
-  CreditCard,
-  Scale,
-  GraduationCap,
-  Users,
-  Lightbulb,
-  ShoppingBag,
-  ChevronRight,
-  Loader,
-} from 'lucide-react';
+import { Briefcase, BookOpen, TrendingUp, FileText, LifeBuoy, CreditCard, Scale, GraduationCap, Users, Lightbulb, ShoppingBag, ChevronRight, Loader } from 'lucide-react';
 import { maiBusinessApi, type MaiBusinessProfile, type Course, type BusinessProfile } from '@/features/mai-business/lib/maiBusinessApi';
 
 const glass = 'border border-white/10 bg-[#070b19]/70 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]';

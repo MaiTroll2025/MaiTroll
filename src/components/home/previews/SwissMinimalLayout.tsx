@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { Play, Eye, Radio, Sparkles, Menu, X } from 'lucide-react';
+import { Play, Eye, Radio, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
-import TrollWallFeed from '@/components/home/TrollWallFeed';
-import { cn } from '@/lib/utils';
 
 interface SwissMinimalLayoutProps {
   liveItems: any[];
@@ -17,14 +15,14 @@ export default function SwissMinimalLayout({
   liveItems,
   totalViewers,
   onLiveItemClick,
-  onRequireAuth,
+  onRequireAuth: _onRequireAuth,
 }: SwissMinimalLayoutProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const featured = liveItems[0];
   const regular = liveItems.slice(1, 7);
-  const grid = liveItems.slice(7, 13);
+  const _grid = liveItems.slice(7, 13);
 
   return (
     <div className="min-h-[calc(100vh-12rem)] bg-white text-black">

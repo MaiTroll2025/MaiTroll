@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Play, Eye, Radio, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/lib/store';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
 
 interface CinematicMarqueeLayoutProps {
@@ -15,6 +13,7 @@ interface CinematicMarqueeLayoutProps {
 
 export default function CinematicMarqueeLayout({
   liveItems,
+  totalViewers,
   onLiveItemClick,
   onRequireAuth,
 }: CinematicMarqueeLayoutProps) {

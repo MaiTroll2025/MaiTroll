@@ -9,36 +9,8 @@ import { useCreditScore } from '../lib/hooks/useCreditScore'
 import CreditScoreBadge from '../components/CreditScoreBadge'
 import ConvertHypeCoinsModal from '../components/modals/ConvertHypeCoinsModal'
 import { CreatorSeasonalGoals } from '../components/CreatorSeasonalGoals'
-import {
-  Crown,
-  Sword,
-  Trophy,
-  Coins,
-  Star,
-  Shield,
-  Zap,
-  ShoppingBag,
-  Store,
-  Package,
-  DollarSign,
-  TrendingUp,
-  Loader2,
-  Activity,
-  BarChart3,
-  Calendar,
-  Clock,
-  CheckCircle,
-  Lock,
-  ArrowRight,
-  Users,
-  Building2,
-  Briefcase,
-  Gavel,
-  FileText,
-  AlertCircle,
-} from 'lucide-react'
-import { STORE_USD_PER_COIN, STATS_COINS_PER_USD } from '../lib/coinMath'
-import { UserEarningEvent, RoleEarningRule, UserEarningSummary, AgencyEarningsData, FamilyConversionData, TreasuryPayoutItem, RoleStatus } from '../types/earnings'
+import { Crown, Sword, Trophy, Coins, Star, Shield, Zap, ShoppingBag, Store, Package, DollarSign, TrendingUp, Loader2, Activity, Calendar, CheckCircle, Lock, ArrowRight, Building2, Briefcase } from 'lucide-react';
+import { RoleEarningRule, UserEarningSummary, AgencyEarningsData, FamilyConversionData, TreasuryPayoutItem, RoleStatus } from '../types/earnings';
 
 interface UserStats {
   level: number
@@ -159,12 +131,12 @@ export default function Stats() {
   // Earning state
   const [earningSummary, setEarningSummary] = useState<UserEarningSummary | null>(null)
   const [activeRoles, setActiveRoles] = useState<ActiveEarningRole[]>([])
-  const [earningEvents, setEarningEvents] = useState<EarningTimelineEvent[]>([])
+  const [_earningEvents, setEarningEvents] = useState<EarningTimelineEvent[]>([])
   const [agencyData, setAgencyData] = useState<AgencyEarningsData | null>(null)
   const [familyData, setFamilyData] = useState<FamilyConversionData | null>(null)
   const [treasuryPayouts, setTreasuryPayouts] = useState<TreasuryPayoutItem[]>([])
   const [roleRules, setRoleRules] = useState<RoleEarningRule[]>([])
-  const [agencyApplicants, setAgencyApplicants] = useState<any[]>([])
+  const [_agencyApplicants, setAgencyApplicants] = useState<any[]>([])
   
   const isInitialized = useRef(false)
   const prevCreditScore = useRef<number | null>(null)
@@ -478,7 +450,7 @@ export default function Stats() {
   const levelProgress = Math.min(computedProgress, 99)
   const familyXpProgress = stats?.familyXp ? Math.min((stats.familyXp / 1000) * 100, 100) : 0
   const statsCoinsPerUsd = 300
-  const statsUsdPerCoin = 1 / statsCoinsPerUsd
+  const _statsUsdPerCoin = 1 / statsCoinsPerUsd
 
   const formatStatsUsd = (coins: number) => {
     return `$${(Math.round(coins / statsCoinsPerUsd * 100) / 100).toFixed(2)}`

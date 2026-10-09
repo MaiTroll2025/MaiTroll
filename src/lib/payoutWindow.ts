@@ -11,6 +11,6 @@ export const PAYOUT_WINDOW_LABEL =
  * @deprecated Use backend RPC request_cashout which checks user level
  * This is a frontend-only hint and should not be used for gating.
  */
-export function isPayoutWindowOpen(date: Date = new Date()): boolean {
+export function isPayoutWindowOpen(_date: Date = new Date()): boolean {
   return true;
 }

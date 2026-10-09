@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
 import { getUserAffiliation, UserAffiliation } from '../../lib/userAffiliations';
 import { useNavigate } from 'react-router-dom';
-import { 
-  User, MessageCircle, Gift, Flag, Camera, 
-  Crown, Check, X, Heart, Users, Loader2
-} from 'lucide-react';
+import { User, MessageCircle, Gift, Flag, Camera, Crown, X, Users, Loader2, MoreVertical, Ban, Shield, Coins, Gavel } from 'lucide-react';
 import { toast } from 'sonner';
 import SubscribeButton from './SubscribeButton';
 import ProfileFrame from '@/components/profile/ProfileFrame';
-import { useUserFrame } from '@/hooks/useUserFrame';
+import type { ProfileFrame as ProfileFrameType } from '@/config/profileFrames';
+import { useProfileFrameStore } from '@/stores/useProfileFrameStore';
 
 interface UserMiniProfileProps {
   userId: string;
@@ -20,6 +18,7 @@ interface UserMiniProfileProps {
   isLive?: boolean;
   liveStreamId?: string;
   onClose: () => void;
+  onModerate?: (userId: string, username?: string) => void;
 }
 
 const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
@@ -29,18 +28,30 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
   coverImageUrl,
   isLive,
   liveStreamId,
-  onClose
+  onClose,
+  onModerate
 }) => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const isOwnProfile = user?.id === userId;
   const [targetProfile, setTargetProfile] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [affiliation, setAffiliation] = useState<UserAffiliation | null>(null);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [userFrame, setUserFrame] = useState<ProfileFrameType | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
+  const [tipOpen, setTipOpen] = useState(false);
+  const [customTip, setCustomTip] = useState('');
+  const [tipSending, setTipSending] = useState(false);
 
-  const checkFollowing = async () => {
+  const checkFollowing = useCallback(async () => {
     if (!user || !userId || isOwnProfile) return;
     try {
       const { data } = await supabase
@@ -53,13 +64,71 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
     } catch (err) {
       console.error('Error checking follow status:', err);
     }
-  };
+  }, [user, userId, isOwnProfile]);
+
+  const fetchAffiliation = useCallback(async () => {
+    try {
+      const data = await getUserAffiliation(userId);
+      setAffiliation(data);
+    } catch (error) {
+      console.error('Error fetching affiliation:', error);
+    }
+  }, [userId]);
+
+  const checkSubscription = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from('user_subscriptions')
+        .select(`
+          *,
+          tier: subscription_tiers(*)
+        `)
+        .eq('subscriber_id', user.id)
+        .eq('broadcaster_id', userId)
+        .eq('is_active', true)
+        .single();
+      setSubscription(data);
+    } catch (_error) {
+      // No subscription
+    }
+  }, [user, userId]);
 
   useEffect(() => {
     if (!loading) {
       checkFollowing();
     }
-  }, [loading, user?.id, userId]);
+  }, [loading, checkFollowing]);
+
+  useEffect(() => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    let mounted = true;
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('avatar_url, cover_image_url, is_verified, level, monthly_subscriber_count, troll_coins, crowns, subscriber_badge_color_hex, can_message')
+          .eq('id', userId)
+          .maybeSingle();
+        if (mounted && data) setTargetProfile(data);
+      } catch {}
+      finally { if (mounted) setLoading(false); }
+    })();
+    return () => { mounted = false };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!user || !userId) return
+    checkSubscription()
+  }, [user, userId, checkSubscription])
+
+  useEffect(() => {
+    if (!userId) return
+    fetchAffiliation()
+  }, [userId, fetchAffiliation])
 
   useEffect(() => {
     if (!userId) return
@@ -67,20 +136,36 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
     ;(async () => {
       try {
         const { data } = await supabase
-          .from('user_profiles')
-          .select('avatar_url, cover_image_url, is_verified, level, monthly_subscriber_count, troll_coins, crowns, subscriber_badge_color_hex, can_message')
-          .eq('id', userId)
+          .from('user_profile_frames')
+          .select('frame_id')
+          .eq('user_id', userId)
+          .eq('is_equipped', true)
           .maybeSingle()
-        if (mounted && data) setTargetProfile(data)
+        if (mounted && data?.frame_id) {
+          const frame = useProfileFrameStore.getState().catalog.find((f) => f.id === data.frame_id) || null
+          if (mounted) setUserFrame(frame)
+        }
       } catch {}
     })()
     return () => { mounted = false }
   }, [userId])
 
   useEffect(() => {
-    if (!user || !userId) return
-    checkSubscription()
-  }, [user?.id, userId])
+    if (!user || !userId || isOwnProfile) return
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('user_blocks')
+          .select('id')
+          .eq('blocker_id', user.id)
+          .eq('blocked_id', userId)
+          .maybeSingle()
+        if (mounted) setIsBlocked(!!data)
+      } catch {}
+    })()
+    return () => { mounted = false }
+  }, [user, userId, isOwnProfile])
 
   const handleFollow = async () => {
     if (!user || !userId || isOwnProfile) return;
@@ -105,34 +190,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
       toast.error(err.message || 'Follow action failed');
     } finally {
       setFollowLoading(false);
-    }
-  };
-
-  const fetchAffiliation = async () => {
-    try {
-      const data = await getUserAffiliation(userId);
-      setAffiliation(data);
-    } catch (error) {
-      console.error('Error fetching affiliation:', error);
-    }
-  };
-
-  const checkSubscription = async () => {
-    if (!user) return;
-    try {
-      const { data } = await supabase
-        .from('user_subscriptions')
-        .select(`
-          *,
-          tier: subscription_tiers(*)
-        `)
-        .eq('subscriber_id', user.id)
-        .eq('broadcaster_id', userId)
-        .eq('is_active', true)
-        .single();
-      setSubscription(data);
-    } catch (error) {
-      // No subscription
     }
   };
 
@@ -185,6 +242,61 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
     { id: 'other', label: 'Other' },
   ];
 
+  const handleBlock = async () => {
+    if (!user || !userId || isOwnProfile) return;
+    if (blockLoading) return;
+    if (!confirm(isBlocked ? `Unblock @${username}?` : `Block @${username}? They will not be able to message you or view your profile.`)) return;
+    setBlockLoading(true);
+    try {
+      if (isBlocked) {
+        await supabase.from('user_blocks').delete().eq('blocker_id', user.id).eq('blocked_id', userId);
+        setIsBlocked(false);
+        toast.success(`Unblocked @${username}`);
+      } else {
+        await supabase.from('user_blocks').insert({ blocker_id: user.id, blocked_id: userId });
+        setIsBlocked(true);
+        toast.success(`Blocked @${username}`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Block action failed');
+    } finally {
+      setBlockLoading(false);
+    }
+  };
+
+  const handleProtectionOrder = () => {
+    navigate('/troll-court', {
+      state: {
+        poRespondent: {
+          id: userId,
+          username,
+          avatar_url: avatarUrl || targetProfile?.avatar_url || null,
+        },
+      },
+    });
+    onClose();
+  };
+
+  const sendTip = async (amount: number) => {
+    if (!user || !userId || !amount || amount <= 0 || tipSending) return;
+    setTipSending(true);
+    try {
+      const { error } = await supabase.rpc('transfer_coins', {
+        p_from_user_id: user.id,
+        p_to_user_id: userId,
+        p_amount: amount,
+      });
+      if (error) throw error;
+      toast.success(`Tipped ${amount} Troll Coins to @${username}`);
+      setTipOpen(false);
+      setCustomTip('');
+    } catch (err: any) {
+      toast.error(err.message || 'Tip failed');
+    } finally {
+      setTipSending(false);
+    }
+  };
+
   const handleViewProfile = () => {
     navigate(`/profile/${username}`);
     onClose();
@@ -206,9 +318,9 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
       <div className="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
         {/* Cover Image */}
         {coverImageUrl || targetProfile?.cover_image_url ? (
-          <img 
-            src={coverImageUrl || targetProfile?.cover_image_url} 
-            alt="Cover" 
+          <img
+            src={coverImageUrl || targetProfile?.cover_image_url}
+            alt="Cover"
             className="w-full h-20 object-cover"
           />
         ) : (
@@ -228,16 +340,22 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
             </div>
             <div className="flex-1 min-w-0 mt-8">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-bold text-white truncate text-lg">{username}</h3>
+                <button
+                  onClick={handleViewProfile}
+                  className="font-bold text-white truncate text-lg hover:text-cyan-300 transition-colors text-left"
+                  title={`View ${username}'s profile`}
+                >
+                  {username}
+                </button>
                 {targetProfile?.is_verified && (
                   <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded">✓</span>
                 )}
                 {subscription && (
-                  <span 
+                  <span
                     className="text-xs px-2 py-0.5 rounded-full font-bold"
-                    style={{ 
+                    style={{
                       backgroundColor: subscription.tier?.color_hex + '30',
-                      color: subscription.tier?.color_hex 
+                      color: subscription.tier?.color_hex
                     }}
                   >
                     <Crown className="w-3 h-3 inline mr-1" />
@@ -326,12 +444,52 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
                   Gift
                 </button>
                 <button
-                  onClick={handleReport}
-                  className="col-span-2 flex items-center justify-center gap-2 px-3 py-2 bg-slate-800 hover:bg-red-900/50 text-slate-300 hover:text-red-400 rounded-lg text-sm"
+                  onClick={() => setTipOpen(true)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm"
                 >
-                  <Flag className="w-4 h-4" />
-                  Report User
+                  <Coins className="w-4 h-4" />
+                  Tip
                 </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setMenuOpen((v) => !v)}
+                    className="flex w-full items-center justify-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                    Actions
+                  </button>
+                  {menuOpen && (
+                    <div className="absolute bottom-full left-0 right-0 mb-1 z-20 overflow-hidden rounded-lg border border-slate-600 bg-slate-800 shadow-xl">
+                      {onModerate && (
+                        <button
+                          onClick={() => { setMenuOpen(false); onModerate(userId, username); }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-cyan-900/40 hover:text-cyan-300"
+                        >
+                          <Gavel className="w-4 h-4" /> Moderate User
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setMenuOpen(false); handleReport(); }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-red-900/40 hover:text-red-300"
+                      >
+                        <Flag className="w-4 h-4" /> Report User
+                      </button>
+                      <button
+                        onClick={() => { setMenuOpen(false); handleBlock(); }}
+                        disabled={blockLoading}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-red-900/40 hover:text-red-300 disabled:opacity-50"
+                      >
+                        <Ban className="w-4 h-4" /> {isBlocked ? 'Unblock User' : 'Block User'}
+                      </button>
+                      <button
+                        onClick={() => { setMenuOpen(false); handleProtectionOrder(); }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-amber-900/40 hover:text-amber-300"
+                      >
+                        <Shield className="w-4 h-4" /> File Protection Order
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -414,11 +572,64 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
               {subscription?.tier?.sla_uptime_guarantee_pct !== undefined && (
                 <div className="mt-1">
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                    title={`${subscription.tier.name} SLA: ${subscription.tier.sla_uptime_guarantee_pct}% uptime, ${subscription.tier.sla_quality_guarantee} quality`}>
+                    title={`${subscription.tier.name} SLA: ${subscription.tier.sla_uptime_guarantee_pct}% uptime, ${subscription.tier.sla_quality_guarantee} quality}`}>
                     {subscription.tier.sla_uptime_guarantee_pct}% SLA
                   </span>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Tip Modal */}
+          {tipOpen && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setTipOpen(false)}>
+              <div className="bg-zinc-900 border border-amber-400/30 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4 border-b border-white/10 flex items-center justify-between bg-amber-400/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-400/20 flex items-center justify-center">
+                      <Coins className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-sm">Send Tip</h3>
+                      <p className="text-xs text-zinc-400">Tipping @{username}</p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => setTipOpen(false)} className="text-zinc-400 hover:text-white transition-colors">
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="grid grid-cols-4 gap-2">
+                    {[10, 50, 100, 500].map((amount) => (
+                      <button
+                        key={amount}
+                        type="button"
+                        disabled={tipSending}
+                        onClick={() => sendTip(amount)}
+                        className="rounded-xl border border-white/10 bg-white/[0.04] py-3 text-sm font-black text-amber-300 hover:bg-amber-400/10 transition disabled:opacity-40"
+                      >
+                        {amount}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={customTip}
+                      onChange={(e) => setCustomTip(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Custom amount"
+                      className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-amber-300/50 placeholder:text-white/30"
+                    />
+                    <button
+                      type="button"
+                      disabled={!customTip || tipSending}
+                      onClick={() => sendTip(Number(customTip))}
+                      className="rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-4 text-xs font-black text-black disabled:opacity-30"
+                    >
+                      {tipSending ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

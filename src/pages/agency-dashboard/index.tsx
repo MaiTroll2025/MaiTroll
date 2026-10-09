@@ -11,20 +11,7 @@ import AgencyMembersTable from './components/AgencyMembersTable'
 import { AgencyApplicationsTable } from './components/AgencyApplicationsTable'
 import { AgencyGoalsTable } from './components/AgencyGoalsTable'
 import { AgencyEarningsChart } from './components/AgencyEarningsChart'
-import { AgencyInvitesPanel } from './components/AgencyInvitesPanel'
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Building2,
-  CheckCircle2,
-  Clock3,
-  FileText,
-  RefreshCw,
-  ShieldCheck,
-  Sparkles,
-  UserPlus,
-  XCircle,
-} from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, Clock3, FileText, RefreshCw, ShieldCheck, Sparkles, XCircle } from 'lucide-react';
 
 type AgencyStatus = 'pending' | 'approved' | 'suspended' | 'denied' | 'under_review' | 'active' | 'inactive' | 'rejected' | string
 

@@ -1,10 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import AgoraRTC, {
-  IAgoraRTCClient,
-  IAgoraRTCRemoteUser,
-  IMicrophoneAudioTrack,
-  UID
-} from 'agora-rtc-sdk-ng'
+import AgoraRTC, { IAgoraRTCClient, IAgoraRTCRemoteUser, IMicrophoneAudioTrack } from 'agora-rtc-sdk-ng';
 import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { useAuthStore } from '../lib/store'
@@ -174,12 +169,12 @@ export function useStaffWalkieTalkie({
     const handleUserPublished = async (user: IAgoraRTCRemoteUser, mediaType: string) => {
       debugAgora('[StaffWalkieTalkie] User published:', user.uid, mediaType)
       try {
-        await client.subscribe(user, mediaType)
+        await (client as any).subscribe(user, mediaType)
 
         if (mediaType === 'audio' && user.audioTrack) {
           const audioElement = createRemoteAudioElement(String(user.uid))
           try {
-            await user.audioTrack.play(audioElement)
+            await (user.audioTrack as any).play(audioElement)
             user.audioTrack.setVolume?.(100)
           } catch (playError) {
             console.warn('[StaffWalkieTalkie] Remote audio play failed:', playError)
@@ -325,15 +320,16 @@ export function useStaffWalkieTalkie({
       }
 
       if (clientRef.current) {
+        const client = clientRef.current as any
         if (localAudioTrackRef.current) {
-          await clientRef.current.unpublish(localAudioTrackRef.current).catch(() => {})
+          await client.unpublish(localAudioTrackRef.current).catch(() => {})
         }
-        clientRef.current.off('user-joined')
-        clientRef.current.off('user-left')
-        clientRef.current.off('user-published')
-        clientRef.current.off('user-unpublished')
-        clientRef.current.off('connection-state-change')
-        await clientRef.current.leave().catch((err) => {
+        client.off('user-joined')
+        client.off('user-left')
+        client.off('user-published')
+        client.off('user-unpublished')
+        client.off('connection-state-change')
+        await client.leave().catch((err) => {
           debugAgora('[StaffWalkieTalkie] Error leaving Agora client:', err)
         })
         clientRef.current = null

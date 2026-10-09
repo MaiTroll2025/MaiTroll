@@ -3,7 +3,6 @@ import { MessageCircle, Eye, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TMProfileView } from '../../types/trollMatch';
 import { useTMMessagePricing, useTMRecordView } from '../../hooks/useTrollMatch';
-import { toast } from 'sonner';
 
 interface TMViewerCardProps {
   viewer: TMProfileView;

@@ -144,7 +144,7 @@ function setupAutoUpdater(): void {
     return
   }
 
-  const feedUrl = getProductionUrl().replace(/\/$/, '')
+  const _feedUrl = getProductionUrl().replace(/\/$/, '')
 
   autoUpdater.setFeedURL({
     provider: 'github',

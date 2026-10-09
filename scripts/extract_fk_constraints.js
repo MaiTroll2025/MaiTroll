@@ -31,12 +31,12 @@ for (const block of tableBlocks) {
   const tableName = tableMatch[1];
   
   // Remove REFERENCES from the CREATE TABLE
-  let tableDef = block;
+  let _tableDef = block;
   
   // Extract column definitions
   const lines = block.split('\n');
   const cleanLines = [];
-  const fkLines = [];
+  const _fkLines = [];
   
   for (const line of lines) {
     let cleaned = line;

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Users, Gift, Crown, Heart, Star } from 'lucide-react'
+import { ArrowLeft, Users, Gift, Crown, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
-import { cn } from '@/lib/utils'
 import { useGamingStreamId } from '@/contexts/GamingStreamContext'
 
 interface TopGifter {

@@ -64,10 +64,10 @@ function formatTime(dateStr: string): string {
 
 export default function EventRollPost() {
   const navigate = useNavigate()
-  const { user, profile } = useAuthStore()
+  const { user: _user, profile } = useAuthStore()
   const [event, setEvent] = useState<EventPost | null>(null)
   const [loading, setLoading] = useState(true)
-  const [joining, setJoining] = useState(false)
+  const [joining, _setJoining] = useState(false)
 
   const isAdmin = profile?.is_admin === true || profile?.role === 'admin'
 

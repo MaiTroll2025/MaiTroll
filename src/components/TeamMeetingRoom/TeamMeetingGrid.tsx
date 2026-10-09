@@ -78,7 +78,7 @@ const ParticipantTile: React.FC<{
   isLocal: boolean;
 }> = ({
   participant,
-  position,
+  position: _position,
   isFocused,
   isHeld,
   onToggleHold,
@@ -127,7 +127,7 @@ const ParticipantTile: React.FC<{
         if (participant.remoteUser?.audioTrack) {
           participant.remoteUser.audioTrack.stop();
         }
-      } catch (e) {}
+      } catch (_e) {}
     };
   }, [participant.remoteUser?.audioTrack, isLocal]);
 
@@ -231,7 +231,7 @@ export const TeamMeetingGrid: React.FC<TeamMeetingGridProps> = ({
   localAudioTrack,
   localUsername,
   localRole,
-  meetingId
+  meetingId: _meetingId
 }) => {
   const [profiles, setProfiles] = useState<Map<string | number, ParticipantProfile>>(new Map());
   const [heldPositions, setHeldPositions] = useState<Set<string | number>>(new Set());

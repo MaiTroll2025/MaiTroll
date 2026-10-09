@@ -3,16 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../lib/store';
 import { isAdminEmail } from '../../lib/supabase';
 import { Loader } from '../../components/ui/loader';
-import { AgencyApplicationsPanel } from './components/AgencyApplicationsPanel';
-import { AgencyMembersPanel } from './components/AgencyMembersPanel';
-import { AgencyLeaderboardPanel } from './components/AgencyLeaderboardPanel';
-import { AgencyPointAdjustmentPanel } from './components/AgencyPointAdjustmentPanel';
-import { AgencyRewardDistributionPanel } from './components/AgencyRewardDistributionPanel';
-import { AgencyAuditLogPanel } from './components/AgencyAuditLogPanel';
+import AgencyApplicationsPanel from './components/AgencyApplicationsPanel';
+import AgencyMembersPanel from './components/AgencyMembersPanel';
+import AgencyLeaderboardPanel from './components/AgencyLeaderboardPanel';
+import AgencyPointAdjustmentPanel from './components/AgencyPointAdjustmentPanel';
+import AgencyRewardDistributionPanel from './components/AgencyRewardDistributionPanel';
+import AgencyAuditLogPanel from './components/AgencyAuditLogPanel';
 import { useAdminAgencyApplications } from '../../hooks/useAdminAgency';
 import { useAdminAgencyMembers } from '../../hooks/useAdminAgency';
 import { useAdminAgencyLeaderboard } from '../../hooks/useAdminAgency';
-import { Users, FileText, Trophy, SlidersHorizontal, Gift, Shield, ScrollText } from 'lucide-react';
+import { Users, FileText, Trophy, SlidersHorizontal, Gift, ScrollText } from 'lucide-react';
 
 type TabId = 'applications' | 'members' | 'leaderboard' | 'adjustments' | 'rewards' | 'audit';
 
@@ -31,7 +31,7 @@ export default function AgencyDashboard() {
   const [activeTab, setActiveTab] = useState<TabId>('applications');
   const { applications } = useAdminAgencyApplications();
   const { members } = useAdminAgencyMembers();
-  const { leaderboard } = useAdminAgencyLeaderboard();
+  const { leaderboard: _leaderboard } = useAdminAgencyLeaderboard();
 
   useEffect(() => {
     if (!user || !profile) return;

@@ -262,7 +262,7 @@ export default function ProfileFeed({ userId }: ProfileFeedProps) {
         <div className="text-center py-10 text-gray-500">Loading posts...</div>
       ) : posts.length === 0 ? (
         <div className="text-center py-10 text-gray-500 bg-white/5 rounded-xl border border-white/5">
-            No posts yet. Be the first to share something!
+            No posts yet!
         </div>
       ) : (
         <div className="space-y-4">

@@ -29,14 +29,12 @@ interface BucketData {
 
 interface LedgerTransaction {
   id: string;
-  transaction_type: string;
-  source_type: string;
-  source_id: string;
-  usd_amount: number;
-  coin_amount: number;
+  type: string;
+  coin_type: string;
+  amount: number;
+  user_id: string;
   description: string;
   created_at: string;
-  user_username?: string;
 }
 
 interface PayoutSummary {
@@ -509,14 +507,14 @@ export default function BucketsDashboard() {
                 {transactions.map((tx) => (
                   <tr key={tx.id} className="border-b border-[#2C2C2C] hover:bg-[#252525]">
                     <td className="py-3 pr-4">
-                      <div className={`flex items-center gap-2 ${getTransactionTypeColor(tx.transaction_type)}`}>
-                        {getTransactionTypeIcon(tx.transaction_type)}
-                        <span className="capitalize">{tx.transaction_type.replace(/_/g, ' ')}</span>
+                      <div className={`flex items-center gap-2 ${getTransactionTypeColor(tx.type)}`}>
+                        {getTransactionTypeIcon(tx.type)}
+                        <span className="capitalize">{tx.type.replace(/_/g, ' ')}</span>
                       </div>
                     </td>
-                    <td className="py-3 pr-4 text-gray-400">{tx.source_type}</td>
-                    <td className="py-3 pr-4 text-green-400">{tx.usd_amount > 0 ? formatCurrency(tx.usd_amount) : '-'}</td>
-                    <td className="py-3 pr-4 text-yellow-400">{tx.coin_amount > 0 ? formatCoins(tx.coin_amount) : '-'}</td>
+                    <td className="py-3 pr-4 text-gray-400">{tx.coin_type}</td>
+                    <td className="py-3 pr-4 text-green-400">-</td>
+                    <td className="py-3 pr-4 text-yellow-400">{formatCoins(tx.amount)}</td>
                     <td className="py-3 pr-4 text-gray-300 max-w-xs truncate">{tx.description || '-'}</td>
                     <td className="py-3 text-gray-400">
                       <div className="flex items-center gap-1">

@@ -56,7 +56,7 @@ function injectStructuredData(data: object, id: string) {
   document.head.appendChild(script)
 }
 
-function removeStructuredData(id: string) {
+function _removeStructuredData(id: string) {
   const existing = document.querySelector(`#jsonld-${id}`)
   if (existing) existing.remove()
 }

@@ -85,8 +85,8 @@ export default function ProfilePurchases({ userId }: { userId: string }) {
         ]);
 
         if (isMounted) {
-          setMarketplacePurchases((marketRes.data || []) as MarketplacePurchase[]);
-          setAuctionWins((auctionRes.data || []) as AuctionLot[]);
+          setMarketplacePurchases((marketRes.data || []) as unknown as MarketplacePurchase[]);
+          setAuctionWins((auctionRes.data || []) as unknown as AuctionLot[]);
         }
       } catch (err) {
         console.error('[ProfilePurchases] Error:', err);
@@ -114,7 +114,7 @@ export default function ProfilePurchases({ userId }: { userId: string }) {
   const all = [
     ...marketplacePurchases.map(p => ({ ...p, source: 'marketplace' as const })),
     ...auctionWins.map(a => ({ ...a, source: 'auction' as const }))
-  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  ].sort((a, b) => new Date((b as any).created_at || 0).getTime() - new Date((a as any).created_at || 0).getTime());
 
   if (all.length === 0) {
     return (
@@ -159,7 +159,7 @@ export default function ProfilePurchases({ userId }: { userId: string }) {
             </div>
             <div className="text-right">
               <p className="font-black text-green-300">{Number(a.final_bid || a.current_highest_bid || 0).toLocaleString()} TC</p>
-              <p className="text-[10px] text-slate-500">{new Date(a.created_at).toLocaleDateString()}</p>
+              <p className="text-[10px] text-slate-500">{new Date((a as any).created_at || Date.now()).toLocaleDateString()}</p>
             </div>
           </div>
         );

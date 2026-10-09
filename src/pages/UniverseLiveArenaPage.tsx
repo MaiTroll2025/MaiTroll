@@ -28,7 +28,6 @@ import {
   universeClaimTrollBag,
 } from '../lib/api/universe'
 import UniverseArenaBackground from '../components/universe/UniverseArenaBackground'
-import UniverseMuxPlayer from '../components/universe/UniverseMuxPlayer'
 import UniverseLiveKitStage from '../components/universe/UniverseLiveKitStage'
 import BroadcastChat from '../components/broadcast/BroadcastChat'
 
@@ -42,7 +41,7 @@ const ABILITIES = [
   { type: 'scramble_score', label: 'Scramble Score', dur: 20, color: 'rose', icon: Sparkles },
 ] as const
 
-const colorMap: Record<string, { text: string; border: string; glow: string; bg: string; chip: string }> = {
+const _colorMap: Record<string, { text: string; border: string; glow: string; bg: string; chip: string }> = {
   fuchsia: { text: 'text-fuchsia-200', border: 'border-fuchsia-400/50', glow: 'shadow-[0_0_30px_rgba(232,121,249,0.55)]', bg: 'from-fuchsia-600/20', chip: 'bg-fuchsia-400/15' },
   sky: { text: 'text-sky-200', border: 'border-sky-400/50', glow: 'shadow-[0_0_30px_rgba(56,189,248,0.55)]', bg: 'from-sky-600/20', chip: 'bg-sky-400/15' },
   violet: { text: 'text-violet-200', border: 'border-violet-400/50', glow: 'shadow-[0_0_30px_rgba(167,139,250,0.55)]', bg: 'from-violet-600/20', chip: 'bg-violet-400/15' },
@@ -136,7 +135,7 @@ function CrystalDiamond({
   )
 }
 
-function CenterBeam({ leader, transitionPreparing, roundEnding }: any) {
+function CenterBeam({ leader: _leader, transitionPreparing: _transitionPreparing, roundEnding: _roundEnding }: any) {
   return (
     <div className="pointer-events-none relative flex min-h-[120px] items-center justify-center lg:h-full lg:min-h-0">
       <span className="absolute inset-y-0 left-1/2 w-[4px] -translate-x-1/2 bg-gradient-to-b from-sky-400 via-fuchsia-400 to-rose-400 opacity-80 blur-[3px] [box-shadow:0_0_40px_rgba(232,121,249,0.8)] animate-pulse" />
@@ -202,7 +201,7 @@ export default function UniverseLiveArenaPage() {
   const [queue, setQueue] = useState<QueueEntry[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [now, setNow] = useState(Date.now())
-  const [giftTarget, setGiftTarget] = useState<{
+  const [_giftTarget, setGiftTarget] = useState<{
     teamId: string
     recipientId: string
     captainId: string
@@ -456,7 +455,7 @@ export default function UniverseLiveArenaPage() {
 
   const scoreA = Number(scores.A?.actual_score || 0)
   const scoreB = Number(scores.B?.actual_score || 0)
-  const scoreDifference = Math.abs(scoreA - scoreB)
+  const _scoreDifference = Math.abs(scoreA - scoreB)
   const leader: Side | null = scoreA === scoreB ? null : scoreA > scoreB ? 'A' : 'B'
 
   const activeTypes = useMemo(
@@ -910,7 +909,7 @@ function QueueSidebar({ queue, nextEntry }: any) {
   )
 }
 
-function ActivityFeed({ round, teams, abilities, scoreA, scoreB, leader }: any) {
+function ActivityFeed({ round: _round, teams, abilities, scoreA: _scoreA, scoreB: _scoreB, leader }: any) {
   const events = [
     ...(abilities || []).slice(0, 4).map((a: any) => ({
       id: `ab-${a.id}`,

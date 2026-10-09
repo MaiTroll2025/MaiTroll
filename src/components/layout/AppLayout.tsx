@@ -8,7 +8,6 @@ import PurchaseRequiredModal from '../PurchaseRequiredModal'
 import { useAuthStore } from '../../lib/store'
 import { useSidebarStore } from '../../stores/useSidebarStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { isStandalone } from '../../pwa/install'
 import { useUcRedirect } from '../../hooks/usePageVisibility'
 import { useSwipeNavigationProvider, type SwipeDirection } from '../../contexts/SwipeNavigationContext'
 import { useHomeSwipeNavigation } from '../../hooks/useHomeSwipeNavigation'
@@ -29,9 +28,9 @@ interface AppLayoutProps {
 
 export default function AppLayout({ 
   children, 
-  showSidebar = true, 
+  showSidebar: _showSidebar = true, 
   showHeader = true, 
-  showBottomNav = true,
+  showBottomNav: _showBottomNav = true,
   mobileHeader,
   mobileTopBanner,
   mobileFooter,
@@ -41,18 +40,18 @@ export default function AppLayout({
   isJailed = false,
 }: AppLayoutProps) {
    const location = useLocation();
-   const showLegacySidebar = useAuthStore((s) => s.showLegacySidebar)
+   const _showLegacySidebar = useAuthStore((s) => s.showLegacySidebar)
    const user = useAuthStore((s) => s.user)
    const { isCollapsed } = useSidebarStore()
    const { isMobileWidth } = useIsMobile()
     const isAuthPage = location.pathname.startsWith('/auth');
     const isLivePage = location.pathname.startsWith('/live/') || location.pathname.startsWith('/watch/') || location.pathname.startsWith('/gaming/watch/') || (location.pathname.startsWith('/broadcast/') && !location.pathname.startsWith('/broadcast/setup')) || location.pathname.startsWith('/stream/') || location.pathname === '/live-swipe';
     const isTreelzPage = location.pathname.startsWith('/treelz');
-     const isUtromailPage = location.pathname.startsWith('/utromail') || location.pathname.startsWith('/tromail') || location.pathname.startsWith('/messages');
+     const _isUtromailPage = location.pathname.startsWith('/utromail') || location.pathname.startsWith('/tromail') || location.pathname.startsWith('/messages');
      const isSingOffPage = location.pathname.startsWith('/mai-sing-off');
      const normalizedPath = location.pathname.toLowerCase();
     const isThemeExemptPage = normalizedPath.includes('court') || normalizedPath.startsWith('/church');
-    const isKeyboardVisible = false;
+    const _isKeyboardVisible = false;
     const isMobileLayout = isMobileWidth && !isAuthPage;
    const [hytroSetupLive, setHytroSetupLive] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('tc_hytro_gaming_setup_live') === 'true')
   const [morePagesOpen, setMorePagesOpen] = useState(false)
@@ -181,8 +180,8 @@ export default function AppLayout({
 
    const effectiveShowSidebar = false;
     const effectiveShowHeader = showHeader && !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed;
-   const effectiveShowBottomNav = false;
-    const isHomePage = location.pathname === '/';
+   const _effectiveShowBottomNav = false;
+    const _isHomePage = location.pathname === '/';
     const mainOverflowClass = isLivePage || isHytroGamingSetupLivePage || isSingOffPage ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto touch-pan-y scrollbar-thin scrollbar-thumb-purple-900/30 scrollbar-track-transparent';
    // The new bottom nav bar is ~64px tall on mobile (h-16) and ~144px tall on
    // desktop (md:h-36) plus the safe-area inset. The old 64px bottom padding

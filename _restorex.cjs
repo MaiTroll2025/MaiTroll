@@ -27,18 +27,18 @@ function getDivs() {
 getDivs();
 
 // Also: find the EXACT list of `<div` line numbers
-function showDivSections(title) {
+function showDivSections(_title) {
   const map = [];
   for (let i = 0; i < L.length; i++) {
     let s = L[i]; let p = 0;
-    let nOpen = 0;
+    let _nOpen = 0;
     while ((p = s.indexOf('<div', p)) !== -1) {
-      if (/[\s>/]/.test(s[p+4]||'')) { nOpen++; map.push({line: i+1, indent: s.length - s.trimStart().length, raw:s.trimStart().slice(0,60), desc:'OPEN'}); }
+      if (/[\s>/]/.test(s[p+4]||'')) { _nOpen++; map.push({line: i+1, indent: s.length - s.trimStart().length, raw:s.trimStart().slice(0,60), desc:'OPEN'}); }
       p += 4;
     }
     p = 0;
-    let nClose = 0;
-    while ((p = s.indexOf('</div>', p)) !== -1) { nClose++; map.push({line:i+1, indent:s.length-s.trimStart().length, raw:s.trimStart().slice(0,60), desc:'CLOSE'}); p+=6; }
+    let _nClose = 0;
+    while ((p = s.indexOf('</div>', p)) !== -1) { _nClose++; map.push({line:i+1, indent:s.length-s.trimStart().length, raw:s.trimStart().slice(0,60), desc:'CLOSE'}); p+=6; }
   }
   console.log('\n| Line | Ind | Desc | Context');
   console.log('|------|-----|------|-------');

@@ -27,7 +27,7 @@ export default function Withdraw() {
 
     const { data } = await supabase
       .from("user_profiles")
-      .select("troll_coins, paypal_email, cashapp_handle, venmo_handle")
+      .select("troll_coins, paypal_email, cashapp_handle, venmo_handle, id_verification_status, id_document_url")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -50,7 +50,7 @@ export default function Withdraw() {
     loadBalance();
   }, [loadBalance]);
 
-  const requestPayout = async () => {
+const requestPayout = async () => {
     if (!user) {
       toast.error("You must be logged in");
       return;
@@ -91,6 +91,13 @@ export default function Withdraw() {
       return;
     }
 
+    // Get ID document URL from profile
+    const { data: profileData } = await supabase
+      .from("user_profiles")
+      .select("id_document_url")
+      .eq("id", user.id)
+      .maybeSingle();
+
     const tier = TIERS.find(t => t.coins === coinAmount);
     if (!tier) {
       toast.error("Select a valid Cashout tier.");
@@ -98,17 +105,17 @@ export default function Withdraw() {
     }
 
     if (tier.manualReview) {
-       toast.info("This amount requires manual review and may take longer to process.");
+      toast.info("This amount requires manual review and may take longer to process.");
     }
 
     // Use the unified Fast Pay cashout RPC
-    const { data, error } = await supabase.rpc('request_cashout', {
+    const { data: cashoutData, error } = await supabase.rpc('request_cashout', {
       p_user_id: user.id,
       p_coins_to_redeem: tier.coins,
       p_provider_type: payoutMethod,
       p_provider_username: providerUsername.trim(),
       p_user_tag: null,
-      p_id_verification_url: null,
+      p_id_verification_url: profileData?.id_document_url || null,
     });
 
     if (error) {
@@ -116,11 +123,11 @@ export default function Withdraw() {
       return toast.error("Error submitting request: " + error.message);
     }
 
-    if (!data?.success) {
-      return toast.error(data?.error || "Cashout request failed");
+    if (!cashoutData?.success) {
+      return toast.error(cashoutData?.error || "Cashout request failed");
     }
 
-    toast.success(`Cashout request submitted! Payout ID: ${data.payout_id}`);
+    toast.success(`Cashout request submitted! Payout ID: ${cashoutData.payout_id}`);
     setAmount("");
     loadBalance();
   };

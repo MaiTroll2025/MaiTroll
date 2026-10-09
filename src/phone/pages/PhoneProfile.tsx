@@ -7,42 +7,18 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
+import { cn } from '../../lib/utils'
 
-import {
-  ArrowLeft,
-  Award,
-  Ban,
-  BatteryCharging,
-  BookOpen,
-  Boxes,
-  ChevronRight,
-  Coins,
-  CreditCard,
-  Crown,
-  Gavel,
-  Image as Image,
-  KeyRound,
-  LogOut,
-  Music,
-  Save,
-  Scale,
-  Settings,
-  Shield,
-  ShoppingBag,
-  Sparkles,
-  Star,
-  Store,
-  Trash2,
-  Trophy,
-  UserRound,
-  Video,
-  Wallet,
-} from 'lucide-react'
+import { ArrowLeft, Award, Ban, BatteryCharging, BookOpen, Boxes, ChevronRight, Coins, CreditCard, Crown, Gavel, Image, KeyRound, LogOut, Save, Scale, Settings, Shield, ShoppingBag, Star, UserPlus, UserRound, Video, Wallet, ShieldCheck, AlertCircle, FileText, Upload, Eye, Trash2 } from 'lucide-react';
 
 import { toast } from 'sonner'
 
+import { usePhoneXP } from '../../hooks/usePhoneXP';
 import { getLevelName } from '../../lib/xp'
 import { useCityStatus } from '../../hooks/useCityStatus'
+import { PhoneButton } from '../components/PhoneButton'
+import { PhoneBadgeDisplay } from '../components/PhoneBadgeDisplay'
+import { PhoneBadgeList } from '../components/PhoneBadgeDisplay'
 
 import AvatarUpload from '../../components/profile/AvatarUpload'
 import CoverPhotoUpload, {
@@ -71,11 +47,6 @@ import { useFounderIdentity } from '../../hooks/useFounderProgram'
 type ProfileRow = {
   id: string
   troll_coins?: number | null
-  level?: number | null
-  xp?: number | null
-  xp_to_next_level?: number | null
-  total_xp?: number | null
-  next_level_xp?: number | null
   display_name?: string | null
   full_name?: string | null
   username?: string | null
@@ -89,6 +60,12 @@ type ProfileRow = {
   is_minor?: boolean | null
   creator_subscription_enabled?: boolean | null
   creator_subscription_price_coins?: number | null
+  maipiks_story_visibility?: string | null
+  maipiks_story_duration_hours?: number | null
+  maipiks_story_monetization?: string | null
+  maipiks_story_base_price_coins?: number | null
+  maipiks_story_subscriber_discount_mode?: string | null
+  maipiks_story_paid_access_duration?: string | null
 }
 
 const PLATFORM_OPTIONS = [
@@ -153,9 +130,6 @@ const PROFILE_TABS: ProfileTab[] = [
   { id: 'inventory', label: 'Inventory & Perks', icon: Boxes },
   { id: 'purchases', label: 'Purchase History', icon: Wallet },
   { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'music', label: 'Music', icon: Music },
-  { id: 'albums', label: 'Albums', icon: Image },
-  { id: 'tracks', label: 'Tracks', icon: Store },
 ]
 
 export default function PhoneProfile() {
@@ -176,7 +150,7 @@ export default function PhoneProfile() {
   const [username, setUsername] = useState(usernameParam || '')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
-  const [role, setRole] = useState('')
+  const [_role, setRole] = useState('')
   // Id of the profile being viewed (own profile or someone else's).
   const [profileId, setProfileId] = useState<string | null>(null)
 
@@ -197,6 +171,26 @@ export default function PhoneProfile() {
   const [platform, setPlatform] = useState('')
   const [bannerNotifications, setBannerNotifications] = useState(true)
   const [isMinor, setIsMinor] = useState(false)
+  const [gender, setGender] = useState<'male' | 'female' | 'nonbinary' | ''>('')
+
+  /*
+   * ID Verification
+   */
+  const [idVerificationStatus, setIdVerificationStatus] = useState<'not_submitted' | 'pending' | 'approved' | 'rejected'>('not_submitted')
+  const [idDocumentUrl, setIdDocumentUrl] = useState<string | null>(null)
+  const [idUploading, setIdUploading] = useState(false)
+  const [idUploadProgress, setIdUploadProgress] = useState(0)
+
+  /*
+   * MAI Piks Story Defaults
+   */
+  const [maipiksStoryVisibility, setMaipiksStoryVisibility] = useState<'everyone' | 'followers' | 'private'>('everyone')
+  const [maipiksStoryDurationHours, setMaipiksStoryDurationHours] = useState(24)
+  const [maipiksStoryMonetization, setMaipiksStoryMonetization] = useState<'free' | 'paid' | 'subscribers_only' | 'free_for_subscribers'>('free')
+  const [maipiksStoryBasePriceCoins, setMaipiksStoryBasePriceCoins] = useState(100)
+  const [maipiksStorySubscriberDiscountMode, setMaipiksStorySubscriberDiscountMode] = useState<'platform' | 'none'>('platform')
+  const [maipiksStoryPaidAccessDuration, setMaipiksStoryPaidAccessDuration] = useState('until_story_expiry')
+  const [savingMaipiksSettings, setSavingMaipiksSettings] = useState(false)
 
   /*
    * Creator memberships
@@ -210,19 +204,21 @@ export default function PhoneProfile() {
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingSubscription, setSavingSubscription] = useState(false)
 
-  const [level, setLevel] = useState(1)
-  const [xp, setXp] = useState(0)
-  const [xpToNextLevel, setXpToNextLevel] = useState(100)
-  const [totalXp, setTotalXp] = useState(0)
-
   const [profileTargetId, setProfileTargetId] = useState<string | null>(null)
   const { status: cityStatus, loading: cityStatusLoading } = useCityStatus(profileTargetId)
+
+  // XP from usePhoneXP hook (mirrors web useXPStore logic)
+  const xpData = usePhoneXP(profileId || user?.id)
+  const level = xpData.level
+  const _xp = xpData.totalXp
+  const xpToNextLevel = xpData.xpToNext
+  const _totalXp = xpData.totalXp
 
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
   const [postsCount, setPostsCount] = useState(0)
 
-  const isViewingOwnProfile = !usernameParam || usernameParam === user?.username
+  const isViewingOwnProfile = !usernameParam || usernameParam === (user as any)?.username
 
   /*
    * Load profile
@@ -237,10 +233,6 @@ export default function PhoneProfile() {
 
     const applyProfile = (row: ProfileRow) => {
       setCoins(Math.max(0, Number(row.troll_coins) || 0))
-      setLevel(Number(row.level) || 1)
-      setXp(Number(row.xp) || 0)
-      setTotalXp(Number(row.total_xp) || 0)
-      setXpToNextLevel(Number(row.xp_to_next_level) || Number(row.next_level_xp) || 100)
 
       setDisplayName(
         row.display_name ||
@@ -274,6 +266,19 @@ export default function PhoneProfile() {
         Number(row.creator_subscription_price_coins) || 100,
       )
 
+      setMaipiksStoryVisibility((row.maipiks_story_visibility as 'everyone' | 'followers' | 'private') ?? 'everyone')
+      setMaipiksStoryDurationHours(Number(row.maipiks_story_duration_hours ?? 24))
+      setMaipiksStoryMonetization((row.maipiks_story_monetization as 'free' | 'paid' | 'subscribers_only' | 'free_for_subscribers') ?? 'free')
+      setMaipiksStoryBasePriceCoins(Number(row.maipiks_story_base_price_coins ?? 100))
+      setMaipiksStorySubscriberDiscountMode((row.maipiks_story_subscriber_discount_mode as 'platform' | 'none') ?? 'platform')
+      setMaipiksStoryPaidAccessDuration(row.maipiks_story_paid_access_duration ?? 'until_story_expiry')
+
+      setGender(((row as any).gender as 'male' | 'female' | 'nonbinary' | '') ?? '')
+
+      // ID Verification
+      setIdVerificationStatus(((row as any).id_verification_status as 'not_submitted' | 'pending' | 'approved' | 'rejected') ?? 'not_submitted')
+      setIdDocumentUrl((row as any).id_document_url || null)
+
       if (row.id) {
         setProfileTargetId(row.id)
       }
@@ -283,10 +288,6 @@ export default function PhoneProfile() {
       const fallback = storeProfile as any
 
       setCoins(Number(fallback?.troll_coins) || 0)
-      setLevel(Number(fallback?.level) || 1)
-      setXp(Number(fallback?.xp) || 0)
-      setTotalXp(Number(fallback?.total_xp) || 0)
-      setXpToNextLevel(Number(fallback?.xp_to_next_level) || Number(fallback?.next_level_xp) || 100)
 
       setDisplayName(
         fallback?.display_name ||
@@ -312,6 +313,12 @@ export default function PhoneProfile() {
 
       setIsMinor(fallback?.is_minor ?? false)
 
+      setGender((fallback?.gender as 'male' | 'female' | 'nonbinary' | '') ?? '')
+
+      // ID Verification
+      setIdVerificationStatus((fallback?.id_verification_status as 'not_submitted' | 'pending' | 'approved' | 'rejected') ?? 'not_submitted')
+      setIdDocumentUrl(fallback?.id_document_url || null)
+
       setCreatorSubscriptionEnabled(
         fallback?.creator_subscription_enabled ?? false,
       )
@@ -319,6 +326,13 @@ export default function PhoneProfile() {
       setCreatorSubscriptionPrice(
         Number(fallback?.creator_subscription_price_coins) || 100,
       )
+
+      setMaipiksStoryVisibility((fallback?.maipiks_story_visibility as 'everyone' | 'followers' | 'private') ?? 'everyone')
+      setMaipiksStoryDurationHours(Number(fallback?.maipiks_story_duration_hours ?? 24))
+      setMaipiksStoryMonetization((fallback?.maipiks_story_monetization as 'free' | 'paid' | 'subscribers_only' | 'free_for_subscribers') ?? 'free')
+      setMaipiksStoryBasePriceCoins(Number(fallback?.maipiks_story_base_price_coins ?? 100))
+      setMaipiksStorySubscriberDiscountMode((fallback?.maipiks_story_subscriber_discount_mode as 'platform' | 'none') ?? 'platform')
+      setMaipiksStoryPaidAccessDuration(fallback?.maipiks_story_paid_access_duration ?? 'until_story_expiry')
 
       if (fallback?.id) {
         setProfileTargetId(fallback.id)
@@ -334,11 +348,6 @@ export default function PhoneProfile() {
         .select(`
           id,
           troll_coins,
-          level,
-          xp,
-          xp_to_next_level,
-          total_xp,
-          next_level_xp,
           display_name,
           full_name,
           username,
@@ -351,7 +360,17 @@ export default function PhoneProfile() {
           banner_notifications_enabled,
           is_minor,
           creator_subscription_enabled,
-          creator_subscription_price_coins
+          creator_subscription_price_coins,
+          maipiks_story_visibility,
+          maipiks_story_duration_hours,
+          maipiks_story_monetization,
+          maipiks_story_base_price_coins,
+          maipiks_story_subscriber_discount_mode,
+          maipiks_story_paid_access_duration,
+          gender,
+          id_verification_status,
+          id_document_url,
+          id_uploaded_at
         `)
 
       if (usernameParam) {
@@ -473,12 +492,7 @@ export default function PhoneProfile() {
     return source.charAt(0).toUpperCase()
   }, [displayName])
 
-  const xpProgress = useMemo(() => {
-    const currentXp = xp || 0
-    const needed = xpToNextLevel || 100
-    if (needed <= 0) return 100
-    return Math.min((currentXp / (currentXp + needed)) * 100, 100)
-  }, [xp, xpToNextLevel])
+  const xpProgress = xpData.progress
 
   /*
    * Settings
@@ -572,6 +586,98 @@ export default function PhoneProfile() {
     }
   }
 
+  const handleIdUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !user) return
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Please upload JPG, PNG, WebP, or PDF.')
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File too large. Maximum size is 10MB.')
+      return
+    }
+
+    setIdUploading(true)
+    setIdUploadProgress(0)
+
+    try {
+      const fileExt = file.name.split('.').pop() || 'jpg'
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const filePath = `id-documents/${fileName}`
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('verification_docs')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        })
+
+      if (uploadError) throw uploadError
+
+      // Simulate progress
+      for (let i = 10; i <= 90; i += 10) {
+        setIdUploadProgress(i)
+        await new Promise(r => setTimeout(r, 50))
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('verification_docs')
+        .getPublicUrl(filePath)
+
+      // Update profile with ID verification info
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .update({
+          id_document_url: urlData.publicUrl,
+          id_verification_status: 'pending',
+          id_uploaded_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (profileError) throw profileError
+
+      // Insert into applications table for admin review
+      try {
+        await supabase.from('applications').insert({
+          user_id: user.id,
+          type: 'id_verification',
+          status: 'pending',
+          reason: 'ID verification submitted',
+          data: {
+            id_document_url: urlData.publicUrl,
+            verification_status: 'pending'
+          }
+        })
+      } catch (appErr) {
+        console.warn('Failed to insert id_verification application:', appErr)
+      }
+
+      setIdUploadProgress(100)
+      setIdDocumentUrl(urlData.publicUrl)
+      setIdVerificationStatus('pending')
+
+      toast.success('ID uploaded successfully! Your account will be verified by an admin within 24 hours.')
+    } catch (err: any) {
+      console.error('ID upload error:', err)
+      toast.error(err?.message || 'Failed to upload ID. Please try again.')
+    } finally {
+      setIdUploading(false)
+      setIdUploadProgress(0)
+      // Reset file input
+      const input = document.getElementById('id-verification-upload') as HTMLInputElement
+      if (input) input.value = ''
+    }
+  }
+
   const handleSaveCreatorMemberships =
     async () => {
       if (!user) return
@@ -623,6 +729,44 @@ export default function PhoneProfile() {
         setSavingSubscription(false)
       }
     }
+
+  const handleSaveMaipiksSettings = async () => {
+    if (!user) return
+
+    setSavingMaipiksSettings(true)
+
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          maipiks_story_visibility: maipiksStoryVisibility,
+          maipiks_story_duration_hours: maipiksStoryDurationHours,
+          maipiks_story_monetization: maipiksStoryMonetization,
+          maipiks_story_base_price_coins: maipiksStoryBasePriceCoins,
+          maipiks_story_subscriber_discount_mode: maipiksStorySubscriberDiscountMode,
+          maipiks_story_paid_access_duration: maipiksStoryPaidAccessDuration,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      await refreshProfile(true)
+
+      toast.success('MAI Piks story defaults saved.')
+    } catch (error) {
+      console.error(
+        '[PhoneProfile] Failed to save MAI Piks settings:',
+        error,
+      )
+
+      toast.error(
+        'Failed to save MAI Piks story defaults.',
+      )
+    } finally {
+      setSavingMaipiksSettings(false)
+    }
+  }
 
   const handleSignOut = async () => {
     try {
@@ -823,18 +967,16 @@ export default function PhoneProfile() {
                 </select>
               </label>
 
-              <button
-                type="button"
+              <PhoneButton
+                variant="primary"
+                size="lg"
+                icon={<Save size={16} />}
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] py-3.5 text-xs font-black uppercase tracking-wider text-white disabled:opacity-50"
+                fullWidth
               >
-                <Save size={16} />
-
-                {savingProfile
-                  ? 'Saving...'
-                  : 'Save Profile'}
-              </button>
+                {savingProfile ? 'Saving...' : 'Save Profile'}
+              </PhoneButton>
             </div>
           </section>
 
@@ -983,20 +1125,16 @@ export default function PhoneProfile() {
                 </div>
               </label>
 
-              <button
-                type="button"
-                onClick={
-                  handleSaveCreatorMemberships
-                }
+              <PhoneButton
+                variant="secondary"
+                size="lg"
+                icon={<Save size={16} />}
+                onClick={handleSaveCreatorMemberships}
                 disabled={savingSubscription}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#BF00FF]/25 bg-[#BF00FF]/10 py-3.5 text-xs font-black uppercase tracking-wider text-[#BF00FF] disabled:opacity-50"
+                fullWidth
               >
-                <Save size={16} />
-
-                {savingSubscription
-                  ? 'Saving...'
-                  : 'Save Memberships'}
-              </button>
+                {savingSubscription ? 'Saving...' : 'Save Memberships'}
+              </PhoneButton>
             </div>
           </section>
 
@@ -1065,6 +1203,306 @@ export default function PhoneProfile() {
 
                 <BatterySaverToggle />
               </div>
+            </div>
+          </section>
+
+          {/* MAI Piks Story Defaults */}
+          <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-4">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
+                <Image
+                  size={18}
+                  className="text-[#00BFFF]"
+                />
+              </div>
+
+              <div>
+                <h2 className="text-base font-black">
+                  MAI Piks Story Defaults
+                </h2>
+
+                <p className="text-[9px] text-white/35">
+                  Configure default settings for your stories.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                  Story Visibility
+                </span>
+                <select
+                  value={maipiksStoryVisibility}
+                  onChange={(event) => setMaipiksStoryVisibility(event.target.value as 'everyone' | 'followers' | 'private')}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none focus:border-[#00BFFF]/40"
+                >
+                  <option value="everyone" className="bg-[#0b0812]">Everyone</option>
+                  <option value="followers" className="bg-[#0b0812]">Followers Only</option>
+                  <option value="private" className="bg-[#0b0812]">Subscribers Only</option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                  Story Duration
+                </span>
+                <select
+                  value={maipiksStoryDurationHours}
+                  onChange={(event) => setMaipiksStoryDurationHours(Number(event.target.value))}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none focus:border-[#00BFFF]/40"
+                >
+                  <option value={1} className="bg-[#0b0812]">1 hour</option>
+                  <option value={6} className="bg-[#0b0812]">6 hours</option>
+                  <option value={12} className="bg-[#0b0812]">12 hours</option>
+                  <option value={24} className="bg-[#0b0812]">24 hours</option>
+                  <option value={48} className="bg-[#0b0812]">48 hours</option>
+                  <option value={168} className="bg-[#0b0812]">7 days</option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                  Story Access
+                </span>
+                <select
+                  value={maipiksStoryMonetization}
+                  onChange={(event) => setMaipiksStoryMonetization(event.target.value as 'free' | 'paid' | 'subscribers_only' | 'free_for_subscribers')}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none focus:border-[#00BFFF]/40"
+                >
+                  <option value="free" className="bg-[#0b0812]">Everyone can view</option>
+                  <option value="paid" className="bg-[#0b0812]">Paid access</option>
+                  <option value="subscribers_only" className="bg-[#0b0812]">Subscribers only</option>
+                  <option value="free_for_subscribers" className="bg-[#0b0812]">Free for subscribers</option>
+                </select>
+              </label>
+
+              {(maipiksStoryMonetization === 'paid' || maipiksStoryMonetization === 'free_for_subscribers') && (
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                      Base Price (Troll Coins)
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={1000000}
+                      step={1}
+                      value={maipiksStoryBasePriceCoins}
+                      onChange={(event) => setMaipiksStoryBasePriceCoins(Number(event.target.value))}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none focus:border-[#00BFFF]/40"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                      Subscriber Discount
+                    </span>
+                    <select
+                      value={maipiksStorySubscriberDiscountMode}
+                      onChange={(event) => setMaipiksStorySubscriberDiscountMode(event.target.value as 'platform' | 'none')}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none focus:border-[#00BFFF]/40"
+                    >
+                      <option value="platform" className="bg-[#0b0812]">Tier rate</option>
+                      <option value="none" className="bg-[#0b0812]">No discount</option>
+                    </select>
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                      Buyer Access Duration
+                    </span>
+                    <select
+                      value={maipiksStoryPaidAccessDuration}
+                      onChange={(event) => setMaipiksStoryPaidAccessDuration(event.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none focus:border-[#00BFFF]/40"
+                    >
+                      <option value="until_story_expiry" className="bg-[#0b0812]">Until story expires</option>
+                      <option value="1h" className="bg-[#0b0812]">1 hour</option>
+                      <option value="6h" className="bg-[#0b0812]">6 hours</option>
+                      <option value="24h" className="bg-[#0b0812]">24 hours</option>
+                      <option value="7d" className="bg-[#0b0812]">7 days</option>
+                      <option value="permanent" className="bg-[#0b0812]">Permanent</option>
+                    </select>
+                  </label>
+                </div>
+              )}
+
+              <PhoneButton
+                variant="primary"
+                size="lg"
+                icon={<Save size={16} />}
+                onClick={handleSaveMaipiksSettings}
+                disabled={savingMaipiksSettings}
+                fullWidth
+              >
+                {savingMaipiksSettings ? 'Saving...' : 'Save Story Defaults'}
+              </PhoneButton>
+            </div>
+          </section>
+
+          {/* Identity & Gender */}
+          <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-4">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#EC4899]/20 bg-[#EC4899]/10">
+                <UserPlus size={18} className="text-[#EC4899]" />
+              </div>
+
+              <div>
+                <h2 className="text-base font-black">
+                  Identity & Gender
+                </h2>
+
+                <p className="text-[9px] text-white/35">
+                  Manage your gender identity, ID verification, and badge display.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                  Gender Identity
+                </span>
+                <select
+                  value={gender}
+                  onChange={(event) => setGender(event.target.value as 'male' | 'female' | 'nonbinary' | '')}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none focus:border-[#EC4899]/40"
+                >
+                  <option value="" className="bg-[#0b0812]">Not specified</option>
+                  <option value="male" className="bg-[#0b0812]">Male ♂</option>
+                  <option value="female" className="bg-[#0b0812]">Female ♀</option>
+                  <option value="nonbinary" className="bg-[#0b0812]">Non-Binary ⚧</option>
+                </select>
+              </label>
+
+              {/* ID Verification */}
+              <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={16} className={cn(
+                      idVerificationStatus === 'approved' && 'text-green-400',
+                      idVerificationStatus === 'pending' && 'text-yellow-400 animate-pulse',
+                      idVerificationStatus === 'rejected' && 'text-red-400',
+                      idVerificationStatus === 'not_submitted' && 'text-zinc-500'
+                    )} />
+                    <div>
+                      <p className="text-xs font-black text-white">ID Verification</p>
+                      <p className="text-[8px] text-zinc-400">
+                        Required for cashout and full platform access
+                      </p>
+                    </div>
+                  </div>
+                  <span className={cn(
+                    'text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full',
+                    idVerificationStatus === 'approved' && 'text-green-400 bg-green-500/10 border border-green-500/20',
+                    idVerificationStatus === 'pending' && 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20',
+                    idVerificationStatus === 'rejected' && 'text-red-400 bg-red-500/10 border border-red-500/20',
+                    idVerificationStatus === 'not_submitted' && 'text-zinc-500 bg-zinc-500/10 border border-zinc-500/20'
+                  )}>
+                    {idVerificationStatus === 'approved' && 'Verified'}
+                    {idVerificationStatus === 'pending' && 'Pending Review'}
+                    {idVerificationStatus === 'rejected' && 'Rejected - Re-upload Required'}
+                    {idVerificationStatus === 'not_submitted' && 'Not Submitted'}
+                  </span>
+                </div>
+
+                {idDocumentUrl && (
+                  <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                    <FileText size={20} className="text-cyan-400" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-black text-white truncate">Government ID Document</p>
+                      <p className="text-[8px] text-zinc-400">Uploaded and ready for review</p>
+                    </div>
+                    <PhoneButton
+                      variant="ghost"
+                      size="sm"
+                      icon={<Eye size={14} />}
+                      onClick={() => window.open(idDocumentUrl, '_blank')}
+                    >
+                      View
+                    </PhoneButton>
+                  </div>
+                )}
+
+{(idVerificationStatus === 'rejected' || idVerificationStatus === 'not_submitted' || idVerificationStatus === 'pending') && (
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleIdUpload}
+                        disabled={idUploading}
+                        className="hidden"
+                        id="id-verification-upload"
+                      />
+                      <label
+                        htmlFor="id-verification-upload"
+                        className={cn(
+                          'flex items-center justify-center gap-2 w-full rounded-xl border-2 border-dashed',
+                          'bg-white/[0.02] px-4 py-4 text-sm font-black text-white/70 transition-all',
+                          'hover:bg-white/[0.05] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
+                          idVerificationStatus === 'rejected' && 'border-red-500/50 bg-red-500/5',
+                          idVerificationStatus !== 'rejected' && 'border-cyan-500/50 bg-cyan-500/5'
+                        )}
+                      >
+                        <Upload size={18} className={cn(
+                          idVerificationStatus === 'rejected' && 'text-red-400',
+                          idVerificationStatus !== 'rejected' && 'text-cyan-400'
+                        )} />
+                        <span className={cn(
+                          idVerificationStatus === 'rejected' && 'text-red-300',
+                          idVerificationStatus !== 'rejected' && 'text-cyan-300'
+                        )}>
+                          {idUploading ? (
+                            <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-transparent mr-1" />
+                              Uploading... {idUploadProgress}%
+                            </>
+                          ) : idVerificationStatus === 'rejected' ? (
+                            'Re-upload ID (Previous was rejected)'
+                          ) : idVerificationStatus === 'pending' ? (
+                            'Replace ID (Under review)'
+                          ) : (
+                            'Upload Government ID'
+                          )}
+                        </span>
+                      </label>
+                      {idVerificationStatus === 'rejected' && (
+                        <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
+                          <div className="flex items-center gap-2 text-red-300">
+                            <AlertCircle size={14} />
+                            <p className="text-xs font-black">Your ID was rejected. Please upload a clear, valid government-issued ID.</p>
+                          </div>
+                          <p className="mt-1 text-[9px] text-red-400/70">
+                            Common reasons: blurry image, expired document, mismatched info, or unsupported file type.
+                          </p>
+                        </div>
+                      )}
+                      {idVerificationStatus === 'pending' && (
+                        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3">
+                          <div className="flex items-center gap-2 text-yellow-300">
+                            <AlertCircle size={14} />
+                            <p className="text-xs font-black">Your ID is under review. This typically takes 24 hours.</p>
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-[8px] text-zinc-500 text-center">
+                        Accepted: JPG, PNG, PDF (max 10MB). Your ID is securely stored and only used for verification.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+              <PhoneButton
+                variant="primary"
+                size="lg"
+                icon={<Save size={16} />}
+                onClick={handleSaveProfile}
+                disabled={savingProfile}
+                fullWidth
+              >
+                {savingProfile ? 'Saving...' : 'Save Identity'}
+              </PhoneButton>
             </div>
           </section>
 
@@ -1137,35 +1575,19 @@ export default function PhoneProfile() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate('/blocked-users')
-              }
-              className="mt-3 flex w-full items-center justify-between rounded-2xl border border-amber-400/15 bg-amber-400/[0.03] p-3.5 text-left"
+            <PhoneButton
+              variant="outline"
+              size="md"
+              icon={<Ban size={17} />}
+              onClick={() => navigate('/blocked-users')}
+              className="justify-start gap-3 border-amber-400/15 bg-amber-400/[0.03] text-left"
             >
-              <div className="flex items-center gap-3">
-                <Ban
-                  size={17}
-                  className="text-amber-400"
-                />
-
-                <div>
-                  <p className="text-xs font-black">
-                    Blocked Users
-                  </p>
-
-                  <p className="mt-1 text-[8px] text-white/25">
-                    Review people you have blocked.
-                  </p>
-                </div>
+              <div className="flex flex-col">
+                <p className="text-xs font-black">Blocked Users</p>
+                <p className="mt-1 text-[8px] text-white/25">Review people you have blocked.</p>
               </div>
-
-              <ChevronRight
-                size={16}
-                className="text-amber-400/50"
-              />
-            </button>
+              <ChevronRight size={16} className="text-amber-400/50" />
+            </PhoneButton>
           </section>
 
           {/* Danger */}
@@ -1189,27 +1611,27 @@ export default function PhoneProfile() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate('/profile/delete')
-              }
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 py-3.5 text-xs font-black uppercase tracking-wider text-white active:scale-[0.98]"
+            <PhoneButton
+              variant="danger"
+              size="lg"
+              icon={<Trash2 size={16} />}
+              onClick={() => navigate('/profile/delete')}
+              fullWidth
             >
-              <Trash2 size={16} />
               Delete Account
-            </button>
+            </PhoneButton>
           </section>
 
           <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-3">
-            <button
-              type="button"
+            <PhoneButton
+              variant="outline"
+              size="lg"
+              icon={<LogOut size={17} />}
               onClick={handleSignOut}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/[0.04] py-3.5 text-xs font-black uppercase tracking-wider text-red-400 active:scale-[0.98]"
+              fullWidth
             >
-              <LogOut size={17} />
               Sign Out
-            </button>
+            </PhoneButton>
           </section>
         </main>
       </div>
@@ -1244,14 +1666,13 @@ export default function PhoneProfile() {
 
       {/* Mobile header */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#03050B]/90 px-4 py-3 backdrop-blur-2xl">
-        <button
-          type="button"
+        <PhoneButton
+          variant="icon-only"
+          size="lg"
+          icon={<ArrowLeft size={28} />}
           onClick={() => navigate(-1)}
-          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white transition active:scale-95"
           aria-label="Go back"
-        >
-          <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-        </button>
+        />
 
         <div className="text-center">
           <h1 className="text-sm font-black uppercase tracking-[0.2em]">
@@ -1263,14 +1684,13 @@ export default function PhoneProfile() {
           </p>
         </div>
 
-        <button
-          type="button"
+        <PhoneButton
+          variant="icon-only"
+          size="lg"
+          icon={<Settings size={28} />}
           onClick={openSettings}
-          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white transition active:scale-95"
           aria-label="Settings"
-        >
-          <Settings size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-        </button>
+        />
       </header>
 
       <main className="relative z-10 pb-8">
@@ -1308,15 +1728,14 @@ export default function PhoneProfile() {
 
             {/* Change cover */}
             {user && (
-              <button
-                type="button"
-                onClick={() =>
-                  openSettings()
-                }
-                className="absolute bottom-4 right-4 rounded-full border border-white/20 bg-black/45 px-3 py-2 text-[8px] font-black text-white backdrop-blur-md active:scale-95"
+              <PhoneButton
+                variant="secondary"
+                size="sm"
+                onClick={() => openSettings()}
+                className="rounded-full border-white/20 bg-black/45 px-3 py-2 text-[8px]"
               >
                 Change Cover
-              </button>
+              </PhoneButton>
             )}
           </div>
 
@@ -1346,24 +1765,24 @@ export default function PhoneProfile() {
                   </div>
                 )}
 
-                <button
-                  type="button"
+                <PhoneButton
+                  variant="icon-only"
+                  size="sm"
+                  icon={<Image size={14} />}
                   onClick={openSettings}
-                  className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#050914] bg-[#101523] text-[#00BFFF] shadow-lg"
                   aria-label="Edit profile photo"
-                >
-                  <Image size={14} />
-                </button>
+                  className="bg-[#101523] border-[#050914] text-[#00BFFF]"
+                />
               </div>
 
               <div className="mb-1 flex gap-2">
-                <button
-                  type="button"
-                  onClick={openSettings}
-                  className="rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] px-3 py-2 text-[9px] font-black uppercase tracking-wider text-white shadow-[0_0_18px_rgba(191,0,255,0.18)]"
-                >
-                  Edit Profile
-                </button>
+                <PhoneButton
+                variant="primary"
+                size="sm"
+                onClick={openSettings}
+              >
+                Edit Profile
+              </PhoneButton>
               </div>
             </div>
 
@@ -1377,6 +1796,11 @@ export default function PhoneProfile() {
                 <span className="rounded-full border border-[#00BFFF]/30 bg-[#00BFFF]/10 px-2 py-1 text-[8px] font-black text-[#00BFFF]">
                   ✓ VERIFIED
                 </span>
+
+                {/* Badges next to username */}
+                {profileId && (
+                  <PhoneBadgeDisplay userId={profileId} maxVisible={4} size="sm" />
+                )}
               </div>
 
               {username && (
@@ -1654,14 +2078,8 @@ export default function PhoneProfile() {
             <MaiSubPanel />
           )}
 
-          {activeTab === 'badges' && (
-            <div className="text-center py-10 text-gray-500">
-              <Award className="w-8 h-8 mx-auto mb-3 text-yellow-400" />
-              <h3 className="text-sm font-black">Badges</h3>
-              <p className="mt-1 text-[9px] text-white/30">
-                Badge collection coming soon.
-              </p>
-            </div>
+          {activeTab === 'badges' && profileTargetId && (
+            <PhoneBadgeList userId={profileTargetId} />
           )}
 
           {activeTab === 'keys' && user?.id && (
@@ -1674,37 +2092,7 @@ export default function PhoneProfile() {
             </div>
           )}
 
-          {activeTab === 'music' && (
-            <div className="text-center py-10 text-gray-500">
-              <Music className="w-8 h-8 mx-auto mb-3 text-pink-400" />
-              <h3 className="text-sm font-black">Music</h3>
-              <p className="mt-1 text-[9px] text-white/30">
-                Music library coming soon.
-              </p>
-            </div>
-          )}
-
-          {activeTab === 'albums' && (
-            <div className="text-center py-10 text-gray-500">
-              <Image className="w-8 h-8 mx-auto mb-3 text-purple-400" />
-              <h3 className="text-sm font-black">Albums</h3>
-              <p className="mt-1 text-[9px] text-white/30">
-                Album collection coming soon.
-              </p>
-            </div>
-          )}
-
-          {activeTab === 'tracks' && (
-            <div className="text-center py-10 text-gray-500">
-              <Store className="w-8 h-8 mx-auto mb-3 text-green-400" />
-              <h3 className="text-sm font-black">Tracks</h3>
-              <p className="mt-1 text-[9px] text-white/30">
-                Track list coming soon.
-              </p>
-            </div>
-          )}
-
-          {activeTab !== 'social' && activeTab !== 'maipiks' && activeTab !== 'broadcasts' && activeTab !== 'marketplace' && activeTab !== 'auctions' && activeTab !== 'court' && activeTab !== 'agency' && activeTab !== 'church' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'subscriptions' && activeTab !== 'badges' && activeTab !== 'keys' && activeTab !== 'music' && activeTab !== 'albums' && activeTab !== 'tracks' && activeTab !== 'settings' && (
+          {activeTab !== 'social' && activeTab !== 'maipiks' && activeTab !== 'broadcasts' && activeTab !== 'marketplace' && activeTab !== 'auctions' && activeTab !== 'court' && activeTab !== 'agency' && activeTab !== 'church' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'subscriptions' && activeTab !== 'badges' && activeTab !== 'keys' && activeTab !== 'settings' && (
             <div className="text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
                 {(() => {

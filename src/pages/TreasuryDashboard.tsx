@@ -112,7 +112,7 @@ export default function TreasuryDashboard() {
   const canCredit = hasRole(profile, [UserRole.ADMIN], { allowAdminOverride: true });
   const currentWeekStart = useMemo(() => getCurrentWeekStart(), []);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
   const [isSavingAllocation, setIsSavingAllocation] = useState(false);
   const [isCreatingRun, setIsCreatingRun] = useState(false);
   const [isApprovingRun, setIsApprovingRun] = useState(false);

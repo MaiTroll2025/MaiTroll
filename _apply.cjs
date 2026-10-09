@@ -4,7 +4,7 @@ const B = fs.readFileSync(f, 'utf8').split('\n');
 
 // We explicitly replace lines 1047-end
 const KEEP_UP_TO = 1048;  // keep [0,1047] — up to but not including line 1048
-const CUT_FROM = 1048;    // replace from here
+const _CUT_FROM = 1048;    // replace from here
 
 // After line 960 we need:
 //   - Schema section JSX (indent 8 inside max-w wrapper)
@@ -74,7 +74,7 @@ const schemaOpen = [
 const before = B.slice(0, KEEP_UP_TO); // 0–1047
 console.log('Lines before:', before.length);
 
-const beforeCount = before.length;
+const _beforeCount = before.length;
 const final = [...before, ...schemaOpen.split('\n')];
 console.log('Result:', final.length, 'lines');
 console.log('KEEP segment [0..961]:');

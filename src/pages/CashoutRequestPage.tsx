@@ -13,11 +13,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
 import { toast } from 'sonner';
-import type {
-  CashoutRequest,
-  PayoutMethod,
-  RequestCashoutResponse,
-} from '../types/cashout';
+import type { CashoutRequest, PayoutMethod } from '../types/cashout';
 import {
   TIERS,
   MIN_CASHOUT_COINS,
@@ -80,7 +76,7 @@ export default function CashoutRequestPage() {
   const [payoutMethod, setPayoutMethod] = useState<PayoutMethod>('paypal');
   const [providerUsername, setProviderUsername] = useState('');
   const [userTag, setUserTag] = useState('');
-  const [lastApprovedAt, setLastApprovedAt] = useState<string | null>(null);
+  const [_lastApprovedAt, setLastApprovedAt] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [recentRequests, setRecentRequests] = useState<CashoutRequest[]>([]);
@@ -260,14 +256,14 @@ export default function CashoutRequestPage() {
     try {
       setSubmitting(true);
 
-         const { data, error } = await supabase.rpc('request_cashout', {
-         p_user_id: profile.id,
-         p_coins_to_redeem: selectedTier.coins,
-         p_provider_type: payoutMethod,
-         p_provider_username: providerUsername.trim(),
-         p_user_tag: userTag.trim() || null,
-         p_id_verification_url: null,
-       });
+const { data, error } = await supabase.rpc('request_cashout', {
+          p_user_id: profile.id,
+          p_coins_to_redeem: selectedTier.coins,
+          p_provider_type: payoutMethod,
+          p_provider_username: providerUsername.trim(),
+          p_user_tag: userTag.trim() || null,
+          p_id_verification_url: profile.id_document_url || null,
+        });
 
       if (error) throw error;
 

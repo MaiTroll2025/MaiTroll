@@ -1,10 +1,8 @@
 import React, { useMemo } from 'react';
-import { Play, Eye, Radio, Sparkles, Users } from 'lucide-react';
+import { Play, Eye, Radio } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
-import LiveStreamsModule from '@/components/home/LiveStreamsModule';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
-import { cn } from '@/lib/utils';
 
 interface ParallaxDepthLayoutProps {
   liveItems: any[];
@@ -20,7 +18,7 @@ export default function ParallaxDepthLayout({
   onLiveItemClick,
   onRequireAuth,
 }: ParallaxDepthLayoutProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   const featured = useMemo(() => liveItems[0], [liveItems]);
   const secondary = useMemo(() => liveItems.slice(1, 4), [liveItems]);

@@ -5,24 +5,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
-import {
-  ChevronLeft,
-  Reply,
-  Forward,
-  Trash2,
-  Archive,
-  Star,
-  MoreHorizontal,
-  Flag,
-  Paperclip,
-  Send,
-  Loader2,
-  Crown,
-  Heart,
-  Gem,
-  Star as StarIcon,
-  Lock,
-} from 'lucide-react';
+import { ChevronLeft, Reply, Trash2, Archive, Star, Flag, Paperclip, Send, Loader2, Crown, Heart, Gem, Star as StarIcon, Lock } from 'lucide-react';
 import { getThreadMessages, sendMessage, markAsRead, markThreadAsRead, starMessage, deleteThread } from '@/services/utromailService';
 import type { UtromailMessage } from '@/types/mail';
 import { toast } from 'sonner';
@@ -274,7 +257,7 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
                         {msg.sender_name || msg.sender_mail_address}
                       </button>
                       {msg.sender_is_jailed && (
-                        <Lock className="h-3.5 w-3.5 text-red-400" title="In custody" />
+                        <Lock className="h-3.5 w-3.5 text-red-400" aria-label="In custody" />
                       )}
                       {!isOwn && subscriberBadge && (
                         <span

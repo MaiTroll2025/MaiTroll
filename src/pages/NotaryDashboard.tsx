@@ -3,11 +3,7 @@ import { useAuthStore } from '@/lib/store'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
-import {
-  FileText, Clock, CheckCircle, XCircle, Archive, Search, FileSignature,
-  Briefcase, Users, Shield, Plus, Eye, Download, Stamp, AlertTriangle,
-  ChevronRight, Filter, RefreshCw, Award, FileCheck
-} from 'lucide-react'
+import { FileText, Clock, CheckCircle, XCircle, Archive, Search, FileSignature, Briefcase, Users, Shield, Plus, Download, Stamp, AlertTriangle, ChevronRight, RefreshCw, Award, FileCheck } from 'lucide-react';
 import type {
   NotaryDocument, DocumentSignature, DocumentStamp, DocumentAuditLog,
   NotaryStats, NotaryTab
@@ -31,7 +27,7 @@ export default function NotaryDashboard() {
   const [docSignatures, setDocSignatures] = useState<DocumentSignature[]>([])
   const [docStamp, setDocStamp] = useState<DocumentStamp | null>(null)
   const [auditLogs, setAuditLogs] = useState<DocumentAuditLog[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
+  const [_searchTerm, _setSearchTerm] = useState('')
   const [allAuditLogs, setAllAuditLogs] = useState<DocumentAuditLog[]>([])
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [userSearchResults, setUserSearchResults] = useState<any[]>([])
@@ -172,7 +168,7 @@ export default function NotaryDashboard() {
       setDocSignatures(sigs)
       setDocStamp(stamp)
       setAuditLogs(logs)
-    } catch (err: any) {
+    } catch (_err: any) {
       toast.error('Failed to load document details')
     }
   }
@@ -275,7 +271,7 @@ export default function NotaryDashboard() {
         stamp: docStamp
       })
       toast.success('PDF downloaded')
-    } catch (err: any) {
+    } catch (_err: any) {
       toast.error('Failed to download PDF')
     }
   }
@@ -294,7 +290,7 @@ export default function NotaryDashboard() {
         const { documents: docs } = await fetchDocuments({ submittedBy: data[0].id })
         setDocuments(docs)
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error('Search failed')
     }
   }

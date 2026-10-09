@@ -65,6 +65,7 @@ export type CoinTransactionType =
   | 'family_gift'
   | 'frame_purchase'
   | 'troll_town_sale'
+  | 'academy_course'
   | 'troll_town_upgrade'
   | 'troll_town_upgrade_task'
   | 'broadcast_theme'

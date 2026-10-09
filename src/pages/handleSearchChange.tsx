@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../../lib/supabase'
-import { useAuthStore } from '../../../lib/store'
+import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/lib/store'
 import { toast } from 'sonner'
 import { 
   User, 
@@ -11,10 +11,10 @@ import {
   AlertTriangle,
   Construction
 } from 'lucide-react'
-import UserNameWithAge from '../../../components/UserNameWithAge'
-import BroadcastLockdownControl from '../../../components/admin/BroadcastLockdownControl'
-import BroadcastRestrictionControl from '../../../components/admin/BroadcastRestrictionControl'
-import ShareAThonControl from '../../../components/admin/ShareAThonControl'
+import UserNameWithAge from '@/components/UserNameWithAge'
+import BroadcastLockdownControl from '@/components/admin/BroadcastLockdownControl'
+import BroadcastRestrictionControl from '@/components/admin/BroadcastRestrictionControl'
+import ShareAThonControl from '@/components/admin/ShareAThonControl'
 
 
 export default function AdminControlPanel() {

@@ -175,7 +175,7 @@ function normalizeBattleState(battle: any, previous?: BattleState): BattleState 
   };
 }
 
-function logRealtimeStatus(
+function _logRealtimeStatus(
   label: string,
   status: string,
   err: unknown,

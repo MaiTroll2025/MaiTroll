@@ -262,7 +262,7 @@ export function useTrollminSystem() {
     if (!user || !currentTrollmin) return;
 
     try {
-      const { data, error } = await supabase.rpc('vote_trollmin_approval', {
+      const { data: _data, error } = await supabase.rpc('vote_trollmin_approval', {
         p_voter_user_id: user.id,
         p_trollmin_id: currentTrollmin.id,
         p_vote: voteType
@@ -417,7 +417,7 @@ export function useTrollminSystem() {
     }
 
     try {
-      const { data, error } = await supabase.rpc('trollmin_grant_pardon', {
+      const { data: _data, error } = await supabase.rpc('trollmin_grant_pardon', {
         p_trollmin_id: currentTrollmin.id,
         p_trollmin_username: currentTrollmin.username,
         p_target_user_id: targetUserId,

@@ -29,7 +29,7 @@ export async function translateMessage(
 /**
  * Get language name from code
  */
-function getLanguageName(code: string): string {
+function _getLanguageName(code: string): string {
   const languages: Record<string, string> = {
     'en': 'English',
     'es': 'Spanish',

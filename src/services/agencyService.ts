@@ -1,22 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type {
-  AgencyApplication,
-  AgencyMember,
-  AgencyPointTransaction,
-  AgencyWeeklyStats,
-  AgencyReward,
-  AgencyAuditLog,
-  AgencySettings,
-  LeaderboardEntry,
-  AddPointsResult,
-  AdjustPointsResult,
-  NextTierThreshold,
-  AgencyTier,
-  AgencyApplicationStatus,
-  AgencyRewardStatus,
-  AgencyRewardType,
-  AgencyMemberRole,
-} from '../types/agency';
+import type { AgencyApplication, AgencyMember, AgencyPointTransaction, AgencyWeeklyStats, AgencyReward, AgencyAuditLog, LeaderboardEntry, AddPointsResult, AdjustPointsResult, NextTierThreshold, AgencyTier, AgencyRewardType, AgencyMemberRole } from '../types/agency';
 
 const getWeekStart = (date: Date = new Date()): string => {
   const d = new Date(date);

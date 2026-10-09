@@ -14,17 +14,19 @@ export const Select = ({
   children, 
   value, 
   onValueChange,
-  required = false
+  required: _required = false,
+  className = '',
 }: { 
   children: React.ReactNode
   value: string
   onValueChange: (value: string) => void 
   required?: boolean
+  className?: string
 }) => {
   const [open, setOpen] = useState(false)
   return (
     <SelectContext.Provider value={{ value, onValueChange, open, setOpen }}>
-      <div className="relative inline-block w-full">{children}</div>
+      <div className={`relative inline-block w-full ${className}`}>{children}</div>
     </SelectContext.Provider>
   )
 }
@@ -67,10 +69,13 @@ export const SelectValue = ({
 
 export const SelectContent = ({ 
   children, 
-  className = "" 
+  className = "",
+  sideOffset = 4,
 }: { 
   children: React.ReactNode
-  className?: string 
+  className?: string
+  position?: 'item-aligned' | 'popper'
+  sideOffset?: number
 }) => {
   const context = useContext(SelectContext)
   if (!context) throw new Error("SelectContent must be used within Select")
@@ -92,7 +97,8 @@ export const SelectContent = ({
   return (
     <div 
       ref={ref}
-      className={`absolute z-50 min-w-[8rem] overflow-hidden rounded-md border shadow-md animate-in fade-in-0 zoom-in-95 mt-1 ${className}`}
+      className={`absolute z-50 min-w-[8rem] overflow-hidden rounded-md border shadow-md animate-in fade-in-0 zoom-in-95 ${className}`}
+      style={{ marginTop: sideOffset }}
     >
       <div className="p-1">{children}</div>
     </div>

@@ -17,7 +17,6 @@ interface StaffMember {
   is_pastor: boolean;
   is_prosecutor: boolean;
   // is_auctioneer: boolean; // column does not exist
-  is_moderator: boolean; // kept for DB select but column may not exist
   is_attorney: boolean;
   is_judge: boolean;
   is_troller: boolean;

@@ -14,8 +14,6 @@
 
 import { execSync } from 'node:child_process';
 import readline from 'node:readline';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
 // Files that require confirmation before modification
 // These are the core files that handle Mux stream creation/teardown

@@ -1,22 +1,5 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
-import {
-  CalendarPlus,
-  CalendarClock,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  Video,
-  AlertTriangle,
-  Users,
-  Clock,
-  FileText,
-  X,
-} from 'lucide-react'
+import React, { useCallback, useEffect, useState } from 'react';
+import { CalendarPlus, CalendarClock, CheckCircle2, XCircle, Loader2, Video, Users, Clock, FileText } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../../lib/supabase'
@@ -72,7 +55,7 @@ interface InterviewRow {
   room_name?: string | null
 }
 
-const INTERVIEW_STATUSES = ['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show'] as const
+const _INTERVIEW_STATUSES = ['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show'] as const
 
 function formatDateValue(value?: string | null): string {
   if (!value) return '—'

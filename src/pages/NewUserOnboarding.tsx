@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import TutorialOverlay, { TutorialStep } from '../components/tutorial/TutorialOverlay';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
-import { Check, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 type OnboardingPhase = 'profile' | 'neighborhood' | 'coins' | 'golive' | 'finish';
 
@@ -89,7 +89,7 @@ const GO_LIVE_STEPS: TutorialStep[] = [
 
 export default function NewUserOnboarding() {
   const navigate = useNavigate();
-  const { user, profile, setProfile, refreshProfile } = useAuthStore();
+  const { user, profile, setProfile, refreshProfile: _refreshProfile } = useAuthStore();
   const [phase, setPhase] = useState<OnboardingPhase>('profile');
   const [stepIndex, setStepIndex] = useState(0);
   const [isTouch, setIsTouch] = useState(false);

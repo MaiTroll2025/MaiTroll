@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Camera, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { X, Camera, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabase';
+import { notifyAdmins } from '../../lib/notifications';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -54,7 +55,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   streamId,
   streamTitle,
   reportedUserId,
-  reportedUsername,
+  reportedUsername: _reportedUsername,
 }) => {
   const [selectedType, setSelectedType] = useState<ReportType | null>(null);
   const [description, setDescription] = useState('');
@@ -160,7 +161,32 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
       if (reportError) throw reportError;
 
-      toast.success('Report submitted successfully. Thank you for helping keep Mai Troll safe.');
+      const { data: { user: reporter } } = await supabase.auth.getUser();
+      if (!reporter) {
+        toast.error('Report submitted, but staff could not be notified because your session expired.');
+      } else {
+        const notificationResults = await notifyAdmins(
+          '🚨 New Stream Report',
+          `A user reported "${streamTitle}" for ${selectedType.toLowerCase().replaceAll('_', ' ')}.`,
+          'report_filed',
+          {
+            reporter_id: reporter.id,
+            reported_user_id: reportedUserId,
+            stream_id: streamId,
+            stream_title: streamTitle,
+            reason: selectedType,
+            details: description || null,
+            action_url: '/admin/reports',
+          },
+        );
+        const notificationFailure = notificationResults.find((result) => !result.success);
+        if (notificationFailure) {
+          console.error('[ReportModal] Report saved, but staff notification failed:', notificationFailure.error);
+          toast.error(`Report submitted, but staff could not be notified: ${notificationFailure.error}`);
+        } else {
+          toast.success('Report submitted successfully. Staff have been notified.');
+        }
+      }
       
       // Reset and close
       setSelectedType(null);

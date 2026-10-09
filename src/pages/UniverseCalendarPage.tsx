@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuthStore } from '../lib/store'
-import { Calendar as CalIcon, ArrowLeft, EyeOff, Eye } from 'lucide-react'
+import { Calendar as CalIcon, ArrowLeft, EyeOff } from 'lucide-react';
 
 function Cell({ day, events, matches, onOpen }: any) {
   const dayEvents = events.filter((e: any) => new Date(e.scheduled_start).toDateString() === day.toDateString())
@@ -48,7 +47,9 @@ export default function UniverseCalendarPage() {
       .channel('universe-calendar')
       .on('broadcast', { event: 'refresh' }, () => load())
       .subscribe()
-    return () => supabase.removeChannel(ch)
+    return () => {
+      void supabase.removeChannel(ch)
+    }
   }, [load])
 
   const weeks = useMemo(() => {
@@ -88,7 +89,7 @@ export default function UniverseCalendarPage() {
               <div key={e.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 flex items-center justify-between">
                 <div>
                   <p className="font-bold">{e.title}</p>
-                  <p className="text-xs text-slate-400">{new Date(e.scheduled_start).toLocaleDateString()} · 7:00 PM {mdLabel(new Date(e.scheduled_start))}</p>
+                  <p className="text-xs text-slate-400">{new Date(e.scheduled_start).toLocaleDateString()} · 7:00 PM</p>
                 </div>
                 <div className="flex items-center gap-2 text-amber-200 text-xs"><EyeOff className="h-3 w-3" /> Opponent Hidden</div>
               </div>

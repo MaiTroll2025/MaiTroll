@@ -19,7 +19,7 @@ const containerVariants = {
     x: 0,
     scale: 1,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 300,
       damping: 25,
       staggerChildren: 0.1
@@ -46,7 +46,7 @@ const badgeVariants = {
     scale: 1, 
     rotate: 0,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 500,
       damping: 15
     }

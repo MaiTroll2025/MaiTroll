@@ -72,7 +72,7 @@ const ghost =
 export default function DeviceManagement() {
   const { user } = useAuthStore()
   const [devices, setDevices] = useState<Device[]>([])
-  const [loading, setLoading] = useState(true)
+  const [_loading, setLoading] = useState(true)
   const [diagnostics, setDiagnostics] = useState<string[]>([])
 
   // Mobile scanner pairing state
@@ -98,7 +98,7 @@ export default function DeviceManagement() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
       setDevices(data || [])
-    } catch (error: any) {
+    } catch (_error: any) {
       toast.error('Failed to load devices')
     } finally {
       setLoading(false)
@@ -212,7 +212,7 @@ export default function DeviceManagement() {
     }
   }
 
-  const toggleConnection = async (device: Device) => {
+  const _toggleConnection = async (device: Device) => {
     const newStatus: DeviceStatus = device.status === 'connected' ? 'disconnected' : 'pairing'
     try {
       await supabase
@@ -345,7 +345,7 @@ export default function DeviceManagement() {
       await fetchMobileSessions()
 
       // Subscribe to session updates
-      const channel = supabase
+      const _channel = supabase
         .channel(`device_session_${data.id}`)
         .on(
           'postgres_changes',
@@ -622,7 +622,7 @@ export default function DeviceManagement() {
     }
   }, [mobileSessions, user?.id])
 
-  const scanners = devices.filter(d => d.device_type === 'scanner')
+  const _scanners = devices.filter(d => d.device_type === 'scanner')
   const printers = devices.filter(d => d.device_type === 'printer')
 
   return (
@@ -1005,7 +1005,7 @@ export default function DeviceManagement() {
   )
 }
 
-function DeviceRow({
+function _DeviceRow({
   device,
   onToggle,
   onRemove,

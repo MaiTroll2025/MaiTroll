@@ -68,7 +68,7 @@ const TrollSVG: React.FC<{
   isJumping: boolean; 
   jumpHeight: number;
   type: 'walker' | 'jumper' | 'runner';
-}> = ({ color, size, isJumping, jumpHeight, type }) => {
+}> = ({ color, size, isJumping: _isJumping, jumpHeight, type }) => {
   const getBodyShape = () => {
     switch (type) {
       case 'runner':

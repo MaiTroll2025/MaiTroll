@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
-import { CheckCircle, Coins, Shield, BadgeCheck, AlertTriangle, Clock, Ban, XCircle } from 'lucide-react'
+import { CheckCircle, Coins, Shield, BadgeCheck, AlertTriangle, Clock, XCircle } from 'lucide-react';
 
 const VERIFICATION_COST_COINS = 500
 const VERIFICATION_COST_USD = 5.00

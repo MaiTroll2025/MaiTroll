@@ -9,7 +9,7 @@ export default function ProtestsTab(props: any) {
   const onCreateProtest = props.onCreateProtest;
   const onJoinProtest = props.onJoinProtest;
   const onLeaveProtest = props.onLeaveProtest;
-  const roleLevel = props.roleLevel || 'citizen';
+  const _roleLevel = props.roleLevel || 'citizen';
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [title, setTitle] = useState('');

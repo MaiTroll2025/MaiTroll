@@ -71,7 +71,7 @@ interface UseFeedTheTrollResult {
 export function useFeedTheTroll(
   broadcasterId: string | null | undefined,
   streamId?: string | null,
-  opts?: { battleId?: string | null }
+  _opts?: { battleId?: string | null }
 ): UseFeedTheTrollResult {
   const [state, setState] = useState<TrollFeedState | null>(null);
   const [leaderboard, setLeaderboard] = useState<TrollFeedLeaderboardEntry[]>([]);

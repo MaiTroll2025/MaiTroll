@@ -8,6 +8,7 @@ import UserDetailsModal from '../../../components/admin/UserDetailsModal';
 
 export default function UserFormsTab() {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [filter, setFilter] = useState<'all' | 'incomplete'>('incomplete');
   const [search, setSearch] = useState('');
@@ -18,6 +19,7 @@ export default function UserFormsTab() {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       // 1. Fetch profiles first
       const { data: profiles, error: profileError } = await supabase
@@ -51,10 +53,7 @@ export default function UserFormsTab() {
         .select('id, user_id, w9_status, legal_full_name')
         .in('user_id', userIds);
 
-      if (taxError && !taxError.message.includes('relation')) {
-        // Log error but continue if it's just missing table/relation issue
-        console.warn('Error fetching tax info:', taxError);
-      }
+      if (taxError) throw taxError;
 
       // 3. Map them together
       const profilesWithTax = profiles.map(p => {
@@ -68,7 +67,9 @@ export default function UserFormsTab() {
       setUsers(profilesWithTax as any);
     } catch (err) {
       console.error('Error fetching user forms:', err);
-      toast.error('Failed to load user forms');
+      const message = err instanceof Error ? err.message : 'Failed to load user forms.';
+      setLoadError(message);
+      toast.error(`Failed to load user forms: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -154,6 +155,12 @@ export default function UserFormsTab() {
           </select>
         </div>
       </div>
+
+      {loadError && (
+        <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+          Failed to load user forms: {loadError}
+        </div>
+      )}
 
       <div className="bg-zinc-900 rounded-xl border border-white/10 overflow-hidden">
         <table className="w-full text-sm text-left text-gray-400">

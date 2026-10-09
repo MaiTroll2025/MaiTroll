@@ -43,10 +43,16 @@ export async function notifyAdmins(
       return [{ success: false, error: edgeResult.error.message }]
     }
 
-    if (edgeResult.data?.success !== true) {
+    const alreadyDelivered = edgeResult.data?.message === 'Signup notification already delivered'
+    if (
+      edgeResult.data?.success !== true
+      || (!alreadyDelivered && edgeResult.data?.notificationsCreated === 0)
+    ) {
       const error = typeof edgeResult.data?.error === 'string'
         ? edgeResult.data.error
-        : 'Notification event was not accepted'
+        : typeof edgeResult.data?.message === 'string'
+          ? edgeResult.data.message
+          : 'Notification event was not accepted'
       console.error('[notifyAdmins] Notification event was rejected:', error)
       return [{ success: false, error }]
     }
@@ -1241,18 +1247,6 @@ export async function notifyCareerApplicationSubmitted(
   positionId: string,
   positionTitle: string
 ): Promise<void> {
-  await notifyAdmins(
-    '📝 New Job Application',
-    `A user has applied for the ${positionTitle} position.`,
-    'career_application_submitted',
-    {
-      applicant_id: applicantId,
-      position_id: positionId,
-      position_title: positionTitle,
-      action_url: '/admin/applications'
-    }
-  )
-
   await createNotification(
     applicantId,
     'application_submitted',

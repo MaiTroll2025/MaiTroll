@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ interface ResponsiveTeamGridProps {
 export const ResponsiveTeamGrid: React.FC<ResponsiveTeamGridProps> = ({
   children,
   isMobileView = false,
-  maxVisibleOnMobile = 4
+  maxVisibleOnMobile: _maxVisibleOnMobile = 4
 }) => {
   // Media query hook would go here for real implementation
   const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -46,7 +46,7 @@ export const MobileTeamMeetingView: React.FC<{
 }> = ({
   primaryParticipant,
   secondaryParticipants,
-  onTogglePrimary
+  onTogglePrimary: _onTogglePrimary
 }) => {
   const [showOverlay, setShowOverlay] = React.useState(true);
 

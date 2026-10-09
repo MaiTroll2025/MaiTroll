@@ -54,7 +54,7 @@ export default function ProfileAgency({ userId }: { userId: string }) {
           .maybeSingle();
 
         if (error) throw error;
-        if (isMounted) setMembership(data as AgencyMember | null);
+        if (isMounted) setMembership(data as unknown as AgencyMember | null);
       } catch (err) {
         console.error('[ProfileAgency] Error:', err);
         toast.error('Failed to load agency info');

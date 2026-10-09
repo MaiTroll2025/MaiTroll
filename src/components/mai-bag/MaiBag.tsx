@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useAuthStore } from '../../lib/store'

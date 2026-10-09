@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Radio, Users, Play, UserPlus, Heart } from 'lucide-react'
+import { Users, Play, UserPlus, Heart } from 'lucide-react';
 import HorizontalScrollRow from './HorizontalScrollRow'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'

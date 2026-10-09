@@ -26,7 +26,7 @@ async function updateCashoutTiers() {
   // Step 1: If there's a tier with 5000 coins, update it to 7500 coins and $25
   const fiveThousandTier = tiers.find(t => t.coin_amount === 5000)
   if (fiveThousandTier) {
-    const { data, error: updateError } = await supabase
+    const { data: _data, error: updateError } = await supabase
       .from('cashout_tiers')
       .update({ coin_amount: 7500, cash_amount: 25 })
       .eq('id', fiveThousandTier.id)
@@ -50,7 +50,7 @@ async function updateCashoutTiers() {
 
   // Step 2: For each desired tier, try to update by coin_amount; if 0 rows updated, insert
   for (const tier of desiredTiers) {
-    const { data, error: updateError, count } = await supabase
+    const { data: _data, error: updateError, count } = await supabase
       .from('cashout_tiers')
       .update({ 
         cash_amount: tier.cash_amount,
@@ -65,7 +65,7 @@ async function updateCashoutTiers() {
     } else {
       if (count === 0) {
         // No rows updated, so insert
-        const { data: insertData, error: insertError } = await supabase
+        const { data: _insertData, error: insertError } = await supabase
           .from('cashout_tiers')
           .insert({
             coin_amount: tier.coin_amount,
@@ -88,7 +88,7 @@ async function updateCashoutTiers() {
 
   // Step 3: Deactivate any tiers not in the desired list
   const desiredCoinAmounts = desiredTiers.map(t => t.coin_amount)
-  const { data: deactiveData, error: deactiveError, count: deactiveCount } = await supabase
+  const { data: _deactiveData, error: deactiveError, count: deactiveCount } = await supabase
     .from('cashout_tiers')
     .update({ is_active: false })
     .not('coin_amount', 'in', `(${desiredCoinAmounts.join(',')})`)

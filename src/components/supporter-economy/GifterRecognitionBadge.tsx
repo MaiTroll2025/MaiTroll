@@ -2,7 +2,7 @@ import React from 'react';
 import { useGifterLeaderboard, useFanCrownStatus } from '@/hooks/useGifterRecognition';
 import { useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Crown, Medal, Star, Users, TrendingUp } from 'lucide-react';
+import { Crown, Medal, Users, TrendingUp } from 'lucide-react';
 
 export function GifterRecognitionBadge() {
   const { profile } = useAuthStore();
@@ -24,7 +24,7 @@ export function GifterRecognitionBadge() {
 
   const userRank = leaderboard?.find((entry) => entry.user_id === profile?.id);
   const hasCrown = crownStatus && crownStatus.length > 0;
-  const totalCrowns = crownStatus?.reduce((sum, c) => sum + 1, 0) ?? 0;
+  const totalCrowns = crownStatus?.reduce((sum, _c) => sum + 1, 0) ?? 0;
 
   return (
     <Card className="bg-[#0A0814] border-white/10">

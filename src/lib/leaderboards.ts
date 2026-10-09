@@ -1,5 +1,39 @@
 import { supabase } from './supabase'
 
+type GifterTransaction = {
+  user_id: string
+  amount: number
+  created_at: string
+}
+
+async function buildGifterLeaderboard(transactions: GifterTransaction[]) {
+  const userIds = [...new Set(transactions.map(transaction => transaction.user_id).filter(Boolean))]
+  const { data: profiles, error } = userIds.length
+    ? await supabase.from('user_profiles').select('id, username, avatar_url').in('id', userIds)
+    : { data: [], error: null }
+  if (error) throw error
+
+  const profileMap = new Map((profiles || []).map(profile => [profile.id, profile]))
+  const leaderboard = new Map<string, {
+    user_id: string
+    username: string | null
+    avatar_url: string | null
+    total_coins: number
+  }>()
+  transactions.forEach(transaction => {
+    const profile = profileMap.get(transaction.user_id)
+    const existing = leaderboard.get(transaction.user_id) || {
+      user_id: transaction.user_id,
+      username: profile?.username || null,
+      avatar_url: profile?.avatar_url || null,
+      total_coins: 0,
+    }
+    existing.total_coins += Number(transaction.amount) || 0
+    leaderboard.set(transaction.user_id, existing)
+  })
+  return Array.from(leaderboard.values())
+}
+
 /**
  * Get Top Gifters Leaderboard
  */
@@ -22,26 +56,14 @@ export async function getLeaderboard(period: 'daily' | 'weekly' | 'monthly', lim
   try {
     const { data: transactions, error } = await supabase
       .from('coin_transactions')
-      .select('user_id, amount, created_at, user_profiles(username, avatar_url)')
+      .select('user_id, amount, created_at')
       .in('type', ['gift', 'gift_sent', 'gift_send'])
       .gte('created_at', startDate.toISOString())
       .lte('created_at', now.toISOString())
 
     if (error) throw error
 
-    const leaderboard = new Map<string, any>()
-    transactions?.forEach((tx: any) => {
-      const existing = leaderboard.get(tx.user_id) || {
-        user_id: tx.user_id,
-        username: tx.user_profiles?.username,
-        avatar_url: tx.user_profiles?.avatar_url,
-        total_coins: 0
-      }
-      existing.total_coins += tx.amount
-      leaderboard.set(tx.user_id, existing)
-    })
-
-    return Array.from(leaderboard.values())
+    return (await buildGifterLeaderboard(transactions || []))
       .sort((a, b) => b.total_coins - a.total_coins)
       .slice(0, limit)
   } catch (err) {
@@ -70,26 +92,14 @@ export async function runDailyReset() {
     // Direct query fallback for reliability
     const { data: transactions, error } = await supabase
       .from('coin_transactions')
-      .select('user_id, amount, created_at, user_profiles(username, avatar_url)')
+      .select('user_id, amount, created_at')
       .in('type', ['gift', 'gift_sent', 'gift_send'])
       .gte('created_at', yesterday.toISOString())
       .lt('created_at', today.toISOString())
 
     if (error) throw error
 
-    const leaderboard = new Map<string, any>()
-    transactions?.forEach((tx: any) => {
-      const existing = leaderboard.get(tx.user_id) || {
-        user_id: tx.user_id,
-        username: tx.user_profiles?.username,
-        avatar_url: tx.user_profiles?.avatar_url,
-        total_coins: 0
-      }
-      existing.total_coins += tx.amount
-      leaderboard.set(tx.user_id, existing)
-    })
-
-    const topGifters = Array.from(leaderboard.values())
+    const topGifters = (await buildGifterLeaderboard(transactions || []))
       .sort((a, b) => b.total_coins - a.total_coins)
       .slice(0, 3)
 
@@ -141,7 +151,7 @@ export async function getWeeklyTopBroadcasters(limit: number = 5) {
     
     const { data: transactions, error } = await supabase
       .from('coin_transactions')
-      .select('user_id, amount, created_at, user_profiles(username, avatar_url)')
+      .select('user_id, amount, created_at')
       .in('type', ['gift', 'gift_received', 'stream_gift']) 
       .gt('amount', 0) // Only positive amounts (received)
       .gte('created_at', startDate.toISOString())
@@ -149,19 +159,7 @@ export async function getWeeklyTopBroadcasters(limit: number = 5) {
 
     if (error) throw error
 
-    const leaderboard = new Map<string, any>()
-    transactions?.forEach((tx: any) => {
-      const existing = leaderboard.get(tx.user_id) || {
-        user_id: tx.user_id,
-        username: tx.user_profiles?.username,
-        avatar_url: tx.user_profiles?.avatar_url,
-        total_coins: 0
-      }
-      existing.total_coins += tx.amount
-      leaderboard.set(tx.user_id, existing)
-    })
-
-    return Array.from(leaderboard.values())
+    return (await buildGifterLeaderboard(transactions || []))
       .sort((a, b) => b.total_coins - a.total_coins)
       .slice(0, limit)
   } catch (err) {

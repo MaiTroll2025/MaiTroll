@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Swords, X, Minimize2, Trophy, Clock, Zap } from 'lucide-react'
+import { Swords, X, Minimize2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils'
 import type { GamingBattlePhase } from '@/hooks/useGamingBattle'
 

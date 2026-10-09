@@ -1,0 +1,473 @@
+# ESLint Warning Inventory (2026-10-08)
+
+Current full-project snapshot generated after targeted notification and hook cleanup. `src\pages\broadcast\ViewerPage.tsx` remains excluded from edits as requested; its warnings, if any, remain listed below.
+
+- Warnings: **456**
+- Errors: **0**
+- Rules: @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps, react-refresh/only-export-components
+
+## @typescript-eslint/no-unused-vars (1)
+
+- src\components\broadcast\MobileBroadcastHostSettings.tsx:160:3 — 'onOpenCoinStore' is defined but never used. Allowed unused args must match /^_/u.
+
+## react-hooks/exhaustive-deps (345)
+
+- src\App.tsx:512:8 — React Hook React.useEffect has a missing dependency: 'location.state'. Either include it or remove the dependency array.
+- src\App.tsx:1209:6 — React Hook useEffect has a missing dependency: 'location.pathname'. Either include it or remove the dependency array.
+- src\appMobile\pages\MobileTreelzPage.tsx:87:6 — React Hook useEffect has a missing dependency: 'prevPost'. Either include it or remove the dependency array.
+- src\appMobile\pages\MobileTreelzPage.tsx:94:6 — React Hook useEffect has a missing dependency: 'nextPost'. Either include it or remove the dependency array.
+- src\components\BottomNavigation.tsx:355:6 — React Hook useEffect has a missing dependency: 'isMobile'. Either include it or remove the dependency array.
+- src\components\BottomNavigation.tsx:612:5 — React Hook useMemo has missing dependencies: 'canBroadcast', 'handleMessagesClick', and 'isAdmin'. Either include them or remove the dependency array.
+- src\components\BottomNavigation.tsx:684:6 — React Hook useMemo has a missing dependency: 'isPastorCheck'. Either include it or remove the dependency array.
+- src\components\BroadcastAnnouncement.tsx:79:6 — React Hook useEffect has a missing dependency: 'location.pathname'. Either include it or remove the dependency array.
+- src\components\ChatBubble.tsx:320:6 — React Hook useCallback has missing dependencies: 'activeThread?.other_user_id', 'activeThread?.other_utromail_address', and 'otherParticipant?.user_id'. Either include them or remove the dependency array.
+- src\components\ClickableUsername.tsx:199:7 — React Hook useEffect has a missing dependency: 'checkSubscription'. Either include it or remove the dependency array.
+- src\components\ExpandedStatsPanel.tsx:129:6 — React Hook useEffect has a missing dependency: 'xpToNext'. Either include it or remove the dependency array.
+- src\components\JudgeRulingModal.tsx:28:6 — React Hook useEffect has a missing dependency: 'fetchAttorneyCases'. Either include it or remove the dependency array.
+- src\components\MusicTab.tsx:50:6 — React Hook useEffect has a missing dependency: 'user?.music_contract_accepted'. Either include it or remove the dependency array.
+- src\components\PayWarrantModal.tsx:16:6 — React Hook useEffect has a missing dependency: 'loadWarrant'. Either include it or remove the dependency array.
+- src\components\Sidebar.tsx:349:6 — React Hook useEffect has missing dependencies: 'role' and 'trollRole'. Either include them or remove the dependency array.
+- src\components\SurveyNotification.tsx:54:6 — React Hook useEffect has a missing dependency: 'handleDismiss'. Either include it or remove the dependency array.
+- src\components\TeamMeetingRoom\TeamMeetingGrid.tsx:261:6 — React Hook useEffect has missing dependencies: 'profiles' and 'remoteUsers'. Either include them or remove the dependency array.
+- src\components\UserNameWithAge.tsx:42:6 — React Hook useMemo has unnecessary dependencies: 'user.age_days' and 'user.created_at'. Either exclude them or remove the dependency array.
+- src\components\admin\RTCAdminMonitor.tsx:531:8 — React Hook useCallback has an unnecessary dependency: 'rtcMinutesResetAt'. Either exclude it or remove the dependency array.
+- src\components\admin\RTCAdminMonitor.tsx:1030:6 — React Hook useCallback has a missing dependency: 'profile?.username'. Either include it or remove the dependency array.
+- src\components\admin\RTCAdminMonitor.tsx:1235:6 — React Hook useEffect has a missing dependency: 'navigate'. Either include it or remove the dependency array.
+- src\components\admin\customer-service\PasswordResetPanel.tsx:32:6 — React Hook React.useEffect has a missing dependency: 'fetchRecentResets'. Either include it or remove the dependency array.
+- src\components\agora\VideoTile.tsx:68:18 — The ref value 'videoRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'videoRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\components\auth\SessionMonitor.tsx:165:6 — React Hook useEffect has a missing dependency: 'checkSession'. Either include it or remove the dependency array.
+- src\components\battle\mobile\MobileBattleFloatingChat.tsx:94:6 — React Hook useEffect has a missing dependency: 'normalizeMessage'. Either include it or remove the dependency array.
+- src\components\battle\mobile\MobileBattleFloatingChat.tsx:135:6 — React Hook useEffect has a missing dependency: 'normalizeMessage'. Either include it or remove the dependency array.
+- src\components\broadcast\ARGiftOverlay.tsx:64:5 — React Hook useCallback has missing dependencies: 'setFps' and 'setProcessingTime'. Either include them or remove the dependency array.
+- src\components\broadcast\ARGiftOverlay.tsx:123:6 — React Hook useEffect has missing dependencies: 'handleGiftExpired', 'handleTrackingData', and 'settings'. Either include them or remove the dependency array.
+- src\components\broadcast\ArrestHandler.tsx:76:6 — React Hook useEffect has a missing dependency: 'handleArrest'. Either include it or remove the dependency array.
+- src\components\broadcast\BackgroundCheckView.tsx:37:6 — React Hook useEffect has a missing dependency: 'fetchBackgroundData'. Either include it or remove the dependency array.
+- src\components\broadcast\BannedUsersList.tsx:124:8 — React Hook useCallback has a missing dependency: 'activeViewersOverride'. Either include it or remove the dependency array. If 'setActiveViewers' needs the current value of 'activeViewersOverride', you can also switch to useReducer instead of useState and read 'activeViewersOverride' in the reducer.
+- src\components\broadcast\BattleArena.tsx:376:6 — React Hook useEffect has a missing dependency: 'isLocal'. Either include it or remove the dependency array.
+- src\components\broadcast\BattleArena.tsx:459:6 — React Hook useEffect has a missing dependency: 'isLocal'. Either include it or remove the dependency array.
+- src\components\broadcast\BattleArena.tsx:1579:6 — React Hook useEffect has missing dependencies: 'getSupabaseParticipant', 'getSupabaseParticipantsBatched', 'isBroadcaster', 'localAudioTrack', 'localIsCameraEnabled', 'localIsMicEnabled', 'localVideoTrack', 'remoteUsers', 'user', and 'userIdToLiveKitIdentity'. Either include them or remove the dependency array.
+- src\components\broadcast\BattleArena.tsx:1817:5 — React Hook useMemo has missing dependencies: 'buildSlots' and 'categorized.challenger'. Either include them or remove the dependency array.
+- src\components\broadcast\BattleArena.tsx:1822:5 — React Hook useMemo has missing dependencies: 'buildSlots' and 'categorized.opponent'. Either include them or remove the dependency array.
+- src\components\broadcast\BattleArena.tsx:1869:6 — React Hook useEffect has missing dependencies: 'battleParticipants', 'remoteUsers', and 'userIdToLiveKitIdentity'. Either include them or remove the dependency array.
+- src\components\broadcast\BattleChat.tsx:167:6 — React Hook useEffect has a missing dependency: 'normalizeMessage'. Either include it or remove the dependency array.
+- src\components\broadcast\BattleChat.tsx:277:6 — React Hook useEffect has a missing dependency: 'normalizeMessage'. Either include it or remove the dependency array.
+- src\components\broadcast\BattleControls.tsx:94:6 — React Hook useEffect has an unnecessary dependency: 'supabase'. Either exclude it or remove the dependency array. Outer scope values like 'supabase' aren't valid dependencies because mutating them doesn't re-render the component.
+- src\components\broadcast\BattleEventBanner.tsx:82:6 — React Hook useEffect has a missing dependency: 'activeEvent?.id'. Either include it or remove the dependency array.
+- src\components\broadcast\BattleGiftPanel.tsx:93:6 — React Hook useCallback has a missing dependency: 'battleId'. Either include it or remove the dependency array.
+- src\components\broadcast\BattleSwipeCard.tsx:235:6 — React Hook useEffect has a missing dependency: 'joinStream'. Either include it or remove the dependency array.
+- src\components\broadcast\BattleSwipeCard.tsx:339:6 — React Hook useEffect has a missing dependency: 'stream'. Either include it or remove the dependency array.
+- src\components\broadcast\BattleSwipeCard.tsx:339:27 — React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+- src\components\broadcast\BroadcastChat.tsx:723:31 — The ref value 'disappearingTimerIdsRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'disappearingTimerIdsRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\components\broadcast\BroadcastChat.tsx:724:29 — The ref value 'disappearingTimersRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'disappearingTimersRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\components\broadcast\BroadcastChat.tsx:1375:6 — React Hook useEffect has a missing dependency: 'normalizeIncomingMessage'. Either include it or remove the dependency array.
+- src\components\broadcast\BroadcastControls.tsx:396:6 — React Hook useEffect has a missing dependency: 'stream.seat_price'. Either include it or remove the dependency array.
+- src\components\broadcast\BroadcastGrid.tsx:319:6 — React Hook useEffect has a missing dependency: 'isLocal'. Either include it or remove the dependency array.
+- src\components\broadcast\BroadcastGrid.tsx:626:6 — React Hook useMemo has a missing dependency: 'getParticipantAndTracks'. Either include it or remove the dependency array.
+- src\components\broadcast\BroadcastGrid.tsx:651:6 — React Hook useMemo has a missing dependency: 'getParticipantAndTracks'. Either include it or remove the dependency array.
+- src\components\broadcast\BroadcastGrid.tsx:698:6 — React Hook useEffect has a missing dependency: 'seatUserIds'. Either include it or remove the dependency array.
+- src\components\broadcast\BroadcastGrid.tsx:698:19 — React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+- src\components\broadcast\BroadcastGrid.tsx:758:6 — React Hook useEffect has a missing dependency: 'seats'. Either include it or remove the dependency array.
+- src\components\broadcast\BroadcastGrid.tsx:1099:6 — React Hook useMemo has missing dependencies: 'hideBox0' and 'isUniversalBattleActive'. Either include them or remove the dependency array.
+- src\components\broadcast\BroadcastHouseIcon.tsx:41:6 — React Hook useEffect has a missing dependency: 'fetchHouseData'. Either include it or remove the dependency array.
+- src\components\broadcast\BroadcastMessageModal.tsx:83:6 — React Hook useEffect has missing dependencies: 'fetchChatThreads', 'fetchFollowers', and 'fetchFollowing'. Either include them or remove the dependency array.
+- src\components\broadcast\BroadcastMessageModal.tsx:101:6 — React Hook useEffect has missing dependencies: 'fetchMessages' and 'setupRealtimeChannel'. Either include them or remove the dependency array.
+- src\components\broadcast\BroadcastOfficerModal.tsx:96:6 — React Hook useEffect has missing dependencies: 'fetchBroadcasterBalance' and 'fetchOfficers'. Either include them or remove the dependency array.
+- src\components\broadcast\CoinStoreModal.tsx:82:6 — React Hook useEffect has missing dependencies: 'loadCatalog', 'loadUserFrames', and 'onClose'. Either include them or remove the dependency array. If 'onClose' changes too often, find the parent component that defines it and wrap that definition in useCallback.
+- src\components\broadcast\GamingSetup.tsx:143:6 — React Hook React.useMemo has a missing dependency: 'POPULAR_GAMES'. Either include it or remove the dependency array.
+- src\components\broadcast\GiftVideoOverlay.tsx:386:6 — React Hook useCallback has an unnecessary dependency: 'gift.animation_duration_ms'. Either exclude it or remove the dependency array.
+- src\components\broadcast\HomeLiveGrid.tsx:165:6 — React Hook useEffect has a missing dependency: 'fetchStreams'. Either include it or remove the dependency array.
+- src\components\broadcast\KickHandler.tsx:50:6 — React Hook useEffect has a missing dependency: 'handleKick'. Either include it or remove the dependency array.
+- src\components\broadcast\LeagueProgressPanel.tsx:31:6 — React Hook useEffect has a missing dependency: 'display'. Either include it or remove the dependency array.
+- src\components\broadcast\ModActionsPopup.tsx:297:6 — React Hook useEffect has a missing dependency: 'checkInsuranceStatus'. Either include it or remove the dependency array.
+- src\components\broadcast\PayPalPaymentModal.tsx:297:6 — React Hook useCallback has missing dependencies: 'paypalError' and 'requireCoins'. Either include them or remove the dependency array.
+- src\components\broadcast\RoleInviteHandler.tsx:72:6 — React Hook useEffect has a missing dependency: 'fetchPendingInvites'. Either include it or remove the dependency array.
+- src\components\broadcast\SquarePaymentModal.tsx:132:6 — React Hook useEffect has missing dependencies: 'profile?.username' and 'profile?.zipcode'. Either include them or remove the dependency array. If 'setCardPostalCode' needs the current value of 'profile.zipcode', you can also switch to useReducer instead of useState and read 'profile.zipcode' in the reducer.
+- src\components\broadcast\StreamSwipeCard.tsx:236:6 — React Hook useEffect has missing dependencies: 'joinStream' and 'leaveStream'. Either include them or remove the dependency array.
+- src\components\broadcast\TopSubscribersBar.tsx:34:6 — React Hook useEffect has a missing dependency: 'fetchTopSubscribers'. Either include it or remove the dependency array.
+- src\components\broadcast\TrollmersBattleControls.tsx:360:6 — React Hook useEffect has a missing dependency: 'checkBattleStatus'. Either include it or remove the dependency array.
+- src\components\broadcast\TrollmersBattleControls.tsx:405:6 — React Hook useEffect has a missing dependency: 'checkPendingChallenges'. Either include it or remove the dependency array.
+- src\components\contracts\ContractCreator.tsx:69:6 — React Hook useEffect has a missing dependency: 'generatePreview'. Either include it or remove the dependency array.
+- src\components\entrance\GrandCityEntrance.tsx:52:6 — React Hook useEffect has a missing dependency: 'e'. Either include it or remove the dependency array.
+- src\components\featured\FeaturedBanner.tsx:13:9 — The 'items' conditional could make the dependencies of useMemo Hook (at line 28) change on every render. To fix this, wrap the initialization of 'items' in its own useMemo() Hook.
+- src\components\featured\FeaturedBanner.tsx:13:9 — The 'items' conditional could make the dependencies of useMemo Hook (at line 39) change on every render. To fix this, wrap the initialization of 'items' in its own useMemo() Hook.
+- src\components\featured\FeaturedBanner.tsx:20:24 — React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+- src\components\games\TrollWheelGame.tsx:572:6 — React Hook useEffect has a missing dependency: 'loadWheelData'. Either include it or remove the dependency array.
+- src\components\home\DynamicWeatherBackground.tsx:2859:7 — React Hook useMemo has an unnecessary dependency: 'mounted'. Either exclude it or remove the dependency array.
+- src\components\home\FollowersLiveRow.tsx:86:6 — React Hook useCallback has a missing dependency: 'onCountChange'. Either include it or remove the dependency array. If 'onCountChange' changes too often, find the parent component that defines it and wrap that definition in useCallback.
+- src\components\home\GhostBanner.tsx:30:6 — React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array.
+- src\components\home\TrollWallPostModal.tsx:96:6 — React Hook useEffect has a missing dependency: 'currentPost.metadata'. Either include it or remove the dependency array.
+- src\components\home\TrollWallPostModal.tsx:271:6 — React Hook useCallback has a missing dependency: 'profile?.username'. Either include it or remove the dependency array.
+- src\components\hr\ApplicationsPanel.tsx:117:6 — React Hook useEffect has a missing dependency: 'loadApplications'. Either include it or remove the dependency array.
+- src\components\hr\ClockInPanel.tsx:98:6 — React Hook useEffect has a missing dependency: 'loadClockData'. Either include it or remove the dependency array.
+- src\components\hr\PayrollPanel.tsx:106:6 — React Hook useEffect has a missing dependency: 'loadPayrollData'. Either include it or remove the dependency array.
+- src\components\hr\TimeOffPanel.tsx:77:6 — React Hook useEffect has a missing dependency: 'loadRequests'. Either include it or remove the dependency array.
+- src\components\jail\BondRequestModal.tsx:42:6 — React Hook useEffect has missing dependencies: 'fetchExistingRequests' and 'fetchFollowers'. Either include them or remove the dependency array.
+- src\components\live\TopFansLeaderboard.tsx:419:6 — React Hook useEffect has a missing dependency: 'streamId'. Either include it or remove the dependency array.
+- src\components\media\AudioPlayer.tsx:128:6 — React Hook useEffect has missing dependencies: 'currentIsPlaying', 'handleEnded', 'isMuted', 'setCurrentIsPlaying', and 'volume'. Either include them or remove the dependency array.
+- src\components\nav\BottomNavBar.tsx:445:6 — React Hook useMemo has missing dependencies: 'isAgencyLeader', 'isAttorney', 'isAuctioneer', 'isCEOAssistant', 'isChiefNewsCaster', 'isJournalist', 'isNewsCaster', 'isPastor', and 'isProsecutor'. Either include them or remove the dependency array.
+- src\components\organizations\OrganizationMembers.tsx:49:6 — React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array.
+- src\components\payments\PaymentMethodManager.tsx:155:6 — React Hook useEffect has a missing dependency: 'squareAttached'. Either include it or remove the dependency array.
+- src\components\payments\TrollCardSaver.tsx:150:6 — React Hook useEffect has a missing dependency: 'cardInstance'. Either include it or remove the dependency array. Mutable values like 'cardElementRef.current' aren't valid dependencies because mutating them doesn't re-render the component.
+- src\components\previewImage.tsx:544:6 — React Hook useEffect has missing dependencies: 'profileAccess' and 'stream'. Either include them or remove the dependency array.
+- src\components\previewImage.tsx:547:5 — React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+- src\components\profile\CoverPhotoEditor.tsx:159:6 — React Hook useEffect has a missing dependency: 'preview'. Either include it or remove the dependency array.
+- src\components\profile\EnhancedPublicProfile.tsx:137:6 — React Hook useEffect has a missing dependency: 'updateSEOTags'. Either include it or remove the dependency array.
+- src\components\profile\MaiSubPanel.tsx:46:6 — React Hook useEffect has a missing dependency: 'products'. Either include it or remove the dependency array.
+- src\components\profile\UserModActionsModal.tsx:76:6 — React Hook useEffect has a missing dependency: 'loadTarget'. Either include it or remove the dependency array.
+- src\components\profile\UserModActionsModal.tsx:131:6 — React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array.
+- src\components\promo\PromoSlot.tsx:101:6 — React Hook useCallback has an unnecessary dependency: 'ads.length'. Either exclude it or remove the dependency array.
+- src\components\security\TurnstileGate.tsx:62:55 — The ref value 'turnstileRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'turnstileRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\components\sell\BusinessProfileForm.tsx:47:6 — React Hook useEffect has missing dependencies: 'existingProfile.address', 'existingProfile.business_name', 'existingProfile.category', 'existingProfile.city', 'existingProfile.description', 'existingProfile.email', 'existingProfile.phone', 'existingProfile.state', and 'existingProfile.website'. Either include them or remove the dependency array. If 'setBusinessName' needs the current value of 'existingProfile.business_name', you can also switch to useReducer instead of useState and read 'existingProfile.business_name' in the reducer.
+- src\components\setupRealtimeChat.tsx:19:6 — React Hook useEffect has missing dependencies: 'fetchStream' and 'setupRealtimeChat'. Either include them or remove the dependency array.
+- src\components\sidebar\SidebarTopBroadcasters.tsx:81:6 — React Hook useCallback has an unnecessary dependency: 'user.id'. Either exclude it or remove the dependency array.
+- src\components\tcnn\TCNNVirtualStudio.tsx:422:8 — React Hook useCallback has missing dependencies: 'onFpsUpdate' and 'useSimpleMode'. Either include them or remove the dependency array. If 'onFpsUpdate' changes too often, find the parent component that defines it and wrap that definition in useCallback.
+- src\components\tcnn\TCNNVirtualStudio.tsx:609:8 — React Hook useCallback has a missing dependency: 'useSimpleMode'. Either include it or remove the dependency array.
+- src\components\tcnn\dashboard\AnalyticsTab.tsx:52:6 — React Hook useEffect has a missing dependency: 'loadAnalytics'. Either include it or remove the dependency array.
+- src\components\user\SubscribeButton.tsx:31:6 — React Hook useEffect has a missing dependency: 'checkCreatorSubscription'. Either include it or remove the dependency array.
+- src\contexts\BatterySaverContext.tsx:268:7 — React Hook useMemo has missing dependencies: 'getPollingInterval' and 'getRealtimeThrottleMs'. Either include them or remove the dependency array.
+- src\contexts\GlobalEventContext.tsx:94:6 — React Hook useCallback has an unnecessary dependency: 'adminOverride'. Either exclude it or remove the dependency array.
+- src\contexts\PWAContext.tsx:323:7 — React Hook useEffect has a missing dependency: 'isLocalhost'. Either include it or remove the dependency array.
+- src\features\employees\tabs\AnnouncementsTab.tsx:25:31 — React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array.
+- src\features\employees\tabs\ReportsTab.tsx:36:31 — React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array.
+- src\features\mai-business\pages\MaiBusinessPlan.tsx:48:6 — React Hook useEffect has a missing dependency: 'activeSection'. Either include it or remove the dependency array.
+- src\features\mai-sing-off\components\RemoteVideoRenderer.tsx:23:31 — The ref value 'videoRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'videoRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\features\mai-sing-off\components\StatisticsView.tsx:28:6 — React Hook useEffect has a missing dependency: 'actions'. Either include it or remove the dependency array.
+- src\features\mai-sing-off\hooks\useSingOffActions.ts:91:5 — React Hook useCallback has a missing dependency: 'user.user_metadata?.full_name'. Either include it or remove the dependency array.
+- src\features\mai-sing-off\hooks\useSingOffRealtime.ts:146:6 — React Hook useEffect has missing dependencies: 'removeParticipant', 'setMyQueueEntry', 'setRounds', 'setSession', 'upsertDecision', 'upsertParticipant', 'upsertQueueEntry', and 'userId'. Either include them or remove the dependency array.
+- src\features\mai-sing-off\hooks\useSingOffRealtime.ts:189:6 — React Hook useEffect has missing dependencies: 'addChatMessage', 'setActiveGift', 'setCountdown', 'setLiveKit', and 'setMaiWinnerEffect'. Either include them or remove the dependency array.
+- src\hooks\useARGiftDuration.ts:71:17 — The ref value 'timersRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'timersRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\hooks\useAgoraRoom.ts:72:9 — The 'getAgoraAppId' function makes the dependencies of useCallback Hook (at line 131) change on every render. To fix this, wrap the definition of 'getAgoraAppId' in its own useCallback() Hook.
+- src\hooks\useAgoraRoom.ts:332:6 — React Hook useCallback has missing dependencies: 'onUserJoined' and 'onUserLeft'. Either include them or remove the dependency array. If 'onUserJoined' changes too often, find the parent component that defines it and wrap that definition in useCallback.
+- src\hooks\useAgoraScreenShare.ts:165:6 — React Hook useCallback has a missing dependency: 'stopPreview'. Either include it or remove the dependency array.
+- src\hooks\useAgoraScreenShare.ts:261:6 — React Hook useCallback has a missing dependency: 'getCameraUid'. Either include it or remove the dependency array.
+- src\hooks\useAgoraScreenShare.ts:494:6 — React Hook useCallback has a missing dependency: 'getCameraUid'. Either include it or remove the dependency array.
+- src\hooks\useAprilFools.ts:104:17 — The ref value 'timersRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'timersRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\hooks\useBattleManagement.ts:228:5 — React Hook useCallback has a missing dependency: 'getBroadcastChannel'. Either include it or remove the dependency array.
+- src\hooks\useBattleManagement.ts:275:5 — React Hook useCallback has a missing dependency: 'getBroadcastChannel'. Either include it or remove the dependency array.
+- src\hooks\useBattleRoom.ts:262:6 — React Hook useEffect has a missing dependency: 'disconnect'. Either include it or remove the dependency array.
+- src\hooks\useBattleSubscriber.ts:358:6 — React Hook useEffect has a missing dependency: 'stream.id'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:551:6 — React Hook useCallback has a missing dependency: 'bumpTrackRevision'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:610:6 — React Hook useCallback has a missing dependency: 'getBattleBroadcastChannel'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1073:6 — React Hook useEffect has missing dependencies: 'battleRealtime', 'clearDeferredError', 'deferError', and 'effectiveUserId'. Either include them or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1098:6 — React Hook useEffect has a missing dependency: 'clearDeferredError'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1108:6 — React Hook useEffect has missing dependencies: 'battleRealtime' and 'clearDeferredError'. Either include them or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1121:6 — React Hook useEffect has a missing dependency: 'arenaReady'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1143:6 — React Hook useEffect has a missing dependency: 'battle'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1338:6 — React Hook useEffect has missing dependencies: 'challengerStream.user_id', 'getBattleBroadcastChannel', 'navigate', 'opponentStream.user_id', and 'participantInfo?.team'. Either include them or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1690:6 — React Hook useCallback has a missing dependency: 'returnPathTemplate'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1712:6 — React Hook useEffect has a missing dependency: 'battle'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1922:6 — React Hook useCallback has a missing dependency: 'getBattleBroadcastChannel'. Either include it or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1965:6 — React Hook useEffect has missing dependencies: 'getBattleBroadcastChannel' and 'returnPathTemplate'. Either include them or remove the dependency array.
+- src\hooks\useBattleViewController.ts:1997:6 — React Hook useEffect has missing dependencies: 'challengerStream?.user_id' and 'opponentStream?.user_id'. Either include them or remove the dependency array.
+- src\hooks\useBroadcastRecorder.ts:64:63 — The ref value 'clipTimeoutRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'clipTimeoutRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\hooks\useBroadcastShutdown.ts:217:72 — The ref value 'localVideoRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'localVideoRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\hooks\useBroadcastShutdown.ts:229:6 — React Hook useEffect has a missing dependency: 'isTransitioning'. Either include it or remove the dependency array.
+- src\hooks\useFiveVFiveBattle.ts:372:6 — React Hook useCallback has missing dependencies: 'handleBattleEvent' and 'startCountdown'. Either include them or remove the dependency array.
+- src\hooks\useFiveVFiveBattle.ts:392:6 — React Hook useCallback has a missing dependency: 'startBattleTimer'. Either include it or remove the dependency array.
+- src\hooks\useFiveVFiveBattle.ts:472:6 — React Hook useCallback has a missing dependency: 'endBattle'. Either include it or remove the dependency array.
+- src\hooks\useFiveVFiveBattle.ts:564:6 — React Hook useCallback has a missing dependency: 'resetBattle'. Either include it or remove the dependency array.
+- src\hooks\useGamingBattle.ts:180:43 — The ref value 'channelRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'channelRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\hooks\useGamingHeartbeat.tsx:233:6 — React Hook useEffect has missing dependencies: 'lastAudioAt' and 'lastChatAt'. Either include them or remove the dependency array.
+- src\hooks\useGetStreamRoom.ts:187:6 — React Hook useCallback has an unnecessary dependency: 'roomType'. Either exclude it or remove the dependency array.
+- src\hooks\useGetStreamRoom.ts:295:6 — React Hook useCallback has an unnecessary dependency: 'identity'. Either exclude it or remove the dependency array.
+- src\hooks\useGetStreamRoom.ts:377:6 — React Hook useCallback has an unnecessary dependency: 'identity'. Either exclude it or remove the dependency array.
+- src\hooks\useGhostMode.ts:143:6 — React Hook useCallback has an unnecessary dependency: 'streamId'. Either exclude it or remove the dependency array.
+- src\hooks\useGiftSystem.ts:678:6 — React Hook useCallback has a missing dependency: '_battleId'. Either include it or remove the dependency array.
+- src\hooks\useGovernmentSystem.ts:676:6 — React Hook useEffect has missing dependencies: 'fetchBribes', 'fetchCityReputation', 'fetchGovernmentHistory', 'fetchLaws', 'fetchPoliticalParties', 'fetchProtests', 'fetchReputation', and 'fetchUserProtests'. Either include them or remove the dependency array.
+- src\hooks\useLeagueMissions.ts:106:6 — React Hook useCallback has a missing dependency: 'profile?.id'. Either include it or remove the dependency array.
+- src\hooks\useLeagueProgress.ts:298:6 — React Hook useCallback has missing dependencies: 'distributeReward', 'profile?.username', 'state', 'streamId', 'user?.email', and 'xpStore.xpTotal'. Either include them or remove the dependency array.
+- src\hooks\useLiveKitRoom.ts:63:9 — The 'safeStringify' function makes the dependencies of useCallback Hook (at line 1404) change on every render. To fix this, wrap the definition of 'safeStringify' in its own useCallback() Hook.
+- src\hooks\useLiveKitRoom.ts:63:9 — The 'safeStringify' function makes the dependencies of useCallback Hook (at line 1466) change on every render. To fix this, wrap the definition of 'safeStringify' in its own useCallback() Hook.
+- src\hooks\useLiveKitRoom.ts:333:7 — React Hook useCallback has a missing dependency: 'videoPreset'. Either include it or remove the dependency array.
+- src\hooks\useLiveKitRoom.ts:477:6 — React Hook useCallback has a missing dependency: 'replaceOrAppendParticipant'. Either include it or remove the dependency array.
+- src\hooks\useLiveKitRoom.ts:857:6 — React Hook useCallback has a missing dependency: 'waitForRoomConnected'. Either include it or remove the dependency array.
+- src\hooks\useLiveKitRoom.ts:1138:6 — React Hook useCallback has missing dependencies: 'failedJoinCache' and 'waitForRoomConnected'. Either include them or remove the dependency array.
+- src\hooks\useLiveKitRoom.ts:1325:7 — React Hook useCallback has missing dependencies: 'handleParticipantJoined', 'handleParticipantLeft', 'handleTrackSubscribed', and 'handleTrackUnsubscribed'. Either include them or remove the dependency array.
+- src\hooks\useLockdown.ts:113:6 — React Hook useCallback has an unnecessary dependency: 'description'. Either exclude it or remove the dependency array.
+- src\hooks\useObsHeartbeat.ts:61:6 — React Hook useCallback has a missing dependency: 'sessionId'. Either include it or remove the dependency array.
+- src\hooks\useObsScenes.ts:125:6 — React Hook useCallback has a missing dependency: 'fetchStreamingStatus'. Either include it or remove the dependency array.
+- src\hooks\useObsScenes.ts:171:6 — React Hook useEffect has missing dependencies: 'autoConnect' and 'connect'. Either include them or remove the dependency array.
+- src\hooks\usePodcastAgora.ts:310:6 — React Hook useCallback has missing dependencies: 'onClientReady' and 'podcastId'. Either include them or remove the dependency array. If 'onClientReady' changes too often, find the parent component that defines it and wrap that definition in useCallback.
+- src\hooks\useRandomBattleQueueController.ts:324:6 — React Hook useEffect has a missing dependency: 'triggerActivationIfDue'. Either include it or remove the dependency array.
+- src\hooks\useRealtimeStability.ts:133:6 — React Hook useCallback has a missing dependency: 'attemptReconnect'. Either include it or remove the dependency array.
+- src\hooks\useRoom.ts:196:6 — React Hook useEffect has a missing dependency: 'isAdmin'. Either include it or remove the dependency array.
+- src\hooks\useSEO.tsx:127:6 — React Hook useCallback has a missing dependency: 'config.structuredData'. Either include it or remove the dependency array.
+- src\hooks\useStaffWalkieTalkie.ts:143:6 — React Hook useCallback has a missing dependency: 'profile'. Either include it or remove the dependency array.
+- src\hooks\useStaffWalkieTalkie.ts:387:42 — The ref value 'remoteAudioElementsRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'remoteAudioElementsRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\hooks\useStateBattle.ts:157:6 — React Hook useCallback has a missing dependency: 'findStateMatch'. Either include it or remove the dependency array.
+- src\hooks\useStreamChat.ts:443:6 — React Hook useCallback has missing dependencies: 'canChat', 'isHost', and 'trackChatMessage'. Either include them or remove the dependency array.
+- src\hooks\useStreamSeats.ts:541:5 — React Hook useCallback has missing dependencies: 'isAdmin', 'safeSetJoiningSeatId', 'safeSetMySeat', 'safeSetSeatVersion', 'safeSetSeats', 'user?.user_metadata?.display_name', and 'user?.user_metadata?.username'. Either include them or remove the dependency array.
+- src\hooks\useStreamSeats.ts:627:6 — React Hook useCallback has missing dependencies: 'safeSetLeavingSeatId', 'safeSetMySeat', 'safeSetSeatVersion', and 'safeSetSeats'. Either include them or remove the dependency array.
+- src\hooks\useStreamSeats.ts:855:6 — React Hook useEffect has a missing dependency: 'fetchSeats'. Either include it or remove the dependency array.
+- src\hooks\useStreamSeats.ts:927:6 — React Hook useCallback has a missing dependency: 'scheduleRefresh'. Either include it or remove the dependency array.
+- src\hooks\useStreamSeats.ts:992:6 — React Hook useEffect has a missing dependency: '_refreshStageConfig'. Either include it or remove the dependency array. If '_refreshStageConfig' changes too often, find the parent component that defines it and wrap that definition in useCallback.
+- src\hooks\useStreamSeats.ts:1036:6 — React Hook useEffect has a missing dependency: 'fetchSeats'. Either include it or remove the dependency array.
+- src\hooks\useTrollBattle.ts:91:6 — React Hook useCallback has missing dependencies: 'startBattleTimer', 'startCountdown', and 'subscribeToBattleChannel'. Either include them or remove the dependency array.
+- src\hooks\useTrollBattle.ts:141:6 — React Hook useCallback has missing dependencies: 'broadcastBattleState' and 'endBattle'. Either include them or remove the dependency array.
+- src\hooks\useTrollBattle.ts:160:6 — React Hook useCallback has a missing dependency: 'broadcastBattleState'. Either include it or remove the dependency array.
+- src\hooks\useTrollBattle.ts:204:6 — React Hook useCallback has missing dependencies: 'awardBattleRewards' and 'broadcastBattleState'. Either include them or remove the dependency array.
+- src\hooks\useTrollBattle.ts:272:6 — React Hook useCallback has a missing dependency: 'broadcastBattleState'. Either include it or remove the dependency array.
+- src\hooks\useTrollBattle.ts:308:6 — React Hook useCallback has a missing dependency: 'broadcastBattleState'. Either include it or remove the dependency array.
+- src\hooks\useTrollMatch.ts:416:6 — React Hook useEffect has a missing dependency: 'profile'. Either include it or remove the dependency array.
+- src\hooks\useTrollminSystem.ts:105:6 — React Hook useCallback has missing dependencies: 'checkUserVote' and 'fetchDailyLimits'. Either include them or remove the dependency array.
+- src\lib\getAgoraAppId.tsx:160:6 — React Hook useCallback has a missing dependency: 'stopPreview'. Either include it or remove the dependency array.
+- src\lib\getAgoraAppId.tsx:243:6 — React Hook useCallback has a missing dependency: 'getCameraUid'. Either include it or remove the dependency array.
+- src\lib\getAgoraAppId.tsx:463:6 — React Hook useCallback has a missing dependency: 'getCameraUid'. Either include it or remove the dependency array.
+- src\lib\handleGift.tsx:51:6 — React Hook useEffect has missing dependencies: 'checkFollowing', 'checkSubscription', 'fetchAffiliation', 'fetchProfile', and 'isOwnProfile'. Either include them or remove the dependency array.
+- src\lib\handleKeyDown.tsx:129:6 — React Hook useCallback has an unnecessary dependency: 'refreshKey'. Either exclude it or remove the dependency array.
+- src\lib\handleKeyDown.tsx:162:6 — React Hook useEffect has a missing dependency: 'fetchThreads'. Either include it or remove the dependency array.
+- src\lib\handleMouseMove.tsx:126:6 — React Hook React.useMemo has a missing dependency: 'POPULAR_GAMES'. Either include it or remove the dependency array.
+- src\lib\hooks\useCityStatusOrb.ts:246:6 — React Hook useCallback has a missing dependency: 'options.isBroadcaster'. Either include it or remove the dependency array.
+- src\lib\hooks\useCoins.ts:177:7 — React Hook useCallback has missing dependencies: 'balances.battle_crowns', 'balances.hype_coins', 'balances.total_earned_coins', 'balances.total_spent_coins', and 'balances.troll_coins'. Either include them or remove the dependency array.
+- src\lib\hooks\useCoins.ts:260:6 — React Hook useCallback has an unnecessary dependency: 'balances.hype_coins'. Either exclude it or remove the dependency array.
+- src\lib\hooks\useGiftSystem.ts:359:5 — React Hook useCallback has an unnecessary dependency: 'recordGiftEarned'. Either exclude it or remove the dependency array.
+- src\lib\hooks\useLazyAPI.ts:135:6 — React Hook useMemo has missing dependencies: 'factory' and 'fallback'. Either include them or remove the dependency array. If 'factory' changes too often, find the parent component that defines it and wrap that definition in useCallback.
+- src\lib\hooks\useLazyAPI.ts:135:22 — React Hook useMemo has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies.
+- src\lib\hooks\useNeighborhood.ts:202:6 — React Hook useCallback has a missing dependency: 'fetchNeighborhood'. Either include it or remove the dependency array.
+- src\lib\hooks\useNeighborhood.ts:347:6 — React Hook useCallback has a missing dependency: 'fetchNeighborhood'. Either include it or remove the dependency array.
+- src\lib\hooks\useNeighborhood.ts:461:6 — React Hook useCallback has a missing dependency: 'fetchNeighborhood'. Either include it or remove the dependency array.
+- src\lib\isActive.tsx:332:6 — React Hook useEffect has missing dependencies: 'role' and 'trollRole'. Either include them or remove the dependency array.
+- src\lib\maitrollOperatingStore.ts:67:6 — React Hook React.useEffect has a missing dependency: 'store'. Either include it or remove the dependency array.
+- src\lib\maitrollOperatingStore.ts:78:6 — React Hook React.useEffect has a missing dependency: 'store'. Either include it or remove the dependency array.
+- src\lib\updateMeta.tsx:79:6 — React Hook useEffect has a missing dependency: 'loadArticle'. Either include it or remove the dependency array.
+- src\pages\Auth.tsx:369:6 — React Hook useEffect has missing dependencies: 'profile' and 'setProfile'. Either include them or remove the dependency array.
+- src\pages\CashoutRequestPage.tsx:287:6 — React Hook useCallback has missing dependencies: 'dailyCashoutCount', 'dailyLimitReached', and 'feeCoins'. Either include them or remove the dependency array.
+- src\pages\CourtViewerPage.tsx:411:6 — React Hook useMemo has missing dependencies: 'findParticipantByRole' and 'findRemoteUser'. Either include them or remove the dependency array.
+- src\pages\FastPayApplication.tsx:94:6 — React Hook useMemo has an unnecessary dependency: 'tierInfo'. Either exclude it or remove the dependency array.
+- src\pages\FastPayApplication.tsx:126:6 — React Hook useEffect has a missing dependency: 'appStatus'. Either include it or remove the dependency array.
+- src\pages\InmatesPage.tsx:72:6 — React Hook useEffect has a missing dependency: 'fetchInmates'. Either include it or remove the dependency array.
+- src\pages\JailAppealPage.tsx:37:6 — React Hook useEffect has a missing dependency: 'fetchExistingAppeal'. Either include it or remove the dependency array.
+- src\pages\Jobs.tsx:341:6 — React Hook useEffect has a missing dependency: 'loadJobsData'. Either include it or remove the dependency array.
+- src\pages\MaiPayPage.tsx:497:6 — React Hook useCallback has a missing dependency: 'idDocumentUrl'. Either include it or remove the dependency array.
+- src\pages\Marketplace.tsx:135:6 — React Hook useEffect has a missing dependency: 'checkIfSeller'. Either include it or remove the dependency array.
+- src\pages\MayorDashboard.tsx:76:6 — React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array.
+- src\pages\NeighborhoodOnboarding.tsx:134:5 — React Hook useMemo has a missing dependency: 'progressSteps'. Either include it or remove the dependency array.
+- src\pages\NeighborhoodOnboarding.tsx:491:6 — React Hook useEffect has a missing dependency: 'setProfile'. Either include it or remove the dependency array.
+- src\pages\Profile.tsx:181:8 — React Hook useMemo has an unnecessary dependency: 'profile'. Either exclude it or remove the dependency array.
+- src\pages\Profile.tsx:363:8 — React Hook useEffect has a missing dependency: 'currentUser'. Either include it or remove the dependency array.
+- src\pages\Stats.tsx:412:6 — React Hook useEffect has an unnecessary dependency: 'isInitialized.current'. Either exclude it or remove the dependency array. Mutable values like 'isInitialized.current' aren't valid dependencies because mutating them doesn't re-render the component.
+- src\pages\Stats.tsx:436:6 — React Hook useEffect has missing dependencies: 'fetchXP', 'loadStatsInternal', 'subscribeToXP', and 'unsubscribe'. Either include them or remove the dependency array.
+- src\pages\StreamSwipePage.tsx:313:6 — React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array.
+- src\pages\TeamMeetingRoom.tsx:528:6 — React Hook useEffect has a missing dependency: 'joinChannel'. Either include it or remove the dependency array.
+- src\pages\TeamMeetingRoom.tsx:535:6 — React Hook useEffect has a missing dependency: 'leaveChannel'. Either include it or remove the dependency array.
+- src\pages\TeamMeetingRoom.tsx:583:8 — React Hook useCallback has a missing dependency: 'sendStaffMeetingNotifications'. Either include it or remove the dependency array.
+- src\pages\TreelzPage.tsx:144:6 — React Hook useEffect has a missing dependency: 'previousPost'. Either include it or remove the dependency array.
+- src\pages\TreelzPage.tsx:151:6 — React Hook useEffect has a missing dependency: 'nextPost'. Either include it or remove the dependency array.
+- src\pages\TreelzPage.tsx:279:6 — React Hook useEffect has a missing dependency: 'currentPost.author'. Either include it or remove the dependency array.
+- src\pages\TrollBank.tsx:81:6 — React Hook useEffect has a missing dependency: 'fetchSavedCards'. Either include it or remove the dependency array.
+- src\pages\TrollBank.tsx:88:6 — React Hook useEffect has a missing dependency: 'fetchSmallPurchases'. Either include it or remove the dependency array.
+- src\pages\TrollFamily.tsx:77:6 — React Hook useEffect has a missing dependency: 'navigate'. Either include it or remove the dependency array.
+- src\pages\TrollFamilyChat.tsx:62:6 — React Hook useEffect has a missing dependency: 'checkFamilyMembership'. Either include it or remove the dependency array.
+- src\pages\TrollFamilyChat.tsx:868:6 — React Hook useEffect has a missing dependency: 'familyId'. Either include it or remove the dependency array.
+- src\pages\UniverseArenaDevPreview.tsx:510:81 — React Hook useMemo has an unnecessary dependency: 'now'. Either exclude it or remove the dependency array.
+- src\pages\UserInventory.tsx:214:6 — React Hook useCallback has a missing dependency: 'loadFrames'. Either include it or remove the dependency array.
+- src\pages\VerifiedBadgePage.tsx:21:6 — React Hook useEffect has a missing dependency: 'checkEligibility'. Either include it or remove the dependency array.
+- src\pages\VerifyStampPage.tsx:18:6 — React Hook useEffect has a missing dependency: 'handleVerify'. Either include it or remove the dependency array.
+- src\pages\admin\AdminCrownRedemptions.tsx:148:6 — React Hook useCallback has a missing dependency: 'user'. Either include it or remove the dependency array.
+- src\pages\admin\AdminCrownRedemptions.tsx:174:6 — React Hook useCallback has a missing dependency: 'user'. Either include it or remove the dependency array.
+- src\pages\admin\AdminCrownRedemptions.tsx:198:6 — React Hook useCallback has a missing dependency: 'user'. Either include it or remove the dependency array.
+- src\pages\admin\MarketplaceReleaseRequests.tsx:82:6 — React Hook React.useEffect has a missing dependency: 'fetchRequests'. Either include it or remove the dependency array.
+- src\pages\admin\NightWatchDashboard.tsx:188:6 — React Hook useMemo has a missing dependency: 'selectedStream'. Either include it or remove the dependency array.
+- src\pages\admin\NightWatchDashboard.tsx:617:6 — React Hook useEffect has a missing dependency: 'selectedStream'. Either include it or remove the dependency array.
+- src\pages\admin\SubAnalytics.tsx:53:6 — React Hook useEffect has a missing dependency: 'fetchAllData'. Either include it or remove the dependency array.
+- src\pages\admin\agencies\index.tsx:25:6 — React Hook useEffect has a missing dependency: 'fetchAgencies'. Either include it or remove the dependency array.
+- src\pages\agencies\CreateAgencyPage.tsx:26:6 — React Hook useEffect has a missing dependency: 'loadUserBalance'. Either include it or remove the dependency array.
+- src\pages\agencies\index.tsx:23:6 — React Hook useEffect has a missing dependency: 'fetchAgencies'. Either include it or remove the dependency array.
+- src\pages\agency-apply\[agencyId]\index.tsx:42:6 — React Hook useEffect has a missing dependency: 'fetchAgencyAndCheckStatus'. Either include it or remove the dependency array.
+- src\pages\agency-dashboard\components\AgencyApplicationsTable.tsx:133:6 — React Hook useEffect has a missing dependency: 'fetchApplications'. Either include it or remove the dependency array.
+- src\pages\agency-dashboard\components\AgencyMembersTable.tsx:81:6 — React Hook useEffect has a missing dependency: 'fetchMembers'. Either include it or remove the dependency array.
+- src\pages\agency-dashboard\index.tsx:485:6 — React Hook useCallback has a missing dependency: 'navigate'. Either include it or remove the dependency array.
+- src\pages\agency-hr-dashboard.tsx:553:6 — React Hook useEffect has a missing dependency: 'loadDashboard'. Either include it or remove the dependency array.
+- src\pages\auction\AuctionSales.tsx:126:6 — React Hook useCallback has an unnecessary dependency: 'supabase'. Either exclude it or remove the dependency array. Outer scope values like 'supabase' aren't valid dependencies because mutating them doesn't re-render the component.
+- src\pages\auction\AuctioneerScanner.tsx:211:73 — The ref value 'scanChannelRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'scanChannelRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\pages\auction\AuctioneerScanner.tsx:268:6 — React Hook useEffect has a missing dependency: 'sendScanToDesktop'. Either include it or remove the dependency array.
+- src\pages\auction\DeviceManagement.tsx:391:6 — React Hook useCallback has a missing dependency: 'mobileSessions'. Either include it or remove the dependency array.
+- src\pages\auction\DeviceManagement.tsx:474:6 — React Hook useCallback has missing dependencies: 'mobileSessions' and 'user'. Either include them or remove the dependency array.
+- src\pages\auction\LiveAuctionRoom.tsx:584:6 — React Hook useCallback has a missing dependency: 'redirectOnAuctionEnd'. Either include it or remove the dependency array.
+- src\pages\auction\LiveAuctionRoom.tsx:770:6 — React Hook useCallback has a missing dependency: 'getAgoraToken'. Either include it or remove the dependency array. Outer scope values like 'getAgoraChannelName' aren't valid dependencies because mutating them doesn't re-render the component.
+- src\pages\auction\LiveAuctionRoom.tsx:921:6 — React Hook useCallback has an unnecessary dependency: 'cleanupAgora'. Either exclude it or remove the dependency array.
+- src\pages\broadcast\BattleViewMobile.tsx:213:6 — React Hook useMemo has an unnecessary dependency: 'remoteUsers'. Either exclude it or remove the dependency array.
+- src\pages\broadcast\BroadcastPage.tsx:1074:6 — React Hook useEffect has missing dependencies: 'cameraFacingMode' and 'localTracks'. Either include them or remove the dependency array. You can also do a functional update 'setCameraFacingMode(c => ...)' if you only need 'cameraFacingMode' in the 'setCameraFacingMode' call.
+- src\pages\broadcast\BroadcastPage.tsx:1077:5 — React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+- src\pages\broadcast\BroadcastPage.tsx:4869:6 — React Hook useEffect has a missing dependency: 'stream'. Either include it or remove the dependency array.
+- src\pages\broadcast\BroadcastRouter.tsx:507:6 — React Hook useEffect has missing dependencies: 'location.pathname', 'params.username', and 'streamSlug'. Either include them or remove the dependency array.
+- src\pages\broadcast\BroadcastRouter.tsx:572:6 — React Hook useEffect has missing dependencies: 'profileAccess' and 'stream'. Either include them or remove the dependency array.
+- src\pages\broadcast\BroadcastRouter.tsx:575:5 — React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+- src\pages\broadcast\ViewerPage.tsx:687:6 — React Hook useEffect has a missing dependency: 'params'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:860:6 — React Hook useMemo has unnecessary dependencies: 'stream.battle_id', 'stream.battle_mode', 'stream.battle_status', 'stream.is_battle', 'stream.random_battle_queue_enabled', and 'stream.status'. Either exclude them or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:1428:8 — React Hook useCallback has a missing dependency: 'stream?.user_id'. Either include it or remove the dependency array. Outer scope values like 'hydrateGiftForOverlay' aren't valid dependencies because mutating them doesn't re-render the component.
+- src\pages\broadcast\ViewerPage.tsx:1782:6 — React Hook useMemo has a missing dependency: 'isSeatActiveStatus'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:1888:6 — React Hook useEffect has a missing dependency: 'stream'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:1888:7 — React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+- src\pages\broadcast\ViewerPage.tsx:1938:7 — React Hook useEffect has a missing dependency: 'stream'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:1943:8 — React Hook useMemo has a missing dependency: 'stream'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:1946:63 — React Hook useMemo has a missing dependency: 'stream'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:2318:6 — React Hook useEffect has a missing dependency: 'isSeatActiveStatus'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:2423:7 — React Hook useMemo has a missing dependency: 'isSeatActiveStatus'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:2584:7 — React Hook useCallback has a missing dependency: 'handleOpenUserAction'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:2657:6 — React Hook useCallback has an unnecessary dependency: 'navigate'. Either exclude it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:2684:7 — React Hook useCallback has a missing dependency: 'leaveLiveKitRoom'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:2741:7 — React Hook useCallback has a missing dependency: 'user?.id'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:2803:6 — React Hook useCallback has a missing dependency: 'flushLikes'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:2858:6 — React Hook useCallback has an unnecessary dependency: 'streamId'. Either exclude it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:3000:6 — React Hook useEffect has a missing dependency: 'refreshStageConfig'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:3202:6 — React Hook useEffect has a missing dependency: 'leaveLiveKitRoom'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:3264:6 — React Hook useEffect has a missing dependency: 'blockedUsernames'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:3545:7 — React Hook useEffect has missing dependencies: 'leaveSeat', 'markSeatLive', 'mySeat?.id', and 'mySeat.seat_index'. Either include them or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:3668:6 — React Hook useEffect has missing dependencies: 'params', 'stream', and 'viewerIdentity'. Either include them or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:3711:6 — React Hook useMemo has a missing dependency: 'isSeatActiveStatus'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:3749:6 — React Hook useEffect has a missing dependency: 'isStreamAdmin'. Either include it or remove the dependency array.
+- src\pages\broadcast\ViewerPage.tsx:3758:6 — React Hook useEffect has a missing dependency: 'isStreamAdmin'. Either include it or remove the dependency array.
+- src\pages\ceo-assistant-dashboard.tsx:196:6 — React Hook useEffect has a missing dependency: 'loadDashboardStats'. Either include it or remove the dependency array.
+- src\pages\event\EventDetailPage.tsx:25:6 — React Hook useEffect has a missing dependency: 'fetchEvent'. Either include it or remove the dependency array.
+- src\pages\gaming\HytroGaming.tsx:359:6 — React Hook useEffect has a missing dependency: 'profile'. Either include it or remove the dependency array.
+- src\pages\gaming\HytroGaming.tsx:359:32 — React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+- src\pages\isTargetAdmin.tsx:869:5 — React Hook useCallback has a missing dependency: 'profile?.username'. Either include it or remove the dependency array.
+- src\pages\lead-officer\LeadOfficerDashboard.tsx:344:6 — React Hook useEffect has a missing dependency: 'refreshAll'. Either include it or remove the dependency array.
+- src\pages\office\SpreadsheetEditor.tsx:190:6 — React Hook useMemo has a missing dependency: 'evaluateFormula'. Either include it or remove the dependency array.
+- src\pages\office\SpreadsheetEditor.tsx:238:6 — React Hook useEffect has a missing dependency: 'persistCells'. Either include it or remove the dependency array.
+- src\pages\office\TroMailOfficePage.tsx:162:6 — React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array.
+- src\pages\perks\PerksStore.tsx:44:6 — React Hook useEffect has a missing dependency: 'loadPerks'. Either include it or remove the dependency array.
+- src\pages\prosecutor\ProsecutorDashboard.tsx:35:6 — React Hook useEffect has a missing dependency: 'fetchProsecutorData'. Either include it or remove the dependency array.
+- src\pages\secretary\components\SecretaryCrownRedemptions.tsx:142:6 — React Hook useCallback has a missing dependency: 'user'. Either include it or remove the dependency array.
+- src\pages\secretary\components\SecretaryCrownRedemptions.tsx:169:6 — React Hook useCallback has a missing dependency: 'user'. Either include it or remove the dependency array.
+- src\pages\secretary\components\SecretaryCrownRedemptions.tsx:193:6 — React Hook useCallback has a missing dependency: 'user'. Either include it or remove the dependency array.
+- src\pages\secretary\components\SecretaryOwnDashboard.tsx:43:6 — React Hook useEffect has missing dependencies: 'fetchStats' and 'fetchTasks'. Either include them or remove the dependency array.
+- src\pages\shareathon\ShareAThonAdminDashboard.tsx:42:6 — React Hook useEffect has missing dependencies: 'refreshEligibility' and 'refreshSubmissions'. Either include them or remove the dependency array.
+- src\pages\shareathon\ShareAThonLanding.tsx:41:6 — React Hook useEffect has missing dependencies: 'refreshEligibility' and 'refreshSubmissions'. Either include them or remove the dependency array.
+- src\pages\tcnn\ArticleReader.tsx:79:6 — React Hook useEffect has a missing dependency: 'loadArticle'. Either include it or remove the dependency array.
+- src\pages\tcnn\TCNNBroadcasterPage.tsx:600:17 — The ref value 'studioRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'studioRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\pages\tcnn\TCNNViewerPage.tsx:179:6 — React Hook useEffect has missing dependencies: 'stream' and 'user'. Either include them or remove the dependency array.
+- src\pages\tcnn\TCNNViewerPage.tsx:219:6 — React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array.
+- src\pages\utromail\UtromailPage.tsx:216:6 — React Hook useCallback has an unnecessary dependency: 'refreshKey'. Either exclude it or remove the dependency array.
+- src\pages\utromail\UtromailPage.tsx:654:6 — React Hook useEffect has missing dependencies: 'profile?.avatar_url', 'profile?.display_name', and 'profile?.username'. Either include them or remove the dependency array.
+- src\pages\utromail\UtromailPage.tsx:824:6 — React Hook useEffect has a missing dependency: 'messages'. Either include it or remove the dependency array.
+- src\pages\utromail\UtromailThreadView.tsx:33:6 — React Hook useEffect has missing dependencies: 'fetchMessages' and 'fetchSubscriberBadge'. Either include them or remove the dependency array.
+- src\phone\pages\PhoneBroadcastPage.tsx:2793:22 — The ref value 'containerRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'containerRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\phone\pages\PhoneBroadcastPage.tsx:2923:22 — The ref value 'containerRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'containerRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\phone\pages\PhoneBroadcastPage.tsx:3033:24 — The ref value 'audioElementsRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'audioElementsRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+- src\phone\pages\PhoneProfile.tsx:477:6 — React Hook useEffect has a missing dependency: 'profileTargetId'. Either include it or remove the dependency array.
+- src\phone\pages\PhoneViewerPage.tsx:1191:6 — React Hook useEffect has a missing dependency: 'stream'. Either include it or remove the dependency array.
+- src\phone\pages\PhoneViewerPage.tsx:1715:7 — React Hook useEffect has a missing dependency: 'leaveAudience'. Either include it or remove the dependency array.
+- src\phone\pages\PhoneViewerPage.tsx:2073:61 — React Hook useMemo has a missing dependency: 'stream'. Either include it or remove the dependency array.
+- src\phone\pages\PhoneViewerPage.tsx:2237:7 — React Hook useEffect has a missing dependency: 'streamId'. Either include it or remove the dependency array.
+- src\phone\pages\PhoneViewerPage.tsx:3102:4 — React Hook useEffect has missing dependencies: 'isGetStream', 'liveKitRoom', 'markSeatLive', and 'viewerIdentity'. Either include them or remove the dependency array.
+- src\phone\pages\PhoneViewerPage.tsx:3163:7 — React Hook useEffect has a missing dependency: 'liveKitRoom'. Either include it or remove the dependency array.
+- src\phone\pages\PhoneViewerPage.tsx:3744:7 — React Hook useCallback has a missing dependency: 'navigate'. Either include it or remove the dependency array.
+- src\phone\pages\PhoneViewerPage.tsx:4076:5 — React Hook useCallback has an unnecessary dependency: 'toast'. Either exclude it or remove the dependency array. Outer scope values like 'toast' aren't valid dependencies because mutating them doesn't re-render the component.
+- src\phone\usePhoneRoleAccess.ts:330:6 — React Hook useEffect has missing dependencies: 'role' and 'trollRole'. Either include them or remove the dependency array.
+- src\troll\events\TrollJumpScare.tsx:130:6 — React Hook useEffect has missing dependencies: 'playScarySound', 'rarity', and 'scaryImages.length'. Either include them or remove the dependency array.
+
+## react-refresh/only-export-components (110)
+
+- src\components\AddressManager.tsx:20:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\AddressManager.tsx:40:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\AddressManager.tsx:78:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\AddressManager.tsx:113:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\GlobalEventThemeLayer.tsx:17:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\LazyLeaflet.tsx:60:10 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\StaffWalkieTalkieProvider.tsx:86:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\TabSwitchHandler.tsx:76:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\animations\index.tsx:21:3 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\animations\index.tsx:22:3 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\animations\index.tsx:36:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\animations\index.tsx:40:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\animations\index.tsx:44:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\animations\index.tsx:48:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\auction\LabelPrinter.tsx:260:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\BattleArena.tsx:16:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\BattleArena.tsx:26:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\BattleArena.tsx:229:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\BattleArena.tsx:243:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\GiftVideoOverlay.tsx:55:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\JailBarOverlay.tsx:261:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\JailTimeBattleIntegration.tsx:139:10 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\MobileAudienceTicker.tsx:6:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\broadcast\battle\ActiveBattlesPanel.tsx:77:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\easter\HiddenEasterEgg.tsx:127:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\marketing\ReadOnlyGuard.tsx:119:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\marketing\ReadOnlyGuard.tsx:124:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:14:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:87:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:102:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:523:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:526:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:538:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:542:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:549:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:553:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:560:13 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:594:13 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:617:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:893:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:915:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1010:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1016:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1026:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1032:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1063:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1104:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1121:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1152:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1191:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1256:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1265:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1276:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1290:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1300:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1309:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1321:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1356:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1403:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1441:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1474:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1483:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1493:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1535:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1628:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1646:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1714:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1738:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1762:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1792:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1819:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1860:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1936:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\originalChannel.tsx:1963:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\pets\PetPresence.tsx:6:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\profile\ProfileComponents.tsx:693:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\promo\PromoSlot.tsx:245:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\trollmin\PresidentRuleValidator.tsx:237:23 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\components\uploadVerificationFile.tsx:163:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\context\GhostDropInContext.tsx:268:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\BroadcastEffectsContext.tsx:182:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\ConsentContext.tsx:126:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\ConsentContext.tsx:134:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\EasterEggHuntContext.tsx:166:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\GamingStreamContext.tsx:23:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\GamingStreamContext.tsx:27:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\LiveContentContext.tsx:453:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PWAContext.tsx:831:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PWAContext.tsx:871:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PWAContext.tsx:876:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PWAContext.tsx:881:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PWAContext.tsx:886:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PWAContext.tsx:891:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PWAContext.tsx:896:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PageChannelContext.tsx:64:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PageChannelContext.tsx:74:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PageVisibilityContext.tsx:56:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\PageVisibilityContext.tsx:65:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\ProfileFrameContext.tsx:173:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\ShareAThonContext.tsx:93:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\StreamRouteContext.tsx:27:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\StreamRouteContext.tsx:31:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\SwipeNavigationContext.tsx:28:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\contexts\SwipeNavigationContext.tsx:36:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\hooks\useSafeNavigate.tsx:6:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\lib\cartContext.tsx:182:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\phone\components\maiPiksShared.tsx:34:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\phone\components\maiPiksShared.tsx:94:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\phone\components\maiPiksShared.tsx:102:17 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+- src\troll\TrollProvider.tsx:185:14 — Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+

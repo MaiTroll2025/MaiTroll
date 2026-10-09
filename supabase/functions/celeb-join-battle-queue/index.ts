@@ -74,7 +74,7 @@ Deno.serve(async (req: Request) => {
       const expiry = new Date(now.getTime() + 120000) // 2 min expiry
 
       // Upsert queue entry
-      const { data: queueEntry, error: queueError } = await supabase
+      const { data: _queueEntry, error: queueError } = await supabase
         .from("celeb_battle_queue")
         .upsert({
           stream_id: stream_id,
@@ -93,7 +93,7 @@ Deno.serve(async (req: Request) => {
       }
 
       // Try to find a match — another open queue entry that is not this one
-      const { data: match, error: matchError } = await supabase
+      const { data: match, error: _matchError } = await supabase
         .from("celeb_battle_queue")
         .select("stream_id")
         .eq("status", "open")

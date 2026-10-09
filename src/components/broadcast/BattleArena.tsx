@@ -1,32 +1,16 @@
 ﻿import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-import { Room, LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteTrack, RemoteVideoTrack, RemoteAudioTrack, RemoteTrackPublication, RoomEvent, Track } from 'livekit-client';
+import { LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack, RemoteTrackPublication, Track } from 'livekit-client';
 
 import { supabase } from '../../lib/supabase';
-import { Stream } from '../../types/broadcast';
 import { useAuthStore } from '../../lib/store';
-import { PreflightStore } from '../../lib/preflightStore';
-import { Loader2, Coins, User, MicOff, VideoOff, Mic, Video, Plus, Minus, Crown, Flame, Skull, X, Gift } from 'lucide-react';
-import { useCoins } from '../../lib/hooks/useCoins';
-import useTrollFamilyActivity from '../../hooks/useTrollFamilyActivity';
-import { useBattleRealtime } from '../../hooks/useBattleRealtime';
-import { logActiveChannels } from '../../lib/realtimeChannelDiagnostics';
-import { useIsMobile } from '../../hooks/useIsMobile';
+import { User, MicOff, VideoOff, Mic, Video, Plus, Minus, Crown, Flame, Skull, Gift } from 'lucide-react';
 import FeedTheTroll from '../feed-the-troll/FeedTheTroll';
-import BattleChat from './BattleChat';
-import MuteHandler from './MuteHandler';
-import GiftTray from './GiftTray';
-import ActiveBattlesPanel, { useActiveBattles, ActiveBattle } from './battle/ActiveBattlesPanel';
-import BattleScoreboard from './battle/BattleScoreboard';
-import BattleBottomBar from './battle/BattleBottomBar';
-import BattleActivityFeed from './battle/BattleActivityFeed';
-import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BattleSounds } from '../../lib/battleSounds';
+import { motion } from 'framer-motion';
 import { useJailTime } from '../../hooks/useJailTime';
 import JailBarOverlay from './JailBarOverlay';
+import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation';
 
 // --- Safe Helper Functions ---
 export function safeValues<T>(mapLike: Map<any, T> | undefined | null): T[] {
@@ -50,19 +34,19 @@ export function safeObjectValues<T>(obj: Record<string, T> | undefined | null): 
 }
 
 // --- Logging Helpers ---
-const logBroadcastLifecycle = (message: string, data?: any) => {
+const _logBroadcastLifecycle = (message: string, data?: any) => {
   console.log(`[BroadcastLifecycle] ${message}`, data || '');
 };
 
-const logRealtime = (message: string, data?: any) => {
+const _logRealtime = (message: string, data?: any) => {
   console.log(`[Realtime] ${message}`, data || '');
 };
 
-const logParticipants = (message: string, data?: any) => {
+const _logParticipants = (message: string, data?: any) => {
   console.log(`[Participants] ${message}`, data || '');
 };
 
-const logRTC = (message: string, data?: any) => {
+const _logRTC = (message: string, data?: any) => {
   console.log(`[RTC] ${message}`, data || '');
 };
 
@@ -78,7 +62,7 @@ const BattleAudioTrackPlayer = ({
   label: string;
 }) => {
   const [audioBlocked, setAudioBlocked] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [_audioEnabled, setAudioEnabled] = useState(false);
 
   useEffect(() => {
     if (!audioTrack) return;
@@ -148,7 +132,7 @@ const BattleAudioTrackPlayer = ({
         }
         try {
           audioElement.remove();
-        } catch (_err) {}
+        } catch (__err) {}
       }
     };
   }, [audioTrack, label]);
@@ -188,7 +172,7 @@ const BattleAudioRenderer = ({
       for (const entry of entriesRef.current) {
         try {
           entry.audioTrack.detach();
-        } catch (e) {
+        } catch (_e) {
           // ignore cleanup errors
         }
       }
@@ -381,13 +365,11 @@ export const BattleVideoRenderer = ({
       videoElement.controls = false;
       (videoElement as any).disablePictureInPicture = true;
       videoElement.muted = true;
+      applyCameraVideoPresentation(videoElement, {
+        track: videoTrack.mediaStreamTrack,
+        isLocal,
+      });
       containerRef.current.appendChild(videoElement);
-      const mediaTrack = videoTrack?.mediaStreamTrack;
-      const trackSettings = mediaTrack ? (mediaTrack.getSettings?.() || {}) : {};
-      const shouldMirror = isLocal && (trackSettings as any).facingMode !== 'environment';
-      if (containerRef.current) {
-        containerRef.current.style.transform = shouldMirror ? 'scaleX(-1)' : '';
-      }
     } catch (err) {
       console.error('[BattleVideoRenderer] attach() threw error:', err);
     }
@@ -776,13 +758,13 @@ const BattleArena = ({
   jailTimeEnabled = true,
   jailTimeSoundEnabled = true,
   jailTimeAmbientEnabled = true,
-  challengerStateCode = null,
-  challengerStateName = null,
-  challengerStatePoints = null,
-  opponentStateCode = null,
-  opponentStateName = null,
-  opponentStatePoints = null,
-  isStateBattle = false,
+  challengerStateCode: _challengerStateCode = null,
+  challengerStateName: _challengerStateName = null,
+  challengerStatePoints: _challengerStatePoints = null,
+  opponentStateCode: _opponentStateCode = null,
+  opponentStateName: _opponentStateName = null,
+  opponentStatePoints: _opponentStatePoints = null,
+  isStateBattle: _isStateBattle = false,
   onToggleCamera,
   onToggleMic,
   onChangeBoxCount,
@@ -933,13 +915,13 @@ const BattleArena = ({
   }, [STAFF_ROLES]);
 
   // Helper to get username from participant (checks profile join first)
-  const getUsername = (participant: any, fallback = 'Anonymous'): string => {
+  const _getUsername = (participant: any, fallback = 'Anonymous'): string => {
     return participant?.profile?.username || participant?.username || fallback;
   };
 
   // Track last remote users identities and trackRevision to avoid redundant re-fetches
-  const lastRemoteIdentitiesRef = useRef<string>('');
-  const lastTrackRevisionRef = useRef<number>(-1);
+  const _lastRemoteIdentitiesRef = useRef<string>('');
+  const _lastTrackRevisionRef = useRef<number>(-1);
   
   // Stable identity signature for participant loading dependencies
   const participantIdentitySignature = useMemo(() => {
@@ -949,10 +931,10 @@ const BattleArena = ({
 
   const participantLoadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const participantAbortControllerRef = useRef<AbortController | null>(null);
-  const lastParticipantSignatureRef = useRef<string>('');
-  const participantFetchIdRef = useRef(0);
+  const _lastParticipantSignatureRef = useRef<string>('');
+  const _participantFetchIdRef = useRef(0);
 
-  const getSupabaseParticipant = async (userId: string, signal?: AbortSignal) => {
+  const getSupabaseParticipant = async (userId: string, _signal?: AbortSignal) => {
     const { data, error } = await supabase
       .from('battle_participants')
       .select('*, profile:user_profiles(id, username, avatar_url, troll_coins, trollmonds)')
@@ -966,7 +948,7 @@ const BattleArena = ({
     return data;
   };
 
-  const getSupabaseParticipantsBatched = async (userIds: string[], signal?: AbortSignal) => {
+  const getSupabaseParticipantsBatched = async (userIds: string[], _signal?: AbortSignal) => {
     if (userIds.length === 0) return {} as Record<string, any>;
     const { data, error } = await supabase
       .from('battle_participants')
@@ -1039,12 +1021,12 @@ const BattleArena = ({
 
          
           // Helper to find LiveKit identity for a user ID
-          const findLiveKitIdentity = (userId: string): string => {
+          const _findLiveKitIdentity = (userId: string): string => {
             return userId;
           };
 
           // Helper to find RemoteParticipant by LiveKit identity
-          const findRemoteParticipant = (liveKitIdentity: string): RemoteParticipant | undefined => {
+          const _findRemoteParticipant = (liveKitIdentity: string): RemoteParticipant | undefined => {
             const normalizedTarget = String(liveKitIdentity || '').replace(/-/g, '').toLowerCase();
             return remoteUsers.find((u) => {
               const id = String(u.identity || '');

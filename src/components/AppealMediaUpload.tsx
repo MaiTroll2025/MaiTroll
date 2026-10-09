@@ -139,12 +139,12 @@ export default function AppealMediaUpload({
     }
   };
 
-  const formatDate = (dateStr?: string) => {
+  const _formatDate = (dateStr?: string) => {
     if (!dateStr) return 'Unknown';
     return new Date(dateStr).toLocaleString();
   };
 
-  const calculateTimeDifference = (takenAt?: string, uploadedAt?: string) => {
+  const _calculateTimeDifference = (takenAt?: string, uploadedAt?: string) => {
     if (!takenAt || !uploadedAt) return null;
     const taken = new Date(takenAt).getTime();
     const uploaded = new Date(uploadedAt).getTime();

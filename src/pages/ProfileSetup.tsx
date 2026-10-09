@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAvatar } from '../lib/hooks/useAvatar'
-import type { AvatarConfig } from '../lib/hooks/useAvatar'
 import { validateFile, FILE_VALIDATION } from '../lib/fileValidation'
 import CropPhotoModal from '../components/CropPhotoModal'
 import { KeyRound } from 'lucide-react'
@@ -14,7 +13,7 @@ import { moderation } from '@/services/maitrollModeration';
 const ProfileSetup = () => {
   const navigate = useNavigate()
   const { user, profile, setProfile } = useAuthStore()
-  const { config: avatarConfig, setConfig: setAvatarConfig } = useAvatar()
+  const { config: _avatarConfig, setConfig: _setAvatarConfig } = useAvatar()
 
   // Ensure loading is false when component mounts
   React.useEffect(() => {

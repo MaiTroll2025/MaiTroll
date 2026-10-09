@@ -68,7 +68,7 @@ console.log(`Found ${enums.size} unique enums (${enumCount} total)`);
 let sql = '-- Enums\n';
 sql += '-- Created before tables to avoid "type does not exist" errors\n\n';
 
-for (const [name, definition] of Array.from(enums.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
+for (const [_name, definition] of Array.from(enums.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
   sql += definition + '\n\n';
 }
 

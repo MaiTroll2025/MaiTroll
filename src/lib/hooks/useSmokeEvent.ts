@@ -42,7 +42,7 @@ export interface SongRequest {
 export function useSmokeEvent(streamId: string | undefined) {
   const [smokeEvent, setSmokeEvent] = useState<SmokeEvent | null>(null);
   const [activeDrop, setActiveDrop] = useState<TrollDrop | null>(null);
-  const [raffleTickets, setRaffleTickets] = useState<RaffleTicket[]>([]);
+  const [_raffleTickets, _setRaffleTickets] = useState<RaffleTicket[]>([]);
   const [songQueue, setSongQueue] = useState<SongRequest[]>([]);
   const [loading, setLoading] = useState(true);
 

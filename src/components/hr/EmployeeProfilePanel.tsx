@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { Search, RefreshCw, Shield, Clock, DollarSign, CheckCircle2, XCircle } from 'lucide-react'
+import { Search, RefreshCw, Shield, Clock } from 'lucide-react';
 
 interface EmployeeRow {
   id: string
@@ -95,7 +95,7 @@ const isActiveRole = (row: EmployeeRow): boolean => {
   return resolveRole(row) !== null
 }
 
-export default function EmployeeProfilePanel({ isHRAdmin, currentUserId }: EmployeeProfilePanelProps) {
+export default function EmployeeProfilePanel({ isHRAdmin, currentUserId: _currentUserId }: EmployeeProfilePanelProps) {
   const [employees, setEmployees] = useState<EmployeeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

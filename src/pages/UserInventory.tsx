@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { Package, Zap, Crown, Star, Palette, CheckCircle, XCircle, Sparkles, Shield, Phone, X, Car, Home, ChevronDown, ChevronUp, Gavel, Truck } from 'lucide-react'
 import { MaiTrollTheme } from '../styles/trollCityTheme'
-import { PERK_CONFIG } from '../lib/perkSystem'
 import { PERKS as LEVEL_PERKS } from '@/config/levelSystem'
 import { GlowingUsernameColorPicker } from '../components/GlowingUsernameColorPicker'
 import TitleDeedModal from '../components/TitleDeedModal'
@@ -42,10 +41,10 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
   const {
     catalog: frameCatalog,
     ownedFrames: userOwnedFrames,
-    equippedFrame,
+    equippedFrame: _equippedFrame,
     loadUserFrames: loadFrames,
     equipFrame: equipProfileFrame,
-    isFrameOwned,
+    isFrameOwned: _isFrameOwned,
   } = useProfileFrameStore();
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -85,7 +84,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
       }
 
       const inventoryRes = results[0];
-      const effectsRes = results[1];
+      const _effectsRes = results[1];
       const perksRes = results[2];
       const insuranceRes = results[3];
       const activeRes = results[4];
@@ -432,7 +431,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
     return () => clearInterval(interval)
   }, [user, navigate, loadInventory])
 
-  const deleteItem = async (recordId: string, itemId: string, tableName: string, stateSetter: React.Dispatch<React.SetStateAction<any[]>>) => {
+  const _deleteItem = async (recordId: string, itemId: string, tableName: string, stateSetter: React.Dispatch<React.SetStateAction<any[]>>) => {
     if (!user?.id) return;
     if (activeItems.has(itemId)) {
       toast.error('Deactivate item before deleting');

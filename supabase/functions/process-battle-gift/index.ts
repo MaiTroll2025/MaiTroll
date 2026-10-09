@@ -86,14 +86,14 @@ export const handler = async (req: Request): Promise<Response> => {
     let cashoutEligibleAmount = paid_coin_amount || 0;
     let battlePointAmount = paid_coin_amount || 0;
     let eventBonusAmount = 0;
-    let multiplier = 1;
+    let _multiplier = 1;
 
     if (activeEvent === 'triple_points') {
-      multiplier = 3;
+      _multiplier = 3;
       battlePointAmount = (paid_coin_amount || 0) * 3;
       eventBonusAmount = (paid_coin_amount || 0) * 2;
     } else if (activeEvent === 'glow_mode' && (paid_coin_amount || 0) >= 1000) {
-      multiplier = 2;
+      _multiplier = 2;
       eventBonusAmount = (paid_coin_amount || 0) * 2;
       cashoutEligibleAmount = paid_coin_amount || 0;
     }
@@ -217,7 +217,7 @@ export const handler = async (req: Request): Promise<Response> => {
       return withCors({ error: giftError.message }, 500);
     }
 
-    const { data: scoreUpdate, error: scoreError } = await supabase
+    const { data: _scoreUpdate, error: _scoreError } = await supabase
       .from('battles')
       .update({
         score_challenger: battle.active_event_type === 'triple_points'

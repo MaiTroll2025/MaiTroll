@@ -59,7 +59,7 @@ export default function VerifyStampPage() {
             className="flex-1 px-4 py-3 bg-zinc-800 border border-gray-700 rounded-lg text-white text-sm font-mono"
           />
           <button
-            onClick={handleVerify}
+            onClick={() => void handleVerify()}
             disabled={loading}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
           >

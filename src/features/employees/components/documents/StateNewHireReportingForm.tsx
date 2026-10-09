@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf'
 const ATTESTATION =
   'Under penalties of perjury, I declare that the information provided on this new hire report is true and correct to the best of my knowledge.'
 
-function generateNewHirePdf(data: any, signatureName: string): Uint8Array | null {
+async function generateNewHirePdf(data: any, signatureName: string): Promise<Uint8Array | null> {
   try {
     const doc = new jsPDF({ unit: 'pt', format: 'letter' })
     const date = new Date().toISOString().slice(0, 10)
@@ -34,9 +34,9 @@ function generateNewHirePdf(data: any, signatureName: string): Uint8Array | null
       ['Employer Phone', data.employerPhone ?? ''],
       ['Reported By', signatureName],
       ['Date', date],
-    ]
+    ];
 
-    doc.autoTable({
+    (doc as any).autoTable({
       startY: 110,
       head: [['Field', 'Value']],
       body: rows.map((r) => [r[0], r[1] || '—']),

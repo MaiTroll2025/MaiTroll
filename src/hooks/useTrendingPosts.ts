@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { WallPost } from '@/types/trollWall'
 
 interface TrendingPost {
   id: string

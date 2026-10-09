@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react';
 import { Radio, Users, Play, Camera } from 'lucide-react'
 import HorizontalScrollRow from './HorizontalScrollRow'
 import { useIsMobile } from '@/hooks/useIsMobile'

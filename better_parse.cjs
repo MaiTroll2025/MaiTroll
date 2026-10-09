@@ -276,7 +276,7 @@ const requestedFiles = [
 function parseSQLFile(filename) {
   const filepath = path.join(migrationsDir, filename);
   let raw;
-  try { raw = fs.readFileSync(filepath, 'utf-8'); } catch (e) { return { error: `File not found: ${filepath}` }; }
+  try { raw = fs.readFileSync(filepath, 'utf-8'); } catch (_e) { return { error: `File not found: ${filepath}` }; }
 
   // For baseline: strip block comments
   let content = raw.replace(/\/\*[\s\S]*?\*\//g, ' /*cmt*/ ');
@@ -298,7 +298,7 @@ function parseSQLFile(filename) {
   const publications = [];
   const extensions = [];
   const sequences = [];
-  const types = [];
+  const _types = [];
 
   for (let i = 0; i < lines.length; i++) {
     let l = lines[i].trim();

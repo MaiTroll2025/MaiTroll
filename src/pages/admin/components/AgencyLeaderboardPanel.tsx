@@ -1,6 +1,6 @@
-import { useAdminAgencyLeaderboard } from '../../hooks/useAdminAgency';
-import { TIER_CONFIG } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { useAdminAgencyLeaderboard } from '@/hooks/useAdminAgency';
+import { TIER_CONFIG } from '@/types/agency';
+import { cn } from '@/lib/utils';
 import { Trophy, Loader2, Medal, Crown, Star, TrendingUp } from 'lucide-react';
 
 const rankStyles: Record<number, { bg: string; border: string; text: string; glow: string; icon: typeof Trophy }> = {

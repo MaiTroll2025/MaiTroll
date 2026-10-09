@@ -1,17 +1,5 @@
 import type { ReactNode } from 'react'
-import {
-  Briefcase,
-  Shield,
-  FileText,
-  Users,
-  Cross,
-  Video,
-  Star,
-  Store,
-  Newspaper,
-  Mic,
-  Radio,
-} from 'lucide-react'
+import { Shield, FileText, Users, Cross, Video, Star, Store, Newspaper, Mic, Radio } from 'lucide-react';
 
 export interface JobPosition {
   id: string

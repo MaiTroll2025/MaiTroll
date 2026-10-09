@@ -67,7 +67,7 @@ async function createBucket() {
     } else {
       console.log('📦 Creating bucket: camera-off-images');
       
-      const { data, error } = await supabase.storage.createBucket('camera-off-images', {
+      const { data: _data, error } = await supabase.storage.createBucket('camera-off-images', {
         public: true,
         fileSizeLimit: 10485760, // 10MB
         allowedMimeTypes: [

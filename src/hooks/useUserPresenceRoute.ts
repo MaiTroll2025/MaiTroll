@@ -14,7 +14,7 @@ import { useLocation } from "react-router-dom";
  * Should be used once at the app level for authenticated users.
  */
 export function useUserPresenceRoute() {
-  const { user: storeUser } = useAuthStore();
+  const { user: _storeUser } = useAuthStore();
   const location = useLocation();
   const lastUpdateRef = useRef(0);
   const lastRouteRef = useRef<string | null>(null);

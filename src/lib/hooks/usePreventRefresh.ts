@@ -94,7 +94,7 @@ export function useStatePersistence<T>(
     restoreOnVisible?: boolean;
   } = {}
 ) {
-  const { persistOnHidden = true, restoreOnVisible = true } = options;
+  const { persistOnHidden = true, restoreOnVisible: _restoreOnVisible = true } = options;
   const { isVisible } = usePageVisibility();
 
   const [state, setState] = useState<T>(() => {

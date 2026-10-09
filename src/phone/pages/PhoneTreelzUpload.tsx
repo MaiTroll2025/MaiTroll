@@ -1,5 +1,4 @@
 import { lazyWithRetry } from '@/utils/lazyImport'
-import { neonCard, neonTextGradient } from '../phoneTheme'
 
 const TreelzUploadPage = lazyWithRetry(
   () => import('../../pages/TreelzUploadPage.tsx')

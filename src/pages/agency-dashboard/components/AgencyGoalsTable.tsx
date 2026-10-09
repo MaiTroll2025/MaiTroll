@@ -6,8 +6,8 @@ type AgencyGoalsTableProps = {
 };
 
 export const AgencyGoalsTable: React.FC<AgencyGoalsTableProps> = ({
-  agencyId,
-  userRole,
+  agencyId: _agencyId,
+  userRole: _userRole,
 }) => {
   return (
     <div className="p-6">

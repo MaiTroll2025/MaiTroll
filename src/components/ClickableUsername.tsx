@@ -3,7 +3,7 @@ import VerifiedBadge from './VerifiedBadge'
 import OfficerTierBadge from './OfficerTierBadge'
 import { EmpireBadge } from './EmpireBadge'
 import { useNavigate } from 'react-router-dom'
-import { Shield, Crown, Skull, Star, UserX, Ban, MicOff, User, LogOut, ClipboardList, Gavel, Lock, Car, CreditCard, Heart, Briefcase, Receipt } from 'lucide-react'
+import { Shield, Crown, Skull, Star, UserX, Ban, MicOff, User, LogOut, ClipboardList, Gavel, Lock, Car, CreditCard, Briefcase, Receipt } from 'lucide-react';
 import { applyGlowingUsername, getGlowingTextStyle, getTrollSpellEffect } from '../lib/perkEffects'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
@@ -35,6 +35,16 @@ interface ClickableUsernameProps {
     username_style?: string
     badge?: string
     glowing_username_color?: string | null
+    is_attorney?: boolean
+    is_prosecutor?: boolean
+    is_judge?: boolean
+    is_ceo_assistant?: boolean
+    is_noah_assistant?: boolean
+    is_journalist?: boolean
+    is_news_caster?: boolean
+    is_chief_news_caster?: boolean
+    is_pastor?: boolean
+    is_secretary?: boolean
   }
   royalTitle?: {
     title_type: string
@@ -67,7 +77,7 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
   const menuRef = useRef<HTMLDivElement>(null)
    const [showMenu, setShowMenu] = useState(false)
    const [showSummonModal, setShowSummonModal] = useState(false)
-   const [showSubscribeModal, setShowSubscribeModal] = useState(false)
+   const [_showSubscribeModal, _setShowSubscribeModal] = useState(false)
    const [licenseStatus, setLicenseStatus] = useState<any>(null)
    const [insuranceStatus, setInsuranceStatus] = useState<any>(null)
    const [loadingStatus, setLoadingStatus] = useState(false)
@@ -199,7 +209,7 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
          .eq('is_active', true)
          .single();
        setCurrentSubscription(data);
-     } catch (error) {
+     } catch (_error) {
        setCurrentSubscription(null);
      }
    };

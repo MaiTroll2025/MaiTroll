@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Room, RoomEvent, LocalAudioTrack, LocalVideoTrack, RemoteParticipant, Track } from 'livekit-client'
+import { Room } from 'livekit-client';
 import { supabase } from '../lib/supabase'
 import { getLiveKitRoomName } from '../lib/liveUtils'
 import { toast } from 'sonner'
@@ -26,7 +26,7 @@ export function useGhostMode({ streamId, userId, isCEO, roomRef }: UseGhostModeP
   const [isLeavingGhost, setIsLeavingGhost] = useState(false)
   const [isMicEnabled, setIsMicEnabled] = useState(true)
   const [isCameraEnabled, setIsCameraEnabled] = useState(false)
-  const ghostRoomRef = useRef<Room | null>(null)
+  const _ghostRoomRef = useRef<Room | null>(null)
 
   const roomName = getLiveKitRoomName(null, streamId)
 
@@ -35,7 +35,7 @@ export function useGhostMode({ streamId, userId, isCEO, roomRef }: UseGhostModeP
 
     setIsJoiningGhost(true)
     try {
-      const { data, error } = await supabase
+      const { data: _data, error } = await supabase
         .from('user_profiles')
         .update({ is_ghost_mode: true })
         .eq('id', userId)

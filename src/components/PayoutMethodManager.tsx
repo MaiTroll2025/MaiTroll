@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Save, Check, X, AlertCircle, DollarSign, CreditCard, Wallet } from 'lucide-react'
+import { Save, Check, DollarSign, CreditCard } from 'lucide-react';
 import { cn } from '../lib/utils'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
@@ -99,7 +99,7 @@ export default function PayoutMethodManager({ onSaved }: PayoutMethodManagerProp
     }
   }
 
-  const getMethodIcon = (method: PayoutMethod) => {
+  const _getMethodIcon = (method: PayoutMethod) => {
     switch (method) {
       case 'cash_app': return '$'
       case 'paypal': return <DollarSign className="h-4 w-4" />

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Bell, MessageCircle, User, ChevronDown, X } from 'lucide-react'
+import { Bell, User } from 'lucide-react';
 import GlobalTicker from '@/components/header/GlobalTicker'
 import PhoneDrawer from './PhoneDrawer'
+import { PhoneButton } from './components/PhoneButton'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -151,7 +152,7 @@ export default function PhoneHeader({
     window.location.assign(route)
   }
 
-  return (
+return (
     <>
       <PhoneDrawer
         open={drawerOpen}
@@ -159,20 +160,20 @@ export default function PhoneHeader({
       />
 
       <header className="sticky top-0 z-50 border-b border-[#00BFFF]/20 bg-[#03030a]/90 backdrop-blur-2xl">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="relative px-4 py-3">
 
-          {/* Menu */}
+          {/* Menu - absolute left */}
           <button
             type="button"
             aria-label="Open menu"
             onClick={() => setDrawerOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white transition active:scale-95"
+            className="absolute left-0 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white transition active:scale-95"
           >
             <span className="text-xl leading-none">☰</span>
           </button>
 
-          {/* Brand */}
-          <div className="min-w-0 flex-1 px-3 text-center">
+          {/* Brand - truly centered */}
+          <div className="flex flex-col items-center">
             <h1 className="truncate bg-gradient-to-r from-[#00BFFF] via-white to-[#BF00FF] bg-clip-text text-lg font-black tracking-tight text-transparent">
               {title}
             </h1>
@@ -185,21 +186,19 @@ export default function PhoneHeader({
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Actions - absolute right */}
           {showActions ? (
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
 
               {/* Notifications */}
               <div className="relative">
-                <button
-                  type="button"
-                  aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+                <PhoneButton
+                  variant="icon-only"
+                  size="lg"
+                  icon={<Bell size={28} strokeWidth={2.5} />}
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white transition active:scale-90"
-                >
-                  <Bell size={28} strokeWidth={2.5} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-                </button>
-
+                  aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+                />
                 {/* Notifications Dropdown */}
                 {notificationsOpen && (
                   <div className="absolute right-0 top-full mt-2 w-[320px] max-h-[500px] overflow-y-auto rounded-2xl border border-white/10 bg-[#050715]/95 backdrop-blur-2xl shadow-2xl z-50 animate-in slide-in-from-top-2 duration-200">
@@ -285,33 +284,25 @@ export default function PhoneHeader({
               </div>
 
               {/* Profile */}
-              <div className="relative">
-                <button
-                  type="button"
-                  aria-label="Profile"
-                  onClick={() => window.location.assign('/profile')}
-className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-white transition active:scale-90"
-                  >
-                    {profile?.avatar_url ? (
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.username}
-                        className="h-12 w-12 rounded-xl object-cover"
-                      />
-                    ) : (
-                      <User size={28} strokeWidth={2.5} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-                  )}
-                </button>
-              </div>
-
+              <PhoneButton
+                variant="icon-only"
+                size="lg"
+                icon={profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
+                ) : (
+                  <User size={28} strokeWidth={2.5} />
+                )}
+                onClick={() => window.location.assign('/profile')}
+              />
             </div>
           ) : (
-            <div className="h-10 w-10" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10" />
           )}
+
         </div>
 
-        {/* Global activity ticker */}
-        <div className="border-t border-white/5 px-3 py-1.5">
+        {/* Global activity ticker - centered */}
+        <div className="px-4 py-1.5">
           <GlobalTicker showSeoLinks={showTickerLinks} />
         </div>
       </header>

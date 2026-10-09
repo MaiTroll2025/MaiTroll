@@ -118,7 +118,7 @@ export function useFeaturedLive(options: UseFeaturedLiveOptions = {}) {
       } else {
         setFeaturedState(null)
       }
-    } catch (error) {
+    } catch (_error) {
       setFeaturedBroadcasters([])
       setFeaturedState(null)
     }

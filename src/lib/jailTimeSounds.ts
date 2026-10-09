@@ -60,7 +60,7 @@ function playTone(
     gain.connect(ctx.destination);
     osc.start(ctx.currentTime + delay);
     osc.stop(ctx.currentTime + delay + duration);
-  } catch (_) { /* ignore */ }
+  } catch (__) { /* ignore */ }
 }
 
 function playNoiseBurst(
@@ -87,7 +87,7 @@ function playNoiseBurst(
     gain.connect(ctx.destination);
     noise.start(ctx.currentTime + delay);
     noise.stop(ctx.currentTime + delay + duration);
-  } catch (_) { /* ignore */ }
+  } catch (__) { /* ignore */ }
 }
 
 // ─── 1. JAIL LOCK SOUND ─────────────────────────────────────────
@@ -97,7 +97,7 @@ export function playJailLockSound() {
   const ctx = getCtx();
   if (!ctx) return;
 
-  const t = ctx.currentTime;
+  const _t = ctx.currentTime;
 
   // ── Deep bass impact (the "slam") ──
   playTone(ctx, 55, 0.4, 'sine', 0.25, 0);       // Sub bass thud
@@ -327,13 +327,13 @@ class BattleAmbientEngine {
     this.intervalIds.forEach(id => clearInterval(id));
     this.intervalIds = [];
     this.oscillators.forEach(osc => {
-      try { osc.stop(); } catch (_) {}
+      try { osc.stop(); } catch (__) {}
     });
     this.oscillators = [];
     if (this.masterGain && this.ctx) {
       this.masterGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
       setTimeout(() => {
-        try { this.masterGain?.disconnect(); } catch (_) {}
+        try { this.masterGain?.disconnect(); } catch (__) {}
         this.masterGain = null;
       }, 600);
     }

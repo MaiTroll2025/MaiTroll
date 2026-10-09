@@ -15,9 +15,6 @@ const LazyUserSearch = lazyWithRetry(() => import('@/pages/admin/UserSearch'))
 const LazyRoleManagement = lazyWithRetry(() => import('@/pages/admin/RoleManagement'))
 const LazyUserFormsTab = lazyWithRetry(() => import('@/pages/admin/components/UserFormsTab'))
 const LazyStaffAudit = lazyWithRetry(() => import('@/pages/admin/StaffAuditDashboard'))
-const LazyCreatorSwitchApprovals = lazyWithRetry(
-  () => import('@/pages/admin/components/CreatorSwitchApprovals'),
-)
 const LazyOfficerManagement = lazyWithRetry(() => import('@/pages/admin/OfficerManager'))
 const LazyVerifiedUsers = lazyWithRetry(() => import('@/pages/admin/AdminVerifiedUsers'))
 const LazyVerificationReview = lazyWithRetry(() => import('@/pages/admin/AdminVerificationReview'))
@@ -100,10 +97,8 @@ const LazyTromocodes = lazyWithRetry(() => import('@/pages/admin/TromoCodesAdmin
 const LazyCrownRedemptions = lazyWithRetry(() => import('@/pages/admin/AdminCrownRedemptions'))
 const LazyStartupExpenseTracker = lazyWithRetry(() => import('@/pages/admin/StartupExpenseTracker'))
 const LazyFirstCashoutMatch = lazyWithRetry(() => import('@/pages/admin/FirstCashoutMatch'))
-const LazyEmpireApplications = lazyWithRetry(() => import('@/pages/admin/EmpireApplicationsPage'))
 const LazyAdminAdvertisements = lazyWithRetry(() => import('@/pages/admin/AdminAdvertisements'))
 const LazyTrollmersTournament = lazyWithRetry(() => import('@/pages/admin/TrollmersTournament'))
-const LazyZipGovernance = lazyWithRetry(() => import('@/pages/admin/ZipGovernanceDashboard'))
 const LazySellerManagement = lazyWithRetry(() => import('@/pages/admin/SellerManagement'))
 const LazyCourtDockets = lazyWithRetry(() => import('@/pages/admin/CourtDocketsManager'))
 const LazySeasonalGoals = lazyWithRetry(() => import('@/pages/admin/SeasonalGoals'))
@@ -113,13 +108,6 @@ const LazyWeeklyReports = lazyWithRetry(() => import('@/pages/admin/WeeklyReport
 const LazyStreamMonitor = lazyWithRetry(() => import('@/pages/admin/StreamMonitorPage'))
 const LazyNightWatch = lazyWithRetry(() => import('@/pages/admin/NightWatchDashboard'))
 const LazyLiveOfficersTracker = lazyWithRetry(() => import('@/pages/admin/AdminLiveOfficersTracker'))
-
-// Mai Sing Off Judges (named export, not default)
-const LazySingOffJudges = lazyWithRetry(() =>
-  import('@/features/mai-sing-off/pages/SingOffJudgeApplicationsAdmin').then((m) => ({
-    default: m.SingOffJudgeApplicationsAdmin,
-  })),
-)
 
 // ---------------------------------------------------------------------------
 // Route table — maps phone `/admin/*` paths to their web components
@@ -132,7 +120,6 @@ const exactRoutes: Array<[string, PhoneAdminRouteEntry]> = [
   ['/admin/user-forms', { Component: LazyUserFormsTab, title: 'User Forms' }],
   ['/admin/users/forms', { Component: LazyUserFormsTab, title: 'User Forms' }],
   ['/admin/staff-audit', { Component: LazyStaffAudit, title: 'Staff Audit' }],
-  ['/admin/creator-approvals', { Component: LazyCreatorSwitchApprovals, title: 'Creator Approvals' }],
   ['/admin/officer-management', { Component: LazyOfficerManagement, title: 'Officer Management' }],
   ['/admin/verified-users', { Component: LazyVerifiedUsers, title: 'Verified Users' }],
   ['/admin/verification', { Component: LazyVerificationReview, title: 'Verification Review' }],
@@ -210,17 +197,13 @@ const exactRoutes: Array<[string, PhoneAdminRouteEntry]> = [
   ['/admin/marketplace/release-requests', { Component: LazyMarketplaceReleaseRequests, title: 'Release Requests' }],
   ['/admin/troll-town-deeds', { Component: LazyTrollTownDeeds, title: 'Troll Town Deeds' }],
   ['/admin/jail-management', { Component: LazyJailManagement, title: 'Jail Management' }],
-  ['/admin/jail-test', { Component: LazyJailManagement, title: 'Jail Test Simulator' }],
   ['/admin/voting', { Component: LazyVoting, title: 'Voting / Troting' }],
   ['/admin/tromocodes', { Component: LazyTromocodes, title: 'TromoCodes' }],
   ['/admin/crown-redemptions', { Component: LazyCrownRedemptions, title: 'Crown Redemptions' }],
   ['/admin/startup-expense-tracker', { Component: LazyStartupExpenseTracker, title: 'Startup Expense Tracker' }],
   ['/admin/first-cashout-match', { Component: LazyFirstCashoutMatch, title: 'First Cashout Match' }],
-  ['/admin/empire-applications', { Component: LazyEmpireApplications, title: 'Empire Applications' }],
   ['/admin/advertisements', { Component: LazyAdminAdvertisements, title: 'Advertisements' }],
-  ['/admin/mai-singoff-judges', { Component: LazySingOffJudges, title: 'Mai Sing Off Judges' }],
   ['/admin/trollmers-tournament', { Component: LazyTrollmersTournament, title: 'Trollmers Tournament' }],
-  ['/admin/zip-governance', { Component: LazyZipGovernance, title: 'Zip Governance' }],
   ['/admin/seller-management', { Component: LazySellerManagement, title: 'Seller Management' }],
   ['/admin/court-dockets', { Component: LazyCourtDockets, title: 'Court Dockets' }],
   ['/admin/seasonal-goals', { Component: LazySeasonalGoals, title: 'Seasonal Goals' }],

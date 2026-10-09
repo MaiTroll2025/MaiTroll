@@ -1,21 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import {
-  Check,
-  CheckCircle2,
-  Coins,
-  DollarSign,
-  Loader2,
-  Package,
-  Printer,
-  Scan,
-  Search,
-  Send,
-  ShoppingBag,
-  Truck,
-  User,
-  Users,
-  X,
-} from 'lucide-react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Check, CheckCircle2, DollarSign, Loader2, Package, Scan, Search, Send, Truck, Users, X } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -376,7 +360,7 @@ export default function AuctionSales() {
 
       toast.success('Marked as delivered')
       await fetchSales()
-    } catch (error: any) {
+    } catch (_error: any) {
       toast.error('Failed to update status')
     }
   }

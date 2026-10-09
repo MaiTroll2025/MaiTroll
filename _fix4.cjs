@@ -74,20 +74,20 @@ const V = fs.readFileSync(file, 'utf8').split('\n');
 console.log('Written', V.length, 'lines');
 
 // ── JSX tag balance ─────────────────────────────────────────────────────────
-function tagBalance(from, to) {
-  let open=0,close=0;
+function _tagBalance(from, to) {
+  let open=0,_close=0;
   for(let i=from; i<=to; i++){
     const s=V[i]||'';
     // JSX open tags
     open += (s.match(/<[A-Za-z][A-Za-z0-9]*[\s>/]/g)||[]).length;
     // JSX close tags
-    close += (s.match(/<\/[A-Za-z][A-Za-z0-9]*[\s>]/g)||[]).length;
+    _close += (s.match(/<\/[A-Za-z][A-Za-z0-9]*[\s>]/g)||[]).length;
   }
   // Fallback closing div/section manually counted for the key area
-  let extraClose = 0;
+  let _extraClose = 0;
   for(let i=from;i<=to;i++){
     const s=(V[i]||'').trim();
-    if(s.startsWith('</'+'section')||s.startsWith('</'+'div')) extraClose++;
+    if(s.startsWith('</'+'section')||s.startsWith('</'+'div')) _extraClose++;
   }
   console.log('  JSX zone open={},close={},extraClose={}'.replace('{}',open).replace('{}',(V.slice(from,to+1).join('').match(/<\/[A-Za-z0-9]+>/g)||[]).length||0));
   // This is hard to measure perfectly; just check open/close section+div directly

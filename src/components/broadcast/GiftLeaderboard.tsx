@@ -1,7 +1,7 @@
 // 🏆 Gift Leaderboard - Real-time top gifters display
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Gem, Medal } from 'lucide-react';
+import { Crown, Gem } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface GifterEntry {

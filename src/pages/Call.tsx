@@ -51,7 +51,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
   const [livekitToken, setLivekitToken] = useState<string | null>(null);
   const [isEnding, setIsEnding] = useState(false);
   const [isStartingCall, setIsStartingCall] = useState(false);
-  const [remoteParticipant, setRemoteParticipant] = useState<RemoteParticipant | null>(null);
+  const [_remoteParticipant, setRemoteParticipant] = useState<RemoteParticipant | null>(null);
   const dialCtxRef = useRef<AudioContext | null>(null);
   const dialOscRef = useRef<OscillatorNode | null>(null);
   const dialGainRef = useRef<GainNode | null>(null);
@@ -157,7 +157,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
         if (soundCatalog?.asset_url) {
           setDialToneSrc(soundCatalog.asset_url);
         }
-      } catch (error) {
+      } catch (_error) {
         // ignore
       }
     };
@@ -171,7 +171,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
       try {
         dialAudioRef.current.pause();
         dialAudioRef.current.currentTime = 0;
-      } catch (error) {
+      } catch (_error) {
         // ignore
       }
     }
@@ -179,7 +179,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
       try {
         dialOscRef.current.stop();
         dialOscRef.current.disconnect();
-      } catch (error) {
+      } catch (_error) {
         // ignore
       }
       dialOscRef.current = null;
@@ -187,7 +187,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
     if (dialCtxRef.current) {
       try {
         dialCtxRef.current.close();
-      } catch (error) {
+      } catch (_error) {
         // ignore
       }
       dialCtxRef.current = null;
@@ -208,7 +208,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
   }, []);
 
   // Handle track subscribed
-  const handleTrackSubscribed = useCallback((track: any, participant: RemoteParticipant) => {
+  const handleTrackSubscribed = useCallback((track: any, _publication: unknown, _participant: RemoteParticipant) => {
     console.log('[Call] Track subscribed:', track.kind);
     
     if (track.kind === 'video' && remoteVideoRef.current) {
@@ -266,10 +266,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
         }
 
         // Connect to room
-        await room.connect(url, livekitToken, {
-          name: roomId,
-          identity: user.id
-        });
+        await room.connect(url, livekitToken);
 
         // Check for existing participants
         const participantCollection = (room as any).participants ?? (room as any).remoteParticipants;
@@ -291,7 +288,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
             dialAudioRef.current.loop = true;
             await dialAudioRef.current.play();
           }
-        } catch (error) {
+        } catch (_error) {
           // fallback to oscillator
           try {
             const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -306,7 +303,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
             dialCtxRef.current = ctx;
             dialOscRef.current = osc;
             dialGainRef.current = gain;
-          } catch (fallbackError) {
+          } catch (_fallbackError) {
             // ignore
           }
         }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useTabVisibility } from '../components/TabSwitchHandler';
+import { useTabVisibility } from '@/components/TabSwitchHandler';
 
 interface UseLazyOperationOptions {
   /** Whether to run the operation immediately when becoming visible */
@@ -24,7 +24,7 @@ export function useLazyOperation<T extends any[]>(
     skipWhenHidden = true
   } = options;
 
-  const { isVisible, wasHidden } = useTabVisibility();
+  const { isVisible, wasHidden: _wasHidden } = useTabVisibility();
   const timeoutRef = useRef<NodeJS.Timeout>();
   const pendingArgsRef = useRef<T | null>(null);
 

@@ -187,6 +187,9 @@ const TAB_NOTIFICATION_TYPES: Record<keyof NavBadges, string[]> = {
 
   // Alerts tab: total unread notifications (same as home)
   alerts: [], // special: counts everything
+
+  // Careers tab: career application updates
+  careers: [],
 };
 
 export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; dismiss: (tab: keyof NavBadges) => void } {
@@ -328,7 +331,7 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
       setBadgeCounts({
         home: 0, chats: 0, coins: 0, auctions: 0, court: 0,
         neighborhood: 0, wallet: 0, family: 0,
-        shop: 0, inventory: 0, alerts: 0,
+        shop: 0, inventory: 0, alerts: 0, careers: 0,
       });
       return;
     }

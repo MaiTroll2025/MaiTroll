@@ -2,16 +2,8 @@
 // Renders 3D models attached to tracking points on the video stream
 
 import * as THREE from 'three';
-import type {
-  ARGiftEffect,
-  ARGiftInstance,
-  TrackingData,
-  TrackingPointTransform,
-  FaceLandmarks,
-  BodyLandmarks,
-} from '../../types/arGifts';
+import type { ARGiftEffect, ARGiftInstance, FaceLandmarks, BodyLandmarks } from '../../types/arGifts';
 import { computeTrackingPointTransform } from '../../types/arGifts';
-import { f } from 'node_modules/obs-websocket-js/dist/base-BBN0PZdy';
 
 const loadedModels = new Map<string, THREE.Object3D>();
 const loadingModels = new Map<string, Promise<THREE.Object3D>>();

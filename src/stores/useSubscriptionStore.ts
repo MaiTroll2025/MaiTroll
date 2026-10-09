@@ -143,7 +143,7 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
         .single();
 
       return data || null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

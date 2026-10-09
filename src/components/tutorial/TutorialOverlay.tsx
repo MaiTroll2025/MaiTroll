@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, ArrowLeft, SkipForward } from 'lucide-react';
 
@@ -20,7 +20,7 @@ interface TutorialOverlayProps {
   isTouchDevice: boolean;
 }
 
-function isTouchDeviceDetector(): boolean {
+function _isTouchDeviceDetector(): boolean {
   if (typeof window === 'undefined') return false;
   return (
     window.matchMedia('(pointer: coarse)').matches ||

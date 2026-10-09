@@ -1,9 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  ArrowLeft, Box, Camera, ChevronRight, Coins, Package, Printer, RefreshCw, Scan,
-  Settings as SettingsIcon, Smartphone, Truck, Wifi, WifiOff, Zap,
-} from 'lucide-react'
+import { ArrowLeft, Box, Camera, ChevronRight, Coins, Package, Printer, RefreshCw, Scan, Settings as SettingsIcon, Smartphone, Truck, Wifi, Zap } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '../../lib/supabase'
@@ -659,7 +656,7 @@ function ScannerPanel({ show, lots, onSelectLot, onStartLot, auctioneerId }: { s
     async (code: string) => {
       if (!auctioneerId) return
       setTestScanStatus('Looking up item…')
-      const lot = await selection.resolve(code)
+      const _lot = await selection.resolve(code)
       const matched = selection.selected
       try {
         await supabase

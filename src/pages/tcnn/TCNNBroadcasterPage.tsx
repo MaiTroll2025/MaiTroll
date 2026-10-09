@@ -64,7 +64,7 @@ export default function TCNNBroadcasterPage() {
   const navigate = useNavigate();
   const { streamId: paramStreamId } = useParams();
   const { user, profile } = useAuthStore();
-  const { isNewsCaster, isChiefNewsCaster, hasAnyRole } = useTCNNRoles(user?.id);
+  const { isNewsCaster, isChiefNewsCaster, hasAnyRole: _hasAnyRole } = useTCNNRoles(user?.id);
 
   const studioRef = useRef<TCNNVirtualStudioHandle>(null);
   const roomRef = useRef<Room | null>(null);

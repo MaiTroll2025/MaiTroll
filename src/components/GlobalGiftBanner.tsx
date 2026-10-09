@@ -5,7 +5,7 @@ import { getGlowingTextStyle } from '../lib/perkEffects';
 import { useAnimationStore, type GiftType } from '../lib/animationManager';
 
 // Map gift names to gift types
-const mapGiftNameToType = (giftName: string): GiftType => {
+const _mapGiftNameToType = (giftName: string): GiftType => {
   const name = giftName.toLowerCase();
   if (name.includes('rose')) return 'rose';
   if (name.includes('heart')) return 'heart';
@@ -40,8 +40,8 @@ const DISPLAY_DURATION = 5000;
 export default function GlobalGiftBanner() {
   const [currentEvent, setCurrentEvent] = useState<GiftEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const playGiftAnimation = useAnimationStore((state) => state.playGiftAnimation);
-  const playCoinExplosion = useAnimationStore((state) => state.playCoinExplosion);
+  const _playGiftAnimation = useAnimationStore((state) => state.playGiftAnimation);
+  const _playCoinExplosion = useAnimationStore((state) => state.playCoinExplosion);
 
   useEffect(() => {
     // Subscribe to global-gifts broadcast channel

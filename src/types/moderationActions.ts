@@ -3,8 +3,6 @@
 // ============================================================================
 
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../lib/store';
-import type { Session } from '@supabase/supabase-js';
 
 /**
  * The ONLY roles allowed to use Mod Actions.

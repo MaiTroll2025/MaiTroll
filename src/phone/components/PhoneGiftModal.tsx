@@ -162,11 +162,11 @@ export default function PhoneGiftModal({
   onClose,
   recipientId,
   streamId,
-  broadcasterId = recipientId,
-  activeUserIds = [],
-  userProfiles = {},
+  broadcasterId: _broadcasterId = recipientId,
+  activeUserIds: _activeUserIds = [],
+  userProfiles: _userProfiles = {},
   onGiftSent,
-  sharedChannel,
+  sharedChannel: _sharedChannel,
 }: PhoneGiftModalProps) {
   const { user, profile } = useAuthStore()
   const { sendGift, isSending } = useGiftSystem()

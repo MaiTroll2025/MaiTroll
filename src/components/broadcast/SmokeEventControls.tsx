@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Users, Gift, Music, Trophy, DollarSign, X, Play, Square } from 'lucide-react';
+import { Flame, Users, Music, Trophy, DollarSign, X, Play, Square } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { MAX_GUEST_SEATS } from '@/config/broadcastCategories';
 
@@ -24,7 +24,7 @@ export default function SmokeEventControls({
   onEnd,
   onStartDrop,
   onBuyRaffle,
-  onDrawRaffle,
+  onDrawRaffle: _onDrawRaffle,
   onRequestSong,
   isAdmin,
 }: SmokeEventControlsProps) {

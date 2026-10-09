@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Bookmark, Play, Eye, Heart, Gift } from 'lucide-react'
+import { ArrowLeft, Bookmark, Play, Eye, Gift } from 'lucide-react';
 import { fetchSavedTreelz } from '@/services/treelzService'
 import { useAuthStore } from '@/lib/store'
 import type { TreelzPost } from '@/types/treelz'

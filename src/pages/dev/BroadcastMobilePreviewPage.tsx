@@ -4,7 +4,7 @@ import { ArrowLeft, Smartphone } from 'lucide-react';
 import { Stream } from '../../types/broadcast';
 
 // Mock data for preview
-const mockStream: Stream = {
+const _mockStream: Stream = {
   id: 'preview-stream',
   user_id: 'preview-user',
   title: 'Mobile Layout Preview',
@@ -169,7 +169,7 @@ const BroadcastMobilePreviewPage: React.FC = () => {
         <div className="bg-blue-900/30 border border-blue-500/30 rounded-lg p-4 mb-6">
           <h2 className="text-lg font-bold text-blue-400 mb-3">Select Layout Version</h2>
           <div className="grid grid-cols-5 gap-2">
-            {Object.entries(layoutVersions).map(([version, config]) => (
+            {Object.entries(layoutVersions).map(([version, _config]) => (
               <button
                 key={version}
                 onClick={() => setSelectedVersion(Number(version))}

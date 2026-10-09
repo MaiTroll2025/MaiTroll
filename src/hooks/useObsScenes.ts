@@ -44,7 +44,7 @@ export function useObsScenes(options: UseObsScenesOptions = {}): UseObsScenesRet
         isActive: s.sceneName === obsScenes[0]?.sceneName,
       }))
       setScenes(mapped)
-      setCurrentScene(obsScenes[0]?.sceneName ?? null)
+      setCurrentScene((obsScenes[0]?.sceneName as string) ?? null)
     } catch (err: any) {
       console.warn('[useObsScenes] Failed to fetch scenes:', err?.message)
     }
@@ -78,7 +78,7 @@ export function useObsScenes(options: UseObsScenesOptions = {}): UseObsScenesRet
     setIsConnecting(true)
     setError(null)
 
-    obs.on('CurrentSceneChanged', (data: any) => {
+    obs.on('CurrentSceneChanged' as any, (data: any) => {
       const newName = data.sceneName as string
       setCurrentScene(newName)
       setScenes((prev) =>

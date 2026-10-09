@@ -267,7 +267,7 @@ function PerksStoreContent({ profile, user }: { profile: any, user: any }) {
                           if (!user) { toast.error('Sign in to purchase'); return }
                           setPurchasingTheme(t.id)
                           try {
-                            const { data: rpcData, error: rpcError } = await supabase.rpc('purchase_broadcast_theme', { p_theme_id: t.id, p_set_active: true })
+                            const { data: _rpcData, error: rpcError } = await supabase.rpc('purchase_broadcast_theme', { p_theme_id: t.id, p_set_active: true })
                             if (rpcError) throw rpcError
                             toast.success('Purchased and activated')
                             // refresh profile and themes

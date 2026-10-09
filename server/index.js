@@ -169,7 +169,7 @@ app.get('/api/admin/capacity', (req, res) => {
 });
 
 app.post('/api/admin/capacity/subscribe', (req, res) => {
-  const id = Date.now().toString();
+  const _id = Date.now().toString();
   const listener = () => {
     res.write(`data: ${JSON.stringify({ activeConnections, maxConnections: MAX_CONCURRENT_CONNECTIONS, remainingConnections: Math.max(0, MAX_CONCURRENT_CONNECTIONS - activeConnections) })}\n\n`);
   };
@@ -346,7 +346,7 @@ app.get(/^\/post\/([a-zA-Z0-9-]+)$/, async (req, res, next) => {
   }
 });
 
-app.get('/wall/:postId', (req, res, next) => {
+app.get('/wall/:postId', (req, res, _next) => {
   const postId = req.params.postId;
   const userAgent = req.headers['user-agent'] || '';
   const isBot = /facebookexternalhit|twitterbot|bingbot|googlebot|slackbot|discordbot|telegrambot|whatsapp|metaexternalhit|linkedinbot|applebot|duckduckbot|baiduspider|yandexbot/i.test(userAgent);

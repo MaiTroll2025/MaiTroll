@@ -1,79 +1,47 @@
-import React, { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import React from 'react'
 import { Loader2 } from 'lucide-react'
-
-type FinanceSummary = {
-  total_coins_in_circulation: number
-  total_gift_coins_spent: number
-  total_payouts_processed_usd: number
-  total_pending_payouts_usd: number
-  total_creator_earned_coins: number
-  top_earning_broadcaster: string | null
-  total_revenue_usd: number
-}
+import { useAdminFinanceRealtime } from '../../hooks/useAdminFinanceRealtime'
 
 export default function AdminFinanceDashboard() {
-  const [summary, setSummary] = useState<FinanceSummary | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    financeSummary: summary,
+    isLoading: loading,
+    summaryError: error,
+    refetchSummary,
+  } = useAdminFinanceRealtime()
+  const errorMessage = error instanceof Error ? error.message : null
 
   const formatNumber = (value?: number | null) => (value ?? 0).toLocaleString()
   const formatCurrency = (value?: number | null) => `$${formatNumber(value)}`
 
-  const loadSummary = React.useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const { data, error } = await supabase.from('economy_summary').select('*').single()
-      if (error) throw error
-      setSummary(data)
-    } catch (err: unknown) {
-      console.error('Failed to load finance summary:', err)
-      setError(err instanceof Error ? err.message : 'Unable to load finance data')
-      setSummary(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadSummary()
-
-    const interval = window.setInterval(loadSummary, 60_000)
-
-    return () => {
-      window.clearInterval(interval)
-    }
-  }, [loadSummary])
-
   const summaryItems = [
     {
-      label: 'Total Revenue',
-      value: formatCurrency(summary?.total_revenue_usd),
+      label: 'Coin Sales Revenue',
+      value: formatCurrency(summary?.economy.coinSalesRevenue),
       color: 'text-green-400',
       bg: 'bg-green-500/10'
     },
     {
       label: 'Coins in Circulation',
-      value: summary ? summary.total_coins_in_circulation : 0,
+      value: summary ? summary.economy.totalCoinsInCirculation : 0,
       color: 'text-yellow-400',
       bg: 'bg-yellow-500/10'
     },
     {
-      label: 'Gift Coins Spent',
-      value: summary ? summary.total_gift_coins_spent : 0,
+      label: 'Gift Coins',
+      value: summary ? summary.economy.giftCoins : 0,
       color: 'text-pink-400',
       bg: 'bg-pink-500/10'
     },
     {
-      label: 'Processed Payouts',
-      value: formatCurrency(summary?.total_payouts_processed_usd),
+      label: 'Payouts',
+      value: formatCurrency(summary?.economy.totalPayouts),
       color: 'text-green-400',
       bg: 'bg-green-500/10'
     },
     {
-      label: 'Pending Payouts',
-      value: formatCurrency(summary?.total_pending_payouts_usd),
+      label: 'Platform Profit',
+      value: formatCurrency(summary?.economy.platformProfit),
       color: 'text-orange-400',
       bg: 'bg-orange-500/10'
     },
@@ -86,7 +54,7 @@ export default function AdminFinanceDashboard() {
           <p className="text-sm text-gray-400 uppercase tracking-[0.4em]">Finance Dashboard</p>
           <h1 className="text-3xl font-bold">Platform Finance Overview</h1>
           <p className="text-sm text-gray-400">
-            High level finance metrics pulled from the economy summary view.
+            Finance metrics from the current admin finance summary.
           </p>
         </header>
 
@@ -96,10 +64,10 @@ export default function AdminFinanceDashboard() {
               <Loader2 className="w-5 h-5 animate-spin" />
               Loading finance metrics...
             </div>
-          ) : error ? (
+          ) : errorMessage ? (
             <div className="text-red-400">
-              {error}
-              <button onClick={loadSummary} className="ml-4 text-xs uppercase tracking-wider text-gray-300">
+              {errorMessage}
+              <button onClick={() => void refetchSummary()} className="ml-4 text-xs uppercase tracking-wider text-gray-300">
                 Retry
               </button>
             </div>
@@ -125,23 +93,18 @@ export default function AdminFinanceDashboard() {
                 <div className="border border-[#2C2C2C] rounded-xl p-5 bg-[#0D0D16]">
                   <h2 className="text-lg font-semibold text-white mb-2">Creator Economy</h2>
                   <p className="text-sm text-gray-400 mb-4">
-                    {formatNumber(summary?.total_creator_earned_coins)} coins earned by creators through gifts.
+                    {formatNumber(summary?.economy.giftCoins)} gift coins.
                   </p>
-                  <div className="text-xs uppercase tracking-[0.4em] text-gray-400">Top Broadcaster</div>
-                  <p className="text-xl font-semibold">
-                    {summary?.top_earning_broadcaster || 'N/A'}
-                  </p>
+                  <div className="text-xs uppercase tracking-[0.4em] text-gray-400">Creator earned coins</div>
+                  <p className="text-xl font-semibold">{formatNumber(summary?.economy.earnedCoins)}</p>
                 </div>
                 <div className="border border-[#2C2C2C] rounded-xl p-5 bg-[#0D0D16]">
-                  <h2 className="text-lg font-semibold text-white mb-2">Pending Obligations</h2>
+                  <h2 className="text-lg font-semibold text-white mb-2">Pending Payout Requests</h2>
                   <p className="text-sm text-gray-400 mb-4">
-                    Track funds waiting to be paid out to creators.
+                    Number of payout requests awaiting processing.
                   </p>
                   <p className="text-xl font-semibold text-orange-300">
-                    {formatCurrency(summary?.total_pending_payouts_usd)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {summary ? 'Based on live payout requests' : 'Loading data'}
+                    {formatNumber(summary?.users.pendingPayouts)}
                   </p>
                 </div>
               </div>

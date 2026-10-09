@@ -11,7 +11,7 @@ interface BattleEventBannerProps {
 }
 
 export default function BattleEventBanner({ battleId, onEventStart }: BattleEventBannerProps) {
-  const { profile } = useAuthStore();
+  const { profile: _profile } = useAuthStore();
   const [activeEvent, setActiveEvent] = useState<BattleRandomEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);

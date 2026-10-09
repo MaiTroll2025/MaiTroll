@@ -15,7 +15,7 @@ interface PageVisibilityProviderProps {
 }
 
 export function PageVisibilityProvider({ children }: PageVisibilityProviderProps) {
-  const { isVisible, visibilityState } = usePageVisibility();
+  const { isVisible, visibilityState: _visibilityState } = usePageVisibility();
   const [wasHidden, setWasHidden] = useState(false);
   const [lastVisibleTime, setLastVisibleTime] = useState(Date.now());
   const [timeSinceLastVisible, setTimeSinceLastVisible] = useState(0);

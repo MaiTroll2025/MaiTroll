@@ -13,7 +13,6 @@ export type BugSource =
   | 'rls'
   | 'schema_cache'
   | 'broadcast'
-  | 'trollopoly'
   | 'gifts'
   | 'trollcourt'
   | 'insurance'
@@ -346,9 +345,6 @@ export async function reportSupabaseError(
   } else if (message.includes('broadcast')) {
     source = 'broadcast';
     severity = context.severity || 'medium';
-  } else if (message.includes('trollopoly')) {
-    source = 'trollopoly';
-    severity = context.severity || 'medium';
   } else if (message.includes('gift')) {
     source = 'gifts';
     severity = context.severity || 'low';
@@ -525,7 +521,7 @@ export async function safeJsonFetch<T>(
     let data: T;
     try {
       data = JSON.parse(rawText) as T;
-    } catch (parseError) {
+    } catch (_parseError) {
       const parseErrMsg = `Invalid JSON response: ${rawText.substring(0, 200)}`;
       await reportBug(new Error(parseErrMsg), {
         ...context,
@@ -561,7 +557,7 @@ export async function logEdgeFunctionError(
 ): Promise<void> {
   try {
     const normalized = normalizeError(error);
-    const { data, error: logError } = await supabase.rpc('log_app_bug_report', {
+    const { data: _data, error: logError } = await supabase.rpc('log_app_bug_report', {
       payload: {
         source: 'edge_function',
         severity: 'high',

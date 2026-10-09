@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useAdminAgencyMembers } from '../../hooks/useAdminAgency';
-import { TIER_CONFIG } from '../../types/agency';
-import type { AgencyMemberRole } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { useAdminAgencyMembers } from '@/hooks/useAdminAgency';
+import { TIER_CONFIG } from '@/types/agency';
+import type { AgencyMemberRole } from '@/types/agency';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Users, Shield, Loader2, ChevronDown, UserX, X, Crown, Award, Star, Calendar, Activity } from 'lucide-react';
+import { Users, Shield, Loader2, UserX, X, Crown, Award, Star } from 'lucide-react';
 
 interface MemberWithProfile {
   id: string;
@@ -48,7 +47,7 @@ function MemberDetailPanel({
     try {
       await onUpdateRole(member.id, selectedRole);
       toast.success(`Role updated to ${selectedRole}`);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to update role');
     } finally {
       setSaving(false);
@@ -62,7 +61,7 @@ function MemberDetailPanel({
       await onDeactivate(member.id);
       toast.success('Member deactivated');
       onClose();
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to deactivate member');
     } finally {
       setDeactivating(false);
@@ -175,7 +174,7 @@ export default function AgencyMembersPanel() {
     try {
       await updateRole(memberId, role);
       toast.success(`Role updated to ${role}`);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to update role');
     } finally {
       setRoleUpdatingId(null);
@@ -188,14 +187,14 @@ export default function AgencyMembersPanel() {
     try {
       await deactivate(memberId);
       toast.success('Member deactivated');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to deactivate member');
     } finally {
       setDeactivatingId(null);
     }
   };
 
-  const getRoleIcon = (role: AgencyMemberRole) => {
+  const _getRoleIcon = (role: AgencyMemberRole) => {
     switch (role) {
       case 'creator': return <Crown className="w-3.5 h-3.5" />;
       case 'leader': return <Star className="w-3.5 h-3.5" />;

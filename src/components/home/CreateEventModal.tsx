@@ -70,7 +70,7 @@ export default function CreateEventModal({ isOpen, onClose, onCreated, initialDa
     event_color: '#8B5CF6',
     max_participants: '',
     visibility: 'public' as const,
-    access_level: 'everyone' as const,
+    access_level: 'everyone' as string,
     min_level: 1,
     rules: '',
     location_type: 'virtual' as const,
@@ -89,7 +89,7 @@ export default function CreateEventModal({ isOpen, onClose, onCreated, initialDa
     if (field === 'category_slug') {
       const cat = EVENT_CATEGORIES.find(c => c.slug === value);
       if (cat) {
-        setFormData(prev => ({ ...prev, [field]: value, event_color: cat.color }));
+        setFormData(prev => ({ ...prev, [field]: value, event_color: cat.color }) as typeof formData);
       }
     }
   };
@@ -109,7 +109,7 @@ export default function CreateEventModal({ isOpen, onClose, onCreated, initialDa
         .eq('id', user.id)
         .maybeSingle();
 
-      const { data, error } = await supabase.rpc('create_event', {
+      const { data: _data, error } = await supabase.rpc('create_event', {
         p_title: formData.title,
         p_description: formData.description,
         p_category_slug: formData.category_slug,

@@ -10,7 +10,7 @@
 const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.maitroll.com';
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-preview.png`;
 
-function escapeJsonLd(str) {
+function _escapeJsonLd(str) {
   return String(str || '')
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')

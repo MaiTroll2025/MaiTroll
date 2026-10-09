@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
 import { AgencyCard } from './components/AgencyCard';
 import { Loader } from '../../components/ui/loader';
 import { EmptyState } from '../../components/ui/empty-state';

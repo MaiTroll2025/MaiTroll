@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import SEOLayout, { Breadcrumb, SEOContentSection, CTASection } from './SEOLayout'
-import { Radio, Play, Users, DollarSign, Gift, MessageCircle, Eye, Mic, Camera, Monitor, Smartphone, TrendingUp, Zap, Shield, Star, ArrowRight, Wifi, Clock, ThumbsUp, Share2 } from 'lucide-react'
+import SEOLayout, { Breadcrumb, SEOContentSection, CTASection } from '@/pages/seo/SEOLayout'
+import { Radio, Play, Users, DollarSign, Gift, MessageCircle, Eye, Mic, Monitor, TrendingUp, Zap, Shield, Star, Wifi, Clock, ThumbsUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 
 const features = [

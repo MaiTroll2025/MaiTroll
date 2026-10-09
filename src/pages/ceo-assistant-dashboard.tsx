@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
-import { LayoutDashboard, Activity, AlertTriangle, BriefcaseBusiness, FileText, List, ShieldAlert, Users, ArrowRight, Coins, ChevronDown, ChevronUp, CheckCircle, Clock } from 'lucide-react'
-import { requireRole } from '@/lib/auth'
+import { LayoutDashboard, Activity, AlertTriangle, BriefcaseBusiness, FileText, List, ShieldAlert, Users, ArrowRight, Coins, ChevronDown, ChevronUp } from 'lucide-react';
 import ExecutiveReportsList from '@/pages/admin/components/shared/ExecutiveReportsList'
 
 type DashboardSection = 'overview' | 'staff_reports' | 'user_reports' | 'moderation_actions' | 'applications' | 'audit_logs' | 'payout_review'

@@ -27,9 +27,9 @@ async function generateStateWithholdingPdf(data: any, signatureName: string): Pr
       ['Exempt from State Withholding', data.exempt ? 'Yes' : 'No'],
       ['Employee Signature', signatureName],
       ['Date', date],
-    ]
+    ];
 
-    doc.autoTable({
+    (doc as any).autoTable({
       startY: 110,
       head: [['Field', 'Value']],
       body: rows.map((r) => [r[0], r[1] || '—']),

@@ -26,7 +26,7 @@ export default function MusicTab() {
   const [showUploadForm, setShowUploadForm] = useState(false)
   const [showContract, setShowContract] = useState(false)
   const [contractAccepted, setContractAccepted] = useState(false)
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
+  const [_currentTrack, setCurrentTrack] = useState<Track | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [tipAmount, setTipAmount] = useState(10)
   const [tippingTrackId, setTippingTrackId] = useState<string | null>(null)

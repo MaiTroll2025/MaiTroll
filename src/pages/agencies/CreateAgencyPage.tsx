@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/button';
 
 export default function CreateAgencyPage() {
-  const { user, profile } = useAuth();
+  const { user, profile: _profile } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');

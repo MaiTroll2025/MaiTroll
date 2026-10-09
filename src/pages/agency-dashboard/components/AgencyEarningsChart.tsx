@@ -14,7 +14,7 @@ type AgencyEarningsChartProps = {
 };
 
 export const AgencyEarningsChart: React.FC<AgencyEarningsChartProps> = ({
-  agencyId,
+  agencyId: _agencyId,
 }) => {
   const data = [
     { month: 'Jan', earnings: 0 },

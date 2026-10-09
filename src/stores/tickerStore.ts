@@ -1,14 +1,5 @@
 import { create } from 'zustand';
-import {
-  TickerMessage,
-  TickerSettings,
-  TickerCategory,
-  TickerMode,
-  TickerPosition,
-  TickerSpeed,
-  TickerTheme,
-  DEFAULT_TICKER_SETTINGS,
-} from '../types/ticker';
+import { TickerMessage, TickerSettings, DEFAULT_TICKER_SETTINGS } from '../types/ticker';
 
 interface TickerState {
   messages: TickerMessage[];
@@ -34,7 +25,7 @@ interface TickerState {
   setScreenshareActive: (active: boolean) => void;
 }
 
-export const useTickerStore = create<TickerState>((set, get) => ({
+export const useTickerStore = create<TickerState>((set, _get) => ({
   messages: [],
   settings: { ...DEFAULT_TICKER_SETTINGS, stream_id: '' },
   priorityMessage: null,
@@ -58,7 +49,7 @@ export const useTickerStore = create<TickerState>((set, get) => ({
   clearMessages: () => set({ messages: [] }),
 
   setPriorityMessage: (msg) =>
-    set((state) => {
+    set((_state) => {
       if (msg) {
         return { priorityMessage: msg, isPaused: true };
       }

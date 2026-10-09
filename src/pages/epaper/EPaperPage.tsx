@@ -119,7 +119,7 @@ function EventsSection({ events }: { events: UniverseNewspaperEvent[] }) {
 
       <div className="divide-y divide-white/5">
         {events.slice(0, 8).map((event) => {
-          const meta = EVENT_META[event.event_type] ?? EVENT_META.show;
+          const _meta = EVENT_META[event.event_type] ?? EVENT_META.show;
           const date = event.occurs_at ? new Date(event.occurs_at) : null;
           const prize =
             event.meta?.grand_prize_coins != null

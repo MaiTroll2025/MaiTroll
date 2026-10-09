@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { ShopOrder, PurchaseRequest, PurchaseResult, ShipOrderRequest, ShippingCarrier } from '../types/liveCommerce';
+import { ShopOrder, PurchaseRequest, PurchaseResult, ShipOrderRequest } from '../types/liveCommerce';
 
 interface UseLiveCommerceOrdersOptions {
   userId?: string;

@@ -4,7 +4,7 @@ import { WallPost } from '@/types/trollWall'
 
 const PAGE_SIZE = 20
 
-export function useWallPosts(limit = 20) {
+export function useWallPosts(_limit = 20) {
   const [posts, setPosts] = useState<WallPost[]>([])
   const [loading, setLoading] = useState(true)
   const [hasMore, setHasMore] = useState(true)

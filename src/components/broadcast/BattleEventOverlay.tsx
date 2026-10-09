@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, Zap, Shield, Star, Crown, Lock } from 'lucide-react';
+import { X, Clock, Zap, Shield, Star, Crown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { BattleRandomEvent, BATTLE_EVENT_CONFIGS, BattleEventType } from '@/types/battle';
@@ -20,7 +20,7 @@ const EVENT_ICONS: Record<BattleEventType, React.ReactNode> = {
 };
 
 export default function BattleEventOverlay({ battleId, onClose }: BattleEventOverlayProps) {
-  const { profile } = useAuthStore();
+  const { profile: _profile } = useAuthStore();
   const [event, setEvent] = useState<BattleRandomEvent | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isVisible, setIsVisible] = useState(false);

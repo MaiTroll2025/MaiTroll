@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+declare const __APP_VERSION__: string
+declare const __BUILD_TIME__: string
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://gejtbllazzighxwxudyu.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -575,7 +578,7 @@ export enum UserRole {
   TROLL_CITY_TREASURER = 'troll_city_treasurer',
   TEMP_ADMIN = 'temp_admin',
   EXECUTIVE_SECRETARY = 'executive_secretary',
-  MARKETING_READONLY = 'marketing_readonly',
+  MARKETING_AGENT = 'marketing_agent',
   SUPERADMIN = 'superadmin',
   CEO = 'ceo',
   PASTOR = 'pastor',
@@ -814,9 +817,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.CREATE_CONTENT,
     Permission.MONETIZE
   ],
-  [UserRole.MARKETING_READONLY]: [
-    // Marketing read-only: Can only view data, no write permissions
-    Permission.VIEW_ONLY
+  [UserRole.MARKETING_AGENT]: [
+    Permission.CREATE_CONTENT
   ],
   [UserRole.HR_MANAGER]: [
     Permission.MANAGE_USERS,
@@ -1005,9 +1007,9 @@ export const hasRole = (
 }
 
 // Check if user is marketing read-only (external agency access)
-export const isMarketingReadonly = (profile: UserProfile | null): boolean => {
+export const isMarketingAgent = (profile: UserProfile | null): boolean => {
   if (!profile) return false
-  return profile.role === UserRole.MARKETING_READONLY
+  return profile.role === UserRole.MARKETING_AGENT || profile.troll_role === UserRole.MARKETING_AGENT
 }
 
 // Check if user can perform write operations
@@ -1016,7 +1018,7 @@ export const canWrite = (profile: UserProfile | null): boolean => {
   // Admin can write
   if (profile.role === UserRole.ADMIN || profile.is_admin) return true
   // Marketing readonly cannot write
-  if (profile.role === UserRole.MARKETING_READONLY) return false
+  if (isMarketingAgent(profile)) return false
   return true
 }
 
@@ -1027,7 +1029,7 @@ export const isAdminOrSecretary = (profile: UserProfile | null): boolean => {
 }
 
 // Role display name formatter - maps internal role values to user-friendly labels
-export const getRoleDisplayName = (role?: string | null, isAdmin?: boolean): string => {
+export const getRoleDisplayName = (role?: string | null, _isAdmin?: boolean): string => {
   if (!role) return 'User'
   
   // Map internal roles to display names
@@ -1050,7 +1052,7 @@ export const getRoleDisplayName = (role?: string | null, isAdmin?: boolean): str
     'troll_city_secretary': 'City Secretary',
     'troll_city_treasurer': 'City Treasurer',
     'empire_partner': 'Empire Partner',
-    'marketing_readonly': 'Marketing Agency',
+    'marketing_agent': 'Marketing Agent',
     'user': 'User'
   }
   

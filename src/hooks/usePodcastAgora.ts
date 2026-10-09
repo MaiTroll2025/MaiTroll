@@ -177,7 +177,8 @@ export function usePodcastAgora({
           channelName: channel,
           userId: uid.toString(),
           role: isHost ? 'publisher' : 'subscriber',
-          podcastId: pId
+          podcastId: pId,
+          roomType: 'podcast',
         }
       })
 
@@ -446,4 +447,3 @@ export function usePodcastAgora({
     setVolume: handleSetVolume,
   }
 }
-

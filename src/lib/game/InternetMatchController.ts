@@ -188,7 +188,7 @@ export class InternetMatchController {
     this.onStateChange(this._gameState);
   }
 
-  private handlePresenceChange(presences: any[], type: 'join' | 'leave') {
+  private handlePresenceChange(_presences: any[], _type: 'join' | 'leave') {
     if (!this._gameState) return;
     this.handlePresenceSync();
   }

@@ -1,27 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useStaffAudit, StaffAuditFilters } from '../../hooks/useStaffAudit';
 import { StaffActionType, StaffActionCategory } from '../../lib/logStaffAction';
-import {
-  Shield,
-  Search,
-  Filter,
-  Download,
-  RefreshCw,
-  ChevronLeft,
-  ChevronRight,
-  AlertTriangle,
-  Eye,
-  Lock,
-  Unlock,
-  Trash2,
-  Plus,
-  CheckCircle,
-  XCircle,
-  Activity,
-  Clock,
-  User,
-  FileText,
-} from 'lucide-react';
+import { Shield, Search, Filter, RefreshCw, ChevronLeft, ChevronRight, AlertTriangle, Lock, Unlock, Trash2, Plus, Activity, Clock, User, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 type TabId = 'audit_log' | 'summary' | 'permissions' | 'gaps';
@@ -39,7 +19,7 @@ const STAFF_ROLES = [
   'ceo_assistant', 'noah_assistant',
   'president', 'vice_president',
   'hr_admin', 'hr_manager', 'agency_hr', 'agency_hr_manager', 'agency_leader',
-  'marketing_readonly', 'empire_partner', 'notary', 'broadofficer',
+  'marketing_agent', 'notary', 'broadofficer',
   'academy_teacher', 'academy_director', 'admissions_officer',
   'temp_city_admin', 'temp_admin', 'moderator',
 ];
@@ -64,7 +44,7 @@ export default function StaffAuditDashboard() {
   const [newPermAccess, setNewPermAccess] = useState<'allow' | 'deny'>('allow');
 
   const {
-    entries, summary, permissions, loading, error,
+    entries, summary, permissions, permissionError, loading, error,
     totalCount, page, pageSize, setPage,
     refresh, refreshSummary, refreshPermissions,
     updatePermission, addPermission, removePermission,
@@ -335,6 +315,11 @@ export default function StaffAuditDashboard() {
       {/* ─── PERMISSIONS TAB ─── */}
       {activeTab === 'permissions' && (
         <div>
+          {permissionError && (
+            <div role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+              Permission matrix unavailable: {permissionError}
+            </div>
+          )}
           {/* Add Permission */}
           <div className="flex items-center gap-3 mb-4 p-4 bg-white/5 rounded-lg">
             <select

@@ -1,9 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Home, Zap, Droplets, Wifi, Trash2, CreditCard, 
-  AlertTriangle, Wrench, Gift, X, Check, Lock
-} from 'lucide-react'
+import { Home, Zap, Droplets, Wifi, Trash2, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { toast } from 'sonner'
@@ -27,7 +24,7 @@ const DEFAULT_FEES = {
 }
 
 export default function HouseFeesModal({ isOpen, onClose, house, onFeesPaid }: HouseFeesModalProps) {
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const { user, profile } = useAuthStore()
   const [paying, setPaying] = useState(false)
   const [selectedFees, setSelectedFees] = useState({

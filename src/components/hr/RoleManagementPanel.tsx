@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { supabase, UserRole } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { RefreshCw, UserCog, AlertTriangle } from 'lucide-react'
+import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 interface ProfileRow {
   id: string
@@ -19,10 +19,10 @@ interface RoleManagementPanelProps {
   currentUserId: string | undefined
 }
 
-export default function RoleManagementPanel({ isHRAdmin, currentUserId }: RoleManagementPanelProps) {
+export default function RoleManagementPanel({ isHRAdmin, currentUserId: _currentUserId }: RoleManagementPanelProps) {
   const [managers, setManagers] = useState<ProfileRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [acting, setActing] = useState(false)
+  const [_acting, _setActing] = useState(false)
 
   const loadManagers = async () => {
     setLoading(true)

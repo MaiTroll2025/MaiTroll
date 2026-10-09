@@ -1,35 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ArrowLeft,
-  Bell,
-  Camera,
-  ChevronLeft,
-  ChevronRight,
-  Coins,
-  Image as ImageIcon,
-  Lock,
-  Plus,
-  Radio,
-  ShieldCheck,
-  Sparkles,
-  Trash2,
-  User,
-  Users,
-  Video,
-  X,
-  RefreshCw,
-  Zap,
-  Eye,
-  Heart,
-  Send,
-  Loader2,
-} from 'lucide-react'
+import { ArrowLeft, Bell, Camera, ChevronRight, Coins, Image as ImageIcon, Lock, Plus, Radio, RotateCcw, ShieldCheck, Sparkles, Trash2, User, Users, Video, X, RefreshCw, Zap, Eye, Heart, Send, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../lib/supabase'
 import { useUserRestrictions } from '@/hooks/useUserRestrictions'
 import { createNotification } from '../../lib/notifications'
 import StoryViewer from '../components/MaiPiksStoryViewer'
+import { PhoneButton } from '../components/PhoneButton'
 import {
   ExpiryCountdown,
   formatRecordClock,
@@ -42,7 +19,7 @@ import {
   type StoryVisibility,
 } from '../components/maiPiksShared'
 
-type PiksMode = 'feed' | 'camera' | 'story'
+type PiksMode = 'feed' | 'camera' | 'story' | 'preview'
 
 /* --------------------------------------------------------------------------
  * Server clock
@@ -161,6 +138,12 @@ interface CurrentUser {
   avatarUrl?: string | null
   screenshotsAllowed: boolean
   trollCoins: number
+  storyVisibility: StoryVisibility
+  storyDurationHours: number
+  storyMonetization: StoryMonetizationMode
+  storyBasePriceCoins: number
+  storySubscriberDiscountMode: 'platform' | 'none'
+  storyPaidAccessDuration: string
 }
 
 export default function PhoneMaiPiks() {
@@ -184,7 +167,7 @@ export default function PhoneMaiPiks() {
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user')
   /* The camera that actually opened, which can differ from the requested one
      when a fallback constraint succeeds. */
-  const [activeFacing, setActiveFacing] = useState<'user' | 'environment'>('user')
+  const [_activeFacing, setActiveFacing] = useState<'user' | 'environment'>('user')
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
   const [uploading, setUploading] = useState(false)
   const [recording, setRecording] = useState(false)
@@ -194,12 +177,19 @@ export default function PhoneMaiPiks() {
   const [deletingStoryId, setDeletingStoryId] = useState<string | null>(null)
   const [storyVisibility, setStoryVisibility] = useState<StoryVisibility>('everyone')
   const [storyDurationHours, setStoryDurationHours] = useState(24)
-  const [customStoryDuration, setCustomStoryDuration] = useState(false)
-  const [storyCaption, setStoryCaption] = useState('')
+  const [_storyCaption, _setStoryCaption] = useState('')
   const [monetizationMode, setMonetizationMode] = useState<StoryMonetizationMode>('free')
   const [basePriceCoins, setBasePriceCoins] = useState(100)
   const [subscriberDiscountMode, setSubscriberDiscountMode] = useState<'platform' | 'none'>('platform')
   const [paidAccessDuration, setPaidAccessDuration] = useState('until_story_expiry')
+
+  /* Preview state - shows after photo/video capture */
+  const [previewMedia, setPreviewMedia] = useState<{ url: string; type: 'photo' | 'video'; path: string; durationMs?: number } | null>(null)
+  const [previewCaption, setPreviewCaption] = useState('')
+  const [previewUploading, setPreviewUploading] = useState(false)
+  const [previewFollowers, setPreviewFollowers] = useState<{ id: string; username: string; avatarUrl?: string | null }[]>([])
+  const [selectedFollowers, setSelectedFollowers] = useState<Set<string>>(new Set())
+  const [showFollowerPicker, setShowFollowerPicker] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const recorderRef = useRef<MediaRecorder | null>(null)
@@ -228,7 +218,7 @@ export default function PhoneMaiPiks() {
 
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('id, username, avatar_url, screenshots_allowed, troll_coins')
+      .select('id, username, avatar_url, screenshots_allowed, troll_coins, maipiks_story_visibility, maipiks_story_duration_hours, maipiks_story_monetization, maipiks_story_base_price_coins, maipiks_story_subscriber_discount_mode, maipiks_story_paid_access_duration')
       .eq('id', authData.user.id)
       .single()
 
@@ -240,6 +230,12 @@ export default function PhoneMaiPiks() {
       avatarUrl: profile.avatar_url,
       screenshotsAllowed: profile.screenshots_allowed ?? true,
       trollCoins: Number(profile.troll_coins ?? 0),
+      storyVisibility: (profile.maipiks_story_visibility as StoryVisibility) ?? 'everyone',
+      storyDurationHours: Number(profile.maipiks_story_duration_hours ?? 24),
+      storyMonetization: (profile.maipiks_story_monetization as StoryMonetizationMode) ?? 'free',
+      storyBasePriceCoins: Number(profile.maipiks_story_base_price_coins ?? 0),
+      storySubscriberDiscountMode: (profile.maipiks_story_subscriber_discount_mode as 'platform' | 'none') ?? 'platform',
+      storyPaidAccessDuration: profile.maipiks_story_paid_access_duration ?? 'until_story_expiry',
     }
   }, [])
 
@@ -514,6 +510,13 @@ export default function PhoneMaiPiks() {
       }
 
       setCurrentUser(user)
+      /* Story defaults come from the user's profile settings now. */
+      setStoryVisibility(user.storyVisibility)
+      setStoryDurationHours(user.storyDurationHours)
+      setMonetizationMode(user.storyMonetization)
+      setBasePriceCoins(user.storyBasePriceCoins)
+      setSubscriberDiscountMode(user.storySubscriberDiscountMode)
+      setPaidAccessDuration(user.storyPaidAccessDuration)
 
       /*
        * Enforce the 24h window before reading, otherwise a viewer still sees
@@ -842,7 +845,7 @@ export default function PhoneMaiPiks() {
   /* Create post / story                                                    */
   /* ---------------------------------------------------------------------- */
 
-  const createPost = async (media: { url: string; path: string }, caption: string, visibility: StoryVisibility) => {
+  const _createPost = async (media: { url: string; path: string }, caption: string, visibility: StoryVisibility) => {
     if (!currentUser) return
 
     const { error } = await supabase.from('maipiks_posts').insert({
@@ -948,6 +951,116 @@ export default function PhoneMaiPiks() {
   }
 
   /* ---------------------------------------------------------------------- */
+  /* Preview — upload to story or send to followers                         */
+  /* ---------------------------------------------------------------------- */
+
+  const handlePreviewUploadToStory = async () => {
+    if (!previewMedia || !currentUser) return
+
+    setPreviewUploading(true)
+
+    const ok = await addToStory(
+      { url: previewMedia.url, path: previewMedia.path },
+      previewMedia.type,
+      storyVisibility,
+      previewMedia.durationMs ?? undefined,
+      previewCaption
+    )
+
+    setPreviewUploading(false)
+
+    if (ok) {
+      setPreviewMedia(null)
+      setMode('story')
+      toast.success('Added to your story!')
+    }
+  }
+
+  const loadFollowers = async () => {
+    if (!currentUser) return
+
+    try {
+      const { data: follows } = await supabase
+        .from('user_follows')
+        .select('following_id')
+        .eq('follower_id', currentUser.id)
+
+      if (!follows || follows.length === 0) {
+        setPreviewFollowers([])
+        return
+      }
+
+      const followingIds = follows.map(f => f.following_id)
+
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('id, username, avatar_url')
+        .in('id', followingIds)
+
+      if (profiles) {
+        setPreviewFollowers(profiles.map(p => ({
+          id: p.id,
+          username: p.username,
+          avatarUrl: p.avatar_url
+        })))
+      }
+    } catch (err) {
+      console.error('[MAIPiks] Failed to load followers:', err)
+      setPreviewFollowers([])
+    }
+  }
+
+  const handleSendToFollowers = async () => {
+    if (!previewMedia || !currentUser || selectedFollowers.size === 0) return
+
+    setPreviewUploading(true)
+
+    try {
+      /* First add to story */
+      const ok = await addToStory(
+        { url: previewMedia.url, path: previewMedia.path },
+        previewMedia.type,
+        storyVisibility,
+        previewMedia.durationMs ?? undefined,
+        previewCaption
+      )
+
+      if (!ok) {
+        setPreviewUploading(false)
+        return
+      }
+
+      /* Then send DM to selected followers */
+      for (const followerId of selectedFollowers) {
+        try {
+          await supabase.rpc('send_direct_message', {
+            p_recipient_id: followerId,
+            p_content: `@${currentUser.username} sent you a MAI Piks: ${previewCaption || 'New story!'}`,
+            p_metadata: {
+              type: 'maipiks_share',
+              story_preview_url: previewMedia.url,
+              sender_id: currentUser.id
+            }
+          })
+        } catch (dmErr) {
+          console.error('[MAIPiks] Failed to send DM to follower:', followerId, dmErr)
+        }
+      }
+
+      toast.success(`Sent to ${selectedFollowers.size} follower${selectedFollowers.size > 1 ? 's' : ''}!`)
+      setPreviewMedia(null)
+      setSelectedFollowers(new Set())
+      setShowFollowerPicker(false)
+      setMode('story')
+    } catch (err) {
+      console.error('[MAIPiks] Failed to send to followers:', err)
+      toast.error('Failed to send to followers')
+    } finally {
+      setPreviewUploading(false)
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
   /* Capture — tap for a photo, hold for video                              */
   /* ---------------------------------------------------------------------- */
 
@@ -962,11 +1075,6 @@ export default function PhoneMaiPiks() {
     const context = canvas.getContext('2d')
     if (!context) return
 
-    if (activeFacing === 'user') {
-      context.translate(canvas.width, 0)
-      context.scale(-1, 1)
-    }
-
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
@@ -974,11 +1082,10 @@ export default function PhoneMaiPiks() {
 
     if (!media) return
 
-    const ok = await addToStory(media, 'photo', storyVisibility, undefined, storyCaption)
-    if (ok) {
-      setStoryCaption('')
-      setMode('story')
-    }
+    /* Show preview screen instead of directly adding to story */
+    setPreviewMedia({ url: media.url, type: 'photo', path: media.path })
+    setPreviewCaption('')
+    setMode('preview')
   }
 
   /** Picks a container the browser can actually record. */
@@ -1068,11 +1175,10 @@ export default function PhoneMaiPiks() {
       const media = await uploadBlob(blob, ext)
       if (!media) return
 
-      const ok = await addToStory(media, 'video', storyVisibility, elapsed, storyCaption)
-      if (ok) {
-        setStoryCaption('')
-        setMode('story')
-      }
+      /* Show preview screen instead of directly adding to story */
+      setPreviewMedia({ url: media.url, type: 'video', path: media.path, durationMs: elapsed })
+      setPreviewCaption('')
+      setMode('preview')
     }
 
     recorder.start(250)
@@ -1572,10 +1678,14 @@ export default function PhoneMaiPiks() {
     return (
       <div className="fixed inset-0 z-[70] flex flex-col bg-[#03030a] text-white">
         <header className="flex h-[62px] shrink-0 items-center border-b border-red-400/15 px-4">
-          <button type="button" onClick={handleBack} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-black">
-            <ArrowLeft size={18} />
+          <PhoneButton
+            variant="ghost"
+            size="sm"
+            icon={<ArrowLeft size={18} />}
+            onClick={handleBack}
+          >
             MaiTroll
-          </button>
+          </PhoneButton>
         </header>
         <main className="flex flex-1 items-center justify-center px-5">
           <section className="w-full max-w-md rounded-2xl border border-red-400/20 bg-red-950/15 p-5">
@@ -1641,25 +1751,26 @@ export default function PhoneMaiPiks() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            className="relative grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
+          <PhoneButton
+            variant="icon-only"
+            size="md"
+            icon={<Bell size={24} />}
+            onClick={() => setShowNotifications((value) => !value)}
+            aria-label={`Notifications${unreadNotifications > 0 ? `, ${unreadNotifications} unread` : ''}`}
           >
-            <Bell size={24} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]" />
             {unreadNotifications > 0 && (
               <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#BF00FF] px-1 text-[8px] font-black text-white shadow-[0_0_10px_#BF00FF]">
                 {unreadNotifications > 9 ? '9+' : unreadNotifications}
               </span>
             )}
-          </button>
+          </PhoneButton>
 
-          <button
-            type="button"
+          <PhoneButton
+            variant="icon-only"
+            size="md"
+            icon={<Zap size={24} />}
             onClick={() => setShowNotifications((value) => !value)}
-            className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/[0.08] text-white"
-          >
-            <Zap size={24} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]" />
-          </button>
+          />
         </div>
       </header>
 
@@ -1751,7 +1862,7 @@ export default function PhoneMaiPiks() {
                 autoPlay
                 muted
                 playsInline
-                className={`h-full w-full object-cover ${activeFacing === 'user' ? '-scale-x-100' : ''}`}
+                className="h-full w-full object-cover"
               />
             ) : (
               <div className="relative flex h-full flex-col items-center justify-center px-8 text-center">
@@ -1794,13 +1905,13 @@ export default function PhoneMaiPiks() {
                   <span className="text-[8px] font-black uppercase tracking-[0.18em]">MAI Piks Camera</span>
                 </div>
               </div>
-              <button
-                type="button"
+              <PhoneButton
+                variant="icon-only"
+                size="md"
+                icon={<RefreshCw size={18} />}
                 onClick={flipCamera}
-                className="grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/40 backdrop-blur-xl transition active:scale-90"
-              >
-                <RefreshCw size={18} />
-              </button>
+                className="bg-black/40 border-white/15"
+              />
             </div>
 
             {/* Camera bottom */}
@@ -1828,189 +1939,7 @@ export default function PhoneMaiPiks() {
                 </div>
               )}
 
-              {/* Premium Mai Piks shutter */}
-              <div
-                role="group"
-                aria-label="Story audience"
-                className="mb-5 grid w-full max-w-[310px] grid-cols-3 overflow-hidden rounded-xl border border-white/15 bg-black/50 backdrop-blur-xl"
-              >
-                {([
-                  { value: 'everyone', label: 'Everyone', icon: Sparkles },
-                  { value: 'followers', label: 'Followers', icon: Users },
-                  { value: 'private', label: 'Subscribers', icon: Lock },
-                ] as const).map(({ value, label, icon: Icon }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={storyVisibility === value}
-                    disabled={recording || uploading}
-                    onClick={() => setStoryVisibility(value)}
-                    className={`flex min-h-10 items-center justify-center gap-1.5 px-2 text-[9px] font-black transition-colors disabled:opacity-50 ${
-                      storyVisibility === value
-                        ? 'bg-[#00BFFF]/20 text-white shadow-[inset_0_-2px_0_#00BFFF]'
-                        : 'text-zinc-400 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <Icon size={12} />
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <label className="mb-5 flex w-full max-w-[310px] items-center justify-between rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
-                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">
-                  Story duration
-                </span>
-                <select
-                  aria-label="Story duration"
-                  value={customStoryDuration ? 'custom' : storyDurationHours}
-                  disabled={recording || uploading}
-                  onChange={(event) => {
-                    if (event.target.value === 'custom') {
-                      setCustomStoryDuration(true)
-                    } else {
-                      setCustomStoryDuration(false)
-                      setStoryDurationHours(Number(event.target.value))
-                    }
-                  }}
-                  className="bg-transparent text-right text-[10px] font-black text-white outline-none disabled:opacity-50"
-                >
-                  <option value={1} className="bg-[#090913]">1 hour</option>
-                  <option value={6} className="bg-[#090913]">6 hours</option>
-                  <option value={12} className="bg-[#090913]">12 hours</option>
-                  <option value={24} className="bg-[#090913]">24 hours</option>
-                  <option value={48} className="bg-[#090913]">48 hours</option>
-                  <option value={168} className="bg-[#090913]">7 days</option>
-                  <option value="custom" className="bg-[#090913]">Custom</option>
-                </select>
-              </label>
-
-              {customStoryDuration && (
-                <label className="mb-3 flex w-full max-w-[310px] items-center justify-between rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">Custom hours (max 720)</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={720}
-                    step={1}
-                    value={storyDurationHours}
-                    disabled={recording || uploading}
-                    onChange={(event) => setStoryDurationHours(Number(event.target.value))}
-                    aria-label="Custom story duration in hours"
-                    className="w-16 bg-transparent text-right text-[10px] font-black text-white outline-none disabled:opacity-50"
-                  />
-                </label>
-              )}
-
-              <label className="mb-3 flex w-full max-w-[310px] items-center justify-between rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
-                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">
-                  Story access
-                </span>
-                <select
-                  aria-label="Story access"
-                  value={monetizationMode}
-                  disabled={recording || uploading}
-                  onChange={(event) => setMonetizationMode(event.target.value as StoryMonetizationMode)}
-                  className="max-w-[170px] bg-transparent text-right text-[10px] font-black text-white outline-none disabled:opacity-50"
-                >
-                  <option value="free" className="bg-[#090913]">Everyone can view</option>
-                  <option value="paid" className="bg-[#090913]">Paid access</option>
-                  <option value="subscribers_only" className="bg-[#090913]">Subscribers only</option>
-                  <option value="free_for_subscribers" className="bg-[#090913]">Free for subscribers</option>
-                </select>
-              </label>
-
-              {(monetizationMode === 'paid' || monetizationMode === 'free_for_subscribers') && (
-                <div className="mb-5 grid w-full max-w-[310px] grid-cols-2 gap-2">
-                  <label className="flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-zinc-300">Base coins</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={1000000}
-                      step={1}
-                      value={basePriceCoins}
-                      disabled={recording || uploading}
-                      onChange={(event) => setBasePriceCoins(Number(event.target.value))}
-                      className="w-16 bg-transparent text-right text-[10px] font-black text-white outline-none disabled:opacity-50"
-                      aria-label="Base price in Troll Coins"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-zinc-300">Subscribers</span>
-                    <select
-                      aria-label="Subscriber discount"
-                      value={subscriberDiscountMode}
-                      disabled={recording || uploading}
-                      onChange={(event) => setSubscriberDiscountMode(event.target.value as 'platform' | 'none')}
-                      className="max-w-[100px] bg-transparent text-right text-[9px] font-black text-white outline-none disabled:opacity-50"
-                    >
-                      <option value="platform" className="bg-[#090913]">Tier rate</option>
-                      <option value="none" className="bg-[#090913]">No discount</option>
-                    </select>
-                  </label>
-                  <label className="col-span-2 flex items-center justify-between rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-zinc-300">Buyer access</span>
-                    <select
-                      aria-label="Buyer access duration"
-                      value={paidAccessDuration}
-                      disabled={recording || uploading}
-                      onChange={(event) => setPaidAccessDuration(event.target.value)}
-                      className="bg-transparent text-right text-[9px] font-black text-white outline-none disabled:opacity-50"
-                    >
-                      <option value="until_story_expiry" className="bg-[#090913]">Until story expires</option>
-                      <option value="1h" className="bg-[#090913]">1 hour</option>
-                      <option value="6h" className="bg-[#090913]">6 hours</option>
-                      <option value="24h" className="bg-[#090913]">24 hours</option>
-                      <option value="7d" className="bg-[#090913]">7 days</option>
-                      <option value="permanent" className="bg-[#090913]">Permanent</option>
-                    </select>
-                  </label>
-                </div>
-              )}
-
-              <label className="mb-5 w-full max-w-[310px] space-y-1 rounded-xl border border-white/15 bg-black/50 px-3 py-2 backdrop-blur-xl">
-                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">Caption</span>
-                <textarea
-                  value={storyCaption}
-                  onChange={(event) => setStoryCaption(event.target.value)}
-                  maxLength={500}
-                  rows={2}
-                  disabled={recording || uploading}
-                  placeholder="Add a caption or #hashtag"
-                  className="w-full resize-none bg-transparent text-xs text-white outline-none placeholder:text-zinc-600 disabled:opacity-50"
-                />
-              </label>
-
-              <div className="relative flex flex-col items-center">
-                {/* Slide-to-latch rail, revealed while the finger travels left */}
-                {(swipeProgress > 0 || recordingLocked) && (
-                  <div
-                    className="pointer-events-none absolute right-full top-1/2 mr-3 flex -translate-y-1/2 items-center gap-2"
-                    aria-hidden="true"
-                  >
-                    {recordingLocked ? (
-                      <span className="grid h-9 w-9 place-items-center rounded-full border border-white/40 bg-black/60 text-white shadow-[0_0_20px_rgba(0,191,255,0.35)] backdrop-blur-xl">
-                        <Lock size={15} />
-                      </span>
-                    ) : (
-                      <>
-                        <span className="h-1.5 w-14 overflow-hidden rounded-full bg-white/15">
-                          <span
-                            className="block h-full rounded-full bg-gradient-to-r from-[#BF00FF] to-[#00BFFF] transition-[width] duration-75"
-                            style={{ width: `${swipeProgress * 100}%` }}
-                          />
-                        </span>
-                        <ChevronLeft
-                          size={16}
-                          className="text-white/70 transition-opacity duration-150"
-                          style={{ opacity: 0.35 + swipeProgress * 0.65 }}
-                        />
-                      </>
-                    )}
-                  </div>
-                )}
-
+              <div className="flex flex-col items-center">
                 <button
                   type="button"
                   disabled={uploading || !cameraReady}
@@ -2101,6 +2030,126 @@ export default function PhoneMaiPiks() {
                 <span className="text-[8px] font-bold text-zinc-400">
                   Everything you post in 24h joins the same story
                 </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================================================================ */}
+        {/* PREVIEW — shows after photo/video capture                        */}
+        {/* ================================================================ */}
+
+        {mode === 'preview' && previewMedia && (
+          <div className="absolute inset-0 flex flex-col bg-black">
+            {/* Media preview */}
+            <div className="flex-1 flex items-center justify-center relative">
+              {previewMedia.type === 'photo' ? (
+                <img src={previewMedia.url} alt="Preview" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <video
+                  src={previewMedia.url}
+                  className="max-h-full max-w-full object-contain"
+                  autoPlay
+                  playsInline
+                  loop
+                  muted
+                />
+              )}
+            </div>
+
+            {/* Top bar */}
+            <div className="absolute left-0 right-0 top-0 flex items-center justify-between p-4 z-10">
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewMedia(null)
+                  setMode('camera')
+                }}
+                className="grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/50 backdrop-blur-xl transition active:scale-90"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#00BFFF] shadow-[0_0_8px_#00BFFF]" />
+                <span className="text-[8px] font-black uppercase tracking-[0.18em]">Preview</span>
+              </div>
+
+              <div className="w-11" />
+            </div>
+
+            {/* Bottom actions */}
+            <div className="absolute bottom-0 left-0 right-0 pb-8 px-4">
+              {/* Caption input */}
+              <div className="mb-4 w-full max-w-[320px] mx-auto">
+                <label className="block space-y-2">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-zinc-300">Add Caption</span>
+                  <textarea
+                    value={previewCaption}
+                    onChange={(event) => setPreviewCaption(event.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Add a caption... #hashtag @mention"
+                    className="w-full rounded-xl border border-white/15 bg-black/50 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-[#00BFFF]/40"
+                  />
+                  <div className="flex items-center justify-between text-[9px] text-zinc-500">
+                    <span>{previewCaption.length}/500</span>
+                    {previewCaption.match(/#\w+/g) && (
+                      <span className="text-[#00BFFF]">
+                        {previewCaption.match(/#\w+/g)!.length} hashtag{previewCaption.match(/#\w+/g)!.length > 1 ? 's' : ''} detected
+                      </span>
+                    )}
+                  </div>
+                </label>
+              </div>
+
+              {/* Action buttons */}
+              <div className="space-y-3 w-full max-w-[320px] mx-auto">
+                {/* Upload to Story */}
+                <button
+                  type="button"
+                  onClick={handlePreviewUploadToStory}
+                  disabled={previewUploading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] py-3.5 text-xs font-black uppercase tracking-wider text-white disabled:opacity-50 active:scale-[0.98]"
+                >
+                  {previewUploading ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-transparent" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={16} />
+                      Upload to Story
+                    </>
+                  )}
+                </button>
+
+                {/* Send to Followers */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    loadFollowers()
+                    setShowFollowerPicker(true)
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/50 py-3.5 text-xs font-black uppercase tracking-wider text-white active:scale-[0.98]"
+                >
+                  <Users size={16} />
+                  Send to Followers (up to 20)
+                </button>
+
+                {/* Cancel / Retake */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewMedia(null)
+                    setMode('camera')
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] py-3.5 text-xs font-black uppercase tracking-wider text-zinc-400 active:scale-[0.98]"
+                >
+                  <RotateCcw size={16} />
+                  Retake
+                </button>
               </div>
             </div>
           </div>
@@ -2476,6 +2525,102 @@ export default function PhoneMaiPiks() {
           </div>
         </div>
       )}
+
+      {/* Follower Picker Modal for Send to Followers */}
+      {showFollowerPicker && (
+        <div className="fixed inset-0 z-[150] flex items-end bg-black/75 backdrop-blur-sm" onClick={() => setShowFollowerPicker(false)}>
+          <div className="w-full max-h-[70vh] rounded-t-3xl border-t border-white/10 bg-[#08080f] shadow-[0_-10px_50px_rgba(0,0,0,0.6)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <Users size={20} className="text-[#00BFFF]" />
+                <h3 className="text-base font-black">Select Followers</h3>
+                <span className="text-[10px] font-black text-zinc-500">({selectedFollowers.size}/20)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFollowerPicker(false)}
+                className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/[0.035]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto">
+              {previewFollowers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                  <Users size={32} className="text-zinc-600" />
+                  <p className="mt-3 text-sm font-black text-zinc-400">No followers yet</p>
+                  <p className="mt-1 text-[10px] text-zinc-600">Followers will appear here when you have them</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-white/5">
+                  {previewFollowers.map(follower => (
+                    <li key={follower.id}>
+                      <label className="flex items-center justify-between px-4 py-3 cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-10 w-10 shrink-0 rounded-xl p-[2px] bg-gradient-to-br from-[#00BFFF] to-[#BF00FF]">
+                            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[8px] bg-[#05050d]">
+                              {follower.avatarUrl ? (
+                                <img src={follower.avatarUrl} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                <User size={16} className="text-zinc-600" />
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-white">@{follower.username}</p>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={selectedFollowers.has(follower.id)}
+                          onChange={(e) => {
+                            const newSelected = new Set(selectedFollowers)
+                            if (e.target.checked) {
+                              if (newSelected.size < 20) {
+                                newSelected.add(follower.id)
+                              } else {
+                                e.target.checked = false
+                                toast.error('Maximum 20 followers')
+                              }
+                            } else {
+                              newSelected.delete(follower.id)
+                            }
+                            setSelectedFollowers(newSelected)
+                          }}
+                          disabled={!selectedFollowers.has(follower.id) && selectedFollowers.size >= 20}
+                          className="h-5 w-5 rounded border-white/20 bg-white/[0.05] text-[#00BFFF] focus:ring-[#00BFFF] focus:ring-2"
+                        />
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={handleSendToFollowers}
+                disabled={previewUploading || selectedFollowers.size === 0}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00BFFF] to-[#BF00FF] py-3.5 text-xs font-black uppercase tracking-wider text-white disabled:opacity-50 active:scale-[0.98]"
+              >
+                {previewUploading ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-transparent" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} />
+                    Send to {selectedFollowers.size} Follower{selectedFollowers.size > 1 ? 's' : ''}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -2594,33 +2739,20 @@ function PiksNavButton({
   const isBlue = color === 'blue'
 
   return (
-    <button
-      type="button"
+    <PhoneButton
+      variant={active ? (isBlue ? 'primary' : 'secondary') : 'ghost'}
+      size="sm"
+      icon={icon}
       onClick={onClick}
-      className={`relative flex flex-col items-center justify-center gap-1 rounded-2xl transition active:scale-95 ${
-        active
-          ? isBlue
-            ? 'border border-[#00BFFF]/25 bg-[#00BFFF]/10 text-[#00BFFF]'
-            : 'border border-[#BF00FF]/25 bg-[#BF00FF]/10 text-[#BF00FF]'
-          : 'border border-transparent text-zinc-600'
-      }`}
+      className={`
+        flex flex-col gap-1 px-2 py-2.5 rounded-2xl
+        ${active ? '' : 'text-zinc-600'}
+      `}
     >
-      {active && (
-        <span
-          className={`absolute bottom-0 h-[2px] w-8 rounded-full ${
-            isBlue ? 'bg-[#00BFFF] shadow-[0_0_10px_#00BFFF]' : 'bg-[#BF00FF] shadow-[0_0_10px_#BF00FF]'
-          }`}
-        />
-      )}
-
-      <span className={active ? (isBlue ? 'drop-shadow-[0_0_7px_#00BFFF]' : 'drop-shadow-[0_0_7px_#BF00FF]') : ''}>
-        {icon}
-      </span>
-
       <span className={`text-[8px] font-black uppercase tracking-wider ${active ? 'text-white' : 'text-zinc-600'}`}>
         {label}
       </span>
-    </button>
+    </PhoneButton>
   )
 }
 
@@ -2630,27 +2762,17 @@ function PiksNavButton({
 
 function PiksCameraNav({ active, onClick }: { active: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="relative flex flex-col items-center justify-center gap-0.5">
-      <div
-        className={`relative grid h-12 w-12 place-items-center rounded-full p-[2px] transition ${
-          active
-            ? 'bg-gradient-to-br from-[#00BFFF] to-[#BF00FF] shadow-[0_0_25px_rgba(0,191,255,0.35)]'
-            : 'bg-white/10'
-        }`}
-      >
-        <div
-          className={`grid h-full w-full place-items-center rounded-full ${
-            active ? 'bg-[#05050d] text-white' : 'bg-[#111118] text-zinc-500'
-          }`}
-        >
-          <Camera size={20} />
-        </div>
-      </div>
-
+    <PhoneButton
+      variant={active ? 'primary' : 'ghost'}
+      size="lg"
+      icon={<Camera size={20} />}
+      onClick={onClick}
+      className="flex flex-col gap-1 px-3 py-2 rounded-full"
+    >
       <span className={`text-[8px] font-black uppercase tracking-wider ${active ? 'text-[#00BFFF]' : 'text-zinc-600'}`}>
         Camera
       </span>
-    </button>
+    </PhoneButton>
   )
 }
 

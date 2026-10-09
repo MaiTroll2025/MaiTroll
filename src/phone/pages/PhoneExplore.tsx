@@ -1,14 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Eye,
-  Play,
-  Radio,
-  Search,
-  Users,
-  Flame,
-} from 'lucide-react'
+import { ArrowLeft, Eye, Play, Radio, Search, Flame } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase'
 import { searchUsers } from '@/lib/filtered'

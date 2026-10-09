@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import SEOLayout, { Breadcrumb, CTASection } from './SEOLayout'
-import { Play, Radio, Camera, Mic, Monitor, Smartphone, Wifi, Clock, Users, Gift, MessageCircle, ChevronRight, ArrowRight, Zap, Settings, Eye, TrendingUp, CheckCircle, Lock, Unlock } from 'lucide-react'
+import SEOLayout, { Breadcrumb, CTASection } from '@/pages/seo/SEOLayout'
+import { Play, Radio, Camera, Mic, Monitor, Wifi, Users, Gift, MessageCircle, ChevronRight, Zap, Eye, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 
 const steps = [
@@ -27,7 +27,7 @@ const steps = [
 
 function VideoPlayer() {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
+  const [_isMuted, _setIsMuted] = useState(false)
   
   const youtubeVideoId = 'Zmoqz2RbWjA'
   const youtubeUrl = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${youtubeVideoId}&showinfo=0&controls=1&modestbranding=1&rel=0`

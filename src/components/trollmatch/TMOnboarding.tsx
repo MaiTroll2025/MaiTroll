@@ -11,7 +11,7 @@ interface TMOnboardingProps {
 }
 
 export function TMOnboarding({ onComplete }: TMOnboardingProps) {
-  const { profile } = useAuthStore();
+  const { profile: _profile } = useAuthStore();
   const { updateProfile } = useTMUpdateProfile();
   
   const [step, setStep] = useState<'interests' | 'dating'>('interests');
@@ -52,7 +52,7 @@ export function TMOnboarding({ onComplete }: TMOnboardingProps) {
         await updateProfile({ interests: selectedInterests });
         toast.success('Preferences saved!');
         onComplete?.();
-      } catch (err) {
+      } catch (_err) {
         toast.error('Failed to save preferences');
       } finally {
         setLoading(false);
@@ -82,7 +82,7 @@ export function TMOnboarding({ onComplete }: TMOnboardingProps) {
       });
       toast.success('Preferences saved!');
       onComplete?.();
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to save preferences');
     } finally {
       setLoading(false);

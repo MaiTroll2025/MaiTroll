@@ -13,11 +13,11 @@ interface ARGiftDurationManagerOptions {
 }
 
 export function useARGiftDurationManager({
-  streamId,
+  streamId: _streamId,
   onGiftExpired,
   onGiftStackChange,
 }: ARGiftDurationManagerOptions) {
-  const { activeGifts, removeActiveGift, settings } = useARGiftStore();
+  const { activeGifts, removeActiveGift, settings: _settings } = useARGiftStore();
   const timersRef = useRef<Map<string, number>>(new Map());
   const lastCountRef = useRef(0);
 
@@ -119,7 +119,7 @@ export function useARGiftDurationManager({
 }
 
 // Hook for managing AR gift settings per-streamer
-export function useARGiftSettings(userId: string) {
+export function useARGiftSettings(_userId: string) {
   const { settings, updateSettings } = useARGiftStore();
 
   const canReceiveGift = useCallback(

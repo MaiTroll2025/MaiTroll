@@ -1,6 +1,6 @@
 import React from 'react';
-import { AgencyReward, AgencyRewardStatus, TIER_CONFIG } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { AgencyReward, AgencyRewardStatus, TIER_CONFIG } from '@/types/agency';
+import { cn } from '@/lib/utils';
 import { Gift, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 
 const statusConfig: Record<AgencyRewardStatus, { icon: React.ElementType; label: string; className: string }> = {

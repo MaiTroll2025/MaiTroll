@@ -76,7 +76,7 @@ async function uploadCEOCameraOffImage() {
     // Determine MIME type
     const mimeType = getMimeType(fileExt);
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: _uploadData, error: uploadError } = await supabase.storage
       .from('camera-off-images')
       .upload(filePath, fileBuffer, {
         contentType: mimeType,

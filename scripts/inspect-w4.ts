@@ -17,14 +17,14 @@ async function inspectW4Fields() {
       try {
         const value = textField.getText()
         if (value) console.log(`  Value: ${value}`)
-      } catch (e) {}
+      } catch (_e) {}
     }
     
     if (type === 'PDFCheckBox') {
       const checkbox = field as any
       try {
         console.log(`  Checked: ${checkbox.isChecked()}`)
-      } catch (e) {}
+      } catch (_e) {}
     }
   }
 }

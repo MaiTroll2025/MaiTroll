@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../hooks/useAuth';
-import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
-import { Loader } from '../../components/ui/loader';
-import { EmptyState } from '../../components/ui/empty-state';
-import { Table } from '../../components/ui/table';
-import { Input } from '../../components/ui/input';
-import { Select } from '../../components/ui/select';
-import { Badge } from '../../components/ui/badge';
-import { AgencyAgencyCard } from './components/AgencyAgencyCard';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader } from '@/components/ui/loader';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import AgencyAgencyCard from './components/AgencyAgencyCard';
 
 export default function AdminAgenciesPage() {
   const { user } = useAuth();

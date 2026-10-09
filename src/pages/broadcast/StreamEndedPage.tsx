@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Home, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Home, ArrowLeft } from 'lucide-react';
 
 export default function StreamEndedPage() {
-  const { streamId } = useParams();
+  const { streamId: _streamId } = useParams();
   const navigate = useNavigate();
 
   return (

@@ -26,7 +26,7 @@ const getRandomX = () => {
   return positions[Math.floor(Math.random() * positions.length)];
 };
 
-const ReactionFloat = ({ reaction, index, total }: ReactionFloatProps) => {
+const ReactionFloat = ({ reaction, index, total: _total }: ReactionFloatProps) => {
   const { reducedMotion, isMobile } = useAnimationStore();
   const { type, username } = reaction;
   const reactionConfig = reactionIcons[type] || reactionIcons.heart;

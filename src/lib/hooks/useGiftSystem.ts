@@ -101,7 +101,7 @@ export function GiftSystemProvider({
   if (!streamId) {
     if (import.meta.env.DEV) console.debug('[GiftSystemProvider] Skipping - no streamId provided')
     return React.createElement(
-      GiftSystemContext.Provider,
+      GiftSystemContext.Provider as React.ComponentType<any>,
       { value: { sendGift: async () => false, isSending: false } },
       children
     )

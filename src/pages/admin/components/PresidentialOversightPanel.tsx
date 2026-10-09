@@ -4,21 +4,15 @@ import {
   AlertTriangle,
   Crown,
   FileClock,
-  Gavel,
   Loader2,
   RefreshCw,
   Shield,
   ShieldAlert,
   UserMinus,
-  Users,
   Vote,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { Badge } from '../../../components/ui/badge'
-import { Button } from '../../../components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card'
-import { ScrollArea } from '../../../components/ui/scroll-area'
 import { supabase } from '../../../lib/supabase'
 import { usePresidentSystem } from '../../../hooks/usePresidentSystem'
 
@@ -85,11 +79,6 @@ const roleLabels: Record<OversightRoleKey, string> = {
   vice_president: 'Vice President',
 }
 
-const roleAccent: Record<OversightRoleKey, string> = {
-  president: 'from-yellow-500/30 via-amber-400/15 to-cyan-500/10 border-yellow-400/30 text-yellow-100',
-  vice_president: 'from-cyan-500/25 via-purple-500/15 to-slate-500/10 border-cyan-300/25 text-cyan-100',
-}
-
 const safeDate = (value?: string | null, pattern = 'MMM d, yyyy') => {
   if (!value) return 'N/A'
 
@@ -127,6 +116,7 @@ export default function PresidentialOversightPanel() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [activeModule, setActiveModule] = useState<string>('officials')
 
   const [systemRoles, setSystemRoles] = useState<Record<OversightRoleKey, SystemRole | null>>({
     president: null,
@@ -168,6 +158,10 @@ export default function PresidentialOversightPanel() {
   const activeOfficialsCount = useMemo(() => {
     return officialList.filter((official) => Boolean(official.userId)).length
   }, [officialList])
+
+  const vacantSeatsCount = useMemo(() => {
+    return 2 - activeOfficialsCount
+  }, [activeOfficialsCount])
 
   const fetchProfilesByIds = useCallback(async (ids: string[]) => {
     const uniqueIds = Array.from(new Set(ids.filter(Boolean)))
@@ -267,7 +261,6 @@ export default function PresidentialOversightPanel() {
       }) as RoleGrant[]
 
       const profileMap = await fetchProfilesByIds(activeGrants.map((grant) => grant.user_id))
-
       const findOfficial = (roleKey: OversightRoleKey): OfficialRecord => {
         const role = roles[roleKey]
         const fallbackOfficial = fallback[roleKey]
@@ -279,7 +272,6 @@ export default function PresidentialOversightPanel() {
         if (!grant) return fallbackOfficial
 
         const profile = profileMap.get(grant.user_id)
-
         return {
           roleKey,
           roleId: role.id,
@@ -304,60 +296,58 @@ export default function PresidentialOversightPanel() {
     [buildFallbackOfficialsFromHook, currentElection?.ends_at, fetchProfilesByIds]
   )
 
-   const fetchAuditLogs = useCallback(async () => {
-     try {
-       const { data, error } = await supabase
-         .from('president_audit_logs')
-         .select('id, actor_id, action, target_id, details, created_at')
-         .order('created_at', { ascending: false })
-         .limit(50);
+  const fetchAuditLogs = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('president_audit_logs')
+        .select('id, actor_id, action, target_id, details, created_at')
+        .order('created_at', { ascending: false })
+        .limit(50)
 
-       if (error) throw error;
+      if (error) throw error
 
-       const rawLogs = (data || []) as AuditLog[];
-       const profileIds = rawLogs.flatMap((log) => [log.actor_id, log.target_id]).filter(Boolean) as string[];
-       const profileMap = await fetchProfilesByIds(profileIds);
+      const rawLogs = (data || []) as AuditLog[]
+      const profileIds = rawLogs.flatMap((log) => [log.actor_id, log.target_id]).filter(Boolean) as string[]
+      const profileMap = await fetchProfilesByIds(profileIds)
 
-       const hydratedLogs = rawLogs.map((log) => ({
-         ...log,
-         actor: log.actor_id ? profileMap.get(log.actor_id) || null : null,
-         target: log.target_id ? profileMap.get(log.target_id) || null : null,
-       }));
+      const hydratedLogs = rawLogs.map((log) => ({
+        ...log,
+        actor: log.actor_id ? profileMap.get(log.actor_id) || null : null,
+        target: log.target_id ? profileMap.get(log.target_id) || null : null,
+      }))
 
-       setAuditLogs(hydratedLogs);
-       return hydratedLogs;
-     } catch (err: any) {
-       // If the table doesn't exist, we just set an empty array and log a warning.
-       if (err?.code === 'PGRST205') {
-         console.warn('[PresidentialOversightPanel] Audit logs table not found, proceeding with empty logs.');
-         setAuditLogs([]);
-         return [];
-       }
-       // Otherwise, rethrow to be caught by the outer try/catch in loadPanelData
-       throw err;
-     }
-   }, [fetchProfilesByIds]);
+      setAuditLogs(hydratedLogs)
+      return hydratedLogs
+    } catch (err: any) {
+      if (err?.code === 'PGRST205') {
+        console.warn('[PresidentialOversightPanel] Audit logs table not found, proceeding with empty logs.')
+        setAuditLogs([])
+        return []
+      }
+      throw err
+    }
+  }, [fetchProfilesByIds])
 
-   const fetchActiveElection = useCallback(async () => {
-     try {
-       const { data, error } = await supabase
-         .from('president_elections')
-         .select('id, status, title, starts_at, ends_at, created_at')
-         .in('status', ['active', 'voting', 'open'])
-         .order('created_at', { ascending: false })
-         .limit(1)
-         .maybeSingle()
+  const fetchActiveElection = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('president_elections')
+        .select('id, status, title, starts_at, ends_at, created_at')
+        .in('status', ['active', 'voting', 'open'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
 
-       if (error) throw error
+      if (error) throw error
 
-       setActiveElection((data as ElectionRow) || null)
-       return data as ElectionRow | null
-     } catch (err) {
-       console.warn('[PresidentialOversightPanel] Active election fetch failed:', err)
-       setActiveElection(currentElection || null)
-       return currentElection || null
-     }
-   }, [currentElection])
+      setActiveElection((data as ElectionRow) || null)
+      return data as ElectionRow | null
+    } catch (err) {
+      console.warn('[PresidentialOversightPanel] Active election fetch failed:', err)
+      setActiveElection(currentElection || null)
+      return currentElection || null
+    }
+  }, [currentElection])
 
   const loadPanelData = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
@@ -428,7 +418,6 @@ export default function PresidentialOversightPanel() {
       if (!confirmed) return
 
       setActionLoading(official.roleKey)
-
       try {
         let deleted = false
 
@@ -481,21 +470,46 @@ export default function PresidentialOversightPanel() {
     [systemRoles, insertAuditLog, loadPanelData]
   )
 
+  const modules = [
+    {
+      id: 'officials',
+      label: 'Administration',
+      icon: <Crown className="w-4 h-4" />,
+      color: 'text-yellow-400',
+      bgColor: 'bg-yellow-500/20',
+      borderColor: 'border-yellow-500/30',
+      count: activeOfficialsCount,
+    },
+    {
+      id: 'audit',
+      label: 'Audit Log',
+      icon: <FileClock className="w-4 h-4" />,
+      color: 'text-cyan-400',
+      bgColor: 'bg-cyan-500/20',
+      borderColor: 'border-cyan-500/30',
+      count: auditLogs.length,
+    },
+    {
+      id: 'election',
+      label: 'Election',
+      icon: <Vote className="w-4 h-4" />,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/20',
+      borderColor: 'border-purple-500/30',
+      count: activeElection ? 1 : 0,
+    },
+  ]
+
   const renderOfficialCard = (official: OfficialRecord) => {
     const label = roleLabels[official.roleKey]
     const isVacant = !official.userId
     const isBusy = actionLoading === official.roleKey
 
     return (
-      <div
-        key={official.roleKey}
-        className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br p-5 ${roleAccent[official.roleKey]}`}
-      >
-        <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-
-        <div className="relative z-10 flex items-start justify-between gap-4">
+      <div key={official.roleKey} className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-4">
+        <div className="flex items-start justify-between gap-4 mb-3">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-black/25">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#2C2C2C] bg-[#141414]">
               {official.avatarUrl ? (
                 <img
                   src={official.avatarUrl}
@@ -503,21 +517,21 @@ export default function PresidentialOversightPanel() {
                   className="h-full w-full object-cover"
                 />
               ) : official.roleKey === 'president' ? (
-                <Crown className="h-7 w-7 text-yellow-200" />
+                <Crown className="h-7 w-7 text-yellow-400" />
               ) : (
-                <Shield className="h-7 w-7 text-cyan-200" />
+                <Shield className="h-7 w-7 text-cyan-400" />
               )}
             </div>
 
-            <div>
-              <div className="text-xs font-black uppercase tracking-wider opacity-80">{label}</div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold uppercase tracking-wider text-gray-400">{label}</div>
 
               {isVacant ? (
-                <div className="mt-1 text-lg font-black text-white/80 italic">Vacant</div>
+                <div className="mt-1 text-lg font-bold text-gray-300 italic">Vacant</div>
               ) : (
                 <>
-                  <div className="mt-1 text-xl font-black text-white">{official.username}</div>
-                  <div className="mt-1 text-xs text-white/65">
+                  <div className="mt-1 truncate text-xl font-bold text-white">{official.username}</div>
+                  <div className="mt-1 text-xs text-gray-500">
                     User ID: <span className="font-mono">{official.userId}</span>
                   </div>
                 </>
@@ -525,222 +539,309 @@ export default function PresidentialOversightPanel() {
             </div>
           </div>
 
-          <Badge variant="outline" className="border-white/20 bg-black/20 text-white">
+          <span
+            className={`shrink-0 px-2 py-1 rounded text-xs font-bold border uppercase ${
+              official.source === 'role_grant'
+                ? 'bg-green-500/20 text-green-400 border-green-500/50'
+                : official.source === 'hook'
+                  ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50'
+                  : 'bg-slate-500/20 text-slate-400 border-slate-500/50'
+            }`}
+          >
             {official.source === 'role_grant' ? 'Live DB' : official.source === 'hook' ? 'Hook Fallback' : 'Vacant'}
-          </Badge>
+          </span>
         </div>
 
-        <div className="relative z-10 mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-            <div className="text-xs text-white/55">Granted</div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mb-4">
+          <div className="rounded-lg border border-[#2C2C2C] bg-[#141414] p-3">
+            <div className="text-xs text-gray-500">Granted</div>
             <div className="mt-1 text-sm font-bold text-white">
               {safeDate(official.grantedAt, 'MMM d, yyyy h:mm a')}
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-            <div className="text-xs text-white/55">Term Ends</div>
+          <div className="rounded-lg border border-[#2C2C2C] bg-[#141414] p-3">
+            <div className="text-xs text-gray-500">Term Ends</div>
             <div className="mt-1 text-sm font-bold text-white">
               {safeDate(official.expiresAt || currentElection?.ends_at, 'MMM d, yyyy')}
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 mt-5 flex flex-wrap gap-2">
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={isVacant || isBusy}
-            onClick={() => handleEmergencyRemove(official)}
-            className="gap-2"
-          >
-            {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserMinus className="h-4 w-4" />}
-            {isBusy ? `Removing ${label}` : `Emergency Remove ${label}`}
-          </Button>
-        </div>
+        <button
+          onClick={() => handleEmergencyRemove(official)}
+          disabled={isVacant || isBusy}
+          className="flex items-center gap-2 px-3 py-1 text-xs bg-red-600 hover:bg-red-500 rounded transition-colors disabled:opacity-50"
+        >
+          {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserMinus className="h-4 w-4" />}
+          {isBusy ? `Removing ${label}` : `Emergency Remove ${label}`}
+        </button>
       </div>
     )
   }
 
-  return (
-    <div className="animate-in fade-in space-y-6 duration-500">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 className="flex items-center gap-2 text-2xl font-black text-white">
-            <ShieldAlert className="h-7 w-7 text-yellow-400" />
-            Presidential Oversight
-          </h2>
-          <p className="text-slate-400">
-            Real-time oversight of elected officials, role grants, elections, and audit actions.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={refreshing}
-          onClick={() => loadPanelData('refresh')}
-          className="gap-2"
-        >
-          {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {refreshing ? 'Refreshing Real Data' : 'Refresh Real Data'}
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm text-slate-300">
-              <Users className="h-4 w-4 text-cyan-400" />
-              Active Officials
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-white">{activeOfficialsCount}/2</div>
-            <p className="text-xs text-slate-500">President and Vice President seats</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm text-slate-300">
-              <Vote className="h-4 w-4 text-purple-400" />
-              Election
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="truncate text-lg font-black text-white">
-              {activeElection?.status || currentElection?.status || 'No Active Election'}
-            </div>
-            <p className="text-xs text-slate-500">
-              Ends {safeDate(activeElection?.ends_at || currentElection?.ends_at, 'MMM d, yyyy')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm text-slate-300">
-              <FileClock className="h-4 w-4 text-yellow-400" />
-              Audit Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-white">{auditLogs.length}</div>
-            <p className="text-xs text-slate-500">Latest loaded audit records</p>
-          </CardContent>
-        </Card>
+  const renderOfficialsModule = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-medium text-white flex items-center gap-2">
+          <Crown className="w-4 h-4 text-yellow-400" />
+          Current Administration ({activeOfficialsCount}/2)
+        </h4>
       </div>
 
       {loading ? (
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardContent className="flex h-64 items-center justify-center">
-            <div className="flex items-center gap-3 text-slate-400">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Loading real presidential data...
-            </div>
-          </CardContent>
-        </Card>
+        <div className="text-center py-8 text-gray-400">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+          Loading real presidential data...
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <Card className="border-slate-800 bg-slate-900/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Gavel className="h-5 w-5 text-yellow-400" />
-                Current Administration
-              </CardTitle>
-              <CardDescription>
-                Pulled from system_roles, user_role_grants, and user_profiles.
-              </CardDescription>
-            </CardHeader>
+        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+          {officialList.map(renderOfficialCard)}
 
-            <CardContent className="space-y-4">
-              {officialList.map(renderOfficialCard)}
+          <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-yellow-300" />
+              <div>
+                <div className="font-bold text-yellow-100">Emergency actions are logged</div>
+                <p className="mt-1 text-sm text-yellow-100/70">
+                  Removing an official revokes the role grant and writes to president_audit_logs when the table allows inserts.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 
-              <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="mt-0.5 h-5 w-5 text-yellow-300" />
-                  <div>
-                    <div className="font-bold text-yellow-100">Emergency actions are logged</div>
-                    <p className="mt-1 text-sm text-yellow-100/70">
-                      Removing an official revokes the role grant and writes to president_audit_logs when the table allows inserts.
-                    </p>
+  const renderAuditModule = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-medium text-white flex items-center gap-2">
+          <FileClock className="w-4 h-4 text-cyan-400" />
+          Real Audit Log ({auditLogs.length})
+        </h4>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-8 text-gray-400">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+          Loading audit log...
+        </div>
+      ) : auditLogs.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <FileClock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          No actions recorded
+        </div>
+      ) : (
+        <div className="space-y-3 max-h-[520px] overflow-y-auto pr-2">
+          {auditLogs.map((log) => (
+            <div key={log.id} className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-4">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-bold uppercase tracking-wide text-white">
+                    {log.action?.replace(/_/g, ' ') || 'Unknown Action'}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {safeDate(log.created_at, 'MMM d, yyyy h:mm a')}
+                  </div>
+                </div>
+
+                <span className="shrink-0 px-2 py-1 rounded text-xs font-bold border border-slate-700 text-slate-300 bg-slate-500/10 uppercase">
+                  Audit
+                </span>
+              </div>
+
+              <div className="mb-3 grid gap-2 text-xs sm:grid-cols-2">
+                <div className="rounded-lg border border-[#2C2C2C] bg-[#141414] p-2">
+                  <div className="text-gray-500">Actor</div>
+                  <div className="font-bold text-gray-200">
+                    {log.actor?.username || 'Unknown'}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-[#2C2C2C] bg-[#141414] p-2">
+                  <div className="text-gray-500">Target</div>
+                  <div className="font-bold text-gray-200">
+                    {log.target?.username || log.target_id || 'N/A'}
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="border-slate-800 bg-slate-900/50">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between text-white">
-                <span className="flex items-center gap-2">
-                  <FileClock className="h-5 w-5 text-cyan-400" />
-                  Real Audit Log
-                </span>
-                <Badge variant="outline">{auditLogs.length} Actions</Badge>
-              </CardTitle>
-              <CardDescription>
-                Pulled from president_audit_logs and hydrated with user_profiles.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent>
-              <ScrollArea className="h-[520px] pr-4">
-                {auditLogs.length === 0 ? (
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/70 py-10 text-center text-slate-500">
-                    No actions recorded
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {auditLogs.map((log) => (
-                      <div
-                        key={log.id}
-                        className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm"
-                      >
-                        <div className="mb-2 flex items-start justify-between gap-3">
-                          <div>
-                            <div className="font-black uppercase tracking-wide text-slate-100">
-                              {log.action?.replace(/_/g, ' ') || 'Unknown Action'}
-                            </div>
-                            <div className="mt-1 text-xs text-slate-500">
-                              {safeDate(log.created_at, 'MMM d, yyyy h:mm a')}
-                            </div>
-                          </div>
-
-                          <Badge variant="outline" className="border-slate-700 text-slate-300">
-                            Audit
-                          </Badge>
-                        </div>
-
-                        <div className="mb-3 grid gap-2 text-xs sm:grid-cols-2">
-                          <div className="rounded-xl bg-black/25 p-2">
-                            <div className="text-slate-500">Actor</div>
-                            <div className="font-bold text-slate-200">
-                              {log.actor?.username || 'Unknown'}
-                            </div>
-                          </div>
-
-                          <div className="rounded-xl bg-black/25 p-2">
-                            <div className="text-slate-500">Target</div>
-                            <div className="font-bold text-slate-200">
-                              {log.target?.username || log.target_id || 'N/A'}
-                            </div>
-                          </div>
-                        </div>
-
-                        <pre className="max-h-40 overflow-auto rounded-xl bg-black/35 p-3 text-xs text-slate-400">
-                          {JSON.stringify(log.details || {}, null, 2)}
-                        </pre>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
+              <pre className="max-h-40 overflow-auto rounded-lg border border-[#2C2C2C] bg-black/40 p-3 text-xs text-gray-400">
+                {JSON.stringify(log.details || {}, null, 2)}
+              </pre>
+            </div>
+          ))}
         </div>
       )}
+    </div>
+  )
+
+  const renderElectionModule = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-medium text-white flex items-center gap-2">
+          <Vote className="w-4 h-4 text-purple-400" />
+          Active Election
+        </h4>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-8 text-gray-400">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+          Loading election data...
+        </div>
+      ) : !activeElection ? (
+        <div className="text-center py-8 text-gray-500">
+          <Vote className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          No active election
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-4">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="text-sm font-bold text-white">
+                {activeElection.title || 'Presidential Election'}
+              </div>
+              <span className="px-2 py-1 rounded text-xs font-bold border bg-purple-500/20 text-purple-400 border-purple-500/50 uppercase">
+                {activeElection.status}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-[#2C2C2C] bg-[#141414] p-3">
+                <div className="text-xs text-gray-500">Starts</div>
+                <div className="mt-1 text-sm font-bold text-white">
+                  {safeDate(activeElection.starts_at, 'MMM d, yyyy h:mm a')}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#2C2C2C] bg-[#141414] p-3">
+                <div className="text-xs text-gray-500">Ends</div>
+                <div className="mt-1 text-sm font-bold text-white">
+                  {safeDate(activeElection.ends_at, 'MMM d, yyyy h:mm a')}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-[#2C2C2C] bg-[#141414] p-4">
+            <div className="text-xs text-gray-500">Election ID</div>
+            <div className="mt-1 font-mono text-sm font-bold text-white">{activeElection.id}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const renderActiveModule = () => {
+    switch (activeModule) {
+      case 'officials':
+        return renderOfficialsModule()
+      case 'audit':
+        return renderAuditModule()
+      case 'election':
+        return renderElectionModule()
+      default:
+        return renderOfficialsModule()
+    }
+  }
+
+  return (
+    <div className="bg-[#141414] border border-[#2C2C2C] rounded-xl p-6 mb-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-yellow-500/20 border border-yellow-500/30 rounded-lg flex items-center justify-center">
+            <ShieldAlert className="w-5 h-5 text-yellow-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white">Presidential Oversight</h3>
+            <p className="text-sm text-gray-400">
+              Real-time oversight of elected officials, role grants, and audit actions.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => loadPanelData('refresh')}
+          disabled={refreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-[#2C2C2C] hover:bg-[#3C3C3C] rounded-lg font-semibold text-white transition-colors disabled:opacity-50"
+        >
+          {refreshing ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4" />
+          )}
+          {refreshing ? 'Refreshing...' : 'Refresh Real Data'}
+        </button>
+      </div>
+
+      {/* Module Selector */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        {modules.map((module) => (
+          <button
+            key={module.id}
+            onClick={() => setActiveModule(module.id)}
+            className={`relative p-4 rounded-lg border transition-all duration-200 ${
+              activeModule === module.id
+                ? `${module.bgColor} ${module.borderColor} border-opacity-100`
+                : 'bg-[#0A0814] border-[#2C2C2C] hover:border-[#3C3C3C]'
+            }`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  activeModule === module.id ? module.bgColor : 'bg-[#2C2C2C]'
+                }`}
+              >
+                <div className={activeModule === module.id ? module.color : 'text-gray-400'}>
+                  {module.icon}
+                </div>
+              </div>
+              <div className="text-left">
+                <div
+                  className={`text-sm font-medium ${
+                    activeModule === module.id ? 'text-white' : 'text-gray-300'
+                  }`}
+                >
+                  {module.label}
+                </div>
+                <div className="text-xs text-gray-400">{module.count}</div>
+              </div>
+            </div>
+            {activeModule === module.id && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Active Module Content */}
+      <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-4">
+        {renderActiveModule()}
+      </div>
+
+      {/* Quick Stats Bar */}
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-green-400">{activeOfficialsCount}/2</div>
+          <div className="text-xs text-gray-400">Active Officials</div>
+        </div>
+        <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-cyan-400">{auditLogs.length}</div>
+          <div className="text-xs text-gray-400">Audit Actions</div>
+        </div>
+        <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-3 text-center">
+          <div className="truncate text-lg font-bold text-purple-400">
+            {activeElection?.status || currentElection?.status || 'None'}
+          </div>
+          <div className="text-xs text-gray-400">Election</div>
+        </div>
+        <div className="bg-[#0A0814] border border-[#2C2C2C] rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-red-400">{vacantSeatsCount}</div>
+          <div className="text-xs text-gray-400">Vacant Seats</div>
+        </div>
+      </div>
     </div>
   )
 }

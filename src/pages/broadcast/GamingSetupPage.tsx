@@ -10,7 +10,6 @@ import { useAgoraScreenShare } from '@/hooks/useAgoraScreenShare'
 import { useGamingHeartbeat } from '@/hooks/useGamingHeartbeat'
 import { useHytroGamingLockdown } from '@/hooks/useFeatureLockdown'
 import GamingChat from '@/components/broadcast/GamingChat'
-import TipBanner from '@/components/broadcast/TipBanner'
 import { GamingStreamProvider, useSetGamingStreamId } from '@/contexts/GamingStreamContext'
 
 import {
@@ -48,7 +47,7 @@ export default function GamingSetupPage() {
 // ─── Inner component ─────────────────────────────────────────────────────────
 
 function GamingSetupPageInner() {
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const location = useLocation()
   const { user, profile } = useAuthStore()
   const setGamingStreamId = useSetGamingStreamId()
@@ -57,6 +56,8 @@ function GamingSetupPageInner() {
   // ── Stream state ──
   const [streamTitle, setStreamTitle] = useState('')
   const [selectedGame, setSelectedGame] = useState('')
+  const selectedGameRef = useRef(selectedGame)
+  selectedGameRef.current = selectedGame
   const [streamId] = useState(() => generateUUID())
   const [streamData, setStreamData] = useState<StreamData | null>(null)
   const [isLive, setIsLive] = useState(false)
@@ -180,7 +181,7 @@ function GamingSetupPageInner() {
             user_id: user.id,
             broadcaster_id: user.id,
             title: defaultTitle,
-            game_title: selectedGame || '',
+            game_title: selectedGameRef.current || '',
             category: 'gaming',
             status: 'starting',
             is_live: false,
@@ -272,7 +273,7 @@ function GamingSetupPageInner() {
   }, [streamData?.id, agora]);
 
   // Phase 2: Go live (join Agora + publish)
-  const doGoLive = async (agreementAcceptedAt: string) => {
+  const doGoLive = useCallback(async (agreementAcceptedAt: string) => {
     if (isGamingLockedDown) {
       toast.error('HytroGaming is currently disabled by admin. No one can go live while lockdown is active.');
       return;
@@ -290,14 +291,11 @@ function GamingSetupPageInner() {
       await agora.goLive(channelName, streamData.id);
       setIsLive(true);
       toast.success('You are now LIVE on HytroGaming!');
-      await supabase.functions.invoke('notify-stream-live', {
-        body: { streamId: streamData.id, userId: user?.id, category: 'gaming' },
-      });
     } catch (err: any) {
       console.error('[GamingSetupPage] Go live failed:', err);
       toast.error(err?.message || 'Failed to go live');
     }
-  };
+  }, [isGamingLockedDown, streamData?.id, channelName, agora, user?.id]);
 
   const handleGoLive = useCallback(() => {
     if (!inlineAgreementChecked) {

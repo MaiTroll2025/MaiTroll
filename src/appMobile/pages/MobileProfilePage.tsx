@@ -1,17 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import {
-  ArrowRight,
-  BadgeCheck,
-  Coins,
-  Crown,
-  Edit3,
-  Gift,
-  MessageCircle,
-  Settings,
-  Wallet,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, BadgeCheck, Crown, Edit3, Gift, MessageCircle, Settings, Wallet, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeMobileRole, type MobileUserRole } from "../mobileRoutes.tsx";
 import { useCityStatus } from "../../hooks/useCityStatus";

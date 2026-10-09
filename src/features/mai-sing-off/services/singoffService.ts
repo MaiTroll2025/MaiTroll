@@ -1,22 +1,6 @@
 import { supabase } from '@/lib/supabase'
-import { createNotification } from '@/lib/notifications'
 import { OFFICIAL_GIFTS, GiftItem } from '@/lib/giftConstants'
-import type {
-  SingOffSession,
-  SingOffUser,
-  SingOffQueueEntry,
-  SingOffRound,
-  SingOffDecision,
-  SingOffSessionState,
-  SingOffChatMessage,
-  SingOffGiftEvent,
-  SingOffStats,
-  ScheduledShow,
-  SingOffRoleApplication,
-  SingOffChampionship,
-UpcomingEvent,
-  ActiveRolesList,
-} from '../types'
+import type { SingOffUser, SingOffQueueEntry, SingOffRound, SingOffDecision, SingOffSessionState, SingOffChatMessage, SingOffGiftEvent, SingOffStats, ScheduledShow, SingOffRoleApplication, SingOffChampionship, UpcomingEvent, ActiveRolesList } from '../types';
 
 export type SingOffTokenMode = 'singoff-publisher' | 'singoff-viewer'
 

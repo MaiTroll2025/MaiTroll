@@ -190,7 +190,7 @@ self.addEventListener('activate', (event) => {
         if (self.registration.navigationPreload) {
           await self.registration.navigationPreload.enable();
         }
-      } catch (e) {
+      } catch (_e) {
         console.log('[SW] Navigation preload not supported');
       }
     })()
@@ -292,7 +292,7 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       notificationData = event.data.json();
-    } catch (e) {
+    } catch (_e) {
       notificationData = { body: event.data.text() };
     }
   }
@@ -512,7 +512,7 @@ async function cacheFirst(request: Request, cacheName: string): Promise<Response
       cache.put(request, network.clone());
     }
     return network;
-  } catch (err) {
+  } catch (_err) {
     return new Response('Network error', { status: 503, statusText: 'Service Unavailable' });
   }
 }
@@ -525,7 +525,7 @@ async function networkFirstWithOfflineFallback(request: Request): Promise<Respon
     if (preloadResponse) {
       return preloadResponse;
     }
-  } catch (e) {
+  } catch (_e) {
     // Preload not supported
   }
   
@@ -540,7 +540,7 @@ async function networkFirstWithOfflineFallback(request: Request): Promise<Respon
       return networkResponse;
     }
     throw new Error('Network response not ok');
-  } catch (err) {
+  } catch (_err) {
     const cache = await caches.open(STATIC_CACHE);
     
     // For navigation requests, retry once after a short delay to handle
@@ -553,7 +553,7 @@ async function networkFirstWithOfflineFallback(request: Request): Promise<Respon
           cache.put(request, retryResponse.clone());
           return retryResponse;
         }
-      } catch (retryErr) {
+      } catch (_retryErr) {
         // Retry failed, continue to cache fallback
       }
     }
@@ -660,7 +660,7 @@ async function handleBackgroundSync(request: Request): Promise<Response> {
   try {
     const response = await fetch(request);
     return response;
-  } catch (err) {
+  } catch (_err) {
     // Queue for later
     const url = new URL(request.url);
     let queueName = 'chat-messages';
@@ -743,7 +743,7 @@ async function processSyncQueue(queueName: string) {
         headers: new Headers(item.headers),
         body: item.body
       });
-    } catch (err) {
+    } catch (_err) {
       failed.push(item);
     }
   }

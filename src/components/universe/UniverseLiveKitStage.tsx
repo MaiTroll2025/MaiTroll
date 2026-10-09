@@ -13,10 +13,11 @@
 // publishes the local camera/mic to the round's LiveKit room at the lowest
 // practical latency; otherwise it renders the provided Mux playbackId.
 // ============================================================================
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { useLiveKitRoom } from '../../hooks/useLiveKitRoom'
 import UniverseMuxPlayer from './UniverseMuxPlayer'
 import { Mic, Video, Loader2, Wifi } from 'lucide-react'
+import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation'
 
 interface UniverseLiveKitStageProps {
   roomName: string | null | undefined
@@ -49,6 +50,16 @@ export default function UniverseLiveKitStage({
       onUserLeft: () => {},
       onError: () => {},
     })
+  const localVideoRef = useRef<HTMLVideoElement | null>(null)
+
+  useEffect(() => {
+    const video = localVideoRef.current
+    if (!video || !localVideoTrack) return
+    applyCameraVideoPresentation(video, {
+      track: localVideoTrack.mediaStreamTrack,
+      isLocal: true,
+    })
+  }, [localVideoTrack])
 
   // Join as publisher whenever the user is on stage and we have a room.
   useEffect(() => {
@@ -108,6 +119,7 @@ export default function UniverseLiveKitStage({
       {localVideoTrack ? (
         <video
           ref={(el) => {
+            localVideoRef.current = el
             if (el && localVideoTrack && el.srcObject !== (localVideoTrack as any).mediaStream) {
               const stream = new MediaStream()
               stream.addTrack((localVideoTrack as any).mediaStreamTrack)
@@ -117,7 +129,7 @@ export default function UniverseLiveKitStage({
           autoPlay
           muted
           playsInline
-          className="h-full w-full -scale-x-100 object-cover"
+          className="h-full w-full object-cover"
         />
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-zinc-950">

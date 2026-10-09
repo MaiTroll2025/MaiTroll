@@ -1,13 +1,7 @@
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Play, Eye, Radio, Users, Sparkles, ArrowRight } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { Play, Eye, Radio, Users, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
-import { Skeleton } from '@/components/ui/skeleton';
-import LiveStreamsModule from '@/components/home/LiveStreamsModule';
 import TrollWallFeed from '@/components/home/TrollWallFeed';
-import FeaturedBroadcasts from '@/components/broadcast/FeaturedBroadcasts';
-import { cn } from '@/lib/utils';
 
 interface HeroImmersiveLayoutProps {
   liveItems: any[];
@@ -19,12 +13,12 @@ interface HeroImmersiveLayoutProps {
 
 export default function HeroImmersiveLayout({
   liveItems,
-  totalViewers,
-  loadingLive,
+  totalViewers: _totalViewers,
+  loadingLive: _loadingLive,
   onLiveItemClick,
   onRequireAuth,
 }: HeroImmersiveLayoutProps) {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
 
   const featuredStream = useMemo(() =>
     liveItems.find(item => item.isFeatured) || liveItems[0],

@@ -21,7 +21,7 @@ interface FileLawsuitModalProps {
 
 export default function FileLawsuitModal({ isOpen, onClose, onSuccess, defendant }: FileLawsuitModalProps) {
   const [loading, setLoading] = useState(false);
-  const { profile } = useAuthStore();
+  const { profile: _profile } = useAuthStore();
 
 
 

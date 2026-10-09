@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useStreamStats(streamerId: string | null) {
-  const [viewerCount, setViewerCount] = useState(1)
+  const [viewerCount, _setViewerCount] = useState(1)
   const [streamerStats, setStreamerStats] = useState<any>(null)
   const startRef = useRef(Date.now())
   const [, forceUpdate] = useState(0)

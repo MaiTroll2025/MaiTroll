@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function PropertyMarkerV2({ id, x, y, owner, isLive, badges }: { id: string; x: number; y: number; owner?: string; isLive?: boolean; badges?: string[] }) {
+export default function PropertyMarkerV2({ id, x: _x, y: _y, owner, isLive, badges }: { id: string; x: number; y: number; owner?: string; isLive?: boolean; badges?: string[] }) {
   return (
     <div className="pointer-events-auto transform -translate-x-1/2 -translate-y-1/2" style={{ width: 140 }}>
       <div className="relative rounded-2xl bg-gradient-to-br from-[#081123] to-[#0b1622] border border-white/6 shadow-[0_18px_40px_rgba(2,6,12,0.8)] p-2">

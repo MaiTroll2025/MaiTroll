@@ -2,22 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../../lib/store'
 import { toast } from 'sonner'
-import { 
-  Search, 
-  Award, 
-  Gift, 
-  Star, 
-  Rocket, 
-  CheckCircle, 
-  Loader2, 
-  Shield,
-  Crown,
-  BadgeCheck,
-  Sparkles,
-  Users,
-  Clock,
-  AlertCircle
-} from 'lucide-react'
+import { Search, Award, Gift, Star, Rocket, CheckCircle, Loader2, Shield, Crown, BadgeCheck, Sparkles, Clock, AlertCircle } from 'lucide-react';
 
 interface TargetUser {
   id: string
@@ -101,7 +86,7 @@ export default function FounderRewardsTab() {
   const [grantHistory, setGrantHistory] = useState<GrantHistory[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
 
-  const isAdmin = !!profile && (profile.role === 'admin' || profile.is_admin === true || profile.role === 'secretary')
+  const _isAdmin = !!profile && (profile.role === 'admin' || profile.is_admin === true || profile.role === 'secretary')
 
   const fetchRewardStatus = useCallback(async (userId: string) => {
     try {

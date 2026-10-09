@@ -2,7 +2,7 @@ import { ImageResponse } from '@vercel/og'
 
 export const runtime = 'edge'
 
-const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.maitroll.com'
+const _APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.maitroll.com'
 
 async function fetchFont(weight: 'bold' | 'regular' = 'bold'): Promise<ArrayBuffer> {
   const family = weight === 'bold' ? 'Inter:wght@700' : 'Inter:wght@400'

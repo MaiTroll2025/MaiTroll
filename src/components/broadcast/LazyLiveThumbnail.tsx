@@ -37,7 +37,7 @@ interface LazyLiveThumbnailProps {
  * For regular broadcasts, it shows the camera/screenshare preview.
  */
 export function LazyLiveThumbnail({
-  streamId,
+  streamId: _streamId,
   agoraChannel,
   category,
   thumbnailUrl,
@@ -48,8 +48,8 @@ export function LazyLiveThumbnail({
   onClick,
 }: LazyLiveThumbnailProps) {
   const [isHovering, setIsHovering] = useState(false);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [_videoLoaded, setVideoLoaded] = useState(false);
+  const [_hasError, _setHasError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

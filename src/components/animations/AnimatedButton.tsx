@@ -94,7 +94,7 @@ const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>(
           stiffness: 400, 
           damping: 17 
         }}
-        {...(props as HTMLMotionProps<'button'>)}
+        {...(props as unknown as HTMLMotionProps<'button'>)}
       >
         {/* Animated background gradient */}
         <motion.div

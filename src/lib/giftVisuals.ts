@@ -390,7 +390,7 @@ const normalizeSlug = (value?: string | null): string | null => {
     .replace(/(^-|-$)/g, '') || null
 }
 
-const toStorageFileName = (value?: string | null): string | null => {
+const _toStorageFileName = (value?: string | null): string | null => {
   if (!value) return null
   return String(value)
     .replace(/^gift_/, '')
@@ -410,7 +410,7 @@ const isFullUrl = (value?: string | null): value is string => {
   return typeof value === 'string' && /^(https?:)?\/\//i.test(value)
 }
 
-const getAssetTypeFromField = (field: string, value?: string | null): 'video' | 'image' | 'unknown' => {
+const _getAssetTypeFromField = (field: string, value?: string | null): 'video' | 'image' | 'unknown' => {
   if (!value) return 'unknown'
   if (field === 'icon_url') return 'image'
   if (field === 'animation_url') return 'video'

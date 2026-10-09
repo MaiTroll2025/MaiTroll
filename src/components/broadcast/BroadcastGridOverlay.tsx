@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Stream } from '../../types/broadcast';
 import { cn } from '../../lib/utils';
-import { Plus, Coins } from 'lucide-react';
 import { useAuthStore } from '../../lib/store';
 import UserActionModal from './UserActionModal';
 import { SeatSession } from '../../hooks/useStreamSeats';

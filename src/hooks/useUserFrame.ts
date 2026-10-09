@@ -3,13 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { useProfileFrameStore } from '@/stores/useProfileFrameStore'
 import type { ProfileFrame } from '@/config/profileFrames'
-import {
-  frameCache,
-  frameListeners,
-  notifyFrameListeners,
-  invalidateFrameCache,
-  invalidateAllFrameCache,
-} from '@/lib/frameCache'
+import { frameCache, frameListeners, notifyFrameListeners } from '@/lib/frameCache';
 
 // ─── Realtime subscription management ─────────────────────────
 const activeSubscriptions = new Map<string, ReturnType<typeof supabase.channel>>()
@@ -104,7 +98,7 @@ function ensureSubscription(userId: string) {
       },
       () => {
         // Frame changed in DB — re-fetch and notify all listeners
-        fetchAndCacheUserFrame(userId).then(() => notifyListeners())
+        fetchAndCacheUserFrame(userId).then(() => notifyFrameListeners())
       }
     )
     .subscribe()

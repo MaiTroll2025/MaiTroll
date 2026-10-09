@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useAdminAgencyRewards } from '../../hooks/useAdminAgency';
-import type { AgencyRewardType, AgencyTier } from '../../types/agency';
-import { TIER_CONFIG } from '../../types/agency';
-import { cn } from '../../lib/utils';
+import { supabase } from '@/lib/supabase';
+import { useAdminAgencyRewards } from '@/hooks/useAdminAgency';
+import type { AgencyRewardType, AgencyTier } from '@/types/agency';
+import { TIER_CONFIG } from '@/types/agency';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Gift, Plus, Loader2, Trash2, Search, Clock, CheckCircle2, XCircle, AlertTriangle, X } from 'lucide-react';
 
@@ -170,7 +170,7 @@ export default function AgencyRewardDistributionPanel() {
       setCoinValue('');
       setTierRequirement('none');
       setRewardType('bonus_coins');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to create reward');
     } finally {
       setSubmitting(false);
@@ -183,7 +183,7 @@ export default function AgencyRewardDistributionPanel() {
       await revokeReward(revokeModal.id, reason);
       toast.success('Reward revoked');
       setRevokeModal(null);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to revoke reward');
     }
   };

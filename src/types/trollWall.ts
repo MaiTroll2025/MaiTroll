@@ -28,6 +28,7 @@ export interface WallPost {
   badge?: string | null
   user_created_at?: string
   is_pinned?: boolean
+  is_facebook_featured?: boolean
   post_type: WallPostType
   content: string
   metadata: Record<string, any>
@@ -78,4 +79,3 @@ export interface CreateWallPostPayload {
   content: string
   metadata?: WallPostMetadata
 }
-

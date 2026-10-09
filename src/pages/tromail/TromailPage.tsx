@@ -2,44 +2,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { format, startOfMonth, startOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, isToday } from 'date-fns'
-import {
-  Mail,
-  Send,
-  Inbox,
-  Star,
-  Calendar,
-  Users,
-  Plus,
-  RefreshCw,
-  X,
-  Bell,
-  AlertCircle,
-  Reply,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  FileText,
-  Folder,
-  CheckCircle2,
-  UserCheck,
-  Eye,
-  ShieldCheck,
-  Loader2,
-  Trash2,
-} from 'lucide-react'
+import { Mail, Send, Inbox, Star, Calendar, Users, Plus, RefreshCw, X, Bell, Reply, ChevronLeft, ChevronRight, Clock, FileText, Folder, CheckCircle2, UserCheck, Eye, ShieldCheck, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
-import {
-  createTromailAccount,
-  getUserTromailAccount,
-  canAccessTromail,
-  canSendAdminEmail,
-  sendTromailMessage,
-  createTromailCalendarEvent,
-  scheduleTeamMeeting,
-} from '@/lib/tromail'
+import { createTromailAccount, getUserTromailAccount, canAccessTromail, canSendAdminEmail, sendTromailMessage, scheduleTeamMeeting } from '@/lib/tromail';
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

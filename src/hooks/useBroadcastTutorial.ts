@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
-import { toast } from 'sonner'
 
 export interface TutorialStep {
   id: string
@@ -131,7 +130,7 @@ export interface TutorialState {
 }
 
 export function useBroadcastTutorial() {
-  const { user, profile } = useAuthStore()
+  const { user, profile: _profile } = useAuthStore()
   const [state, setState] = useState<TutorialState>({
     active: false,
     currentStepIndex: 0,

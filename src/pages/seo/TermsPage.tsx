@@ -1,18 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import SEOLayout, { Breadcrumb } from './SEOLayout'
-import {
-  AlertTriangle,
-  Copyright,
-  CreditCard,
-  FileText,
-  Gavel,
-  Mail,
-  Scale,
-  ShieldCheck,
-  UserCheck,
-  Users,
-} from 'lucide-react'
+import { AlertTriangle, Copyright, CreditCard, FileText, Gavel, Mail, Scale, ShieldCheck, UserCheck } from 'lucide-react';
 
 export default function TermsPage() {
   return (

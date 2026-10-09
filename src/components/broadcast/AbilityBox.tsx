@@ -29,7 +29,7 @@ export default function AbilityBox({
   isOpen,
   onClose,
   abilities,
-  activeEffects,
+  activeEffects: _activeEffects,
   onActivate,
   getCooldownRemaining,
   isEffectActive,

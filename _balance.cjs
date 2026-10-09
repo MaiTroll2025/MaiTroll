@@ -3,11 +3,11 @@ const fs = require('fs');
 const file = 'src/pages/admin/CoinPackPurchasesLedger.tsx';
 const L = fs.readFileSync(file, 'utf8').split('\n');
 
-let running = 0;
+let _running = 0;
 const ents = [];
 for (let i = 0; i < L.length; i++) {
   const s = L[i];
-  let m, pos = 0;
+  let _m, pos = 0;
   while (pos < s.length) {
     const a = s.indexOf('<', pos);
     const c = s.indexOf('</', pos);

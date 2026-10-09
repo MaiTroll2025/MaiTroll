@@ -1,4 +1,0 @@
-.kilo/
-playwright-report/
-**/node_modules/
-**/*.generated.*

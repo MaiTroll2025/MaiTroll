@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     }
 
     // Check if already processed (idempotency)
-    const currentStatus = merchOrder.fulfillment_status || ""
+    const _currentStatus = merchOrder.fulfillment_status || ""
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     }

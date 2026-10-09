@@ -1,10 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { toast } from 'sonner'
-import {
-  Users, Crown, Shield, CheckCircle2, XCircle, AlertTriangle,
-  Search, RefreshCw, Coins, ArrowUpDown, Star
-} from 'lucide-react'
+import { Users, Shield, CheckCircle2, AlertTriangle, Search, RefreshCw, Coins, Star } from 'lucide-react';
 
 interface ReferralOverview {
   total_referrals: number
@@ -53,7 +50,7 @@ export default function EmpirePartnerAdminPanel() {
   const [loading, setLoading] = useState(true)
   const [activeView, setActiveView] = useState<'overview' | 'referrers' | 'referred'>('overview')
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortField, setSortField] = useState<SortField>('created_at')
+  const [_sortField, _setSortField] = useState<SortField>('created_at')
 
   const loadData = useCallback(async () => {
     setLoading(true)

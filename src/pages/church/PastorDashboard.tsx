@@ -1,26 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Bell,
-  BookOpen,
-  Calendar,
-  CheckCircle2,
-  Church,
-  Clock,
-  Gift,
-  Megaphone,
-  Mic,
-  MicOff,
-  Monitor,
-  Radio,
-  Save,
-  Shield,
-  Sparkles,
-  Users,
-  Video,
-  VideoOff,
-  UsersRound,
-} from 'lucide-react';
+import { Bell, BookOpen, CheckCircle2, Church, Clock, Gift, Megaphone, Mic, MicOff, Monitor, Radio, Save, Shield, Sparkles, Users, Video, VideoOff, UsersRound } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { supabase } from '@/lib/supabase';
@@ -96,12 +76,12 @@ export default function PastorDashboard() {
     isJoining,
     remoteUsers,
     localVideoTrack,
-    localAudioTrack,
+    localAudioTrack: _localAudioTrack,
     joinAsPublisher,
     leaveRoom,
     toggleMicrophone,
     toggleCamera,
-    setMicEnabled,
+    setMicEnabled: _setMicEnabled,
     getMicEnabled,
   } = useLiveKitRoom({
     roomId: churchRoomId || '',

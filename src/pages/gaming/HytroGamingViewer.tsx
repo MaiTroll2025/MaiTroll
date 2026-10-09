@@ -13,47 +13,9 @@
  * - Saved Streams playback
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
-import {
-  ArrowLeft,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
-  Clock,
-  Coins,
-  Crown,
-  Eye,
-  Flame,
-  Lock,
-  Gamepad2,
-  Gift,
-  Heart,
-  Loader2,
-  Maximize,
-  MessageCircle,
-  Mic,
-  MicOff,
-  Minimize,
-  MonitorPlay,
-  MoreVertical,
-  Pause,
-  Play,
-  Radio,
-  Send,
-  Settings,
-  Share2,
-  ShieldCheck,
-  Smile,
-  Trophy,
-  UserPlus,
-  Users,
-  Video,
-  Volume2,
-  VolumeX,
-  WifiOff,
-  Zap,
-} from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronRight, Clock, Coins, Crown, Eye, Flame, Lock, Gamepad2, Gift, Heart, Loader2, Maximize, MessageCircle, Minimize, MonitorPlay, MoreVertical, Radio, Share2, ShieldCheck, Trophy, UserPlus, Users, Video, Volume2, VolumeX, WifiOff } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
@@ -65,10 +27,8 @@ import { useIsMobile } from '@/hooks/useIsMobile'
 import GamingChat from '@/components/broadcast/GamingChat'
 import TipBanner from '@/components/broadcast/TipBanner'
 import StorageIndicator from '@/components/broadcast/StorageIndicator'
-import {
-  getAnonymousDisplayName,
-  reserveAnonymousChatSlot,
-} from '@/lib/anonymousIdentity'
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
+import { getAnonymousDisplayName } from '@/lib/anonymousIdentity';
 import useSEO from '@/hooks/useSEO'
 
 
@@ -142,7 +102,7 @@ export default function HytroGamingViewer() {
   const streamId = params.streamId || params.id
   const navigate = useNavigate()
   const { user, profile } = useAuthStore()
-  const { isMobile, hasMounted } = useIsMobile()
+  const { isMobile, hasMounted: _hasMounted } = useIsMobile()
 
   const [stream, setStream] = useState<StreamData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -153,7 +113,7 @@ export default function HytroGamingViewer() {
   const [likeCount, setLikeCount] = useState(0)
   const [showCoinStore, setShowCoinStore] = useState(false)
   const [showTipPanel, setShowTipPanel] = useState(false)
-  const [selectedTip, setSelectedTip] = useState<TipItem | null>(null)
+  const [_selectedTip, _setSelectedTip] = useState<TipItem | null>(null)
   const [sendingTip, setSendingTip] = useState(false)
   const [showMobileChat, setShowMobileChat] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -481,7 +441,7 @@ export default function HytroGamingViewer() {
   // Protected streams require hasAccess before joining
   const joinedChannelRef = useRef<string | null>(null)
   useEffect(() => {
-    if (!channelName || isHost) {
+    if (!channelName || !currentStream?.id || isHost) {
       if (joinedChannelRef.current) {
         void leaveRef.current()
         joinedChannelRef.current = null
@@ -498,13 +458,13 @@ export default function HytroGamingViewer() {
     const identity = stableViewerId.current!
     const channelKey = `${channelName}:${identity}`
     if (joinedChannelRef.current === channelKey) return // already joined this channel
-    void joinRef.current(channelName, identity)
+    void joinRef.current(channelName, identity, currentStream.id)
     joinedChannelRef.current = channelKey
     return () => {
       void leaveRef.current()
       joinedChannelRef.current = null
     }
-  }, [channelName, isHost, hasAccess])
+  }, [channelName, isHost, hasAccess, currentStream?.id])
 
   // Handlers
   const handleLike = useCallback(async () => {
@@ -542,8 +502,7 @@ export default function HytroGamingViewer() {
   }, [liked, likeCount, currentStream?.id, user?.id])
 
   const handleShare = useCallback(async () => {
-    const publicName = currentStream?.broadcaster_name || 'HytroGaming'
-    const url = `${window.location.origin}/live/${encodeURIComponent(publicName)}`
+    const url = `${window.location.origin}/gaming/watch/${encodeURIComponent(String(currentStream?.id || streamId))}`
     const shareText = `Watch ${currentStream?.broadcaster_name || 'this streamer'} live on HytroGaming! ${currentStream?.title || ''}`
     if (navigator.share) {
       try {
@@ -897,7 +856,10 @@ export default function HytroGamingViewer() {
             <ActionButton icon={<Heart className={cn('h-4 w-4', liked && 'fill-pink-400 text-pink-400')} />} label="Like" onClick={handleLike} />
             <ActionButton icon={<Gift className="h-4 w-4" />} label="Tips" onClick={() => setShowTipPanel(!showTipPanel)} active={showTipPanel} />
             <ActionButton icon={<UserPlus className="h-4 w-4" />} label="Follow" />
-            <ActionButton icon={<Share2 className="h-4 w-4" />} label="Share" />
+            <ActionButton icon={<Share2 className="h-4 w-4" />} label="Share" onClick={handleShare} />
+            {currentStream?.id && (
+              <FacebookPublishButton sourceType="gaming_stream" sourceId={currentStream.id} compact />
+            )}
             <ActionButton icon={<MoreVertical className="h-4 w-4" />} label="More" />
           </div>
 
@@ -1100,6 +1062,9 @@ export default function HytroGamingViewer() {
             label="Share"
             onClick={handleShare}
           />
+          {currentStream?.id && (
+            <FacebookPublishButton sourceType="gaming_stream" sourceId={currentStream.id} compact />
+          )}
         </div>
 
         {/* Chat overlay toggle */}
@@ -1194,7 +1159,7 @@ export default function HytroGamingViewer() {
 function StreamPlayer({
   stream,
   agora,
-  isHost,
+  isHost: _isHost,
   isMobile,
 }: {
   stream: StreamData
@@ -1344,10 +1309,10 @@ function StreamPlayer({
         </div>
       )}
 
-      {/* Camera overlay — un-mirror front camera for remote viewers (browser mirrors facingMode=user locally) */}
+      {/* Camera overlay is a remote feed, so it keeps the broadcaster's published orientation. */}
       {agora.remoteCameraTrack && (isMobile ? (
         <div className="absolute left-3 top-3 z-20 w-28 overflow-hidden rounded-lg border-2 border-cyan-400/40 bg-black/60 shadow-xl backdrop-blur-sm">
-          <div ref={cameraRef} className="h-20 w-full bg-slate-900" style={{ transform: 'scaleX(-1)' }} />
+          <div ref={cameraRef} className="h-20 w-full bg-slate-900" />
           <div className="flex items-center gap-1 px-1.5 py-0.5">
             <span className="h-1 w-1 animate-pulse rounded-full bg-red-400" />
             <span className="text-[8px] font-bold text-white/70 truncate">{stream.broadcaster_name}</span>
@@ -1355,7 +1320,7 @@ function StreamPlayer({
         </div>
       ) : (
         <div className="absolute right-4 top-4 z-20 w-48 overflow-hidden rounded-xl border-2 border-white/15 bg-black/70 shadow-2xl backdrop-blur-sm">
-          <div ref={cameraRef} className="h-24 w-full bg-slate-900" style={{ transform: 'scaleX(-1)' }} />
+          <div ref={cameraRef} className="h-24 w-full bg-slate-900" />
           <div className="flex items-center gap-1.5 px-2 py-1">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
             <span className="text-[9px] font-bold text-white/70">{stream.broadcaster_name}</span>

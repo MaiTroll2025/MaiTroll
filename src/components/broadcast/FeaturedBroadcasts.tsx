@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Stream } from '@/types/broadcast';
-import { User, Eye, Play, Camera } from 'lucide-react';
+import { Eye, Play, Camera } from 'lucide-react';
 import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';

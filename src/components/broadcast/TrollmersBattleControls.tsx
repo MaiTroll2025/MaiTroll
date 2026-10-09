@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Stream } from '../../types/broadcast';
-import { Swords, Loader2, Crown, Users, LogOut, UserPlus, Radio, Timer, Trophy, Flame } from 'lucide-react';
+import { Swords, Loader2, Crown, Users, LogOut, Radio, Timer, Trophy, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OnlineBroadcaster {
@@ -36,15 +36,15 @@ export default function TrollmersBattleControls({ currentStream, onBattleAccepte
   const [battleId, setBattleId] = useState<string | null>(null);
   const [opponentInfo, setOpponentInfo] = useState<any>(null);
   const [onlineBroadcasters, setOnlineBroadcasters] = useState<OnlineBroadcaster[]>([]);
-  const [pendingChallenges, setPendingChallenges] = useState<PendingChallenge[]>([]);
-  const [myChallengeId, setMyChallengeId] = useState<string | null>(null);
+  const [_pendingChallenges, setPendingChallenges] = useState<PendingChallenge[]>([]);
+  const [_myChallengeId, setMyChallengeId] = useState<string | null>(null);
   
   // Battle timer state
   const [battleTimeRemaining, setBattleTimeRemaining] = useState<number>(180);
   const [battleTimerActive, setBattleTimerActive] = useState(false);
   
   // Battle score state
-  const [battleScores, setBattleScores] = useState<BattleScore[]>([]);
+  const [_battleScores, setBattleScores] = useState<BattleScore[]>([]);
   const [myScore, setMyScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
   

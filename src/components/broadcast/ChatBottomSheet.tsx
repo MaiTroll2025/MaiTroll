@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { Send, Smile } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { ChatMessage } from "../../types/broadcast";
-import ProfileFrame from "../live/ProfileFrame";
 import AvatarWithFrame from "../profile/AvatarWithFrame";
 import { getDiamondForLevel } from "../../types/liveStreaming";
 import { resolveUsername as resolveUsernameUtil, DEFAULT_USERNAME } from "../../lib/chatUtils";

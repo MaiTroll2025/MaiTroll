@@ -1,7 +1,6 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Particles from '@tsparticles/react';
-import { Engine } from 'tsparticles-engine';
 import { useAnimationStore, type DiamondRainData } from '../../lib/animationManager';
 import { Gem } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -11,7 +10,7 @@ interface DiamondRainProps {
 }
 
 const DiamondRain = ({ rain }: DiamondRainProps) => {
-  const { reducedMotion, isMobile, particleDensity } = useAnimationStore();
+  const { reducedMotion, isMobile: _isMobile, particleDensity } = useAnimationStore();
   
   // Calculate particle count based on amount and device
   const particleCount = useMemo(() => {
@@ -19,11 +18,6 @@ const DiamondRain = ({ rain }: DiamondRainProps) => {
     const multiplier = particleDensity === 'low' ? 0.3 : particleDensity === 'medium' ? 0.6 : 1;
     return Math.floor(baseAmount * multiplier);
   }, [rain.amount, particleDensity]);
-
-  // Particle configuration for diamond rain
-  const particlesInit = useCallback(async (engine: Engine) => {
-    await engine.addShape('star');
-  }, []);
 
   // Custom particle options for diamond rain
   const options = useMemo(() => ({
@@ -141,7 +135,6 @@ const DiamondRain = ({ rain }: DiamondRainProps) => {
       <Particles
         id={`diamond-rain-${rain.id}`}
         options={options}
-        init={particlesInit}
       />
       
       {/* Amount display overlay at top */}

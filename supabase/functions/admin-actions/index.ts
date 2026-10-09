@@ -405,7 +405,7 @@ Deno.serve(async (req) => {
 
         const { data: rpcResult, error } = await supabaseAdmin.rpc('admin_update_any_profile_field', {
             p_user_id: userId,
-            p_updates: { is_banned: false, banned_until: null },
+            p_updates: { is_banned: false },
             p_admin_id: user.id,
             p_reason: 'Unbanned by admin'
         });
@@ -521,10 +521,10 @@ Deno.serve(async (req) => {
           id: newUserId,
           username: username,
           email: email,
-          role: "marketing_readonly",
-          bio: "Marketing Agency Read-Only Account",
+          role: "marketing_agent",
+          bio: "Marketing Agent",
           created_at: new Date().toISOString(),
-          is_broadcaster: true,
+          is_broadcaster: false,
           is_creator_onboarded: false,
           troll_coins: 0,
           total_earned_coins: 0,
@@ -559,8 +559,8 @@ Deno.serve(async (req) => {
           .single();
 
         if (fetchError) throw fetchError;
-        if (targetProfile.role !== "marketing_readonly") {
-          throw new Error("User is not a marketing_readonly account");
+        if (targetProfile.role !== "marketing_agent") {
+          throw new Error("User is not a marketing_agent account");
         }
 
         const { error: roleError } = await supabaseAdmin.rpc('set_user_role', {
@@ -596,7 +596,7 @@ Deno.serve(async (req) => {
         const { data, error } = await supabaseAdmin
           .from("user_profiles")
           .select("id, username, email, created_at, last_active")
-          .eq("role", "marketing_readonly")
+          .eq("role", "marketing_agent")
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -842,9 +842,9 @@ Deno.serve(async (req) => {
         const { limit } = params;
         const { data: users, error: usersError } = await supabaseAdmin
           .from("user_profiles")
-          .select("id, username, email, is_banned, banned_until")
+          .select("id, username, email, is_banned")
           .eq("is_banned", true)
-          .order("banned_until", { ascending: false })
+          .order("username", { ascending: true })
           .limit(limit || 100);
         if (usersError) throw usersError;
         result = { users: users || [] };
@@ -936,7 +936,7 @@ Deno.serve(async (req) => {
         if (error) throw error;
 
         // Also get grant history
-        const { data: grants, error: grantsError } = await supabaseAdmin
+        const { data: grants, error: _grantsError } = await supabaseAdmin
           .from('founder_rewards_grants')
           .select('*')
           .order('created_at', { ascending: false })
@@ -1032,6 +1032,216 @@ Deno.serve(async (req) => {
             .eq('id', assignmentId);
 
         if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "get_executive_intake": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        const requestedLimit = Number(params.limit ?? 100);
+        if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+          throw new Error("limit must be a positive integer");
+        }
+        const { data, error } = await supabaseAdmin
+          .from("executive_intake")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(Math.min(requestedLimit, 500));
+        if (error) throw error;
+        result = { intake: data || [] };
+        break;
+      }
+
+      case "assign_intake": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        const { requestId, assigneeId } = params;
+        if (!requestId) throw new Error("Missing requestId");
+        const { data, error } = await supabaseAdmin
+          .from("executive_intake")
+          .update({ assigned_secretary: assigneeId || user.id })
+          .eq("id", requestId)
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
+      case "update_intake_status": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        const { requestId, status } = params;
+        const statusValues = ["open", "in_review", "resolved", "escalated"];
+        if (!requestId || !statusValues.includes(status)) {
+          throw new Error("A requestId and valid status are required");
+        }
+        const { data, error } = await supabaseAdmin
+          .from("executive_intake")
+          .update({ status })
+          .eq("id", requestId)
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
+      case "escalate_intake": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        const { requestId } = params;
+        if (!requestId) throw new Error("Missing requestId");
+        const { data, error } = await supabaseAdmin
+          .from("executive_intake")
+          .update({ status: "escalated", escalated_to_admin: true })
+          .eq("id", requestId)
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
+      case "update_intake_notes": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        const { requestId, notes } = params;
+        if (!requestId || typeof notes !== "string") {
+          throw new Error("A requestId and notes string are required");
+        }
+        const { data, error } = await supabaseAdmin
+          .from("executive_intake")
+          .update({ secretary_notes: notes })
+          .eq("id", requestId)
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
+      case "get_officer_shifts": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        const { filter = "all", limit = 100 } = params;
+        const parsedLimit = Number(limit);
+        if (!Number.isInteger(parsedLimit) || parsedLimit < 1) {
+          throw new Error("limit must be a positive integer");
+        }
+        let query = supabaseAdmin
+          .from("officer_work_sessions")
+          .select("*")
+          .order("clock_in", { ascending: false })
+          .limit(Math.min(parsedLimit, 500));
+        if (filter === "active") query = query.is("clock_out", null);
+        else if (filter === "completed") query = query.not("clock_out", "is", null);
+        const { data: shifts, error } = await query;
+        if (error) throw error;
+
+        const officerIds = [...new Set((shifts || []).map((shift) => shift.officer_id))];
+        const { data: officers, error: profilesError } = officerIds.length
+          ? await supabaseAdmin.from("user_profiles").select("id, username").in("id", officerIds)
+          : { data: [], error: null };
+        if (profilesError) throw profilesError;
+        const officerById = new Map((officers || []).map((officer) => [officer.id, officer]));
+        result = {
+          shifts: (shifts || []).map((shift) => ({
+            ...shift,
+            officer: officerById.get(shift.officer_id) || null,
+          })),
+        };
+        break;
+      }
+
+      case "get_officer_shift_slots": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        const { data, error } = await supabaseAdmin
+          .from("officer_shift_slots")
+          .select("*, officer:user_profiles!officer_shift_slots_officer_id_fkey(id, username)")
+          .order("shift_date", { ascending: true })
+          .order("shift_start_time", { ascending: true });
+        if (error) throw error;
+        result = { slots: data || [] };
+        break;
+      }
+
+      case "get_officer_details_admin": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+        const { userId } = params;
+        if (!userId) throw new Error("Missing userId");
+
+        const [profileRes, badgesRes, logsRes] = await Promise.all([
+          supabaseAdmin
+            .from("user_profiles")
+            .select("id, username, avatar_url, role, is_officer_active, is_lead_officer, troll_role, glowing_username_color, rgb_username_expires_at, is_gold, username_style, badge, total_earned_coins, total_spent_coins, level, created_at")
+            .eq("id", userId)
+            .single(),
+          supabaseAdmin
+            .from("officer_badges")
+            .select("*")
+            .eq("user_id", userId),
+          supabaseAdmin
+            .from("role_change_log")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(50)
+        ]);
+
+        if (profileRes.error) throw profileRes.error;
+        if (badgesRes.error) throw badgesRes.error;
+        if (logsRes.error) throw logsRes.error;
+
+        result = {
+          profile: profileRes.data,
+          badges: badgesRes.data || [],
+          logs: logsRes.data || []
+        };
+        break;
+      }
+
+      case "set_officer_status": {
+        if (!isAdmin) throw new Error("Unauthorized: Admin only");
+        const { targetUserId, status, reason } = params;
+        if (!targetUserId || typeof status !== "boolean") throw new Error("Missing targetUserId or status");
+
+        const { error } = await supabaseAdmin
+          .from("user_profiles")
+          .update({ 
+            is_officer_active: status,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", targetUserId);
+
+        if (error) throw error;
+
+        await supabaseAdmin.rpc("log_admin_action", {
+          p_action_type: "set_officer_status",
+          p_target_id: targetUserId,
+          p_details: { status, reason }
+        });
+
+        result = { success: true };
+        break;
+      }
+
+      case "toggle_lead_officer": {
+        if (!isAdmin) throw new Error("Unauthorized: Admin only");
+        const { targetUserId, isLead } = params;
+        if (!targetUserId || typeof isLead !== "boolean") throw new Error("Missing targetUserId or isLead");
+
+        const { error } = await supabaseAdmin
+          .from("user_profiles")
+          .update({ 
+            is_lead_officer: isLead,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", targetUserId);
+
+        if (error) throw error;
+
+        await supabaseAdmin.rpc("log_admin_action", {
+          p_action_type: "toggle_lead_officer",
+          p_target_id: targetUserId,
+          p_details: { isLead }
+        });
+
         result = { success: true };
         break;
       }

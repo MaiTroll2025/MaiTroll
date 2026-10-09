@@ -4,10 +4,7 @@ import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import {
-  Video, Users, Clock, Play, StopCircle, Trash2, ChevronRight,
-  RefreshCw, Plus, Calendar, AlertCircle
-} from 'lucide-react';
+import { Users, Play, StopCircle, Trash2, ChevronRight, RefreshCw, Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface StaffMeeting {
@@ -36,28 +33,28 @@ export default function AdminMeetingsDashboard() {
    const canCreateMeeting = profile && (
      profile.role === 'admin' ||
      profile.role === 'ceo' ||
-     profile.role === 'lead_officer' ||
+      (profile.role as string) === 'lead_officer' ||
      profile.role === 'lead_troll_officer' ||
      profile.role === 'troll_officer' ||
-     profile.role === 'officer' ||
+      (profile.role as string) === 'officer' ||
      profile.role === 'secretary' ||
      profile.role === 'prosecutor' ||
-     profile.role === 'judge' ||
+      (profile.role as string) === 'judge' ||
      profile.role === 'attorney' ||
      profile.role === 'pastor' ||
      profile.role === 'auctioneer' ||
      profile.role === 'moderator' ||
      profile.role === 'ceo_assistant' ||
      profile.role === 'noah_assistant' ||
-     profile.role === 'agency_hr' ||
+      (profile.role as string) === 'agency_hr' ||
      profile.role === 'agency_hr_manager' ||
      profile.role === 'journalist' ||
-     profile.role === 'tcnn_news_caster' ||
-     profile.role === 'tcnn_chief_news_caster' ||
+      (profile.role as string) === 'tcnn_news_caster' ||
+      (profile.role as string) === 'tcnn_chief_news_caster' ||
      profile.role === 'troller' ||
-     profile.role === 'troll_family_leader' ||
+      (profile.role as string) === 'troll_family_leader' ||
      profile.role === 'agency_leader' ||
-     profile.role === 'noah_admin' ||
+      (profile.role as string) === 'noah_admin' ||
      profile.is_admin === true ||
      profile.is_ceo === true ||
      profile.is_lead_officer === true ||
@@ -250,7 +247,7 @@ const handleStartMeeting = async (meetingId: string) => {
       }
 
       // Send notifications to all staff members
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/send-bulk-notifications`, {
+      const response = await fetch(`${(supabase as any).supabaseUrl}/functions/v1/send-bulk-notifications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -264,6 +261,7 @@ const handleStartMeeting = async (meetingId: string) => {
             meeting_id: meetingId,
             action_url: `/meeting/${meetingId}`
           },
+          sendToAll: false,
           targetUserIds: staffIds
         })
       });

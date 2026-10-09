@@ -36,7 +36,7 @@ export default function MentionTextarea({
 }: MentionTextareaProps) {
   const navigate = useNavigate()
   const [showDropdown, setShowDropdown] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [_searchQuery, setSearchQuery] = useState('')
   const [users, setUsers] = useState<MentionUser[]>([])
   const [loading, setLoading] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(0)

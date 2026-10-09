@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MessageCircle, Heart, Gift, Send, Image, Smile, Video } from 'lucide-react'
+import { MessageCircle, Heart, Gift, Send, Image, Smile, Video, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
@@ -12,6 +12,8 @@ import HorizontalScrollRow from './HorizontalScrollRow'
 import TrollWallPostModal from './TrollWallPostModal'
 import MentionTextarea from '../MentionTextarea'
 import { notifySomeoneMentioned } from '@/lib/notifications'
+import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
+import WallShareModal from '@/components/trollWall/WallShareModal'
 
 const EMOJI_OPTIONS = [':)', ':D', '<3', ':-)', ';)', ':P']
 
@@ -70,6 +72,7 @@ export default function TrollWallFeed({ onRequireAuth, feedClassName }: TrollWal
   const [posts, setPosts] = useState<WallPost[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPost, setSelectedPost] = useState<WallPost | null>(null)
+  const [sharePost, setSharePost] = useState<WallPost | null>(null)
   const currentUserFrame = useUserFrame(user?.id)
 
   // Composer state
@@ -409,10 +412,10 @@ export default function TrollWallFeed({ onRequireAuth, feedClassName }: TrollWal
                   : 'border-white/[0.08] hover:border-cyan-400/30 hover:shadow-[0_0_24px_rgba(34,211,238,0.12)]'
 
                 return (
+                  <div key={post.id} className="flex h-[260px] w-[180px] shrink-0 flex-col gap-1">
                     <button
-                    key={post.id}
                     onClick={() => handlePostClick(post)}
-                    className={`group relative flex h-[220px] w-[180px] shrink-0 flex-col overflow-hidden rounded-2xl border bg-[#080c1a]/95 text-left transition-all duration-200 ${borderClasses}`}
+                    className={`group relative flex h-[220px] w-full flex-col overflow-hidden rounded-2xl border bg-[#080c1a]/95 text-left transition-all duration-200 ${borderClasses}`}
                   >
                     {boosted && (
                       <div className="absolute inset-x-0 top-0 z-10 h-[2px] bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(245,158,11,0.8)]" />
@@ -492,6 +495,26 @@ export default function TrollWallFeed({ onRequireAuth, feedClassName }: TrollWal
                       </div>
                     </div>
                   </button>
+                    <div className="flex h-9 items-center justify-between gap-1">
+                      {!post.is_system_generated && (
+                        <FacebookPublishButton
+                          sourceType="wall_post"
+                          sourceId={post.id}
+                          featured={Boolean((post as any).is_facebook_featured)}
+                          className="[&>button]:h-8 [&>button]:px-2 [&>button]:py-1 [&>button]:text-[9px]"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setSharePost(post)}
+                        aria-label="Share this Troll Wall post"
+                        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 text-[10px] font-bold text-white/80 hover:bg-white/10"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        Share
+                      </button>
+                    </div>
+                  </div>
                 )
               })
             : (
@@ -509,6 +532,14 @@ export default function TrollWallFeed({ onRequireAuth, feedClassName }: TrollWal
           post={selectedPost}
           onClose={() => setSelectedPost(null)}
           onRequireAuth={onRequireAuth}
+        />
+      )}
+      {sharePost && (
+        <WallShareModal
+          isOpen={!!sharePost}
+          onClose={() => setSharePost(null)}
+          post={sharePost}
+          postUrl={`${window.location.origin}/wall/${encodeURIComponent(sharePost.id)}`}
         />
       )}
     </div>

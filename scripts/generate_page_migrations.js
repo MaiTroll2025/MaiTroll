@@ -112,7 +112,7 @@ function scanDirectory(dir, baseDir) {
         }
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // Directory doesn't exist
   }
 }

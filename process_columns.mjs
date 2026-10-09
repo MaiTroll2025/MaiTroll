@@ -9,7 +9,7 @@ const s = JSON.parse(raw);
 console.log('Total rows:', s.rows?.length);
 
 // Also strip supabase status output that might be included
-const lines = raw.split('\n').filter(l => {
+const _lines = raw.split('\n').filter(l => {
   try { JSON.parse(l); return true; } catch { return false; }
 });
 
@@ -20,7 +20,7 @@ const jsonContent = raw.substring(jsonStart);
 let parsed;
 try {
   parsed = JSON.parse(jsonContent);
-} catch (e) {
+} catch (_e) {
   // Try to find the end of the JSON
   let end = jsonContent.lastIndexOf('}');
   parsed = JSON.parse(jsonContent.substring(0, end + 1));

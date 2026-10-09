@@ -1,41 +1,15 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react';
 import { lazyWithRetry } from '@/utils/lazyImport'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner'
-import {
-  Bell,
-  BookOpen,
-  Crown,
-  FileText,
-  Gamepad2,
-  Gavel,
-  Gift,
-  Heart,
-  MessageCircle,
-  Play,
-  Radio,
-  Shield,
-  Sparkles,
-  Star,
-  Trophy,
-  Users,
-  Vote,
-  X,
-  Zap,
-} from 'lucide-react'
+import { BookOpen, Crown, FileText, Gamepad2, Gift, Heart, MessageCircle, Play, Radio, Shield, Sparkles, Star, Trophy, Vote, X, Zap } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
-import { supabase } from '@/lib/supabase'
 import { isPrideMonth } from '@/lib/prideMonth'
 import TrollWallFeed from '@/components/home/TrollWallFeed'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
 import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
-import LiveAuctionMiniWindow from '@/components/home/LiveAuctionMiniWindow'
-import SupportGoalReminderModal from '@/components/SupportGoalReminderModal'
-import { useSupportGoalReminder } from '@/hooks/useSupportGoalReminder'
-import { usePresidentSystem } from '@/hooks/usePresidentSystem'
-import FloatingPoster from '@/components/home/FloatingPoster'
 import JoinPoster from '@/components/home/JoinPoster'
 
 interface AuctionShow {
@@ -71,11 +45,11 @@ interface LiveItem {
 
 type TabType = 'wall' | 'live' | 'universe' | 'laws-fees' | 'leagues' | 'president' | 'academy'
 
-const PWAInstallPrompt = lazyWithRetry(() => import('../components/PWAInstallPrompt'))
-const TCNNPopupWidget = lazyWithRetry(() => import('@/components/tcnn/TCNNPopupWidget'))
-const FeaturedBroadcasts = lazyWithRetry(() => import('@/components/broadcast/FeaturedBroadcasts'))
-const PromoSlot = lazyWithRetry(() => import('@/components/promo/PromoSlot'))
-const AdRail = lazyWithRetry(() => import('@/components/promo/AdRail'))
+const _PWAInstallPrompt = lazyWithRetry(() => import('../components/PWAInstallPrompt'))
+const _TCNNPopupWidget = lazyWithRetry(() => import('@/components/tcnn/TCNNPopupWidget'))
+const _FeaturedBroadcasts = lazyWithRetry(() => import('@/components/broadcast/FeaturedBroadcasts'))
+const _PromoSlot = lazyWithRetry(() => import('@/components/promo/PromoSlot'))
+const _AdRail = lazyWithRetry(() => import('@/components/promo/AdRail'))
 
 const glass =
   'border border-white/10 bg-[#070b19]/70 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]'
@@ -132,7 +106,7 @@ const PrideBackground = React.memo(() => {
 })
 PrideBackground.displayName = 'PrideBackground'
 
-function TopPrideHero({
+function _TopPrideHero({
   onGoLive,
   onCelebrate,
 }: {
@@ -207,7 +181,7 @@ function TopPrideHero({
   )
 }
 
-function PrideAdRail() {
+function _PrideAdRail() {
   return (
     <aside className={`${neonCard} ${rainbowBorder} hidden rounded-3xl p-5 lg:block`}>
       <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-black/30 p-6 text-center">
@@ -231,7 +205,7 @@ function PrideAdRail() {
   )
 }
 
-function LevelStatusCard() {
+function _LevelStatusCard() {
   return (
     <section className={`${neonCard} rounded-3xl p-6`}>
       <div className="flex items-center justify-between">
@@ -261,7 +235,7 @@ function LevelStatusCard() {
   )
 }
 
-function PrideCollectionCard({ onOpenStore }: { onOpenStore: () => void }) {
+function _PrideCollectionCard({ onOpenStore }: { onOpenStore: () => void }) {
   return (
     <section className={`${glass} ${rainbowBorder} rounded-3xl p-6`}>
       <div className="relative z-10">
@@ -284,7 +258,7 @@ function PrideCollectionCard({ onOpenStore }: { onOpenStore: () => void }) {
   )
 }
 
-function PrideChallengesCard({ onOpenChallenges }: { onOpenChallenges: () => void }) {
+function _PrideChallengesCard({ onOpenChallenges }: { onOpenChallenges: () => void }) {
   const now = new Date()
   const currentWeek = Math.min(4, Math.max(1, Math.ceil(now.getDate() / 7)))
 
@@ -366,7 +340,7 @@ function CityAnnouncementCard() {
   )
 }
 
-function CashOutCard() {
+function _CashOutCard() {
   return (
     <section className={`${glass} rounded-3xl p-6`}>
       <div className="flex items-center justify-between">
@@ -459,7 +433,7 @@ function HomeTabs({
 
 function LiveGrid({
   liveItems,
-  loadingLive,
+  loadingLive: _loadingLive,
   totalViewers,
   showLiveGrid,
   setShowLiveGrid,
@@ -525,8 +499,8 @@ function LiveGrid({
 function LeftSidebar({ liveItems, user }: { liveItems: LiveItem[]; user: any }) {
   const topLive = liveItems.slice(0, 6)
 
-  const [trendingTopics, setTrendingTopics] = useState<Array<{ name: string; count: number }>>([])
-  const [onlineFriends, setOnlineFriends] = useState<any[]>([])
+  const [_trendingTopics, _setTrendingTopics] = useState<Array<{ name: string; count: number }>>([])
+  const [_onlineFriends, _setOnlineFriends] = useState<any[]>([])
 
   // Trending topics & online friends (same logic as before)
   useEffect(() => {
@@ -584,7 +558,7 @@ function LeftSidebar({ liveItems, user }: { liveItems: LiveItem[]; user: any }) 
   )
 }
 
-function RightSidebar({ user, liveAuctions, liveItems, isPride, onOpenStore, onOpenChallenges }: { user: any; liveAuctions: AuctionShow[]; liveItems: LiveItem[]; isPride: boolean; onOpenStore: () => void; onOpenChallenges: () => void }) {
+function RightSidebar({ user, liveAuctions: _liveAuctions, liveItems, isPride, onOpenStore: _onOpenStore, onOpenChallenges }: { user: any; liveAuctions: AuctionShow[]; liveItems: LiveItem[]; isPride: boolean; onOpenStore: () => void; onOpenChallenges: () => void }) {
   const battleItems = liveItems.filter(i => i.isBattle)
 
   return (
@@ -659,11 +633,11 @@ export default function Home() {
   const isLoading = useAuthStore((state) => state.isLoading)
 
   const [activeTab, setActiveTab] = useState<TabType>('wall')
-  const [liveItems, setLiveItems] = useState<LiveItem[]>([])
-  const [totalViewers, setTotalViewers] = useState(0)
-  const [loadingLive, setLoadingLive] = useState(true)
+  const [liveItems, _setLiveItems] = useState<LiveItem[]>([])
+  const [totalViewers, _setTotalViewers] = useState(0)
+  const [loadingLive, _setLoadingLive] = useState(true)
   const [showLiveGrid, setShowLiveGrid] = useState<boolean | null>(null)
-  const [liveAuctions, setLiveAuctions] = useState<AuctionShow[]>([])
+  const [liveAuctions, _setLiveAuctions] = useState<AuctionShow[]>([])
 
   // ... keep all data fetching logic, realtime, etc. from original (fetchLiveContent, etc.)
 
@@ -679,7 +653,7 @@ export default function Home() {
     else navigate(`/watch/${item.id}`)
   }
 
-  const goLive = () => {
+  const _goLive = () => {
     if (!requireAuth('go live')) return
     navigate('/broadcast/setup')
   }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Grid3x3, X } from 'lucide-react'
+import { Grid3x3 } from 'lucide-react';
 
 export function DevGridOverlay() {
   const [showGrid, setShowGrid] = useState(false)
@@ -28,7 +28,7 @@ export function DevGridOverlay() {
         <div className="fixed inset-0 z-[990] pointer-events-none overflow-hidden">
           {/* Column Labels (A-Z) */}
           <div className="fixed top-0 left-0 right-0 h-8 z-[991] flex bg-black/50 backdrop-blur">
-            {columns.map((col, i) => (
+            {columns.map((col, _i) => (
               <div
                 key={`col-${col}`}
                 className="flex-1 flex items-center justify-center text-[10px] font-black text-cyan-300 border-r border-cyan-500/30"
@@ -90,7 +90,7 @@ export function DevGridOverlay() {
             className="fixed top-4 right-4 z-[992] bg-black/80 backdrop-blur border border-cyan-400/50 rounded-lg p-2 text-xs font-mono text-cyan-300"
             onMouseMove={(e) => {
               const grid = e.currentTarget
-              const rect = grid.getBoundingClientRect()
+              const _rect = grid.getBoundingClientRect()
               const x = Math.floor((e.clientX / window.innerWidth) * columns.length)
               const y = Math.floor(((e.clientY - 32) / window.innerHeight) * rows.length)
               

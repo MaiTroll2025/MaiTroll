@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Crown, Flame, Sparkles, Star } from 'lucide-react'
+import { Crown, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react'
 import type { FeaturedBroadcaster, FeaturedLiveEvent } from '../../types/featuredLive'
 

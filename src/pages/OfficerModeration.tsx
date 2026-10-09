@@ -10,12 +10,7 @@ import {
 } from 'lucide-react'
 import { ModerationReport } from '../types/moderation'
 import ReportDetailsModal from '../components/ReportDetailsModal'
-import {
-  rpcListReports,
-  rpcRejectReport,
-  rpcTakeAction,
-  rpcSubmitReport,
-} from '../types/moderationActions'
+import { rpcListReports } from '../types/moderationActions';
 
 export default function OfficerModeration() {
   const { profile } = useAuthStore()

@@ -11,10 +11,9 @@
  */
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef, ReactNode } from 'react';
-import { injectEventThemeCSS, getEventCSSVariables } from '../components/GlobalEventThemeLayer';
 // import { useAuthStore } from '../lib/store';
 // import { supabase } from '../lib/supabase';
-import { GlobalEvents, getServerTime, isEventActive, getPrimaryActiveEvent, getActiveEvents, calculateFeatureFlags } from '../lib/events/eventRegistry';
+import { GlobalEvents, getServerTime, isEventActive } from '../lib/events/eventRegistry';
 import type { GlobalEventConfig, EventFeatureFlags, AdminEventOverride } from '../lib/events/types';
 
 // ============================================================================

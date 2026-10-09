@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Video, Star, Trophy, TrendingUp, Flame, Zap, Crown, Sparkles } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { Users, Video, Star, Trophy, TrendingUp, Flame, Zap, Sparkles } from 'lucide-react';
 import { MaiTrollTheme } from '@/styles/trollCityTheme'
 import { useLiveStreams, queryKeys } from '@/hooks/useQueries'
 import { useQueryClient } from '@tanstack/react-query'

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { Swords, UserPlus, UserMinus, Zap, Trophy, Crown, Clock, WifiOff, MessageSquare } from 'lucide-react';
+import { Swords, UserPlus, UserMinus, Zap, Trophy, Crown, Clock, MessageSquare } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 
 interface SysEvent {
@@ -20,8 +20,8 @@ function teamWord(team?: string | null) {
 
 export default function BattleActivityFeed({
   battleId,
-  challengerName,
-  opponentName,
+  challengerName: _challengerName,
+  opponentName: _opponentName,
 }: {
   battleId?: string | null;
   challengerName?: string | null;

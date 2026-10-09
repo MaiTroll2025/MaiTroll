@@ -27,7 +27,7 @@ function findSqlFiles(dir, baseDir) {
         sqlFiles.push(relativePath);
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // skip
   }
 }
@@ -76,7 +76,7 @@ for (const sqlFile of relevantSqlFiles) {
         allTableDefs[name] = def;
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // skip
   }
 }
@@ -112,7 +112,7 @@ function findCodeFiles(dir, baseDir) {
         } catch {}
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // skip
   }
 }

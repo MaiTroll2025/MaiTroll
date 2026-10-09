@@ -30,7 +30,7 @@ export interface BaseGameState {
 // INTERNET GAME TYPES
 // ============================================
 
-export type InternetGameType = 'snake' | 'pong' | 'tetris' | 'pacman' | 'trollopoly';
+export type InternetGameType = 'snake' | 'pong' | 'tetris' | 'pacman';
 
 export interface InternetGameConfig {
   id: InternetGameType;
@@ -227,14 +227,5 @@ export const INTERNET_GAMES: Record<InternetGameType, InternetGameConfig> = {
     maxPlayers: 2,
     supportsMultiplayer: true,
     gameDuration: 180, // 3 minutes
-  },
-  trollopoly: {
-    id: 'trollopoly',
-    name: 'Trollopoly',
-    description: '3D Mini City Board Game! Buy properties, build your empire, bankrupt your opponents!',
-    minPlayers: 2,
-    maxPlayers: 4,
-    supportsMultiplayer: true,
-    gameDuration: 0, // Unlimited until winner
   },
 };

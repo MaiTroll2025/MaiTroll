@@ -8,7 +8,7 @@ interface SeatHeatBarProps {
   isBroadcasterBox?: boolean;
 }
 
-export default function SeatHeatBar({ userId, streamId, boxCount = 1, isBroadcasterBox = false }: SeatHeatBarProps) {
+export default function SeatHeatBar({ userId, streamId, boxCount = 1, isBroadcasterBox: _isBroadcasterBox = false }: SeatHeatBarProps) {
   const [heatValue, setHeatValue] = useState(0);
 
   useEffect(() => {

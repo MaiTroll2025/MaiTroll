@@ -1,20 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import {
-  X,
-  DollarSign,
-  Coins,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
-  Building,
-  Wallet,
-  User,
-  CreditCard,
-} from 'lucide-react'
+import { X, DollarSign, Loader2, AlertCircle, CheckCircle, Building, Wallet, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { CASHOUT_TIERS, type CashoutTier } from '@/config/coinConfig'
@@ -59,7 +46,7 @@ export default function MiniMaiPayCashoutModal({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [showTierSelector, setShowTierSelector] = useState(false)
+  const [_showTierSelector, setShowTierSelector] = useState(false)
 
   useEffect(() => {
     if (!isOpen) {

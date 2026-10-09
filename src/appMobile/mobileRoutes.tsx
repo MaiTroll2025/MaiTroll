@@ -1,38 +1,5 @@
 import React from "react";
-import {
-  Bell,
-  Briefcase,
-  Crown,
-  FileText,
-  Gavel,
-  GraduationCap,
-  Hammer,
-  Home,
-  Lock,
-  MessageCircle,
-  Mic,
-  Mic2,
-  Music,
-  PlayCircle,
-  Radio,
-  Scale,
-  Scan,
-  Settings,
-  Shield,
-  Sparkles,
-  Store,
-  User,
-  Users,
-  Wallet,
-  Wrench,
-  Heart,
-  Landmark,
-  Gamepad2,
-  DollarSign,
-  Newspaper,
-  Coins,
-  Disc3,
-} from "lucide-react";
+import { Bell, Crown, FileText, Gavel, GraduationCap, Home, Lock, MessageCircle, Mic, Radio, Scan, Settings, Shield, Sparkles, Store, User, Wrench, Heart, Gamepad2, DollarSign, Newspaper } from "lucide-react";
 
 import MobileHomePage from "./pages/MobileHomepage";
 import MobileSetupPage from "./pages/MobileSetupPage";
@@ -51,7 +18,6 @@ import MobileTreelzSettings from "./pages/MobileTreelzSettings";
 import MobileTreelzSaved from "./pages/MobileTreelzSaved";
 import MobilePrideChallenges from "./pages/MobilePrideChallenges";
 import MobilePodcastPage from "./pages/MobilePodcastPage";
-import HowToVideosPage from "../pages/JobsHowToPage";
 
 import MobilePlaceholder from "./components/MobilePlaceholder";
 import AuctioneerScanner from "../pages/auction/AuctioneerScanner";

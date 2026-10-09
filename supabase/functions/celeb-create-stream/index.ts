@@ -97,7 +97,7 @@ Deno.serve(async (req: Request) => {
       pricing_value: priceCoins,
     }
 
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from("streams")
       .insert(insertData)
       .select()

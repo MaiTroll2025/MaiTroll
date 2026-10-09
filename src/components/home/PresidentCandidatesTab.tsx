@@ -2,20 +2,7 @@ import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePresidentSystem } from '@/hooks/usePresidentSystem'
 import { supabase } from '@/lib/supabase'
-import {
-  BadgeCheck,
-  ChevronRight,
-  Crown,
-  Flame,
-  Landmark,
-  Radio,
-  Sparkles,
-  TrendingUp,
-  Trophy,
-  User,
-  Users,
-  Vote,
-} from 'lucide-react'
+import { BadgeCheck, ChevronRight, Crown, Flame, Landmark, Radio, Sparkles, Trophy, User, Vote } from 'lucide-react';
 
 export default function PresidentCandidatesTab() {
   const navigate = useNavigate()

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
-import { Gavel, Users, MessageSquare, FileText, User, Clock, AlertTriangle, CheckCircle, X } from 'lucide-react';
+import { Gavel, MessageSquare, FileText, User, X } from 'lucide-react';
 
 interface ProsecutedCase {
   id: string;
@@ -19,7 +19,7 @@ interface ProsecutedCase {
 }
 
 export default function ProsecutorDashboard() {
-  const { user, profile } = useAuthStore();
+  const { user, profile: _profile } = useAuthStore();
   const navigate = useNavigate();
   const [activeCases, setActiveCases] = useState<ProsecutedCase[]>([]);
   const [pendingCases, setPendingCases] = useState<ProsecutedCase[]>([]);

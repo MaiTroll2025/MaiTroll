@@ -1,11 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { 
-  DollarSign, User, Coins, Calendar, 
-  ChevronRight, CheckCircle, XCircle, 
-  Clock, AlertCircle, RefreshCw 
-} from 'lucide-react'
+import { DollarSign, User, Calendar, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { cn } from '../../lib/utils'

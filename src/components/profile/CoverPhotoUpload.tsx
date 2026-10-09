@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, forwardRef, useImperativeHandle }
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
-import { Upload, X, Image as ImageIcon, Check } from 'lucide-react';
+import { Upload, Check } from 'lucide-react';
 import CoverPhotoEditor from './CoverPhotoEditor';
 import { notifyFollowersOfCoverPhotoUpdate } from '../../lib/notifications';
 
@@ -29,7 +29,7 @@ export default forwardRef<CoverPhotoUploadRef, CoverPhotoUploadProps>(function C
 }: CoverPhotoUploadProps, ref) {
   const { user } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, _setIsUploading] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -172,11 +172,6 @@ export default forwardRef<CoverPhotoUploadRef, CoverPhotoUploadProps>(function C
     }
   };
 
-  const handleCancel = () => {
-    setShowEditor(false);
-    setSelectedImage(null);
-  };
-
   const handleRemoveCover = async () => {
     if (!effectiveUserId) return;
 
@@ -288,9 +283,8 @@ export default forwardRef<CoverPhotoUploadRef, CoverPhotoUploadProps>(function C
       {/* Cover Photo Editor Modal */}
       {showEditor && selectedImage && (
         <CoverPhotoEditor
-          image={selectedImage}
+          currentImage={selectedImage}
           onSave={handleSave}
-          onCancel={handleCancel}
           isSaving={isSaving}
         />
       )}

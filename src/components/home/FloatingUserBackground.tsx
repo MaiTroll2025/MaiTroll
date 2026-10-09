@@ -154,7 +154,7 @@ export const FloatingUserBackground: React.FC<FloatingUserBackgroundProps> = ({
     
     if (width <= 0 || height <= 0 || users.length === 0) return;
 
-    const centerX = width * 0.5;
+    const _centerX = width * 0.5;
     const sideMargin = width * 0.25;
     const topMargin = 100;
 
@@ -220,7 +220,7 @@ export const FloatingUserBackground: React.FC<FloatingUserBackgroundProps> = ({
       const sideMargin = width * 0.25;
       const topMargin = 100;
       const bottomMargin = 120;
-      const bubbleRadius = BUBBLE_SIZE / 2;
+      const _bubbleRadius = BUBBLE_SIZE / 2;
 
       let updatedBubbles = bubblesRef.current.map(bubble => ({ ...bubble }));
 
@@ -264,7 +264,8 @@ export const FloatingUserBackground: React.FC<FloatingUserBackgroundProps> = ({
       }
 
       updatedBubbles = updatedBubbles.map(bubble => {
-        const { x, y, vx, vy, radius } = bubble;
+        let { x, y, vx, vy } = bubble;
+        const { radius } = bubble;
 
         x += vx;
         y += vy;

@@ -4,7 +4,7 @@ import { useAuthStore } from '@/lib/store';
 import { X } from 'lucide-react';
 import { CityAd } from '@/types/cityAds';
 import { queueCityAdImpression } from '@/lib/batchWrites';
-import { shouldShowAds, hasActiveNoAdsSubscription, isAdExcludedPage } from '@/lib/adExemption';
+import { shouldShowAds, hasActiveNoAdsSubscription } from '@/lib/adExemption';
 
 const OVERLAY_SHOWN_KEY = 'tc_mobile_ad_overlay_shown';
 const OVERLAY_DURATION_MS = 5000;
@@ -14,7 +14,7 @@ export default function MobileAdOverlay() {
   const [loading, setLoading] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [shownAt, setShownAt] = useState<number>(0);
+  const [_shownAt, setShownAt] = useState<number>(0);
   const [countdown, setCountdown] = useState(5);
   const { profile } = useAuthStore();
 
@@ -25,7 +25,7 @@ export default function MobileAdOverlay() {
     try {
       const now = new Date().toISOString();
 
-      const { data: officialAds, error: officialError } = await supabase
+      const { data: officialAds, error: _officialError } = await supabase
         .from('city_ads')
         .select('*')
         .eq('is_active', true)
@@ -35,7 +35,7 @@ export default function MobileAdOverlay() {
         .order('display_order', { ascending: true })
         .limit(5);
 
-      const { data: userAds, error: userError } = await supabase
+      const { data: userAds, error: _userError } = await supabase
         .from('user_advertisements')
         .select('*')
         .eq('status', 'approved')

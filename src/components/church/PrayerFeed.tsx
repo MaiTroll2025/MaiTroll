@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { Heart, Trash2, Send, MessageCircle, AlertTriangle, Loader2, Gavel, Reply, ShieldOff, Ban, Volume2, VolumeX } from 'lucide-react';
+import { Heart, Trash2, Send, MessageCircle, AlertTriangle, Loader2, Gavel, Reply, ShieldOff, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Prayer {
