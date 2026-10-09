@@ -7,6 +7,7 @@ import { reportBug } from '../lib/bugReporter'
 interface Props {
   children: ReactNode
   fallback?: ReactNode
+  onError?: (error: Error, info: ErrorInfo) => void
 }
 
 interface State {
@@ -27,6 +28,8 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    this.props.onError?.(error, info)
+
     // Prevent infinite recursion: if we're already handling an error boundary
     // error (e.g. reportBug triggers another render error), stop immediately.
     if (isHandlingErrorBoundaryError) return
