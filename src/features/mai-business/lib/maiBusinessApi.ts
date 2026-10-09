@@ -404,7 +404,13 @@ export const maiBusinessApi = {
     return data as UserProgress[]
   },
 
-  async updateLessonProgress(lessonId: string, status: string, progress?: number) {
+  async updateLessonProgress(
+    lessonId: string,
+    courseId: string,
+    moduleId: string,
+    status: string,
+    progress?: number,
+  ) {
     const { user } = useAuthStore.getState()
     if (!user?.id) return null
     const { data: existing, error: fetchErr } = await supabase
@@ -424,7 +430,15 @@ export const maiBusinessApi = {
     } else {
       const { error: insertErr } = await supabase
         .from('mai_business_progress')
-        .insert({ user_id: user.id, lesson_id: lessonId, status, progress_percent: progress ?? 0, ...(status === 'completed' ? { completed_at: new Date().toISOString() } : {}) })
+        .insert({
+          user_id: user.id,
+          course_id: courseId,
+          module_id: moduleId,
+          lesson_id: lessonId,
+          status,
+          progress_percent: progress ?? 0,
+          ...(status === 'completed' ? { completed_at: new Date().toISOString() } : {}),
+        })
       if (insertErr) { console.error('updateLessonProgress insert error:', insertErr); return null }
     }
     return { success: true }

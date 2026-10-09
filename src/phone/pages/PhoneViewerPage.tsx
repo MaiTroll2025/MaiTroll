@@ -22,6 +22,7 @@ import {
   useAuthStore,
 } from '@/lib/store'
 import UserMiniProfile from '@/components/user/UserMiniProfile'
+import ChatMessageReportButton from '@/components/broadcast/ChatMessageReportButton'
 import { useBlockedUsers } from '@/hooks/useBlockedUsers'
 import ProtectionOrderGate from '@/components/ProtectionOrderGate'
 
@@ -4941,6 +4942,12 @@ useEffect(() => {
                     )}
                     <span className="text-[10px] font-bold text-white/40"> sent: </span>
                     <span className="text-[10px] font-semibold text-white/90">{msg.content}</span>
+                    <ChatMessageReportButton
+                      username={msg.username}
+                      content={msg.content}
+                      streamId={resolvedStreamId}
+                      className="ml-1 inline-flex items-center rounded p-1 text-white/75 transition-colors hover:text-red-300"
+                    />
                   </div>
                 )}
               </div>

@@ -319,9 +319,9 @@ export default function TrollCourt() {
           .select(`
             *,
             served_to_user:served_to(username, avatar_url),
-            court_cases!court_cases_docket_id_fkey(
+            court_cases!court_summons_case_id_fkey(
               docket_id,
-            court_dockets!court_dockets_case_id_fkey!inner(court_date)
+              court_dockets!court_cases_docket_id_fkey!inner(court_date)
             )
           `)
           .eq('summoned_user_id', user.id)

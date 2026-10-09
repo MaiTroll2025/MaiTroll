@@ -26,6 +26,7 @@ import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import GiftBoxModal from '../../components/broadcast/GiftBoxModal'
 import UserActionModal from '../../components/broadcast/UserActionModal'
+import ChatMessageReportButton from '@/components/broadcast/ChatMessageReportButton'
 import ViewerUserActionModal from '../../components/broadcast/ViewerUserActionModal'
 import ModActionsPopup from '../../components/broadcast/ModActionsPopup'
 import FounderLiveModerationSheet from '@/components/founder/FounderLiveModerationSheet'
@@ -5090,6 +5091,12 @@ useStreamRealtime(
                                       </button>
                                       <span className="mx-1 text-white/40">:</span>
                                       <span className="text-white/90">{msg.content}</span>
+                                      <ChatMessageReportButton
+                                        username={msg.username}
+                                        content={msg.content}
+                                        streamId={streamId}
+                                        className="ml-1 inline-flex items-center rounded p-1 text-white/45 transition-colors hover:bg-red-500/15 hover:text-red-300"
+                                      />
                                     </div>
                                     {canPinMessages && (
                                       <button
@@ -5329,6 +5336,12 @@ useStreamRealtime(
                          </button>
                          <span className="text-white/40 mx-1">:</span>
                          <span className="text-white/90">{msg.content}</span>
+                         <ChatMessageReportButton
+                           username={msg.username}
+                           content={msg.content}
+                           streamId={streamId}
+                           className="ml-1 inline-flex items-center rounded p-1 text-white/45 transition-colors hover:bg-red-500/15 hover:text-red-300"
+                         />
                        </div>
                        )
                      ))}
@@ -5603,6 +5616,12 @@ useStreamRealtime(
                       >
                         {message.content}
                       </span>
+                      <ChatMessageReportButton
+                        username={message.username}
+                        content={message.content}
+                        streamId={streamId}
+                        className="ml-1 inline-flex items-center rounded p-1 text-white/75 transition-colors hover:text-red-300"
+                      />
                    </motion.div>
                    )
                  })}
@@ -5685,6 +5704,12 @@ useStreamRealtime(
                           >
                             {msg.content}
                           </span>
+                          <ChatMessageReportButton
+                            username={msg.username}
+                            content={msg.content}
+                            streamId={streamId}
+                            className="ml-1 inline-flex items-center rounded p-1 text-white/70 transition-colors hover:text-red-300"
+                          />
                         </motion.div>
                         )
                       })}

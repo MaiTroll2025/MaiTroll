@@ -147,13 +147,13 @@ export async function toggleTreelzTroll(userId: string, postId: string): Promise
     .maybeSingle()
 
   if (existing) {
-    await supabase.from('treelz_likes').delete().eq('id', existing.id)
-    await supabase.rpc('decrement_treelz_likes', { p_post_id: postId })
+    const { error } = await supabase.from('treelz_likes').delete().eq('id', existing.id)
+    if (error) throw error
     return false
   }
 
-  await supabase.from('treelz_likes').insert({ user_id: userId, post_id: postId })
-  await supabase.rpc('increment_treelz_likes', { p_post_id: postId })
+  const { error } = await supabase.from('treelz_likes').insert({ user_id: userId, post_id: postId })
+  if (error) throw error
   return true
 }
 

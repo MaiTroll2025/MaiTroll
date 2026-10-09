@@ -37,32 +37,33 @@ export default function NeighborApprovals() {
     try {
       setLoading(true)
       
-      // Fetch pending businesses
-      const { data: businesses } = await supabase
+      const { data: businesses, error: businessesError } = await supabase
         .from('neighbors_businesses')
-        .select('*, profiles(username)')
-        .eq('verified', false)
+        .select('*, submitter:user_profiles!neighbors_businesses_owner_user_profiles_fkey(username)')
+        .eq('approval_status', 'pending')
         .order('created_at', { ascending: false })
-      
-      // Fetch pending events
-      const { data: events } = await supabase
+      if (businessesError) throw businessesError
+
+      const { data: events, error: eventsError } = await supabase
         .from('neighbors_events')
-        .select('*, profiles(username)')
-        .eq('verified', false)
+        .select('*, submitter:user_profiles!neighbors_events_creator_user_profiles_fkey(username)')
+        .eq('approval_status', 'pending')
         .order('created_at', { ascending: false })
-      
-      // Fetch pending jobs
-      const { data: jobs } = await supabase
+      if (eventsError) throw eventsError
+
+      const { data: jobs, error: jobsError } = await supabase
         .from('neighbors_hiring')
-        .select('*, profiles(username), neighbors_businesses(business_name)')
-        .eq('verified', false)
+        .select('*, submitter:user_profiles!neighbors_hiring_owner_user_profiles_fkey(username), neighbors_businesses(business_name)')
+        .eq('approval_status', 'pending')
         .order('created_at', { ascending: false })
+      if (jobsError) throw jobsError
       
       setPendingBusinesses(businesses || [])
       setPendingEvents(events || [])
       setPendingJobs(jobs || [])
     } catch (error) {
       console.error('Error fetching pending approvals:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to load Neighbor approvals')
     } finally {
       setLoading(false)
     }
@@ -159,9 +160,7 @@ export default function NeighborApprovals() {
     }
 
     const getSubmittedBy = () => {
-      if (type === 'business') return item.profiles?.username || 'Unknown'
-      if (type === 'event') return item.profiles?.username || 'Unknown'
-      return item.profiles?.username || 'Unknown'
+      return item.submitter?.username || 'Unknown'
     }
 
     const getDetails = () => {

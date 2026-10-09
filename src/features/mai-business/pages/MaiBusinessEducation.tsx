@@ -61,8 +61,14 @@ export default function MaiBusinessEducation() {
   };
 
   const handleComplete = async () => {
-    if (!currentLesson) return;
-    const result = await maiBusinessApi.updateLessonProgress(currentLesson.id, 'completed', 100);
+    if (!currentLesson || !course || !currentModule) return;
+    const result = await maiBusinessApi.updateLessonProgress(
+      currentLesson.id,
+      course.id,
+      currentModule.id,
+      'completed',
+      100,
+    );
     if (result?.success) {
       toast.success('Lesson completed!');
       setProgress(prev => [...prev.filter(p => p.lesson_id !== currentLesson.id), {

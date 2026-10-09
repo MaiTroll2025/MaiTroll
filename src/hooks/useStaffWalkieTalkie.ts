@@ -302,6 +302,38 @@ export function useStaffWalkieTalkie({
       } else {
         toast.error('Failed to connect to staff walkie-talkie: ' + errMsg)
       }
+
+      const track = localAudioTrackRef.current
+      const client = clientRef.current
+      if (track && client && isPublishingRef.current) {
+        try {
+          await client.unpublish(track)
+        } catch (cleanupError) {
+          console.error('[StaffWalkieTalkie] Failed to unpublish after join error:', cleanupError)
+        }
+      }
+      try {
+        track?.stop()
+      } catch (cleanupError) {
+        console.error('[StaffWalkieTalkie] Failed to stop microphone after join error:', cleanupError)
+      }
+      try {
+        track?.close()
+      } catch (cleanupError) {
+        console.error('[StaffWalkieTalkie] Failed to close microphone after join error:', cleanupError)
+      }
+      localAudioTrackRef.current = null
+      isPublishingRef.current = false
+      joinedRef.current = false
+      setIsConnected(false)
+      setIsSpeaking(false)
+      if (client) {
+        try {
+          await client.leave()
+        } catch (cleanupError) {
+          console.error('[StaffWalkieTalkie] Failed to leave after join error:', cleanupError)
+        }
+      }
       onLiveKitMicUnmute?.()
     } finally {
       joiningRef.current = false
@@ -310,47 +342,69 @@ export function useStaffWalkieTalkie({
   }, [createMicrophoneTrack, fetchAgoraToken, initAgoraClient, onLiveKitMicMute, onLiveKitMicUnmute])
 
   const leaveWalkieTalkie = useCallback(async () => {
-    try {
-      debugAgora('[StaffWalkieTalkie] Leaving walkie-talkie')
+    debugAgora('[StaffWalkieTalkie] Leaving walkie-talkie')
 
-      if (localAudioTrackRef.current) {
-        localAudioTrackRef.current.stop()
-        localAudioTrackRef.current.close()
-        localAudioTrackRef.current = null
+    const client = clientRef.current
+    const track = localAudioTrackRef.current
+    const cleanupErrors: unknown[] = []
+
+    if (client && track && isPublishingRef.current) {
+      try {
+        await client.unpublish(track)
+      } catch (err) {
+        cleanupErrors.push(err)
+        console.error('[StaffWalkieTalkie] Failed to unpublish microphone:', err)
       }
+    }
 
-      if (clientRef.current) {
-        const client = clientRef.current as any
-        if (localAudioTrackRef.current) {
-          await client.unpublish(localAudioTrackRef.current).catch(() => {})
-        }
-        client.off('user-joined')
-        client.off('user-left')
-        client.off('user-published')
-        client.off('user-unpublished')
-        client.off('connection-state-change')
-        await client.leave().catch((err) => {
-          debugAgora('[StaffWalkieTalkie] Error leaving Agora client:', err)
-        })
-        clientRef.current = null
+    if (track) {
+      try {
+        track.stop()
+      } catch (err) {
+        cleanupErrors.push(err)
+        console.error('[StaffWalkieTalkie] Failed to stop microphone:', err)
       }
+      try {
+        track.close()
+      } catch (err) {
+        cleanupErrors.push(err)
+        console.error('[StaffWalkieTalkie] Failed to close microphone:', err)
+      }
+      localAudioTrackRef.current = null
+    }
 
-      Object.keys(remoteAudioElementsRef.current).forEach((uid) => {
-        cleanupRemoteAudioElement(uid)
-      })
+    if (client) {
+      client.removeAllListeners('user-joined')
+      client.removeAllListeners('user-left')
+      client.removeAllListeners('user-published')
+      client.removeAllListeners('user-unpublished')
+      client.removeAllListeners('connection-state-change')
+      try {
+        await client.leave()
+      } catch (err) {
+        cleanupErrors.push(err)
+        console.error('[StaffWalkieTalkie] Failed to leave Agora client:', err)
+      }
+      clientRef.current = null
+    }
 
-      setIsConnected(false)
-      setIsSpeaking(false)
-      setRemoteUsers([])
-      joinedRef.current = false
-      isPublishingRef.current = false
-      setIsJoining(false)
-      setError(null)
-      onLiveKitMicUnmute?.()
+    Object.keys(remoteAudioElementsRef.current).forEach((uid) => {
+      cleanupRemoteAudioElement(uid)
+    })
 
+    setIsConnected(false)
+    setIsSpeaking(false)
+    setRemoteUsers([])
+    joinedRef.current = false
+    isPublishingRef.current = false
+    setIsJoining(false)
+    setError(cleanupErrors.length ? 'Walkie-talkie disconnected with cleanup errors' : null)
+    onLiveKitMicUnmute?.()
+
+    if (cleanupErrors.length) {
+      toast.error('Walkie-talkie disconnected, but some audio resources could not be cleaned up')
+    } else {
       debugAgora('[StaffWalkieTalkie] Left walkie-talkie successfully')
-    } catch (err) {
-      console.error('[StaffWalkieTalkie] Leave error:', err)
     }
   }, [onLiveKitMicUnmute])
 

@@ -11,6 +11,7 @@ interface ReportModalProps {
   targetUserId?: string | null
   streamId?: string | null
   targetType: 'user' | 'stream'
+  initialDescription?: string
   onSuccess?: () => void
 }
 
@@ -20,11 +21,12 @@ export default function ReportModal({
   targetUserId,
   streamId,
   targetType,
+  initialDescription = '',
   onSuccess
 }: ReportModalProps) {
   const { user } = useAuthStore()
   const [reason, setReason] = useState<ReportReason | ''>('')
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState(initialDescription)
   const [loading, setLoading] = useState(false)
 
   if (!isOpen) return null

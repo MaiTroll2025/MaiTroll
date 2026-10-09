@@ -361,7 +361,7 @@ function ProfileInner() {
 
         };
 
-    }, [currentUser, currentUser.id, fetchXP, subscribeToXP, userId, username]);
+    }, [currentUser, currentUser?.id, fetchXP, subscribeToXP, userId, username]);
 
     // Fetch featured badges when the Badges tab is active
 
