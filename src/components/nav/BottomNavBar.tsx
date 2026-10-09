@@ -443,7 +443,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
       ...cat,
       items: cat.items.filter((item) => item.show !== false),
     }));
-  }, [profile.username, canSeeFounderHub, canSeeMarketingPage, isOfficer, isSecretary, isAdmin, isLead, isPresident, isAttorney, isProsecutor, isPastor, isAgencyHR, isAgencyLeader, isJournalist, isNewsCaster, isChiefNewsCaster, isCEOAssistant, isAuctioneer, isHRAdmin]);
+  }, [profile?.username, canSeeFounderHub, canSeeMarketingPage, isOfficer, isSecretary, isAdmin, isLead, isPresident, isAttorney, isProsecutor, isPastor, isAgencyHR, isAgencyLeader, isJournalist, isNewsCaster, isChiefNewsCaster, isCEOAssistant, isAuctioneer, isHRAdmin]);
 
   const filteredPages = useMemo(() => {
     if (!search.trim()) return allPages;
