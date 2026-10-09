@@ -126,7 +126,7 @@ export default function ExpandedStatsPanel({ isOpen, onClose }: ExpandedStatsPan
     }
 
     loadStats()
-  }, [isOpen, user?.id, profile, level, xpTotal])
+  }, [isOpen, user?.id, profile, level, xpTotal, xpToNext])
 
   if (!isOpen) return null
 

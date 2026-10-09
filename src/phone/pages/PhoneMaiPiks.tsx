@@ -9,7 +9,6 @@ import StoryViewer from '../components/MaiPiksStoryViewer'
 import { PhoneButton } from '../components/PhoneButton'
 import {
   ExpiryCountdown,
-  formatRecordClock,
   HOLD_TO_RECORD_MS,
   MAX_VIDEO_MS,
   SWIPE_TO_LOCK_PX,
@@ -18,6 +17,7 @@ import {
   type StoryMonetizationMode,
   type StoryVisibility,
 } from '../components/maiPiksShared'
+import { formatRecordClock } from '../components/maiPiksUtils'
 
 type PiksMode = 'feed' | 'camera' | 'story' | 'preview'
 

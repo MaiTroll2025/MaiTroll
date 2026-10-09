@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { Stamp, Shield, CheckCircle, XCircle, Search } from 'lucide-react'
 import { verifyStamp } from '@/services/notaryService'
@@ -10,15 +10,8 @@ export default function VerifyStampPage() {
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (paramCode) {
-      setCode(paramCode)
-      handleVerify(paramCode)
-    }
-  }, [paramCode])
-
-  const handleVerify = async (verifyCode?: string) => {
-    const c = verifyCode || code
+  const handleVerify = useCallback(async (verifyCode: string) => {
+    const c = verifyCode
     if (!c.trim()) {
       toast.error('Please enter a verification code')
       return
@@ -36,7 +29,14 @@ export default function VerifyStampPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (paramCode) {
+      setCode(paramCode)
+      void handleVerify(paramCode)
+    }
+  }, [handleVerify, paramCode])
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
@@ -54,12 +54,12 @@ export default function VerifyStampPage() {
             type="text"
             value={code}
             onChange={e => setCode(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleVerify()}
+            onKeyDown={e => e.key === 'Enter' && handleVerify(code)}
             placeholder="TC-VERIFY-XXXXXXXXXXXX"
             className="flex-1 px-4 py-3 bg-zinc-800 border border-gray-700 rounded-lg text-white text-sm font-mono"
           />
           <button
-            onClick={() => void handleVerify()}
+            onClick={() => void handleVerify(code)}
             disabled={loading}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
           >

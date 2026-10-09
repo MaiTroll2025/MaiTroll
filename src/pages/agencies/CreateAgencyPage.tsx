@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
@@ -16,16 +16,7 @@ export default function CreateAgencyPage() {
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState<boolean>(true);
 
-  useEffect(() => {
-    if (user?.id) {
-      loadUserBalance();
-    } else {
-      setBalance(null);
-      setLoadingBalance(false);
-    }
-  }, [user]);
-
-  const loadUserBalance = async () => {
+  const loadUserBalance = useCallback(async () => {
     if (!user?.id) return;
     
     setLoadingBalance(true);
@@ -48,7 +39,16 @@ export default function CreateAgencyPage() {
     } finally {
       setLoadingBalance(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      void loadUserBalance();
+    } else {
+      setBalance(null);
+      setLoadingBalance(false);
+    }
+  }, [loadUserBalance, user?.id]);
 
   const handleCreateAgency = async (event: React.FormEvent) => {
     event.preventDefault();

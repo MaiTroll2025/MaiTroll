@@ -9,7 +9,8 @@ import { useAuthStore } from '../../lib/store'
 import { useSidebarStore } from '../../stores/useSidebarStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useUcRedirect } from '../../hooks/usePageVisibility'
-import { useSwipeNavigationProvider, type SwipeDirection } from '../../contexts/SwipeNavigationContext'
+import type { SwipeDirection } from '../../contexts/SwipeNavigationContext'
+import { useSwipeNavigationProvider } from '../../hooks/useSwipeNavigation'
 import { useHomeSwipeNavigation } from '../../hooks/useHomeSwipeNavigation'
 
 interface AppLayoutProps {

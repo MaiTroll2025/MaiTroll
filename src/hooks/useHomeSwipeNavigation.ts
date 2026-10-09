@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSwipeNavigation } from '@/contexts/SwipeNavigationContext';
+import { useSwipeNavigation } from './useSwipeNavigation';
 
 export interface SwipeDestination {
   path: string;

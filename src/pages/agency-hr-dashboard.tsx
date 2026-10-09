@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
 import { getRoleDisplayName, supabase } from '@/lib/supabase'
@@ -361,7 +361,7 @@ export default function AgencyHRDashboard() {
     }
   }
 
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -546,11 +546,11 @@ export default function AgencyHRDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [profile?.id, profile?.is_admin, profile?.role, profile?.troll_role, user?.id])
 
   useEffect(() => {
     void loadDashboard()
-  }, [])
+  }, [loadDashboard])
 
   useEffect(() => {
     if (!feeForm.agency_id) return

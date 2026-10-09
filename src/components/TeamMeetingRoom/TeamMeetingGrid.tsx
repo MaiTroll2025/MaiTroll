@@ -238,8 +238,10 @@ export const TeamMeetingGrid: React.FC<TeamMeetingGridProps> = ({
   const [speakingUsers, setSpeakingUsers] = useState<Set<string | number>>(new Set());
 
   useEffect(() => {
+    let cancelled = false
     const fetchProfiles = async () => {
       const newProfiles = new Map(profiles);
+      let hasNewProfiles = false
       const userIds: (string | number)[] = [
         localUserId,
         ...remoteUsers.map(u => u.uid)
@@ -250,15 +252,21 @@ export const TeamMeetingGrid: React.FC<TeamMeetingGridProps> = ({
           const profile = await fetchUserProfile(userId);
           if (profile) {
             newProfiles.set(userId, profile);
+            hasNewProfiles = true
           }
         }
       }
 
-      setProfiles(newProfiles);
+      if (!cancelled && hasNewProfiles) {
+        setProfiles(newProfiles);
+      }
     };
 
-    fetchProfiles();
-  }, [remoteUsers.length, localUserId]);
+    void fetchProfiles();
+    return () => {
+      cancelled = true
+    }
+  }, [localUserId, profiles, remoteUsers]);
 
   useEffect(() => {
     const newSpeakingUsers = new Set<string | number>();

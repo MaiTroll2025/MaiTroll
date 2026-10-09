@@ -61,7 +61,7 @@ export default function ARGiftOverlay({
         rendererRef.current.updateTracking(data.face, data.body);
       }
     },
-    []
+    [setFps, setProcessingTime]
   );
 
   const handleGiftExpired = useCallback(
@@ -120,7 +120,7 @@ export default function ARGiftOverlay({
         trackingEngineRef.current = null;
       }
     };
-  }, [videoElement, isStreamerView]);
+  }, [videoElement, isStreamerView, settings, handleGiftExpired, handleTrackingData]);
 
   useEffect(() => {
     if (!rendererRef.current || !videoElement) return;

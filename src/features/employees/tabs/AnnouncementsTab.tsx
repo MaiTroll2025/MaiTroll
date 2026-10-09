@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../../lib/store'
 import { PermissionGate } from '../components/PermissionGate'
@@ -12,7 +12,7 @@ export default function AnnouncementsTab({ profile: _profile, realProfile }: { p
   const [level, setLevel] = useState<'normal' | 'important' | 'urgent'>('normal')
   const [busy, setBusy] = useState(false)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const { data } = await supabase.from('employee_announcements').select('*').order('created_at', { ascending: false }).limit(50)
     setItems((data as any[]) || [])
     if (user) {
@@ -21,8 +21,8 @@ export default function AnnouncementsTab({ profile: _profile, realProfile }: { p
       ;(ackData as any[])?.forEach((a) => { map[a.announcement_id] = true })
       setAcks(map)
     }
-  }
-  useEffect(() => { load() }, [user])
+  }, [user])
+  useEffect(() => { load() }, [load, user])
 
   const ack = async (id: string) => {
     if (!user) return

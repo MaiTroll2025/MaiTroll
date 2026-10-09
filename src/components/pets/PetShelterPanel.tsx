@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Cat, Dog, Heart, Loader2, PawPrint, Utensils } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '../../lib/supabase'
-import { petImage } from './PetPresence'
+import { petImage } from './petImage'
 
 type Pet = {
   id: string

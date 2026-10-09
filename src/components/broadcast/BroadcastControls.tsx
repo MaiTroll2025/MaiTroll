@@ -393,7 +393,7 @@ function BroadcastControls({
       updateStreamConfig(seatPrice, false, debouncedSeatPrices);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [debouncedSeatPrices, stream.seat_prices, seatPrice, updateStreamConfig]);
+  }, [debouncedSeatPrices, stream.seat_price, stream.seat_prices, seatPrice, updateStreamConfig]);
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isHost) return;

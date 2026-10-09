@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../../lib/store'
 import { canEmployee } from '../permissions'
@@ -16,7 +16,7 @@ export default function ReportsTab({ profile: _profile, realProfile }: { profile
   const [confidential, setConfidential] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!user) return
     const isMgmt = canEmployee(realProfile, 'manage_reports')
     let query = supabase.from('employee_reports').select('*').order('created_at', { ascending: false }).limit(80)
@@ -32,8 +32,8 @@ export default function ReportsTab({ profile: _profile, realProfile }: { profile
       reports = reports.map(r => ({ ...r, supervisor: map.get(r.supervisor_id) || null }))
     }
     setReports(reports)
-  }
-  useEffect(() => { load() }, [user, realProfile])
+  }, [realProfile, user])
+  useEffect(() => { load() }, [user, realProfile, load])
 
   const submit = async () => {
     if (!subject || !user) return

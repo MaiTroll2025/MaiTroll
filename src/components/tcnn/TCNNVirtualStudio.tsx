@@ -419,7 +419,7 @@ const TCNNVirtualStudio = forwardRef<TCNNVirtualStudioHandle, TCNNVirtualStudioP
       }
 
       ctx.restore();
-    }, [width, height, applyBlurBackground]);
+    }, [onFpsUpdate, width, useSimpleMode, applyBlurBackground, height]);
 
     // Initialize MediaPipe + webcam
     const start = useCallback(async () => {
@@ -606,7 +606,7 @@ const TCNNVirtualStudio = forwardRef<TCNNVirtualStudioHandle, TCNNVirtualStudioP
         onReady?.();
         onError?.(err.message || 'Virtual studio initialization failed');
       }
-    }, [width, height, generateNewsroomBackground, generateCityscapeBackground, onSegmentationResults, onReady, onError, onModeChange]);
+    }, [generateNewsroomBackground, generateCityscapeBackground, width, height, useSimpleMode, onModeChange, onReady, onSegmentationResults, onError]);
 
     // Stop everything
     const stop = useCallback(() => {

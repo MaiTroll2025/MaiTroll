@@ -49,7 +49,7 @@ export default function GrandCityEntrance() {
       }
     }, 9000)
     return () => window.clearTimeout(safety)
-  }, [e.active, e.skip])
+  }, [e, e.active, e.skip])
 
   if (!e.active) return null
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Room, RoomEvent, VideoPresets, createLocalAudioTrack, createLocalVideoTrack } from 'livekit-client';
 import type { LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack } from 'livekit-client';
 import { supabase } from '../lib/supabase';
@@ -35,6 +35,21 @@ interface UseLiveKitRoomOptions {
   onError?: (error: Error) => void
 }
 
+const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
+
+const safeStringify = (value: any) => {
+  try {
+    if (typeof value === 'string') return value;
+    return JSON.stringify(value);
+  } catch {
+    try {
+      return String(value);
+    } catch {
+      return '[Unserializable]';
+    }
+  }
+};
+
 export function useLiveKitRoom({
   roomId,
   roomType = 'broadcast',
@@ -59,16 +74,6 @@ export function useLiveKitRoom({
   const [isJoining, setIsJoining] = useState(false);
   const [lastJoinDebug, setLastJoinDebug] = useState<any>(null);
 
-  // Helper to safely stringify values for logging without passing raw objects
-  const safeStringify = (v: any) => {
-    try {
-      if (typeof v === 'string') return v
-      return JSON.stringify(v)
-    } catch {
-      try { return String(v) } catch { return '[Unserializable]' }
-    }
-  }
-
    // Refs
     const roomRef = useRef<Room | null>(null);
     const joinedRef = useRef(false);
@@ -85,10 +90,6 @@ export function useLiveKitRoom({
     const lastFailedJoinRef = useRef<{ roomId: string; userId: string; error: string; timestamp: number } | null>(null);
     // Track seat upgrade in progress to prevent clearing participants during the transition
     const _isSeatUpgradingRef = useRef(false);
-
-// Module-level: tracks failed joins across component remounts (e.g. ErrorBoundary recovery).
-// Key = `${roomId}:${userId}`, Value = { error, timestamp }
-const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
 
   // Get LiveKit credentials from environment
   const getLiveKitUrl = () => import.meta.env.VITE_LIVEKIT_URL;
@@ -249,7 +250,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
   }, [publish, roomType, identity]);
 
   // Resolve video preset — beta cap is always 720p regardless of admin status
-  const videoPreset = VideoPresets.h720;
+  const videoPreset = useMemo(() => VideoPresets.h720, []);
 
 // Create local tracks based on room type
   const _createLocalTracks = useCallback(async () => {
@@ -330,7 +331,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
        console.error(`[useLiveKitRoom] Error creating local tracks: ${safeStringify(err)}`);
        throw err;
      }
-   }, [audioOnly, roomType]);
+   }, [audioOnly, roomType, videoPreset]);
 
   const getPublicationCount = (participant: any) => {
     const publications =
@@ -355,16 +356,16 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
     );
   };
 
-  const participantMatches = (item: any, participant: any) => {
+  const participantMatches = useCallback((item: any, participant: any) => {
     if (!item || !participant) return false;
     const sid = participant?.sid;
     const identity = participant?.identity;
     if (sid && item?.sid === sid) return true;
     if (identity && item?.identity === identity) return true;
     return false;
-  };
+  }, []);
 
-  const replaceOrAppendParticipant = (prev: RemoteParticipant[], participant: RemoteParticipant) => {
+  const replaceOrAppendParticipant = useCallback((prev: RemoteParticipant[], participant: RemoteParticipant) => {
     const _sid = participant?.sid || null;
     const _identity = participant?.identity || null;
     const exists = prev.some((item: any) => participantMatches(item, participant));
@@ -372,7 +373,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
       return [...prev, participant];
     }
     return prev.map((item: any) => participantMatches(item, participant) ? participant : item);
-  };
+  }, [participantMatches]);
 
   // Normalize various error shapes into a predictable object for logging
   const normalizeLiveKitError = (err: unknown) => {
@@ -474,7 +475,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
     setRemoteUsers(prev => replaceOrAppendParticipant(prev, participant));
 
     onUserJoined?.(participant);
-  }, [onUserJoined]);
+  }, [onUserJoined, replaceOrAppendParticipant]);
 
   // Handle participant left
   const handleParticipantLeft = useCallback((participant: RemoteParticipant) => {
@@ -575,7 +576,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
         });
       });
     },
-    []
+    [participantMatches]
   );
 
   // Handle track unsubscribed — idempotent, safe for missing participants.
@@ -656,8 +657,40 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
         });
       });
     },
-    []
+    [participantMatches]
   );
+
+  const waitForRoomConnected = useCallback(async (room: Room, timeoutMs = 5000) => {
+    if (room.state === 'connected') {
+      return true;
+    }
+
+    return new Promise<boolean>((resolve, reject) => {
+      let resolved = false;
+      const onConnected = () => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve(true);
+      };
+
+      const onTimeout = () => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        reject(new Error(`LiveKit room not connected after ${timeoutMs}ms`));
+      };
+
+      const cleanup = () => {
+        room.off(RoomEvent.Connected, onConnected);
+        window.clearTimeout(timeoutId);
+      };
+
+      const timeoutId = window.setTimeout(onTimeout, timeoutMs);
+
+      room.on(RoomEvent.Connected, onConnected);
+    });
+  }, []);
 
    // Join LiveKit as publisher
    const joinAsPublisher = useCallback(async (userId: string, tokenOverride?: string | null) => {
@@ -854,7 +887,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
       onError?.(err);
       throw err;
     }
-  }, [roomId, videoPreset, fetchToken, handleParticipantJoined, handleParticipantLeft, handleTrackSubscribed, handleTrackUnsubscribed, onError, userName, identity, audioOnly, initialAudioEnabled]);
+  }, [roomId, videoPreset, fetchToken, handleParticipantJoined, handleParticipantLeft, handleTrackSubscribed, handleTrackUnsubscribed, onError, userName, audioOnly, initialAudioEnabled, waitForRoomConnected]);
 
   // Join as viewer (LiveKit)
   const joinAsAudience = useCallback(async (userIdOrParam: string | { userId?: string; streamId?: string; roomName?: string; viewerIdentity?: string; publishCapable?: boolean }) => {
@@ -1135,7 +1168,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
       // Do not re-throw; return the root message to allow callers to display the failure reason.
       return rootMessage;
     }
-  }, [roomId, identity, fetchToken, handleParticipantJoined, handleParticipantLeft, handleTrackSubscribed, handleTrackUnsubscribed, onError, userName]);
+  }, [roomId, identity, fetchToken, handleParticipantJoined, handleParticipantLeft, handleTrackSubscribed, handleTrackUnsubscribed, onError, userName, waitForRoomConnected]);
 
   const stopUnusedPrewarmedTracks = useCallback(() => {
     if (prewarmCleanupTimerRef.current) {
@@ -1322,7 +1355,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
        setIsConnected(false)
        setIsPublishing(false)
      }
-   }, [])
+   }, [handleParticipantJoined, handleParticipantLeft, handleTrackSubscribed, handleTrackUnsubscribed])
 
   const setCameraEnabled = useCallback(async (enabled: boolean) => {
     if (audioOnly || roomType === 'pod') return false
@@ -1401,7 +1434,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
 
     cameraToggleQueueRef.current = next
     return next
-  }, [audioOnly, roomType, safeStringify, videoPreset])
+  }, [audioOnly, roomType, videoPreset])
 
   // Toggle camera
   const toggleCamera = useCallback(async () => {
@@ -1463,7 +1496,7 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
 
     microphoneToggleQueueRef.current = next
     return next
-  }, [safeStringify])
+  }, [])
 
   // Toggle microphone - with error handling to prevent disconnects
   const toggleMicrophone = useCallback(async () => {
@@ -1473,39 +1506,6 @@ const failedJoinCache = new Map<string, { error: string; timestamp: number }>();
     const isEnabled = !track.isMuted
     return setMicEnabled(!isEnabled)
   }, [setMicEnabled])
-
-// Wait for room to be connected
-    const waitForRoomConnected = useCallback(async (room: Room, timeoutMs = 5000) => {
-      if (room.state === 'connected') {
-        return true;
-      }
-
-      return new Promise<boolean>((resolve, reject) => {
-        let resolved = false;
-        const onConnected = () => {
-          if (resolved) return;
-          resolved = true;
-          cleanup();
-          resolve(true);
-        };
-
-        const onTimeout = () => {
-          if (resolved) return;
-          resolved = true;
-          cleanup();
-          reject(new Error(`LiveKit room not connected after ${timeoutMs}ms`));
-        };
-
-        const cleanup = () => {
-          room.off(RoomEvent.Connected, onConnected);
-          window.clearTimeout(timeoutId);
-        };
-
-        const timeoutId = window.setTimeout(onTimeout, timeoutMs);
-
-        room.on(RoomEvent.Connected, onConnected);
-      });
-    }, []);
 
   // Get current mic state
   const getMicEnabled = useCallback(() => {

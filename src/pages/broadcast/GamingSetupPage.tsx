@@ -10,7 +10,8 @@ import { useAgoraScreenShare } from '@/hooks/useAgoraScreenShare'
 import { useGamingHeartbeat } from '@/hooks/useGamingHeartbeat'
 import { useHytroGamingLockdown } from '@/hooks/useFeatureLockdown'
 import GamingChat from '@/components/broadcast/GamingChat'
-import { GamingStreamProvider, useSetGamingStreamId } from '@/contexts/GamingStreamContext'
+import { GamingStreamProvider } from '@/contexts/GamingStreamContext'
+import { useSetGamingStreamId } from '@/hooks/useGamingStream'
 
 import {
   DEFAULT_SCENES,

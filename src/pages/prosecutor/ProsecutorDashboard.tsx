@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
@@ -28,13 +28,7 @@ export default function ProsecutorDashboard() {
   const [selectedCase, setSelectedCase] = useState<ProsecutedCase | null>(null);
   const [messageText, setMessageText] = useState('');
 
-  useEffect(() => {
-    if (user) {
-      fetchProsecutorData();
-    }
-  }, [user]);
-
-  const fetchProsecutorData = async () => {
+  const fetchProsecutorData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -121,7 +115,13 @@ export default function ProsecutorDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchProsecutorData();
+    }
+  }, [fetchProsecutorData, user]);
 
   const handleProsecuteCase = async (caseData: ProsecutedCase) => {
     if (!user) return;

@@ -14,7 +14,7 @@ import FileLawsuitModal from '@/components/FileLawsuitModal';
 import FounderBadge from '@/components/founder/FounderBadge';
 import { useTheme } from '@/hooks/useTheme'
 import { toast } from 'sonner';
-import { Gavel, FileText, Radio, ShoppingBag, Video, Star, Award, Users, TrendingUp, Clock, DollarSign, Eye, CheckCircle, Shield, Crown, Heart, MessageCircle, UserPlus, Settings, Package, History, Send, MoreHorizontal, ShoppingCart, Hammer, BookOpen, Newspaper, Scale, AlertTriangle, ShieldAlert, Camera, Key, Ban, Coins } from 'lucide-react';
+import { Gavel, FileText, Radio, ShoppingBag, Video, Star, Users, TrendingUp, Clock, DollarSign, Eye, CheckCircle, Shield, Crown, Heart, MessageCircle, UserPlus, Settings, Package, Send, MoreHorizontal, ShoppingCart, Hammer, BookOpen, Newspaper, Scale, AlertTriangle, ShieldAlert, Camera, Ban } from 'lucide-react';
 
 interface UserProfile {
     id: string;
@@ -689,24 +689,6 @@ export function ProfileTabs({ activeTab, onTabChange, visibleTabs, isOwnProfile:
         </div>
     );
 }
-
-export const PROFILE_TABS = [
-    { key: 'social', label: 'Social', icon: Users },
-    { key: 'maipiks', label: 'Mai Piks', icon: Camera },
-    { key: 'broadcasts', label: 'Broadcasts', icon: Video },
-    { key: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
-    { key: 'auctions', label: 'Auctions', icon: Gavel },
-    { key: 'court', label: 'Court', icon: Scale },
-    { key: 'agency', label: 'Agency', icon: Shield },
-    { key: 'church', label: 'Church', icon: BookOpen },
-    { key: 'subscriptions', label: 'Subscriptions', icon: Crown },
-    { key: 'maisub', label: 'MaiSub', icon: Coins },
-    { key: 'badges', label: 'Badges', icon: Award },
-    { key: 'keys', label: 'Keys', icon: Key },
-    { key: 'inventory', label: 'Inventory & Perks', icon: Package },
-    { key: 'purchases', label: 'Purchase History', icon: History },
-    { key: 'settings', label: 'Settings', icon: Settings },
-];
 
 export default ProfileComponents;
 

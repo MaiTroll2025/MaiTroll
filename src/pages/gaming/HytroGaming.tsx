@@ -356,7 +356,7 @@ export default function HytroGaming() {
     };
 
     void checkAgency();
-  }, [user?.id, profile?.role, (profile as any)?.troll_role]);
+  }, [user.id, profile?.role, profile]);
 
   useSEO({
     title: 'HydroGaming | Live Game Streaming & Screen Sharing | Mai Troll',

@@ -124,7 +124,7 @@ export default function useSEO(config: SEOConfig) {
         injectStructuredData(schema, `page-${index}`)
       })
     }
-  }, [config.title, config.description, config.keywords, config.robots, config.ogType, config.ogVideo, config.author, config.publishedTime, config.modifiedTime, config.section, config.tags, canonicalUrl, imageUrl])
+  }, [config.title, config.description, config.keywords, config.robots, config.ogType, config.ogVideo, config.author, config.publishedTime, config.modifiedTime, config.section, config.tags, config.structuredData, canonicalUrl, imageUrl])
 
   useEffect(() => {
     applySEO()

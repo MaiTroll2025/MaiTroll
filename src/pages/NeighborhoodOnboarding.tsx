@@ -131,7 +131,7 @@ export default function NeighborhoodOnboarding() {
 
   const currentStepIndex = useMemo(
     () => progressSteps.findIndex((step) => step.id === currentScene),
-    [currentScene]
+    [currentScene, progressSteps]
   )
 
   const selectedHouseConfig = useMemo(() => {
@@ -488,7 +488,7 @@ export default function NeighborhoodOnboarding() {
     }
 
     checkUserStatus()
-  }, [user?.id])
+  }, [setProfile, user.id])
 
   const clearDraft = () => {
     localStorage.removeItem('tc_onboarding_draft')

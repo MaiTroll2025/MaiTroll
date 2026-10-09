@@ -19,11 +19,11 @@ import {
   MaiPiksAvatar,
   PHOTO_STORY_DURATION_MS,
   TIP_PLATFORM_FEE_PERCENT,
-  TIP_PRESETS,
   type MaiPiksUser,
   type PiksStory,
   type PiksStoryItem,
 } from './maiPiksShared'
+import { TIP_PRESETS } from './maiPiksUtils'
 
 /* ========================================================================= */
 /* STORY VIEWER                                                              */

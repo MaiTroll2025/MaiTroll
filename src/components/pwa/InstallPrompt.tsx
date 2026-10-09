@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { usePWA } from '../../contexts/PWAContext';
+import { usePWA } from '../../contexts/usePWA';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ===== OFFLINE BANNER =====

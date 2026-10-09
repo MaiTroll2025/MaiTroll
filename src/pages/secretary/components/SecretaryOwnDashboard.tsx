@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuthStore } from '../../../lib/store';
 import { toast } from 'sonner';
@@ -37,12 +37,7 @@ export default function SecretaryOwnDashboard() {
     pendingTasks: 0,
   });
 
-  useEffect(() => {
-    fetchTasks();
-    fetchStats();
-  }, []);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -72,9 +67,9 @@ export default function SecretaryOwnDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const [intakeRes, alertsRes, electionsRes] = await Promise.all([
         supabase.from('executive_intake').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_review']),
@@ -90,7 +85,12 @@ export default function SecretaryOwnDashboard() {
     } catch (err) {
       console.error('Error fetching stats:', err);
     }
-  };
+  }, [tasks]);
+
+  useEffect(() => {
+    void fetchTasks();
+    void fetchStats();
+  }, [fetchStats, fetchTasks]);
 
   const handleCreateTask = async () => {
     if (!user || !newTask.title) {

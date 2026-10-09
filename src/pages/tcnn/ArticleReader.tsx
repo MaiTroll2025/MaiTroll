@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -72,12 +72,6 @@ export default function ArticleReader() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [_canUserTip, setCanUserTip] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      loadArticle();
-    }
-  }, [id]);
-
   // Check if user can tip when profile or article changes
   useEffect(() => {
     if (user && article) {
@@ -131,7 +125,7 @@ export default function ArticleReader() {
     }
   }, [article]);
 
-  const loadArticle = async () => {
+  const loadArticle = useCallback(async () => {
     setIsLoading(true);
     try {
       // Load article with author details
@@ -196,7 +190,7 @@ export default function ArticleReader() {
       }
 
       // Check if bookmarked
-      if (user) {
+      if (user?.id) {
         const { data: bookmarkData } = await supabase
           .from('tcnn_bookmarks')
           .select('id')
@@ -212,7 +206,13 @@ export default function ArticleReader() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, navigate, user?.id]);
+
+  useEffect(() => {
+    if (id) {
+      void loadArticle();
+    }
+  }, [id, loadArticle]);
 
   const handleTip = async () => {
     if (!user || !article) return;

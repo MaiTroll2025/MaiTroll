@@ -1,4 +1,4 @@
-import { Home, Coins, Gavel, Scale, Building2, Gamepad2, Trophy, Music, Users, FileText, Wallet, TrendingUp, Megaphone, Briefcase, Package, PawPrint, Store, List, Waves, ShoppingBag, Shuffle, Banknote, Landmark, Radio, Crown, Church, Shield, Wrench, LayoutDashboard, Lock, Database, Settings, Zap, Calendar, Mail, Newspaper, Video, LifeBuoy, Image, Warehouse, DollarSign, Sparkles, type LucideIcon } from 'lucide-react';
+import { Home, Coins, Gavel, Scale, Building2, Gamepad2, Trophy, Music, Users, FileText, Wallet, TrendingUp, Megaphone, Briefcase, Package, PawPrint, Store, List, Waves, ShoppingBag, Shuffle, Banknote, Landmark, Radio, Crown, Church, Shield, Wrench, LayoutDashboard, Lock, Database, Settings, Zap, Calendar, Mail, Newspaper, Video, LifeBuoy, Image, Warehouse, DollarSign, Sparkles, Star, type LucideIcon } from 'lucide-react';
 import { UserRole } from '../lib/supabase'
 import type { PhoneRoleAccess } from './usePhoneRoleAccess'
 
@@ -7,6 +7,7 @@ export interface PhoneNavItem {
   path: string
   icon: LucideIcon
   show?: boolean
+  onClick?: () => void
 }
 
 export interface PhoneNavSection {
@@ -32,6 +33,7 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     { label: 'Troll Up', path: '/troll-up', icon: Zap },
     { label: 'Auctions', path: '/auctions', icon: Gavel, show: true },
     { label: 'HytroGaming', path: '/hytro', icon: Gamepad2 },
+    { label: 'HytroSpot', path: '#', icon: Star, show: true, onClick: () => window.dispatchEvent(new Event('open-hytrospot-modal')) },
     { label: 'Careers', path: '/careers', icon: Briefcase },
     { label: 'Profile', path: '/profile', icon: Users, show: true },
     { label: 'MaiLife', path: '/mai-life', icon: Sparkles, show: true },
@@ -47,11 +49,13 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     },
     { label: 'Live Now', path: '/viewer', icon: Radio },
     { label: 'High Bcasters', path: '/high-bcasters', icon: Crown },
+    { label: 'HytroSpot', path: '#', icon: Star, show: true, onClick: () => window.dispatchEvent(new Event('open-hytrospot-modal')) },
   ])
 
   add('City Core', [
     { label: 'Neighborhood', path: '/neighborhood-setup', icon: Building2 },
     { label: 'Mai Talent Show', path: '/mai-sing-off', icon: Trophy },
+    { label: 'HytroSpot', path: '#', icon: Star, show: true, onClick: () => window.dispatchEvent(new Event('open-hytrospot-modal')) },
     { label: 'MAI Business', path: '/mai-business', icon: Building2 },
     // ⭐ Founder Program — shown only to ACTIVE Founders (server-verified).
     { label: 'Founder Hub', path: '/founder', icon: Sparkles, show: a.isFounder },

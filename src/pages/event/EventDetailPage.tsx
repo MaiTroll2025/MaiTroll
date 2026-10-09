@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Users, MapPin, Bell, BellOff, Share2, Radio, Trophy, Shield, Star, Edit, Trash2, Lock, Send, Download } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -20,11 +20,7 @@ export default function EventPage() {
   const [registering, setRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
 
-  useEffect(() => {
-    fetchEvent();
-  }, [eventId]);
-
-  const fetchEvent = async () => {
+  const fetchEvent = useCallback(async () => {
     if (!eventId) return;
     setLoading(true);
 
@@ -68,7 +64,11 @@ export default function EventPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId, user?.id]);
+
+  useEffect(() => {
+    void fetchEvent();
+  }, [fetchEvent]);
 
   const handleRegister = async () => {
     if (!eventId || !user || !profile) return;

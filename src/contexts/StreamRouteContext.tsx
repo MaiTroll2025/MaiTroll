@@ -1,12 +1,6 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import type { Stream } from '../types/broadcast'
-
-interface StreamRouteValue {
-  streamId: string
-  stream: Stream
-}
-
-const StreamRouteContext = createContext<StreamRouteValue | null>(null)
+import { StreamRouteContext } from '../hooks/useStreamRoute'
 
 export function StreamRouteProvider({
   streamId,
@@ -22,12 +16,4 @@ export function StreamRouteProvider({
       {children}
     </StreamRouteContext.Provider>
   )
-}
-
-export function useResolvedStreamId(fallback?: string | null) {
-  return useContext(StreamRouteContext)?.streamId || fallback || ''
-}
-
-export function useResolvedStream(fallback?: Stream | null) {
-  return useContext(StreamRouteContext)?.stream || fallback || null
 }

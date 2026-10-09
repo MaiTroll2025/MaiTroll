@@ -233,7 +233,7 @@ export default function StreamSwipeCard({ stream, isActive, isMuted, onClose: _o
         hasJoinedRef.current = false;
       }
     };
-  }, [isActive]);
+  }, [isActive, joinStream, leaveStream]);
   
    // Handle like
    const handleLike = async () => {

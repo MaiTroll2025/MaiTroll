@@ -4,8 +4,9 @@
 
 import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useEasterEggHunt } from '@/contexts/EasterEggHuntContext'
-import HiddenEasterEgg, { injectEasterEggStyles } from './HiddenEasterEgg'
+import { useEasterEggHunt } from '@/hooks/useEasterEggHunt'
+import HiddenEasterEgg from './HiddenEasterEgg'
+import { injectEasterEggStyles } from './injectEasterEggStyles'
 import type { EggSpawn } from '@/lib/events/easterEggHunt'
 import { generateEggSpawns } from '@/lib/events/easterEggHunt'
 

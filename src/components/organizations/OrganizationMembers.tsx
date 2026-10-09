@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { UserPlus, GraduationCap } from 'lucide-react'
 import { API_ENDPOINTS, post } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
@@ -35,18 +35,18 @@ export default function OrganizationMembers({ organization, canManage = false }:
   const [studentDob, setStudentDob] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const [{ data: memberData }, { data: studentData }] = await Promise.all([
       supabase.from('organization_members').select('*').eq('org_id', organization.id).order('created_at', { ascending: false }),
       supabase.from('organization_students').select('*').eq('organization_id', organization.id).order('created_at', { ascending: false }),
     ])
     setMembers((memberData || []) as MemberRow[])
     setStudents((studentData || []) as StudentRow[])
-  }
+  }, [organization.id])
 
   useEffect(() => {
     void load()
-  }, [organization.id])
+  }, [load, organization.id])
 
   const inviteMember = async () => {
     if (!email.trim()) return

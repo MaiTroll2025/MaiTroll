@@ -1,5 +1,5 @@
 // TrollWheelGame.tsx - Enhanced Troll Wheel with Bankruptcy, Special Items, Ghost Mode, and Broadcast Abilities
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
@@ -110,7 +110,7 @@ interface TrollWheelProps {
 
 interface WheelReward {
   id: number;
-  type: 'trollmonds' | 'bankrupt' | 'trolled' | 'free_perk' | 'free_jail' | 'free_entrance' | 'ghost_mode' | 'featured_broadcaster' | 'broadcast_ability' | 'blockers';
+  type: 'trollmonds' | 'bankrupt' | 'trolled' | 'free_perk' | 'free_jail' | 'free_entrance' | 'ghost_mode' | 'featured_broadcaster' | 'broadcast_ability' | 'blockers' | 'promo_code';
   coins: number;
   label: string;
   description: string;
@@ -119,6 +119,7 @@ interface WheelReward {
   glowColor: string;
   icon: string;
   abilityId?: AbilityId;
+  promoCode?: string;
 }
 
 // Enhanced wheel rewards: 14 trollmond amounts + 1 bankrupt + 1 troll (24hr lock)
@@ -142,6 +143,8 @@ const WHEEL_REWARDS: WheelReward[] = [
   { id: 14, type: 'bankrupt', coins: 0, label: 'BANKRUPT', description: 'Lose ALL your Trollmonds!', rarity: 'special', color: '#1a1a1a', glowColor: '#000000', icon: '💀' },
   { id: 15, type: 'trolled', coins: 0, label: 'TROLLED!', description: 'No spins for 24 hours!', rarity: 'special', color: '#dc2626', glowColor: '#ef4444', icon: '🤡' },
   { id: 16, type: 'blockers', coins: 0, label: '+5 BLOCKERS', description: '5 Property Blockers!', rarity: 'rare', color: '#06b6d4', glowColor: '#22d3ee', icon: '🛡️' },
+  // Rare promo code reward (1 in 100 chance - handled in spin logic)
+  { id: 17, type: 'promo_code', coins: 0, label: 'PROMO CODE', description: 'ceopet1 - Pet Health 24h!', rarity: 'special', color: '#22c55e', glowColor: '#4ade80', icon: '🎁', promoCode: 'ceopet1' },
 ];
 
 // Additional special items that can be won (weighted lower)
@@ -564,14 +567,25 @@ export default function TrollWheelGame({
   
   const currentBidCost = getBidCost(selectedMultiplier, userBalance);
   
-  // Load wheel balance and session on mount
-  useEffect(() => {
-    if (profile?.id) {
-      loadWheelData();
+  const loadInventory = useCallback(async () => {
+    if (!profile?.id) return;
+
+    try {
+      const { data } = await supabase
+        .from('wheel_inventory')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('won_at', { ascending: false });
+
+      if (data) {
+        setInventory(data);
+      }
+    } catch (err) {
+      console.warn('[TrollWheel] Failed to load inventory:', err);
     }
   }, [profile?.id]);
-  
-  const loadWheelData = async () => {
+
+  const loadWheelData = useCallback(async () => {
     if (!profile?.id) return;
     
     try {
@@ -623,29 +637,17 @@ export default function TrollWheelGame({
       }
       
       // Load inventory
-      loadInventory();
+      await loadInventory();
     } catch (err) {
       console.warn('[TrollWheel] Failed to load wheel data:', err);
     }
-  };
-  
-  const loadInventory = async () => {
-    if (!profile?.id) return;
-    
-    try {
-      const { data } = await supabase
-        .from('wheel_inventory')
-        .select('*')
-        .eq('user_id', profile.id)
-        .order('won_at', { ascending: false });
-      
-      if (data) {
-        setInventory(data);
-      }
-    } catch (err) {
-      console.warn('[TrollWheel] Failed to load inventory:', err);
+  }, [loadInventory, profile?.id]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      void loadWheelData();
     }
-  };
+  }, [loadWheelData, profile?.id]);
   
   const MIN_BALANCE_TO_SPIN = 10;
   
@@ -739,6 +741,7 @@ export default function TrollWheelGame({
     // === RANDOM SPIN WITH SPECIAL CHANCES ===
     let resultIndex: number;
     let abilityResult: WheelReward | null = null;
+    let promoCodeResult: WheelReward | null = null;
     
     // Check if user is admin/ceo (bypass session bankrupt limit)
     const isAdmin = profile?.is_admin || profile?.is_ceo;
@@ -746,9 +749,18 @@ export default function TrollWheelGame({
     // Rolls
     const specialRoll = Math.random() * 15;
     const abilityRoll = Math.random() * 30; // 1 in 30 chance for ability
+    const promoRoll = Math.random() * 100; // 1 in 100 chance for promo code
     const canGetBankrupt = isAdmin || !sessionData?.bankrupt_landed;
     
-    if (specialRoll < 1 && canGetBankrupt) {
+    if (promoRoll < 1) {
+      // Ultra-rare promo code reward (1 in 100)
+      promoCodeResult = FULL_WHEEL_REWARDS.find(r => r.type === 'promo_code') || null;
+      if (promoCodeResult) {
+        resultIndex = FULL_WHEEL_REWARDS.indexOf(promoCodeResult);
+      } else {
+        resultIndex = Math.floor(Math.random() * WHEEL_REWARDS.length);
+      }
+    } else if (specialRoll < 1 && canGetBankrupt) {
       // Special result - either bankrupt (50%) or trolled (50%)
       resultIndex = Math.random() < 0.5 ? 14 : 15; // 14 = bankrupt, 15 = trolled
     } else if (abilityRoll < 1) {
@@ -770,11 +782,11 @@ export default function TrollWheelGame({
       resultIndex = abilityIndex >= 0 ? abilityIndex : WHEEL_REWARDS.length + Math.floor(Math.random() * ABILITY_REWARDS.length);
     } else {
       // Regular result - random trollmond reward
-      resultIndex = Math.floor(Math.random() * WHEEL_REWARDS.length); // 0-15 = trollmonds + specials
+      resultIndex = Math.floor(Math.random() * WHEEL_REWARDS.length); // 0-16 = trollmonds + specials + promo
     }
     
-    // Get the result - ability overrides the wheel segment result
-    const result = abilityResult || FULL_WHEEL_REWARDS[resultIndex];
+    // Get the result - ability and promo code override the wheel segment result
+    const result = abilityResult || promoCodeResult || FULL_WHEEL_REWARDS[resultIndex];
     
     // Calculate segment angle
     const segmentAngle = 360 / FULL_WHEEL_REWARDS.length;
@@ -883,6 +895,11 @@ export default function TrollWheelGame({
             message = `🛡️ BLOCKERS! +${blockerData?.blockers_granted || 5} Property Blockers!`;
             useAuthStore.getState().refreshProfile();
           }
+        } else if (result.type === 'promo_code') {
+          playWinSound();
+          const code = result.promoCode || 'ceopet1';
+          // Show toast with promo code for 5 seconds
+          message = `🎁 PROMO CODE: ${code} - Pet Health 24h!`;
         }
       
       // Show toast based on result type

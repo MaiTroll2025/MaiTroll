@@ -1,6 +1,6 @@
 import React from 'react'
 import { Radio, Pause, Send } from 'lucide-react'
-import { useStaffWalkieTalkieContext } from './StaffWalkieTalkieProvider'
+import { useStaffWalkieTalkieContext } from '@/hooks/useStaffWalkieTalkieContext'
 
 interface StaffWalkieTalkieButtonProps {
   onLiveKitMicMute?: () => void

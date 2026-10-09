@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase'
 import { toast } from 'sonner'
 import {
@@ -42,7 +42,7 @@ export default function MarketplaceReleaseRequests() {
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({})
   const [_showDetail, _setShowDetail] = React.useState<ReleaseRequest | null>(null)
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true)
     try {
       let query = supabase
@@ -73,13 +73,13 @@ export default function MarketplaceReleaseRequests() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterStatus])
 
   React.useEffect(() => {
     fetchRequests()
     const interval = setInterval(fetchRequests, 30000)
     return () => clearInterval(interval)
-  }, [filterStatus])
+  }, [fetchRequests, filterStatus])
 
   const handleApprove = async (request: ReleaseRequest) => {
     setProcessing(request.id)

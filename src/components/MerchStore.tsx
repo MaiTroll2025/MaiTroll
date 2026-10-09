@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/lib/supabase"
 import { useAuthStore } from "@/lib/store"
-import { useCart } from "@/lib/cartContext"
+import { useCart } from "@/lib/useCart"
 import { ShoppingBag, Plus, Minus, X, Loader2, AlertCircle, Truck, CreditCard, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import {

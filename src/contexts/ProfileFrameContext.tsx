@@ -6,17 +6,18 @@
  * Automatically fetches frame info when a user ID is requested.
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { LAUNCH_FRAMES, type ProfileFrame } from '../config/profileFrames';
+import { ProfileFrameContext } from '../hooks/useProfileFrameContext';
 
-interface UserFrameData {
+export interface UserFrameData {
   frameId: string | null;
   frame: ProfileFrame | null;
   loading: boolean;
 }
 
-interface ProfileFrameContextValue {
+export interface ProfileFrameContextValue {
   /** Get equipped frame data for a user (cached) */
   getUserFrame: (userId: string) => UserFrameData;
   /** Preload frame data for multiple users (e.g. chat participant list) */
@@ -26,8 +27,6 @@ interface ProfileFrameContextValue {
   /** Load the catalog */
   loadCatalog: () => Promise<void>;
 }
-
-const ProfileFrameContext = createContext<ProfileFrameContextValue | null>(null);
 
 // Cache for user frame data
 const frameCache = new Map<string, UserFrameData>();
@@ -168,18 +167,4 @@ export function ProfileFrameProvider({ children }: { children: React.ReactNode }
       {children}
     </ProfileFrameContext.Provider>
   );
-}
-
-export function useProfileFrameContext() {
-  const ctx = useContext(ProfileFrameContext);
-  if (!ctx) {
-    // Return a no-op context if provider is not mounted
-    return {
-      getUserFrame: () => ({ frameId: null, frame: null, loading: false }),
-      preloadUserFrames: async () => {},
-      catalog: LAUNCH_FRAMES,
-      loadCatalog: async () => {},
-    };
-  }
-  return ctx;
 }

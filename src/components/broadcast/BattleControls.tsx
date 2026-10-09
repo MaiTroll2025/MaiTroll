@@ -4,7 +4,7 @@ import { Stream } from '../../types/broadcast';
 import { Swords, Loader2, SkipForward } from 'lucide-react';
 import { toast } from 'sonner';
 import UserNameWithAge from '../UserNameWithAge';
-import { usePageVisibilityContext } from '../../contexts/PageVisibilityContext';
+import { usePageVisibilityContext } from '../../hooks/usePageVisibilityContext';
 
 interface BattleControlsProps {
   currentStream: Stream;
@@ -91,7 +91,7 @@ export default function BattleControls({ currentStream, onBattleAccepted }: Batt
       clearInterval(pollInterval);
       setWaitingForAccept(false);
     };
-  }, [outgoingBattleId, onBattleAccepted, supabase, isVisible]);
+  }, [outgoingBattleId, onBattleAccepted, isVisible]);
 
   const findAndChallengeRandom = async () => {
     if (matchStatus === 'searching') return;

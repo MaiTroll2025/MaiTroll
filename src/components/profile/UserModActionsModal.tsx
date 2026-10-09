@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase'
 import { X, Loader2, Trash2, Mic, MicOff, AlertCircle, MessageSquareOff, LogOut, Ban, Shield, UserCheck, Car, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
@@ -60,26 +60,26 @@ export default function UserModActionsModal({ isOpen, onClose, userId, username,
   const [disableKickDuration, setDisableKickDuration] = useState(24)
   const [targetProfile, setTargetProfile] = useState<any>(null)
 
-  const loadTarget = async () => {
+  const loadTarget = useCallback(async () => {
     const { data } = await supabase
       .from('user_profiles')
       .select('id, username, role, troll_role, is_admin')
       .eq('id', userId)
       .maybeSingle()
     setTargetProfile(data || null)
-  }
+  }, [userId])
 
   useEffect(() => {
     if (isOpen) {
       void loadTarget()
     }
-  }, [isOpen, userId])
+  }, [isOpen, loadTarget, userId])
 
   const isTargetProtected = isProtectedPlatformRole(targetProfile)
   const PROTECTED_ACTION_IDS = new Set(['mute', 'unmute', 'arrest', 'disable_chat', 'kick', 'ban', 'suspend_license', 'remove_officer', 'set_to_user'])
   const filteredActions = isTargetProtected ? MOD_ACTIONS.filter((a) => !PROTECTED_ACTION_IDS.has(a.id)) : MOD_ACTIONS
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
       const { data, error } = await supabase
@@ -122,13 +122,13 @@ export default function UserModActionsModal({ isOpen, onClose, userId, username,
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
 
   useEffect(() => {
     if (isOpen) {
       void load()
     }
-  }, [isOpen, userId])
+  }, [isOpen, load, userId])
 
   const deleteAction = async (row: ModActionRow) => {
     const confirmed = window.confirm(`Delete this mod action?\n\nAction: ${row.action || row.action_type || 'unknown'}\nTarget: ${row.target?.username || 'unknown'}\nReason: ${row.reason || '—'}`)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
@@ -30,13 +30,7 @@ export default function JailAppealPage() {
   const isBackgroundJailed = profile?.is_background_jailed;
   const hasActiveJail = searchParams.get('active') === 'true';
 
-  useEffect(() => {
-    if (user) {
-      fetchExistingAppeal();
-    }
-  }, [user]);
-
-  const fetchExistingAppeal = async () => {
+  const fetchExistingAppeal = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('jail_appeals')
@@ -53,7 +47,13 @@ export default function JailAppealPage() {
     } finally {
       setLoadingAppeal(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      void fetchExistingAppeal();
+    }
+  }, [fetchExistingAppeal, user]);
 
   const handleSubmitAppeal = async () => {
     if (!user || !appealText.trim()) return toast.error('Please provide appeal text');

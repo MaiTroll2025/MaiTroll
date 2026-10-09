@@ -292,6 +292,10 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
     }, 300);
   }, [currentIndex, streams.length]);
   
+  const handleClose = useCallback(() => {
+    navigate('/explore');
+  }, [navigate]);
+
   // Handle keyboard navigation (accessibility)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -310,11 +314,7 @@ export default function StreamSwipePage({ initialCategory = 'top' }: StreamSwipe
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, streams.length]);
-  
-  const handleClose = () => {
-    navigate('/explore');
-  };
+  }, [currentIndex, handleClose, streams.length]);
   
   const handleCategoryChange = (category: SwipeCategory) => {
     setActiveCategory(category);

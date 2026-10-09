@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { applyBatterySaverClass, isRealtimeRoute } from '../lib/performanceMode'
 
@@ -230,17 +230,17 @@ export function BatterySaverProvider({ children }: { children: React.ReactNode }
   const shouldReduceVideoQuality = effectiveMode !== 'normal'
   const shouldPauseNonEssentialWork = effectiveMode === 'ultra'
 
-  const getRealtimeThrottleMs = (defaultMs: number) => {
+  const getRealtimeThrottleMs = useCallback((defaultMs: number) => {
     if (effectiveMode === 'normal') return defaultMs
     if (effectiveMode === 'reduced') return Math.max(Math.round(defaultMs * 2), 15000)
     return Math.max(Math.round(defaultMs * 4), 30000)
-  }
+  }, [effectiveMode])
 
-  const getPollingInterval = (defaultMs: number) => {
+  const getPollingInterval = useCallback((defaultMs: number) => {
     if (effectiveMode === 'normal') return defaultMs
     if (effectiveMode === 'reduced') return Math.max(Math.round(defaultMs * 2.5), 15000)
     return Math.max(Math.round(defaultMs * 6), 60000)
-  }
+  }, [effectiveMode])
 
   // Memoize context value to prevent unnecessary re-renders of all consumers
   const value: BatterySaverContextValue = useMemo(() => ({
@@ -265,13 +265,7 @@ export function BatterySaverProvider({ children }: { children: React.ReactNode }
     shouldPauseNonEssentialWork,
     getRealtimeThrottleMs,
     getPollingInterval,
-  }), [
-    setting, effectiveMode, isBatterySaverOn, isUltraMode, batteryLevel, charging,
-    saveData, isPageHidden, isMobileWidth, isStandalonePWA, isStreamRoute,
-    isViewerOnlyStreamRoute, isBroadcasterRoute, shouldReduceAnimations,
-    shouldReduceRealtime, shouldReducePolling, shouldReduceVideoQuality,
-    shouldPauseNonEssentialWork,
-  ])
+  }), [setting, effectiveMode, isBatterySaverOn, isUltraMode, batteryLevel, charging, saveData, isPageHidden, isMobileWidth, isStandalonePWA, isStreamRoute, isViewerOnlyStreamRoute, isBroadcasterRoute, shouldReduceAnimations, shouldReduceRealtime, shouldReducePolling, shouldReduceVideoQuality, shouldPauseNonEssentialWork, getRealtimeThrottleMs, getPollingInterval])
 
   return <BatterySaverContext.Provider value={value}>{children}</BatterySaverContext.Provider>
 }

@@ -59,9 +59,10 @@ export function useBroadcastRecorder(options: UseBroadcastRecorderOptions = {}):
   const BUFFER_INTERVAL_MS = 1000
 
   useEffect(() => {
+    const clipTimeout = clipTimeoutRef.current
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
-      if (clipTimeoutRef.current) clearTimeout(clipTimeoutRef.current)
+      if (clipTimeout) clearTimeout(clipTimeout)
       if (streamRef.current && ownsSourceStreamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop())
       }

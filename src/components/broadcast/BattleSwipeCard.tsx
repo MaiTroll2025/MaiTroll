@@ -218,11 +218,13 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose: _o
       setIsJoining(false);
     }
   }, [isActive, stream, viewerIdentity, isMuted, user]);
+  const joinStreamRef = useRef(joinStream);
+  joinStreamRef.current = joinStream;
   
   // Join/leave based on active state
   useEffect(() => {
     if (isActive) {
-      joinStream();
+      joinStreamRef.current();
     }
     
     return () => {
@@ -331,12 +333,12 @@ export default function BattleSwipeCard({ stream, isActive, isMuted, onClose: _o
   const _broadcaster = stream.broadcaster;
   const _isHost = user?.id === stream.user_id;
 
+  const updatedLikes = stream.total_likes ?? (stream as any).like_count;
   useEffect(() => {
-    const updatedLikes = stream.total_likes ?? (stream as any).like_count;
     if (typeof updatedLikes === 'number') {
       setLikeCount(updatedLikes);
     }
-  }, [stream.total_likes, (stream as any).like_count]);
+  }, [updatedLikes]);
   
   // Calculate scores
   const challengerScore = battleData?.challenger_score || 0;

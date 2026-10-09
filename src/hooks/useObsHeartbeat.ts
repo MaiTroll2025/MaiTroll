@@ -58,7 +58,7 @@ export function useObsHeartbeat({
       console.error('[useObsHeartbeat] Heartbeat exception:', err)
       return { ok: false, error: err?.message || String(err) }
     }
-  }, [streamId, enabled])
+  }, [sessionId, streamId, enabled])
 
   // Start heartbeat interval
   useEffect(() => {

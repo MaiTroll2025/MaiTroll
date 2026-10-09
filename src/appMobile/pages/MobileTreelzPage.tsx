@@ -76,22 +76,24 @@ export default function MobileTreelzPage() {
   const currentPost = posts[currentIndex]
   const prevPost = currentIndex > 0 ? posts[currentIndex - 1] : null
   const nextPost = currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null
+  const prevVideoUrl = prevPost?.video_url
+  const nextVideoUrl = nextPost?.video_url
   const preloadRef1 = useRef<HTMLVideoElement>(null)
   const preloadRef2 = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
-    if (prevPost && preloadRef1.current) {
-      preloadRef1.current.src = prevPost.video_url
+    if (prevVideoUrl && preloadRef1.current) {
+      preloadRef1.current.src = prevVideoUrl
       preloadRef1.current.load()
     }
-  }, [prevPost?.video_url])
+  }, [prevVideoUrl])
 
   useEffect(() => {
-    if (nextPost && preloadRef2.current) {
-      preloadRef2.current.src = nextPost.video_url
+    if (nextVideoUrl && preloadRef2.current) {
+      preloadRef2.current.src = nextVideoUrl
       preloadRef2.current.load()
     }
-  }, [nextPost?.video_url])
+  }, [nextVideoUrl])
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => handleSwipe('left'),

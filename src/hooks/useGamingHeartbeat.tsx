@@ -230,7 +230,7 @@ export function useGamingHeartbeat({
         heartbeatIntervalRef.current = null;
       }
     };
-  }, [enabled, streamId, sendHeartbeat, checkIntervalMs, onAutoDisconnect]);
+  }, [enabled, streamId, sendHeartbeat, checkIntervalMs, onAutoDisconnect, lastChatAt, lastAudioAt]);
 
   return {
     lastChatAt,

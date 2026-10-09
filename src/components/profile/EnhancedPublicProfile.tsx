@@ -76,6 +76,41 @@ const PLATFORM_ICONS: Record<string, { icon: string; color: string }> = {
   personal_website: { icon: '🌐', color: '#6366F1' },
 };
 
+function updateSEOTags(profileData: EnhancedProfile, username: string) {
+  const displayName = profileData.display_name || profileData.username;
+  const title = `${displayName} | Mai Troll`;
+  const description = profileData.bio || `Check out ${displayName}'s profile on Mai Troll`;
+  const profileUrl = `${window.location.origin}/${username}`;
+  const ogImageUrl = buildOGImageUrl({ kind: 'profile', username });
+
+  document.title = title;
+
+  let metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) {
+    metaDesc.setAttribute('content', description);
+  } else {
+    metaDesc = document.createElement('meta');
+    metaDesc.setAttribute('name', 'description');
+    metaDesc.setAttribute('content', description);
+    document.head.appendChild(metaDesc);
+  }
+
+  const updateOG = (prop: string, content: string) => {
+    let el = document.querySelector(`meta[property="og:${prop}"]`);
+    if (el) { el.setAttribute('content', content); return }
+    el = document.createElement('meta');
+    el.setAttribute('property', `og:${prop}`);
+    el.setAttribute('content', content);
+    document.head.appendChild(el);
+  };
+
+  updateOG('title', title);
+  updateOG('description', description);
+  updateOG('url', profileUrl);
+  updateOG('type', 'profile');
+  updateOG('image', ogImageUrl);
+}
+
 export default function EnhancedPublicProfile() {
   const { username } = useParams();
   const { user: currentUser } = useAuthStore();
@@ -125,7 +160,7 @@ export default function EnhancedPublicProfile() {
         setAchievements(badges || []);
 
         // Update SEO
-        updateSEOTags(data);
+        updateSEOTags(data as EnhancedProfile, username);
       } catch (err) {
         console.error('Error fetching profile:', err);
       } finally {
@@ -135,41 +170,6 @@ export default function EnhancedPublicProfile() {
 
     fetchProfile();
   }, [username]);
-
-  const updateSEOTags = (profileData: EnhancedProfile) => {
-    const displayName = profileData.display_name || profileData.username;
-    const title = `${displayName} | Mai Troll`;
-    const description = profileData.bio || `Check out ${displayName}'s profile on Mai Troll`;
-    const profileUrl = `${window.location.origin}/${username}`;
-    const ogImageUrl = buildOGImageUrl({ kind: 'profile', username: username! });
-
-    document.title = title;
-
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', description);
-    } else {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      metaDesc.setAttribute('content', description);
-      document.head.appendChild(metaDesc);
-    }
-
-    const updateOG = (prop: string, content: string) => {
-      let el = document.querySelector(`meta[property="og:${prop}"]`);
-      if (el) { el.setAttribute('content', content); return }
-      el = document.createElement('meta');
-      el.setAttribute('property', `og:${prop}`);
-      el.setAttribute('content', content);
-      document.head.appendChild(el);
-    };
-
-    updateOG('title', title);
-    updateOG('description', description);
-    updateOG('url', profileUrl);
-    updateOG('type', 'profile');
-    updateOG('image', ogImageUrl);
-  };
 
   const handleShare = async () => {
     const profileUrl = profile?.username

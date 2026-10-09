@@ -494,7 +494,7 @@ export default function MaiPayPage() {
     } finally {
       setSubmittingCashout(false);
     }
-  }, [selectedTier, canRequestCashout, user?.id, selectedProvider, providerUsername, achBankName, achRoutingNumber, achAccountNumber, loadAllData, refreshCashoutLimit, loadPromotionStatus, feeCoins]);
+  }, [selectedTier, canRequestCashout, providerUsername, selectedProvider, user?.id, idDocumentUrl, feeCoins, loadAllData, refreshCashoutLimit, loadPromotionStatus, achBankName, achRoutingNumber, achAccountNumber]);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 

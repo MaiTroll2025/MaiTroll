@@ -225,7 +225,7 @@ export function useBattleManagement({ battleId, streamId, isHost }: UseBattleMan
         return false;
       }
     },
-    [streamId, isHost]
+    [streamId, isHost, getBroadcastChannel]
   );
 
   // Auto-adjust boxes when a guest leaves
@@ -272,7 +272,7 @@ export function useBattleManagement({ battleId, streamId, isHost }: UseBattleMan
         console.error('Error auto-adjusting boxes:', err);
       }
     },
-    [streamId, isHost, state.guests]
+    [streamId, isHost, state.guests, getBroadcastChannel]
   );
 
   return {

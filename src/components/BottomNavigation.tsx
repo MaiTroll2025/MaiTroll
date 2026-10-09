@@ -185,7 +185,7 @@ export default function BottomNavigation() {
 
   const canSeeCourt = !!user && !!profile
 
-  const canBroadcast = () => {
+  const canBroadcast = useCallback(() => {
     const licenseStatus = String(
       (profile as any)?.license_status ||
         (profile as any)?.drivers_license_status ||
@@ -211,7 +211,7 @@ export default function BottomNavigation() {
       licenseStatus === 'revoked'
 
     return !isBlocked && hasActiveLicense && hasInsurance && hasVehicle && hasPlate
-  }
+  }, [profile, isBroadcastLockedDown])
 
   const trollCoins = Number(
     (balances as any)?.troll_coins ??
@@ -352,7 +352,7 @@ export default function BottomNavigation() {
         supabase.removeChannel(channel)
       }
     }
-  }, [user?.id])
+  }, [isMobile, user?.id])
 
   useEffect(() => {
     if (!user?.id) return
@@ -462,7 +462,7 @@ export default function BottomNavigation() {
     }
   }, [user?.id, isMobile])
 
-  const handleMessagesClick = async () => {
+  const handleMessagesClick = useCallback(async () => {
     if (user?.id && notificationCount > 0) {
       await supabase
         .from('notifications')
@@ -473,7 +473,7 @@ export default function BottomNavigation() {
 
     setNotificationCount(0)
     setIsMenuOpen(false)
-  }
+  }, [notificationCount, user?.id])
 
   const handleLogout = async () => {
     try {
@@ -609,7 +609,7 @@ export default function BottomNavigation() {
       { category: 'Support', label: 'Policies', icon: FileText, path: '/legal' },
       { category: 'Support', label: 'Support', icon: LifeBuoy, path: '/support' },
     ],
-    [user, profile, notificationCount, isBroadcastLockedDown],
+    [user, profile, notificationCount, canBroadcast, handleMessagesClick, isAdmin],
   )
 
   const governmentPages: MenuOption[] = useMemo(() => {
@@ -681,7 +681,7 @@ export default function BottomNavigation() {
     }
 
     return pages
-  }, [isOfficer, isSecretary, isAdmin, isLead, isPresident, isAttorney, isProsecutor, canSeeCourt, profile])
+  }, [isOfficer, isSecretary, isAdmin, isLead, isPresident, isAttorney, isProsecutor, canSeeCourt, profile, isPastorCheck])
 
   const auctioneerPages: MenuOption[] = useMemo(() => {
     if (!isAuctioneer && !isAdmin) return []

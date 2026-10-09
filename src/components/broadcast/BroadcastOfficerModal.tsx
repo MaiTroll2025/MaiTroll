@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { X, Shield, UserMinus, Search, RefreshCw, Coins, Gift } from 'lucide-react';
 import { supabase } from '../../lib/supabase'
 import { toast } from 'sonner'
@@ -34,7 +34,7 @@ export default function BroadcastOfficerModal({ streamId, broadcasterId, isOpen,
 
   const [showPayAllModal, setShowPayAllModal] = useState(false)
 
-  const fetchOfficers = async () => {
+  const fetchOfficers = useCallback(async () => {
     setLoading(true)
     try {
       const { data, error } = await supabase
@@ -73,9 +73,9 @@ export default function BroadcastOfficerModal({ streamId, broadcasterId, isOpen,
     } finally {
       setLoading(false)
     }
-  }
+  }, [broadcasterId, streamId])
 
-  const fetchBroadcasterBalance = async () => {
+  const fetchBroadcasterBalance = useCallback(async () => {
     try {
       const { data } = await supabase
         .from('user_profiles')
@@ -86,14 +86,14 @@ export default function BroadcastOfficerModal({ streamId, broadcasterId, isOpen,
     } catch {
       // silent
     }
-  }
+  }, [broadcasterId])
 
   useEffect(() => {
     if (isOpen && streamId && broadcasterId) {
       fetchOfficers()
       fetchBroadcasterBalance()
     }
-  }, [isOpen, streamId, broadcasterId])
+  }, [isOpen, streamId, broadcasterId, fetchOfficers, fetchBroadcasterBalance])
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return

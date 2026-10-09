@@ -39,6 +39,7 @@ export function useRealtimeStability(options: RealtimeStabilityOptions) {
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isReconnectingRef = useRef(false);
+  const attemptReconnectRef = useRef<() => void>(() => {});
 
   // Clean up function
   const cleanup = useCallback(() => {
@@ -106,7 +107,7 @@ export function useRealtimeStability(options: RealtimeStabilityOptions) {
           }
           
           // Trigger reconnect
-          attemptReconnect();
+          attemptReconnectRef.current();
         }
       });
 
@@ -169,6 +170,7 @@ export function useRealtimeStability(options: RealtimeStabilityOptions) {
     
     retryTimeoutRef.current = setTimeout(attempt, delay);
   }, [connectionState.retryCount, initializeChannel, maxRetries, onReconnect, retryDelay]);
+  attemptReconnectRef.current = attemptReconnect;
 
   // Manual reconnect trigger
   const triggerReconnect = useCallback(() => {

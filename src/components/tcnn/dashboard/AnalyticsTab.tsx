@@ -3,7 +3,7 @@
  * 
  * Dashboard tab for viewing TCNN analytics and statistics
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { useTCNNRoles } from '@/hooks/useTCNNRoles';
@@ -47,11 +47,7 @@ export default function AnalyticsTab() {
     topArticles: []
   });
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [period]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setLoading(true);
     try {
       const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
@@ -162,7 +158,11 @@ export default function AnalyticsTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    void loadAnalytics();
+  }, [loadAnalytics]);
 
   if (loading) {
     return (

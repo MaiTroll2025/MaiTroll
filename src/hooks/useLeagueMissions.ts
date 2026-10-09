@@ -103,7 +103,7 @@ export function useLeagueMissions(leagueEventId?: string | null): UseLeagueMissi
     } finally {
       setIsLoading(false)
     }
-  }, [leagueEventId, user?.id])
+  }, [leagueEventId, profile?.id, user.id])
 
   useEffect(() => {
     fetchMissions()

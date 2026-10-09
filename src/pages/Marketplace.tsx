@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -52,8 +52,8 @@ export default function Marketplace() {
     return shops.reduce((sum, shop) => sum + Number(shop.shop_items?.length || 0), 0)
   }, [shops])
 
-  const checkIfSeller = async () => {
-    if (!user) {
+  const checkIfSeller = useCallback(async () => {
+    if (!user?.id) {
       setHasShop(false)
       return
     }
@@ -66,9 +66,9 @@ export default function Marketplace() {
       .maybeSingle()
 
     setHasShop(Boolean(data))
-  }
+  }, [user?.id])
 
-  const loadShops = async () => {
+  const loadShops = useCallback(async () => {
     setLoading(true)
 
     try {
@@ -128,15 +128,15 @@ export default function Marketplace() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     void checkIfSeller()
-  }, [user])
+  }, [checkIfSeller])
 
   useEffect(() => {
     if (activeTab === 'browse') void loadShops()
-  }, [activeTab])
+  }, [activeTab, loadShops])
 
   return (
     <div className="relative min-h-screen bg-[#050714] px-4 pb-10 pt-24 text-white md:px-6 overflow-y-auto">

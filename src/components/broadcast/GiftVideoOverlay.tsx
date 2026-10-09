@@ -52,22 +52,6 @@ async function playGiftSound(url: string): Promise<void> {
   }
 }
 
-export const unlockGiftAudio = async (): Promise<void> => {
-  const audio = document.createElement('audio')
-  audio.muted = false
-  audio.volume = 0.01
-  const silentAudio =
-    'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAAAA=='
-  audio.src = silentAudio
-  try {
-    await audio.play()
-    audio.pause()
-    audio.remove()
-  } catch {
-    audio.remove()
-  }
-}
-
 const giftSoundEnabled = true
 
 async function playGiftVideo(video: HTMLVideoElement, giftId?: string, giftName?: string, resolvedUrl?: string): Promise<void> {
@@ -383,7 +367,7 @@ function GiftPreview({
     const ms = Math.round(video.duration * 1000)
 
     onDurationKnown?.(gift.id, ms)
-  }, [gift.id, gift.animation_duration_ms, label, onDurationKnown])
+  }, [gift.id, label, onDurationKnown])
 
   useEffect(() => {
     soundUrlRef.current = visual.soundUrl

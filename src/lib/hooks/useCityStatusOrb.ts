@@ -243,7 +243,7 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         setLoading(false);
       }
     }
-  }, [options.userId]);
+  }, [options.isBroadcaster, options.userId]);
 
   useEffect(() => {
     fetchStatus();

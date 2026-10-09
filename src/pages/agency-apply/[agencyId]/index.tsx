@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isUuid } from '../../../lib/validators';
 import { supabase } from '../../../lib/supabase';
@@ -33,15 +33,7 @@ export default function AgencyApplyPage() {
   
   
   
-  useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    fetchAgencyAndCheckStatus();
-  }, [agencyIdOrSlug, navigate, user]);
-
-  const fetchAgencyAndCheckStatus = async () => {
+  const fetchAgencyAndCheckStatus = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -153,7 +145,15 @@ export default function AgencyApplyPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [agencyIdOrSlug, user?.id]);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    void fetchAgencyAndCheckStatus();
+  }, [agencyIdOrSlug, fetchAgencyAndCheckStatus, navigate, user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;

@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
 import { toast } from 'sonner';
+import { ShareAThonContext } from '../hooks/useShareAThon';
 
 export interface ShareAThonEvent {
   id: string;
@@ -66,7 +67,7 @@ export interface ShareSubmission {
   display_name?: string;
 }
 
-interface ShareAThonContextType {
+export interface ShareAThonContextType {
   event: ShareAThonEvent | null;
   eligibleBroadcasters: EligibleBroadcaster[];
   myEligibility: EligibleBroadcaster | null;
@@ -87,14 +88,6 @@ interface ShareAThonContextType {
   qualifyBroadcaster: (broadcasterId: string) => Promise<boolean>;
   updateLiveBroadcasterCount: (count: number) => Promise<void>;
 }
-
-const ShareAThonContext = createContext<ShareAThonContextType | undefined>(undefined);
-
-export const useShareAThon = () => {
-  const context = useContext(ShareAThonContext);
-  if (!context) throw new Error('useShareAThon must be used within ShareAThonProvider');
-  return context;
-};
 
 interface ShareAThonProviderProps {
   children: ReactNode;

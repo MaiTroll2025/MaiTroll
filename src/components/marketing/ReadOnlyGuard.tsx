@@ -115,13 +115,3 @@ export const ReadOnlyButton = React.forwardRef<HTMLButtonElement, ReadOnlyButton
   }
 )
 ReadOnlyButton.displayName = 'ReadOnlyButton'
-
-export function useCanWrite() {
-  const profile = useAuthStore((state) => state.profile)
-  return canWrite(profile) ?? true
-}
-
-export function useIsMarketingAgent() {
-  const profile = useAuthStore((state) => state.profile)
-  return isMarketingAgent(profile)
-}

@@ -157,7 +157,6 @@ export default function MobileBroadcastHostSettings({
   onShare,
   onOpenMessage,
   onEndStream,
-  onOpenCoinStore,
   onOpenWebCoinStore,
   onInviteFollowers,
   onToggleRGB,

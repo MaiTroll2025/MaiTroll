@@ -64,7 +64,7 @@ export function useMaiTrollOperatingHours() {
   React.useEffect(() => {
     setMounted(true)
     store.updateOperatingState()
-  }, [])
+  }, [store])
 
   // Set up interval for real-time updates
   React.useEffect(() => {
@@ -75,7 +75,7 @@ export function useMaiTrollOperatingHours() {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [mounted])
+  }, [mounted, store])
 
   return {
     operatingHoursInfo: store.operatingHoursInfo,

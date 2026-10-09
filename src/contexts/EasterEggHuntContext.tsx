@@ -1,7 +1,7 @@
 // Easter Egg Hunt Context
 // Provides egg state, found count, and collection actions to all components
 
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react'
+import React, { useState, useCallback, useMemo, useEffect, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store'
 import {
@@ -16,6 +16,7 @@ import {
   type EggReward,
   type EggSpawn,
 } from '@/lib/events/easterEggHunt'
+import { EasterEggHuntContext } from '../hooks/useEasterEggHunt'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ interface FoundEgg {
   foundAt: number
 }
 
-interface EasterEggHuntContextType {
+export interface EasterEggHuntContextType {
   isActive: boolean
   eggsFound: number
   eggsRemaining: number
@@ -36,8 +37,6 @@ interface EasterEggHuntContextType {
   getSpawnsForPage: (pageId: string) => EggSpawn[]
   isEggFound: (eggId: string) => boolean
 }
-
-const EasterEggHuntContext = createContext<EasterEggHuntContextType | undefined>(undefined)
 
 // ── Provider ────────────────────────────────────────────────────────────
 
@@ -159,16 +158,6 @@ export function EasterEggHuntProvider({ children }: { children: ReactNode }) {
       {children}
     </EasterEggHuntContext.Provider>
   )
-}
-
-// ── Hook ────────────────────────────────────────────────────────────────
-
-export function useEasterEggHunt() {
-  const ctx = useContext(EasterEggHuntContext)
-  if (!ctx) {
-    throw new Error('useEasterEggHunt must be used within EasterEggHuntProvider')
-  }
-  return ctx
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────

@@ -29,7 +29,6 @@ export default function AudioPlayer({
       setInternalIsPlaying(playing);
     }
   }, [onIsPlayingChange]);
-
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
@@ -43,6 +42,21 @@ export default function AudioPlayer({
   
   const howlRef = useRef<Howl | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+
+  const handleEnded = useCallback(() => {
+    if (repeatMode === 'one') {
+      if (howlRef.current) {
+        howlRef.current.seek(0);
+        howlRef.current.play();
+      }
+    } else if (currentIndex < queue.length - 1) {
+      onChangeSong(currentIndex + 1);
+    } else if (repeatMode === 'all') {
+      onChangeSong(0);
+    } else {
+      setCurrentIsPlaying(false);
+    }
+  }, [repeatMode, currentIndex, queue.length, onChangeSong, setCurrentIsPlaying]);
 
   const toggleLike = () => {};
   const sendTip = async () => ({ success: false, error: 'Not available' });
@@ -125,7 +139,7 @@ export default function AudioPlayer({
         howlRef.current = null;
       }
     };
-  }, [song.id, song.audio_url]);
+  }, [song.id, song.audio_url, isMuted, volume, currentIsPlaying, setCurrentIsPlaying, handleEnded]);
 
   // Update volume
   useEffect(() => {
@@ -146,21 +160,6 @@ export default function AudioPlayer({
 
     return () => clearInterval(interval);
   }, [currentIsPlaying]);
-
-  const handleEnded = () => {
-    if (repeatMode === 'one') {
-      if (howlRef.current) {
-        howlRef.current.seek(0);
-        howlRef.current.play();
-      }
-    } else if (currentIndex < queue.length - 1) {
-      onChangeSong(currentIndex + 1);
-    } else if (repeatMode === 'all') {
-      onChangeSong(0);
-    } else {
-      setCurrentIsPlaying(false);
-    }
-  };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressRef.current || !howlRef.current || duration === 0) return;

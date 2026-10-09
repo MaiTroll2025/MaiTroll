@@ -121,7 +121,7 @@ export default function BannedUsersList({ streamId, onClose, activeViewersOverri
         } catch (err) {
             console.error('Failed to fetch active viewers:', err);
         }
-    }, [streamId]);
+    }, [activeViewersOverride, streamId]);
 
     const fetchBannedUsers = useCallback(async () => {
         setLoading(true);

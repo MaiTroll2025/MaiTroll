@@ -102,6 +102,31 @@ export function useLeagueProgress(streamId?: string | null) {
 
   const seasonKey = new Date().toISOString().slice(0, 7)
 
+  const distributeReward = useCallback(async (reward: RewardInfo, uid: string) => {
+    try {
+      await supabase.rpc('grant_league_reward', {
+        p_user_id: uid,
+        p_troll_coins: reward.trollCoins,
+        p_xp: reward.xp,
+        p_trollmonds: reward.trollmonds,
+        p_label: reward.label,
+      })
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('[useLeagueProgress] reward grant failed:', err)
+      try {
+        await supabase
+          .from('user_profiles')
+          .update({
+            troll_coins: (profile?.troll_coins || 0) + reward.trollCoins,
+            xp: (profile?.xp || 0) + reward.xp,
+          })
+          .eq('id', uid)
+      } catch (e2) {
+        if (import.meta.env.DEV) console.warn('[useLeagueProgress] fallback reward failed:', e2)
+      }
+    }
+  }, [profile?.troll_coins, profile?.xp])
+
   const fetchProgress = useCallback(async () => {
     if (!userId) return
 
@@ -295,32 +320,7 @@ export function useLeagueProgress(streamId?: string | null) {
       if (import.meta.env.DEV) console.warn('[useLeagueProgress] fetch failed:', err)
       setState(prev => prev ? { ...prev, isLoading: false } : null)
     }
-  }, [userId, seasonKey])
-
-  const distributeReward = async (reward: RewardInfo, uid: string) => {
-    try {
-      await supabase.rpc('grant_league_reward', {
-        p_user_id: uid,
-        p_troll_coins: reward.trollCoins,
-        p_xp: reward.xp,
-        p_trollmonds: reward.trollmonds,
-        p_label: reward.label,
-      })
-    } catch (err) {
-      if (import.meta.env.DEV) console.warn('[useLeagueProgress] reward grant failed:', err)
-      try {
-        await supabase
-          .from('user_profiles')
-          .update({
-            troll_coins: (profile?.troll_coins || 0) + reward.trollCoins,
-            xp: (profile?.xp || 0) + reward.xp,
-          })
-          .eq('id', uid)
-      } catch (e2) {
-        if (import.meta.env.DEV) console.warn('[useLeagueProgress] fallback reward failed:', e2)
-      }
-    }
-  }
+  }, [userId, seasonKey, xpStore.xpTotal, streamId, profile?.username, user?.email, state, distributeReward])
 
   const claimWeeklyGoal = useCallback(async (goalId: string) => {
     if (!state) return

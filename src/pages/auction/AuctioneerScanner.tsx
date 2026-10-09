@@ -88,6 +88,7 @@ export default function AuctioneerScanner() {
   const streamRef = useRef<MediaStream | null>(null)
   const barcodeDetectorRef = useRef<any>(null)
   const scanChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const sendScanToDesktopRef = useRef<((scan: ScanResult) => Promise<void>) | null>(null)
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastScanTimeRef = useRef(0)
 
@@ -205,10 +206,11 @@ export default function AuctioneerScanner() {
 
   // Cleanup camera on unmount
   useEffect(() => {
+    const scanChannel = scanChannelRef.current
     return () => {
       stopCamera()
       if (heartbeatRef.current) clearInterval(heartbeatRef.current)
-      if (scanChannelRef.current) supabase.removeChannel(scanChannelRef.current)
+      if (scanChannel) void supabase.removeChannel(scanChannel)
     }
   }, [stopCamera])
 
@@ -250,7 +252,7 @@ export default function AuctioneerScanner() {
 
           // Send to desktop if connected
           if (connectionState === 'connected' && session) {
-            await sendScanToDesktop(result)
+            await sendScanToDesktopRef.current?.(result)
           }
 
           // Haptic feedback if available
@@ -289,7 +291,7 @@ export default function AuctioneerScanner() {
       setScanHistory((prev) => [result, ...prev].slice(0, 50))
       setScanCount((c) => c + 1)
       if (connectionState === 'connected' && session) {
-        void sendScanToDesktop(result)
+        void sendScanToDesktopRef.current?.(result)
       }
       if (navigator.vibrate) navigator.vibrate(100)
     },
@@ -336,6 +338,7 @@ export default function AuctioneerScanner() {
     },
     [session],
   )
+  sendScanToDesktopRef.current = sendScanToDesktop
 
   // ── Manual barcode entry ──────────────────────────────────────────────────
 

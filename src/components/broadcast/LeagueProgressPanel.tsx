@@ -11,10 +11,12 @@ interface LeagueProgressPanelProps {
 
 function AnimatedNumber({ value, duration = 600 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0)
+  const displayRef = useRef(display)
+  displayRef.current = display
   const rafRef = useRef<number>(0)
 
   useEffect(() => {
-    const start = display
+    const start = displayRef.current
     const diff = value - start
     if (Math.abs(diff) < 1) { setDisplay(value); return }
     const startTime = performance.now()

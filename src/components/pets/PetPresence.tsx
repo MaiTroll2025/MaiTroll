@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { petImage } from './petImage'
 
 type Pet = { id: string; pet_type: 'dog' | 'cat'; name: string; care_status: number; hunger_status: number; walk_status: number; attention_status: number }
-
-export function petImage(type: 'dog' | 'cat') {
-  return type === 'dog' ? '🐕' : '🐈'
-}
 
 export default function PetPresence({ ownerId, streamId, className = '' }: { ownerId?: string; streamId?: string; className?: string }) {
   const [pet, setPet] = useState<Pet | null>(null)

@@ -140,7 +140,7 @@ export function useStaffWalkieTalkie({
       }
       throw err
     }
-  }, [profile?.role, user?.id])
+  }, [profile, user.id])
 
   const initAgoraClient = useCallback(async () => {
     if (clientRef.current) {
@@ -376,6 +376,7 @@ export function useStaffWalkieTalkie({
   )
 
   useEffect(() => {
+    const remoteAudioElements = remoteAudioElementsRef.current
     return () => {
       if (localAudioTrackRef.current) {
         localAudioTrackRef.current.stop()
@@ -384,7 +385,7 @@ export function useStaffWalkieTalkie({
       if (clientRef.current) {
         clientRef.current.leave().catch(() => {})
       }
-      Object.keys(remoteAudioElementsRef.current).forEach((uid) => {
+      Object.keys(remoteAudioElements).forEach((uid) => {
         cleanupRemoteAudioElement(uid)
       })
     }

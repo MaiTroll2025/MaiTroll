@@ -1,7 +1,7 @@
 import React from 'react'
 import { Gamepad2, Users, Play, Flame } from 'lucide-react'
 import HorizontalScrollRow from './HorizontalScrollRow'
-import { useLiveContent } from '@/contexts/LiveContentContext'
+import { useLiveContent } from '@/hooks/useLiveContent'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 import { useIsMobile } from '@/hooks/useIsMobile'

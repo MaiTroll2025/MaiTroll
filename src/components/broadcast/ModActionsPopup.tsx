@@ -290,20 +290,20 @@ const ModActionsPopup = memo(function ModActionsPopup({
   const _isTargetHost = targetUserId === hostId;
 
   // Check insurance status for kick
-  useEffect(() => {
-    if (targetUserId) {
-      checkInsuranceStatus();
-    }
-  }, [targetUserId]);
-
-  const checkInsuranceStatus = async () => {
+  const checkInsuranceStatus = useCallback(async () => {
     try {
       const hasKickProtection = await hasProtection(targetUserId, 'kick');
       setHasInsuranceProtection(hasKickProtection);
     } catch (error) {
       console.error('Error checking insurance:', error);
     }
-  };
+  }, [targetUserId]);
+
+  useEffect(() => {
+    if (targetUserId) {
+      void checkInsuranceStatus();
+    }
+  }, [checkInsuranceStatus, targetUserId]);
 
   const handleMute = async () => {
     if (!profile || isLoading) {

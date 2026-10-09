@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Home, Wrench, AlertTriangle, Shield, Hammer } from 'lucide-react';
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
@@ -36,10 +36,6 @@ export default function BroadcastHouseIcon({
   // Track recent raid for animation
   const [recentRaid, setRecentRaid] = useState<boolean>(false)
 
-  useEffect(() => {
-    fetchHouseData()
-  }, [broadcasterId])
-
   // Hard-stop the raid flash animation exactly 4 s after each batch of raids becomes stale
   useEffect(() => {
     if (!recentRaid) return
@@ -47,7 +43,7 @@ export default function BroadcastHouseIcon({
     return () => clearTimeout(t)
   }, [recentRaid])
 
-  const fetchHouseData = async () => {
+  const fetchHouseData = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -92,7 +88,11 @@ export default function BroadcastHouseIcon({
     } finally {
       setLoading(false)
     }
-  }
+  }, [broadcasterId, profile?.homeowners_insurance_expiry])
+
+  useEffect(() => {
+    void fetchHouseData()
+  }, [fetchHouseData])
 
   const isRaided = raids.length > 0
   const hasInsurance = insurance?.is_active

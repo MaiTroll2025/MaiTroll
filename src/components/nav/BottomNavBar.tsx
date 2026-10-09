@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProfileFrame from '@/components/profile/ProfileFrame';
 import { useUserFrame } from '@/hooks/useUserFrame';
 import { Home, Video, Coins, Gavel, Scale, Scan, Gamepad2, LayoutGrid, Store, Users, Crown, BookOpen, Trophy, Vote, Shield, Star, Heart, MessageCircle, Search, Compass, Activity, BarChart3, Settings, ScrollText, Newspaper, ClipboardList, MonitorDot, Lock, Mic, Eye, DollarSign, Bell, User, LogOut, X, TrendingUp, Building2, Landmark, Waves, Package, Shuffle, Car, Briefcase, Sparkles, Radio, RefreshCw, Gem, Zap, Megaphone } from 'lucide-react';
+import HytroSpotButton from '@/components/HytroSpotButton'
 import { useAuthStore } from '@/lib/store';
 import { useCoins } from '@/lib/hooks/useCoins';
 import { useXPStore } from '@/stores/useXPStore';
@@ -442,7 +443,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
       ...cat,
       items: cat.items.filter((item) => item.show !== false),
     }));
-  }, [isAdmin, isSecretary, isLead, isOfficer, isPresident, isAgencyHR, isHRAdmin, profile?.username, canSeeFounderHub, canSeeMarketingPage]);
+  }, [profile.username, canSeeFounderHub, canSeeMarketingPage, isOfficer, isSecretary, isAdmin, isLead, isPresident, isAttorney, isProsecutor, isPastor, isAgencyHR, isAgencyLeader, isJournalist, isNewsCaster, isChiefNewsCaster, isCEOAssistant, isAuctioneer, isHRAdmin]);
 
   const filteredPages = useMemo(() => {
     if (!search.trim()) return allPages;
@@ -637,9 +638,10 @@ interface DoorNavButtonProps {
   to: string;
   active: boolean;
   variant?: 'default' | 'goLive';
+  onClick?: () => void;
 }
 
-function DoorNavButton({ letter, label, to, active, variant = 'default' }: DoorNavButtonProps) {
+function DoorNavButton({ letter, label, to, active, variant = 'default', onClick }: DoorNavButtonProps) {
   const isGoLive = variant === 'goLive';
   const frameBorder = active
     ? (isGoLive ? '#ef4444' : '#5c3a1e')
@@ -671,9 +673,17 @@ function DoorNavButton({ letter, label, to, active, variant = 'default' }: DoorN
     ? (isGoLive ? '0 0 10px rgba(239,68,68,0.7)' : '0 0 6px rgba(192,135,90,0.6)')
     : (isGoLive ? '0 0 5px rgba(239,68,68,0.2)' : 'none');
 
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <Link
-      to={to}
+    <a
+      href={onClick ? '#' : to}
+      onClick={handleClick}
       className="group relative flex flex-col items-center justify-end"
       style={{ perspective: '600px' }}
     >
@@ -744,7 +754,7 @@ function DoorNavButton({ letter, label, to, active, variant = 'default' }: DoorN
       >
         {label}
       </span>
-    </Link>
+    </a>
   );
 }
 
@@ -769,7 +779,14 @@ export default function BottomNavBar() {
   };
 
   // Desktop door tabs config
-  const desktopDoorTabs = [
+  const desktopDoorTabs: Array<{
+    letter: string;
+    label: string;
+    to: string;
+    active: boolean;
+    variant?: 'default' | 'goLive';
+    onClick?: () => void;
+  }> = [
     { letter: 'H', label: 'Home', to: '/home', active: isActive('/home') || isActive('/') },
     { letter: 'G', label: 'Go Live', to: '/broadcast/setup', active: isActive('/broadcast'), variant: 'goLive' as const },
     { letter: 'M', label: 'MAI Pay', to: '/mai-pay', active: isActive('/mai-pay') },
@@ -780,6 +797,7 @@ export default function BottomNavBar() {
     { letter: 'H', label: 'High Bcasters', to: '/high-bcasters', active: isActive('/high-bcasters') },
     { letter: 'A', label: 'Alerts', to: '/notifications', active: isActive('/notifications') },
     { letter: 'B', label: 'Careers', to: '/careers', active: isActive('/careers') },
+    { letter: 'S', label: 'HytroSpot', to: '#', active: false, onClick: () => window.dispatchEvent(new Event('open-hytrospot-modal')) },
   ];
 
   // Hide bottom nav on Treelz pages
@@ -803,41 +821,42 @@ export default function BottomNavBar() {
             style={{ overflow: 'visible' }}
           >
             {/* CENTER: Desktop navigation gets ALL remaining space */}
-            {isMobile ? (
-              <nav className="flex flex-1 items-center gap-3 overflow-x-auto scrollbar-hide px-2">
-                <NavButton icon={Home} label="Home" to="/home" active={isActive('/home') || isActive('/')} size="large" badge={badges.home} badgeKey="home" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={MessageCircle} label="Chats" to="/utromail" active={isActive('/utromail')} size="large" badge={badges.chats} badgeKey="chats" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Coins} label="Coins" to="/store" active={isActive('/store') || isActive('/coins')} size="large" badge={badges.coins} badgeKey="coins" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Sparkles} label="Treelz" to="/treelz" active={isActive('/treelz')} size="large" />
-                <NavButton icon={Crown} label="High Bcasters" to="/high-bcasters" active={isActive('/high-bcasters')} size="large" />
-                <NavButton icon={Video} label="Go Live" to="/broadcast/setup" active={isActive('/broadcast')} size="large" />
-                  <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} size="large" />
-                  <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} size="large" badge={badges.careers} badgeKey="careers" onBadgeDismiss={badges.dismiss} />
-                  <NavButton icon={Newspaper} label="TCNN" to="/tcnn" active={isActive('/tcnn')} size="large" />
-                 <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} size="large" badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
-                 <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} size="large" badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
-                 <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} size="large" />
-                 <NavButton icon={DollarSign} label="MAI Pay" to="/mai-pay" active={isActive('/mai-pay')} size="large" />
-                <NavButton
-                  icon={LayoutGrid}
-                  label="More"
-                  onClick={() => {
-                    window.dispatchEvent(new Event('open-more-panel'))
-                  }}
-                  active={false}
-                  size="large"
-                />
-                <NavButton icon={Bell} label="Alerts" to="/notifications" active={isActive('/notifications')} size="large" badge={badges.alerts} badgeKey="alerts" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Search} label="Search" to="/search" active={isActive('/search')} size="large" />
-                <NavButton icon={Users} label="Family" to="/family/home" active={isActive('/family')} size="large" badge={badges.family} badgeKey="family" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Store} label="Shop" to="/marketplace" active={isActive('/marketplace')} size="large" badge={badges.shop} badgeKey="shop" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={Package} label="Inventory" to="/inventory" active={isActive('/inventory')} size="large" badge={badges.inventory} badgeKey="inventory" onBadgeDismiss={badges.dismiss} />
-                <NavButton icon={BookOpen} label="Church" to="/church" active={isActive('/church')} size="large" />
-                <NavButton icon={Shield} label="Safety" to="/safety" active={isActive('/safety')} size="large" />
-                <NavButton icon={Compass} label="Explore" to="/explore" active={isActive('/explore') || isActive('/live')} size="large" />
-                <NavButton icon={ClipboardList} label="Beta" to="/beta-feedback" active={isActive('/beta-feedback')} size="large" />
-                <NavButton icon={User} label="Profile" to={profile?.username ? `/profile/${profile.username}` : '/profile'} active={isActive('/profile')} size="large" />
-              </nav>
+{isMobile ? (
+                <nav className="flex flex-1 items-center gap-3 overflow-x-auto scrollbar-hide px-2">
+                  <NavButton icon={Home} label="Home" to="/home" active={isActive('/home') || isActive('/')} size="large" badge={badges.home} badgeKey="home" onBadgeDismiss={badges.dismiss} />
+                  <NavButton icon={MessageCircle} label="Chats" to="/utromail" active={isActive('/utromail')} size="large" badge={badges.chats} badgeKey="chats" onBadgeDismiss={badges.dismiss} />
+                  <NavButton icon={Coins} label="Coins" to="/store" active={isActive('/store') || isActive('/coins')} size="large" badge={badges.coins} badgeKey="coins" onBadgeDismiss={badges.dismiss} />
+                  <NavButton icon={Sparkles} label="Treelz" to="/treelz" active={isActive('/treelz')} size="large" />
+                  <NavButton icon={Crown} label="High Bcasters" to="/high-bcasters" active={isActive('/high-bcasters')} size="large" />
+                  <NavButton icon={Video} label="Go Live" to="/broadcast/setup" active={isActive('/broadcast')} size="large" />
+                    <NavButton icon={Mic} label="Podcast" to="/podcast" active={isActive('/podcast')} size="large" />
+                    <NavButton icon={Briefcase} label="Careers" to="/careers" active={isActive('/careers')} size="large" badge={badges.careers} badgeKey="careers" onBadgeDismiss={badges.dismiss} />
+                    <NavButton icon={Newspaper} label="TCNN" to="/tcnn" active={isActive('/tcnn')} size="large" />
+                   <NavButton icon={Gavel} label="Auctions" to="/auctions" active={isActive('/auctions')} size="large" badge={badges.auctions} badgeKey="auctions" onBadgeDismiss={badges.dismiss} />
+                   <NavButton icon={Scale} label="Court" to="/troll-court" active={isActive('/troll-court')} size="large" badge={badges.court} badgeKey="court" onBadgeDismiss={badges.dismiss} />
+                   <NavButton icon={Gamepad2} label="HydroGaming" to="/hytrogaming" active={isActive('/hytrogaming') || isActive('/gaming')} size="large" />
+                   <NavButton icon={DollarSign} label="MAI Pay" to="/mai-pay" active={isActive('/mai-pay')} size="large" />
+                  <HytroSpotButton variant="bottom-bar" size="md" onClick={() => window.dispatchEvent(new Event('open-hytrospot-modal'))} />
+                  <NavButton
+                    icon={LayoutGrid}
+                    label="More"
+                    onClick={() => {
+                      window.dispatchEvent(new Event('open-more-panel'))
+                    }}
+                    active={false}
+                    size="large"
+                  />
+                  <NavButton icon={Bell} label="Alerts" to="/notifications" active={isActive('/notifications')} size="large" badge={badges.alerts} badgeKey="alerts" onBadgeDismiss={badges.dismiss} />
+                  <NavButton icon={Search} label="Search" to="/search" active={isActive('/search')} size="large" />
+                  <NavButton icon={Users} label="Family" to="/family/home" active={isActive('/family')} size="large" badge={badges.family} badgeKey="family" onBadgeDismiss={badges.dismiss} />
+                  <NavButton icon={Store} label="Shop" to="/marketplace" active={isActive('/marketplace')} size="large" badge={badges.shop} badgeKey="shop" onBadgeDismiss={badges.dismiss} />
+                  <NavButton icon={Package} label="Inventory" to="/inventory" active={isActive('/inventory')} size="large" badge={badges.inventory} badgeKey="inventory" onBadgeDismiss={badges.dismiss} />
+                  <NavButton icon={BookOpen} label="Church" to="/church" active={isActive('/church')} size="large" />
+                  <NavButton icon={Shield} label="Safety" to="/safety" active={isActive('/safety')} size="large" />
+                  <NavButton icon={Compass} label="Explore" to="/explore" active={isActive('/explore') || isActive('/live')} size="large" />
+                  <NavButton icon={ClipboardList} label="Beta" to="/beta-feedback" active={isActive('/beta-feedback')} size="large" />
+                  <NavButton icon={User} label="Profile" to={profile?.username ? `/profile/${profile.username}` : '/profile'} active={isActive('/profile')} size="large" />
+                </nav>
             ) : (
               <nav className="flex min-w-0 flex-1 items-center justify-around px-4">
                 {desktopDoorTabs.map((tab) => (
@@ -848,6 +867,7 @@ export default function BottomNavBar() {
                     to={tab.to}
                     active={tab.active}
                     variant={tab.variant}
+                    onClick={tab.onClick}
                   />
                 ))}
               </nav>

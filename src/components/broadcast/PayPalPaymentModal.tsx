@@ -294,21 +294,7 @@ export default function PayPalPaymentModal({
       console.error('[PayPalPaymentModal] Failed to render PayPal buttons:', err)
       toast.error('Unable to load PayPal checkout')
     }
-  }, [
-    amountUsd,
-    clearPayPalContainer,
-    coins,
-    forceCard,
-    isOpen,
-    modalRenderKey,
-    packageId,
-    packageName,
-    pkg,
-    purchaseType,
-    safelyClosePayPalButtons,
-    userId,
-    onPaymentSuccess,
-  ])
+  }, [isOpen, pkg, amountUsd, requireCoins, coins, paypalError, safelyClosePayPalButtons, clearPayPalContainer, modalRenderKey, userId, packageId, packageName, purchaseType, onPaymentSuccess, forceCard])
 
   useEffect(() => {
     if (!isOpen || !pkg) return

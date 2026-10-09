@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Coins, Handshake, Lock, MessageSquare, Phone, RefreshCw, Search, Shield, Unlock, Users, X } from 'lucide-react';
 import { toast } from 'sonner'
@@ -67,11 +67,7 @@ export default function InmatesPage() {
     ? Math.max(0, selectedInmate.message_minutes - selectedInmate.message_minutes_used)
     : 0
 
-  useEffect(() => {
-    fetchInmates()
-  }, [])
-
-  const fetchInmates = async () => {
+  const fetchInmates = useCallback(async () => {
     setLoading(true)
     try {
       const { data: jailData, error: jailError } = await supabase
@@ -122,17 +118,20 @@ export default function InmatesPage() {
         })
 
       setInmates(activeInmates)
-      if (selectedInmate) {
-        const updated = activeInmates.find((i) => i.id === selectedInmate.id)
-        setSelectedInmate(updated || null)
-      }
+      setSelectedInmate((current) =>
+        current ? activeInmates.find((i) => i.id === current.id) || null : null
+      )
     } catch (error: any) {
       console.error('Error fetching inmates:', error)
       toast.error(error.message || 'Failed to load inmates')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    void fetchInmates()
+  }, [fetchInmates])
 
   const formatReleaseTime = (releaseTime: string) => {
     if (!releaseTime) return 'Pending release time'

@@ -316,7 +316,7 @@ function LiveKitVideoPlayer({
       // Don't cleanup immediately on track change to avoid visual glitches
       // Let the new track take over
     };
-  }, [videoTrack, attachVideoElement]);
+  }, [videoTrack, attachVideoElement, isLocal]);
 
   // Periodically check if video is playing and retry if needed
   useEffect(() => {
@@ -478,7 +478,7 @@ const BroadcastGridComponent = function BroadcastGrid({
   isHost,
   isModerator: _isModerator,
   isOfficer: _isOfficer,
-  maxItems,
+  maxItems: _maxItems,
   onGift: _onGift,
   onGiftAll: _onGiftAll,
   mode: _mode = 'stage',
@@ -600,56 +600,6 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
       .sort((a, b) => (a.stage_index || 0) - (b.stage_index || 0))
   }, [stagePassesHook.stagePasses]);
 
-  const stageGuestVideoNodes = useMemo(() => {
-    const nodes: Record<string, ReactNode> = {};
-
-    liveStagePasses.forEach((pass) => {
-      const userId = pass.user_id;
-      if (!userId) return;
-
-      const { videoTrack, isScreenShare } = getParticipantAndTracks(userId);
-      if (!videoTrack) return;
-
-      nodes[userId] = (
-        <LiveKitVideoPlayer
-          videoTrack={videoTrack}
-          isLocal={false}
-          isScreenShare={isScreenShare}
-          themeUrl={stream.broadcast_theme_slug}
-          isRgbEnabled={!!stream.has_rgb_effect}
-          broadcasterProfile={broadcasterProfile}
-        />
-      );
-    });
-
-    return nodes;
-  }, [
-    liveStagePasses,
-    stream.broadcast_theme_slug,
-    stream.has_rgb_effect,
-    broadcasterProfile,
-    localTracks,
-    remoteUsers,
-    userIdToLiveKitIdentity,
-  ]);
-
-  const stageGuestMicCam = useMemo(() => {
-    const mapping: Record<string, { micOn: boolean; camOn: boolean }> = {};
-
-    liveStagePasses.forEach((pass) => {
-      const userId = pass.user_id;
-      if (!userId) return;
-
-      const { audioTrack, videoTrack } = getParticipantAndTracks(userId);
-      mapping[userId] = {
-        micOn: !!audioTrack,
-        camOn: !!videoTrack,
-      };
-    });
-
-    return mapping;
-  }, [liveStagePasses, localTracks, remoteUsers, userIdToLiveKitIdentity]);
-
     // seatUserIds for license plate lookup and other seat user checks
     const seatUserIds = useMemo(() => {
       const set = new Set<string>();
@@ -695,7 +645,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
     };
 
     fetchLicensePlates();
-  }, [stream?.id, seatUserIds.join('|')]);
+  }, [stream?.id, seatUserIds]);
 
   const boxRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [persistentGifts, setPersistentGifts] = useState<Map<string, PersistentGift[]>>(new Map());
@@ -714,21 +664,11 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
 
   // Fetch received gifts only when the stream starts or the seat roster changes.
   useEffect(() => {
-    if (!stream?.id || !seats) return;
+    if (!stream?.id || !seatParticipantIdsKey) return;
 
     const fetchUserGifts = async () => {
-      // Get all user IDs currently in seats (both user_id and guest_id)
-      const userIdsInStream: string[] = [];
+      const userIdsInStream = seatParticipantIdsKey.split('|');
       console.log('[BroadcastLifecycle] Scanning participants for gift history');
-      Object.values(seats).forEach((seat) => {
-        if (seat?.user_id) userIdsInStream.push(seat.user_id);
-        if (seat?.guest_id) userIdsInStream.push(seat.guest_id);
-      });
-      
-      // Also include host
-      if (stream.user_id && !userIdsInStream.includes(stream.user_id)) {
-        userIdsInStream.push(stream.user_id);
-      }
 
       if (userIdsInStream.length === 0) return;
 
@@ -755,7 +695,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
     };
 
     fetchUserGifts();
-  }, [stream?.id, stream?.status, stream?.user_id, seatParticipantIdsKey]);
+  }, [stream?.id, stream?.status, seatParticipantIdsKey]);
 
   // Expose positions when callback is provided
   const getPositionsRef = useRef<() => Record<string, { top: number; left: number; width: number; height: number }>>(() => ({}));
@@ -830,7 +770,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
 
   const attributes = useParticipantAttributes(userIds, stream.id);
 
-  const getParticipantAndTracks = (userId: string | undefined, hostUserId?: string) => {
+  const getParticipantAndTracks = useCallback((userId: string | undefined, hostUserId?: string) => {
     if (!userId) return { participant: undefined, videoTrack: undefined, audioTrack: undefined, isLocal: false };
 
     let participant: RemoteParticipant | undefined;
@@ -1004,7 +944,55 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
      }
 
     return { participant, videoTrack, audioTrack, isLocal, isMicOn, isCamOn, isScreenShare };
-  };
+  }, [localUserId, localTracks, remoteUsers, userIdToLiveKitIdentity]);
+
+  const stageGuestVideoNodes = useMemo(() => {
+    const nodes: Record<string, ReactNode> = {};
+
+    liveStagePasses.forEach((pass) => {
+      const userId = pass.user_id;
+      if (!userId) return;
+
+      const { videoTrack, isScreenShare } = getParticipantAndTracks(userId);
+      if (!videoTrack) return;
+
+      nodes[userId] = (
+        <LiveKitVideoPlayer
+          videoTrack={videoTrack}
+          isLocal={false}
+          isScreenShare={isScreenShare}
+          themeUrl={stream.broadcast_theme_slug}
+          isRgbEnabled={!!stream.has_rgb_effect}
+          broadcasterProfile={broadcasterProfile}
+        />
+      );
+    });
+
+    return nodes;
+  }, [
+    liveStagePasses,
+    stream.broadcast_theme_slug,
+    stream.has_rgb_effect,
+    broadcasterProfile,
+    getParticipantAndTracks,
+  ]);
+
+  const stageGuestMicCam = useMemo(() => {
+    const mapping: Record<string, { micOn: boolean; camOn: boolean }> = {};
+
+    liveStagePasses.forEach((pass) => {
+      const userId = pass.user_id;
+      if (!userId) return;
+
+      const { audioTrack, videoTrack } = getParticipantAndTracks(userId);
+      mapping[userId] = {
+        micOn: !!audioTrack,
+        camOn: !!videoTrack,
+      };
+    });
+
+    return mapping;
+  }, [liveStagePasses, getParticipantAndTracks]);
 
   // Define at component level so it's accessible everywhere
   const isUniversalBattleActive = isUniversalBattle || stream.battle_mode === 'universal';
@@ -1096,7 +1084,7 @@ const stagePassesHook = useStagePasses(streamStatus === 'live' ? stream?.id : un
     }
 
     return { effectiveBoxCount, boxes };
-  }, [seats, boxCountProp, stream.box_count, stream.battle_mode, isUniversalBattle, battleFormat, maxItems, hideEmptySeats, localUserId, stream.user_id, isTrollBattleUniverseMode, trollBattleBoxCount]);
+  }, [seats, boxCountProp, stream.box_count, isUniversalBattleActive, battleFormat, hideEmptySeats, hideBox0, localUserId, stream.user_id, isTrollBattleUniverseMode, trollBattleBoxCount]);
 
   const _enforceSquareOnMobile = effectiveBoxCount > 1;
   const isSingleBoxLayout = effectiveBoxCount === 1;

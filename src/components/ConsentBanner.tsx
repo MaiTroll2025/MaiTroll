@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Settings } from 'lucide-react';
-import { useConsent } from '../contexts/ConsentContext';
+import { useConsent } from '../hooks/useConsent';
 import { ConsentPreferences } from '../lib/consent';
 
 export default function ConsentBanner() {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Award,
@@ -318,7 +318,7 @@ export default function LeadOfficerDashboard() {
     }
   }
 
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     await Promise.all([
       loadApplicants(),
       loadOfficers(),
@@ -327,7 +327,7 @@ export default function LeadOfficerDashboard() {
       loadAutoClockouts(),
       loadPendingCareerApps(),
     ])
-  }
+  }, [])
 
   useEffect(() => {
     const init = async () => {
@@ -341,7 +341,7 @@ export default function LeadOfficerDashboard() {
 
     init()
      
-  }, [])
+  }, [refreshAll])
 
   useEffect(() => {
     if (currentUserId) {

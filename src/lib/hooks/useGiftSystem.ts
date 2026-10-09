@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { BattleSounds } from '../battleSounds';
 import { useAuthStore } from '../../lib/store'
 import { useTrollFamilyActivity } from '@/hooks/useTrollFamilyActivity'
-import { unlockGiftAudio } from '../../components/broadcast/GiftVideoOverlay';
+import { unlockGiftAudio } from '../giftAudio';
 
 import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
 
@@ -120,7 +120,7 @@ function GiftSystemProviderInner({
     children?: React.ReactNode
 }) {
   const { user, profile } = useAuthStore()
-  const { recordGiftSent, recordGiftEarned } = useTrollFamilyActivity()
+  const { recordGiftSent } = useTrollFamilyActivity()
   const [isSending, setIsSending] = useState(false)
   const [lastSentGiftId, setLastSentGiftId] = useState<string | null>(null)
 
@@ -356,7 +356,7 @@ function GiftSystemProviderInner({
         setIsSending(false)
       }
     },
-    [defaultReceiverId, profile, streamId, user, recordGiftSent, recordGiftEarned]
+    [defaultReceiverId, profile, streamId, user, recordGiftSent]
   )
 
   const contextValue = useMemo(

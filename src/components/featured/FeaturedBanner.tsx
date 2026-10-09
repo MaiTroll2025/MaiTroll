@@ -10,14 +10,18 @@ interface FeaturedBannerProps {
 }
 
 export function FeaturedBanner({ broadcasters, event, onOpenLeaderboard }: FeaturedBannerProps) {
-  const items = (broadcasters && broadcasters.length > 0 ? broadcasters : event?.broadcasters || [])
+  const items = useMemo(
+    () => (broadcasters && broadcasters.length > 0 ? broadcasters : event?.broadcasters || []),
+    [broadcasters, event?.broadcasters],
+  )
+  const featuredStreamIds = items.map((item) => item.stream_id).join(',')
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
     setVisible(true)
     const timer = window.setTimeout(() => setVisible(false), 8000)
     return () => window.clearTimeout(timer)
-  }, [event?.cycle_id, items.map((item) => item.stream_id).join(',')])
+  }, [event?.cycle_id, featuredStreamIds])
 
   const headline = useMemo(() => {
     if (!items.length) return 'FEATURED LIVE'

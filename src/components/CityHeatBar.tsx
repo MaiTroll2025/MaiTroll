@@ -1,5 +1,5 @@
 import React from 'react';
-import { useBroadcastEffects } from '../contexts/BroadcastEffectsContext';
+import { useBroadcastEffects } from '../hooks/useBroadcastEffects';
 
 interface CityHeatBarProps {
   className?: string;

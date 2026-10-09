@@ -88,7 +88,7 @@ const startShow = useCallback(
         toast.error(res.error || 'Could not join the queue.')
       }
     },
-    [user?.id, profile],
+    [user.id, user.user_metadata?.full_name, profile?.display_name, profile?.avatar_url, profile?.level, profile?.troll_coins],
   )
 
   const callToStage = useCallback(

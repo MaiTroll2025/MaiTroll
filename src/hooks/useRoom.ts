@@ -193,7 +193,7 @@ export function useRoom({ url, token, isAdmin = false, onConnected, onDisconnect
       }
       onDisconnected?.();
     };
-  }, [url, token, onConnected, onDisconnected, fetchToken, handleParticipantConnected, handleParticipantDisconnected, handleTrackSubscribed, handleTrackUnsubscribed, localAudioTrack, localVideoTrack]);
+  }, [url, token, onConnected, onDisconnected, fetchToken, handleParticipantConnected, handleParticipantDisconnected, handleTrackSubscribed, handleTrackUnsubscribed, localAudioTrack, localVideoTrack, isAdmin]);
 
   const toggleCamera = async () => {
     if (localVideoTrack && roomRef.current) {

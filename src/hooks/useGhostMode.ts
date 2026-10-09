@@ -140,7 +140,7 @@ export function useGhostMode({ streamId, userId, isCEO, roomRef }: UseGhostModeP
     } finally {
       setIsLeavingGhost(false)
     }
-  }, [userId, isCEO, ghostSession, streamId, roomRef])
+  }, [userId, isCEO, ghostSession, roomRef])
 
   const toggleMic = useCallback(async () => {
     const room = roomRef?.current

@@ -5,10 +5,8 @@ import { ArrowRight, ChevronRight, Crown, Gavel, MessageCircle, FileText, HelpCi
 
 import PhoneHeader from '../PhoneHeader'
 import { useAuthStore } from '@/lib/store'
-import {
-  useLiveContent,
-  type LiveItem,
-} from '@/contexts/LiveContentContext'
+import { useLiveContent } from '@/hooks/useLiveContent'
+import type { LiveItem } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
 import { useWallNotifications } from '@/hooks/useWallNotifications'

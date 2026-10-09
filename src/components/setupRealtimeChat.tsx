@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import type { Stream, CreatorProfile, ChatMessage } from '../types/database'
 import { supabase } from '../lib/supabase'
@@ -14,15 +14,10 @@ export default function StreamPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    fetchStream()
-    setupRealtimeChat()
-  }, [streamId])
-
-  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const fetchStream = async () => {
+  const fetchStream = useCallback(async () => {
     setLoading(true)
     const { data: streamData } = await supabase
       .from('streams')
@@ -40,9 +35,9 @@ export default function StreamPage() {
       setCreator(creatorData)
     }
     setLoading(false)
-  }
+  }, [streamId])
 
-  const setupRealtimeChat = () => {
+  const setupRealtimeChat = useCallback(() => {
     const channel = supabase
       .channel(`chat:${streamId}`)
       .on(
@@ -55,11 +50,14 @@ export default function StreamPage() {
       .subscribe()
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
+      void supabase.removeChannel(channel)
     }
-  }
+  }, [streamId])
+
+  useEffect(() => {
+    void fetchStream()
+    return setupRealtimeChat()
+  }, [fetchStream, setupRealtimeChat])
 
   const sendMessage = async () => {
     if (!message.trim()) return

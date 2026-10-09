@@ -176,7 +176,7 @@ export default function TCNNViewerPage() {
       }
       hasJoinedRef.current = false;
     };
-  }, [streamId, stream?.user_id, user?.id]);
+  }, [streamId, stream.user_id, user.id, stream, user]);
 
   // Realtime channel for chat, likes, presence
   useEffect(() => {
@@ -216,7 +216,7 @@ export default function TCNNViewerPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [streamId, user?.id, profile]);
+  }, [streamId, user.id, profile, user]);
 
   // Auto-hide controls
   useEffect(() => {

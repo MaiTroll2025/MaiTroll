@@ -211,7 +211,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [loadFrames, user])
 
   // Fetch the signed-in user's won auction items from the authoritative
   // auction_orders / auction_wins records (RLS restricts to the owner).

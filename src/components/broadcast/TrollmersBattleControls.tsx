@@ -357,7 +357,7 @@ export default function TrollmersBattleControls({ currentStream, onBattleAccepte
         supabase.removeChannel(channel);
       }
     };
-  }, [currentStream.id, battleStatus]);
+  }, [currentStream.id, battleStatus, checkBattleStatus]);
 
   // Realtime subscription for challenge updates (to remove accepted challenges immediately)
   useEffect(() => {
@@ -402,7 +402,7 @@ export default function TrollmersBattleControls({ currentStream, onBattleAccepte
         supabase.removeChannel(channel);
       }
     };
-  }, [currentStream.id]);
+  }, [checkPendingChallenges, currentStream.id]);
 
   // Join the instant battle queue - automatically matches with another broadcaster
   const handleFindMatch = async () => {

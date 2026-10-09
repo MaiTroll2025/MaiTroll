@@ -1059,6 +1059,7 @@ export default function PhoneViewerPage() {
     profile,
   } = useAuthStore()
   const leaveCurrentRoomRef = useRef<() => Promise<void>>(async () => {})
+  const leaveAudienceRef = useRef<() => Promise<void>>(async () => {})
 
   const {
     featuredBroadcasters,
@@ -1142,24 +1143,30 @@ export default function PhoneViewerPage() {
     swipeStartRef.current = null
   }, [resolvedStreamId])
 
-  useEffect(() => {
-    const isActive = stream?.status === 'live' && stream?.is_live !== false
-    if (!stream?.id || !isActive) return
+  const signalStreamCategory = (stream as any)?.category
+  const signalStreamType = (stream as any)?.stream_type
+  const signalStreamId = stream?.id
+  const signalStreamIsLive = stream?.is_live
+  const signalStreamStatus = stream?.status
 
-    const contentType = (stream as any)?.category === 'gaming' || (stream as any)?.stream_type === 'hytro'
+  useEffect(() => {
+    const isActive = signalStreamStatus === 'live' && signalStreamIsLive !== false
+    if (!signalStreamId || !isActive) return
+
+    const contentType = signalStreamCategory === 'gaming' || signalStreamType === 'hytro'
       ? 'hytrogame'
       : 'broadcast'
     const surface = contentType === 'hytrogame' ? 'hytrogames' : 'live_now'
     const metadata = {
-      category: (stream as any)?.category,
-      stream_type: (stream as any)?.stream_type,
+      category: signalStreamCategory,
+      stream_type: signalStreamType,
       platform: 'phone',
     }
 
     recordSignalEventInBackground({
       eventType: 'impression',
       contentType,
-      contentId: stream.id,
+      contentId: signalStreamId,
       creatorId: hostId || null,
       surface,
       metadata,
@@ -1167,7 +1174,7 @@ export default function PhoneViewerPage() {
     recordSignalEventInBackground({
       eventType: 'watch_start',
       contentType,
-      contentId: stream.id,
+      contentId: signalStreamId,
       creatorId: hostId || null,
       surface,
       metadata,
@@ -1180,7 +1187,7 @@ export default function PhoneViewerPage() {
         recordSignalEventInBackground({
           eventType: 'skip',
           contentType,
-          contentId: stream.id,
+          contentId: signalStreamId,
           creatorId: hostId || null,
           surface,
           value: secondsViewed,
@@ -1188,7 +1195,14 @@ export default function PhoneViewerPage() {
         })
       }
     }
-  }, [hostId, stream?.category, stream?.id, stream?.is_live, stream?.status, stream?.stream_type])
+  }, [
+    hostId,
+    signalStreamCategory,
+    signalStreamType,
+    signalStreamId,
+    signalStreamIsLive,
+    signalStreamStatus,
+  ])
   
 
   const [
@@ -1692,7 +1706,7 @@ export default function PhoneViewerPage() {
 
                 void (async () => {
                   try {
-                    await leaveAudience()
+                    await leaveAudienceRef.current()
                   } catch {
                     // ignore
                   }
@@ -2007,6 +2021,7 @@ export default function PhoneViewerPage() {
         },
       },
     )
+  leaveAudienceRef.current = leaveAudience
 
   const cashoutBanner = useCashoutBanner({
     userId: user?.id,
@@ -2070,7 +2085,7 @@ export default function PhoneViewerPage() {
     ])
 
   // Determine RTC provider from stream metadata
-  const rtcProvider = useMemo(() => getRTCProvider(stream), [stream?.rtc_provider])
+  const rtcProvider = getRTCProvider(stream)
 
   const audienceName =
     useMemo(() => {
@@ -2128,6 +2143,7 @@ export default function PhoneViewerPage() {
     onUserLeft: noop,
     onError: handleLiveKitError,
   })
+  const publishLiveKitTracks = liveKitRoom.publishLocalTracks
 
   // GetStream hook (for staff/official streams)
   const getStreamRoom = useGetStreamRoom({
@@ -2153,7 +2169,6 @@ export default function PhoneViewerPage() {
   const setCameraEnabled = isGetStream ? getStreamRoom.setCameraEnabled : liveKitRoom.setCameraEnabled
   const leaveRoom = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.leaveRoom
   const joinAsAudience = isGetStream ? getStreamRoom.joinAsAudience : liveKitRoom.joinAsAudience
-  const publishLocalTracks = isGetStream ? getStreamRoom.joinAsAudience : liveKitRoom.publishLocalTracks
   const unpublishLocalTracks = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.unpublishLocalTracks
   leaveCurrentRoomRef.current = async () => {
     await leaveRoom()
@@ -2173,7 +2188,7 @@ export default function PhoneViewerPage() {
    ======================================================================== */
 
   useEffect(() => {
-    if (!streamId || !stream || !roomId || !viewerIdentity) {
+    if (!resolvedStreamId || !stream || !roomId || !viewerIdentity) {
       return
     }
 
@@ -3065,7 +3080,7 @@ useEffect(() => {
       joiningPublisherRef.current = true
       currentRoomKeyRef.current = `${resolvedStreamId}:${roomId}`
 
-      void liveKitRoom.publishLocalTracks()
+      void publishLiveKitTracks()
         .then(async () => {
           if (mySeat?.seat_index != null) {
             try {
@@ -3101,15 +3116,18 @@ useEffect(() => {
     }
 }, [
       isUserOnStage,
+      isGetStream,
       isConnected,
       isPublishing,
       room,
-      publishLocalTracks,
+      publishLiveKitTracks,
       unpublishLocalTracks,
       leaveRoom,
       resolvedStreamId,
       roomId,
       mySeat?.seat_index,
+      markSeatLive,
+      viewerIdentity,
     ])
 
   const wasOnStageRef = useRef(isUserOnStage)
@@ -3142,7 +3160,7 @@ useEffect(() => {
         })
 
         if (!isBattleMode) {
-          await liveKitRoom.publishLocalTracks()
+          await publishLiveKitTracks()
           if (mySeat?.seat_index != null) {
             try {
               await markSeatLive(mySeat.seat_index, viewerIdentityRef.current || viewerIdentity)
@@ -3160,7 +3178,7 @@ useEffect(() => {
         joiningAudienceRef.current = false
       }
     })()
-   }, [isUserOnStage, roomId, resolvedStreamId, viewerIdentity, joinAsAudience, publishLocalTracks, battleId, mySeat?.seat_index, markSeatLive])
+   }, [isUserOnStage, roomId, resolvedStreamId, viewerIdentity, joinAsAudience, publishLiveKitTracks, battleId, mySeat?.seat_index, markSeatLive])
 
   /* ========================================================================
       AUDIENCE PRESENCE
@@ -3745,6 +3763,7 @@ useEffect(() => {
         resolvedStreamId,
         user?.id,
         flushLikes,
+        navigate,
       ],
     )
 
@@ -4076,7 +4095,6 @@ useEffect(() => {
     [
       setMicEnabled,
       setMicEnabledState,
-      toast,
     ],
     )
 

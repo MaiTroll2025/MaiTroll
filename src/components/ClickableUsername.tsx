@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import VerifiedBadge from './VerifiedBadge'
 import OfficerTierBadge from './OfficerTierBadge'
 import { EmpireBadge } from './EmpireBadge'
@@ -191,14 +191,7 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
      }
    }, [targetUserId, isGold, hasRgb, userProfile, glowingColor]) // Added dependencies
 
-   // Check subscription status when menu opens
-   useEffect(() => {
-     if (showMenu && targetUserId && currentUser && targetUserId !== currentUser.id) {
-       checkSubscription();
-     }
-   }, [showMenu, targetUserId, currentUser]);
-
-   const checkSubscription = async () => {
+   const checkSubscription = useCallback(async () => {
      if (!currentUser || !targetUserId) return;
      try {
        const { data } = await supabase
@@ -212,7 +205,14 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
      } catch (_error) {
        setCurrentSubscription(null);
      }
-   };
+   }, [currentUser, targetUserId]);
+
+   // Check subscription status when menu opens
+   useEffect(() => {
+    if (showMenu && targetUserId && currentUser && targetUserId !== currentUser.id) {
+      void checkSubscription();
+    }
+   }, [showMenu, targetUserId, currentUser, checkSubscription]);
 
   // Close menu when clicking outside
   useEffect(() => {

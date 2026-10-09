@@ -45,7 +45,7 @@ export default function MaiBusinessPlan() {
       }
     };
     fetchData();
-  }, []);
+  }, [activeSection]);
 
   const handleSectionClick = (section: BusinessPlanSection) => {
     setActiveSection(section);

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Coins, X, LogOut } from "lucide-react";
 import { Track } from "livekit-client";
@@ -6,9 +6,9 @@ import { Track } from "livekit-client";
 import type { BattleViewController } from "../../hooks/useBattleViewController";
 import useTrollTime from "../../hooks/useTrollTime";
 import TrollTimeBanner from "../../components/battle/TrollTimeBanner";
-import { getTrackPublications } from "../../components/broadcast/BattleArena";
+import { getTrackPublications } from "../../components/broadcast/battleArenaUtils";
 import QuickGiftRow from "../../components/broadcast/QuickGiftRow";
-import type { ActiveBattle } from "../../components/broadcast/battle/ActiveBattlesPanel";
+import type { ActiveBattle } from "../../hooks/useActiveBattles";
 
 import MobileBattleHeader from "../../components/battle/mobile/MobileBattleHeader";
 import MobileBattleScore from "../../components/battle/mobile/MobileBattleScore";
@@ -114,20 +114,20 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     typeof navigator !== "undefined" &&
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  const findRemoteByIdentity = (identity: string) => {
+  const findRemoteByIdentity = useCallback((identity: string) => {
     const target = normalizeId(identity);
     return remoteUsers.find((u) => {
       const id = String(u.identity || "");
       const n = normalizeId(id);
       return id === identity || n === target || n.startsWith(target.substring(0, 8)) || target.startsWith(n.substring(0, 8));
     });
-  };
+  }, [remoteUsers]);
 
   // Track cache so a brief unsubscribe/reconnect doesn't drop a box back to the
   // profile picture (mirrors BattleArena's lastKnownTrackRef behaviour).
   const trackCacheRef = React.useRef<Record<string, { videoTrack?: any; hasAudio: boolean }>>({});
 
-  const resolveTrack = (userId: string) => {
+  const resolveTrack = useCallback((userId: string) => {
     // In the battle room, participants use bare user IDs as LiveKit identities.
     const remote = findRemoteByIdentity(userId);
 
@@ -175,7 +175,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       trackCacheRef.current[userId] = result;
     }
     return result;
-  };
+  }, [battleParticipants, findRemoteByIdentity, isMobileDevice, remoteUsers]);
 
   const { blueVMs, redVMs } = useMemo(() => {
     const blue: MobileParticipantVM[] = [];
@@ -210,7 +210,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       else red.push(vm);
     }
     return { blueVMs: blue, redVMs: red };
-  }, [battleParticipants, participantContributions, remoteUsers, resolveTrack, effectiveUserId, battleLocalVideoTrack, battleLocalAudioTrack]);
+  }, [battleParticipants, participantContributions, resolveTrack, effectiveUserId, battleLocalVideoTrack, battleLocalAudioTrack]);
 
   const viewers = useMemo(() => {
     return (battleParticipants as any[])

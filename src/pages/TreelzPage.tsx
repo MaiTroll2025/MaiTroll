@@ -72,6 +72,9 @@ export default function TreelzPage() {
   const currentPost = posts[currentIndex]
   const previousPost = currentIndex > 0 ? posts[currentIndex - 1] : null
   const nextPost = currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null
+  const previousVideoUrl = previousPost?.video_url
+  const nextVideoUrl = nextPost?.video_url
+  const currentPostAuthorId = currentPost?.author?.id
 
   const upNext = useMemo(
     () => posts.slice(currentIndex + 1, currentIndex + 7),
@@ -137,18 +140,18 @@ export default function TreelzPage() {
   }, [loadFeed])
 
   useEffect(() => {
-    if (previousPost && preloadPreviousRef.current) {
-      preloadPreviousRef.current.src = previousPost.video_url
+    if (previousVideoUrl && preloadPreviousRef.current) {
+      preloadPreviousRef.current.src = previousVideoUrl
       preloadPreviousRef.current.load()
     }
-  }, [previousPost?.video_url])
+  }, [previousVideoUrl])
 
   useEffect(() => {
-    if (nextPost && preloadNextRef.current) {
-      preloadNextRef.current.src = nextPost.video_url
+    if (nextVideoUrl && preloadNextRef.current) {
+      preloadNextRef.current.src = nextVideoUrl
       preloadNextRef.current.load()
     }
-  }, [nextPost?.video_url])
+  }, [nextVideoUrl])
 
   const switchCategory = useCallback(
     (category: string) => {
@@ -254,7 +257,7 @@ export default function TreelzPage() {
   }, [user, followedAuthors])
 
   useEffect(() => {
-    if (!currentPost?.author?.id || !user?.id) return
+    if (!currentPostAuthorId || !user?.id) return
 
     let cancelled = false
 
@@ -263,20 +266,20 @@ export default function TreelzPage() {
         .from('user_follows')
         .select('id')
         .eq('follower_id', user.id)
-        .eq('following_id', currentPost.author!.id)
+        .eq('following_id', currentPostAuthorId)
         .maybeSingle()
 
       if (!cancelled) {
         setFollowedAuthors((prev) => ({
           ...prev,
-          [currentPost.author!.id]: !!data,
+          [currentPostAuthorId]: !!data,
         }))
       }
     }
 
     checkFollow()
     return () => { cancelled = true }
-  }, [currentPost?.author?.id, user?.id])
+  }, [currentPostAuthorId, user?.id])
 
   return (
     <div className="fixed inset-0 flex h-[100dvh] w-full flex-col overflow-hidden bg-[#03050b] text-white">

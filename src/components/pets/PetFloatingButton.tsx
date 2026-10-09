@@ -4,7 +4,7 @@ import { PawPrint } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
-import { petImage } from './PetPresence'
+import { petImage } from './petImage'
 import PetShelterModal from './PetShelterModal'
 
 type PetSummary = { id: string; pet_type: 'dog' | 'cat'; name: string; care_status: number; hunger_status: number; walk_status: number; attention_status: number }

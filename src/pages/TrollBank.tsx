@@ -59,7 +59,7 @@ export default function TrollBank() {
   }, [user, profile, refreshProfile])
 
   // Function to fetch saved cards
-  const fetchSavedCards = async () => {
+  const fetchSavedCards = useCallback(async () => {
     if (!user?.id) return
     try {
       const { data, error } = await supabase
@@ -73,19 +73,19 @@ export default function TrollBank() {
     } catch (err) {
       console.error('Failed to fetch saved cards:', err)
     }
-  }
+  }, [user.id])
 
   // Fetch saved cards on mount and when user changes
   useEffect(() => {
     fetchSavedCards()
-  }, [user?.id])
+  }, [fetchSavedCards, user.id])
 
   // Fetch small purchase credit-building trackers
    
   useEffect(() => {
     fetchSmallPurchases()
     // eslint-enable react-hooks/exhaustive-deps
-  }, [])
+  }, [fetchSmallPurchases])
 
   // Fetch and Subscribe to Bank Reserves
   useEffect(() => {

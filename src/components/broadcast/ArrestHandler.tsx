@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
@@ -18,64 +18,7 @@ export default function ArrestHandler({ streamId }: { streamId: string }) {
   const { room } = useRoom();
   const userId = user?.id;
 
-  useEffect(() => {
-    if (!streamId || !streamId.trim()) return;
-    if (!userId) return;
-
-    // Check if user is already jailed on component mount
-    const checkInitialArrest = async () => {
-      try {
-        const { data } = await supabase
-          .from('jail')
-           .select('id, reason, severity, bond_amount, arrested_by, release_time')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (data) {
-          // User is jailed - check if release time is in the future
-          const releaseTime = new Date(data.release_time);
-          if (releaseTime > new Date()) {
-            await handleArrest(data);
-            return;
-          }
-        }
-      } catch (error) {
-        console.error('[ArrestHandler] Error checking initial arrest:', error);
-      }
-    };
-
-    checkInitialArrest();
-
-    // Subscribe to real-time jail table changes
-    const channel = supabase
-      .channel(`arrests:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'jail',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const data = (payload as any).new;
-          if (data && data.user_id === userId) {
-            handleArrest(data);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [streamId, userId, navigate, room]);
-
-  const handleArrest = async (jailRecord: any) => {
+  const handleArrest = useCallback(async (jailRecord: any) => {
     console.log('[ArrestHandler] User arrested:', { userId, jailRecord });
 
     // 1. Disconnect from LiveKit room
@@ -105,7 +48,57 @@ export default function ArrestHandler({ streamId }: { streamId: string }) {
       navigate('/jail', { replace: true });
       console.log('[ArrestHandler] Redirected to /jail');
     }, 1000);
-  };
+  }, [userId, room, navigate]);
+
+  useEffect(() => {
+    if (!streamId || !streamId.trim() || !userId) return;
+
+    const checkInitialArrest = async () => {
+      try {
+        const { data } = await supabase
+          .from('jail')
+          .select('id, reason, severity, bond_amount, arrested_by, release_time')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (data) {
+          const releaseTime = new Date(data.release_time);
+          if (releaseTime > new Date()) {
+            await handleArrest(data);
+          }
+        }
+      } catch (error) {
+        console.error('[ArrestHandler] Error checking initial arrest:', error);
+      }
+    };
+
+    void checkInitialArrest();
+
+    const channel = supabase
+      .channel(`arrests:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'jail',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const data = (payload as any).new;
+          if (data && data.user_id === userId) {
+            void handleArrest(data);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [handleArrest, streamId, userId]);
 
   return null; // No UI - just handler
 }

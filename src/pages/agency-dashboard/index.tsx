@@ -482,7 +482,7 @@ export default function AgencyDashboard() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [fetchAgencyById, fetchCounts, fetchContracts, fetchLatestApplication, user?.id])
+  }, [user.id, fetchLatestApplication, fetchAgencyById, navigate, fetchCounts, fetchContracts])
 
   useEffect(() => {
     void fetchAgencyData()

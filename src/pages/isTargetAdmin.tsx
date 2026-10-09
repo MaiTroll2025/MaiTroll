@@ -5,7 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { usePresenceStore } from '@/lib/presenceStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useStaffWalkieTalkieContext } from '@/components/StaffWalkieTalkieProvider';
+import { useStaffWalkieTalkieContext } from '@/hooks/useStaffWalkieTalkieContext';
 import { toast } from 'sonner';
 import { Activity, BarChart3, Bug, Clock, Coins, Mail, Monitor, MoreVertical, Radio, RefreshCw, Send, Pause, Search, Shield, ShieldAlert, TrendingUp, UserPlus, Users, X, Stamp } from 'lucide-react';
 import BugCenterPanel from '../components/admin/BugCenterPanel';
@@ -224,7 +224,6 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   // Arrest-specific state
   const [arrestReason, setArrestReason] = useState('');
   const [arrestSeverity, setArrestSeverity] = useState('moderate');
-  const [arrestBailAmount, setArrestBailAmount] = useState(100);
 
   const [selectedStream, setSelectedStream] = useState<StreamDetail | null>(null);
   const [selectedStreamBroadcaster, setSelectedStreamBroadcaster] = useState('');
@@ -592,7 +591,6 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     if (action === 'arrest') {
         setArrestReason('');
         setArrestSeverity('moderate');
-        setArrestBailAmount(100);
     }
 }, []);
 
@@ -866,7 +864,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
      } finally {
          setActionLoading(false);
      }
- }, [actionAmount, actionDuration, actionReason, actionTarget, activeAction, arrestReason, arrestSeverity, arrestBailAmount, closeAction, fetchModActionLogs, isFullAdmin, profile?.id, isTargetAdmin]);
+ }, [actionTarget, activeAction, isFullAdmin, fetchModActionLogs, closeAction, profile?.username, profile?.id, actionReason, actionDuration, actionAmount, arrestReason, arrestSeverity]);
 
   const openStreamModal = useCallback(async (stream: StreamDetail) => {
     setSelectedStream(stream);

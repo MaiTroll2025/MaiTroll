@@ -156,7 +156,7 @@ export default function AutoCoverPhotoUpload({
     if (currentImage && currentImage !== preview) {
       setPreview(currentImage);
     }
-  }, [currentImage]);
+  }, [currentImage, preview]);
 
   const handleChooseFile = useCallback(() => {
     inputRef.current?.click();

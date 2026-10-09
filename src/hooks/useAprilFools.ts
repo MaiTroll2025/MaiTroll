@@ -64,6 +64,7 @@ export function useAprilFools(realBalance?: number) {
 
   // Check active state on mount and set auto-disable timer
   useEffect(() => {
+    const prankTimers = timersRef.current
     const checkActive = () => {
       const active = isAprilFoolsActive();
       setState(prev => ({
@@ -101,7 +102,7 @@ export function useAprilFools(realBalance?: number) {
         clearTimeout(autoDisableTimerRef.current);
       }
       // Clean up all timers
-      timersRef.current.forEach(t => clearTimeout(t));
+      prankTimers.forEach(t => clearTimeout(t));
     };
   }, []);
 

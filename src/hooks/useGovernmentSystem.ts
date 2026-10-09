@@ -673,7 +673,7 @@ export const useGovernmentSystem = () => {
     if (user) {
       initializeData();
     }
-  }, [user]);
+  }, [fetchBribes, fetchCityReputation, fetchGovernmentHistory, fetchLaws, fetchPoliticalParties, fetchProtests, fetchReputation, fetchUserProtests, user]);
 
   // Realtime subscription for protest changes - live updates when users join/leave
   useEffect(() => {

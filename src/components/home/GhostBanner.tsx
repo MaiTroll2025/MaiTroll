@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGhostDropIn } from '@/context/GhostDropInContext';
+import { useGhostDropIn } from '@/hooks/useGhostDropIn';
 import { useAuthStore } from '@/lib/store';
 import { X, UserPlus, Sparkles } from 'lucide-react';
 
@@ -27,7 +27,7 @@ export default function GhostBanner() {
     } else {
       setVisible(false);
     }
-  }, [state.promptShown, state.signUpClicked]);
+  }, [user, state.promptShown, state.signUpClicked]);
 
   // Countdown timer for auto-dismiss
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useTabVisibility } from '@/components/TabSwitchHandler';
+import { useTabVisibility } from '@/hooks/useTabVisibility';
 
 interface UseLazyOperationOptions {
   /** Whether to run the operation immediately when becoming visible */

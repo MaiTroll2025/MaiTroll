@@ -18,11 +18,8 @@ export * from './eventRegistry';
 export { GlobalEventProvider, useGlobalEvent, useEventAdmin } from '../../contexts/GlobalEventContext';
 
 // Theme
-export { 
-  GlobalEventThemeLayer, 
-  useEventTheme, 
-  injectEventThemeCSS 
-} from '../../components/GlobalEventThemeLayer';
+export { GlobalEventThemeLayer } from '../../components/GlobalEventThemeLayer';
+export { useEventTheme, injectEventThemeCSS, getEventCSSVariables } from './themeHelpers';
 
 // Feature Hooks
 export { useEventGifts } from '../hooks/useEventGifts';

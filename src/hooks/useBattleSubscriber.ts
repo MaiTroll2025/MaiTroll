@@ -355,7 +355,7 @@ export function useBattleSubscriber(stream: any) {
       cleanup();
       setState(INITIAL);
     }
-  }, [stream?.is_battle, stream?.battle_id, cleanup, clearTimer]);
+  }, [stream?.is_battle, stream?.battle_id, cleanup, clearTimer, stream.id]);
 
   useEffect(() => {
     return () => {

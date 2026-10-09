@@ -416,7 +416,7 @@ export default function TopFansLeaderboard({
         supabase.removeChannel(channel);
       }
     };
-  }, [fetchLeaderboard]);
+  }, [fetchLeaderboard, streamId]);
 
   const totalCoins = useMemo(
     () => fans.reduce((sum, f) => sum + f.coinsGifted, 0),

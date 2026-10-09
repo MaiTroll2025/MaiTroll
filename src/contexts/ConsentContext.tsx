@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
   ConsentState,
   ConsentPreferences,
@@ -11,8 +11,9 @@ import {
   hasMarketingConsent,
   hasPreferencesConsent,
 } from '../lib/consent';
+import { ConsentContext } from '../hooks/useConsent';
 
-interface ConsentContextType {
+export interface ConsentContextType {
   consent: ConsentState | null;
   hasConsented: boolean;
   acceptAll: () => void;
@@ -25,8 +26,6 @@ interface ConsentContextType {
   canInitializeMarketing: boolean;
   canInitializePreferences: boolean;
 }
-
-const ConsentContext = createContext<ConsentContextType | null>(null);
 
 export function ConsentProvider({ children }: { children: ReactNode }) {
   const [consent, setConsent] = useState<ConsentState | null>(null);
@@ -121,20 +120,4 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
       {children}
     </ConsentContext.Provider>
   );
-}
-
-export function useConsent(): ConsentContextType {
-  const context = useContext(ConsentContext);
-  if (!context) {
-    throw new Error('useConsent must be used within a ConsentProvider');
-  }
-  return context;
-}
-
-export function useConsentValue<K extends keyof ConsentContextType>(key: K): ConsentContextType[K] {
-  const context = useContext(ConsentContext);
-  if (!context) {
-    throw new Error('useConsentValue must be used within a ConsentProvider');
-  }
-  return context[key];
 }

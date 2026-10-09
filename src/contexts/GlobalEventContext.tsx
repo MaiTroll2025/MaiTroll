@@ -91,7 +91,7 @@ export const GlobalEventProvider: React.FC<GlobalEventProviderProps> = ({ childr
     // Holiday themes disabled - always set to no active events
     setActiveEvent(null);
     setActiveEvents([]);
-  }, [adminOverride, checkAdminExpiration]);
+  }, [checkAdminExpiration]);
 
   // Initialize and set up update loop — fixed 30s interval (no dynamic 1s timer)
   useEffect(() => {

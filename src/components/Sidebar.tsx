@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom';
 import UserPresenceCounter from '@/components/sidebar/UserPresenceCounter'
 import { SafeLink } from '@/hooks/useSafeNavigate'
-import { AlertTriangle, Banknote, BookOpen, Briefcase, Building2, Calendar, ChevronLeft, ChevronRight, Church, Coins, Crown, Database, DollarSign, FileText, Gamepad2, Gavel, Home, Landmark, LayoutDashboard, LifeBuoy, List, Lock, Mail, Megaphone, Newspaper, Package, PawPrint, Radio, Scale, Settings, Shield, ShoppingBag, Shuffle, Sparkles, Store, TrendingUp, Trophy, Users, Video, Warehouse, Waves, Zap, Wrench } from 'lucide-react';
+import { AlertTriangle, Banknote, BookOpen, Briefcase, Building2, Calendar, ChevronLeft, ChevronRight, Church, Coins, Crown, Database, DollarSign, FileText, Gamepad2, Gavel, Home, Landmark, LayoutDashboard, LifeBuoy, List, Lock, Mail, Megaphone, Newspaper, Package, PawPrint, Radio, Scale, Settings, Shield, ShoppingBag, Sparkles, Store, TrendingUp, Trophy, Users, Video, Warehouse, Waves, Zap, Wrench } from 'lucide-react';
 
 import CourtEntryModal from './CourtEntryModal'
 import UserProfileWidget from './sidebar/UserProfileWidget'
@@ -346,7 +346,7 @@ export default function Sidebar() {
     }
 
     fetchUserData()
-  }, [profile?.id, profile, isAdmin])
+  }, [profile?.id, profile, isAdmin, role, trollRole])
 
   useEffect(() => {
     if (!isAdmin) {

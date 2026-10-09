@@ -1,21 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+import React, { useReducer, useEffect, useCallback, useRef } from 'react';
 import { ActiveEffect, EffectType, EffectTarget, GIFT_EFFECT_MAPPING } from '../types/broadcastEffects';
-
-interface EffectsState {
-  activeEffects: ActiveEffect[];
-  cityHeatValue: number;
-  seatHeatValues: Record<string, number>;
-  lastEffectId: number;
-}
-
-type EffectsAction =
-  | { type: 'ADD_EFFECT'; payload: ActiveEffect }
-  | { type: 'REMOVE_EFFECT'; payload: string }
-  | { type: 'SET_CITY_HEAT'; payload: number }
-  | { type: 'BOOST_CITY_HEAT'; payload: number }
-  | { type: 'SET_SEAT_HEAT'; payload: { seatId: string; value: number } }
-  | { type: 'BOOST_SEAT_HEAT'; payload: { seatId: string; value: number } }
-  | { type: 'DECAY_HEAT' };
+import { EffectsContext, type EffectsAction, type EffectsState } from '../hooks/useBroadcastEffects';
 
 const initialState: EffectsState = {
   activeEffects: [],
@@ -74,19 +59,6 @@ function effectsReducer(state: EffectsState, action: EffectsAction): EffectsStat
       return state;
   }
 }
-
-interface EffectsContextValue {
-  state: EffectsState;
-  triggerEffect: (type: EffectType, target: 'page' | 'broadcast' | 'seat', durationMs: number, seatId?: string) => void;
-  triggerGiftEffect: (giftId: string, targetSeatId?: string) => void;
-  setCityHeat: (value: number) => void;
-  boostCityHeat: (amount: number) => void;
-  setSeatHeat: (seatId: string, value: number) => void;
-  boostSeatHeat: (seatId: string, amount: number) => void;
-  clearEffects: () => void;
-}
-
-const EffectsContext = createContext<EffectsContextValue | null>(null);
 
 export function EffectsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(effectsReducer, initialState);
@@ -177,12 +149,4 @@ export function EffectsProvider({ children }: { children: React.ReactNode }) {
       {children}
     </EffectsContext.Provider>
   );
-}
-
-export function useBroadcastEffects() {
-  const context = useContext(EffectsContext);
-  if (!context) {
-    throw new Error('useBroadcastEffects must be used within EffectsProvider');
-  }
-  return context;
 }

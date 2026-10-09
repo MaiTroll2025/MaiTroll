@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import {
   FileText,
   Sheet,
@@ -127,7 +127,7 @@ export default function TroMailOfficePage() {
     folder: spreadsheet.folder || undefined,
   })), [spreadsheets])
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user?.id) return
     setIsLoading(true)
     try {
@@ -148,7 +148,7 @@ export default function TroMailOfficePage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [selectedFolderId, user?.id])
 
   const loadRecipients = async () => {
     const { data, error } = await supabase.from('tromail_accounts').select('user_id, email_address, role, display_name').eq('is_active', true)
@@ -159,7 +159,7 @@ export default function TroMailOfficePage() {
   useEffect(() => {
     loadData()
     loadRecipients().catch(() => undefined)
-  }, [section, selectedFolderId, user?.id])
+  }, [loadData, section, selectedFolderId, user.id])
 
   const createFolder = async () => {
     if (!user?.id || !newFolderName.trim()) return

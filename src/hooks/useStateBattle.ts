@@ -129,33 +129,6 @@ export function useStateBattle({
     [userId]
   );
 
-  const startStateQueue = useCallback(async () => {
-    if (!stream?.id || !userId) return;
-
-    if (!userState) {
-      setShowStateSelector(true);
-      toast.error('Select your state first!');
-      return;
-    }
-
-    try {
-      // Set stream to state battle mode
-      const { error } = await supabase
-        .from('streams')
-        .update({ state_battle_mode: 'state' })
-        .eq('id', stream.id);
-      if (error) throw error;
-
-      onStreamUpdate?.({ state_battle_mode: 'state' });
-      toast.success('State Battle mode enabled! Searching for opponent...');
-
-      // Immediately try to find a match
-      await findStateMatch();
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to start state battle queue');
-    }
-  }, [stream?.id, userId, userState, onStreamUpdate]);
-
   const stopStateQueue = useCallback(async () => {
     if (!stream?.id) return;
     try {
@@ -208,6 +181,30 @@ export function useStateBattle({
       setIsStateMatching(false);
     }
   }, [stream?.id, userId, isStateMatching, onStreamUpdate]);
+
+  const startStateQueue = useCallback(async () => {
+    if (!stream?.id || !userId) return;
+
+    if (!userState) {
+      setShowStateSelector(true);
+      toast.error('Select your state first!');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('streams')
+        .update({ state_battle_mode: 'state' })
+        .eq('id', stream.id);
+      if (error) throw error;
+
+      onStreamUpdate?.({ state_battle_mode: 'state' });
+      toast.success('State Battle mode enabled! Searching for opponent...');
+      await findStateMatch();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to start state battle queue');
+    }
+  }, [stream?.id, userId, userState, onStreamUpdate, findStateMatch]);
 
   return {
     battleMode,

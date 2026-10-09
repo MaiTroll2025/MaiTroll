@@ -129,7 +129,7 @@ export default function SquarePaymentModal({
       setSaveCard(onSaveCard || requireCardOnFile || !hasSavedCard);
       setCardErrors({});
     }
-  }, [isOpen, hasSavedCard, saveOnly, onSaveCard, requireCardOnFile, savedPaymentMethods]);
+  }, [isOpen, hasSavedCard, saveOnly, onSaveCard, requireCardOnFile, savedPaymentMethods, profile?.zipcode, profile?.username]);
 
   const validateCard = useCallback((): boolean => {
     const errors: typeof cardErrors = {};

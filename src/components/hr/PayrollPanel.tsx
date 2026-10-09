@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { DollarSign, Clock, RefreshCw, TrendingUp, Award } from 'lucide-react';
@@ -45,7 +45,7 @@ export default function PayrollPanel({ isHRAdmin, currentUserId }: PayrollPanelP
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week')
 
-  const loadPayrollData = async () => {
+  const loadPayrollData = useCallback(async () => {
     if (!currentUserId) return
     setLoading(true)
     try {
@@ -99,11 +99,11 @@ export default function PayrollPanel({ isHRAdmin, currentUserId }: PayrollPanelP
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentUserId, selectedPeriod])
 
   useEffect(() => {
     loadPayrollData()
-  }, [currentUserId, selectedPeriod])
+  }, [loadPayrollData])
 
   const totals = useMemo(() => {
     const basePay = payrollLogs.reduce((sum, log) => sum + (log.base_pay || 0), 0)

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../lib/store'
-import { ShareAThonProvider, useShareAThon } from '../../contexts/ShareAThonContext'
+import { ShareAThonProvider } from '../../contexts/ShareAThonContext'
+import { useShareAThon } from '../../hooks/useShareAThon'
 import { toast } from 'sonner'
 import { ArrowLeft, Users, Share2, Zap, Clock, CheckCircle, XCircle, DollarSign, Radio, Loader2, Search, Eye, Shield, BarChart3 } from 'lucide-react';
 
@@ -39,7 +40,7 @@ function AdminDashboardContent() {
       refreshEligibility()
       refreshSubmissions()
     }
-  }, [event, isAdmin])
+  }, [event, isAdmin, refreshEligibility, refreshSubmissions])
 
   const stats = {
     eligible: eligibleBroadcasters.length,

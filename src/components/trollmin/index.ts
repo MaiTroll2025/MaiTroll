@@ -1,1 +1,2 @@
-export { PresidentRuleValidator, validateTrollminAction } from './PresidentRuleValidator';
+export { PresidentRuleValidator } from './PresidentRuleValidator';
+export { validateTrollminAction } from '../../lib/trollmin/validateTrollminAction';

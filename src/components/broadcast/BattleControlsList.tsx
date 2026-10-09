@@ -5,7 +5,7 @@ import { Swords, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import UserNameWithAge from '../UserNameWithAge';
 import { cn } from '../../lib/utils';
-import { usePageVisibilityContext } from '../../contexts/PageVisibilityContext';
+import { usePageVisibilityContext } from '../../hooks/usePageVisibilityContext';
 
 interface BattleControlsListProps {
   currentStream: Stream;

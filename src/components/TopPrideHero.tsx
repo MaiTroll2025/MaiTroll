@@ -6,7 +6,8 @@ import { BookOpen, Crown, FileText, Gamepad2, Gift, Heart, MessageCircle, Play, 
 
 import { useAuthStore } from '@/lib/store'
 import { isPrideMonth } from '@/lib/prideMonth'
-import { useLiveContent, type LiveItem } from '@/contexts/LiveContentContext'
+import { useLiveContent } from '@/hooks/useLiveContent'
+import type { LiveItem } from '@/contexts/LiveContentContext'
 import TrollWallFeed from '@/components/home/TrollWallFeed'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'

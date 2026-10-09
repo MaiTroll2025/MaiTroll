@@ -413,7 +413,7 @@ export function useTMNeedsOnboarding() {
 
     setNeedsOnboarding(!hasInterests);
     setLoading(false);
-  }, [profile?.id, profile?.interests]);
+  }, [profile, profile.id, profile.interests]);
 
   return { needsOnboarding, loading };
 }

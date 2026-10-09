@@ -10,7 +10,7 @@ import { useGlobalEvent } from '../../contexts/GlobalEventContext';
 import { useEventGifts } from '../../lib/hooks/useEventGifts';
 import { useEventBonuses } from '../../lib/hooks/useEventBonuses';
 // import { useEventHighlights } from '../../lib/hooks/useEventHighlights';
-import { useEventTheme } from '../GlobalEventThemeLayer';
+import { useEventTheme } from '../../lib/events/themeHelpers';
 // import type { EventGift, EventBonus } from '../../lib/events/types';
 
 // ============================================================================

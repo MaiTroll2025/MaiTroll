@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -13,6 +13,7 @@ interface BattleEventBannerProps {
 export default function BattleEventBanner({ battleId, onEventStart }: BattleEventBannerProps) {
   const { profile: _profile } = useAuthStore();
   const [activeEvent, setActiveEvent] = useState<BattleRandomEvent | null>(null);
+  const activeEventIdRef = useRef<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -28,6 +29,7 @@ export default function BattleEventBanner({ battleId, onEventStart }: BattleEven
         .single();
 
       if (error || !data) {
+        activeEventIdRef.current = null;
         setActiveEvent(null);
         setDismissed(false);
         return;
@@ -35,7 +37,8 @@ export default function BattleEventBanner({ battleId, onEventStart }: BattleEven
 
       const event = data as BattleRandomEvent;
 
-      if (activeEvent?.id !== event.id) {
+      if (activeEventIdRef.current !== event.id) {
+        activeEventIdRef.current = event.id;
         setActiveEvent(event);
         setDismissed(false);
         setIsVisible(true);
@@ -55,6 +58,7 @@ export default function BattleEventBanner({ battleId, onEventStart }: BattleEven
       }, (payload) => {
         const newEvent = payload.new as BattleRandomEvent;
         if (newEvent.status === 'active') {
+          activeEventIdRef.current = newEvent.id;
           setActiveEvent(newEvent);
           setDismissed(false);
           setIsVisible(true);
@@ -69,6 +73,7 @@ export default function BattleEventBanner({ battleId, onEventStart }: BattleEven
       }, (payload) => {
         const updated = payload.new as BattleRandomEvent;
         if (updated.status === 'expired' || updated.status === 'cancelled') {
+          activeEventIdRef.current = null;
           setActiveEvent(null);
           setDismissed(false);
           setIsVisible(false);

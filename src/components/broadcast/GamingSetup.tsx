@@ -6,6 +6,17 @@ import TipBanner from '@/components/broadcast/TipBanner'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 
+const POPULAR_GAMES = [
+  'Fortnite','Apex Legends','Call of Duty: Warzone','Valorant','League of Legends',
+  'Counter-Strike 2','Dota 2','Overwatch 2','Rocket League','Fall Guys',
+  'Grand Theft Auto V','Red Dead Redemption 2','Elden Ring','Cyberpunk 2077',
+  'The Witcher 3','World of Warcraft','Final Fantasy XIV','Destiny 2','Rainbow Six Siege',
+  'SplitGate','Halo Infinite','Call of Duty: Modern Warfare II','PUBG','ARMA 3',
+  'Escape from Tarkov','Dead by Daylight','Among Us','Brawlhalla',
+  'Super Smash Bros. Ultimate','Street Fighter 6','Mortal Kombat 1',
+  'FIFA 24','NBA 2K24','Madden NFL 24','F1 23',
+]
+
 interface GamingSetupProps {
   streamTitle?: string
   onStreamTitleChange?: (title: string) => void
@@ -125,17 +136,6 @@ streamId,
   const [selectedGame, setSelectedGame] = React.useState<string>('')
   const [showScenePanel, setShowScenePanel] = React.useState(false)
   const userFrame = useUserFrame(userId)
-
-  const POPULAR_GAMES = [
-    'Fortnite','Apex Legends','Call of Duty: Warzone','Valorant','League of Legends',
-    'Counter-Strike 2','Dota 2','Overwatch 2','Rocket League','Fall Guys',
-    'Grand Theft Auto V','Red Dead Redemption 2','Elden Ring','Cyberpunk 2077',
-    'The Witcher 3','World of Warcraft','Final Fantasy XIV','Destiny 2','Rainbow Six Siege',
-    'SplitGate','Halo Infinite','Call of Duty: Modern Warfare II','PUBG','ARMA 3',
-    'Escape from Tarkov','Dead by Daylight','Among Us','Brawlhalla',
-    'Super Smash Bros. Ultimate','Street Fighter 6','Mortal Kombat 1',
-    'FIFA 24','NBA 2K24','Madden NFL 24','F1 23',
-  ]
 
   const filteredGames = React.useMemo(() => {
     if (!gameSearchQuery) return POPULAR_GAMES.slice(0, 15)

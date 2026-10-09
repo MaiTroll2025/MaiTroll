@@ -506,7 +506,7 @@ export default function BroadcastChat({
     setShowEmotePicker(false)
   }, [])
 
-  const buildUserProfile = (source: any) => ({
+  const buildUserProfile = useCallback((source: any) => ({
     username:
       source?.user_name ||
       source?.username ||
@@ -541,9 +541,9 @@ export default function BroadcastChat({
       source?.user_glowing_username_color ||
       source?.glowing_username_color ||
       source?.user_profiles?.glowing_username_color
-  });
+  }), []);
 
-  const normalizeIncomingMessage = (incoming: any): Message | null => {
+  const normalizeIncomingMessage = useCallback((incoming: any): Message | null => {
     if (!incoming) return null;
 
     if (incoming.v === 1 && incoming.t && incoming.d) {
@@ -602,7 +602,7 @@ export default function BroadcastChat({
         type: incoming.type || 'chat',
         user_profiles: buildUserProfile(incoming),
       } as Message;
-  };
+  }, [buildUserProfile]);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
@@ -718,10 +718,13 @@ export default function BroadcastChat({
 
   // Clear any pending disappearing timers when the component unmounts.
   useEffect(() => {
+    const timerIds = disappearingTimerIdsRef.current;
+    const timers = disappearingTimersRef.current;
+
     return () => {
-      disappearingTimerIdsRef.current.forEach(t => clearTimeout(t));
-      disappearingTimerIdsRef.current.clear();
-      disappearingTimersRef.current.clear();
+      timerIds.forEach(t => clearTimeout(t));
+      timerIds.clear();
+      timers.clear();
     };
   }, []);
   
@@ -1372,7 +1375,7 @@ const fetchMessages = async () => {
             broadcastChannelRef.current = null;
           }
       };
-  }, [streamId]);
+  }, [normalizeIncomingMessage, streamId]);
 
   // Track chat focus/visibility
   useEffect(() => {

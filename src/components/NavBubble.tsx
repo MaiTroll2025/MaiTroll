@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Menu, Home, LogIn, UserPlus, X, Video, Coins, Trophy, Gavel, Shield, Store, Wallet, Users, Newspaper, Briefcase, Building2, Landmark, Mail, Search, Radio, Gamepad2, Megaphone, Scale, Crown, Package, Waves, LifeBuoy, Church } from 'lucide-react';
+import { Menu, Home, LogIn, UserPlus, X, Video, Coins, Trophy, Gavel, Shield, Store, Wallet, Users, Newspaper, Briefcase, Building2, Landmark, Mail, Search, Radio, Gamepad2, Megaphone, Scale, Crown, Package, Waves, LifeBuoy, Church, Mic } from 'lucide-react';
+import HytroSpotButton from '@/components/HytroSpotButton'
 
 import { useAuthStore } from '@/lib/store'
 import { useCoins } from '@/lib/hooks/useCoins'
@@ -14,6 +15,7 @@ type NavItem = {
   requiresAuth?: boolean
   show?: boolean
   badge?: string
+  onClick?: () => void
 }
 
 type NavGroup = {
@@ -132,6 +134,12 @@ export default function NavBubble() {
             path: '/leagues',
             icon: Trophy,
             requiresAuth: true,
+          },
+          {
+            label: 'HytroSpot',
+            path: '#',
+            icon: Mic,
+            onClick: () => window.dispatchEvent(new Event('open-hytrospot-modal')),
           },
         ],
       },
@@ -533,11 +541,33 @@ export default function NavBubble() {
                       const Icon = item.icon
                       const active = location.pathname === item.path
 
+                      if (item.label === 'HytroSpot' && item.onClick) {
+                        return (
+                          <HytroSpotButton
+                            key={`${group.title}-${item.path}`}
+                            variant="drawer"
+                            size="md"
+                            onClick={() => {
+                              item.onClick?.();
+                              setIsOpen(false);
+                              setQuery('');
+                            }}
+                            className="min-h-[74px]"
+                          />
+                        );
+                      }
+
                       return (
                         <button
                           key={`${group.title}-${item.path}`}
                           type="button"
-                          onClick={() => handleNavigate(item.path)}
+                          onClick={() => {
+                            if (item.onClick) {
+                              item.onClick();
+                            } else {
+                              handleNavigate(item.path);
+                            }
+                          }}
                           className={cx(
                             'relative flex min-h-[74px] flex-col items-center justify-center gap-1.5 overflow-hidden rounded-2xl border p-3 text-center transition focus:outline-none focus:ring-2 focus:ring-cyan-400/40 active:scale-[0.98] active:shadow-[0_0_20px_rgba(34,211,238,0.25),0_0_20px_rgba(34,253,154,0.15)]',
                             active
@@ -559,7 +589,7 @@ export default function NavBubble() {
                             {item.label}
                           </span>
                         </button>
-                      )
+                      );
                     })}
                   </div>
                 </section>

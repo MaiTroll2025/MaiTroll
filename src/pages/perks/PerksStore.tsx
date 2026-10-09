@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -38,13 +38,7 @@ function PerksStoreContent({ profile, user }: { profile: any, user: any }) {
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
   const levelPerkIds = React.useMemo(() => new Set(LEVEL_PERKS.map((perk) => perk.id)), [])
 
-  useEffect(() => {
-    loadPerks()
-    loadThemes()
-  }, [])
-
-
-  const loadPerks = async () => {
+  const loadPerks = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('perks')
@@ -61,9 +55,9 @@ function PerksStoreContent({ profile, user }: { profile: any, user: any }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [levelPerkIds])
 
-  const loadThemes = async () => {
+  const loadThemes = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('broadcast_background_themes')
@@ -77,7 +71,12 @@ function PerksStoreContent({ profile, user }: { profile: any, user: any }) {
     } catch (err) {
       console.error('Failed to load themes', err)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    void loadPerks()
+    void loadThemes()
+  }, [loadPerks, loadThemes])
 
   const handlePrestige = async () => {
     if (!profile) return;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { useGetUserTromailAccount } from '../../hooks/useGetUserTromailAccount';
@@ -62,12 +62,6 @@ export const ContractCreator = () => {
     }
   }, [userAccountData]);
 
-  useEffect(() => {
-    if (selectedTemplate && formData.recipient_user_id && recipientProfile) {
-      generatePreview();
-    }
-  }, [selectedTemplate, formData, recipientProfile]);
-
   const handleTemplateChange = (templateId) => {
     const template = templates?.find(t => t.id === templateId);
     setSelectedTemplate(template);
@@ -111,7 +105,7 @@ export const ContractCreator = () => {
     }));
   };
 
-  const generatePreview = async () => {
+  const generatePreview = useCallback(async () => {
     if (!selectedTemplate || !recipientProfile) return;
     
     try {
@@ -135,7 +129,13 @@ export const ContractCreator = () => {
     } catch (error) {
       console.error('Error generating preview:', error);
     }
-  };
+  }, [selectedTemplate, recipientProfile, formData, userAccount]);
+
+  useEffect(() => {
+    if (selectedTemplate && formData.recipient_user_id && recipientProfile) {
+      generatePreview();
+    }
+  }, [selectedTemplate, formData, recipientProfile, generatePreview]);
 
   const handleSendContract = async () => {
     setIsSending(true);

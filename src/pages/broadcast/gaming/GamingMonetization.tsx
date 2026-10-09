@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, DollarSign, Gift, TrendingUp, Wallet } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
-import { useGamingStreamId } from '@/contexts/GamingStreamContext'
+import { useGamingStreamId } from '@/hooks/useGamingStream'
 
 interface EarningsData {
   streamCoins: number

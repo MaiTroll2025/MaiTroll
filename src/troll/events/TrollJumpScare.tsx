@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Rarity } from '../useTrollEngine';
 
 interface TrollJumpScareProps {
@@ -32,6 +32,20 @@ async function fetchAudioBuffer(url: string): Promise<AudioBuffer | null> {
   }
 }
 
+const SCARY_SOUNDS = [
+  '/sounds/entrance/explosion.mp3',
+  '/sounds/evil_laugh.mp3',
+  '/sounds/troll.mp3',
+  '/sounds/entrance/magical.mp3',
+  '/sounds/entrance/lightning.mp3',
+  '/sounds/metal_spin.mp3',
+  '/sounds/click.mp3',
+  '/sounds/entrance/flame.mp3',
+  '/sounds/calls/ringtone-neon.mp3',
+  '/sounds/calls/dialtone-neon.mp3',
+  '/sounds/entrance/curtain-open.mp3',
+];
+
 const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [scaryImageIndex, setScaryImageIndex] = useState<number>(0);
@@ -52,23 +66,8 @@ const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
     '/img/jumpscares/jumpscare11.jpeg',
   ];
 
-  // Scary sound files - mapped to images (use shorter sounds for jumpscare)
-  const scarySounds = [
-    '/sounds/entrance/explosion.mp3',
-    '/sounds/evil_laugh.mp3',
-    '/sounds/troll.mp3',
-    '/sounds/entrance/magical.mp3',
-    '/sounds/entrance/lightning.mp3',
-    '/sounds/metal_spin.mp3',
-    '/sounds/click.mp3',
-    '/sounds/entrance/flame.mp3',
-    '/sounds/calls/ringtone-neon.mp3',
-    '/sounds/calls/dialtone-neon.mp3',
-    '/sounds/entrance/curtain-open.mp3',
-  ];
-
   // Play scary sound using Web Audio API (bypasses autoplay restrictions)
-  const playScarySound = async (index: number, volume: number) => {
+  const playScarySound = useCallback(async (index: number, volume: number) => {
     try {
       // Stop any previous sound
       if (sourceRef.current) {
@@ -76,8 +75,8 @@ const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
         sourceRef.current = null;
       }
 
-      const soundIndex = index % scarySounds.length;
-      const soundPath = scarySounds[soundIndex];
+      const soundIndex = index % SCARY_SOUNDS.length;
+      const soundPath = SCARY_SOUNDS[soundIndex];
 
       const ctx = getAudioCtx();
       if (!ctx) return;
@@ -103,7 +102,7 @@ const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
     } catch (err) {
       console.warn('[JumpScare] Sound error:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Randomly select a scary image and sound
@@ -127,7 +126,7 @@ const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
         sourceRef.current = null;
       }
     };
-  }, []);
+  }, [playScarySound, rarity, scaryImages.length]);
 
   // Determine the size and intensity of the jumpscare based on rarity
   const getJumpScareStyle = () => {

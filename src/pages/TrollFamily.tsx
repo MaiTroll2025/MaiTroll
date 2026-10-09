@@ -74,7 +74,7 @@ export default function TrollFamily() {
     }
 
     checkFamilyMembership()
-  }, [user])
+  }, [navigate, user])
 
   // =========================================
   // FETCH FAMILIES + WEEKLY TASK DATA

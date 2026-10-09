@@ -329,7 +329,7 @@ export default function Sidebar() {
     }
 
     fetchUserData()
-  }, [profile?.id, profile, isAdmin])
+  }, [profile.id, profile, isAdmin, role, trollRole])
 
   useEffect(() => {
     const path = location.pathname

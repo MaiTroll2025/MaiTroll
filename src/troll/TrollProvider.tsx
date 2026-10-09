@@ -1,15 +1,10 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
+import { useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { useTrollEngine, TrollEvent } from './useTrollEngine';
 import { subscribeEvents, TrollEventType } from '../lib/events';
 import TrollOverlay from './TrollOverlay';
 import { PreflightStore } from '../lib/preflightStore';
 import { useLocation } from 'react-router-dom';
-
-interface TrollContextType {
-  triggerTroll: (context?: string, options?: { safe?: boolean }) => void;
-}
-
-const TrollContext = createContext<TrollContextType | undefined>(undefined);
+import { TrollContext } from './useTrollContext';
 
 interface TrollProviderProps {
   children: ReactNode;
@@ -180,14 +175,6 @@ export const TrollProvider = ({ children }: TrollProviderProps) => {
       )}
     </TrollContext.Provider>
   );
-};
-
-export const useTrollContext = () => {
-  const context = useContext(TrollContext);
-  if (!context) {
-    throw new Error('useTrollContext must be used within a TrollProvider');
-  }
-  return context;
 };
 
 export default TrollProvider;

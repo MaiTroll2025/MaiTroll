@@ -54,14 +54,8 @@ function FamilyMinutesStoreModal({
     cost: isFamilyMember ? Math.floor(pkg.cost * 0.95) : pkg.cost // 5% off for family
   }));
 
-  // Check if user is a family member on mount
-  useEffect(() => {
-    if (user && familyId) {
-      checkFamilyMembership();
-    }
-  }, [user, familyId]);
-
-  const checkFamilyMembership = async () => {
+  const checkFamilyMembership = useCallback(async () => {
+    if (!familyId) return
     try {
       const { data } = await supabase
         .from('family_members')
@@ -75,7 +69,14 @@ function FamilyMinutesStoreModal({
     } catch {
       setIsFamilyMember(false);
     }
-  };
+  }, [familyId, user?.id]);
+
+  // Check if user is a family member on mount
+  useEffect(() => {
+    if (user && familyId) {
+      void checkFamilyMembership();
+    }
+  }, [user, familyId, checkFamilyMembership]);
 
   if (!isOpen) return null;
 
@@ -865,7 +866,7 @@ export default function TrollFamilyChat() {
     if (urlFamilyId && urlFamilyId !== familyId) {
       setFamilyId(urlFamilyId);
     }
-  }, [urlFamilyId]);
+  }, [familyId, urlFamilyId]);
 
   // Initial data fetch
   useEffect(() => {

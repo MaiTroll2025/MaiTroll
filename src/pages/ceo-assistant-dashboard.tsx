@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { LayoutDashboard, Activity, AlertTriangle, BriefcaseBusiness, FileText, List, ShieldAlert, Users, ArrowRight, Coins, ChevronDown, ChevronUp } from 'lucide-react';
@@ -65,7 +65,7 @@ const CEOAssistantDashboard = () => {
   const assistantUsername = profile?.username || (isNoahAssistant ? 'noah_assistant' : 'ceo_assistant')
   const reportsViewMode = isNoahAssistant ? 'noah_assistant' : 'ceo_assistant'
 
-  const loadDashboardStats = async () => {
+  const loadDashboardStats = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -189,11 +189,11 @@ const CEOAssistantDashboard = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [profile?.id])
 
   useEffect(() => {
     loadDashboardStats()
-  }, [])
+  }, [loadDashboardStats])
 
   if (!canAccess) {
     return (

@@ -79,7 +79,7 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
     setShowPayPalPayment(false);
     setShowCardPayment(false);
     paymentInProgressRef.current = false;
-  }, [isOpen, user?.id]);
+  }, [isOpen, loadCatalog, loadUserFrames, onClose, user?.id]);
 
     const handlePackageSelect = (pkg: CoinPackage) => {
       if (!user?.id) {

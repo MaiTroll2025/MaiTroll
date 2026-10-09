@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { X, Gavel, Scale, ExternalLink, Lock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -21,13 +21,7 @@ export default function JudgeRulingModal({ isOpen, onClose, caseData, onSuccess 
 
   const isImpeachment = caseData?.category === 'IMPEACHMENT';
 
-  useEffect(() => {
-    if (isOpen && caseData?.id) {
-      fetchAttorneyCases();
-    }
-  }, [isOpen, caseData?.id]);
-
-  const fetchAttorneyCases = async () => {
+  const fetchAttorneyCases = useCallback(async () => {
     if (!caseData?.id) return;
 
     try {
@@ -45,7 +39,13 @@ export default function JudgeRulingModal({ isOpen, onClose, caseData, onSuccess 
     } catch (err) {
       console.error('Error fetching attorney cases:', err);
     }
-  };
+  }, [caseData?.id]);
+
+  useEffect(() => {
+    if (isOpen && caseData?.id) {
+      void fetchAttorneyCases();
+    }
+  }, [isOpen, caseData?.id, fetchAttorneyCases]);
 
   if (!isOpen || !caseData) return null;
 

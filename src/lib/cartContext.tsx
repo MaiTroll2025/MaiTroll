@@ -1,5 +1,6 @@
-import { createContext, useContext, useReducer, useEffect, ReactNode } from "react"
+import { useReducer, useEffect, type ReactNode } from "react"
 import { MerchCartItem, PrintifyProduct, PrintifyVariant } from "./merchTypes"
+import { CartContext } from "./useCart"
 
 interface CartState {
   items: MerchCartItem[]
@@ -76,7 +77,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
   }
 }
 
-interface CartContextValue {
+export interface CartContextValue {
   items: MerchCartItem[]
   isOpen: boolean
   subtotal: number
@@ -89,8 +90,6 @@ interface CartContextValue {
   setCartOpen: (open: boolean) => void
   getVariantForItem: (productId: string, variantId: string) => PrintifyVariant | undefined
 }
-
-const CartContext = createContext<CartContextValue | null>(null)
 
 const STORAGE_KEY = "maitroll_merch_cart"
 
@@ -177,12 +176,4 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {children}
     </CartContext.Provider>
   )
-}
-
-export function useCart() {
-  const context = useContext(CartContext)
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider")
-  }
-  return context
 }

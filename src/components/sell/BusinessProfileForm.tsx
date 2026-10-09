@@ -44,7 +44,7 @@ export default function BusinessProfileForm({ user, existingProfile, onProfileCr
     setAddress(existingProfile.address || '')
     setCity(existingProfile.city || '')
     setState(existingProfile.state || '')
-  }, [existingProfile?.id])
+  }, [existingProfile.address, existingProfile.business_name, existingProfile.category, existingProfile.city, existingProfile.description, existingProfile.email, existingProfile?.id, existingProfile.phone, existingProfile.state, existingProfile.website])
 
   const resetForm = () => {
     setBusinessName('')

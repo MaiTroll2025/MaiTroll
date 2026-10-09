@@ -55,17 +55,18 @@ const VideoTile: React.FC<VideoTileProps> = ({
 
   // Attach video track to DOM element
   useEffect(() => {
-    if (videoRef.current && videoTrack) {
+    const videoElement = videoRef.current;
+    if (videoElement && videoTrack) {
       // LiveKit tracks attach themselves to the element
       if ('attach' in videoTrack) {
         const element = videoTrack.attach();
-        videoRef.current.appendChild(element);
+        videoElement.appendChild(element);
       }
     }
     return () => {
       // Cleanup attached element on unmount
-      if (videoRef.current) {
-        videoRef.current.innerHTML = '';
+      if (videoElement) {
+        videoElement.innerHTML = '';
       }
     };
   }, [videoTrack]);

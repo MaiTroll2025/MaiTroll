@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import {
   Bar,
@@ -175,13 +175,38 @@ export default function SpreadsheetEditor({
     return Object.fromEntries(Object.entries(cells).filter(([, cell]) => cell.sheet_name === selectedSheet))
   }, [cells, selectedSheet])
 
+  const formulaParser = useRef({ tokenize, parseExpression })
+
   const evaluatedCells = useMemo(() => {
     const result: Record<string, string> = {}
+    const calculateFormula = (formula: string, stack: string[] = []): string => {
+      let expr = formula.trim()
+      const strings: string[] = []
+      expr = expr.replace(/"([^"]*)"/g, (_, value) => {
+        strings.push(value)
+        return `__STR_${strings.length - 1}__`
+      })
+      expr = expr.replace(/([A-Z]+[0-9]+):([A-Z]+[0-9]+)/gi, (_, start: string, end: string) => {
+        const refs = parseRange(`${start}:${end}`)
+        return refs.map((cellRef) => String(toNumber(resolve(cellRef, stack)))).join(',')
+      })
+      expr = expr.replace(/([A-Z]+[0-9]+)(?![A-Z0-9_])/gi, (_, cellRef: string) =>
+        String(toNumber(resolve(cellRef.toUpperCase(), stack))),
+      )
+      expr = expr.replace(/__STR_(\d+)__/g, (_, index) => `"${strings[Number(index)]}"`)
+      const tokens = formulaParser.current.tokenize(expr)
+      const position = { value: 0 }
+      const value = formulaParser.current.parseExpression(tokens, position)
+      return typeof value === 'number'
+        ? String(Number.isFinite(value) ? value : 0)
+        : String(value)
+    }
+
     const resolve = (ref: string, stack: string[] = []): string => {
       if (stack.includes(ref)) return ''
       const cell = sheetCells[ref]
       if (!cell?.formula) return cell?.value || ''
-      if (cell.formula.startsWith('=')) result[ref] = evaluateFormula(cell.formula.slice(1), sheetCells, resolve, stack.concat(ref))
+      if (cell.formula.startsWith('=')) result[ref] = calculateFormula(cell.formula.slice(1), stack.concat(ref))
       return result[ref] || ''
     }
 
@@ -201,6 +226,24 @@ export default function SpreadsheetEditor({
       header,
     }))
   }, [chartRange, evaluatedCells])
+
+  const persistCells = useCallback(() => {
+    if (!spreadsheet?.id || !canEdit) return
+    setIsSaving(true)
+    const allCells = Object.values(cells).map((cell) => {
+      const style = { ...(cell.style_json || {}) }
+      if (mergedCells[cell.cell_reference]) style.merge = mergedCells[cell.cell_reference]
+      return { ...cell, style_json: style }
+    })
+
+    saveSpreadsheetCells(spreadsheet.id, allCells)
+      .then(() => {
+        toast.success('Spreadsheet saved.')
+        onRefresh()
+      })
+      .catch((err: any) => toast.error(err?.message || 'Failed to save spreadsheet.'))
+      .finally(() => setIsSaving(false))
+  }, [canEdit, cells, mergedCells, onRefresh, spreadsheet?.id])
 
   useEffect(() => {
     if (!spreadsheet?.id) return
@@ -235,47 +278,7 @@ export default function SpreadsheetEditor({
     return () => {
       if (saveTimer.current) window.clearTimeout(saveTimer.current)
     }
-  }, [canEdit, cells, mergedCells, spreadsheet?.id])
-
-function evaluateFormula(formula: string, cellMap: Record<string, OfficeSpreadsheetCell>, resolve: (ref: string, stack?: string[]) => string, stack: string[] = []) {
-    let expr = formula.trim()
-
-    // Handle string literals first
-    const strings: string[] = []
-    expr = expr.replace(/"([^"]*)"/g, (_, s) => {
-      strings.push(s)
-      return `__STR_${strings.length - 1}__`
-    })
-
-    // Replace cell references and ranges with resolved numeric values
-    expr = expr.replace(/([A-Z]+[0-9]+):([A-Z]+[0-9]+)/gi, (_, start: string, end: string) => {
-      const refs = parseRange(`${start}:${end}`)
-      const vals = refs.map(ref => {
-        const raw = resolve(ref, stack)
-        const n = toNumber(raw)
-        return String(n)
-      })
-      return vals.join(',')
-    })
-
-    expr = expr.replace(/([A-Z]+[0-9]+)(?![A-Z0-9_])/gi, (_, ref: string) => {
-      const raw = resolve(ref.toUpperCase(), stack)
-      return String(toNumber(raw))
-    })
-
-    // Restore string literals
-    expr = expr.replace(/__STR_(\d+)__/g, (_, i) => `"${strings[Number(i)]}"`)
-
-    // Tokenize
-    const tokens = tokenize(expr)
-    const pos = { value: 0 }
-    const result = parseExpression(tokens, pos)
-
-    if (typeof result === 'number') {
-      return String(Number.isFinite(result) ? result : 0)
-    }
-    return String(result)
-  }
+  }, [canEdit, cells, mergedCells, persistCells, spreadsheet?.id])
 
   // Token types for the safe formula parser
   type Token = { type: 'NUM'; value: number }
@@ -583,24 +586,6 @@ function evaluateFormula(formula: string, cellMap: Record<string, OfficeSpreadsh
     const spanRows = Number(window.prompt('Rows to merge', '2')) || 2
     const spanCols = Number(window.prompt('Columns to merge', '2')) || 2
     setMergedCells((current) => ({ ...current, [selectedCell]: { rows: spanRows, cols: spanCols } }))
-  }
-
-  function persistCells() {
-    if (!spreadsheet?.id || !canEdit) return
-    setIsSaving(true)
-    const allCells = Object.values(cells).map((cell) => {
-      const style = { ...(cell.style_json || {}) }
-      if (mergedCells[cell.cell_reference]) style.merge = mergedCells[cell.cell_reference]
-      return { ...cell, style_json: style }
-    })
-
-    saveSpreadsheetCells(spreadsheet.id, allCells)
-      .then(() => {
-        toast.success('Spreadsheet saved.')
-        onRefresh()
-      })
-      .catch((err: any) => toast.error(err?.message || 'Failed to save spreadsheet.'))
-      .finally(() => setIsSaving(false))
   }
 
   async function saveTitle() {

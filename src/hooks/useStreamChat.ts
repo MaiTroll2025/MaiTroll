@@ -440,7 +440,7 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
     } finally {
       setIsSendingMessage(false);
     }
-  }, [user, profile, streamId, hostChatDisabledByOfficer, hostChatDisableRemainingMs, userChatDisabled, chatDisabledRemainingMinutes]);
+  }, [user, profile, hostChatDisabledByOfficer, userChatDisabled, canChat, isHost, hostChatDisableRemainingMs, chatDisabledRemainingMinutes, streamId, trackChatMessage]);
 
   return {
     messages: messages.filter(msg => {

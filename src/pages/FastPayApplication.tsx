@@ -91,7 +91,7 @@ export default function FastPayApplication() {
     { key: 'violations', label: 'No Active Violations', met: !hasViolations, detail: 'No active bans or suspensions' },
     { key: 'age', label: 'Account Older Than 30 Days', met: accountAgeDays >= 30, detail: `${accountAgeDays} days old` },
     { key: 'fraud', label: 'Clean Payment History', met: !hasFraudHistory, detail: 'No fraud or chargeback history' },
-  ], [hasVerifiedIdentity, hasViolations, accountAgeDays, hasFraudHistory, tierInfo]);
+  ], [hasVerifiedIdentity, hasViolations, accountAgeDays, hasFraudHistory]);
 
   const unmetRequirements = requirements.filter(r => !r.met);
 
@@ -123,7 +123,7 @@ export default function FastPayApplication() {
       }
     }
     checkExisting();
-  }, [profile]);
+  }, [appStatus, profile]);
 
   const currentPayoutMethod = PAYOUT_METHODS.find(m => m.value === payoutMethod);
   const IconComponent = currentPayoutMethod?.icon || Wallet;

@@ -7,27 +7,11 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useGlobalEvent } from '../contexts/GlobalEventContext';
-import { MaiTrollTheme } from '../styles/trollCityTheme';
-import type { EventTheme } from '../lib/events/types';
+import { getEventCSSVariables } from '../lib/events/themeHelpers';
 
 // ============================================================================
 // CSS Custom Properties for Event Themes
 // ============================================================================
-
-export const getEventCSSVariables = (theme: EventTheme | undefined): Record<string, string> => {
-  if (!theme) return {};
-  
-  const vars: Record<string, string> = {
-    '--event-primary': theme.primaryColor,
-    '--event-secondary': theme.secondaryColor,
-  };
-  
-  if (theme.cssVariables) {
-    Object.assign(vars, theme.cssVariables);
-  }
-  
-  return vars;
-};
 
 // ============================================================================
 // Event Theme Layer Component
@@ -149,61 +133,6 @@ const EventParticles: React.FC<EventParticlesProps> = ({ effect }) => {
 // ============================================================================
 // Theme Hook for Components
 // ============================================================================
-
-interface UseEventThemeReturn {
-  /** Whether event theme is active */
-  isActive: boolean;
-  /** Event theme object or undefined */
-  theme: EventTheme | undefined;
-  /** Primary color */
-  primaryColor: string;
-  /** Secondary color */
-  secondaryColor: string;
-  /** Background accent class */
-  backgroundAccent: string;
-  /** Text highlight class */
-  textHighlight: string;
-  /** Border accent class */
-  borderAccent: string;
-  /** Button class */
-  buttonClass: string;
-  /** Badge background */
-  badgeBackground: string;
-  /** Particle effect type */
-  particleEffect: string;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useEventTheme = (): UseEventThemeReturn => {
-  const { activeEvent, featureFlags } = useGlobalEvent();
-  
-  const theme = activeEvent?.theme;
-  
-  return {
-    isActive: featureFlags.hasEventTheme,
-    theme,
-    primaryColor: theme?.primaryColor || '',
-    secondaryColor: theme?.secondaryColor || '',
-    backgroundAccent: theme?.backgroundAccent || '',
-    textHighlight: theme?.textHighlight || MaiTrollTheme.text.highlight,
-    borderAccent: theme?.borderAccent || '',
-    buttonClass: theme?.buttonClass || MaiTrollTheme.buttons.primary,
-    badgeBackground: theme?.badgeBackground || '',
-    particleEffect: theme?.particleEffect || 'none',
-  };
-};
-
-// ============================================================================
-// Event Theme CSS (injected into document)
-// ============================================================================
-
-const _cssInjected = false;
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const injectEventThemeCSS = (_theme?: EventTheme): void => {
-  // Holiday/event themes disabled
-  return;
-};
 
 // ============================================================================
 // Default Export

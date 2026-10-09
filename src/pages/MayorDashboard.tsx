@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/lib/store';
@@ -48,7 +48,7 @@ export default function MayorDashboard() {
   const [requestNote, setRequestNote] = useState('Launch a city announcement');
   const [busy, setBusy] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -69,11 +69,11 @@ export default function MayorDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
 
   useEffect(() => {
     loadData();
-  }, [user?.id]);
+  }, [loadData, user.id]);
 
   const handleActivate = async () => {
     if (!user?.id) return;

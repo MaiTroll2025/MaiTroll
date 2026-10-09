@@ -1413,6 +1413,45 @@ useEffect(() => {
     }
   };
 
+  const redeemPetHealthPromo = async () => {
+    if (!user?.id) {
+      toast.error('Please log in to redeem promo code');
+      return;
+    }
+    
+    const input = document.getElementById('pet-promo-input');
+    const code = input?.value?.trim?.().toLowerCase?.();
+    
+    if (!code) {
+      toast.error('Please enter a promo code');
+      return;
+    }
+    
+    if (code !== 'ceopet1') {
+      toast.error('Invalid promo code');
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('redeem-pet-health-promo', {
+        body: { code }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(data.message || 'Pet health set to 100% for 24 hours!');
+        if (input) input.value = '';
+        await refreshCoins();
+      } else {
+        toast.error(data?.error || 'Failed to redeem promo code');
+      }
+    } catch (err) {
+      console.error('Pet health promo redemption error:', err);
+      toast.error(err?.message || 'Failed to redeem promo code');
+    }
+  };
+
   // Format large numbers
   const _formatMarketCap = (value) => {
     if (!value) return '0 Troll Coins';
@@ -1474,20 +1513,21 @@ useEffect(() => {
                <button type="button" className={`px-3 py-2 rounded ${tab==='coins'?'bg-purple-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('coins')}>Coins</button>
                <button type="button" className={`px-3 py-2 rounded ${tab==='bank'?'bg-purple-600':MaiTrollTheme.backgrounds.card}`} onClick={() => setTab('bank')}>Bank</button>
               
-              <div className="relative">
-                 <button 
-                      type="button" 
-                      className={`px-3 py-2 rounded flex items-center gap-2 ${['perks', 'calls', 'insurance', 'themes', 'frames', 'merch'].includes(tab) ? 'bg-purple-600' : MaiTrollTheme.backgrounds.card}`}
-                      onClick={() => setShowStoreDropdown(!showStoreDropdown)}
-                  >
-                      Store Items
-                      <ChevronDown className="w-4 h-4" />
-                  </button>
+<div className="relative">
+                  <button 
+                       type="button" 
+                       className={`px-3 py-2 rounded flex items-center gap-2 ${['perks', 'calls', 'insurance', 'themes', 'frames', 'merch', 'pet'].includes(tab) ? 'bg-purple-600' : MaiTrollTheme.backgrounds.card}`}
+                       onClick={() => setShowStoreDropdown(!showStoreDropdown)}
+                   >
+                       Store Items
+                       <ChevronDown className="w-4 h-4" />
+                   </button>
                   
                   {showStoreDropdown && (
                       <div className="absolute top-full right-0 mt-2 w-48 bg-zinc-900 border border-purple-500/30 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
                                <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='perks' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('perks'); setShowStoreDropdown(false); }}>Perks</button>
                               <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='insurance' ? 'text-purple-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('insurance'); setShowStoreDropdown(false); }}>Insurance</button>
+                              <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='pet' ? 'text-emerald-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('pet'); setShowStoreDropdown(false); }}>🐾 Pet Health</button>
                              <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='frames' ? 'text-pink-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('frames'); setShowStoreDropdown(false); }}>✨ Profile Frames</button>
                              <button className={`text-left px-4 py-3 hover:bg-white/10 ${tab==='merch' ? 'text-pink-400 font-bold' : 'text-gray-300'}`} onClick={() => { setTab('merch'); setShowStoreDropdown(false); }}>🛍️ Merch</button>
                        </div>
@@ -1514,17 +1554,18 @@ useEffect(() => {
 )}
             </div>
             <div className="md:hidden w-full space-y-2">
-                <select
+<select
                   value={tab}
                   onChange={(e) => setTab(e.target.value)}
                   className={`w-full ${MaiTrollTheme.backgrounds.card} text-white ${MaiTrollTheme.borders.glass} rounded-lg p-2 text-sm focus:outline-none focus:border-purple-500`}
                 >
  <option value="coins">Coins</option>
-                   <option value="bank">Bank</option>
-                   <option value="perks">Perks</option>
-                   <option value="insurance">Insurance</option>
-                   <option value="merch">Merch</option>
-                </select>
+                    <option value="bank">Bank</option>
+                    <option value="perks">Perks</option>
+                    <option value="insurance">Insurance</option>
+                    <option value="pet">🐾 Pet Health</option>
+                    <option value="merch">Merch</option>
+                 </select>
               
               {/* Mobile Use Credit Card Toggle */}
               {creditInfo?.limit > 0 && (
@@ -2240,6 +2281,51 @@ useEffect(() => {
             <MaiMerchStore />
           )}
 
+          {/* Pet Health Tab */}
+          {tab === 'pet' && (
+            <>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-emerald-400" />
+                Pet Health Promo Codes
+              </h2>
+              <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="text-3xl">🐾</div>
+                  <div>
+                    <h3 className="text-lg font-bold text-emerald-300">Unlimited Pet Health Promo</h3>
+                    <p className="text-sm text-gray-300">Redeem a promo code to keep your pet at 100% health for 24 hours</p>
+                  </div>
+                </div>
+                <div className="bg-black/30 p-4 rounded-lg border border-emerald-500/20">
+                  <p className="text-sm text-gray-400 mb-3">Enter the promo code below to activate unlimited pet health:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter promo code"
+                      className="flex-1 bg-zinc-800 border border-emerald-500/30 rounded-lg px-4 py-3 text-white text-lg font-mono uppercase"
+                      id="pet-promo-input"
+                    />
+                    <button
+                      onClick={redeemPetHealthPromo}
+                      className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-bold text-white transition-colors"
+                    >
+                      Redeem
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                <h3 className="font-bold text-blue-300 mb-2">How it works:</h3>
+                <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                  <li>Your active primary pet&apos;s health (care, hunger, walk, attention) will instantly be set to 100%</li>
+                  <li>Health will be maintained at 100% for 24 hours (no decay)</li>
+                  <li>After 24 hours, normal pet care decay resumes</li>
+                </ul>
+              </div>
+            </>
+          )}
+
         </div>
         
         <PayPalPaymentModal
@@ -2254,7 +2340,6 @@ useEffect(() => {
       )
   );
 }
-
 
 
 

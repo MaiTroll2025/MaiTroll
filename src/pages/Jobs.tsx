@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store'
@@ -277,7 +277,7 @@ export default function JobsPage() {
     return ['All', ...Array.from(new Set(jobPositions.map((job) => job.department)))]
   }, [])
 
-  const loadJobsData = async () => {
+  const loadJobsData = useCallback(async () => {
     setIsLoading(true)
 
     try {
@@ -334,11 +334,11 @@ export default function JobsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user])
 
   useEffect(() => {
     loadJobsData()
-  }, [])
+  }, [loadJobsData])
 
   const filteredJobs = useMemo(() => {
     const normalized = query.trim().toLowerCase()

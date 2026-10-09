@@ -2,7 +2,7 @@
 // UTROMAIL - THREAD / MESSAGE DETAIL VIEW
 // ============================================================
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { ChevronLeft, Reply, Trash2, Archive, Star, Flag, Paperclip, Send, Loader2, Crown, Heart, Gem, Star as StarIcon, Lock } from 'lucide-react';
@@ -27,13 +27,8 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
   const [subscriberBadge, setSubscriberBadge] = useState<{ tierName: string; tierColor: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchMessages();
-    fetchSubscriberBadge();
-  }, [threadId]);
-
-  const fetchSubscriberBadge = async () => {
-    if (!user) return;
+  const fetchSubscriberBadge = useCallback(async () => {
+    if (!user?.id) return;
     try {
       // Get the other participant in this thread
       const { data: thread } = await supabase
@@ -62,7 +57,7 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
     } catch (err) {
       console.error('[UtromailThreadView] Error fetching subscriber badge:', err);
     }
-  };
+  }, [threadId, user?.id]);
 
   useEffect(() => {
     if (!threadId || !user?.id) return;
@@ -148,16 +143,20 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
     try {
       const msgs = await getThreadMessages(threadId);
       setMessages(msgs);
       // Mark all as read
-      await markThreadAsRead(threadId, user!.id);
+      await markThreadAsRead(threadId, user.id);
       // Mark individual messages as read
       for (const msg of msgs) {
-        if (msg.recipient_id === user!.id) {
-          await markAsRead(msg.id, user!.id);
+        if (msg.recipient_id === user.id) {
+          await markAsRead(msg.id, user.id);
         }
       }
     } catch (err) {
@@ -165,7 +164,12 @@ export default function UtromailThreadView({ threadId, onBack, onRefresh }: Prop
     } finally {
       setLoading(false);
     }
-  };
+  }, [threadId, user?.id]);
+
+  useEffect(() => {
+    void fetchMessages();
+    void fetchSubscriberBadge();
+  }, [fetchMessages, fetchSubscriberBadge]);
 
   const handleReply = async () => {
     if (!replyBody.trim()) return;

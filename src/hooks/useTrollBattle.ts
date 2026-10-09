@@ -51,6 +51,12 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const battleChannelRef = useRef<any>(null);
   const stateRef = useRef(state);
+  const startCountdownRef = useRef<(duration: number, onComplete: () => void) => void>(() => {});
+  const startBattleTimerRef = useRef<() => void>(() => {});
+  const subscribeToBattleChannelRef = useRef<(battleId: string) => void>(() => {});
+  const endBattleRef = useRef<() => Promise<void>>(async () => {});
+  const awardBattleRewardsRef = useRef<(winner: 'A' | 'B' | 'draw') => Promise<void>>(async () => {});
+  const broadcastBattleStateRef = useRef<(event: string, payload: any) => void>(() => {});
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -75,17 +81,17 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
     }));
 
     // Start pre-battle countdown
-    startCountdown(PRE_BATTLE_COUNTDOWN, () => {
+    startCountdownRef.current(PRE_BATTLE_COUNTDOWN, () => {
       setState(prev => ({
         ...prev,
         phase: 'active',
         timerSeconds: BATTLE_DURATION
       }));
-      startBattleTimer();
+      startBattleTimerRef.current();
     });
 
     // Subscribe to battle channel
-    subscribeToBattleChannel(battleId);
+    subscribeToBattleChannelRef.current(battleId);
 
     return battleId;
   }, []);
@@ -124,21 +130,22 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
       }));
 
       // Broadcast score update every second
-      if (state.battleId) {
-        broadcastBattleState('score_update', {
-          teamAScore: state.teamAScore,
-          teamBScore: state.teamBScore,
-          timerSeconds: remaining
-        });
+      const currentState = stateRef.current;
+      if (currentState.battleId) {
+      broadcastBattleStateRef.current('score_update', {
+        teamAScore: currentState.teamAScore,
+        teamBScore: currentState.teamBScore,
+        timerSeconds: remaining
+      });
       }
 
       // Battle ends
       if (remaining <= 0) {
         if (timerRef.current) clearInterval(timerRef.current);
-        endBattle();
+        void endBattleRef.current();
       }
     }, 1000);
-  }, [state.battleId, state.teamAScore, state.teamBScore]);
+  }, []);
 
   // Add score to team
   const addScore = useCallback((team: 'A' | 'B', amount: number) => {
@@ -152,7 +159,7 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
 
     // Broadcast to other participants
     if (state.battleId) {
-      broadcastBattleState('score_update', {
+      broadcastBattleStateRef.current('score_update', {
         teamAScore: state.teamAScore + (team === 'A' ? amount : 0),
         teamBScore: state.teamBScore + (team === 'B' ? amount : 0)
       });
@@ -176,9 +183,10 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
     if (timerRef.current) clearInterval(timerRef.current);
 
     // Determine winner
+    const currentState = stateRef.current;
     const winner: 'A' | 'B' | 'draw' = 
-      state.teamAScore > state.teamBScore ? 'A' :
-      state.teamBScore > state.teamAScore ? 'B' :
+      currentState.teamAScore > currentState.teamBScore ? 'A' :
+      currentState.teamBScore > currentState.teamAScore ? 'B' :
       'draw';
 
     setState(prev => ({
@@ -189,25 +197,26 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
     }));
 
     // Award rewards
-    if (isHost && state.battleId) {
-      await awardBattleRewards(winner);
+    if (isHost && currentState.battleId) {
+      await awardBattleRewardsRef.current(winner);
     }
 
     // Broadcast battle end
-    if (state.battleId) {
-      broadcastBattleState('battle_ended', {
+    if (currentState.battleId) {
+      broadcastBattleStateRef.current('battle_ended', {
         winner,
-        teamAScore: state.teamAScore,
-        teamBScore: state.teamBScore
+        teamAScore: currentState.teamAScore,
+        teamBScore: currentState.teamBScore
       });
     }
-  }, [state, isHost]);
+  }, [isHost]);
 
   // Award crowns and bonus coins to winners
   const awardBattleRewards = useCallback(async (winner: 'A' | 'B' | 'draw') => {
     if (winner === 'draw') return;
 
-    const winningParticipants = state.participants.filter(p => p.team === winner);
+    const currentState = stateRef.current;
+    const winningParticipants = currentState.participants.filter(p => p.team === winner);
 
     for (const participant of winningParticipants) {
       try {
@@ -230,7 +239,7 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
               user_id: participant.userId,
               amount: bonusCoins,
               type: 'battle_bonus',
-              metadata: { battle_id: state.battleId, bonus_percentage: 2 }
+              metadata: { battle_id: currentState.battleId, bonus_percentage: 2 }
             });
 
           if (coinError) console.error('Error awarding bonus coins:', coinError);
@@ -239,7 +248,7 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
         console.error('Error awarding rewards:', err);
       }
     }
-  }, [state]);
+  }, []);
 
   // Request rematch
   const requestRematch = useCallback(() => {
@@ -258,7 +267,7 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
 
     // Broadcast rematch request
     if (state.battleId) {
-      broadcastBattleState('rematch_requested', { team: userTeam });
+      broadcastBattleStateRef.current('rematch_requested', { team: userTeam });
     }
 
     // Check if both teams accepted
@@ -297,7 +306,7 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
 
     // Broadcast forfeit
     if (state.battleId) {
-      broadcastBattleState('battle_ended', {
+      broadcastBattleStateRef.current('battle_ended', {
         winner,
         forfeited: true,
         forfeitingTeam,
@@ -352,6 +361,13 @@ export function useTrollBattle({ streamId: _streamId, userId, isHost }: UseTroll
       payload
     });
   }, []);
+
+  startCountdownRef.current = startCountdown;
+  startBattleTimerRef.current = startBattleTimer;
+  subscribeToBattleChannelRef.current = subscribeToBattleChannel;
+  endBattleRef.current = endBattle;
+  awardBattleRewardsRef.current = awardBattleRewards;
+  broadcastBattleStateRef.current = broadcastBattleState;
 
   // Cleanup on unmount
   useEffect(() => {

@@ -317,7 +317,7 @@ export default function ChatBubble() {
       setSending(false)
       setTimeout(() => inputRef.current?.focus(), 50)
     }
-  }, [inputText, activeThreadId, user, profile, sending, loadThreads])
+  }, [inputText, activeThreadId, activeThread?.other_user_id, activeThread?.other_utromail_address, otherParticipant?.user_id, user, profile, sending, loadThreads])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

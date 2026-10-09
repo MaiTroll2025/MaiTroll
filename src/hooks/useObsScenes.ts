@@ -122,7 +122,7 @@ export function useObsScenes(options: UseObsScenesOptions = {}): UseObsScenesRet
         setError(msg || 'Failed to connect to OBS WebSocket')
       }
     }
-  }, [defaultUrl, fetchScenes])
+  }, [defaultUrl, fetchScenes, fetchStreamingStatus])
 
   const disconnect = useCallback(() => {
     if (obsRef.current) {
@@ -168,7 +168,7 @@ export function useObsScenes(options: UseObsScenesOptions = {}): UseObsScenesRet
         obsRef.current = null
       }
     }
-  }, [])
+  }, [autoConnect, connect])
 
   return { scenes, currentScene, isConnected, isConnecting, isStreaming, connect, disconnect, switchScene, stopStreaming, error }
 }

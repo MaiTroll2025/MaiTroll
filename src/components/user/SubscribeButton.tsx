@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
@@ -25,12 +25,7 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = ({
   const [subscriptionPrice, setSubscriptionPrice] = useState<number | null>(null);
   const [canSubscribe, setCanSubscribe] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-    checkCreatorSubscription();
-  }, [user, broadcasterId]);
-
-  const checkCreatorSubscription = async () => {
+  const checkCreatorSubscription = useCallback(async () => {
     try {
       // Check if creator has subscriptions enabled and get price
       const { data: creator } = await supabase
@@ -56,7 +51,12 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = ({
     } catch (err) {
       console.error('[SubscribeButton] Error checking subscription:', err);
     }
-  };
+  }, [broadcasterId, profile?.level, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    void checkCreatorSubscription();
+  }, [user, checkCreatorSubscription]);
 
   const handleSubscribe = async () => {
     if (!user) return;

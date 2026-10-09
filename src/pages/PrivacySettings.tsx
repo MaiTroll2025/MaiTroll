@@ -1,5 +1,5 @@
 import React from 'react';
-import { useConsent } from '../contexts/ConsentContext';
+import { useConsent } from '../hooks/useConsent';
 import { ConsentPreferences } from '../lib/consent';
 import { Shield, BarChart3, Share2, Settings, RefreshCw, Download } from 'lucide-react';
 

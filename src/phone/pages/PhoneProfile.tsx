@@ -474,7 +474,7 @@ export default function PhoneProfile() {
     return () => {
       cancelled = true
     }
-  }, [user?.id, usernameParam])
+  }, [profileTargetId, user.id, usernameParam])
 
   const initials = useMemo(() => {
     const source = displayName.trim()

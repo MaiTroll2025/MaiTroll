@@ -1,9 +1,10 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { Profile } from '../types/database'
 import { supabase } from '../lib/supabase'
+import { AuthContext } from '../hooks/useVerificationAuth'
 
-interface SignUpPayload {
+export interface SignUpPayload {
   email: string
   password: string
   username: string
@@ -16,15 +17,13 @@ interface SignUpPayload {
   selfie: File
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: Profile | null
   loading: boolean
   signUp: (payload: SignUpPayload) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
 }
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 async function uploadVerificationFile(userId: string, prefix: string, file: File) {
   const extension = file.name.split('.').pop() ?? 'jpg'
@@ -158,13 +157,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-
-  return context
 }

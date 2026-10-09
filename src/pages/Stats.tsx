@@ -409,7 +409,7 @@ export default function Stats() {
     if (user?.id && isInitialized.current) {
       loadEarningsData()
     }
-  }, [user?.id, isInitialized.current, loadEarningsData])
+  }, [user?.id, loadEarningsData])
 
   useEffect(() => {
     if (!user?.id || isInitialized.current) return
@@ -433,7 +433,7 @@ export default function Stats() {
       unsubscribe()
       isInitialized.current = false
     }
-  }, [user?.id])
+  }, [fetchXP, loadStatsInternal, subscribeToXP, unsubscribe, user.id])
 
   useEffect(() => {
     xpRef.current = { level, xpTotal, xpToNext }

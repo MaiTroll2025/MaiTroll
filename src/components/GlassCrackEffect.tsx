@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useBroadcastEffects } from '../contexts/BroadcastEffectsContext';
+import { useBroadcastEffects } from '../hooks/useBroadcastEffects';
 
 interface GlassCrackEffectProps {
   className?: string;

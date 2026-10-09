@@ -143,7 +143,7 @@ export function useSingOffRealtime(sessionId: string | null, userId?: string) {
     return () => {
       channels.forEach((ch) => supabase.removeChannel(ch))
     }
-  }, [sessionId])
+  }, [removeParticipant, sessionId, setMyQueueEntry, setRounds, setSession, upsertDecision, upsertParticipant, upsertQueueEntry, userId])
 
   // Broadcast channel: gifts, Mai Winner effect, kicks, countdown triggers
   useEffect(() => {
@@ -186,5 +186,5 @@ export function useSingOffRealtime(sessionId: string | null, userId?: string) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [sessionId, userId])
+  }, [addChatMessage, sessionId, setActiveGift, setCountdown, setLiveKit, setMaiWinnerEffect, userId])
 }

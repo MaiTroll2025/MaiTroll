@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
@@ -10,12 +10,7 @@ export default function PayWarrantModal({ isOpen, onClose }: { isOpen: boolean; 
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
 
-  useEffect(() => {
-    if (!isOpen) return
-    void loadWarrant()
-  }, [isOpen, user?.id])
-
-  const loadWarrant = async () => {
+  const loadWarrant = useCallback(async () => {
     if (!user?.id) return
     setLoading(true)
     try {
@@ -31,7 +26,12 @@ export default function PayWarrantModal({ isOpen, onClose }: { isOpen: boolean; 
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!isOpen) return
+    void loadWarrant()
+  }, [isOpen, loadWarrant])
 
   const handlePay = async () => {
     if (!warrant?.id || !user?.id) return

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { LogIn, LogOut, Clock, RefreshCw, AlertTriangle } from 'lucide-react'
@@ -46,7 +46,7 @@ export default function ClockInPanel({ isHRAdmin: _isHRAdmin, currentUserId, has
     return () => clearInterval(interval)
   }, [])
 
-  const loadClockData = async () => {
+  const loadClockData = useCallback(async () => {
     if (!currentUserId) return
     setLoading(true)
     try {
@@ -91,11 +91,11 @@ export default function ClockInPanel({ isHRAdmin: _isHRAdmin, currentUserId, has
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentUserId])
 
   useEffect(() => {
     loadClockData()
-  }, [currentUserId])
+  }, [loadClockData])
 
   const handleClockToggle = async () => {
     if (!currentUserId) {

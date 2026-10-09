@@ -44,7 +44,13 @@ export default function HomeLiveGrid() {
     return false
   }, [navigate, user])
 
-  const fetchStreams = async () => {
+  const isAdmin =
+    profile?.role === 'admin' ||
+    profile?.is_admin === true ||
+    profile?.troll_role === 'admin' ||
+    profile?.officer_role === 'owner'
+
+  const fetchStreams = useCallback(async () => {
     try {
       const { data: rpcData, error: rpcError } = await supabase.rpc('get_active_streams_v2', {
         p_limit: 50,
@@ -54,11 +60,6 @@ export default function HomeLiveGrid() {
 
       if (!rpcError && rpcData) {
         let filteredStreams = (rpcData as any[]) || []
-        const isAdmin =
-          profile?.role === 'admin' ||
-          profile?.is_admin === true ||
-          profile?.troll_role === 'admin' ||
-          profile?.officer_role === 'owner'
 
         if (!isAdmin) {
           filteredStreams = filteredStreams.filter((stream: any) => {
@@ -120,11 +121,6 @@ export default function HomeLiveGrid() {
       if (error) throw error
 
       let filteredStreams = (data as any[]) || []
-      const isAdmin =
-        profile?.role === 'admin' ||
-        profile?.is_admin === true ||
-        profile?.troll_role === 'admin' ||
-        profile?.officer_role === 'owner'
 
       if (!isAdmin) {
         filteredStreams = filteredStreams.filter((stream: any) => {
@@ -151,7 +147,7 @@ export default function HomeLiveGrid() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAdmin])
 
   useEffect(() => {
     fetchStreams()
@@ -162,7 +158,7 @@ export default function HomeLiveGrid() {
     return () => {
       clearInterval(interval)
     }
-  }, [])
+  }, [fetchStreams])
 
   if (loading) {
     return (

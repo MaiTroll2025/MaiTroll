@@ -93,7 +93,7 @@ export default function TrollWallPostModal({
       }
     }
     checkStreamStatus()
-  }, [currentPost?.metadata?.stream_id])
+  }, [currentPost.metadata, currentPost.metadata?.stream_id])
 
   useEffect(() => {
     setCurrentPost(post)
@@ -268,7 +268,7 @@ export default function TrollWallPostModal({
     } finally {
       setReplying(false)
     }
-  }, [currentPost, user?.id, replyText, onRequireAuth])
+  }, [currentPost, user.id, replyText, onRequireAuth, profile?.username])
 
   const handlePin = useCallback(async () => {
     if (!currentPost || !user?.id) return

@@ -96,6 +96,11 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const matchingRef = useRef(false);
   const stateRef = useRef(state);
+  const startCountdownRef = useRef<(battleId: string, participants: BattleParticipant[], abilities: Record<string, AbilityState>) => void>(() => {});
+  const startBattleTimerRef = useRef<(battleId: string, participants: BattleParticipant[], abilities: Record<string, AbilityState>) => void>(() => {});
+  const endBattleRef = useRef<() => Promise<void>>(async () => {});
+  const resetBattleRef = useRef<() => void>(() => {});
+  const handleBattleEventRef = useRef<(event: string, data: any) => void>(() => {});
 
   useEffect(() => {
     stateRef.current = state;
@@ -331,7 +336,7 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
       // Subscribe to battle channel
       const channel = supabase.channel(`5v5-battle:${battleId}`);
       channel.on('broadcast', { event: '*' }, (payload) => {
-        handleBattleEvent(payload.event, payload.payload);
+        handleBattleEventRef.current(payload.event, payload.payload);
       });
       await channel.subscribe();
       channelRef.current = channel;
@@ -360,7 +365,7 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
       });
 
       // Start countdown
-      startCountdown(battleId, participants, abilities);
+      startCountdownRef.current(battleId, participants, abilities);
 
     } catch (err: any) {
       console.error('[FiveVFive] Matchmaking error:', err);
@@ -386,10 +391,11 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
 
       if (countdown <= 0) {
         if (countdownRef.current) clearInterval(countdownRef.current);
-        startBattleTimer(battleId, participants, abilities);
+        startBattleTimerRef.current(battleId, participants, abilities);
       }
     }, 1000);
   }, [broadcastState]);
+  startCountdownRef.current = startCountdown;
 
   // ─── BATTLE TIMER ───
   const startBattleTimer = useCallback((
@@ -466,10 +472,11 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
 
       if (remaining <= 0) {
         if (timerRef.current) clearInterval(timerRef.current);
-        endBattle();
+        void endBattleRef.current();
       }
     }, 1000);
   }, [broadcastState]);
+  startBattleTimerRef.current = startBattleTimer;
 
   // ─── AWARD CROWNS TO WINNING TEAM ───
   const awardCrownsToWinner = useCallback(async (winner: 'A' | 'B', participants: BattleParticipant[]) => {
@@ -558,10 +565,11 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
       setState(prev => ({ ...prev, rematchCountdown: rematchTime }));
       if (rematchTime <= 0) {
         if (countdownRef.current) clearInterval(countdownRef.current);
-        resetBattle();
+        resetBattleRef.current();
       }
     }, 1000);
   }, [cleanup, broadcastState, streamId, awardCrownsToWinner]);
+  endBattleRef.current = endBattle;
 
   // ─── RESET ───
   const resetBattle = useCallback(() => {
@@ -569,6 +577,7 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
     matchingRef.current = false;
     setState(INITIAL_STATE);
   }, [cleanup]);
+  resetBattleRef.current = resetBattle;
 
   // ─── FORFEIT BATTLE ───
   const forfeitBattle = useCallback(async () => {
@@ -958,6 +967,7 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
       }
     }
   }, [isHost]);
+  handleBattleEventRef.current = handleBattleEvent;
 
   // ─── JOIN BATTLE (for remote side) ───
   const joinBattle = useCallback(async (battleId: string) => {

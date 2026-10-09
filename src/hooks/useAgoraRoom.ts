@@ -69,7 +69,7 @@ export function useAgoraRoom({
   const joinAbortRef = useRef(false);
 
   // Get Agora app ID
-  const getAgoraAppId = () => import.meta.env.VITE_AGORA_APP_ID;
+  const getAgoraAppId = useCallback(() => import.meta.env.VITE_AGORA_APP_ID, []);
 
   const debugAgora = (...args: unknown[]) => {
     if (import.meta.env.DEV) {
@@ -329,7 +329,7 @@ export function useAgoraRoom({
       onError?.(errMsg);
       toast.error('Meeting connection failed: ' + errMsg);
     }
-  }, [channelName, userId, role, getAgoraAppId, fetchAgoraToken, getUserUid, onError, cleanClientAfterFailure]);
+  }, [getAgoraAppId, userId, cleanClientAfterFailure, fetchAgoraToken, channelName, role, onUserJoined, onUserLeft, onError]);
 
   // Leave channel
   const leaveChannel = useCallback(async () => {

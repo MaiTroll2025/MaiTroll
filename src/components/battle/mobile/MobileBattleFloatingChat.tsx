@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useAuthStore } from "../../../lib/store";
 import useTrollFamilyActivity from "../../../hooks/useTrollFamilyActivity";
@@ -53,7 +53,7 @@ export default function MobileBattleFloatingChat({
   const recentBattleChatKeysRef =
     useRef<Map<string, number>>(new Map());
 
-  const normalizeMessage = (raw: any): ChatMessage => {
+  const normalizeMessage = useCallback((raw: any): ChatMessage => {
     const rawUsername = raw.username || "";
     const isPlaceholder = rawUsername === "You" || rawUsername === "Unknown";
     const resolved =
@@ -71,7 +71,7 @@ export default function MobileBattleFloatingChat({
       created_at: raw.created_at,
       avatar_url: raw.avatar_url || undefined,
     };
-  };
+  }, [currentUserId, profileUsername]);
 
   // Fetch recent messages.
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function MobileBattleFloatingChat({
     return () => {
       cancelled = true;
     };
-  }, [challengerStream.id, opponentStream.id]);
+  }, [challengerStream.id, normalizeMessage, opponentStream.id]);
 
   // Subscribe to realtime chat (postgres + broadcast).
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function MobileBattleFloatingChat({
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
-  }, [battleId, challengerStream.id, opponentStream.id]);
+  }, [battleId, challengerStream.id, normalizeMessage, opponentStream.id]);
 
   // Prune expired messages so they fly up and fade out.
   useEffect(() => {

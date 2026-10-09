@@ -76,7 +76,7 @@ export default function BroadcastAnnouncement() {
     return () => {
       clearInterval(interval);
     };
-  }, [user]);
+  }, [location.pathname, user]);
 
   if (shouldHideAnnouncement(location.pathname)) {
     return null;

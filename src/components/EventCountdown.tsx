@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Clock, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
-import { useEventTheme } from '../components/GlobalEventThemeLayer';
+import { useEventTheme } from '../lib/events/themeHelpers';
 
 const COUNTDOWN_STYLES = `
   @keyframes spin-slow {

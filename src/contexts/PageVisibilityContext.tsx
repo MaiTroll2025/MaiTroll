@@ -1,14 +1,13 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { useEffect, useState, type ReactNode } from 'react';
 import { usePageVisibility, isPageVisibilitySupported } from '../lib/hooks/usePageVisibility';
+import { PageVisibilityContext } from '../hooks/usePageVisibilityContext';
 
-interface PageVisibilityContextType {
+export interface PageVisibilityContextType {
   isVisible: boolean;
   wasHidden: boolean;
   timeSinceLastVisible: number;
   visibilitySupported: boolean;
 }
-
-const PageVisibilityContext = createContext<PageVisibilityContextType | undefined>(undefined);
 
 interface PageVisibilityProviderProps {
   children: ReactNode;
@@ -51,35 +50,4 @@ export function PageVisibilityProvider({ children }: PageVisibilityProviderProps
       {children}
     </PageVisibilityContext.Provider>
   );
-}
-
-export function usePageVisibilityContext(): PageVisibilityContextType {
-  const context = useContext(PageVisibilityContext);
-  if (context === undefined) {
-    throw new Error('usePageVisibilityContext must be used within a PageVisibilityProvider');
-  }
-  return context;
-}
-
-// Hook for components that need to pause/resume based on visibility
-export function useVisibilityAware(callbacks?: {
-  onVisible?: () => void;
-  onHidden?: () => void;
-  onReturn?: (timeHidden: number) => void;
-}) {
-  const { isVisible, wasHidden, timeSinceLastVisible } = usePageVisibilityContext();
-
-  useEffect(() => {
-    if (isVisible) {
-      if (wasHidden && callbacks?.onReturn) {
-        callbacks.onReturn(timeSinceLastVisible);
-      } else if (callbacks?.onVisible) {
-        callbacks.onVisible();
-      }
-    } else if (callbacks?.onHidden) {
-      callbacks.onHidden();
-    }
-  }, [isVisible, wasHidden, timeSinceLastVisible, callbacks]);
-
-  return { isVisible, wasHidden, timeSinceLastVisible };
 }

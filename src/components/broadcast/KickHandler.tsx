@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
@@ -18,38 +18,7 @@ export default function KickHandler({ streamId }: { streamId: string }) {
   const { room } = useRoom();
   const userId = user?.id;
 
-  useEffect(() => {
-    if (!streamId || !streamId.trim()) return;
-    if (!userId) return;
-
-    // Subscribe to real-time kick changes
-    const channel = supabase
-      .channel(`kicks:${streamId}:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'stream_kicks',
-          filter: `stream_id=eq.${streamId}`,
-        },
-        (payload) => {
-          const data = (payload as any).new;
-          if (data && data.user_id === userId) {
-            handleKick(data);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [streamId, userId, navigate, room]);
-
-  const handleKick = async (kickRecord: any) => {
+  const handleKick = useCallback(async (kickRecord: any) => {
     console.log('[KickHandler] User kicked:', { userId, kickRecord });
 
     // 1. Disconnect from LiveKit room immediately
@@ -73,7 +42,34 @@ export default function KickHandler({ streamId }: { streamId: string }) {
       navigate('/', { replace: true });
       console.log('[KickHandler] Redirected to home');
     }, 1000);
-  };
+  }, [userId, room, navigate]);
+
+  useEffect(() => {
+    if (!streamId || !streamId.trim() || !userId) return;
+
+    const channel = supabase
+      .channel(`kicks:${streamId}:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stream_kicks',
+          filter: `stream_id=eq.${streamId}`,
+        },
+        (payload) => {
+          const data = (payload as any).new;
+          if (data && data.user_id === userId) {
+            void handleKick(data);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [handleKick, streamId, userId]);
 
   return null; // No UI - just handler
 }

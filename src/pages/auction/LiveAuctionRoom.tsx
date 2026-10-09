@@ -520,6 +520,8 @@ export default function LiveAuctionRoom() {
     }
   }, [showId])
 
+  const redirectOnAuctionEndRef = useRef<() => Promise<void>>(async () => {})
+
   const fetchShow = useCallback(async () => {
     if (!showId) {
       setLoading(false)
@@ -566,7 +568,7 @@ export default function LiveAuctionRoom() {
       // updates status). Only bounce ended/cancelled shows without a win.
       if (nextShow.status === 'ended' || nextShow.status === 'cancelled') {
         if (nextShow.status === 'ended') {
-          void redirectOnAuctionEnd()
+          void redirectOnAuctionEndRef.current()
         } else {
           toast.error('This auction has been cancelled')
           navigate('/auctions')
@@ -614,6 +616,7 @@ export default function LiveAuctionRoom() {
       navigate('/')
     }
   }, [isAuctioneer, user?.id, showId, winnerPopupChecked, navigate])
+  redirectOnAuctionEndRef.current = redirectOnAuctionEnd
 
   // Also redirect on initial load in case user reloads after auction ended
   useEffect(() => {
@@ -767,7 +770,7 @@ export default function LiveAuctionRoom() {
     })
 
     return client
-  }, [getAgoraChannelName, scheduleViewerReconnect, show, subscribeAndPlay, user?.id])
+  }, [getAgoraToken, scheduleViewerReconnect, show, subscribeAndPlay, user?.id])
 
   const connectViewerAgora = useCallback(async () => {
     if (!showId || !user?.id || isAuctioneer) return
@@ -918,7 +921,7 @@ export default function LiveAuctionRoom() {
       setAuctioneerConnecting(false)
       agoraConnectingRef.current = false
     }
-  }, [buildAgoraClient, cleanupAgora, getAgoraToken, isAuctioneer, show, showId, user?.id])
+  }, [buildAgoraClient, getAgoraToken, isAuctioneer, show, showId, user?.id])
 
   const toggleAuctioneerMic = useCallback(async () => {
     const track = localAudioTrackRef.current

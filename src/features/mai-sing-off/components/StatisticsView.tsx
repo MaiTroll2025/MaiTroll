@@ -25,7 +25,7 @@ export function StatisticsView() {
       setStats(s)
       setLoading(false)
     })
-  }, [])
+  }, [actions])
 
   const judgesThisRound = store.currentRound
     ? store.decisions.filter((d) => d.round_id === store.currentRound?.id && d.decision === 'yes').length

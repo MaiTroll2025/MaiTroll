@@ -139,7 +139,7 @@ export default function SecretaryCrownRedemptions() {
     } finally {
       setActionLoading(false)
     }
-  }, [user?.id, fetchRedemptions])
+  }, [user, fetchRedemptions])
 
   const handleFulfill = useCallback(async (redemption: RedemptionRecord) => {
     setActionLoading(true)
@@ -166,7 +166,7 @@ export default function SecretaryCrownRedemptions() {
     } finally {
       setActionLoading(false)
     }
-  }, [user?.id, notes, giftcardCode, fetchRedemptions])
+  }, [user, notes, giftcardCode, fetchRedemptions])
 
   const handleReject = useCallback(async (redemption: RedemptionRecord) => {
     setActionLoading(true)
@@ -190,7 +190,7 @@ export default function SecretaryCrownRedemptions() {
     } finally {
       setActionLoading(false)
     }
-  }, [user?.id, notes, fetchRedemptions])
+  }, [user, notes, fetchRedemptions])
 
   const getStatusColor = (status: string) => {
     switch (status) {

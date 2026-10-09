@@ -152,7 +152,7 @@ export default function PaymentMethodManager({
       }
       setSquareAttached(false)
     }
-  }, [profile?.id, setupCounter, loadMethods])
+  }, [profile.id, setupCounter, loadMethods, squareAttached])
 
   const remove = async (id: string) => {
     if (!profile) return

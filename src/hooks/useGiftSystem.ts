@@ -11,7 +11,7 @@ import { TROLLMOND_CASHBACK_ENABLED } from '../config/featureFlags';
 import { createCityActivityEvent } from '../lib/events/createCityActivityEvent';
 import { queueSideEffect } from '../lib/events/queueSideEffects';
 import { isBroadcastChatLockActive } from '../lib/broadcastModeration';
-import { unlockGiftAudio } from '../components/broadcast/GiftVideoOverlay';
+import { unlockGiftAudio } from '../lib/giftAudio';
 
 type GiftBroadcastChannel = ReturnType<typeof supabase.channel>;
 
@@ -675,17 +675,7 @@ const sendGift = useCallback(async (gift: GiftItem, options?: SendGiftOptions): 
     } finally {
       setIsSending(false);
     }
-  }, [
-    giftsDisabled,
-    giftsDisabledReason,
-    recipientId,
-    sharedChannel,
-    streamId,
-    trackGiftSent,
-    user,
-    recordGiftSent,
-    recordGiftEarned,
-  ]);
+  }, [recipientId, _battleId, giftsDisabled, user, streamId, giftsDisabledReason, recordGiftSent, recordGiftEarned, sharedChannel, trackGiftSent]);
 
   if (!hasStreamId) {
     return stableEmptyGiftState;
@@ -696,4 +686,3 @@ const sendGift = useCallback(async (gift: GiftItem, options?: SendGiftOptions): 
     isSending
   };
 }
-

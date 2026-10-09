@@ -541,23 +541,7 @@ function BroadcastRouter() {
     setShowPasswordModal((current) =>
       current === nextShowPasswordModal ? current : nextShowPasswordModal,
     )
-  }, [
-    stream?.id,
-    stream?.user_id,
-    (stream as any)?.is_protected,
-    streamId,
-    userId,
-    isHost,
-    profileAccess.role,
-    profileAccess.isAdmin,
-    profileAccess.isSuperAdmin,
-    profileAccess.isCeo,
-    profileAccess.isStaff,
-    profileAccess.isOfficer,
-    profileAccess.isBroadOfficer,
-    profileAccess.isSecretary,
-    profileAccess.isPresident,
-  ])
+  }, [stream.id, stream.user_id, streamId, userId, isHost, profileAccess.role, profileAccess.isAdmin, profileAccess.isSuperAdmin, profileAccess.isCeo, profileAccess.isStaff, profileAccess.isOfficer, profileAccess.isBroadOfficer, profileAccess.isSecretary, profileAccess.isPresident, stream, profileAccess])
 
   useEffect(() => {
     if (!stream || !hasAccess) return

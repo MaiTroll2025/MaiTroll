@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, XCircle, Crown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -19,7 +19,7 @@ export function RoleInviteHandler() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
 
-  const fetchPendingInvites = async () => {
+  const fetchPendingInvites = useCallback(async () => {
     if (!user) return;
     try {
       const { data, error } = await supabase
@@ -32,7 +32,7 @@ export function RoleInviteHandler() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -69,7 +69,7 @@ export function RoleInviteHandler() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, fetchPendingInvites]);
 
   const handleAccept = async (inviteId: string) => {
     try {

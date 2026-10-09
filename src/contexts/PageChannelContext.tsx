@@ -1,16 +1,8 @@
-import React, { createContext, useContext, useEffect, useRef, useCallback, useMemo } from 'react'
-import { subscribePageChannel, removePageChannel, getPageChannelStats } from '../lib/realtime/RealtimeManager'
+import React, { useEffect, useRef, useCallback, useMemo } from 'react'
+import { removePageChannel, getPageChannelStats } from '../lib/realtime/RealtimeManager'
+import { PageChannelContext } from '../hooks/usePageChannel'
 
 export type PageType = 'home' | 'stream' | 'court' | 'pod' | 'none'
-
-interface PageChannelState {
-  currentPage: PageType
-  currentPageId: string | null
-  switchPage: (type: PageType, id?: string | null) => void
-  getPageStats: () => ReturnType<typeof getPageChannelStats>
-}
-
-const PageChannelContext = createContext<PageChannelState | null>(null)
 
 /**
  * PageChannelProvider manages a single page-level channel per navigation state.
@@ -59,33 +51,4 @@ export function PageChannelProvider({ children }: { children: React.ReactNode })
       {children}
     </PageChannelContext.Provider>
   )
-}
-
-export function usePageChannel() {
-  const ctx = useContext(PageChannelContext)
-  if (!ctx) throw new Error('usePageChannel must be used within PageChannelProvider')
-  return ctx
-}
-
-/**
- * Hook that subscribes to the current page channel with a builder.
- * Automatically unsubscribes when the page changes or component unmounts.
- */
-export function usePageChannelSubscription(
-  pageType: PageType,
-  pageId: string | undefined,
-  subscriberId: string,
-  builder: (channel: any) => any,
-) {
-  const { switchPage } = usePageChannel()
-
-  useEffect(() => {
-    switchPage(pageType, pageId || null)
-
-    const unsubscribe = subscribePageChannel(pageType as Parameters<typeof subscribePageChannel>[0], subscriberId, builder, pageId)
-
-    return () => {
-      unsubscribe()
-    }
-  }, [pageType, pageId, subscriberId, builder, switchPage])
 }

@@ -371,14 +371,14 @@ export default function CourtViewerPage() {
     }
   }, [messages]);
 
-  const findRemoteUser = (uid?: string | null) => {
+  const findRemoteUser = useCallback((uid?: string | null) => {
     if (!uid) return undefined;
     return remoteUsers.find((u) => String(u.uid) === String(uid));
-  };
+  }, [remoteUsers]);
 
-  const findParticipantByRole = (role: CourtRoleKey) => {
+  const findParticipantByRole = useCallback((role: CourtRoleKey) => {
     return participants.find((p) => String(p.role || '').toLowerCase() === role);
-  };
+  }, [participants]);
 
   const spotUsers = useMemo(() => {
     const result: Record<CourtRoleKey, AgoraTrackUser | undefined> = {
@@ -408,7 +408,7 @@ export default function CourtViewerPage() {
     }
 
     return result;
-  }, [participants, remoteUsers]);
+  }, [findParticipantByRole, findRemoteUser]);
 
   const handleSendChat = useCallback(async () => {
     if (!chatInput.trim() || !user || !profile) return;

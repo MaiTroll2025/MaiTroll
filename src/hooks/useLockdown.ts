@@ -110,7 +110,7 @@ export function useLockdown(settingKey: string, description: string): LockdownSt
       console.error(`Error toggling ${settingKey}:`, err)
       return false
     }
-  }, [settingKey, description])
+  }, [settingKey])
 
   return { isLocked, loading, toggleLockdown }
 }

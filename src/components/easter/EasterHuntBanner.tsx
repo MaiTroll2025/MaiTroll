@@ -2,7 +2,7 @@
 // Compact banner showing Easter egg hunt progress, shown when hunt is active.
 
 import React from 'react'
-import { useEasterEggHunt } from '@/contexts/EasterEggHuntContext'
+import { useEasterEggHunt } from '@/hooks/useEasterEggHunt'
 
 export default function EasterHuntBanner() {
   const { isActive, eggsFound, maxEggs, canFindMore } = useEasterEggHunt()

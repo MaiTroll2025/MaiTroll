@@ -18,7 +18,7 @@
 import React from 'react';
 import ProfileFrame from './ProfileFrame';
 import type { FrameSize } from './ProfileFrame';
-import { useProfileFrameContext } from '../../contexts/ProfileFrameContext';
+import { useProfileFrameContext } from '../../hooks/useProfileFrameContext';
 
 interface AvatarWithFrameProps {
   /** User ID to look up their equipped frame */

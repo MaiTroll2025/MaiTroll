@@ -86,7 +86,7 @@ export default function UtromailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCompose, setShowCompose] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, setRefreshKey] = useState(0);
   const [userMailAddress, setUserMailAddress] = useState<string>('');
 
   // Chat state
@@ -126,7 +126,7 @@ export default function UtromailPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, refreshKey]);
+  }, [user.id]);
 
   useEffect(() => {
     fetchThreads();
@@ -159,7 +159,7 @@ export default function UtromailPage() {
     };
 
     fetchMessages();
-  }, [activeConversationId, user?.id]);
+  }, [activeConversationId, fetchThreads, user.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

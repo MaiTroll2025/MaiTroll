@@ -10,8 +10,8 @@ import { useObsHeartbeat } from '@/hooks/useObsHeartbeat'
 import GamingChat from '@/components/broadcast/GamingChat'
 import {
   GamingStreamProvider,
-  useSetGamingStreamId,
 } from '@/contexts/GamingStreamContext'
+import { useSetGamingStreamId } from '@/hooks/useGamingStream'
 
 type ObsStatus =
   | 'idle'

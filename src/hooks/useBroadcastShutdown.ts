@@ -199,6 +199,7 @@ export function useBroadcastShutdown(options: BroadcastShutdownOptions): Broadca
 
     window.addEventListener('pagehide', handlePageHide)
     window.addEventListener('beforeunload', handleBeforeUnload)
+    const fallbackLocalVideo = localVideoRef.current
 
     return () => {
       window.removeEventListener('pagehide', handlePageHide)
@@ -214,7 +215,7 @@ export function useBroadcastShutdown(options: BroadcastShutdownOptions): Broadca
       stopMediaStream(localStream)
       localStreamRef.current = null
 
-      const localVideo = getLocalVideoRef.current?.() ?? localVideoRef.current
+      const localVideo = getLocalVideoRef.current?.() ?? fallbackLocalVideo
       if (localVideo) {
         try {
           localVideo.srcObject = null
@@ -226,7 +227,7 @@ export function useBroadcastShutdown(options: BroadcastShutdownOptions): Broadca
       // Best-effort leave on unmount; do not await (component is tearing down).
       void Promise.resolve(stopRtcRef.current?.()).catch(() => undefined)
     }
-  }, [endBroadcast, stopMediaStream, isLive])
+  }, [endBroadcast, stopMediaStream, isLive, isTransitioning])
 
   // Heartbeat: while a broadcast is live, keep `last_heartbeat_at` fresh in the
   // database as a lightweight "browser still open" signal for admin monitoring.

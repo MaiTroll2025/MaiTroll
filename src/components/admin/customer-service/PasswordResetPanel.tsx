@@ -17,7 +17,7 @@ export default function PasswordResetPanel({ user }: PasswordResetPanelProps) {
 
   const isAdmin = profile?.is_admin === true || profile?.role === "admin" || profile?.role === "ceo";
 
-  const fetchRecentResets = async () => {
+  const fetchRecentResets = React.useCallback(async () => {
     const { data } = await supabase
       .from("admin_password_resets")
       .select("id, reset_method, reason, created_at")
@@ -25,11 +25,11 @@ export default function PasswordResetPanel({ user }: PasswordResetPanelProps) {
       .order("created_at", { ascending: false })
       .limit(5);
     setRecentResets(data || []);
-  };
+  }, [user.id]);
 
   React.useEffect(() => {
-    fetchRecentResets();
-  }, [user.id]);
+    void fetchRecentResets();
+  }, [fetchRecentResets]);
 
   const handlePasswordReset = async (method: "send" | "force") => {
 if (!isAdmin) {

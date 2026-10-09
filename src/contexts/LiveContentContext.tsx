@@ -1,6 +1,7 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
+import { LiveContentContext } from '../hooks/useLiveContent'
 
 export interface LiveItem {
   id: string
@@ -22,17 +23,6 @@ export interface LiveItem {
   momentumLevel?: number
   velocityTrend?: string
 }
-
-interface LiveContentState {
-  liveItems: LiveItem[]
-  totalViewers: number
-  onlineUsers: number
-  loadingLive: boolean
-  loadingOnline: boolean
-  refresh: () => void
-}
-
-const LiveContentContext = createContext<LiveContentState | null>(null)
 
 export function LiveContentProvider({ children }: { children: React.ReactNode }) {
   const [liveItems, setLiveItems] = useState<LiveItem[]>([])
@@ -448,10 +438,4 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
       {children}
     </LiveContentContext.Provider>
   )
-}
-
-export function useLiveContent() {
-  const ctx = useContext(LiveContentContext)
-  if (!ctx) throw new Error('useLiveContent must be used within LiveContentProvider')
-  return ctx
 }

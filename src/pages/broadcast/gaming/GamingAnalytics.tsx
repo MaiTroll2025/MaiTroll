@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, BarChart3, Eye, Gift, Coins, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-import { useGamingStreamId } from '@/contexts/GamingStreamContext'
+import { useGamingStreamId } from '@/hooks/useGamingStream'
 
 interface StreamStats {
   peakViewers: number

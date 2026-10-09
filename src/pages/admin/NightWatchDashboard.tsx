@@ -185,7 +185,7 @@ export default function NightWatchDashboard() {
 
   const patrolRoomName = useMemo(() => {
     return getLiveKitRoomName(selectedStream as any, selectedStream?.id) || ''
-  }, [selectedStream?.livekit_room_name, selectedStream?.id])
+  }, [selectedStream])
 
   const patrolIdentity =
     selectedStreamId && officerId
@@ -614,7 +614,7 @@ export default function NightWatchDashboard() {
 
   useEffect(() => {
     fetchBroadcaster(selectedStream)
-  }, [fetchBroadcaster, selectedStream?.broadcaster_id, selectedStream?.user_id])
+  }, [fetchBroadcaster, selectedStream, selectedStream.broadcaster_id, selectedStream.user_id])
 
   useEffect(() => {
     fetchSupportingData(selectedStreamId)

@@ -2788,9 +2788,10 @@ function LocalCameraFullVideo({
   }, [videoTrack, facingMode])
 
   useEffect(() => {
+    const container = containerRef.current
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = ''
+      if (container) {
+        container.innerHTML = ''
       }
       videoElementRef.current = null
       previousTrackRef.current = null
@@ -2918,9 +2919,10 @@ function RemoteSeatThumbnail({
   }, [videoStream])
 
   useEffect(() => {
+    const container = containerRef.current
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = ''
+      if (container) {
+        container.innerHTML = ''
       }
       videoElementRef.current = null
       previousTrackRef.current = null
@@ -3024,13 +3026,14 @@ function RemoteAudioManager({
   }, [remoteUsers])
 
   useEffect(() => {
+    const audioElements = audioElementsRef.current
     return () => {
-      audioElementsRef.current.forEach((audioElement) => {
+      audioElements.forEach((audioElement) => {
         audioElement.pause()
         audioElement.srcObject = null
         audioElement.remove()
       })
-      audioElementsRef.current.clear()
+      audioElements.clear()
     }
   }, [])
 

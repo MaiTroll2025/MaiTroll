@@ -1,6 +1,6 @@
  import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { usePageVisibilityContext } from '../contexts/PageVisibilityContext'
+import { usePageVisibilityContext } from './usePageVisibilityContext'
 
 // Query keys
 export const queryKeys = {

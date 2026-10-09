@@ -20,7 +20,8 @@ import { useCityStatus } from '../hooks/useCityStatus';
 
 import SubscriptionTierSelector from '../components/user/SubscriptionTierSelector';
 
-import { ProfileHeader, RoleCard, ProfileTabs, PROFILE_TABS } from '../components/profile/ProfileComponents';
+import { ProfileHeader, RoleCard, ProfileTabs } from '../components/profile/ProfileComponents';
+import { PROFILE_TABS } from '../components/profile/profileTabs';
 
 import ProfileFeed from '../components/profile/ProfileFeed';
 
@@ -178,7 +179,7 @@ function ProfileInner() {
 
         });
 
-    }, [activeRoles, isOwnProfile, profile]);
+    }, [activeRoles, isOwnProfile]);
 
     // Fetch profile data
 
@@ -360,7 +361,7 @@ function ProfileInner() {
 
         };
 
-    }, [currentUser?.id, fetchXP, subscribeToXP, userId, username]);
+    }, [currentUser, currentUser.id, fetchXP, subscribeToXP, userId, username]);
 
     // Fetch featured badges when the Badges tab is active
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from './store';
 import { supabase } from './supabase';
 import { getUserAffiliation, UserAffiliation } from './userAffiliations';
@@ -40,17 +40,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
 
   const isOwnProfile = user?.id === userId;
 
-  useEffect(() => {
-    fetchProfile();
-    fetchAffiliation();
-
-    if (user && !isOwnProfile) {
-      checkSubscription();
-      checkFollowing();
-    }
-  }, [userId, user]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const { data } = await supabase
         .from('user_profiles')
@@ -63,18 +53,18 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  const fetchAffiliation = async () => {
+  const fetchAffiliation = useCallback(async () => {
     try {
       const data = await getUserAffiliation(userId);
       setAffiliation(data);
     } catch (error) {
       console.error('Error fetching affiliation:', error);
     }
-  };
+  }, [userId]);
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     if (!user) return;
     try {
       const { data } = await supabase
@@ -91,14 +81,24 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
     } catch (_error) {
       // No subscription
     }
-  };
+  }, [user, userId]);
 
-  const checkFollowing = async () => {
+  const checkFollowing = useCallback(async () => {
     if (!user) return;
     // Placeholder: implement follow table later
     // For now, just set false
     setFollowing(false);
-  };
+  }, [user]);
+
+  useEffect(() => {
+    void fetchProfile();
+    void fetchAffiliation();
+
+    if (user && !isOwnProfile) {
+      void checkSubscription();
+      void checkFollowing();
+    }
+  }, [userId, user, fetchProfile, fetchAffiliation, isOwnProfile, checkSubscription, checkFollowing]);
 
   const handleGift = () => {
     if (liveStreamId) {

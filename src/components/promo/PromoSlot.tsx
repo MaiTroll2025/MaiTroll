@@ -98,7 +98,7 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
       }
       return nextIndex;
     });
-  }, [ads.length, isHovered, ads, trackImpression]);
+  }, [isHovered, ads, trackImpression]);
 
   // Setup rotation interval (8-12 seconds random)
   useEffect(() => {
@@ -239,38 +239,4 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
       )}
     </div>
   );
-}
-
-// Hook for fetching ads data (for external use)
-export function useCityAds(placement: AdPlacement) {
-  const [ads, setAds] = useState<CityAd[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetch() {
-      try {
-        const { data, error } = await supabase
-          .from('city_ads')
-          .select('*')
-          .eq('placement', placement)
-          .eq('is_active', true)
-          .or('start_at.is.null,start_at.lte.' + new Date().toISOString())
-          .or('end_at.is.null,end_at.gte.' + new Date().toISOString())
-          .order('priority', { ascending: false })
-          .order('display_order', { ascending: true })
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setAds(data || []);
-      } catch (e) {
-        console.error('Failed to fetch ads:', e);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetch();
-  }, [placement]);
-
-  return { ads, loading };
 }

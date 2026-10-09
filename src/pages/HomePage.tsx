@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Stream, Profile, TipPackage } from '../types/database'
 import { supabase } from '../lib/supabase'
-import { useLiveContent } from '../contexts/LiveContentContext'
+import { useLiveContent } from '../hooks/useLiveContent'
 import { useAuth } from '../contexts/AuthContext'
 import HomeBroadcastBanner from '../components/HomeBroadcastBanner'
 

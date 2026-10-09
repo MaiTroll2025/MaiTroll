@@ -39,7 +39,7 @@ export default function UserNameWithAge({
       return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)))
     }
     return 0
-  }, [user?.age_days, user?.created_at, now, user])
+  }, [now, user])
 
   if (!user) {
     return (

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -73,7 +73,7 @@ export const AgencyApplicationsTable: React.FC<AgencyApplicationsTableProps> = (
     [applications],
   );
 
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     if (!agencyId) {
       return;
     }
@@ -126,11 +126,11 @@ export const AgencyApplicationsTable: React.FC<AgencyApplicationsTableProps> = (
     } finally {
       setLoading(false);
     }
-  };
+  }, [agencyId]);
 
   useEffect(() => {
     void fetchApplications();
-  }, [agencyId]);
+  }, [agencyId, fetchApplications]);
 
   const updateApplication = async (applicationId: string, status: 'approved' | 'denied') => {
     if (!currentUserId || !canManage) {

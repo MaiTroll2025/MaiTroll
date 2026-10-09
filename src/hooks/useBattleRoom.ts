@@ -259,7 +259,7 @@ export function useBattleRoom({
       mountedRef.current = false;
       disconnect();
     };
-  }, []);
+  }, [disconnect]);
 
   return {
     room: roomRef.current,

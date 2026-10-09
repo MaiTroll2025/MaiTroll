@@ -47,7 +47,7 @@ export default function MusicTab() {
       setShowContract(true)
       setContractAccepted(false)
     }
-  }, [])
+  }, [user?.music_contract_accepted])
 
   const fetchTracks = async () => {
     setLoading(true)

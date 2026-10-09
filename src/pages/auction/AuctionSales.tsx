@@ -123,7 +123,7 @@ export default function AuctionSales() {
       toast.error(error?.message || 'Scan failed')
       setScanResult(null)
     }
-  }, [sales, supabase])
+  }, [sales])
 
   useBarcodeScanner({
     minLength: 3,

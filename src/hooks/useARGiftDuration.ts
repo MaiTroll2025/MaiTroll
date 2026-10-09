@@ -34,17 +34,18 @@ export function useARGiftDurationManager({
   );
 
   useEffect(() => {
+    const giftTimers = timersRef.current
     const currentIds = new Set(activeGifts.map((g) => g.id));
 
-    timersRef.current.forEach((timer, id) => {
+    giftTimers.forEach((timer, id) => {
       if (!currentIds.has(id)) {
         window.clearTimeout(timer);
-        timersRef.current.delete(id);
+        giftTimers.delete(id);
       }
     });
 
     activeGifts.forEach((gift) => {
-      if (timersRef.current.has(gift.id)) return;
+      if (giftTimers.has(gift.id)) return;
 
       const elapsed = performance.now() - gift.startTime;
       const remaining = gift.duration - elapsed;
@@ -58,7 +59,7 @@ export function useARGiftDurationManager({
         expireGift(gift.id);
       }, remaining);
 
-      timersRef.current.set(gift.id, timer);
+      giftTimers.set(gift.id, timer);
     });
 
     if (activeGifts.length !== lastCountRef.current) {
@@ -67,8 +68,8 @@ export function useARGiftDurationManager({
     }
 
     return () => {
-      timersRef.current.forEach((timer) => window.clearTimeout(timer));
-      timersRef.current.clear();
+      giftTimers.forEach((timer) => window.clearTimeout(timer));
+      giftTimers.clear();
     };
   }, [activeGifts, expireGift, onGiftStackChange]);
 

@@ -12,8 +12,9 @@ import { useCoins } from "../lib/hooks/useCoins";
 import useTrollFamilyActivity from "./useTrollFamilyActivity";
 import { useBattleRealtime } from "./useBattleRealtime";
 import { toast } from "sonner";
-import { useActiveBattles, ActiveBattle } from "../components/broadcast/battle/ActiveBattlesPanel";
-import { getTrackPublications, CrownInfo } from "../components/broadcast/BattleArena";
+import { useActiveBattles, type ActiveBattle } from "./useActiveBattles";
+import { CrownInfo } from "../components/broadcast/BattleArena";
+import { getTrackPublications } from "../components/broadcast/battleArenaUtils";
 
 const MAIN_BATTLE_DURATION_MS = 180_000;
 const _SUDDEN_DEATH_DURATION_MS = 10_000;
@@ -226,6 +227,8 @@ export function useBattleViewController({
 
   // Consolidated battle realtime hook (replaces 6 separate channel subscriptions)
   const { state: battleRealtime } = useBattleRealtime(battleId || null);
+  const battleRealtimeRef = useRef(battleRealtime);
+  battleRealtimeRef.current = battleRealtime;
 
   // Realtime list of other live battles (for the Active Battles sidebar + next-stream nav)
   const { battles: activeBattles, loading: activeBattlesLoading } = useActiveBattles(battleId);
@@ -549,14 +552,13 @@ export function useBattleViewController({
       battleJoinInFlightRef.current = false;
     }
   }, [
-    battleId,
     effectiveUserId,
     isBroadcaster,
     currentStreamId,
     recordBattleJoined,
     connectBattleRoom,
     publishBattleMedia,
-    validatePublisherToken,
+    bumpTrackRevision,
   ]);
 
   // ==========================================================================
@@ -608,7 +610,6 @@ export function useBattleViewController({
 
     battleReturnInFlightRef.current = false;
   }, [
-    battleId,
     challengerStream?.id,
     challengerStream?.user_id,
     opponentStream?.id,
@@ -618,6 +619,7 @@ export function useBattleViewController({
     onReturnToStream,
     disconnectBattleRoom,
     returnPathTemplate,
+    getBattleBroadcastChannel,
   ]);
 
   // ── Channel diagnostics (dev only) ──
@@ -938,7 +940,7 @@ export function useBattleViewController({
         if (battleError || !battleData) {
           console.warn('[BattleView] battle query returned empty or error after retries', { battleId, battleData, battleError });
           // Fallback: prefer realtime state (handles viewers with RLS blocking DB reads)
-          const realtimeCandidate = (battleRealtime as any)?.battle;
+          const realtimeCandidate = battleRealtimeRef.current?.battle;
           if (realtimeCandidate) {
             console.log('[BattleView] Using immediate battleRealtime fallback for battle', battleId);
             setBattle(realtimeCandidate);
@@ -950,7 +952,7 @@ export function useBattleViewController({
             while (!found && Date.now() - start < 3000) {
                
               await new Promise((r) => setTimeout(r, 100));
-              const candidate = (battleRealtime as any)?.battle;
+              const candidate = battleRealtimeRef.current?.battle;
               if (candidate) {
                 console.log('[BattleView] Using delayed battleRealtime fallback for battle', battleId);
                 setBattle(candidate);
@@ -1070,7 +1072,7 @@ export function useBattleViewController({
       preflightSetInBattleRef.current = false;
       if (import.meta.env.DEV) console.log('[BattleView] Set isInBattle = false (cleanup)');
     };
-  }, [battleId, transitionToPhase]);
+  }, [battleId, transitionToPhase, effectiveUserId, clearDeferredError, deferError]);
 
   // Expose realtime battle state on window for debugging/fallback when DB reads fail
   useEffect(() => {
@@ -1095,17 +1097,17 @@ export function useBattleViewController({
     if (battleRealtime.battle.status === 'ended') {
       setShowResults(true);
     }
-  }, [battleRealtime.battle]);
+  }, [battleRealtime.battle, clearDeferredError]);
 
   // If we previously set an immediate 'Battle not found' error, clear it when realtime data appears
   useEffect(() => {
-    if (error === 'Battle not found' && (battleRealtime as any)?.battle) {
+    if (error === 'Battle not found' && battleRealtime.battle) {
       console.log('[BattleView] Clearing "Battle not found" error due to realtime data', battleId);
       clearDeferredError();
       setError(null);
-      setBattle((battleRealtime as any).battle);
+      setBattle(battleRealtime.battle);
     }
-  }, [error, battleRealtime?.battle, battleId]);
+  }, [error, battleRealtime?.battle, battleId, clearDeferredError]);
 
   useEffect(() => {
     if (battleRealtime.participants.length > 0) {
@@ -1118,11 +1120,11 @@ export function useBattleViewController({
       setArenaReady(true);
       setArenaReadyAtMs(Date.now());
     }
-  }, [battleRealtime.arenaReady]);
+  }, [battleRealtime.arenaReady, arenaReady]);
 
   // Pre-battle countdown: show match found overlay during 'starting' phase
   useEffect(() => {
-    if (!battle || battle.status !== 'starting') {
+    if (battle?.status !== 'starting') {
       setPreBattleCountdown(null);
       return;
     }
@@ -1335,7 +1337,17 @@ export function useBattleViewController({
     return () => {
       channels.forEach((c) => supabase.removeChannel(c));
     };
-  }, [challengerStream?.id, opponentStream?.id, battle?.status, battleId]);
+  }, [
+    challengerStream?.id,
+    challengerStream?.user_id,
+    opponentStream?.id,
+    opponentStream?.user_id,
+    battle?.status,
+    battleId,
+    getBattleBroadcastChannel,
+    navigate,
+    participantInfo?.team,
+  ]);
 
   // Fallback poll â€” 15s during active battle, 30s otherwise.
   // Score updates are handled in realtime via useBattleRealtime broadcasts,
@@ -1687,16 +1699,18 @@ export function useBattleViewController({
     } finally {
       setLeaveLoading(false);
     }
-  }, [battle, user, battleLocalAudioTrack, battleLocalVideoTrack, livekitRoom, onReturnToStream, navigate, participantInfo?.team, challengerStream?.id, opponentStream?.id, currentStreamId]);
+  }, [battle, user, onReturnToStream, navigate, participantInfo?.team, challengerStream?.id, opponentStream?.id, currentStreamId, returnPathTemplate]);
 
   // ==========================================================================
   // STATE MACHINE: Drive phase transitions from authoritative battle state
   // ==========================================================================
 
+  const currentBattleStatus = battle?.status;
+  const currentBattleId = battle?.id;
   useEffect(() => {
-    if (!battle) return;
+    if (!currentBattleId) return;
 
-    switch (battle.status) {
+    switch (currentBattleStatus) {
       case 'active':
         if (battlePhaseRef.current === 'WAITING_FOR_BATTLE' || battlePhaseRef.current === 'INITIALIZING') {
           transitionToPhase('CONNECTING_ARENA');
@@ -1709,7 +1723,7 @@ export function useBattleViewController({
       default:
         break;
     }
-  }, [battle?.status, battle?.id, joinBattleArena, transitionToPhase]);
+  }, [currentBattleStatus, currentBattleId, joinBattleArena, transitionToPhase]);
 
   // ==========================================================================
   // TIMER REFS
@@ -1919,7 +1933,7 @@ export function useBattleViewController({
 
     navigateBackToOwnBroadcast();
     onReturnToStream?.();
-  }, [battleLocalAudioTrack, battleLocalVideoTrack, livekitRoom, battleId, challengerStream?.id, challengerStream?.user_id, opponentStream?.id, opponentStream?.user_id, navigateBackToOwnBroadcast, onReturnToStream]);
+  }, [challengerStream?.id, challengerStream?.user_id, opponentStream?.id, opponentStream?.user_id, livekitRoom, navigateBackToOwnBroadcast, onReturnToStream, getBattleBroadcastChannel]);
 
   // React to battle-level "return_to_broadcast" broadcast from either broadcaster.
   // When streamEnded is true, the user on the ended stream goes home, winner goes to broadcast
@@ -1962,7 +1976,7 @@ export function useBattleViewController({
       // Don't remove shared channel here; it may be reused by other code paths.
       // Supabase deduplicates by topic, so unsubscribing this listener is sufficient.
     };
-  }, [battleId, navigateBackToOwnBroadcast, onReturnToStream, participantInfo?.team, opponentStream?.id, challengerStream?.id, navigate]);
+  }, [battleId, navigateBackToOwnBroadcast, onReturnToStream, participantInfo?.team, opponentStream?.id, challengerStream?.id, navigate, getBattleBroadcastChannel, returnPathTemplate]);
 
   // Guarantee end screen appears whenever server battle row is ended.
   useEffect(() => {
@@ -1994,7 +2008,7 @@ export function useBattleViewController({
     console.log('[BattleView] User lookup - opponent stream:', opponentStream?.user_id?.substring(0, 8), '-> livekit identity:', opponentLiveKitIdentity);
     console.log('[BattleView] Battle remoteUsers count:', remoteUsers?.length || 0);
     console.log('[BattleView] Local videoTrack:', !!battleLocalVideoTrack);
-  }, [challengerLiveKitIdentity, opponentLiveKitIdentity, remoteUsers.length, battleLocalVideoTrack]);
+  }, [challengerLiveKitIdentity, opponentLiveKitIdentity, remoteUsers.length, battleLocalVideoTrack, challengerStream?.user_id, opponentStream?.user_id]);
 
   // Diagnostic logging: room participants and their video track SIDs
   useEffect(() => {
@@ -2330,4 +2344,3 @@ export function useBattleViewController({
 }
 
 export type BattleViewController = ReturnType<typeof useBattleViewController>;
-

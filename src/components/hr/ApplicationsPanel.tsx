@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { CheckCircle2, XCircle, Clock3, Archive, RefreshCw, User } from 'lucide-react';
@@ -81,7 +81,7 @@ export default function ApplicationsPanel({ isHRAdmin, currentUserId }: Applicat
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'archived'>('pending')
   const [actingId, setActingId] = useState<string | null>(null)
 
-  const loadApplications = async () => {
+  const loadApplications = useCallback(async () => {
     setLoading(true)
     try {
       let query = supabase
@@ -110,11 +110,11 @@ export default function ApplicationsPanel({ isHRAdmin, currentUserId }: Applicat
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentUserId, filter, isHRAdmin])
 
   useEffect(() => {
     loadApplications()
-  }, [filter, isHRAdmin, currentUserId])
+  }, [loadApplications])
 
   const visibleApplications = useMemo(() => {
     if (filter === 'all') return applications

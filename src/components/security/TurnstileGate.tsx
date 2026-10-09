@@ -16,6 +16,7 @@ const TurnstileGate: React.FC<TurnstileGateProps> = ({
   const turnstileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const widgetElement = turnstileRef.current
     const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
     if (!siteKey) {
@@ -58,8 +59,8 @@ const TurnstileGate: React.FC<TurnstileGateProps> = ({
 
     // Cleanup
     return () => {
-      if (turnstileRef.current && (window as any).turnstile) {
-        (window as any).turnstile.remove(turnstileRef.current);
+      if (widgetElement && (window as any).turnstile) {
+        (window as any).turnstile.remove(widgetElement);
       }
     };
   }, [action, onVerified, disabled]);

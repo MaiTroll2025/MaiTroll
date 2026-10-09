@@ -8,7 +8,8 @@ import { generateUUID } from '@/lib/uuid'
 import { toast } from 'sonner'
 import { useObsHeartbeat } from '@/hooks/useObsHeartbeat'
 import GamingChat from '@/components/broadcast/GamingChat'
-import { GamingStreamProvider, useSetGamingStreamId } from '@/contexts/GamingStreamContext'
+import { GamingStreamProvider } from '@/contexts/GamingStreamContext'
+import { useSetGamingStreamId } from '@/hooks/useGamingStream'
 
 type ObsStatus = 'idle' | 'generating' | 'ready' | 'waiting' | 'signal_detected' | 'connected' | 'live' | 'ended' | 'error' | 'reconnecting'
 

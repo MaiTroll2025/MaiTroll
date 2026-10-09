@@ -1,8 +1,9 @@
-import React, { createContext, useContext } from 'react'
+import React from 'react'
 import useStaffWalkieTalkie from '@/hooks/useStaffWalkieTalkie'
 import { useAuthStore } from '@/lib/store'
+import { StaffWalkieTalkieContext } from '@/hooks/useStaffWalkieTalkieContext'
 
-interface StaffWalkieTalkieContextValue {
+export interface StaffWalkieTalkieContextValue {
   isConnected: boolean
   isSpeaking: boolean
   isJoining: boolean
@@ -13,8 +14,6 @@ interface StaffWalkieTalkieContextValue {
   toggleSpeaking: (speaking: boolean) => void
   canAccessWalkieTalkie: boolean
 }
-
-const StaffWalkieTalkieContext = createContext<StaffWalkieTalkieContextValue | null>(null)
 
 const WALKIE_TALKIE_ALLOWED_ROLES = [
   'admin',
@@ -81,14 +80,6 @@ export function StaffWalkieTalkieProvider({ children }: { children: React.ReactN
       {children}
     </StaffWalkieTalkieContext.Provider>
   )
-}
-
-export function useStaffWalkieTalkieContext() {
-  const context = useContext(StaffWalkieTalkieContext)
-  if (!context) {
-    throw new Error('useStaffWalkieTalkieContext must be used within StaffWalkieTalkieProvider')
-  }
-  return context
 }
 
 export { WALKIE_TALKIE_ALLOWED_ROLES }

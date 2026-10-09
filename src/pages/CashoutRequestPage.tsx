@@ -284,7 +284,7 @@ const { data, error } = await supabase.rpc('request_cashout', {
     } finally {
       setSubmitting(false);
     }
-  }, [profile, selectedTier, payoutMethod, providerUsername, userTag, eligibleCoins, refreshProfile, navigate]);
+  }, [profile, selectedTier, eligibleCoins, dailyLimitReached, providerUsername, dailyCashoutCount, payoutMethod, userTag, feeCoins, refreshProfile, navigate]);
 
   if (loading) {
     return (

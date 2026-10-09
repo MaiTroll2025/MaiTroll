@@ -1,14 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-
-interface GamingStreamContextValue {
-  streamId: string | null
-  setStreamId: (id: string | null) => void
-}
-
-const GamingStreamContext = createContext<GamingStreamContextValue>({
-  streamId: null,
-  setStreamId: () => {},
-})
+import React, { useState } from 'react';
+import { GamingStreamContext } from '../hooks/useGamingStream';
 
 export function GamingStreamProvider({ children }: { children: React.ReactNode }) {
   const [streamId, setStreamId] = useState<string | null>(null)
@@ -18,12 +9,4 @@ export function GamingStreamProvider({ children }: { children: React.ReactNode }
       {children}
     </GamingStreamContext.Provider>
   )
-}
-
-export function useGamingStreamId() {
-  return useContext(GamingStreamContext).streamId
-}
-
-export function useSetGamingStreamId() {
-  return useContext(GamingStreamContext).setStreamId
 }

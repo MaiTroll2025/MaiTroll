@@ -70,7 +70,7 @@ import PaidChatViewerModal from '../../components/broadcast/PaidChatViewerModal'
 import RandomBattleBanner from '../../components/broadcast/RandomBattleBanner'
 import CityStatusPanel from '../../components/city/CityStatusPanel'
 import { useFeaturedLive } from '../../hooks/useFeaturedLive'
-import { useResolvedStream, useResolvedStreamId } from '../../contexts/StreamRouteContext'
+import { useResolvedStream, useResolvedStreamId } from '../../hooks/useStreamRoute'
 import { FeaturedBanner } from '../../components/featured/FeaturedBanner'
 import { FeaturedLeaderboard } from '../../components/featured/FeaturedLeaderboard'
 import { FeaturedLiveOverlay } from '../../components/featured/FeaturedLiveOverlay'
@@ -123,6 +123,18 @@ function isStreamEnded(stream: Stream | null): boolean {
   if (!stream) return true
   const status = String((stream as any).status || '').toLowerCase()
   return status === 'ended' || (stream as any).ended_at != null
+}
+
+function normalizeSeatStatus(status?: string | null) {
+  return String(status || '').trim().toLowerCase()
+}
+
+function isSeatActiveStatus(status?: string | null) {
+  return ['reserved', 'camera_starting', 'active', 'live'].includes(normalizeSeatStatus(status))
+}
+
+function _isSeatOpenStatus(status?: string | null) {
+  return ['empty', 'failed', 'left', 'cancelled', 'expired'].includes(normalizeSeatStatus(status))
 }
 
 const KICK_BAN_DURATION_MS = 24 * 60 * 60 * 1000
@@ -679,7 +691,6 @@ function ViewerPage() {
       console.log('[ViewerPage] route streamId resolved', {
         pathname: typeof window !== 'undefined' ? window.location.pathname : null,
         streamId,
-        params,
       })
     } catch (e) {
       console.warn('[ViewerPage] route streamId log failed', e)
@@ -844,6 +855,10 @@ function ViewerPage() {
   const CHAT_FLOAT_MS = 30000
 
   const [stream, setStream] = useState<Stream | null>(resolvedStream)
+  const isActive = isStreamActive(stream)
+  const hostId = (stream as any)?.user_id || ''
+  const streamCategory = (stream as any)?.category
+  const streamType = (stream as any)?.stream_type
 
    // Broadcaster's equipped profile frame
    const broadcasterFrame = useUserFrame((stream as any)?.user_id)
@@ -857,7 +872,7 @@ function ViewerPage() {
     if (isRandomBattle && (stream.battle_status === 'active' || !stream.battle_status)) return 'active';
     if (stream.random_battle_queue_enabled) return 'queue';
     return 'regular';
-  }, [stream, stream?.battle_mode, stream?.battle_id, stream?.is_battle, stream?.battle_status, stream?.random_battle_queue_enabled, stream?.status]);
+  }, [stream]);
 
 const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
     const [error, setError] = useState<string | null>(null)
@@ -1406,7 +1421,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
        gift_id: enrichedGiftData.gift_id || '',
        gift_name: resolvedGiftName,
        sender_user_id: enrichedGiftData.sender_id || '',
-      recipient_user_id: receiverId || stream?.user_id || '',
+      recipient_user_id: receiverId || hostId || '',
       recipient_type: 'broadcaster',
        recipient_seat_index: null,
        animation_url: newGift.animation_url || null,
@@ -1425,7 +1440,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
      window.setTimeout(() => {
        setRecentGifts((prev) => prev.filter((gift) => gift.id !== giftId))
      }, giftDurationMs + 150)
-    }, [hydrateGiftForOverlay, resolveGiftAmount, resolveGiftName, streamId, enqueueGift])
+    }, [hostId, resolveGiftAmount, resolveGiftName, streamId, enqueueGift])
 
   const processGiftEventRef = useRef(processGiftEvent)
   useEffect(() => {
@@ -1705,16 +1720,6 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
        }
       }, [streamId, user?.id, mySeat, navigate])
 
-   const normalizeSeatStatus = (status?: string | null) => String(status || '').trim().toLowerCase()
-   const isSeatActiveStatus = (status?: string | null) => {
-     const normalized = normalizeSeatStatus(status)
-     return ['reserved', 'camera_starting', 'active', 'live'].includes(normalized)
-   }
-   const _isSeatOpenStatus = (status?: string | null) => {
-     const normalized = normalizeSeatStatus(status)
-     return ['empty', 'failed', 'left', 'cancelled', 'expired'].includes(normalized)
-   }
-
    const isUserOnStage = Boolean(
      mySeat &&
        isSeatActiveStatus(mySeat.status) &&
@@ -1876,37 +1881,34 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
   // Fetch stream mods for the floating overlay badges
   useEffect(() => {
     const fetchMods = async () => {
-      const targetHostId = (stream as any)?.user_id;
-      if (!targetHostId) return;
+      if (!hostId) return;
       const { data } = await supabase
         .from('stream_moderators')
         .select('user_id')
-        .eq('broadcaster_id', targetHostId);
+        .eq('broadcaster_id', hostId);
       if (data) setStreamMods(data.map((d: any) => d.user_id));
     };
-    if ((stream as any)?.user_id) fetchMods();
-  }, [(stream as any)?.user_id]);
+    if (hostId) void fetchMods();
+  }, [hostId]);
 
-const isActive = isStreamActive(stream)
-   const hostId = (stream as any)?.user_id || ''
    const hostName = getDisplayName(broadcasterProfile, 'Broadcaster')
 
    useEffect(() => {
-     if (!stream?.id || !isActive) return
+     if (!streamId || !isActive) return
 
-     const contentType = (stream as any)?.category === 'gaming' || (stream as any)?.stream_type === 'hytro'
+     const contentType = streamCategory === 'gaming' || streamType === 'hytro'
        ? 'hytrogame'
        : 'broadcast'
      const surface = contentType === 'hytrogame' ? 'hytrogames' : 'live_now'
      const metadata = {
-       category: (stream as any)?.category,
-       stream_type: (stream as any)?.stream_type,
+       category: streamCategory,
+       stream_type: streamType,
      }
 
      recordSignalEventInBackground({
        eventType: 'impression',
        contentType,
-       contentId: stream.id,
+       contentId: streamId,
        creatorId: hostId || null,
        surface,
        metadata,
@@ -1914,7 +1916,7 @@ const isActive = isStreamActive(stream)
      recordSignalEventInBackground({
        eventType: 'watch_start',
        contentType,
-       contentId: stream.id,
+       contentId: streamId,
        creatorId: hostId || null,
        surface,
        metadata,
@@ -1927,7 +1929,7 @@ const isActive = isStreamActive(stream)
          recordSignalEventInBackground({
            eventType: 'skip',
            contentType,
-           contentId: stream.id,
+           contentId: streamId,
            creatorId: hostId || null,
            surface,
            value: secondsViewed,
@@ -1935,15 +1937,13 @@ const isActive = isStreamActive(stream)
          })
        }
      }
-   }, [hostId, isActive, stream?.category, stream?.id, stream?.stream_type])
+   }, [hostId, isActive, streamCategory, streamId, streamType])
    const { subscriberUsernames } = useSubscriberUsernames(hostId)
 
-const roomId = useMemo(() => {
-      return String(getLiveKitRoomName(stream as Stream | null, streamId) || '')
-    }, [stream?.livekit_room_name, stream?.id, streamId])
+const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '')
 
     // Determine RTC provider from stream metadata
-    const rtcProvider = useMemo(() => getRTCProvider(stream), [stream?.rtc_provider])
+    const rtcProvider = getRTCProvider(stream)
 
     const stableAnonId = anonViewerId;
 
@@ -2581,7 +2581,7 @@ const roomId = useMemo(() => {
        console.error('[ViewerPage] Error opening user action:', err)
        toast.error('Failed to open user profile')
      }
-   }, [isModOrHigher])
+   }, [handleOpenUserAction, isModOrHigher])
 
    const handleArrestUserFromPopup = useCallback((_targetUserId: string, _reason: string, _severity: string, _bailAmount: number) => {
      setUserActionTarget(null)
@@ -2654,7 +2654,7 @@ const roomId = useMemo(() => {
     } catch (err) {
       console.warn('[ViewerPage] floating chat broadcast failed:', err)
     }
-  }, [streamId, hostChatDisabledByOfficer, hostChatDisableRemainingMs, userChatDisabled, chatDisabledRemainingMinutes, user, profile, navigate])
+  }, [streamId, hostChatDisabledByOfficer, hostChatDisableRemainingMs, userChatDisabled, chatDisabledRemainingMinutes, user, profile])
 
    const refreshStream = useCallback(async () => {
      if (!streamId || streamEndedRef.current) return
@@ -2681,7 +2681,7 @@ const roomId = useMemo(() => {
        navigate(`/broadcast/summary/${(data as any).id}`, { replace: true })
        return
      }
-   }, [streamId, navigate])
+   }, [leaveLiveKitRoom, streamId, navigate])
 
    const handleLeaveSeat = useCallback(async () => {
     try {
@@ -2738,7 +2738,7 @@ const roomId = useMemo(() => {
      } finally {
        flushInProgressRef.current = false;
      }
-   }, [streamId]);
+   }, [streamId, user?.id]);
 
    useEffect(() => {
      const interval = window.setInterval(() => {
@@ -2800,7 +2800,7 @@ const roomId = useMemo(() => {
     if (pendingLikesRef.current >= 25) {
       flushLikes();
     }
-  }, [streamId, user?.id, stream])
+  }, [flushLikes, streamId, user?.id])
 
   const handleNextBroadcast = useCallback(() => {
     if (!liveStreamsData || !Array.isArray(liveStreamsData)) return
@@ -2855,7 +2855,7 @@ const roomId = useMemo(() => {
     } catch (err) {
       console.warn('[ViewerPage] share failed:', err)
     }
-  }, [streamId, stream, broadcasterProfile])
+  }, [stream, broadcasterProfile])
 
   const isStreamLive = isActive
   const passiveBunnyPlaybackUrl = useMemo(() => {
@@ -2997,7 +2997,7 @@ const roomId = useMemo(() => {
         pollInterval = null
       }
     }
-  }, [streamId, navigate])
+  }, [refreshStageConfig, streamId, navigate])
 
   // Canonical gift-animation source: stream_gifts postgres_changes received
   // via useStreamRealtime. event.new.id is the stream_gifts row UUID — the
@@ -3199,7 +3199,7 @@ useStreamRealtime(
         supabase.removeChannel(kickChannel)
       }
     }
-  }, [streamId, user?.id, navigate])
+  }, [leaveLiveKitRoom, streamId, user?.id, navigate])
 
   // Pin/unpin messages (staff/broadcaster/broadofficer/admin/CEO only)
   const canPinMessages = Boolean(
@@ -3261,7 +3261,7 @@ useStreamRealtime(
         supabase.removeChannel(channel)
       }
     }
-  }, [streamId])
+  }, [blockedUsernames, streamId])
 
     useEffect(() => {
       return () => {
@@ -3542,7 +3542,7 @@ useStreamRealtime(
      }
 
     // Audience join flow moved to a focused effect below (primitive deps only)
-   }, [streamId, roomId, isActive, isUserOnStage, isPublishing, joinAsAudience, publishLocalTracks, unpublishLocalTracks, leaveLiveKitRoom, user?.id, navigate, viewerIdentity])
+   }, [streamId, roomId, isActive, isUserOnStage, isPublishing, joinAsAudience, publishLocalTracks, unpublishLocalTracks, leaveLiveKitRoom, leaveSeat, markSeatLive, mySeat?.id, mySeat?.seat_index, user?.id, navigate, viewerIdentity])
 
   // Reset audience join refs when changing streams so we can re-attempt on new stream
   useEffect(() => {
@@ -3556,8 +3556,7 @@ useStreamRealtime(
   // re-running due to object identity changes.
   useEffect(() => {
     if (!streamId) return
-    const isActiveLocal = isStreamActive(stream)
-    if (!isActiveLocal) return
+    if (!isActive) return
 
     const identityToUse = viewerIdentityRef.current || viewerIdentity
     if (!identityToUse) return
@@ -3566,14 +3565,6 @@ useStreamRealtime(
       hasJoinedAudienceRef.current = true
       joiningAudienceRef.current = false
       currentRoomKeyRef.current = null
-      return
-    }
-
-    if (!streamId) {
-      console.warn('[ViewerPage] Missing streamId from route before joinAsAudience', {
-        pathname: typeof window !== 'undefined' ? window.location.pathname : null,
-        params,
-      })
       return
     }
 
@@ -3665,7 +3656,7 @@ useStreamRealtime(
       })
 
     return () => { cancelled = true }
-  }, [streamId, stream?.id, stream?.status, stream?.is_live, roomId, user?.id, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage])
+  }, [streamId, isActive, roomId, user?.id, viewerIdentity, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage])
 
    const _stageSlots = useMemo(() => {
     const liveSeats = activeSeats.slice(0, Math.max(0, effectiveBoxCount - 1))
@@ -3746,7 +3737,7 @@ useStreamRealtime(
     if (!isStreamAdmin) return;
     logActiveChannels(`ViewerPage:mount:${streamId}`);
     return () => logActiveChannels(`ViewerPage:unmount:${streamId}`);
-  }, [streamId]);
+  }, [isStreamAdmin, streamId]);
 
   useEffect(() => {
     if (!isStreamAdmin) return;
@@ -3755,7 +3746,7 @@ useStreamRealtime(
     } else {
       logActiveChannels(`ViewerPage:no-battle:${streamId}`);
     }
-  }, [stream?.is_battle, stream?.battle_id, streamId]);
+  }, [isStreamAdmin, stream?.is_battle, stream?.battle_id, streamId]);
 
   // ── Seat Debug Overlay (dev only) ──
   const [seatDebugOpen, _setSeatDebugOpen] = useState(false)

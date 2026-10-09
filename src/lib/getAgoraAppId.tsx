@@ -8,6 +8,14 @@ import AgoraRTC, {
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+const getUserUid = (uid: string): UID => {
+  let hash = 0;
+  for (let i = 0; i < uid.length; i++) { hash = (hash << 5) - hash + uid.charCodeAt(i); hash |= 0; }
+  return Math.abs(hash) % 4294967295;
+};
+
+const getCameraUid = (uid: string): UID => getUserUid(`${uid}-camera`);
+
 /**
  * useAgoraScreenShare — Two-phase flow:
  *
@@ -96,17 +104,10 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const isMountedRef = useRef(true);
+  const stopPreviewRef = useRef<() => void>(() => {});
 
   const getAgoraAppId = () => import.meta.env.VITE_AGORA_APP_ID;
   const debug = (...args: unknown[]) => { if (import.meta.env.DEV) console.log('[AgoraScreenShare]', ...args); };
-
-  const getUserUid = (uid: string): UID => {
-    let hash = 0;
-    for (let i = 0; i < uid.length; i++) { hash = (hash << 5) - hash + uid.charCodeAt(i); hash |= 0; }
-    return Math.abs(hash) % 4294967295;
-  };
-
-  const getCameraUid = (uid: string): UID => getUserUid(`${uid}-camera`);
 
   const fetchToken = useCallback(async (channel: string, uid: UID): Promise<string> => {
     const response = await supabase.functions.invoke('agora-token', {
@@ -137,7 +138,7 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
 
       // Handle user clicking "Stop sharing" from browser UI
       const vt = displayStream.getVideoTracks()[0];
-      if (vt) { vt.onended = () => { debug('Screen share ended by browser UI'); stopPreview(); }; }
+      if (vt) { vt.onended = () => { debug('Screen share ended by browser UI'); stopPreviewRef.current(); }; }
 
       // Auto-enable mic for preview
       try {
@@ -338,6 +339,7 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
     setMicEnabled(true);
     setError(null);
   }, []);
+  stopPreviewRef.current = stopPreview;
 
   // ── Toggle mic ──
   const toggleMic = useCallback(async () => {

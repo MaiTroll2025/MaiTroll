@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -49,7 +49,7 @@ const AgencyMembersTable: React.FC<AgencyMembersTableProps> = ({
     [members],
   );
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     if (!agencyId) {
       return;
     }
@@ -74,11 +74,11 @@ const AgencyMembersTable: React.FC<AgencyMembersTableProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [agencyId]);
 
   useEffect(() => {
     void fetchMembers();
-  }, [agencyId]);
+  }, [agencyId, fetchMembers]);
 
   const manageMember = async (memberId: string, action: 'suspend' | 'remove' | 'restore') => {
     if (!currentUserId || !canManage) {

@@ -388,7 +388,7 @@ export default function DeviceManagement() {
     } catch (err: any) {
       toast.error(err?.message || 'Failed to generate pairing code')
     }
-  }, [user?.id, selectedAuctionId, fetchMobileSessions])
+  }, [user.id, mobileSessions, selectedAuctionId, fetchMobileSessions])
 
   // ── Desktop enters a code from mobile ────────────────────────────────────
 
@@ -471,7 +471,7 @@ export default function DeviceManagement() {
     } catch (err: any) {
       toast.error(err?.message || 'Failed to connect with code')
     }
-  }, [desktopCodeInput, user?.id, selectedAuctionId, fetchMobileSessions])
+  }, [desktopCodeInput, mobileSessions, fetchMobileSessions, user, selectedAuctionId])
 
   const removeMobileSession = useCallback(async (sessionId: string) => {
     try {

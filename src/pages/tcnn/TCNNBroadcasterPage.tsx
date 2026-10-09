@@ -588,6 +588,7 @@ export default function TCNNBroadcasterPage() {
   };
 
   useEffect(() => {
+    const studio = studioRef.current
     return () => {
       if (roomRef.current) {
         roomRef.current.disconnect();
@@ -597,7 +598,7 @@ export default function TCNNBroadcasterPage() {
         supabase.removeChannel(channelRef.current);
       }
 
-      studioRef.current?.stop();
+      studio?.stop();
     };
   }, []);
 

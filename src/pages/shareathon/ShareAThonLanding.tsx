@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../lib/store'
-import { ShareAThonProvider, useShareAThon } from '../../contexts/ShareAThonContext'
+import { ShareAThonProvider } from '../../contexts/ShareAThonContext'
+import { useShareAThon } from '../../hooks/useShareAThon'
 import { Share2, Radio, Trophy, Users, Zap, CheckCircle, XCircle, Info, ArrowRight, Shield, Gift, Star, TrendingUp, AlertTriangle, ExternalLink } from 'lucide-react';
 
 const PLATFORMS = [
@@ -38,7 +39,7 @@ function ShareAThonContent() {
       refreshEligibility()
       refreshSubmissions()
     }
-  }, [user, event?.status])
+  }, [user, event?.status, refreshEligibility, refreshSubmissions])
 
   const handleStartEvent = async () => {
     const confirmed = window.confirm('Start Share-A-Thon Weekend? This will activate the event and restrict new broadcasters from broadcasting.')

@@ -145,7 +145,7 @@ export default function AdminCrownRedemptions() {
     } finally {
       setActionLoading(false)
     }
-  }, [user?.id, fetchRedemptions])
+  }, [user, fetchRedemptions])
 
   const handleFulfill = useCallback(async (redemption: RedemptionRecord) => {
     setActionLoading(true)
@@ -171,7 +171,7 @@ export default function AdminCrownRedemptions() {
     } finally {
       setActionLoading(false)
     }
-  }, [user?.id, notes, giftcardCode, fetchRedemptions])
+  }, [user, notes, giftcardCode, fetchRedemptions])
 
   const handleReject = useCallback(async (redemption: RedemptionRecord) => {
     setActionLoading(true)
@@ -195,7 +195,7 @@ export default function AdminCrownRedemptions() {
     } finally {
       setActionLoading(false)
     }
-  }, [user?.id, notes, fetchRedemptions])
+  }, [user, notes, fetchRedemptions])
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 

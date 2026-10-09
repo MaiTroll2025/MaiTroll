@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
 import { Crown, Gift, Video } from 'lucide-react';
 
 interface TopBroadcaster {
@@ -19,7 +18,6 @@ interface SidebarTopBroadcastersProps {
 
 export default function SidebarTopBroadcasters({ isCollapsed }: SidebarTopBroadcastersProps) {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [broadcaster, setBroadcaster] = useState<TopBroadcaster | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,7 +76,7 @@ export default function SidebarTopBroadcasters({ isCollapsed }: SidebarTopBroadc
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, []);
 
   useEffect(() => {
     fetchTopBroadcaster();

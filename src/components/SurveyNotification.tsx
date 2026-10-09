@@ -41,6 +41,12 @@ export default function SurveyNotification({ onDismissed }: SurveyNotificationPr
     checkSurvey();
   }, [checkSurvey]);
 
+  const handleDismiss = useCallback(() => {
+    setVisible(false);
+    setDismissed(true);
+    onDismissed?.();
+  }, [onDismissed]);
+
   useEffect(() => {
     if (!visible || dismissed) return;
     if (timeLeft <= 0) {
@@ -51,13 +57,7 @@ export default function SurveyNotification({ onDismissed }: SurveyNotificationPr
       setTimeLeft((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [visible, dismissed, timeLeft]);
-
-  const handleDismiss = () => {
-    setVisible(false);
-    setDismissed(true);
-    onDismissed?.();
-  };
+  }, [visible, dismissed, timeLeft, handleDismiss]);
 
   const handleTakeSurvey = () => {
     if (survey) {

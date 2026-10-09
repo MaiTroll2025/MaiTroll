@@ -1,13 +1,7 @@
-import { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { SwipeNavigationContext } from '../hooks/useSwipeNavigation';
 
 export type SwipeDirection = 'left' | 'right' | null;
-
-interface SwipeNavigationContextValue {
-  direction: SwipeDirection;
-  setDirection: (dir: SwipeDirection) => void;
-}
-
-const SwipeNavigationContext = createContext<SwipeNavigationContextValue | null>(null);
 
 export function SwipeNavigationProvider({ children }: { children: React.ReactNode }) {
   const [direction, setDirection] = useState<SwipeDirection>(null);
@@ -24,13 +18,3 @@ export function SwipeNavigationProvider({ children }: { children: React.ReactNod
     </SwipeNavigationContext.Provider>
   );
 }
-
-export function useSwipeNavigation() {
-  const ctx = useContext(SwipeNavigationContext);
-  if (!ctx) {
-    return { direction: null as SwipeDirection, setDirection: () => {} };
-  }
-  return ctx;
-}
-
-export const useSwipeNavigationProvider = useSwipeNavigation;

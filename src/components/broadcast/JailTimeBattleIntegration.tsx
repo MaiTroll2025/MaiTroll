@@ -136,6 +136,4 @@ export function JailTimeHostTile({
 // wherever you need it.
 
 // Re-export for convenience
-export { useJailTime } from '../../hooks/useJailTime';
-export { JailTimeSounds } from '../../lib/jailTimeSounds';
 export { default as JailBarOverlay } from './JailBarOverlay';

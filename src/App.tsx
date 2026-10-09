@@ -90,6 +90,7 @@ import { hasPhoneNativeRoute } from "./phone/phoneRoutePatterns";
 
 // Animation components
 import { AnimationsContainer } from "./components/animations";
+import HytroSpotComingSoonModal from "./components/HytroSpotComingSoonModal"
 
 // Layout
 import OfficerAlertBanner from "./components/OfficerAlertBanner";
@@ -509,7 +510,7 @@ const isPublicRoute = (pathname: string) => {
         console.warn(`[Route Guard] Blocked direct access to ${location.pathname}`)
         navigate('/', { replace: true })
       }
-    }, [location.pathname, navigate])
+    }, [location.pathname, location.state, navigate])
 
     return <>{children}</>
   }
@@ -716,6 +717,7 @@ function AppContent() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileModalLoading] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [hytroSpotModalOpen, setHytroSpotModalOpen] = useState(false);
   const { isMobile: _isMobile, isMobileWidth } = useIsMobile();
   const isMobileUI = isMobileWidth || isStandalone;
   const [initialProfileLoaded, setInitialProfileLoaded] = useState(false);
@@ -789,6 +791,15 @@ function AppContent() {
     navigator.serviceWorker.addEventListener('message', handleMessage);
     return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
   }, [navigate]);
+
+  // HytroSpot Coming Soon Modal event listener
+  useEffect(() => {
+    const handleOpenHytroSpot = () => {
+      setHytroSpotModalOpen(true);
+    };
+    window.addEventListener('open-hytrospot-modal', handleOpenHytroSpot);
+    return () => window.removeEventListener('open-hytrospot-modal', handleOpenHytroSpot);
+  }, []);
 
   // Global unhandled rejection handler for AuthApiError
   useEffect(() => {
@@ -1206,7 +1217,7 @@ function AppContent() {
         supabase.removeChannel(channel);
       }
     };
-  }, [user?.id, profile, navigate]);
+  }, [user?.id, profile, location.pathname, navigate]);
 
   // 🔹 Track user IP address and check for IP bans / anonymous arrests
   useEffect(() => {
@@ -1591,7 +1602,7 @@ const handleVisibilityChange = async () => {
     })
   }, [location.pathname])
 
-  const appShell = (
+const appShell = (
     <>
       {/* Global Error Banner */}
       <GlobalErrorBanner />
@@ -1641,7 +1652,10 @@ const handleVisibilityChange = async () => {
        {/* Idle Session Prompt */}
        <IdleSessionPrompt />
 
-       <SwipeNavigationProvider>
+       {/* HytroSpot Coming Soon Modal */}
+       <HytroSpotComingSoonModal isOpen={hytroSpotModalOpen} onClose={() => setHytroSpotModalOpen(false)} />
+
+      <SwipeNavigationProvider>
       <LiveContentProvider>
             <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true} isJailed={isJailed}>
              <PetFloatingButton />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
@@ -18,11 +18,7 @@ export default function AgenciesPage() {
   const [limit] = useState(12);
   const [total, setTotal] = useState(0);
 
-  useEffect(() => {
-    fetchAgencies();
-  }, [page]);
-
-  const fetchAgencies = async () => {
+  const fetchAgencies = useCallback(async () => {
     try {
       setLoading(true);
       const { data, count, error } = await supabase
@@ -42,7 +38,11 @@ export default function AgenciesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit, page]);
+
+  useEffect(() => {
+    void fetchAgencies();
+  }, [fetchAgencies]);
 
   if (loading) return <Loader />;
   if (error) return <div className="text-red-400 p-4">{error}</div>;

@@ -139,7 +139,7 @@ export default function UtromailPage() {
 
   const [showCompose, setShowCompose] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, setRefreshKey] = useState(0);
   const [userMailAddress, setUserMailAddress] = useState("");
 
   const [contextMenu, setContextMenu] = useState<{
@@ -213,7 +213,7 @@ export default function UtromailPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, refreshKey]);
+  }, [user.id]);
 
   fetchThreadsRef.current = fetchThreads;
 
@@ -651,7 +651,7 @@ export default function UtromailPage() {
     return () => {
       supabase.removeChannel(msgChannel);
     };
-  }, [activeConversationId, user?.id]);
+  }, [activeConversationId, profile?.avatar_url, profile?.display_name, profile?.username, user.id]);
 
   // ============================================================
   // TYPING
@@ -821,11 +821,7 @@ export default function UtromailPage() {
     };
 
     markRead();
-  }, [
-    activeConversationId,
-    user?.id,
-    messages.length,
-  ]);
+  }, [activeConversationId, user.id, messages.length, messages]);
 
   // ============================================================
   // DELETE

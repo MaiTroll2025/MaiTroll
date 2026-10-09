@@ -162,7 +162,7 @@ export default function SessionMonitor() {
         supabase.removeChannel(channel)
       }
     }
-  }, [user, logout])
+  }, [checkSession, user, logout])
 
   return null
 }

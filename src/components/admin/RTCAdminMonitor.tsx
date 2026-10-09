@@ -5,7 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { usePresenceStore } from '@/lib/presenceStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useStaffWalkieTalkieContext } from '../StaffWalkieTalkieProvider';
+import { useStaffWalkieTalkieContext } from '@/hooks/useStaffWalkieTalkieContext';
 import { toast } from 'sonner';
 import {
   Activity, BarChart3, Bug, Clock, Coins, Mail, Monitor, MoreVertical,
@@ -194,9 +194,9 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
     || [profile?.role, profile?.troll_role].some((role) => String(role || '').toLowerCase() === 'lead_troll_officer');
   const canUseWalkieTalkie = contextCanAccessWalkieTalkie;
 
-  const isTargetAdmin = (target: UserListItem | StreamViewer | any): boolean => {
+  const isTargetAdmin = useCallback((target: UserListItem | StreamViewer | any): boolean => {
     return target.role === 'admin' || target.role === 'superadmin' || target.role === 'ceo' || target.is_admin === true;
-  };
+  }, []);
 
   const [isOpen, setIsOpen] = useState(fullPage);
   const [activeMainTab, setActiveMainTab] = useState<MainTab>('rtc');
@@ -302,7 +302,6 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   // Arrest-specific state
   const [arrestReason, setArrestReason] = useState('');
   const [arrestSeverity, setArrestSeverity] = useState('moderate');
-  const [arrestBailAmount, setArrestBailAmount] = useState(100);
 
   // Arrest tab state
   const [arrestSearchUsername, setArrestSearchUsername] = useState('');
@@ -528,7 +527,7 @@ return {
      } finally {
        setIsLoading(false);
      }
-    }, [isStaff, rtcMinutesResetAt]);
+    }, [isStaff]);
 
   const handleSaveTotalMinutes = useCallback(async () => {
     const parsed = parseInt(editedTotalMinutes, 10);
@@ -753,7 +752,6 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     if (action === 'arrest') {
         setArrestReason('');
         setArrestSeverity('moderate');
-        setArrestBailAmount(100);
     }
 }, []);
 
@@ -1027,7 +1025,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
      } finally {
          setActionLoading(false);
      }
-  }, [actionAmount, actionDuration, actionReason, actionTarget, activeAction, arrestReason, arrestSeverity, arrestBailAmount, closeAction, fetchModActionLogs, isFullAdmin, profile?.id, isTargetAdmin, selectedStream]);
+  }, [actionAmount, actionDuration, actionReason, actionTarget, activeAction, arrestReason, arrestSeverity, closeAction, fetchModActionLogs, isFullAdmin, profile?.id, profile?.username, isTargetAdmin, selectedStream]);
 
   const openStreamModal = useCallback(async (stream: StreamDetail) => {
     setSelectedStream(stream);
@@ -1232,7 +1230,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
         supabase.removeChannel(channel)
       }
     }
-  }, [isStaff, profile?.id])
+  }, [isStaff, profile?.id, navigate])
 
   const handleTromailMessageClick = (messageId: string) => {
     navigate(`/tromail?messageId=${messageId}`)

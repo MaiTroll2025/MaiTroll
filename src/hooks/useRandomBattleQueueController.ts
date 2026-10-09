@@ -59,6 +59,7 @@ export function useRandomBattleQueueController({
 
   const realtimeChannelRef =
     useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const triggerActivationRef = useRef<(battleId: string, startTime: string) => Promise<void>>(async () => {});
 
   const lastMatchErrorToastRef = useRef<number>(0);
   const shouldAutoQueueRef = useRef(false);
@@ -292,7 +293,7 @@ export function useRandomBattleQueueController({
             setBattleStartsAt(startMs);
 
             if (startMs <= Date.now()) {
-              void triggerActivationIfDue(
+              void triggerActivationRef.current(
                 next.battle_id,
                 next.battle_start_time
               );
@@ -321,13 +322,7 @@ export function useRandomBattleQueueController({
 
       void supabase.removeChannel(channel);
     };
-  }, [
-    canUseRandomBattles,
-    clearActivationTimer,
-    clearTimers,
-    onStreamUpdate,
-    stream?.id,
-  ]);
+  }, [canUseRandomBattles, clearActivationTimer, clearTimers, onStreamUpdate, stream.id]);
 
   /*
    * -------------------------------------------------------------
@@ -500,6 +495,7 @@ export function useRandomBattleQueueController({
     },
     [callActivationRpc]
   );
+  triggerActivationRef.current = triggerActivationIfDue;
 
   /*
    * -------------------------------------------------------------

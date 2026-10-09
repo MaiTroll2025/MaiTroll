@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
@@ -46,13 +46,7 @@ export default function SubAnalytics() {
 
   const isAdmin = profile?.role === 'admin' || profile?.is_admin;
 
-  useEffect(() => {
-    if (isAdmin) {
-      fetchAllData();
-    }
-  }, [isAdmin, dateRange]);
-
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
       const now = new Date();
@@ -147,7 +141,13 @@ export default function SubAnalytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      void fetchAllData();
+    }
+  }, [isAdmin, fetchAllData]);
 
   const saveMaiPiksDiscount = async (tier: DiscountTier) => {
     const value = Number(discountInputs[tier.id]);

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { usePageVisibilityContext, useVisibilityAware } from '../contexts/PageVisibilityContext';
+import { usePageVisibilityContext, useVisibilityAware } from '../hooks/usePageVisibilityContext';
 import { toast } from 'sonner';
 import { usePreventTabRefresh, useScrollPersistence } from '../lib/hooks/usePreventRefresh';
 
@@ -70,26 +70,6 @@ export function TabSwitchHandler({
   }, [isVisible]);
 
   return <>{children}</>;
-}
-
-// Hook for components that need to conditionally render or behave differently based on visibility
-export function useTabVisibility() {
-  const { isVisible, wasHidden, timeSinceLastVisible, visibilitySupported } = usePageVisibilityContext();
-
-  return {
-    isVisible,
-    wasHidden,
-    timeSinceLastVisible,
-    visibilitySupported,
-    // Helper to only run expensive operations when visible
-    whenVisible: <T,>(operation: () => T, fallback?: T): T | undefined => {
-      return isVisible ? operation() : fallback;
-    },
-    // Helper to skip operations when hidden
-    skipWhenHidden: <T,>(operation: () => T): T | undefined => {
-      return isVisible ? operation() : undefined;
-    }
-  };
 }
 
 export default TabSwitchHandler;

@@ -11,27 +11,7 @@ import { motion } from 'framer-motion';
 import { useJailTime } from '../../hooks/useJailTime';
 import JailBarOverlay from './JailBarOverlay';
 import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation';
-
-// --- Safe Helper Functions ---
-export function safeValues<T>(mapLike: Map<any, T> | undefined | null): T[] {
-  if (!mapLike || typeof mapLike.values !== 'function') return [];
-  try {
-    return Array.from(mapLike.values());
-  } catch (e) {
-    console.warn('[BattleView] safeValues failed:', e);
-    return [];
-  }
-}
-
-export function safeObjectValues<T>(obj: Record<string, T> | undefined | null): T[] {
-  if (!obj || typeof obj !== 'object') return [];
-  try {
-    return Object.values(obj);
-  } catch (e) {
-    console.warn('[BattleView] safeObjectValues failed:', e);
-    return [];
-  }
-}
+import { getTrackPublications, safeParseMetadata } from './battleArenaUtils';
 
 // --- Logging Helpers ---
 const _logBroadcastLifecycle = (message: string, data?: any) => {
@@ -226,69 +206,6 @@ export interface CrownInfo {
   hasStreak: boolean;
 }
 
-export const safeParseMetadata = (raw: unknown, context: string): Record<string, any> => {
-  if (!raw) return {};
-  if (typeof raw === 'object') return raw as Record<string, any>;
-  if (typeof raw === 'string') {
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      console.warn(`[BattleView] Failed to parse metadata for ${context}:`, raw, e);
-      return {};
-    }
-  }
-  return {};
-};
-
-export const getTrackPublications = (
-  participant: RemoteParticipant,
-  kind: 'video' | 'audio'
-): RemoteTrackPublication[] => {
-  const sourceMaps = kind === 'video'
-    ? [
-        (participant as any).videoTrackPublications,
-        (participant as any).videoTracks,
-      ]
-    : [
-        (participant as any).audioTrackPublications,
-        (participant as any).audioTracks,
-      ];
-
-  for (const mapLike of sourceMaps) {
-    if (!mapLike?.values) continue;
-
-    const entries = safeValues(mapLike) as any[];
-    if (entries.length === 0) continue;
-
-    const normalized = entries.map((entry) => {
-      if (entry && typeof entry.track === 'undefined' && typeof entry.attach === 'function') {
-        return {
-          track: entry,
-          isSubscribed: (entry as any).isSubscribed ?? true,
-          kind: (entry as any).kind,
-          source: (entry as any).source,
-          // FIX 4: Support both sid and trackSid to handle undefined sid cases
-          sid: (entry as any).sid ?? (entry as any).trackSid ?? '',
-          trackSid: (entry as any).sid ?? (entry as any).trackSid ?? '',
-        };
-      }
-      return entry;
-    }) as RemoteTrackPublication[];
-
-    return normalized.filter((p) => (kind === 'video' ? p.kind === Track.Kind.Video : p.kind === Track.Kind.Audio));
-  }
-
-  const all = safeValues((participant as any).trackPublications) as RemoteTrackPublication[];
-
-  // FIX 4: More robust filtering that handles both kind and track.kind
-  return all.filter((p) => {
-    if (kind === 'video') {
-      return p.kind === Track.Kind.Video || p.track?.kind === Track.Kind.Video;
-    }
-    return p.kind === Track.Kind.Audio || p.track?.kind === Track.Kind.Audio;
-  });
-};
-
 // Extended props for BattleParticipantTile.
 // Battle rule:
 // - publishers (host/stage) render LiveKit tracks
@@ -373,7 +290,7 @@ export const BattleVideoRenderer = ({
     } catch (err) {
       console.error('[BattleVideoRenderer] attach() threw error:', err);
     }
-  }, [videoTrack]);
+  }, [videoTrack, isLocal]);
 
   if (!videoTrack) {
     if (isHost) {
@@ -456,7 +373,7 @@ const BattleParticipantTile = ({
       isLocal,
       videoTrackSid: videoTrack?.sid,
     });
-  }, [identity, isSingleHost, isHost, name, side, videoTrack]);
+  }, [identity, isSingleHost, isHost, name, side, videoTrack, isLocal]);
 
   const containerClass = isSingleHost
     ? `relative w-full aspect-video md:h-full min-h-0 rounded-2xl overflow-hidden bg-black transition-all duration-300`
@@ -934,7 +851,7 @@ const BattleArena = ({
   const _lastParticipantSignatureRef = useRef<string>('');
   const _participantFetchIdRef = useRef(0);
 
-  const getSupabaseParticipant = async (userId: string, _signal?: AbortSignal) => {
+  const getSupabaseParticipant = useCallback(async (userId: string, _signal?: AbortSignal) => {
     const { data, error } = await supabase
       .from('battle_participants')
       .select('*, profile:user_profiles(id, username, avatar_url, troll_coins, trollmonds)')
@@ -946,9 +863,9 @@ const BattleArena = ({
       console.log('[BattleArena] getSupabaseParticipant for', userId, ':', data);
     }
     return data;
-  };
+  }, [battleId]);
 
-  const getSupabaseParticipantsBatched = async (userIds: string[], _signal?: AbortSignal) => {
+  const getSupabaseParticipantsBatched = useCallback(async (userIds: string[], _signal?: AbortSignal) => {
     if (userIds.length === 0) return {} as Record<string, any>;
     const { data, error } = await supabase
       .from('battle_participants')
@@ -961,7 +878,7 @@ const BattleArena = ({
       if (row?.user_id) map[row.user_id] = row;
     }
     return map;
-  };
+  }, [battleId]);
 
   useEffect(() => {
     const fetchParticipantData = async (signal?: AbortSignal) => {
@@ -1576,7 +1493,22 @@ const BattleArena = ({
         participantAbortControllerRef.current = null;
       }
     };
-  }, [participantIdentitySignature, battleId, challengerHostId, opponentHostId]);
+  }, [
+    participantIdentitySignature,
+    battleId,
+    challengerHostId,
+    opponentHostId,
+    getSupabaseParticipant,
+    getSupabaseParticipantsBatched,
+    isBroadcaster,
+    localAudioTrack,
+    localIsCameraEnabled,
+    localIsMicEnabled,
+    localVideoTrack,
+    remoteUsers,
+    user,
+    userIdToLiveKitIdentity,
+  ]);
 
   const categorized = useMemo(() => {
     const teams = {
@@ -1792,7 +1724,7 @@ const BattleArena = ({
   // box (host) shows until seats are explicitly added by a broadcaster
   // (box_count beyond the number of occupied guests) or occupied by a guest.
   type SlotDef = { type: 'host' | 'guest'; participant?: BattleParticipant | null; index?: number; added?: boolean };
-  const buildSlots = (
+  const buildSlots = useCallback((
     teamData: { host: BattleParticipant | null; guests: BattleParticipant[]; boxCount: number },
     boxCountProp: number
   ): SlotDef[] => {
@@ -1810,16 +1742,16 @@ const BattleArena = ({
       slots.push({ type: 'guest', participant: null, index: guests.length + j + 1, added: true });
     }
     return slots;
-  };
+  }, []);
 
   const challengerSlots = useMemo(
     () => buildSlots(categorized.challenger, challengerBoxCount),
-    [categorized.challenger.host, categorized.challenger.guests, challengerBoxCount]
+    [categorized.challenger, challengerBoxCount, buildSlots]
   );
 
   const opponentSlots = useMemo(
     () => buildSlots(categorized.opponent, opponentBoxCount),
-    [categorized.opponent.host, categorized.opponent.guests, opponentBoxCount]
+    [categorized.opponent, opponentBoxCount, buildSlots]
   );
 
   const remoteAudioEntries = useMemo(() => {
@@ -1866,7 +1798,7 @@ const BattleArena = ({
       challengeHostTrack: !!battleParticipants.find(p => p.team === 'challenger' && p.role === 'host')?.videoTrack,
       opponentHostTrack: !!battleParticipants.find(p => p.team === 'opponent' && p.role === 'host')?.videoTrack,
     });
-  }, [remoteUsers.length, challengerHostId, opponentHostId, challengerSlots.length, opponentSlots.length, categorized.challenger.guests.length, categorized.opponent.guests.length, battleParticipants.length]);
+  }, [remoteUsers, challengerHostId, opponentHostId, userIdToLiveKitIdentity, challengerSlots.length, opponentSlots.length, categorized.challenger.guests.length, categorized.opponent.guests.length, battleParticipants]);
 
   // Determine if a side has only the host (no guests) - for single-host styling
   const challengerIsSingleHost = challengerSlots.length === 1 && challengerSlots[0]?.type === 'host';

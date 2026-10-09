@@ -510,6 +510,10 @@ export const TeamMeetingRoom: React.FC = () => {
       toast.error('Video connection error: ' + error);
     }
   });
+  const joinChannelRef = useRef(joinChannel);
+  const leaveChannelRef = useRef(leaveChannel);
+  joinChannelRef.current = joinChannel;
+  leaveChannelRef.current = leaveChannel;
 
   // Auto-join when meeting is ready - ONLY ONCE
   useEffect(() => {
@@ -524,13 +528,13 @@ export const TeamMeetingRoom: React.FC = () => {
 
     hasJoinedRef.current = true;
     console.log('🚀 Auto-joining Agora channel:', meeting.room_name);
-    joinChannel();
+    joinChannelRef.current();
   }, [meeting?.room_name, loadError]); // ONLY depends on meeting data, not joinChannel
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      leaveChannel();
+      leaveChannelRef.current();
     };
   }, []);
 
@@ -558,7 +562,7 @@ export const TeamMeetingRoom: React.FC = () => {
      }
    }, [leaveChannel, user, meetingId, navigate]);
 
-    const handleStartMeeting = useCallback(async () => {
+    const handleStartMeeting = async () => {
       try {
         if (!meetingId) return;
 
@@ -580,7 +584,7 @@ export const TeamMeetingRoom: React.FC = () => {
         console.error('Error starting meeting:', error);
         toast.error('Failed to start meeting');
       }
-    }, [meetingId]);
+    };
 
   // Get mic and camera state from track properties
   const _isMicMuted = !isPublishing || (localAudioTrack && !('enabled' in localAudioTrack ? localAudioTrack.enabled : true));

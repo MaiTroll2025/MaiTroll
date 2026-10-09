@@ -366,7 +366,7 @@ const [showPassword, setShowPassword] = useState(false)
 
       fetchProfile()
     }
-  }, [user])
+  }, [profile, setProfile, user])
 
   // Get referral code from URL
   const referralCode = searchParams.get('ref') || ''

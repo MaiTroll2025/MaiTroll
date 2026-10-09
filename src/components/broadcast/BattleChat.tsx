@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { isStaffProfile } from '../../lib/staff';
@@ -68,7 +68,7 @@ export default function BattleChat({
      return 'viewer';
    };
 
-   const normalizeMessage = (raw: any, profiles: Record<string, any>): ChatMessage => {
+   const normalizeMessage = useCallback((raw: any, profiles: Record<string, any>): ChatMessage => {
     const profile = profiles[raw.user_id];
     const rawUsername = raw.username || profile?.username || '';
     const isPlaceholder = rawUsername === 'You' || rawUsername === 'Unknown';
@@ -88,7 +88,7 @@ export default function BattleChat({
       created_at: raw.created_at,
       avatar_url: raw.avatar_url || profile?.avatar_url || undefined,
     };
-  };
+  }, [currentUserId, profileUsername]);
 
   const openUserActions = async (targetUserId: string, targetUsername: string) => {
     if (!isOfficer || !targetUserId) return;
@@ -164,7 +164,7 @@ export default function BattleChat({
     };
 
     fetchMessages();
-  }, [challengerStream.id, currentUserId, profileUsername]);
+  }, [challengerStream.id, normalizeMessage]);
 
 // Subscribe to real-time chat messages from both streams
   useEffect(() => {
@@ -274,7 +274,7 @@ export default function BattleChat({
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [battleId, challengerStream.id]); // Only depend on challenger stream
+  }, [battleId, challengerStream.id, normalizeMessage]);
 
   // Auto-scroll to bottom
   useEffect(() => {

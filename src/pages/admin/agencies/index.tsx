@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader } from '@/components/ui/loader';
@@ -15,14 +15,6 @@ export default function AdminAgenciesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('created_at_desc');
-
-  useEffect(() => {
-    if (!user || !isAdminOrStaff(user)) {
-      // Redirect or show error if not admin
-      return;
-    }
-    fetchAgencies();
-  }, [user, searchTerm, statusFilter, sortBy]);
 
   const isAdminOrStaff = (user) => {
     return user.is_admin || 
@@ -41,7 +33,7 @@ export default function AdminAgenciesPage() {
            user.role === 'temp_admin';
   };
 
-  const fetchAgencies = async () => {
+  const fetchAgencies = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -105,7 +97,12 @@ export default function AdminAgenciesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, sortBy, statusFilter]);
+
+  useEffect(() => {
+    if (!user || !isAdminOrStaff(user)) return;
+    void fetchAgencies();
+  }, [user, searchTerm, statusFilter, sortBy, fetchAgencies]);
 
   const handleStatusChange = async (agencyId, newStatus) => {
     try {

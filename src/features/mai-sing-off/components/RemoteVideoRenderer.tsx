@@ -11,16 +11,17 @@ export function RemoteVideoRenderer({ track, poster, className, muted = false }:
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
-    if (!track || !videoRef.current) return
+    const videoElement = videoRef.current
+    if (!track || !videoElement) return
     try {
-      track.attach(videoRef.current)
+      track.attach(videoElement)
       track.setMuted(muted)
     } catch (e) {
       console.warn('[singoff] track attach failed', e)
     }
     return () => {
       try {
-        track.detach(videoRef.current as HTMLVideoElement)
+        track.detach(videoElement)
       } catch {}
     }
   }, [track, muted])

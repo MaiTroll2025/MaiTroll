@@ -476,7 +476,6 @@ function TrollUps({ onActivate, active }: any) {
 
 export default function UniverseArenaDevPreview() {
   const navigate = useNavigate();
-  const [now, setNow] = useState(Date.now());
   const [teams, setTeams] = useState(fakeTeams);
   const [nextTurn, setNextTurn] = useState(42);
   const [abilities, setAbilities] = useState<string[]>([]);
@@ -492,7 +491,6 @@ export default function UniverseArenaDevPreview() {
 
   useEffect(() => {
     const id = setInterval(() => {
-      setNow(Date.now());
       setNextTurn((t) => (t > 0 ? t - 1 : 42));
       setTeams((prev) => ({
         ...prev,
@@ -507,7 +505,7 @@ export default function UniverseArenaDevPreview() {
   const baseTimer = 4 * 60 + 58 - (Math.floor(mountedAt / 1000) % 300);
   const timerLeft = Math.max(0, baseTimer + timerOffset);
   const roundNo = 1;
-  const spectators = useMemo(() => 1240 + Math.floor((Date.now() / 2500) % 90), [now]);
+  const spectators = useMemo(() => 1240 + Math.floor((Date.now() / 2500) % 90), []);
   const lead = teams.blue.host.score - teams.red.host.score;
   const winner = lead >= 0 ? "blue" : "red";
 

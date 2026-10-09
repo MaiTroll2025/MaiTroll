@@ -55,7 +55,7 @@ import CollaborationRequestNotification from '../../components/collaboration/Col
 import { useStreamCollaboration } from '../../hooks/useStreamCollaboration'
 import MaiBag from '../../components/mai-bag/MaiBag'
 import { useFeaturedLive } from '../../hooks/useFeaturedLive'
-import { useResolvedStream, useResolvedStreamId } from '../../contexts/StreamRouteContext'
+import { useResolvedStream, useResolvedStreamId } from '../../hooks/useStreamRoute'
 import { useBroadcastLifecycle, formatCountdown } from '../../hooks/useBroadcastLifecycle'
 import { FeaturedBanner } from '../../components/featured/FeaturedBanner'
 import { FeaturedLeaderboard } from '../../components/featured/FeaturedLeaderboard'
@@ -1071,11 +1071,7 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
         getCameraFacingMode(activeCameraTrack, cameraFacingMode),
       )
     }
-  }, [
-    stream?.rtc_provider,
-    getStreamRoom.localVideoTrack,
-    localTracks?.[1],
-  ])
+  }, [stream?.rtc_provider, getStreamRoom.localVideoTrack, localTracks, cameraFacingMode])
 
   const trackedTimeout = (fn: () => void, ms: number) => {
     const id = window.setTimeout(() => {
@@ -4866,7 +4862,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     return () => {
       clearInterval(checkInterval)
     }
-  }, [isHost, streamId, user?.id, stream?.status, cameraEnabled])
+  }, [isHost, streamId, user?.id, stream.status, cameraEnabled, stream])
 
 const toggleMicrophone = useCallback(async () => {
     const participant = roomRef.current?.localParticipant

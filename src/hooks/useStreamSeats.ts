@@ -543,9 +543,15 @@ export function useStreamSeats(
       streamId,
       _streamData,
       _broadcasterProfile,
-      fetchSeats,
+      isAdmin,
+      user?.user_metadata?.display_name,
+      user?.user_metadata?.username,
       sendSeatEvent,
       scheduleRefresh,
+      safeSetJoiningSeatId,
+      safeSetMySeat,
+      safeSetSeatVersion,
+      safeSetSeats,
     ],
   )
 
@@ -624,7 +630,15 @@ export function useStreamSeats(
     } finally {
       safeSetLeavingSeatId(null)
     }
-  }, [streamId, effectiveUserId, fetchSeats, sendSeatEvent, scheduleRefresh])
+  }, [
+    streamId,
+    effectiveUserId,
+    sendSeatEvent,
+    safeSetLeavingSeatId,
+    safeSetMySeat,
+    safeSetSeatVersion,
+    safeSetSeats,
+  ])
 
   const markSeatLive = useCallback(
     async (seatIndex: number, livekitParticipantIdentity?: string | null) => {
@@ -852,7 +866,7 @@ export function useStreamSeats(
     }
 
     void fetchSeats('mount')
-  }, [streamId])
+  }, [streamId, fetchSeats])
 
   const handleSeatSession = useCallback((event: any) => {
     if (event.eventType === 'DELETE') {
@@ -924,7 +938,7 @@ export function useStreamSeats(
         }
       }
     }
-  }, [effectiveUserId])
+  }, [effectiveUserId, scheduleRefresh])
 
   const handleSeatEvent = useCallback(() => {
     scheduleRefresh('broadcast-seat-event')
@@ -989,7 +1003,7 @@ export function useStreamSeats(
     return () => {
       if (channel) supabase.removeChannel(channel)
     }
-  }, [streamId, scheduleRefresh])
+  }, [streamId, scheduleRefresh, _refreshStageConfig])
 
   useEffect(() => {
     if (!streamId) return
@@ -1033,7 +1047,7 @@ export function useStreamSeats(
     }
 
     void fetchSeats('mount')
-  }, [streamId])
+  }, [streamId, fetchSeats])
 
   const pendingSeatRequests: any[] = []
   const loadingSeatRequests = false

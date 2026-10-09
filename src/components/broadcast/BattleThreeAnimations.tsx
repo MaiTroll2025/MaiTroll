@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import { usePageVisibilityContext } from '../../contexts/PageVisibilityContext';
+import { usePageVisibilityContext } from '../../hooks/usePageVisibilityContext';
 
 interface BattleThreeAnimationsProps {
   containerRef: React.RefObject<HTMLDivElement>;

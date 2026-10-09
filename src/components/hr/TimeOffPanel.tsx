@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { CalendarOff, Plus, CheckCircle2, XCircle, Clock3, RefreshCw } from 'lucide-react'
@@ -45,7 +45,7 @@ export default function TimeOffPanel({ isHRAdmin, currentUserId, hasApprovedRole
   const [formData, setFormData] = useState({ date: '', end_date: '', reason: '' })
   const [actingId, setActingId] = useState<string | null>(null)
 
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     setLoading(true)
     try {
       let query = supabase
@@ -70,11 +70,11 @@ export default function TimeOffPanel({ isHRAdmin, currentUserId, hasApprovedRole
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentUserId, isHRAdmin])
 
   useEffect(() => {
     loadRequests()
-  }, [isHRAdmin, currentUserId])
+  }, [loadRequests])
 
   const handleSubmitRequest = async () => {
     if (!currentUserId || !formData.date) {

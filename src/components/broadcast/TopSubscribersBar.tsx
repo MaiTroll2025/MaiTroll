@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { Crown } from 'lucide-react'
@@ -27,13 +27,7 @@ export const TopSubscribersBar: React.FC<TopSubscribersBarProps> = ({
   const [subscribers, setSubscribers] = useState<TopSubscriber[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (!broadcasterId) return
-
-    fetchTopSubscribers()
-  }, [broadcasterId])
-
-  const fetchTopSubscribers = async () => {
+  const fetchTopSubscribers = useCallback(async () => {
     setLoading(true)
     try {
       const { data, error } = await supabase
@@ -82,7 +76,13 @@ export const TopSubscribersBar: React.FC<TopSubscribersBarProps> = ({
     } finally {
       setLoading(false)
     }
-  }
+  }, [broadcasterId, maxSubscribers])
+
+  useEffect(() => {
+    if (!broadcasterId) return
+
+    fetchTopSubscribers()
+  }, [broadcasterId, fetchTopSubscribers])
 
   if (loading || subscribers.length === 0) return null
 

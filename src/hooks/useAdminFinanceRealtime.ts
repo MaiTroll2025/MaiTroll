@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { reportSupabaseError } from '../lib/bugReporter'
-import { usePageVisibilityContext } from '../contexts/PageVisibilityContext'
+import { usePageVisibilityContext } from './usePageVisibilityContext'
 
 // Types for finance data
 export interface FinanceSummary {

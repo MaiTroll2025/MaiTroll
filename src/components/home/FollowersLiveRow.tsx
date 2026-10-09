@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Users, Play, UserPlus, Heart } from 'lucide-react';
 import HorizontalScrollRow from './HorizontalScrollRow'
 import { supabase } from '@/lib/supabase'
@@ -21,11 +21,13 @@ export default function FollowersLiveRow({ onCountChange }: { onCountChange?: (c
   const [loading, setLoading] = useState(true)
   const { profile } = useAuthStore()
   const navigate = useNavigate()
+  const onCountChangeRef = useRef(onCountChange)
+  onCountChangeRef.current = onCountChange
 
   const fetchFollowersLive = useCallback(async () => {
     if (!profile?.id) {
       setLoading(false)
-      onCountChange?.(0)
+      onCountChangeRef.current?.(0)
       return
     }
 
@@ -40,7 +42,7 @@ export default function FollowersLiveRow({ onCountChange }: { onCountChange?: (c
       const followingIds = (follows || []).map((f: any) => f.following_id)
       if (followingIds.length === 0) {
         setStreams([])
-        onCountChange?.(0)
+        onCountChangeRef.current?.(0)
         setLoading(false)
         return
       }
@@ -77,7 +79,7 @@ export default function FollowersLiveRow({ onCountChange }: { onCountChange?: (c
       }))
 
       setStreams(mapped)
-      onCountChange?.(mapped.length)
+      onCountChangeRef.current?.(mapped.length)
     } catch (err) {
       console.error('Error fetching followers live streams:', err)
     } finally {

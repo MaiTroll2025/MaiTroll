@@ -488,7 +488,7 @@ if (typeof window !== 'undefined') {
 
 createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter>
       
       <HelmetProvider>
         <AuthProvider>

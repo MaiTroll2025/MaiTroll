@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
+import { GhostDropInContext } from '../hooks/useGhostDropIn';
 
 interface GhostDropInState {
   isGhost: boolean;
@@ -14,7 +15,7 @@ interface GhostDropInState {
   loadingMessage: string;
 }
 
-interface GhostDropInContextType {
+export interface GhostDropInContextType {
   state: GhostDropInState;
   startGhostDropIn: (streamId: string) => void;
   showPrompt: () => void;
@@ -22,8 +23,6 @@ interface GhostDropInContextType {
   signUpFromGhost: () => void;
   clearGhost: () => void;
 }
-
-const GhostDropInContext = createContext<GhostDropInContextType | null>(null);
 
 const STORAGE_KEY = 'MaiTroll_ghost_last_seen';
 
@@ -263,10 +262,4 @@ export function GhostDropInProvider({ children }: { children: React.ReactNode })
       {children}
     </GhostDropInContext.Provider>
   );
-}
-
-export function useGhostDropIn() {
-  const ctx = useContext(GhostDropInContext);
-  if (!ctx) throw new Error('useGhostDropIn must be used within GhostDropInProvider');
-  return ctx;
 }

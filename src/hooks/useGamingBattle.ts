@@ -174,10 +174,11 @@ export function useGamingBattle({ streamId, userId }: UseGamingBattleOptions) {
   }, [state.phase, state.timeRemaining, endBattle])
 
   useEffect(() => {
+    const channel = channelRef.current
     return () => {
       stopTimer()
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
+      if (channel) {
+        void supabase.removeChannel(channel)
       }
     }
   }, [stopTimer])

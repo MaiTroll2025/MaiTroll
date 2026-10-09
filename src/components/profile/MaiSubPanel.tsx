@@ -43,7 +43,7 @@ export default function MaiSubPanel() {
       .catch(() => undefined)
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [])
+  }, [products])
 
   const update = (type: AccessType, patch: Partial<AccessProduct>) => {
     setProducts((current) => ({ ...current, [type]: { ...current[type], ...patch } }))

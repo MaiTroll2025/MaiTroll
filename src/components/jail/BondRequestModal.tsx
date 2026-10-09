@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
@@ -34,14 +34,7 @@ export default function BondRequestModal({ inmateId, onClose }: Props) {
   const [sending, setSending] = useState(false);
   const [existingRequests, setExistingRequests] = useState<BondRequest[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      fetchFollowers();
-      fetchExistingRequests();
-    }
-  }, [user, inmateId]);
-
-  const fetchFollowers = async () => {
+  const fetchFollowers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('user_followers')
@@ -61,9 +54,9 @@ export default function BondRequestModal({ inmateId, onClose }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [inmateId]);
 
-  const fetchExistingRequests = async () => {
+  const fetchExistingRequests = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('bond_requests')
@@ -77,7 +70,14 @@ export default function BondRequestModal({ inmateId, onClose }: Props) {
     } catch (err) {
       console.error('Error fetching requests:', err);
     }
-  };
+  }, [inmateId]);
+
+  useEffect(() => {
+    if (user) {
+      void fetchFollowers();
+      void fetchExistingRequests();
+    }
+  }, [user, fetchFollowers, fetchExistingRequests]);
 
   const handleSendRequest = async () => {
     if (!user || !selectedFollower) return;

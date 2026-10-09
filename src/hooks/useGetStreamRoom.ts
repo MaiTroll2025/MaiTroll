@@ -19,7 +19,7 @@ export interface UseGetStreamRoomOptions {
 
 export function useGetStreamRoom({
   roomId,
-  roomType = 'broadcast',
+  roomType: _roomType = 'broadcast',
   role: _role = 'viewer',
   audioOnly = false,
   publish = false,
@@ -184,7 +184,7 @@ export function useGetStreamRoom({
       console.error(`[useGetStreamRoom] Token fetch failed after all retries for room ${roomName}: ${rootMessage}`);
       throw new Error(`GetStream token fetch failed: ${rootMessage}`);
     }
-  }, [publish, roomType, identity]);
+  }, [publish, identity]);
 
   const initializeClient = useCallback(async (userId: string, userToken: string) => {
     const apiKey = import.meta.env.VITE_GETSTREAM_API_KEY;
@@ -292,7 +292,7 @@ export function useGetStreamRoom({
       onError?.(err?.message || 'Failed to join room');
       throw err;
     }
-  }, [roomId, fetchToken, initializeClient, connectToCall, onError, userName, identity, audioOnly, initialAudioEnabled]);
+  }, [roomId, fetchToken, initializeClient, connectToCall, onError, userName, audioOnly, initialAudioEnabled]);
 
   const joinAsAudience = useCallback(async (userIdOrParam: string | { userId?: string; streamId?: string; roomName?: string; viewerIdentity?: string; publishCapable?: boolean }) => {
     let userId: string;
@@ -374,7 +374,7 @@ export function useGetStreamRoom({
       onError?.(rootMessage);
       return rootMessage;
     }
-  }, [roomId, fetchToken, initializeClient, connectToCall, onError, userName, identity, audioOnly, initialAudioEnabled]);
+  }, [roomId, fetchToken, initializeClient, connectToCall, onError, userName, audioOnly, initialAudioEnabled]);
 
   const leaveRoom = useCallback(async () => {
     try {

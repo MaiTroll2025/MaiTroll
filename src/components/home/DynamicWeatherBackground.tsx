@@ -2660,9 +2660,6 @@ export default function DynamicWeatherBackground({
       null,
     )
 
-  const [mounted, setMounted] =
-    useState(false)
-
   const buildingsRef =
     useRef<Building[]>([])
 
@@ -2757,8 +2754,6 @@ export default function DynamicWeatherBackground({
     }, [weather, isDark])
 
   useEffect(() => {
-    setMounted(true)
-
     let cancelled = false
 
     ;(async () => {
@@ -2856,7 +2851,7 @@ export default function DynamicWeatherBackground({
         getMoonPhase(
           new Date(),
         ),
-      [mounted],
+      [],
     )
 
   const sunPos =

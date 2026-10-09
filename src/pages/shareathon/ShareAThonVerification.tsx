@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../lib/store'
-import { ShareAThonProvider, useShareAThon } from '../../contexts/ShareAThonContext'
+import { ShareAThonProvider } from '../../contexts/ShareAThonContext'
+import { useShareAThon } from '../../hooks/useShareAThon'
 import { toast } from 'sonner'
 import {
   ArrowLeft,

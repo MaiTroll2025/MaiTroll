@@ -174,7 +174,7 @@ export function useCoins() {
      } finally {
        setLoading(false)
      }
-   }, [user?.id, optimisticUntil, optimisticTroll])
+   }, [user.id, optimisticUntil, optimisticTroll, balances.troll_coins, balances.hype_coins, balances.total_earned_coins, balances.total_spent_coins, balances.battle_crowns])
 
   /**
    * Spend coins via secure RPC
@@ -257,7 +257,7 @@ export function useCoins() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, balances.troll_coins, balances.hype_coins, refreshCoins])
+  }, [user?.id, balances.troll_coins, refreshCoins])
 
   // Set up real-time subscription for coin balance updates
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { useTabVisibility } from '@/components/TabSwitchHandler';
+import { useTabVisibility } from '@/hooks/useTabVisibility';
 
 interface UseLazyAPIOptions {
   /** Whether to run the API call immediately when becoming visible */
@@ -132,7 +132,7 @@ export function useVisibilityMemo<T>(
       return newValue;
     }
     return lastValueRef.current ?? fallback;
-  }, [shouldCompute, ...deps]);
+  }, [factory, fallback, shouldCompute]);
 
   return result as T;
 }

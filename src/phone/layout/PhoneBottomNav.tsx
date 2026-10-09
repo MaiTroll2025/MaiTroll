@@ -6,6 +6,7 @@ import { PhoneButton } from '../components/PhoneButton'
 import { useAuthStore } from '@/lib/store'
 import { getPhoneNavSections, type PhoneNavSection } from '../phoneNav'
 import { usePhoneRoleAccess } from '../usePhoneRoleAccess'
+import HytroSpotButton from '@/components/HytroSpotButton'
 
 const HIDDEN_PATHS = [
   '/broadcast',
@@ -194,30 +195,46 @@ export default function PhoneBottomNav() {
                 <div className="space-y-1">
                   {section.items
                     .filter((item) => item.show !== false)
-                    .map((item) => (
-                      <NavLink
-                        key={item.path + item.label}
-                        to={item.path}
-                        onClick={() => setIsOpen(false)}
-                        className={({ isActive }) =>
-                          [
-                            'flex items-center gap-3 rounded-xl px-3 py-2.5 transition active:scale-[0.98]',
-                            isActive
-                              ? 'bg-cyan-500/10 text-cyan-300'
-                              : 'bg-white/[0.03] text-slate-300 active:bg-white/[0.06]',
-                          ]
-                            .filter(Boolean)
-                            .join(' ')
-                        }
-                      >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs">
-                          {item.label.charAt(0)}
-                        </span>
-                        <span className="text-xs font-bold">
-                          {item.label}
-                        </span>
-                      </NavLink>
-                    ))}
+                    .map((item) => {
+                      if (item.label === 'HytroSpot' && item.onClick) {
+                        return (
+                          <HytroSpotButton
+                            key={item.path + item.label}
+                            variant="drawer"
+                            size="md"
+                            onClick={() => {
+                              item.onClick?.();
+                              setIsOpen(false);
+                            }}
+                            className="w-full justify-start"
+                          />
+                        );
+                      }
+                      return (
+                        <NavLink
+                          key={item.path + item.label}
+                          to={item.path}
+                          onClick={() => setIsOpen(false)}
+                          className={({ isActive }) =>
+                            [
+                              'flex items-center gap-3 rounded-xl px-3 py-2.5 transition active:scale-[0.98]',
+                              isActive
+                                ? 'bg-cyan-500/10 text-cyan-300'
+                                : 'bg-white/[0.03] text-slate-300 active:bg-white/[0.06]',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')
+                          }
+                        >
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs">
+                            {item.label.charAt(0)}
+                          </span>
+                          <span className="text-xs font-bold">
+                            {item.label}
+                          </span>
+                        </NavLink>
+                      );
+                    })}
                 </div>
               </div>
             ))}

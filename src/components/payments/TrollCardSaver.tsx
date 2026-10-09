@@ -147,7 +147,7 @@ export default function TrollCardSaver({
         }
       }
     }
-  }, [cardElementRef.current]) // Run when DOM element becomes available
+  }, [cardInstance]) // Run when DOM element becomes available
 
   const handleSaveCard = async () => {
     if (!cardInstance || !profile?.id) {

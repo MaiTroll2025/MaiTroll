@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
@@ -15,13 +15,8 @@ export default function VerifiedBadgePage() {
   const [eligibility, setEligibility] = useState<{ eligible: boolean; reason: string } | null>(null)
   const [checkingEligibility, setCheckingEligibility] = useState(true)
 
-  useEffect(() => {
-    if (!user) return
-    checkEligibility()
-  }, [user])
-
-  const checkEligibility = async () => {
-    if (!user) return
+  const checkEligibility = useCallback(async () => {
+    if (!user?.id) return
     setCheckingEligibility(true)
     try {
       const { data, error } = await supabase.rpc('check_verification_eligibility', {
@@ -35,7 +30,12 @@ export default function VerifiedBadgePage() {
     } finally {
       setCheckingEligibility(false)
     }
-  }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!user?.id) return
+    void checkEligibility()
+  }, [checkEligibility, user?.id])
 
   if (!user) {
     return (

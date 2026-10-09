@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { sendMessage } from '../../services/utromailService'
@@ -75,32 +75,12 @@ export default function BroadcastMessageModal({
   const isHost = user?.id === broadcasterId
 
   useEffect(() => {
-    if (!isOpen) return
-    if (!isHost) return
-    fetchFollowers()
-    fetchFollowing()
-    fetchChatThreads()
-  }, [isOpen, isHost, broadcasterId])
-
-  useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages])
 
-  useEffect(() => {
-    if (!isOpen || !selectedUser) return
-    fetchMessages(selectedUser.id)
-    setupRealtimeChannel(selectedUser.id)
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
-        channelRef.current = null
-      }
-    }
-  }, [selectedUser, isOpen])
-
-  const fetchFollowers = async () => {
+  const fetchFollowers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('user_follows')
@@ -130,9 +110,9 @@ export default function BroadcastMessageModal({
     } catch (err) {
       console.warn('[BroadcastMessageModal] Failed to fetch followers:', err)
     }
-  }
+  }, [broadcasterId])
 
-  const fetchFollowing = async () => {
+  const fetchFollowing = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('user_follows')
@@ -162,9 +142,9 @@ export default function BroadcastMessageModal({
     } catch (err) {
       console.warn('[BroadcastMessageModal] Failed to fetch following:', err)
     }
-  }
+  }, [broadcasterId])
 
-  const fetchChatThreads = async () => {
+  const fetchChatThreads = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('utromail_threads')
@@ -202,9 +182,9 @@ export default function BroadcastMessageModal({
     } catch (err) {
       console.warn('[BroadcastMessageModal] Failed to fetch chat threads:', err)
     }
-  }
+  }, [broadcasterId])
 
-  const fetchMessages = async (otherUserId: string) => {
+  const fetchMessages = useCallback(async (otherUserId: string) => {
     try {
       const { data, error } = await supabase
         .from('utromail_threads')
@@ -237,9 +217,9 @@ export default function BroadcastMessageModal({
     } catch (err) {
       console.warn('[BroadcastMessageModal] Failed to fetch messages:', err)
     }
-  }
+  }, [broadcasterId])
 
-  const setupRealtimeChannel = (otherUserId: string) => {
+  const setupRealtimeChannel = useCallback((otherUserId: string) => {
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current)
     }
@@ -267,7 +247,7 @@ export default function BroadcastMessageModal({
       .subscribe()
 
     channelRef.current = channel
-  }
+  }, [broadcasterId, chats])
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !selectedUser || !user) return
@@ -331,6 +311,25 @@ export default function BroadcastMessageModal({
     setMessages([])
     setActiveTab('followers')
   }
+
+  useEffect(() => {
+    if (!isOpen || !isHost) return
+    fetchFollowers()
+    fetchFollowing()
+    fetchChatThreads()
+  }, [isHost, isOpen, fetchFollowers, fetchFollowing, fetchChatThreads])
+
+  useEffect(() => {
+    if (!isOpen || !selectedUser) return
+    fetchMessages(selectedUser.id)
+    setupRealtimeChannel(selectedUser.id)
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
+    }
+  }, [selectedUser, isOpen, fetchMessages, setupRealtimeChannel])
 
   if (!isOpen) return null
 

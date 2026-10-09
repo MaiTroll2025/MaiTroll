@@ -81,72 +81,6 @@ export function useTrollminSystem() {
   const [isTrollmin, setIsTrollmin] = useState(false);
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
 
-  // Fetch all data
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchCurrentTrollmin(),
-        fetchQueue(),
-        fetchActiveLaws(),
-        fetchActivityFeed(),
-        fetchDailyLimits()
-      ]);
-      
-      if (user) {
-        fetchUserStats(user.id);
-        checkUserVote();
-      }
-    } catch (error) {
-      console.error('Error fetching Trollmin data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchData();
-
-    // Set up real-time subscriptions
-    const activityChannel = supabase
-      .channel('trollmin-activity')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'trollmin_actions_log' },
-        () => {
-          fetchActivityFeed();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'trollmin_current' },
-        () => {
-          fetchCurrentTrollmin();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'trollmin_laws' },
-        () => {
-          fetchActiveLaws();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(activityChannel);
-    };
-  }, [fetchData]);
-
-  // Check if current user is the Trollmin
-  useEffect(() => {
-    if (currentTrollmin && user) {
-      setIsTrollmin(currentTrollmin.user_id === user.id);
-    } else {
-      setIsTrollmin(false);
-    }
-  }, [currentTrollmin, user]);
-
   const fetchCurrentTrollmin = async () => {
     const { data, error } = await supabase.rpc('get_current_trollmin');
     if (!error && data && data.length > 0) {
@@ -177,7 +111,7 @@ export function useTrollminSystem() {
     }
   };
 
-  const fetchDailyLimits = async () => {
+  const fetchDailyLimits = useCallback(async () => {
     if (!currentTrollmin) {
       setDailyLimits(null);
       return;
@@ -199,7 +133,7 @@ export function useTrollminSystem() {
         court_overrides_used: 0
       });
     }
-  };
+  }, [currentTrollmin]);
 
   const fetchUserStats = async (userId: string) => {
     const { data, error } = await supabase.rpc('get_trollmin_stats', { p_user_id: userId });
@@ -208,7 +142,7 @@ export function useTrollminSystem() {
     }
   };
 
-  const checkUserVote = async () => {
+  const checkUserVote = useCallback(async () => {
     if (!currentTrollmin || !user) return;
 
     const { data } = await supabase
@@ -224,7 +158,67 @@ export function useTrollminSystem() {
     } else {
       setUserVote(null);
     }
-  };
+  }, [currentTrollmin, user]);
+
+  // Fetch all data
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchCurrentTrollmin(),
+        fetchQueue(),
+        fetchActiveLaws(),
+        fetchActivityFeed(),
+        fetchDailyLimits()
+      ]);
+
+      if (user) {
+        fetchUserStats(user.id);
+        checkUserVote();
+      }
+    } catch (error) {
+      console.error('Error fetching Trollmin data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [checkUserVote, fetchDailyLimits, user]);
+
+  useEffect(() => {
+    void fetchData();
+
+    const activityChannel = supabase
+      .channel('trollmin-activity')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'trollmin_actions_log' },
+        () => {
+          fetchActivityFeed();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trollmin_current' },
+        () => {
+          fetchCurrentTrollmin();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trollmin_laws' },
+        () => {
+          fetchActiveLaws();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(activityChannel);
+    };
+  }, [fetchData]);
+
+  useEffect(() => {
+    setIsTrollmin(Boolean(currentTrollmin && user && currentTrollmin.user_id === user.id));
+  }, [currentTrollmin, user]);
 
   // Join the Power Queue
   const joinQueue = async () => {

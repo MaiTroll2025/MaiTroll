@@ -307,7 +307,7 @@ export function usePodcastAgora({
       joiningRef.current = false
       setIsJoining(false)
     }
-  }, [channelName, fetchAgoraToken, initAgoraClient, user, profile, isHost])
+  }, [podcastId, channelName, fetchAgoraToken, isHost, onClientReady, user?.id, profile?.username, profile?.role, profile?.level, initAgoraClient])
 
   const leavePodcast = useCallback(async () => {
     if (!joinedRef.current || !clientRef.current) return

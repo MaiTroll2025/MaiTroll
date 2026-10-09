@@ -1,6 +1,4 @@
 import React, {
-  createContext,
-  useContext,
   useEffect,
   useState,
   useCallback,
@@ -13,86 +11,9 @@ import { doesUserProfileExist, supabase } from '../lib/supabase';
 import { getVapidPublicKey } from '../lib/vapid';
 import { useAuthStore } from '../lib/store';
 import { registerNativePush } from '../lib/nativePush';
+import { PWAContext, type CacheState, type NetworkState, type PWAContextType, type ServiceWorkerState } from './PWAContextValue';
 
 const env = import.meta.env;
-
-// ===== TYPES =====
-
-interface ServiceWorkerState {
-  isRegistered: boolean;
-  isUpdateAvailable: boolean;
-  isOfflineReady: boolean;
-  version: string | null;
-  waitingWorker: ServiceWorker | null;
-}
-
-interface NetworkState {
-  isOnline: boolean;
-  isSlowConnection: boolean;
-  effectiveType: string | null;
-}
-
-interface CacheState {
-  cachedStreams: string[];
-  cachedProfiles: string[];
-  cachedChats: string[];
-}
-
-interface PWAContextType {
-  // Install state
-  canInstall: boolean;
-  isInstalled: boolean;
-  isIOS: boolean;
-  isSafari: boolean;
-  promptInstall: () => Promise<'accepted' | 'dismissed' | null>;
-  dismissInstallPrompt: () => void;
-  showIOSInstallInstructions: boolean;
-  dismissIOSInstructions: () => void;
-  
-  // Service Worker state
-  swState: ServiceWorkerState;
-  updateApp: () => void;
-  checkForUpdates: () => Promise<void>;
-  
-  // Network state
-  networkState: NetworkState;
-  
-  // Cache state
-  cacheState: CacheState;
-  
-  // Background sync
-  syncWhenOnline: (queueName: string, data: unknown) => void;
-  pendingSyncItems: Record<string, number>;
-  
-  // Push notifications
-  pushPermission: NotificationPermission;
-  requestPushPermission: () => Promise<NotificationPermission>;
-  subscribeToPush: () => Promise<void>;
-  unsubscribeFromPush: () => Promise<void>;
-  
-  // Offline/Online events
-  wasOffline: boolean;
-  offlineTimestamp: number | null;
-  
-  // Utility
-  clearAllCaches: () => Promise<void>;
-  cacheStream: (streamId: string, data: unknown) => void;
-  cacheProfile: (userId: string, data: unknown) => void;
-  cacheChat: (roomId: string, messages: unknown[]) => void;
-  
-  // Stream prefetching
-  prefetchStream: (streamId: string) => void;
-  prefetchUpcomingStreams: () => void;
-  
-  // Realtime connection recovery
-  connectionHealth: 'healthy' | 'degraded' | 'disconnected';
-  lastRealtimeActivity: number;
-  triggerReconnect: () => void;
-}
-
-// ===== CONTEXT =====
-
-const PWAContext = createContext<PWAContextType | null>(null);
 
 // ===== PROVIDER =====
 
@@ -196,15 +117,12 @@ export function PWAProvider({ children }: PWAProviderProps) {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
   
-const isLocalhost =
-     window.location.hostname === 'localhost' ||
-     window.location.hostname === '127.0.0.1' ||
-     window.location.hostname === '0.0.0.0'
-
   // ===== SERVICE WORKER REGISTRATION =====
     
    useEffect(() => {
       if (!('serviceWorker' in navigator)) return;
+      const hostname = window.location.hostname;
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
       
       // In dev/localhost, skip SW registration to avoid noise
       // Only report failures in production
@@ -825,77 +743,3 @@ const isLocalhost =
   
   return <PWAContext.Provider value={value}>{children}</PWAContext.Provider>;
 }
-
-// ===== HOOK =====
-
-export function usePWA(): PWAContextType {
-  const context = useContext(PWAContext);
-  if (!context) {
-    if (import.meta.env.DEV) {
-      console.warn('usePWA called outside PWAProvider; using no-op fallback');
-    }
-    return ({
-      isInstalled: false,
-      canInstall: false,
-      installPrompt: null,
-      networkState: { isOnline: typeof navigator === 'undefined' ? true : navigator.onLine, effectiveType: undefined, downlink: undefined, rtt: undefined },
-      wasOffline: false,
-      offlineTimestamp: null,
-      cacheState: { isSupported: false, isEnabled: false, usage: 0, quota: 0, items: [] },
-      swState: { isSupported: typeof navigator !== 'undefined' && 'serviceWorker' in navigator, isRegistered: false, isInstalling: false, isWaiting: false, isActive: false, hasUpdate: false },
-      pushPermission: typeof Notification === 'undefined' ? 'default' : Notification.permission,
-      pushSubscription: null,
-      connectionHealth: 'good',
-      lastRealtimeActivity: null,
-      promptInstall: async () => false,
-      dismissInstallPrompt: () => {},
-      checkForUpdates: async () => {},
-      updateApp: async () => {},
-      requestPushPermission: async () => (typeof Notification === 'undefined' ? 'denied' : Notification.permission),
-      subscribeToPush: async () => null,
-      unsubscribeFromPush: async () => {},
-      clearAllCaches: async () => {},
-      cacheStream: async () => {},
-      cacheProfile: async () => {},
-      cacheChat: async () => {},
-      prefetchStream: async () => {},
-      prefetchUpcomingStreams: async () => {},
-      triggerReconnect: () => {},
-    } as unknown) as PWAContextType;
-  }
-  return context;
-}
-
-// ===== SELECTOR HOOKS FOR PERFORMANCE =====
-
-export function useInstallState() {
-  const { canInstall, isInstalled, promptInstall, dismissInstallPrompt } = usePWA();
-  return { canInstall, isInstalled, promptInstall, dismissInstallPrompt };
-}
-
-export function useNetworkStatus() {
-  const { networkState, wasOffline, offlineTimestamp } = usePWA();
-  return { ...networkState, wasOffline, offlineTimestamp };
-}
-
-export function useSWStatus() {
-  const { swState, updateApp, checkForUpdates } = usePWA();
-  return { swState, updateApp, checkForUpdates };
-}
-
-export function usePushNotifications() {
-  const { pushPermission, requestPushPermission, subscribeToPush, unsubscribeFromPush } = usePWA();
-  return { pushPermission, requestPushPermission, subscribeToPush, unsubscribeFromPush };
-}
-
-export function usePWACache() {
-  const { cacheState, cacheStream, cacheProfile, cacheChat, clearAllCaches } = usePWA();
-  return { cacheState, cacheStream, cacheProfile, cacheChat, clearAllCaches };
-}
-
-export function useConnectionHealth() {
-  const { connectionHealth, lastRealtimeActivity, triggerReconnect } = usePWA();
-  return { connectionHealth, lastRealtimeActivity, triggerReconnect };
-}
-
-export default PWAContext;

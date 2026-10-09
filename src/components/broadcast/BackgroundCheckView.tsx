@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Shield, AlertTriangle, Scale, Clock, TrendingUp } from 'lucide-react';
 import { MaiTrollTheme } from '../../styles/trollCityTheme';
@@ -32,11 +32,7 @@ export default function BackgroundCheckView({ userId }: BackgroundCheckViewProps
   const [homeownersInsurance, setHomeownersInsurance] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchBackgroundData();
-  }, [userId]);
-
-  const fetchBackgroundData = async () => {
+  const fetchBackgroundData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch user profile for credit score
@@ -106,7 +102,11 @@ export default function BackgroundCheckView({ userId }: BackgroundCheckViewProps
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void fetchBackgroundData();
+  }, [fetchBackgroundData]);
 
   const getCreditScoreColor = (score: number) => {
     if (score >= 700) return 'text-green-400';

@@ -90,7 +90,7 @@ export default function BattleGiftPanel({
     } finally {
       setSendingGiftId(null);
     }
-  }, [user, isSending, sendingGiftId, sendGift, recipientId, selectedSide, onGiftSent]);
+  }, [user, isSending, sendingGiftId, sendGift, recipientId, selectedSide, onGiftSent, battleId]);
 
   if (isLoading) {
     return (
