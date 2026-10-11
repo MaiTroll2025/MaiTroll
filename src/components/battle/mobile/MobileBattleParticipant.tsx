@@ -42,7 +42,7 @@ export default function MobileBattleParticipant({
     const track = vm.videoTrack;
     if (!track || !container) return;
 
-    const trackId = track.sid || (track as any).id || null;
+    const trackId = typeof track.sid === "string" ? track.sid : null;
     if (trackId && trackId === trackIdRef.current && videoRef.current) {
       return;
     }

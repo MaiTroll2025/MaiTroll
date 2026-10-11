@@ -585,6 +585,15 @@ export default function PhoneGoLive() {
         throw error
       }
 
+      if (!data?.id || data.id !== streamId) {
+        console.error('[PhoneGoLive] Stream insert returned an incomplete record', {
+          stage: 'stream-row-validation',
+          streamId,
+          requiredObjectMissing: !data?.id,
+        })
+        throw new Error('The broadcast could not be initialized. Please try again.')
+      }
+
       streamId = data.id
 
       /*

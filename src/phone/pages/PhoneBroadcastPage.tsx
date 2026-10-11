@@ -117,6 +117,7 @@ export default function PhoneBroadcastPage() {
 
   const [stream, setStream] = useState<Stream | null>(null)
   const [isStreamLoading, setIsStreamLoading] = useState(true)
+  const [loadedRouteId, setLoadedRouteId] = useState<string | null>(null)
   const [streamLoadError, setStreamLoadError] = useState<string | null>(null)
 
   const {
@@ -217,6 +218,7 @@ export default function PhoneBroadcastPage() {
     if (!routeStreamId) {
       setIsStreamLoading(false)
       setStreamLoadError('A broadcast ID is required.')
+      setLoadedRouteId('')
       return
     }
 
@@ -224,21 +226,47 @@ export default function PhoneBroadcastPage() {
 
     const fetchStream = async () => {
       setIsStreamLoading(true)
+      setLoadedRouteId(null)
       setStreamLoadError(null)
       setStream(null)
 
-      try {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(routeStreamId)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(routeStreamId)
+      let stage = 'route-validation'
 
+      try {
         if (!isUUID) {
-          const { data: userData } = await supabase
+          stage = 'broadcaster-profile-lookup'
+          const { data: userData, error: profileError } = await supabase
             .from('user_profiles')
             .select('id')
             .eq('username', routeStreamId)
             .maybeSingle()
 
-          if (userData?.id) {
-            const { data: userStream } = await supabase
+          if (cancelled) return
+
+          if (profileError) {
+            console.warn('[PhoneBroadcastPage] Broadcast lookup failed', {
+              stage,
+              streamId: routeStreamId,
+              errorCode: profileError.code || null,
+              requiredObjectMissing: false,
+            })
+            setStreamLoadError('Unable to load this broadcast. Please try again.')
+            return
+          }
+
+          if (!userData?.id) {
+            console.info('[PhoneBroadcastPage] Broadcaster profile unavailable', {
+              stage,
+              streamId: routeStreamId,
+              requiredObjectMissing: true,
+            })
+            setStreamLoadError('This broadcast could not be found or is no longer available.')
+            return
+          }
+
+          stage = 'live-stream-lookup'
+          const { data: userStream, error: streamError } = await supabase
               .from('streams')
               .select('*')
               .eq('user_id', userData.id)
@@ -246,13 +274,34 @@ export default function PhoneBroadcastPage() {
               .eq('status', 'live')
               .maybeSingle()
 
-            if (userStream) {
-              if (!cancelled) setStream(userStream as Stream)
-              return
-            }
+          if (cancelled) return
+
+          if (streamError) {
+            console.warn('[PhoneBroadcastPage] Broadcast lookup failed', {
+              stage,
+              streamId: routeStreamId,
+              errorCode: streamError.code || null,
+              requiredObjectMissing: false,
+            })
+            setStreamLoadError('Unable to load this broadcast. Please try again.')
+            return
           }
+
+          if (!userStream?.id || !userStream.user_id) {
+            console.info('[PhoneBroadcastPage] Live broadcast unavailable', {
+              stage,
+              streamId: routeStreamId,
+              requiredObjectMissing: !userStream?.id || !userStream.user_id,
+            })
+            setStreamLoadError('This broadcast could not be found or is no longer available.')
+            return
+          }
+
+          if (!cancelled) setStream(userStream as Stream)
+          return
         }
 
+        stage = 'stream-lookup'
         const {
           data,
           error,
@@ -265,34 +314,40 @@ export default function PhoneBroadcastPage() {
         if (cancelled) return
 
         if (error) {
-          console.error(
-            '[PhoneBroadcastPage] Failed to fetch stream:',
-            error,
-          )
-          setStreamLoadError(error.message)
+          console.error('[PhoneBroadcastPage] Broadcast lookup failed', {
+            stage,
+            streamId: routeStreamId,
+            errorCode: error.code || null,
+            requiredObjectMissing: false,
+          })
+          setStreamLoadError('Unable to load this broadcast. Please try again.')
           return
         }
 
-        if (data) {
+        if (data?.id && data.user_id) {
           setStream(data as Stream)
         } else {
+          console.info('[PhoneBroadcastPage] Broadcast record unavailable', {
+            stage,
+            streamId: routeStreamId,
+            requiredObjectMissing: true,
+          })
           setStreamLoadError('This broadcast could not be found or is no longer available.')
         }
       } catch (error) {
         if (!cancelled) {
-          console.error(
-            '[PhoneBroadcastPage] Failed to fetch stream:',
-            error,
-          )
-          setStreamLoadError(
-            error instanceof Error
-              ? error.message
-              : 'Unable to load this broadcast.',
-          )
+          console.error('[PhoneBroadcastPage] Broadcast initialization failed', {
+            stage,
+            streamId: routeStreamId,
+            errorCode: (error as { code?: string } | null)?.code || null,
+            requiredObjectMissing: false,
+          })
+          setStreamLoadError('Unable to load this broadcast. Please try again.')
         }
       } finally {
         if (!cancelled) {
           setIsStreamLoading(false)
+          setLoadedRouteId(routeStreamId)
         }
       }
     }
@@ -2064,7 +2119,7 @@ export default function PhoneBroadcastPage() {
     })
   }, [occupiedRemoteSeats, stream?.box_count, stream?.seat_count])
 
-  if (isStreamLoading) {
+  if (isStreamLoading || loadedRouteId !== routeStreamId) {
     return (
       <div className="flex h-[100dvh] items-center justify-center bg-black text-sm text-white/70">
         Loading broadcast…

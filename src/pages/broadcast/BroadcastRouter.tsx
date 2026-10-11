@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Loader2, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -9,9 +9,11 @@ import { Stream } from '../../types/broadcast'
 import { StreamRouteProvider } from '../../contexts/StreamRouteContext'
 import { BroadcastPage } from './BroadcastPage'
 import ViewerPage from './ViewerPage'
+import ErrorBoundary from '../../components/ErrorBoundary'
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://www.maitroll.com'
 const FALLBACK_PREVIEW_IMAGE = `${APP_URL}/images/mai-troll-preview.png`
+const BROADCAST_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 type BroadcasterMeta = {
   username: string
@@ -285,6 +287,7 @@ function BroadcastRouter() {
   const [stream, setStream] = useState<Stream | null>(null)
   const [_broadcaster, setBroadcaster] = useState<BroadcasterMeta | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadedRouteId, setLoadedRouteId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -350,37 +353,68 @@ function BroadcastRouter() {
   }, [enteredPassword, streamId])
 
   useEffect(() => {
+    setStream(null)
+    setBroadcaster(null)
+    setHasAccess(false)
+    setIsLoading(true)
+    setLoadedRouteId(null)
+
     if (!streamId) {
       setError('No stream ID provided.')
       setIsLoading(false)
+      setLoadedRouteId('')
+      return
+    }
+
+    const usesIdRoute = Boolean(params.id || params.streamId)
+    const isUUID = BROADCAST_ID_PATTERN.test(streamId)
+    if (usesIdRoute && !isUUID) {
+      console.warn('[BroadcastRouter] Broadcast route parameter is invalid', {
+        stage: 'route-validation',
+        streamId,
+        routeParamType: params.id ? 'id' : 'streamId',
+        requiredObjectMissing: true,
+      })
+      setError('Invalid broadcast ID.')
+      setIsLoading(false)
+      setLoadedRouteId(streamId)
+      injectSafeMetaForPrivateStream(streamId, false)
       return
     }
 
     let cancelled = false
 
     const fetchStream = async () => {
-      setIsLoading(true)
       setError(null)
-
-      const isUUID =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          streamId,
-        )
 
       let streamData: Stream | null = null
       let broadcasterData: BroadcasterMeta | null = null
+      let stage = 'stream-lookup'
+      let queryErrorCode: string | null = null
+      let queryFailed = false
 
       try {
         if (streamSlug && params.username) {
+          stage = 'broadcaster-profile-lookup'
           const { data: userData, error: userError } = await supabase
             .from('user_profiles')
             .select('id, username, avatar_url, thumbnail_url')
             .eq('username', params.username)
             .maybeSingle()
 
-          if (!userError && userData) {
+          if (userError) {
+            queryFailed = true
+            queryErrorCode = userError.code || null
+            console.warn('[BroadcastRouter] Broadcast lookup failed', {
+              stage,
+              streamId,
+              errorCode: queryErrorCode,
+              requiredObjectMissing: false,
+            })
+          } else if (userData?.id) {
             broadcasterData = userData as BroadcasterMeta
 
+            stage = 'slug-stream-lookup'
             const { data: streamBySlug, error: streamBySlugError } = await supabase
               .from('streams')
               .select('*')
@@ -389,27 +423,53 @@ function BroadcastRouter() {
               .eq('is_public', true)
               .maybeSingle()
 
-            if (!streamBySlugError && streamBySlug) {
+            if (streamBySlugError) {
+              queryFailed = true
+              queryErrorCode = streamBySlugError.code || null
+              console.warn('[BroadcastRouter] Broadcast lookup failed', {
+                stage,
+                streamId,
+                errorCode: queryErrorCode,
+                requiredObjectMissing: false,
+              })
+            } else if (streamBySlug) {
               streamData = streamBySlug as Stream
+            } else {
+              console.info('[BroadcastRouter] Broadcast record unavailable', {
+                stage,
+                streamId,
+                requiredObjectMissing: true,
+              })
             }
+          } else if (!userError) {
+            console.info('[BroadcastRouter] Broadcaster profile unavailable', {
+              stage,
+              streamId,
+              requiredObjectMissing: true,
+            })
           }
         } else if (isUUID) {
+          stage = 'stream-lookup'
           const { data, error: fetchError } = await supabase
             .from('streams')
             .select('*')
             .eq('id', streamId)
             .maybeSingle()
 
-          console.log('[BroadcastRouter] Stream fetch result:', {
-            data,
-            error: fetchError,
-            streamId,
-          })
-
-          if (!fetchError && data) {
+          if (fetchError) {
+            queryFailed = true
+            queryErrorCode = fetchError.code || null
+            console.warn('[BroadcastRouter] Broadcast lookup failed', {
+              stage,
+              streamId,
+              errorCode: queryErrorCode,
+              requiredObjectMissing: false,
+            })
+          } else if (data) {
             streamData = data as Stream
 
             if ((data as any).user_id) {
+              stage = 'broadcaster-profile-lookup'
               const { data: profileData, error: profileError } = await supabase
                 .from('user_profiles')
                 .select('id, username, avatar_url, thumbnail_url')
@@ -417,28 +477,57 @@ function BroadcastRouter() {
                 .maybeSingle()
 
               if (profileError) {
-                console.warn('[BroadcastRouter] Broadcaster profile lookup failed:', profileError)
+                queryFailed = true
+                console.warn('[BroadcastRouter] Broadcaster profile lookup failed', {
+                  stage,
+                  streamId,
+                  errorCode: profileError.code || null,
+                  requiredObjectMissing: false,
+                })
+              } else if (!profileData?.id) {
+                console.info('[BroadcastRouter] Broadcaster profile unavailable', {
+                  stage,
+                  streamId,
+                  requiredObjectMissing: true,
+                })
               }
 
               broadcasterData = profileData as BroadcasterMeta | null
+            } else {
+              console.info('[BroadcastRouter] Broadcast is missing its broadcaster ID', {
+                stage: 'stream-validation',
+                streamId,
+                requiredObjectMissing: true,
+              })
             }
+          } else {
+            console.info('[BroadcastRouter] Broadcast record unavailable', {
+              stage,
+              streamId,
+              requiredObjectMissing: true,
+            })
           }
         } else {
+          stage = 'broadcaster-profile-lookup'
           const { data: userData, error: userError } = await supabase
             .from('user_profiles')
             .select('id, username, avatar_url, thumbnail_url')
             .eq('username', streamId)
             .maybeSingle()
 
-          console.log('[BroadcastRouter] User lookup result:', {
-            userData,
-            error: userError,
-            streamId,
-          })
-
-          if (!userError && userData) {
+          if (userError) {
+            queryFailed = true
+            queryErrorCode = userError.code || null
+            console.warn('[BroadcastRouter] Broadcast lookup failed', {
+              stage,
+              streamId,
+              errorCode: queryErrorCode,
+              requiredObjectMissing: false,
+            })
+          } else if (userData?.id) {
             broadcasterData = userData as BroadcasterMeta
 
+            stage = 'live-stream-lookup'
             const { data: liveStream, error: liveStreamError } = await supabase
               .from('streams')
               .select('*')
@@ -447,14 +536,19 @@ function BroadcastRouter() {
               .eq('status', 'live')
               .maybeSingle()
 
-            console.log('[BroadcastRouter] Live stream lookup:', {
-              streamDataByUser: liveStream,
-              error: liveStreamError,
-            })
-
-            if (!liveStreamError && liveStream) {
+            if (liveStreamError) {
+              queryFailed = true
+              queryErrorCode = liveStreamError.code || null
+              console.warn('[BroadcastRouter] Broadcast lookup failed', {
+                stage,
+                streamId,
+                errorCode: queryErrorCode,
+                requiredObjectMissing: false,
+              })
+            } else if (liveStream) {
               streamData = liveStream as Stream
             } else {
+              stage = 'recent-stream-lookup'
               const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
 
               const { data: recentStream, error: recentError } = await supabase
@@ -467,29 +561,64 @@ function BroadcastRouter() {
                 .maybeSingle()
 
               if (recentError) {
-                console.warn('[BroadcastRouter] Recent stream fallback failed:', recentError)
+                queryFailed = true
+                queryErrorCode = recentError.code || null
+                console.warn('[BroadcastRouter] Broadcast lookup failed', {
+                  stage,
+                  streamId,
+                  errorCode: queryErrorCode,
+                  requiredObjectMissing: false,
+                })
               }
-
-              console.log('[BroadcastRouter] Recent stream fallback:', { recentStream })
 
               if (recentStream) {
                 streamData = recentStream as Stream
+              } else if (!recentError) {
+                console.info('[BroadcastRouter] Broadcast record unavailable', {
+                  stage,
+                  streamId,
+                  requiredObjectMissing: true,
+                })
               }
             }
+          } else if (!userError) {
+            console.info('[BroadcastRouter] Broadcaster profile unavailable', {
+              stage,
+              streamId,
+              requiredObjectMissing: true,
+            })
           }
         }
       } catch (err) {
-        console.error('[BroadcastRouter] Stream fetch error:', err)
+        queryFailed = true
+        console.error('[BroadcastRouter] Broadcast initialization failed', {
+          stage,
+          streamId,
+          errorCode: (err as { code?: string } | null)?.code || null,
+          requiredObjectMissing: false,
+        })
       }
 
       if (cancelled) return
 
-      if (!streamData) {
+      if (!streamData?.id || !streamData.user_id) {
+        if (streamData && !streamData.user_id) {
+          console.warn('[BroadcastRouter] Broadcast record is missing its owner ID', {
+            stage: 'stream-validation',
+            streamId,
+            requiredObjectMissing: true,
+          })
+        }
         setStream(null)
         setBroadcaster(null)
-        setError('Stream not found.')
+        setError(queryFailed
+          ? 'Unable to load this broadcast. Please try again.'
+          : streamData
+            ? 'This broadcast is unavailable.'
+            : 'Stream not found.')
         injectSafeMetaForPrivateStream(streamId, false)
         setIsLoading(false)
+        setLoadedRouteId(streamId)
         return
       }
 
@@ -497,6 +626,7 @@ function BroadcastRouter() {
       setBroadcaster(broadcasterData)
       injectSocialMetaTags(streamData, broadcasterData, location.pathname)
       setIsLoading(false)
+      setLoadedRouteId(streamId)
     }
 
     void fetchStream()
@@ -504,7 +634,7 @@ function BroadcastRouter() {
     return () => {
       cancelled = true
     }
-  }, [location.pathname, params.username, streamId, streamSlug])
+  }, [location.pathname, params.id, params.streamId, params.username, streamId, streamSlug])
 
   useEffect(() => {
     if (!stream || !streamId) return
@@ -584,7 +714,7 @@ function BroadcastRouter() {
     console.log('[BroadcastRouter] Final route decision:', routingDecision)
   }, [stream, hasAccess, routingDecision])
 
-  if (isLoading) {
+  if (isLoading || loadedRouteId !== (streamId || '')) {
     return (
       <div className="flex h-dvh items-center justify-center bg-black text-white">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -596,7 +726,10 @@ function BroadcastRouter() {
   if (error || !stream) {
     return (
       <div className="flex h-dvh flex-col items-center justify-center bg-black text-white">
-        <p className="text-red-500">{error || 'Stream not found'}</p>
+        <p className="text-center text-red-300">{error || 'Stream not found'}</p>
+        <Link to="/" className="mt-4 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/20">
+          Return home
+        </Link>
       </div>
     )
   }
@@ -697,9 +830,30 @@ function BroadcastRouter() {
   }
 
   return (
-    <StreamRouteProvider streamId={stream.id} stream={stream}>
-      {shouldUseRtcPage ? <BroadcastPage /> : <ViewerPage />}
-    </StreamRouteProvider>
+    <ErrorBoundary
+      key={stream.id}
+      fallback={
+        <div className="flex h-dvh flex-col items-center justify-center gap-4 bg-black px-4 text-center text-white">
+          <p className="text-red-300">This broadcast could not be opened. Please retry or return home.</p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/20"
+            >
+              Retry
+            </button>
+            <Link to="/" className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/20">
+              Return home
+            </Link>
+          </div>
+        </div>
+      }
+    >
+      <StreamRouteProvider streamId={stream.id} stream={stream}>
+        {shouldUseRtcPage ? <BroadcastPage /> : <ViewerPage />}
+      </StreamRouteProvider>
+    </ErrorBoundary>
   )
 }
 
