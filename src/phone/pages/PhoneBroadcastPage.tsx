@@ -116,6 +116,8 @@ export default function PhoneBroadcastPage() {
   } = useAuthStore()
 
   const [stream, setStream] = useState<Stream | null>(null)
+  const [isStreamLoading, setIsStreamLoading] = useState(true)
+  const [streamLoadError, setStreamLoadError] = useState<string | null>(null)
 
   const {
     featuredBroadcasters: _featuredBroadcasters,
@@ -212,11 +214,19 @@ export default function PhoneBroadcastPage() {
    */
 
   useEffect(() => {
-    if (!routeStreamId) return
+    if (!routeStreamId) {
+      setIsStreamLoading(false)
+      setStreamLoadError('A broadcast ID is required.')
+      return
+    }
 
     let cancelled = false
 
     const fetchStream = async () => {
+      setIsStreamLoading(true)
+      setStreamLoadError(null)
+      setStream(null)
+
       try {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(routeStreamId)
 
@@ -259,11 +269,14 @@ export default function PhoneBroadcastPage() {
             '[PhoneBroadcastPage] Failed to fetch stream:',
             error,
           )
+          setStreamLoadError(error.message)
           return
         }
 
         if (data) {
           setStream(data as Stream)
+        } else {
+          setStreamLoadError('This broadcast could not be found or is no longer available.')
         }
       } catch (error) {
         if (!cancelled) {
@@ -271,6 +284,15 @@ export default function PhoneBroadcastPage() {
             '[PhoneBroadcastPage] Failed to fetch stream:',
             error,
           )
+          setStreamLoadError(
+            error instanceof Error
+              ? error.message
+              : 'Unable to load this broadcast.',
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setIsStreamLoading(false)
         }
       }
     }
@@ -2041,6 +2063,32 @@ export default function PhoneBroadcastPage() {
       }
     })
   }, [occupiedRemoteSeats, stream?.box_count, stream?.seat_count])
+
+  if (isStreamLoading) {
+    return (
+      <div className="flex h-[100dvh] items-center justify-center bg-black text-sm text-white/70">
+        Loading broadcast…
+      </div>
+    )
+  }
+
+  if (!stream) {
+    return (
+      <div className="flex h-[100dvh] flex-col items-center justify-center gap-3 bg-black px-6 text-center text-white">
+        <p className="text-base font-bold">Unable to open this broadcast</p>
+        <p className="max-w-sm text-sm text-white/60">
+          {streamLoadError || 'This broadcast could not be found or is no longer available.'}
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/20"
+        >
+          Return home
+        </button>
+      </div>
+    )
+  }
 
   if (shouldShowRandomBattleArena) {
     return (
