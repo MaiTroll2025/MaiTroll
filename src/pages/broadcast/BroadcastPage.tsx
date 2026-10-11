@@ -6884,7 +6884,7 @@ const showFallback =
 
                   {/* Pinned product overlay */}
                  {(() => {
-                   const pinned = pinnedProducts.find((p: any) => p.stream_id === stream.id);
+                   const pinned = pinnedProducts.find((p: any) => p.stream_id === stream?.id);
                    if (!pinned) return null;
                    const imgSrc = (pinned as any).image_url || (pinned as any).imageUrl || (pinned as any)?.product?.image_url || null;
                    const title = (pinned as any).title || (pinned as any).name || (pinned as any)?.product?.name || 'Product';

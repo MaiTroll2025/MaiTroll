@@ -322,7 +322,7 @@ export function useRandomBattleQueueController({
 
       void supabase.removeChannel(channel);
     };
-  }, [canUseRandomBattles, clearActivationTimer, clearTimers, onStreamUpdate, stream.id]);
+  }, [canUseRandomBattles, clearActivationTimer, clearTimers, onStreamUpdate, stream?.id]);
 
   /*
    * -------------------------------------------------------------
