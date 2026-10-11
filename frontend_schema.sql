@@ -1455,8 +1455,9 @@ CREATE TABLE IF NOT EXISTS public.app_bug_reports (
   error_message text NOT NULL,
   error_details text NULL,
   error_hint text NULL,
-  stack_trace text NULL,
-  request_payload jsonb NULL,
+   stack_trace text NULL,
+   file_debug text NULL,
+   request_payload jsonb NULL,
   response_payload jsonb NULL,
   browser_info jsonb NULL,
   app_context jsonb NULL,
@@ -25438,10 +25439,11 @@ DECLARE
   v_table_name text := COALESCE(payload->>'table_name', payload->>'tableName');
   v_error_code text := COALESCE(payload->>'error_code', payload->>'errorCode');
   v_error_message text := COALESCE(payload->>'error_message', payload->>'errorMessage', 'Unknown application error');
-  v_error_details text := COALESCE(payload->>'error_details', payload->>'errorDetails');
-  v_error_hint text := COALESCE(payload->>'error_hint', payload->>'errorHint');
-  v_stack_trace text := COALESCE(payload->>'stack_trace', payload->>'stackTrace');
-  v_is_duplicate boolean := false;
+   v_error_details text := COALESCE(payload->>'error_details', payload->>'errorDetails');
+   v_error_hint text := COALESCE(payload->>'error_hint', payload->>'errorHint');
+   v_stack_trace text := COALESCE(payload->>'stack_trace', payload->>'stackTrace');
+   v_file_debug text := COALESCE(payload->>'file_debug', payload->>'fileDebug');
+   v_is_duplicate boolean := false;
 BEGIN
   IF v_severity NOT IN ('low', 'medium', 'high', 'critical') THEN
     v_severity := 'medium';
@@ -25456,8 +25458,9 @@ BEGIN
       error_code = COALESCE(v_error_code, error_code),
       error_details = COALESCE(v_error_details, error_details),
       error_hint = COALESCE(v_error_hint, error_hint),
-      stack_trace = COALESCE(v_stack_trace, stack_trace),
-      request_payload = COALESCE(payload->'request_payload', payload->'requestPayload', request_payload),
+       stack_trace = COALESCE(v_stack_trace, stack_trace),
+       file_debug = COALESCE(v_file_debug, file_debug),
+       request_payload = COALESCE(payload->'request_payload', payload->'requestPayload', request_payload),
       response_payload = COALESCE(payload->'response_payload', payload->'responsePayload', response_payload),
       browser_info = COALESCE(payload->'browser_info', payload->'browserInfo', browser_info),
       app_context = COALESCE(payload->'app_context', payload->'appContext', app_context)
@@ -25482,14 +25485,14 @@ BEGIN
       INSERT INTO public.app_bug_reports (
         source, severity, page_url, route_path, user_id, user_email, user_role, stream_id,
         function_name, table_name, error_code, error_message, error_details, error_hint,
-        stack_trace, request_payload, response_payload, browser_info, app_context,
-        created_at, updated_at, occurrence_count, last_seen_at
+         stack_trace, file_debug, request_payload, response_payload, browser_info, app_context,
+         created_at, updated_at, occurrence_count, last_seen_at
       )
       VALUES (
-        v_source, v_severity, v_page_url, v_route_path, v_user_id, v_user_email, v_user_role, v_stream_id,
-        v_function_name, v_table_name, v_error_code, v_error_message, v_error_details, v_error_hint,
-        v_stack_trace,
-        COALESCE(payload->'request_payload', payload->'requestPayload'),
+         v_source, v_severity, v_page_url, v_route_path, v_user_id, v_user_email, v_user_role, v_stream_id,
+         v_function_name, v_table_name, v_error_code, v_error_message, v_error_details, v_error_hint,
+         v_stack_trace, v_file_debug,
+         COALESCE(payload->'request_payload', payload->'requestPayload'),
         COALESCE(payload->'response_payload', payload->'responsePayload'),
         COALESCE(payload->'browser_info', payload->'browserInfo'),
         COALESCE(payload->'app_context', payload->'appContext'),

@@ -51,10 +51,115 @@ export interface BugReport {
   errorDetails?: string;
   errorHint?: string;
   stackTrace?: string;
+  fileDebug?: string;
   requestPayload?: Record<string, any>;
   responsePayload?: Record<string, any>;
   browserInfo?: Record<string, any>;
   appContext?: Record<string, any>;
+}
+
+// ============================================================================
+// File / Line debugging utilities
+// ============================================================================
+
+export interface StackFrame {
+  functionName: string | null;
+  fileName: string;
+  lineNumber: number | null;
+  columnNumber: number | null;
+  raw: string;
+}
+
+const VENDOR_RE = /(node_modules|vendor-react|vendor-|polyfills|\.map)/;
+const REACT_INTERNAL_RE = /\/\/(react|scheduler|use-subscription)/;
+
+function isAppFrame(frame: StackFrame): boolean {
+  return !VENDOR_RE.test(frame.fileName) && !REACT_INTERNAL_RE.test(frame.fileName);
+}
+
+export function parseErrorStack(stack?: string | null): StackFrame[] {
+  if (!stack) return [];
+
+  const lines = stack.split('\n');
+  const frames: StackFrame[] = [];
+
+  for (const line of lines) {
+    // Skip the leading "ErrorName: message" line — it is not a frame.
+    if (/^\s*(Error|TypeError|RangeError|ReferenceError|SyntaxError|EvalError|URIError)/.test(line)) {
+      continue;
+    }
+
+    // V8 / Chromium formats:
+    //   "    at fnName (url:line:col)"
+    //   "    at url:line:col"
+    const m = line.match(/^\s*at\s+(?:(.+?)\s+\((.+):(\d+):(\d+)\)|(.+):(\d+):(\d+))\s*$/);
+    if (!m) continue;
+
+    let functionName: string | null = null;
+    let fileName: string;
+    let lineNumber: number | null;
+    let columnNumber: number | null;
+
+    if (m[1]) {
+      functionName = m[1] || null;
+      fileName = m[2];
+      lineNumber = parseInt(m[3], 10);
+      columnNumber = parseInt(m[4], 10);
+    } else {
+      fileName = m[5];
+      lineNumber = parseInt(m[6], 10);
+      columnNumber = parseInt(m[7], 10);
+    }
+
+    if (!fileName) continue;
+
+    frames.push({ functionName, fileName, lineNumber, columnNumber, raw: line.trim() });
+  }
+
+  return frames;
+}
+
+export function extractFileDebugInfo(error: any): string {
+  const stack = typeof error?.stack === 'string' ? error.stack : '';
+  const frames = parseErrorStack(stack);
+  if (frames.length === 0) return '';
+
+  const lines: string[] = [];
+  lines.push(`Page: ${getCurrentPageUrl()}`);
+  lines.push(`Route: ${getCurrentRoute()}`);
+  lines.push('');
+  lines.push('Source frames (top = origin of crash):');
+
+  // Top 3 frames get full detail; the rest are shown compactly so the
+  // developer can see the exact file:line:column that caused the crash
+  // without wading through minified React internals.
+  const primaryFrames = frames.slice(0, 3);
+  const appOnlyFrames = frames.filter(isAppFrame).slice(0, 3);
+
+  primaryFrames.forEach((frame, idx) => {
+    const prefix = idx === 0 ? 'FRAME 1 (crash origin)' : `Frame ${idx + 1}`;
+    lines.push(
+      `${prefix}: ${frame.functionName || '<anonymous>'} @ ${frame.fileName}:${frame.lineNumber}:${frame.columnNumber}`,
+    );
+  });
+
+  if (appOnlyFrames.length > 0 && appOnlyFrames.some((f) => !primaryFrames.includes(f))) {
+    lines.push('');
+    lines.push('Application frames:');
+    appOnlyFrames.forEach((frame) => {
+      lines.push(
+        `  ${frame.functionName || '<anonymous>'} @ ${frame.fileName}:${frame.lineNumber}:${frame.columnNumber}`,
+      );
+    });
+  }
+
+  lines.push('');
+  lines.push('Full stack:');
+  frames.forEach((frame, idx) => {
+    lines.push(`  ${idx + 1}. ${frame.raw}`);
+  });
+
+  return lines.join('\n');
 }
 
 // ============================================================================
@@ -254,10 +359,11 @@ export async function reportBug(
       errorMessage: normalized.message,
       errorDetails: normalized.details,
       errorHint: normalized.hint,
-      stackTrace: normalized.stack,
-      browserInfo: getBrowserInfo(),
-      appContext: getAppContext(),
-    };
+       stackTrace: normalized.stack,
+       fileDebug: extractFileDebugInfo(error),
+       browserInfo: getBrowserInfo(),
+       appContext: getAppContext(),
+     };
 
     // Fire-and-forget to not block user flow
     void sendBugReport(report);
@@ -285,12 +391,13 @@ function toDbPayload(report: BugReport): Record<string, any> {
     error_message: report.errorMessage,
     error_details: report.errorDetails,
     error_hint: report.errorHint,
-    stack_trace: report.stackTrace,
-    request_payload: report.requestPayload,
-    response_payload: report.responsePayload,
-    browser_info: report.browserInfo,
-    app_context: report.appContext,
-  };
+     stack_trace: report.stackTrace,
+     file_debug: report.fileDebug,
+     request_payload: report.requestPayload,
+     response_payload: report.responsePayload,
+     browser_info: report.browserInfo,
+     app_context: report.appContext,
+   };
 }
 
 async function sendBugReport(report: BugReport): Promise<void> {
@@ -378,12 +485,13 @@ export async function reportSupabaseError(
       errorMessage: normalized.message,
       errorDetails: normalized.details,
       errorHint: normalized.hint,
-      stackTrace: normalized.stack,
-      requestPayload: maskSensitiveData(context.requestPayload),
-      responsePayload: maskSensitiveData(context.responsePayload),
-      browserInfo: getBrowserInfo(),
-      appContext: getAppContext(),
-    };
+       stackTrace: normalized.stack,
+       fileDebug: extractFileDebugInfo(error),
+       requestPayload: maskSensitiveData(context.requestPayload),
+       responsePayload: maskSensitiveData(context.responsePayload),
+       browserInfo: getBrowserInfo(),
+       appContext: getAppContext(),
+     };
 
     void sendBugReport(report);
   } catch (e) {
@@ -441,6 +549,7 @@ export async function reportFetchError(
       errorMessage: parsedResponse?.message || message,
       errorDetails: details,
       errorHint: parsedResponse?.hint,
+      fileDebug: `Page: ${getCurrentPageUrl()}\nRoute: ${getCurrentRoute()}\nHTTP ${response.status} ${response.statusText}\nURL: ${responseUrl || ''}`,
       requestPayload: maskSensitiveData(context.requestPayload),
       responsePayload: maskSensitiveData(parsedResponse || { rawText: rawText.substring(0, 500), url: responseUrl }),
       browserInfo: getBrowserInfo(),
@@ -475,13 +584,14 @@ export async function reportRealtimeError(
       userRole: profile?.role || profile?.troll_role,
       streamId: context.streamId,
       functionName: context.functionName,
-      errorCode: normalized.code,
-      errorMessage: normalized.message,
-      errorDetails: normalized.details,
-      stackTrace: normalized.stack,
-      browserInfo: getBrowserInfo(),
-      appContext: getAppContext(),
-    };
+       errorCode: normalized.code,
+       errorMessage: normalized.message,
+       errorDetails: normalized.details,
+       stackTrace: normalized.stack,
+       fileDebug: extractFileDebugInfo(error),
+       browserInfo: getBrowserInfo(),
+       appContext: getAppContext(),
+     };
 
     void sendBugReport(report);
   } catch (e) {

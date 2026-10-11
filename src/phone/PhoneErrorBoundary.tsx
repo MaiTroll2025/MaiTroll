@@ -1,6 +1,7 @@
 import { ErrorInfo, ReactNode, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { parseErrorStack } from '@/lib/bugReporter'
 
 interface Props {
   children: ReactNode
@@ -13,12 +14,29 @@ interface CrashDetails {
   componentStack?: string
 }
 
+function formatFileDebug(stack?: string): string {
+  if (!stack) return '';
+  const frames = parseErrorStack(stack);
+  if (frames.length === 0) return '';
+
+  const lines: string[] = ['File debug (file:line:column — top = crash origin):'];
+  frames.slice(0, 5).forEach((f, i) => {
+    lines.push(
+      `  ${i + 1}. ${f.functionName || '<anonymous>'} @ ${f.fileName}${f.lineNumber !== null ? `:${f.lineNumber}` : ''}${f.columnNumber !== null ? `:${f.columnNumber}` : ''}`,
+    );
+  });
+  return lines.join('\n');
+}
+
 function PhoneCrashScreen({ crash, pathname }: { crash: CrashDetails; pathname: string }) {
   const pageName = pathname.split('/').filter(Boolean).pop() || 'Home'
+  const fileDebug = formatFileDebug(crash.stack)
   const diagnostics = [
-    `Type: ${crash.kind}`,
+    `Page: ${typeof window !== 'undefined' ? window.location.href : ''}`,
     `Route: ${pathname}`,
+    `Type: ${crash.kind}`,
     `Message: ${crash.message}`,
+    fileDebug,
     crash.stack ? `Stack:\n${crash.stack}` : '',
     crash.componentStack ? `Component stack:\n${crash.componentStack}` : '',
   ].filter(Boolean).join('\n\n')
@@ -60,6 +78,13 @@ function PhoneCrashScreen({ crash, pathname }: { crash: CrashDetails; pathname: 
             <summary className="cursor-pointer text-sm font-semibold text-slate-300">Technical details</summary>
             <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs text-slate-400">{diagnostics}</pre>
           </details>
+
+          {fileDebug && (
+            <details className="mb-5 rounded-xl border border-red-500/30 bg-red-950/20 p-3" open>
+              <summary className="cursor-pointer text-sm font-semibold text-red-300">File debug — exact file &amp; line causing the crash</summary>
+              <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs text-red-300">{fileDebug}</pre>
+            </details>
+          )}
 
           {copyMessage && <p role="status" className="mb-3 text-sm text-slate-300">{copyMessage}</p>}
           <div className="flex flex-wrap gap-3">

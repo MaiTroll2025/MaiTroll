@@ -28,6 +28,7 @@ interface BugReportRow {
   error_details: string | null;
   error_hint: string | null;
   stack_trace: string | null;
+  file_debug: string | null;
   request_payload: any;
   response_payload: any;
   browser_info: any;
@@ -68,6 +69,7 @@ function makeDebugReport(bug: BugReportRow): string {
     `Details: ${bug.error_details || ''}`,
     `Hint: ${bug.error_hint || ''}`,
     `Stack: ${bug.stack_trace || ''}`,
+    `File Debug: ${bug.file_debug || ''}`,
     `Request Payload: ${formatJson(bug.request_payload)}`,
     `Response Payload: ${formatJson(bug.response_payload)}`,
     `Created At: ${bug.created_at}`,
@@ -279,11 +281,16 @@ export default function BugCenterPanel() {
            lines.push(`${bug.error_hint}`);
            lines.push('');
          }
-         if (bug.stack_trace) {
-           lines.push(`STACK TRACE:`);
-           lines.push(`${bug.stack_trace}`);
-           lines.push('');
-         }
+          if (bug.stack_trace) {
+            lines.push(`STACK TRACE:`);
+            lines.push(`${bug.stack_trace}`);
+            lines.push('');
+          }
+          if (bug.file_debug) {
+            lines.push(`FILE DEBUG:`);
+            lines.push(`${bug.file_debug}`);
+            lines.push('');
+          }
           lines.push(`Occurrence Count: ${bug.occurrence_count || 1}`);
           lines.push(`Last Seen: ${bug.last_seen_at || 'N/A'}`);
           lines.push(`Created At: ${bug.created_at}`);
@@ -510,6 +517,12 @@ export default function BugCenterPanel() {
                 <div>
                   <div className="mb-1 text-gray-500">Stack</div>
                   <pre className="max-h-28 overflow-auto rounded bg-black/50 p-2 text-gray-300 whitespace-pre-wrap">{selectedBug.stack_trace}</pre>
+                </div>
+              )}
+              {selectedBug.file_debug && (
+                <div>
+                  <div className="mb-1 text-gray-500">File Debug</div>
+                  <pre className="max-h-40 overflow-auto rounded bg-black/50 p-2 text-red-300 whitespace-pre-wrap break-all">{selectedBug.file_debug}</pre>
                 </div>
               )}
               <div className="grid gap-2 md:grid-cols-2">

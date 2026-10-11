@@ -327,7 +327,7 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     return () => {
       cancelled = true
     }
-  }, [profile.id, profile, isAdmin, role, trollRole])
+  }, [profile?.id, profile, isAdmin, role, trollRole])
 
   return {
     role,

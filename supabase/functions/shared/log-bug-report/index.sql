@@ -30,6 +30,7 @@ DECLARE
   v_error_details TEXT;
   v_error_hint TEXT;
   v_stack_trace TEXT;
+  v_file_debug TEXT;
   v_request_payload JSONB;
   v_response_payload JSONB;
   v_browser_info JSONB;
@@ -52,6 +53,7 @@ BEGIN
   v_error_details := payload->>'error_details';
   v_error_hint    := payload->>'error_hint';
   v_stack_trace   := payload->>'stack_trace';
+  v_file_debug    := payload->>'file_debug';
   v_request_payload  := payload->'request_payload';
   v_response_payload := payload->'response_payload';
   v_browser_info     := payload->'browser_info';
@@ -79,7 +81,8 @@ BEGIN
     error_code = COALESCE(v_error_code, error_code),
     error_details = COALESCE(v_error_details, error_details),
     error_hint = COALESCE(v_error_hint, error_hint),
-    stack_trace = COALESCE(v_stack_trace, stack_trace)
+    stack_trace = COALESCE(v_stack_trace, stack_trace),
+    file_debug = COALESCE(v_file_debug, file_debug)
   WHERE id = (
     SELECT id
     FROM public.app_bug_reports
@@ -104,14 +107,14 @@ BEGIN
         source, severity, page_url, route_path,
         user_id, user_email, user_role,
         stream_id, function_name, table_name,
-        error_code, error_message, error_details, error_hint, stack_trace,
+        error_code, error_message, error_details, error_hint, stack_trace, file_debug,
         request_payload, response_payload, browser_info, app_context,
         created_at, updated_at, occurrence_count, last_seen_at
       ) VALUES (
         v_source, v_severity, v_page_url, v_route_path,
         v_user_id, v_user_email, v_user_role,
         v_stream_id, v_function_name, v_table_name,
-        v_error_code, v_error_message, v_error_details, v_error_hint, v_stack_trace,
+        v_error_code, v_error_message, v_error_details, v_error_hint, v_stack_trace, v_file_debug,
         v_request_payload, v_response_payload, v_browser_info, v_app_context,
         v_now, v_now, 1, v_now
       )

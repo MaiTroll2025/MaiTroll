@@ -12,6 +12,7 @@ import { useUcRedirect } from '../../hooks/usePageVisibility'
 import type { SwipeDirection } from '../../contexts/SwipeNavigationContext'
 import { useSwipeNavigationProvider } from '../../hooks/useSwipeNavigation'
 import { useHomeSwipeNavigation } from '../../hooks/useHomeSwipeNavigation'
+import { requiresWebRenderer } from '../../lib/seo/seoRoutes'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -46,6 +47,7 @@ export default function AppLayout({
    const { isCollapsed } = useSidebarStore()
    const { isMobileWidth } = useIsMobile()
     const isAuthPage = location.pathname.startsWith('/auth');
+    const isPublicWebOnlyPage = requiresWebRenderer(location.pathname);
     const isLivePage = location.pathname.startsWith('/live/') || location.pathname.startsWith('/watch/') || location.pathname.startsWith('/gaming/watch/') || (location.pathname.startsWith('/broadcast/') && !location.pathname.startsWith('/broadcast/setup')) || location.pathname.startsWith('/stream/') || location.pathname === '/live-swipe';
     const isTreelzPage = location.pathname.startsWith('/treelz');
      const _isUtromailPage = location.pathname.startsWith('/utromail') || location.pathname.startsWith('/tromail') || location.pathname.startsWith('/messages');
@@ -65,10 +67,9 @@ export default function AppLayout({
     return () => window.removeEventListener('open-more-panel', openMore)
   }, [])
 
-  // New bottom nav bar is always shown (replaces sidebar on all screen sizes)
-   // Hidden on live pages and treelz pages
+  // The app navigation is hidden on focused experiences and public web-only pages.
    const isHytroGamingSetupLivePage = location.pathname.startsWith('/broadcast/setup/gaming') && hytroSetupLive
-    const showNewBottomNavBar = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed && location.pathname !== '/'
+    const showNewBottomNavBar = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed && !isPublicWebOnlyPage && location.pathname !== '/'
 
  // Setup global message notifications - opens chat bubble when message received
  useEffect(() => {
