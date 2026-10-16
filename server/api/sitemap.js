@@ -21,6 +21,10 @@ async function generateSitemap(supabase) {
   // ============================================================
   const staticPages = [
     { loc: `${APP_URL}/`, priority: 1.0, changefreq: 'daily' },
+    { loc: `${APP_URL}/features/broadcasting-app`, priority: 0.8, changefreq: 'monthly' },
+    { loc: `${APP_URL}/features/social-media`, priority: 0.8, changefreq: 'monthly' },
+    { loc: `${APP_URL}/updates`, priority: 0.8, changefreq: 'daily' },
+    { loc: `${APP_URL}/blog`, priority: 0.8, changefreq: 'daily' },
     { loc: `${APP_URL}/explore`, priority: 1.0, changefreq: 'always' },
     { loc: `${APP_URL}/live`, priority: 0.9, changefreq: 'always' },
     { loc: `${APP_URL}/live-swipe`, priority: 0.9, changefreq: 'always' },
@@ -61,6 +65,30 @@ async function generateSitemap(supabase) {
   // PUBLIC PROFILES
   // ============================================================
   if (supabase) {
+    try {
+      const { data: posts, error: postError } = await supabase
+        .from('site_updates')
+        .select('slug, post_type, updated_at, published_at')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(5000);
+
+      if (postError) throw postError;
+      for (const post of posts || []) {
+        if (post.post_type !== 'blog' && post.post_type !== 'update') continue;
+        const collection = post.post_type === 'blog' ? 'blog' : 'updates';
+        const lastmod = (post.updated_at || post.published_at || now).split('T')[0];
+        urls.push(`  <url>
+    <loc>${escapeXml(`${APP_URL}/${collection}/${encodeURIComponent(post.slug)}`)}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`);
+      }
+    } catch (err) {
+      console.error('[Sitemap] Error fetching public site updates:', err.message);
+    }
+
     try {
       const { data: profiles, error: profileError } = await supabase
         .from('user_profiles')

@@ -232,25 +232,30 @@ BEGIN
          WHERE id = v_pet.owner_id
            AND is_online IS TRUE
        ) THEN
-      PERFORM public.create_notification(
-        v_pet.owner_id,
-        'pet_care',
-        'Your Troll Pet needs care',
-        v_pet.name || ' is low on ' || v_lowest_need || ' (' || v_lowest_status || '%). Visit the Troll Animal Shelter to help.',
-        jsonb_build_object(
-          'source', 'pet_care_lifecycle',
-          'pet_id', v_pet.id,
-          'need', v_lowest_need,
-          'need_status', v_lowest_status,
-          'care_status', v_pet.care_status,
-          'route', '/troll-animal-shelter'
-        )
-      );
+      BEGIN
+        PERFORM public.create_notification(
+          v_pet.owner_id,
+          'pet_care',
+          'Your Troll Pet needs care',
+          v_pet.name || ' is low on ' || v_lowest_need || ' (' || v_lowest_status || '%). Visit the Troll Animal Shelter to help.',
+          jsonb_build_object(
+            'source', 'pet_care_lifecycle',
+            'pet_id', v_pet.id,
+            'need', v_lowest_need,
+            'need_status', v_lowest_status,
+            'care_status', v_pet.care_status,
+            'route', '/troll-animal-shelter'
+          )
+        );
+        v_notifications := v_notifications + 1;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE NOTICE 'pet_care_lifecycle: failed to send care notification for pet %: %', v_pet.id, SQLERRM;
+      END;
 
       UPDATE public.pets
       SET last_offline_care_notification_at = now()
       WHERE id = v_pet.id;
-      v_notifications := v_notifications + 1;
     END IF;
   END LOOP;
 

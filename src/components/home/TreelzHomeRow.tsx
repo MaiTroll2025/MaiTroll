@@ -10,47 +10,74 @@ function formatCount(n: number): string {
   return n.toLocaleString()
 }
 
-function TreelzThumb({ post }: { post: TreelzPost }) {
+function TreelzThumb({
+  post,
+  isPlaying,
+  onPlay,
+}: {
+  post: TreelzPost
+  isPlaying: boolean
+  onPlay: () => void
+}) {
   const [hovered, setHovered] = useState(false)
 
   return (
-    <Link
-      to={`/treelz?post=${post.id}`}
-      className="group relative flex-shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.08]"
-      style={{ width: 180 }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="relative aspect-[9/16] w-full overflow-hidden bg-black/40">
-        {post.thumbnail_url ? (
-          <img
-            src={post.thumbnail_url}
-            alt=""
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+    <article className="group relative flex-shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.08]" style={{ width: 180 }}>
+      <div
+        className="relative aspect-[9/16] w-full overflow-hidden bg-black/40"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {isPlaying ? (
+          <video
+            key={post.id}
+            src={post.video_url}
+            poster={post.thumbnail_url || undefined}
+            className="h-full w-full object-cover"
+            controls
+            autoPlay
+            muted
+            playsInline
+            preload="metadata"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-900/60 to-cyan-900/60">
-            <Play className="h-8 w-8 text-white/40" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        {hovered && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-              <Play className="h-5 w-5 text-white" fill="white" />
+          <button
+            type="button"
+            onClick={onPlay}
+            className="absolute inset-0 h-full w-full text-left"
+            aria-label={`Play Treelz: ${post.caption || 'Untitled'}`}
+          >
+            {post.thumbnail_url ? (
+              <img
+                src={post.thumbnail_url}
+                alt=""
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-900/60 to-cyan-900/60">
+                <Play className="h-8 w-8 text-white/40" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            {hovered && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                  <Play className="h-5 w-5 text-white" fill="white" />
+                </div>
+              </div>
+            )}
+            <div className="absolute bottom-2 left-2 right-2">
+              <p className="line-clamp-2 text-[10px] font-bold leading-tight text-white drop-shadow-lg">
+                {post.caption || 'Untitled'}
+              </p>
             </div>
-          </div>
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-sm">
+              <Eye className="h-2.5 w-2.5" />
+              {formatCount(post.views_count || 0)}
+            </div>
+          </button>
         )}
-        <div className="absolute bottom-2 left-2 right-2">
-          <p className="line-clamp-2 text-[10px] font-bold leading-tight text-white drop-shadow-lg">
-            {post.caption || 'Untitled'}
-          </p>
-        </div>
-        <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-sm">
-          <Eye className="h-2.5 w-2.5" />
-          {formatCount(post.views_count || 0)}
-        </div>
       </div>
       <div className="flex items-center gap-2 px-2 py-1.5">
         {post.author?.avatar_url ? (
@@ -72,13 +99,14 @@ function TreelzThumb({ post }: { post: TreelzPost }) {
           {formatCount(post.gifts_received || 0)}
         </span>
       </div>
-    </Link>
+    </article>
   )
 }
 
 export default function TreelzHomeRow({ title, icon, sortBy }: { title: string; icon: React.ReactNode; sortBy?: string }) {
   const [posts, setPosts] = useState<TreelzPost[]>([])
   const [loading, setLoading] = useState(true)
+  const [playingPostId, setPlayingPostId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -114,7 +142,7 @@ export default function TreelzHomeRow({ title, icon, sortBy }: { title: string; 
       <section className="relative">
         <div className="mb-3 flex items-center gap-2">
           {icon}
-          <h3 className="text-sm font-black text-white">{title}</h3>
+          <Link to="/treelz" className="text-sm font-black text-white hover:text-cyan-300">{title}</Link>
         </div>
         <div className="flex gap-3 overflow-hidden">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -137,7 +165,7 @@ export default function TreelzHomeRow({ title, icon, sortBy }: { title: string; 
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="text-sm font-black text-white">{title}</h3>
+          <Link to="/treelz" className="text-sm font-black text-white hover:text-cyan-300">{title}</Link>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -168,7 +196,12 @@ export default function TreelzHomeRow({ title, icon, sortBy }: { title: string; 
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {posts.map((post) => (
-          <TreelzThumb key={post.id} post={post} />
+          <TreelzThumb
+            key={post.id}
+            post={post}
+            isPlaying={playingPostId === post.id}
+            onPlay={() => setPlayingPostId(post.id)}
+          />
         ))}
       </div>
     </section>

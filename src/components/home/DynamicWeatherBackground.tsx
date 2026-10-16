@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Video, Users } from 'lucide-react'
 import {
   fetchUserWeather,
   getSkyColors,
@@ -17,18 +18,17 @@ const CITY_HEIGHT = 420
 export interface BuildingMeta {
   label: string
   to: string
+  type?: 'home' | 'arcade' | 'bank' | 'court' | 'standard' | 'achievement' | 'broadcast'
 }
 
-interface BuildingMetaExtended extends BuildingMeta {
-  type?: 'home' | 'arcade' | 'bank' | 'court' | 'standard' | 'achievement'
-}
+type BuildingMetaExtended = BuildingMeta
 
 const DEFAULT_BUILDINGS: BuildingMetaExtended[] = [
   { label: 'Your Home', to: '/home', type: 'home' },
   { label: 'Chats', to: '/utromail', type: 'standard' },
   { label: 'MAI Troll Bank', to: '/store', type: 'bank' },
   { label: 'Treelz', to: '/treelz', type: 'standard' },
-  { label: 'Go Live', to: '/broadcast/setup', type: 'standard' },
+  { label: 'Go Live', to: '/broadcast/setup', type: 'broadcast' },
   { label: 'Court House', to: '/troll-court', type: 'court' },
   { label: 'Hytro Arcade', to: '/hytrogaming', type: 'arcade' },
   { label: 'MAI Pay', to: '/mai-pay', type: 'bank' },
@@ -304,7 +304,7 @@ interface Building {
     person: boolean
     flicker: number
   }[]
-  buildingType: 'home' | 'arcade' | 'bank' | 'court' | 'standard' | 'achievement'
+  buildingType: 'home' | 'arcade' | 'bank' | 'court' | 'standard' | 'achievement' | 'broadcast'
 }
 
 function generateBuildings(
@@ -331,6 +331,9 @@ function generateBuildings(
     } else if (buildingType === 'bank') {
       width = segmentWidth * (0.72 + Math.random() * 0.18)
       height = 155 + Math.random() * 70
+    } else if (buildingType === 'broadcast') {
+      width = segmentWidth * 0.96
+      height = 110
     } else {
       width = segmentWidth * (0.62 + Math.random() * 0.3)
       height = 100 + Math.random() * 220
@@ -1636,6 +1639,8 @@ interface RealisticBuildingProps {
   isDark: boolean
   isNight: boolean
   onClick: (to: string) => void
+  onJoinRandomSeat?: () => void
+  isJoiningRandomSeat?: boolean
 }
 
 function getBuildingFacade(
@@ -1717,7 +1722,49 @@ function RealisticBuilding({
   isDark,
   isNight,
   onClick,
+  onJoinRandomSeat,
+  isJoiningRandomSeat,
 }: RealisticBuildingProps) {
+  if (building.buildingType === 'broadcast') {
+    return (
+      <div
+        className="absolute grid grid-cols-2 gap-1"
+        style={{
+          left: building.x,
+          bottom: 80,
+          width: building.width,
+          height: 100,
+          pointerEvents: 'auto',
+          zIndex: 6,
+        }}
+      >
+        <button
+          type="button"
+          aria-label="Start your broadcast"
+          onClick={() => onClick(building.to)}
+          className="group flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-red-400/50 bg-gradient-to-b from-red-950/95 to-black/95 px-1 text-center text-white shadow-[0_0_24px_rgba(239,68,68,0.4)] transition hover:-translate-y-1 hover:border-red-300"
+        >
+          <Video size={25} className="text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.85)]" />
+          <span className="text-[8px] font-black uppercase tracking-wide">Go Live</span>
+          <span className="text-[6px] font-bold leading-tight text-white/70">Start Broadcast</span>
+        </button>
+        <button
+          type="button"
+          aria-label="Join a random free broadcast seat"
+          onClick={onJoinRandomSeat}
+          disabled={!onJoinRandomSeat || isJoiningRandomSeat}
+          className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-cyan-400/35 bg-gradient-to-b from-cyan-950/95 to-black/95 px-1 text-center text-white shadow-[0_0_20px_rgba(34,211,238,0.18)] transition hover:-translate-y-1 hover:border-cyan-300 disabled:cursor-wait disabled:opacity-60"
+        >
+          <Users size={20} className="text-cyan-300" />
+          <span className="text-[7px] font-black uppercase tracking-wide">Random Seat</span>
+          <span className="text-[6px] font-bold leading-tight text-white/70">
+            {isJoiningRandomSeat ? 'Finding...' : 'Join Free'}
+          </span>
+        </button>
+      </div>
+    )
+  }
+
   const facade = getBuildingFacade(building, isDark)
   const isHome = building.buildingType === 'home'
   const isBank = building.buildingType === 'bank'
@@ -2634,6 +2681,8 @@ export default function DynamicWeatherBackground({
   walkerCount = 1,
   buildings: buildingMetas = DEFAULT_BUILDINGS,
   onBuildingClick,
+  onJoinRandomSeat,
+  isJoiningRandomSeat = false,
 }: {
   isDark?: boolean
   showWalker?: boolean
@@ -2642,6 +2691,8 @@ export default function DynamicWeatherBackground({
   onBuildingClick?: (
     to: string,
   ) => void
+  onJoinRandomSeat?: () => void
+  isJoiningRandomSeat?: boolean
 }) {
   const cityCanvasRef =
     useRef<HTMLCanvasElement>(null)
@@ -3568,6 +3619,8 @@ export default function DynamicWeatherBackground({
               isDark={isDark}
               isNight={isNight}
               onClick={handleBuildingClick}
+              onJoinRandomSeat={onJoinRandomSeat}
+              isJoiningRandomSeat={isJoiningRandomSeat}
             />
           ))}
         </div>

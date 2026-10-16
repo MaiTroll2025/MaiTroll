@@ -28,10 +28,14 @@ Allow: /sell
 Allow: /about
 Allow: /broadcasting
 Allow: /categories
+Allow: /features/broadcasting-app
+Allow: /features/social-media
+Allow: /updates
+Allow: /blog
 
 # Sitemaps Reference
-Sitemap: https://maitroll.com
-Sitemap: https://maitroll.com
+Sitemap: https://www.maitroll.com/sitemap.xml
+Sitemap: https://www.maitroll.com/sitemap-dynamic.xml
 
 # ------------------------------------------------------------
 # STRICT DISALLOWS: SECURITY & BACKGROUND OPERATIONS
@@ -110,6 +114,7 @@ Disallow: /api/og/
 # STRICT DISALLOWS: STAFF CONSOLES & ROLES
 # ------------------------------------------------------------
 Disallow: /admin/
+Disallow: /admin
 Disallow: /secretary/
 Disallow: /ceo-assistant-dashboard
 Disallow: /noah-assistant-dashboard

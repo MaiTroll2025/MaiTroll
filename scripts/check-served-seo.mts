@@ -5,7 +5,7 @@
  * which was the original indexing blocker.
  */
 
-const BASE = process.argv[2] || 'http://localhost:4178'
+const BASE = process.argv[2] || 'http://localhost:3002'
 
 let failures = 0
 const fail = (m) => {
@@ -92,13 +92,37 @@ for (const path of ['/sitemap.xml', '/sitemap-dynamic.xml']) {
   } else ok(`robots.txt — 200, declares both sitemaps`)
 }
 
-// A SPA deep link must still resolve to the app shell (not 404).
+// Deep links must return route-specific metadata in the initial HTML response.
 {
+  for (const route of ['/terms', '/terms-of-service', '/legal/terms']) {
+    const { res, body } = await get(route)
+    const title = /<title>(.*?)<\/title>/i.exec(body)?.[1]
+    const canonical = /<link rel="canonical" href="([^"]+)"/i.exec(body)?.[1]
+    if (res.status === 200 && title === 'Terms of Service | MaiTroll'
+      && canonical === 'https://www.maitroll.com/terms') {
+      ok(`${route} — legal title and canonical`)
+    } else {
+      fail(`${route} returned ${res.status} without legal title/canonical metadata`)
+    }
+  }
+
+  {
+    const { res, body } = await get('/features/broadcasting-app')
+    if (res.status === 200 && body.includes('<title>Live Broadcasting App for Creators | MaiTroll</title>')
+      && body.includes('Streaming quality and latency')) {
+      ok('/features/broadcasting-app — route-specific metadata and content')
+    } else {
+      fail(`/features/broadcasting-app returned ${res.status} without feature metadata/content`)
+    }
+  }
+
   const { res, body } = await get('/profile/someuser')
-  if (res.status === 200 && body.includes('<div id="root"')) {
-    ok('/profile/someuser — 200 SPA shell (deep link intact)')
+  if (res.status === 200 && /<title>someuser \(@someuser\) \| MaiTroll<\/title>/i.test(body)
+    && body.includes('href="https://www.maitroll.com/profile/someuser"')
+    && body.includes('<div id="root"><main>')) {
+    ok('/profile/someuser — route-specific title, canonical, and server-rendered content')
   } else {
-    fail(`/profile/someuser returned ${res.status} without an SPA shell`)
+    fail(`/profile/someuser returned ${res.status} without route-specific HTML metadata`)
   }
 }
 

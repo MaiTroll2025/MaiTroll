@@ -68,6 +68,12 @@ import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
 import { MaiTrollBroadcastTheme as theme } from '../../styles/broadcastTheme'
 import TrollUpSlideModal from '../../components/trollup/TrollUpSlideModal'
 
+// Per-broadcast ticker + coin tipping integration
+import { useBroadcastTicker } from '../../hooks/useBroadcastTicker'
+import BroadcastTipOverlay, { type TipOverlayItem } from '../../components/broadcast/BroadcastTipOverlay'
+import BroadcastTipTrigger from '../../components/broadcast/BroadcastTipTrigger'
+import WishlistMiniBrowserButton from '../../components/broadcast/WishlistMiniBrowserButton'
+
 // Reusable label classes from broadcastTheme
 // const guestLabel = 'rounded-lg bg-cyan-500/20 px-2.5 py-1 text-[11px] font-black text-cyan-300 shadow-[0_0_12px_rgba(45,212,191,0.25)]'
 // const sectionLabel = 'inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-sm font-bold text-white/70 backdrop-blur'
@@ -692,6 +698,42 @@ export function BroadcastPage() {
    // Accumulate gift amounts received while broadcasterProfile is still loading (null);
    // applied once the profile arrives via @see applyPendingGiftsEffect
 const isHost = stream?.user_id === user?.id
+
+  // Per-broadcast ticker data (announcement + wishlist URL) with realtime sync.
+  const broadcastTicker = useBroadcastTicker(streamId)
+
+  // Flying-chat coin tip overlay state.
+  const [tipOverlayItems, setTipOverlayItems] = useState<TipOverlayItem[]>([])
+  const dismissTipOverlay = useCallback((id: string) => {
+    setTipOverlayItems((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  const broadcasterDisplayName = useMemo(() => {
+    if (broadcasterProfile?.display_name) return broadcasterProfile.display_name
+    if (broadcasterProfile?.username) return broadcasterProfile.username
+    if (stream?.user_id === user?.id && profile?.display_name) return profile.display_name
+    if (stream?.user_id === user?.id && profile?.username) return profile.username
+    return 'Broadcaster'
+  }, [broadcasterProfile, stream, user, profile])
+
+  // Listen for `tip_sent` realtime events so the flying-chat overlay
+  // appears for every viewer on this page.
+  useStreamRealtime(streamId, {
+    onPresenceBroadcast: (event) => {
+      const payload = event.new as any
+      if (!payload || payload.type !== 'tip_sent') return
+      const amount = Number(payload.amount || 0)
+      if (!amount) return
+      const item: TipOverlayItem = {
+        id: payload.txn_id || `tip_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        senderUsername: payload.sender_username || payload.senderId || 'Viewer',
+        broadcasterDisplayName: payload.broadcaster_display_name || broadcasterDisplayName,
+        amount,
+        createdAt: Date.now(),
+      }
+      setTipOverlayItems((prev) => [...prev, item])
+    },
+  })
 
   // GetStream RTC for staff/official broadcasters
   const getStreamRoom = useGetStreamRoom({
@@ -6416,7 +6458,7 @@ const toggleMicrophone = useCallback(async () => {
                 }}
               >
                 <div className="mx-auto flex h-full w-full max-w-7xl items-center overflow-hidden">
-                    <AudienceBubbleTicker
+<AudienceBubbleTicker
                       streamId={streamId || ''}
                       audience={audienceWithAnon}
                       currentUserId={user?.id}
@@ -6425,11 +6467,24 @@ const toggleMicrophone = useCallback(async () => {
                       className="relative z-0 flex w-full items-center"
                       onGiftUser={onGift}
                       onModerateUser={handleOpenUserAction}
-                    />
+/>
+                    {/* Mini wishlist browser button (desktop only, right side of ticker) */}
+                    <div className="relative z-10 flex shrink-0 items-center px-3">
+                      <WishlistMiniBrowserButton
+                        wishlistUrl={broadcastTicker.data.wishlistUrl}
+                        broadcasterDisplayName={broadcasterDisplayName}
+                        isBroadcaster={isHost}
+                        onEdit={() => {
+                          // Double-tap / click on the ticker opens the edit flow.
+                          // We reuse the broadcaster controls modal for editing the URL.
+                          setIsBroadcasterControlsOpen(true)
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-             {myLeagues.length > 0 && (
+              {myLeagues.length > 0 && (
                <div className="w-full z-20 px-0 py-3 bg-black/10 border-b border-white/10">
                  <div className="mx-auto flex max-w-7xl flex-col gap-3 rounded-3xl border border-cyan-500/10 bg-slate-950/90 p-4 text-sm text-slate-200 shadow-[0_0_30px_rgba(45,212,191,0.08)] sm:flex-row sm:items-center sm:justify-between">
                    <div className="flex items-center gap-3">
@@ -9431,9 +9486,35 @@ onOpenSeatsModal={handleOpenSeatsModal}
                 </div>
               </div>
 )}
-          </GiftSystemProvider>
+</GiftSystemProvider>
           <RoleInviteHandler />
-       </>
+
+          {/* Flying-chat coin tip overlay (web + mobile) */}
+          <BroadcastTipOverlay
+            tips={tipOverlayItems}
+            onDismiss={dismissTipOverlay}
+          />
+
+          {/* Floating tip trigger button for viewers (non-broadcaster) */}
+          {!isHost && user?.id && streamId && (
+            <BroadcastTipTrigger
+              streamId={streamId}
+              broadcasterId={stream?.user_id || stream?.broadcaster_id || user.id}
+              broadcasterDisplayName={broadcasterDisplayName}
+              onTipSent={(amount) => {
+                // Optimistic local overlay in case realtime hasn't propagated yet.
+                const item: TipOverlayItem = {
+                  id: `tip_local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+                  senderUsername: profile?.username || profile?.display_name || 'You',
+                  broadcasterDisplayName,
+                  amount,
+                  createdAt: Date.now(),
+                }
+                setTipOverlayItems((prev) => [...prev, item])
+              }}
+            />
+          )}
+        </>
     );
   }
 

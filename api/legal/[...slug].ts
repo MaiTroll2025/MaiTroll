@@ -4,6 +4,8 @@ const privacyPolicyHTML = `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Privacy Policy - MaiTroll</title>
+  <meta name="description" content="Learn how MaiTroll collects, uses, and protects information when you use its app and services.">
+  <link rel="canonical" href="https://www.maitroll.com/legal/privacy">
   <link rel="canonical" href="https://www.maitroll.com/legal/privacy">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #e0e0e0; background: #05010a; }
@@ -73,6 +75,10 @@ const termsOfServiceHTML = `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Terms of Service - MaiTroll</title>
+  <meta name="description" content="Review the MaiTroll Terms of Service for information about using the website, applications, community, broadcasts, and related platform features.">
+  <link rel="canonical" href="https://www.maitroll.com/terms">
+  <meta property="og:title" content="Terms of Service | MaiTroll">
+  <meta property="og:description" content="Review the MaiTroll Terms of Service for information about using the website, applications, community, broadcasts, and related platform features.">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #e0e0e0; background: #05010a; }
     h1 { color: #f8f8f2; border-bottom: 1px solid #2c2c2c; padding-bottom: 10px; }

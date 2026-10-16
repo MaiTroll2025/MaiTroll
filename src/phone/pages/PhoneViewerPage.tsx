@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Bell, Gift, Heart, Mic, MicOff, Plus, Radio, Share2, Users, Video, VideoOff, Zap } from 'lucide-react';
 
 import {
@@ -1037,6 +1037,9 @@ export default function PhoneViewerPage() {
   const params =
     useParams()
 
+  const location =
+    useLocation()
+
   const navigate =
     useNavigate()
 
@@ -1048,6 +1051,7 @@ export default function PhoneViewerPage() {
   const swipeStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
   const swipeHandledRef = useRef(false)
   const swipeLockedRef = useRef(false)
+  const autoJoinSeatRequestRef = useRef<string | null>(null)
 
   const [stream, setStream] =
     useState<Stream | null>(null)
@@ -1960,6 +1964,44 @@ export default function PhoneViewerPage() {
       broadcasterProfile,
       stream as any,
     )
+
+    useEffect(() => {
+      const query = new URLSearchParams(location.search)
+      const requestedSeat = query.get('joinSeat')
+      if (!requestedSeat || !resolvedStreamId || !stream || !user?.id) return
+
+      const seatIndex = Number(requestedSeat)
+      const requestKey = `${resolvedStreamId}:${requestedSeat}`
+      if (autoJoinSeatRequestRef.current === requestKey) return
+      autoJoinSeatRequestRef.current = requestKey
+
+      const clearRequest = () => {
+        query.delete('joinSeat')
+        const remainingQuery = query.toString()
+        navigate(`${location.pathname}${remainingQuery ? `?${remainingQuery}` : ''}`, { replace: true })
+      }
+
+      if (!Number.isInteger(seatIndex) || seatIndex < 1) {
+        clearRequest()
+        toast.error('That broadcast seat could not be selected.')
+        return
+      }
+
+      if ((stream as any)?.are_seats_locked) {
+        clearRequest()
+        toast.info('Seats are currently locked.')
+        return
+      }
+
+      if (getSeatPrice(stream, seatIndex) !== 0) {
+        clearRequest()
+        toast.info('That seat is no longer free. No coins were charged.')
+        return
+      }
+
+      clearRequest()
+      void joinSeat(seatIndex, 0, viewerIdentityRef.current || viewerIdentity)
+    }, [joinSeat, location.pathname, location.search, navigate, resolvedStreamId, stream, user?.id, viewerIdentity])
 
     const protectionOrderParticipantIds = useMemo(
       () =>

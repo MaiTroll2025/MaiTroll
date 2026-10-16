@@ -10,7 +10,9 @@ import type { LiveItem } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
 import { useWallNotifications } from '@/hooks/useWallNotifications'
+import { useRandomFreeSeat } from '@/hooks/useRandomFreeSeat'
 import { PhoneButton } from '../components/PhoneButton'
+import TreelzHomeRow from '@/components/home/TreelzHomeRow'
 
 const glass =
   'border border-[#FF7A00]/10 bg-[#0D0814]/85 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.40)]'
@@ -683,6 +685,8 @@ export default function PhoneHomepage({
     [navigate, onNavigate],
   )
 
+  const { joinRandomFreeSeat, joiningRandomSeat } = useRandomFreeSeat(user?.id, go)
+
   const handleStreamClick = useCallback(
     (item: LiveItem) => {
       if (item.category === 'gaming') {
@@ -878,32 +882,31 @@ export default function PhoneHomepage({
           </div>
 
           {/* MAIN CTA */}
-          <button
-            type="button"
-            onClick={() => go('/go-live')}
-            className="group relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#FF7A00]/50 bg-gradient-to-br from-[#FF7A00] via-[#F97316] to-[#A855F7] p-3 text-white shadow-[0_0_25px_rgba(0,191,255,0.30),0_0_35px_rgba(191,0,255,0.20)] transition-all duration-200 active:scale-[0.97] hover:scale-[1.02]"
-          >
+          <div className="group relative grid grid-cols-2 gap-1 overflow-hidden rounded-2xl border border-[#FF7A00]/50 bg-gradient-to-br from-[#FF7A00] via-[#F97316] to-[#A855F7] p-1 text-white shadow-[0_0_25px_rgba(0,191,255,0.30),0_0_35px_rgba(191,0,255,0.20)]">
             <div className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-white/20 blur-2xl transition-transform duration-500 group-hover:scale-150" />
-
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10" />
-
-            <div className="relative flex flex-col items-center">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-black/10 shadow-[0_0_15px_rgba(255,255,255,0.15)]">
-                <Radio
-                  size={18}
-                  className="text-white transition-transform duration-200 group-hover:scale-110"
-                />
-              </div>
-
-              <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-white">
-                GO LIVE
+            <button
+              type="button"
+              onClick={() => go('/broadcast/setup')}
+              className="relative flex min-h-[88px] flex-col items-center justify-center rounded-xl border border-white/20 bg-red-950/35 px-1 text-center transition hover:bg-red-950/55 active:scale-[0.97]"
+            >
+              <Radio size={18} className="text-white" />
+              <p className="mt-1.5 text-[9px] font-black uppercase tracking-wide text-white">GO LIVE</p>
+              <p className="mt-0.5 text-[6px] font-black uppercase tracking-wider text-white/80">Start Your Broadcast</p>
+            </button>
+            <button
+              type="button"
+              onClick={joinRandomFreeSeat}
+              disabled={joiningRandomSeat}
+              className="relative flex min-h-[88px] flex-col items-center justify-center rounded-xl border border-white/20 bg-black/25 px-1 text-center transition hover:bg-black/40 active:scale-[0.97] disabled:cursor-wait disabled:opacity-60"
+            >
+              <Users size={18} className="text-white" />
+              <p className="mt-1.5 text-[8px] font-black uppercase tracking-wide text-white">RANDOM SEAT</p>
+              <p className="mt-0.5 text-[6px] font-black uppercase tracking-wider text-white/80">
+                {joiningRandomSeat ? 'Finding...' : 'Join Free'}
               </p>
-
-              <p className="mt-0.5 text-[7px] font-black uppercase tracking-wider text-white/80">
-                Start Your Broadcast
-              </p>
-            </div>
-          </button>
+            </button>
+          </div>
 
           <div className={`${glass} rounded-2xl border border-[#A855F7]/30 bg-gradient-to-br from-[#A855F7]/10 via-[#100914]/90 to-[#FF7A00]/10 rounded-2xl p-3 shadow-[inset_0_0_18px_rgba(168,85,247,.06)]`}>
             <Users size={14} className="text-[#A855F7]" />
@@ -937,6 +940,8 @@ export default function PhoneHomepage({
             onItemClick={handleStreamClick}
             onViewAll={() => go('/live')}
           />
+
+          <TreelzHomeRow title="Treelz" icon={<Play size={15} className="text-[#FF7A00]" />} />
 
           {/* Hytro Gaming */}
           <PhoneSection
@@ -1142,19 +1147,33 @@ export default function PhoneHomepage({
           {/* -------------------------------------------------------------- */}
 
           {user && (
-            <PhoneButton
-              variant="primary"
-              size="lg"
-              icon={<Radio size={20} />}
-              onClick={() => go('/broadcast/setup')}
-              className="w-full justify-start gap-3 px-4 py-3 shadow-[0_0_35px_rgba(0,191,255,0.08)]"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-black text-white">Ready to Go Live?</p>
-                <p className="mt-0.5 text-[9px] font-bold text-zinc-500">Start your broadcast and join the Troll City network.</p>
-              </div>
-              <ChevronRight size={17} className="text-[#FF7A00] shrink-0" />
-            </PhoneButton>
+            <div className="grid grid-cols-2 gap-2">
+              <PhoneButton
+                variant="primary"
+                size="lg"
+                icon={<Radio size={20} />}
+                onClick={() => go('/broadcast/setup')}
+                className="w-full justify-start gap-2 px-3 py-3 text-left shadow-[0_0_35px_rgba(0,191,255,0.08)]"
+              >
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black normal-case text-white">Start Your Broadcast</p>
+                </div>
+              </PhoneButton>
+              <PhoneButton
+                variant="secondary"
+                size="lg"
+                icon={<Users size={20} />}
+                onClick={joinRandomFreeSeat}
+                disabled={joiningRandomSeat}
+                className="w-full justify-start gap-2 px-3 py-3 text-left"
+              >
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black normal-case text-white">
+                    {joiningRandomSeat ? 'Finding Seat...' : 'Join Free Seat'}
+                  </p>
+                </div>
+              </PhoneButton>
+            </div>
           )}
         </div>
 

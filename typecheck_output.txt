@@ -1,4 +1,0 @@
-
-> Mai Troll@1.0.0 check
-> tsc --noEmit
-

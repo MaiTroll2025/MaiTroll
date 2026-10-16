@@ -86,6 +86,21 @@ function urlEntry(loc, lastmod, changefreq, priority) {
 const urls = []
 
 // ============================================================
+// 0. Static public marketing pages
+// ============================================================
+for (const route of [
+  '/',
+  '/about',
+  '/terms',
+  '/features/broadcasting-app',
+  '/features/social-media',
+  '/updates',
+  '/blog',
+]) {
+  urls.push(urlEntry(`${BASE_URL}${route}`, today, 'weekly', '0.8'))
+}
+
+// ============================================================
 // 1. User Profiles
 // ============================================================
 console.log('📊 Fetching user profiles...')
@@ -204,6 +219,34 @@ try {
   console.log(`  ✅ ${articles?.length || 0} TCNN articles`)
 } catch (err) {
   console.warn(`  ⚠️ Skipping TCNN articles: ${err.message}`)
+}
+
+// ============================================================
+// Public site updates and blog articles
+// ============================================================
+console.log('📊 Fetching public site updates and blog articles...')
+try {
+  const { data: posts, error } = await supabase
+    .from('site_updates')
+    .select('slug, post_type, updated_at, published_at')
+    .eq('is_published', true)
+    .order('published_at', { ascending: false })
+    .limit(5000)
+  if (error) throw error
+
+  for (const post of posts || []) {
+    const collection = post.post_type === 'blog' ? 'blog' : post.post_type === 'update' ? 'updates' : null
+    if (!collection) continue
+    urls.push(urlEntry(
+      `${BASE_URL}/${collection}/${encodeURIComponent(post.slug)}`,
+      (post.updated_at || post.published_at || today).split('T')[0],
+      'weekly',
+      '0.7'
+    ))
+  }
+  console.log(`  ✅ ${posts?.length || 0} public site posts`)
+} catch (err) {
+  console.warn(`  ⚠️ Skipping public site posts: ${err.message}`)
 }
 
 // ============================================================

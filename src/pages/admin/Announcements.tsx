@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
@@ -383,7 +384,12 @@ const Announcements: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">📢 Announcements Management</h1>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-3xl font-bold mb-2">📢 Announcements Management</h1>
+            <Link to="/admin/site-updates" className="rounded-lg border border-purple-500/40 bg-purple-600/20 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-600/30">
+              Manage public site updates
+            </Link>
+          </div>
           <p className="text-gray-400">
             Send immediate notifications, create broadcast messages, and schedule future announcements
           </p>

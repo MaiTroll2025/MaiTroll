@@ -4,9 +4,51 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <!-- ============================================================ -->
-  <!-- DYNAMIC SITEMAP - Generated 2026-10-11                          -->
-  <!-- 13 URLs                                           -->
+  <!-- DYNAMIC SITEMAP - Generated 2026-10-16                          -->
+  <!-- 25 URLs                                           -->
   <!-- ============================================================ -->
+  <url>
+    <loc>https://www.maitroll.com/</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/about</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/terms</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/features/broadcasting-app</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/features/social-media</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/updates</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/blog</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://www.maitroll.com/profile/ImportD14G10</loc>
     <lastmod>2026-08-28</lastmod>
@@ -22,12 +64,6 @@
   <url>
     <loc>https://www.maitroll.com/profile/Tester9</loc>
     <lastmod>2026-10-08</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/profile/joshuatucker95</loc>
-    <lastmod>2026-10-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -60,6 +96,42 @@
     <lastmod>2026-08-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/joshuatucker95</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/live/16994eef-4d55-4985-a165-c73976932059</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/live/9429e99b-bd96-4c51-bab0-14eb3665d5a7</loc>
+    <lastmod>2026-10-11</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/live/64d621a6-7f57-46fe-a5ad-2cfb1a989753</loc>
+    <lastmod>2026-10-11</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/blog/maitroll-new-broadcasting-app-creator-communities</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/blog/broadcast-app-social-media-community</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/post/9ed7179b-ff0d-429a-9aa2-d157d6ff60d5</loc>

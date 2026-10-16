@@ -6,26 +6,30 @@
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/legal/(.*)", "dest": "/api/legal/$1" },
     { "src": "/downloads/MaiTroll-Setup.exe", "dest": "https://github.com/maitroll/maitroll/releases/latest/download/MaiTroll-Setup.exe" },
+    { "src": "^/sitemap.xml$", "dest": "/api/sitemap-dynamic" },
+    { "src": "^/sitemap-dynamic.xml$", "dest": "/api/sitemap-dynamic" },
 
     { "handle": "filesystem" },
 
-    { 
-      "src": "/sitemap-dynamic.xml", 
-      "dest": "/api/sitemap-dynamic" 
-    },
-    { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
     { "src": "/robots.txt", "dest": "/robots.txt" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
+    { "src": "^/([A-Za-z0-9_-]+)\\.txt$", "dest": "/api/indexnow-key?key=$1" },
+    { "src": "^/$", "dest": "/api/seo-render?path=/" },
 
-    { 
-      "src": "/(.*)", 
-      "dest": "/index.html",
+    {
+      "src": "^/(.*)$",
+      "dest": "/api/seo-render?path=/$1",
       "headers": {
         "Cache-Control": "public, max-age=0, must-revalidate"
       }
     }
   ],
   "functions": {
+    "api/seo-render.ts": {
+      "includeFiles": "dist/index.html",
+      "memory": 1024,
+      "maxDuration": 10
+    },
     "api/**/*.{ts,tsx,js}": {
       "memory": 1024,
       "maxDuration": 10

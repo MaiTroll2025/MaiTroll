@@ -1,5 +1,7 @@
 /// <reference lib="webworker" />
 
+importScripts("https://cdn.pushalert.co/sw-91525.js");
+
 // Declare service worker scope
 declare const self: ServiceWorkerGlobalScope;
 

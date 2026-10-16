@@ -208,6 +208,9 @@ const SEOFAQPage = lazyWithRetry(() => import("./pages/seo/FAQPage"));
 const SEOPrivacyPage = lazyWithRetry(() => import("./pages/seo/PrivacyPage"));
 const SEOTermsPage = lazyWithRetry(() => import("./pages/seo/TermsPage"));
 const SEOAppDownloadsPage = lazyWithRetry(() => import("./pages/seo/AppDownloadsPage"));
+const BroadcastingAppPage = lazyWithRetry(() => import("./pages/seo/FeatureLandingPages").then((module) => ({ default: module.BroadcastingAppPage })));
+const SocialMediaFeaturePage = lazyWithRetry(() => import("./pages/seo/FeatureLandingPages").then((module) => ({ default: module.SocialMediaFeaturePage })));
+const SiteUpdatesPage = lazyWithRetry(() => import("./pages/SiteUpdatesPage"));
 
 const _ReportDetailsPage = lazyWithRetry(() => import("./pages/ReportDetailsPage"));
 const PasswordReset = lazyWithRetry(() => import("./pages/PasswordReset"));
@@ -224,6 +227,7 @@ const StaffAuditDashboard = lazyWithRetry(() => import("./pages/admin/StaffAudit
 const MediaLibrary = lazyWithRetry(() => import("./pages/admin/MediaLibrary"));
 const ChatModeration = lazyWithRetry(() => import("./pages/admin/ChatModeration"));
 const Announcements = lazyWithRetry(() => import("./pages/admin/Announcements"));
+const AdminSiteUpdates = lazyWithRetry(() => import("./pages/admin/AdminSiteUpdates"));
 const SendNotifications = lazyWithRetry(() => import("./pages/admin/SendNotifications"));
 const ExportData = lazyWithRetry(() => import("./pages/admin/ExportData"));
 const UserSearch = lazyWithRetry(() => import("./pages/admin/UserSearch"));
@@ -1732,6 +1736,12 @@ const appShell = (
                 <Route path="/privacy" element={<SEOPrivacyPage />} />
                 <Route path="/terms" element={<SEOTermsPage />} />
                 <Route path="/app-downloads" element={<SEOAppDownloadsPage />} />
+                <Route path="/features/broadcasting-app" element={<BroadcastingAppPage />} />
+                <Route path="/features/social-media" element={<SocialMediaFeaturePage />} />
+                <Route path="/updates" element={<SiteUpdatesPage postType="update" />} />
+                <Route path="/updates/:slug" element={<SiteUpdatesPage postType="update" />} />
+                <Route path="/blog" element={<SiteUpdatesPage postType="blog" />} />
+                <Route path="/blog/:slug" element={<SiteUpdatesPage postType="blog" />} />
 
                 {/* 🏢 Talent Offices (Public) */}
                 <Route path="/agencies" element={<AgenciesPage />} />
@@ -2548,6 +2558,14 @@ const appShell = (
                       element={
                         <RequireRole roles={[UserRole.ADMIN]}>
                           <Announcements />
+                        </RequireRole>
+                      }
+                    />
+                    <Route
+                      path="/admin/site-updates"
+                      element={
+                        <RequireRole roles={[UserRole.ADMIN]}>
+                          <AdminSiteUpdates />
                         </RequireRole>
                       }
                     />

@@ -25,6 +25,8 @@ for (const p of [
   '/legal/refunds', '/legal/payouts', '/legal/safety', '/legal/creator-earnings',
   '/legal/gambling-disclosure', '/explore', '/trending', '/categories', '/categories/gaming',
   '/creators', '/careers', '/jobs', '/safety', '/support', '/help',
+  '/terms', '/terms-of-service', '/features/broadcasting-app', '/features/social-media',
+  '/updates', '/updates/example-update', '/blog', '/blog/example-article',
   '/profile/exampleuser', '/live/exampleuser', '/stream/exampleuser',
   '/troll-court', '/troll-court/watch/abc-123', '/tcnn/article/42',
   '/wall', '/post/9', '/leaderboard', '/marketplace', '/podcast', '/podcast/7',
@@ -51,6 +53,8 @@ for (const p of [
 console.log('\n== Public routes with NO phone page must use the web renderer ==')
 for (const p of [
   '/about', '/faq', '/contact', '/legal/terms', '/legal/privacy',
+  '/terms', '/terms-of-service', '/features/broadcasting-app', '/features/social-media',
+  '/updates', '/updates/example-update', '/blog', '/blog/example-article',
   '/trending', '/creators', '/categories', '/categories/gaming',
   '/tcnn/article/42', '/troll-court/watch/abc-123', '/wall', '/post/9',
   '/marketplace', '/leaderboard-x-not-real', '/careers-x-not-real',

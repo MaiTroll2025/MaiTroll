@@ -15,6 +15,7 @@ import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
 import { MaiTrollOperatingHoursWrapper } from '@/components/maitroll/MaiTrollOperatingHoursWrapper'
 import useGlobalActivity from '@/hooks/useGlobalActivity'
+import { useRandomFreeSeat } from '@/hooks/useRandomFreeSeat'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
 import PresidentCandidatesTab from '@/components/home/PresidentCandidatesTab'
@@ -31,6 +32,7 @@ import DynamicWeatherBackground from '@/components/home/DynamicWeatherBackground
 import FeaturedBroadcastersRow from '@/components/home/FeaturedBroadcastersRow'
 import HyTroGamingRow from '@/components/home/HyTroGamingRow'
 import PodcastRow from '@/components/home/PodcastRow'
+import TreelzHomeRow from '@/components/home/TreelzHomeRow'
 import HorizontalScrollRow from '@/components/home/HorizontalScrollRow'
 import NewStreamersRow from '@/components/home/NewStreamersRow'
 import BestTrollersRow from '@/components/home/BestTrollersRow'
@@ -528,6 +530,7 @@ MobileTabBar.displayName = 'MobileTabBar'
 export default function Home() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
+  const { joinRandomFreeSeat, joiningRandomSeat } = useRandomFreeSeat(user?.id, navigate)
   const isLoading = useAuthStore((state) => state.isLoading)
   const { isMobile, isMobileWidth: _isMobileWidth } = useIsMobile()
   const { theme, toggleTheme } = useTheme()
@@ -671,7 +674,13 @@ export default function Home() {
       <div
         className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-y-auto text-white"
       >
-          <DynamicWeatherBackground isDark={theme === 'dark'} showWalker={!!user} walkerCount={totalUsers} />
+          <DynamicWeatherBackground
+            isDark={theme === 'dark'}
+            showWalker={!!user}
+            walkerCount={totalUsers}
+            onJoinRandomSeat={joinRandomFreeSeat}
+            isJoiningRandomSeat={joiningRandomSeat}
+          />
 
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050715]/85 backdrop-blur-md">
@@ -786,6 +795,7 @@ export default function Home() {
                   <FeaturedBroadcastersRow onItemClick={handleScrollItemClick} />
                   <PodcastRow />
                   <HyTroGamingRow onItemClick={handleScrollItemClick} />
+                  <TreelzHomeRow title="Treelz" icon={<Play className="h-4 w-4 text-cyan-400" />} />
                 </div>
               </section>
             )}

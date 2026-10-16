@@ -55,6 +55,12 @@ export default function LeftNavSidebar({
   const isActiveFounder = useIsActiveFounder(user?.id)
   const role = String(profile?.role || '').toLowerCase()
   const trollRole = String(profile?.troll_role || '').toLowerCase()
+  const isAdmin = isAdminEmail(user?.email) || Boolean(
+    profile?.is_admin ||
+    (profile as any)?.is_superadmin ||
+    ['admin', 'superadmin', 'owner', 'ceo'].includes(role) ||
+    ['admin', 'superadmin', 'owner', 'ceo'].includes(trollRole)
+  )
   const canSeeFounderHub = isActiveFounder || isAdminEmail(user?.email) || Boolean(
     profile?.is_admin ||
     (profile as any)?.is_superadmin ||
@@ -343,6 +349,22 @@ export default function LeftNavSidebar({
             Open More Options
           </span>
         </button>
+
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => navigate('/admin/site-updates')}
+            className="group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-cyan-500/20"
+          >
+            <Newspaper className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-cyan-300" />
+            <span className="text-xs font-bold text-slate-300 group-hover:text-white">
+              Website Updates &amp; Blog
+            </span>
+            <span className="pointer-events-none absolute left-full top-1/2 z-[100] ml-2.5 w-max rounded-md bg-slate-800/95 px-2.5 py-1.5 text-[10px] font-semibold text-white opacity-0 shadow-lg shadow-black/60 ring-1 ring-white/10 backdrop-blur transition-opacity duration-200 group-hover:opacity-100">
+              Manage public website updates
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Floating Poster */}

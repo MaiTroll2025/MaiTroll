@@ -135,6 +135,10 @@ export default function SEOLayout({ children, title, description, keywords = [],
             <div>
               <h3 className="text-white font-semibold mb-4">Sitemap</h3>
               <ul className="space-y-2">
+                <li><Link to="/features/broadcasting-app" className="text-slate-400 hover:text-purple-300 transition-colors">Broadcasting App</Link></li>
+                <li><Link to="/features/social-media" className="text-slate-400 hover:text-purple-300 transition-colors">Social Media Platform</Link></li>
+                <li><Link to="/updates" className="text-slate-400 hover:text-purple-300 transition-colors">Product Updates</Link></li>
+                <li><Link to="/blog" className="text-slate-400 hover:text-purple-300 transition-colors">Blog</Link></li>
                 <li>
                   <a href="/sitemap.xml" className="text-slate-400 hover:text-purple-300 transition-colors">
                     XML Sitemap

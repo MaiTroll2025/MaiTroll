@@ -78,6 +78,10 @@ import { FeaturedLiveOverlay } from '../../components/featured/FeaturedLiveOverl
 import CityStatusOrb from '../../components/city/CityStatusOrb'
 import { useCityStatusOrb } from '../../lib/hooks/useCityStatusOrb'
 import SeatCityStatusOrb from '../../components/broadcast/SeatCityStatusOrb'
+
+// Per-broadcast ticker + coin tipping integration
+import BroadcastTipOverlay, { type TipOverlayItem } from '../../components/broadcast/BroadcastTipOverlay'
+import BroadcastTipTrigger from '../../components/broadcast/BroadcastTipTrigger'
 import RaidPanel from '../../components/city/RaidPanel'
 import RaidModal from '../../components/city/RaidModal'
 import { useGhostMode } from '../../hooks/useGhostMode'
@@ -702,6 +706,7 @@ function ViewerPage() {
   const founderStatus = useFounderSelfStatus()
   const navigate = useNavigate()
   const location = useLocation()
+  const autoJoinSeatRequestRef = useRef<string | null>(null)
   const { isMobileWidth, hasMounted } = useIsMobile()
   const isMobileViewer = hasMounted && isMobileWidth
   const { recordWatchTime } = useTrollFamilyActivity()
@@ -876,12 +881,46 @@ function ViewerPage() {
   }, [stream]);
 
 const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
-    const [error, setError] = useState<string | null>(null)
-    const [_streamLoaded, setStreamLoaded] = useState(false)
-    const [viewerCount, setViewerCount] = useState(0)
-    // Broadcast frame - decorative border for viewer page
-    const broadcastFrame = useBroadcastFrame(stream?.user_id)
-    // Local tracks for publishing when in a seat
+     const [error, setError] = useState<string | null>(null)
+     const [_streamLoaded, setStreamLoaded] = useState(false)
+     const [viewerCount, setViewerCount] = useState(0)
+     // Broadcast frame - decorative border for viewer page
+     const broadcastFrame = useBroadcastFrame(stream?.user_id)
+
+  // Flying-chat coin tip overlay state.
+  const [tipOverlayItems, setTipOverlayItems] = useState<TipOverlayItem[]>([])
+  const dismissTipOverlay = useCallback((id: string) => {
+    setTipOverlayItems((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  const broadcasterDisplayName = useMemo(() => {
+    if (broadcasterProfile?.display_name) return broadcasterProfile.display_name
+    if (broadcasterProfile?.username) return broadcasterProfile.username
+    if (stream?.user_id === user?.id && profile?.display_name) return profile.display_name
+    if (stream?.user_id === user?.id && profile?.username) return profile.username
+    return 'Broadcaster'
+  }, [broadcasterProfile, stream, user, profile])
+
+  // Listen for `tip_sent` realtime events so the flying-chat overlay
+  // appears for every viewer on this page.
+  useStreamRealtime(streamId, {
+    onPresenceBroadcast: (event) => {
+      const payload = event.new as any
+      if (!payload || payload.type !== 'tip_sent') return
+      const amount = Number(payload.amount || 0)
+      if (!amount) return
+      const item: TipOverlayItem = {
+        id: payload.txn_id || `tip_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        senderUsername: payload.sender_username || payload.senderId || 'Viewer',
+        broadcasterDisplayName: payload.broadcaster_display_name || broadcasterDisplayName,
+        amount,
+        createdAt: Date.now(),
+      }
+      setTipOverlayItems((prev) => [...prev, item])
+    },
+  })
+
+  // Local tracks for publishing when in a seat
    const audioTrackRef = useRef<LocalAudioTrack | null>(null)
    const videoTrackRef = useRef<LocalVideoTrack | null>(null)
    const [_localTracksVersion, setLocalTracksVersion] = useState(0)
@@ -1607,6 +1646,44 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       removeSeatByUserId: _removeSeatByUserId,
       handleParticipantDisconnected,
     } = useStreamSeats(streamId || '', user?.id, broadcasterProfile, stream as any, refreshStageConfig)
+
+    useEffect(() => {
+      const params = new URLSearchParams(location.search)
+      const requestedSeat = params.get('joinSeat')
+      if (!requestedSeat || !streamId || !stream || !user?.id) return
+
+      const seatIndex = Number(requestedSeat)
+      const requestKey = `${streamId}:${requestedSeat}`
+      if (autoJoinSeatRequestRef.current === requestKey) return
+      autoJoinSeatRequestRef.current = requestKey
+
+      const clearRequest = () => {
+        params.delete('joinSeat')
+        const query = params.toString()
+        navigate(`${location.pathname}${query ? `?${query}` : ''}`, { replace: true })
+      }
+
+      if (!Number.isInteger(seatIndex) || seatIndex < 1) {
+        clearRequest()
+        toast.error('That broadcast seat could not be selected.')
+        return
+      }
+
+      if ((stream as any)?.are_seats_locked) {
+        clearRequest()
+        toast.info('Seats are currently locked.')
+        return
+      }
+
+      if (getSeatPriceForIndex(stream as Stream, seatIndex) !== 0) {
+        clearRequest()
+        toast.info('That seat is no longer free. No coins were charged.')
+        return
+      }
+
+      clearRequest()
+      void joinSeat(seatIndex, 0, viewerIdentityRef.current)
+    }, [joinSeat, location.pathname, location.search, navigate, stream, streamId, user?.id])
 
     const protectionOrderParticipantIds = useMemo(
       () =>
@@ -6235,15 +6312,41 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
         )}
       </AnimatePresence>
 
-      </ErrorBoundary>
+</ErrorBoundary>
       <ProtectionOrderGate
         streamId={streamId}
         broadcasterId={(stream as any)?.user_id || null}
         participantIds={protectionOrderParticipantIds}
       />
       <TrollUpFloatingButton />
+
+      {/* Flying-chat coin tip overlay (web + mobile) */}
+      <BroadcastTipOverlay
+        tips={tipOverlayItems}
+        onDismiss={dismissTipOverlay}
+      />
+
+      {/* Floating tip trigger button for viewers (non-broadcaster) */}
+      {user?.id && streamId && stream?.user_id && user.id !== stream.user_id && (
+        <BroadcastTipTrigger
+          streamId={streamId}
+          broadcasterId={stream.user_id}
+          broadcasterDisplayName={broadcasterDisplayName}
+          onTipSent={(amount) => {
+            // Optimistic local overlay in case realtime hasn't propagated yet.
+            const item: TipOverlayItem = {
+              id: `tip_local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+              senderUsername: profile?.username || profile?.display_name || 'You',
+              broadcasterDisplayName,
+              amount,
+              createdAt: Date.now(),
+            }
+            setTipOverlayItems((prev) => [...prev, item])
+          }}
+        />
+      )}
     </GiftSystemProvider>
- )
+  )
 }
 
 export default ViewerPage
