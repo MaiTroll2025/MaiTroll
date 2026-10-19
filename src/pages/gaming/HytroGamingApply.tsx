@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { ArrowLeft, Briefcase, CheckCircle2, Clock3, Gamepad2, Loader2, XCircle, AlertTriangle } from 'lucide-react';
 import GamingLoanModal from '@/components/broadcast/GamingLoanModal';
+import TromoCodeInput from '@/components/ui/TromoCodeInput';
 
 const REQUIRED_COINS = 5000;
 
@@ -47,11 +48,22 @@ export default function HytroGamingApply() {
   const [applyForLoan, setApplyForLoan] = useState(false);
   const [loanAmount, setLoanAmount] = useState('');
   const MAX_LOAN_AMOUNT = 5000;
+  const [feePromo, setFeePromo] = useState<any>(null);
+  const [discountedFee, setDiscountedFee] = useState(REQUIRED_COINS);
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
+  };
+
+  const handleFeePromoApplied = (promo: any) => {
+    setFeePromo(promo);
+    setDiscountedFee(Number(promo.final_amount) || 0);
+    const savings = Number(promo.original_amount || REQUIRED_COINS) - Number(promo.final_amount || 0);
+    if (savings > 0) {
+      toast.success(`✓ ${promo.code} applied! You saved ${savings.toLocaleString()} Troll Coins (${Math.round((savings / REQUIRED_COINS) * 100)}% off).`);
+    }
   };
 
   const checkExisting = useCallback(async () => {
@@ -72,14 +84,14 @@ export default function HytroGamingApply() {
 
   const _checkBalanceAndLoan = useCallback(() => {
     const balance = profile?.troll_coins ?? 0;
-    if (balance < REQUIRED_COINS) {
+    if (balance < discountedFee) {
       setInsufficientBalance(true);
       setShowLoanModal(true);
       return false;
     }
     setInsufficientBalance(false);
     return true;
-  }, [profile?.troll_coins]);
+  }, [profile?.troll_coins, discountedFee]);
 
   useEffect(() => {
     if (!user) {
@@ -110,7 +122,7 @@ export default function HytroGamingApply() {
     // covers the startup fee. Only block when they have no loan and can't pay.
     const usingLoan = applyForLoan || hasLoan;
 
-    if (!usingLoan && balance < REQUIRED_COINS) {
+    if (!usingLoan && balance < discountedFee) {
       setInsufficientBalance(true);
       setShowLoanModal(true);
       return;
@@ -132,7 +144,6 @@ export default function HytroGamingApply() {
     try {
       const { error } = await supabase.from('agency_applications').insert({
         user_id: user.id,
-        applicant_id: user.id,
         display_name: displayName.trim(),
         primary_platform: primaryPlatform,
         channel_url: channelUrl.trim() || null,
@@ -247,6 +258,31 @@ export default function HytroGamingApply() {
           )}
 
           <div className="space-y-5">
+            {/* HytroGaming Fee Promo Code */}
+            <div className="mb-6">
+              <TromoCodeInput
+                productType="all_eligible"
+                originalAmount={REQUIRED_COINS}
+                onApplied={handleFeePromoApplied}
+                onError={(msg) => toast.error(msg)}
+                className="max-w-md"
+              />
+              {feePromo && (
+                <div className="mt-3 rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-3 text-sm text-cyan-100">
+                  <div className="font-semibold text-white flex items-center gap-2">
+                    <span>Promo applied: {feePromo.code}</span>
+                  </div>
+                  <div className="mt-1 text-cyan-200">
+                    Startup fee: {REQUIRED_COINS.toLocaleString()} TC →{' '}
+                    <span className="font-black">{discountedFee.toLocaleString()} TC</span>
+                    {feePromo.promotion_type === 'percentage_discount' && (
+                      <span className="text-green-400 ml-1">(-{feePromo.promotion_value}%)</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-300">Display Name *</label>
               <input
@@ -364,16 +400,16 @@ export default function HytroGamingApply() {
           </div>
 
           {/* Low Balance Warning */}
-          {(profile?.troll_coins ?? 0) < REQUIRED_COINS && (
+          {(profile?.troll_coins ?? 0) < discountedFee && (
             <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-bold text-amber-200">Insufficient Balance</p>
                   <p className="mt-1 text-xs text-amber-300/80">
-                    You need at least {REQUIRED_COINS.toLocaleString()} Troll Coins to apply for HytroGaming Agency.
+                    You need at least {discountedFee.toLocaleString()} Troll Coins to apply for HytroGaming Agency.
                     Your current balance is {(profile?.troll_coins ?? 0).toLocaleString()} TC.
-                    Shortfall: {(REQUIRED_COINS - (profile?.troll_coins ?? 0)).toLocaleString()} TC.
+                    Shortfall: {(discountedFee - (profile?.troll_coins ?? 0)).toLocaleString()} TC.
                   </p>
                   <button
                     type="button"

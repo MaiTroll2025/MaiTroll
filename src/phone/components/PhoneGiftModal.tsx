@@ -56,12 +56,9 @@ type GiftCategory =
   | 'luxury'
   | 'men'
   | 'women'
-  | 'lgbt'
-  | 'holiday'
   | 'smoking'
   | 'drinking'
   | 'funny'
-  | 'seasonal'
 
 type Rarity =
   | 'common'
@@ -85,12 +82,9 @@ const CATEGORIES: {
   { id: 'luxury', label: 'Luxury', icon: <Crown size={13} /> },
   { id: 'men', label: 'Men', icon: '👨' },
   { id: 'women', label: 'Women', icon: '👩' },
-  { id: 'lgbt', label: 'LGBT', icon: '🌈' },
-  { id: 'holiday', label: 'Holiday', icon: '🎄' },
   { id: 'smoking', label: 'Smoking', icon: '🚬' },
   { id: 'drinking', label: 'Drinking', icon: '🍺' },
   { id: 'funny', label: 'Funny', icon: '😂' },
-  { id: 'seasonal', label: 'Seasonal', icon: '🌸' },
 ]
 
 const RARITY_STYLES: Record<
@@ -439,21 +433,6 @@ export default function PhoneGiftModal({
     }
 
     if (
-      nameLower.includes('christmas') ||
-      nameLower.includes('santa') ||
-      nameLower.includes('pumpkin')
-    ) {
-      return 'holiday'
-    }
-
-    if (
-      nameLower.includes('rainbow') ||
-      nameLower.includes('pride')
-    ) {
-      return 'lgbt'
-    }
-
-    if (
       icon === '👨' ||
       nameLower.includes('men') ||
       nameLower.includes('muscle')
@@ -467,14 +446,6 @@ export default function PhoneGiftModal({
       nameLower.includes('dress')
     ) {
       return 'women'
-    }
-
-    if (
-      nameLower.includes('sunny') ||
-      nameLower.includes('snow') ||
-      nameLower.includes('spring')
-    ) {
-      return 'seasonal'
     }
 
     return 'general'

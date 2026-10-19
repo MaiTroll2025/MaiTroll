@@ -162,6 +162,39 @@ const startShow = useCallback(
     [user?.id],
   )
 
+  const claimJudgeSeat = useCallback(
+    async (position: string) => {
+      if (!user?.id) return { success: false, error: 'not logged in' }
+      const sid = useSingOffStore.getState().session?.id
+      if (!sid) return { success: false, error: 'no active session' }
+      const res = await Service.claimJudgeSeat(sid, position)
+      if (res.success) {
+        const state = await Service.loadSessionState(sid, user.id)
+        if (state) useSingOffStore.getState().initFromState(state)
+        toast.success(`You entered ${position.replace('_', ' ')}.`)
+      } else {
+        toast.error(res.error || 'Could not enter that judge seat.')
+      }
+      return res
+    },
+    [user?.id],
+  )
+
+  const claimCeoSeat = useCallback(async () => {
+    if (!user?.id) return { success: false, error: 'not logged in' }
+    const sid = useSingOffStore.getState().session?.id
+    if (!sid) return { success: false, error: 'no active session' }
+    const res = await Service.claimCeoSeat(sid)
+    if (res.success) {
+      const state = await Service.loadSessionState(sid, user.id)
+      if (state) useSingOffStore.getState().initFromState(state)
+      toast.success('You entered the CEO seat.')
+    } else {
+      toast.error(res.error || 'Could not enter the CEO seat.')
+    }
+    return res
+  }, [user?.id])
+
   const startRound = useCallback(async () => {
     if (!user?.id) return
     const s = useSingOffStore.getState()
@@ -207,6 +240,30 @@ if (res.success) {
       } else {
         toast.error(res.error || 'Could not record your vote.')
       }
+    },
+    [user?.id],
+  )
+
+  const loadParticipantNote = useCallback(
+    async (participantUserId: string) => {
+      if (!user?.id) return { success: false, error: 'not logged in', note: '' }
+      const sid = useSingOffStore.getState().session?.id
+      if (!sid) return { success: false, error: 'no active session', note: '' }
+      const res = await Service.getParticipantNote(sid, participantUserId)
+      return { ...res, note: typeof res.note === 'string' ? res.note : '' }
+    },
+    [user?.id],
+  )
+
+  const saveParticipantNote = useCallback(
+    async (participantUserId: string, note: string) => {
+      if (!user?.id) return { success: false, error: 'not logged in' }
+      const sid = useSingOffStore.getState().session?.id
+      if (!sid) return { success: false, error: 'no active session' }
+      const res = await Service.saveParticipantNote(sid, participantUserId, note)
+      if (res.success) toast.success('Participant note saved privately.')
+      else toast.error(res.error || 'Could not save participant note.')
+      return res
     },
     [user?.id],
   )
@@ -414,9 +471,13 @@ return {
     callToStage,
     moveHost,
     claimSeat,
+    claimJudgeSeat,
+    claimCeoSeat,
     startRound,
     endRound,
     submitDecision,
+    loadParticipantNote,
+    saveParticipantNote,
     sendGift,
     sendChat,
     kickUser,
@@ -440,4 +501,3 @@ return {
     giftCatalog,
   }
 }
-

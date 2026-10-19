@@ -18,7 +18,8 @@ CREATE INDEX IF NOT EXISTS idx_user_signup_ips_created ON public.user_signup_ips
 -- 2. Create function to check if an IP already has a regular (non-exempt) account
 CREATE OR REPLACE FUNCTION public.check_duplicate_account_on_ip(
     p_ip_address TEXT,
-    p_email TEXT DEFAULT NULL
+    p_email TEXT DEFAULT NULL,
+    p_role TEXT DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -31,7 +32,6 @@ DECLARE
     v_is_admin BOOLEAN;
     v_is_troll_officer BOOLEAN;
     v_is_org_student BOOLEAN;
-    v_is_inst_verified BOOLEAN;
     v_role TEXT;
     v_troll_role TEXT;
 BEGIN
@@ -39,12 +39,21 @@ BEGIN
         RETURN jsonb_build_object('is_duplicate', false, 'message', 'No IP address provided');
     END IF;
 
+    -- Admin accounts (and other exempt roles) can sign up from any device/IP
+    IF p_role IS NOT NULL AND (
+        p_role IN ('admin', 'superadmin', 'ceo', 'secretary', 'moderator', 'owner')
+        OR p_role = 'troll_officer'
+        OR p_role = 'lead_troll_officer'
+    ) THEN
+        RETURN jsonb_build_object('is_duplicate', false, 'message', 'Exempt role - IP check bypassed');
+    END IF;
+
     -- Find an existing user who signed up from this IP, excluding same email
     -- Join with user_profiles to get role information for exemption checks
     SELECT up.id, up.username, up.is_admin, up.is_troll_officer,
-           up.is_org_student, up.institution_verified, up.role, up.troll_role
+           up.is_org_student, up.role, up.troll_role
     INTO v_existing_user_id, v_existing_username, v_is_admin, v_is_troll_officer,
-         v_is_org_student, v_is_inst_verified, v_role, v_troll_role
+         v_is_org_student, v_role, v_troll_role
     FROM public.user_signup_ips usi
     JOIN public.user_profiles up ON up.id = usi.user_id
     WHERE usi.ip_address = p_ip_address
@@ -65,7 +74,6 @@ BEGIN
         OR v_is_troll_officer = true
         OR v_role IN ('admin', 'superadmin', 'ceo', 'secretary', 'moderator', 'owner')
         OR v_is_org_student = true
-        OR v_is_inst_verified = true
         OR v_troll_role IN ('student', 'instructor', 'troll_family')
     ) THEN
         RETURN jsonb_build_object('is_duplicate', false, 'message', 'Existing user is exempt from IP restriction');
@@ -81,12 +89,13 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.check_duplicate_account_on_ip(TEXT, TEXT) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.check_duplicate_account_on_ip(TEXT, TEXT, TEXT) TO authenticated, service_role;
 
 -- 3. Enable RLS on user_signup_ips table
 ALTER TABLE public.user_signup_ips ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can insert their own signup IP record
+DROP POLICY IF EXISTS "Users can insert own signup IP" ON public.user_signup_ips;
 CREATE POLICY "Users can insert own signup IP"
     ON public.user_signup_ips
     FOR INSERT
@@ -94,6 +103,7 @@ CREATE POLICY "Users can insert own signup IP"
     WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can view their own signup IP records
+DROP POLICY IF EXISTS "Users can view own signup IPs" ON public.user_signup_ips;
 CREATE POLICY "Users can view own signup IPs"
     ON public.user_signup_ips
     FOR SELECT
@@ -101,6 +111,7 @@ CREATE POLICY "Users can view own signup IPs"
     USING (auth.uid() = user_id);
 
 -- Policy: Service role has full access (for admin functions and duplicate checking)
+DROP POLICY IF EXISTS "Service role full access" ON public.user_signup_ips;
 CREATE POLICY "Service role full access"
     ON public.user_signup_ips
     FOR ALL
@@ -109,6 +120,7 @@ CREATE POLICY "Service role full access"
     WITH CHECK (true);
 
 -- Policy: Admins and moderators can view all signup IPs for abuse detection
+DROP POLICY IF EXISTS "Admins can view all signup IPs" ON public.user_signup_ips;
 CREATE POLICY "Admins can view all signup IPs"
     ON public.user_signup_ips
     FOR SELECT

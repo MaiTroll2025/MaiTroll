@@ -6,10 +6,16 @@
   useState,
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Crown, Gem, Gift, Heart, Mic, MicOff, PhoneOff, RefreshCw, Swords, Video, VideoOff, X, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Crown, Gem, Gift, Heart, Mic, MicOff, PhoneOff, RefreshCw, Swords, Trophy, Video, VideoOff, X, AlertTriangle, AlertCircle } from 'lucide-react';
 import type { LocalAudioTrack, LocalVideoTrack } from 'livekit-client'
 
 import { useAuthStore } from '@/lib/store'
+import { useCreditActivityHeartbeat } from '@/lib/hooks/useCreditActivityHeartbeat'
+import { activateAutomatedAudience } from '@/lib/automatedAudience'
+import {
+  resolveBroadcasterGuidanceClientType,
+  useBroadcasterGuidance,
+} from '@/lib/broadcasterGuidance'
 import { supabase } from '@/lib/supabase'
 import UserMiniProfile from '@/components/user/UserMiniProfile'
 import { useBlockedUsers } from '@/hooks/useBlockedUsers'
@@ -18,9 +24,7 @@ import { awardInvitePoint } from '@/lib/weeklyPointsService'
 
 import { useStreamSeats } from '@/hooks/useStreamSeats'
 import { useLiveBroadcast } from '@/hooks/useLiveBroadcast'
-import { useGetStreamBroadcast } from '@/hooks/useGetStreamBroadcast'
 import { applyCameraVideoPresentation } from '@/lib/cameraVideoPresentation'
-import { useRTCProvider } from '@/hooks/useRTCProvider'
 import { useStreamAudiencePresence, type StreamAudienceMember } from '@/hooks/useStreamAudiencePresence'
 import { useStreamRealtime } from '@/hooks/useStreamRealtime'
 import { useRandomBattleQueueController } from '@/hooks/useRandomBattleQueueController'
@@ -39,6 +43,7 @@ import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import PetPresence from '@/components/pets/PetPresence'
 import MobileBroadcastHostSettings from '@/components/broadcast/MobileBroadcastHostSettings'
+import LeagueProgressPanel from '@/components/broadcast/LeagueProgressPanel'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import CityStatusOrb from '@/components/city/CityStatusOrb'
 import { useCityStatusOrb } from '@/lib/hooks/useCityStatusOrb'
@@ -48,6 +53,7 @@ import BattleView from '@/pages/broadcast/BattleView'
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import MaiBag from '@/components/mai-bag/MaiBag'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
+import GiftFlyOverlay from '@/components/broadcast/GiftFlyOverlay'
 import ShareModal from '@/components/broadcast/ShareModal'
 import { useFeaturedLive } from '@/hooks/useFeaturedLive'
 import { useBroadcastLifecycle, formatCountdown } from '@/hooks/useBroadcastLifecycle'
@@ -59,6 +65,7 @@ import { useCashoutBanner } from '@/hooks/useCashoutBanner'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
 import RandomBattleBanner from '@/components/broadcast/RandomBattleBanner'
+import { BattlePot } from '@/components/broadcast/BattlePot'
 import TrollUpSlideModal from '@/components/trollup/TrollUpSlideModal'
 
 import type { Stream } from '@/types/broadcast'
@@ -120,6 +127,14 @@ export default function PhoneBroadcastPage() {
   const [loadedRouteId, setLoadedRouteId] = useState<string | null>(null)
   const [streamLoadError, setStreamLoadError] = useState<string | null>(null)
 
+  useBroadcasterGuidance({
+    streamId: stream?.id || null,
+    broadcasterId: stream?.user_id === user?.id ? user?.id || null : null,
+    isLive: stream?.status === 'live' && stream?.is_live === true,
+    enabled: true,
+    clientType: resolveBroadcasterGuidanceClientType(true),
+  })
+
   const {
     featuredBroadcasters: _featuredBroadcasters,
     featuredEvent: _featuredEvent,
@@ -132,6 +147,8 @@ export default function PhoneBroadcastPage() {
 
   const [isGiftModalOpen, setIsGiftModalOpen] =
     useState(false)
+
+  const [showTLeaguePanel, setShowTLeaguePanel] = useState(false)
 
   const [isShareModalOpen, setIsShareModalOpen] =
     useState(false)
@@ -189,7 +206,7 @@ export default function PhoneBroadcastPage() {
 
   const streamEndedRef =
     useRef(false)
-  const activatedGetStreamIdRef = useRef<string | null>(null)
+  const automatedAudienceActivationRequestedRef = useRef<string | null>(null)
 
   const lastVideoTapRef =
     useRef<{ time: number; x: number; y: number } | null>(null)
@@ -360,6 +377,11 @@ export default function PhoneBroadcastPage() {
   }, [routeStreamId])
 
   const streamId = stream?.id
+  useCreditActivityHeartbeat(
+    streamId,
+    'host',
+    stream?.status === 'live' && stream?.is_live === true,
+  )
 
   /*
    * ============================================================
@@ -367,91 +389,15 @@ export default function PhoneBroadcastPage() {
    * ============================================================
    */
 
-  // Determine RTC provider from stream
-  const { provider: rtcProvider } = useRTCProvider(stream);
-
-  // Unified session interface that works for both LiveKit and GetStream
-  interface UnifiedBroadcastSession {
-    roomRef: React.MutableRefObject<any>;
-    callRef: React.MutableRefObject<any>;
-    clientRef: React.MutableRefObject<any>;
-    localTracks: [
-      LocalAudioTrack | MediaStreamTrack | null,
-      LocalVideoTrack | MediaStreamTrack | null,
-    ] | null;
-    localVideoTrack: MediaStreamTrack | LocalVideoTrack | null;
-    localAudioTrack: MediaStreamTrack | LocalAudioTrack | null;
-    cameraFacingMode: 'user' | 'environment';
-    cameraEnabled: boolean;
-    micEnabled: boolean;
-    isConnecting: boolean;
-    isConnected: boolean;
-    remoteParticipants: Map<string, any>;
-    connect: () => Promise<void>;
-    toggleCamera: () => Promise<void>;
-    toggleMicrophone: () => Promise<void>;
-    flipCamera: () => Promise<void>;
-    disconnect: () => void;
-  }
-
-  // Use the appropriate broadcast hook based on RTC provider
+  // LiveKit broadcast session (all users use LiveKit)
   const liveKitSession = useLiveBroadcast({
     streamId: streamId || '',
     isHost: true,
     facingMode: 'user',
   });
 
-  const getStreamSession = useGetStreamBroadcast({
-    streamId: streamId || '',
-    isHost: true,
-    facingMode: 'user',
-  });
-
-  // Select the active session based on provider
-  const session: UnifiedBroadcastSession = useMemo(() => {
-    if (rtcProvider === 'getstream') {
-      return {
-        roomRef: { current: null } as any,
-        callRef: getStreamSession.callRef,
-        clientRef: getStreamSession.clientRef,
-        localTracks: getStreamSession.localAudioTrack || getStreamSession.localVideoTrack
-          ? [getStreamSession.localAudioTrack, getStreamSession.localVideoTrack]
-          : null,
-        localVideoTrack: getStreamSession.localVideoTrack,
-        localAudioTrack: getStreamSession.localAudioTrack,
-        cameraFacingMode: getStreamSession.cameraFacingMode,
-        cameraEnabled: getStreamSession.cameraEnabled,
-        micEnabled: getStreamSession.micEnabled,
-        isConnecting: getStreamSession.isConnecting,
-        isConnected: getStreamSession.isConnected,
-        remoteParticipants: getStreamSession.remoteParticipants,
-        connect: getStreamSession.connect,
-        toggleCamera: getStreamSession.toggleCamera,
-        toggleMicrophone: getStreamSession.toggleMicrophone,
-        flipCamera: getStreamSession.flipCamera,
-        disconnect: getStreamSession.disconnect,
-      };
-    }
-    return {
-      roomRef: liveKitSession.roomRef,
-      callRef: { current: null } as any,
-      clientRef: { current: null } as any,
-      localTracks: liveKitSession.localTracks,
-      localVideoTrack: liveKitSession.localTracks?.[1] || null,
-      localAudioTrack: liveKitSession.localTracks?.[0] || null,
-      cameraFacingMode: liveKitSession.cameraFacingMode,
-      cameraEnabled: liveKitSession.cameraEnabled,
-      micEnabled: liveKitSession.micEnabled,
-      isConnecting: liveKitSession.isConnecting,
-      isConnected: liveKitSession.isConnected,
-      remoteParticipants: liveKitSession.remoteParticipants,
-      connect: liveKitSession.connect,
-      toggleCamera: liveKitSession.toggleCamera,
-      toggleMicrophone: liveKitSession.toggleMicrophone,
-      flipCamera: liveKitSession.flipCamera,
-      disconnect: liveKitSession.disconnect,
-    };
-  }, [rtcProvider, liveKitSession, getStreamSession]);
+  // Session is always LiveKit
+  const session = useMemo(() => liveKitSession, [liveKitSession]);
 
   /*
    * ============================================================
@@ -1158,10 +1104,6 @@ export default function PhoneBroadcastPage() {
 
   const userIdToLiveKitIdentity =
     useMemo(() => {
-      if (rtcProvider !== 'livekit') {
-        return {}
-      }
-
       const mapping: Record<
         string,
         string
@@ -1193,7 +1135,7 @@ export default function PhoneBroadcastPage() {
       )
 
       return mapping
-    }, [seats, rtcProvider])
+    }, [seats])
 
   /*
    * ============================================================
@@ -1202,7 +1144,6 @@ export default function PhoneBroadcastPage() {
    */
 
   const shouldShowRandomBattleArena =
-    rtcProvider === 'livekit' &&
     stream?.battle_mode ===
       'random_queue' &&
     !!stream?.battle_id &&
@@ -1281,41 +1222,27 @@ export default function PhoneBroadcastPage() {
   }, [streamId])
 
   useEffect(() => {
+    const isAdminCandidate =
+      broadcasterProfile?.role === 'admin' ||
+      broadcasterProfile?.role === 'superadmin' ||
+      broadcasterProfile?.role === 'ceo' ||
+      broadcasterProfile?.is_admin === true
     if (
-      rtcProvider !== 'getstream' ||
-      !streamId ||
-      !user?.id ||
-      !session.isConnected ||
-      activatedGetStreamIdRef.current === streamId
+      !isAdminCandidate ||
+      !stream?.id ||
+      stream.status !== 'live' ||
+      stream.is_live !== true ||
+      automatedAudienceActivationRequestedRef.current === stream.id
     ) {
       return
     }
 
-    const startedAt = new Date().toISOString()
-    void (async () => {
-      try {
-        const { error } = await supabase
-          .from('streams')
-          .update({
-            status: 'live',
-            is_live: true,
-            started_at: startedAt,
-          })
-          .eq('id', streamId)
-          .eq('broadcaster_id', user.id)
-          .eq('rtc_provider', 'getstream')
-
-        if (error) throw error
-        activatedGetStreamIdRef.current = streamId
-        setStream((previous) => previous?.id === streamId
-          ? { ...previous, status: 'live', is_live: true, started_at: startedAt }
-          : previous)
-      } catch (error) {
-        console.error('[PhoneBroadcastPage] Failed to mark GetStream broadcast live:', error)
-        toast.error('Connected, but could not mark the broadcast live. Please retry.')
-      }
-    })()
-  }, [rtcProvider, streamId, user?.id, session.isConnected])
+    automatedAudienceActivationRequestedRef.current = stream.id
+    void activateAutomatedAudience(stream.id).catch((activationError) => {
+      console.error('[PhoneBroadcastPage] Automated audience activation failed:', activationError)
+      toast.warning(`Broadcast is live, but automated audience stayed inactive: ${activationError instanceof Error ? activationError.message : 'Request failed'}`)
+    })
+  }, [broadcasterProfile, stream?.id, stream?.is_live, stream?.status])
 
   /*
    * ============================================================
@@ -1343,6 +1270,7 @@ export default function PhoneBroadcastPage() {
       stream,
       userId: user?.id,
       isBroadcaster: true,
+      isBattleUnlocked: broadcasterProfile?.battle_unlocked === true,
       onStreamUpdate:
         handleRandomBattleStreamUpdate,
     })
@@ -2263,6 +2191,7 @@ export default function PhoneBroadcastPage() {
         stream?.user_id
       }
     >
+      <GiftFlyOverlay streamId={streamId} />
       <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black text-white">
         {/* ======================================================
             BROADCAST VIDEO REGION
@@ -2293,7 +2222,7 @@ export default function PhoneBroadcastPage() {
           */}
         <div className="absolute inset-0 z-0">
           <LocalCameraFullVideo
-            videoTrack={session.localVideoTrack}
+            videoTrack={session.localTracks?.[1] ?? null}
             facingMode={session.cameraFacingMode}
           />
           {/* Camera-off image fallback */}
@@ -2498,6 +2427,17 @@ export default function PhoneBroadcastPage() {
                 />
               </div>
             )}
+            {stream?.user_id && (
+              <div className="pointer-events-auto w-full">
+                <BattlePot
+                  broadcasterId={stream.user_id}
+                  streamId={streamId}
+                  isMobile
+                  canManageRounds
+                  onBattleStart={() => {}}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -2623,7 +2563,7 @@ export default function PhoneBroadcastPage() {
         {/* ======================================================
             PHONE CONTROL BAR — own layout row, directly above chat input
         ====================================================== */}
-        <div className="relative z-40 flex w-full shrink-0 items-center justify-around gap-1.5 bg-slate-950/95 px-2 py-3">
+        <div className="relative z-40 flex w-full shrink-0 items-center justify-around gap-1 bg-slate-950/95 px-2 py-3">
           <ControlButton
             active={session.cameraEnabled}
             onClick={session.toggleCamera}
@@ -2659,6 +2599,12 @@ export default function PhoneBroadcastPage() {
             battle
           />
           <ControlButton
+            active={showTLeaguePanel}
+            onClick={() => setShowTLeaguePanel(true)}
+            icon={Trophy}
+            label="T League"
+          />
+          <ControlButton
             active
             onClick={handleGift}
             icon={Gift}
@@ -2690,6 +2636,32 @@ export default function PhoneBroadcastPage() {
             className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
           />
         </form>
+
+        {showTLeaguePanel && (
+          <div
+            className="fixed inset-0 z-[110] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm"
+            onClick={() => setShowTLeaguePanel(false)}
+          >
+            <section
+              aria-label="T League progress and missions"
+              className="max-h-[80dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-white/10 bg-slate-950 p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-black text-white">T League</h2>
+                <button
+                  type="button"
+                  aria-label="Close T League"
+                  onClick={() => setShowTLeaguePanel(false)}
+                  className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-white"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <LeagueProgressPanel streamId={streamId} />
+            </section>
+          </div>
+        )}
 
         {/* ======================================================
             GIFT MODAL
@@ -2848,20 +2820,10 @@ function LocalCameraFullVideo({
 
       const videoElement = document.createElement('video')
 
-      // Handle both LiveKit LocalVideoTrack (has .attach()) and GetStream MediaStreamTrack
-      if (typeof videoTrack.attach === 'function') {
-        // LiveKit track
-        const attachedElement = videoTrack.attach() as HTMLVideoElement
-        videoElementRef.current = attachedElement
-        container.appendChild(attachedElement)
-      } else {
-        // GetStream MediaStreamTrack or standard MediaStreamTrack
-        const stream = new MediaStream()
-        stream.addTrack(videoTrack)
-        videoElement.srcObject = stream
-        videoElementRef.current = videoElement
-        container.appendChild(videoElement)
-      }
+      // LiveKit track
+      const attachedElement = videoTrack.attach() as HTMLVideoElement
+      videoElementRef.current = attachedElement
+      container.appendChild(attachedElement)
 
       videoElement.style.width = '100%'
       videoElement.style.height = '100%'
@@ -2912,7 +2874,7 @@ function LocalCameraFullVideo({
 /*
  * ================================================================
  * REMOTE SEAT THUMBNAIL — small video tile for remote participants on phone
- * Works with both LiveKit RemoteParticipant and GetStream StreamVideoParticipant
+ * Works with LiveKit RemoteParticipant
  * ================================================================
  */
 
@@ -2951,10 +2913,6 @@ function RemoteSeatThumbnail({
           normalizedIdentity.endsWith(shortUserId) ||
           normalizedUserId.startsWith(normalizedIdentity.substring(0, 8))
         )
-      }
-      // GetStream participant
-      if (u.userId !== undefined || u.user_id !== undefined) {
-        return (u.userId || u.user_id) === userId
       }
       return false
     })
@@ -3053,7 +3011,7 @@ function RemoteSeatThumbnail({
 /*
  * ================================================================
  * REMOTE AUDIO MANAGER — attaches remote participant audio tracks
- * Works with both LiveKit RemoteParticipant and GetStream StreamVideoParticipant
+ * Works with LiveKit RemoteParticipant
  * ================================================================
  */
 
@@ -3176,7 +3134,7 @@ function ControlButton({
       disabled={disabled}
       aria-label={label}
       className={`
-        flex h-14 w-14 shrink-0
+        flex h-12 min-w-10 max-w-14 flex-1
         flex-col items-center justify-center
         gap-1 rounded-2xl border
         text-[8px] font-black uppercase

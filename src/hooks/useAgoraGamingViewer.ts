@@ -320,12 +320,13 @@ export function useAgoraGamingViewer(): AgoraGamingViewerState & AgoraGamingView
       debug('Joined Agora channel as viewer:', channelName);
     } catch (err: any) {
       console.error('[AgoraGamingViewer] Join failed:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err || 'Failed to connect to stream');
       if (mountedRef.current) {
-        setError(err?.message || 'Failed to connect to stream');
+        setError(errorMessage);
         setIsConnecting(false);
         joiningRef.current = false;
       }
-      toast.error('Failed to connect to gaming stream');
+      toast.error(errorMessage);
     }
   }, [fetchToken]);
 

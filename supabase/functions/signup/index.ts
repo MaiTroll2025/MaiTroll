@@ -32,6 +32,7 @@ Deno.serve(async (req: Request) => {
       username,
       role,
       referral_code,
+      referral_visitor_token,
       data,
     } = body
 
@@ -63,6 +64,7 @@ Deno.serve(async (req: Request) => {
         {
           p_ip_address: clientIP,
           p_email: cleanEmail,
+          p_role: role || "user",
         },
       )
 
@@ -232,6 +234,31 @@ Deno.serve(async (req: Request) => {
         500,
         req,
       )
+    }
+
+    const referralVisitorToken =
+      typeof referral_visitor_token === "string" &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(referral_visitor_token)
+        ? referral_visitor_token
+        : null
+
+    if (referralVisitorToken) {
+      const { data: attributionClaimed, error: attributionError } =
+        await supabase.rpc("t_league_claim_referral_attribution", {
+          p_referred_user_id: newUserId,
+          p_visitor_token: referralVisitorToken,
+        })
+
+      if (attributionError) {
+        console.error(
+          `[Signup ${requestId}] T League referral attribution failed:`,
+          attributionError,
+        )
+      } else if (!attributionClaimed) {
+        console.warn(
+          `[Signup ${requestId}] No first-click T League referral attribution found for user ${newUserId}`,
+        )
+      }
     }
 
     console.log(

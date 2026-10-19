@@ -61,6 +61,10 @@ export default function PayPalPaymentModal({
   const paypalInstanceRef = useRef<any>(null)
   const renderKeyRef = useRef<string>('')
   const paypalFlowActiveRef = useRef(false)
+  const serverAmountUsdRef = useRef<number | null>(null)
+  const [serverAmountUsd, setServerAmountUsd] = useState<number | null>(null)
+  const [serverListAmountUsd, setServerListAmountUsd] = useState<number | null>(null)
+  const [serverDiscountPercent, setServerDiscountPercent] = useState(0)
 
   const coins = pkg?.coins ?? pkg?.coin_amount ?? pkg?.coinAmount ?? 0
   const rawPrice = pkg?.price_usd ?? pkg?.amount_usd ?? pkg?.price ?? 0
@@ -80,6 +84,13 @@ export default function PayPalPaymentModal({
   useEffect(() => {
     setForceCard(Boolean(pkg?.forceCard))
   }, [pkg?.forceCard])
+
+  useEffect(() => {
+    serverAmountUsdRef.current = null
+    setServerAmountUsd(null)
+    setServerListAmountUsd(null)
+    setServerDiscountPercent(0)
+  }, [pkg?.id, isOpen])
 
   const safelyClosePayPalButtons = useCallback(() => {
     try {
@@ -185,7 +196,16 @@ export default function PayPalPaymentModal({
           if (error) throw new Error(error.message || 'Failed to create PayPal order')
           if (!data?.success) throw new Error(data?.error || 'Failed to create payment order')
           if (!data?.paypalOrderId) throw new Error('PayPal order ID missing')
+          const quotedAmount = Number(data.amount)
+          if (!Number.isFinite(quotedAmount) || quotedAmount <= 0) {
+            throw new Error('Invalid amount returned for payment order')
+          }
 
+          serverAmountUsdRef.current = quotedAmount
+          setServerAmountUsd(quotedAmount)
+          const listAmount = Number(data.listAmount)
+          setServerListAmountUsd(Number.isFinite(listAmount) && listAmount > 0 ? listAmount : quotedAmount)
+          setServerDiscountPercent(Number(data.discountPercent) || 0)
           paypalOrderIdRef.current = data.paypalOrderId
           return data.paypalOrderId
         } catch (err: any) {
@@ -205,7 +225,7 @@ export default function PayPalPaymentModal({
             body: {
               paypalOrderId: data.orderID,
               orderId: paypalOrderIdRef.current,
-              expectedAmount: amountUsd,
+              expectedAmount: serverAmountUsdRef.current ?? amountUsd,
               userId,
               packageId,
               coins,
@@ -394,7 +414,7 @@ export default function PayPalPaymentModal({
 
           <DialogDescription className="text-zinc-400">
             {step === 'select'
-              ? `Complete your purchase of ${Number(coins || 0).toLocaleString()} coins for $${Number(amountUsd || 0).toFixed(2)}`
+              ? `Complete your purchase of ${Number(coins || 0).toLocaleString()} coins for $${Number(serverAmountUsd ?? amountUsd ?? 0).toFixed(2)}`
               : step === 'processing'
                 ? 'Verifying your PayPal payment...'
                 : 'Payment completed successfully!'}
@@ -412,10 +432,22 @@ export default function PayPalPaymentModal({
 
             <div className="flex justify-between items-center">
               <span className="text-zinc-400">Total</span>
-              <span className="font-bold text-white text-xl">
-                ${Number(amountUsd || 0).toFixed(2)}
+              <span className="text-right">
+                {serverDiscountPercent > 0 && serverListAmountUsd !== null && (
+                  <span className="block text-xs text-zinc-500 line-through">
+                    ${serverListAmountUsd.toFixed(2)}
+                  </span>
+                )}
+                <span className="font-bold text-white text-xl">
+                  ${Number(serverAmountUsd ?? amountUsd ?? 0).toFixed(2)}
+                </span>
               </span>
             </div>
+            {serverDiscountPercent > 0 && (
+              <p className="mt-2 text-right text-xs text-green-400">
+                {serverDiscountPercent}% membership discount applied
+              </p>
+            )}
           </div>
 
           {step === 'processing' ? (

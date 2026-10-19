@@ -13,6 +13,7 @@ import SummonModal from './SummonModal'
 import SubscribeButton from './user/SubscribeButton'
 import FounderBadge from './founder/FounderBadge'
 import { useFounderIdentity } from '../hooks/useFounderProgram'
+import { usePublicProfileIdentity } from '../hooks/usePublicProfileIdentity'
 
 interface ClickableUsernameProps {
   username: string
@@ -85,6 +86,10 @@ const ClickableUsername: React.FC<ClickableUsernameProps> = ({
    const { user: currentUser, profile: currentUserProfile } = useAuthStore()
   
    const targetUserId = userId || profile?.id
+   const { identity, loading: identityLoading } = usePublicProfileIdentity(targetUserId)
+   const safeUsername = targetUserId
+     ? identity?.username || (identityLoading ? 'xxxxx' : 'xxxxx')
+     : username
    const userProfile = profile
    const isOwnProfile = currentUser?.id === targetUserId
 
@@ -324,13 +329,13 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
             break
             
         case 'assign_vp': {
-            if (!confirm(`Are you sure you want to appoint ${username} as Vice President?`)) return;
+            if (!confirm(`Are you sure you want to appoint ${safeUsername} as Vice President?`)) return;
             try {
                 const { error } = await supabase.rpc('appoint_vice_president', {
                     p_appointee_id: targetUserId
                 });
                 if (error) throw error;
-                toast.success(`Appointed ${username} as Vice President!`);
+                toast.success(`Appointed ${safeUsername} as Vice President!`);
             } catch (err: any) {
                 toast.error(err.message);
             }
@@ -338,14 +343,14 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
         }
             
         case 'give_ticket': {
-            const amountStr = window.prompt(`Enter ticket amount (coins) for @${username}:`, '100')
+            const amountStr = window.prompt(`Enter ticket amount (coins) for @${safeUsername}:`, '100')
             if (amountStr === null) return
             const amount = parseInt(amountStr)
             if (isNaN(amount) || amount <= 0) {
                 toast.error('Invalid amount')
                 return
             }
-            const notes = window.prompt(`Ticket notes for @${username}:`, '') || ''
+            const notes = window.prompt(`Ticket notes for @${safeUsername}:`, '') || ''
             try {
                 const { data, error } = await supabase.rpc('issue_ticket', {
                     p_target_user_id: targetUserId,
@@ -354,7 +359,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                 })
                 if (error) throw error
                 if (data && data.success) {
-                    toast.success(`Ticket issued to @${username} for ${amount} coins`)
+                    toast.success(`Ticket issued to @${safeUsername} for ${amount} coins`)
                 } else {
                     toast.error(data?.error || 'Failed to issue ticket')
                 }
@@ -378,12 +383,12 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
 
                 if (error) throw error
                 if (data && data.success) {
-                   toast.success(`Warrant issued for ${username}. Access restricted until court appearance.`)
+                   toast.success(`Warrant issued for ${safeUsername}. Access restricted until court appearance.`)
                    
                    // Notify admins
                    await notifyAdmins(
                        'Warrant Issued',
-                       `@${currentUserProfile?.username || 'Staff'} issued a warrant for @${username}`,
+                       `@${currentUserProfile?.username || 'Staff'} issued a warrant for @${safeUsername}`,
                        'moderation_action',
                        {
                            target_user_id: targetUserId,
@@ -405,7 +410,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
         }
 
         case 'restrict_broadcast': {
-            if (!confirm(`Restrict ${username} from broadcasting/guesting for 24h?`)) return;
+            if (!confirm(`Restrict ${safeUsername} from broadcasting/guesting for 24h?`)) return;
             
             try {
                 const tomorrow = new Date();
@@ -417,12 +422,12 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                     .eq('id', targetUserId);
                     
                 if (error) throw error;
-                toast.success(`${username} restricted for 24h`);
+                toast.success(`${safeUsername} restricted for 24h`);
                 
                 // Notify admins
                 await notifyAdmins(
                     'Broadcast Restriction',
-                    `@${currentUserProfile?.username || 'Staff'} restricted @${username} from broadcasting for 24h`,
+                    `@${currentUserProfile?.username || 'Staff'} restricted @${safeUsername} from broadcasting for 24h`,
                     'moderation_action',
                     {
                         target_user_id: targetUserId,
@@ -454,7 +459,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                         stream_id: streamId
                     });
                     if (error) throw error;
-                    toast.success(`User ${username} muted in stream`);
+                    toast.success(`User ${safeUsername} muted in stream`);
                  } catch (err: any) {
                     toast.error(err.message);
                  }
@@ -469,7 +474,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                    .eq('user_id', targetUserId);
 
                 if (error) throw error
-                toast.success(`User ${username} muted in stream`)
+                toast.success(`User ${safeUsername} muted in stream`)
             } catch (err: any) {
                 console.error('Error muting user in stream:', err)
                 toast.error('Failed to mute user')
@@ -490,7 +495,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                    .eq('user_id', targetUserId);
 
                 if (error) throw error
-                toast.success(`User ${username} unmuted in stream`)
+                toast.success(`User ${safeUsername} unmuted in stream`)
             } catch (err: any) {
                 console.error('Error unmuting user in stream:', err)
                 toast.error('Failed to unmute user')
@@ -553,7 +558,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
        }
 
         case 'unmute': {
-            if (!confirm(`Are you sure you want to globally UNMUTE ${username}?`)) return;
+            if (!confirm(`Are you sure you want to globally UNMUTE ${safeUsername}?`)) return;
             try {
                 // 0 minutes = unmute as per baseline.sql mute_user logic
                 const { error } = await supabase.rpc('mute_user', {
@@ -563,7 +568,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                 })
 
                 if (error) throw error
-                toast.success(`User ${username} has been unmuted globally`)
+                toast.success(`User ${safeUsername} has been unmuted globally`)
             } catch (err: any) {
                 console.error('Error unmuting user:', err)
                 toast.error(err.message || 'Failed to unmute user')
@@ -601,12 +606,12 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                     if (error) throw error
                 }
 
-                toast.success(`User ${username} has been muted`)
+                toast.success(`User ${safeUsername} has been muted`)
                 
                 // Notify admins
                 await notifyAdmins(
                     'User Muted',
-                    `@${currentUserProfile?.username || 'Staff'} muted @${username} for ${minutes} minutes`,
+                    `@${currentUserProfile?.username || 'Staff'} muted @${safeUsername} for ${minutes} minutes`,
                     'moderation_action',
                     {
                         target_user_id: targetUserId,
@@ -627,7 +632,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
         }
 
         case 'delete': {
-            if (confirm(`Are you sure you want to PERMANENTLY delete user ${username}? This action cannot be undone.`)) {
+            if (confirm(`Are you sure you want to PERMANENTLY delete user ${safeUsername}? This action cannot be undone.`)) {
                 try {
                     // Try to use admin API first if available (usually not on client)
                     // Or call a hypothetical delete RPC
@@ -640,12 +645,12 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                         throw error
                     }
                     
-                    toast.success(`User ${username} deleted`)
+                    toast.success(`User ${safeUsername} deleted`)
                     
                     // Notify admins
                     await notifyAdmins(
                         'User Deleted',
-                        `User @${username} has been permanently deleted by @${currentUserProfile?.username || 'staff'}`,
+                        `User @${safeUsername} has been permanently deleted by @${currentUserProfile?.username || 'staff'}`,
                         'moderation_action',
                         {
                             target_user_id: targetUserId,
@@ -790,11 +795,11 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
                     case_type: 'criminal'
                 });
                 
-                toast.success(`${username} arrested for ${days} day(s), court date: ${new Date(courtDateStr).toLocaleDateString()}`);
+                toast.success(`${safeUsername} arrested for ${days} day(s), court date: ${new Date(courtDateStr).toLocaleDateString()}`);
                 
                 await notifyAdmins(
                     'User Arrested',
-                    `@${currentUserProfile?.username || 'Staff'} arrested @${username} for ${days} day(s) - Court: ${new Date(courtDateStr).toLocaleDateString()}`,
+                    `@${currentUserProfile?.username || 'Staff'} arrested @${safeUsername} for ${days} day(s) - Court: ${new Date(courtDateStr).toLocaleDateString()}`,
                     'moderation_action',
                     {
                         target_user_id: targetUserId,
@@ -870,7 +875,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
         onDoubleClick={handleDoubleClick}
         ref={usernameRef}
         className={`cursor-pointer hover:text-troll-gold transition-colors username username-readable ${isAdmin ? 'admin-user' : isOfficer ? 'officer-user' : isTroller ? 'troller-user' : ''} ${specialClass}`}
-        title={`View ${username}'s profile`}
+        title={`View ${safeUsername}'s profile`}
         style={trollSpellEffect ? {
           color: trollSpellEffect.color,
           textShadow: `0 0 10px ${trollSpellEffect.color}`,
@@ -878,7 +883,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
         } : undefined}
         >
         {trollSpellEffect && <span className="mr-1">{trollSpellEffect.emoji}</span>}
-        {prefix}{username}
+        {prefix}{safeUsername}
         </span>
         
         {/* Admin Badge First Priority */}
@@ -1185,7 +1190,7 @@ profile?.role === 'tcnn_chief_news_caster' || profile?.is_chief_news_caster ||
             isOpen={showSummonModal}
             onClose={() => setShowSummonModal(false)}
             userId={targetUserId}
-            username={username}
+            username={safeUsername}
         />
     )}
     </>

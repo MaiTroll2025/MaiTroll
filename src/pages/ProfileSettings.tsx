@@ -11,6 +11,8 @@ import FamilyMinorSettings from "../components/profile/FamilyMinorSettings";
 import BatterySaverToggle from "@/components/BatterySaverToggle";
 import AvatarUpload from "../components/profile/AvatarUpload";
 import CoverPhotoUpload, { CoverPhotoUploadRef } from "../components/profile/CoverPhotoUpload";
+import GhostModeSettingsPanel from "@/components/GhostModeSettingsPanel";
+import MaiSupremeSettingsPanel from "@/components/MaiSupremeSettingsPanel";
 
 const PLATFORM_OPTIONS = [
   { value: "", label: "Select platform" },
@@ -317,6 +319,9 @@ export default function ProfileSettings() {
             </p>
           </div>
         </header>
+
+        <GhostModeSettingsPanel />
+        <MaiSupremeSettingsPanel />
 
         <section className={`${MaiTrollTheme.components.card} space-y-5`}>
           <div className="flex items-center gap-2">

@@ -82,7 +82,11 @@ export default function GovernmentProposalsPage() {
                 <option value="budget">Budget</option>
                 <option value="infrastructure">Infrastructure</option>
                 <option value="community">Community</option>
+                <option value="law">Law proposal (Mai Supreme or official)</option>
               </select>
+              <p className="text-xs text-slate-400">
+                Active Mai Supreme members may submit law proposals here. Other proposal categories remain limited to authorized officials.
+              </p>
               <button onClick={handleSubmit} disabled={busy} className="rounded-xl border border-cyan-300/30 bg-cyan-300 px-4 py-2 font-black text-slate-950 transition hover:bg-cyan-200 disabled:opacity-70">
                 {busy ? 'Submitting…' : 'Submit proposal'}
               </button>

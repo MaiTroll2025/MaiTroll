@@ -82,14 +82,25 @@ export default function CashoutRequestPage() {
   const [recentRequests, setRecentRequests] = useState<CashoutRequest[]>([]);
   const [dailyCashoutCount, setDailyCashoutCount] = useState(0);
   const [fastPayApproved, setFastPayApproved] = useState(false);
+  const [ghostSupremeExpiresAt, setGhostSupremeExpiresAt] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now());
 
    // Derived state for display
    const usdAmount = selectedTier ? selectedTier.usd : 0;
    const dailyLimitReached = dailyCashoutCount >= 1;
    const isFeeProvider = payoutMethod === 'venmo' || payoutMethod === 'cash_app';
    const isPayPal = payoutMethod === 'paypal';
+   const ghostSupremeActive = Boolean(
+     ghostSupremeExpiresAt && new Date(ghostSupremeExpiresAt).getTime() > now,
+   );
    const feeCoins = selectedTier
-     ? (isFeeProvider ? Math.round(selectedTier.coins * 0.05) : isPayPal ? 50 : 0)
+     ? ghostSupremeActive
+       ? 0
+       : isFeeProvider
+         ? Math.round(selectedTier.coins * 0.05)
+         : isPayPal
+           ? 50
+           : 0
      : 0;
    const totalCoinsNeeded = selectedTier ? selectedTier.coins + (feeCoins || 0) : 0;
    const canRequest = eligibleCoins >= totalCoinsNeeded && providerUsername.trim() && userTag.trim();
@@ -119,6 +130,11 @@ export default function CashoutRequestPage() {
   }, [user?.id, refreshProfile])
 
   useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 15_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     if (!profile) return;
     if (providerUsername.trim()) return;
 
@@ -136,6 +152,19 @@ export default function CashoutRequestPage() {
         // All troll coins are cashout-eligible.
         const eligibleTotal = Math.max(0, (profile.troll_coins || 0));
         setEligibleCoins(eligibleTotal);
+
+        const { data: ghostEntitlement, error: ghostEntitlementError } = await supabase
+          .from('ghost_mode_entitlements')
+          .select('tier, starts_at, expires_at')
+          .eq('user_id', profile.id)
+          .maybeSingle();
+        if (ghostEntitlementError) throw ghostEntitlementError;
+        setGhostSupremeExpiresAt(
+          ghostEntitlement?.tier === 'supreme'
+          && new Date(ghostEntitlement.starts_at).getTime() <= Date.now()
+            ? ghostEntitlement.expires_at
+            : null,
+        );
 
         // Load recent payout requests
         const { data: requestsData, error: requestsError } = await supabase
@@ -311,7 +340,7 @@ const { data, error } = await supabase.rpc('request_cashout', {
               <h1 className="text-3xl font-extrabold text-white mb-2">Request Cashout</h1>
              <p className="text-gray-300">
                 Convert your eligible cashout coins into real payout requests. All troll coins are cashout-eligible.
-                You can request 1 cashout per day. PayPal and ACH have no fee. Venmo and Cash App charge a 5% fee (in coins).
+                You can request 1 cashout per day. Active Ghost Mode Supreme waives cashout fees for its 30-day term.
              </p>
             </div>
           </div>
@@ -392,7 +421,9 @@ const { data, error } = await supabase.rpc('request_cashout', {
             <div>
             <h3 className="text-sm font-bold text-green-300">Cashout Fee</h3>
               <p className="text-sm text-green-200/80">
-                PayPal and ACH have no cashout fee. Venmo and Cash App charge a 5% fee (in coins) per cashout. The full cash amount is paid out to you.
+                {ghostSupremeActive
+                  ? 'Ghost Mode Supreme is active: cashout provider fees are waived.'
+                  : 'PayPal charges 50 coins. Venmo and Cash App charge 5% in coins; ACH has no fee. The full cash amount is paid out to you.'}
               </p>
             </div>
           </div>
@@ -409,8 +440,8 @@ const { data, error } = await supabase.rpc('request_cashout', {
                 <div className="flex justify-between">
                     <span className="text-gray-400">Processing Fee</span>
                     <span className="text-red-400 font-mono">
-                      {isFeeProvider
-                        ? `${feeCoins.toLocaleString()} coins (5%)`
+                      {feeCoins > 0
+                        ? `${feeCoins.toLocaleString()} coins${isFeeProvider ? ' (5%)' : ''}`
                         : '$0.00'}
                     </span>
                   </div>
@@ -418,7 +449,7 @@ const { data, error } = await supabase.rpc('request_cashout', {
                    <span>You Receive</span>
                    <span>${usdAmount.toFixed(2)}</span>
                  </div>
-                 {isFeeProvider && feeCoins > 0 && (
+                 {feeCoins > 0 && (
                    <div className="flex justify-between pt-1">
                      <span className="text-gray-400">Total Charged</span>
                      <span className="text-white font-mono">

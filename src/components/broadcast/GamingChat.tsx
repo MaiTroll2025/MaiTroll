@@ -9,6 +9,7 @@ import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 import { getAnonymousDisplayName } from '@/lib/anonymousIdentity'
 import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
+import { generateUUID } from '@/lib/uuid'
 
 /** Small avatar for chat messages — extracts useUserFrame out of .map() */
 function ChatAvatar({ userId, avatarUrl, username }: { userId?: string; avatarUrl: string; username: string }) {
@@ -20,6 +21,7 @@ function ChatAvatar({ userId, avatarUrl, username }: { userId?: string; avatarUr
 
 interface ChatMessage {
   id: string
+  txn_id?: string
   user_id?: string
   username: string
   content: string
@@ -43,27 +45,43 @@ export function GamingChat({ streamId, className }: GamingChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [_isVisible, _setIsVisible] = useState(true)
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const channel = supabase.channel(`floating-chat:${streamId}`)
-    channelRef.current = channel
+    const channel = supabase.channel(`stream-chat:${streamId}`)
 
     channel
-      .on('broadcast', { event: 'floating_chat' }, (payload: any) => {
-        const msg = payload.payload
-        if (!msg) return
+      .on('broadcast', { event: 'chat' }, (payload: any) => {
+        const envelope = payload.payload
+        if (
+          envelope?.v !== 1 ||
+          envelope?.t !== 'chat' ||
+          envelope?.stream_id !== streamId ||
+          typeof envelope?.txn_id !== 'string' ||
+          typeof envelope?.message_id !== 'string' ||
+          typeof envelope?.s !== 'string' ||
+          typeof envelope?.d?.content !== 'string'
+        ) return
 
         const chatMsg: ChatMessage = {
-          id: msg.id || `${Date.now()}-${Math.random()}`,
-          username: msg.username || 'Anonymous',
-          content: msg.content || msg.message || '',
-          createdAt: msg.createdAt || Date.now(),
-          avatarUrl: msg.avatarUrl || msg.avatar_url || null,
+          id: envelope.message_id,
+          txn_id: envelope.txn_id,
+          user_id: envelope.s,
+          username: envelope.d.user_name || envelope.d.sender_name || 'Anonymous',
+          content: envelope.d.content,
+          createdAt: envelope.ts,
+          avatarUrl: envelope.d.user_avatar || null,
         }
 
         setMessages((prev) => {
+          const existingIndex = prev.findIndex((message) =>
+            message.txn_id === chatMsg.txn_id || message.id === chatMsg.id
+          )
+          if (existingIndex >= 0) {
+            const updated = [...prev]
+            updated[existingIndex] = chatMsg
+            return updated
+          }
           const next = [...prev, chatMsg]
           return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
         })
@@ -71,10 +89,7 @@ export function GamingChat({ streamId, className }: GamingChatProps) {
       .subscribe()
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
-      channelRef.current = null
+      supabase.removeChannel(channel)
     }
   }, [streamId])
 
@@ -100,9 +115,12 @@ export function GamingChat({ streamId, className }: GamingChatProps) {
       : getAnonymousDisplayName()
 
     const avatar = user ? (profile?.avatar_url || null) : null
+    const txnId = generateUUID()
 
     const optimisticMsg: ChatMessage = {
-      id: `local-${Date.now()}`,
+      id: `local-${txnId}`,
+      txn_id: txnId,
+      user_id: user.id,
       username: displayName,
       content: text,
       createdAt: Date.now(),
@@ -112,25 +130,31 @@ export function GamingChat({ streamId, className }: GamingChatProps) {
     setMessages((prev) => [...prev, optimisticMsg])
 
     try {
-      const result = await sendChatThroughGate({ streamId, content: text })
-      if (result.ok) {
-        const chatChannel = channelRef.current
-        if (chatChannel) {
-          chatChannel.send({
-            type: 'broadcast',
-            event: 'floating_chat',
-            payload: {
-              id: optimisticMsg.id,
-              username: displayName,
-              content: text,
-              createdAt: Date.now(),
-              avatarUrl: avatar,
-            },
-          })
+      const result = await sendChatThroughGate({ streamId, content: text, txnId })
+      if (!result.ok) {
+        setMessages((prev) => prev.filter((message) => message.txn_id !== txnId))
+        toast.error(result.error || 'Message could not be sent.')
+        return
+      }
+
+      if (result.envelope) {
+        const envelope = result.envelope
+        const canonicalMessage: ChatMessage = {
+          id: envelope.message_id,
+          txn_id: envelope.txn_id,
+          user_id: envelope.s,
+          username: String(envelope.d.user_name || envelope.d.sender_name || displayName),
+          content: String(envelope.d.content || text),
+          createdAt: envelope.ts,
+          avatarUrl: typeof envelope.d.user_avatar === 'string' ? envelope.d.user_avatar : avatar,
         }
+        setMessages((prev) => prev.map((message) =>
+          message.txn_id === txnId ? canonicalMessage : message
+        ))
       }
     } catch (err: any) {
       console.error('[GamingChat] Send failed:', err)
+      setMessages((prev) => prev.filter((message) => message.txn_id !== txnId))
       toast.error('Failed to send message')
     }
   }, [input, user, profile, streamId, navigate])

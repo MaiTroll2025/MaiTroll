@@ -13,6 +13,8 @@ import JailBarOverlay from './JailBarOverlay';
 import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation';
 import { getTrackPublications, safeParseMetadata } from './battleArenaUtils';
 
+const EMPTY_DEPARTED_SEAT_KEYS: ReadonlySet<string> = new Set();
+
 // --- Logging Helpers ---
 const _logBroadcastLifecycle = (message: string, data?: any) => {
   console.log(`[BroadcastLifecycle] ${message}`, data || '');
@@ -610,6 +612,8 @@ interface BattleArenaProps {
   trackRevision: number;
   currentUserId?: string | null;
   isBroadcaster?: boolean;
+  isRandomBattle?: boolean;
+  departedSeatKeys?: ReadonlySet<string>;
   timeLeft?: number;
   battleStatus?: string;
   /** Enable JAIL TIME overlay effect (default: true for random battles) */
@@ -670,6 +674,8 @@ const BattleArena = ({
   onOpenStaffActions,
   currentUserId,
   isBroadcaster = false,
+  isRandomBattle = false,
+  departedSeatKeys = EMPTY_DEPARTED_SEAT_KEYS,
   timeLeft,
   battleStatus,
   jailTimeEnabled = true,
@@ -897,6 +903,10 @@ const BattleArena = ({
             for (const dbParticipant of allParticipants) {
               // Skip null entries or if we already have this participant
               if (!dbParticipant) continue;
+              if (
+                dbParticipant.role === 'stage' &&
+                departedSeatKeys.has(`${dbParticipant.source_stream_id}:${dbParticipant.user_id}`)
+              ) continue;
               if (participantsData.some(p => p.identity === dbParticipant.user_id)) continue;
               
               const metadata = safeParseMetadata(dbParticipant.metadata, `db participant ${dbParticipant.user_id}`);
@@ -1122,6 +1132,12 @@ const BattleArena = ({
             if (!matchedTeam && remoteSupabaseParticipant?.team) {
               matchedTeam = remoteSupabaseParticipant.team;
             }
+            if (
+              remoteSupabaseParticipant?.role === 'stage' &&
+              departedSeatKeys.has(
+                `${remoteSupabaseParticipant.source_stream_id}:${matchedUserId}`
+              )
+            ) continue;
 
             // FIX #1: Correct Track Extraction - use publications with isSubscribed check
             // Use proper source mapping - check publication.source against Track.Source enum
@@ -1508,6 +1524,7 @@ const BattleArena = ({
     remoteUsers,
     user,
     userIdToLiveKitIdentity,
+    departedSeatKeys,
   ]);
 
   const categorized = useMemo(() => {
@@ -1626,6 +1643,7 @@ const BattleArena = ({
 
   const TeamSeatControls = ({ team }: { team: 'challenger' | 'opponent' }) => {
     if (!canManageTeamSeats(team)) return null;
+    if (isRandomBattle) return null;
     const boxCount = (team === 'challenger' ? challengerBoxCount : opponentBoxCount) || 1;
     const saving = seatSaving[team];
     const battleLive = battleStatus === 'active' || battleStatus === 'starting' || battleStatus === 'ready';

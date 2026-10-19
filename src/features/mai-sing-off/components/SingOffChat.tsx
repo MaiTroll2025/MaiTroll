@@ -6,6 +6,7 @@ import {
 } from 'react';
 
 import {
+  Coins,
   Gift,
   Hash,
   Send,
@@ -18,6 +19,7 @@ import { useAuthStore } from '@/lib/store';
 
 import { useSingOffStore } from '../store/useSingOffStore';
 import { useSingOffActions } from '../hooks/useSingOffActions';
+import { SingOffCoinStore } from './SingOffCoinStore';
 
 interface SingOffChatProps {
   sessionId?: string;
@@ -42,13 +44,16 @@ export function SingOffChat({
     messages,
     participants,
     authority,
+    coinStoreOpen,
   } = useSingOffStore(
     useShallow((state) => ({
       messages: state.chatMessages,
       participants: state.participants,
       authority: state.authority,
+      coinStoreOpen: state.coinStoreOpen,
     })),
   );
+  const setCoinStoreOpen = useSingOffStore((state) => state.setCoinStoreOpen);
 
   const actions = useSingOffActions();
 
@@ -158,6 +163,7 @@ export function SingOffChat({
   };
 
   return (
+    <>
     <section
       className="
         flex
@@ -211,29 +217,40 @@ export function SingOffChat({
           </div>
         </div>
 
-        {canModerate && (
-          <div
-            className="
-              flex
-              items-center
-              gap-1.5
-              rounded-full
-              border
-              border-red-400/20
-              bg-red-500/10
-              px-2.5
-              py-1
-              text-[11px]
-              font-bold
-              uppercase
-              tracking-wide
-              text-red-300
-            "
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCoinStoreOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-400/20 bg-yellow-500/10 px-2.5 py-1.5 text-xs font-bold text-yellow-300 transition hover:bg-yellow-500/20"
+            aria-label="Buy Mai Talent Show coins"
           >
-            <Shield className="h-3 w-3" />
-            Staff
-          </div>
-        )}
+            <Coins className="h-3.5 w-3.5" />
+            Buy Coins
+          </button>
+          {canModerate && (
+            <div
+              className="
+                flex
+                items-center
+                gap-1.5
+                rounded-full
+                border
+                border-red-400/20
+                bg-red-500/10
+                px-2.5
+                py-1
+                text-[11px]
+                font-bold
+                uppercase
+                tracking-wide
+                text-red-300
+              "
+            >
+              <Shield className="h-3 w-3" />
+              Staff
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Messages */}
@@ -374,6 +391,8 @@ export function SingOffChat({
         </div>
       </footer>
     </section>
+    <SingOffCoinStore open={coinStoreOpen} onClose={() => setCoinStoreOpen(false)} />
+    </>
   );
 }
 

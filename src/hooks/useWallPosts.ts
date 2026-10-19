@@ -27,7 +27,7 @@ export function useWallPosts(_limit = 20) {
       const end = start + PAGE_SIZE - 1
 
       const { data, error } = await supabase
-        .from('troll_wall_posts')
+        .from('troll_wall_posts_public')
         .select(
           'id, user_id, username, avatar_url, is_admin, is_troll_officer, is_og_user, user_created_at, is_pinned, post_type, content, metadata, likes, created_at, reply_to_post_id'
         )

@@ -12,6 +12,40 @@ const CURRENT_KID = "k1";
 // const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000; // 5 minutes
 const SAMPLE_RATE_DEFAULT = 20; // 20%
 const HOT_STREAM_THRESHOLD = 5000;
+const STAFF_ROLES = new Set([
+  "admin",
+  "superadmin",
+  "owner",
+  "ceo",
+  "ceo_assistant",
+  "noah_assistant",
+  "staff",
+  "lead_troll_officer",
+  "troll_officer",
+  "secretary",
+  "prosecutor",
+  "attorney",
+  "agency_hr_manager",
+  "agency_hr",
+  "hr_admin",
+  "marketing_agent",
+  "empire_partner",
+]);
+
+function isStaffProfile(profile: Record<string, unknown>) {
+  const role = String(profile.role || "").toLowerCase();
+  const trollRole = String(profile.troll_role || "").toLowerCase();
+  return profile.is_staff === true ||
+    profile.is_admin === true ||
+    profile.is_superadmin === true ||
+    profile.is_troll_officer === true ||
+    profile.is_lead_officer === true ||
+    profile.is_secretary === true ||
+    profile.is_prosecutor === true ||
+    profile.is_attorney === true ||
+    STAFF_ROLES.has(role) ||
+    STAFF_ROLES.has(trollRole);
+}
 
 function isBroadcastChatLockActive(lock: {
   broadcast_chat_disabled?: boolean | null;
@@ -36,33 +70,34 @@ interface TransportAdapter {
 }
 
 class SupabaseTransportAdapter implements TransportAdapter {
-  constructor(private supabase: any) {}
-  async publish(channel: string, event: string, payload: any) {
-    const chan = this.supabase.channel(channel);
-    // MUST wait until channel is subscribed before sending broadcast.
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error("Realtime subscribe timeout")), 5000);
-      chan.subscribe((status: string) => {
-        if (status === "SUBSCRIBED") {
-          clearTimeout(timeout);
-          resolve();
-          return;
-        }
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          clearTimeout(timeout);
-          reject(new Error(`Realtime subscribe failed: ${status}`));
-        }
-      });
-    });
+  constructor(
+    private supabaseUrl: string,
+    private apiKey: string,
+  ) {}
 
+  async publish(channel: string, event: string, payload: any) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     try {
-      await chan.send({
-        type: "broadcast",
-        event: event,
-        payload: payload,
+      const endpoint = new URL(
+        `/realtime/v1/api/broadcast/${encodeURIComponent(channel)}/events/${encodeURIComponent(event)}`,
+        this.supabaseUrl,
+      );
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          apikey: this.apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+      if (!response.ok) {
+        const details = await response.text();
+        throw new Error(`Realtime REST broadcast failed (${response.status}): ${details}`);
+      }
     } finally {
-      await this.supabase.removeChannel(chan);
+      clearTimeout(timeout);
     }
   }
 }
@@ -209,11 +244,61 @@ serve(async (req) => {
       });
     }
 
-    const body: MessagePayload = await req.json();
-    const { type, stream_id, txn_id, data } = body;
+    const body = await req.json();
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return new Response(JSON.stringify({ error: "Invalid request body", code: "INVALID_BODY" }), {
+        status: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
+    const { type, stream_id, txn_id, data } = body as MessagePayload;
+    const requiredFields = ["type", "stream_id", "txn_id", "data"];
+    const missingFields = requiredFields.filter((field) => !(field in body));
+    if (missingFields.length > 0) {
+      return new Response(JSON.stringify({ error: `Missing required fields: ${missingFields.join(", ")}` }), {
+        status: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
+    const supportedTypes = ["chat", "gift", "mod", "sys", "battle", "count"];
+    if (!supportedTypes.includes(type)) {
+      return new Response(JSON.stringify({ error: "Unsupported message type", code: "INVALID_TYPE" }), {
+        status: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return new Response(JSON.stringify({ error: "Invalid message data", code: "INVALID_DATA" }), {
+        status: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+    if (type === "chat") {
+      if (typeof data.content !== "string" || !data.content.trim()) {
+        return new Response(JSON.stringify({ error: "Message content is required", code: "INVALID_CONTENT" }), {
+          status: 400,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+      if (data.content.trim().length > 280) {
+        return new Response(JSON.stringify({ error: "Messages are limited to 280 characters", code: "CONTENT_TOO_LONG" }), {
+          status: 400,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+      data.content = data.content.trim();
+    }
 
     if (!UUID_REGEX.test(String(stream_id || "").trim())) {
       return new Response(JSON.stringify({ error: "Invalid stream_id", code: "INVALID_STREAM_ID" }), {
+        status: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+    if (!UUID_REGEX.test(String(txn_id || "").trim())) {
+      return new Response(JSON.stringify({ error: "Invalid txn_id", code: "INVALID_TXN_ID" }), {
         status: 400,
         headers: { ...headers, "Content-Type": "application/json" },
       });
@@ -224,7 +309,15 @@ serve(async (req) => {
     const { data: jailData, error: jailError } = await supabase
       .rpc('is_user_jailed', { p_user_id: user.id });
 
-    if (!jailError && jailData && Array.isArray(jailData) && jailData.length > 0 && jailData[0].is_jailed) {
+    if (jailError) {
+      console.error("[ERROR] Failed to verify jail status:", jailError);
+      return new Response(JSON.stringify({ error: "Could not verify chat eligibility", code: "RESTRICTION_CHECK_FAILED" }), {
+        status: 503,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
+    if (jailData && Array.isArray(jailData) && jailData.length > 0 && jailData[0].is_jailed) {
       const jailInfo = jailData[0];
       return new Response(JSON.stringify({
         error: "You are currently in jail.",
@@ -246,7 +339,15 @@ serve(async (req) => {
     const { data: restrictionData, error: restrictionError } = await supabase
       .rpc('check_user_chat_restriction', { p_user_id: user.id, p_stream_id: stream_id });
 
-    if (!restrictionError && restrictionData && restrictionData.restricted) {
+    if (restrictionError || !restrictionData) {
+      console.error("[ERROR] Failed to verify chat restrictions:", restrictionError);
+      return new Response(JSON.stringify({ error: "Could not verify chat eligibility", code: "RESTRICTION_CHECK_FAILED" }), {
+        status: 503,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
+    if (restrictionData.restricted) {
       const reasons = restrictionData.reasons || [];
       const reason = reasons.includes('jailed') ? 'You are currently in jail.' :
                      reasons.includes('chat_blocked') ? 'Your chat has been disabled by moderation.' :
@@ -258,39 +359,6 @@ serve(async (req) => {
         data: restrictionData
       }), {
         status: 403,
-        headers: { ...headers, "Content-Type": "application/json" },
-      });
-    }
-
-    // 3c. Content moderation (unicode + prohibited language)
-    if (type === 'chat' && data && typeof data.content === 'string') {
-      const { data: modData, error: modError } = await supabase
-        .rpc('moderate_user_content', {
-          p_user_id: user.id,
-          p_content: data.content,
-          p_source: 'send_message',
-          p_context: { stream_id }
-        });
-
-      if (!modError && modData && !modData.allowed) {
-        return new Response(JSON.stringify({
-          error: modData.message || 'That message violates Mai Troll\'s chat rules and was not sent.',
-          code: modData.code || 'PROHIBITED_LANGUAGE',
-          data: modData
-        }), {
-          status: 403,
-          headers: { ...headers, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    // 2. Validate input
-    const requiredFields = ['type', 'stream_id', 'txn_id', 'data'];
-    const missingFields = requiredFields.filter(field => !(field in body));
-
-    if (missingFields.length > 0) {
-      return new Response(JSON.stringify({ error: `Missing required fields: ${missingFields.join(', ')}` }), {
-        status: 400,
         headers: { ...headers, "Content-Type": "application/json" },
       });
     }
@@ -325,11 +393,11 @@ serve(async (req) => {
     const [
       { data: stream, error: streamError },
       { data: profile, error: profileError },
-      { data: mute },
-      { data: ban },
-      { data: viewerCount }
+      { data: mute, error: muteError },
+      { data: ban, error: banError },
+      viewerCount
     ] = await Promise.all([
-      supabase.from("streams").select("id, is_live, user_id, broadcaster_id").eq("id", stream_id).single(),
+      supabase.from("streams").select("id, is_live, status, subscriber_only_chat, user_id").eq("id", stream_id).single(),
       supabase.from("user_profiles").select("*").eq("id", user.id).single(),
       supabase.from("stream_mutes").select("id").eq("stream_id", stream_id).eq("user_id", user.id).maybeSingle(),
       supabase.from("stream_bans").select("id, expires_at").eq("stream_id", stream_id).eq("user_id", user.id).maybeSingle(),
@@ -337,16 +405,38 @@ serve(async (req) => {
     ]);
 
     if (streamError || !stream) {
-      console.log(`[AUTH] Stream not found or inactive: ${stream_id}`);
+      console.error(`[AUTH] Stream lookup failed: ${stream_id}`, streamError);
       return new Response(JSON.stringify({ error: "Stream not found or inactive", code: "STREAM_NOT_FOUND" }), {
         status: 404,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+    if (type === "chat" && (stream.is_live !== true || stream.status !== "live")) {
+      return new Response(JSON.stringify({ error: "Stream is not live", code: "STREAM_NOT_LIVE" }), {
+        status: 409,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
+    if (profileError) {
+      console.error(`[ERROR] User profile lookup failed for ${user.id}:`, profileError);
+      return new Response(JSON.stringify({ error: "Could not verify user authorization", code: "PROFILE_LOOKUP_FAILED" }), {
+        status: 503,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
+    if (type === "chat" && (muteError || banError)) {
+      console.error("[ERROR] Failed to verify stream mute/ban status:", { muteError, banError });
+      return new Response(JSON.stringify({ error: "Could not verify chat eligibility", code: "RESTRICTION_CHECK_FAILED" }), {
+        status: 503,
         headers: { ...headers, "Content-Type": "application/json" },
       });
     }
 
     // If profile doesn't exist, create one (handles orphaned users from trigger issues)
     let userProfile = profile;
-    if (profileError || !profile) {
+    if (!profile) {
       console.log(`[AUTH] User profile not found, creating: ${user.id}`);
       
       // Create profile with ID-based username (guaranteed unique)
@@ -381,6 +471,107 @@ serve(async (req) => {
       console.log(`[SUCCESS] Created profile for orphaned user: ${user.id}`);
     }
 
+    const streamOwnerId = stream.user_id;
+    const isPrivilegedSender =
+      user.id === streamOwnerId ||
+      isStaffProfile(userProfile);
+
+    if (type === "chat" && !isPrivilegedSender) {
+      const membershipCutoff = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+      const [
+        { data: audiencePresence, error: audiencePresenceError },
+        { data: streamViewer, error: streamViewerError },
+      ] = await Promise.all([
+        supabase
+          .from("stream_audience_presence")
+          .select("id")
+          .eq("stream_id", stream_id)
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .gte("last_seen_at", membershipCutoff)
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("stream_viewers")
+          .select("stream_id")
+          .eq("stream_id", stream_id)
+          .eq("user_id", user.id)
+          .gte("last_seen", membershipCutoff)
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      if (!audiencePresence && !streamViewer && (audiencePresenceError || streamViewerError)) {
+        console.error("[ERROR] Failed to verify stream membership:", {
+          audiencePresenceError,
+          streamViewerError,
+        });
+        return new Response(JSON.stringify({ error: "Could not verify stream membership", code: "MEMBERSHIP_CHECK_FAILED" }), {
+          status: 503,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!audiencePresence && !streamViewer) {
+        return new Response(JSON.stringify({ error: "Join the stream before sending chat", code: "STREAM_MEMBERSHIP_REQUIRED" }), {
+          status: 403,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    if (type === "chat" && stream.subscriber_only_chat && !isPrivilegedSender) {
+      const { data: subscription, error: subscriptionError } = await supabase
+        .from("user_subscriptions")
+        .select("id")
+        .eq("subscriber_id", user.id)
+        .eq("broadcaster_id", streamOwnerId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (subscriptionError) {
+        console.error("[ERROR] Failed to verify subscriber-only chat access:", subscriptionError);
+        return new Response(JSON.stringify({ error: "Could not verify subscription", code: "SUBSCRIPTION_CHECK_FAILED" }), {
+          status: 503,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+      if (!subscription) {
+        return new Response(JSON.stringify({ error: "Subscriber-only chat — subscribe to the broadcaster to chat in this stream.", code: "SUBSCRIBER_REQUIRED" }), {
+          status: 403,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    if (type === "chat" && !isPrivilegedSender) {
+      const { data: moderationResult, error: moderationError } = await supabase
+        .rpc("moderate_user_content", {
+          p_user_id: user.id,
+          p_content: data.content,
+          p_source: "send_message",
+          p_context: { stream_id },
+        });
+
+      if (moderationError || !moderationResult) {
+        console.error("[ERROR] Failed to verify chat content:", moderationError);
+        return new Response(JSON.stringify({ error: "Could not verify this message", code: "CONTENT_CHECK_FAILED" }), {
+          status: 503,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+      if (!moderationResult.allowed) {
+        return new Response(JSON.stringify({
+          error: moderationResult.message || "That message violates Mai Troll's chat rules and was not sent.",
+          code: moderationResult.code || "PROHIBITED_LANGUAGE",
+          data: moderationResult,
+        }), {
+          status: 403,
+          headers: { ...headers, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (mute) {
       console.log(`[AUTH] User muted: ${user.id} in stream ${stream_id}`);
       return new Response(JSON.stringify({ error: "You are muted in this stream", code: "MUTED" }), {
@@ -401,12 +592,20 @@ serve(async (req) => {
     }
 
     // 5a. Check if user's chat is disabled (chat_blocks table)
-    const { data: chatBlock } = await supabase
+    const { data: chatBlock, error: chatBlockError } = await supabase
       .from("chat_blocks")
       .select("id, expires_at")
       .eq("stream_id", stream_id)
       .eq("user_id", user.id)
       .maybeSingle();
+
+    if (chatBlockError) {
+      console.error("[ERROR] Failed to verify chat block:", chatBlockError);
+      return new Response(JSON.stringify({ error: "Could not verify chat eligibility", code: "RESTRICTION_CHECK_FAILED" }), {
+        status: 503,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
 
     if (chatBlock) {
       const isExpired = chatBlock.expires_at && new Date(chatBlock.expires_at) < new Date();
@@ -420,13 +619,21 @@ serve(async (req) => {
     }
 
     // 5b. Check broadcast_mod_actions for active chat disable
-    const { data: activeChatDisable } = await supabase
+    const { data: activeChatDisable, error: activeChatDisableError } = await supabase
       .from("broadcast_mod_actions")
       .select("id, expires_at")
       .eq("target_user_id", user.id)
       .eq("action_type", "disable_chat")
       .eq("status", "active")
       .maybeSingle();
+
+    if (activeChatDisableError) {
+      console.error("[ERROR] Failed to verify moderation action:", activeChatDisableError);
+      return new Response(JSON.stringify({ error: "Could not verify chat eligibility", code: "RESTRICTION_CHECK_FAILED" }), {
+        status: 503,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
 
     if (activeChatDisable) {
       const isExpired = activeChatDisable.expires_at && new Date(activeChatDisable.expires_at) < new Date();
@@ -439,8 +646,8 @@ serve(async (req) => {
       }
     }
 
-    // 6. Rate Limiting (Fail-Open for availability)
-    const isMod = userProfile.role === "admin" || userProfile.role === "moderator" || userProfile.troll_role === "officer";
+    // 6. Rate Limiting (fail-closed)
+    const isMod = isPrivilegedSender;
     const currentViewerCount = Number(viewerCount) || 0;
 
     // B1) Deterministic Sampling
@@ -458,23 +665,28 @@ serve(async (req) => {
           code: "SAMPLING_ACTIVE",
           sample_rate: SAMPLE_RATE_DEFAULT 
         }), {
-          status: 202, // Accepted but not processed/broadcasted
+          status: 429,
           headers: { ...headers, "Content-Type": "application/json" },
         });
       }
     }
 
     if (redis) {
-      const rateLimitKey = `ratelimit:${user.id}:${type}`;
       try {
-        const count = await redis.incr(rateLimitKey);
-        if (count === 1) await redis.expire(rateLimitKey, 10); // 10 second window for 5 messages
-        if (count > 5) {
-          console.warn(`[AUTH] Rate limit exceeded: user_id=${user.id} type=${type}`);
-          return new Response(JSON.stringify({ error: "Rate limit exceeded", code: "RATE_LIMITED" }), {
-            status: 429,
-            headers: { ...headers, "Content-Type": "application/json" },
-          });
+        const limits = [
+          { key: `ratelimit:${user.id}:${type}`, max: 5 },
+          { key: `ratelimit:stream:${stream_id}:${type}`, max: 2500 },
+        ];
+        for (const limit of limits) {
+          const count = await redis.incr(limit.key);
+          if (count === 1) await redis.expire(limit.key, 10);
+          if (count > limit.max) {
+            console.warn(`[AUTH] Rate limit exceeded: user_id=${user.id} stream_id=${stream_id} type=${type}`);
+            return new Response(JSON.stringify({ error: "Rate limit exceeded", code: "RATE_LIMITED" }), {
+              status: 429,
+              headers: { ...headers, "Content-Type": "application/json" },
+            });
+          }
         }
       } catch (err) {
         console.error(`[CRITICAL] Rate limit check failed, rejecting: ${err}`);
@@ -492,7 +704,7 @@ serve(async (req) => {
     }
 
     // 6. Enrich Data (Denormalize server-side for security)
-    const enrichedData = {
+    const enrichedData: Record<string, any> = {
       ...data,
       user_name: userProfile.username,
       user_avatar: userProfile.avatar_url,
@@ -503,27 +715,10 @@ serve(async (req) => {
       user_glowing_username_color: userProfile.glowing_username_color,
     };
 
-    // 7. Canonicalize and Sign
-    const payloadHash = await getPayloadHash(enrichedData);
-    const canonicalString = `v=1|t=${type}|stream_id=${stream_id}|sender_id=${user.id}|txn_id=${txn_id}|ts=${ts}|payload_hash=${payloadHash}`;
-    const sig = await signMessage(canonicalString, CURRENT_KID);
-
-    const envelope = {
-      v: 1,
-      kid: CURRENT_KID,
-      t: type,
-      stream_id: stream_id,
-      s: user.id,
-      ts: ts,
-      txn_id: txn_id,
-      d: enrichedData,
-      sig: sig,
-    };
-
 
     // 8. Publish via Adapters
     const adapters: TransportAdapter[] = [
-      new SupabaseTransportAdapter(supabase),
+      new SupabaseTransportAdapter(supabaseUrl, supabaseServiceKey),
       // new AblyTransportAdapter(), // <--- ONE-LINE SWAP: Uncomment to enable Ably transport
     ];
     if (redis) adapters.push(new RedisStreamAdapter(redis));
@@ -552,13 +747,20 @@ serve(async (req) => {
     }
 
     if (type === "chat") {
-      const hostId = stream.user_id || stream.broadcaster_id;
-      if (hostId) {
-        const { data: hostModerationLock } = await supabase
+      if (streamOwnerId) {
+        const { data: hostModerationLock, error: hostModerationLockError } = await supabase
           .from("user_profiles")
           .select("broadcast_chat_disabled, broadcast_chat_disabled_until, broadcast_chat_disabled_stream_id")
-          .eq("id", hostId)
+          .eq("id", streamOwnerId)
           .maybeSingle();
+
+        if (hostModerationLockError || !hostModerationLock) {
+          console.error("[ERROR] Failed to verify broadcaster chat lock:", hostModerationLockError);
+          return new Response(JSON.stringify({ error: "Could not verify broadcaster chat settings", code: "CHAT_LOCK_CHECK_FAILED" }), {
+            status: 503,
+            headers: { ...headers, "Content-Type": "application/json" },
+          });
+        }
 
         if (isBroadcastChatLockActive(hostModerationLock, stream_id)) {
           return new Response(JSON.stringify({ error: "Chat is disabled for this broadcaster", code: "CHAT_DISABLED" }), {
@@ -584,13 +786,13 @@ serve(async (req) => {
         insertPayload.highlight_color = data.highlight_color || null;
     }
 
-    const { error: insertError } = await supabase
+    const { data: insertedMessage, error: insertError } = await supabase
       .from("stream_messages")
       .insert(insertPayload)
-      .select()
+      .select("id")
       .single();
 
-    if (insertError) {
+    if (insertError || !insertedMessage) {
       // RLS rejection (42501) or other insert failure — do NOT broadcast.
       // Failing closed here prevents everyone from seeing a message the
       // database refused to persist.
@@ -612,19 +814,46 @@ serve(async (req) => {
 
     console.log("[SUCCESS] Message inserted into stream_messages table:", txn_id);
 
+    enrichedData.message_id = insertedMessage.id;
+    const payloadHash = await getPayloadHash(enrichedData);
+    const canonicalString = `v=1|t=${type}|stream_id=${stream_id}|sender_id=${user.id}|txn_id=${txn_id}|ts=${ts}|payload_hash=${payloadHash}`;
+    const sig = await signMessage(canonicalString, CURRENT_KID);
+    const envelope = {
+      v: 1,
+      kid: CURRENT_KID,
+      t: type,
+      stream_id: stream_id,
+      s: user.id,
+      ts: ts,
+      txn_id: txn_id,
+      message_id: insertedMessage.id,
+      d: enrichedData,
+      sig: sig,
+    };
+
     // 8. Publish to Realtime AFTER the database has accepted the message.
-    await Promise.allSettled(
+    const chatPublishResults = await Promise.allSettled(
       publishChannels.flatMap((channelName) =>
         adapters.map((a) => a.publish(channelName, "chat", envelope))
       )
     );
+    chatPublishResults.forEach((result) => {
+      if (result.status === "rejected") {
+        console.error("[ERROR] Chat persisted but realtime publish failed:", result.reason);
+      }
+    });
 
     // Also publish gift events to the main stream channel for gift animations
     if (type === "gift") {
       const streamChannel = `stream:${stream_id}`;
-      await Promise.allSettled(
+      const giftPublishResults = await Promise.allSettled(
         adapters.map((a) => a.publish(streamChannel, "gift_sent", envelope))
       );
+      giftPublishResults.forEach((result) => {
+        if (result.status === "rejected") {
+          console.error("[ERROR] Gift persisted but realtime publish failed:", result.reason);
+        }
+      });
       console.log(`[GIFT] Also published to stream channel: ${streamChannel}`);
     }
 
@@ -698,4 +927,3 @@ serve(async (req) => {
     });
   }
 });
-

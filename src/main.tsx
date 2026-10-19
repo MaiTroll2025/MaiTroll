@@ -12,11 +12,8 @@ import './styles/battle-themes.css'
 import './styles/leaflet.css'
 import { AuthProvider } from './contexts/AuthProvider'
  import { GlobalAppProvider } from './contexts/GlobalAppContext'
-import { GlobalEventProvider } from './contexts/GlobalEventContext'
 import { ConsentProvider } from './contexts/ConsentContext'
 import ConsentBanner from './components/ConsentBanner'
-import AprilFoolsProvider from './components/april-fools/AprilFoolsProvider'
-import { EasterEggHuntProvider } from './contexts/EasterEggHuntContext'
 import { PWAProvider } from './contexts/PWAContext'
 import { supabase } from './lib/supabase';
   import { initMobilePlatform, isMobilePlatform } from './lib/mobilePlatform'
@@ -493,18 +490,12 @@ createRoot(rootElement).render(
       <HelmetProvider>
         <AuthProvider>
           <GlobalAppProvider>
-            <GlobalEventProvider>
-              <ConsentProvider>
-                <AprilFoolsProvider>
-                  <PWAProvider>
-                    <EasterEggHuntProvider>
-                      <App />
-                      <ConsentBanner />
-                    </EasterEggHuntProvider>
-                  </PWAProvider>
-                </AprilFoolsProvider>
-              </ConsentProvider>
-            </GlobalEventProvider>
+            <ConsentProvider>
+              <PWAProvider>
+                <App />
+                <ConsentBanner />
+              </PWAProvider>
+            </ConsentProvider>
           </GlobalAppProvider>
         </AuthProvider>
       </HelmetProvider>

@@ -169,6 +169,35 @@ export async function recordOfficerActionWithFee(input: {
             commission_coins: commissionCoins
           }
         })
+
+      // Mirror the moderation fee into admin_pool.trollcoins_balance so the
+      // Admin Pool page reflects every moderation fee collected.
+      try {
+        const { data: poolRow } = await adminClient
+          .from('admin_pool')
+          .select('id, trollcoins_balance')
+          .maybeSingle()
+
+        if (poolRow) {
+          await adminClient
+            .from('admin_pool')
+            .update({ trollcoins_balance: (poolRow.trollcoins_balance || 0) + adminProfitCoins, updated_at: new Date().toISOString() })
+            .eq('id', poolRow.id)
+        } else {
+          await adminClient
+            .from('admin_pool')
+            .insert({ trollcoins_balance: adminProfitCoins, updated_at: new Date().toISOString() })
+        }
+
+        await adminClient.from('admin_pool_ledger').insert({
+          amount: adminProfitCoins,
+          reason: `Moderation Fee - ${input.action_type}`,
+          ref_user_id: input.target_user_id,
+          created_at: new Date().toISOString()
+        })
+      } catch (poolErr) {
+        console.warn('[Economy] Failed to credit admin pool balance for moderation fee:', poolErr)
+      }
     }
   } catch (err) {
     console.warn('[Economy] Failed to record admin pool moderation fee:', err)

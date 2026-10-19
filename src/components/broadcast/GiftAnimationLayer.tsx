@@ -2,19 +2,13 @@ import React, { useEffect, useRef, useState } from 'react'
 
 type GiftEvent = {
   id: string
-  gift_id: string
-  gift_name?: string
-  animation_url?: string | null
-  animation_duration_ms?: number | null
-  sound_url?: string | null
-  display_mode?: 'recipient_box' | 'full_screen'
+  gift_id?: string
+  gift_name: string
+  gift_icon: string
   sender_id?: string
   sender_name?: string
-  receiver_id?: string
-  quantity?: number
-  amount?: number
-  stream_id?: string
-  timestamp?: string
+  receiver_id: string
+  quantity: number
 }
 
 interface Props {
@@ -24,194 +18,76 @@ interface Props {
   className?: string
 }
 
-export default function GiftAnimationLayer({ streamId, recipientUserId, recipientType: _recipientType = 'seat', className = '' }: Props) {
-  const [queue, setQueue] = useState<GiftEvent[]>([])
-  const playingRef = useRef<boolean>(false)
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const seen = useRef(new Set<string>())
+const BADGE_DURATION_MS = 2000
+
+export default function GiftAnimationLayer({
+  streamId,
+  recipientUserId,
+  recipientType: _recipientType = 'seat',
+  className = '',
+}: Props) {
+  const [gift, setGift] = useState<GiftEvent | null>(null)
+  const seenRef = useRef(new Set<string>())
+  const badgeTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
-    if (!streamId) return
+    if (!streamId || !recipientUserId) return
+    const seenGiftIds = seenRef.current
 
     const handler = (event: Event) => {
       const payload = (event as CustomEvent).detail
-      if (!payload) return
-      const ev: GiftEvent = payload?.payload || payload
-      if (!ev || !ev.receiver_id) return
-      if (ev.receiver_id !== recipientUserId) return
-      if (seen.current.has(ev.id)) return
-      seen.current.add(ev.id)
-      setQueue((q) => [...q, ev])
+      const rawGift = payload?.payload || payload
+      const id = rawGift?.id || rawGift?.stream_gift_id || rawGift?.gift_transaction_id || rawGift?.transaction_id
+      const receiverId = rawGift?.receiver_id || rawGift?.recipient_id || rawGift?.receiver_user_id
+
+      if (!id || String(receiverId) !== recipientUserId || seenGiftIds.has(String(id))) return
+      seenGiftIds.add(String(id))
+
+      const nextGift: GiftEvent = {
+        id: String(id),
+        gift_id: rawGift.gift_id || rawGift.metadata?.gift_id,
+        gift_name: rawGift.gift_name || rawGift.metadata?.gift_name || 'Gift',
+        gift_icon: rawGift.gift_icon || rawGift.metadata?.gift_icon || '🎁',
+        sender_id: rawGift.sender_id || rawGift.sender_user_id,
+        sender_name: rawGift.sender_name || rawGift.metadata?.sender_name || 'Someone',
+        receiver_id: String(receiverId),
+        quantity: Math.max(1, Number(rawGift.quantity || rawGift.metadata?.quantity || 1)),
+      }
+
+      setGift((current) => current &&
+        current.gift_id === nextGift.gift_id &&
+        current.sender_id === nextGift.sender_id
+        ? { ...nextGift, quantity: current.quantity + nextGift.quantity }
+        : nextGift)
+
+      if (badgeTimerRef.current !== null) window.clearTimeout(badgeTimerRef.current)
+      badgeTimerRef.current = window.setTimeout(() => {
+        setGift(null)
+        badgeTimerRef.current = null
+      }, BADGE_DURATION_MS)
     }
 
     window.addEventListener('broadcast-gift-received', handler as EventListener)
-    return () => window.removeEventListener('broadcast-gift-received', handler as EventListener)
+    return () => {
+      window.removeEventListener('broadcast-gift-received', handler as EventListener)
+      seenGiftIds.clear()
+      if (badgeTimerRef.current !== null) window.clearTimeout(badgeTimerRef.current)
+    }
   }, [streamId, recipientUserId])
 
-  useEffect(() => {
-    if (playingRef.current) return
-    if (queue.length === 0) return
-
-    const next = queue[0]
-    if (!next) return
-
-    const resolvedUrl = String(next.animation_url || (next as any).video_url || '')
-    if (import.meta.env.DEV) {
-      console.debug('[GiftAnimationLayer] next queue gift', {
-        queueLength: queue.length,
-        giftId: next.id,
-        animation_url: next.animation_url,
-        video_url: (next as any).video_url,
-        resolvedUrl,
-        sender_id: next.sender_id,
-        receiver_id: next.receiver_id,
-      })
-    }
-    if (!resolvedUrl) {
-      if (import.meta.env.DEV) {
-        console.debug('[GiftAnimationLayer] skipping gift without resolvedUrl', { next })
-      }
-      setQueue((q) => q.slice(1))
-      return
-    }
-
-    playingRef.current = true
-
-    // Create video element
-    const video = document.createElement('video')
-    video.src = resolvedUrl
-    video.autoplay = true
-    video.playsInline = true
-    video.defaultMuted = false
-    video.muted = false
-    video.loop = false
-    video.preload = 'auto'
-    video.setAttribute('playsinline', '')
-    video.style.pointerEvents = 'none'
-    video.style.position = 'absolute'
-    video.style.inset = '0'
-    video.style.width = '100%'
-    video.style.height = '100%'
-    video.style.objectFit = 'contain'
-    video.style.background = 'transparent'
-    video.style.zIndex = '30'
-    video.style.display = 'block'
-
-    let expectedDurationMs = next.animation_duration_ms ?? 0
-    const normalizeDuration = (value: number | null | undefined) => {
-      if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) return 0
-      return Math.round(value)
-    }
-
-    const getSafeTimeout = () => {
-      const duration = normalizeDuration(expectedDurationMs)
-      return Math.min(Math.max(duration || 5000, 5000) + 1000, 60_000)
-    }
-
-    const scheduleTimeout = () => {
-      return window.setTimeout(() => {
-        if (playingRef.current) {
-          try {
-            video.pause()
-            video.remove()
-          } catch {}
-          setQueue((q) => q.slice(1))
-          playingRef.current = false
-        }
-      }, getSafeTimeout())
-    }
-
-    const onLoadedMetadata = () => {
-      if (video.duration && !Number.isNaN(video.duration) && video.duration > 0) {
-        expectedDurationMs = Math.max(expectedDurationMs, Math.round(video.duration * 1000))
-      }
-      window.clearTimeout(safeTimeout)
-      safeTimeout = scheduleTimeout()
-    }
-
-    const onEnded = () => {
-      try {
-        video.removeEventListener('loadedmetadata', onLoadedMetadata)
-        video.removeEventListener('ended', onEnded)
-        video.removeEventListener('error', onError)
-        video.remove()
-      } catch {}
-      setQueue((q) => q.slice(1))
-      playingRef.current = false
-    }
-
-    const onError = () => {
-      console.error('[GiftAnimationLayer] video error for gift', next)
-      onEnded()
-    }
-
-    video.addEventListener('loadedmetadata', onLoadedMetadata)
-    video.addEventListener('ended', onEnded)
-    video.addEventListener('error', onError)
-
-    // Add small sender badge
-    const badge = document.createElement('div')
-    badge.style.position = 'absolute'
-    badge.style.left = '8px'
-    badge.style.top = '8px'
-    badge.style.zIndex = '40'
-    badge.style.pointerEvents = 'none'
-    badge.style.padding = '6px 8px'
-    badge.style.background = 'rgba(0,0,0,0.6)'
-    badge.style.color = 'white'
-    badge.style.fontSize = '12px'
-    badge.style.borderRadius = '6px'
-    badge.textContent = `${next.sender_name || 'Someone'} ${next.gift_name || ''} ${next.quantity && next.quantity > 1 ? `×${next.quantity}` : ''}`
-
-    const container = containerRef.current
-    let safeTimeout = scheduleTimeout()
-
-    if (container) {
-      container.appendChild(video)
-      container.appendChild(badge)
-      // Try to play; handle autoplay restrictions gracefully
-      const tryPlay = async () => {
-        try {
-          video.load();
-          await video.play();
-        } catch (_err) {
-          try {
-            video.muted = true;
-            video.load();
-            await video.play();
-          } catch (err2) {
-            console.warn('[GiftAnimationLayer] playback failed', err2);
-            onEnded();
-          }
-        }
-      };
-      void tryPlay()
-    } else {
-      // If no container, skip
-      window.clearTimeout(safeTimeout)
-      playingRef.current = false
-      setQueue((q) => q.slice(1))
-    }
-
-    return () => {
-      window.clearTimeout(safeTimeout)
-      try {
-        video.removeEventListener('loadedmetadata', onLoadedMetadata)
-        video.removeEventListener('ended', onEnded)
-        video.removeEventListener('error', onError)
-        video.remove()
-      } catch {}
-    }
-
-  }, [queue])
-
-  if (!streamId) return null
+  if (!streamId || !gift) return null
 
   return (
-    <div
-      ref={containerRef}
-      className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}
-      aria-hidden
-    />
+    <div className={`pointer-events-none absolute inset-0 z-40 overflow-hidden ${className}`} aria-live="polite">
+      <div className="absolute left-2 top-2 flex max-w-[calc(100%-1rem)] items-center gap-2 rounded-xl border border-amber-300/40 bg-slate-950/90 px-2.5 py-1.5 text-white shadow-lg backdrop-blur">
+        <span className="text-xl" aria-hidden="true">{gift.gift_icon}</span>
+        <span className="truncate text-xs font-bold">{gift.gift_name}</span>
+        {gift.quantity > 1 && (
+          <span className="shrink-0 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-black text-black">
+            x{gift.quantity}
+          </span>
+        )}
+      </div>
+    </div>
   )
 }

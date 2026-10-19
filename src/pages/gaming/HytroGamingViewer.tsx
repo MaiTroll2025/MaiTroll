@@ -23,6 +23,7 @@ import { useAuthStore } from '@/lib/store'
 import { cn, formatCompactNumber } from '@/lib/utils'
 import { useAgoraGamingViewer } from '@/hooks/useAgoraGamingViewer'
 import { useBroadcastRealtime } from '@/hooks/useBroadcastRealtime'
+import { useViewerTracking } from '@/hooks/useViewerTracking'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import GamingChat from '@/components/broadcast/GamingChat'
 import TipBanner from '@/components/broadcast/TipBanner'
@@ -103,6 +104,7 @@ export default function HytroGamingViewer() {
   const navigate = useNavigate()
   const { user, profile } = useAuthStore()
   const { isMobile, hasMounted: _hasMounted } = useIsMobile()
+  useViewerTracking(streamId || null, false)
 
   const [stream, setStream] = useState<StreamData | null>(null)
   const [loading, setLoading] = useState(true)

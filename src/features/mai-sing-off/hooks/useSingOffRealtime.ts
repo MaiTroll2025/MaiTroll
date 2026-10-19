@@ -25,7 +25,7 @@ export function useSingOffRealtime(sessionId: string | null, userId?: string) {
     clearCountdown: _clearCountdown,
     setActiveGift,
     setMaiWinnerEffect,
-    setLiveKit,
+    setRtcMedia,
     setMyQueueEntry,
     setSession,
   } = useSingOffStore.getState()
@@ -179,12 +179,12 @@ export function useSingOffRealtime(sessionId: string | null, userId?: string) {
       })
       .on('broadcast', { event: 'user_kicked' }, (payload: any) => {
         const k = (payload?.payload as any) ?? {}
-        if (userId && k.user_id === userId) setLiveKit({ isConnected: false })
+        if (userId && k.user_id === userId) setRtcMedia({ isConnected: false })
       })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [addChatMessage, sessionId, setActiveGift, setCountdown, setLiveKit, setMaiWinnerEffect, userId])
+  }, [addChatMessage, sessionId, setActiveGift, setCountdown, setRtcMedia, setMaiWinnerEffect, userId])
 }

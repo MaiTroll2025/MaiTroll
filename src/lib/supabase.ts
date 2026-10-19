@@ -269,6 +269,8 @@ export interface UserProfile {
   credit_apr_fee_percent?: number
   credit_status?: string
   battle_crowns?: number
+  battle_unlocked?: boolean
+  battle_unlocked_at?: string | null
 
   // Trollz fields
   trollz_balance?: number

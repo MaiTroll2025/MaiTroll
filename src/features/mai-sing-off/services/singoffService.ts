@@ -2,16 +2,6 @@ import { supabase } from '@/lib/supabase'
 import { OFFICIAL_GIFTS, GiftItem } from '@/lib/giftConstants'
 import type { SingOffUser, SingOffQueueEntry, SingOffRound, SingOffDecision, SingOffSessionState, SingOffChatMessage, SingOffGiftEvent, SingOffStats, ScheduledShow, SingOffRoleApplication, SingOffChampionship, UpcomingEvent, ActiveRolesList } from '../types';
 
-export type SingOffTokenMode = 'singoff-publisher' | 'singoff-viewer'
-
-export interface SingOffTokenResponse {
-  success: boolean
-  token: string
-  accessToken: string
-  serverUrl: string
-  roomName: string
-}
-
 export interface RpcResult {
   success: boolean
   error?: string
@@ -24,35 +14,6 @@ export interface RpcResult {
   user_id?: string
   already?: boolean
   [key: string]: unknown
-}
-
-/** Fetch a LiveKit token for a Sing Off room. Reuses the livekit-token edge
- * function, which validates authorization server-side via
- * singoff_validate_token_access. */
-export async function fetchSingOffToken(
-  roomName: string,
-  userId: string,
-  userName: string,
-  mode: SingOffTokenMode,
-): Promise<SingOffTokenResponse | null> {
-  const { data, error } = await supabase.functions.invoke('livekit-token', {
-    body: {
-      room: roomName,
-      roomName,
-      identity: userId,
-      name: userName || 'User',
-      role: mode === 'singoff-publisher' ? 'publisher' : 'audience',
-      canPublish: mode === 'singoff-publisher',
-      canSubscribe: true,
-      mode,
-    },
-  })
-
-  if (error) {
-    console.error('[singoff] token fetch failed', error)
-    return null
-  }
-  return data as SingOffTokenResponse
 }
 
 async function rpc(name: string, params: Record<string, unknown>): Promise<RpcResult> {
@@ -119,6 +80,17 @@ export const claimSeat = (
     p_assigner_id: assignerId,
   })
 
+export const claimJudgeSeat = (sessionId: string, position: string) =>
+  rpc('singoff_claim_judge_seat', {
+    p_session_id: sessionId,
+    p_position: position,
+  })
+
+export const claimCeoSeat = (sessionId: string) =>
+  rpc('singoff_claim_ceo_seat', {
+    p_session_id: sessionId,
+  })
+
 export const moveHost = (sessionId: string, hostUserId: string, targetPosition: string) =>
   rpc('singoff_move_host', { p_session_id: sessionId, p_host_user_id: hostUserId, p_target_position: targetPosition })
 
@@ -172,6 +144,19 @@ export const maiWinner = (sessionId: string, roundId: string, judgeId: string, c
 
 export const endRound = (sessionId: string, roundId: string, closerId: string) =>
   rpc('singoff_end_round', { p_session_id: sessionId, p_round_id: roundId, p_closer_id: closerId })
+
+export const getParticipantNote = (sessionId: string, participantUserId: string) =>
+  rpc('singoff_get_participant_note', {
+    p_session_id: sessionId,
+    p_participant_user_id: participantUserId,
+  })
+
+export const saveParticipantNote = (sessionId: string, participantUserId: string, note: string) =>
+  rpc('singoff_save_participant_note', {
+    p_session_id: sessionId,
+    p_participant_user_id: participantUserId,
+    p_note: note,
+  })
 
 export const kickUser = (sessionId: string, targetUserId: string, actorId: string) =>
   rpc('singoff_kick_user', { p_session_id: sessionId, p_target_user_id: targetUserId, p_actor_id: actorId })
@@ -395,8 +380,10 @@ export async function loadSessionState(sessionId: string, userId: string): Promi
     decisions: parseArr<SingOffDecision>(raw.decisions),
     authority: {
       is_staff: !!raw.is_staff,
+      is_admin: !!raw.is_admin,
       is_host: !!raw.is_host,
       is_judge: !!raw.is_judge,
+      is_judge_eligible: !!raw.is_judge_eligible,
       is_ceo: !!raw.is_ceo,
     },
   }

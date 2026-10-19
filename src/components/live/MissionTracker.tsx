@@ -257,6 +257,7 @@ function MissionCard({
 }) {
   const typeConfig = TYPE_CONFIG[mission.mission_type]
   const diffConfig = DIFFICULTY_CONFIG[mission.difficulty]
+  const [explaining, setExplaining] = useState(false)
 
   return (
     <motion.div
@@ -265,11 +266,13 @@ function MissionCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
+      onMouseEnter={() => setExplaining(true)}
+      onMouseLeave={() => setExplaining(false)}
       className={cn(
-        'relative rounded-xl border p-4 transition-all duration-300',
+        'relative rounded-xl border p-4 transition-all duration-300 cursor-default',
         mission.is_completed
           ? 'bg-green-950/20 border-green-500/20'
-          : 'bg-white/[0.03] border-white/10 hover:border-white/20',
+          : 'bg-white/[0.03] border-white/10 hover:border-white/20 hover:bg-white/[0.06]',
         diffConfig.glow,
       )}
     >
@@ -306,6 +309,19 @@ function MissionCard({
             </h4>
             {mission.description && (
               <p className="text-[11px] text-white/40 truncate">{mission.description}</p>
+            )}
+            {explaining && mission.description && (
+              <div className="mt-3 rounded-lg border border-cyan-500/30 bg-cyan-900/20 p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Target className="w-3 h-3 text-cyan-400" />
+                  <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider">
+                    How to accomplish
+                  </p>
+                </div>
+                <p className="text-[11px] text-cyan-100/90 leading-relaxed">
+                  {mission.description}
+                </p>
+              </div>
             )}
           </div>
         </div>

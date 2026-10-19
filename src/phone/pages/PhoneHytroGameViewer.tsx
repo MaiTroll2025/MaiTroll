@@ -14,6 +14,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { useAgoraGamingViewer } from '@/hooks/useAgoraGamingViewer'
+import { useViewerTracking } from '@/hooks/useViewerTracking'
 import { useBroadcastRealtime } from '@/hooks/useBroadcastRealtime'
 import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 import { getAnonymousDisplayName, isAnonymousDisplayName } from '@/lib/anonymousIdentity'
@@ -88,6 +89,7 @@ export default function PhoneHytroGameViewer() {
   const { streamId } = useParams()
   const navigate = useNavigate()
   const { user, profile } = useAuthStore()
+  useViewerTracking(streamId || null, false)
 
   const [stream, setStream] = useState<any>(null)
   const [loading, setLoading] = useState(true)

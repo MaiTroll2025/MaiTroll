@@ -24,15 +24,15 @@ export interface BuildingMeta {
 type BuildingMetaExtended = BuildingMeta
 
 const DEFAULT_BUILDINGS: BuildingMetaExtended[] = [
-  { label: 'Your Home', to: '/home', type: 'home' },
-  { label: 'Chats', to: '/utromail', type: 'standard' },
-  { label: 'MAI Troll Bank', to: '/store', type: 'bank' },
-  { label: 'Treelz', to: '/treelz', type: 'standard' },
-  { label: 'Go Live', to: '/broadcast/setup', type: 'broadcast' },
-  { label: 'Court House', to: '/troll-court', type: 'court' },
-  { label: 'Hytro Arcade', to: '/hytrogaming', type: 'arcade' },
-  { label: 'MAI Pay', to: '/mai-pay', type: 'bank' },
-  { label: 'Careers', to: '/careers', type: 'standard' },
+  { label: 'Apartment Building', to: '/home', type: 'home' },
+  { label: 'City Post Office', to: '/utromail', type: 'standard' },
+  { label: 'Mai City Bank', to: '/store', type: 'bank' },
+  { label: 'Treelz Cinema', to: '/treelz', type: 'standard' },
+  { label: 'Broadcast Tower', to: '/broadcast/setup', type: 'broadcast' },
+  { label: 'Municipal Court', to: '/troll-court', type: 'court' },
+  { label: 'Game Center', to: '/hytrogaming', type: 'arcade' },
+  { label: 'City Treasury', to: '/mai-pay', type: 'bank' },
+  { label: 'Employment Office', to: '/careers', type: 'standard' },
 ]
 
 type Material = 'brick' | 'glass' | 'concrete' | 'stone' | 'darkGlass'

@@ -4,7 +4,6 @@ import type { ThemeEffectType } from '../components/themes/themeEffectMap';
 export const DEFAULT_BROADCAST_THEME_ID    = 'default';
 export const CEO_BROADCAST_THEME_ID        = 'ceo_gold_premium';
 export const PRESIDENT_BROADCAST_THEME_ID  = 'president_mansion';
-export const PRIDE_LEGACY_THEME_ID         = 'pride_legacy_2026';
 export const CEO_THEME_ALLOWED_USER_ID     = '8dff9f37-21b5-4b8e-adc2-b9286874be1a';
 export const CEO_THEME_ALLOWED_EMAIL       = 'Trollcity2025@gmail.com';
 
@@ -14,7 +13,7 @@ const ALL_BROADCAST_CATEGORIES: BroadcastCategoryId[] = [
 ];
 
 type BroadcastThemeCategory =
-  | 'cash' | 'smoke' | 'drinks' | 'girly' | 'pride'
+  | 'cash' | 'smoke' | 'drinks' | 'girly'
   | 'car'  | 'music' | 'ceo'   | 'president';
 
 export interface BroadcastTheme {
@@ -150,34 +149,6 @@ export const BROADCAST_THEMES: BroadcastTheme[] = [
     accentClassName:       'text-violet-300 border-violet-400/30 bg-violet-900/20',
   },
 
-  // ── PRIDE ─────────────────────────────────────────────────────────────────
-  {
-    id: 'pride-1',
-    label: 'Rainbow Flag Motion',
-    category: 'pride',
-    accentColor: '#8b5cf6',
-    effectType: 'rainbow-flag-motion',
-    allowedCategories: SHARED,
-    shellClassName:        'broadcast-theme-container theme-rainbow-flag-motion theme-shell',
-    overlayClassName:      'tc-theme-overlay',
-    playerFrameClassName:  'tc-theme-frame broadcast-center-slot',
-    fallbackCardClassName: 'bg-indigo-900/20 border border-indigo-400/40 rounded-lg p-8 text-center',
-    accentClassName:       'text-indigo-300 border-indigo-400/30 bg-indigo-900/20',
-  },
-  {
-    id: 'pride-2',
-    label: 'Pride Wave Lights',
-    category: 'pride',
-    accentColor: '#34d399',
-    effectType: 'pride-wave-lights',
-    allowedCategories: SHARED,
-    shellClassName:        'broadcast-theme-container theme-pride-wave-lights theme-shell',
-    overlayClassName:      'tc-theme-overlay',
-    playerFrameClassName:  'tc-theme-frame broadcast-center-slot',
-    fallbackCardClassName: 'bg-teal-900/20 border border-teal-400/40 rounded-lg p-8 text-center',
-    accentClassName:       'text-teal-300 border-teal-400/30 bg-teal-900/20',
-  },
-
   // ── CAR ───────────────────────────────────────────────────────────────────
   {
     id: 'car-1',
@@ -232,22 +203,6 @@ export const BROADCAST_THEMES: BroadcastTheme[] = [
     playerFrameClassName:  'tc-theme-frame broadcast-center-slot',
     fallbackCardClassName: 'bg-sky-900/20 border border-sky-400/40 rounded-lg p-8 text-center',
     accentClassName:       'text-sky-300 border-sky-400/30 bg-sky-900/20',
-  },
-
-  // ── PRIDE LEGACY (owned / airdropped) ─────────────────────────────────────
-  {
-    id: PRIDE_LEGACY_THEME_ID,
-    label: 'Pride Broadcast Theme (2026 Legacy Edition)',
-    category: 'pride',
-    accentColor: '#ef4444',
-    effectType: 'pride-legacy-2026',
-    allowedCategories: SHARED,
-    shellClassName:        'broadcast-theme-container theme-rainbow-flag-motion theme-shell',
-    overlayClassName:      'tc-theme-overlay',
-    playerFrameClassName:  'tc-theme-frame broadcast-center-slot',
-    fallbackCardClassName: 'bg-red-900/20 border border-red-400/40 rounded-lg p-8 text-center',
-    accentClassName:       'text-red-300 border-red-400/30 bg-red-900/20',
-    isLegacyReward: true,
   },
 
   // ── CEO GOLD PREMIUM ──────────────────────────────────────────────────────

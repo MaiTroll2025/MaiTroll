@@ -18,8 +18,6 @@ const THEMES: BroadcastTheme[] = [
   { id: 'drinks-2', name: 'Pink Champagne Lounge',   category: 'drinks', accentColor: '#ec4899', backgroundImage: '', isPremium: false },
   { id: 'girly-1',  name: 'Crystal Rose Shine',      category: 'girly',  accentColor: '#f472b6', backgroundImage: '', isPremium: false },
   { id: 'girly-2',  name: 'Butterfly Glitter Sky',   category: 'girly',  accentColor: '#e879f9', backgroundImage: '', isPremium: false },
-  { id: 'pride-1',  name: 'Rainbow Flag Motion',     category: 'pride',  accentColor: '#8b5cf6', backgroundImage: '', isPremium: false },
-  { id: 'pride-2',  name: 'Pride Wave Lights',       category: 'pride',  accentColor: '#34d399', backgroundImage: '', isPremium: false },
   { id: 'car-1',    name: 'Parts and Pistons',       category: 'car',    accentColor: '#3b82f6', backgroundImage: '', isPremium: false },
   { id: 'car-2',    name: 'Street Roll Motion',      category: 'car',    accentColor: '#f97316', backgroundImage: '', isPremium: false },
   { id: 'music-1',  name: 'Mic Drop Reactor',        category: 'music',  accentColor: '#8b5cf6', backgroundImage: '', isPremium: false },
@@ -31,7 +29,7 @@ export default function BroadcastThemes() {
   const [mode, setMode] = useState<'solo' | 'battle'>('solo');
   const [selectedTheme, setSelectedTheme] = useState<string>('cash-1');
 
-  const categories = ['cash', 'smoke', 'drinks', 'girly', 'pride', 'car', 'music', 'ceo'];
+  const categories = ['cash', 'smoke', 'drinks', 'girly', 'car', 'music', 'ceo'];
   const list = useMemo(() => THEMES.filter((t) => t.category === activeCategory), [activeCategory]);
 
   if (activeCategory === 'ceo') {

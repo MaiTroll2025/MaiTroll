@@ -36,6 +36,7 @@ const ExecutiveSecretaries = lazy(() => import('./ExecutiveSecretaries'))
 const FirstCashoutMatch = lazy(() => import('./FirstCashoutMatch'))
 const SupabaseUsageDashboard = lazy(() => import('./SupabaseUsageDashboard'))
 const TromocodeAdmin = lazy(() => import('./TromoCodesAdmin'))
+const AutomatedAudienceAdmin = lazy(() => import('./AutomatedAudienceAdmin'))
 
 export interface AdminRoute {
   id: string
@@ -472,5 +473,18 @@ export const systemManagementRoutes: AdminRoute[] = [
     tileBgColor: 'bg-amber-500/10',
     tileBorderColor: 'border-amber-500/30',
     category: 'users'
+  },
+  {
+    id: 'automated-audience',
+    title: 'Automated Audience',
+    path: '/admin/automated-audience',
+    component: AutomatedAudienceAdmin,
+    roles: ['admin', 'superadmin', 'ceo'],
+    description: 'Manage labeled platform-controlled broadcast audience activity',
+    icon: <Activity className="w-5 h-5 text-cyan-200" />,
+    tileColor: 'text-cyan-200',
+    tileBgColor: 'bg-cyan-500/10',
+    tileBorderColor: 'border-cyan-500/30',
+    category: 'system'
   }
 ]

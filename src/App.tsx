@@ -26,7 +26,6 @@ const MaiBusinessDocuments = lazyWithRetry(() => import("./features/mai-business
 const MaiBusinessMarketplace = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessMarketplace"));
 const MaiBusinessHelp = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessHelp"));
 const MaiBusinessAdmin = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessAdmin"));
-import { GlobalEventProvider } from "./contexts/GlobalEventContext";
 import { BatterySaverProvider } from "./contexts/BatterySaverContext";
 import { ProfileFrameProvider } from "./contexts/ProfileFrameContext";
 import PetFloatingButton from "./components/pets/PetFloatingButton";
@@ -165,8 +164,6 @@ const MaiPayPage = lazyWithRetry(() => import("./pages/MaiPayPage"));
 
 const ShopPartnerPage = lazyWithRetry(() => import("./pages/ShopPartnerPage"));
 const ShopEarnings = lazyWithRetry(() => import("./pages/ShopEarnings"));
-const PrideShop = lazyWithRetry(() => import("./pages/PrideShop"));
-const PrideChallengesPage = lazyWithRetry(() => import("./pages/PrideChallengesPage"));
 const NotaryDashboard = lazyWithRetry(() => import("./pages/NotaryDashboard"));
 
 
@@ -2155,10 +2152,6 @@ const appShell = (
                   {/* 📝 Creator Onboarding */}
                   <Route path="/onboarding/creator" element={<CreatorOnboarding />} />
 
-{/* 🏳️‍🌈 Pride Shop */}
-                   <Route path="/pride-shop" element={<PrideShop />} />
-                   {/* 🏳️‍🌈 Pride Challenges */}
-                   <Route path="/pride-challenges" element={<PrideChallengesPage />} />
                     {/* 💰 Earnings & Coins */}
                     <Route path="/store" element={<CoinStore />} />
                     <Route path="/store/merch" element={<MerchStore />} />
@@ -2819,6 +2812,7 @@ const appShell = (
                 <Route path="/podcast/:id" element={<PodcastRoom />} />
 
 {/* 🎤 Mai Sing Off — live singing competition */}
+                  <Route path="/mai-sing-off/live/:sessionId" element={<MaiSingOffPage />} />
                   <Route path="/mai-sing-off/*" element={<MaiSingOffPage />} />
                   <Route path="/xtrollz/*" element={<Navigate to="/mai-sing-off" replace />} />
 
@@ -2967,7 +2961,6 @@ function App() {
 
   return (
     <PageVisibilityProvider>
-      <GlobalEventProvider>
         <BatterySaverProvider>
           <EffectsProvider>
             <CartProvider>
@@ -3003,7 +2996,6 @@ function App() {
           </CartProvider>
             </EffectsProvider>
         </BatterySaverProvider>
-      </GlobalEventProvider>
     </PageVisibilityProvider>
   );
 }

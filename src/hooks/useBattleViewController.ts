@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useActiveBattles, type ActiveBattle } from "./useActiveBattles";
 import { CrownInfo } from "../components/broadcast/BattleArena";
 import { getTrackPublications } from "../components/broadcast/battleArenaUtils";
+import { subscribeToStreamRealtime } from "../lib/realtime/streamRealtimeManager";
 
 const MAIN_BATTLE_DURATION_MS = 180_000;
 const _SUDDEN_DEATH_DURATION_MS = 10_000;
@@ -144,6 +145,15 @@ export function useBattleViewController({
   // Full battle_participants rows (with profile join) — used by the mobile layout
   // to render team boxes. Crowns are intentionally NOT used for battle scoring.
   const [battleParticipants, setBattleParticipants] = useState<any[]>([]);
+  const [departedSeatKeys, setDepartedSeatKeys] = useState<Set<string>>(() => new Set());
+  const battleParticipantsRef = useRef<any[]>([]);
+  const departedSeatKeysRef = useRef<Set<string>>(new Set());
+  battleParticipantsRef.current = battleParticipants;
+  useEffect(() => {
+    const empty = new Set<string>();
+    departedSeatKeysRef.current = empty;
+    setDepartedSeatKeys(empty);
+  }, [battleId]);
   // Real, authoritative per-recipient battle-point contributions aggregated from
   // realtime gift_sent events (gift coin value credited to the recipient). Never mocked.
   const [participantContributions, setParticipantContributions] = useState<Record<string, number>>({});
@@ -166,6 +176,7 @@ export function useBattleViewController({
   const audioPublishedRef = useRef(false);
   const videoPublishedRef = useRef(false);
   const battleJoinInFlightRef = useRef(false);
+  const publishingTracksRef = useRef<Set<LocalAudioTrack | LocalVideoTrack>>(new Set());
   const battleReturnInFlightRef = useRef(false);
   const originalBroadcastRef = useRef<{ streamId: string; roomName: string; userId: string } | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => {
@@ -278,24 +289,42 @@ export function useBattleViewController({
       let audioPublished = false;
       let videoPublished = false;
 
-      try {
-        if (audioTrack) {
-          await room.localParticipant.publishTrack(audioTrack, { name: "audio" });
+      if (audioTrack) {
+        const alreadyPublished = Array.from(room.localParticipant.trackPublications.values())
+          .some((publication) => publication.track === audioTrack);
+        if (alreadyPublished) {
           audioPublished = true;
-          logBattleRTC("LOCAL_MEDIA", { audioPublished: true });
+        } else if (!publishingTracksRef.current.has(audioTrack)) {
+          publishingTracksRef.current.add(audioTrack);
+          try {
+            await room.localParticipant.publishTrack(audioTrack, { name: "audio" });
+            audioPublished = true;
+            logBattleRTC("LOCAL_MEDIA", { audioPublished: true });
+          } catch (e) {
+            console.warn("[BattleView] Failed to publish audio track:", e);
+          } finally {
+            publishingTracksRef.current.delete(audioTrack);
+          }
         }
-      } catch (e) {
-        console.warn("[BattleView] Failed to publish audio track:", e);
       }
 
-      try {
-        if (videoTrack) {
-          await room.localParticipant.publishTrack(videoTrack, { name: "video" });
+      if (videoTrack) {
+        const alreadyPublished = Array.from(room.localParticipant.trackPublications.values())
+          .some((publication) => publication.track === videoTrack);
+        if (alreadyPublished) {
           videoPublished = true;
-          logBattleRTC("LOCAL_MEDIA", { videoPublished: true });
+        } else if (!publishingTracksRef.current.has(videoTrack)) {
+          publishingTracksRef.current.add(videoTrack);
+          try {
+            await room.localParticipant.publishTrack(videoTrack, { name: "video" });
+            videoPublished = true;
+            logBattleRTC("LOCAL_MEDIA", { videoPublished: true });
+          } catch (e) {
+            console.warn("[BattleView] Failed to publish video track:", e);
+          } finally {
+            publishingTracksRef.current.delete(videoTrack);
+          }
         }
-      } catch (e) {
-        console.warn("[BattleView] Failed to publish video track:", e);
       }
 
       audioPublishedRef.current = audioPublished;
@@ -347,7 +376,10 @@ export function useBattleViewController({
           throw new Error("Invalid publisher token permissions");
         }
 
-        const client = new Room();
+        const client = new Room({
+          adaptiveStream: true,
+          dynacast: true,
+        });
         battleRoomRef.current = client;
         setLivekitRoom(client);
 
@@ -734,6 +766,38 @@ export function useBattleViewController({
     setBattleLocalVideoTrack(video || null);
   }, [effectiveLocalTracks, audioTrackId, videoTrackId]);
 
+  useEffect(() => {
+    const room = battleRoomRef.current;
+    if (!isBroadcaster || !effectiveLocalTracks || room?.state !== "connected") return;
+
+    let cancelled = false;
+    void publishBattleMedia(room, effectiveLocalTracks).then((result) => {
+      if (cancelled) return;
+      if (result.audioPublished) {
+        cachedAudioTrackRef.current = effectiveLocalTracks[0] || null;
+        setBattleLocalAudioTrack(effectiveLocalTracks[0] || null);
+        setIsMicEnabled(true);
+      }
+      if (result.videoPublished) {
+        cachedVideoTrackRef.current = effectiveLocalTracks[1] || null;
+        setBattleLocalVideoTrack(effectiveLocalTracks[1] || null);
+        setIsCameraEnabled(true);
+      }
+      if (result.audioPublished || result.videoPublished) bumpTrackRevision();
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isBroadcaster,
+    effectiveLocalTracks,
+    audioTrackId,
+    videoTrackId,
+    publishBattleMedia,
+    bumpTrackRevision,
+  ]);
+
   // Fetch crown info for both broadcasters
   useEffect(() => {
     const fetchCrownInfo = async () => {
@@ -830,6 +894,11 @@ export function useBattleViewController({
   // updates local state, broadcasts box_count_changed (consumed in realtime),
   // and writes through to the DB via set_stream_box_count.
   const setTeamBoxCount = useCallback(async (team: 'challenger' | 'opponent', newCount: number) => {
+    if (isRandomBattle) {
+      toast.info('Seats cannot be changed during a Random Battle.');
+      return;
+    }
+
     const targetStream = team === 'challenger' ? challengerStream : opponentStream;
     if (!targetStream) return;
 
@@ -890,7 +959,7 @@ export function useBattleViewController({
     } else {
       toast.success(team === 'challenger' ? 'Blue seat updated' : 'Red seat updated');
     }
-  }, [challengerStream, opponentStream]);
+  }, [challengerStream, opponentStream, isRandomBattle]);
 
    // Initialize battle
    useEffect(() => {
@@ -1050,7 +1119,13 @@ export function useBattleViewController({
           .select('*, profile:user_profiles(id, username, avatar_url, troll_coins, trollmonds)')
           .eq('battle_id', battleId);
         setParticipantSnapshots((participantData as Array<{ user_id: string; role: 'host' | 'stage' | 'viewer' }>) || []);
-        setBattleParticipants((participantData as any[]) || []);
+        setBattleParticipants(
+          ((participantData as any[]) || []).filter((participant) =>
+            !departedSeatKeysRef.current.has(
+              `${participant.source_stream_id}:${participant.user_id}`
+            )
+          )
+        );
       } catch (e) {
         console.error("[BattleView] Initialization error:", e);
         deferError('Failed to initialize battle');
@@ -1111,7 +1186,13 @@ export function useBattleViewController({
 
   useEffect(() => {
     if (battleRealtime.participants.length > 0) {
-      setParticipantSnapshots(battleRealtime.participants);
+      setParticipantSnapshots(
+        battleRealtime.participants.filter((participant: any) =>
+          !departedSeatKeysRef.current.has(
+            `${participant.source_stream_id}:${participant.user_id}`
+          )
+        )
+      );
     }
   }, [battleRealtime.participants]);
 
@@ -1122,8 +1203,35 @@ export function useBattleViewController({
     }
   }, [battleRealtime.arenaReady, arenaReady]);
 
-  // Pre-battle countdown: show match found overlay during 'starting' phase
+  // For random battles, align the final countdown with the authoritative start time.
+  // Other battle modes retain the existing three-second starting countdown.
   useEffect(() => {
+    if (!battle || battle.status === 'ended') {
+      setPreBattleCountdown(null);
+      return;
+    }
+
+    if (isRandomBattle && battle?.started_at) {
+      const startAt = new Date(battle.started_at).getTime();
+      if (!Number.isFinite(startAt)) {
+        setPreBattleCountdown(null);
+        return;
+      }
+
+      const updateCountdown = () => {
+        const secondsUntilStart = Math.ceil((startAt - Date.now()) / 1000);
+        setPreBattleCountdown(
+          secondsUntilStart > 0 && secondsUntilStart <= 3
+            ? secondsUntilStart
+            : null
+        );
+      };
+
+      updateCountdown();
+      const timer = setInterval(updateCountdown, 200);
+      return () => clearInterval(timer);
+    }
+
     if (battle?.status !== 'starting') {
       setPreBattleCountdown(null);
       return;
@@ -1142,7 +1250,7 @@ export function useBattleViewController({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [battle?.id, battle?.status]);
+  }, [battle?.id, battle?.started_at, battle?.status, isRandomBattle]);
 
   // Arena readiness check
   useEffect(() => {
@@ -1348,6 +1456,56 @@ export function useBattleViewController({
     navigate,
     participantInfo?.team,
   ]);
+
+  useEffect(() => {
+    const sourceStreams = [
+      challengerStream?.id,
+      opponentStream?.id,
+    ].filter((streamId): streamId is string => Boolean(streamId));
+    if (sourceStreams.length === 0) return;
+
+    const activeSeatStatuses = new Set(["reserved", "camera_starting", "active", "live"]);
+    const unsubscribe = sourceStreams.map((sourceStreamId) =>
+      subscribeToStreamRealtime(sourceStreamId, (event) => {
+        const seat = (event.new || event.old || {}) as Record<string, unknown>;
+        const isSeatLeftBroadcast = event.table === "broadcast:seat_left";
+        const isInactiveSeatRow =
+          event.table === "stream_seat_sessions" &&
+          (event.eventType === "DELETE" ||
+            !activeSeatStatuses.has(String(seat.status || "").toLowerCase()));
+        if (!isSeatLeftBroadcast && !isInactiveSeatRow) return;
+
+        const departedUserId = String(seat.user_id || seat.guest_id || "");
+        if (!departedUserId) return;
+
+        const departedSeatKey = `${sourceStreamId}:${departedUserId}`;
+        const nextDepartedKeys = new Set(departedSeatKeysRef.current);
+        if (nextDepartedKeys.has(departedSeatKey)) return;
+        nextDepartedKeys.add(departedSeatKey);
+        departedSeatKeysRef.current = nextDepartedKeys;
+        setDepartedSeatKeys(nextDepartedKeys);
+        setBattleParticipants((prev) =>
+          prev.filter((participant) =>
+            participant.user_id !== departedUserId ||
+            participant.source_stream_id !== sourceStreamId ||
+            participant.role !== "stage"
+          )
+        );
+        setParticipantSnapshots((prev) =>
+          prev.filter((participant) => participant.user_id !== departedUserId)
+        );
+        const normalizedUserId = departedUserId.replace(/-/g, "").toLowerCase();
+        setRemoteUsers((prev) =>
+          prev.filter((participant) => {
+            const identity = String(participant.identity || "").replace(/-/g, "").toLowerCase();
+            return identity !== normalizedUserId;
+          })
+        );
+      }, battleId)
+    );
+
+    return () => unsubscribe.forEach((remove) => remove());
+  }, [battleId, challengerStream?.id, opponentStream?.id]);
 
   // Fallback poll â€” 15s during active battle, 30s otherwise.
   // Score updates are handled in realtime via useBattleRealtime broadcasts,
@@ -2290,6 +2448,7 @@ export function useBattleViewController({
     opponentStream,
     participantSnapshots,
     battleParticipants,
+    departedSeatKeys,
     participantContributions,
     battleLocalAudioTrack,
     battleLocalVideoTrack,

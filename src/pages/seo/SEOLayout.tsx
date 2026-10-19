@@ -9,6 +9,10 @@ interface SEOPageProps {
   description: string
   keywords?: string[]
   ogImage?: string
+  robots?: string
+  author?: string
+  publishedTime?: string
+  section?: string
 }
 
 const navLinks = [
@@ -18,7 +22,17 @@ const navLinks = [
   { path: '/faq', label: 'FAQ', icon: MessageCircle },
 ]
 
-export default function SEOLayout({ children, title, description, keywords = [], ogImage }: SEOPageProps) {
+export default function SEOLayout({
+  children,
+  title,
+  description,
+  keywords = [],
+  ogImage,
+  robots = 'index, follow',
+  author,
+  publishedTime,
+  section,
+}: SEOPageProps) {
   const location = useLocation()
 
   useSEO({
@@ -26,7 +40,10 @@ export default function SEOLayout({ children, title, description, keywords = [],
     description,
     keywords,
     ogImage,
-    robots: 'index, follow'
+    robots,
+    author,
+    publishedTime,
+    section,
   })
 
   React.useEffect(() => {

@@ -162,7 +162,6 @@ export interface CreateEventFormData {
 }
 
 export const EVENT_CATEGORIES: EventCategory[] = [
-  { id: '', slug: 'pride_event', name: 'Pride Event', icon: '🏳️‍🌈', color: '#EC4899', is_active: true, sort_order: 1, created_at: '', updated_at: '', description: 'LGBTQ+ celebration events' },
   { id: '', slug: 'trollathon', name: 'Trollathon', icon: '🎮', color: '#8B5CF6', is_active: true, sort_order: 2, created_at: '', updated_at: '', description: 'Extended streaming marathon events' },
   { id: '', slug: 'auction_event', name: 'Auction Event', icon: '🔨', color: '#F59E0B', is_active: true, sort_order: 3, created_at: '', updated_at: '', description: 'Live auction events' },
   { id: '', slug: 'gaming_tournament', name: 'Gaming Tournament', icon: '🎯', color: '#10B981', is_active: true, sort_order: 4, created_at: '', updated_at: '', description: 'Competitive gaming events' },

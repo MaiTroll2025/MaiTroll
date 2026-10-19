@@ -99,8 +99,8 @@ BEGIN
       v_role,
       'Bronze',
       0,
-      100,  -- Welcome bonus: 100 troll_coins
-      100,  -- Track the bonus
+      1,  -- Welcome bonus: 100 troll_coins
+      1,  -- Track the bonus
       0,
       v_email,
         v_terms_accepted,

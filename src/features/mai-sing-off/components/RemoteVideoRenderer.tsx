@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 interface RemoteVideoRendererProps {
-  track: any
+  track: MediaStreamTrack | null
   poster?: string
   className?: string
   muted?: boolean
@@ -13,18 +13,12 @@ export function RemoteVideoRenderer({ track, poster, className, muted = false }:
   useEffect(() => {
     const videoElement = videoRef.current
     if (!track || !videoElement) return
-    try {
-      track.attach(videoElement)
-      track.setMuted(muted)
-    } catch (e) {
-      console.warn('[singoff] track attach failed', e)
-    }
+    const stream = new MediaStream([track])
+    videoElement.srcObject = stream
     return () => {
-      try {
-        track.detach(videoElement)
-      } catch {}
+      if (videoElement.srcObject === stream) videoElement.srcObject = null
     }
-  }, [track, muted])
+  }, [track])
 
   if (!track) {
     return (

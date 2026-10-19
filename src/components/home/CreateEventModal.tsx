@@ -21,7 +21,6 @@ interface CreateEventModalProps {
 }
 
 const EVENT_CATEGORIES = [
-  { slug: 'pride_event', name: 'Pride Event', icon: '🏳️‍🌈', color: '#EC4899' },
   { slug: 'trollathon', name: 'Trollathon', icon: '🎮', color: '#8B5CF6' },
   { slug: 'auction_event', name: 'Auction Event', icon: '🔨', color: '#F59E0B' },
   { slug: 'gaming_tournament', name: 'Gaming Tournament', icon: '🎯', color: '#10B981' },

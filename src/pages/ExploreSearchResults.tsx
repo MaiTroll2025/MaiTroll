@@ -92,14 +92,14 @@ export default function ExploreSearchResults() {
 
       const [postsRes, usersRes, streamsRes, storesRes, broadRes, auctionsRes, articlesRes, postsForTags] =
         await Promise.all([
-          supabase.from('troll_wall_posts').select('id, user_id, username, avatar_url, content, created_at, likes').ilike('content', like).order('created_at', { ascending: false }).limit(20),
+          supabase.from('troll_wall_posts_public').select('id, user_id, username, avatar_url, content, created_at, likes').ilike('content', like).order('created_at', { ascending: false }).limit(20),
           supabase.from('user_profiles').select('id, username, avatar_url, role, followers_count').ilike('username', like).neq('id', user?.id || '').order('followers_count', { ascending: false }).limit(20),
           supabase.from('streams').select('id, title, broadcaster_id, category, current_viewers, is_live, thumbnail_url').ilike('title', like).eq('is_live', true).order('current_viewers', { ascending: false }).limit(20),
           supabase.from('shop_items').select('id, name, shop_id, price_coins, image_url, created_at').ilike('name', like).order('created_at', { ascending: false }).limit(20),
           supabase.from('broadcaster_stats').select('user_id, total_gifts_all_time').order('total_gifts_all_time', { ascending: false }).limit(20),
           supabase.from('auction_shows').select('id, title, status, thumbnail_url, created_at').ilike('title', like).order('created_at', { ascending: false }).limit(20),
           supabase.from('tcnn_articles').select('id, title, slug, excerpt, view_count, is_breaking, published_at, category').ilike('title', like).eq('status', 'published').order('view_count', { ascending: false }).limit(20),
-          term ? supabase.from('troll_wall_posts').select('content').ilike('content', `%#${term.replace(/^#/, '')}%`).order('created_at', { ascending: false }).limit(200) : { data: [] as any[] },
+          term ? supabase.from('troll_wall_posts_public').select('content').ilike('content', `%#${term.replace(/^#/, '')}%`).order('created_at', { ascending: false }).limit(200) : { data: [] as any[] },
         ])
 
       setPosts(postsRes.data || [])

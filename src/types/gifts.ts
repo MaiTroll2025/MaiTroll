@@ -15,14 +15,7 @@ export type AnimationType =
   | 'drop'
   | 'orbit'
   | 'spotlight'
-  | 'fireworks'
-  | 'ar_gift'
-  | 'ar_face'
-  | 'ar_body'
-  | 'ar_presidential'
-  | 'ar_troll'
-  | 'ar_shoulder'
-  | 'ar_legendary';
+  | 'fireworks';
 
 export interface GiftCatalogItem {
   id: string;
@@ -135,11 +128,4 @@ export const ANIMATION_DURATIONS: Record<AnimationType, number> = {
   orbit: 6000,
   spotlight: 8000,
   fireworks: 10000,
-  ar_gift: 15000,
-  ar_face: 15000,
-  ar_body: 15000,
-  ar_presidential: 15000,
-  ar_troll: 15000,
-  ar_shoulder: 15000,
-  ar_legendary: 20000,
 };

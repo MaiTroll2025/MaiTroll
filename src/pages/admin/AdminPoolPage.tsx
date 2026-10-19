@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { ArrowLeft, Coins, History, TrendingUp, Users, DollarSign, Crown, Home, MessageSquare, Gift as GiftIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
+import { COINS_PER_USD } from '../../config/coinConfig'
 
 interface LedgerEntry {
   id: string
@@ -28,7 +29,9 @@ export default function AdminPoolPage() {
   const { user: _user } = useAuthStore()
   const navigate = useNavigate()
   const [poolBalance, setPoolBalance] = useState<number>(0)
+  const [poolBalanceUsd, setPoolBalanceUsd] = useState<number>(0)
   const [totalLiability, setTotalLiability] = useState<number>(0)
+  const [totalLiabilityUsd, setTotalLiabilityUsd] = useState<number>(0)
   const [totalPaidUsd, setTotalPaidUsd] = useState<number>(0)
   const [ledger, setLedger] = useState<LedgerEntry[]>([])
   const [revenueSources, setRevenueSources] = useState<RevenueSource[]>([])
@@ -47,8 +50,13 @@ export default function AdminPoolPage() {
         .maybeSingle()
 
       if (poolRow) {
-        setPoolBalance(Number(poolRow.trollcoins_balance || 0))
-        setTotalLiability(Number(poolRow.total_liability_coins || 0))
+        const coins = Number(poolRow.trollcoins_balance || 0)
+        const liability = Number(poolRow.total_liability_coins || 0)
+        const usdPerCoin = 1 / COINS_PER_USD
+        setPoolBalance(coins)
+        setPoolBalanceUsd(coins * usdPerCoin)
+        setTotalLiability(liability)
+        setTotalLiabilityUsd(liability * usdPerCoin)
         setTotalPaidUsd(Number(poolRow.total_paid_usd || 0))
       }
 
@@ -128,7 +136,7 @@ export default function AdminPoolPage() {
       }
       setTotalPropertyRevenue(propertyTotal)
 
-      const usdPerCoin = 25 / 12000
+      const usdPerCoin = 1 / COINS_PER_USD
 
       setRevenueSources([
         {
@@ -222,6 +230,7 @@ export default function AdminPoolPage() {
             </div>
             <p className="text-3xl font-black text-amber-300">{formatCoins(poolBalance)}</p>
             <p className="text-xs text-zinc-500 mt-1">Troll Coins</p>
+            <p className="text-xs text-zinc-400 mt-0.5">≈ ${poolBalanceUsd.toFixed(2)} USD</p>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -233,6 +242,7 @@ export default function AdminPoolPage() {
             </div>
             <p className="text-3xl font-black text-cyan-300">{formatCoins(totalLiability)}</p>
             <p className="text-xs text-zinc-500 mt-1">Coins owed to users</p>
+            <p className="text-xs text-zinc-400 mt-0.5">≈ ${totalLiabilityUsd.toFixed(2)} USD</p>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">

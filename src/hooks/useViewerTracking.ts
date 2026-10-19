@@ -27,6 +27,9 @@ export function useViewerTracking(streamId: string | null, isHost: boolean = fal
   useEffect(() => {
     if (!streamId || !effectiveUser) return
 
+    let active = true
+    let membershipHeartbeat: number | null = null
+
     // Check if user is banned from this stream
     const checkBanStatus = async () => {
       if (!user?.id) return; // Skip for guests/custom users
@@ -101,7 +104,7 @@ export function useViewerTracking(streamId: string | null, isHost: boolean = fal
         }
       })
       .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
+        if (status === 'SUBSCRIBED' && active) {
           // Everyone tracks themselves
           await channel.track({
             user_id: effectiveUser.id,
@@ -111,6 +114,7 @@ export function useViewerTracking(streamId: string | null, isHost: boolean = fal
             troll_role: profile?.troll_role,
             joined_at: new Date().toISOString(),
           })
+          if (!active) return
 
           // Also heartbeat into stream_viewers table for the "Active" list
           // Only for authenticated users (UUID required)
@@ -127,11 +131,35 @@ export function useViewerTracking(streamId: string | null, isHost: boolean = fal
               );
 
             if (viewerError?.code === '42P10') {
-              await supabase
+              const { error: updateError } = await supabase
                 .from('stream_viewers')
                 .update({ last_seen: new Date().toISOString() })
                 .eq('stream_id', streamId)
                 .eq('user_id', user.id);
+              if (updateError) {
+                console.error('[useViewerTracking] Failed to update viewer membership:', updateError)
+              }
+            } else if (viewerError) {
+              console.error('[useViewerTracking] Failed to upsert viewer membership:', viewerError)
+            }
+
+            if (!active) {
+              await supabase
+                .from('stream_viewers')
+                .delete()
+                .match({ stream_id: streamId, user_id: user.id })
+            } else if (membershipHeartbeat === null) {
+              membershipHeartbeat = window.setInterval(async () => {
+                if (!active || document.visibilityState !== 'visible') return
+                const { error } = await supabase
+                  .from('stream_viewers')
+                  .update({ last_seen: new Date().toISOString() })
+                  .eq('stream_id', streamId)
+                  .eq('user_id', user.id)
+                if (error) {
+                  console.error('[useViewerTracking] Failed to refresh viewer membership:', error)
+                }
+              }, 90_000)
             }
 
             void logStreamAnalyticsEvent(streamId, user.id, 'join');
@@ -147,6 +175,8 @@ export function useViewerTracking(streamId: string | null, isHost: boolean = fal
     // This eliminates N × 1 DB write per minute across all viewers.
 
     return () => {
+      active = false
+      if (membershipHeartbeat !== null) window.clearInterval(membershipHeartbeat)
       if (updateTimerRef.current) clearTimeout(updateTimerRef.current);
       if (channel) {
         channel.untrack();

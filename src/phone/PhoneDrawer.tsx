@@ -83,7 +83,7 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
 
     add('Explore', [
       { label: 'Live Now', path: '/live', icon: 'Radio' },
-      { label: 'Leagues', path: '/leagues', icon: 'Trophy' },
+      { label: 'T League', path: '/leagues', icon: 'Trophy' },
       { label: 'MAI Business', path: '/mai-business', icon: 'Building2' },
       { label: 'Community Wall', path: '/community-wall', icon: 'MessageSquare' },
       { label: 'Blocked Users', path: '/blocked-users', icon: 'Ban' },

@@ -58,16 +58,14 @@ export default function WallPostPage() {
 
       try {
         const { data, error } = await supabase
-          .from('troll_wall_posts')
-          .select('*, user_profiles(username, avatar_url, is_admin, is_troll_officer, is_og_user)')
+          .from('troll_wall_posts_public')
+          .select('*')
           .eq('id', postId)
           .maybeSingle()
 
         if (error) throw error
 
         if (data) {
-          const profile = data.user_profiles || {}
-          
           // Check if user liked it
           let userLiked = false
           if (user?.id) {
@@ -82,11 +80,8 @@ export default function WallPostPage() {
 
           setPost({
             ...data,
-            username: profile.username,
-            avatar_url: profile.avatar_url,
-            is_admin: profile.is_admin,
-            is_troll_officer: profile.is_troll_officer,
-            is_og_user: profile.is_og_user,
+            username: data.username,
+            avatar_url: data.avatar_url,
             user_liked: userLiked
           } as WallPost)
         }

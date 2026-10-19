@@ -130,7 +130,7 @@ export default function NavBubble() {
             badge: 'LIVE',
           },
           {
-            label: 'Leagues',
+            label: 'T League',
             path: '/leagues',
             icon: Trophy,
             requiresAuth: true,

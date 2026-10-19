@@ -1,18 +1,20 @@
-import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
-import BottomNavBar from '../nav/BottomNavBar'
-import { MorePagesPanel } from '../nav/BottomNavBar'
-import Sidebar from '../Sidebar'
+import { useEffect, useState, useRef, useCallback, useMemo, type ReactNode } from 'react'
+import { MorePagesPanel } from '../nav/MorePagesPanel'
+import LeftNavSidebar from '../home/LeftNavSidebar'
 import Header from '../Header'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import PurchaseRequiredModal from '../PurchaseRequiredModal'
 import { useAuthStore } from '../../lib/store'
-import { useSidebarStore } from '../../stores/useSidebarStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useUcRedirect } from '../../hooks/usePageVisibility'
 import type { SwipeDirection } from '../../contexts/SwipeNavigationContext'
 import { useSwipeNavigationProvider } from '../../hooks/useSwipeNavigation'
 import { useHomeSwipeNavigation } from '../../hooks/useHomeSwipeNavigation'
 import { requiresWebRenderer } from '../../lib/seo/seoRoutes'
+import { useLiveContent } from '../../hooks/useLiveContent'
+import { usePresidentSystem } from '../../hooks/usePresidentSystem'
+import { useWallNotifications } from '../../hooks/useWallNotifications'
+import type { TabType } from '../../types/homeTabs'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -42,10 +44,9 @@ export default function AppLayout({
   isJailed = false,
 }: AppLayoutProps) {
    const location = useLocation();
-   const _showLegacySidebar = useAuthStore((s) => s.showLegacySidebar)
-   const user = useAuthStore((s) => s.user)
-   const { isCollapsed } = useSidebarStore()
-   const { isMobileWidth } = useIsMobile()
+    const _showLegacySidebar = useAuthStore((s) => s.showLegacySidebar)
+    const user = useAuthStore((s) => s.user)
+    const { isMobileWidth } = useIsMobile()
     const isAuthPage = location.pathname.startsWith('/auth');
     const isPublicWebOnlyPage = requiresWebRenderer(location.pathname);
     const isLivePage = location.pathname.startsWith('/live/') || location.pathname.startsWith('/watch/') || location.pathname.startsWith('/gaming/watch/') || (location.pathname.startsWith('/broadcast/') && !location.pathname.startsWith('/broadcast/setup')) || location.pathname.startsWith('/stream/') || location.pathname === '/live-swipe';
@@ -69,7 +70,42 @@ export default function AppLayout({
 
   // The app navigation is hidden on focused experiences and public web-only pages.
    const isHytroGamingSetupLivePage = location.pathname.startsWith('/broadcast/setup/gaming') && hytroSetupLive
-    const showNewBottomNavBar = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed && !isPublicWebOnlyPage && location.pathname !== '/'
+
+   // Left-nav navigation is shown on every web page so users can reach Home or
+   // any other page from anywhere. The bottom nav bar is removed: phone keeps
+   // its own bottom nav, and both phone and web expose all pages via More.
+   // Homepage renders its own LeftNavSidebar internally, so AppLayout skips it
+   // there to avoid a duplicate sidebar.
+
+   const { liveItems, totalViewers: _totalViewers, onlineUsers: _onlineUsers, loadingLive: _loadingLive } = useLiveContent()
+   const battleItems = useMemo(() => liveItems.filter((item) => item.isBattle), [liveItems])
+   const { currentElection, currentPresident } = usePresidentSystem()
+   const { newPostCount: wallNotificationCount } = useWallNotifications(false)
+
+   const presidentTabLabel = currentElection?.status === 'open'
+     ? 'President Candidates'
+     : currentPresident
+       ? 'President'
+       : 'President Office'
+   const showPresidentTab = currentElection?.status === 'open'
+
+   const path = location.pathname
+   const params = new URLSearchParams(location.search)
+   const homeTab = params.get('tab')
+   let activeTab: TabType = 'home'
+   if (path.startsWith('/live') || path.startsWith('/watch/')) activeTab = 'live'
+   else if (path === '/universe') activeTab = 'universe'
+   else if (path === '/leagues') activeTab = 'leagues'
+   else if (path === '/laws-fees' || (path === '/home' && homeTab === 'laws-fees')) activeTab = 'laws-fees'
+    else if (path === '/' || path === '/home') activeTab = 'home'
+
+   const showLeftNav = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed && !isPublicWebOnlyPage && !isMobileLayout && activeTab !== 'home'
+
+   const navigate = useNavigate()
+   const handleSetActiveTab = useCallback((tab: TabType) => {
+     if (tab === 'home') navigate('/')
+     else navigate(`/home?tab=${tab}`)
+   }, [navigate])
 
  // Setup global message notifications - opens chat bubble when message received
  useEffect(() => {
@@ -180,30 +216,16 @@ export default function AppLayout({
    })
  }, [location.pathname])
 
-   const effectiveShowSidebar = false;
-    const effectiveShowHeader = showHeader && !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed;
-   const _effectiveShowBottomNav = false;
+     const effectiveShowHeader = showHeader && !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed;
+     const _effectiveShowBottomNav = false;
     const _isHomePage = location.pathname === '/';
-    const mainOverflowClass = isLivePage || isHytroGamingSetupLivePage || isSingOffPage ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto touch-pan-y scrollbar-thin scrollbar-thumb-purple-900/30 scrollbar-track-transparent';
-   // The new bottom nav bar is ~64px tall on mobile (h-16) and ~144px tall on
-   // desktop (md:h-36) plus the safe-area inset. The old 64px bottom padding
-   // left the lower portion of every page hidden behind the fixed nav, so
-   // content could never be scrolled fully into view. Pad past the tallest bar.
-    const mainPaddingClass = showNewBottomNavBar && !isLivePage && !isHytroGamingSetupLivePage && !isJailed
-      ? 'pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-[calc(156px+env(safe-area-inset-bottom,0px))]'
-      : '';
-  const appThemeClass = isThemeExemptPage ? 'tc-theme-exempt' : 'tc-app-shell';
+     const mainOverflowClass = isLivePage || isHytroGamingSetupLivePage || isSingOffPage ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto touch-pan-y scrollbar-thin scrollbar-thumb-purple-900/30 scrollbar-track-transparent';
+     const mainPaddingClass = '';
+   const appThemeClass = isThemeExemptPage ? 'tc-theme-exempt' : 'tc-app-shell';
 
   return (
     <div className={`app-viewport ${appThemeClass} w-screen h-dvh overflow-hidden text-white flex relative`}>
       {!isAuthPage && <PurchaseRequiredModal />}
-{/* Desktop Sidebar - Hidden on Mobile PWA */}
-   {effectiveShowSidebar && (
-    <div className={`h-full shrink-0 z-60 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
-      <Sidebar />
-    </div>
-  )}
-
       <div className="flex-1 flex flex-col min-h-0 min-w-0 relative">
         {/* Header - Sticky or Fixed */}
         {effectiveShowHeader && !isMobileLayout && (
@@ -229,7 +251,24 @@ export default function AppLayout({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {isMobileLayout ? (
+          <div className="flex h-full min-h-0">
+            {showLeftNav && (
+              <div className="shrink-0">
+                <LeftNavSidebar
+                  activeTab={activeTab}
+                  setActiveTab={handleSetActiveTab}
+                  liveCount={liveItems.length}
+                  battleCount={battleItems.length}
+                  followersLiveCount={0}
+                  presidentTabLabel={presidentTabLabel}
+                  showPresidentTab={showPresidentTab}
+                  wallNotificationCount={wallNotificationCount}
+                  onMoreClick={() => setMorePagesOpen(true)}
+                />
+              </div>
+            )}
+            <div className="min-h-0 min-w-0 flex-1">
+              {isMobileLayout ? (
             <div className={`mx-auto flex min-h-full w-full flex-col ${mobileShellClassName} bg-slate-950/30 backdrop-blur-sm`}>
               {mobileHeader ? (
                 <div className="shrink-0 border-b border-white/10 bg-slate-950/50 px-4 pb-3 pt-3">
@@ -264,14 +303,11 @@ export default function AppLayout({
           ) : (
             children
           )}
+            </div>
+          </div>
         </main>
 
       </div>
-
-      {/* New OS-Style Bottom Navigation Bar */}
-      {showNewBottomNavBar && (
-        <BottomNavBar />
-      )}
 
       {/* Global More Pages Panel — always mounted so sidebar "More" works on every page */}
       <MorePagesPanel isOpen={morePagesOpen} onClose={() => setMorePagesOpen(false)} />

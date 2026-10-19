@@ -2,10 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { lazyWithRetry } from '@/utils/lazyImport'
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner'
-import { BookOpen, Crown, FileText, Gamepad2, Gift, Heart, MessageCircle, Play, Radio, Shield, Sparkles, Star, Trophy, Vote, X, Zap } from 'lucide-react';
+import { BookOpen, Crown, FileText, MessageCircle, Play, Radio, Shield, Sparkles, Star, Trophy, Vote, X, Zap } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
-import { isPrideMonth } from '@/lib/prideMonth'
 import TrollWallFeed from '@/components/home/TrollWallFeed'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
 import LeaguesTab from '@/components/home/LeaguesTab'
@@ -56,8 +55,7 @@ const glass =
 const neonCard =
   'border border-white/10 bg-[#0a0f1f]/90 backdrop-blur-xl shadow-xl'
 
-const rainbowBorder =
-  'relative overflow-hidden before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:p-[1px] before:[background:linear-gradient(90deg,#ff2a6d,#ffb703,#38ff7d,#00d4ff,#a855f7,#ff2a6d)] before:[mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] before:[mask-composite:exclude]'
+
 
 const OriginalBackground = React.memo(() => {
   return (
@@ -73,137 +71,12 @@ const OriginalBackground = React.memo(() => {
 })
 OriginalBackground.displayName = 'OriginalBackground'
 
-const PrideBackground = React.memo(() => {
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[#050715]" />
-      <div className="absolute inset-0 opacity-[0.20] [background:radial-gradient(circle_at_20%_10%,rgba(236,72,153,0.30),transparent_32%),radial-gradient(circle_at_80%_5%,rgba(34,211,238,0.25),transparent_30%),radial-gradient(circle_at_50%_92%,rgba(168,85,247,0.28),transparent_36%)]" />
 
-      <div className="absolute -left-[12%] top-[7%] h-[64vh] w-[72vw] -rotate-12 opacity-[0.38] blur-[1px]">
-        <div className="h-1/6 rounded-r-full bg-red-500/85" />
-        <div className="h-1/6 rounded-r-full bg-orange-400/85" />
-        <div className="h-1/6 rounded-r-full bg-yellow-300/85" />
-        <div className="h-1/6 rounded-r-full bg-green-400/85" />
-        <div className="h-1/6 rounded-r-full bg-blue-500/85" />
-        <div className="h-1/6 rounded-r-full bg-purple-600/85" />
-      </div>
 
-      <div className="absolute -right-[18%] top-[4%] h-[76vh] w-[70vw] rotate-12 opacity-[0.40] blur-[1px]">
-        <div className="h-1/6 rounded-l-full bg-red-500/85" />
-        <div className="h-1/6 rounded-l-full bg-orange-400/85" />
-        <div className="h-1/6 rounded-l-full bg-yellow-300/85" />
-        <div className="h-1/6 rounded-l-full bg-green-400/85" />
-        <div className="h-1/6 rounded-l-full bg-blue-500/85" />
-        <div className="h-1/6 rounded-l-full bg-purple-600/85" />
-      </div>
 
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.055)_1px,transparent_1px)] bg-[length:58px_58px]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_26%,rgba(3,7,18,0.72)_100%)]" />
-      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#09051a] via-[#09051a]/70 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#050715] via-[#050715]/70 to-transparent" />
-    </div>
-  )
-})
-PrideBackground.displayName = 'PrideBackground'
 
-function _TopPrideHero({
-  onGoLive,
-  onCelebrate,
-}: {
-  onGoLive: () => void
-  onCelebrate: () => void
-}) {
-  return (
-    <section className={`${glass} ${rainbowBorder} rounded-3xl p-6 mb-4`}>
-      <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_240px]">
-        <div className="relative min-h-[140px] overflow-hidden rounded-3xl border border-pink-400/30 bg-[#0b0d1f]/90 p-6">
-          <div className="absolute inset-0 opacity-40 [background:radial-gradient(circle_at_8%_35%,rgba(236,72,153,0.45),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(34,211,238,0.35),transparent_35%),linear-gradient(120deg,rgba(255,42,109,0.25),rgba(255,183,3,0.14),rgba(56,255,125,0.14),rgba(0,212,255,0.18),rgba(168,85,247,0.25))]" />
-          <div className="absolute bottom-0 right-0 h-full w-1/2 opacity-30 [background:linear-gradient(90deg,transparent,rgba(34,211,238,0.25)),repeating-linear-gradient(90deg,transparent_0_14px,rgba(255,255,255,0.14)_15px_16px)]" />
-          <div className="relative flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-black uppercase tracking-widest text-white">
-                <Heart className="h-4 w-4 text-pink-300" />
-                PRIDE MONTH
-              </span>
-              <span className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-1 text-xs font-bold text-cyan-100">
-                Live with pride. Troll with love.
-              </span>
-            </div>
-            <div>
-              <h1 className="text-4xl font-black leading-none text-white md:text-5xl">
-                Welcome to Mai Troll{' '}
-                <span className="bg-gradient-to-r from-pink-400 via-yellow-300 to-cyan-300 bg-clip-text text-transparent">
-                  (MaiTroll)
-                </span>
-              </h1>
-              <p className="mt-3 max-w-xl text-base font-medium text-slate-200">
-                Mai Troll is a social streaming platform for creators, streamers, gamers, and online communities. 
-                Livestream, create communities, chat, and engage with content creators.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={onCelebrate}
-                className="rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 px-6 py-3 text-sm font-black text-white shadow-xl transition hover:scale-105 active:scale-95"
-              >
-                Celebrate With Us!
-              </button>
-              <button
-                onClick={onGoLive}
-                className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-black text-white transition hover:border-cyan-300 hover:bg-cyan-300/10"
-              >
-                Go Live Now
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <button
-          onClick={onGoLive}
-          className="group hidden rounded-3xl border border-purple-400/30 bg-gradient-to-br from-purple-700/80 via-fuchsia-600/40 to-cyan-700/50 p-6 text-left shadow-xl transition hover:scale-[1.02] lg:block"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-500 shadow-2xl">
-              <Gamepad2 className="h-7 w-7 text-white" />
-            </div>
-            <div>
-              <p className="text-lg font-black text-white">HytroGaming</p>
-              <p className="text-xs font-black uppercase tracking-widest text-purple-100">WATCH LIVE</p>
-            </div>
-            <span className="ml-auto h-3 w-3 rounded-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.9)]" />
-          </div>
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4">
-            <p className="mt-1 text-xs text-slate-300">Gaming • Battles • Creator moments</p>
-          </div>
-        </button>
-      </div>
-    </section>
-  )
-}
 
-function _PrideAdRail() {
-  return (
-    <aside className={`${neonCard} ${rainbowBorder} hidden rounded-3xl p-5 lg:block`}>
-      <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-black/30 p-6 text-center">
-        <div>
-          <p className="text-lg font-black text-white">Pride Month</p>
-          <p className="mt-1 text-sm font-bold text-slate-300">Ad Spot</p>
-        </div>
-        <div className="relative my-8 flex h-28 w-28 items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 blur-3xl opacity-50" />
-          <Heart className="relative h-20 w-20 text-pink-300 drop-shadow-[0_0_30px_rgba(236,72,153,0.9)]" />
-        </div>
-        <div>
-          <p className="text-sm font-black text-cyan-100">Your Brand</p>
-          <p className="text-sm font-bold text-slate-300">Proudly Here</p>
-          <button className="mt-6 rounded-xl bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 px-6 py-3 text-sm font-black text-white shadow-lg">
-            Advertise Now
-          </button>
-        </div>
-      </div>
-    </aside>
-  )
-}
 
 function _LevelStatusCard() {
   return (
@@ -235,93 +108,9 @@ function _LevelStatusCard() {
   )
 }
 
-function _PrideCollectionCard({ onOpenStore }: { onOpenStore: () => void }) {
-  return (
-    <section className={`${glass} ${rainbowBorder} rounded-3xl p-6`}>
-      <div className="relative z-10">
-        <h3 className="text-2xl font-black text-white">Pride Collection</h3>
-        <p className="text-lg font-bold text-slate-200">Now Available</p>
-        <p className="mt-3 text-sm text-slate-400">Limited Edition Avatars, Frames &amp; Badges</p>
-        <div className="my-8 flex items-center justify-center gap-8">
-          <Crown className="h-16 w-16 text-yellow-300 drop-shadow-[0_0_25px_rgba(250,204,21,0.9)]" />
-          <Heart className="h-16 w-16 text-pink-300 drop-shadow-[0_0_25px_rgba(236,72,153,0.9)]" />
-          <Gift className="h-16 w-16 text-cyan-300 drop-shadow-[0_0_25px_rgba(34,211,238,0.9)]" />
-        </div>
-        <button
-          onClick={onOpenStore}
-          className="w-full rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 py-3.5 text-lg font-black text-white shadow-xl transition hover:scale-[1.02]"
-        >
-          Shop Now
-        </button>
-      </div>
-    </section>
-  )
-}
 
-function _PrideChallengesCard({ onOpenChallenges }: { onOpenChallenges: () => void }) {
-  const now = new Date()
-  const currentWeek = Math.min(4, Math.max(1, Math.ceil(now.getDate() / 7)))
 
-  const allPrideChallenges: Array<{ week: number; title: string; description: string; xp: string; color: string }> = [
-    // Week 1-4 data (same as before)
-    { week: 1, title: 'Show Your Pride', description: 'Update your profile frame to a Pride theme', xp: '500 XP', color: 'pink' },
-    { week: 1, title: 'Rainbow Greeting', description: 'Send 10 positive chat messages today', xp: '750 XP', color: 'red' },
-    { week: 2, title: 'Ally Actions', description: 'Support 5 different users with gifts', xp: '1,000 XP', color: 'cyan' },
-    { week: 3, title: 'Pride Champion', description: 'Win a battle with a Pride theme equipped', xp: '1,200 XP', color: 'orange' },
-    { week: 4, title: 'Pride Legend', description: 'Reach top 10 on any leaderboard', xp: '2,000 XP', color: 'purple' },
-  ]
 
-  const colorMap: Record<string, string> = {
-    pink: 'border-pink-400/30 bg-pink-500/10',
-    red: 'border-red-400/30 bg-red-500/10',
-    orange: 'border-orange-400/30 bg-orange-500/10',
-    yellow: 'border-yellow-300/30 bg-yellow-300/10',
-    green: 'border-green-400/30 bg-green-500/10',
-    cyan: 'border-cyan-400/30 bg-cyan-500/10',
-    blue: 'border-blue-400/30 bg-blue-500/10',
-    purple: 'border-purple-400/30 bg-purple-500/10',
-  }
-
-  const visibleChallenges = allPrideChallenges.filter(c => c.week <= currentWeek)
-  const previewChallenges = visibleChallenges.slice(0, 3)
-
-  return (
-    <section className={`${glass} ${rainbowBorder} rounded-3xl p-6`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">Pride Challenges</h3>
-          <p className="text-sm text-slate-400">Week {currentWeek} of 4</p>
-        </div>
-        <span className="rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 px-4 py-1 text-xs font-black text-pink-200">
-          {visibleChallenges.length}/20
-        </span>
-      </div>
-
-      <div className="my-5 h-1.5 w-full rounded-full bg-white/10">
-        <div className="h-1.5 w-3/4 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400" />
-      </div>
-
-      <div className="space-y-4">
-        {previewChallenges.map((ch) => (
-          <div key={ch.title} className={`rounded-2xl border p-4 ${colorMap[ch.color]}`}>
-            <div className="flex justify-between">
-              <p className="font-black text-white">{ch.title}</p>
-              <span className="text-sm font-black text-emerald-300">{ch.xp}</span>
-            </div>
-            <p className="mt-1 text-sm text-slate-400">{ch.description}</p>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onClick={onOpenChallenges}
-        className="mt-6 w-full rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 py-3.5 text-sm font-black text-black shadow-xl transition hover:scale-[1.02]"
-      >
-        View All Challenges →
-      </button>
-    </section>
-  )
-}
 
 function CityAnnouncementCard() {
   return (
@@ -334,7 +123,7 @@ function CityAnnouncementCard() {
         <Shield className="h-11 w-11 text-cyan-300" />
       </div>
       <p className="mt-4 text-sm leading-relaxed text-slate-300">
-        We are a community that values respect, inclusion and equality. Thank you for making Mai Troll a place where everyone is seen, heard, and celebrated. 🏳️‍🌈
+        We are a community that values respect, inclusion and equality. Thank you for making Mai Troll a place where everyone is seen, heard, and celebrated.
       </p>
     </section>
   )
@@ -395,7 +184,7 @@ function HomeTabs({
     { id: 'live', label: 'Live Now', subtitle: 'Active streams', icon: Radio, active: 'from-red-500 to-rose-600', count: liveCount },
     { id: 'universe', label: 'Universe', subtitle: 'Explore all', icon: Sparkles, active: 'from-amber-500 to-yellow-500', count: battleCount },
     { id: 'laws-fees', label: 'City Laws & Fees', subtitle: 'Rules & info', icon: FileText, active: 'from-cyan-500 to-sky-600' },
-    { id: 'leagues', label: 'Leagues', subtitle: 'Competitions', icon: Trophy, active: 'from-violet-500 to-purple-600' },
+    { id: 'leagues', label: 'T League', subtitle: 'Missions & progress', icon: Trophy, active: 'from-violet-500 to-purple-600' },
     { id: 'president', label: presidentTabLabel, subtitle: 'Elections', icon: Vote, active: 'from-amber-500 to-yellow-600' },
     { id: 'academy', label: 'Academy', subtitle: 'Learn & grow', icon: BookOpen, active: 'from-emerald-500 to-teal-600' },
   ]
@@ -537,7 +326,7 @@ function LeftSidebar({ liveItems, user }: { liveItems: LiveItem[]; user: any }) 
       <div className={`${neonCard} rounded-3xl p-5`}>
         <h3 className="font-black flex items-center gap-2 mb-4">🔥 TRENDING TOPICS</h3>
         <div className="space-y-2 text-sm">
-          {['#PrideMonth', '#TrollWall', '#CityElections', '#BattleNight'].map((tag, i) => (
+          {['#TrollWall', '#CityElections', '#BattleNight'].map((tag, i) => (
             <div key={i} className="flex justify-between items-center bg-white/5 hover:bg-white/10 rounded-xl px-4 py-3 cursor-pointer">
               <span className="font-medium text-cyan-300">{tag}</span>
               <span className="text-xs text-slate-400">12.4k posts</span>
@@ -558,32 +347,11 @@ function LeftSidebar({ liveItems, user }: { liveItems: LiveItem[]; user: any }) 
   )
 }
 
-function RightSidebar({ user, liveAuctions: _liveAuctions, liveItems, isPride, onOpenStore: _onOpenStore, onOpenChallenges }: { user: any; liveAuctions: AuctionShow[]; liveItems: LiveItem[]; isPride: boolean; onOpenStore: () => void; onOpenChallenges: () => void }) {
+function RightSidebar({ user, liveAuctions: _liveAuctions, liveItems }: { user: any; liveAuctions: AuctionShow[]; liveItems: LiveItem[] }) {
   const battleItems = liveItems.filter(i => i.isBattle)
 
   return (
     <aside className="hidden xl:block w-80 space-y-4">
-      {isPride && (
-        <div className={`${glass} ${rainbowBorder} rounded-3xl p-6`}>
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-xl font-black">Pride Month 🏳️‍🌈</div>
-              <div className="text-xs text-slate-400">Live with pride. Troll with love.</div>
-            </div>
-            <Heart className="text-pink-400 h-8 w-8" />
-          </div>
-          <div className="mt-6 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-2xl p-4">
-            <div className="flex justify-between text-xs mb-2">
-              <span>75% Complete</span>
-              <span>Ends June 30th</span>
-            </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full w-[75%] bg-gradient-to-r from-pink-400 to-purple-400 rounded-full" />
-            </div>
-          </div>
-          <button onClick={onOpenChallenges} className="mt-4 w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 font-black text-sm">View Challenges</button>
-        </div>
-      )}
 
       {/* Live Battles */}
       {battleItems.length > 0 && (
@@ -658,15 +426,9 @@ export default function Home() {
     navigate('/broadcast/setup')
   }
 
-  const openChallenges = () => setActiveTab('leagues')
-  const openStore = () => {
-    if (!requireAuth('open store')) return
-    navigate('/store')
-  }
-
   return (
     <div className="relative min-h-screen w-full overflow-y-auto overflow-x-hidden md:overflow-hidden text-white bg-[#050715]">
-      {isPrideMonth() ? <PrideBackground /> : <OriginalBackground />}
+      <OriginalBackground />
 
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur">
@@ -700,9 +462,6 @@ export default function Home() {
               user={user}
               liveAuctions={liveAuctions}
               liveItems={liveItems}
-              isPride={isPrideMonth()}
-              onOpenStore={openStore}
-              onOpenChallenges={openChallenges}
             />
           </div>
         )}

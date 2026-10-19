@@ -10,11 +10,11 @@ import type { Stream } from '../../types/broadcast'
 import type { BroadcastGift } from '../../hooks/useBroadcastRealtime'
 import { supabase, getBlockedUserIds } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
+import { useCreditActivityHeartbeat } from '../../lib/hooks/useCreditActivityHeartbeat'
 import { cn } from '../../lib/utils'
-import { getLiveKitRoomName, getRTCProvider } from '../../lib/liveUtils'
+import { getLiveKitRoomName } from '../../lib/liveUtils'
 import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation'
 import { isStaffProfile } from '../../lib/staff'
-import { useGetStreamRoom } from '../../hooks/useGetStreamRoom'
 import {
   getAnonymousDisplayName,
   isAnonymousDisplayName,
@@ -58,6 +58,9 @@ import PetPresence from '../../components/pets/PetPresence'
 import { AudienceBubbleTicker } from '../../components/broadcast/AudienceBubbleTicker'
 import MobileAudienceTicker from '../../components/broadcast/MobileAudienceTicker'
 import { TopSubscribersBar } from '../../components/broadcast/TopSubscribersBar'
+import { WishlistMiniBrowserButton } from '../../components/broadcast/WishlistMiniBrowserButton'
+import { useBroadcastTicker } from '../../hooks/useBroadcastTicker'
+import { useRandomBattleQueueController } from '../../hooks/useRandomBattleQueueController'
 import { useSubscriberUsernames } from '../../hooks/useCreatorSubscription';
 import SubscriptionTierSelector from '../../components/user/SubscriptionTierSelector'
 import { useStreamTopGifters } from '../../hooks/useStreamTopGifters'
@@ -69,6 +72,7 @@ import { logActiveChannels } from '../../lib/realtimeChannelDiagnostics'
 import BroadcastTextPopupOverlay from '../../components/broadcast/BroadcastTextPopupOverlay'
 import PaidChatViewerModal from '../../components/broadcast/PaidChatViewerModal'
 import RandomBattleBanner from '../../components/broadcast/RandomBattleBanner'
+import { BattlePot } from '../../components/broadcast/BattlePot'
 import CityStatusPanel from '../../components/city/CityStatusPanel'
 import { useFeaturedLive } from '../../hooks/useFeaturedLive'
 import { useResolvedStream, useResolvedStreamId } from '../../hooks/useStreamRoute'
@@ -86,7 +90,6 @@ import RaidPanel from '../../components/city/RaidPanel'
 import RaidModal from '../../components/city/RaidModal'
 import { useGhostMode } from '../../hooks/useGhostMode'
 import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
-import { sendChatThroughGate } from '../../lib/sendChatThroughGate'
 import { sendStreamBroadcast } from '../../lib/realtime/streamRealtimeManager'
 import { admitViewerToStream, releaseViewerSlot } from '@/lib/streamCapacity'
 import CashoutProgressBanner from '../../components/broadcast/CashoutProgressBanner'
@@ -103,6 +106,8 @@ import { recordSignalEventInBackground } from '@/lib/signalEngine'
 // Import theme constants
 import { MaiTrollBroadcastTheme } from '../../styles/broadcastTheme'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
+import GiftFlyOverlay from '@/components/broadcast/GiftFlyOverlay'
+import VirtualAudienceActivityOverlay from '@/components/broadcast/VirtualAudienceActivityOverlay'
 import MaiBag from '../../components/mai-bag/MaiBag'
 import RecoveryBanner from '../../components/broadcast/RecoveryBanner'
 import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
@@ -185,6 +190,7 @@ function getParticipantIdentity(participant: any): string {
   return String(
     participant?.identity ||
       participant?.participantIdentity ||
+      participant?.userId ||
       participant?.name ||
       participant?.metadata?.user_id ||
       participant?.metadata?.userId ||
@@ -236,8 +242,22 @@ interface _BroadcasterState {
   audioTrack: any
 }
 
-function getVideoTrackFromParticipant(participant: any): RemoteVideoTrack | null {
+function getTrackId(track: any): string | null {
+  return track?.mediaStreamTrack?.id || track?.sid || track?.id || null
+}
+
+function getMediaStreamTrack(track: any): MediaStreamTrack | null {
+  if (typeof MediaStreamTrack !== 'undefined' && track instanceof MediaStreamTrack) {
+    return track
+  }
+  return track?.mediaStreamTrack || null
+}
+
+function getVideoTrackFromParticipant(participant: any): RemoteVideoTrack | MediaStreamTrack | null {
   if (!participant) return null
+
+  const getStreamVideoTrack = participant.videoStream?.getVideoTracks?.()[0]
+  if (getStreamVideoTrack) return getStreamVideoTrack
 
   const directCandidates = [
     participant.videoTrack,
@@ -289,6 +309,9 @@ function getVideoTrackFromParticipant(participant: any): RemoteVideoTrack | null
 function getAudioTrackFromParticipant(participant: any): any {
   if (!participant) return null
 
+  const getStreamAudioTrack = participant.audioStream?.getAudioTracks?.()[0]
+  if (getStreamAudioTrack) return getStreamAudioTrack
+
   const publications: any[] = []
 
   const collectFromMap = (maybeMap: any) => {
@@ -325,6 +348,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   onTap,
   onDoubleTap,
   room,
+  mirror = false,
 }: {
   participant: any
   className?: string
@@ -332,6 +356,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
   onTap?: () => void
   onDoubleTap?: () => void
   room?: any
+  mirror?: boolean
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -377,21 +402,22 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
 // Stable identity for the underlying media stream track.
    // This prevents unnecessary detach/attach when trackTick bumps due to
    // unrelated room events (e.g. another participant joining a seat).
-   const videoTrackId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
-   const audioTrackId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
+   const videoTrackId = getTrackId(videoTrack)
+   const audioTrackId = getTrackId(audioTrack)
 
    // Use refs to track what we actually attached, so we only detach/reattach
    // when the underlying track truly changes.
-   const attachedVideoTrackRef = useRef<RemoteVideoTrack | null>(null)
+   const attachedVideoTrackRef = useRef<RemoteVideoTrack | MediaStreamTrack | null>(null)
    const attachedAudioIdRef = useRef<string | null>(null)
+   const attachedAudioTrackRef = useRef<any>(null)
 
    useEffect(() => {
      const videoEl = videoRef.current
      if (!videoEl) return
 
      const previousTrack = attachedVideoTrackRef.current
-     const previousTrackId = previousTrack?.mediaStreamTrack?.id || previousTrack?.sid || null
-     const nextTrackId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
+     const previousTrackId = getTrackId(previousTrack)
+     const nextTrackId = getTrackId(videoTrack)
 
      if (previousTrackId && nextTrackId && previousTrackId === nextTrackId && previousTrack) {
        return
@@ -399,7 +425,11 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
 
      if (previousTrack) {
        try {
-         previousTrack.detach()
+         if ('detach' in previousTrack && typeof previousTrack.detach === 'function') {
+           previousTrack.detach(videoEl)
+         } else {
+           videoEl.srcObject = null
+         }
        } catch {
          // ignore
        }
@@ -423,11 +453,21 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
          videoEl.muted = true
          videoEl.setAttribute('playsinline', '')
          videoEl.setAttribute('webkit-playsinline', '')
-         videoTrack.attach(videoEl)
+         const mediaTrack = getMediaStreamTrack(videoTrack)
+         if (mediaTrack) {
+           videoEl.srcObject = new MediaStream([mediaTrack])
+         } else if ('attach' in videoTrack && typeof videoTrack.attach === 'function') {
+           videoTrack.attach(videoEl)
+         } else {
+           return
+         }
          applyCameraVideoPresentation(videoEl, {
-           track: videoTrack.mediaStreamTrack,
+           track: mediaTrack,
            isLocal: false,
          })
+         if (mirror) {
+           videoEl.style.setProperty('transform', 'scaleX(-1)', 'important')
+         }
          attachedVideoTrackRef.current = videoTrack
 
          if (!cancelled) {
@@ -444,7 +484,11 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
        cancelled = true
 
        try {
-         videoTrack.detach(videoEl)
+         if ('detach' in videoTrack && typeof videoTrack.detach === 'function') {
+           videoTrack.detach(videoEl)
+         } else if (videoEl.srcObject) {
+           videoEl.srcObject = null
+         }
        } catch {
          // ignore
        }
@@ -454,16 +498,19 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
        }
      }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [videoTrackId, trackTick])
+    }, [videoTrackId, trackTick, mirror])
 
   useEffect(() => {
     const videoEl = videoRef.current
     if (!videoEl || !videoTrack) return
     applyCameraVideoPresentation(videoEl, {
-      track: videoTrack.mediaStreamTrack,
+      track: getMediaStreamTrack(videoTrack),
       isLocal: false,
     })
-  }, [videoTrack, videoTrackId, trackTick])
+    if (mirror) {
+      videoEl.style.setProperty('transform', 'scaleX(-1)', 'important')
+    }
+  }, [videoTrack, videoTrackId, trackTick, mirror])
 
   useEffect(() => {
     const audioEl = audioRef.current
@@ -472,9 +519,14 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
     // Only (re-)attach if the track identity actually changed
     if (audioTrackId !== attachedAudioIdRef.current) {
       // Detach previous track if we had one attached
-      if (attachedAudioIdRef.current !== null) {
+      const previousAudioTrack = attachedAudioTrackRef.current
+      if (previousAudioTrack) {
         try {
-          audioTrack?.detach?.(audioEl)
+          if (typeof previousAudioTrack.detach === 'function') {
+            previousAudioTrack.detach(audioEl)
+          } else {
+            audioEl.srcObject = null
+          }
         } catch {
           // ignore
         }
@@ -482,13 +534,21 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
 
       if (audioTrack) {
         try {
-          audioTrack.attach(audioEl)
+          const mediaTrack = getMediaStreamTrack(audioTrack)
+          if (mediaTrack) {
+            audioEl.srcObject = new MediaStream([mediaTrack])
+          } else if (typeof audioTrack.attach === 'function') {
+            audioTrack.attach(audioEl)
+          } else {
+            return
+          }
           audioEl.play().catch(() => {})
         } catch (err) {
           console.warn('[ViewerPage] Failed to attach remote audio track:', err)
         }
       }
       attachedAudioIdRef.current = audioTrackId
+      attachedAudioTrackRef.current = audioTrack
     }
   }, [audioTrack, audioTrackId, trackTick])
 
@@ -703,6 +763,7 @@ function ViewerPage() {
   }, [streamId])
 
   const { user, profile } = useAuthStore()
+  useCreditActivityHeartbeat(streamId, 'viewer', !!user?.id)
   const founderStatus = useFounderSelfStatus()
   const navigate = useNavigate()
   const location = useLocation()
@@ -865,22 +926,69 @@ function ViewerPage() {
   const hostId = (stream as any)?.user_id || ''
   const streamCategory = (stream as any)?.category
   const streamType = (stream as any)?.stream_type
+  const broadcastTicker = useBroadcastTicker(streamId)
+  const isViewerBroadcaster = Boolean(user?.id && user.id === hostId)
+  const [isWishlistEditorOpen, setIsWishlistEditorOpen] = useState(false)
+  const [wishlistDraft, setWishlistDraft] = useState('')
+  const [isSavingWishlist, setIsSavingWishlist] = useState(false)
+
+  const saveWishlist = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const value = wishlistDraft.trim()
+    let normalizedUrl = ''
+
+    if (value) {
+      try {
+        const parsedUrl = new URL(value)
+        if (parsedUrl.protocol !== 'https:') throw new Error('Use an HTTPS wishlist link.')
+        normalizedUrl = parsedUrl.toString()
+      } catch (saveError) {
+        toast.error(saveError instanceof Error && saveError.message === 'Use an HTTPS wishlist link.'
+          ? saveError.message
+          : 'Enter a valid HTTPS wishlist URL.')
+        return
+      }
+    }
+
+    setIsSavingWishlist(true)
+    try {
+      const result = await broadcastTicker.updateTicker({ wishlistUrl: normalizedUrl || null })
+      if (!result.success) {
+        toast.error(result.error || 'Could not save your wishlist link.')
+        return
+      }
+      setIsWishlistEditorOpen(false)
+      toast.success(normalizedUrl ? 'Wishlist link saved.' : 'Wishlist link removed.')
+    } catch (saveError) {
+      console.error('[ViewerPage] Wishlist link save failed:', saveError)
+      toast.error(saveError instanceof Error ? saveError.message : 'Could not save your wishlist link.')
+    } finally {
+      setIsSavingWishlist(false)
+    }
+  }
 
    // Broadcaster's equipped profile frame
    const broadcasterFrame = useUserFrame((stream as any)?.user_id)
 
-   // Random battle phase (derived from stream state for viewers)
-  const randomBattlePhase = useMemo((): 'regular' | 'queue' | 'starting' | 'active' | 'ended' => {
-    if (!stream) return 'regular';
-    if (stream.status === 'ended') return 'ended';
-    const isRandomBattle = stream.battle_mode === 'random_queue' && !!stream.battle_id && !!stream.is_battle;
-    if (isRandomBattle && stream.battle_status === 'starting') return 'starting';
-    if (isRandomBattle && (stream.battle_status === 'active' || !stream.battle_status)) return 'active';
-    if (stream.random_battle_queue_enabled) return 'queue';
-    return 'regular';
-  }, [stream]);
+   const [isBattlePotReady, setIsBattlePotReady] = useState(false)
+   const handleBattlePotReadinessChange = useCallback((isReady: boolean) => {
+     setIsBattlePotReady(isReady)
+   }, [])
+   const updateStreamPatch = useCallback((patch: Partial<Stream>) => {
+     setStream((previous) => previous ? { ...previous, ...patch } : previous)
+   }, [])
+   const randomBattleQueue = useRandomBattleQueueController({
+     stream,
+     userId: user?.id,
+     isBroadcaster: isViewerBroadcaster,
+     isBattleUnlocked: profile?.battle_unlocked === true,
+     isBattlePotReady,
+     onStreamUpdate: updateStreamPatch,
+   })
+   const randomBattlePhase = randomBattleQueue.phase
 
 const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
+const [broadcasterProfileLoaded, setBroadcasterProfileLoaded] = useState(false)
      const [error, setError] = useState<string | null>(null)
      const [_streamLoaded, setStreamLoaded] = useState(false)
      const [viewerCount, setViewerCount] = useState(0)
@@ -924,6 +1032,7 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
    const audioTrackRef = useRef<LocalAudioTrack | null>(null)
    const videoTrackRef = useRef<LocalVideoTrack | null>(null)
    const [_localTracksVersion, setLocalTracksVersion] = useState(0)
+   const [audienceJoinRevision, setAudienceJoinRevision] = useState(0)
    const localTracksRef = useRef<[LocalAudioTrack | null, LocalVideoTrack | null] | null>(null)
 
    const _setLocalTracks = useCallback((
@@ -962,6 +1071,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
    // Floating chat
     interface FloatingMessage {
       id: string
+      txnId?: string
+      userId?: string
       username: string
       content: string
       createdAt: number
@@ -1690,7 +1801,10 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
         Object.values(seats || {}).map((seat: any) => seat?.user_id || seat?.guest_id).filter(Boolean) as string[],
       [seats],
     )
-    const { audience, activeAudience, topAudience: _topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal: _incrementGiftTotal } = useStreamAudiencePresence(streamId || '', user?.id, {
+   const [showViewerList, setShowViewerList] = useState(false)
+    const { audience, topAudience: _topAudience, myPresence, joinAudience, leaveAudience, heartbeatAudience, incrementGiftTotal: _incrementGiftTotal, isAudienceLoading } = useStreamAudiencePresence(streamId || '', user?.id, {
+      loadAudience: showViewerList,
+      audienceLimit: 100,
       onPresenceChange: (event) => {
         if (!streamId || !event?.member?.username) return
         const username = event.member.username
@@ -1712,17 +1826,13 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
       streamId: streamId || null,
     })
 
-   const [showViewerList, setShowViewerList] = useState(false)
    const onActiveViewersClick = useCallback(() => {
      setShowViewerList(prev => !prev)
    }, [])
 
-   // Mirror active audience presence into viewerCount so the header ticker
-   // shows a live count even when streams.current_viewers has not been
-   // refreshed yet by the broadcaster-side RPC.
    useEffect(() => {
-     setViewerCount((prev) => Math.max(prev, activeAudience.length))
-   }, [activeAudience.length])
+     setViewerCount(Number(stream?.current_viewers || 0))
+   }, [stream?.current_viewers])
 
     useEffect(() => {
      joinAudienceRef.current = joinAudience
@@ -2020,8 +2130,8 @@ const [broadcasterProfile, setBroadcasterProfile] = useState<any>(null)
 
 const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '')
 
-    // Determine RTC provider from stream metadata
-    const rtcProvider = getRTCProvider(stream)
+    // All viewers join via LiveKit
+    const hasResolvedRTCProvider = Boolean(stream && broadcasterProfileLoaded)
 
     const stableAnonId = anonViewerId;
 
@@ -2083,7 +2193,7 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
 
   // LiveKit hook (for normal streams)
   const liveKitRoom = useLiveKitRoom({
-    roomId,
+    roomId: hasResolvedRTCProvider ? roomId : '',
     roomType: 'broadcast',
     role: 'viewer',
     publish: false,
@@ -2100,37 +2210,17 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
     onError: handleLiveKitError,
   })
 
-  // GetStream hook (for staff/official streams)
-  const getStreamRoom = useGetStreamRoom({
-    roomId,
-    roomType: 'broadcast',
-    role: 'viewer',
-    audioOnly: false,
-    publish: false,
-    userName: audienceName,
-    identity: viewerIdentity,
-    onUserJoined: noopCallback,
-    onUserLeft: useCallback((participant: any) => {
-      const identity = participant?.user_id || null
-      if (identity) {
-        handleParticipantDisconnected(identity)
-      }
-    }, [handleParticipantDisconnected]),
-    onError: handleLiveKitError,
-  })
-
   // Select the appropriate room based on provider
-  const isGetStream = rtcProvider === 'getstream'
-  const remoteUsers = isGetStream ? getStreamRoom.remoteUsers : liveKitRoom.remoteUsers
-  const localVideoTrack = isGetStream ? getStreamRoom.localVideoTrack : liveKitRoom.localVideoTrack
-  const localAudioTrack = isGetStream ? getStreamRoom.localAudioTrack : liveKitRoom.localAudioTrack
-  const isPublishing = isGetStream ? getStreamRoom.isPublishing : liveKitRoom.isPublishing
-  const joinAsAudience = isGetStream ? getStreamRoom.joinAsAudience : liveKitRoom.joinAsAudience
-  const leaveRoom = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.leaveRoom
-  const setMicEnabled = isGetStream ? getStreamRoom.setMicrophoneEnabled : liveKitRoom.setMicEnabled
-  const setCameraEnabled = isGetStream ? getStreamRoom.setCameraEnabled : liveKitRoom.setCameraEnabled
-  const room = isGetStream ? null : liveKitRoom.room
-  const joinGetStreamAsAudience = getStreamRoom.joinAsAudience
+  const remoteUsers = liveKitRoom.remoteUsers
+  const localVideoTrack = liveKitRoom.localVideoTrack
+  const localAudioTrack = liveKitRoom.localAudioTrack
+  const isPublishing = liveKitRoom.isPublishing
+  const isConnected = liveKitRoom.isConnected
+  const joinAsAudience = liveKitRoom.joinAsAudience
+  const leaveRoom = liveKitRoom.leaveRoom
+  const setMicEnabled = liveKitRoom.setMicEnabled
+  const setCameraEnabled = liveKitRoom.setCameraEnabled
+  const room = liveKitRoom.room
   const publishLiveKitTracks = liveKitRoom.publishLocalTracks
   const unpublishLocalTracks = useCallback(async () => {
     await unpublishLocalTracksRef.current?.()
@@ -2140,17 +2230,8 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
   }, [])
   const lastJoinDebug = liveKitRoom.lastJoinDebug
   const publishLocalTracks = useCallback(async () => {
-    if (isGetStream) {
-      return joinGetStreamAsAudience({
-        userId: viewerIdentity,
-        streamId,
-        roomName: roomId,
-        viewerIdentity,
-        publishCapable: true,
-      })
-    }
     return publishLiveKitTracks()
-  }, [isGetStream, joinGetStreamAsAudience, publishLiveKitTracks, roomId, streamId, viewerIdentity])
+  }, [publishLiveKitTracks])
 
   const audioTracksRef = useRef<Map<string, { audioTrack: any; audioEl: HTMLAudioElement | null }>>(new Map())
 
@@ -2164,7 +2245,7 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
   } = useSeatFocus(streamId, seats as any, audioTracksRef)
 
   // Populate refs so the seat_left handler (defined before this hook) can call them
-  unpublishLocalTracksRef.current = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.unpublishLocalTracks
+  unpublishLocalTracksRef.current = liveKitRoom.unpublishLocalTracks
   leaveLiveKitRoomRef.current = leaveRoom
   localAudioTrackRef.current = localAudioTrack
 
@@ -2209,22 +2290,22 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
     const videoTrack = getVideoTrackFromParticipant(participant)
     const audioTrack = getAudioTrackFromParticipant(participant)
     setBroadcasterState(prev => {
-      const prevIdentity = prev.participant?.identity || null
-      const nextIdentity = participant?.identity || null
+      const prevIdentity = getParticipantIdentity(prev.participant) || null
+      const nextIdentity = getParticipantIdentity(participant) || null
 
       if (prevIdentity === nextIdentity) {
-        const nextVideoId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
-        const nextAudioId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
+        const nextVideoId = getTrackId(videoTrack)
+        const nextAudioId = getTrackId(audioTrack)
 
         if (!nextVideoId && !nextAudioId) {
           return prev
         }
       }
 
-      const prevVideoId = prev.videoTrack?.mediaStreamTrack?.id || prev.videoTrack?.sid || null
-      const nextVideoId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
-      const prevAudioId = prev.audioTrack?.mediaStreamTrack?.id || prev.audioTrack?.sid || null
-      const nextAudioId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
+      const prevVideoId = getTrackId(prev.videoTrack)
+      const nextVideoId = getTrackId(videoTrack)
+      const prevAudioId = getTrackId(prev.audioTrack)
+      const nextAudioId = getTrackId(audioTrack)
 
       if (prevVideoId === nextVideoId && prevAudioId === nextAudioId && prevIdentity === nextIdentity) {
         return prev
@@ -2237,8 +2318,11 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
   // Sync broadcaster state from remoteParticipants — stable, only reacts to host changes
   // Never clears host state due to seat joins/leaves or temporary lookup failures
   useEffect(() => {
-    let exactHost = remoteParticipants.find((p: any) => participantMatchesUser(p, hostId))
-    if (!exactHost && !isGetStream && liveKitRoom.room?.remoteParticipants) {
+    const hostIdentity = hostId
+    let exactHost = remoteParticipants.find((p: any) =>
+      participantMatchesUser(p, hostIdentity) || participantMatchesUser(p, hostId),
+    )
+    if (!exactHost && liveKitRoom.room?.remoteParticipants) {
       exactHost = Array.from(liveKitRoom.room.remoteParticipants.values()).find((p: any) => participantMatchesUser(p, hostId))
     }
     if (exactHost) {
@@ -2249,12 +2333,12 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
       // Do NOT clear broadcasterState — host may be temporarily missing from
       // remoteParticipants during reconnect/subscribe. Only clear on stream end.
     }
-  }, [remoteParticipants, hostId, updateBroadcasterState, liveKitRoom.room, isGetStream])
+  }, [remoteParticipants, hostId, streamId, updateBroadcasterState, liveKitRoom.room])
 
   // DEBUG: Log broadcaster state changes to diagnose mirroring
   useEffect(() => {
     const identity = broadcasterState.participant?.identity
-    const videoTrackId = broadcasterState.videoTrack?.mediaStreamTrack?.id || broadcasterState.videoTrack?.sid
+    const videoTrackId = getTrackId(broadcasterState.videoTrack)
     console.log('[ViewerPage] DEBUG broadcasterState updated:', {
       hostIdentity: identity,
       videoTrackId,
@@ -2307,10 +2391,10 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
 
     setSeatTracks(prev => {
       const prevSeat = prev[seatId]
-      const prevVideoId = prevSeat?.videoTrack?.mediaStreamTrack?.id || prevSeat?.videoTrack?.sid || null
-      const nextVideoId = videoTrack?.mediaStreamTrack?.id || videoTrack?.sid || null
-      const prevAudioId = prevSeat?.audioTrack?.mediaStreamTrack?.id || prevSeat?.audioTrack?.sid || null
-      const nextAudioId = audioTrack?.mediaStreamTrack?.id || audioTrack?.sid || null
+      const prevVideoId = getTrackId(prevSeat?.videoTrack)
+      const nextVideoId = getTrackId(videoTrack)
+      const prevAudioId = getTrackId(prevSeat?.audioTrack)
+      const nextAudioId = getTrackId(audioTrack)
       if (
         prevVideoId === nextVideoId &&
         prevAudioId === nextAudioId &&
@@ -2622,44 +2706,44 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
     pushFloatingSystemMessage(`${profile?.username || 'A viewer'} followed ${broadcasterLabel}`)
     }, [hostName, profile?.username, pushFloatingSystemMessage])
 
-   const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
-     if (!username) return
+const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
+      if (!username) return
 
-     // For anonymous users: only mods/officers can click, open arrest dialog directly
-     if (isAnonymousDisplayName(username)) {
-       if (!isModOrHigher) return
-       await handleOpenUserAction({
-         userId: `anon-${username}`,
-         username,
-         role: 'anonymous',
-         createdAt: null,
-       })
-       return
-     }
+      // For anonymous users: only mods/officers can click, open arrest dialog directly
+      if (isAnonymousDisplayName(username)) {
+        if (!isModOrHigher) return
+        await handleOpenUserAction({
+          userId: `anon-${username}`,
+          username,
+          role: 'anonymous',
+          createdAt: null,
+        })
+        return
+      }
 
-     try {
-       const { data, error } = await supabase
-         .from('user_profiles')
-         .select('id, username, created_at, role, troll_role')
-         .eq('username', username)
-         .maybeSingle()
-       
-       if (error || !data?.id) {
-         toast.error('User not found')
-         return
-       }
-       
-       await handleOpenUserAction({
-         userId: data.id,
-         username: data.username || username,
-         role: data.role || data.troll_role,
-         createdAt: data.created_at,
-       })
-     } catch (err) {
-       console.error('[ViewerPage] Error opening user action:', err)
-       toast.error('Failed to open user profile')
-     }
-   }, [handleOpenUserAction, isModOrHigher])
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id, username, created_at, role, troll_role')
+          .eq('username', username)
+          .maybeSingle()
+
+        if (error || !data?.id) {
+          toast.error('User not found')
+          return
+        }
+
+        await handleOpenUserAction({
+          userId: data.id,
+          username: data.username || username,
+          role: data.role || data.troll_role,
+          createdAt: data.created_at,
+        })
+      } catch (err) {
+        console.error('[ViewerPage] Error opening user action:', err)
+        toast.error('Failed to open user profile')
+      }
+    }, [handleOpenUserAction, isModOrHigher])
 
    const handleArrestUserFromPopup = useCallback((_targetUserId: string, _reason: string, _severity: string, _bailAmount: number) => {
      setUserActionTarget(null)
@@ -2695,44 +2779,35 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
     const username = profile?.username || user?.email?.split('@')?.[0] || getAnonymousDisplayName()
     const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
-    setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(0, 50))
+    setFloatingMessages(prev => [{
+      id: msgId,
+      userId: user.id,
+      username,
+      content: text,
+      createdAt: Date.now(),
+    }, ...prev].slice(0, 50))
     setChatInput('')
 
     window.setTimeout(() => {
-      setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+      setFloatingMessages(prev => prev.filter(message => message.id !== msgId))
     }, floatTimeout)
 
     try {
-      const result = await sendChatThroughGate({ streamId, content: text })
-      if (!result.ok) {
-        setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-        const errMsg = String(result.error || '').toLowerCase()
-        if (errMsg.includes('currently disabled') || (errMsg.includes('chat') && errMsg.includes('disabled'))) {
-          toast.error('Your chat is currently disabled.')
-        } else if (errMsg.includes('muted')) {
-          toast.error('You are muted in this stream.')
-        } else if (errMsg.includes('banned')) {
-          toast.error('You are banned from this stream.')
-        } else if (errMsg.includes('high traffic')) {
-          // High traffic sampling: silently drop optimistic message
-        } else if (result.error) {
-          toast.error(result.error)
-        }
-        return
-      }
+      const channel = floatingChatChannelRef.current
+      if (!channel) throw new Error('The chat channel is not connected.')
 
-      const chatChannel = floatingChatChannelRef.current
-      if (chatChannel) {
-        chatChannel.send({
-          type: 'broadcast',
-          event: 'floating_chat',
-                                  payload: { username, content: text },
-        }).catch(() => {})
-      }
+      const status = await channel.send({
+        type: 'broadcast',
+        event: 'floating_chat',
+        payload: { username, content: text },
+      })
+      if (status !== 'ok') throw new Error(`Chat broadcast ${status}.`)
     } catch (err) {
-      console.warn('[ViewerPage] floating chat broadcast failed:', err)
+      setFloatingMessages(prev => prev.filter(message => message.id !== msgId))
+      console.error('[ViewerPage] chat send failed:', err)
+      toast.error('Could not send your chat message. Please try again.')
     }
-  }, [streamId, hostChatDisabledByOfficer, hostChatDisableRemainingMs, userChatDisabled, chatDisabledRemainingMinutes, user, profile])
+  }, [hostChatDisabledByOfficer, hostChatDisableRemainingMs, userChatDisabled, chatDisabledRemainingMinutes, user, profile])
 
    const refreshStream = useCallback(async () => {
      if (!streamId || streamEndedRef.current) return
@@ -2974,6 +3049,11 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
   }, [streamId, user?.id, isStreamLive, hostId, recordWatchTime])
 
   useEffect(() => {
+    setBroadcasterProfile(null)
+    setBroadcasterProfileLoaded(false)
+  }, [streamId])
+
+  useEffect(() => {
     if (!streamId) {
       setError('No stream ID provided.')
       setStreamLoaded(true)
@@ -3046,7 +3126,7 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
       if ((data as any).user_id) {
         const { data: hostProfile, error: hostProfileError } = await supabase
           .from('user_profiles')
-           .select('id, username, email, avatar_url, troll_coins, paid_coin_balance, free_coin_balance, total_earned_coins, is_verified, camera_off_image_url')
+           .select('id, username, email, avatar_url, troll_coins, paid_coin_balance, free_coin_balance, total_earned_coins, is_verified, camera_off_image_url, role, troll_role, is_staff, is_admin, is_superadmin, is_troll_officer, is_lead_officer, is_secretary, is_prosecutor, is_attorney')
           .eq('id', (data as any).user_id)
           .maybeSingle()
 
@@ -3054,9 +3134,13 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
           console.warn('[ViewerPage] host profile fetch failed:', hostProfileError)
         }
 
-        if (!cancelled && hostProfile) {
-          setBroadcasterProfile(hostProfile)
+        if (!cancelled) {
+          setBroadcasterProfile(hostProfile || null)
+          setBroadcasterProfileLoaded(true)
         }
+      } else if (!cancelled) {
+        setBroadcasterProfile(null)
+        setBroadcasterProfileLoaded(true)
       }
 
       if (!cancelled) setStreamLoaded(true)
@@ -3097,6 +3181,7 @@ useStreamRealtime(
           const username = newRow.user_name || newRow.username || 'Viewer'
           const content = newRow.content || ''
           if (!content) return
+          if (content.trimStart().startsWith('GIFT_EVENT:')) return
 
           const chatKey = `${username}:${content}`
           const now = Date.now()
@@ -3128,6 +3213,44 @@ useStreamRealtime(
           if (rawGift) {
             void processGiftEvent(rawGift)
           }
+
+          if (event?.table !== 'broadcast:gift_sent' || !rawGift) return
+
+          const gift = rawGift as Record<string, unknown>
+          const giftId = String(gift.stream_gift_id || gift.transaction_id || gift.id || '')
+          const senderId = String(gift.sender_id || '')
+          const senderName = String(gift.sender_name || 'Someone')
+          const giftName = String(gift.gift_name || gift.gift_slug || 'gift')
+          const receiverId = String(gift.receiver_id || '')
+          const receiverName = String(
+            gift.receiver_name ||
+            (receiverId && receiverId === hostId ? hostName : '') ||
+            'another viewer',
+          )
+          if (!giftId || !senderId) return
+
+          const chatKey = `gift:${giftId}`
+          const now = Date.now()
+          if (recentChatKeysRef.current.has(chatKey)) return
+          recentChatKeysRef.current.set(chatKey, now)
+          window.setTimeout(() => {
+            if (recentChatKeysRef.current.get(chatKey) === now) {
+              recentChatKeysRef.current.delete(chatKey)
+            }
+          }, CHAT_FLOAT_MS)
+
+          const messageId = `gift-chat-${giftId}`
+          setFloatingMessages((prev) => [{
+            id: messageId,
+            userId: senderId,
+            username: senderName,
+            content: `sent ${giftName}${Number(gift.quantity) > 1 ? ` x${Number(gift.quantity)}` : ''} to ${receiverName}`,
+            createdAt: now,
+          }, ...prev].slice(0, 50))
+
+          window.setTimeout(() => {
+            setFloatingMessages((prev) => prev.filter((message) => message.id !== messageId))
+          }, CHAT_FLOAT_MS)
         },
         onParticipant: (event: any) => {
           if (event.eventType !== 'UPDATE' || !event.new || !user?.id) return
@@ -3505,6 +3628,8 @@ useStreamRealtime(
 
   useEffect(() => {
 
+     if (!hasResolvedRTCProvider) return
+
      if (user?.id) {
        const kickKey = getKickStorageKey(streamId, user.id)
        const kickRaw = localStorage.getItem(kickKey)
@@ -3530,6 +3655,7 @@ useStreamRealtime(
       const audienceRoomKey = `${streamId}:${roomId}`
 
       if (isUserOnStage && !isPublishing) {
+        if (!room || !isConnected) return
         if (joiningPublisherRef.current || joiningAudienceRef.current) return
 
         joiningPublisherRef.current = true
@@ -3551,7 +3677,7 @@ useStreamRealtime(
 
             if (isPermissionError && mySeat?.id && isUserOnStage) {
               const now = Date.now()
-              if (now - lastPermissionErrorRef.current < PERMISSION_ERROR_COOLDOWN_MS) {
+              if (lastPermissionErrorRef.current > 0 && now - lastPermissionErrorRef.current < PERMISSION_ERROR_COOLDOWN_MS) {
                 setViewerError(errorDetail)
                 if (mySeat?.id) {
                   await leaveSeat()
@@ -3620,7 +3746,7 @@ useStreamRealtime(
      }
 
     // Audience join flow moved to a focused effect below (primitive deps only)
-   }, [streamId, roomId, isActive, isUserOnStage, isPublishing, joinAsAudience, publishLocalTracks, unpublishLocalTracks, leaveLiveKitRoom, leaveSeat, markSeatLive, mySeat?.id, mySeat?.seat_index, user?.id, navigate, viewerIdentity])
+   }, [streamId, roomId, isActive, hasResolvedRTCProvider, isUserOnStage, isPublishing, isConnected, audienceJoinRevision, room, joinAsAudience, publishLocalTracks, unpublishLocalTracks, leaveLiveKitRoom, leaveSeat, markSeatLive, mySeat?.id, mySeat?.seat_index, user?.id, navigate, viewerIdentity])
 
   // Reset audience join refs when changing streams so we can re-attempt on new stream
   useEffect(() => {
@@ -3635,6 +3761,7 @@ useStreamRealtime(
   useEffect(() => {
     if (!streamId) return
     if (!isActive) return
+    if (!hasResolvedRTCProvider) return
 
     const identityToUse = viewerIdentityRef.current || viewerIdentity
     if (!identityToUse) return
@@ -3685,7 +3812,7 @@ useStreamRealtime(
              if (res && typeof res !== 'string') {
                 hasJoinedAudienceRef.current = true
                 setViewerError(null)
-                console.log('[ViewerPage] LiveKit audience joined:', { streamId, roomId })
+                console.log('[ViewerPage] livekit audience joined:', { streamId, roomId })
 
                 if (!keyAwardedRef.current && user?.id) {
                   keyAwardedRef.current = true
@@ -3731,10 +3858,11 @@ useStreamRealtime(
       })
       .finally(() => {
         joiningAudienceRef.current = false
+        setAudienceJoinRevision((revision) => revision + 1)
       })
 
     return () => { cancelled = true }
-  }, [streamId, isActive, roomId, user?.id, viewerIdentity, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage])
+  }, [streamId, isActive, hasResolvedRTCProvider, roomId, user?.id, viewerIdentity, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage])
 
    const _stageSlots = useMemo(() => {
     const liveSeats = activeSeats.slice(0, Math.max(0, effectiveBoxCount - 1))
@@ -3871,14 +3999,16 @@ useStreamRealtime(
     return (
       <ErrorBoundary>
         <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
+          <GiftFlyOverlay streamId={streamId} />
           <UndoRecentGiftBar />
+          <VirtualAudienceActivityOverlay streamId={streamId} />
           <div className="relative flex h-dvh w-full flex-col overflow-hidden">
             <BattleView
               key={activeBattleId}
               battleId={stream.battle_id!}
               currentStreamId={streamId}
               viewerId={user?.id || stableAnonId}
-              remoteUsers={isGetStream ? [] : liveKitRoom.remoteUsers}
+              remoteUsers={liveKitRoom.remoteUsers}
               userIdToLiveKitIdentity={userIdToLiveKitIdentity}
               onReturnToStream={() => {
                 refreshStream();
@@ -3908,8 +4038,10 @@ useStreamRealtime(
 
   return (
     <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
+      <GiftFlyOverlay streamId={streamId} />
       <RecoveryBanner onRefresh={() => window.location.reload()} />
       <UndoRecentGiftBar />
+      <VirtualAudienceActivityOverlay streamId={streamId} />
       {isFeaturedEvent && (
         <FeaturedBanner
           broadcasters={featuredBroadcasters}
@@ -3988,7 +4120,61 @@ useStreamRealtime(
           </div>
         )}
 
-        <div className={cn('relative flex h-dvh w-full flex-col overflow-hidden', theme.pageShell)}>
+        <div className={cn('relative flex min-h-dvh w-full flex-col overflow-x-hidden', theme.pageShell)}>
+
+          {isWishlistEditorOpen && isViewerBroadcaster && (
+            <div
+              className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+              onClick={() => !isSavingWishlist && setIsWishlistEditorOpen(false)}
+            >
+              <form
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="viewer-wishlist-editor-title"
+                onSubmit={saveWishlist}
+                onClick={(event) => event.stopPropagation()}
+                className="w-full max-w-md space-y-4 rounded-2xl border border-white/10 bg-slate-950 p-5 shadow-2xl"
+              >
+                <div>
+                  <h2 id="viewer-wishlist-editor-title" className="text-lg font-black text-white">
+                    Set your wishlist
+                  </h2>
+                  <p className="mt-1 text-sm text-white/60">
+                    Add a public HTTPS link for viewers. Leave it blank to remove the link.
+                  </p>
+                </div>
+                <label className="block text-sm text-white/70">
+                  Wishlist URL
+                  <input
+                    type="url"
+                    inputMode="url"
+                    autoFocus
+                    value={wishlistDraft}
+                    onChange={(event) => setWishlistDraft(event.target.value)}
+                    placeholder="https://example.com/your-wishlist"
+                    className="mt-2 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-white outline-none focus:border-cyan-300/50"
+                  />
+                </label>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    disabled={isSavingWishlist}
+                    onClick={() => setIsWishlistEditorOpen(false)}
+                    className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/5 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingWishlist}
+                    className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-cyan-300 disabled:opacity-50"
+                  >
+                    {isSavingWishlist ? 'Saving…' : 'Save wishlist'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
           {/* Background layers — identical to Sidebar ShellBackdrop */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
@@ -4089,21 +4275,37 @@ useStreamRealtime(
                   isLive={isActive}
                   streamStartedAt={(stream as any)?.started_at}
                   onActiveViewersClick={onActiveViewersClick} />
-{/* Audience Bubble Ticker and Top Subscribers Bar */}
-                <div className="w-full z-20 px-0 pt-1 pb-2 flex items-center justify-center bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 backdrop-blur-xl border-b border-cyan-400/10 shadow-[0_2px_32px_0_rgba(34,211,238,0.10)]">
-                  <div className="w-full max-w-7xl mx-auto flex items-center gap-3 px-4 sm:px-0">
+{/* Audience, Battle Pot, and wishlist share a fixed-height web ticker. */}
+                <div className="z-20 flex h-[56px] w-full shrink-0 items-center justify-center overflow-hidden border-b border-cyan-400/10 bg-gradient-to-r from-slate-950/80 via-black/60 to-slate-950/80 shadow-[0_2px_32px_0_rgba(34,211,238,0.10)] backdrop-blur-xl">
+                  <div className="mx-auto flex h-full w-full max-w-7xl min-w-0 items-center gap-2 overflow-hidden px-2 sm:px-4">
                     <AudienceBubbleTicker
                       streamId={streamId}
                       audience={audienceWithAnon}
                       currentUserId={currentViewerId}
                       hostUserId={hostId || undefined}
                       maxVisible={8}
-                      className="relative z-0 hidden sm:flex pointer-events-none"
+                      className="relative z-0 flex min-w-0 flex-1 items-center"
                       onGiftUser={onGift}
                     />
-                    {hostId && (
-                      <TopSubscribersBar broadcasterId={hostId} />
+                    {hostId && <TopSubscribersBar broadcasterId={hostId} />}
+                    {stream && hostId && (
+                      <BattlePot
+                        broadcasterId={hostId}
+                        streamId={stream.id}
+                        compact
+                        canManageRounds={isViewerBroadcaster}
+                        onBattlePotReadinessChange={handleBattlePotReadinessChange}
+                      />
                     )}
+                    <WishlistMiniBrowserButton
+                      wishlistUrl={broadcastTicker.data.wishlistUrl}
+                      broadcasterDisplayName={hostName}
+                      isBroadcaster={isViewerBroadcaster}
+                      onEdit={() => {
+                        setWishlistDraft(broadcastTicker.data.wishlistUrl || '')
+                        setIsWishlistEditorOpen(true)
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -4130,15 +4332,34 @@ useStreamRealtime(
              </>
            )}
 
-           {/* Random Battle Banner — prominent notice for queue/active battle */}
+            {/* Random Battle Banner — prominent notice for queue/active battle */}
            {stream && (
              <RandomBattleBanner
                phase={randomBattlePhase}
-               delayUntil={null}
-               isBroadcaster={false}
+               delayUntil={randomBattleQueue.delayUntil}
+               isBroadcaster={isViewerBroadcaster}
+               onStartQueue={isViewerBroadcaster ? randomBattleQueue.startQueue : undefined}
+               onStopQueue={isViewerBroadcaster ? randomBattleQueue.stopQueue : undefined}
+               isBusy={randomBattleQueue.isBusy}
+               canStartQueue={randomBattleQueue.canUseRandomBattles && isBattlePotReady}
                mobileSafe={isMobileViewer}
              />
            )}
+
+{/* Gift-funded Battle Pot for unlocking / funding battles */}
+            {stream && isMobileViewer && (
+               <BattlePot
+                 broadcasterId={stream.user_id}
+                 streamId={stream.id}
+                 isMobile
+                 canManageRounds={isViewerBroadcaster}
+                 onBattlePotReadinessChange={handleBattlePotReadinessChange}
+                 onBattleStart={() => {
+                   // Notify that a battle is starting so UI can react
+                 }}
+                 className="relative z-40 mx-auto w-full max-w-3xl shrink-0 px-4 py-2"
+               />
+            )}
 
    <main
                 className={cn(
@@ -4219,10 +4440,11 @@ useStreamRealtime(
                     />
                   ) : (
                   <>
-                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (grid):', { mirror: false, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
+                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (grid):', { mirror: true, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
                   <RemoteVideoSurface
                     participant={broadcasterState.participant}
                     className="absolute inset-0"
+                    mirror
                     onTap={handleLike}
                     onDoubleTap={handleNextBroadcast}
                     room={room}
@@ -4397,10 +4619,11 @@ useStreamRealtime(
                   />
                 ) : (
                   <>
-                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (split):', { mirror: false, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
+                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (split):', { mirror: true, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
  <RemoteVideoSurface
                   participant={broadcasterState.participant}
                   className="absolute inset-0"
+                  mirror
                   onTap={handleLike}
                   onDoubleTap={handleNextBroadcast}
                   room={room}
@@ -5800,17 +6023,17 @@ useStreamRealtime(
          {/* ── MOBILE: Right-side vertical control bar ── */}
          {isMobileViewer && (
            <div
-             className="fixed right-0 z-20 flex flex-col items-center justify-center gap-2 pointer-events-auto"
+             className="fixed right-0 z-20 flex flex-col items-center gap-2 overflow-y-auto overscroll-contain pointer-events-auto scrollbar-hide"
              style={{
-               top: '50%',
-               transform: 'translateY(-50%)',
+               top: 'calc(88px + env(safe-area-inset-top))',
+               bottom: `calc(${MOBILE_CHAT_INPUT_HEIGHT}px + 8px + env(safe-area-inset-bottom))`,
                paddingRight: '4px',
              }}
            >
               {isPaidChatEnabled && (
                 <button
                   onClick={() => setIsPaidChatModalOpen(true)}
-                   className="inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold border border-amber-400/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20"
+                   className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-sm font-bold border border-amber-400/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20"
                  >
                     <MessageSquare className="h-10 w-10" />
                  </button>
@@ -5818,7 +6041,7 @@ useStreamRealtime(
                 <button
                   onClick={() => setIsMessagePopupOpen(true)}
                   className={cn(
-                     'inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold border transition',
+                     'inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-sm font-bold border transition',
                      'border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]'
                    )}
                  >
@@ -5826,37 +6049,39 @@ useStreamRealtime(
                 </button>
               <button
                 onClick={() => onGift(hostId)}
-className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold', theme.purpleButton)}
+className={cn('inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-sm font-bold', theme.purpleButton)}
                >
                  <Gift className="h-10 w-10" />
               </button>
                 <button
                   onClick={handleShare}
-                  className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold', theme.cyanButton)}
+                  className={cn('inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-sm font-bold', theme.cyanButton)}
                 >
                   <Share2 className="h-10 w-10" />
                 </button>
                 <button
                   onClick={() => setIsAuctionMeOpen(true)}
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20"
+                  className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-sm font-bold border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20"
                 >
                   <Gamepad2 className="h-10 w-10" />
                 </button>
-                <SeatFocusButton
-                  seats={seats}
-                  focusedUserId={focusedUserId}
-                  focusedSeatIndex={focusedSeatIndex}
-                  onToggle={toggleSeatFocus}
-                  onFocusAll={focusAllSeats}
-                  getSeatLabel={getSeatLabel}
-                  isFocused={isSeatFocused}
-                />
+                <div className="shrink-0">
+                  <SeatFocusButton
+                    seats={seats}
+                    focusedUserId={focusedUserId}
+                    focusedSeatIndex={focusedSeatIndex}
+                    onToggle={toggleSeatFocus}
+                    onFocusAll={focusAllSeats}
+                    getSeatLabel={getSeatLabel}
+                    isFocused={isSeatFocused}
+                  />
+                </div>
                {isUserOnStage && (
                  <>
                    <button
                      onClick={handleToggleMic}
                      className={cn(
-                       'inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold transition',
+                       'inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-sm font-bold transition',
                        seatMicOn
                          ? 'border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]'
                          : 'border border-red-400/40 bg-red-500/15 text-red-200 hover:bg-red-500/25'
@@ -5868,7 +6093,7 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
                    <button
                      onClick={handleToggleCamera}
                      className={cn(
-                       'inline-flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold transition',
+                       'inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-sm font-bold transition',
                        seatCamOn
                          ? 'border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]'
                          : 'border border-red-400/40 bg-red-500/15 text-red-200 hover:bg-red-500/25'
@@ -5965,7 +6190,7 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
     </div>
           )}
 
-        <div className="pointer-events-none absolute inset-0 z-30">
+        <div className="pointer-events-none absolute inset-0 z-50">
           <div className="pointer-events-auto">
             <GiftBoxModal
               isOpen={isGiftModalOpen}
@@ -6115,13 +6340,18 @@ className={cn('inline-flex h-12 w-12 items-center justify-center rounded-lg text
           <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowViewerList(false)}>
             <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-black text-white">Active Viewers</h3>
+                <div>
+                  <h3 className="text-base font-black text-white">Active Viewers</h3>
+                  <p className="text-xs text-zinc-500">Showing up to 100 viewers</p>
+                </div>
                 <button onClick={() => setShowViewerList(false)} className="rounded-lg p-1 text-zinc-400 hover:text-white">
                   <X size={18} />
                 </button>
               </div>
               <div className="max-h-80 overflow-y-auto space-y-2">
-                {audience.length === 0 ? (
+                {isAudienceLoading ? (
+                  <p className="text-sm text-zinc-500">Loading viewers...</p>
+                ) : audience.length === 0 ? (
                   <p className="text-sm text-zinc-500">No active viewers</p>
                 ) : (
                   audience.filter(m => m.is_active && !m.left_at).map(member => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Trophy, Zap, Gift, ChevronRight, Star, Target, TrendingUp, Award } from 'lucide-react';
+import { Trophy, ChevronRight, Target, TrendingUp, Award, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
 import { useLeagueProgress, type LevelUpEvent } from '../../hooks/useLeagueProgress'
@@ -103,16 +103,9 @@ function LevelUpAnimation({ event, onDismiss }: { event: LevelUpEvent; onDismiss
                 className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3"
               >
                 <p className="text-xs font-bold text-yellow-300">{event.reward.perk}</p>
-                <div className="mt-2 flex items-center justify-center gap-3 text-[11px] text-slate-300">
-                  <span className="flex items-center gap-1">
-                    <Zap className="h-3 w-3 text-yellow-400" />
-                    +{event.reward.trollCoins} coins
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Star className="h-3 w-3 text-purple-400" />
-                    +{event.reward.xp} XP
-                  </span>
-                </div>
+                <p className="mt-2 text-[11px] text-slate-300">
+                  Your verified mission points advanced your T League standing.
+                </p>
               </motion.div>
 
               <motion.button
@@ -165,18 +158,30 @@ function ProgressBar({
 }
 
 export default function LeagueProgressPanel({ streamId, compact = false }: LeagueProgressPanelProps) {
+  const [inviteCopied, setInviteCopied] = useState(false)
   const {
     state,
     subTierProgress,
     nextSubTier,
     scoreForNext,
-    leagueLevelInfo,
-    leagueLevelProgress,
     subTierColor,
     levelUpEvent,
-    claimWeeklyGoal,
     dismissLevelUp,
   } = useLeagueProgress(streamId || null)
+  const inviteUrl = state
+    ? `${window.location.origin}/auth?mode=signup&ref=${encodeURIComponent(state.userId)}`
+    : ''
+
+  const copyInviteLink = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      setInviteCopied(true)
+      window.setTimeout(() => setInviteCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy T League referral link:', error)
+      window.prompt('Copy your T League invite link:', inviteUrl)
+    }
+  }
 
   if (!state) {
     return (
@@ -197,9 +202,7 @@ export default function LeagueProgressPanel({ streamId, compact = false }: Leagu
             <span className="text-xs font-black text-white">{state.mainTier}{state.subTier}</span>
             <span className="text-[10px] text-slate-400">{state.mainTier === 'T0' ? 'Unranked' : ''}</span>
           </div>
-          <span className="text-[10px] font-bold text-cyan-300">
-            Lv.{state.leagueLevel}
-          </span>
+          <span className="text-[10px] font-bold text-cyan-300">{state.mainTier}</span>
         </div>
         <ProgressBar
           progress={subTierProgress}
@@ -289,28 +292,11 @@ export default function LeagueProgressPanel({ streamId, compact = false }: Leagu
 
         <div className="relative border-t border-white/5 pt-3">
           <div className="flex items-center gap-2 mb-2">
-            <Gift className="h-3.5 w-3.5 text-pink-400" />
-            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">League Level</span>
-            <span className="ml-auto text-xs font-black text-purple-300">{leagueLevelInfo.icon} {leagueLevelInfo.label}</span>
-          </div>
-          <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-            <span>Lv.{state.leagueLevel}</span>
-            <span>Gifts sent: {state.totalGiftsSent.toLocaleString()}</span>
-          </div>
-          <ProgressBar
-            progress={leagueLevelProgress}
-            colorFrom="from-purple-500"
-            colorTo="to-pink-500"
-            height="h-2"
-          />
-          <p className="mt-1 text-[9px] text-slate-500">{leagueLevelInfo.perk}</p>
-        </div>
-
-        <div className="relative border-t border-white/5 pt-3">
-          <div className="flex items-center gap-2 mb-2">
             <Target className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Weekly Goals</span>
-            <span className="ml-auto text-[10px] text-slate-500">{state.weeklyGoalsCompleted}/4</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Missions</span>
+            <span className="ml-auto text-[10px] text-slate-500">
+              {state.weeklyGoalsCompleted}/{state.weeklyGoals.length}
+            </span>
           </div>
 
           <div className="space-y-2">
@@ -333,20 +319,13 @@ export default function LeagueProgressPanel({ streamId, compact = false }: Leagu
                       <span className="text-xs">{goal.icon}</span>
                       <span className="text-[11px] font-bold text-white">{goal.title}</span>
                     </div>
-                    {goal.claimed ? (
-                      <span className="text-[9px] font-black text-emerald-400">Claimed</span>
-                    ) : goal.completed ? (
-                      <button
-                        onClick={() => claimWeeklyGoal(goal.id)}
-                        className="rounded-full bg-yellow-400/10 px-2 py-0.5 text-[9px] font-black text-yellow-300 hover:bg-yellow-400/20 transition-colors"
-                      >
-                        Claim +{goal.reward}
-                      </button>
+                    {goal.completed ? (
+                      <span className="text-[9px] font-black text-emerald-400">Complete · +{goal.reward} pts</span>
                     ) : (
                       <span className="text-[9px] text-slate-500">{goal.current}/{goal.target}</span>
                     )}
                   </div>
-                  {!goal.claimed && (
+                  {!goal.completed && (
                     <ProgressBar
                       progress={goalProgress}
                       colorFrom="from-cyan-600"
@@ -362,19 +341,36 @@ export default function LeagueProgressPanel({ streamId, compact = false }: Leagu
           </div>
         </div>
 
-        <div className="relative grid grid-cols-3 gap-2 border-t border-white/5 pt-3">
+        <div className="relative grid grid-cols-2 gap-2 border-t border-white/5 pt-3">
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-            <p className="text-[9px] uppercase tracking-wider text-slate-500">Received</p>
-            <p className="text-xs font-black text-white"><AnimatedNumber value={state.giftCoinsReceived} /></p>
+            <p className="text-[9px] uppercase tracking-wider text-slate-500">Eligible Earned</p>
+            <p className="text-xs font-black text-white"><AnimatedNumber value={state.eligibleLifetimeCoins} /></p>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-            <p className="text-[9px] uppercase tracking-wider text-slate-500">Streams</p>
-            <p className="text-xs font-black text-white">{state.streamCount}</p>
+            <p className="text-[9px] uppercase tracking-wider text-slate-500">T500 Coin Gate</p>
+            <p className="text-[9px] font-black text-white">
+              {state.tier500CoinGateMet ? 'Met' : '5T eligible earnings'}
+            </p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-            <p className="text-[9px] uppercase tracking-wider text-slate-500">Live Min</p>
-            <p className="text-xs font-black text-white"><AnimatedNumber value={Math.round(state.totalLiveMinutes)} /></p>
-          </div>
+        </div>
+
+        <div className="relative border-t border-white/5 pt-3">
+          <button
+            type="button"
+            onClick={() => { void copyInviteLink() }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-xs font-bold text-cyan-200 transition-colors hover:bg-cyan-400/10"
+          >
+            {inviteCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            {inviteCopied ? 'Invite link copied' : 'Copy invite link'}
+          </button>
+          <p className="mt-1.5 text-center text-[9px] text-slate-500">
+            Earn 100 non-cashout T League points after 7 days when a referred friend accumulates 15 verified live minutes (no expiry).
+          </p>
+          {state.pendingReferralCount > 0 && (
+            <p className="mt-1 text-center text-[9px] font-semibold text-cyan-200/80">
+              {state.pendingReferralPoints.toLocaleString()} referral points pending from {state.pendingReferralCount} qualified {state.pendingReferralCount === 1 ? 'friend' : 'friends'}.
+            </p>
+          )}
         </div>
       </div>
     </>

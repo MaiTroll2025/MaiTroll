@@ -20,7 +20,7 @@ interface Props {
 
 export function RolesLobby({ staffView: _staffView = false }: Props) {
   const { user, profile } = useAuthStore()
-  const actions = useSingOffActions()
+  const { applyRole, listActiveRoles, listRoleApplications, releaseRole, reviewApplication } = useSingOffActions()
 
   const isStaff = !!profile && (profile.is_ceo || profile.is_admin || profile.role === 'ceo' || profile.role === 'admin')
 
@@ -42,15 +42,15 @@ export function RolesLobby({ staffView: _staffView = false }: Props) {
   const load = useCallback(async () => {
     setLoading(true)
     const [allApps, active] = await Promise.all([
-      actions.listRoleApplications(),
-      isStaff ? actions.listActiveRoles() : Promise.resolve({ judges: [], hosts: [] }),
+      listRoleApplications(),
+      isStaff ? listActiveRoles() : Promise.resolve({ judges: [], hosts: [] }),
     ])
     const myList = allApps.filter((a) => a.user_id === user?.id)
     setMine(myList)
     setApps(allApps)
     setActiveRoles(active)
     setLoading(false)
-  }, [actions, isStaff, user?.id])
+  }, [isStaff, listActiveRoles, listRoleApplications, user?.id])
 
   useEffect(() => {
     void load()
@@ -59,7 +59,7 @@ export function RolesLobby({ staffView: _staffView = false }: Props) {
   const handleApply = async () => {
     if (!user?.id) return
     setSubmitting(true)
-    const res = await actions.applyRole(formType, statement, experience, broadcastExp, agree)
+    const res = await applyRole(formType, statement, experience, broadcastExp, agree)
     setSubmitting(false)
     if (res.success) {
       toast.success(`${formType === 'judge' ? 'Judge' : 'Host'} application submitted!`)
@@ -75,7 +75,7 @@ export function RolesLobby({ staffView: _staffView = false }: Props) {
   }
 
   const handleReview = async (id: string, action: 'approve' | 'reject' | 'suspend') => {
-    const res = await actions.reviewApplication(id, action)
+    const res = await reviewApplication(id, action)
     if (res.success) {
       toast.success(`Application ${action}d`)
       void load()
@@ -86,7 +86,7 @@ export function RolesLobby({ staffView: _staffView = false }: Props) {
 
   const handleRelease = async (targetUserId: string, role: 'judge' | 'host') => {
     if (!window.confirm(`Release this ${role}? Their stage access will be revoked immediately.`)) return
-    const res = await actions.releaseRole(targetUserId, role)
+    const res = await releaseRole(targetUserId, role)
     if (res.success) {
       void load()
     } else {
@@ -450,4 +450,3 @@ export function RolesLobby({ staffView: _staffView = false }: Props) {
     </div>
   )
 }
-

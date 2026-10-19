@@ -120,7 +120,7 @@ export function MiniPopupBrowser({
           type="button"
           onClick={handleToggleMinimize}
           className="p-1 rounded hover:bg-white/10 transition"
-          title={isMinimize ? 'Expand' : 'Minimize'}
+          title={isMinimized ? 'Expand' : 'Minimize'}
         >
           {isMinimized ? <Plus size={12} className="text-white/60" /> : <Minus size={12} className="text-white/60" />}
         </button>

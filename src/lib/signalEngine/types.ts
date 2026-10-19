@@ -49,6 +49,7 @@ export interface SignalFeatures {
   engagement: number
   giftQuality: number
   creatorConsistency: number
+  creatorProgress: number
   freshness: number
   momentum: number
   exploration: number
@@ -92,6 +93,7 @@ export const SIGNAL_FEATURE_KEYS: readonly (keyof SignalFeatures)[] = [
   'engagement',
   'giftQuality',
   'creatorConsistency',
+  'creatorProgress',
   'freshness',
   'momentum',
   'exploration',

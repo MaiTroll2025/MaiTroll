@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Coins } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
+import { useLiveKitRoom } from '@/hooks/useLiveKitRoom'
+import { Track } from 'livekit-client'
+import { useShallow } from 'zustand/react/shallow'
 import { useSingOffStore } from '../store/useSingOffStore'
 import { useSingOffActions } from '../hooks/useSingOffActions'
-import { useShallow } from 'zustand/react/shallow'
-import { useSingOffLiveKit } from '../hooks/useSingOffLiveKit'
 import { useSingOffRealtime } from '../hooks/useSingOffRealtime'
 import { MicStand } from './MicStand'
 import { ChallengerTile } from './ChallengerTile'
@@ -35,7 +36,6 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
       hostPosition: s.hostPosition,
       countdown: s.countdown,
       authority: s.authority,
-      liveKit: s.liveKit,
       maiWinnerEffect: s.maiWinnerEffect,
       coinStoreOpen: s.coinStoreOpen,
     })),
@@ -46,7 +46,7 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
     clearCountdown,
     setCoinStoreOpen,
     clearMaiWinnerEffect,
-    setLiveKit,
+    setRtcMedia,
   } = useSingOffStore.getState()
 
   const actions = useSingOffActions()
@@ -54,45 +54,51 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
   useSingOffRealtime(sessionId, user?.id)
 
   const me = store.participants.find((p) => p.user_id === user?.id)
-  const isOnStage = !!me && ['host', 'challenger', 'judge', 'host_judge', 'ceo_judge'].includes(me.role) && !!me.position
-  const liveKitMode: 'singoff-publisher' | 'singoff-viewer' = isOnStage ? 'singoff-publisher' : 'singoff-viewer'
+  const isOnStage = Boolean(me?.can_publish && me.position)
 
   const {
-    isConnected,
     isPublishing,
     localVideoTrack,
-    localAudioTrack: _localAudioTrack,
-    remoteUsers,
-    connect,
-    publish,
-    toggleMic,
+    remoteUsers: liveKitRemoteUsers,
+    joinAsAudience,
+    toggleMicrophone,
     toggleCamera,
     leaveRoom,
-  } = useSingOffLiveKit({
-    roomName: store.session?.room_name ?? '',
-    userId: user?.id ?? '',
+  } = useLiveKitRoom({
+    roomId: store.session?.room_name ?? '',
+    roomType: 'singoff',
+    role: isOnStage ? 'publisher' : 'viewer',
+    identity: user?.id ?? '',
     userName: me?.display_name || user?.user_metadata?.full_name || 'User',
-    mode: liveKitMode,
-    autoPublish: false,
-    isAdmin: store.authority.is_ceo,
   })
 
   useEffect(() => {
-    if (!store.session || !user?.id) return
+    if (!store.session || !user?.id || store.session.status !== 'active') return
     let cancelled = false
-    connect().then((ok) => {
+    const joined = isOnStage
+      ? joinAsAudience({
+          userId: user.id,
+          streamId: store.session.id,
+          roomName: store.session.room_name,
+          publishCapable: true,
+        })
+      : joinAsAudience(user.id)
+    joined.then((result) => {
       if (cancelled) return
-      setLiveKit({ isConnected: ok })
+      const ok = Boolean(result && typeof result !== 'string')
+      setRtcMedia({ isConnected: ok, isPublishing: ok && isOnStage })
+    }).catch((error: unknown) => {
+      if (cancelled) return
+      console.error('[StageLayout] LiveKit join failed', error)
+      setRtcMedia({ isConnected: false, isPublishing: false })
     })
     return () => {
       cancelled = true
-      leaveRoom()
+      void leaveRoom()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.session?.id, user?.id, liveKitMode])
+  }, [isOnStage, joinAsAudience, leaveRoom, setRtcMedia, store.session, user?.id])
 
-  // Challenger publishes after the 10s countdown resolves
-  const [published, setPublished] = useState(false)
+  // Clear the stage-call countdown when it expires; LiveKit publishing is tied to the assigned seat.
   const myCountdown = store.countdown?.targetUserId === user?.id ? store.countdown : null
   const [_tick, setTick] = useState(0)
   const countdownRemaining = myCountdown ? Math.max(0, Math.ceil((myCountdown.startAt - Date.now()) / 1000)) : null
@@ -104,20 +110,10 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
   }, [myCountdown])
 
   useEffect(() => {
-    if (!myCountdown || !me || me.role !== 'challenger' || published) return
-    if (!isConnected) return
-    if (countdownRemaining <= 0) {
-      void publish().then(() => {
-        setPublished(true)
-        clearCountdown()
-        setTimeout(() => setTick((n) => n + 1), 250)
-      })
-      return
+    if (myCountdown && me?.role === 'challenger' && countdownRemaining !== null && countdownRemaining <= 0) {
+      clearCountdown()
     }
-    const t = setTimeout(() => setTick((n) => n + 1), 250)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countdownRemaining, myCountdown, published, isConnected])
+  }, [clearCountdown, countdownRemaining, me?.role, myCountdown])
 
   const hostParticipant = store.participants.find((p) => p.position === 'host_stage')
   const challengerA = store.participants.find((p) => p.position === 'challenger_a')
@@ -129,10 +125,12 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
   const hostJudge = store.participants.find((p) => p.position === 'host_judge')
   const ceoParticipant = store.participants.find((p) => p.position === 'ceo')
 
-  const trackForUser = (userId?: string, participant?: { can_publish?: boolean }) => {
+  const trackForUser = (userId?: string, _participant?: { can_publish?: boolean }): MediaStreamTrack | null => {
     if (!userId) return null
-    if (userId === user?.id) return localVideoTrack ?? (participant?.can_publish ? undefined : null)
-    return remoteUsers[userId]?.videoTrack ?? null
+    if (userId === user?.id) return (localVideoTrack as unknown as MediaStreamTrack | null) ?? null
+    const remote = liveKitRemoteUsers.find((r) => r.identity === userId)
+    const videoPub = remote?.getTrackPublication?.(Track.Source.Camera)
+    return (videoPub?.track as unknown as MediaStreamTrack | undefined) ?? null
   }
 
   const isHostOrStaff = store.authority.is_host || store.authority.is_staff
@@ -166,8 +164,8 @@ export function StageLayout({ sessionId, onBack }: StageLayoutProps) {
             muted={!isPublishing}
             onSitToggle={() => setHostPosition(store.hostPosition === 'host_stage' ? 'host_judge' : 'host_stage')}
             sitting={store.hostPosition === 'host_judge'}
-            onToggleMic={toggleMic}
-            onToggleCamera={toggleCamera}
+            onToggleMic={() => void toggleMicrophone()}
+            onToggleCamera={() => void toggleCamera()}
           />
           {store.hostPosition === 'host_stage' && <MicStand live={!!isPublishing} muted={!isPublishing} />}
         </div>

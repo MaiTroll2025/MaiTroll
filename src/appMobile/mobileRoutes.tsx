@@ -16,7 +16,6 @@ import MobileTreelzPage from "./pages/MobileTreelzPage";
 import MobileTreelzUpload from "./pages/MobileTreelzUpload";
 import MobileTreelzSettings from "./pages/MobileTreelzSettings";
 import MobileTreelzSaved from "./pages/MobileTreelzSaved";
-import MobilePrideChallenges from "./pages/MobilePrideChallenges";
 import MobilePodcastPage from "./pages/MobilePodcastPage";
 
 import MobilePlaceholder from "./components/MobilePlaceholder";
@@ -222,17 +221,6 @@ export const mobileRoutes: MobileRouteItem[] = [
     icon: Settings,
     priority: 94,
     regular: true,
-    showInBottomBubble: false,
-  },
-  {
-    key: "pride-challenges",
-    label: "Pride Challenges",
-    path: "/pride-challenges",
-    element: <MobilePrideChallenges />,
-    icon: Sparkles,
-    priority: 95,
-    regular: true,
-    public: true,
     showInBottomBubble: false,
   },
   {

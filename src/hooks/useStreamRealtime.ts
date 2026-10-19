@@ -7,7 +7,6 @@ interface UseStreamRealtimeHandlers {
   onGift?: (event: StreamRealtimeEvent) => void
   onParticipant?: (event: StreamRealtimeEvent) => void
   onBattle?: (event: StreamRealtimeEvent) => void
-  onAudiencePresence?: (event: StreamRealtimeEvent) => void
   onSeatSession?: (event: StreamRealtimeEvent) => void
   onSeatEvent?: (event: StreamRealtimeEvent) => void
   onFloatingChat?: (event: StreamRealtimeEvent) => void
@@ -43,9 +42,6 @@ export function useStreamRealtime(streamId?: string | null, handlers: UseStreamR
           break
         case 'battle_sessions':
           current.onBattle?.(event)
-          break
-        case 'stream_audience_presence':
-          current.onAudiencePresence?.(event)
           break
         case 'stream_seat_sessions':
           current.onSeatSession?.(event)

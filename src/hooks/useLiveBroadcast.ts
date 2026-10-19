@@ -26,14 +26,9 @@ import {
   VideoPresets,
 } from 'livekit-client'
 import { PreflightStore, usePreflightStore } from '../lib/preflightStore'
+import { getLiveKitUrl } from '../lib/livekitUrl'
 
-export const getLiveKitUrl = (): string | undefined => {
-  const livekitUrl = import.meta.env.VITE_LIVEKIT_URL
-  if (!livekitUrl) {
-    console.error('[useLiveBroadcast] Missing LiveKit URL - check VITE_LIVEKIT_URL')
-  }
-  return livekitUrl
-}
+export { getLiveKitUrl }
 
 export interface LiveBroadcastSession {
   roomRef: React.MutableRefObject<Room | null>
@@ -89,12 +84,7 @@ export function useLiveBroadcast({
       console.log('[useLiveBroadcast] Room already connecting, skipping duplicate connect')
       return
     }
-    const livekitUrl = getLiveKitUrl()
-    if (!livekitUrl) {
-      console.error('[useLiveBroadcast] LiveKit URL not configured')
-      return
-    }
-    await room.connect(livekitUrl, token)
+    await room.connect(getLiveKitUrl(), token)
   }, [])
 
   const publishTrackOrClone = useCallback(

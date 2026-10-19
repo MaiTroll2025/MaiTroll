@@ -6,7 +6,7 @@ import { useCoins } from '@/lib/hooks/useCoins';
 import { useBank as useBankHook } from '../lib/hooks/useBank';
 import { useAllCreditScores } from '../lib/hooks/useAllCreditScores';
 // import { toast } from 'sonner';
-import { Coins, CreditCard, Landmark, History, AlertCircle, ChevronDown, X, Flame, Sparkles, Wallet, ShoppingBag, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Coins, CreditCard, Landmark, History, AlertCircle, ChevronDown, X, Flame, Sparkles, Wallet, ShoppingBag, ArrowUpRight, ArrowDownRight, Shield, FileText } from 'lucide-react';
 import { formatCoins, COIN_PACKAGES } from '../lib/coinMath';
 import { getBroadcastTheme } from '../lib/broadcastThemes';
 import { deductCoins } from '@/lib/coinTransactions';
@@ -666,6 +666,8 @@ const { activeLoans, refresh: _refreshBank, payCreditCard, creditInfo, _payLoan:
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [useCredit, setUseCredit] = useState(false);
   const [_applying, _setApplying] = useState(false);
+  const [showCreditReportModal, setShowCreditReportModal] = useState(false);
+  const [creditReport, setCreditReport] = useState(null);
   
   // Bank State
   const [_showActiveLoanModal, _setShowActiveLoanModal] = useState(false);
@@ -676,11 +678,22 @@ const { activeLoans, refresh: _refreshBank, payCreditCard, creditInfo, _payLoan:
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [paypalPaymentModalOpen, setPaypalPaymentModalOpen] = useState(false);
   const [activePromoByTab, setActivePromoByTab] = useState({});
+  const [coinPackDiscountPercent, setCoinPackDiscountPercent] = useState(0);
+  const [coinPackDiscountLoaded, setCoinPackDiscountLoaded] = useState(false);
 
   const handlePayPalPurchase = async (pkg) => {
+    const purchaseType = pkg.purchaseType || 'coins';
+    const receivesCoinPackDiscount = purchaseType === 'coins'
+      && COIN_PACKAGES.some((coinPackage) => coinPackage.id === pkg.id);
+    const discountPercent = receivesCoinPackDiscount ? coinPackDiscountPercent : 0;
+    const basePrice = Number(pkg.usdPrice ?? pkg.usd_price ?? 0);
+    const discountedPrice = basePrice > 0
+      ? Math.round(basePrice * (100 - discountPercent)) / 100
+      : basePrice;
     const purchasePkg = {
       ...pkg,
-      purchaseType: 'coins',
+      price: discountedPrice > 0 ? `$${discountedPrice.toFixed(2)}` : pkg.price,
+      purchaseType,
       coin_amount: pkg.coin_amount || pkg.coins || 0
     };
 
@@ -766,6 +779,34 @@ const [_selectedPostId, _setSelectedPostId] = useState(null);
   useEffect(() => {
     checkNewUserStatus();
   }, [checkNewUserStatus]);
+
+  useEffect(() => {
+    let mounted = true;
+    setCoinPackDiscountLoaded(false);
+    if (!user?.id) {
+      setCoinPackDiscountPercent(0);
+      setCoinPackDiscountLoaded(true);
+      return () => { mounted = false; };
+    }
+
+    supabase.rpc('get_my_coin_pack_discount_percent')
+      .then(({ data, error }) => {
+        if (error) throw error;
+        if (mounted) setCoinPackDiscountPercent(Number(data) || 0);
+      })
+      .catch((error) => {
+        console.error('Failed to load coin pack discount:', error);
+        if (mounted) {
+          setCoinPackDiscountPercent(0);
+          toast.error('Could not load your membership discount. The checkout will verify it again.');
+        }
+      })
+      .finally(() => {
+        if (mounted) setCoinPackDiscountLoaded(true);
+      });
+
+    return () => { mounted = false; };
+  }, [user?.id]);
 
   const showLiveSnacks = Boolean(activeStreamId && liveStreamIsLive);
   const callPackages = {
@@ -1670,7 +1711,19 @@ useEffect(() => {
                         <div className="flex flex-col items-center text-center p-1">
                            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{pkg.emoji}</div>
                            <div className="font-bold text-2xl text-white mb-1">{formatCoins(pkg.coins)}</div>
-                           <div className="text-lg font-semibold text-green-400 mb-1">{pkg.price}</div>
+                           <div className="text-lg font-semibold text-green-400 mb-1">
+                             {coinPackDiscountLoaded && coinPackDiscountPercent > 0 ? (
+                               <>
+                                 <span className="mr-2 text-sm text-gray-500 line-through">{pkg.price}</span>
+                                 ${(pkg.usdPrice * (100 - coinPackDiscountPercent) / 100).toFixed(2)}
+                               </>
+                             ) : pkg.price}
+                           </div>
+                           {coinPackDiscountLoaded && coinPackDiscountPercent > 0 && (
+                             <div className="text-xs text-green-300 mb-1">
+                               {coinPackDiscountPercent}% membership discount
+                             </div>
+                           )}
                            <div className="text-sm text-gray-400 mb-4">Troll Coins</div>
 
                             <button
@@ -1767,33 +1820,95 @@ useEffect(() => {
                    </div>
                 </div>
 
-                <div className="bg-black/30 border border-white/10 rounded-xl p-6 md:col-span-2">
-                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-blue-400" />
-                      Card Rules
-                   </h3>
-                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
-                      <li className="flex items-start gap-2">
-                         <span className="text-purple-400 font-bold">•</span>
-                         <span><strong className="text-white">8% Finance Fee:</strong> Applied immediately to any credit purchase.</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                         <span className="text-red-400 font-bold">•</span>
-                         <span><strong className="text-white">Direct Purchase Only:</strong> Use your card directly in the shop. No cash advances or transfers.</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                         <span className="text-yellow-400 font-bold">•</span>
-                         <span><strong className="text-white">Cashout Block:</strong> You cannot request a payout while you have ANY credit debt.</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                         <span className="text-green-400 font-bold">•</span>
-                         <span><strong className="text-white">Dynamic Limit:</strong> Increases by 1 coin for every day your account exists.</span>
-                      </li>
-                   </ul>
-                </div>
-              </div>
+                 <div className="bg-black/30 border border-white/10 rounded-xl p-6 md:col-span-2">
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                       <AlertCircle className="w-5 h-5 text-blue-400" />
+                       Card Rules
+                    </h3>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
+                       <li className="flex items-start gap-2">
+                          <span className="text-purple-400 font-bold">•</span>
+                          <span><strong className="text-white">8% Finance Fee:</strong> Applied immediately to any credit purchase.</span>
+                       </li>
+                       <li className="flex items-start gap-2">
+                          <span className="text-red-400 font-bold">•</span>
+                          <span><strong className="text-white">Direct Purchase Only:</strong> Use your card directly in the shop. No cash advances or transfers.</span>
+                       </li>
+                       <li className="flex items-start gap-2">
+                          <span className="text-yellow-400 font-bold">•</span>
+                          <span><strong className="text-white">Cashout Block:</strong> You cannot request a payout while you have ANY credit debt.</span>
+                       </li>
+                       <li className="flex items-start gap-2">
+                          <span className="text-green-400 font-bold">•</span>
+                          <span><strong className="text-white">Dynamic Limit:</strong> Increases by 1 coin for every day your account exists.</span>
+                       </li>
+                    </ul>
+                 </div>
+               </div>
 
-              {/* Legacy Loans Section */}
+               {/* Credit Score Report */}
+               <div className="bg-gradient-to-br from-indigo-900/50 via-black to-black border border-indigo-500/30 rounded-xl p-6 relative overflow-hidden group md:col-span-2">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none" />
+                  <div className="relative z-10">
+                     <div className="flex items-center justify-between mb-4">
+                        <div>
+                           <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
+                              <Shield className="w-6 h-6 text-indigo-400" />
+                              Your Credit Score
+                           </h2>
+                           <div className="text-xs text-indigo-300/70 font-mono tracking-widest">
+                              {user?.username || 'User'} • Click below to view full report
+                           </div>
+                        </div>
+                        <button
+                           onClick={() => {
+                              setCreditReport(null);
+                              supabase.rpc('get_credit_report', { p_user_id: user?.id }).then(({ data, error }) => {
+                                 if (!error && data) setCreditReport(data);
+                                 setShowCreditReportModal(true);
+                              });
+                           }}
+                           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                           <FileText className="w-4 h-4" />
+                           View Full Report
+                        </button>
+                     </div>
+
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                           <p className="text-xs text-indigo-300 uppercase font-bold mb-1">Credit Score</p>
+                           <div className="text-3xl font-black">
+                              <span className={`${profile?.credit_score >= 500 ? 'text-green-400' : 'text-red-400'}`}>
+                                 {profile?.credit_score ?? 400}
+                              </span>
+                           </div>
+                           <p className="text-sm text-gray-400 mt-1">Min for card: 500</p>
+                        </div>
+                        <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                           <p className="text-xs text-indigo-300 uppercase font-bold mb-1">Credit Limit</p>
+                           <p className="text-2xl font-bold text-white">
+                              {(creditInfo?.limit || 0).toLocaleString()} coins
+                           </p>
+                        </div>
+                        <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                           <p className="text-xs text-indigo-300 uppercase font-bold mb-1">Credit Used</p>
+                           <p className="text-2xl font-bold text-red-400">
+                              {(creditInfo?.used || 0).toLocaleString()} coins
+                           </p>
+                        </div>
+                     </div>
+
+                     <div className="mt-4 p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-lg">
+                        <p className="text-sm text-indigo-200">
+                           <strong className="text-indigo-400">How to increase your score:</strong>
+                           Broadcast live (+1/hr), view streams (+1/2hrs), send gifts (+1 per 1,000 coins), pay off credit card debt (+5), or make small installment purchases. Avoid loans (-1 to -10 each).
+                        </p>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Legacy Loans Section */}
               {activeLoans && activeLoans.length > 0 && (
                                  <div className="space-y-6">
                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
@@ -2336,10 +2451,149 @@ useEffect(() => {
           profile={profile}
           onPaymentSuccess={handlePayPalPaymentSuccess}
         />
+
+        {/* Credit Report Modal */}
+        {showCreditReportModal && creditReport && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-900/90 backdrop-blur-sm rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-indigo-500/30">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-6 h-6 text-indigo-400" />
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Credit Report</h2>
+                    <p className="text-sm text-gray-400">
+                      {creditReport.username} • Score: {creditReport.credit_score} ({creditReport.credit_tier})
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowCreditReportModal(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20">
+                  <p className="text-xs text-indigo-400 uppercase font-bold mb-1">Credit Score</p>
+                  <div className="text-3xl font-black">
+                    <span className={`${creditReport.credit_score >= 500 ? 'text-green-400' : 'text-red-400'}`}>
+                      {creditReport.credit_score}
+                    </span>
+                  </div>
+                  <p className="text-sm text-indigo-300 mt-1">{creditReport.credit_tier}</p>
+                </div>
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20">
+                  <p className="text-xs text-indigo-400 uppercase font-bold mb-1">Credit Limit</p>
+                  <p className="text-2xl font-bold text-white">{creditReport.credit_limit?.toLocaleString() ?? 0} coins</p>
+                </div>
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20">
+                  <p className="text-xs text-indigo-400 uppercase font-bold mb-1">Credit Used</p>
+                  <p className="text-2xl font-bold text-red-400">{creditReport.credit_used?.toLocaleString() ?? 0} coins</p>
+                </div>
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20">
+                  <p className="text-xs text-indigo-400 uppercase font-bold mb-1">Available</p>
+                  <p className="text-2xl font-bold text-green-400">{creditReport.credit_available?.toLocaleString() ?? 0} coins</p>
+                </div>
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20">
+                  <p className="text-xs text-indigo-400 uppercase font-bold mb-1">Application Status</p>
+                  <p className={`text-white font-bold ${creditReport.application_status === 'approved' ? 'text-green-400' : creditReport.application_status === 'denied' ? 'text-red-400' : 'text-yellow-400'}`}>
+                    {creditReport.application_status?.replace(/_/g, ' ') || 'None'}
+                  </p>
+                </div>
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20">
+                  <p className="text-xs text-indigo-400 uppercase font-bold mb-1">Credit Card Active</p>
+                  <p className={`text-white font-bold ${creditReport.credit_card_active ? 'text-green-400' : 'text-gray-400'}`}>
+                    {creditReport.credit_card_active ? 'Yes' : 'No'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20">
+                  <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Activity This Month
+                  </h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Broadcast Hours</span>
+                      <span className="text-white font-mono">{creditReport.broadcast_hours_this_month ?? 0} hrs</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Viewing Hours</span>
+                      <span className="text-white font-mono">{creditReport.viewing_hours_this_month ?? 0} hrs</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Gifts Sent</span>
+                      <span className="text-white font-mono">{creditReport.gifts_sent ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Gifts Received</span>
+                      <span className="text-white font-mono">{creditReport.gifts_received ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Small Installment Purchases</span>
+                      <span className="text-white font-mono">{creditReport.small_installment_purchases ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Active Loans</span>
+                      <span className="text-white font-mono">{creditReport.active_loans ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20">
+                  <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    <ArrowUpRight className="w-4 h-4" />
+                    How to Increase Your Score
+                  </h3>
+                  <ul className="text-sm text-indigo-200 space-y-2 list-disc pl-5">
+                    <li>Broadcast live streams (+1 point per verified host hour)</li>
+                    <li>View live streams (+1 point per 2 verified viewer hours)</li>
+                    <li>Send gifts in streams (+1 point per 1,000 coins gifted)</li>
+                    <li>Pay off credit card debt (+5 points per payment)</li>
+                    <li>Make small installment purchases (under 100 coins via credit card)</li>
+                    <li>Avoid taking loans (each loan drops score by 1–10 points)</li>
+                  </ul>
+                </div>
+              </div>
+
+              {creditReport.recent_events && creditReport.recent_events.length > 0 && (
+                <div className="p-4 bg-indigo-900/50 rounded-xl border border-indigo-500/20 mb-6">
+                  <h3 className="text-sm font-bold text-white mb-3">Recent Credit Events (90 Days)</h3>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {creditReport.recent_events.map((event, i) => (
+                      <div key={i} className="p-2 bg-indigo-900/30 rounded-lg text-xs">
+                        <div className="flex justify-between mb-1">
+                          <span className={`font-bold ${event.delta > 0 ? 'text-green-400' : event.delta < 0 ? 'text-red-400' : 'text-indigo-400'}`}>
+                            {event.event_type.replace(/_/g, ' ')}
+                          </span>
+                          <span className="text-indigo-500">{new Date(event.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div className={`text-white ${event.delta > 0 ? '+' : ''}${event.delta}`}>
+                          {event.delta > 0 ? '+' : ''}{event.delta} points
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowCreditReportModal(false)}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-semibold transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       )
   );
 }
-
-
 

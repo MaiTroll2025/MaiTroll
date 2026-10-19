@@ -149,14 +149,6 @@ export const giftEffectsMap: Record<string, GiftEffect> = {
     icon: '💄',
     duration: 8000,
   },
-  'gift_rainbow': {
-    id: 'gift_rainbow',
-    name: 'Rainbow Pride',
-    effectFile: 'effects/rainbow',
-    animationFile: 'animations/rainbow.json',
-    icon: '🌈',
-    duration: 12000,
-  },
   'gift_fire': {
     id: 'gift_fire',
     name: 'Fire Aura',
@@ -228,7 +220,7 @@ export const giftEffectsMap: Record<string, GiftEffect> = {
 
 // Determine gift category based on gift ID
 export function getGiftCategory(giftId: string): GiftCategory {
-  const faceGifts = ['gift_hat', 'gift_glasses', 'gift_crown', 'gift_makeup', 'gift_rainbow', 'gift_fire', 'gift_angel', 'gift_devil'];
+  const faceGifts = ['gift_hat', 'gift_glasses', 'gift_crown', 'gift_makeup', 'gift_fire', 'gift_angel', 'gift_devil'];
   const grandGifts = ['gift_rocket', 'gift_dragon', 'gift_rain', 'gift_car', 'gift_house', 'gift_yacht'];
   
   if (faceGifts.includes(giftId)) return 'face';

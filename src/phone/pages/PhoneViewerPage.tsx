@@ -7,7 +7,7 @@ import React, {
   useState,
 } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Bell, Gift, Heart, Mic, MicOff, Plus, Radio, Share2, Users, Video, VideoOff, Zap } from 'lucide-react';
+import { ArrowLeft, Bell, Gift, Heart, Mic, MicOff, Plus, Radio, Share2, Users, Video, VideoOff, X, Zap } from 'lucide-react';
 
 import {
   RoomEvent,
@@ -21,6 +21,7 @@ import {
 import {
   useAuthStore,
 } from '@/lib/store'
+import { useCreditActivityHeartbeat } from '@/lib/hooks/useCreditActivityHeartbeat'
 import UserMiniProfile from '@/components/user/UserMiniProfile'
 import ChatMessageReportButton from '@/components/broadcast/ChatMessageReportButton'
 import { useBlockedUsers } from '@/hooks/useBlockedUsers'
@@ -37,11 +38,8 @@ import type {
 } from '@/types/broadcast'
 import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
 
-import {
-  useLiveKitRoom,
-} from '@/hooks/useLiveKitRoom'
-import { useGetStreamRoom } from '@/hooks/useGetStreamRoom'
-import { getLiveKitRoomName, getRTCProvider } from '@/lib/liveUtils'
+import { useLiveKitRoom } from '@/hooks/useLiveKitRoom'
+import { getLiveKitRoomName } from '@/lib/liveUtils'
 import { useLiveStreams } from '@/hooks/useQueries'
 import { applyCameraVideoPresentation } from '@/lib/cameraVideoPresentation'
 
@@ -62,6 +60,7 @@ import {
   GiftSystemProvider,
 } from '@/lib/hooks/useGiftSystem'
 import UndoRecentGiftBar from '@/components/broadcast/UndoRecentGiftBar'
+import { BattlePot } from '@/components/broadcast/BattlePot'
 import { useTargetedGiftQueue, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
 import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
@@ -109,6 +108,7 @@ import {
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BattleView from '@/pages/broadcast/BattleView'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
+import GiftFlyOverlay from '@/components/broadcast/GiftFlyOverlay'
 import UserActionModal from '@/components/broadcast/UserActionModal'
 import { useFeaturedLive } from '@/hooks/useFeaturedLive'
 import { FeaturedBanner } from '@/components/featured/FeaturedBanner'
@@ -121,6 +121,8 @@ import MiniMaiPayCashoutModal from '@/components/broadcast/MiniMaiPayCashoutModa
 import { useCashoutBanner } from '@/hooks/useCashoutBanner'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
+import PhoneViewerRtcModButton from '@/phone/components/PhoneViewerRtcModButton'
+import { isStaffProfile } from '@/lib/staff'
 
 interface SeatState {
   participant: any
@@ -718,7 +720,6 @@ const PhoneRemoteVideo = memo(
       videoTrack?.mediaStreamTrack?.id ||
       videoTrack?.sid ||
       null
-    const getStreamVideo = participant?.videoStream
 
     const audioTrackId =
       audioTrack?.mediaStreamTrack?.id ||
@@ -729,13 +730,12 @@ const PhoneRemoteVideo = memo(
       const video = videoRef.current
       if (!video) return
       const nativeTrack =
-        getStreamVideo?.getVideoTracks?.()[0] ||
         videoTrack?.mediaStreamTrack
       applyCameraVideoPresentation(video, {
         track: nativeTrack,
-        isLocal: true,
+        isLocal: false,
       })
-    }, [getStreamVideo, videoTrack, videoTrackId, trackTick])
+    }, [videoTrack, videoTrackId, trackTick])
 
     useEffect(() => {
       const video =
@@ -745,31 +745,6 @@ const PhoneRemoteVideo = memo(
 
       const previous =
         attachedVideoRef.current
-
-      if (getStreamVideo instanceof MediaStream) {
-        if (previous) {
-          try {
-            previous.detach(video)
-          } catch {
-            // ignore
-          }
-          attachedVideoRef.current = null
-        }
-
-        video.srcObject = getStreamVideo
-        video.autoplay = true
-        video.playsInline = true
-        video.muted = true
-        void video.play().catch((error) => {
-          console.warn('[PhoneViewerPage] GetStream video playback failed', error)
-        })
-
-        return () => {
-          if (video.srcObject === getStreamVideo) {
-            video.srcObject = null
-          }
-        }
-      }
 
       const previousId =
         previous?.mediaStreamTrack?.id ||
@@ -857,7 +832,6 @@ const PhoneRemoteVideo = memo(
         }
       }
     }, [
-      getStreamVideo,
       videoTrack,
       videoTrackId,
       trackTick,
@@ -868,20 +842,6 @@ const PhoneRemoteVideo = memo(
         audioRef.current
 
       if (!audio) return
-
-      const getStreamAudio = participant?.audioStream
-      if (getStreamAudio instanceof MediaStream) {
-        audio.srcObject = getStreamAudio
-        audio.autoplay = true
-        void audio.play().catch((error) => {
-          console.warn('[PhoneViewerPage] GetStream audio playback failed', error)
-        })
-        return () => {
-          if (audio.srcObject === getStreamAudio) {
-            audio.srcObject = null
-          }
-        }
-      }
 
       if (
         audioTrackId ===
@@ -909,12 +869,8 @@ const PhoneRemoteVideo = memo(
     }, [
       audioTrack,
       audioTrackId,
-      participant?.audioStream,
       trackTick,
     ])
-
-    const hasGetStreamVideo =
-      participant?.videoStream instanceof MediaStream
 
     return (
       <div
@@ -939,7 +895,6 @@ const PhoneRemoteVideo = memo(
         />
 
         {!videoTrack &&
-          !hasGetStreamVideo &&
           !attachedVideoRef.current && (
             <div className="absolute inset-0">
               {fallback}
@@ -1063,6 +1018,7 @@ export default function PhoneViewerPage() {
     user,
     profile,
   } = useAuthStore()
+  useCreditActivityHeartbeat(resolvedStreamId, 'viewer', !!user?.id)
   const leaveCurrentRoomRef = useRef<() => Promise<void>>(async () => {})
   const leaveAudienceRef = useRef<() => Promise<void>>(async () => {})
 
@@ -1237,6 +1193,9 @@ export default function PhoneViewerPage() {
 
   const [viewerCount, setViewerCount] =
     useState(0)
+
+  const [showViewerList, setShowViewerList] =
+    useState(false)
 
   const [liked, setLiked] =
     useState(false)
@@ -1844,75 +1803,75 @@ export default function PhoneViewerPage() {
     }
   }, [resolvedStreamId])
 
-   const canClickFloatingChatUsername =
-     hasModActionsAccess(profile)
+const canClickFloatingChatUsername =
+      hasModActionsAccess(profile)
 
-   const handleOpenUserAction = useCallback(
-     async (info: {
-       userId: string
-       username?: string
-       role?: string
-       createdAt?: string
-     }) => {
-       const normalizedUserId = info.userId
-       const normalizedUsername = info.username || ''
-       const isAnonUsername = isAnonymousDisplayName(normalizedUsername)
+    const handleOpenUserAction = useCallback(
+      async (info: {
+        userId: string
+        username?: string
+        role?: string
+        createdAt?: string
+      }) => {
+        const normalizedUserId = info.userId
+        const normalizedUsername = info.username || ''
+        const isAnonUsername = isAnonymousDisplayName(normalizedUsername)
 
-       if (!isValidUuid(normalizedUserId)) {
-         if (isAnonUsername) {
-           setUserActionTarget({
-             userId: `anon-${normalizedUsername}`,
-             username: normalizedUsername,
-             role: 'anonymous',
-             createdAt: null,
-           })
-           setShowModActionMenu(canClickFloatingChatUsername)
-           setShowViewerAction(!canClickFloatingChatUsername)
-           return
-         }
-         toast.error('Invalid user identifier')
-         return
-       }
+        if (!isValidUuid(normalizedUserId)) {
+          if (isAnonUsername) {
+            setUserActionTarget({
+              userId: `anon-${normalizedUsername}`,
+              username: normalizedUsername,
+              role: 'anonymous',
+              createdAt: null,
+            })
+            setShowModActionMenu(canClickFloatingChatUsername)
+            setShowViewerAction(!canClickFloatingChatUsername)
+            return
+          }
+          toast.error('Invalid user identifier')
+          return
+        }
 
-       try {
-         const { data, error } = await supabase
-           .from('user_profiles')
-           .select(
-             'id, username, role, troll_role, avatar_url',
-           )
-           .eq('id', normalizedUserId)
-           .maybeSingle()
+        try {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select(
+              'id, username, role, troll_role, avatar_url',
+            )
+            .eq('id', normalizedUserId)
+            .maybeSingle()
 
-         if (error || !data?.id) {
-           console.error(
-             '[MOD TARGET RESOLUTION] Profile not found for UUID:',
-             normalizedUserId,
-             error,
-           )
-           toast.error(
-             'MaiTroll profile could not be resolved for this participant.',
-           )
-           return
-         }
+          if (error || !data?.id) {
+            console.error(
+              '[MOD TARGET RESOLUTION] Profile not found for UUID:',
+              normalizedUserId,
+              error,
+            )
+            toast.error(
+              'MaiTroll profile could not be resolved for this participant.',
+            )
+            return
+          }
 
-         setUserActionTarget({
-           userId: data.id,
-           username: data.username || normalizedUsername,
-           role: data.role || data.troll_role || info.role,
-           createdAt: info.createdAt,
-         })
-         setShowModActionMenu(canClickFloatingChatUsername)
-         setShowViewerAction(!canClickFloatingChatUsername)
-       } catch (err) {
-         console.error(
-           '[PhoneViewerPage] Error opening user action:',
-           err,
-         )
-         toast.error('Failed to open user profile')
-       }
-     },
-     [canClickFloatingChatUsername],
-   )
+          setUserActionTarget({
+            userId: data.id,
+            username: data.username || normalizedUsername,
+            role: data.role || data.troll_role || info.role,
+            createdAt: info.createdAt,
+          })
+          setShowModActionMenu(canClickFloatingChatUsername)
+          setShowViewerAction(!canClickFloatingChatUsername)
+        } catch (err) {
+          console.error(
+            '[PhoneViewerPage] Error opening user action:',
+            err,
+          )
+          toast.error('Failed to open user profile')
+        }
+      },
+      [canClickFloatingChatUsername],
+    )
 
     const handleOpenFloatingChatUsername = useCallback(
       async (username: string) => {
@@ -2035,16 +1994,63 @@ export default function PhoneViewerPage() {
       AUDIENCE
   ======================================================================== */
 
+  function handleOwnAudiencePresence(event: any) {
+    if (!resolvedStreamId || !user?.id || streamEndedRef.current) return
+
+    const eventType = event.eventType
+    const newRow = event.new
+    const oldRow = event.old
+    const removesCurrentViewer =
+      (eventType === 'DELETE' && oldRow?.user_id === user.id) ||
+      (eventType === 'UPDATE' &&
+        newRow?.stream_id === resolvedStreamId &&
+        newRow?.user_id === user.id &&
+        newRow.is_active === false)
+
+    if (!removesCurrentViewer) return
+
+    kickProcessedRef.current = true
+    void (async () => {
+      try {
+        if (isPublishing) await unpublishLocalTracks()
+        await leaveAudience()
+        await leaveCurrentRoomRef.current()
+      } catch {
+        // Cleanup continues through the existing kick navigation path.
+      }
+
+      localStorage.setItem(
+        getKickStorageKey(resolvedStreamId, user.id),
+        JSON.stringify({
+          timestamp: Date.now(),
+          resolvedStreamId,
+          reason: 'Removed from broadcast',
+        }),
+      )
+
+      hasJoinedAudienceRef.current = false
+      joiningAudienceRef.current = false
+      currentRoomKeyRef.current = null
+      toast.error('Removed from broadcast')
+      navigate('/', { replace: true })
+    })()
+  }
+
   const {
+    audience,
     activeAudience,
     joinAudience,
     leaveAudience,
     heartbeatAudience,
+    isAudienceLoading,
   } =
     useStreamAudiencePresence(
       resolvedStreamId || '',
       user?.id,
       {
+        loadAudience: showViewerList,
+        audienceLimit: 100,
+        onOwnPresenceChange: handleOwnAudiencePresence,
         onPresenceChange: event => {
           if (!resolvedStreamId) return
           if (!event?.member?.username) return
@@ -2127,8 +2133,8 @@ export default function PhoneViewerPage() {
       resolvedStreamId,
     ])
 
-  // Determine RTC provider from stream metadata
-  const rtcProvider = getRTCProvider(stream)
+  // All viewers join via LiveKit
+  const hasResolvedRTCProvider = Boolean(stream)
 
   const audienceName =
     useMemo(() => {
@@ -2188,31 +2194,16 @@ export default function PhoneViewerPage() {
   })
   const publishLiveKitTracks = liveKitRoom.publishLocalTracks
 
-  // GetStream hook (for staff/official streams)
-  const getStreamRoom = useGetStreamRoom({
-    roomId: resolvedStreamId || roomId,
-    roomType: 'broadcast',
-    role: 'viewer',
-    audioOnly: false,
-    publish: false,
-    userName: audienceName,
-    identity: viewerIdentity,
-    onUserJoined: noop,
-    onUserLeft: noop,
-    onError: handleLiveKitError,
-  })
-
-  // Select the appropriate room based on provider
-  const isGetStream = rtcProvider === 'getstream'
-  const remoteUsers = isGetStream ? getStreamRoom.remoteUsers : liveKitRoom.remoteUsers
-  const room = isGetStream ? getStreamRoom.call : liveKitRoom.room
-  const isConnected = isGetStream ? getStreamRoom.isConnected : liveKitRoom.isConnected
-  const isPublishing = isGetStream ? getStreamRoom.isPublishing : liveKitRoom.isPublishing
-  const setMicEnabled = isGetStream ? getStreamRoom.setMicrophoneEnabled : liveKitRoom.setMicEnabled
-  const setCameraEnabled = isGetStream ? getStreamRoom.setCameraEnabled : liveKitRoom.setCameraEnabled
-  const leaveRoom = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.leaveRoom
-  const joinAsAudience = isGetStream ? getStreamRoom.joinAsAudience : liveKitRoom.joinAsAudience
-  const unpublishLocalTracks = isGetStream ? getStreamRoom.leaveRoom : liveKitRoom.unpublishLocalTracks
+  // All viewers use LiveKit
+  const remoteUsers = liveKitRoom.remoteUsers
+  const room = liveKitRoom.room
+  const isConnected = liveKitRoom.isConnected
+  const isPublishing = liveKitRoom.isPublishing
+  const setMicEnabled = liveKitRoom.setMicEnabled
+  const setCameraEnabled = liveKitRoom.setCameraEnabled
+  const leaveRoom = liveKitRoom.leaveRoom
+  const joinAsAudience = liveKitRoom.joinAsAudience
+  const unpublishLocalTracks = liveKitRoom.unpublishLocalTracks
   leaveCurrentRoomRef.current = async () => {
     await leaveRoom()
   }
@@ -2231,7 +2222,7 @@ export default function PhoneViewerPage() {
    ======================================================================== */
 
   useEffect(() => {
-    if (!resolvedStreamId || !stream || !roomId || !viewerIdentity) {
+    if (!resolvedStreamId || !stream || !hasResolvedRTCProvider || !roomId || !viewerIdentity) {
       return
     }
 
@@ -2259,7 +2250,7 @@ export default function PhoneViewerPage() {
     void joinAsAudience({
       userId: viewerIdentity,
       streamId: resolvedStreamId,
-      roomName: isGetStream ? resolvedStreamId : roomId,
+      roomName: roomId,
       viewerIdentity,
       publishCapable: false,
     })
@@ -2295,8 +2286,8 @@ export default function PhoneViewerPage() {
    }, [
      resolvedStreamId,
      stream,
-     roomId,
-     isGetStream,
+      roomId,
+      hasResolvedRTCProvider,
      viewerIdentity,
      joinAsAudience,
      viewerError,
@@ -2568,82 +2559,6 @@ export default function PhoneViewerPage() {
           toast.error('Removed from broadcast')
           navigate('/', { replace: true })
         })()
-      },
-      onAudiencePresence: (event: any) => {
-        if (!resolvedStreamId || !user?.id) return
-        if (streamEndedRef.current) return
-
-        const evtType = event.eventType
-        const newRow = event.new
-        const oldRow = event.old
-
-        if (evtType === 'DELETE') {
-          const deletedUserId = oldRow?.user_id
-          if (deletedUserId && deletedUserId === user.id) {
-            kickProcessedRef.current = true
-            void (async () => {
-              try {
-                if (isPublishing) {
-                  await unpublishLocalTracks()
-                }
-                await leaveAudience()
-                await leaveCurrentRoomRef.current()
-              } catch {
-                // ignore cleanup errors
-              }
-
-              localStorage.setItem(
-                getKickStorageKey(resolvedStreamId, user.id),
-                JSON.stringify({
-                  timestamp: Date.now(),
-                  resolvedStreamId,
-                  reason: 'Removed from broadcast',
-                }),
-              )
-
-              hasJoinedAudienceRef.current = false
-              joiningAudienceRef.current = false
-              currentRoomKeyRef.current = null
-              toast.error('Removed from broadcast')
-              navigate('/', { replace: true })
-            })()
-          }
-          return
-        }
-
-        if (evtType === 'UPDATE' && newRow) {
-          if (newRow.stream_id !== resolvedStreamId) return
-          if (newRow.user_id !== user.id) return
-          if (newRow.is_active === false) {
-            kickProcessedRef.current = true
-            void (async () => {
-              try {
-                if (isPublishing) {
-                  await unpublishLocalTracks()
-                }
-                await leaveAudience()
-                await leaveCurrentRoomRef.current()
-              } catch {
-                // ignore cleanup errors
-              }
-
-              localStorage.setItem(
-                getKickStorageKey(resolvedStreamId, user.id),
-                JSON.stringify({
-                  timestamp: Date.now(),
-                  resolvedStreamId,
-                  reason: 'Removed from broadcast',
-                }),
-              )
-
-              hasJoinedAudienceRef.current = false
-              joiningAudienceRef.current = false
-              currentRoomKeyRef.current = null
-              toast.error('Removed from broadcast')
-              navigate('/', { replace: true })
-            })()
-          }
-        }
       },
       onStream: (event: any) => {
         const next = event?.new || event
@@ -2947,8 +2862,7 @@ useEffect(() => {
     >({})
 
   useEffect(() => {
-    // Skip seat sync for GetStream - staff/official streams don't use LiveKit seat system
-    if (isGetStream || !room) {
+    if (!room) {
       return
     }
 
@@ -3031,7 +2945,7 @@ useEffect(() => {
     }
 
     // Only set up LiveKit event listeners for LiveKit streams
-    if (!isGetStream && liveKitRoom.room) {
+    if (liveKitRoom.room) {
       const activeLiveKitRoom = liveKitRoom.room
       activeLiveKitRoom.on(
         RoomEvent.TrackSubscribed,
@@ -3076,7 +2990,6 @@ useEffect(() => {
       }
     }
   }, [
-    isGetStream,
     liveKitRoom.room,
     remoteParticipants,
     room,
@@ -3110,8 +3023,7 @@ useEffect(() => {
   }, [mySeat, user?.id])
 
   useEffect(() => {
-    // Skip seat publish/unpublish for GetStream - handled differently
-    if (isGetStream || !room || !isConnected) {
+    if (!room || !isConnected) {
       return
     }
 
@@ -3159,7 +3071,6 @@ useEffect(() => {
     }
 }, [
       isUserOnStage,
-      isGetStream,
       isConnected,
       isPublishing,
       room,
@@ -3176,6 +3087,8 @@ useEffect(() => {
   const wasOnStageRef = useRef(isUserOnStage)
 
   useEffect(() => {
+    if (!hasResolvedRTCProvider) return
+
     if (wasOnStageRef.current) {
       wasOnStageRef.current = isUserOnStage
       return
@@ -3197,13 +3110,15 @@ useEffect(() => {
         const result = await joinAsAudience({
           userId: viewerIdentityRef.current || viewerIdentity,
           streamId: resolvedStreamId,
-          roomName: roomId,
+      roomName: roomId,
           viewerIdentity: viewerIdentityRef.current || viewerIdentity,
           publishCapable: !isBattleMode && true,
         })
 
         if (!isBattleMode) {
           await publishLiveKitTracks()
+        }
+        if (!isBattleMode) {
           if (mySeat?.seat_index != null) {
             try {
               await markSeatLive(mySeat.seat_index, viewerIdentityRef.current || viewerIdentity)
@@ -3221,7 +3136,7 @@ useEffect(() => {
         joiningAudienceRef.current = false
       }
     })()
-   }, [isUserOnStage, roomId, resolvedStreamId, viewerIdentity, joinAsAudience, publishLiveKitTracks, battleId, mySeat?.seat_index, markSeatLive])
+   }, [isUserOnStage, hasResolvedRTCProvider, roomId, resolvedStreamId, viewerIdentity, joinAsAudience, publishLiveKitTracks, battleId, mySeat?.seat_index, markSeatLive])
 
   /* ========================================================================
       AUDIENCE PRESENCE
@@ -3257,23 +3172,8 @@ useEffect(() => {
    ])
 
   useEffect(() => {
-    const audienceCount =
-      activeAudience?.length || 0
-
-    const serverCount =
-      Number(
-        (stream as any)?.current_viewers || 0,
-      ) || 0
-
-    setViewerCount(
-      audienceCount > 0
-        ? audienceCount
-        : serverCount,
-    )
-  }, [
-    activeAudience,
-    stream,
-  ])
+    setViewerCount(Number(stream?.current_viewers || 0))
+  }, [stream?.current_viewers])
 
    /* ========================================================================
       KICK / REMOVAL HANDLING
@@ -4060,6 +3960,7 @@ useEffect(() => {
   const handleMic =
     useCallback(
       async () => {
+        if (!isUserOnStage) return
         const next =
           !micEnabled
 
@@ -4077,12 +3978,14 @@ useEffect(() => {
       [
         micEnabled,
         setMicEnabled,
+        isUserOnStage,
       ],
     )
 
   const handleCamera =
     useCallback(
       async () => {
+        if (!isUserOnStage) return
         const next =
           !cameraEnabled
 
@@ -4100,6 +4003,7 @@ useEffect(() => {
       [
         cameraEnabled,
         setCameraEnabled,
+        isUserOnStage,
       ],
     )
 
@@ -4396,6 +4300,7 @@ useEffect(() => {
           stream.user_id
         }
       >
+      <GiftFlyOverlay streamId={resolvedStreamId} />
       <UndoRecentGiftBar />
       {isFeaturedEvent && (
         <FeaturedBanner
@@ -4561,6 +4466,7 @@ useEffect(() => {
                   viewerCount={viewerCount}
                   likes={stream?.total_likes ?? 0}
                   maxVisible={7}
+                  onViewerCountClick={() => setShowViewerList(true)}
                 />
               </div>
 
@@ -4667,7 +4573,62 @@ useEffect(() => {
               </div>
             </div>
           </div>
+          {stream?.user_id && (
+            <BattlePot
+              broadcasterId={stream.user_id}
+              streamId={resolvedStreamId}
+              isMobile
+              className="pointer-events-auto w-full"
+              onBattleStart={() => {}}
+            />
+          )}
         </div>
+        )}
+
+        {showViewerList && (
+          <div
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+            onClick={() => setShowViewerList(false)}
+          >
+            <div
+              className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl"
+              onClick={event => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-white">Active Viewers</h3>
+                  <p className="text-xs text-zinc-500">Showing up to 100 viewers</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowViewerList(false)}
+                  aria-label="Close active viewers"
+                  className="rounded-lg p-1 text-zinc-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="max-h-80 space-y-2 overflow-y-auto">
+                {isAudienceLoading ? (
+                  <p className="text-sm text-zinc-500">Loading viewers...</p>
+                ) : audience.length === 0 ? (
+                  <p className="text-sm text-zinc-500">No active viewers</p>
+                ) : (
+                  audience.filter(member => member.is_active && !member.left_at).map(member => (
+                    <div key={member.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-xs font-bold text-cyan-300">
+                        {member.username?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold text-white">{member.username || 'Viewer'}</div>
+                        <div className="text-xs text-zinc-500">{member.role || 'audience'}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Mai Bag moved below share/gift buttons */}
@@ -4881,7 +4842,7 @@ useEffect(() => {
                               )}
                           </div>
 
-                           {seat.isMine && (
+                           {seat.isMine && isUserOnStage && (
                              <>
                                <button
                                  type="button"
@@ -5259,6 +5220,16 @@ useEffect(() => {
                 createdAt: null,
               })
             }}
+          />
+        )}
+
+        {stream && isStaffProfile(profile) && (
+          <PhoneViewerRtcModButton
+            streamId={resolvedStreamId}
+            broadcasterId={hostId}
+            audience={audienceWithAnon}
+            seats={seatCards}
+            currentUserId={user?.id}
           />
         )}
 

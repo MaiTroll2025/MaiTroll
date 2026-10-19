@@ -19,6 +19,7 @@ import React from 'react';
 import ProfileFrame from './ProfileFrame';
 import type { FrameSize } from './ProfileFrame';
 import { useProfileFrameContext } from '../../hooks/useProfileFrameContext';
+import { usePublicProfileIdentity } from '../../hooks/usePublicProfileIdentity';
 
 interface AvatarWithFrameProps {
   /** User ID to look up their equipped frame */
@@ -56,16 +57,23 @@ export default function AvatarWithFrame({
   asDiv = false,
 }: AvatarWithFrameProps) {
   const { getUserFrame } = useProfileFrameContext();
+  const { identity, loading } = usePublicProfileIdentity(userId);
   const userFrame = getUserFrame(userId || '');
   const frame = userFrame?.frame || null;
 
+  const safeAvatarUrl = userId
+    ? identity?.avatar_url || (loading ? '/ghost-basic.svg' : '/default-avatar.png')
+    : avatarUrl;
+  const safeUsername = userId
+    ? identity?.username || (loading ? 'Ghost Mode' : 'User')
+    : username;
   const resolvedAvatarUrl =
-    avatarUrl ||
+    safeAvatarUrl ||
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId || 'default'}`;
 
   // If no frame, render plain avatar
   if (!frame) {
-    if (fallback && !avatarUrl) {
+    if (fallback && !safeAvatarUrl) {
       return <>{fallback}</>;
     }
     if (asDiv) {
@@ -73,7 +81,7 @@ export default function AvatarWithFrame({
         <div className={className} onClick={onClick}>
           <img
             src={resolvedAvatarUrl}
-            alt={username || 'Avatar'}
+            alt={safeUsername || 'Avatar'}
             className="w-full h-full object-cover rounded-full"
             draggable={false}
             loading="lazy"
@@ -84,7 +92,7 @@ export default function AvatarWithFrame({
     return (
       <img
         src={resolvedAvatarUrl}
-        alt={username || 'Avatar'}
+        alt={safeUsername || 'Avatar'}
         className={className}
         onClick={onClick}
         draggable={false}
@@ -99,7 +107,7 @@ export default function AvatarWithFrame({
       frame={frame}
       avatarUrl={resolvedAvatarUrl}
       size={size}
-      username={username}
+      username={safeUsername}
       showBadge={showBadge}
       className={className}
       onClick={onClick}

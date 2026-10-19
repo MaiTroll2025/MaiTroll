@@ -558,7 +558,7 @@ export default function BroadcastChat({
               : 'chat';
 
       return {
-        id: incoming.txn_id || `${incoming.s}-${incoming.ts}`,
+        id: incoming.message_id || payload.message_id || incoming.txn_id || `${incoming.s}-${incoming.ts}`,
         txn_id: incoming.txn_id,
         user_id: incoming.s || payload.user_id || 'system',
         content:
@@ -1014,6 +1014,46 @@ export default function BroadcastChat({
 
       onStreamEnd?.();
     },
+    onGift: (event) => {
+      if (event.table !== 'broadcast:gift_sent') return;
+
+      const giftData = event.new as Record<string, unknown> | null;
+      if (!giftData) return;
+
+      const giftId = String(giftData.stream_gift_id || giftData.transaction_id || giftData.id || '');
+      const senderId = String(giftData.sender_id || '');
+      const giftName = String(giftData.gift_name || giftData.gift_slug || 'gift');
+      const senderName = String(giftData.sender_name || 'Someone');
+      const receiverName = String(giftData.receiver_name || 'the recipient');
+      const quantity = Math.max(1, Number(giftData.quantity) || 1);
+      if (!giftId || !senderId) return;
+
+      const giftMessage: Message = {
+        id: giftId,
+        txn_id: giftId,
+        user_id: senderId,
+        content: `GIFT_EVENT:${giftName}:${quantity}:${Number(giftData.amount) || 0}:${String(giftData.currency_used || 'coins')}:${Number(giftData.coins_back) || 0}:${Number(giftData.trollmonds_transferred) || 0}`,
+        created_at: String(giftData.created_at || new Date().toISOString()),
+        type: 'gift',
+        gift_type: giftName,
+        gift_amount: quantity,
+        sender_name: senderName,
+        receiver_id: String(giftData.receiver_id || ''),
+        receiver_name: receiverName,
+        trollmonds_transferred: Number(giftData.trollmonds_transferred) || 0,
+        user_profiles: {
+          username: senderName,
+          avatar_url: '',
+        },
+      };
+
+      setMessages((prev) => {
+        if (prev.some((message) => message.id === giftId || message.txn_id === giftId)) return prev;
+        const updated = [...prev, giftMessage];
+        if (updated.length > MAX_MESSAGES) return updated.slice(updated.length - MAX_MESSAGES);
+        return updated;
+      });
+    },
   });
 
   const fetchedStreamIdsRef = useRef<Set<string>>(new Set())
@@ -1316,46 +1356,6 @@ const fetchMessages = async () => {
                 setMessages(prev => prev.filter(msg => msg.id !== messageId));
             }
         )
-        // Also listen for gift_sent events to show in chat
-        .on(
-          'broadcast',
-          { event: 'gift_sent' },
-          (payload: any) => {
-            const giftEnvelope = payload.payload;
-            const giftData = giftEnvelope?.d || giftEnvelope;
-            if (import.meta.env.DEV) console.debug('[BroadcastChat] 🎁🎁🎁 Gift received for chat (gift_sent listener):', giftData);
-            
-            const giftMessage: Message = {
-              id: giftEnvelope?.txn_id || giftData.id || `gift-${Date.now()}`,
-              txn_id: giftEnvelope?.txn_id,
-              user_id: giftEnvelope?.s || giftData.sender_id || 'system',
-              content: `GIFT_EVENT:${giftData.gift_slug || giftData.gift_name}:${giftData.quantity || 1}`,
-              created_at: giftEnvelope?.ts ? new Date(giftEnvelope.ts).toISOString() : (giftData.timestamp || new Date().toISOString()),
-              type: 'gift',
-              gift_type: giftData.gift_slug || giftData.gift_name?.toLowerCase().replace(/\s+/g, '-'),
-              gift_amount: giftData.quantity || 1,
-              sender_name: giftData.sender_name || giftData.user_name || 'Someone',
-              receiver_id: giftData.receiver_id,
-              receiver_name: giftData.receiver_name || 'user',
-              user_profiles: {
-                username: giftData.sender_name || giftData.user_name || 'Someone',
-                avatar_url: null
-              }
-            };
-            
-            setMessages(prev => {
-              if (giftMessage.txn_id && prev.some(m => m.txn_id === giftMessage.txn_id)) {
-                return prev;
-              }
-              if (giftMessage.id && prev.some(m => m.id === giftMessage.id)) {
-                return prev;
-              }
-              const updated = [...prev, giftMessage];
-              if (updated.length > MAX_MESSAGES) return updated.slice(updated.length - MAX_MESSAGES);
-              return updated;
-            });
-          }
-        )
         .subscribe((status) => {
           if (import.meta.env.DEV) console.debug('[BroadcastChat] 📡 Broadcast channel subscription status:', status);
         });
@@ -1576,17 +1576,26 @@ const fetchMessages = async () => {
     const result = await sendChatThroughGate({
       streamId,
       content,
+      txnId,
       isHighlighted: isHighlighted || undefined,
       highlightColor: isHighlighted ? highlightedChatColor : undefined,
     })
-        if (result.ok && broadcastChannelRef.current) {
-            broadcastChannelRef.current.send({
-                type: 'broadcast',
-                event: 'chat',
-                payload: msg
-            });
+        if (!result.ok) {
+            throw new Error(result.error || 'Failed to send message');
         }
-
+        const canonicalMessage = result.envelope
+          ? normalizeIncomingMessage(result.envelope)
+          : null;
+        if (!canonicalMessage) {
+            throw new Error('The chat service returned an invalid confirmation.');
+        }
+        receivedTxnIdsRef.current.add(canonicalMessage.txn_id || txnId);
+        processedMessageIds.current.add(canonicalMessage.id);
+        setMessages(prev => prev.map(message =>
+          message.txn_id === txnId || message.id === txnId
+            ? canonicalMessage
+            : message
+        ));
         trackChatMessage();
         
         // Record family activity for chat message

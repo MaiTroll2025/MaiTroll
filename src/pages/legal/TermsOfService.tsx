@@ -70,7 +70,7 @@ export default function TermsOfService() {
           <strong>6.1 Troll Bank Loans:</strong> Users may apply for loans through the Troll Bank system. All loans must be repaid according to the agreed terms. Failure to make payments for 30 days or more constitutes a default.
         </p>
         <p>
-          <strong>6.2 Credit Cards:</strong> Credit cards may be issued to eligible users based on credit score and account standing. All credit card charges include an 8% finance fee. Credit cards may only be used for approved purchases (Coin Store items, vehicles) and cannot be used for peer-to-peer transfers, gifts, or rent payments. Credit card debt must be repaid promptly to maintain good standing.
+          <strong>6.2 Credit Cards:</strong> Credit cards may be issued to eligible users based on credit score and account standing. Credit cards may be used for approved in-app purchases except coin packs, peer-to-peer transfers, gifts, tips, rent, or payouts. Credit card debt must be repaid promptly to maintain good standing.
         </p>
         <p>
           <strong>6.3 Property and Vehicle Loans:</strong> Properties and vehicles purchased on credit remain subject to the loan agreement until paid in full. Missed payments or defaults may result in repossession.

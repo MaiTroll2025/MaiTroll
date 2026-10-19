@@ -63,11 +63,12 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     viewerCount,
     activeBattles,
     battleParticipants,
+    departedSeatKeys,
     participantContributions,
     remoteUsers,
     userIdToLiveKitIdentity: _userIdToLiveKitIdentity,
     effectiveUserId,
-    isBroadcaster: _isBroadcaster,
+    isBroadcaster,
     profile,
     challengerStream,
     opponentStream,
@@ -182,6 +183,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     const red: MobileParticipantVM[] = [];
 
     for (const p of battleParticipants as any[]) {
+      if (departedSeatKeys.has(`${p.source_stream_id}:${p.user_id}`)) continue;
       const team = p.team === "opponent" ? "red" : "blue";
       const isLocal = effectiveUserId && p.user_id === effectiveUserId;
       let videoTrack = isLocal ? battleLocalVideoTrack : undefined;
@@ -210,7 +212,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       else red.push(vm);
     }
     return { blueVMs: blue, redVMs: red };
-  }, [battleParticipants, participantContributions, resolveTrack, effectiveUserId, battleLocalVideoTrack, battleLocalAudioTrack]);
+  }, [battleParticipants, departedSeatKeys, participantContributions, resolveTrack, effectiveUserId, battleLocalVideoTrack, battleLocalAudioTrack]);
 
   const viewers = useMemo(() => {
     return (battleParticipants as any[])
@@ -312,6 +314,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
           challengerStateCode={challengerStream.state_battle_state_code || null}
           opponentStateCode={opponentStream.state_battle_state_code || null}
           countdown={preBattleCountdown}
+          isBroadcaster={isBroadcaster}
         />
       )}
       <TrollTimeBanner

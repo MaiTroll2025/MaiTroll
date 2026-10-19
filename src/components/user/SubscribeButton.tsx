@@ -70,7 +70,12 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = ({
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Subscription failed');
 
-      toast.success(`Subscribed to ${broadcasterUsername}! (80% to creator, 20% to CEO)`);
+      const feePercent = Number(data.platform_fee_percent ?? 20);
+      toast.success(
+        feePercent === 0
+          ? `Subscribed to ${broadcasterUsername}! Your Mai Supreme benefit waived the platform fee.`
+          : `Subscribed to ${broadcasterUsername}! (${100 - feePercent}% to creator, ${feePercent}% to CEO)`,
+      );
       setIsSubscribed(true);
       await refreshCoins(); // Refresh coin balance (same as bottom nav bar)
       onSubscribe?.();

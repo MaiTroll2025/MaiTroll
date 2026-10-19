@@ -289,6 +289,24 @@ function GiftSystemProviderInner({
 
           const giftId = result?.stream_gift_id || result?.gift_transaction_id || result?.transaction_id
           if (giftId) setLastSentGiftId(giftId)
+          let receiverName = 'the recipient'
+          try {
+            const { data: receiverProfile, error: receiverProfileError } = await supabase
+              .from('user_profiles')
+              .select('username, display_name, email')
+              .eq('id', targetReceiverId)
+              .maybeSingle()
+
+            if (receiverProfileError) throw receiverProfileError
+            receiverName =
+              receiverProfile?.username ||
+              receiverProfile?.display_name ||
+              receiverProfile?.email?.split('@')?.[0] ||
+              receiverName
+          } catch (error) {
+            console.warn('[GiftSystem] Could not resolve gift recipient name:', error)
+          }
+
           const normalizedPayload = {
             id: giftId,
             stream_gift_id: giftId,
@@ -301,6 +319,7 @@ function GiftSystemProviderInner({
             sender_id: user.id,
             sender_name: profile?.username || user.email?.split('@')?.[0] || 'Someone',
             receiver_id: targetReceiverId,
+            receiver_name: receiverName,
             recipient_type: giftMetadata.recipient_type || 'broadcaster',
             recipient_seat_index: giftMetadata.recipient_seat_index ?? null,
             animation_type: gift.animationType || 'video',

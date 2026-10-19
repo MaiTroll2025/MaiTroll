@@ -20,7 +20,7 @@ export interface SingOffState {
   countdown: { targetUserId: string; startAt: number } | null
   view: SingOffView
   authority: SingOffAuthority
-  liveKit: { isConnected: boolean; isPublishing: boolean; hasLocalTracks: boolean }
+  rtcMedia: { isConnected: boolean; isPublishing: boolean; hasLocalTracks: boolean }
   myQueueEntry: SingOffQueueEntry | null
   isConnected: boolean
   error: string | null
@@ -63,9 +63,9 @@ export interface SingOffStore extends SingOffState {
   clearActiveGift: () => void
   setMaiWinnerEffect: (challengerId: string, challengerName: string) => void
   clearMaiWinnerEffect: () => void
-  // view / livekit
+  // view / RTC media state
   setView: (view: SingOffView) => void
-  setLiveKit: (state: Partial<SingOffState['liveKit']>) => void
+  setRtcMedia: (state: Partial<SingOffState['rtcMedia']>) => void
   reset: () => void
 }
 
@@ -86,8 +86,8 @@ const initialState: SingOffState = {
   maiWinnerEffect: null,
   countdown: null,
   view: 'stage',
-  authority: { is_staff: false, is_host: false, is_judge: false, is_ceo: false },
-  liveKit: { isConnected: false, isPublishing: false, hasLocalTracks: false },
+  authority: { is_staff: false, is_admin: false, is_host: false, is_judge: false, is_judge_eligible: false, is_ceo: false },
+  rtcMedia: { isConnected: false, isPublishing: false, hasLocalTracks: false },
   myQueueEntry: null,
   isConnected: false,
   error: null,
@@ -175,7 +175,7 @@ export const useSingOffStore = create<SingOffStore>()((set, get) => ({
   clearMaiWinnerEffect: () => set({ maiWinnerEffect: null }),
 
   setView: (view) => set({ view, chatOpen: false, queueOpen: false, judgesOpen: false }),
-  setLiveKit: (state) => set((s) => ({ liveKit: { ...s.liveKit, ...state } })),
+  setRtcMedia: (state) => set((s) => ({ rtcMedia: { ...s.rtcMedia, ...state } })),
 
   reset: () => set({ ...initialState }),
 }))

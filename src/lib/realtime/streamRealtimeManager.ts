@@ -7,7 +7,6 @@ type StreamRealtimeTable =
   | 'stream_participants'
   | 'battle_sessions'
   | 'stream_seat_sessions'
-  | 'stream_audience_presence'
   | 'broadcast:floating_chat'
   | 'broadcast:seat_joined'
   | 'broadcast:seat_live'
@@ -104,7 +103,6 @@ function createEntry(streamId: string, battleId?: string | null): StreamEntry {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stream_gifts', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_gifts', payload))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'stream_participants', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_participants', payload))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'stream_seat_sessions', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_seat_sessions', payload))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'stream_audience_presence', filter: `stream_id=eq.${streamId}` }, (payload) => emit(entry, 'stream_audience_presence', payload))
     .on('broadcast', { event: 'floating_chat' }, (message) => emitBroadcast(entry, 'floating_chat', message.payload))
     .on('broadcast', { event: 'seat_joined' }, (message) => emitBroadcast(entry, 'seat_joined', message.payload))
     .on('broadcast', { event: 'seat_live' }, (message) => emitBroadcast(entry, 'seat_live', message.payload))
@@ -189,8 +187,8 @@ export function getStreamRealtimeDebugState() {
     status: entry.status,
     handlers: entry.handlers.size,
     tables: entry.battleId
-      ? ['streams', 'stream_messages', 'stream_gifts', 'stream_participants', 'stream_seat_sessions', 'stream_audience_presence', 'battle_sessions']
-      : ['streams', 'stream_messages', 'stream_gifts', 'stream_participants', 'stream_seat_sessions', 'stream_audience_presence'],
+      ? ['streams', 'stream_messages', 'stream_gifts', 'stream_participants', 'stream_seat_sessions', 'battle_sessions']
+      : ['streams', 'stream_messages', 'stream_gifts', 'stream_participants', 'stream_seat_sessions'],
     eventCounts: { ...entry.eventCounts },
   }))
 }

@@ -1,9 +1,14 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
-import { useXPStore } from '../stores/useXPStore'
-import { sendStreamBroadcast } from '../lib/realtime/streamRealtimeManager'
-import { T_LEAGUE_TIERS, LEAGUE_LEVELS, getSubTierFromScore, getSubTierProgress, getNextSubTier, getScoreForNextSubTier, getLeagueLevel, getNextLeagueLevel, getLeagueLevelProgress, getSubTierColor, getWeeklyGoalsForTier } from '../config/T_LEAGUE_CONFIG';
+import {
+  T_LEAGUE_TIERS,
+  getNextSubTier,
+  getScoreForNextSubTier,
+  getSubTierColor,
+  getSubTierFromScore,
+  getSubTierProgress,
+} from '../config/T_LEAGUE_CONFIG'
 
 export interface WeeklyGoalProgress {
   id: string
@@ -37,6 +42,10 @@ export interface LeagueProgressState {
   subTier: string
   weeklyGoals: WeeklyGoalProgress[]
   weeklyResetAt: string | null
+  eligibleLifetimeCoins: number
+  tier500CoinGateMet: boolean
+  pendingReferralPoints: number
+  pendingReferralCount: number
   isLoading: boolean
 }
 
@@ -55,355 +64,204 @@ export interface RewardInfo {
   label: string
 }
 
-function getTierReward(mainTier: string, subTier: string): RewardInfo {
-  const tierNum = parseInt(mainTier.replace('T', ''))
-  const subIdx = ['a', 'b', 'c', 'd'].indexOf(subTier)
-  const tierLabel = T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.label || mainTier
-
-  if (subIdx === 0) {
-    return {
-      trollCoins: (tierNum + 1) * 100,
-      xp: (tierNum + 1) * 50,
-      trollmonds: (tierNum + 1) * 50,
-      perk: `Reach ${tierLabel}`,
-      label: `${mainTier} reached! +${(tierNum + 1) * 100} coins, +${(tierNum + 1) * 50} XP, +${(tierNum + 1) * 50} trollmonds`,
-    }
-  }
-
-  return {
-    trollCoins: (tierNum + 1) * 25,
-    xp: (tierNum + 1) * 15,
-    trollmonds: (tierNum + 1) * 10,
-    perk: `Advance to ${mainTier}${subTier}`,
-    label: `${mainTier}${subTier} reached! +${(tierNum + 1) * 25} coins, +${(tierNum + 1) * 15} XP`,
-  }
+interface TLeagueMission {
+  id: string
+  missionKey: string
+  title: string
+  description: string
+  target: number
+  current: number
+  reward: number
+  completed: boolean
+  icon: string
 }
 
-function getLeagueLevelReward(level: number): RewardInfo {
-  const lvl = LEAGUE_LEVELS.find(l => l.level === level)
-  return {
-    trollCoins: level * 200,
-    xp: level * 100,
-    trollmonds: level * 75,
-    perk: lvl?.perk || 'Level up!',
-    label: `League Level ${level} — ${lvl?.label || 'Level up!'} +${level * 200} coins, +${level * 100} XP`,
-  }
+interface TLeagueResponse {
+  user_id: string
+  total_points: number
+  eligible_lifetime_coins: number
+  tier: number
+  tier_500_coin_gate_met: boolean
+  pending_referral_points: number
+  pending_referral_count: number
+  missions: TLeagueMission[]
 }
 
 export function useLeagueProgress(streamId?: string | null) {
   const { user, profile } = useAuthStore()
-  const xpStore = useXPStore()
   const userId = user?.id || profile?.id
   const [state, setState] = useState<LeagueProgressState | null>(null)
+  const stateRef = useRef<LeagueProgressState | null>(null)
   const [levelUpEvent, setLevelUpEvent] = useState<LevelUpEvent | null>(null)
-  const prevTierRef = useRef<string | null>(null)
-  const prevLevelRef = useRef<number>(0)
-  const isInitialLoad = useRef(true)
-
+  const previousTierRef = useRef<string | null>(null)
+  const initialLoadRef = useRef(true)
+  const requestRef = useRef(false)
+  const pendingRequestRef = useRef(false)
   const seasonKey = new Date().toISOString().slice(0, 7)
 
-  const distributeReward = useCallback(async (reward: RewardInfo, uid: string) => {
-    try {
-      await supabase.rpc('grant_league_reward', {
-        p_user_id: uid,
-        p_troll_coins: reward.trollCoins,
-        p_xp: reward.xp,
-        p_trollmonds: reward.trollmonds,
-        p_label: reward.label,
-      })
-    } catch (err) {
-      if (import.meta.env.DEV) console.warn('[useLeagueProgress] reward grant failed:', err)
-      try {
-        await supabase
-          .from('user_profiles')
-          .update({
-            troll_coins: (profile?.troll_coins || 0) + reward.trollCoins,
-            xp: (profile?.xp || 0) + reward.xp,
-          })
-          .eq('id', uid)
-      } catch (e2) {
-        if (import.meta.env.DEV) console.warn('[useLeagueProgress] fallback reward failed:', e2)
-      }
-    }
-  }, [profile?.troll_coins, profile?.xp])
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
 
   const fetchProgress = useCallback(async () => {
-    if (!userId) return
+    if (!userId) {
+      setState(null)
+      return
+    }
+    if (requestRef.current) {
+      pendingRequestRef.current = true
+      return
+    }
+    requestRef.current = true
 
     try {
-      const { data: statsData } = await supabase
-        .from('broadcast_league_stats')
-        .select('*')
-        .eq('broadcaster_id', userId)
-        .eq('season_key', seasonKey)
-        .maybeSingle()
+      const { data, error } = await supabase.rpc('get_t_league_state')
+      if (error) throw error
+      if (!data) throw new Error('T League state returned no data')
 
-      const leagueScore = statsData
-        ? Number(statsData.total_xp) || 0
-        : xpStore.xpTotal || 0
+      const response = data as TLeagueResponse
+      const points = Number(response.total_points) || 0
+      const serverTier = Math.max(0, Math.min(500, Number(response.tier) || 0))
+      const nextTier = T_LEAGUE_TIERS[serverTier + 1]
+      const tierScore = nextTier && points >= nextTier.minScore
+        ? nextTier.minScore - 1
+        : points
+      const subInfo = getSubTierFromScore(tierScore)
+      const mainTier = T_LEAGUE_TIERS[serverTier]?.tier ?? subInfo.tier.tier
+      const missions = Array.isArray(response.missions) ? response.missions : []
+      const weeklyGoals: WeeklyGoalProgress[] = missions.map((mission) => ({
+        id: mission.id,
+        goalType: mission.missionKey,
+        title: mission.title,
+        description: mission.description,
+        target: Number(mission.target) || 0,
+        current: Number(mission.current) || 0,
+        reward: Number(mission.reward) || 0,
+        completed: Boolean(mission.completed),
+        claimed: Boolean(mission.completed),
+        icon: mission.icon || '🎯',
+      }))
+      const fullTier = `${mainTier}${subInfo.sub}`
 
-      const subInfo = getSubTierFromScore(leagueScore)
-      const mainTier = statsData?.league_tier || subInfo.tier.tier
-      const subTier = statsData?.sub_tier || subInfo.sub
-      const leagueLevel = statsData?.league_level || getLeagueLevel(Number(statsData?.total_gifts_sent) || 0).level
-
-      let weeklyGoals: WeeklyGoalProgress[] = []
-      try {
-        const { data: goalsData } = await supabase
-          .from('weekly_league_goals')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('season_key', seasonKey)
-          .eq('main_tier', mainTier)
-          .eq('sub_tier', subTier)
-
-        if (goalsData && goalsData.length > 0) {
-          weeklyGoals = goalsData.map((g: any) => ({
-            id: g.id,
-            goalType: g.goal_type,
-            title: g.goal_type === 'gift_weekly' ? 'Gift Spree'
-              : g.goal_type === 'live_weekly' ? 'Go Live'
-              : g.goal_type === 'chat_weekly' ? 'Chat Active'
-              : 'Watch & Support',
-            description: g.goal_type === 'gift_weekly' ? 'Send gifts in any live broadcast'
-              : g.goal_type === 'live_weekly' ? 'Broadcast for at least 15 minutes'
-              : g.goal_type === 'chat_weekly' ? 'Send 20 chat messages in broadcasts'
-              : 'Watch 30 minutes of live broadcasts',
-            target: Number(g.target_value) || 0,
-            current: Number(g.current_value) || 0,
-            reward: Number(g.reward_score) || 0,
-            completed: g.completed || false,
-            claimed: g.claimed || false,
-            icon: g.goal_type === 'gift_weekly' ? '🎁'
-              : g.goal_type === 'live_weekly' ? '📡'
-              : g.goal_type === 'chat_weekly' ? '💬'
-              : '👁️',
-          }))
-        } else {
-          const templates = getWeeklyGoalsForTier(mainTier, subTier)
-          for (const tmpl of templates) {
-            try {
-              const { data: inserted } = await supabase
-                .from('weekly_league_goals')
-                .insert({
-                  user_id: userId,
-                  season_key: seasonKey,
-                  main_tier: mainTier,
-                  sub_tier: subTier,
-                  goal_type: tmpl.id,
-                  target_value: tmpl.target,
-                  reward_score: tmpl.reward,
-                  current_value: 0,
-                  completed: false,
-                  claimed: false,
-                })
-                .select()
-                .single()
-              if (inserted) {
-                weeklyGoals.push({
-                  id: inserted.id,
-                  goalType: tmpl.id,
-                  title: tmpl.title,
-                  description: tmpl.description,
-                  target: tmpl.target,
-                  current: 0,
-                  reward: tmpl.reward,
-                  completed: false,
-                  claimed: false,
-                  icon: tmpl.icon,
-                })
-              }
-            } catch (e) {
-              if (import.meta.env.DEV) console.warn('[useLeagueProgress] goal insert failed:', e)
-            }
-          }
+      if (!initialLoadRef.current && previousTierRef.current && previousTierRef.current !== fullTier) {
+        const previousMain = previousTierRef.current.replace(/[a-d]$/, '')
+        const previousMainIndex = T_LEAGUE_TIERS.findIndex((tier) => tier.tier === previousMain)
+        const currentMainIndex = T_LEAGUE_TIERS.findIndex((tier) => tier.tier === mainTier)
+        const reward = {
+          trollCoins: 0,
+          xp: 0,
+          trollmonds: 0,
+          perk: `Reach ${fullTier}`,
+          label: `T League progress: ${fullTier}`,
         }
-      } catch (e) {
-        if (import.meta.env.DEV) console.warn('[useLeagueProgress] goals fetch failed:', e)
+        setLevelUpEvent({
+          type: currentMainIndex > previousMainIndex ? 'main_tier' : 'sub_tier',
+          previous: previousTierRef.current,
+          current: fullTier,
+          reward,
+        })
       }
 
-      const newState: LeagueProgressState = {
+      const nextState: LeagueProgressState = {
         userId,
         streamId: streamId || '',
         username: profile?.username || user?.email?.split('@')?.[0] || 'Broadcaster',
         seasonKey,
-        leagueScore,
-        giftCoinsReceived: Number(statsData?.gift_coins_received) || 0,
-        totalLiveMinutes: Number(statsData?.total_live_minutes) || 0,
-        giftCount: Number(statsData?.gift_count) || 0,
-        streamCount: Number(statsData?.stream_count) || 0,
-        totalGiftsSent: Number(statsData?.total_gifts_sent) || 0,
-        weeklyGiftsSent: Number(statsData?.weekly_gifts_sent) || 0,
-        weeklyScore: Number(statsData?.weekly_score) || 0,
-        weeklyGoalsCompleted: Number(statsData?.weekly_goals_completed) || 0,
-        leagueLevel,
+        leagueScore: points,
+        giftCoinsReceived: 0,
+        totalLiveMinutes: 0,
+        giftCount: 0,
+        streamCount: 0,
+        totalGiftsSent: 0,
+        weeklyGiftsSent: 0,
+        weeklyScore: 0,
+        weeklyGoalsCompleted: weeklyGoals.filter((goal) => goal.completed).length,
+        leagueLevel: 0,
         mainTier,
-        subTier,
+        subTier: subInfo.sub,
         weeklyGoals,
-        weeklyResetAt: statsData?.weekly_reset_at || null,
+        weeklyResetAt: null,
+        eligibleLifetimeCoins: Number(response.eligible_lifetime_coins) || 0,
+        tier500CoinGateMet: Boolean(response.tier_500_coin_gate_met),
+        pendingReferralPoints: Number(response.pending_referral_points) || 0,
+        pendingReferralCount: Number(response.pending_referral_count) || 0,
         isLoading: false,
       }
 
-      const currentFullTier = `${mainTier}${subTier}`
-
-      if (!isInitialLoad.current) {
-        if (prevTierRef.current && currentFullTier !== prevTierRef.current) {
-          const prevMain = prevTierRef.current.replace(/[a-d]$/, '')
-          const _prevSub = prevTierRef.current.slice(-1)
-          const prevMainIdx = T_LEAGUE_TIERS.findIndex(t => t.tier === prevMain)
-          const curMainIdx = T_LEAGUE_TIERS.findIndex(t => t.tier === mainTier)
-
-          if (curMainIdx > prevMainIdx) {
-            const reward = getTierReward(mainTier, subTier)
-            const event = { type: 'main_tier' as const, previous: prevTierRef.current, current: currentFullTier, reward }
-            setLevelUpEvent(event)
-            if (state) {
-              await distributeReward(reward, state.userId)
-              const tierLabel = T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.label || mainTier
-              void sendStreamBroadcast(state.streamId || '', 'league_level_up', {
-                user_id: state.userId,
-                username: state.username || 'Broadcaster',
-                type: 'main_tier',
-                previous: prevTierRef.current,
-                current: currentFullTier,
-                tierLabel,
-                icon: T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.icon || '⭐',
-              }).catch(() => {})
-            }
-          } else {
-            const reward = getTierReward(mainTier, subTier)
-            const event = { type: 'sub_tier' as const, previous: prevTierRef.current, current: currentFullTier, reward }
-            setLevelUpEvent(event)
-            if (state) {
-              await distributeReward(reward, state.userId)
-              const tierLabel = T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.label || mainTier
-              void sendStreamBroadcast(state.streamId || '', 'league_level_up', {
-                user_id: state.userId,
-                username: state.username || 'Broadcaster',
-                type: 'sub_tier',
-                previous: prevTierRef.current,
-                current: currentFullTier,
-                tierLabel,
-                icon: T_LEAGUE_TIERS.find(t => t.tier === mainTier)?.icon || '⭐',
-              }).catch(() => {})
-            }
-          }
-        }
-
-        if (prevLevelRef.current > 0 && leagueLevel > prevLevelRef.current) {
-          const reward = getLeagueLevelReward(leagueLevel)
-          const event = { type: 'league_level' as const, previous: `Lv.${prevLevelRef.current}`, current: `Lv.${leagueLevel}`, reward }
-          setLevelUpEvent(event)
-
-          if (state) {
-            await distributeReward(reward, state.userId)
-            const lvlInfo = LEAGUE_LEVELS.find(l => l.level === leagueLevel)
-            void sendStreamBroadcast(state.streamId || '', 'league_level_up', {
-              user_id: state.userId,
-              username: state.username || 'Broadcaster',
-              type: 'league_level',
-              previous: `Lv.${prevLevelRef.current}`,
-              current: `Lv.${leagueLevel}`,
-              tierLabel: lvlInfo?.label || `Level ${leagueLevel}`,
-              icon: lvlInfo?.icon || '🏆',
-            }).catch(() => {})
-          }
-        }
+      previousTierRef.current = fullTier
+      initialLoadRef.current = false
+      stateRef.current = nextState
+      setState(nextState)
+    } catch (error) {
+      console.error('[useLeagueProgress] Failed to load authoritative T League state:', error)
+      setState((previous) => previous ? { ...previous, isLoading: false } : null)
+    } finally {
+      requestRef.current = false
+      if (pendingRequestRef.current) {
+        pendingRequestRef.current = false
+        window.setTimeout(() => { void fetchProgress() }, 0)
       }
-
-      prevTierRef.current = currentFullTier
-      prevLevelRef.current = leagueLevel
-      isInitialLoad.current = false
-
-      setState(newState)
-    } catch (err) {
-      if (import.meta.env.DEV) console.warn('[useLeagueProgress] fetch failed:', err)
-      setState(prev => prev ? { ...prev, isLoading: false } : null)
     }
-  }, [userId, seasonKey, xpStore.xpTotal, streamId, profile?.username, user?.email, state, distributeReward])
-
-  const claimWeeklyGoal = useCallback(async (goalId: string) => {
-    if (!state) return
-    const goal = state.weeklyGoals.find(g => g.id === goalId)
-    if (!goal || !goal.completed || goal.claimed) return
-
-    try {
-      const { error } = await supabase
-        .from('weekly_league_goals')
-        .update({ claimed: true, updated_at: new Date().toISOString() })
-        .eq('id', goalId)
-
-      if (error) throw error
-
-      await supabase
-        .from('broadcast_league_stats')
-        .update({
-          weekly_score: state.weeklyScore + goal.reward,
-          weekly_goals_completed: state.weeklyGoalsCompleted + 1,
-          league_score: state.leagueScore + goal.reward,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('broadcaster_id', state.userId)
-        .eq('season_key', state.seasonKey)
-
-      setState(prev => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          weeklyGoals: prev.weeklyGoals.map(g =>
-            g.id === goalId ? { ...g, claimed: true } : g
-          ),
-          weeklyScore: prev.weeklyScore + goal.reward,
-          weeklyGoalsCompleted: prev.weeklyGoalsCompleted + 1,
-          leagueScore: prev.leagueScore + goal.reward,
-        }
-      })
-    } catch (err) {
-      if (import.meta.env.DEV) console.warn('[useLeagueProgress] claim goal failed:', err)
-    }
-  }, [state])
+  }, [profile?.username, seasonKey, streamId, user?.email, userId])
 
   const dismissLevelUp = useCallback(() => {
     setLevelUpEvent(null)
   }, [])
 
   useEffect(() => {
-    fetchProgress()
+    void fetchProgress()
   }, [fetchProgress])
 
   useEffect(() => {
     if (!userId) return
 
-    const channel = supabase.channel(`league-progress-${userId}-${streamId || 'global'}`)
-    channel
+    const channel = supabase
+      .channel(`t-league-progress-${userId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'broadcast_league_stats', filter: `broadcaster_id=eq.${userId}` },
-        () => fetchProgress()
+        {
+          event: '*',
+          schema: 'public',
+          table: 't_league_mission_assignments',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => { void fetchProgress() },
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'weekly_league_goals', filter: `user_id=eq.${userId}` },
-        () => fetchProgress()
+        {
+          event: '*',
+          schema: 'public',
+          table: 't_league_progress',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => { void fetchProgress() },
       )
       .subscribe()
 
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
-    }
-  }, [userId, streamId, fetchProgress])
+    const fallbackRefresh = window.setInterval(() => {
+      void fetchProgress()
+    }, 60_000)
 
-  const subTierProgress = state ? getSubTierProgress(state.leagueScore) : 0
-  const nextSubTier = state ? getNextSubTier(
-    T_LEAGUE_TIERS.find(t => t.tier === state.mainTier) || T_LEAGUE_TIERS[0],
-    state.subTier
-  ) : null
-  const scoreForNext = state ? getScoreForNextSubTier(state.leagueScore) : null
-  const leagueLevelInfo = state ? getLeagueLevel(state.totalGiftsSent) : LEAGUE_LEVELS[0]
-  const nextLeagueLevel = state ? getNextLeagueLevel(state.totalGiftsSent) : null
-  const leagueLevelProgress = state ? getLeagueLevelProgress(state.totalGiftsSent) : 0
+    return () => {
+      window.clearInterval(fallbackRefresh)
+      void supabase.removeChannel(channel)
+    }
+  }, [fetchProgress, userId])
+
+  const stateTierIndex = state
+    ? T_LEAGUE_TIERS.findIndex((tier) => tier.tier === state.mainTier)
+    : -1
+  const nextMainTier = stateTierIndex >= 0 ? T_LEAGUE_TIERS[stateTierIndex + 1] : undefined
+  const progressScore = state && nextMainTier
+    ? Math.min(state.leagueScore, nextMainTier.minScore - 1)
+    : state?.leagueScore || 0
+  const subTierProgress = state ? getSubTierProgress(progressScore) : 0
+  const currentTier = state
+    ? T_LEAGUE_TIERS.find((tier) => tier.tier === state.mainTier) || T_LEAGUE_TIERS[0]
+    : T_LEAGUE_TIERS[0]
+  const nextSubTier = state ? getNextSubTier(currentTier, state.subTier) : null
+  const scoreForNext = state ? getScoreForNextSubTier(progressScore) : null
   const subTierColor = state ? getSubTierColor(state.mainTier, state.subTier) : 'from-gray-600 to-gray-500'
 
   return {
@@ -411,12 +269,8 @@ export function useLeagueProgress(streamId?: string | null) {
     subTierProgress,
     nextSubTier,
     scoreForNext,
-    leagueLevelInfo,
-    nextLeagueLevel,
-    leagueLevelProgress,
     subTierColor,
     levelUpEvent,
-    claimWeeklyGoal,
     dismissLevelUp,
     refreshProgress: fetchProgress,
   }

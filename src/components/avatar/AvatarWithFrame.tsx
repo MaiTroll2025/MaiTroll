@@ -16,6 +16,7 @@ import React, { useState, useEffect } from 'react';
 import ProfileFrame from '@/components/profile/ProfileFrame';
 import { getFrameById, type ProfileFrame as ProfileFrameType } from '@/config/profileFrames';
 import { supabase } from '@/lib/supabase';
+import { usePublicProfileIdentity } from '@/hooks/usePublicProfileIdentity';
 
 export type AvatarFrameSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 
@@ -45,6 +46,11 @@ export default function AvatarWithFrame({
   rounded,
 }: AvatarWithFrameProps) {
   const [frame, setFrame] = useState<ProfileFrameType | null>(null);
+  const { identity, loading: identityLoading } = usePublicProfileIdentity(userId);
+  const safeSrc = userId
+    ? identity?.avatar_url || (identityLoading ? '/ghost-basic.svg' : '/default-avatar.png')
+    : src;
+  const safeAlt = userId ? identity?.username || (identityLoading ? 'Ghost Mode' : 'User') : alt;
 
   useEffect(() => {
     if (!userId) {
@@ -85,8 +91,8 @@ export default function AvatarWithFrame({
     const roundedClass = rounded === 'full' ? 'rounded-full' : rounded === 'lg' ? 'rounded-lg' : rounded === 'xl' ? 'rounded-xl' : rounded === '2xl' ? 'rounded-2xl' : 'rounded-full';
     return (
       <img
-        src={src}
-        alt={alt}
+        src={safeSrc}
+        alt={safeAlt}
         className={`object-cover ${roundedClass} ${className}`}
         style={style}
       onClick={onClick as unknown as () => void}
@@ -99,9 +105,9 @@ export default function AvatarWithFrame({
   return (
     <ProfileFrame
       frame={frame}
-      avatarUrl={src}
+      avatarUrl={safeSrc}
       size={size}
-      username={alt}
+      username={safeAlt}
       className={className}
       onClick={onClick as unknown as () => void}
     />

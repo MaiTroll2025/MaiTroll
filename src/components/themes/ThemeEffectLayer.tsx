@@ -70,21 +70,6 @@ function ThemeEffectLayerInner({
         </>
       )}
 
-      {effectType === 'rainbow-flag-motion' && (
-        <>
-          <div className="fx fx-rainbow-flag" />
-          <div className="fx fx-rainbow-ribbon" />
-        </>
-      )}
-
-      {effectType === 'pride-wave-lights' && (
-        <>
-          <div className="fx-pride-light fx-pride-light--1" />
-          <div className="fx-pride-light fx-pride-light--2" />
-          <div className="fx-pride-light fx-pride-light--3" />
-        </>
-      )}
-
       {effectType === 'neon-bar-pour' && (
         <>
           <div className="fx fx-neon-liquid" />

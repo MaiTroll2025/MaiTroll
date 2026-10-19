@@ -7,7 +7,7 @@ import { useMissionProgress } from './useMissionProgress';
 import { useChatBlockStatus } from './useChatBlockStatus';
 import { isStaffProfile } from '../lib/staff';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../lib/broadcastModeration';
-import { sendChatThroughGate } from '../lib/sendChatThroughGate';
+import { sendChatThroughGate, type SignedChatEnvelope } from '../lib/sendChatThroughGate';
 import { moderation } from '@/services/maitrollModeration';
 
 export interface Message {
@@ -47,6 +47,7 @@ interface UseStreamChatProps {
 }
 
 const MAX_MESSAGES = 200;
+const MAX_TRACKED_MESSAGE_IDS = MAX_MESSAGES * 2;
 const AUTO_DELETE_INTERVAL = 15000;
 const MESSAGE_LIFETIME_MS = 30000;
 
@@ -62,6 +63,62 @@ const getDisplayName = (profileLike: any): string => {
     'Troll Citizen'
   );
 };
+
+function isSignedChatEnvelope(value: unknown): value is SignedChatEnvelope {
+  if (!value || typeof value !== 'object') return false
+  const envelope = value as Record<string, unknown>
+  return envelope.v === 1 &&
+    typeof envelope.stream_id === 'string' &&
+    typeof envelope.s === 'string' &&
+    typeof envelope.txn_id === 'string' &&
+    typeof envelope.message_id === 'string' &&
+    typeof envelope.ts === 'number' &&
+    !!envelope.d &&
+    typeof envelope.d === 'object'
+}
+
+function normalizeSignedMessage(envelope: SignedChatEnvelope): Message {
+  const data = envelope.d
+  const asString = (value: unknown) => typeof value === 'string' ? value : undefined
+  const username = asString(data.user_name) || 'Troll Citizen'
+  const avatarUrl = asString(data.user_avatar) || ''
+  const type: Message['type'] = envelope.t === 'gift'
+    ? 'gift'
+    : envelope.t === 'sys'
+      ? 'system'
+      : 'chat'
+
+  return {
+    id: envelope.message_id,
+    txn_id: envelope.txn_id,
+    user_id: envelope.s,
+    content: asString(data.content) || asString(data.message) ||
+      (type === 'gift'
+        ? `GIFT_EVENT:${asString(data.gift_slug) || asString(data.gift_name) || 'gift'}:${Number(data.quantity || 1)}`
+        : ''),
+    created_at: new Date(envelope.ts).toISOString(),
+    type,
+    gift_type: asString(data.gift_slug) || asString(data.gift_name),
+    gift_amount: Number(data.quantity || data.amount || 1),
+    sender_name: username,
+    user_name: username,
+    user_avatar: avatarUrl,
+    user_role: asString(data.user_role),
+    user_troll_role: asString(data.user_troll_role),
+    user_created_at: asString(data.user_created_at),
+    user_rgb_expires_at: asString(data.user_rgb_expires_at),
+    user_glowing_username_color: asString(data.user_glowing_username_color),
+    user_profiles: {
+      username,
+      avatar_url: avatarUrl,
+      role: asString(data.user_role),
+      troll_role: asString(data.user_troll_role),
+      created_at: asString(data.user_created_at),
+      rgb_username_expires_at: asString(data.user_rgb_expires_at),
+      glowing_username_color: asString(data.user_glowing_username_color),
+    },
+  }
+}
 
 export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -82,51 +139,141 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
   const { user, profile } = useAuthStore();
   const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(user?.id, streamId);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
-  const [subscriberOnlyChat, setSubscriberOnlyChat] = useState(false);
-  const [isSubscriber, setIsSubscriber] = useState(false);
+  const [chatEligibility, setChatEligibility] = useState<{
+    key: string
+    loading: boolean
+    subscriberOnly: boolean
+    isSubscriber: boolean
+    error: string | null
+  }>({ key: '', loading: true, subscriberOnly: false, isSubscriber: false, error: null });
+  const eligibilityKey = `${streamId}:${user?.id || 'anonymous'}`
+  const eligibilityIsCurrent = chatEligibility.key === eligibilityKey
+  const subscriberOnlyChat = eligibilityIsCurrent && chatEligibility.subscriberOnly
+  const isSubscriber = eligibilityIsCurrent && chatEligibility.isSubscriber
+  const isEligibilityLoading = !eligibilityIsCurrent || chatEligibility.loading
+  const eligibilityError = eligibilityIsCurrent ? chatEligibility.error : null
+  const isSendingRef = useRef(false)
+  const streamIdRef = useRef(streamId)
+  const userIdRef = useRef(user?.id)
+  streamIdRef.current = streamId
+  userIdRef.current = user?.id
   const { trackChatMessage } = useMissionProgress(streamId);
 
-  // Check if stream has subscriber-only chat enabled and if user is subscribed
   useEffect(() => {
-    if (!streamId || !hostId) return;
-    supabase
-      .from('streams')
-      .select('subscriber_only_chat, user_id')
-      .eq('id', streamId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) return;
-        setSubscriberOnlyChat(!!data.subscriber_only_chat);
-        // Check if current user is subscribed to the broadcaster
-        if (user?.id && data.user_id !== user.id) {
-          supabase
+    let cancelled = false
+    setChatEligibility({
+      key: eligibilityKey,
+      loading: true,
+      subscriberOnly: false,
+      isSubscriber: false,
+      error: null,
+    })
+
+    const loadChatEligibility = async () => {
+      if (!streamId || !hostId) {
+        setChatEligibility({
+          key: eligibilityKey,
+          loading: false,
+          subscriberOnly: false,
+          isSubscriber: false,
+          error: 'Stream chat settings are unavailable.',
+        })
+        return
+      }
+
+      try {
+        const { data: stream, error: streamError } = await supabase
+          .from('streams')
+          .select('subscriber_only_chat, user_id')
+          .eq('id', streamId)
+          .maybeSingle()
+
+        if (cancelled) return
+        if (streamError || !stream?.user_id) {
+          setChatEligibility({
+            key: eligibilityKey,
+            loading: false,
+            subscriberOnly: false,
+            isSubscriber: false,
+            error: 'Could not verify stream chat settings.',
+          })
+          return
+        }
+
+        const subscriberOnly = Boolean(stream.subscriber_only_chat)
+        let subscribed = user?.id === stream.user_id
+        if (subscriberOnly && user?.id && !subscribed) {
+          const { data: subscription, error: subscriptionError } = await supabase
             .from('user_subscriptions')
             .select('id')
             .eq('subscriber_id', user.id)
-            .eq('broadcaster_id', data.user_id)
+            .eq('broadcaster_id', stream.user_id)
             .eq('is_active', true)
             .maybeSingle()
-            .then(({ data: sub }) => {
-              setIsSubscriber(!!sub);
-            });
-        } else {
-          setIsSubscriber(true); // broadcaster themselves
+
+          if (cancelled) return
+          if (subscriptionError) {
+            setChatEligibility({
+              key: eligibilityKey,
+              loading: false,
+              subscriberOnly,
+              isSubscriber: false,
+              error: 'Could not verify your subscription.',
+            })
+            return
+          }
+          subscribed = Boolean(subscription)
         }
-      });
-  }, [streamId, hostId, user?.id]);
+
+        setChatEligibility({
+          key: eligibilityKey,
+          loading: false,
+          subscriberOnly,
+          isSubscriber: subscribed,
+          error: null,
+        })
+      } catch (error) {
+        if (cancelled) return
+        console.error('[useStreamChat] Chat eligibility check failed:', error)
+        setChatEligibility({
+          key: eligibilityKey,
+          loading: false,
+          subscriberOnly: false,
+          isSubscriber: false,
+          error: 'Could not verify chat access.',
+        })
+      }
+    }
+
+    void loadChatEligibility()
+    return () => {
+      cancelled = true
+    }
+  }, [streamId, hostId, user?.id, eligibilityKey])
 
   const canChat = useMemo(() => {
     if (!user) return false;
+    if (isEligibilityLoading || eligibilityError) return false;
     if (isHost) return true;
     if (isStaffProfile(profile)) return true;
     if (subscriberOnlyChat && !isSubscriber) return false;
     return true;
-  }, [user, isHost, profile, subscriberOnlyChat, isSubscriber]);
+  }, [user, isHost, profile, subscriberOnlyChat, isSubscriber, isEligibilityLoading, eligibilityError]);
 
   const processedMessageIds = useRef<Set<string>>(new Set());
   const joinedUsersRef = useRef<Set<string>>(new Set());
   const channelsRef = useRef<any[]>([]);
   const chatSendThrottleRef = useRef<{ lastTime: number; count: number }>({ lastTime: 0, count: 0 });
+  const rememberMessageIds = useCallback((...ids: Array<string | undefined>) => {
+    ids.forEach((id) => {
+      if (id) processedMessageIds.current.add(id)
+    })
+    while (processedMessageIds.current.size > MAX_TRACKED_MESSAGE_IDS) {
+      const oldest = processedMessageIds.current.values().next().value
+      if (!oldest) break
+      processedMessageIds.current.delete(oldest)
+    }
+  }, [])
 
   const cleanupChannels = useCallback(() => {
     channelsRef.current.forEach(ch => { if (ch) supabase.removeChannel(ch) })
@@ -191,45 +338,68 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
   }, [hostChatDisabledUntil]);
 
   useEffect(() => {
-    if (!streamId) return;
-
     cleanupChannels();
+    let active = true;
+    processedMessageIds.current.clear();
+    joinedUsersRef.current.clear();
+    setMessages([]);
+
+    if (!streamId) {
+      return () => {
+        active = false;
+      };
+    }
 
     const fetchMessages = async () => {
-      await new Promise(resolve => setTimeout(resolve, Math.random() * 400));
-
-      const { data } = await supabase
+      const cutoff = new Date(Date.now() - MESSAGE_LIFETIME_MS).toISOString();
+      const { data, error } = await supabase
         .from('stream_messages')
         .select('*, user_profiles(username, display_name, email, avatar_url, role, troll_role, created_at, rgb_username_expires_at, glowing_username_color)')
         .eq('stream_id', streamId)
+        .gte('created_at', cutoff)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (data) {
-        const processedMessages = data.reverse().map((m: any) => {
-          const uProfile = {
-            username: m.user_name || getDisplayName(m.user_profiles),
-            display_name: m.user_profiles?.display_name,
-            email: m.user_profiles?.email,
-            avatar_url: m.user_avatar || m.user_profiles?.avatar_url || '',
-            role: m.user_role || m.user_profiles?.role,
-            troll_role: m.user_troll_role || m.user_profiles?.troll_role,
-            created_at: m.user_created_at || m.user_profiles?.created_at,
-            rgb_username_expires_at: m.user_rgb_expires_at || m.user_profiles?.rgb_username_expires_at,
-            glowing_username_color: m.user_glowing_username_color || m.user_profiles?.glowing_username_color
-          };
-          if (m.id) processedMessageIds.current.add(m.id);
-          return { ...m, type: 'chat', user_profiles: uProfile } as Message;
-        });
-
-        setMessages(prev => {
-          const existingIds = new Set(prev.map(p => p.id));
-          const newHistory = processedMessages.filter(m => !existingIds.has(m.id));
-          return [...newHistory, ...prev];
-        });
+      if (!active) return;
+      if (error) {
+        console.error('[useStreamChat] Failed to load recent chat history:', error);
+        return;
       }
+      const processedMessages = (data || []).reverse().map((message: any): Message => {
+        const userProfile = {
+          username: message.user_name || getDisplayName(message.user_profiles),
+          display_name: message.user_profiles?.display_name,
+          email: message.user_profiles?.email,
+          avatar_url: message.user_avatar || message.user_profiles?.avatar_url || '',
+          role: message.user_role || message.user_profiles?.role,
+          troll_role: message.user_troll_role || message.user_profiles?.troll_role,
+          created_at: message.user_created_at || message.user_profiles?.created_at,
+          rgb_username_expires_at: message.user_rgb_expires_at || message.user_profiles?.rgb_username_expires_at,
+          glowing_username_color: message.user_glowing_username_color || message.user_profiles?.glowing_username_color,
+        };
+        rememberMessageIds(message.id, message.txn_id);
+        return {
+          ...message,
+          type: message.type === 'gift' ? 'gift' : message.type === 'system' ? 'system' : 'chat',
+          user_profiles: userProfile,
+        } as Message;
+      }).filter((message) =>
+        Date.now() - new Date(message.created_at).getTime() < MESSAGE_LIFETIME_MS
+      );
+
+      setMessages((prev) => {
+        const currentKeys = new Set(prev.flatMap((message) => [message.id, message.txn_id].filter(Boolean)));
+        const merged = [
+          ...processedMessages.filter((message) =>
+            !currentKeys.has(message.id) && (!message.txn_id || !currentKeys.has(message.txn_id))
+          ),
+          ...prev,
+        ];
+        return merged
+          .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
+          .slice(-MAX_MESSAGES);
+      });
     };
-    fetchMessages();
 
     const chatChannel = supabase
       .channel(`stream-chat:${streamId}`)
@@ -237,12 +407,16 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
         'broadcast',
         { event: 'chat' },
         (payload: any) => {
-          const msg = payload.payload as Message;
+          if (!active) return;
+          const incoming = payload.payload;
+          const msg = isSignedChatEnvelope(incoming)
+            ? normalizeSignedMessage(incoming)
+            : incoming as Message;
+          if (!msg?.user_id || !msg.content) return;
           if (msg.user_id === user?.id) return;
           if (msg.txn_id && processedMessageIds.current.has(msg.txn_id)) return;
           if (msg.id && processedMessageIds.current.has(msg.id)) return;
-          if (msg.txn_id) processedMessageIds.current.add(msg.txn_id);
-          if (msg.id) processedMessageIds.current.add(msg.id);
+          rememberMessageIds(msg.txn_id, msg.id);
 
           setMessages(prev => {
             if (msg.txn_id && prev.some(m => m.txn_id === msg.txn_id)) return prev;
@@ -254,6 +428,7 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
         }
       )
       .on('presence', { event: 'join' }, ({ newPresences }) => {
+        if (!active) return;
         newPresences.forEach((p: any) => {
           if (p.user_id === user?.id) return;
           if (joinedUsersRef.current.has(p.user_id)) return;
@@ -281,6 +456,7 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
         });
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        if (!active) return;
         leftPresences.forEach((p: any) => {
           if (p.user_id === user?.id) return;
           if (!joinedUsersRef.current.has(p.user_id)) return;
@@ -307,7 +483,13 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
           });
         });
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          void fetchMessages();
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error(`[useStreamChat] Realtime subscription failed: ${status}`);
+        }
+      });
 
     channelsRef.current = [chatChannel];
 
@@ -320,140 +502,180 @@ export const useStreamChat = ({ streamId, hostId, isHost }: UseStreamChatProps) 
     }, AUTO_DELETE_INTERVAL);
 
     return () => {
+      active = false;
       clearInterval(autoDeleteInterval);
       cleanupChannels();
     };
-  }, [streamId, user?.id, cleanupChannels]);
+  }, [streamId, user?.id, cleanupChannels, rememberMessageIds]);
 
   const sendMessage = useCallback(async (content: string) => {
     if (!user || !profile) {
       toast.error('You must be logged in to send messages.');
       return;
     }
-    if (!content.trim()) return;
-
-    const now = Date.now()
-    const chatThrottle = chatSendThrottleRef.current
-    if (now - chatThrottle.lastTime > 1000) {
-      chatThrottle.lastTime = now
-      chatThrottle.count = 0
-    }
-    chatThrottle.count += 1
-    if (chatThrottle.count > 8) {
-      toast.error('You are sending messages too fast. Please slow down.')
-      return
-    }
-
-    if (hostChatDisabledByOfficer) {
-      toast.error(
-        hostChatDisableRemainingMs
-          ? `Chat is disabled for this broadcaster by officer control. Try again in ${Math.ceil(hostChatDisableRemainingMs / 60000)} minute(s).`
-          : 'Chat is disabled for this broadcaster by officer control'
-      );
-      return;
-    }
-    if (userChatDisabled) {
-      toast.error(`Your chat is disabled.${chatDisabledRemainingMinutes ? ` Try again in ${chatDisabledRemainingMinutes} minute(s).` : ''}`);
+    const normalizedContent = content.trim();
+    if (!normalizedContent) return;
+    if (isSendingRef.current) {
+      toast.info('Please wait for the current message to finish sending.');
       return;
     }
 
-    // Subscriber-only chat enforcement
-    if (!canChat) {
-      toast.error('Subscriber-only chat — subscribe to the broadcaster to chat in this stream.');
-      return;
-    }
+    isSendingRef.current = true;
+    setIsSendingMessage(true);
+    const sendStreamId = streamId;
+    let optimisticId: string | null = null;
 
-    const canBypassModeration = isHost || isStaffProfile(profile);
-    if (!canBypassModeration) {
-      // Canonical moderation check
-      const modResult = await moderation.checkContent(user.id, content, 'chat');
-      if (!modResult.allowed) {
-        toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
+    try {
+      const now = Date.now();
+      const chatThrottle = chatSendThrottleRef.current;
+      if (now - chatThrottle.lastTime > 1000) {
+        chatThrottle.lastTime = now;
+        chatThrottle.count = 0;
+      }
+      chatThrottle.count += 1;
+      if (chatThrottle.count > 8) {
+        toast.error('You are sending messages too fast. Please slow down.');
         return;
       }
-    }
 
-    setIsSendingMessage(true);
-
-    const txnId = generateUUID();
-    const optimisticMessage: Message = {
-      id: `temp-${txnId}`,
-      user_id: user.id,
-      content,
-      created_at: new Date().toISOString(),
-      type: 'chat',
-      user_profiles: {
-        username: getDisplayName(profile),
-        display_name: (profile as any).display_name,
-        email: (profile as any).email,
-        avatar_url: profile.avatar_url,
-        role: profile.role,
-        troll_role: profile.troll_role,
-        created_at: profile.created_at,
-        rgb_username_expires_at: profile.rgb_username_expires_at,
-        glowing_username_color: profile.glowing_username_color
+      if (normalizedContent.length > 280) {
+        toast.error('Messages are limited to 280 characters.');
+        return;
       }
-    };
-
-    setMessages(prev => {
-      const updated = [...prev, optimisticMessage];
-      if (updated.length > MAX_MESSAGES) return updated.slice(updated.length - MAX_MESSAGES);
-      return updated;
-    });
-
-    processedMessageIds.current.add(txnId);
-
-    let parsedBody: any;
-    try {
-      const result = await sendChatThroughGate({ streamId, content })
-      parsedBody = result.envelope
-      if (!result.ok) {
-        throw new Error(result.error || 'Failed to send message')
+      if (hostChatDisabledByOfficer) {
+        toast.error(
+          hostChatDisableRemainingMs
+            ? `Chat is disabled for this broadcaster by officer control. Try again in ${Math.ceil(hostChatDisableRemainingMs / 60000)} minute(s).`
+            : 'Chat is disabled for this broadcaster by officer control'
+        );
+        return;
+      }
+      if (userChatDisabled) {
+        toast.error(`Your chat is disabled.${chatDisabledRemainingMinutes ? ` Try again in ${chatDisabledRemainingMinutes} minute(s).` : ''}`);
+        return;
+      }
+      if (isEligibilityLoading) {
+        toast.info('Checking chat access. Please try again shortly.');
+        return;
+      }
+      if (eligibilityError) {
+        toast.error(eligibilityError);
+        return;
+      }
+      if (!canChat) {
+        toast.error('Subscriber-only chat — subscribe to the broadcaster to chat in this stream.');
+        return;
       }
 
-      const chatChannel = channelsRef.current[0];
-      if (chatChannel) {
-        chatChannel.send({
-          type: 'broadcast',
-          event: 'chat',
-          payload: optimisticMessage
-        }).catch(err => {
-          console.warn('[useStreamChat] Broadcast send failed:', err);
-        });
+      if (!isHost && !isStaffProfile(profile)) {
+        let moderationResult;
+        try {
+          moderationResult = await moderation.checkContent(user.id, normalizedContent, 'chat');
+        } catch (error) {
+          console.error('[useStreamChat] Client moderation check failed:', error);
+          toast.error('Could not verify this message. Please try again.');
+          return;
+        }
+        if (!moderationResult.allowed) {
+          toast.error(moderationResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
+          return;
+        }
       }
 
-      trackChatMessage();
+      const txnId = generateUUID();
+      const optimisticMessage: Message = {
+        id: `temp-${txnId}`,
+        txn_id: txnId,
+        user_id: user.id,
+        content: normalizedContent,
+        created_at: new Date().toISOString(),
+        type: 'chat',
+        user_profiles: {
+          username: getDisplayName(profile),
+          display_name: profile.display_name,
+          email: profile.email,
+          avatar_url: profile.avatar_url || '',
+          role: profile.role,
+          troll_role: profile.troll_role,
+          created_at: profile.created_at,
+          rgb_username_expires_at: profile.rgb_username_expires_at,
+          glowing_username_color: profile.glowing_username_color
+        }
+      };
+      optimisticId = optimisticMessage.id;
+      rememberMessageIds(txnId);
+      setMessages(prev => {
+        const updated = [...prev, optimisticMessage];
+        if (updated.length > MAX_MESSAGES) return updated.slice(updated.length - MAX_MESSAGES);
+        return updated;
+      });
 
-      } catch (err: any) {
-      console.error('Error sending message:', err);
-      const errMsg = String(err.message || '').toLowerCase();
+      const result = await sendChatThroughGate({
+        streamId: sendStreamId,
+        content: normalizedContent,
+        txnId,
+      });
+      if (!result.ok || !result.envelope) {
+        throw new Error(result.error || 'The chat service did not confirm the message.');
+      }
+
+      const canonicalMessage = normalizeSignedMessage(result.envelope);
+      if (streamIdRef.current === sendStreamId && userIdRef.current === user.id) {
+        rememberMessageIds(canonicalMessage.txn_id, canonicalMessage.id);
+        setMessages(prev => prev.map(message =>
+          message.id === optimisticId || message.txn_id === txnId
+            ? canonicalMessage
+            : message
+        ));
+        trackChatMessage();
+      }
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errMsg = errorMessage.toLowerCase();
       if (errMsg.includes('rate limit')) {
         toast.error('You are sending messages too fast. Please slow down.');
       } else if (errMsg.includes('currently disabled') || (errMsg.includes('chat') && errMsg.includes('disabled'))) {
         toast.error('Your chat is currently disabled.');
-      } else if (parsedBody?.error) {
-        toast.error(parsedBody.error);
       } else {
-        toast.error('Failed to send message: ' + err.message);
+        toast.error(`Failed to send message: ${errorMessage}`);
       }
-      setMessages(prev => prev.filter(m => m.id !== `temp-${txnId}`));
+      if (optimisticId && streamIdRef.current === sendStreamId) {
+        setMessages(prev => prev.filter(message => message.id !== optimisticId));
+      }
     } finally {
+      isSendingRef.current = false;
       setIsSendingMessage(false);
     }
-  }, [user, profile, hostChatDisabledByOfficer, userChatDisabled, canChat, isHost, hostChatDisableRemainingMs, chatDisabledRemainingMinutes, streamId, trackChatMessage]);
+  }, [
+    user,
+    profile,
+    hostChatDisabledByOfficer,
+    userChatDisabled,
+    canChat,
+    isHost,
+    hostChatDisableRemainingMs,
+    chatDisabledRemainingMinutes,
+    isEligibilityLoading,
+    eligibilityError,
+    streamId,
+    trackChatMessage,
+    rememberMessageIds,
+  ]);
 
   return {
     messages: messages.filter(msg => {
-      return msg.type === 'chat' || msg.type === 'system';
+      return msg.type === 'chat' || msg.type === 'system' || msg.type === 'gift';
     }),
     sendMessage,
     hostChatDisabledByOfficer,
     userChatDisabled,
     chatDisabledRemainingMinutes,
-    streamMods: [],
     isSendingMessage,
     subscriberOnlyChat,
     isSubscriber,
+    isEligibilityLoading,
     canChat,
   };
 };

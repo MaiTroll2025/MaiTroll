@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore';
-import { applyCameraVideoPresentation } from '@/lib/cameraVideoPresentation';
 import requestBroadcastMediaAccess from '@/lib/media/requestBroadcastMediaAccess';
+import { activateAutomatedAudience } from '@/lib/automatedAudience';
 import { useStreamStore } from '@/lib/streamStore';
 import { LocalAudioTrack, LocalVideoTrack, Room, Track } from 'livekit-client';
-import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame, Bot } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useScreenShare } from '../../hooks/useScreenShare';
 import { DraggableCameraOverlay } from '../../components/broadcast/DraggableCameraOverlay';
@@ -39,7 +39,6 @@ import {
 } from '../../config/broadcastCategories';
 import { awardKeyToUser } from '../../services/keyService';
 import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore';
-import { isStaffProfile } from '@/lib/staff';
 
 
 /* ============================================================================
@@ -171,13 +170,13 @@ export default function SetupPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile } = useAuthStore();
-  const usesGetStream = isStaffProfile(profile);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<BroadcastCategoryId>('general');
   const [loading, setLoading] = useState(false);
   const [broadcasterLimitInfo, setBroadcasterLimitInfo] = useState<{ current: number; max: number; canStart: boolean; unrestricted?: boolean; isStaffBypass?: boolean } | null>(null);
   const [seatCount, setSeatCount] = useState<number>(DEFAULT_SEAT_COUNT);
   const [smokeEventEnabled, setSmokeEventEnabled] = useState(false);
+  const [automatedAudienceEnabled, setAutomatedAudienceEnabled] = useState(false);
 const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const [battleMode, setBattleMode] = useState<BattleModeType>('world');
   const [userState, setUserState] = useState<string | null>(null);
@@ -266,7 +265,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const [showLicenseRecovery, setShowLicenseRecovery] = useState(false);
    // Pre-fetch LiveKit token once user is available
   useEffect(() => {
-     if (!user?.id || !profile || prefetchedToken || usesGetStream) return;
+    if (!user?.id || prefetchedToken) return;
     
     const prefetchToken = async () => {
       try {
@@ -286,7 +285,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     // OPTIMIZED: Prefetch token immediately for faster broadcast start
     const timeout = setTimeout(prefetchToken, 100);
     return () => clearTimeout(timeout);
-  }, [user?.id, profile, streamId, prefetchedToken, usesGetStream]);
+  }, [user?.id, streamId, prefetchedToken]);
 
   // Track if we are navigating to broadcast to prevent cleanup
   const isStartingStream = useRef(false);
@@ -433,11 +432,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
             videoEl.style.width = '100%';
             videoEl.style.height = '100%';
             videoEl.style.objectFit = 'cover';
-            applyCameraVideoPresentation(videoEl, {
-              track: overlayStream.getVideoTracks()[0],
-              facingMode,
-              isLocal: true,
-            });
+            videoEl.style.transform = 'scaleX(-1)';
             cameraOverlayContainerRef.current.appendChild(videoEl);
           }
 
@@ -690,11 +685,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       videoEl.style.width = '100%';
       videoEl.style.height = '100%';
       videoEl.style.objectFit = 'cover';
-      applyCameraVideoPresentation(videoEl, {
-        track: previewStream?.getVideoTracks()[0],
-        facingMode,
-        isLocal: true,
-      });
+      videoEl.style.transform = 'scaleX(-1)';
       videoEl.play().catch(() => {
         // Autoplay may still be blocked in some contexts; muted should help.
       });
@@ -732,11 +723,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     videoEl.style.width = '100%';
     videoEl.style.height = '100%';
     videoEl.style.objectFit = 'cover';
-    applyCameraVideoPresentation(videoEl, {
-      track: stream.getVideoTracks()[0],
-      facingMode: facing,
-      isLocal: true,
-    });
+    videoEl.style.transform = facing === 'user' ? 'scaleX(-1)' : 'none';
 
     videoContainerRef.current.appendChild(videoEl);
     videoEl.onloadedmetadata = () => {
@@ -862,12 +849,6 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
         }
       console.log('[acquireMediaStream] Native stream acquired');
 
-       if (usesGetStream) {
-         setLivekitTracksState([null, null]);
-         PreflightStore.setLivekitTracks([null, null]);
-         PreflightStore.setLivekitRoom(null);
-         setCameraTrack(null);
-       } else {
        // Wrap audio track in LiveKit LocalAudioTrack
        let audioTrack: LocalAudioTrack | null = null;
        let videoTrack: LocalVideoTrack | null = null;
@@ -900,7 +881,6 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
        PreflightStore.setLivekitRoom(null);
        setCameraTrack(videoTrack);
        console.log('[acquireMediaStream] LiveKit tracks stored locally for BroadcastPage');
-       }
 
        // Attach native preview element directly instead of relying on LiveKit attach.
        if (nativeStream.getVideoTracks().length > 0) {
@@ -1185,35 +1165,6 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
     setFacingMode(newFacingMode);
     
-    if (usesGetStream) {
-      try {
-        const oldStream = stream;
-        const audioTracks = oldStream?.getAudioTracks() || [];
-        oldStream?.getVideoTracks().forEach((track) => track.stop());
-
-        const newCameraStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: newFacingMode,
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-        });
-        const newVideoTrack = newCameraStream.getVideoTracks()[0];
-        if (!newVideoTrack) throw new Error('No video track found');
-
-        const newStream = new MediaStream([
-          ...audioTracks,
-          newVideoTrack,
-        ]);
-        setStream(newStream);
-        attachNativePreview(newStream, newFacingMode);
-      } catch (err) {
-        console.error('[SetupPage] Failed to switch GetStream camera:', err);
-        toast.error('Failed to switch camera');
-      }
-      return;
-    }
-
     // Recreate video track with new facing mode
     if (livekitTracks[1]) {
       try {
@@ -1279,11 +1230,6 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
 
   // Toggle screen sharing for gaming mode
   const toggleScreenShare = async () => {
-    if (usesGetStream) {
-      toast.error('Screen sharing is not available for staff GetStream broadcasts yet.');
-      return;
-    }
-
     if (streamMode === 'screen') {
       // Switch back to camera mode - stop the screen track directly
       if (screenTrack) {
@@ -1601,10 +1547,7 @@ const handleStartStream = async () => {
       // LiveKit uses the generated stream ID for a stable, unique room name.
       const roomName = streamId;
       if (!roomName) throw new Error('Missing generated room name');
-      const rtcProvider = isStaffProfile(profile) ? 'getstream' : 'livekit';
-      if (rtcProvider === 'livekit' && !import.meta.env.VITE_LIVEKIT_URL) {
-        throw new Error('VITE_LIVEKIT_URL is missing');
-      }
+      if (!import.meta.env.VITE_LIVEKIT_URL) throw new Error('VITE_LIVEKIT_URL is missing');
       
       console.log('[SetupPage] Stream config:', {
         roomName
@@ -1623,7 +1566,6 @@ const handleStartStream = async () => {
             owner_id: user.id,
             title,
             category,
-            rtc_provider: rtcProvider,
             stream_type: 'standard',
             camera_ready: isVideoEnabled,
            status: 'starting',
@@ -1691,48 +1633,6 @@ const handleStartStream = async () => {
         return
       }
       console.log(`[SetupPage] Capacity check passed in ${Date.now() - tDbInsert}ms`)
-
-      if (rtcProvider === 'getstream') {
-        livekitTracksRef.current.forEach((track) => track?.stop());
-        stream?.getTracks().forEach((track) => track.stop());
-        setStream(null);
-        screenTrack?.stop();
-        PreflightStore.setLivekitRoom(null);
-        PreflightStore.setLivekitTracks([null, null]);
-        PreflightStore.clearTransferSession();
-        usePreflightStore.getState().clearPreflightConnection();
-
-        sessionStorage.setItem('tc_starting_stream', 'true');
-        sessionStorage.setItem('tc_camera_facing_mode', facingMode);
-        sessionStorage.setItem('tc_video_enabled', isVideoEnabled ? 'true' : 'false');
-        sessionStorage.setItem('tc_audio_enabled', isAudioEnabled ? 'true' : 'false');
-
-        if (!keyAwardedRef.current) {
-          keyAwardedRef.current = true;
-          void awardKeyToUser(user.id).then((result) => {
-            if (result?.success && result.key_letter) {
-              useKeyDiscoveryStore.getState().openDiscovery({
-                key_letter: result.key_letter,
-                rarity: result.rarity || 'COMMON',
-                value: result.value || 0,
-                is_key_to_city: !!result.is_key_to_city,
-                cashout_available_at: result.cashout_available_at || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-              });
-            }
-          }).catch((err) => {
-            console.warn('[SetupPage] Failed to award broadcast key:', err);
-          });
-        }
-
-        failureStage = 'redirecting/opening broadcast room';
-        broadcastStartLog('redirecting/opening GetStream broadcast room', {
-          streamId: data.id,
-          roomName,
-        });
-        sessionStorage.removeItem('tc_smoke_event_enabled');
-        navigate(`/broadcast/${data.id}`);
-        return;
-      }
 
       failureStage = 'requesting livekit token';
       broadcastStartLog('requesting livekit token', { streamId: data.id, roomName });
@@ -1829,6 +1729,17 @@ const handleStartStream = async () => {
           console.log('[SetupPage] Smoke event created for stream:', data.id);
         } catch (smokeErr) {
           console.warn('[SetupPage] Failed to create smoke event:', smokeErr);
+        }
+      }
+
+      // Activate automated audience after an admin broadcast starts
+      if (automatedAudienceEnabled && isStreamAdmin) {
+        try {
+          await activateAutomatedAudience(data.id);
+          console.log('[SetupPage] Automated audience activated for stream:', data.id);
+        } catch (actErr) {
+          console.warn('[SetupPage] Failed to activate automated audience:', actErr);
+          toast.warning('Broadcast is live, but automated audience activation failed.');
         }
       }
 
@@ -2325,7 +2236,7 @@ const handleStartStream = async () => {
                   <RefreshCw size={18} />
                 </button>
               )}
-              {category === 'gaming' && screenShare.isSupported && !usesGetStream && (
+              {category === 'gaming' && screenShare.isSupported && (
                 <button
                   type="button"
                   onClick={toggleScreenShare}
@@ -2673,13 +2584,34 @@ const handleStartStream = async () => {
                        : "bg-white/5 border-white/10 text-slate-500 hover:text-white hover:bg-white/10"
                    )}
                  >
-                   <span className="flex items-center gap-2">
-                     <Flame size={14} />
-                     Smoke Event {smokeEventEnabled ? 'ON' : 'OFF'}
-                   </span>
-                 </button>
-               </div>
-             )}
+                    <span className="flex items-center gap-2">
+                      <Flame size={14} />
+                      Smoke Event {smokeEventEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* Automated Audience Toggle (admin only) */}
+              {isStreamAdmin && (
+                <div className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setAutomatedAudienceEnabled(!automatedAudienceEnabled)}
+                    className={cn(
+                      "w-full md:w-auto px-4 py-2.5 rounded-xl text-xs font-bold transition-all border",
+                      automatedAudienceEnabled
+                        ? "bg-blue-500/15 border-blue-500/40 text-blue-300"
+                        : "bg-white/5 border-white/10 text-slate-500 hover:text-white hover:bg-white/10"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Bot size={14} />
+                      Automated Audience {automatedAudienceEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </button>
+                </div>
+              )}
 
               {/* Random Battle Toggle (general category only) */}
               {RANDOM_BATTLE_ENABLED && category === 'general' && (

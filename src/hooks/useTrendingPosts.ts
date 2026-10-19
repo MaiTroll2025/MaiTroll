@@ -23,7 +23,7 @@ export function useTrendingPosts(limit = 10) {
       try {
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
         const { data, error } = await supabase
-          .from('troll_wall_posts')
+          .from('troll_wall_posts_public')
           .select('id, username, avatar_url, content, likes, replies, metadata, created_at')
           .gte('created_at', since)
           .order('likes', { ascending: false })

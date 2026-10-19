@@ -7,7 +7,6 @@ import { useAuthStore } from '@/lib/store'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 import { WallPost } from '@/types/trollWall'
-import { trackPrideWallAction } from '@/services/prideChallengeTracker'
 import MentionTextarea from '@/components/MentionTextarea'
 import TrollWallPostModal from '@/components/home/TrollWallPostModal'
 import { parseTextWithLinks } from '@/lib/utils'
@@ -236,10 +235,8 @@ export default function WallPage() {
       const to = from + POSTS_PER_PAGE - 1
 
       const { data, error } = await supabase
-        .from('troll_wall_posts')
-        .select(
-          '*, user_profiles(username, avatar_url, is_admin, is_troll_officer, is_og_user, created_at, is_verified, is_gold, username_style, badge, officer_level, troller_level, is_troller)'
-        )
+        .from('troll_wall_posts_public')
+        .select('*')
         .is('reply_to_post_id', null)
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false })
@@ -249,19 +246,6 @@ export default function WallPage() {
 
       const rows: WallPost[] = (data || []).map((row: any) => ({
         ...row,
-        username: row.user_profiles?.username || row.username,
-        avatar_url: row.user_profiles?.avatar_url || row.avatar_url,
-        is_admin: row.user_profiles?.is_admin ?? row.is_admin,
-        is_troll_officer: row.user_profiles?.is_troll_officer ?? row.is_troll_officer,
-        is_og_user: row.user_profiles?.is_og_user ?? row.is_og_user,
-        user_created_at: row.user_profiles?.created_at ?? row.user_created_at,
-        is_verified: row.user_profiles?.is_verified,
-        is_gold: row.user_profiles?.is_gold,
-        username_style: row.user_profiles?.username_style,
-        badge: row.user_profiles?.badge,
-        officer_level: row.user_profiles?.officer_level,
-        troller_level: row.user_profiles?.troller_level,
-        is_troller: row.user_profiles?.is_troller,
         replies: [],
         user_liked: false,
         reactions: {},
@@ -430,10 +414,6 @@ export default function WallPage() {
       setMediaType(null)
       toast.success('Post created')
 
-      if (user?.id) {
-        trackPrideWallAction(user.id, 'wall_posts')
-        trackPrideWallAction(user.id, 'share_moment')
-      }
     } catch (err: any) {
       console.error('Error creating post:', err)
       toast.error(err?.message || 'Failed to create post')
@@ -471,9 +451,6 @@ export default function WallPage() {
               : p
           )
         )
-        if (data.liked && user?.id) {
-          trackPrideWallAction(user.id, 'like_posts')
-        }
       }
     } catch {
       toast.error('Failed to like post')

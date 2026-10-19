@@ -21,7 +21,6 @@ import { WallPost } from '@/types/trollWall'
 import NeonGlowUsername from '@/components/NeonGlowUsername'
 import UserNameWithAge from '@/components/UserNameWithAge'
 import { parseTextWithLinks } from '@/lib/utils'
-import { trackPrideWallAction } from '@/services/prideChallengeTracker'
 import WallShareModal from '@/components/trollWall/WallShareModal'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
@@ -106,26 +105,14 @@ export default function TrollWallPostModal({
       return
     }
     supabase
-      .from('troll_wall_posts')
-      .select(
-        '*, user_profiles(username, avatar_url, is_admin, is_troll_officer, is_og_user, created_at, is_verified, is_gold, username_style, badge, officer_level, troller_level, is_troller)'
-      )
+      .from('troll_wall_posts_public')
+      .select('*')
       .eq('reply_to_post_id', post.id)
       .order('created_at', { ascending: true })
       .limit(50)
       .then(({ data, error }) => {
         if (error) return
-        const rows = (data || []).map((r: any) => ({
-          ...r,
-          username: r.user_profiles?.username,
-          avatar_url: r.user_profiles?.avatar_url,
-          is_admin: r.user_profiles?.is_admin,
-          is_troll_officer: r.user_profiles?.is_troll_officer,
-          is_og_user: r.user_profiles?.is_og_user,
-          user_created_at: r.user_profiles?.created_at,
-          is_verified: r.user_profiles?.is_verified,
-          is_gold: r.user_profiles?.is_gold,
-        })) as WallPost[]
+        const rows = (data || []) as WallPost[]
         setReplies(rows)
       })
   }, [post?.id])
@@ -190,9 +177,6 @@ export default function TrollWallPostModal({
             ? { ...prev, likes: data.likes_count, user_liked: data.liked }
             : prev
         )
-        if (data.liked && user?.id) {
-          trackPrideWallAction(user.id, 'like_posts')
-        }
       }
     } catch {
       toast.error('Failed to like post')
@@ -242,25 +226,16 @@ export default function TrollWallPostModal({
 
       toast.success('Reply posted')
       setReplyText('')
-      if (user?.id) {
-        trackPrideWallAction(user.id, 'reply_posts')
-      }
       // Reload replies
       const { data } = await supabase
-        .from('troll_wall_posts')
-        .select(
-          '*, user_profiles(username, avatar_url, is_admin, is_troll_officer, is_og_user, created_at, is_verified, is_gold)'
-        )
+        .from('troll_wall_posts_public')
+        .select('*')
         .eq('reply_to_post_id', currentPost.id)
         .order('created_at', { ascending: true })
         .limit(50)
       if (data) {
         setReplies(
-          data.map((r: any) => ({
-            ...r,
-            username: r.user_profiles?.username,
-            avatar_url: r.user_profiles?.avatar_url,
-          })) as WallPost[]
+          data as WallPost[]
         )
       }
     } catch {

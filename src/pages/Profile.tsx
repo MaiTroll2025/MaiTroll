@@ -244,6 +244,34 @@ function ProfileInner() {
             const { data, error } = await query.maybeSingle();
 
             if (error || !data) {
+                if (userId) {
+                    const { data: publicIdentity, error: identityError } = await supabase
+                        .from('user_profiles_public_identity')
+                        .select('id, username, avatar_url')
+                        .eq('id', userId)
+                        .maybeSingle();
+
+                    if (identityError) {
+                        console.error('Failed to load public profile identity:', identityError);
+                    } else if (publicIdentity) {
+                        const restrictedProfile = {
+                            id: publicIdentity.id,
+                            username: publicIdentity.username,
+                            display_name: publicIdentity.username,
+                            avatar_url: publicIdentity.avatar_url,
+                            cover_url: null,
+                            banner_url: null,
+                            bio: null,
+                        };
+                        prevProfileIdRef.current = restrictedProfile.id;
+                        initialLoadRef.current = false;
+                        if (isMounted) {
+                            setProfile(restrictedProfile);
+                            setLoading(false);
+                        }
+                        return;
+                    }
+                }
 
                 console.error('Profile not found:', error);
 

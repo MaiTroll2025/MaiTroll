@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, LogOut, Zap, Monitor, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Bell, BellRing, Home, LogOut, Zap, Monitor, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2, ChevronDown, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
@@ -22,6 +22,7 @@ const Header = () => {
   const { user, profile } = useAuthStore()
   const headerFrame = useUserFrame(user?.id)
   const navigate = useNavigate()
+  const location = useLocation()
   const isPhone = useIsPhone()
 
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -43,6 +44,20 @@ const Header = () => {
   }
 
   const [unreadNotifications, setUnreadNotifications] = useState(0)
+  const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; type: string; is_read: boolean; created_at: string; username?: string; avatar_url?: string; metadata?: any }[]>([])
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
+  const notificationRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
+        setNotificationDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   const [isMaiSwitcherOpen, setIsMaiSwitcherOpen] = useState(false)
   const [hasDeviceSubscription, setHasDeviceSubscription] = useState(false)
   const [showDesktopDownload, setShowDesktopDownload] = useState(false)
@@ -219,6 +234,7 @@ const Header = () => {
     if (!user?.id) return
 
     const fetchNotifications = async () => {
+      setNotificationsLoading(true)
       try {
         const { data: count, error } = await supabase.rpc('get_unread_notification_count', {
           p_user_id: user.id,
@@ -226,21 +242,44 @@ const Header = () => {
 
         if (!error && typeof count === 'number') {
           setUnreadNotifications(count)
-          return
         }
 
-        const { count: fallbackCount, error: fallbackError } = await supabase
+        const { data: rows, error: rowsError } = await supabase
           .from('notifications')
-          .select('*', { count: 'exact', head: true })
+          .select('*')
           .eq('user_id', user.id)
-          .eq('is_read', false)
-          .or('is_dismissed.is.null,is_dismissed.eq.false')
+          .eq('is_dismissed', false)
+          .order('created_at', { ascending: false })
+          .limit(20)
 
-        if (!fallbackError && fallbackCount !== null) {
-          setUnreadNotifications(fallbackCount)
+        if (!rowsError && rows) {
+          setNotifications((rows as any[]).map((row) => ({
+            id: row.id,
+            title: row.title,
+            message: row.message,
+            type: row.type,
+            is_read: row.is_read,
+            created_at: row.created_at,
+            username: row.username,
+            avatar_url: row.avatar_url,
+            metadata: row.metadata,
+          })))
         }
       } catch (err) {
-        console.error('Error fetching notification count:', err)
+        console.error('Error fetching notifications:', err)
+      } finally {
+        setNotificationsLoading(false)
+      }
+
+      const { count: fallbackCount, error: fallbackError } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+        .or('is_dismissed.is.null,is_dismissed.eq.false')
+
+      if (!fallbackError && fallbackCount !== null) {
+        setUnreadNotifications(fallbackCount)
       }
     }
 
@@ -357,6 +396,16 @@ const Header = () => {
     <>
       <header className="h-[72px] bg-slate-950/95 backdrop-blur-2xl border-b border-cyan-400/20 text-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
         <div className="flex-none z-10 w-32 md:w-auto">
+          {location.pathname !== '/' && (
+            <button
+              onClick={() => navigate('/')}
+              className="p-2.5 text-slate-400 hover:text-white transition-all duration-200 hover:bg-white/[0.04] rounded-xl"
+              title="Home"
+              type="button"
+            >
+              <Home size={20} />
+            </button>
+          )}
           <RGBSearchBar />
         </div>
 
@@ -483,34 +532,96 @@ const Header = () => {
              )}
 
           {user && (
-            <button
-              onClick={async () => {
-                if (user?.id && unreadNotifications > 0) {
-                  setUnreadNotifications(0)
-
-                  try {
-                    await supabase.rpc('mark_all_notifications_read', {
-                      p_user_id: user.id,
-                    })
-                  } catch (err) {
-                    console.error('Error marking notifications as read:', err)
+            <div className="relative" ref={notificationRef}>
+              <button
+                onClick={() => {
+                  if (user?.id && unreadNotifications > 0) {
+                    setUnreadNotifications(0)
+                    try {
+                      void supabase.rpc('mark_all_notifications_read', {
+                        p_user_id: user.id,
+                      })
+                    } catch (err) {
+                      console.error('Error marking notifications as read:', err)
+                    }
                   }
-                }
+                  setNotificationDropdownOpen((prev) => !prev)
+                }}
+                className="relative p-2.5 text-slate-400 hover:text-purple-300 transition-all duration-200 hover:bg-white/[0.04] rounded-xl"
+                title="Notifications"
+                type="button"
+              >
+                <Bell className="w-5 h-5" />
 
-                navigate('/trollifications')
-              }}
-              className="relative p-2.5 text-slate-400 hover:text-purple-300 transition-all duration-200 hover:bg-white/[0.04] rounded-xl"
-              title="Notifications"
-              type="button"
-            >
-              <Bell className="w-5 h-5" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center bg-red-500 text-white font-bold shadow-[0_0_8px_rgba(239,68,68,0.4)]">
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </span>
+                )}
+                {notificationDropdownOpen && <ChevronDown className="w-4 h-4 text-purple-300 ml-1" />}
+              </button>
 
-              {unreadNotifications > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center bg-red-500 text-white font-bold shadow-[0_0_8px_rgba(239,68,68,0.4)]">
-                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                </span>
+              {notificationDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-80 rounded-xl border border-white/10 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_32px_rgba(0,0,0,0.6)] z-50">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                    <h3 className="text-xs font-black text-white">Notifications</h3>
+                    <button
+                      onClick={() => {
+                        setNotificationDropdownOpen(false)
+                        navigate('/trollifications')
+                      }}
+                      className="text-xs font-bold text-cyan-300 hover:text-cyan-200"
+                    >
+                      Open full page <ArrowRight className="w-3 h-3 ml-0.5" />
+                    </button>
+                  </div>
+
+                  {notificationsLoading ? (
+                    <div className="p-4 text-center text-xs text-slate-400">Loading…</div>
+                  ) : notifications.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-500">No new notifications</div>
+                  ) : (
+                    <div className="max-h-[60vh] overflow-y-auto py-1">
+                      {notifications.map((n) => (
+                        <button
+                          key={n.id}
+                          onClick={() => {
+                            setNotificationDropdownOpen(false)
+                            try {
+                              void supabase
+                                .from('notifications')
+                                .update({ is_read: true })
+                                .eq('id', n.id)
+                            } catch {}
+                          }}
+                          className={`w-full px-4 py-3 text-left border-b border-white/5 last:border-0 hover:bg-white/5 flex items-center gap-3 ${
+                            !n.is_read ? 'bg-white/5' : ''
+                          }`}
+                        >
+                          {n.avatar_url ? (
+                            <img src={n.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">
+                              {(n.username || '?')[0]?.toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-white truncate">{n.title}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{n.message}</p>
+                            <p className="text-[9px] text-slate-600 mt-0.5">
+                              {new Date(n.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                          {!n.is_read && (
+                            <div className="h-2 w-2 rounded-full bg-cyan-400 shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
-            </button>
+            </div>
           )}
 
           {user && (

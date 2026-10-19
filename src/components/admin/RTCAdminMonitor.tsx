@@ -56,6 +56,9 @@ interface StreamDetail {
   minutesRemaining?: number;
   giftExtensionMinutes?: number;
   rtc_provider?: string;
+  kind?: 'broadcast' | 'mai-sing-off';
+  sessionId?: string;
+  roomName?: string;
 }
 
  interface StreamViewer {
@@ -70,6 +73,9 @@ interface UserListItem {
     id: string;
     username: string;
     avatar_url: string | null;
+    ghost_mode_tier?: string | null;
+    ghost_mode_active?: boolean;
+    ghost_mode_expires_at?: string | null;
     role: string | null;
     is_admin?: boolean | null;
     last_seen_at?: string;
@@ -472,6 +478,42 @@ return {
          }),
        );
 
+        const { data: singOffSessions, error: singOffSessionsError } = await supabase
+          .from('mai_singoff_sessions')
+          .select('id, title, room_name, host_id, status, started_at, created_at')
+          .eq('status', 'active')
+          .is('ended_at', null)
+          .order('started_at', { ascending: false })
+          .limit(50);
+
+        if (singOffSessionsError) throw singOffSessionsError;
+
+        const singOffDetails = await Promise.all(
+          (singOffSessions || []).map(async (show) => {
+            const { count, error } = await supabase
+              .from('mai_singoff_participants')
+              .select('id', { count: 'exact', head: true })
+              .eq('session_id', show.id);
+
+            if (error) throw error;
+
+            return {
+              id: `mai-sing-off:${show.id}`,
+              title: show.title || 'Mai Talent Show',
+              startedAt: show.started_at || show.created_at || new Date().toISOString(),
+              viewers: count || 0,
+              duration: Math.floor((currentTime - new Date(show.started_at || show.created_at || currentTime).getTime()) / 1000),
+              isLive: true,
+              broadcasterId: show.host_id || '',
+              userId: show.host_id || '',
+              rtc_provider: 'getstream.io',
+              kind: 'mai-sing-off' as const,
+              sessionId: show.id,
+              roomName: show.room_name,
+            };
+          }),
+        );
+
         const { data: sessions } = await supabase
           .from('rtc_sessions')
           .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active, rtc_provider');
@@ -508,8 +550,8 @@ return {
         setStats({
           totalMinutes,
           activeSessions: rtcSessions.filter((s) => s.is_active).length,
-          liveStreams: streamDetails.length,
-          liveStreamDetails: streamDetails,
+          liveStreams: streamDetails.length + singOffDetails.length,
+          liveStreamDetails: [...singOffDetails, ...streamDetails],
           totalUsers: totalUsers || 0,
         });
        setLastRefresh(new Date());
@@ -681,13 +723,30 @@ return {
     setEditingUserId(null);
     setEditUsernameValue('');
     try {
-      const { data } = await supabase.from('user_profiles').select('id, username, avatar_url, role, is_admin, walkie_talkie_page').order('created_at', { ascending: false }).limit(200);
+      const { data, error } = await supabase.from('user_profiles').select('id, username, avatar_url, role, is_admin, walkie_talkie_page').order('created_at', { ascending: false }).limit(200);
+      if (error) throw error;
 
       const rows = (data || []) as UserListItem[];
+      const { data: ghostRows, error: ghostError } = await supabase.rpc('get_staff_ghost_profiles', {
+        p_target_user_ids: rows.map((row) => row.id),
+      });
+      if (ghostError) throw ghostError;
+      const ghostById = new Map(
+        ((ghostRows || []) as Array<{
+          user_id: string;
+          ghost_mode_tier: string | null;
+          ghost_mode_active: boolean;
+          ghost_mode_expires_at: string | null;
+        }>).map((row) => [row.user_id, row]),
+      );
+      const rowsWithGhostStatus = rows.map((row) => ({
+        ...row,
+        ...ghostById.get(row.id),
+      }));
       const onlineUserIds = usePresenceStore.getState().onlineUserIds;
       const onlineSet = new Set(onlineUserIds);
 
-      const sorted = rows.sort((a, b) => {
+      const sorted = rowsWithGhostStatus.sort((a, b) => {
         const aOnline = onlineSet.has(a.id) ? 1 : 0;
         const bOnline = onlineSet.has(b.id) ? 1 : 0;
         if (aOnline !== bOnline) return bOnline - aOnline;
@@ -697,6 +756,7 @@ return {
       setUserList(sorted);
     } catch (err) {
       console.error('[RTC Monitor] Error fetching user list:', err);
+      toast.error('Failed to load users and Ghost Mode status');
     } finally {
       setUserListLoading(false);
     }
@@ -1070,6 +1130,23 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     if (!selectedStream) return;
     setStreamActionLoading(true);
     try {
+      if (selectedStream.kind === 'mai-sing-off') {
+        if (!selectedStream.sessionId || !profile?.id) {
+          throw new Error('Mai Sing Off session or admin identity is missing');
+        }
+        const { data, error } = await supabase.rpc('singoff_end_show', {
+          p_session_id: selectedStream.sessionId,
+          p_user_id: profile.id,
+        });
+        if (error) throw error;
+        const result = data as { success?: boolean; error?: string } | null;
+        if (!result?.success) throw new Error(result?.error || 'Could not end Mai Sing Off show');
+        toast.success('Mai Sing Off show ended');
+        closeStreamModal();
+        void fetchRTCStats();
+        return;
+      }
+
       const { error } = await supabase
         .from('streams')
         .update({ is_live: false, status: 'ended', ended_at: new Date().toISOString() })
@@ -1083,7 +1160,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     } finally {
       setStreamActionLoading(false);
     }
-  }, [closeStreamModal, fetchRTCStats, selectedStream]);
+  }, [closeStreamModal, fetchRTCStats, profile?.id, selectedStream]);
 
    const kickUserFromStream = useCallback(async (userId: string, username: string) => {
      try {
@@ -1386,6 +1463,47 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       void supabase.removeChannel(channel);
     };
   }, [isStaff]);
+
+  useEffect(() => {
+    if (!isStaff) return;
+
+    const channel = supabase
+      .channel('admin-mai-sing-off-monitor')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'mai_singoff_sessions',
+      }, (payload) => {
+        const session = payload.new as { status?: string } | null;
+        if (session?.status === 'active') {
+          setShowLiveFlash(true);
+          window.setTimeout(() => setShowLiveFlash(false), 4000);
+        }
+        void fetchRTCStats();
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'mai_singoff_sessions',
+      }, (payload) => {
+        const session = payload.new as { status?: string } | null;
+        const previous = payload.old as { status?: string } | null;
+        if (session?.status === 'active' && previous?.status !== 'active') {
+          setShowLiveFlash(true);
+          window.setTimeout(() => setShowLiveFlash(false), 4000);
+        }
+        void fetchRTCStats();
+      })
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn('[RTCAdminMonitor] Mai Sing Off subscription error');
+        }
+      });
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [fetchRTCStats, isStaff]);
 
   // Monitor for new live streams to trigger black ring flash
   useEffect(() => {
@@ -2052,7 +2170,6 @@ const renderRtcTab = () => (
            ) : (
              streamDetailsWithDuration.map((stream) => {
                const totalAllowed = stream.totalMinutesAllowed || 360;
-               const _minutesUsed = stream.minutesUsed || 0;
                const minutesRemaining = stream.minutesRemaining ?? totalAllowed;
                const giftExtension = stream.giftExtensionMinutes || 0;
                const pctRemaining = totalAllowed > 0 ? (minutesRemaining / totalAllowed) * 100 : 100;
@@ -2063,7 +2180,13 @@ return (
                   <button
                     key={stream.id}
                     type="button"
-                    onClick={() => openStreamModal(stream)}
+                    onClick={() => {
+                      if (stream.kind === 'mai-sing-off' && stream.sessionId) {
+                        navigate(`/mai-sing-off/live/${stream.sessionId}`);
+                        return;
+                      }
+                      void openStreamModal(stream);
+                    }}
                     className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition-colors hover:bg-white/10"
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -2071,28 +2194,37 @@ return (
                       <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-300">LIVE</span>
                     </div>
                     <div className="mt-1 flex items-center gap-3 text-[11px] text-gray-400">
-                      <span>{stream.viewers} viewers</span>
+                      <span>{stream.viewers} {stream.kind === 'mai-sing-off' ? 'participants' : 'viewers'}</span>
                       <span>{formatDuration(stream.duration)}</span>
+                      {stream.kind === 'mai-sing-off' && (
+                        <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[9px] font-bold text-purple-200">
+                          MAI SING OFF
+                        </span>
+                      )}
                       <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[9px] font-bold text-blue-300">
                         {stream.rtc_provider?.toUpperCase() || 'LIVEKIT'}
                       </span>
                     </div>
-                   <div className="mt-2 flex items-center gap-2">
-                     <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                       <div
-                         className={`h-full rounded-full transition-all ${isCritical ? 'bg-red-500' : isLow ? 'bg-amber-500' : 'bg-green-500'}`}
-                         style={{ width: `${Math.min(100, pctRemaining)}%` }}
-                       />
+                   {stream.kind !== 'mai-sing-off' ? (
+                     <div>
+                       <div className="mt-2 flex items-center gap-2">
+                         <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                           <div
+                             className={`h-full rounded-full transition-all ${isCritical ? 'bg-red-500' : isLow ? 'bg-amber-500' : 'bg-green-500'}`}
+                             style={{ width: `${Math.min(100, pctRemaining)}%` }}
+                           />
+                         </div>
+                         <span className={`text-[10px] font-bold ${isCritical ? 'text-red-400' : isLow ? 'text-amber-400' : 'text-green-400'}`}>
+                           {minutesRemaining}m remaining
+                         </span>
+                       </div>
+                       {giftExtension > 0 && (
+                         <div className="mt-1 text-[10px] text-cyan-400">
+                           +{giftExtension}m from gifts
+                         </div>
+                       )}
                      </div>
-                     <span className={`text-[10px] font-bold ${isCritical ? 'text-red-400' : isLow ? 'text-amber-400' : 'text-green-400'}`}>
-                       {minutesRemaining}m remaining
-                     </span>
-                   </div>
-                   {giftExtension > 0 && (
-                     <div className="mt-1 text-[10px] text-cyan-400">
-                       +{giftExtension}m from gifts
-                     </div>
-                   )}
+                   ) : null}
                  </button>
                );
              })
@@ -2136,6 +2268,11 @@ return (
               filteredUsers.map((user) => (
                 <div key={user.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-3 hover:bg-white/5 cursor-pointer" onClick={() => navigate(`/profile/id/${user.id}`)}>
                   <div className="flex items-center justify-between gap-2">
+                    <img
+                      src={user.avatar_url || '/default-avatar.png'}
+                      alt={`${user.username}'s actual profile`}
+                      className="h-9 w-9 shrink-0 rounded-full object-cover"
+                    />
                     <div className="min-w-0 flex-1">
                        {editingUserId === user.id ? (
                          <div className="flex items-center gap-2">
@@ -2171,6 +2308,16 @@ return (
                          <>
                            <div className="truncate font-medium text-white">@{user.username}</div>
                            <div className="text-xs capitalize text-gray-400">{user.role || 'user'}</div>
+                           {user.ghost_mode_tier && (
+                             <div className={user.ghost_mode_active ? 'text-xs font-semibold text-emerald-300' : 'text-xs text-amber-300'}>
+                               {user.ghost_mode_active ? 'Ghost Mode Active' : 'Ghost Mode Expired'} · {user.ghost_mode_tier}
+                               {user.ghost_mode_expires_at && (
+                                 <span className="ml-1 font-normal text-gray-400">
+                                   · expires {new Date(user.ghost_mode_expires_at).toLocaleString()}
+                                 </span>
+                               )}
+                             </div>
+                           )}
                            {user.walkie_talkie_page !== null && user.walkie_talkie_page !== undefined && user.walkie_talkie_page > 0 && (
                              <div className="text-xs text-blue-400">WP#{user.walkie_talkie_page}</div>
                            )}

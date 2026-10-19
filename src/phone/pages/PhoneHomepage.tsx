@@ -567,7 +567,7 @@ function PhoneQuickLinks() {
       path: '/battles',
     },
     {
-      label: 'Leagues',
+      label: 'T League',
       icon: Trophy,
       path: '/leagues',
     },
@@ -1235,16 +1235,6 @@ export default function PhoneHomepage({
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
-        }
-        @keyframes floatSpooky {
-          0%, 100% { transform: translateY(0) rotate(-4deg); }
-          50% { transform: translateY(-10px) rotate(5deg); }
-        }
-        @keyframes halloweenFlicker {
-          0%, 100% { opacity: 1; }
-          48% { opacity: .82; }
-          50% { opacity: .55; }
-          52% { opacity: .95; }
         }
       `}</style>
     </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { Loader2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ type MatchFoundOverlayProps = {
   challengerStateCode: string | null;
   opponentStateCode: string | null;
   countdown: number | null;
+  isBroadcaster?: boolean;
 };
 
 const MatchFoundOverlay = React.memo(({
@@ -25,6 +27,7 @@ const MatchFoundOverlay = React.memo(({
   challengerStateCode,
   opponentStateCode,
   countdown,
+  isBroadcaster = false,
 }: MatchFoundOverlayProps) => {
   const [challenger, setChallenger] = useState<BroadcasterInfo | null>(null);
   const [opponent, setOpponent] = useState<BroadcasterInfo | null>(null);
@@ -143,8 +146,12 @@ const MatchFoundOverlay = React.memo(({
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-md gap-6">
       <div className="text-center">
-        <h2 className="text-2xl font-black text-white mb-1">Match Found!</h2>
-        <p className="text-sm text-white/60">Preparing battle arena...</p>
+        <h2 className="text-2xl font-black text-white mb-1">
+          {isBroadcaster ? "Getting Ready" : "Match Found!"}
+        </h2>
+        <p className="text-sm text-white/60">
+          {isBroadcaster ? "Your battle starts in..." : "Preparing battle arena..."}
+        </p>
       </div>
 
       <div className="flex items-center gap-6 md:gap-10">
@@ -155,10 +162,21 @@ const MatchFoundOverlay = React.memo(({
 
       {countdown !== null && countdown > 0 && (
         <div className="mt-2 text-center">
-          <div className="text-4xl font-black text-amber-400 animate-pulse">
-            {countdown}
-          </div>
-          <p className="text-xs text-white/50 mt-1">Match starting in...</p>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={countdown}
+              initial={{ opacity: 0, scale: 0.45, rotate: -12 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 1.4, rotate: 12 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="text-5xl font-black text-amber-400"
+            >
+              {countdown}
+            </motion.div>
+          </AnimatePresence>
+          <p className="text-xs text-white/50 mt-1">
+            {isBroadcaster ? "Battle starting in..." : "Match starting in..."}
+          </p>
         </div>
       )}
 

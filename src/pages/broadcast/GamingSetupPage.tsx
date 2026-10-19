@@ -4,6 +4,7 @@ import { Gamepad2 } from 'lucide-react'
 import GamingSetup from '@/components/broadcast/GamingSetup'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
+import { activateAutomatedAudience } from '@/lib/automatedAudience'
 import { generateUUID } from '@/lib/uuid'
 import { toast } from 'sonner'
 import { useAgoraScreenShare } from '@/hooks/useAgoraScreenShare'
@@ -184,6 +185,10 @@ function GamingSetupPageInner() {
             title: defaultTitle,
             game_title: selectedGameRef.current || '',
             category: 'gaming',
+            audience_type: 'public',
+            is_private: false,
+            is_paid: false,
+            pricing_type: 'free',
             status: 'starting',
             is_live: false,
             agora_channel: agoraChannel,
@@ -281,7 +286,7 @@ function GamingSetupPageInner() {
     }
     if (!streamData?.id || !channelName) { toast.error('Stream not ready'); return; }
     try {
-      await supabase.from('streams').update({
+      const { error: streamStatusError } = await supabase.from('streams').update({
         status: 'live',
         is_live: true,
         started_at: new Date().toISOString(),
@@ -289,14 +294,23 @@ function GamingSetupPageInner() {
         broadcast_disclaimer_accepted_at: agreementAcceptedAt,
         broadcast_disclaimer_user_id: user?.id,
       }).eq('id', streamData.id);
+      if (streamStatusError) {
+        throw new Error(`Failed to mark HytroGaming stream live: ${streamStatusError.message}`);
+      }
       await agora.goLive(channelName, streamData.id);
       setIsLive(true);
+      if (isAdmin && user?.id) {
+        void activateAutomatedAudience(streamData.id).catch((activationError) => {
+          console.error('[GamingSetupPage] Automated audience activation failed:', activationError);
+          toast.warning(`HytroGaming is live, but automated audience stayed inactive: ${activationError instanceof Error ? activationError.message : 'Request failed'}`);
+        });
+      }
       toast.success('You are now LIVE on HytroGaming!');
     } catch (err: any) {
       console.error('[GamingSetupPage] Go live failed:', err);
       toast.error(err?.message || 'Failed to go live');
     }
-  }, [isGamingLockedDown, streamData?.id, channelName, agora, user?.id]);
+  }, [isGamingLockedDown, streamData?.id, channelName, agora, user?.id, isAdmin]);
 
   const handleGoLive = useCallback(() => {
     if (!inlineAgreementChecked) {

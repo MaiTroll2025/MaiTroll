@@ -4,7 +4,7 @@ import type { SingOffUser } from '../types'
 
 interface CEOSeatProps {
   participant?: SingOffUser
-  videoTrack?: any
+  videoTrack?: MediaStreamTrack | null
   canDeclare: boolean
   onMaiWinner: (challengerId: string) => void
   currentRoundChallengers: { a: string; b: string }

@@ -611,6 +611,111 @@ Deno.serve(async (req: Request): Promise<Response> => {
     let battleStatus = "";
 
     const userIsAdmin = isAnonymousViewer ? false : isAdmin(profile);
+    const isTownMeetingRoom = roomName.startsWith("town-meeting-");
+
+    if (isTownMeetingRoom) {
+      const meetingId = roomName.slice("town-meeting-".length);
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (isAnonymousViewer || !uuidRegex.test(meetingId)) {
+        return withCors(
+          { success: false, error: "Invalid town meeting access.", code: "town_meeting_access_denied" },
+          403,
+          req,
+        );
+      }
+
+      const { data: meeting, error: meetingError } = await adminDb
+        .from("town_meetings")
+        .select("id, is_active, is_ended")
+        .eq("id", meetingId)
+        .maybeSingle();
+      if (meetingError) {
+        console.error("[livekit-token] Town meeting lookup failed", meetingError);
+        return withCors(
+          { success: false, error: "Unable to verify town meeting.", code: "town_meeting_lookup_failed" },
+          500,
+          req,
+        );
+      }
+      if (!meeting?.is_active || meeting.is_ended) {
+        return withCors(
+          { success: false, error: "This town meeting is not active.", code: "town_meeting_inactive" },
+          403,
+          req,
+        );
+      }
+
+      const officialRoles = [
+        "admin",
+        "owner",
+        "ceo",
+        "staff",
+        "secretary",
+        "lead_troll",
+        "lead_troll_officer",
+        "troll_officer",
+        "pastor",
+        "president",
+        "vice_president",
+        "official",
+        "prosecutor",
+        "attorney",
+      ];
+      const isOfficial = userIsAdmin
+        || profile?.is_staff === true
+        || officialRoles.includes(cleanString(profile?.role).toLowerCase());
+      const { data: maiEntitlement, error: maiEntitlementError } = await adminDb
+        .from("mai_supreme_entitlements")
+        .select("starts_at, expires_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (maiEntitlementError) {
+        console.error("[livekit-token] Mai Supreme lookup failed", maiEntitlementError);
+        return withCors(
+          { success: false, error: "Unable to verify Mai Supreme access.", code: "mai_supreme_lookup_failed" },
+          500,
+          req,
+        );
+      }
+      const now = Date.now();
+      const isMaiSupreme = Boolean(maiEntitlement
+        && new Date(maiEntitlement.starts_at).getTime() <= now
+        && new Date(maiEntitlement.expires_at).getTime() > now);
+      if (!isOfficial && !isMaiSupreme) {
+        return withCors(
+          { success: false, error: "An authorized official role or active Mai Supreme membership is required.", code: "town_meeting_access_denied" },
+          403,
+          req,
+        );
+      }
+
+      if (category === "publisher" || category === "seat") {
+        const { data: seat, error: seatError } = await adminDb
+          .from("town_meeting_seats")
+          .select("id")
+          .eq("meeting_id", meetingId)
+          .eq("user_id", userId)
+          .is("left_at", null)
+          .is("removed_at", null)
+          .maybeSingle();
+        if (seatError) {
+          console.error("[livekit-token] Town meeting seat lookup failed", seatError);
+          return withCors(
+            { success: false, error: "Unable to verify town meeting seat.", code: "town_meeting_seat_lookup_failed" },
+            500,
+            req,
+          );
+        }
+        if (!seat) {
+          return withCors(
+            { success: false, error: "Claim a town meeting seat before publishing.", code: "town_meeting_seat_required" },
+            403,
+            req,
+          );
+        }
+      }
+    }
 
     if (roomName.startsWith("battle-")) {
       isBattleRoom = true;
@@ -828,27 +933,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
           403,
           req,
         );
-      }
-    }
-
-    /*
-     * Preserve compatibility with old clients that request audience mode
-     * after receiving an approved stage pass.
-     */
-    if (
-      category === "viewer" &&
-      !userOwnsStream &&
-      !userIsAdmin &&
-      !isBattleRoom
-    ) {
-      const hasStagePass = await userHasStagePass(
-        adminDb,
-        roomName,
-        userId,
-      );
-
-      if (hasStagePass) {
-        category = "seat";
       }
     }
 

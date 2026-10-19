@@ -45,7 +45,6 @@ interface GiftItem {
   icon: string
   value: number
   category: string
-  holiday_theme: string | null
   description?: string
   animation_type?: string
   animationUrl?: string
@@ -93,7 +92,7 @@ export default function SendGiftModal({
     }
   }, [defaultTargetId, participants, streamerId])
 
-  // Fetch gift items from database (holiday + regular) and merge with hardcoded defaults
+  // Fetch regular gift items from the database and merge with hardcoded defaults
   useEffect(() => {
     if (!isOpen) return
 
@@ -115,7 +114,6 @@ export default function SendGiftModal({
           icon: item.icon || item.icon_url || '',
           value: item.coin_cost,
           category: item.category || 'Common',
-          holiday_theme: item.holiday_theme || null,
           description: item.description || undefined,
           animation_type: item.animation_type || undefined,
           animation_url: item.animation_url || null,
@@ -142,7 +140,6 @@ export default function SendGiftModal({
             icon: (g as any).icon || '',
             value: (g as any).coinCost || 0,
             category: g.category || 'Common',
-            holiday_theme: null,
             description: undefined,
             animation_type: undefined,
             animation_url: null,
@@ -178,7 +175,6 @@ export default function SendGiftModal({
           icon: (g as any).icon || '',
           value: (g as any).coinCost || 0,
           category: g.category || 'Common',
-          holiday_theme: null,
           currency: 'troll_coins' as const
         }))
         setGiftItems(fallback)
@@ -230,7 +226,6 @@ export default function SendGiftModal({
         type: 'paid' as const,
         category: item.category || 'Common',
         animationTheme: item.description || item.animation_type || '',
-        holidayTheme: item.holiday_theme,
         icon: item.icon,
         specialEffect: item.description,
         effect: item.description,
@@ -328,9 +323,7 @@ export default function SendGiftModal({
               onClick={() => handleGiftSend(giftWithType)}
               className={`gift-card p-3 rounded-lg text-sm flex flex-col items-center transition ${
                 canAfford 
-                  ? (gift as any).holidayTheme 
-                    ? 'bg-red-700/30 hover:bg-red-700/40 border-2 border-red-400' 
-                    : category.toLowerCase() === 'common'
+                  ? category.toLowerCase() === 'common'
                     ? 'bg-purple-700/30 hover:bg-purple-700/40'
                     : category.toLowerCase() === 'premium'
                     ? 'bg-yellow-700/30 hover:bg-yellow-700/40'
@@ -349,9 +342,6 @@ export default function SendGiftModal({
             >
               <span className="gift-icon text-2xl">{gift.name.split(' ')[0]}</span>
               <span className="gift-name text-xs text-center mt-1">{gift.name.replace(/^[^\s]+\s/, '')}</span>
-              {(gift as any).holidayTheme && (
-                <span className="text-[9px] text-yellow-300 mt-0.5">🎁 Holiday</span>
-              )}
               <span className={`gift-cost text-xs mt-1 text-gray-300`}>
                 {gift.coinCost.toLocaleString()} 🪙
               </span>

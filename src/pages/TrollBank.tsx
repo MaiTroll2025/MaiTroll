@@ -4,11 +4,11 @@ import { supabase } from '@/lib/supabase'
 import { useBank } from '@/lib/hooks/useBank'
 import { useCoins } from '@/lib/hooks/useCoins'
 import { toast } from 'sonner'
-import { Coins, CreditCard, Landmark, History, AlertCircle, CheckCircle, Lock, Plus, ArrowUpRight, CalendarClock, AlertTriangle, Clock, TrendingDown } from 'lucide-react'
+import { Coins, CreditCard, Landmark, History, AlertCircle, CheckCircle, Lock, Plus, ArrowUpRight, CalendarClock, AlertTriangle, Clock, TrendingDown, User, FileText, ArrowRight, Shield } from 'lucide-react'
 import { MaiTrollTheme } from '@/styles/trollCityTheme'
 import TrollCardSaver from '@/components/payments/TrollCardSaver'
 import { useAuthStore } from '@/lib/store'
-
+import { CreditReportModal } from '@/components/bank/CreditReportModal'
 function _getDaysUntilDue(dueDate: string | null): number | null {
   if (!dueDate) return null;
   const now = new Date();
@@ -16,22 +16,22 @@ function _getDaysUntilDue(dueDate: string | null): number | null {
   const due = new Date(dueDate + 'T00:00:00');
   return Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
-
 export default function TrollBank() {
   const { user, profile, refreshProfile } = useAuthStore()
   const { balances, refreshCoins } = useCoins()
   const { loans, ledger, payLoan, payCreditCard, creditInfo } = useBank()
   const activeLoan = loans && loans.length > 0 ? loans[0] : null
-  
   const [bankBalance, setBankBalance] = useState<number | null>(null)
-  
   const [savedCards, setSavedCards] = useState<any[]>([])
   const [showSaveCardModal, setShowSaveCardModal] = useState(false)
-
+  // Credit card application state
+  const [creditApplication, setCreditApplication] = useState<any>(null)
+  const [applying, setApplying] = useState(false)
+  const [showCreditReportModal, setShowCreditReportModal] = useState(false)
+  const [creditReport, setCreditReport] = useState<any>(null)
   // Small installment purchases (credit-building credit-card items under 100 coins)
   const [smallPurchases, setSmallPurchases] = useState<any[]>([])
   const [smallPurchasesLoading, setSmallPurchasesLoading] = useState(false)
-
   const fetchSmallPurchases = useCallback(async () => {
     if (!user?.id) return
     setSmallPurchasesLoading(true)
@@ -50,14 +50,12 @@ export default function TrollBank() {
       setSmallPurchasesLoading(false)
     }
   }, [user?.id])
-
   // Refresh profile if not loaded
   useEffect(() => {
     if (user && !profile) {
       refreshProfile()
     }
   }, [user, profile, refreshProfile])
-
   // Function to fetch saved cards
   const fetchSavedCards = useCallback(async () => {
     if (!user?.id) return
@@ -67,26 +65,69 @@ export default function TrollBank() {
         .select('*')
         .eq('user_id', user.id)
         .order('is_default', { ascending: false })
-
       if (error) throw error
       setSavedCards(data || [])
     } catch (err) {
       console.error('Failed to fetch saved cards:', err)
     }
   }, [user.id])
-
   // Fetch saved cards on mount and when user changes
   useEffect(() => {
     fetchSavedCards()
   }, [fetchSavedCards, user.id])
-
   // Fetch small purchase credit-building trackers
-   
   useEffect(() => {
     fetchSmallPurchases()
     // eslint-enable react-hooks/exhaustive-deps
   }, [fetchSmallPurchases])
-
+  // Fetch credit card application status
+  const fetchCreditApplication = useCallback(async () => {
+    if (!user?.id) return
+    try {
+      const { data, error } = await supabase
+        .from('credit_card_applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('applied_at', { ascending: false })
+        .limit(1)
+      if (error) throw error
+      setCreditApplication(data?.[0] || null)
+    } catch (err) {
+      console.error('Failed to fetch credit application:', err)
+    }
+  }, [user?.id])
+  useEffect(() => {
+    fetchCreditApplication()
+  }, [fetchCreditApplication])
+  const handleApplyForCreditCard = async () => {
+    if (!user?.id) return
+    setApplying(true)
+    try {
+      const { data, error } = await supabase.rpc('apply_for_credit_card')
+      if (error) throw error
+      if (data?.success) {
+        setCreditApplication({ ...data, status: data.status || 'approved' })
+        toast.success(data.message || 'Credit card application approved!')
+        refreshProfile()
+      } else {
+        toast.error(data?.error || 'Application denied')
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Application failed')
+    } finally {
+      setApplying(false)
+    }
+  }
+  const handleViewCreditReport = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.rpc('get_credit_report', { p_user_id: userId })
+      if (error) throw error
+      setCreditReport(data)
+      setShowCreditReportModal(true)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to load credit report')
+    }
+  }
   // Fetch and Subscribe to Bank Reserves
   useEffect(() => {
     const fetchReserves = async () => {
@@ -98,9 +139,7 @@ export default function TrollBank() {
         console.error('Failed to fetch bank reserves:', err)
       }
     }
-
     fetchReserves()
-
     // Subscribe to ledger changes to update reserves instantly
     const channel = supabase
       .channel('bank_reserves_updates')
@@ -110,19 +149,15 @@ export default function TrollBank() {
         () => fetchReserves()
       )
       .subscribe()
-
     return () => {
       supabase.removeChannel(channel)
     }
   }, [])
-
   const [payAmount, setPayAmount] = useState<string>('')
   const [paying, setPaying] = useState(false)
-  
   // Legacy Loan Payment
   const [legacyPayAmount, setLegacyPayAmount] = useState<string>('')
   const [legacyPaying, setLegacyPaying] = useState(false)
-
   const handlePayCredit = async () => {
     if (!payAmount) return
     const amount = parseInt(payAmount)
@@ -130,18 +165,15 @@ export default function TrollBank() {
       toast.error('Invalid amount')
       return
     }
-    
     setPaying(true)
     const result = await payCreditCard(amount)
     setPaying(false)
-    
     if (result.success) {
       setPayAmount('')
       refreshCoins()
       fetchSmallPurchases() // refresh small-installment trackers after paying the bill
     }
   }
-
   const handlePayLegacyLoan = async () => {
     if (!activeLoan || !legacyPayAmount) return
     const amount = parseInt(legacyPayAmount)
@@ -149,21 +181,17 @@ export default function TrollBank() {
       toast.error('Invalid amount')
       return
     }
-    
     setLegacyPaying(true)
     const result = await payLoan(activeLoan.id, amount)
     setLegacyPaying(false)
-    
     if (result.success) {
       setLegacyPayAmount('')
       refreshCoins()
     }
   }
-
   return (
     <div className={`min-h-screen ${MaiTrollTheme.backgrounds.primary} text-white p-6 pb-24`}>
       <div className="max-w-4xl mx-auto space-y-8">
-        
         {/* Header */}
         <div className="flex items-center gap-4">
           <div className="p-3 bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-xl shadow-lg shadow-yellow-900/20">
@@ -176,7 +204,6 @@ export default function TrollBank() {
             <p className={MaiTrollTheme.text.secondary}>Secure Coin Storage & Credit Services</p>
           </div>
         </div>
-
         {/* Balance Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Main Balance */}
@@ -196,7 +223,6 @@ export default function TrollBank() {
               </div>
             </div>
           </div>
-
           {/* Bank Reserves */}
           <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 relative overflow-hidden group`}>
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -216,7 +242,6 @@ export default function TrollBank() {
               </div>
             </div>
           </div>
-
           {/* Credit Card Status */}
           <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 relative overflow-hidden`}>
             <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -257,14 +282,141 @@ export default function TrollBank() {
             </div>
           </div>
         </div>
-
+        {/* Credit Card Application */}
+        <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-400" />
+            Credit Card Application
+          </h2>
+          {creditApplication && creditApplication.status === 'approved' ? (
+            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm text-green-300 mb-1">Application Status</p>
+                  <p className="text-white font-bold">✓ Approved</p>
+                </div>
+                <button
+                  onClick={() => handleViewCreditReport(user!.id)}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  View Your Credit Report
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-400 text-xs uppercase font-bold">Credit Score at Application</p>
+                  <p className="text-white font-mono">{creditApplication.credit_score_at_application ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs uppercase font-bold">Credit Limit</p>
+                  <p className="text-white font-mono">{creditApplication.credit_limit?.toLocaleString() ?? '—'} coins</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs uppercase font-bold">Required Score</p>
+                  <p className="text-green-400 font-mono">500</p>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-400">
+                {creditApplication.reason || 'Your credit card is active and ready to use in the Coin Store bank.'}
+              </p>
+            </div>
+          ) : creditApplication && creditApplication.status === 'denied' ? (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm text-red-300 mb-1">Application Status</p>
+                  <p className="text-white font-bold">✗ Denied</p>
+                </div>
+                <button
+                  onClick={() => handleViewCreditReport(user!.id)}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  View Your Credit Report
+                </button>
+              </div>
+              <p className="mt-3 text-sm text-red-300">
+                {creditApplication.reason || 'Your credit score must reach 500 to be approved.'}
+              </p>
+              <div className="mt-4 p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
+                <p className="text-sm text-red-300">
+                  <strong>How to reach 500:</strong> Broadcast live streams (+1/hr), view streams (+1/2hrs), send gifts (+1 per 1,000 coins), pay off credit card debt (+5), or make small installment purchases.
+                </p>
+              </div>
+            </div>
+          ) : creditApplication && creditApplication.status === 'pending' ? (
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm text-yellow-300 mb-1">Application Status</p>
+                  <p className="text-white font-bold">⏳ Pending Review</p>
+                </div>
+                <button
+                  onClick={() => handleViewCreditReport(user!.id)}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  View Your Credit Report
+                </button>
+              </div>
+              <p className="mt-3 text-sm text-yellow-300">
+                Your application is under review. You will be notified once a decision is made.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-400">
+                To use credit cards in the Coin Store bank, you must apply and be approved.
+                <span className="text-yellow-400 font-bold">Minimum credit score: 500.</span>
+                Your current score is <span className={`text-white font-bold ${(profile?.credit_score ?? 400) >= 500 ? 'text-green-400' : 'text-red-400'}`}>{profile?.credit_score ?? 400}</span>.
+              </p>
+              <div className="p-4 bg-gray-800/50 rounded-xl">
+                <h4 className="text-sm font-semibold text-white mb-2">How to increase your credit score:</h4>
+                <ul className="text-sm text-gray-300 space-y-1 list-disc pl-4">
+                  <li><strong>Broadcast live streams</strong> — +1 point per verified host hour</li>
+                  <li><strong>View live streams</strong> — +1 point per 2 verified viewer hours</li>
+                  <li><strong>Send gifts in streams</strong> — +1 point per 1,000 coins gifted</li>
+                  <li><strong>Pay off credit card debt</strong> — +5 points per payment</li>
+                  <li><strong>Make small installment purchases</strong> (under 100 coins with credit card)</li>
+                  <li><strong>Avoid loans</strong> — each loan drops your score by 1–10 points</li>
+                </ul>
+              </div>
+              <button
+                onClick={handleApplyForCreditCard}
+                disabled={applying || ((profile?.credit_score ?? 400) < 500)}
+                className={`w-full py-3 rounded-xl font-bold text-white transition-colors flex items-center justify-center gap-2 ${
+                  (profile?.credit_score ?? 400) < 500
+                    ? 'bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-500'
+                }`}
+              >
+                {applying ? (
+                  <span className="flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4 animate-spin" />
+                    Applying...
+                  </span>
+                ) : (
+                  <span>
+                    <Shield className="w-4 h-4" />
+                    Apply for Credit Card
+                  </span>
+                )}
+              </button>
+              {(profile?.credit_score ?? 400) < 500 && (
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Your score of {profile?.credit_score} is below the required 500. Keep building credit through broadcasting, viewing, and gifting.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
          {/* Credit Card Management */}
          <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
              <CreditCard className="w-5 h-5 text-purple-400" />
              Credit Card Management
            </h2>
-
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
                   <p className="text-sm text-purple-300 mb-1">Total Credit Limit</p>
@@ -288,7 +440,6 @@ export default function TrollBank() {
                   </p>
               </div>
            </div>
-
            {/* Billing Cycle Info */}
            {creditInfo.used > 0 && (
              <div className="mb-4">
@@ -335,7 +486,6 @@ export default function TrollBank() {
                    </div>
                  )
                )}
-
                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                  <h3 className="font-semibold text-emerald-400 mb-2">Make a Payment</h3>
                  <p className={`text-sm ${MaiTrollTheme.text.secondary} mb-4`}>
@@ -373,7 +523,6 @@ export default function TrollBank() {
                    </button>
                  </div>
                </div>
-
                {/* Payment History */}
                {(creditInfo.onTimePayments > 0 || creditInfo.latePayments > 0) && (
                  <div className="mt-4 p-4 bg-gray-800/50 rounded-xl">
@@ -395,7 +544,6 @@ export default function TrollBank() {
                )}
              </div>
            )}
-
            <div className="mt-6 p-4 bg-gray-800/50 rounded-xl">
               <h3 className="text-sm font-semibold text-gray-300 mb-2">Credit Card Terms</h3>
               <ul className="text-sm text-gray-400 space-y-1 list-disc pl-4">
@@ -411,7 +559,6 @@ export default function TrollBank() {
               </ul>
            </div>
          </div>
-
         {/* ── Small Installment Purchase Credit Building ─────────────────── */}
         <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
@@ -422,7 +569,6 @@ export default function TrollBank() {
             Any credit-card purchase under <span className="text-amber-400 font-bold">100 troll coins</span> is tracked
             as a micro-installment. Pay it back over time and earn credit-score points at 25 %, 50 %, 75 %, and 100 % repayment.
           </p>
-
           {smallPurchasesLoading ? (
             <p className="text-gray-400 text-sm">Loading…</p>
           ) : smallPurchases.length === 0 ? (
@@ -446,14 +592,12 @@ export default function TrollBank() {
                         {isPaid ? '✓ Paid Off' : `${pct}% repaid`}
                       </span>
                     </div>
-
                     <div className="w-full bg-zinc-900/80 rounded-full h-2 overflow-hidden mb-2">
                       <div
                         className={`h-2 rounded-full transition-all ${isPaid ? 'bg-green-500' : pct >= 75 ? 'bg-amber-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-blue-500'}`}
                         style={{ width: `${Math.min(pct, 100)}%` }}
                       />
                     </div>
-
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span>{p.total_paid.toLocaleString()} / {p.original_price.toLocaleString()} coins repaid</span>
                       <span>Milestone reached: {p.milestone_level}/4</span>
@@ -464,7 +608,6 @@ export default function TrollBank() {
             </div>
           )}
         </div>
-
         {/* Saved Payment Methods */}
         <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
           <h2 className="text-xl font-bold mb-4 flex items-center justify-between">
@@ -480,7 +623,6 @@ export default function TrollBank() {
               Add Card
             </button>
           </h2>
-
           <div className="space-y-3">
             {savedCards.length === 0 ? (
               <p className="text-gray-400 text-center py-8">
@@ -522,14 +664,11 @@ export default function TrollBank() {
                               .update({ is_default: false })
                               .eq('user_id', user?.id)
                               .neq('id', card.id)
-
                             const { error } = await supabase
                               .from('user_payment_methods')
                               .update({ is_default: true })
                               .eq('id', card.id)
-
                             if (error) throw error
-
                             setSavedCards(prev => prev.map(c => ({ ...c, is_default: c.id === card.id })))
                             toast.success('Default payment method updated')
                           } catch (_err: any) {
@@ -544,16 +683,13 @@ export default function TrollBank() {
                     <button
                       onClick={async () => {
                         if (!confirm('Are you sure you want to remove this payment method?')) return
-                        
                         try {
                           const { error } = await supabase
                             .from('user_payment_methods')
                             .delete()
                             .eq('id', card.id)
                             .eq('user_id', user?.id)
-
                           if (error) throw error
-
                           setSavedCards(prev => prev.filter(c => c.id !== card.id))
                           toast.success('Payment method removed')
                         } catch (_err: any) {
@@ -572,7 +708,6 @@ export default function TrollBank() {
             )}
           </div>
         </div>
-
         {/* Legacy Loan Section (Only visible if active) */}
         {activeLoan && (
             <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6 border-red-500/30`}>
@@ -581,7 +716,6 @@ export default function TrollBank() {
                 Legacy Loan (Outstanding)
             </h2>
             <p className="text-sm text-gray-400 mb-4">You have an outstanding loan from the old system. Please pay this off.</p>
-            
             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                 <div className="flex justify-between items-center mb-4">
                     <span className="text-red-300">Amount Due</span>
@@ -606,7 +740,6 @@ export default function TrollBank() {
             </div>
             </div>
         )}
-
         {/* Ledger */}
         <div className={`${MaiTrollTheme.backgrounds.card} ${MaiTrollTheme.borders.glass} rounded-2xl p-6`}>
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
@@ -635,7 +768,6 @@ export default function TrollBank() {
             )}
           </div>
         </div>
-
       </div>
       {/* Save Card Modal */}
       {showSaveCardModal && (
@@ -659,6 +791,13 @@ export default function TrollBank() {
             </button>
           </div>
         </div>
-      )}    </div>
-  )
-}
+        )}
+        {/* Credit Report Modal */}
+        <CreditReportModal
+          show={showCreditReportModal}
+          report={creditReport}
+          onClose={() => setShowCreditReportModal(false)}
+        />
+      </div>
+      )
+    }

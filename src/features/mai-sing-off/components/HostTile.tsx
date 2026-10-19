@@ -4,7 +4,7 @@ import type { SingOffUser } from '../types'
 
 interface HostTileProps {
   participant?: SingOffUser
-  videoTrack?: any
+  videoTrack?: MediaStreamTrack | null
   isSpeaking: boolean
   muted: boolean
   onSitToggle: () => void

@@ -32,6 +32,80 @@ export default function CreatePostModal({
   const [availableStreams, setAvailableStreams] = useState<any[]>([])
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [hasActiveSupreme, setHasActiveSupreme] = useState(false)
+  const [privacyMode, setPrivacyMode] = useState<'public' | 'selected'>('public')
+  const [availableRecipients, setAvailableRecipients] = useState<Array<{ id: string; username: string }>>([])
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
+  const [rememberSelectedUsers, setRememberSelectedUsers] = useState(false)
+  const [recipientLoadError, setRecipientLoadError] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen || !user?.id) return
+
+    let cancelled = false
+    const loadPrivatePostRecipients = async () => {
+      try {
+        const { data: entitlement, error: entitlementError } = await supabase
+          .from('ghost_mode_entitlements')
+          .select('tier, starts_at, expires_at')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (entitlementError) throw entitlementError
+
+        const activeSupreme = entitlement?.tier === 'supreme'
+          && new Date(entitlement.starts_at).getTime() <= Date.now()
+          && new Date(entitlement.expires_at).getTime() > Date.now()
+        if (!activeSupreme) {
+          if (!cancelled) {
+            setHasActiveSupreme(false)
+            setAvailableRecipients([])
+            setSelectedUserIds([])
+            setPrivacyMode('public')
+          }
+          return
+        }
+
+        const [followsResult, savedResult] = await Promise.all([
+          supabase.from('user_follows').select('following_id').eq('follower_id', user.id),
+          supabase.from('ghost_mode_saved_users').select('saved_user_id').eq('user_id', user.id),
+        ])
+        if (followsResult.error) throw followsResult.error
+        if (savedResult.error) throw savedResult.error
+
+        const recipientIds = Array.from(new Set([
+          ...(followsResult.data || []).map((row) => row.following_id),
+          ...(savedResult.data || []).map((row) => row.saved_user_id),
+        ])).filter((id) => id !== user.id)
+        let recipients: Array<{ id: string; username: string }> = []
+        if (recipientIds.length > 0) {
+          const { data, error } = await supabase
+            .from('user_profiles_public_identity')
+            .select('id, username')
+            .in('id', recipientIds)
+          if (error) throw error
+          recipients = (data || []).map((recipient) => ({
+            id: recipient.id,
+            username: recipient.username || 'xxxxx',
+          }))
+        }
+
+        if (!cancelled) {
+          setHasActiveSupreme(true)
+          setAvailableRecipients(recipients)
+          setRecipientLoadError(false)
+        }
+      } catch (error) {
+        console.error('[CreatePostModal] Failed to load private post recipients:', error)
+        if (!cancelled) {
+          setRecipientLoadError(true)
+          toast.error('Could not load saved/followed users for private posts.')
+        }
+      }
+    }
+
+    void loadPrivatePostRecipients()
+    return () => { cancelled = true }
+  }, [isOpen, user?.id])
 
   // Load user's streams for stream_announce type
   const loadStreams = useCallback(async () => {
@@ -95,6 +169,11 @@ export default function CreatePostModal({
 
     if (!content.trim()) {
       toast.error('Please enter some content')
+      return
+    }
+
+    if (privacyMode === 'selected' && (!hasActiveSupreme || selectedUserIds.length === 0)) {
+      toast.error('Choose at least one recipient for a Ghost Mode Supreme private post.')
       return
     }
 
@@ -175,7 +254,9 @@ export default function CreatePostModal({
         user_id: user.id,
         post_type: (postType === 'image' || postType === 'video') ? 'text' : postType,
         content: content.trim(),
-        metadata
+        metadata,
+        privacy_mode: privacyMode,
+        selected_user_ids: privacyMode === 'selected' ? selectedUserIds : [],
       })
 
       const { data: insertedPost, error } = await supabase
@@ -216,9 +297,38 @@ export default function CreatePostModal({
         }
       }
 
+      if (privacyMode === 'selected' && rememberSelectedUsers) {
+        const { data: alreadySaved, error: savedError } = await supabase
+          .from('ghost_mode_saved_users')
+          .select('saved_user_id')
+          .eq('user_id', user.id)
+          .in('saved_user_id', selectedUserIds)
+        if (savedError) {
+          console.error('[CreatePostModal] Failed to check saved users:', savedError)
+          toast.error('Post created, but saved recipients could not be updated.')
+        } else {
+          const knownIds = new Set((alreadySaved || []).map((row) => row.saved_user_id))
+          const newSaved = selectedUserIds
+            .filter((id) => !knownIds.has(id))
+            .map((saved_user_id) => ({ user_id: user.id, saved_user_id }))
+          if (newSaved.length > 0) {
+            const { error: saveError } = await supabase
+              .from('ghost_mode_saved_users')
+              .insert(newSaved)
+            if (saveError) {
+              console.error('[CreatePostModal] Failed to save recipients:', saveError)
+              toast.error('Post created, but saved recipients could not be updated.')
+            }
+          }
+        }
+      }
+
       toast.success('Post created!')
       setContent('')
       setPostType('text')
+      setPrivacyMode('public')
+      setSelectedUserIds([])
+      setRememberSelectedUsers(false)
       setSelectedStreamId('')
       setVideoFile(null)
       setImageFile(null)
@@ -288,6 +398,67 @@ export default function CreatePostModal({
               ))}
             </div>
           </div>
+
+          {hasActiveSupreme && (
+            <fieldset className="rounded-lg border border-purple-500/30 bg-black/20 p-3">
+              <legend className="px-1 text-sm font-semibold text-purple-200">Post visibility</legend>
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <input
+                  type="radio"
+                  name="wall-post-visibility"
+                  checked={privacyMode === 'public'}
+                  onChange={() => setPrivacyMode('public')}
+                />
+                Public post
+              </label>
+              <label className="mt-2 flex items-center gap-2 text-sm text-purple-200">
+                <input
+                  type="radio"
+                  name="wall-post-visibility"
+                  checked={privacyMode === 'selected'}
+                  onChange={() => setPrivacyMode('selected')}
+                />
+                Ghost Supreme - selected users only
+              </label>
+              {privacyMode === 'selected' && (
+                <div className="mt-3">
+                  <p className="mb-2 text-xs text-gray-400">
+                    Only you and selected users can access this post. Block and moderation rules still apply.
+                  </p>
+                  {recipientLoadError ? (
+                    <p className="text-xs text-rose-300">Recipient list failed to load. Close and reopen the composer to retry.</p>
+                  ) : availableRecipients.length === 0 ? (
+                    <p className="text-xs text-gray-400">Follow or save users before choosing private post recipients.</p>
+                  ) : (
+                    <div className="max-h-36 space-y-1 overflow-y-auto">
+                      {availableRecipients.map((recipient) => (
+                        <label key={recipient.id} className="flex items-center gap-2 text-sm text-gray-200">
+                          <input
+                            type="checkbox"
+                            checked={selectedUserIds.includes(recipient.id)}
+                            onChange={(event) => {
+                              setSelectedUserIds((current) => event.target.checked
+                                ? [...current, recipient.id]
+                                : current.filter((id) => id !== recipient.id))
+                            }}
+                          />
+                          {recipient.username}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  <label className="mt-3 flex items-center gap-2 text-xs text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={rememberSelectedUsers}
+                      onChange={(event) => setRememberSelectedUsers(event.target.checked)}
+                    />
+                    Save these recipients for future posts
+                  </label>
+                </div>
+              )}
+            </fieldset>
+          )}
 
           {/* Video Upload */}
           {postType === 'video' && (

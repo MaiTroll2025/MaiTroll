@@ -4,6 +4,7 @@ import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 import FounderBadge from '@/components/founder/FounderBadge'
 import { useFounderIdentity } from '@/hooks/useFounderProgram'
+import { usePublicProfileIdentity } from '@/hooks/usePublicProfileIdentity'
 
 interface NeonGlowUsernameProps {
   username: string
@@ -47,6 +48,13 @@ export default function NeonGlowUsername({
   }
 
   const sizes = sizeClasses[size]
+  const { identity, loading: identityLoading } = usePublicProfileIdentity(userId)
+  const safeUsername = userId
+    ? identity?.username || (identityLoading ? 'xxxxx' : 'xxxxx')
+    : username
+  const safeAvatarUrl = userId
+    ? identity?.avatar_url || (identityLoading ? '/ghost-basic.svg' : null)
+    : avatarUrl
 
   // Founder Program: active Founders get the gold username treatment.
   // Admins are excluded (showFounderBadge) so an Admin keeps their role styling.
@@ -125,14 +133,14 @@ export default function NeonGlowUsername({
         className={`flex items-center gap-2 ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
         onClick={onClick}
       >
-        {avatarUrl && userId && (
-          <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={avatarUrl} username={username} size="xs" /></div>
+        {safeAvatarUrl && userId && (
+          <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={safeAvatarUrl} username={safeUsername} size="xs" /></div>
         )}
-        {avatarUrl && !userId && (
-          <img src={avatarUrl} alt={username} className={`${sizes.avatar} rounded-full`} />
+        {safeAvatarUrl && !userId && (
+          <img src={safeAvatarUrl} alt={safeUsername} className={`${sizes.avatar} rounded-full`} />
         )}
         <span className={`font-bold username-readable ${sizes.text} ${getUsernameColor()} ${getSpecialClasses()}`}>
-          @{username}
+          @{safeUsername}
         </span>
         <FounderBadge userId={userId} compact={size === 'sm'} />
       </div>
@@ -145,13 +153,13 @@ export default function NeonGlowUsername({
       onClick={onClick}
     >
       {/* Avatar */}
-      {avatarUrl && userId ? (
-        <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={avatarUrl} username={username} size={size === 'lg' ? 'sm' : 'xs'} /></div>
-      ) : avatarUrl ? (
-        <img src={avatarUrl} alt={username} className={`${sizes.avatar} rounded-full ring-2 ring-white/20`} />
+      {safeAvatarUrl && userId ? (
+        <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={safeAvatarUrl} username={safeUsername} size={size === 'lg' ? 'sm' : 'xs'} /></div>
+      ) : safeAvatarUrl ? (
+        <img src={safeAvatarUrl} alt={safeUsername} className={`${sizes.avatar} rounded-full ring-2 ring-white/20`} />
       ) : (
         <div className={`${sizes.avatar} rounded-full bg-zinc-800 flex items-center justify-center`}>
-          <span className={`${sizes.text} text-white/60`}>{username[0]?.toUpperCase()}</span>
+          <span className={`${sizes.text} text-white/60`}>{safeUsername[0]?.toUpperCase()}</span>
         </div>
       )}
 
@@ -159,7 +167,7 @@ export default function NeonGlowUsername({
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className={`font-bold username-readable ${sizes.text} ${getUsernameColor()} ${getSpecialClasses()}`}>
-            @{username}
+            @{safeUsername}
           </span>
 
           {/* Founder Badge */}

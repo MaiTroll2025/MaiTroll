@@ -9,7 +9,6 @@ import UserProfileWidget from './sidebar/UserProfileWidget'
 import { useAuthStore } from '@/lib/store'
 import { supabase, UserRole } from '@/lib/supabase'
 import { canAccessTromail } from '@/lib/tromail'
-import { isPrideMonth } from '@/lib/prideMonth'
 import { useCoins } from '@/lib/hooks/useCoins'
 import { useXPStore } from '@/stores/useXPStore'
 import { useSidebarUpdates } from '@/hooks/useSidebarUpdates'
@@ -39,6 +38,8 @@ type GridItemProps = {
   collapsed?: boolean
   tone?: GridItemTone
   badge?: string
+  /** Street-sign wayfinding: renders "STREET → DESTINATION" instead of a plain label */
+  streetSign?: { street: string; destination: string }
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -63,16 +64,6 @@ function ShellBackdrop() {
   return (
     <>
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950 via-[#13071f] to-slate-950" />
-      {isPrideMonth() && (
-        <>
-          <div className="pointer-events-none absolute inset-0 opacity-45 bg-[linear-gradient(135deg,rgba(239,68,68,0.18)_0%,rgba(249,115,22,0.15)_16%,rgba(250,204,21,0.12)_32%,rgba(34,197,94,0.12)_48%,rgba(34,211,238,0.14)_64%,rgba(59,130,246,0.14)_80%,rgba(168,85,247,0.16)_100%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_18%_12%,rgba(236,72,153,0.28),transparent_42%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(140%_140%_at_78%_0%,rgba(34,211,238,0.22),transparent_46%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(140%_140%_at_95%_88%,rgba(250,204,21,0.13),transparent_44%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(236,72,153,0.12)_0%,rgba(250,204,21,0.08)_26%,rgba(34,197,94,0.07)_44%,rgba(14,165,233,0.09)_66%,rgba(168,85,247,0.12)_100%)]" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-pink-300/70 via-yellow-200/60 via-cyan-300/70 to-transparent" />
-        </>
-      )}
     </>
   )
 }
@@ -831,6 +822,7 @@ function GridItem({
   collapsed = false,
   tone = 'default',
   badge,
+  streetSign,
   underConstruction = false,
 }: GridItemProps) {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -889,7 +881,21 @@ function GridItem({
         <Icon size={20} className="shrink-0" />
       </span>
 
-      {!collapsed && <span className="relative z-10 text-center text-[10px] font-bold leading-tight tracking-tight">{label}</span>}
+      {!collapsed && streetSign ? (
+        <span className="relative z-10 inline-flex items-center gap-1 rounded-sm border border-white/20 bg-gradient-to-b from-green-600 to-green-700 px-2 py-0.5 shadow-[0_0_10px_rgba(34,197,94,0.35)] drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]">
+          <span className="text-[8px] font-black uppercase tracking-widest text-green-50 drop-shadow-[0_0_3px_rgba(0,0,0,0.6)]">
+            {streetSign.street.toUpperCase()}
+          </span>
+          <span className="text-[8px] font-black text-white drop-shadow-[0_0_3px_rgba(0,0,0,0.6)]">
+            &rarr;
+          </span>
+          <span className="text-[9px] font-bold text-white drop-shadow-[0_0_3px_rgba(0,0,0,0.6)]">
+            {streetSign.destination}
+          </span>
+        </span>
+      ) : (
+        <span className="relative z-10 text-center text-[10px] font-bold leading-tight tracking-tight">{label}</span>
+      )}
 
       {highlight && !isUnderConstruction && (
         <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gradient-to-r from-pink-400 via-yellow-300 to-cyan-300 shadow-[0_0_8px_rgba(236,72,153,0.70),0_0_8px_rgba(34,211,238,0.55)]" />

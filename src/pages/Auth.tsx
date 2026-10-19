@@ -368,8 +368,46 @@ const [showPassword, setShowPassword] = useState(false)
     }
   }, [profile, setProfile, user])
 
-  // Get referral code from URL
-  const referralCode = searchParams.get('ref') || ''
+  // Keep the first referral click on this browser so later links cannot replace it.
+  const referralCode =
+    localStorage.getItem('t_league_referrer_id') ||
+    localStorage.getItem('t_league_referral_first_code') ||
+    searchParams.get('ref') ||
+    localStorage.getItem('recruited_by') ||
+    ''
+
+  React.useEffect(() => {
+    const incomingReferral = searchParams.get('ref')
+    if (!incomingReferral) return
+
+    const firstReferralCode =
+      localStorage.getItem('t_league_referral_first_code') ||
+      incomingReferral
+    if (!localStorage.getItem('t_league_referral_first_code')) {
+      localStorage.setItem('t_league_referral_first_code', firstReferralCode)
+    }
+    const visitorToken =
+      localStorage.getItem('t_league_referral_visitor_token') ||
+      crypto.randomUUID()
+    localStorage.setItem('t_league_referral_visitor_token', visitorToken)
+
+    const recordedReferrer = localStorage.getItem('t_league_referrer_id')
+    void supabase.rpc('t_league_record_referral_click', {
+      p_referral_code: recordedReferrer || firstReferralCode,
+      p_visitor_token: visitorToken,
+    }).then(({ data, error }) => {
+      if (error) {
+        console.error('Failed to record T League referral click:', error)
+        return
+      }
+      if (data && !recordedReferrer) {
+        localStorage.setItem('t_league_referrer_id', data)
+      } else if (!data &&
+        localStorage.getItem('t_league_referral_first_code') === firstReferralCode) {
+        localStorage.removeItem('t_league_referral_first_code')
+      }
+    })
+  }, [searchParams])
 
   // Validate role-email combinations on role or email change
   React.useEffect(() => {
@@ -450,13 +488,37 @@ try {
         const finalEmail = email.trim()
         const finalPassword = password
         const finalUsername = username.trim()
+        const referralVisitorToken =
+          localStorage.getItem('t_league_referral_visitor_token')
+        let signupReferralCode =
+          localStorage.getItem('t_league_referrer_id') ||
+          referralCode ||
+          localStorage.getItem('recruited_by') ||
+          undefined
+
+        const incomingReferral =
+          localStorage.getItem('t_league_referral_first_code') ||
+          searchParams.get('ref')
+        if (incomingReferral && referralVisitorToken && !localStorage.getItem('t_league_referrer_id')) {
+          const { data, error } = await supabase.rpc('t_league_record_referral_click', {
+            p_referral_code: incomingReferral,
+            p_visitor_token: referralVisitorToken,
+          })
+          if (error) {
+            console.error('Failed to confirm T League referral before signup:', error)
+          } else if (data) {
+            signupReferralCode = data
+            localStorage.setItem('t_league_referrer_id', data)
+          }
+        }
 
         const signupData: any = {
           email: finalEmail,
           password: finalPassword,
           username: finalUsername,
           role: selectedRole,
-          referral_code: referralCode || localStorage.getItem('recruited_by') || undefined,
+          referral_code: signupReferralCode,
+          referral_visitor_token: referralVisitorToken || undefined,
           data: {
             terms_accepted: true,
             accepted_at: new Date().toISOString(),
@@ -474,6 +536,10 @@ try {
         }
 
         toast.success('Account created! Logging you in...')
+        localStorage.removeItem('t_league_referral_visitor_token')
+        localStorage.removeItem('t_league_referrer_id')
+        localStorage.removeItem('t_league_referral_first_code')
+        localStorage.removeItem('recruited_by')
         const loginEmail = email.trim()
         const loginPassword = password
         await executeLogin(loginEmail, loginPassword)

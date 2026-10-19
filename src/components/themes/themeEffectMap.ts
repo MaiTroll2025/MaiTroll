@@ -7,9 +7,6 @@ export type ThemeEffectType =
   | 'pink-champagne-lounge'
   | 'crystal-rose-shine'
   | 'butterfly-glitter-sky'
-  | 'rainbow-flag-motion'
-  | 'pride-wave-lights'
-  | 'pride-legacy-2026'
   | 'parts-and-pistons'
   | 'street-roll-motion'
   | 'mic-drop-reactor'
@@ -35,9 +32,6 @@ export const THEME_CSS_CLASS: Record<ThemeEffectType, string> = {
   'pink-champagne-lounge': 'theme-pink-champagne-lounge',
   'crystal-rose-shine':    'theme-crystal-rose-shine',
   'butterfly-glitter-sky': 'theme-butterfly-glitter-sky',
-  'rainbow-flag-motion':   'theme-rainbow-flag-motion',
-  'pride-wave-lights':     'theme-pride-wave-lights',
-  'pride-legacy-2026':     'theme-rainbow-flag-motion', // reuses pride palette
   'parts-and-pistons':     'theme-parts-and-pistons',
   'street-roll-motion':    'theme-street-roll-motion',
   'mic-drop-reactor':      'theme-mic-drop-reactor',
@@ -59,9 +53,6 @@ export function getThemeEffectType(theme: ThemeLike): ThemeEffectType {
   if (id === 'drinks-2'          || name.includes('champagne'))         return 'pink-champagne-lounge';
   if (id === 'girly-1'           || name.includes('crystal rose'))      return 'crystal-rose-shine';
   if (id === 'girly-2'           || name.includes('butterfly glitter')) return 'butterfly-glitter-sky';
-  if (id === 'pride-1'           || name.includes('flag motion'))       return 'rainbow-flag-motion';
-  if (id === 'pride-2'           || name.includes('wave lights'))       return 'pride-wave-lights';
-  if (id === 'pride_legacy_2026' || name.includes('legacy'))            return 'pride-legacy-2026';
   if (id === 'car-1'             || name.includes('parts and pistons')) return 'parts-and-pistons';
   if (id === 'car-2'             || name.includes('street roll'))       return 'street-roll-motion';
   if (id === 'music-1'           || name.includes('mic drop'))          return 'mic-drop-reactor';
@@ -73,7 +64,6 @@ export function getThemeEffectType(theme: ThemeLike): ThemeEffectType {
   if (theme.category === 'smoke')     return 'smoker-cloud-drift';
   if (theme.category === 'drinks')    return 'pink-champagne-lounge';
   if (theme.category === 'girly')     return 'butterfly-glitter-sky';
-  if (theme.category === 'pride')     return 'pride-wave-lights';
   if (theme.category === 'car')       return 'street-roll-motion';
   if (theme.category === 'music')     return 'note-wave-studio';
   if (theme.category === 'president') return 'president-mansion';

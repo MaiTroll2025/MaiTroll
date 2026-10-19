@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../supabase';
 import { useAuthStore } from '../store';
-import { getSubTierFromScore, getSubTierProgress, getNextSubTier, getLeagueLevel, getSubTierColor, TLeagueTier } from '../../config/T_LEAGUE_CONFIG';
+import { getSubTierFromScore, getSubTierProgress, getNextSubTier, getLeagueLevel, getSubTierColor, T_LEAGUE_TIERS, TLeagueTier } from '../../config/T_LEAGUE_CONFIG';
 
 export interface CityStatusOrbData {
   // User profile data
@@ -152,12 +152,29 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         .eq('season_key', seasonKey)
         .maybeSingle();
 
-      const leagueScore = leagueData
-        ? Number(leagueData.total_xp) || 0
-        : 0;
+      const { data: progressData, error: progressError } = await supabase
+        .from('t_league_public_standings')
+        .select('total_points, tier')
+        .eq('user_id', options.userId)
+        .maybeSingle();
+      if (progressError) throw progressError;
 
-      const subInfo = getSubTierFromScore(leagueScore);
-      const tLeagueTier = subInfo.tier;
+      let leagueScore = Number(progressData?.total_points) || 0;
+      let tierNumber = Math.max(0, Math.min(500, Number(progressData?.tier) || 0));
+      if (options.userId === user?.id) {
+        const { data: ownLeagueState, error: ownLeagueError } = await supabase.rpc('get_t_league_state');
+        if (ownLeagueError) throw ownLeagueError;
+        if (!ownLeagueState) throw new Error('T League state returned no data');
+        leagueScore = Number(ownLeagueState.total_points) || 0;
+        tierNumber = Math.max(0, Math.min(500, Number(ownLeagueState.tier) || 0));
+      }
+
+      const nextMainTier = T_LEAGUE_TIERS[tierNumber + 1];
+      const tierScore = nextMainTier && leagueScore >= nextMainTier.minScore
+        ? nextMainTier.minScore - 1
+        : leagueScore;
+      const subInfo = getSubTierFromScore(tierScore);
+      const tLeagueTier = T_LEAGUE_TIERS[tierNumber] || subInfo.tier;
       const leagueLevelInfo = getLeagueLevel(Number(leagueData?.total_gifts_sent) || 0);
 
       const orbData: CityStatusOrbData = {
@@ -181,8 +198,8 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         is_admin: profileData?.is_admin || null,
         is_troll_officer: profileData?.is_troll_officer || null,
 
-        league_tier: leagueData?.league_tier || tLeagueTier.tier,
-        league_sub_tier: leagueData?.sub_tier || subInfo.sub,
+        league_tier: tLeagueTier.tier,
+        league_sub_tier: subInfo.sub,
         league_score: leagueScore,
         gift_coins_received: Number(leagueData?.gift_coins_received) || 0,
         total_live_minutes: Number(leagueData?.total_live_minutes) || 0,
@@ -191,7 +208,7 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         total_gifts_sent: Number(leagueData?.total_gifts_sent) || 0,
 
         tLeagueTier,
-        leagueProgress: getSubTierProgress(leagueScore),
+        leagueProgress: getSubTierProgress(tierScore),
         subTierColor: getSubTierColor(tLeagueTier.tier, subInfo.sub),
         recentlyRaided,
       };
@@ -212,25 +229,32 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         ? Math.max(0, orbData.nextTier.minScore - leagueScore)
         : 0;
 
-      // Fetch active missions/goals (graceful if table doesn't exist yet)
-      try {
-        const { data: missionsData } = await supabase
-          .from('broadcast_missions')
-          .select('id, title, description, target_type, target_value, current_progress, reward_coins, status')
-          .eq('broadcaster_id', options.userId)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(5);
-        orbData.activeMissions = (missionsData || []).map((m: any) => ({
-          id: m.id,
-          title: m.title || m.description || 'Mission',
-          progress: Number(m.current_progress) || 0,
-          goal: Number(m.target_value) || 1,
-          reward: Number(m.reward_coins) || 0,
-        }));
-      } catch {
-        orbData.activeMissions = [];
-      }
+      const { data: missionsData, error: missionsError } = await supabase
+        .from('t_league_mission_assignments')
+        .select('id, mission_key, target_value, current_value, reward_points')
+        .eq('user_id', options.userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (missionsError) throw missionsError;
+
+      const missionKeys = Array.from(new Set((missionsData || []).map((mission) => mission.mission_key)));
+      const { data: missionCatalog, error: missionCatalogError } = missionKeys.length > 0
+        ? await supabase
+          .from('t_league_mission_catalog')
+          .select('mission_key, title')
+          .in('mission_key', missionKeys)
+        : { data: [], error: null };
+      if (missionCatalogError) throw missionCatalogError;
+
+      const missionTitles = new Map((missionCatalog || []).map((mission) => [mission.mission_key, mission.title]));
+      orbData.activeMissions = (missionsData || []).map((mission) => ({
+        id: mission.id,
+        title: missionTitles.get(mission.mission_key) || mission.mission_key,
+        progress: Number(mission.current_value) || 0,
+        goal: Number(mission.target_value) || 1,
+        reward: Number(mission.reward_points) || 0,
+      }));
 
       if (isMountedRef.current) {
         setData(orbData);
@@ -243,7 +267,7 @@ export function useCityStatusOrb(options: CityStatusOrbOptions) {
         setLoading(false);
       }
     }
-  }, [options.isBroadcaster, options.userId]);
+  }, [options.isBroadcaster, options.userId, user?.id]);
 
   useEffect(() => {
     fetchStatus();

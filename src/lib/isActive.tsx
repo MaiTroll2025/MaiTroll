@@ -8,7 +8,6 @@ import UserProfileWidget from '@/components/sidebar/UserProfileWidget'
 import { useAuthStore } from '@/lib/store'
 import { supabase, UserRole } from '@/lib/supabase'
 import { canAccessTromail } from '@/lib/tromail'
-import { isPrideMonth } from '@/lib/prideMonth'
 import { useCoins } from '@/lib/hooks/useCoins'
 import { useXPStore } from '@/stores/useXPStore'
 import { useSidebarUpdates } from '@/hooks/useSidebarUpdates'
@@ -60,16 +59,6 @@ function ShellBackdrop() {
   return (
     <>
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950 via-[#13071f] to-slate-950" />
-      {isPrideMonth() && (
-        <>
-          <div className="pointer-events-none absolute inset-0 opacity-45 bg-[linear-gradient(135deg,rgba(239,68,68,0.18)_0%,rgba(249,115,22,0.15)_16%,rgba(250,204,21,0.12)_32%,rgba(34,197,94,0.12)_48%,rgba(34,211,238,0.14)_64%,rgba(59,130,246,0.14)_80%,rgba(168,85,247,0.16)_100%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_18%_12%,rgba(236,72,153,0.28),transparent_42%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(140%_140%_at_78%_0%,rgba(34,211,238,0.22),transparent_46%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(140%_140%_at_95%_88%,rgba(250,204,21,0.13),transparent_44%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(236,72,153,0.12)_0%,rgba(250,204,21,0.08)_26%,rgba(34,197,94,0.07)_44%,rgba(14,165,233,0.09)_66%,rgba(168,85,247,0.12)_100%)]" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-pink-300/70 via-yellow-200/60 via-cyan-300/70 to-transparent" />
-        </>
-      )}
     </>
   )
 }

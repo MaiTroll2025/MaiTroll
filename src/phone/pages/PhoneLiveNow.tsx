@@ -18,6 +18,7 @@ import { supabase } from '../../lib/supabase'
 import UserNameWithAge from '../../components/UserNameWithAge'
 import { neonCard, neonTextGradient } from '../phoneTheme'
 import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
+import { calculatePulseScore, normalizeFeatures } from '@/lib/signalEngine'
 
 interface Broadcast {
   id: string
@@ -98,6 +99,7 @@ export default function PhoneLiveNow() {
               is_live,
               is_featured,
               broadcaster_id,
+              started_at,
               battle_mode,
               battle_format
             `,
@@ -124,6 +126,7 @@ export default function PhoneLiveNow() {
         }
 
         const streamsWithBroadcasters: any[] = []
+        const tierByCreator = new Map<string, number>()
 
         if (streamsData && streamsData.length > 0) {
           const broadcasterIds = Array.from(
@@ -162,6 +165,22 @@ export default function PhoneLiveNow() {
                 ]),
               )
             }
+
+            const {
+              data: leagueProgress,
+              error: leagueProgressError,
+            } = await supabase
+              .from('t_league_public_standings')
+              .select('user_id, tier')
+              .in('user_id', broadcasterIds)
+
+            if (leagueProgressError) {
+              console.error('Error fetching T League discovery signals:', leagueProgressError)
+            } else {
+              for (const progress of leagueProgress || []) {
+                tierByCreator.set(progress.user_id, Number(progress.tier) || 0)
+              }
+            }
           }
 
           streamsWithBroadcasters.push(
@@ -174,11 +193,31 @@ export default function PhoneLiveNow() {
           )
         }
 
-        const formattedStreams: Broadcast[] =
-          streamsWithBroadcasters.map((stream) => ({
-            ...stream,
-            type: 'stream',
-          }))
+        const formattedStreams: Broadcast[] = streamsWithBroadcasters
+          .map((stream) => {
+            const currentViewers = Math.max(0, Number(stream.current_viewers) || 0)
+            const tierNumber = tierByCreator.get(stream.broadcaster_id) || 0
+            const startedAt = Date.parse(stream.started_at || '')
+            const freshness = Number.isFinite(startedAt)
+              ? Math.max(0, 1 - (Date.now() - startedAt) / (24 * 60 * 60 * 1000))
+              : 0
+            const signalScore = calculatePulseScore(
+              normalizeFeatures({
+                viewerInterest: Math.min(1, Math.log1p(currentViewers) / Math.log1p(100)),
+                momentum: Math.min(1, currentViewers / 50),
+                freshness,
+                creatorProgress: tierNumber / 500,
+              }),
+              'live_now',
+            )
+
+            return { ...stream, type: 'stream' as const, signalScore }
+          })
+          .sort((left, right) => {
+            if (right.signalScore !== left.signalScore) return right.signalScore - left.signalScore
+            return (Number(right.current_viewers) || 0) - (Number(left.current_viewers) || 0)
+          })
+          .map(({ signalScore: _signalScore, ...stream }) => stream)
 
         /*
          * If there are no live streams on the first page,

@@ -40,7 +40,6 @@ export type AnimationType =
   | 'matrix'
   | 'ocean'
   | 'cherry_blossom'
-  | 'halloween'
   | null;
 
 export type FrameStyle = 'flat' | 'beveled' | 'glowing' | 'animated' | 'premium' | 'legendary';
@@ -103,30 +102,6 @@ export const ANIMATION_DURATIONS: Record<AnimationSpeed, number> = {
 
 // ─── Launch Collection ──────────────────────────────────────────
 export const LAUNCH_FRAMES: ProfileFrame[] = [
-  {
-    id: 'pride_rainbow',
-    name: 'Pride Rainbow',
-    description: 'Animated flowing rainbow border celebrating pride and diversity',
-    icon: '🏳️‍🌈',
-    animationType: 'rainbow',
-    frameStyle: 'premium',
-    borderColor: '#ff0000',
-    borderGradient: 'linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0000)',
-    glowColor: '#ff00ff',
-    glowIntensity: 0.7,
-    animationSpeed: 'normal',
-    hasParticles: true,
-    particleColor: '#ffffff',
-    particleCount: 6,
-    hasSparkles: true,
-    hasEnergyRings: false,
-    rarity: 'rare',
-    coinCost: 250,
-    isActive: true,
-    isLimited: false,
-    limitedQuantity: null,
-    sortOrder: 1,
-  },
   {
     id: 'gold_vip',
     name: 'Gold VIP',
@@ -727,30 +702,6 @@ export const LAUNCH_FRAMES: ProfileFrame[] = [
     isLimited: false,
     limitedQuantity: null,
     sortOrder: 26,
-  },
-  {
-    id: 'haunted_halloween',
-    name: 'Haunted Halloween',
-    description: 'Spooky ghosts and bats float around your frame with eerie purple fog',
-    icon: '🎃',
-    animationType: 'halloween',
-    frameStyle: 'legendary',
-    borderColor: '#9333ea',
-    borderGradient: 'linear-gradient(135deg, #9333ea, #581c87, #c026d3, #7e22ce)',
-    glowColor: '#c084fc',
-    glowIntensity: 1.1,
-    animationSpeed: 'normal',
-    hasParticles: true,
-    particleColor: '#e9d5ff',
-    particleCount: 8,
-    hasSparkles: false,
-    hasEnergyRings: true,
-    rarity: 'limited_edition',
-    coinCost: 1000,
-    isActive: true,
-    isLimited: true,
-    limitedQuantity: 500,
-    sortOrder: 27,
   },
   {
     id: 'frost_crystal',

@@ -5,7 +5,7 @@ import { RemoteVideoRenderer } from './RemoteVideoRenderer'
 
 interface ChallengerTileProps {
   participant?: SingOffUser
-  videoTrack?: any
+  videoTrack?: MediaStreamTrack | null
   position: 'challenger_a' | 'challenger_b'
   countdown?: number | null
   isHost: boolean

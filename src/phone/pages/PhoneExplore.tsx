@@ -172,7 +172,7 @@ export default function PhoneExplore() {
     try {
       setLoadingPosts(true)
       const { data, error } = await supabase
-        .from('troll_wall_posts')
+        .from('troll_wall_posts_public')
         .select(
           'id, content, created_at, user_id, username, avatar_url, likes_count, replies_count',
         )

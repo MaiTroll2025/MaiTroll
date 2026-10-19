@@ -8,17 +8,17 @@ import React, {
 
 import { toast } from "sonner";
 
-import {
-  StreamCall,
-  StreamVideo,
-  useCallStateHooks,
-} from "@stream-io/video-react-sdk";
-import type { StreamVideoParticipant } from "@stream-io/video-client";
+import type {
+  RemoteParticipant,
+  RemoteVideoTrack,
+  RemoteAudioTrack,
+} from "livekit-client";
+import { Track } from "livekit-client";
 
 import { useAuthStore } from "@/lib/store";
 
 import { supabase } from "@/supabaseClient";
-import { useGetStreamRoom } from "@/hooks/useGetStreamRoom";
+import { useLiveKitRoom } from "@/hooks/useLiveKitRoom";
 import UserMiniProfile from "@/components/user/UserMiniProfile";
 
 type OfficialRole =
@@ -202,7 +202,7 @@ function getDisplayName(user: any) {
 type MeetingChamberProps = {
   seats: MeetingSeat[];
   officials: Official[];
-  participants: StreamVideoParticipant[];
+  participants: RemoteParticipant[];
   currentUserId: string | null;
   selectedSeatNumber: number | null;
   canSelectSeat: boolean;
@@ -217,25 +217,41 @@ function MeetingSeatMedia({
   local,
   speakerMuted,
 }: {
-  participant?: StreamVideoParticipant;
+  participant?: RemoteParticipant;
   local: boolean;
   speakerMuted: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const videoTrack = useMemo(() => {
+    if (!participant) return null;
+    const pub = participant.getTrackPublication?.(Track.Source.Camera);
+    return pub?.track as RemoteVideoTrack | null;
+  }, [participant]);
+
+  const audioTrack = useMemo(() => {
+    if (!participant) return null;
+    const pub = participant.getTrackPublication?.(Track.Source.Microphone);
+    return pub?.track as RemoteAudioTrack | null;
+  }, [participant]);
+
   useEffect(() => {
     const videoElement = videoRef.current;
     const audioElement = audioRef.current;
 
-    if (videoElement) videoElement.srcObject = participant?.videoStream || null;
-    if (audioElement) audioElement.srcObject = participant?.audioStream || null;
+    if (videoElement && videoTrack) {
+      videoTrack.attach(videoElement);
+    }
+    if (audioElement && audioTrack) {
+      audioTrack.attach(audioElement);
+    }
 
     return () => {
       if (videoElement) videoElement.srcObject = null;
       if (audioElement) audioElement.srcObject = null;
     };
-  }, [participant?.videoStream, participant?.audioStream]);
+  }, [videoTrack, audioTrack]);
 
   return (
     <>
@@ -265,7 +281,7 @@ function MeetingSeatCard({
 }: {
   seat: MeetingSeat;
   official?: Official;
-  participant?: StreamVideoParticipant;
+  participant?: RemoteParticipant;
   local: boolean;
   muted: boolean;
   speakerMuted: boolean;
@@ -399,7 +415,7 @@ function TownMeetingChamber({
     }
     const official = officials.find((item) => item.id === seat.user_id);
     const participant = participants.find(
-      (item) => item.userId === seat.user_id,
+      (item) => item.identity === seat.user_id,
     );
     return (
       <MeetingSeatCard
@@ -434,7 +450,7 @@ function TownMeetingChamber({
           </div>
           <div className="my-3 h-px w-24 bg-amber-200/25" />
           <div className="text-center text-[10px] uppercase tracking-[0.15em] text-amber-100/60">
-            Official Meeting · GetStream
+            Official Meeting · LiveKit
           </div>
         </div>
       </div>
@@ -449,11 +465,11 @@ function TownMeetingChamber({
 }
 
 function ConnectedTownMeetingChamber(
-  props: Omit<MeetingChamberProps, "participants">,
+  props: Omit<MeetingChamberProps, "participants"> & {
+    participants: RemoteParticipant[];
+  },
 ) {
-  const { useParticipants } = useCallStateHooks();
-  const participants = useParticipants();
-  return <TownMeetingChamber {...props} participants={participants} />;
+  return <TownMeetingChamber {...props} participants={props.participants} />;
 }
 export default function TownMeetingPage() {
   const { user } = useAuthStore();
@@ -492,6 +508,7 @@ export default function TownMeetingPage() {
   const [officialRecord, setOfficialRecord] = useState("");
 
   const [joined, setJoined] = useState(false);
+  const [isMaiSupremeMember, setIsMaiSupremeMember] = useState(false);
 
   const [muted, setMuted] = useState(false);
 
@@ -544,6 +561,32 @@ export default function TownMeetingPage() {
     [currentUserId, currentRole],
   );
 
+  useEffect(() => {
+    let active = true;
+    if (!currentUserId) {
+      setIsMaiSupremeMember(false);
+      return () => { active = false; };
+    }
+
+    void (async () => {
+      try {
+        const { data, error } = await supabase.rpc("has_active_mai_supreme_entitlement");
+        if (error) throw error;
+        if (active) setIsMaiSupremeMember(Boolean(data));
+      } catch (error) {
+        console.error("[TownMeeting] Unable to verify Mai Supreme access:", error);
+        if (active) {
+          setIsMaiSupremeMember(false);
+          toast.error("Unable to verify Mai Supreme Town Meeting access.");
+        }
+      }
+    })();
+
+    return () => { active = false; };
+  }, [currentUserId]);
+
+  const canAttendMeeting = isAuthorizedOfficial || isMaiSupremeMember;
+
   const canManageMeeting = useMemo(
     () => ["ceo", "admin", "lead_troll", "president"].includes(currentRole),
 
@@ -551,7 +594,7 @@ export default function TownMeetingPage() {
   );
 
   const meetingRoomName = meeting?.id ? `town-meeting-${meeting.id}` : "";
-  const getStreamRoom = useGetStreamRoom({
+  const liveKitRoom = useLiveKitRoom({
     roomId: meetingRoomName,
     roomType: "town_meeting",
     role: "publisher",
@@ -560,7 +603,7 @@ export default function TownMeetingPage() {
     identity: currentUserId || "",
     initialAudioEnabled: true,
     onError: (error) => {
-      console.error("[TownMeeting:GetStream] Room error:", error);
+      console.error("[TownMeeting:LiveKit] Room error:", error);
     },
   });
 
@@ -870,11 +913,11 @@ export default function TownMeetingPage() {
 
        * - 8 town_meeting_seats
 
-       * - a GetStream room derived from the meeting ID
+       * - a LiveKit room derived from the meeting ID
 
        *
 
-       * GetStream credentials remain server-side.
+       * LiveKit credentials remain server-side.
 
        */
 
@@ -1008,7 +1051,7 @@ export default function TownMeetingPage() {
 
    * SECURITY:
 
-   * GetStream API credentials MUST remain server-side.
+   * LiveKit API credentials MUST remain server-side.
 
    *
 
@@ -1016,7 +1059,7 @@ export default function TownMeetingPage() {
 
    *
 
-   * getstream-token
+   * livekit-token
 
    *
 
@@ -1052,15 +1095,15 @@ export default function TownMeetingPage() {
 
    */
 
-  const joinGetStreamMeeting = async (
+  const joinLiveKitMeeting = async (
     requestedSeatNumber = localSeat?.seat_number ?? selectedSeatNumber ?? null,
   ) => {
     if (!meeting?.id || !currentUserId) {
       toast.error("Select a meeting and sign in first.");
       return;
     }
-    if (!isAuthorizedOfficial) {
-      toast.error("Only Mai Troll officials can join this meeting.");
+    if (!canAttendMeeting) {
+      toast.error("An authorized official role or active Mai Supreme membership is required to join.");
       return;
     }
 
@@ -1142,20 +1185,16 @@ export default function TownMeetingPage() {
         ].sort((left, right) => left.seat_number - right.seat_number));
       }
 
-      const call = await getStreamRoom.joinAsAudience({
-        userId: currentUserId,
-        roomName: `town-meeting-${meeting.id}`,
-        publishCapable: true,
-      });
-      if (typeof call === "string") throw new Error(call);
-      if (!call) throw new Error("GetStream did not return a meeting call.");
+      const room = await liveKitRoom.joinAsPublisher(currentUserId);
+      if (typeof room === "string") throw new Error(room);
+      if (!room) throw new Error("LiveKit did not return a meeting room.");
 
       const { error } = await supabase
         .from("town_meeting_seats")
         .update({ joined_at: new Date().toISOString(), left_at: null })
         .eq("id", seat.id);
       if (error) {
-        await getStreamRoom.leaveRoom();
+        await liveKitRoom.leaveRoom();
         throw error;
       }
 
@@ -1166,11 +1205,11 @@ export default function TownMeetingPage() {
       await loadSeats(meeting.id);
       toast.success("You joined the Mai Troll Town Meeting.");
     } catch (error) {
-      console.error("[TownMeeting:GetStream] Join failed:", error);
+      console.error("[TownMeeting:LiveKit] Join failed:", error);
       toast.error(
         error instanceof Error
           ? error.message
-          : "Unable to join the GetStream town meeting.",
+          : "Unable to join the LiveKit town meeting.",
       );
     } finally {
       setBusy(false);
@@ -1179,7 +1218,7 @@ export default function TownMeetingPage() {
 
   const leaveMeeting = async () => {
     try {
-      await getStreamRoom.leaveRoom();
+      await liveKitRoom.leaveRoom();
       setJoined(false);
       if (localSeat) {
         const { error } = await supabase
@@ -1206,7 +1245,7 @@ export default function TownMeetingPage() {
 
   const toggleMute = async () => {
     const nextMuted = !muted;
-    const updated = await getStreamRoom.setMicrophoneEnabled(!nextMuted);
+    const updated = await liveKitRoom.setMicEnabled(!nextMuted);
     if (!updated) {
       toast.error("Unable to update microphone.");
       return;
@@ -1216,7 +1255,7 @@ export default function TownMeetingPage() {
 
   const toggleCamera = async () => {
     const nextCameraOff = !cameraOff;
-    const updated = await getStreamRoom.setCameraEnabled(!nextCameraOff);
+    const updated = await liveKitRoom.setCameraEnabled(!nextCameraOff);
     if (!updated) {
       toast.error("Unable to update camera.");
       return;
@@ -1362,7 +1401,7 @@ export default function TownMeetingPage() {
     try {
       setBusy(true);
 
-      await getStreamRoom.leaveRoom();
+      await liveKitRoom.leaveRoom();
       setJoined(false);
 
       const { data, error } = await supabase.rpc(
@@ -1623,7 +1662,7 @@ export default function TownMeetingPage() {
 
    */
 
-  if (!isAuthorizedOfficial) {
+  if (!canAttendMeeting) {
     return (
       <div className="min-h-screen bg-[#071426] px-4 py-24 text-white">
         <div className="mx-auto max-w-2xl rounded-[2rem] border border-red-400/20 bg-slate-950/80 p-8 text-center shadow-2xl">
@@ -1631,12 +1670,10 @@ export default function TownMeetingPage() {
             🔒
           </div>
 
-          <h1 className="mt-5 text-3xl font-black">Officials Only</h1>
+          <h1 className="mt-5 text-3xl font-black">Town Meeting Access Required</h1>
 
           <p className="mt-3 text-sm leading-6 text-slate-400">
-            Mai Troll Town Meeting is a private official meeting room. Your
-            account does not currently have an authorized Mai Troll official
-            role.
+            Mai Troll Town Meeting is limited to authorized officials and active Mai Supreme members.
           </p>
         </div>
       </div>
@@ -1658,8 +1695,8 @@ export default function TownMeetingPage() {
 
                 {meeting?.id && (
                   <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-200">
-                    {getStreamRoom.isConnected
-                      ? "GetStream Live"
+                    {liveKitRoom.isConnected
+                      ? "LiveKit Live"
                       : "Meeting Ready"}
                   </span>
                 )}
@@ -1671,7 +1708,7 @@ export default function TownMeetingPage() {
 
               <p className="mt-1 text-sm text-slate-400">
                 Private official meeting chamber • choose any open seat once;
-                your seat stays yours for this meeting • GetStream video
+                your seat stays yours for this meeting • LiveKit video
                 conference
               </p>
             </div>
@@ -1734,7 +1771,7 @@ export default function TownMeetingPage() {
                     </span>
 
                     <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-cyan-200">
-                      GetStream
+                      LiveKit
                     </span>
                   </div>
                 </div>
@@ -1742,7 +1779,7 @@ export default function TownMeetingPage() {
                 {!joined ? (
                   <button
                     onClick={() =>
-                      joinGetStreamMeeting(
+                      joinLiveKitMeeting(
                         localSeat?.seat_number ?? selectedSeatNumber,
                       )
                     }
@@ -1793,40 +1830,20 @@ export default function TownMeetingPage() {
 
             {/* CHAMBER */}
             <div className="mb-5">
-              {getStreamRoom.client && getStreamRoom.call ? (
-                <StreamVideo client={getStreamRoom.client}>
-                  <StreamCall call={getStreamRoom.call}>
-                    <ConnectedTownMeetingChamber
-                      seats={arrangedSeats}
-                      officials={officials}
-                      currentUserId={currentUserId}
-                      selectedSeatNumber={localSeat?.seat_number ?? selectedSeatNumber}
-                      canSelectSeat={!joined && !busy && !localSeat}
-                      muted={muted}
-                      speakerMuted={speakerMuted}
-                      onSelectSeat={selectMeetingSeat}
-                      onOpenProfile={(userId, username, avatarUrl) =>
-                        setMiniProfile({ userId, username, avatarUrl })
-                      }
-                    />
-                  </StreamCall>
-                </StreamVideo>
-              ) : (
-                <TownMeetingChamber
-                  seats={arrangedSeats}
-                  officials={officials}
-                  participants={[]}
-                  currentUserId={currentUserId}
-                  selectedSeatNumber={localSeat?.seat_number ?? selectedSeatNumber}
-                  canSelectSeat={!joined && !busy && !localSeat}
-                  muted={muted}
-                  speakerMuted={speakerMuted}
-                  onSelectSeat={selectMeetingSeat}
-                  onOpenProfile={(userId, username, avatarUrl) =>
-                    setMiniProfile({ userId, username, avatarUrl })
-                  }
-                />
-              )}
+              <ConnectedTownMeetingChamber
+                seats={arrangedSeats}
+                officials={officials}
+                participants={liveKitRoom.remoteUsers}
+                currentUserId={currentUserId}
+                selectedSeatNumber={localSeat?.seat_number ?? selectedSeatNumber}
+                canSelectSeat={!joined && !busy && !localSeat}
+                muted={muted}
+                speakerMuted={speakerMuted}
+                onSelectSeat={selectMeetingSeat}
+                onOpenProfile={(userId, username, avatarUrl) =>
+                  setMiniProfile({ userId, username, avatarUrl })
+                }
+              />
             </div>
             {/* MEETING DOCUMENTS */}
 
@@ -2133,7 +2150,7 @@ export default function TownMeetingPage() {
 
                 <div className="mt-2 text-xs leading-5 text-slate-500">
                   8 official seats will be created automatically: 2 seats on
-                  each side of the council table. Meetings use GetStream video
+                  each side of the council table. Meetings use LiveKit video
                   calling.
                 </div>
               </div>

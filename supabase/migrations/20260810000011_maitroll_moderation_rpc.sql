@@ -5,6 +5,8 @@
 
 BEGIN;
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
 -- ============================================================================
 -- HELPER FUNCTIONS
 -- ============================================================================
@@ -42,7 +44,7 @@ CREATE OR REPLACE FUNCTION public.pseudonymize_ip(p_ip TEXT)
 RETURNS TEXT
 LANGUAGE sql
 IMMUTABLE
-SET search_path = public
+SET search_path = extensions, public
 AS $$
   SELECT encode(digest(p_ip || 'mai-troll-ip-salt-2026', 'sha256'), 'hex');
 $$;
@@ -58,7 +60,7 @@ RETURNS TABLE (
   jail_id UUID,
   discipline_level INTEGER,
   scheduled_release_at TIMESTAMPTZ,
-  bond_amount INTEGER,
+  bond_amount BIGINT,
   bond_allowed BOOLEAN
 )
 LANGUAGE plpgsql
@@ -135,7 +137,7 @@ BEGIN
     RETURN jsonb_build_object('allowed', true);
   END IF;
 
-  FOR v_char IN SELECT codepoint FROM regexp_split_to_table(p_text, '') AS x(codepoint) LOOP
+  FOR v_char IN SELECT ascii(codepoint) FROM regexp_split_to_table(p_text, '') AS x(codepoint) LOOP
     -- Control characters (excluding common whitespace: tab, newline, CR)
     IF v_char BETWEEN 0 AND 31 AND v_char NOT IN (9, 10, 13) THEN
       v_has_control_char := true;

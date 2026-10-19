@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Coins, TrendingUp, Zap } from 'lucide-react'
-import { type CashoutTier } from '@/config/coinConfig'
+import { CASHOUT_TIERS, type CashoutTier } from '@/config/coinConfig'
 
 interface CashoutProgressBannerProps {
   isVisible: boolean
@@ -23,7 +23,10 @@ export default function CashoutProgressBanner({
   onClick,
   isMobile = false,
 }: CashoutProgressBannerProps) {
-  const displayTier = nextTier ?? { coins: 0, usd: 0, name: 'MAX', color: '#ffd700' }
+  const currentTier = [...CASHOUT_TIERS].reverse().find((tier) => currentBalance >= tier.coins)
+  const displayTier = isCashoutReady
+    ? currentTier ?? { coins: 0, usd: 0, name: 'MAX', color: '#ffd700' }
+    : nextTier ?? { coins: 0, usd: 0, name: 'MAX', color: '#ffd700' }
   const displayRemaining = nextTier ? amountRemaining : 0
   const displayProgress = nextTier ? Math.min(100, Math.max(0, progressPercent)) : 100
 

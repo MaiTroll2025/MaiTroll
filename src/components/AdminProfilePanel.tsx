@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { grantAdminLevels, deductAdminLevels, isAdmin } from '../lib/adminCoins'
+import GhostModeAdminDetails from '@/components/admin/GhostModeAdminDetails'
 
 interface AdminProfilePanelProps {
   userId: string
@@ -108,6 +109,7 @@ export default function AdminProfilePanel({ userId, username }: AdminProfilePane
   return (
     <div className="bg-yellow-950/30 border border-yellow-600/40 rounded-lg p-4 space-y-4">
       <div className="text-sm font-semibold text-yellow-400">Admin Actions</div>
+      <GhostModeAdminDetails userId={userId} canView={isAdminUser} />
 
       {/* Current Stats */}
       {targetProfile && (

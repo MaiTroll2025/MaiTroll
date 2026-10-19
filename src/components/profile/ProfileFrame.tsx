@@ -436,45 +436,6 @@ function PetalParticle({ index, total, color, speed, containerSize }: {
   );
 }
 
-// ─── Halloween Ghost/Bat Particle ──────────────────────────────
-function HalloweenParticle({ index, total, color: _color, speed, containerSize }: {
-  index: number; total: number; color: string; speed: AnimationSpeed; containerSize: number;
-}) {
-  const duration = ANIMATION_DURATIONS[speed] * 1.8;
-  const angle = (index / total) * 360;
-  const radius = containerSize / 2 + 6;
-  const delay = (index / total) * duration;
-  const x = Math.cos((angle * Math.PI) / 180) * radius;
-  const y = Math.sin((angle * Math.PI) / 180) * radius;
-  const emojis = ['👻', '🦇', '🎃', '💀', '🕷️'];
-  const emoji = emojis[index % emojis.length];
-  const size = 8 + Math.random() * 6;
-
-  return (
-    <motion.div
-      className="absolute pointer-events-none"
-      style={{
-        fontSize: size,
-        left: `calc(50% + ${x}px)`,
-        top: `calc(50% + ${y}px)`,
-      }}
-      animate={{
-        opacity: [0, 1, 0.8, 0],
-        scale: [0.5, 1.1, 0.9, 0.3],
-        y: [0, -8 - Math.random() * 8],
-      }}
-      transition={{
-        duration,
-        delay,
-        repeat: Infinity,
-        ease: 'easeOut',
-      }}
-    >
-      {emoji}
-    </motion.div>
-  );
-}
-
 // ─── Lightning Bolt ────────────────────────────────────────────
 function LightningBolt({ index, total, color, speed, containerSize }: {
   index: number; total: number; color: string; speed: AnimationSpeed; containerSize: number;
@@ -847,9 +808,6 @@ function FrameEffects({ frame, containerSize, reducedMotion }: {
     )),
     cherry_blossom: Array.from({ length: count }).map((_, i) => (
       <PetalParticle key={i} index={i} total={count} color={frame.particleColor || '#f9a8d4'} speed={speed} containerSize={containerSize} />
-    )),
-    halloween: Array.from({ length: count }).map((_, i) => (
-      <HalloweenParticle key={i} index={i} total={count} color={frame.particleColor || '#c084fc'} speed={speed} containerSize={containerSize} />
     )),
     lightning: Array.from({ length: count }).map((_, i) => (
       <LightningBolt key={i} index={i} total={count} color={frame.particleColor || '#fde68a'} speed={speed} containerSize={containerSize} />

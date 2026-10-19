@@ -1196,6 +1196,9 @@ export function useLiveKitRoom({
         console.log('[useLiveKitRoom] PUBLISH_ABORT: room not connected')
         return
       }
+      if ((startRoom.localParticipant as any)?.canPublish !== true) {
+        throw new Error('Cannot publish broadcast tracks without publisher permission')
+      }
 
       let audioTrack = localAudioTrackRef.current
       let videoTrack = localVideoTrackRef.current
@@ -1363,6 +1366,10 @@ export function useLiveKitRoom({
     const room = roomRef.current
     const participant = room?.localParticipant
     if (!room || !participant) return false
+    if (enabled && (participant as any).canPublish !== true) {
+      console.warn('[useLiveKitRoom] CAMERA_TOGGLE_BLOCKED: participant cannot publish')
+      return false
+    }
 
     const runCameraToggle = async () => {
       const currentParticipant = roomRef.current?.localParticipant
@@ -1452,6 +1459,11 @@ export function useLiveKitRoom({
 
   // Set mic enabled/disabled (for walkie-talkie integration)
   const setMicEnabled = useCallback(async (enabled: boolean) => {
+    if (enabled && (roomRef.current?.localParticipant as any)?.canPublish !== true) {
+      console.warn('[useLiveKitRoom] MICROPHONE_TOGGLE_BLOCKED: participant cannot publish')
+      return false
+    }
+
     const runMicrophoneToggle = async () => {
       let track = localAudioTrackRef.current
 

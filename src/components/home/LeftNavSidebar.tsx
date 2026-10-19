@@ -131,7 +131,7 @@ export default function LeftNavSidebar({
 
     {
       id: 'leagues',
-      label: 'Leagues',
+      label: 'T League',
       icon: Trophy,
       activeGradient: 'from-purple-500 to-indigo-600',
       description: 'Compete in leagues and climb the ranks',

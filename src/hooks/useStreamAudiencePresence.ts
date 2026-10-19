@@ -27,6 +27,12 @@ export type AudiencePresenceEvent =
   | { type: 'join'; member: StreamAudienceMember }
   | { type: 'leave'; member: StreamAudienceMember }
 
+type OwnAudiencePresencePayload = {
+  eventType?: string
+  new?: Record<string, any>
+  old?: Record<string, any>
+}
+
 function normalizeSeatStatus(value: any): 'audience' | 'seated' {
   return value === 'seated' ? 'seated' : 'audience'
 }
@@ -67,15 +73,25 @@ export function useStreamAudiencePresence(
   userId: string | null,
   options?: {
     onPresenceChange?: (event: AudiencePresenceEvent) => void
+    onOwnPresenceChange?: (event: OwnAudiencePresencePayload) => void
+    loadAudience?: boolean
+    audienceLimit?: number | null
   }
 ) {
   const { user, profile } = useAuthStore()
   const effectiveUserId = userId || user?.id
+  const loadAudience = options?.loadAudience ?? true
+  const audienceLimit = options?.audienceLimit ?? null
   const onPresenceChangeRef = useRef(options?.onPresenceChange)
+  const onOwnPresenceChangeRef = useRef(options?.onOwnPresenceChange)
 
   useEffect(() => {
     onPresenceChangeRef.current = options?.onPresenceChange
   }, [options?.onPresenceChange])
+
+  useEffect(() => {
+    onOwnPresenceChangeRef.current = options?.onOwnPresenceChange
+  }, [options?.onOwnPresenceChange])
 
   // Normalized record keyed by stream_id:user_id. Rendering arrays are derived
   // from this record and only recomputed when it actually changes. Incremental
@@ -85,6 +101,7 @@ export function useStreamAudiencePresence(
   const [activeAudience, setActiveAudience] = useState<StreamAudienceMember[]>([])
   const [topAudience, setTopAudience] = useState<StreamAudienceMember[]>([])
   const [myPresence, setMyPresence] = useState<StreamAudienceMember | null>(null)
+  const [isAudienceLoading, setIsAudienceLoading] = useState(false)
 
   const lastGiftUpdateRef = useRef<Record<string, number>>({})
   const channelsRef = useRef<any[]>([])
@@ -166,16 +183,21 @@ export function useStreamAudiencePresence(
    }, [audienceMap, effectiveUserId])
 
   const fetchAudience = useCallback(async () => {
-    if (!streamId) return
+    if (!streamId || !loadAudience) return
+    setIsAudienceLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('stream_audience_presence')
+      let query = supabase
+        .from('stream_audience_presence_public')
         .select('*')
         .eq('stream_id', streamId)
         .eq('is_active', true)
         .order('gift_total', { ascending: false })
         .order('joined_at', { ascending: true })
+      if (audienceLimit !== null && audienceLimit > 0) {
+        query = query.limit(audienceLimit)
+      }
 
+      const { data, error } = await query
       if (error) {
         console.warn('[useStreamAudiencePresence] fetchAudience error', error)
         return
@@ -195,8 +217,10 @@ export function useStreamAudiencePresence(
       }
     } catch (err) {
       console.warn('[useStreamAudiencePresence] fetchAudience failed', err)
+    } finally {
+      setIsAudienceLoading(false)
     }
-  }, [streamId, effectiveUserId])
+  }, [streamId, effectiveUserId, loadAudience, audienceLimit])
 
   const joinAudience = useCallback(async () => {
     if (!effectiveUserId || !streamId) return
@@ -431,29 +455,62 @@ export function useStreamAudiencePresence(
   }, [streamId, effectiveUserId])
 
   useEffect(() => {
-    void fetchAudience()
-  }, [fetchAudience])
+    if (loadAudience) {
+      void fetchAudience()
+      return
+    }
+
+    setIsAudienceLoading(false)
+    setAudienceMap({})
+  }, [fetchAudience, loadAudience])
 
   useEffect(() => {
     if (!streamId) return
 
     cleanupChannels()
 
-    const audienceChannel = supabase
-      .channel(`stream-audience-presence:${streamId}`)
+    const filter = loadAudience
+      ? `stream_id=eq.${streamId}`
+      : effectiveUserId
+        ? `user_id=eq.${effectiveUserId}`
+        : null
+    if (!filter) return
+
+    let audienceChannel = supabase
+      .channel(
+        loadAudience
+          ? `stream-audience-presence:${streamId}`
+          : `stream-audience-self:${streamId}:${effectiveUserId}`
+      )
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'stream_audience_presence',
-          filter: `stream_id=eq.${streamId}`,
+          filter,
         },
         (payload) => {
           try {
             const evt = (payload as any).eventType || '*'
             const newRow = (payload as any).new
             const oldRow = (payload as any).old
+            const row = newRow || oldRow
+            if (row?.stream_id !== streamId) return
+
+            if (!loadAudience) {
+              if (row?.user_id !== effectiveUserId) return
+              if (evt === 'DELETE') {
+                queueAudienceMutation(`${streamId}:${effectiveUserId}`, null)
+                setMyPresence(null)
+              } else {
+                const member = normalizeAudienceMember(row)
+                queueAudienceMutation(memberKey(member), member)
+                setMyPresence(member)
+              }
+              onOwnPresenceChangeRef.current?.(payload as OwnAudiencePresencePayload)
+              return
+            }
 
             if (evt === 'DELETE') {
               if (oldRow?.user_id) {
@@ -466,12 +523,25 @@ export function useStreamAudiencePresence(
               return
             }
 
-            const row = newRow || oldRow
             if (!row?.user_id) return
 
             const member = normalizeAudienceMember(row)
+            const key = memberKey(member)
+            if (
+              !audienceMapRef.current[key] &&
+              audienceLimit !== null &&
+              audienceLimit > 0 &&
+              Object.keys(audienceMapRef.current).length >= audienceLimit
+            ) {
+              return
+            }
             // Incremental: patch only this one member in the normalized record.
-            queueAudienceMutation(memberKey(member), member)
+            queueAudienceMutation(key, member)
+
+            if (member.user_id === effectiveUserId) {
+              setMyPresence(member)
+              onOwnPresenceChangeRef.current?.(payload as OwnAudiencePresencePayload)
+            }
 
             // Detect join/leave transitions for floating-chat system messages.
             const prevRow = oldRow || audienceMapRef.current[memberKey(member)]
@@ -488,15 +558,13 @@ export function useStreamAudiencePresence(
               onPresenceChangeRef.current?.({ type: 'leave', member: { ...member, is_active: false, left_at: member.left_at } })
             }
 
-            if (effectiveUserId && newRow?.user_id === effectiveUserId) {
-              setMyPresence(member)
-            }
           } catch (err) {
             console.warn('[useStreamAudiencePresence] realtime handler error', err)
           }
         }
       )
-      .on(
+    if (loadAudience) {
+      audienceChannel = audienceChannel.on(
         'postgres_changes',
         {
           event: 'INSERT',
@@ -531,14 +599,15 @@ export function useStreamAudiencePresence(
           })
         }
       )
-      .subscribe()
+    }
+    audienceChannel.subscribe()
 
     channelsRef.current = [audienceChannel]
 
     return () => {
       cleanupChannels()
     }
-  }, [streamId, effectiveUserId, fetchAudience, cleanupChannels, queueAudienceMutation])
+  }, [streamId, effectiveUserId, loadAudience, audienceLimit, cleanupChannels, queueAudienceMutation])
 
   // Fetch ghost mode status for audience members (realtime doesn't support joins)
   // Debounced: only fetch once per unique set of audience user IDs, max once per 30s
@@ -565,11 +634,18 @@ export function useStreamAudiencePresence(
     }
     ghostModeTimerRef.current = setTimeout(async () => {
       const ids = currentUserIds.split(',')
-      const profiles = await getProfiles(ids)
+      let profiles
+      try {
+        profiles = await getProfiles(ids)
+      } catch (error) {
+        console.error('[useStreamAudiencePresence] Failed to refresh audience identities:', error)
+        return
+      }
 
       if (profiles.length > 0) {
         ghostModeFetchedRef.current = { streamId, userIds: currentUserIds }
-        const ghostModeMap = new Map(profiles.map((p: any) => [p.id, p.is_ghost_mode]))
+        const ghostModeMap = new Map<string, boolean | undefined>()
+        profiles.forEach((profile) => ghostModeMap.set(profile.id, profile.is_ghost_mode))
         setAudienceMap((prev) => {
           const next = { ...prev }
           Object.keys(next).forEach((key) => {
@@ -604,6 +680,32 @@ export function useStreamAudiencePresence(
   }, [effectiveUserId, streamId, heartbeatAudience])
 
   useEffect(() => {
+    if (!effectiveUserId || !streamId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(effectiveUserId)) {
+      return
+    }
+
+    const recordTLeagueViewing = async () => {
+      if (document.visibilityState !== 'visible') return
+      try {
+        const { error } = await supabase.rpc('record_t_league_viewing_heartbeat', {
+          p_stream_id: streamId,
+        })
+        if (error) {
+          console.error('[useStreamAudiencePresence] T League viewing heartbeat failed', error)
+        }
+      } catch (error) {
+        console.error('[useStreamAudiencePresence] T League viewing heartbeat failed', error)
+      }
+    }
+
+    const heartbeat = window.setInterval(() => {
+      void recordTLeagueViewing()
+    }, 30_000)
+
+    return () => window.clearInterval(heartbeat)
+  }, [effectiveUserId, streamId])
+
+  useEffect(() => {
     if (!effectiveUserId || !streamId) return
     const now = Date.now()
     const lastUpdate = lastGiftUpdateRef.current[effectiveUserId] || 0
@@ -621,6 +723,7 @@ export function useStreamAudiencePresence(
     activeAudience,
     topAudience,
     myPresence,
+    isAudienceLoading,
     joinAudience,
     leaveAudience,
     heartbeatAudience,

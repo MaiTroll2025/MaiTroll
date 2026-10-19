@@ -1,24 +1,21 @@
 /**
  * T LEAGUE CONFIGURATION — REWORKED
  * ==================================
- * Mai Troll Broadcast League System
+ * Mai Troll T League System
  *
- * League score = total_xp (from the user XP/level system)
- *   - The T league reads from the same xp system the bottom nav bar uses
- *   - Gift XP, chat XP, watch XP, and all other XP sources contribute
- *   - When users receive gifts in broadcast, XP is awarded and counts
- *     towards their T league tier
+ * T League points are earned by completing verified platform missions.
+ * Broadcast activity is one mission source, not the only progression path.
  *
- * Sub-tiers: Each main tier (T0-T10) has 4 sub-levels: a, b, c, d
+ * Sub-tiers: Each main tier (T0-T500) has 4 sub-levels: a, b, c, d
  *   Progress within a tier is divided into 4 equal quarters
  *   T0a (start) → T0b (25%) → T0c (50%) → T0d (75%) → T1a (next tier)
  *
- * Weekly Goals: Reset weekly, provide achievable mini-missions
- *   to push users toward next sub-tier
+ * Mission completion and points are authoritative in the database.
+ * Client-side goal templates below are retained only for legacy consumers.
  */
 
 export interface TLeagueTier {
-  tier: string           // T0, T1, ... T10
+  tier: string           // T0, T1, ... T500
   minScore: number       // Minimum league score for this tier
   label: string          // Display name
   color: string          // Tailwind gradient classes
@@ -28,7 +25,7 @@ export interface TLeagueTier {
   subTiers: string[]     // ['a', 'b', 'c', 'd']
 }
 
-export const T_LEAGUE_TIERS: TLeagueTier[] = [
+const BASE_T_LEAGUE_TIERS: TLeagueTier[] = [
   { tier: 'T0',  minScore: 0,          label: 'Unranked',          color: 'from-gray-600 to-gray-500',     badgeColor: 'bg-gray-700',    textColor: 'text-gray-300',   icon: '⚪', subTiers: ['a','b','c','d'] },
   { tier: 'T1',  minScore: 100,        label: 'Street Rookie',      color: 'from-green-700 to-green-500',   badgeColor: 'bg-green-700',   textColor: 'text-green-300',  icon: '🟢', subTiers: ['a','b','c','d'] },
   { tier: 'T2',  minScore: 500,        label: 'Block Runner',       color: 'from-teal-700 to-teal-500',     badgeColor: 'bg-teal-700',    textColor: 'text-teal-300',   icon: '🔵', subTiers: ['a','b','c','d'] },
@@ -41,6 +38,34 @@ export const T_LEAGUE_TIERS: TLeagueTier[] = [
   { tier: 'T9',  minScore: 750000,     label: 'City Legend',        color: 'from-yellow-600 to-yellow-400', badgeColor: 'bg-yellow-600',  textColor: 'text-yellow-200', icon: '🌟', subTiers: ['a','b','c','d'] },
   { tier: 'T10', minScore: 2000000,    label: 'MaiTroll Immortal', color: 'from-red-600 to-yellow-500',    badgeColor: 'bg-red-700',     textColor: 'text-red-200',    icon: '🏆', subTiers: ['a','b','c','d'] },
 ];
+
+const TIER_COLORS = BASE_T_LEAGUE_TIERS.slice(1).map((tier) => ({
+  color: tier.color,
+  badgeColor: tier.badgeColor,
+  textColor: tier.textColor,
+  icon: tier.icon,
+}))
+
+export function getTLeagueThreshold(tierNumber: number): number {
+  const tier = Math.min(500, Math.max(0, Math.floor(tierNumber)))
+  if (tier <= 10) return BASE_T_LEAGUE_TIERS[tier].minScore
+  return 2_000_000 + 8_000 * (tier - 10) ** 2
+}
+
+export const T_LEAGUE_TIERS: TLeagueTier[] = Array.from(
+  { length: 501 },
+  (_, tierNumber) => {
+    if (tierNumber <= 10) return BASE_T_LEAGUE_TIERS[tierNumber]
+    const palette = TIER_COLORS[(tierNumber - 1) % TIER_COLORS.length]
+    return {
+      tier: `T${tierNumber}`,
+      minScore: getTLeagueThreshold(tierNumber),
+      label: tierNumber === 500 ? 'MaiTroll Immortal' : `T League ${tierNumber}`,
+      ...palette,
+      subTiers: ['a', 'b', 'c', 'd'],
+    }
+  },
+)
 
 /**
  * LEAGUE LEVELS (separate from T League)
@@ -99,7 +124,7 @@ export function getWeeklyGoalsForTier(mainTier: string, subTier: string): Weekly
   // Scale target by tier difficulty (higher tier = harder goals)
   const tierNum = parseInt(mainTier.replace('T', ''));
   const subIdx = ['a','b','c','d'].indexOf(subTier);
-  const difficultyMult = 1 + (tierNum * 0.5) + (subIdx * 0.15);
+  const difficultyMult = 1 + (Math.min(tierNum, 500) * 0.02) + (subIdx * 0.15);
 
   return baseGoals.map(g => ({
     ...g,
@@ -248,10 +273,8 @@ export function getLeagueLevelProgress(giftsSent: number): number {
 }
 
 /**
- * Calculate league score from total_xp
- * The T league is now XP-based — reads from the same xp system
- * the bottom nav bar uses. Gift XP, watch XP, chat XP, etc.
- * all contribute to the T league tier.
+ * Compatibility helper for existing callers. T League points are stored
+ * separately from account XP.
  */
 export function calculateLeagueScore(totalXp: number): number {
   return totalXp;

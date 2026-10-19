@@ -20,7 +20,7 @@ export function useCityAnnouncements(limit = 8) {
     async function fetch() {
       try {
         const { data, error } = await supabase
-          .from('troll_wall_posts')
+          .from('troll_wall_posts_public')
           .select('id, content, metadata, post_type, created_at')
           .eq('post_type', 'announcement')
           .order('created_at', { ascending: false })

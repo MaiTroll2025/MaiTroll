@@ -1,7 +1,7 @@
 export type StreamStatus = 'pending' | 'starting' | 'live' | 'ended' | 'failed';
 export type LayoutMode = 'grid' | 'battle' | 'spotlight';
 
-export type RTCProvider = 'livekit' | 'getstream';
+export type RTCProvider = 'livekit';
 
 export interface Stream {
   [x: string]: any;

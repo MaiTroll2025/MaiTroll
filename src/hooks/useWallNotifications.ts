@@ -41,7 +41,7 @@ export function useWallNotifications(isWallActive: boolean) {
 
     try {
       const { count, error } = await supabase
-        .from('troll_wall_posts')
+        .from('troll_wall_posts_public')
         .select('id', { count: 'exact', head: true })
         .is('reply_to_post_id', null)
         .gt('created_at', lastSeen)

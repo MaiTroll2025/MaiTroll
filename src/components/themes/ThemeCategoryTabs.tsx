@@ -6,7 +6,6 @@ const categoryIcons: Record<string, string> = {
   smoke: '~',
   drinks: 'D',
   girly: '*',
-  pride: 'R',
   car: 'C',
   music: 'M',
   ceo: 'G',

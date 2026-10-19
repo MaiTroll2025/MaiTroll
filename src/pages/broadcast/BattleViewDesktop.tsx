@@ -31,6 +31,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
     opponentStream,
     participantInfo,
     participantSnapshots,
+    departedSeatKeys,
     activeBattles,
     activeBattlesLoading,
     battleId,
@@ -128,6 +129,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
           challengerStateCode={challengerStream.state_battle_state_code || null}
           opponentStateCode={opponentStream.state_battle_state_code || null}
           countdown={preBattleCountdown}
+          isBroadcaster={isBroadcaster}
         />
       )}
       {/* LEFT SIDEBAR — Active Battles + Viewer Status (desktop) */}
@@ -231,6 +233,8 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
               challengerBoxCount={challengerStream.box_count || 1}
               opponentBoxCount={opponentStream.box_count || 1}
               onChangeBoxCount={setTeamBoxCount}
+              isRandomBattle={isRandomBattle}
+              departedSeatKeys={departedSeatKeys}
               challengerScore={battle?.score_challenger || 0}
               opponentScore={battle?.score_opponent || 0}
               challengerCrownInfo={challengerCrownInfo}

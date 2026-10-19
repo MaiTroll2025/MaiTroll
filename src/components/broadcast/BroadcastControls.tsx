@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stream } from '../../types/broadcast';
 import { supabase } from '../../lib/supabase';
@@ -969,23 +969,22 @@ function BroadcastControls({
 
 // ─── ORB COMPONENTS ───
 
-function OrbBtn({ active, onClick, icon: Icon, label, glow, size, disabled, tooltip }: any) {
+const OrbBtn = memo(function OrbBtn({ active, onClick, icon: Icon, label, glow, size, disabled, tooltip }: any) {
   const isLg = size === 'lg';
-  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!disabled && onClick) {
       onClick();
     }
-  };
+  }, [disabled, onClick]);
   return (
     <div className="flex flex-col items-center gap-1" title={tooltip}>
       <button
         onClick={handleClick}
-        onTouchEnd={handleClick}
         disabled={disabled}
         className={cn(
-          "rounded-full flex items-center justify-center transition-all backdrop-blur-xl border",
+          "rounded-full flex items-center justify-center transition-colors backdrop-blur-xl border",
           isLg ? "w-14 h-14" : "w-11 h-11",
           glow === "red"
             ? "bg-red-500/20 border-red-500/40 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
@@ -1006,33 +1005,7 @@ function OrbBtn({ active, onClick, icon: Icon, label, glow, size, disabled, tool
       <span className="text-[8px] text-slate-400 font-medium">{label}</span>
     </div>
   );
-}
-
-function _SideOrb({ onClick, icon: Icon, color: _color, active: _active, disabled, label }: any) {
-  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!disabled && onClick) {
-      onClick();
-    }
-  };
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <button
-        onClick={handleClick}
-        onTouchEnd={handleClick}
-        disabled={disabled}
-        className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-xl border transition-all bg-white/10 border-white/20 text-white hover:bg-white/20",
-          disabled && "opacity-30 cursor-not-allowed"
-        )}
-      >
-        <Icon size={14} />
-      </button>
-      {label && <span className="text-[7px] text-slate-500 font-medium leading-none">{label}</span>}
-    </div>
-  );
-}
+});
 
 function MenuOrb({ icon: Icon, label, onClick, active }: any) {
   return (

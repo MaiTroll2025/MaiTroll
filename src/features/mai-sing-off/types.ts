@@ -75,7 +75,6 @@ export interface SingOffUser {
   is_kicked?: boolean
   is_muted?: boolean
   is_publishing?: boolean
-  livekit_identity?: string | null
 }
 
 export type QueueStatus = 'waiting' | 'called' | 'countdown' | 'on_stage' | 'completed' | 'kicked' | 'left'
@@ -265,8 +264,10 @@ export interface SingOffStats {
 export interface SingOffAuthority {
   [x: string]: boolean
   is_staff: boolean
+  is_admin: boolean
   is_host: boolean
   is_judge: boolean
+  is_judge_eligible: boolean
   is_ceo: boolean
 }
 

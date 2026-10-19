@@ -9,6 +9,9 @@ import SubscribeButton from './SubscribeButton';
 import ProfileFrame from '@/components/profile/ProfileFrame';
 import type { ProfileFrame as ProfileFrameType } from '@/config/profileFrames';
 import { useProfileFrameStore } from '@/stores/useProfileFrameStore';
+import { usePublicProfileIdentity } from '@/hooks/usePublicProfileIdentity';
+import { isStaffUser } from '@/lib/userUtils';
+import GhostModeAdminDetails from '@/components/admin/GhostModeAdminDetails';
 
 interface UserMiniProfileProps {
   userId: string;
@@ -31,7 +34,11 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
   onClose,
   onModerate
 }) => {
-  const { user } = useAuthStore();
+  const { user, profile } = useAuthStore();
+  const { identity, loading: identityLoading } = usePublicProfileIdentity(userId);
+  const safeUsername = identity?.username || (identityLoading ? 'xxxxx' : 'xxxxx');
+  const safeAvatarUrl = identity?.avatar_url || (identityLoading ? '/ghost-basic.svg' : '/default-avatar.png');
+  const canViewGhostDetails = isStaffUser(profile);
   const navigate = useNavigate();
   const isOwnProfile = user?.id === userId;
   const [targetProfile, setTargetProfile] = useState<any>(null);
@@ -203,7 +210,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
   };
 
   const handleMessage = () => {
-    navigate(`/messages?to=${username}`);
+    navigate(`/messages?to=${safeUsername}`);
     onClose();
   };
 
@@ -245,17 +252,17 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
   const handleBlock = async () => {
     if (!user || !userId || isOwnProfile) return;
     if (blockLoading) return;
-    if (!confirm(isBlocked ? `Unblock @${username}?` : `Block @${username}? They will not be able to message you or view your profile.`)) return;
+    if (!confirm(isBlocked ? `Unblock @${safeUsername}?` : `Block @${safeUsername}? They will not be able to message you or view your profile.`)) return;
     setBlockLoading(true);
     try {
       if (isBlocked) {
         await supabase.from('user_blocks').delete().eq('blocker_id', user.id).eq('blocked_id', userId);
         setIsBlocked(false);
-        toast.success(`Unblocked @${username}`);
+        toast.success(`Unblocked @${safeUsername}`);
       } else {
         await supabase.from('user_blocks').insert({ blocker_id: user.id, blocked_id: userId });
         setIsBlocked(true);
-        toast.success(`Blocked @${username}`);
+        toast.success(`Blocked @${safeUsername}`);
       }
     } catch (err: any) {
       toast.error(err.message || 'Block action failed');
@@ -287,7 +294,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
         p_amount: amount,
       });
       if (error) throw error;
-      toast.success(`Tipped ${amount} Troll Coins to @${username}`);
+      toast.success(`Tipped ${amount} Troll Coins to @${safeUsername}`);
       setTipOpen(false);
       setCustomTip('');
     } catch (err: any) {
@@ -298,7 +305,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
   };
 
   const handleViewProfile = () => {
-    navigate(`/profile/${username}`);
+    navigate(`/profile/id/${userId}`);
     onClose();
   };
 
@@ -327,14 +334,16 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
           <div className="w-full h-20 bg-gradient-to-r from-purple-900 to-slate-900" />
         )}
 
+        <GhostModeAdminDetails userId={userId} canView={canViewGhostDetails} />
+
         {/* Profile Section */}
         <div className="px-4 pb-4">
           <div className="flex items-end gap-3 -mt-8 mb-3" style={{ overflow: 'visible' }}>
             <div className="w-20 h-20" style={{ overflow: 'visible' }}>
               <ProfileFrame
                 frame={userFrame}
-                avatarUrl={avatarUrl || targetProfile?.avatar_url || '/default-avatar.png'}
-                username={username}
+                avatarUrl={safeAvatarUrl}
+                username={safeUsername}
                 size="md"
               />
             </div>
@@ -343,9 +352,9 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
                 <button
                   onClick={handleViewProfile}
                   className="font-bold text-white truncate text-lg hover:text-cyan-300 transition-colors text-left"
-                  title={`View ${username}'s profile`}
+                  title={`View ${safeUsername}'s profile`}
                 >
-                  {username}
+                  {safeUsername}
                 </button>
                 {targetProfile?.is_verified && (
                   <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded">✓</span>
@@ -408,7 +417,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
               <>
                 <SubscribeButton
                   broadcasterId={userId}
-                  broadcasterUsername={username}
+                  broadcasterUsername={safeUsername}
                 />
                 <button
                   onClick={handleFollow}
@@ -462,7 +471,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
                     <div className="absolute bottom-full left-0 right-0 mb-1 z-20 overflow-hidden rounded-lg border border-slate-600 bg-slate-800 shadow-xl">
                       {onModerate && (
                         <button
-                          onClick={() => { setMenuOpen(false); onModerate(userId, username); }}
+                          onClick={() => { setMenuOpen(false); onModerate(userId, safeUsername); }}
                           className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-cyan-900/40 hover:text-cyan-300"
                         >
                           <Gavel className="w-4 h-4" /> Moderate User
@@ -591,7 +600,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
                     </div>
                     <div>
                       <h3 className="font-bold text-white text-sm">Send Tip</h3>
-                      <p className="text-xs text-zinc-400">Tipping @{username}</p>
+                      <p className="text-xs text-zinc-400">Tipping @{safeUsername}</p>
                     </div>
                   </div>
                   <button type="button" onClick={() => setTipOpen(false)} className="text-zinc-400 hover:text-white transition-colors">
@@ -644,7 +653,7 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
                     </div>
                     <div>
                       <h3 className="font-bold text-white text-sm">Report User</h3>
-                      <p className="text-xs text-zinc-400">Reporting @{username}</p>
+                      <p className="text-xs text-zinc-400">Reporting @{safeUsername}</p>
                     </div>
                   </div>
                   <button type="button" onClick={() => setShowReportModal(false)} className="text-zinc-400 hover:text-white transition-colors">

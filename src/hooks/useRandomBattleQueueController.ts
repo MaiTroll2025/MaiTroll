@@ -10,6 +10,8 @@ interface Options {
   stream: Stream | null;
   userId?: string;
   isBroadcaster: boolean;
+  isBattleUnlocked?: boolean;
+  isBattlePotReady?: boolean;
   onStreamUpdate?: (patch: Partial<Stream>) => void;
 }
 
@@ -41,11 +43,14 @@ export function useRandomBattleQueueController({
   stream,
   userId,
   isBroadcaster,
+  isBattleUnlocked = false,
+  isBattlePotReady,
   onStreamUpdate,
 }: Options) {
   const [isBusy, setIsBusy] = useState(false);
   const [delayUntil, setDelayUntil] = useState<number | null>(null);
   const [battleStartsAt, setBattleStartsAt] = useState<number | null>(null);
+  const [battleUnlockConfirmed, setBattleUnlockConfirmed] = useState(isBattleUnlocked);
 
   const delayTimerRef = useRef<number | null>(null);
   const pollTimerRef = useRef<number | null>(null);
@@ -65,6 +70,10 @@ export function useRandomBattleQueueController({
   const shouldAutoQueueRef = useRef(false);
 
   const isGeneralChat = stream?.category === 'general';
+
+  useEffect(() => {
+    if (isBattleUnlocked) setBattleUnlockConfirmed(true);
+  }, [isBattleUnlocked]);
 
   const isQueueEnabled =
     !!stream?.random_battle_queue_enabled;
@@ -90,6 +99,7 @@ export function useRandomBattleQueueController({
     RANDOM_BATTLE_ENABLED &&
     isGeneralChat &&
     isBroadcaster &&
+    battleUnlockConfirmed &&
     !!stream?.id &&
     !!userId;
 
@@ -322,7 +332,7 @@ export function useRandomBattleQueueController({
 
       void supabase.removeChannel(channel);
     };
-  }, [canUseRandomBattles, clearActivationTimer, clearTimers, onStreamUpdate, stream?.id]);
+  }, [canUseRandomBattles, isBattleUnlocked, clearActivationTimer, clearTimers, onStreamUpdate, stream?.id]);
 
   /*
    * -------------------------------------------------------------
@@ -557,6 +567,9 @@ export function useRandomBattleQueueController({
           !!data?.match_found;
 
         if (!matched) {
+          if (force && typeof data?.message === 'string' && /battle pot|contribute/i.test(data.message)) {
+            toast.info(data.message);
+          }
           if (import.meta.env.DEV) {
             console.debug(
               '[RandomBattleQueue] no match',
@@ -755,16 +768,75 @@ export function useRandomBattleQueueController({
    */
 
   const startQueue = useCallback(async () => {
-    if (
-      !canUseRandomBattles ||
-      !stream?.id
-    ) {
+    if (!RANDOM_BATTLE_ENABLED) {
+      toast.error('Random battles are currently unavailable.');
+      return;
+    }
+    if (!isBroadcaster || !stream?.id || !userId) {
+      toast.error('Only the broadcaster can start the Random Battle queue.');
+      return;
+    }
+    if (!isGeneralChat) {
+      toast.error('Random battles are only available for General Chat streams.');
+      return;
+    }
+    if (isBattlePotReady === false) {
+      toast.info('Fill the current Battle Pot target before starting the Random Battle queue.');
       return;
     }
 
     setIsBusy(true);
 
     try {
+      if (isBattlePotReady !== undefined) {
+        const { data: battlePotState, error: battlePotError } =
+          await supabase.rpc('get_battle_pot_state', {
+            p_broadcaster_id: userId,
+          });
+
+        if (battlePotError) throw battlePotError;
+        if (battlePotState?.unlocked !== true) {
+          toast.info('Complete the broadcaster’s initial Battle Pot target to unlock Random Battles.');
+          return;
+        }
+        let isBattlePotFull =
+          battlePotState?.round_type === 'subsequent_battle' &&
+          battlePotState?.status === 'reached' &&
+          battlePotState?.collected_coins >= battlePotState?.target_coins;
+        if (!isBattlePotFull && !battlePotState?.round_id) {
+          const { data: reachedRound, error: reachedRoundError } = await supabase
+            .from('battle_pot_rounds')
+            .select('id')
+            .eq('broadcaster_id', userId)
+            .eq('round_type', 'subsequent_battle')
+            .eq('status', 'reached')
+            .limit(1)
+            .maybeSingle();
+
+          if (reachedRoundError) throw reachedRoundError;
+          isBattlePotFull = Boolean(reachedRound);
+        }
+        if (!isBattlePotFull) {
+          toast.info('Fill the current Battle Pot target before starting the Random Battle queue.');
+          return;
+        }
+
+        setBattleUnlockConfirmed(true);
+      } else if (!battleUnlockConfirmed) {
+        const { data: battlePotState, error: battlePotError } =
+          await supabase.rpc('get_battle_pot_state', {
+            p_broadcaster_id: userId,
+          });
+
+        if (battlePotError) throw battlePotError;
+        if (battlePotState?.unlocked !== true) {
+          toast.info('Complete the broadcaster’s initial Battle Pot target to unlock Random Battles.');
+          return;
+        }
+
+        setBattleUnlockConfirmed(true);
+      }
+
       const queuedAt =
         new Date().toISOString();
 
@@ -786,17 +858,17 @@ export function useRandomBattleQueueController({
       }
 
       const row = data;
+      if (!row) {
+        throw new Error('Could not enable the Random Battle queue. Check that you own this live stream and try again.');
+      }
 
       const patch = {
         random_battle_queue_enabled:
-          row?.random_battle_queue_enabled ??
-          true,
+          row.random_battle_queue_enabled,
         random_battle_queued_at:
-          row?.random_battle_queued_at ??
-          queuedAt,
+          row.random_battle_queued_at,
         random_battle_cooldown_until:
-          row?.random_battle_cooldown_until ??
-          null,
+          row.random_battle_cooldown_until,
       } as Partial<Stream>;
 
       onStreamUpdate?.(patch);
@@ -822,12 +894,16 @@ export function useRandomBattleQueueController({
       setIsBusy(false);
     }
   }, [
-    canUseRandomBattles,
+    battleUnlockConfirmed,
     findMatch,
+    isBattlePotReady,
+    isBroadcaster,
     isBattleActive,
+    isGeneralChat,
     onStreamUpdate,
     stream?.id,
     stream?.status,
+    userId,
   ]);
 
   /*

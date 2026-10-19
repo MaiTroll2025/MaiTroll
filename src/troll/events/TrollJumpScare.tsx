@@ -46,25 +46,33 @@ const SCARY_SOUNDS = [
   '/sounds/entrance/curtain-open.mp3',
 ];
 
+const SCARY_VIDEOS = [
+  '/videos/troll-jumpscare.mp4',
+  '/videos/look-at-screen-jumpscare.mp4',
+];
+
+const SCARY_IMAGES = [
+  '/img/jumpscares/jumpscare1.png',
+  '/img/jumpscares/jumpscare2.png',
+  '/img/jumpscares/jumpscare3.png',
+  '/img/jumpscares/jumpscare4.png',
+  '/img/jumpscares/jumpscare5.png',
+  '/img/jumpscares/jumpscare6.png',
+  '/img/jumpscares/jumpscare7.jpeg',
+  '/img/jumpscares/jumpscare8.jpeg',
+  '/img/jumpscares/jumpscare9.jpeg',
+  '/img/jumpscares/jumpscare10.jpeg',
+  '/img/jumpscares/jumpscare11.jpeg',
+];
+
 const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [scaryImageIndex, setScaryImageIndex] = useState<number>(0);
+  const [scaryVideoIndex, setScaryVideoIndex] = useState<number>(0);
+  const [videoFailed, setVideoFailed] = useState<boolean>(false);
+  const [videoReady, setVideoReady] = useState<boolean>(false);
+  const failedVideosRef = useRef(new Set<number>());
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
-
-  // Scary images - local jumpscare images
-  const scaryImages = [
-    '/img/jumpscares/jumpscare1.png',
-    '/img/jumpscares/jumpscare2.png',
-    '/img/jumpscares/jumpscare3.png',
-    '/img/jumpscares/jumpscare4.png',
-    '/img/jumpscares/jumpscare5.png',
-    '/img/jumpscares/jumpscare6.png',
-    '/img/jumpscares/jumpscare7.jpeg',
-    '/img/jumpscares/jumpscare8.jpeg',
-    '/img/jumpscares/jumpscare9.jpeg',
-    '/img/jumpscares/jumpscare10.jpeg',
-    '/img/jumpscares/jumpscare11.jpeg',
-  ];
 
   // Play scary sound using Web Audio API (bypasses autoplay restrictions)
   const playScarySound = useCallback(async (index: number, volume: number) => {
@@ -106,8 +114,12 @@ const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
 
   useEffect(() => {
     // Randomly select a scary image and sound
-    const randomIndex = Math.floor(Math.random() * scaryImages.length);
+    const randomIndex = Math.floor(Math.random() * SCARY_IMAGES.length);
     setScaryImageIndex(randomIndex);
+    setScaryVideoIndex(Math.floor(Math.random() * SCARY_VIDEOS.length));
+    setVideoFailed(false);
+    setVideoReady(false);
+    failedVideosRef.current.clear();
     
     // Start animation after a short delay to ensure the overlay is visible
     const timer = setTimeout(() => {
@@ -126,7 +138,7 @@ const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
         sourceRef.current = null;
       }
     };
-  }, [playScarySound, rarity, scaryImages.length]);
+  }, [playScarySound, rarity]);
 
   // Determine the size and intensity of the jumpscare based on rarity
   const getJumpScareStyle = () => {
@@ -151,16 +163,43 @@ const TrollJumpScare: React.FC<TrollJumpScareProps> = ({ rarity }) => {
           isAnimating ? getJumpScareStyle() : 'w-0 h-0'
         }`}
       >
-        {/* Scary image - jumps out at user */}
-        <img 
-          src={scaryImages[scaryImageIndex]} 
-          alt="Troll Jumpscare" 
-          className="object-cover rounded-full shadow-2xl animate-pulse"
-          style={{ 
+        <img
+          src={SCARY_IMAGES[scaryImageIndex]}
+          alt="Troll jumpscare"
+          className="absolute inset-0 h-full w-full rounded-full object-cover shadow-2xl animate-pulse"
+          style={{
+            opacity: videoReady && !videoFailed ? 0 : 1,
             filter: 'brightness(1.3) saturate(1.4) contrast(1.2)',
-            animation: 'pulse 0.3s ease-in-out infinite'
+            animation: 'pulse 0.3s ease-in-out infinite',
           }}
         />
+        {!videoFailed && (
+          <video
+            key={SCARY_VIDEOS[scaryVideoIndex]}
+            src={SCARY_VIDEOS[scaryVideoIndex]}
+            autoPlay
+            playsInline
+            muted
+            preload="auto"
+            aria-label="Troll jumpscare"
+            className="absolute inset-0 h-full w-full rounded-full object-cover shadow-2xl"
+            onLoadedData={() => setVideoReady(true)}
+            onError={() => {
+              failedVideosRef.current.add(scaryVideoIndex);
+              setVideoReady(false);
+              if (failedVideosRef.current.size < SCARY_VIDEOS.length) {
+                const nextIndex = SCARY_VIDEOS.findIndex((_, index) => !failedVideosRef.current.has(index));
+                setScaryVideoIndex(nextIndex);
+              } else {
+                setVideoFailed(true);
+              }
+            }}
+            style={{
+              opacity: videoReady ? 1 : 0,
+              filter: 'brightness(1.3) saturate(1.4) contrast(1.2)',
+            }}
+          />
+        )}
         
         {/* Neon border effect based on rarity */}
         <div 

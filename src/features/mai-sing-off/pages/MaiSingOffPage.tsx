@@ -2,21 +2,25 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { ArrowLeft, BarChart3, Coins, Crown, Gavel, Hash, Home, Loader2, Mic2, Play, Sparkles, Trophy, Tv, Users, Video, X } from 'lucide-react';
+import { ArrowLeft, BarChart3, Coins, Crown, Gavel, Gem, Hash, Loader2, Mic2, Play, Sparkles, Trophy, Tv, Users, Video, X } from 'lucide-react';
 
 import { useShallow } from 'zustand/react/shallow';
 
 import { useAuthStore } from '@/lib/store';
+import { useLiveKitRoom } from '@/hooks/useLiveKitRoom';
+import { Track } from 'livekit-client';
 import { useSingOffStore } from '../store/useSingOffStore';
 import { useSingOffActions } from '../hooks/useSingOffActions';
-import { useSingOffLiveKit } from '../hooks/useSingOffLiveKit';
+import { useSingOffRealtime } from '../hooks/useSingOffRealtime';
 import { SingOffChat } from '../components/SingOffChat';
 import { ShowsLobby } from '../components/ShowsLobby';
 import { ChampionshipLobby } from '../components/ChampionshipLobby';
 import { RolesLobby } from '../components/RolesLobby';
 import { StatisticsLobby } from '../components/StatisticsLobby';
+import type { SingOffDecision, SingOffRound } from '../types';
+import { toast } from 'sonner';
 
-type LobbyView = 'shows' | 'championship' | 'roles' | 'stats' | 'coins';
+type LobbyView = 'shows' | 'championship' | 'roles' | 'stats';
 
 type ParticipantPosition =
   | 'challenger_a'
@@ -41,10 +45,21 @@ interface SingOffParticipantLike {
   troll_coins?: number | null;
   role?: string | null;
   position?: ParticipantPosition | string | null;
-  livekit_identity?: string | null;
+  can_publish?: boolean;
   is_publishing?: boolean;
   is_muted?: boolean;
   is_kicked?: boolean;
+}
+
+interface SingOffRemoteMediaUser {
+  videoTrack: MediaStreamTrack | null;
+  audioTrack: MediaStreamTrack | null;
+  isSpeaking: boolean;
+}
+
+function attachMediaTrack(element: HTMLMediaElement | null, track: MediaStreamTrack | null) {
+  if (!element) return;
+  element.srcObject = track ? new MediaStream([track]) : null;
 }
 
 export default function MaiSingOffPage() {
@@ -53,12 +68,15 @@ export default function MaiSingOffPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { session, authority, participants, chatMessages } = useSingOffStore(
+  const { session, authority, participants, chatMessages, currentRound, rounds, decisions } = useSingOffStore(
     useShallow((state) => ({
       session: state.session,
       authority: state.authority,
       participants: state.participants,
       chatMessages: state.chatMessages,
+      currentRound: state.currentRound,
+      rounds: state.rounds,
+      decisions: state.decisions,
     })),
   );
 
@@ -71,9 +89,13 @@ export default function MaiSingOffPage() {
   }, [actions]);
 
   const loadedSessionRef = useRef<string | null>(null);
+  const ceoAutoClaimedSessionRef = useRef<string | null>(null);
 
   const [lobbyView, setLobbyView] = useState<LobbyView>('shows');
   const [mobilePanel, setMobilePanel] = useState<'stage' | 'chat' | 'queue'>('stage');
+  const [mediaMicEnabled, setMediaMicEnabled] = useState(true);
+  const [mediaCameraEnabled, setMediaCameraEnabled] = useState(true);
+  const [mediaError, setMediaError] = useState<string | null>(null);
 
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -130,8 +152,8 @@ export default function MaiSingOffPage() {
   const profileRole = String((user as any)?.role ?? '').toLowerCase();
 
   const isCEO = authority?.isCEO === true || profileRole === 'ceo';
-  const isAdmin = authority?.isAdmin === true || profileRole === 'admin';
-  const isHost = authority?.isHost === true || authority?.canManageQueue === true;
+  const isAdmin = authority?.is_admin === true || authority?.isAdmin === true || profileRole === 'admin';
+  const isHost = authority?.isHost === true || authority?.canManageQueue === true || isCEO || isAdmin;
   const isJudge = authority?.isJudge === true;
   const isModerator = authority?.isModerator === true || profileRole === 'moderator';
 
@@ -142,25 +164,139 @@ export default function MaiSingOffPage() {
   const blockedFromGlobalSingOffModeration = profileRole === 'broadcaster' || profileRole === 'broadofficer';
   const hasSingOffModeration = canModerate && !blockedFromGlobalSingOffModeration;
 
-  /* LiveKit */
-  const isPublisher = !!(
-    session &&
-    authority &&
-    (authority.is_host || authority.is_judge || isCEO || isAdmin) &&
-    session.status === 'active'
-  );
+  const typedParticipants = participants as SingOffParticipantLike[];
 
-  const livekit = useSingOffLiveKit({
-    roomName: session?.room_name ?? '',
-    userId: user?.id ?? '',
+  const myLiveSeat = typedParticipants.find((participant) =>
+    participant.user_id === user?.id && participant.can_publish && participant.position,
+  );
+  const isPublisher = Boolean(session?.status === 'active' && myLiveSeat);
+
+  const {
+    isConnected: mediaConnected,
+    isPublishing: mediaPublishing,
+    remoteUsers: liveKitRemoteUsers,
+    localVideoTrack,
+    localAudioTrack,
+    error: liveKitError,
+    joinAsAudience,
+    leaveRoom,
+    setMicEnabled,
+    setCameraEnabled,
+  } = useLiveKitRoom({
+    roomId: session?.room_name ?? '',
+    roomType: 'singoff',
+    role: isPublisher ? 'publisher' : 'viewer',
+    identity: user?.id ?? '',
     userName: (user as any)?.display_name || 'User',
-    mode: isPublisher ? 'singoff-publisher' : 'singoff-viewer',
-    autoPublish: isPublisher,
-    isAdmin: isCEO || isAdmin,
   });
+  const mediaSessionId = session?.id;
+  const mediaRoomName = session?.room_name;
+  const isShowActive = session?.status === 'active';
+  useSingOffRealtime(sessionId, user?.id);
+
+  const connectAndPublish = useCallback(async () => {
+    if (!mediaRoomName || !mediaSessionId || !user?.id) {
+      setMediaError('The show room is not ready yet.');
+      return false;
+    }
+    if (mediaConnected && mediaPublishing) return true;
+
+    setMediaError(null);
+    await leaveRoom();
+    const call = await joinAsAudience({
+      userId: user.id,
+      streamId: mediaSessionId,
+      roomName: mediaRoomName,
+      publishCapable: true,
+    });
+    if (!call || typeof call === 'string') {
+      if (typeof call === 'string') setMediaError(call);
+      return false;
+    }
+    setMediaMicEnabled(true);
+    setMediaCameraEnabled(true);
+    return true;
+  }, [joinAsAudience, leaveRoom, mediaConnected, mediaPublishing, mediaRoomName, mediaSessionId, user?.id]);
 
   /* Stage participants */
-  const typedParticipants = participants as SingOffParticipantLike[];
+  useEffect(() => {
+    if (!isShowActive || isPublisher || !user?.id) return;
+    let cancelled = false;
+    setMediaError(null);
+    void joinAsAudience(user.id).then((result) => {
+      if (cancelled) return;
+      if (typeof result === 'string') setMediaError(result);
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      console.error('[MaiSingOffPage] LiveKit viewer join failed', error);
+      setMediaError('Could not connect to the LiveKit show.');
+    });
+    return () => {
+      cancelled = true;
+      void leaveRoom();
+    };
+  }, [isPublisher, isShowActive, joinAsAudience, leaveRoom, user?.id]);
+
+  const toggleMicrophone = useCallback(async () => {
+    const nextEnabled = !mediaMicEnabled;
+    const succeeded = await setMicEnabled(nextEnabled);
+    if (!succeeded) {
+      const message = 'Could not change your microphone state.';
+      setMediaError(message);
+      toast.error(message);
+      return;
+    }
+    setMediaMicEnabled(nextEnabled);
+  }, [mediaMicEnabled, setMicEnabled]);
+
+  const toggleCamera = useCallback(async () => {
+    const nextEnabled = !mediaCameraEnabled;
+    const succeeded = await setCameraEnabled(nextEnabled);
+    if (!succeeded) {
+      const message = 'Could not change your camera state.';
+      setMediaError(message);
+      toast.error(message);
+      return;
+    }
+    setMediaCameraEnabled(nextEnabled);
+  }, [mediaCameraEnabled, setCameraEnabled]);
+
+  const remoteMediaUsers = useMemo(() => {
+    const users: Record<string, SingOffRemoteMediaUser> = {};
+    liveKitRemoteUsers.forEach((participant) => {
+      const videoPub = participant.getTrackPublication?.(Track.Source.Camera);
+      const audioPub = participant.getTrackPublication?.(Track.Source.Microphone);
+      users[participant.identity] = {
+        videoTrack: (videoPub?.track as unknown as MediaStreamTrack | null) ?? null,
+        audioTrack: (audioPub?.track as unknown as MediaStreamTrack | null) ?? null,
+        isSpeaking: false,
+      };
+    });
+    if (user?.id) {
+      users[user.id] = {
+        videoTrack: (localVideoTrack as unknown as MediaStreamTrack | null) ?? null,
+        audioTrack: (localAudioTrack as unknown as MediaStreamTrack | null) ?? null,
+        isSpeaking: false,
+      };
+    }
+    return users;
+  }, [liveKitRemoteUsers, localAudioTrack, localVideoTrack, user?.id]);
+
+  const singOffMedia = useMemo(() => ({
+    isConnected: mediaConnected,
+    isPublishing: mediaPublishing,
+    remoteUsers: remoteMediaUsers,
+    micEnabled: mediaMicEnabled,
+    cameraEnabled: mediaCameraEnabled,
+    error: mediaError || liveKitError,
+    connect: connectAndPublish,
+    toggleMic: toggleMicrophone,
+    toggleCamera,
+  }), [connectAndPublish, liveKitError, mediaCameraEnabled, mediaConnected, mediaError, mediaMicEnabled, mediaPublishing, remoteMediaUsers, toggleCamera, toggleMicrophone]);
+
+  const latestRoundWinnerId = [...rounds]
+    .filter((round) => round.status === 'completed' && round.winner_id)
+    .sort((a, b) => b.round_number - a.round_number)[0]?.winner_id ?? null;
 
   const getPosition = useCallback(
     (position: ParticipantPosition) =>
@@ -178,6 +314,23 @@ export default function MaiSingOffPage() {
   const judge4 = getPosition('judge_4');
   const ceo = getPosition('ceo');
   const waitingQueue = typedParticipants.filter((participant) => participant.position === 'queue');
+
+  useEffect(() => {
+    if (
+      session?.status !== 'active' ||
+      !session.id ||
+      !user?.id ||
+      !(isCEO || isAdmin) ||
+      ceo?.user_id === user.id ||
+      (ceo && ceo.user_id !== user.id) ||
+      ceoAutoClaimedSessionRef.current === session.id
+    ) {
+      return;
+    }
+
+    ceoAutoClaimedSessionRef.current = session.id;
+    void actionsRef.current.claimCeoSeat?.();
+  }, [ceo, isAdmin, isCEO, session?.id, session?.status, user?.id]);
 
   const goBack = () => {
     navigate('/mai-sing-off');
@@ -217,11 +370,7 @@ export default function MaiSingOffPage() {
     return <SignedOutView onSignIn={() => navigate('/auth')} />;
   }
 
-  if (!inStage) {
-    return <UnderConstruction />;
-  }
-
-  /* ============ LIVE STAGE ============ */
+  /* ============ MAIN / LOBBY PAGE ============ */
   if (inStage) {
     if (!sessionId) {
       return (
@@ -297,7 +446,7 @@ export default function MaiSingOffPage() {
           <MobileStageTab active={mobilePanel === 'queue'} icon={Users} label="Queue" onClick={() => setMobilePanel('queue')} />
         </div>
 
-        <div className="mx-auto hidden max-w-[1800px] gap-4 p-4 md:grid md:grid-cols-[320px_minmax(0,1fr)_280px]">
+        <div className="hidden w-full max-w-none gap-4 p-3 md:grid md:grid-cols-[minmax(280px,22vw)_minmax(0,1fr)_minmax(240px,19vw)] xl:gap-5 xl:p-5">
           <div className="h-[calc(100vh-110px)] min-h-[520px]">
             <SingOffChat sessionId={session.id} />
           </div>
@@ -313,10 +462,16 @@ export default function MaiSingOffPage() {
             judge4={judge4}
             ceo={ceo}
             canModerate={hasSingOffModeration}
-            livekit={livekit}
+            media={singOffMedia}
             actions={actionsRef.current}
             isHost={isHost || isCEO || isAdmin}
+            canForceHost={isCEO || isAdmin}
+            canClaimCeoSeat={isCEO || isAdmin}
             isJudge={isJudge}
+            isJudgeEligible={authority?.is_judge_eligible === true}
+            currentRound={currentRound}
+            decisions={decisions}
+            latestRoundWinnerId={latestRoundWinnerId}
             myUserId={user.id}
           />
 
@@ -341,10 +496,16 @@ export default function MaiSingOffPage() {
                 judge4={judge4}
                 ceo={ceo}
                 canModerate={hasSingOffModeration}
-                livekit={livekit}
+                media={singOffMedia}
                 actions={actionsRef.current}
                 isHost={isHost || isCEO || isAdmin}
+                canForceHost={isCEO || isAdmin}
+                canClaimCeoSeat={isCEO || isAdmin}
                 isJudge={isJudge}
+                isJudgeEligible={authority?.is_judge_eligible === true}
+                currentRound={currentRound}
+                decisions={decisions}
+                latestRoundWinnerId={latestRoundWinnerId}
                 myUserId={user.id}
               />
             </div>
@@ -455,7 +616,6 @@ export default function MaiSingOffPage() {
           <LobbyTab active={lobbyView === 'championship'} icon={Trophy} label="Championship" onClick={() => setLobbyView('championship')} />
           <LobbyTab active={lobbyView === 'roles'} icon={Gavel} label="Judges & Hosts" onClick={() => setLobbyView('roles')} />
           <LobbyTab active={lobbyView === 'stats'} icon={BarChart3} label="Statistics" onClick={() => setLobbyView('stats')} />
-          <LobbyTab active={lobbyView === 'coins'} icon={Coins} label="Coins" onClick={() => setLobbyView('coins')} />
         </div>
       </div>
 
@@ -465,7 +625,6 @@ export default function MaiSingOffPage() {
         {lobbyView === 'championship' && <ChampionshipLobby />}
         {lobbyView === 'roles' && <RolesLobby />}
         {lobbyView === 'stats' && <StatisticsLobby />}
-        {lobbyView === 'coins' && <CoinView balance={Number((user as any)?.troll_coins ?? 0)} />}
       </main>
 
       <style>{`
@@ -536,10 +695,16 @@ interface StageAreaProps {
   judge4: SingOffParticipantLike | null;
   ceo: SingOffParticipantLike | null;
   canModerate: boolean;
-  livekit: any;
+  media: any;
   actions: any;
   isHost: boolean;
+  canForceHost: boolean;
+  canClaimCeoSeat: boolean;
   isJudge: boolean;
+  isJudgeEligible: boolean;
+  currentRound: SingOffRound | null;
+  decisions: SingOffDecision[];
+  latestRoundWinnerId: string | null;
   myUserId: string;
 }
 
@@ -554,13 +719,25 @@ function StageArea({
   judge4,
   ceo,
   canModerate,
-  livekit,
+  media,
   actions,
   isHost,
+  canForceHost,
+  canClaimCeoSeat,
   isJudge,
+  isJudgeEligible,
+  currentRound,
+  decisions,
+  latestRoundWinnerId,
   myUserId,
 }: StageAreaProps) {
-  const mySeat = [
+  const [selectedSeatPosition, setSelectedSeatPosition] = useState<string | null>(null);
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
+  const [participantNote, setParticipantNote] = useState('');
+  const [noteLoading, setNoteLoading] = useState(false);
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
+  const mySeats = [
     challengerA,
     challengerB,
     hostStage,
@@ -570,38 +747,82 @@ function StageArea({
     judge3,
     judge4,
     ceo,
-  ].find((p) => p?.user_id === myUserId);
+  ].filter((p) => p?.user_id === myUserId);
+  const mySeat = mySeats[0] ?? null;
+  const selectedMySeat = mySeats.find((p) => p?.position === selectedSeatPosition);
+  const hasSelectedMySeat = Boolean(selectedMySeat);
+  const selectedParticipant = [challengerA, challengerB].find(
+    (participant) => participant?.user_id === selectedParticipantId,
+  ) ?? null;
+  const selectedParticipantUserId = selectedParticipant?.user_id;
+  const loadParticipantNote = actions.loadParticipantNote;
 
-  const eligibleSeats = useMemo(() => {
-    const seats: Array<{ position: string; label: string; occupied: boolean }> = [];
+  const connectAndPublish = async () => {
+    if (media?.isConnected && media?.isPublishing) return;
+    await media?.connect?.();
+  };
 
-    const push = (position: string, label: string, occupied: boolean) =>
-      seats.push({ position, label, occupied });
+  const selectMySeat = (participant: SingOffParticipantLike | null) =>
+    participant?.user_id === myUserId
+      ? () => {
+          const willSelect = selectedSeatPosition !== participant.position;
+          setSelectedSeatPosition(willSelect ? participant.position ?? null : null);
+          if (willSelect && participant.can_publish) void connectAndPublish();
+        }
+      : undefined;
 
-    const isMe = (p: SingOffParticipantLike | null) => p?.user_id === myUserId;
+  const selectParticipant = (participant: SingOffParticipantLike | null) =>
+    participant ? () => setSelectedParticipantId(participant.user_id) : undefined;
 
-    // Hosts may take the host stage or host-judge seat.
-    if (isHost) {
-      push('host_stage', 'Host Stage', Boolean(hostStage) && !isMe(hostStage));
-      push('host_judge', 'Host Judge', Boolean(hostJudge) && !isMe(hostJudge));
+  const canReviewParticipant = Boolean(
+    canForceHost ||
+    (selectedMySeat &&
+      ['host', 'host_judge', 'judge', 'ceo_judge'].includes(String(selectedMySeat.role))),
+  );
+
+  useEffect(() => {
+    if (!selectedParticipantUserId || !canReviewParticipant || typeof loadParticipantNote !== 'function') {
+      setParticipantNote('');
+      setNoteError(null);
+      setNoteLoading(false);
+      return;
     }
 
-    // Judges may take judge seats 1-4.
-    if (isJudge) {
-      push('judge_1', 'Judge 1', Boolean(judge1) && !isMe(judge1));
-      push('judge_2', 'Judge 2', Boolean(judge2) && !isMe(judge2));
-      push('judge_3', 'Judge 3', Boolean(judge3) && !isMe(judge3));
-      push('judge_4', 'Judge 4', Boolean(judge4) && !isMe(judge4));
-    }
+    let cancelled = false;
+    setNoteLoading(true);
+    setNoteError(null);
+    void loadParticipantNote(selectedParticipantUserId)
+      .then((result: { success: boolean; note?: string; error?: string }) => {
+        if (cancelled) return;
+        if (!result.success) {
+          setNoteError(result.error || 'Could not load the private note.');
+          return;
+        }
+        setParticipantNote(result.note ?? '');
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        console.error('[MaiSingOffPage] participant note load failed', error);
+        setNoteError('Could not load the private note.');
+      })
+      .finally(() => {
+        if (!cancelled) setNoteLoading(false);
+      });
 
-    // Any challenger seat can be claimed by an audience member wanting to perform.
-    push('challenger_a', 'Challenger A', Boolean(challengerA) && !isMe(challengerA));
-    push('challenger_b', 'Challenger B', Boolean(challengerB) && !isMe(challengerB));
-
-    return seats;
-  }, [isHost, isJudge, challengerA, challengerB, hostStage, hostJudge, judge1, judge2, judge3, judge4, myUserId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [canReviewParticipant, loadParticipantNote, selectedParticipantUserId]);
 
   const handleClaimSeat = async (position: string) => {
+    if (position === 'ceo') {
+      await actions.claimCeoSeat?.();
+      return;
+    }
+    if (position.startsWith('judge_')) {
+      await actions.claimJudgeSeat?.(position);
+      return;
+    }
     if (typeof actions.claimSeat === 'function') {
       await actions.claimSeat(position);
       return;
@@ -611,6 +832,20 @@ function StageArea({
       await actions.assignPosition(myUserId, position);
     }
   };
+
+  const moveHostTo = (position: 'host_stage' | 'host_judge') => {
+    if (canForceHost) {
+      void handleClaimSeat(position);
+      return;
+    }
+    void actions.moveHost?.(position);
+  };
+
+  const myHostPosition = hostStage?.user_id === myUserId
+    ? 'host_stage'
+    : hostJudge?.user_id === myUserId
+      ? 'host_judge'
+      : null;
 
   return (
     <section className="relative min-w-0 overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-b from-purple-950/30 via-black to-black p-3 shadow-[0_0_80px_rgba(147,51,234,.12)] sm:p-4">
@@ -646,66 +881,61 @@ function StageArea({
         <div className="rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-300">LIVE</div>
       </div>
 
-      {livekit?.isConnected && (
+      {(media?.isConnected || hasSelectedMySeat || media?.error) && (
         <div className="relative mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <div className="flex items-center gap-1.5 text-xs text-white/50">
-            <span className={`h-2 w-2 rounded-full ${livekit.isConnected ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
-            {livekit.isConnected ? 'Connected' : 'Disconnected'}
-            {livekit.isPublishing && (
+            <span className={`h-2 w-2 rounded-full ${media.isConnected ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
+            {media?.isConnected ? 'Connected to LiveKit' : 'Connecting to LiveKit'}
+            {media.isPublishing && (
               <span className="ml-1 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400">PUBLISHING</span>
             )}
           </div>
 
-          {isHost || isJudge || mySeat ? (
+          {hasSelectedMySeat && media?.isConnected ? (
             <div className="ml-auto flex gap-2">
               <button
                 type="button"
-                onClick={() => void livekit.toggleMic()}
+                onClick={() => void media.toggleMic()}
                 className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-black text-white/70 hover:bg-white/10"
               >
-                {livekit.micEnabled ? 'Mute Mic' : 'Unmute Mic'}
+                {media.micEnabled ? 'Mute Mic' : 'Unmute Mic'}
               </button>
               <button
                 type="button"
-                onClick={() => void livekit.toggleCamera()}
+                onClick={() => void media.toggleCamera()}
                 className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-black text-white/70 hover:bg-white/10"
               >
-                {livekit.cameraEnabled ? 'Cam Off' : 'Cam On'}
+                {media.cameraEnabled ? 'Cam Off' : 'Cam On'}
               </button>
             </div>
           ) : (
-            <span className="ml-auto text-[10px] text-white/35">Watch-only</span>
+            <span className="ml-auto text-[10px] text-white/35">
+              {hasSelectedMySeat ? 'Seat controls will be available when connected' : mySeat ? 'Click your seat to open controls' : 'Watch-only'}
+            </span>
           )}
+          {media?.error && <span role="alert" className="w-full text-xs text-red-300">{media.error}</span>}
         </div>
       )}
 
-      {/* Seat claim panel */}
-      {!mySeat && eligibleSeats.length > 0 && (
-        <div className="relative mb-4 rounded-2xl border border-pink-500/25 bg-gradient-to-r from-pink-600/10 via-purple-600/10 to-cyan-600/10 p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <Mic2 className="h-3.5 w-3.5 text-pink-400" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
-              Claim Your Seat to Perform
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {eligibleSeats.map((seat) => (
-              <button
-                key={seat.position}
-                type="button"
-                disabled={seat.occupied}
-                onClick={() => void handleClaimSeat(seat.position)}
-                className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-wider transition ${
-                  seat.occupied
-                    ? 'cursor-not-allowed border border-white/5 bg-white/[0.02] text-white/25'
-                    : 'border border-pink-400/30 bg-pink-600/20 text-pink-300 hover:bg-pink-600/40'
-                }`}
-              >
-                {seat.occupied ? `${seat.label} • Taken` : seat.label}
-              </button>
-            ))}
-          </div>
+      {canForceHost && !myHostPosition && (
+        <div className="relative mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-purple-300/25 bg-purple-500/10 p-3">
+          <span className="mr-auto text-xs font-bold text-purple-100">Admin host controls</span>
+          <button
+            type="button"
+            disabled={Boolean(hostStage && hostStage.user_id !== myUserId)}
+            onClick={() => moveHostTo('host_stage')}
+            className="rounded-lg border border-purple-200/30 bg-purple-500/20 px-3 py-2 text-[10px] font-black text-purple-100 transition hover:bg-purple-500/35 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {hostStage && hostStage.user_id !== myUserId ? 'Host Stage Occupied' : 'Take Host Stage'}
+          </button>
+          <button
+            type="button"
+            disabled={Boolean(hostJudge && hostJudge.user_id !== myUserId)}
+            onClick={() => moveHostTo('host_judge')}
+            className="rounded-lg border border-cyan-200/30 bg-cyan-500/15 px-3 py-2 text-[10px] font-black text-cyan-100 transition hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {hostJudge && hostJudge.user_id !== myUserId ? 'Host Judge Seat Occupied' : 'Sit with Judges'}
+          </button>
         </div>
       )}
 
@@ -724,26 +954,37 @@ function StageArea({
           participant={challengerA}
           accent="pink"
           canModerate={canModerate}
-          livekit={livekit}
+          media={media}
+          onEnterSeat={!mySeat && !challengerA ? () => void handleClaimSeat('challenger_a') : undefined}
+          onSelectSeat={selectMySeat(challengerA)}
+          onSelectParticipant={selectParticipant(challengerA)}
+          isSelected={(selectedSeatPosition === challengerA?.position && challengerA?.user_id === myUserId) || selectedParticipantId === challengerA?.user_id}
+          isWinner={Boolean(challengerA && (currentRound?.winner_id ?? latestRoundWinnerId) === challengerA.user_id)}
           onKick={challengerA ? () => kickParticipant(actions, challengerA) : undefined}
         />
 
-        <div>
+        <div className="min-w-0">
           <StageSquare
             title="HOST"
             participant={hostStage}
             accent="purple"
             specialLabel="HOST"
             canModerate={canModerate}
-            livekit={livekit}
+            media={media}
+            onEnterSeat={!mySeat && !hostStage && isHost ? () => moveHostTo('host_stage') : undefined}
+            onSelectSeat={selectMySeat(hostStage)}
+            isSelected={selectedSeatPosition === hostStage?.position && hostStage?.user_id === myUserId}
+            emptyActionLabel="Click to take host stage"
           />
-
-          {hostStage && (
-            <div className="mx-auto mt-1 flex h-16 w-16 flex-col items-center">
-              <div className="h-5 w-3 rounded-full bg-zinc-400" />
-              <div className="h-9 w-1 bg-zinc-500" />
-              <div className="h-1 w-12 rounded-full bg-zinc-500" />
-            </div>
+          {hostStage && myUserId === hostStage.user_id && (
+            <button
+              type="button"
+              disabled={Boolean(hostJudge && hostJudge.user_id !== myUserId)}
+              onClick={() => moveHostTo('host_judge')}
+              className="mt-2 w-full rounded-xl border border-purple-300/30 bg-purple-500/15 px-3 py-2 text-xs font-black text-purple-100 transition hover:border-purple-200/60 hover:bg-purple-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {hostJudge && hostJudge.user_id !== myUserId ? 'Host Judge Seat Occupied' : 'Sit with Judges'}
+            </button>
           )}
         </div>
 
@@ -752,7 +993,12 @@ function StageArea({
           participant={challengerB}
           accent="cyan"
           canModerate={canModerate}
-          livekit={livekit}
+          media={media}
+          onEnterSeat={!mySeat && !challengerB ? () => void handleClaimSeat('challenger_b') : undefined}
+          onSelectSeat={selectMySeat(challengerB)}
+          onSelectParticipant={selectParticipant(challengerB)}
+          isSelected={(selectedSeatPosition === challengerB?.position && challengerB?.user_id === myUserId) || selectedParticipantId === challengerB?.user_id}
+          isWinner={Boolean(challengerB && (currentRound?.winner_id ?? latestRoundWinnerId) === challengerB.user_id)}
           onKick={challengerB ? () => kickParticipant(actions, challengerB) : undefined}
         />
       </div>
@@ -763,19 +1009,188 @@ function StageArea({
           <span className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Judge Panel</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-          <JudgeSquare seat="Judge 1" participant={judge1} livekit={livekit} />
-          <JudgeSquare seat="Judge 2" participant={judge2} livekit={livekit} />
-          <JudgeSquare seat="Judge 3" participant={judge3} livekit={livekit} />
-          <JudgeSquare seat="Judge 4" participant={judge4} livekit={livekit} />
-          <JudgeSquare seat="CEO" participant={ceo} ceo livekit={livekit} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          <JudgeSquare seat="Judge 1" participant={judge1} media={media} isSelected={selectedSeatPosition === judge1?.position && judge1?.user_id === myUserId} onSelectSeat={selectMySeat(judge1)} onEnterSeat={!mySeat && !judge1 && (isJudge || isJudgeEligible) ? () => void handleClaimSeat('judge_1') : undefined} />
+          <JudgeSquare seat="Judge 2" participant={judge2} media={media} isSelected={selectedSeatPosition === judge2?.position && judge2?.user_id === myUserId} onSelectSeat={selectMySeat(judge2)} onEnterSeat={!mySeat && !judge2 && (isJudge || isJudgeEligible) ? () => void handleClaimSeat('judge_2') : undefined} />
+          <JudgeSquare seat="Judge 3" participant={judge3} media={media} isSelected={selectedSeatPosition === judge3?.position && judge3?.user_id === myUserId} onSelectSeat={selectMySeat(judge3)} onEnterSeat={!mySeat && !judge3 && (isJudge || isJudgeEligible) ? () => void handleClaimSeat('judge_3') : undefined} />
+          <JudgeSquare seat="Judge 4" participant={judge4} media={media} isSelected={selectedSeatPosition === judge4?.position && judge4?.user_id === myUserId} onSelectSeat={selectMySeat(judge4)} onEnterSeat={!mySeat && !judge4 && (isJudge || isJudgeEligible) ? () => void handleClaimSeat('judge_4') : undefined} />
+          <JudgeSquare seat="CEO" participant={ceo} ceo media={media} isSelected={selectedSeatPosition === ceo?.position && ceo?.user_id === myUserId} onSelectSeat={selectMySeat(ceo)} onEnterSeat={!mySeat && !ceo && canClaimCeoSeat ? () => void handleClaimSeat('ceo') : undefined} />
+          <JudgeSquare
+            seat="Host"
+            participant={hostJudge}
+            media={media}
+            isSelected={selectedSeatPosition === hostJudge?.position && hostJudge?.user_id === myUserId}
+            onSelectSeat={selectMySeat(hostJudge)}
+            onEnterSeat={!mySeat && !hostJudge && isHost ? () => moveHostTo('host_judge') : undefined}
+            onHostSpeak={myUserId === hostJudge?.user_id || (canForceHost && Boolean(hostJudge)) ? () => moveHostTo('host_stage') : undefined}
+          />
+        </div>
+      </div>
+
+      {selectedParticipant && (
+        <ParticipantOptions
+          participant={selectedParticipant}
+          selectedSeat={selectedMySeat ?? null}
+          canReviewParticipant={canReviewParticipant}
+          currentRound={currentRound}
+          decisions={decisions}
+          myUserId={myUserId}
+          note={participantNote}
+          noteLoading={noteLoading}
+          noteSaving={noteSaving}
+          noteError={noteError}
+          onNoteChange={setParticipantNote}
+          onSaveNote={async () => {
+            if (!selectedParticipant || typeof actions.saveParticipantNote !== 'function') return;
+            setNoteSaving(true);
+            setNoteError(null);
+            try {
+              const result = await actions.saveParticipantNote(selectedParticipant.user_id, participantNote);
+              if (!result?.success) setNoteError(result?.error || 'Could not save the private note.');
+            } catch (error) {
+              console.error('[MaiSingOffPage] participant note save failed', error);
+              setNoteError('Could not save the private note.');
+            } finally {
+              setNoteSaving(false);
+            }
+          }}
+          onVote={(vote, maiWinner) => {
+            void actions.submitDecision?.(selectedParticipant.user_id, vote, maiWinner);
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+function ParticipantOptions({
+  participant,
+  selectedSeat,
+  canReviewParticipant,
+  currentRound,
+  decisions,
+  myUserId,
+  note,
+  noteLoading,
+  noteSaving,
+  noteError,
+  onNoteChange,
+  onSaveNote,
+  onVote,
+}: {
+  participant: SingOffParticipantLike;
+  selectedSeat: SingOffParticipantLike | null;
+  canReviewParticipant: boolean;
+  currentRound: SingOffRound | null;
+  decisions: SingOffDecision[];
+  myUserId: string;
+  note: string;
+  noteLoading: boolean;
+  noteSaving: boolean;
+  noteError: string | null;
+  onNoteChange: (note: string) => void;
+  onSaveNote: () => void;
+  onVote: (vote: 'yes' | 'no', maiWinner: boolean) => void;
+}) {
+  const validJudgeSeat = Boolean(
+    selectedSeat &&
+    ['judge_1', 'judge_2', 'judge_3', 'judge_4', 'host_judge', 'ceo'].includes(String(selectedSeat.position)) &&
+    ['judge', 'host_judge', 'ceo_judge'].includes(String(selectedSeat.role)),
+  );
+  const isContestantInRound = Boolean(
+    currentRound?.status === 'active' &&
+    [currentRound.challenger_a_id, currentRound.challenger_b_id].includes(participant.user_id),
+  );
+  const vote = decisions.find(
+    (decision) => decision.judge_id === myUserId && decision.challenger_id === participant.user_id,
+  );
+  const existingMaiWinner = decisions.some(
+    (decision) => decision.decision === 'mai_winner' && decision.challenger_id !== participant.user_id,
+  );
+
+  return (
+    <section className="relative mt-5 rounded-2xl border border-white/10 bg-black/50 p-4">
+      <div className="mb-4 flex items-center gap-2">
+        <Users className="h-4 w-4 text-cyan-300" />
+        <h3 className="text-sm font-black">Participant options: @{participant.username ?? participant.display_name ?? 'performer'}</h3>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="mb-2 text-xs font-black uppercase tracking-wider text-white/65">Private participant note</div>
+          {canReviewParticipant ? (
+            <>
+              <textarea
+                value={note}
+                onChange={(event) => onNoteChange(event.target.value)}
+                maxLength={2000}
+                disabled={noteLoading || noteSaving}
+                rows={4}
+                placeholder="Notes are private to your account and saved on the server."
+                className="w-full resize-y rounded-lg border border-white/10 bg-black/50 p-3 text-sm text-white outline-none focus:border-purple-300/50 disabled:opacity-60"
+              />
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="text-[10px] text-white/40">{note.length}/2000 · private to you</span>
+                <button
+                  type="button"
+                  onClick={onSaveNote}
+                  disabled={noteLoading || noteSaving || note.length > 2000}
+                  className="rounded-lg bg-purple-600 px-3 py-2 text-xs font-black text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {noteLoading ? 'Loading…' : noteSaving ? 'Saving…' : 'Save note'}
+                </button>
+              </div>
+              {noteError && <p role="alert" className="mt-2 text-xs text-red-300">{noteError}</p>}
+            </>
+          ) : (
+            <p className="text-xs leading-relaxed text-white/45">
+              Select your judge or host seat to view and save your private note for this participant.
+            </p>
+          )}
         </div>
 
-        {hostJudge && (
-          <div className="mt-3 rounded-2xl border border-purple-400/20 bg-purple-500/5 p-3 text-sm text-purple-200">
-            Host is currently seated with the judge panel.
-          </div>
-        )}
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="mb-2 text-xs font-black uppercase tracking-wider text-white/65">Judge vote</div>
+          {validJudgeSeat && isContestantInRound ? (
+            <>
+              <p className="mb-3 text-xs text-white/45">
+                {vote ? `Your current vote: ${vote.decision.replace('_', ' ')}` : 'Choose yes or no for this active round.'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {(['yes', 'no'] as const).map((choice) => (
+                  <button
+                    key={choice}
+                    type="button"
+                    aria-pressed={vote?.decision === choice}
+                    onClick={() => onVote(choice, false)}
+                    className={`rounded-lg border px-4 py-2 text-xs font-black uppercase ${
+                      vote?.decision === choice
+                        ? 'border-emerald-300/60 bg-emerald-500/20 text-emerald-200'
+                        : 'border-white/15 bg-white/5 text-white/75 hover:bg-white/10'
+                    }`}
+                  >
+                    {choice}
+                  </button>
+                ))}
+                {selectedSeat?.position === 'ceo' && (
+                  <button
+                    type="button"
+                    disabled={existingMaiWinner}
+                    onClick={() => onVote('yes', true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-300/40 bg-yellow-500/15 px-3 py-2 text-xs font-black text-yellow-200 hover:bg-yellow-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Gem className="h-3.5 w-3.5" />
+                    {existingMaiWinner ? 'Winner already declared' : 'Award Mai Winner'}
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="text-xs leading-relaxed text-white/45">
+              Voting is available to an assigned judge seat when this participant is competing in an active round.
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -791,7 +1206,13 @@ function StageSquare({
   accent,
   specialLabel,
   canModerate,
-  livekit,
+  media,
+  onEnterSeat,
+  onSelectSeat,
+  onSelectParticipant,
+  isSelected = false,
+  isWinner = false,
+  emptyActionLabel,
   onKick,
 }: {
   title: string;
@@ -799,23 +1220,68 @@ function StageSquare({
   accent: 'pink' | 'purple' | 'cyan';
   specialLabel?: string;
   canModerate?: boolean;
-  livekit?: any;
+  media?: any;
+  onEnterSeat?: () => void;
+  onSelectSeat?: () => void;
+  onSelectParticipant?: () => void;
+  isSelected?: boolean;
+  isWinner?: boolean;
+  emptyActionLabel?: string;
   onKick?: () => void;
 }) {
-  const border = accent === 'pink' ? 'border-pink-500/40' : accent === 'cyan' ? 'border-cyan-500/40' : 'border-purple-500/40';
+  const accentStyles = {
+    pink: {
+      border: 'border-pink-300/70',
+      glow: 'shadow-[0_0_32px_rgba(236,72,153,0.24)]',
+      badge: 'border-pink-200/40 bg-pink-500/20 text-pink-100',
+      empty: 'from-pink-950/40 via-zinc-950 to-black',
+    },
+    purple: {
+      border: 'border-purple-300/70',
+      glow: 'shadow-[0_0_32px_rgba(168,85,247,0.22)]',
+      badge: 'border-purple-200/40 bg-purple-500/20 text-purple-100',
+      empty: 'from-purple-950/40 via-zinc-950 to-black',
+    },
+    cyan: {
+      border: 'border-cyan-300/70',
+      glow: 'shadow-[0_0_32px_rgba(34,211,238,0.22)]',
+      badge: 'border-cyan-200/40 bg-cyan-500/20 text-cyan-100',
+      empty: 'from-cyan-950/40 via-zinc-950 to-black',
+    },
+  }[accent];
 
-  const liveUser = livekit?.remoteUsers?.[participant?.livekit_identity || participant?.user_id || ''];
+  const liveUser = media?.remoteUsers?.[participant?.user_id || ''];
+  const videoRef = useCallback(
+    (node: HTMLVideoElement | null) => attachMediaTrack(node, liveUser?.videoTrack ?? null),
+    [liveUser?.videoTrack],
+  );
+  const audioRef = useCallback(
+    (node: HTMLAudioElement | null) => attachMediaTrack(node, liveUser?.audioTrack ?? null),
+    [liveUser?.audioTrack],
+  );
 
   return (
     <div className="min-w-0">
-      <div className={`relative aspect-square w-full overflow-hidden rounded-2xl border-2 ${border} bg-zinc-950 shadow-xl`}>
+      <div
+        role={onEnterSeat || onSelectSeat || onSelectParticipant ? 'button' : undefined}
+        tabIndex={onEnterSeat || onSelectSeat || onSelectParticipant ? 0 : undefined}
+        aria-label={onEnterSeat
+          ? `${title} seat available. ${emptyActionLabel ?? 'Click to enter seat'}`
+          : onSelectSeat ? `Your ${title} seat. Click to open seat options.` : onSelectParticipant ? `Select ${title} participant options.` : undefined}
+        onClick={onEnterSeat ?? onSelectSeat ?? onSelectParticipant}
+        onKeyDown={onEnterSeat || onSelectSeat || onSelectParticipant ? (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            (onEnterSeat ?? onSelectSeat ?? onSelectParticipant)?.();
+          }
+        } : undefined}
+        className={`group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 ${accentStyles.border} ${accentStyles.glow} bg-gradient-to-br ${accentStyles.empty} ring-1 ring-white/10 transition duration-300 ${onEnterSeat || onSelectSeat ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_0_42px_rgba(255,255,255,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white' : ''} ${isSelected ? 'ring-2 ring-emerald-300 ring-offset-2 ring-offset-black' : ''}`}
+      >
         {participant ? (
           <>
             {liveUser?.videoTrack ? (
               <video
-                ref={(node) => {
-                  if (node && liveUser.videoTrack) liveUser.videoTrack.attach(node);
-                }}
+                ref={videoRef}
                 autoPlay
                 playsInline
                 className="h-full w-full object-cover"
@@ -830,9 +1296,7 @@ function StageSquare({
 
             {liveUser?.audioTrack && (
               <audio
-                ref={(node) => {
-                  if (node && liveUser.audioTrack) liveUser.audioTrack.attach(node);
-                }}
+                ref={audioRef}
                 autoPlay
               />
             )}
@@ -856,10 +1320,20 @@ function StageSquare({
               </div>
             )}
 
+            {isWinner && (
+              <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full border border-yellow-300/50 bg-black/75 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-yellow-200 shadow-[0_0_18px_rgba(250,204,21,0.45)]">
+                <Gem className="h-3.5 w-3.5 fill-yellow-300 text-yellow-300" />
+                Mai Winner
+              </div>
+            )}
+
             {canModerate && onKick && (
               <button
                 type="button"
-                onClick={onKick}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onKick();
+                }}
                 className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-600/90 text-white shadow-lg hover:bg-red-500"
                 title="Kick challenger from Mai Talent Show"
               >
@@ -868,13 +1342,20 @@ function StageSquare({
             )}
           </>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-white/25">
-            <Mic2 className="h-8 w-8" />
-            <span className="text-xs font-bold">Seat Empty</span>
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-white/35">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
+              <Mic2 className="h-8 w-8" />
+            </div>
+            <span className="text-xs font-bold">{title === 'HOST' ? 'Host is with the judges' : 'Seat Empty'}</span>
+            {onEnterSeat && (
+              <span className="rounded-lg border border-white/15 bg-black/40 px-3 py-1.5 text-[10px] font-black text-white/80">
+                {emptyActionLabel ?? 'Click to enter seat'}
+              </span>
+            )}
           </div>
         )}
 
-        <div className="absolute left-2 top-2 rounded-lg border border-white/10 bg-black/70 px-2 py-1 text-[9px] font-black uppercase tracking-wider">
+        <div className={`absolute left-3 top-3 rounded-lg border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] shadow-lg backdrop-blur-md ${accentStyles.badge}`}>
           {specialLabel ?? title}
         </div>
       </div>
@@ -892,29 +1373,53 @@ function JudgeSquare({
   seat,
   participant,
   ceo = false,
-  livekit,
+  media,
+  onSelectSeat,
+  onEnterSeat,
+  isSelected = false,
+  onHostSpeak,
 }: {
   seat: string;
   participant: SingOffParticipantLike | null;
   ceo?: boolean;
-  livekit?: any;
+  media?: any;
+  onSelectSeat?: () => void;
+  onEnterSeat?: () => void;
+  isSelected?: boolean;
+  onHostSpeak?: () => void;
 }) {
-  const liveUser = livekit?.remoteUsers?.[participant?.livekit_identity || participant?.user_id || ''];
+  const liveUser = media?.remoteUsers?.[participant?.user_id || ''];
+  const videoRef = useCallback(
+    (node: HTMLVideoElement | null) => attachMediaTrack(node, liveUser?.videoTrack ?? null),
+    [liveUser?.videoTrack],
+  );
+  const audioRef = useCallback(
+    (node: HTMLAudioElement | null) => attachMediaTrack(node, liveUser?.audioTrack ?? null),
+    [liveUser?.audioTrack],
+  );
 
   return (
     <div>
       <div
-        className={`relative aspect-square overflow-hidden rounded-2xl border ${
-          ceo ? 'border-yellow-400/50 bg-yellow-500/5' : 'border-white/10 bg-zinc-950'
-        }`}
+        role={onEnterSeat || onSelectSeat ? 'button' : undefined}
+        tabIndex={onEnterSeat || onSelectSeat ? 0 : undefined}
+        aria-label={onEnterSeat ? `${seat} seat available. Click to enter seat.` : onSelectSeat ? `Your ${seat} seat. Click to open seat options.` : undefined}
+        onClick={onEnterSeat ?? onSelectSeat}
+        onKeyDown={onEnterSeat || onSelectSeat ? (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            (onEnterSeat ?? onSelectSeat)?.();
+          }
+        } : undefined}
+        className={`relative aspect-square overflow-hidden rounded-2xl border shadow-lg transition duration-300 ${
+          ceo ? 'border-yellow-300/60 bg-yellow-500/10 shadow-[0_0_24px_rgba(250,204,21,0.12)]' : seat === 'Host' ? 'border-purple-300/60 bg-purple-500/10 shadow-[0_0_24px_rgba(168,85,247,0.16)]' : 'border-white/15 bg-zinc-950'
+        } ${onEnterSeat || onSelectSeat ? 'cursor-pointer hover:border-white/40 hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white' : ''} ${isSelected ? 'ring-2 ring-emerald-300 ring-offset-2 ring-offset-black' : ''}`}
       >
         {participant ? (
           <>
             {liveUser?.videoTrack ? (
               <video
-                ref={(node) => {
-                  if (node && liveUser.videoTrack) liveUser.videoTrack.attach(node);
-                }}
+                ref={videoRef}
                 autoPlay
                 playsInline
                 className="h-full w-full object-cover"
@@ -929,30 +1434,42 @@ function JudgeSquare({
 
             {liveUser?.audioTrack && (
               <audio
-                ref={(node) => {
-                  if (node && liveUser.audioTrack) liveUser.audioTrack.attach(node);
-                }}
+                ref={audioRef}
                 autoPlay
               />
             )}
 
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-2 pt-8">
-              <div className="truncate text-xs font-black">
-                @{participant.username ?? participant.display_name ?? 'judge'}
+              <div className="truncate text-sm font-black">
+                {ceo
+                  ? participant.display_name || 'Mai (CEO)'
+                  : `@${participant.username ?? participant.display_name ?? 'judge'}`}
               </div>
             </div>
           </>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-white/20">
             {ceo ? <Crown className="h-7 w-7 text-yellow-500/30" /> : <Gavel className="h-7 w-7" />}
-            <span className="text-[10px] font-bold">Empty</span>
+            <span className="text-[10px] font-bold">{onEnterSeat ? 'Click to enter seat' : 'Empty'}</span>
           </div>
         )}
       </div>
 
-      <div className={`mt-1 text-center text-[9px] font-black uppercase tracking-wider ${ceo ? 'text-yellow-400' : 'text-white/40'}`}>
+      <div className={`mt-1 text-center text-[10px] font-black uppercase tracking-wider ${ceo ? 'text-yellow-300' : seat === 'Host' ? 'text-purple-200' : 'text-white/50'}`}>
         {seat}
       </div>
+      {onHostSpeak && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onHostSpeak();
+          }}
+          className="mt-2 w-full rounded-lg border border-purple-300/30 bg-purple-500/15 px-2 py-1.5 text-[10px] font-black text-purple-100 transition hover:bg-purple-500/25"
+        >
+          Speak on Stage
+        </button>
+      )}
     </div>
   );
 }
@@ -1023,39 +1540,6 @@ function QueuePanel({
         )}
       </div>
     </aside>
-  );
-}
-
-/* ============================================================
-   COINS
-   ============================================================ */
-
-function CoinView({ balance }: { balance: number }) {
-  const [customAmount, setCustomAmount] = useState('');
-
-  return (
-    <div className="mx-auto max-w-3xl">
-      <h2 className="text-2xl font-black">Mai Talent Show Coins</h2>
-
-      <div className="mt-5 rounded-3xl border border-yellow-400/20 bg-yellow-500/10 p-6">
-        <div className="text-xs font-black uppercase tracking-[0.2em] text-yellow-300/60">Current Balance</div>
-        <div className="mt-2 text-4xl font-black text-yellow-300">{balance.toLocaleString()} coins</div>
-      </div>
-
-      <div className="mt-4 rounded-3xl border border-white/10 bg-zinc-950 p-6">
-        <label className="text-sm font-black">Custom Amount</label>
-        <input
-          value={customAmount}
-          onChange={(event) => setCustomAmount(event.target.value.replace(/\D/g, ''))}
-          inputMode="numeric"
-          placeholder="Enter Troll Coins"
-          className="mt-3 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-yellow-400/40"
-        />
-        <p className="mt-3 text-xs text-white/35">
-          Connect this to the existing Mai Troll coin purchase backend. Do not calculate or trust purchase pricing from the browser.
-        </p>
-      </div>
-    </div>
   );
 }
 
@@ -1141,32 +1625,6 @@ function StageError({ title, message, onBack }: { title: string; message: string
   );
 }
 
-function UnderConstruction() {
-  const navigate = useNavigate();
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[#06060a] p-4 text-white">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-950 p-8 text-center">
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-pink-500/15">
-          <Mic2 className="h-8 w-8 text-pink-400" />
-        </div>
-        <h1 className="mt-6 text-3xl font-black">Under Construction</h1>
-        <p className="mt-3 text-sm text-white/45">
-          Mai Talent Show is being upgraded. Check back soon for the new virtual talent show experience.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-pink-600 px-5 py-3 text-sm font-black hover:bg-pink-500"
-        >
-          <Home className="h-4 w-4" />
-          Back to Home
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ============================================================
    ACTION COMPATIBILITY HELPERS
    ============================================================ */
@@ -1200,4 +1658,3 @@ async function callQueueSeat(actions: any, participant: SingOffParticipantLike, 
     await actions.assignPosition(participant.user_id, position);
   }
 }
-

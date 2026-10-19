@@ -130,17 +130,6 @@ function ButterflyIcon({ color = '#f0abfc', size = 14 }: { color?: string; size?
   );
 }
 
-function RainbowIcon({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 16a9 9 0 0 1 18 0" stroke="#ef4444" strokeWidth="2" fill="none" />
-      <path d="M5 16a7 7 0 0 1 14 0" stroke="#f97316" strokeWidth="2" fill="none" />
-      <path d="M7 16a5 5 0 0 1 10 0" stroke="#eab308" strokeWidth="2" fill="none" />
-      <path d="M9 16a3 3 0 0 1 6 0" stroke="#22c55e" strokeWidth="2" fill="none" />
-    </svg>
-  );
-}
-
 function WheelIcon({ color = '#94a3b8', size = 14 }: { color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
@@ -184,7 +173,6 @@ export function ThemeBackgroundFX({ theme, isBattle = false }: { theme: ThemeLik
   const isSmoke = theme.category === 'smoke';
   const isDrinks = theme.category === 'drinks';
   const isGirly = theme.category === 'girly';
-  const isPride = theme.category === 'pride';
   const isCar = theme.category === 'car';
   const isMusic = theme.category === 'music';
   const baseOpacity = isBattle ? 0.3 : 0.35;
@@ -229,14 +217,6 @@ export function ThemeBackgroundFX({ theme, isBattle = false }: { theme: ThemeLik
           }}
           animate={{ y: ['0%', '8%'] }}
           transition={{ repeat: Infinity, duration: 4.5, ease: 'linear' }}
-        />
-      )}
-      {isPride && (
-        <motion.div
-          className="absolute inset-0"
-          style={{ opacity: 0.22, background: 'linear-gradient(120deg, rgba(255,255,255,0.08), rgba(255,255,255,0), rgba(255,255,255,0.08))' }}
-          animate={{ x: ['-8%', '8%', '-8%'] }}
-          transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
         />
       )}
       {isCar && (
@@ -338,7 +318,6 @@ export function ThemeTrimFX({ theme, isBattle = false }: { theme: ThemeLike; isB
   const isSmoke = theme.category === 'smoke';
   const isDrinks = theme.category === 'drinks';
   const isGirly = theme.category === 'girly';
-  const isPride = theme.category === 'pride';
   const isCar = theme.category === 'car';
   const isCash = theme.category === 'cash';
   const isCrystal = theme.id === 'girly-1';
@@ -481,15 +460,6 @@ export function ThemeTrimFX({ theme, isBattle = false }: { theme: ThemeLike; isB
           {isButterfly && <RowOf bottom={inset + 2} left={inset + 14} count={8} render={() => <ButterflyIcon color="#f0abfc" />} />}
           {isButterfly && <ColOf top={inset + 8} left={inset + 2} count={4} render={() => <ButterflyIcon color="#f0abfc" />} />}
           {isButterfly && <ColOf top={inset + 8} right={inset + 2} count={4} render={() => <ButterflyIcon color="#f0abfc" />} />}
-        </>
-      )}
-
-      {isPride && (
-        <>
-          <RowOf top={inset + 2} left={inset + 12} count={8} render={() => <RainbowIcon />} />
-          <RowOf bottom={inset + 2} left={inset + 12} count={8} render={() => <RainbowIcon />} />
-          <ColOf top={inset + 8} left={inset + 2} count={4} render={() => <RainbowIcon size={14} />} />
-          <ColOf top={inset + 8} right={inset + 2} count={4} render={() => <RainbowIcon size={14} />} />
         </>
       )}
 

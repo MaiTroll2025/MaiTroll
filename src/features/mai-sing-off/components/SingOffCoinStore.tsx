@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react'
-import { X, Coins, ShoppingCart, Plus, Minus } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Coins, ShoppingCart, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { COINS_PER_USD } from '@/config/coinConfig'
 import { useAuthStore } from '@/lib/store'
-import { COIN_PACKAGES, COINS_PER_USD } from '@/config/coinConfig'
 import PayPalPaymentModal from '@/components/broadcast/PayPalPaymentModal'
 
 interface CoinStoreProps {
@@ -10,49 +10,36 @@ interface CoinStoreProps {
   onClose: () => void
 }
 
+const MIN_PURCHASE_USD = 2
+
 export function SingOffCoinStore({ open, onClose }: CoinStoreProps) {
   const { user, profile } = useAuthStore()
-  const [selectedPack, setSelectedPack] = useState<any>(null)
+  const [selectedPack, setSelectedPack] = useState<Record<string, unknown> | null>(null)
   const [showPay, setShowPay] = useState(false)
-  const [_showCard, setShowCard] = useState(false)
-  const [customCoins, setCustomCoins] = useState('')
+  const [customAmount, setCustomAmount] = useState('')
   const payProgressRef = useRef(false)
 
   if (!open) return null
 
-  const packages = COIN_PACKAGES.map((pkg) => ({
-    id: pkg.id,
-    coins: pkg.coins,
-    price: `$${pkg.usdPrice.toFixed(2)}`,
-    popular: pkg.id === 'pkg-1000',
-  }))
-
-  const handleSelect = (pkg: (typeof packages)[number]) => {
+  const handleSubmit = () => {
     if (!user?.id) {
-      toast.error('Sign in to use the coin store.')
+      toast.error('Sign in to purchase coins.')
       return
     }
-    setSelectedPack({ ...pkg, purchaseType: 'coins', metadata: { source: 'mai_singoff' } })
-    payProgressRef.current = true
-    setShowPay(true)
-  }
 
-  const handleCustom = () => {
-    if (!user?.id) {
-      toast.error('Sign in to use the coin store.')
+    const parsedAmount = Number(customAmount)
+    if (!Number.isFinite(parsedAmount) || parsedAmount < MIN_PURCHASE_USD) {
+      toast.error('The minimum coin purchase is $2.00.')
       return
     }
-    const amount = parseFloat(customCoins)
-    if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error('Enter a valid amount')
-      return
-    }
-    const coins = Math.round(amount * (COINS_PER_USD || 100))
+
+    const amountUsd = Math.round(parsedAmount * 100) / 100
+    const coins = Math.round(amountUsd * COINS_PER_USD)
     setSelectedPack({
       id: 'mai-singoff-custom',
       coins,
-      price: `$${amount.toFixed(2)}`,
-      name: `${coins.toLocaleString()} Coins`,
+      price: `$${amountUsd.toFixed(2)}`,
+      name: `${coins.toLocaleString()} Mai Talent Show Coins`,
       purchaseType: 'coins',
       metadata: { source: 'mai_singoff' },
     })
@@ -60,11 +47,15 @@ export function SingOffCoinStore({ open, onClose }: CoinStoreProps) {
     setShowPay(true)
   }
 
-  const onSuccess = () => {
+  const resetPayment = () => {
     payProgressRef.current = false
     setShowPay(false)
-    setShowCard(false)
     setSelectedPack(null)
+  }
+
+  const onSuccess = () => {
+    resetPayment()
+    setCustomAmount('')
     toast.success('Coins added to your account!')
   }
 
@@ -73,82 +64,82 @@ export function SingOffCoinStore({ open, onClose }: CoinStoreProps) {
       toast.info('Please wait for the payment to complete.')
       return
     }
-    setShowPay(false)
-    setShowCard(false)
-    setSelectedPack(null)
+    resetPayment()
     onClose()
   }
 
   return (
     <>
       <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 p-4">
-        <div className="relative w-full max-w-lg rounded-xl bg-zinc-900 border border-zinc-800 p-5">
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="singoff-coin-store-title"
+          className="relative w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-5"
+        >
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Coins className="w-5 h-5 text-yellow-400" /> Mai Talent Show Coins
+            <h2 id="singoff-coin-store-title" className="flex items-center gap-2 text-xl font-bold text-white">
+              <Coins className="h-5 w-5 text-yellow-400" />
+              Mai Talent Show Coins
             </h2>
-            <button onClick={safeClose} className="p-1 hover:bg-zinc-800 rounded" disabled={payProgressRef.current}>
-              <X className="w-5 h-5 text-zinc-400" />
-            </button>
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-3 max-h-[52vh] overflow-y-auto">
-            {packages.map((pkg) => (
-              <button
-                key={pkg.id}
-                onClick={() => handleSelect(pkg)}
-                className="flex flex-col items-center gap-1 rounded-md border border-zinc-700 bg-zinc-800 p-3 hover:border-yellow-500 text-center"
-              >
-                <span className="font-bold text-white">{pkg.coins.toLocaleString()} 🪙</span>
-                <span className="text-sm text-zinc-300">{pkg.price}</span>
-                {pkg.popular && <span className="text-[10px] font-bold text-yellow-400">BEST VALUE</span>}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-4 rounded-md border border-zinc-700 bg-zinc-800/50 p-3">
-            <div className="text-xs text-zinc-400 mb-1">Custom amount</div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setCustomCoins(String(Math.max(1, parseInt(customCoins || '1') - 1)))} className="rounded bg-zinc-700 px-2 py-1 text-xs">
-                <Minus className="w-3 h-3" />
-              </button>
-              <input
-                type="number"
-                min={1}
-                step={5}
-                value={customCoins}
-                onChange={(e) => setCustomCoins(e.target.value)}
-                placeholder="e.g. 25"
-                className="w-24 rounded-md bg-zinc-900 px-2 py-1 text-center text-white focus:outline-none focus:ring-1 focus:ring-yellow-500"
-              />
-              <span className="text-xs text-zinc-400">USD</span>
-              <button onClick={() => setCustomCoins(String(parseInt(customCoins || '1') + 1))} className="rounded bg-zinc-700 px-2 py-1 text-xs">
-                <Plus className="w-3 h-3" />
-              </button>
-            </div>
             <button
-              onClick={handleCustom}
-              className="mt-2 w-full rounded-md bg-gradient-to-r from-yellow-400 to-amber-500 py-1.5 text-xs font-bold text-black hover:brightness-110"
-              disabled={!customCoins}
+              type="button"
+              onClick={safeClose}
+              className="rounded p-1 hover:bg-zinc-800"
+              aria-label="Close coin purchase"
+              disabled={payProgressRef.current}
             >
-              <ShoppingCart className="w-3 h-3 inline mr-1" /> Buy {customCoins ? `${Math.round(parseFloat(customCoins || '0') * (COINS_PER_USD || 100))} coins` : ''}
+              <X className="h-5 w-5 text-zinc-400" />
             </button>
           </div>
 
-          <div className="mt-3 text-center text-[10px] text-zinc-500">
-            1 USD = {COINS_PER_USD ?? 100} 🪙 • Secure PayPal / card payments
-          </div>
-        </div>
+          <form
+            className="mt-5 rounded-md border border-zinc-700 bg-zinc-800/50 p-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              handleSubmit()
+            }}
+          >
+            <label htmlFor="singoff-custom-coin-amount" className="mb-2 block text-sm font-semibold text-white">
+              Enter purchase amount (USD)
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-zinc-300">$</span>
+              <input
+                id="singoff-custom-coin-amount"
+                type="number"
+                min={MIN_PURCHASE_USD}
+                step="0.01"
+                inputMode="decimal"
+                required
+                value={customAmount}
+                onChange={(event) => setCustomAmount(event.target.value)}
+                placeholder="2.00 minimum"
+                className="min-w-0 flex-1 rounded-md bg-zinc-900 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-yellow-500"
+              />
+            </div>
+            <p className="mt-2 text-xs text-zinc-400">
+              Minimum $2.00. 1 USD = {COINS_PER_USD.toLocaleString()} coins.
+            </p>
+            <button
+              type="submit"
+              disabled={!customAmount || Number(customAmount) < MIN_PURCHASE_USD}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-gradient-to-r from-yellow-400 to-amber-500 py-2.5 text-sm font-bold text-black hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Submit and continue to PayPal
+            </button>
+          </form>
+
+          <p className="mt-3 text-center text-[10px] text-zinc-500">
+            Secure PayPal checkout
+          </p>
+        </section>
       </div>
 
-<PayPalPaymentModal
+      <PayPalPaymentModal
         isOpen={showPay}
-        onClose={() => {
-          payProgressRef.current = false
-          setShowPay(false)
-          setShowCard(false)
-          setSelectedPack(null)
-        }}
+        onClose={resetPayment}
         pkg={selectedPack}
         userId={user?.id || ''}
         profile={profile}
