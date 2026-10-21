@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Room, LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteTrackPublication, RoomEvent } from "livekit-client";
+import { Room, LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteTrackPublication, RemoteAudioTrack, RemoteVideoTrack, RoomEvent } from "livekit-client";
 
 import { supabase } from "../lib/supabase";
 import { logActiveChannels } from "../lib/realtimeChannelDiagnostics";
@@ -16,6 +16,7 @@ import { useActiveBattles, type ActiveBattle } from "./useActiveBattles";
 import { CrownInfo } from "../components/broadcast/BattleArena";
 import { getTrackPublications } from "../components/broadcast/battleArenaUtils";
 import { subscribeToStreamRealtime } from "../lib/realtime/streamRealtimeManager";
+import { attachMaiVoiceAuxAudio, isMaiVoiceAuxPublication } from "../lib/maiVoiceLiveKitAudio";
 
 const MAIN_BATTLE_DURATION_MS = 180_000;
 const _SUDDEN_DEATH_DURATION_MS = 10_000;
@@ -518,7 +519,14 @@ export function useBattleViewController({
         setRemoteUsers((prev) => prev.filter((p) => p.identity !== participant.identity));
       };
 
-      const handleTrackSubscribed = () => {
+      const handleTrackSubscribed = (
+        track: RemoteVideoTrack | RemoteAudioTrack,
+        publication: RemoteTrackPublication,
+      ) => {
+        // Mai Voice delivers the spoken clips as an auxiliary audio track.
+        if (isMaiVoiceAuxPublication(publication)) {
+          attachMaiVoiceAuxAudio(track as RemoteAudioTrack);
+        }
         bumpTrackRevision();
       };
 

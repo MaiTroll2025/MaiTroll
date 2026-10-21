@@ -43,6 +43,7 @@ DECLARE
   v_email text;
   v_role text;
   v_terms_accepted boolean;
+  v_onboarding_completed boolean;
 BEGIN
   v_email := COALESCE(NEW.email, '');
   
@@ -69,6 +70,14 @@ BEGIN
     v_terms_accepted := false;
   END;
   v_terms_accepted := COALESCE(v_terms_accepted, false);
+
+  -- Safe Boolean Parsing for onboarding_completed
+  BEGIN
+    v_onboarding_completed := (NEW.raw_user_meta_data->>'onboarding_completed')::boolean;
+  EXCEPTION WHEN OTHERS THEN
+    v_onboarding_completed := false;
+  END;
+  v_onboarding_completed := COALESCE(v_onboarding_completed, false);
 
   -- Main Profile Insert (Must succeed - this is critical)
   BEGIN

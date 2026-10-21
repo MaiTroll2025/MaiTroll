@@ -550,7 +550,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, ArrowLeft, Gamepad2, Image as Image, AlertTriangle, AlertCircle } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, ArrowLeft, Gamepad2, Image as Image, AlertTriangle, AlertCircle, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -579,6 +579,12 @@ import RaidPanel from '@/components/city/RaidPanel'
 import RaidModal from '@/components/city/RaidModal'
 import PaidChatSettingsModal from '@/components/broadcast/PaidChatSettingsModal'
 import AuctionMePanel from '@/components/broadcast/AuctionMePanel'
+import MaiVoiceComposerActions from '@/components/broadcast/MaiVoiceComposerActions'
+import MaiVoiceMessageStrip from '@/components/broadcast/MaiVoiceMessageStrip'
+import MaiVoicePlayer from '@/components/broadcast/MaiVoicePlayer'
+import MaiVoiceSettingsPanel from '@/components/broadcast/MaiVoiceSettingsPanel'
+import { useMaiVoiceRoom } from '@/hooks/useMaiVoiceRoom'
+import { useMaiVoicePublisher } from '@/hooks/useMaiVoicePublisher'
 
 // Debug counters for broadcast stability verification
 const DEBUG_COUNTERS = {
@@ -2050,6 +2056,25 @@ interface FloatingMessage {
       const [hostChatDisabledByOfficerState, setHostChatDisabledByOfficerState] = useState(false)
       const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(user?.id, streamId)
       const [blockedUsernames, setBlockedUsernames] = useState<Set<string>>(new Set())
+
+      // Mai Voice — spoken chat and recorded voice messages for this broadcast.
+      const maiVoice = useMaiVoiceRoom({
+        roomKind: 'stream',
+        roomId: streamId,
+        enabled: !!streamId,
+      })
+      const [showMaiVoiceSettings, setShowMaiVoiceSettings] = useState(false)
+      const canManageMaiVoiceRoom = isHost || isStreamAdmin || isOfficer
+
+      // The broadcaster publishes the generated speech into the room over LiveKit.
+      useMaiVoicePublisher({
+        roomKind: 'stream',
+        roomId: streamId,
+        livekitRoomName: maiVoice.livekitRoomName,
+        userId: user?.id ?? null,
+        enabled: maiVoice.canPublishVoice && (maiVoice.ttsEnabled || maiVoice.voiceChatEnabled),
+      })
+
 
       // Load blocked usernames for chat filtering
       useEffect(() => {
@@ -5039,6 +5064,44 @@ const toggleMicrophone = useCallback(async () => {
     }
   }, [])
 
+  /*
+   * Mai Voice: while the broadcaster records a voice sample or a voice
+   * message the live microphone is muted so the audience in the viewer page
+   * never hears the raw recording. The previous state is restored as soon as
+   * the capture ends.
+   */
+  const maiVoiceMicRestoreRef = useRef<boolean | null>(null)
+
+  const onMaiVoiceRecordingChange = useCallback(async (recording: boolean) => {
+    const participant = roomRef.current?.localParticipant
+    if (!participant) return
+    try {
+      if (recording) {
+        if (maiVoiceMicRestoreRef.current !== null) return
+        const wasEnabled = participant.isMicrophoneEnabled
+        maiVoiceMicRestoreRef.current = wasEnabled
+        if (wasEnabled) {
+          await participant.setMicrophoneEnabled(false)
+          setMicEnabled(false)
+          console.log('[BroadcastPage] LiveKit mic muted for Mai Voice recording')
+        }
+        return
+      }
+      const wasEnabled = maiVoiceMicRestoreRef.current
+      maiVoiceMicRestoreRef.current = null
+      if (!wasEnabled) return
+      if (hostMicMutedByOfficer) {
+        console.log('[BroadcastPage] LiveKit mic stays muted (officer mute still active)')
+        return
+      }
+      await participant.setMicrophoneEnabled(true)
+      setMicEnabled(true)
+      console.log('[BroadcastPage] LiveKit mic unmuted after Mai Voice recording')
+    } catch (err) {
+      console.error('[BroadcastPage] Failed to toggle LiveKit mic for Mai Voice:', err)
+    }
+  }, [hostMicMutedByOfficer])
+
   useEffect(() => {
     if (!isHost || !hostMicMutedByOfficer || !roomRef.current?.localParticipant) return;
     
@@ -7573,6 +7636,12 @@ const showFallback =
                         })}
                       </div>
 
+                      {/* Recorded voice messages appear in the chat feed. */}
+                      <MaiVoiceMessageStrip
+                        messages={maiVoice.voiceMessages}
+                        removedMessageIds={maiVoice.removedMessageIds}
+                      />
+
                       {/* Input at the bottom */}
                       <form
                         onSubmit={async (e) => {
@@ -7632,7 +7701,52 @@ const showFallback =
                           className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50"
                           maxLength={280}
                         />
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <MaiVoiceComposerActions
+                            roomKind="stream"
+                            roomId={streamId}
+                            myOptIn={maiVoice.myOptIn}
+                            onToggleOptIn={maiVoice.setMyOptIn}
+                            voiceChatEnabled={maiVoice.voiceChatEnabled}
+                            ttsEnabled={maiVoice.ttsEnabled}
+                            isGuest={!user}
+                            onRequireAuth={() => navigate('/auth?mode=signup')}
+                            onRecordingChange={onMaiVoiceRecordingChange}
+                            canManageRoom={canManageMaiVoiceRoom}
+                            onOpenRoomControls={() => setShowMaiVoiceSettings(true)}
+                          />
+                          {canManageMaiVoiceRoom && (
+                            <button
+                              type="button"
+                              onClick={() => setShowMaiVoiceSettings(true)}
+                              title="Mai Voice controls for this broadcast"
+                              className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold text-zinc-400 transition hover:text-yellow-300 hover:bg-white/5"
+                            >
+                              <SlidersHorizontal size={13} />
+                              Mai Voice
+                            </button>
+                          )}
+                        </div>
                       </form>
+
+                      <MaiVoicePlayer
+                        pendingClips={maiVoice.pendingClips}
+                        activeClip={maiVoice.activeClip}
+                        volume={maiVoice.settings?.playback_volume ?? 1}
+                        paused={maiVoice.playbackPaused}
+                        onBegin={maiVoice.beginClip}
+                        onComplete={maiVoice.completeClip}
+                      />
+
+                      {showMaiVoiceSettings && (
+                        <MaiVoiceSettingsPanel
+                          roomKind="stream"
+                          roomId={streamId}
+                          settings={maiVoice.settings}
+                          onClose={() => setShowMaiVoiceSettings(false)}
+                          onChanged={() => void maiVoice.refresh()}
+                        />
+                      )}
                     </div>
                   ) : chatTab === 'gifts' ? (
                     <div className="flex flex-col flex-1 min-h-0 overflow-y-auto p-4 text-sm text-slate-200">

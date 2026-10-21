@@ -28,6 +28,12 @@ import { getEmotesForTier, parseEmotesInText, type SubscriberEmote } from '@/lib
 import { useSubscriberBadges } from '@/hooks/useCreatorSubscription';
 import { SUBSCRIBER_TIER_SLA } from '@/hooks/useSlaStatus';
 import HighlightedChatColorPicker from './HighlightedChatColorPicker';
+import MaiVoiceComposerActions from './MaiVoiceComposerActions';
+import MaiVoiceMessageStrip from './MaiVoiceMessageStrip';
+import MaiVoicePlayer from './MaiVoicePlayer';
+import { useMaiVoiceRoom } from '../../hooks/useMaiVoiceRoom';
+import { useMaiVoicePublisher } from '../../hooks/useMaiVoicePublisher';
+import { moderateMaiVoiceMessage, cancelMaiVoiceTts } from '../../lib/maiVoice';
 
 // Cap total messages in memory to prevent unbounded growth.
 // Used consistently by: initial history, realtime chat, gifts, system messages,
@@ -477,6 +483,31 @@ export default function BroadcastChat({
   const { recordChatMessage } = useTrollFamilyActivity();
   const { highestTier: viewerHighestTier } = useUserSubscriptionTier(user?.id);
   const { badges: subscriberBadges } = useSubscriberBadges(hostId);
+
+  // Mai Voice — spoken chat and recorded voice messages for this broadcast.
+  const maiVoice = useMaiVoiceRoom({
+    roomKind: 'stream',
+    roomId: streamId,
+    enabled: !!streamId,
+  });
+
+  // The broadcaster publishes the generated speech into the room over LiveKit.
+  useMaiVoicePublisher({
+    roomKind: 'stream',
+    roomId: streamId,
+    livekitRoomName: maiVoice.livekitRoomName,
+    userId: user?.id ?? null,
+    enabled: maiVoice.canPublishVoice && (maiVoice.ttsEnabled || maiVoice.voiceChatEnabled),
+  });
+
+  const handleReportVoiceMessage = useCallback(async (messageId: string) => {
+    const result = await moderateMaiVoiceMessage(messageId, 'report', 'Inappropriate voice message');
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success('Thanks — the voice message was reported for review.');
+  }, []);
 
   const [availableEmotes, setAvailableEmotes] = useState<SubscriberEmote[]>([]);
   const [showEmotePicker, setShowEmotePicker] = useState(false);
@@ -1675,6 +1706,13 @@ const fetchMessages = async () => {
       setMessages(prev => prev.filter(msg => msg.id !== msgId));
       processedMessageIds.current.delete(msgId);
 
+      // Mai Voice — the spoken version of a deleted message must never play.
+      void cancelMaiVoiceTts({
+        roomKind: 'stream',
+        roomId: streamId,
+        sourceMessageId: msgId,
+      }).catch(() => undefined);
+
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.send({
           type: 'broadcast',
@@ -1973,7 +2011,35 @@ const fetchMessages = async () => {
                     </div>
                 )}
             </div>
+
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+                <MaiVoiceComposerActions
+                    roomKind="stream"
+                    roomId={streamId}
+                    myOptIn={maiVoice.myOptIn}
+                    onToggleOptIn={maiVoice.setMyOptIn}
+                    voiceChatEnabled={maiVoice.voiceChatEnabled}
+                    ttsEnabled={maiVoice.ttsEnabled}
+                    isGuest={isGuest}
+                    onRequireAuth={redirectGuestToAuth}
+                />
+            </div>
         </form>
+
+        <MaiVoiceMessageStrip
+            messages={maiVoice.voiceMessages}
+            removedMessageIds={maiVoice.removedMessageIds}
+            onReport={handleReportVoiceMessage}
+        />
+
+        <MaiVoicePlayer
+            pendingClips={maiVoice.pendingClips}
+            activeClip={maiVoice.activeClip}
+            volume={maiVoice.settings?.playback_volume ?? 1}
+            paused={maiVoice.playbackPaused}
+            onBegin={maiVoice.beginClip}
+            onComplete={maiVoice.completeClip}
+        />
 
                 <GiftBoxModal
                   isOpen={isGiftModalOpen}

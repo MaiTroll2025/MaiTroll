@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, VolumeX, Mic, MicOff, Settings, Users, Clock, Shield, Zap, Radio, Music, Bell, BellOff, Sliders } from 'lucide-react';
+import { Volume2, VolumeX, Mic, MicOff, Settings, Users, Clock, Shield, Zap, Radio, Music, Bell, BellOff, Sliders, AudioLines } from 'lucide-react';
 import { supabase, searchUsers } from '../../lib/supabase';
+import MaiVoiceSettingsPanel from '../broadcast/MaiVoiceSettingsPanel';
 import type { BroadcastAudioSettings, StreamAudioMode } from '../../types/liveStreaming';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -207,6 +208,7 @@ export default function BroadcastAudioControls({
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showMaiVoicePanel, setShowMaiVoicePanel] = useState(false);
 
   // ── Load existing settings ──
   const loadSettings = useCallback(async () => {
@@ -662,7 +664,35 @@ export default function BroadcastAudioControls({
             </span>
           </div>
         </SectionCard>
+
+        {/* G. Mai Voice */}
+        <SectionCard
+          title="Mai Voice"
+          icon={<AudioLines className="w-4 h-4 text-yellow-400" />}
+        >
+          <p className="text-xs text-zinc-400 mb-3">
+            Let viewers speak their own messages in their own voice, and let them record short voice
+            messages for the whole audience.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowMaiVoicePanel(true)}
+            className="w-full rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs font-bold text-yellow-300 transition hover:bg-yellow-500/20"
+          >
+            Open Mai Voice controls
+          </button>
+        </SectionCard>
       </div>
+
+      {showMaiVoicePanel && (
+        <MaiVoiceSettingsPanel
+          roomKind="stream"
+          roomId={streamId}
+          settings={null}
+          onClose={() => setShowMaiVoicePanel(false)}
+          onChanged={() => undefined}
+        />
+      )}
 
       {/* Save button */}
       <div className="border-t border-zinc-800 p-4">

@@ -20,18 +20,41 @@ export interface BadgeWithEarned extends Badge {
   metadata?: any
 }
 
+export interface BadgeLogEntry extends Badge {
+  earned: boolean
+  earned_at?: string
+  metadata?: any
+}
+
+type BadgeCatalogRow = Omit<Badge, 'icon' | 'color' | 'criteria'> & {
+  icon?: string | null
+  icon_url?: string | null
+  color?: string | null
+  criteria?: any
+}
+
+function normalizeBadge(row: BadgeCatalogRow): Badge {
+  return {
+    ...row,
+    icon: row.icon ?? row.icon_url ?? null,
+    color: row.color ?? null,
+    criteria: row.criteria ?? null,
+  }
+}
+
 /**
  * Fetch all badge definitions
  */
 export async function fetchAllBadges(): Promise<Badge[]> {
   const { data, error } = await supabase
-    .from('badges')
+    .from('badge_catalog')
     .select('*')
+    .eq('is_active', true)
     .order('category', { ascending: true })
     .order('rarity', { ascending: false })
 
   if (error) throw error
-  return data || []
+  return (data || []).map(row => normalizeBadge(row as BadgeCatalogRow))
 }
 
 /**
@@ -43,18 +66,42 @@ export async function fetchUserBadges(userId: string): Promise<BadgeWithEarned[]
     .select(`
       earned_at,
       metadata,
-      badge:badges(*)
+      badge:badge_catalog(*)
     `)
     .eq('user_id', userId)
     .order('earned_at', { ascending: false })
 
   if (error) throw error
   
-  return (data || []).map(item => ({
-    ...(item.badge as any),
-    earned_at: item.earned_at,
-    metadata: item.metadata
-  }))
+  return (data || []).flatMap(item => {
+    const relatedBadge = item.badge as BadgeCatalogRow | BadgeCatalogRow[] | null
+    const badge = Array.isArray(relatedBadge) ? relatedBadge[0] : relatedBadge
+    if (!badge) return []
+
+    return [{
+      ...normalizeBadge(badge),
+      earned_at: item.earned_at,
+      metadata: item.metadata,
+    }]
+  })
+}
+
+export async function fetchUserBadgeLog(userId: string): Promise<BadgeLogEntry[]> {
+  const [catalog, earnedBadges] = await Promise.all([
+    fetchAllBadges(),
+    fetchUserBadges(userId),
+  ])
+  const earnedBySlug = new Map(earnedBadges.map(badge => [badge.slug, badge]))
+
+  return catalog.map(badge => {
+    const earned = earnedBySlug.get(badge.slug)
+    return {
+      ...badge,
+      earned: !!earned,
+      earned_at: earned?.earned_at,
+      metadata: earned?.metadata,
+    }
+  })
 }
 
 /**
@@ -71,19 +118,19 @@ export function useUserBadges(userId: string | null | undefined) {
       return
     }
 
-    let isSubscribed = false
+    let isActive = true
     let channel: any = null
 
     const loadBadges = async () => {
       try {
         const data = await fetchUserBadges(userId)
-        if (!isSubscribed) {
+        if (isActive) {
           setBadges(data)
           setLoading(false)
         }
       } catch (err) {
         console.error('[useUserBadges] Failed to load badges:', err)
-        if (!isSubscribed) {
+        if (isActive) {
           setBadges([])
           setLoading(false)
         }
@@ -109,13 +156,65 @@ export function useUserBadges(userId: string | null | undefined) {
       )
       .subscribe()
 
-    isSubscribed = true
-
     return () => {
-      isSubscribed = false
+      isActive = false
       if (channel) {
         supabase.removeChannel(channel)
       }
+    }
+  }, [userId])
+
+  return { badges, loading }
+}
+
+export function useUserBadgeLog(userId: string | null | undefined) {
+  const [badges, setBadges] = useState<BadgeLogEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!userId || userId.startsWith('TC-')) {
+      setBadges([])
+      setLoading(false)
+      return
+    }
+
+    let isActive = true
+    const loadBadgeLog = async () => {
+      try {
+        const data = await fetchUserBadgeLog(userId)
+        if (isActive) {
+          setBadges(data)
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error('[useUserBadgeLog] Failed to load badge log:', err)
+        if (isActive) {
+          setBadges([])
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadBadgeLog()
+    const channel = supabase
+      .channel(`user-badge-log-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_badges',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          void loadBadgeLog()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      isActive = false
+      void supabase.removeChannel(channel)
     }
   }, [userId])
 

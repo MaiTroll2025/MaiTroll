@@ -1,7 +1,7 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
 import { PhoneBadge } from './PhoneBadge'
-import { useUserBadges } from '@/hooks/useBadges'
+import { useUserBadgeLog, useUserBadges } from '@/hooks/useBadges'
 
 interface PhoneBadgeDisplayProps {
   userId: string
@@ -17,6 +17,7 @@ export function PhoneBadgeDisplay({
   className,
 }: PhoneBadgeDisplayProps) {
   const { badges, loading } = useUserBadges(userId)
+  const [showBadgeLog, setShowBadgeLog] = React.useState(false)
 
   if (loading) {
     return (
@@ -43,23 +44,65 @@ export function PhoneBadgeDisplay({
   const remainingCount = badges.length - maxVisible
 
   return (
-    <div className={cn('flex items-center gap-1', className)}>
-      {visibleBadges.map((badge) => (
-        <PhoneBadge key={badge.slug} badge={badge} size={size} />
-      ))}
-      {remainingCount > 0 && (
+    <>
+      <div className={cn('flex items-center gap-1', className)}>
+        {visibleBadges.map((badge) => (
+          <button
+            key={badge.slug}
+            type="button"
+            aria-label={`View ${badge.name} and badge log`}
+            onClick={() => setShowBadgeLog(true)}
+            className="rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400"
+          >
+            <PhoneBadge badge={badge} size={size} />
+          </button>
+        ))}
+        {remainingCount > 0 && (
+          <button
+            type="button"
+            aria-label={`View all ${badges.length} badges`}
+            onClick={() => setShowBadgeLog(true)}
+            className={cn(
+              'flex-shrink-0 flex items-center justify-center rounded-xl',
+              'border border-white/20 bg-white/5 text-white/50',
+              SIZE_CLASSES[size],
+              'font-black'
+            )}
+          >
+            +{remainingCount}
+          </button>
+        )}
+      </div>
+      {showBadgeLog && (
         <div
-          className={cn(
-            'flex-shrink-0 flex items-center justify-center rounded-xl',
-            'border border-white/20 bg-white/5 text-white/50',
-            SIZE_CLASSES[size],
-            'font-black'
-          )}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          onClick={() => setShowBadgeLog(false)}
         >
-          +{remainingCount}
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="phone-badge-log-title"
+            className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/15 bg-[#100d19] p-5 text-white shadow-2xl"
+            onClick={event => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 id="phone-badge-log-title" className="text-lg font-black">Badge Log</h2>
+                <p className="text-xs text-white/50">{badges.length} earned badges</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBadgeLog(false)}
+                className="rounded-lg border border-white/15 px-3 py-2 text-sm"
+              >
+                Close
+              </button>
+            </div>
+            <PhoneBadgeList userId={userId} />
+          </section>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
@@ -80,7 +123,7 @@ export function PhoneBadgeList({
   category,
   className,
 }: PhoneBadgeListProps) {
-  const { badges, loading } = useUserBadges(userId)
+  const { badges, loading } = useUserBadgeLog(userId)
 
   if (loading) {
     return (
@@ -112,24 +155,28 @@ export function PhoneBadgeList({
           <span className="text-2xl">🏅</span>
         </div>
         <p className="mt-3 text-sm font-black text-zinc-400">
-          {category ? `No ${category} badges yet` : 'No badges earned yet'}
+          {category ? `No ${category} badges available` : 'No badges available yet'}
         </p>
         <p className="mt-1 text-[9px] text-zinc-600">
-          Complete milestones, level up, and participate in events to earn badges!
+          Badge definitions will appear here when they are added to the catalog.
         </p>
       </div>
     )
   }
 
-  // Group by category
-  const categories = ['gender', 'level', 'league', 'milestone', 'special', 'event', 'role']
-  const badgesByCategory = categories.map(cat => ({
-    category: cat,
-    badges: filteredBadges.filter(b => b.category === cat)
-  })).filter(g => g.badges.length > 0)
+  const categories = [...new Set(filteredBadges.map(badge => badge.category))]
+  const badgesByCategory = categories.map(category => ({
+    category,
+    badges: filteredBadges.filter(badge => badge.category === category),
+  }))
 
   return (
     <div className={cn('space-y-6', className)}>
+      <p className="text-xs text-white/55">
+        {filteredBadges.filter(badge => badge.earned).length} earned
+        {' · '}
+        {filteredBadges.filter(badge => !badge.earned).length} not earned
+      </p>
       {badgesByCategory.map(({ category, badges: catBadges }) => (
         <div key={category} className="space-y-3">
           <div className="flex items-center gap-2">
@@ -145,8 +192,35 @@ export function PhoneBadgeList({
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {catBadges.map((badge) => (
-              <PhoneBadge key={badge.slug} badge={badge} size="sm" />
+            {catBadges.map(badge => (
+              <div
+                key={badge.slug}
+                title={badge.earned
+                  ? `${badge.name} — earned${badge.earned_at ? ` ${new Date(badge.earned_at).toLocaleDateString()}` : ''}`
+                  : `${badge.name} — not earned`}
+                className={cn(
+                  'flex min-w-20 flex-col items-center gap-1 rounded-xl border p-2 text-center',
+                  badge.earned
+                    ? 'border-white/10 bg-black/20'
+                    : 'border-white/5 bg-white/[0.02] opacity-55 grayscale',
+                )}
+              >
+                <PhoneBadge badge={badge} size="md" showTooltip={false} />
+                <span className="max-w-24 truncate text-[10px] font-semibold text-white/80">
+                  {badge.name}
+                </span>
+                <span className={cn(
+                  'text-[9px] font-bold',
+                  badge.earned ? 'text-emerald-300' : 'text-white/40',
+                )}>
+                  {badge.earned ? 'Earned' : 'Not earned'}
+                </span>
+                {badge.earned_at && (
+                  <span className="text-[8px] text-white/35">
+                    {new Date(badge.earned_at).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         </div>

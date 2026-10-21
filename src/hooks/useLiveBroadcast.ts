@@ -42,6 +42,8 @@ export interface LiveBroadcastSession {
   connect: () => Promise<void>
   toggleCamera: () => Promise<void>
   toggleMicrophone: () => Promise<void>
+  /** Sets the microphone to a fixed state and keeps the UI in sync. */
+  setMicrophoneEnabled: (enabled: boolean) => Promise<void>
   flipCamera: () => Promise<void>
   disconnect: () => void
 }
@@ -395,6 +397,17 @@ export function useLiveBroadcast({
     }
   }, [micEnabled])
 
+  const setMicrophoneEnabled = useCallback(async (enabled: boolean) => {
+    const room = roomRef.current
+    if (!room) return
+    try {
+      await room.localParticipant.setMicrophoneEnabled(enabled)
+      setMicEnabled(enabled)
+    } catch (err) {
+      console.warn('[useLiveBroadcast] setMicrophoneEnabled failed', err)
+    }
+  }, [])
+
   const flipCamera = useCallback(async () => {
     const room = roomRef.current
     if (!room) return
@@ -465,6 +478,7 @@ export function useLiveBroadcast({
     connect,
     toggleCamera,
     toggleMicrophone,
+    setMicrophoneEnabled,
     flipCamera,
     disconnect,
   }

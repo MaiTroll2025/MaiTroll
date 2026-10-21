@@ -6,9 +6,16 @@ import useTrollFamilyActivity from '../../hooks/useTrollFamilyActivity';
 import ModActionsPopup from './ModActionsPopup';
 import { toast } from 'sonner';
 
-import { Send, Swords } from 'lucide-react';
+import { Send, Swords, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { moderation } from '@/services/maitrollModeration';
+import MaiVoiceComposerActions from './MaiVoiceComposerActions';
+import MaiVoiceMessageStrip from './MaiVoiceMessageStrip';
+import MaiVoicePlayer from './MaiVoicePlayer';
+import MaiVoiceSettingsPanel from './MaiVoiceSettingsPanel';
+import { useMaiVoiceRoom } from '../../hooks/useMaiVoiceRoom';
+import { useMaiVoicePublisher } from '../../hooks/useMaiVoicePublisher';
+import { maiVoiceInvoke, moderateMaiVoiceMessage } from '../../lib/maiVoice';
 
 interface ChatMessage {
   id: string;
@@ -53,6 +60,37 @@ export default function BattleChat({
    const [modActionTargetUser, setModActionTargetUser] = useState<{ id: string; username: string; avatar_url?: string; role?: string; troll_role?: string } | null>(null);
    const messagesEndRef = useRef<HTMLDivElement>(null);
    const channelRef = useRef<any>(null);
+
+   // Mai Voice — both battle sides share one room, so everyone hears the same
+   // spoken chat and the same recorded voice messages.
+  const maiVoice = useMaiVoiceRoom({
+    roomKind: 'battle',
+    roomId: battleId,
+  });
+  const [showMaiVoiceSettings, setShowMaiVoiceSettings] = useState(false);
+  // Both sides own the battle room, the server accepts either broadcaster.
+  const canManageMaiVoiceRoom = Boolean(
+    currentUserId &&
+      (challengerStream.user_id === currentUserId || opponentStream.user_id === currentUserId),
+  );
+
+   // The battle broadcaster publishes the generated speech into the battle room.
+   useMaiVoicePublisher({
+     roomKind: 'battle',
+     roomId: battleId,
+     livekitRoomName: maiVoice.livekitRoomName,
+     userId: currentUserId || null,
+     enabled: maiVoice.canPublishVoice && (maiVoice.ttsEnabled || maiVoice.voiceChatEnabled),
+   });
+
+   const handleReportVoiceMessage = useCallback(async (messageId: string) => {
+     const result = await moderateMaiVoiceMessage(messageId, 'report', 'Inappropriate voice message');
+     if (!result.ok) {
+       toast.error(result.error);
+       return;
+     }
+     toast.success('Thanks — the voice message was reported for review.');
+   }, []);
    const profileUsername =
      (profile as any)?.username?.trim() ||
      (profile as any)?.display_name?.trim() ||
@@ -310,17 +348,32 @@ export default function BattleChat({
     const senderUsername = profileUsername || existingUsername || 'Troll Citizen';
     
     // Insert to challenger stream only (shared battle chat)
-    const { error } = await supabase.from('stream_chat').insert({
-      stream_id: challengerStream.id,
-      user_id: currentUserId,
-      username: senderUsername,
-      content: newMessage.trim(),
-    });
+    const { data: inserted, error } = await supabase
+      .from('stream_chat')
+      .insert({
+        stream_id: challengerStream.id,
+        user_id: currentUserId,
+        username: senderUsername,
+        content: newMessage.trim(),
+      })
+      .select('id')
+      .maybeSingle();
 
     if (error) {
       console.error('Error sending message:', error);
       return;
     }
+
+    // Mai Voice — queue the spoken version of this battle chat message.
+    // The server re-checks eligibility before anything is generated.
+    void maiVoiceInvoke({
+      action: 'enqueue-tts',
+      roomKind: 'battle',
+      roomId: battleId,
+      sourceMessageId: inserted?.id ?? null,
+      text: newMessage.trim(),
+      presentation: 'chat',
+    }).catch(() => undefined);
 
     // Record family activity for chat message
     await recordChatMessage(newMessage.trim().length, battleId);
@@ -443,7 +496,56 @@ export default function BattleChat({
             <Send size={18} />
           </button>
         </div>
+
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <MaiVoiceComposerActions
+            roomKind="battle"
+            roomId={battleId}
+            myOptIn={maiVoice.myOptIn}
+            onToggleOptIn={maiVoice.setMyOptIn}
+            voiceChatEnabled={maiVoice.voiceChatEnabled}
+            ttsEnabled={maiVoice.ttsEnabled}
+            canManageRoom={canManageMaiVoiceRoom}
+            onOpenRoomControls={() => setShowMaiVoiceSettings(true)}
+          />
+          {canManageMaiVoiceRoom && (
+            <button
+              type="button"
+              onClick={() => setShowMaiVoiceSettings(true)}
+              title="Mai Voice controls for this battle"
+              className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold text-zinc-400 transition hover:text-yellow-300 hover:bg-white/5"
+            >
+              <SlidersHorizontal size={13} />
+              Mai Voice
+            </button>
+          )}
+        </div>
       </form>
+
+      <MaiVoiceMessageStrip
+        messages={maiVoice.voiceMessages}
+        removedMessageIds={maiVoice.removedMessageIds}
+        onReport={handleReportVoiceMessage}
+      />
+
+      <MaiVoicePlayer
+        pendingClips={maiVoice.pendingClips}
+        activeClip={maiVoice.activeClip}
+        volume={maiVoice.settings?.playback_volume ?? 1}
+        paused={maiVoice.playbackPaused}
+        onBegin={maiVoice.beginClip}
+        onComplete={maiVoice.completeClip}
+      />
+
+      {showMaiVoiceSettings && (
+        <MaiVoiceSettingsPanel
+          roomKind="battle"
+          roomId={battleId}
+          settings={maiVoice.settings}
+          onClose={() => setShowMaiVoiceSettings(false)}
+          onChanged={() => void maiVoice.refresh()}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,13 @@ declare namespace Deno {
   function serve(handler: (req: Request) => Response | Promise<Response>): void;
 }
 
+// Supabase edge runtime background task helper.
+declare const EdgeRuntime:
+  | {
+      waitUntil(promise: Promise<unknown>): void;
+    }
+  | undefined;
+
 // Supabase types
 declare module 'https://esm.sh/@supabase/supabase-js@2.39.7' {
   export function createClient(url: string, key: string, options?: any): any

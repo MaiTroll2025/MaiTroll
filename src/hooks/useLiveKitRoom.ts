@@ -3,6 +3,7 @@ import { Room, RoomEvent, VideoPresets, createLocalAudioTrack, createLocalVideoT
 import type { LocalVideoTrack, LocalAudioTrack, RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack } from 'livekit-client';
 import { supabase } from '../lib/supabase';
 import { getLiveKitRoomName } from '../lib/liveUtils';
+import { attachMaiVoiceAuxAudio, isMaiVoiceAuxPublication } from '../lib/maiVoiceLiveKitAudio';
 import { toast } from 'sonner';
 import { LIVEKIT_BETA_LIMITS } from '@/config/livekitBetaLimits';
 
@@ -527,6 +528,15 @@ export function useLiveKitRoom({
         kind,
         source: publication?.source || null,
       };
+
+      /*
+       * Mai Voice publishes the spoken clips as an auxiliary audio track.
+       * Nobody else in the app uses that source, so it is attached here to a
+       * hidden audio element and the whole audience hears the clip.
+       */
+      if (isMaiVoiceAuxPublication(publication)) {
+        attachMaiVoiceAuxAudio(track as RemoteAudioTrack);
+      }
 
       // Check local state first
       setRemoteUsers(prev => {

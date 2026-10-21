@@ -112,6 +112,10 @@ import MaiBag from '../../components/mai-bag/MaiBag'
 import RecoveryBanner from '../../components/broadcast/RecoveryBanner'
 import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
 import ProtectionOrderGate from '@/components/ProtectionOrderGate'
+import MaiVoiceComposerActions from '@/components/broadcast/MaiVoiceComposerActions'
+import MaiVoiceMessageStrip from '@/components/broadcast/MaiVoiceMessageStrip'
+import MaiVoicePlayer from '@/components/broadcast/MaiVoicePlayer'
+import { useMaiVoiceRoom } from '@/hooks/useMaiVoiceRoom'
 
 const theme = MaiTrollBroadcastTheme
 
@@ -1098,6 +1102,13 @@ const [broadcasterProfileLoaded, setBroadcasterProfileLoaded] = useState(false)
     const floatingChatContainerRef = useRef<HTMLDivElement>(null)
     const [blockedUsernames, setBlockedUsernames] = useState<Set<string>>(new Set())
     const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(user?.id, streamId);
+
+    // Mai Voice — spoken chat and recorded voice messages for this broadcast.
+    const maiVoice = useMaiVoiceRoom({
+      roomKind: 'stream',
+      roomId: streamId,
+      enabled: !!streamId,
+    })
 
     // Proactively tell the current user their chat was disabled by moderation.
     // Previously this only surfaced when they tried to send a message; now it
@@ -5442,6 +5453,18 @@ useStreamRealtime(
                          disabled={hostChatDisabledByOfficer || userChatDisabled}
                          readOnly={hostChatDisabledByOfficer || userChatDisabled}
                          className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50" maxLength={280} />
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <MaiVoiceComposerActions
+                          roomKind="stream"
+                          roomId={streamId}
+                          myOptIn={maiVoice.myOptIn}
+                          onToggleOptIn={maiVoice.setMyOptIn}
+                          voiceChatEnabled={maiVoice.voiceChatEnabled}
+                          ttsEnabled={maiVoice.ttsEnabled}
+                          isGuest={!user}
+                          onRequireAuth={() => navigate('/auth?mode=signup')}
+                        />
+                      </div>
                     </form>
                   </div>
                 ) : chatTab === 'league' ? (
@@ -5672,6 +5695,22 @@ useStreamRealtime(
                       className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50"
                       maxLength={280}
                     />
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <MaiVoiceComposerActions
+                        roomKind="stream"
+                        roomId={streamId}
+                        myOptIn={maiVoice.myOptIn}
+                        onToggleOptIn={maiVoice.setMyOptIn}
+                        voiceChatEnabled={maiVoice.voiceChatEnabled}
+                        ttsEnabled={maiVoice.ttsEnabled}
+                        isGuest={!user}
+                        onRequireAuth={() => navigate('/auth?mode=signup')}
+                      />
+                    </div>
+                    <MaiVoiceMessageStrip
+                      messages={maiVoice.voiceMessages}
+                      removedMessageIds={maiVoice.removedMessageIds}
+                    />
                   </form>
                 </div>
               ) : chatTab === 'league' ? (
@@ -5832,12 +5871,34 @@ useStreamRealtime(
                      ? 'border border-cyan-400/30 bg-cyan-500/20 text-cyan-300'
                      : 'border border-white/10 bg-white/5 text-white/30'
                  )}
-               >
-                Send
-              </button>
-            </form>
-           </div>
-         )}
+                >
+                 Send
+               </button>
+             </form>
+             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+               <MaiVoiceComposerActions
+                 roomKind="stream"
+                 roomId={streamId}
+                 myOptIn={maiVoice.myOptIn}
+                 onToggleOptIn={maiVoice.setMyOptIn}
+                 voiceChatEnabled={maiVoice.voiceChatEnabled}
+                 ttsEnabled={maiVoice.ttsEnabled}
+                 isGuest={!user}
+                 onRequireAuth={() => navigate('/auth?mode=signup')}
+               />
+             </div>
+            </div>
+          )}
+
+          <MaiVoicePlayer
+            pendingClips={maiVoice.pendingClips}
+            activeClip={maiVoice.activeClip}
+            volume={maiVoice.settings?.playback_volume ?? 1}
+            paused={maiVoice.playbackPaused}
+            onBegin={maiVoice.beginClip}
+            onComplete={maiVoice.completeClip}
+          />
+
 
           {/* ── MOBILE: Flying chat that rises up the screen from the chat input box ── */}
           {isMobileViewer && floatingMessages.length > 0 && !isMobileChatOpen && (

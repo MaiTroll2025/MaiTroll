@@ -1,0 +1,5 @@
+-- Update maiVoiceModeration to check voice restrictions
+-- This is a SQL migration to add the check in the database function behavior;
+-- but the actual eligibility check is in the edge function. We'll also update it there.
+-- Add check in eligibility
+-- (We'll modify the edge function code as well)

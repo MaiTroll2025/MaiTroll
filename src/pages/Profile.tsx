@@ -58,6 +58,7 @@ import AccessPurchasePanel from '../components/profile/AccessPurchasePanel';
 import FounderScheduledBroadcastBanner from '../components/founder/FounderScheduledBroadcastBanner';
 import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate, useSearchParams, useInRouterContext } from 'react-router-dom';
+import { PhoneBadgeDisplay, PhoneBadgeList } from '../phone/components/PhoneBadgeDisplay';
 
 interface ActiveRole {
 
@@ -102,10 +103,6 @@ function ProfileInner() {
     const [isProfileLive, setIsProfileLive] = useState(false);
 
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'social');
-
-    const [badges, setBadges] = useState<any[]>([]);
-
-    const [badgesLoading, setBadgesLoading] = useState(false);
 
     const [activeRoles, setActiveRoles] = useState<ActiveRole[]>([]);
 
@@ -390,42 +387,6 @@ function ProfileInner() {
         };
 
     }, [currentUser, currentUser?.id, fetchXP, subscribeToXP, userId, username]);
-
-    // Fetch featured badges when the Badges tab is active
-
-    useEffect(() => {
-
-        if (activeTab !== 'badges' || !profile?.id) return;
-
-        let isMounted = true;
-
-        setBadgesLoading(true);
-
-        (supabase
-
-            .rpc('get_user_featured_badges', { p_user_id: profile.id, p_limit: 12 }) as any
-
-        ).then(({ data }: any) => {
-
-            if (isMounted) setBadges(data || []);
-
-        })
-
-            .then(undefined, (err) => console.error('Failed to load badges', err))
-
-            .finally(() => {
-
-                if (isMounted) setBadgesLoading(false);
-
-            });
-
-        return () => {
-
-            isMounted = false;
-
-        };
-
-    }, [activeTab, profile?.id]);
 
     const prevProfileIdRef = useRef<string | null>(null);
 
@@ -830,49 +791,8 @@ if (loading) {
 
                     <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
 
-                        <h3 className="text-lg font-bold text-white mb-4">Achievement Badges</h3>
-
-                        {badgesLoading ? (
-
-                            <p className="text-white/50">Loading badges…</p>
-
-                        ) : badges.length === 0 ? (
-
-                            <p className="text-white/50">Badges will appear here as you achieve milestones.</p>
-
-                        ) : (
-
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-
-                                {badges.map((badge: any, i: number) => (
-
-                                    <div key={badge?.id || i} className="flex flex-col items-center rounded-2xl border border-white/10 bg-black/40 p-3 text-center">
-
-                                        {badge?.icon_url ? (
-
-                                            <img src={badge.icon_url} alt={badge?.name || 'Badge'} className="h-12 w-12 rounded-full object-cover" />
-
-                                        ) : (
-
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/15 text-2xl">🏅</div>
-
-                                        )}
-
-                                        <p className="mt-2 text-xs font-semibold text-white">{badge?.name || 'Badge'}</p>
-
-                                        {badge?.description && (
-
-                                            <p className="mt-0.5 text-[10px] text-white/50">{badge.description}</p>
-
-                                        )}
-
-                                    </div>
-
-                                ))}
-
-                            </div>
-
-                        )}
+                        <h3 className="text-lg font-bold text-white mb-4">Badge Log</h3>
+                        {profile?.id && <PhoneBadgeList userId={profile.id} />}
 
                     </div>
 
@@ -1059,6 +979,12 @@ if (loading) {
                     onBlockChange={setIsBlocked}
 
                 />
+
+                {profile?.id && (
+                    <div className="mt-3 flex justify-center">
+                        <PhoneBadgeDisplay userId={profile.id} maxVisible={6} size="sm" />
+                    </div>
+                )}
 
                 {cityStatusLoading ? (
 

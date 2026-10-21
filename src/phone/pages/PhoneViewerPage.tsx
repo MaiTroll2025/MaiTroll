@@ -123,6 +123,10 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
 import PhoneViewerRtcModButton from '@/phone/components/PhoneViewerRtcModButton'
 import { isStaffProfile } from '@/lib/staff'
+import MaiVoiceComposerActions from '@/components/broadcast/MaiVoiceComposerActions'
+import MaiVoiceMessageStrip from '@/components/broadcast/MaiVoiceMessageStrip'
+import MaiVoicePlayer from '@/components/broadcast/MaiVoicePlayer'
+import { useMaiVoiceRoom } from '@/hooks/useMaiVoiceRoom'
 
 interface SeatState {
   participant: any
@@ -2193,6 +2197,13 @@ const canClickFloatingChatUsername =
     onError: handleLiveKitError,
   })
   const publishLiveKitTracks = liveKitRoom.publishLocalTracks
+
+  // Mai Voice — spoken chat and recorded voice messages for this broadcast.
+  const maiVoice = useMaiVoiceRoom({
+    roomKind: 'stream',
+    roomId: resolvedStreamId,
+    enabled: !battleActive,
+  })
 
   // All viewers use LiveKit
   const remoteUsers = liveKitRoom.remoteUsers
@@ -5024,6 +5035,33 @@ useEffect(() => {
               />
               <TrollUpFloatingButton />
             </form>
+
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <MaiVoiceComposerActions
+                roomKind="stream"
+                roomId={resolvedStreamId}
+                myOptIn={maiVoice.myOptIn}
+                onToggleOptIn={maiVoice.setMyOptIn}
+                voiceChatEnabled={maiVoice.voiceChatEnabled}
+                ttsEnabled={maiVoice.ttsEnabled}
+                isGuest={!user}
+                onRequireAuth={() => navigate('/auth?mode=signup')}
+              />
+            </div>
+
+            <MaiVoiceMessageStrip
+              messages={maiVoice.voiceMessages}
+              removedMessageIds={maiVoice.removedMessageIds}
+            />
+
+            <MaiVoicePlayer
+              pendingClips={maiVoice.pendingClips}
+              activeClip={maiVoice.activeClip}
+              volume={maiVoice.settings?.playback_volume ?? 1}
+              paused={maiVoice.playbackPaused}
+              onBegin={maiVoice.beginClip}
+              onComplete={maiVoice.completeClip}
+            />
           </div>
         )}
 

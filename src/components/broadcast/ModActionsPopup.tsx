@@ -67,6 +67,8 @@ const MOD_ACTIONS_LIST = [
   { id: 'troll_coin_penalty', label: 'Coin Penalty', icon: Wallet, color: 'text-amber-400', description: 'Donate Troll Coins to admins' },
   { id: 'disable_chat', label: 'Disable Chat', icon: MessageSquareOff, color: 'text-yellow-400', description: 'Disable chat temporarily' },
   { id: 'kick', label: 'Kick', icon: LogOut, color: 'text-purple-400', description: 'Remove from broadcast' },
+  { id: 'mai_voice_restriction', label: 'Mai Voice Restriction', icon: MicOff, color: 'text-red-400', description: 'Restrict from using Mai Voice' },
+  { id: 'mai_voice_unrestrict', label: 'Restore Mai Voice', icon: Mic, color: 'text-green-400', description: 'Restore Mai Voice privileges' },
   { id: 'suspend_license', label: 'Suspend License', icon: Car, color: 'text-blue-400', description: 'Suspend driver\'s license' },
   { id: 'grant_license', label: 'Grant License', icon: UserCheck, color: 'text-green-400', description: 'Grant active driver license' },
   { id: 'remove_officer', label: 'Remove Officer', icon: Shield, color: 'text-red-500', description: 'Remove broadofficer status' },

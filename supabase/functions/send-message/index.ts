@@ -646,7 +646,7 @@ serve(async (req) => {
       }
     }
 
-    // 6. Rate Limiting (fail-closed)
+    // 6. Rate Limiting (best effort — a limiter outage must not block chat)
     const isMod = isPrivilegedSender;
     const currentViewerCount = Number(viewerCount) || 0;
 
@@ -672,35 +672,46 @@ serve(async (req) => {
     }
 
     if (redis) {
-      try {
-        const limits = [
-          { key: `ratelimit:${user.id}:${type}`, max: 5 },
-          { key: `ratelimit:stream:${stream_id}:${type}`, max: 2500 },
-        ];
-        for (const limit of limits) {
-          const count = await redis.incr(limit.key);
-          if (count === 1) await redis.expire(limit.key, 10);
-          if (count > limit.max) {
-            console.warn(`[AUTH] Rate limit exceeded: user_id=${user.id} stream_id=${stream_id} type=${type}`);
-            return new Response(JSON.stringify({ error: "Rate limit exceeded", code: "RATE_LIMITED" }), {
-              status: 429,
-              headers: { ...headers, "Content-Type": "application/json" },
-            });
+      // One retry, because a dropped connection to the rate limiter must not
+      // take the whole chat down.
+      let limited = false;
+      for (let attempt = 0; attempt < 2 && !limited; attempt++) {
+        try {
+          const limits = [
+            { key: `ratelimit:${user.id}:${type}`, max: 5 },
+            { key: `ratelimit:stream:${stream_id}:${type}`, max: 2500 },
+          ];
+          for (const limit of limits) {
+            const count = await redis.incr(limit.key);
+            if (count === 1) await redis.expire(limit.key, 10);
+            if (count > limit.max) {
+              console.warn(`[AUTH] Rate limit exceeded: user_id=${user.id} stream_id=${stream_id} type=${type}`);
+              limited = true;
+              break;
+            }
           }
+        } catch (err) {
+          if (attempt === 0) {
+            console.warn(`[AUTH] Rate limit check failed, retrying: ${err}`);
+            continue;
+          }
+          // The rate limiter is a guard, not a dependency: a rate limiter that
+          // is down must never block every message of the platform.
+          console.error(`[CRITICAL] Rate limit check failed, allowing message: ${err}`);
         }
-      } catch (err) {
-        console.error(`[CRITICAL] Rate limit check failed, rejecting: ${err}`);
-        return new Response(JSON.stringify({ error: "Service temporarily unavailable", code: "RATE_LIMIT_UNAVAILABLE" }), {
-          status: 503,
+      }
+      if (limited) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded", code: "RATE_LIMITED" }), {
+          status: 429,
           headers: { ...headers, "Content-Type": "application/json" },
         });
       }
     } else {
-      console.warn(`[CRITICAL] Redis not configured, rejecting message for rate limiting`);
-      return new Response(JSON.stringify({ error: "Service temporarily unavailable", code: "RATE_LIMIT_UNAVAILABLE" }), {
-        status: 503,
-        headers: { ...headers, "Content-Type": "application/json" },
-      });
+      // Upstash Redis is optional infrastructure. Without it there is no
+      // distributed rate limit, but the guards above (chat blocks, moderation
+      // actions, high traffic sampling) still apply and the message is
+      // delivered instead of failing the whole chat.
+      console.warn("[AUTH] Redis not configured, continuing without the distributed rate limit");
     }
 
     // 6. Enrich Data (Denormalize server-side for security)
@@ -842,6 +853,40 @@ serve(async (req) => {
         console.error("[ERROR] Chat persisted but realtime publish failed:", result.reason);
       }
     });
+
+    // 8b. Mai Voice — queue a personalized speech clip for this chat message.
+    // Speech is a bonus feature: any failure here must never break the chat
+    // send, so the whole block is best-effort.
+    if (type === "chat" && typeof data.content === "string" && data.content.trim()) {
+      try {
+        const ttsResponse = await fetch(`${supabaseUrl.replace(/\/+$/, "")}/functions/v1/mai-voice`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${supabaseServiceKey}`,
+            apikey: supabaseServiceKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "enqueue-tts",
+            userId: user.id,
+            roomKind: "stream",
+            roomId: stream_id,
+            sourceMessageId: insertedMessage.id,
+            text: data.content,
+            presentation: data.presentation === "flying_chat" ? "flying_chat" : "chat",
+          }),
+        });
+        if (!ttsResponse.ok) {
+          console.warn(
+            "[Mai Voice] TTS enqueue skipped:",
+            ttsResponse.status,
+            (await ttsResponse.text()).slice(0, 200),
+          );
+        }
+      } catch (ttsError: any) {
+        console.warn("[Mai Voice] TTS enqueue failed:", ttsError?.message);
+      }
+    }
 
     // Also publish gift events to the main stream channel for gift animations
     if (type === "gift") {

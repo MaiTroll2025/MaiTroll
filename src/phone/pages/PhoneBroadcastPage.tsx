@@ -6,7 +6,7 @@
   useState,
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Crown, Gem, Gift, Heart, Mic, MicOff, PhoneOff, RefreshCw, Swords, Trophy, Video, VideoOff, X, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Crown, Gem, Gift, Heart, Mic, MicOff, PhoneOff, RefreshCw, Swords, Trophy, Video, VideoOff, X, AlertTriangle, AlertCircle, SlidersHorizontal } from 'lucide-react';
 import type { LocalAudioTrack, LocalVideoTrack } from 'livekit-client'
 
 import { useAuthStore } from '@/lib/store'
@@ -67,6 +67,12 @@ import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
 import RandomBattleBanner from '@/components/broadcast/RandomBattleBanner'
 import { BattlePot } from '@/components/broadcast/BattlePot'
 import TrollUpSlideModal from '@/components/trollup/TrollUpSlideModal'
+import MaiVoiceComposerActions from '@/components/broadcast/MaiVoiceComposerActions'
+import MaiVoiceMessageStrip from '@/components/broadcast/MaiVoiceMessageStrip'
+import MaiVoicePlayer from '@/components/broadcast/MaiVoicePlayer'
+import MaiVoiceSettingsPanel from '@/components/broadcast/MaiVoiceSettingsPanel'
+import { useMaiVoiceRoom } from '@/hooks/useMaiVoiceRoom'
+import { useMaiVoicePublisher } from '@/hooks/useMaiVoicePublisher'
 
 import type { Stream } from '@/types/broadcast'
 import type { BroadcastGift } from '@/hooks/useBroadcastRealtime'
@@ -398,6 +404,63 @@ export default function PhoneBroadcastPage() {
 
   // Session is always LiveKit
   const session = useMemo(() => liveKitSession, [liveKitSession]);
+
+  /*
+   * ============================================================
+   * MAI VOICE
+   * ============================================================
+   */
+
+  const maiVoice = useMaiVoiceRoom({
+    roomKind: 'stream',
+    roomId: streamId,
+    enabled: !!streamId,
+  });
+  const [showMaiVoiceSettings, setShowMaiVoiceSettings] = useState(false);
+  const canManageMaiVoiceRoom =
+    stream?.user_id === user?.id ||
+    broadcasterProfile?.is_admin === true ||
+    broadcasterProfile?.role === 'admin' ||
+    broadcasterProfile?.role === 'owner';
+
+  /*
+   * The microphone is muted while a voice sample or a voice message is
+   * recorded, so the audience never hears the raw recording. The previous
+   * state is restored as soon as the capture ends.
+   */
+  const maiVoiceMicRestoreRef = useRef<boolean | null>(null);
+  const onMaiVoiceRecordingChange = useCallback(
+    async (recording: boolean) => {
+      try {
+        if (recording) {
+          if (maiVoiceMicRestoreRef.current !== null) return;
+          const wasEnabled = session.micEnabled;
+          maiVoiceMicRestoreRef.current = wasEnabled;
+          if (wasEnabled) {
+            await session.setMicrophoneEnabled(false);
+          }
+          return;
+        }
+        const wasEnabled = maiVoiceMicRestoreRef.current;
+        maiVoiceMicRestoreRef.current = null;
+        if (wasEnabled) {
+          await session.setMicrophoneEnabled(true);
+        }
+      } catch (error) {
+        console.warn('[PhoneBroadcastPage] Failed to toggle mic for Mai Voice:', error);
+      }
+    },
+    [session],
+  );
+
+  // The broadcaster publishes the generated speech into the room over LiveKit.
+  useMaiVoicePublisher({
+    roomKind: 'stream',
+    roomId: streamId,
+    livekitRoomName: maiVoice.livekitRoomName,
+    userId: user?.id ?? null,
+    enabled: maiVoice.canPublishVoice && (maiVoice.ttsEnabled || maiVoice.voiceChatEnabled),
+  });
 
   /*
    * ============================================================
@@ -2635,7 +2698,56 @@ export default function PhoneBroadcastPage() {
             maxLength={280}
             className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
           />
+
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <MaiVoiceComposerActions
+              roomKind="stream"
+              roomId={streamId}
+              myOptIn={maiVoice.myOptIn}
+              onToggleOptIn={maiVoice.setMyOptIn}
+              voiceChatEnabled={maiVoice.voiceChatEnabled}
+              ttsEnabled={maiVoice.ttsEnabled}
+              onRecordingChange={onMaiVoiceRecordingChange}
+              canManageRoom={canManageMaiVoiceRoom}
+              onOpenRoomControls={() => setShowMaiVoiceSettings(true)}
+            />
+            {canManageMaiVoiceRoom && (
+              <button
+                type="button"
+                onClick={() => setShowMaiVoiceSettings(true)}
+                title="Mai Voice controls for this broadcast"
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold text-zinc-400 transition hover:text-yellow-300 hover:bg-white/5"
+              >
+                <SlidersHorizontal size={13} />
+                Mai Voice
+              </button>
+            )}
+          </div>
+
+          <MaiVoiceMessageStrip
+            messages={maiVoice.voiceMessages}
+            removedMessageIds={maiVoice.removedMessageIds}
+          />
         </form>
+
+        <MaiVoicePlayer
+          pendingClips={maiVoice.pendingClips}
+          activeClip={maiVoice.activeClip}
+          volume={maiVoice.settings?.playback_volume ?? 1}
+          paused={maiVoice.playbackPaused}
+          onBegin={maiVoice.beginClip}
+          onComplete={maiVoice.completeClip}
+        />
+
+        {showMaiVoiceSettings && (
+          <MaiVoiceSettingsPanel
+            roomKind="stream"
+            roomId={streamId}
+            settings={maiVoice.settings}
+            onClose={() => setShowMaiVoiceSettings(false)}
+            onChanged={() => void maiVoice.refresh()}
+          />
+        )}
 
         {showTLeaguePanel && (
           <div

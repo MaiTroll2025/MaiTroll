@@ -20,6 +20,15 @@ import {
 
 const TOKEN_TTL_SECONDS = 30 * 60;
 
+/**
+ * LiveKit track sources (see @livekit/protocol TrackSource).
+ * The Mai Voice publisher uses the auxiliary audio source so the generated
+ * speech travels over the same LiveKit room the audience is already in.
+ */
+const TRACK_SOURCE_CAMERA = 1;
+const TRACK_SOURCE_MICROPHONE = 2;
+const TRACK_SOURCE_SCREEN_SHARE_AUDIO = 4;
+
 type ParticipantCategory =
   | "host"
   | "publisher"
@@ -27,7 +36,8 @@ type ParticipantCategory =
   | "moderator"
   | "viewer"
   | "preview"
-  | "ghost";
+  | "ghost"
+  | "mai-voice-publisher";
 
 interface TokenRequest {
   room?: unknown;
@@ -48,6 +58,12 @@ interface TokenRequest {
 
   isHost?: unknown;
   ghost?: unknown;
+
+  /**
+   * Requests the Mai Voice auxiliary audio source for this participant.
+   * Only meaningful for participants that are allowed to publish.
+   */
+  maiVoice?: unknown;
 }
 
 interface ProfileRecord {
@@ -56,6 +72,7 @@ interface ProfileRecord {
   display_name?: string | null;
   role?: string | null;
   is_admin?: boolean | null;
+  is_staff?: boolean | null;
   is_banned?: boolean | null;
   is_suspended?: boolean | null;
   account_state?: string | null;
@@ -76,6 +93,8 @@ interface StreamRecord {
   end_reason?: string | null;
   minutes_remaining?: number | string | null;
   total_minutes_allowed?: number | string | null;
+  livekit_room_name?: string | null;
+  room_name?: string | null;
 }
 
 function cleanString(value: unknown): string {
@@ -175,6 +194,14 @@ function getRequestedCategory(
     return "host";
   }
 
+  /*
+   * The Mai Voice publisher is a dedicated, hidden participant that may only
+   * publish the auxiliary audio source. It is authorized separately below.
+   */
+  if (role === "mai-voice-publisher" || mode === "mai-voice-publisher") {
+    return "mai-voice-publisher";
+  }
+
   if (
     role === "host" ||
     mode === "broadcaster"
@@ -206,7 +233,12 @@ function getRequestedCategory(
 }
 
 function categoryCanPublish(category: ParticipantCategory): boolean {
-  return category === "host" || category === "seat" || category === "publisher";
+  return (
+    category === "host" ||
+    category === "seat" ||
+    category === "publisher" ||
+    category === "mai-voice-publisher"
+  );
 }
 
 function categoryCanSubscribe(category: ParticipantCategory): boolean {
@@ -287,22 +319,47 @@ async function getStream(
   adminDb: SupabaseClient,
   roomName: string,
 ): Promise<StreamRecord | null> {
-  const { data, error } = await adminDb
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  // The LiveKit room of a broadcast is normally the stream id.
+  if (uuidRegex.test(roomName)) {
+    const { data, error } = await adminDb
+      .from("streams")
+      .select("*")
+      .eq("id", roomName)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("[livekit-token] Stream lookup failed", {
+        roomName,
+        message: error.message,
+      });
+
+      return null;
+    }
+
+    if (data) return data as StreamRecord;
+  }
+
+  // Streams created outside the app can carry a custom LiveKit room name.
+  const { data: byRoomName, error: roomNameError } = await adminDb
     .from("streams")
     .select("*")
-    .eq("id", roomName)
+    .or(`livekit_room_name.eq.${roomName},room_name.eq.${roomName}`)
+    .limit(1)
     .maybeSingle();
 
-  if (error) {
-    console.warn("[livekit-token] Stream lookup failed", {
+  if (roomNameError) {
+    console.warn("[livekit-token] Stream lookup by room name failed", {
       roomName,
-      message: error.message,
+      message: roomNameError.message,
     });
 
     return null;
   }
 
-  return data as StreamRecord | null;
+  return byRoomName as StreamRecord | null;
 }
 
 async function userHasStagePass(
@@ -366,7 +423,8 @@ async function createToken(options: {
 }): Promise<string> {
   const canPublish = categoryCanPublish(options.category);
   const canSubscribe = categoryCanSubscribe(options.category);
-  const hidden = options.category === "ghost";
+  const hidden =
+    options.category === "ghost" || options.category === "mai-voice-publisher";
 
   const token = new AccessToken(options.apiKey, options.apiSecret, {
     identity: options.identity,
@@ -386,9 +444,19 @@ async function createToken(options: {
     /*
      * Restrict publishers to camera and microphone.
      * This prevents LiveKit screen-share tracks from being authorized.
+     *
+     * The Mai Voice publisher is the one exception: it may only publish the
+     * auxiliary audio source, never camera, microphone or screen-share video.
      */
-    canPublishSources: canPublish
-      ? ([1, 2] as VideoGrant["canPublishSources"])
+    canPublishSources: options.category === "mai-voice-publisher"
+      ? ([
+        TRACK_SOURCE_SCREEN_SHARE_AUDIO,
+      ] as VideoGrant["canPublishSources"])
+      : canPublish
+      ? ([
+        TRACK_SOURCE_CAMERA,
+        TRACK_SOURCE_MICROPHONE,
+      ] as VideoGrant["canPublishSources"])
       : undefined,
   };
 
@@ -519,11 +587,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
         role === "audience" ||
         (mode !== "publisher" &&
           mode !== "broadcaster" &&
+          mode !== "mai-voice-publisher" &&
           mode !== "seat-publisher" &&
           mode !== "singoff-publisher" &&
           mode !== "singoff-viewer" &&
           role !== "publisher" &&
-          role !== "host")
+          role !== "host" &&
+          role !== "mai-voice-publisher")
 
       if (!viewerOnly) {
         console.warn("[livekit-token] Authentication failed for non-viewer request", {
@@ -563,9 +633,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     /*
+     * The requested participant category is resolved before the identity is
+     * built: the Mai Voice publisher joins as its own hidden participant so it
+     * never disturbs (or is disturbed by) the broadcaster's own LiveKit
+     * session, and that decision depends on the category.
+     */
+    let category = getRequestedCategory(body, mode, role);
+
+    /*
      * Never trust body.userId/body.identity as the authoritative user ID.
      */
-    const identity = normalizeIdentity(userId)
+    const identity = normalizeIdentity(
+      category === "mai-voice-publisher"
+        ? `mai-voice-${userId}`
+        : userId,
+    );
 
     if (!identity) {
       return withCors(
@@ -605,7 +687,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    let category = getRequestedCategory(body, mode, role);
     let isBattleRoom = false;
     let battleBroadcaster = false;
     let battleStatus = "";
@@ -819,11 +900,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
       });
 
       if (battleBroadcaster) {
-        category = "host";
+        // The Mai Voice publisher keeps its own restricted grant even inside a
+        // battle room: auxiliary audio only, never camera or microphone.
+        category =
+          category === "mai-voice-publisher"
+            ? "mai-voice-publisher"
+            : "host";
       } else if (
         category === "host" ||
         category === "publisher" ||
-        category === "seat"
+        category === "seat" ||
+        category === "mai-voice-publisher"
       ) {
         return withCors(
           {
@@ -909,6 +996,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     /*
+     * The Mai Voice publisher may only be created by the broadcaster of the
+     * room (or an administrator). It is a separate, hidden participant that
+     * publishes nothing but the generated speech.
+     */
+    if (
+      category === "mai-voice-publisher" &&
+      !userOwnsStream &&
+      !userIsAdmin &&
+      !(isBattleRoom && battleBroadcaster)
+    ) {
+      return withCors(
+        {
+          success: false,
+          error: "You are not authorized to publish voice for this broadcast.",
+          code: "mai_voice_publish_denied",
+        },
+        403,
+        req,
+      );
+    }
+
+    /*
      * A requested seat token requires an active stage pass.
      */
     if (
@@ -965,16 +1074,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const _isLive = isBattleRoom ? true : streamIsLive(stream);
 
     const participantName =
-      cleanString(body.displayName || body.name || body.participantName) ||
-      cleanString(profile?.display_name) ||
-      cleanString(profile?.username) ||
-      "Participant";
+      category === "mai-voice-publisher"
+        ? "Mai Voice"
+        : cleanString(body.displayName || body.name || body.participantName) ||
+        cleanString(profile?.display_name) ||
+        cleanString(profile?.username) ||
+        "Participant";
 
     const metadata = {
       userId,
       role: category,
       mode,
-      hidden: category === "ghost",
+      hidden: category === "ghost" || category === "mai-voice-publisher",
       qualityCap: "720p",
     };
 
@@ -1038,6 +1149,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         canSubscribe: categoryCanSubscribe(category),
 
         isGhost: category === "ghost",
+        isMaiVoicePublisher: category === "mai-voice-publisher",
         participantType: category,
         mode,
         qualityCap: "720p",
