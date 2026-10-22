@@ -464,6 +464,17 @@ export const MIN_ADMIN_SEAT_COUNT = 0;
 export const DEFAULT_SEAT_COUNT = 0;
 export const MAX_GUEST_SEATS = 4;
 
+// Broadcast guest seats are disabled for all users (including admins)
+// until October 31st 2026.
+export const BROADCAST_SEATS_DISABLED_UNTIL_ISO = '2026-10-31';
+
+export function areBroadcastSeatsDisabled(): boolean {
+  if (typeof window === 'undefined') return true;
+  const until = new Date(BROADCAST_SEATS_DISABLED_UNTIL_ISO);
+  until.setHours(23, 59, 59, 999);
+  return Date.now() < until.getTime();
+}
+
 // Helper to get the max box count, including the broadcaster.
 export function getAdminMaxSeatCount(): number {
   return MAX_ADMIN_SEAT_COUNT;

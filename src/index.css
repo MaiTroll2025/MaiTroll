@@ -706,27 +706,27 @@ button:focus-visible {
   }
 }
 
-/* Mobile flying chat — rises from the bottom input box and fades as it climbs */
-@keyframes mobile-rise {
+/* Mobile flying chat — falls from the top (under MaiBag) and fades as it drops */
+@keyframes mobile-fall {
   0% {
     transform: translateY(0) scale(0.85);
     opacity: 0;
   }
   12% {
-    transform: translateY(-12px) scale(1);
+    transform: translateY(12px) scale(1);
     opacity: 1;
   }
   70% {
     opacity: 1;
   }
   100% {
-    transform: translateY(-200px) scale(0.95);
+    transform: translateY(200px) scale(0.95);
     opacity: 0;
   }
 }
 
-.mobile-rise-chat {
-  animation: mobile-rise 14s ease-out forwards;
+.mobile-fall-chat {
+  animation: mobile-fall 14s ease-out forwards;
 }
 
 /* Floating MT tap indicator */

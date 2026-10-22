@@ -662,9 +662,25 @@ export default function PhoneAdminDashboard() {
       const rows: CoinPurchaseRow[] = txRows.map(tx => {
         const meta = tx.metadata || {}
 
+        const usdAmount =
+          [
+            meta.amount_paid,
+            meta.amount_usd,
+            meta.usd_amount,
+            meta.price_usd,
+            meta.payment_amount,
+            meta.total,
+            tx.amount_usd,
+            tx.usd_amount,
+            tx.amount,
+          ]
+            .map(Number)
+            .find(value => Number.isFinite(value) && value > 0) || 0
+
         const metadataCoins =
           Number(meta.coins_awarded || 0) ||
           Number(meta.coin_amount || 0) ||
+          Number(meta.coins_purchased || 0) ||
           Number(meta.coins || 0)
 
         const descriptionCoins = (() => {
@@ -691,7 +707,7 @@ export default function PhoneAdminDashboard() {
           user_id: tx.user_id || null,
           username: userName,
           amount_coins: Math.abs(coins),
-          amount_usd: Math.abs(Number(tx.amount || 0)),
+          amount_usd: usdAmount,
           type: tx.transaction_type || tx.type || 'purchase',
           source: rowSources.get(tx.id) || 'public.transactions',
           package_id: typeof meta.package_id === 'string' ? meta.package_id : null,

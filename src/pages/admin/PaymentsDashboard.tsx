@@ -101,7 +101,21 @@ export default function PaymentsDashboard() {
       // Transform data to match Transaction interface
       const transformed = (data || []).map((tx: any) => {
         const m = tx.metadata || {}
-        const usdPaid = Number(tx.usd_amount || tx.platform_profit || m.amount_paid || m.amount_usd || m.usd_amount || m.total || m.amount || 0)
+        const usdPaid =
+          [
+            tx.usd_amount,
+            tx.platform_profit,
+            m.amount_paid,
+            m.amount_usd,
+            m.usd_amount,
+            m.price_usd,
+            m.payment_amount,
+            m.total,
+            m.amount,
+            m.price,
+          ]
+            .map(Number)
+            .find(value => Number.isFinite(value) && value > 0) || 0
         const paymentRef =
           tx.paypal_order_id ||
           tx.paypal_capture_id ||
@@ -489,5 +503,4 @@ export default function PaymentsDashboard() {
     </div>
   )
 }
-
 

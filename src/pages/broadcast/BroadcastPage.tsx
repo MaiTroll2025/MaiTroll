@@ -526,7 +526,7 @@ const GhostAudioTrack = React.memo(function GhostAudioTrack({ participant }: { p
 
 import ShareModal from '@/components/broadcast/ShareModal'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
+import { MAX_GUEST_SEATS, areBroadcastSeatsDisabled } from '@/config/broadcastCategories'
 import { useBattleState } from '@/hooks/useBattleState'
 import { useBroadcastAbilities } from '@/hooks/useBroadcastAbilities'
 import { useBroadcastPinnedProducts } from '@/hooks/useBroadcastPinnedProducts'
@@ -1078,6 +1078,8 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
       hasCameraTrack: !!seat.remoteParticipantSnapshot?.cameraTrack,
     })))
   }, [viewerSeatCards])
+
+  const seatsEnabled = !areBroadcastSeatsDisabled()
 
   const userIdToLiveKitIdentity = useMemo(() => {
     const mapping: Record<string, string> = {};
@@ -6604,12 +6606,14 @@ const toggleMicrophone = useCallback(async () => {
                style={
                   isMobileHost && layoutMode === 'grid'
                     ? { gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', gap: viewerSeatCards.length >= 6 ? '2px' : '6px' }
-                    : !isMobileHost
+                      : !isMobileHost
                       ? layoutMode === 'grid'
                         ? { gridTemplateColumns: `repeat(${Math.min(totalBoxCount, 6)}, 1fr)`, gap: '12px' }
-                        : viewerSeatCards.length === 1
-                          ? { gridTemplateColumns: 'minmax(430px, 1fr) minmax(430px, 1fr) 360px' }
-                          : { gridTemplateColumns: 'minmax(430px, 1.05fr) minmax(360px, 1fr) 360px' }
+                        : seatsEnabled
+                          ? viewerSeatCards.length === 1
+                            ? { gridTemplateColumns: 'minmax(430px, 1fr) minmax(430px, 1fr) 360px' }
+                            : { gridTemplateColumns: 'minmax(430px, 1.05fr) minmax(360px, 1fr) 360px' }
+                          : { gridTemplateColumns: 'minmax(860px, 1fr) 360px' }
                       : undefined
              }>
                {/* Broadcast Frame as border decoration */}
@@ -7065,7 +7069,7 @@ const showFallback =
               )}
 
               {/* -- CENTER: Seats (desktop only - mobile seats overlay on video) -- */}
-              {!isMobileHost && layoutMode === 'split' && <aside
+              {!isMobileHost && layoutMode === 'split' && seatsEnabled && <aside
                 className={cn(
                   'flex h-auto min-h-0 flex-col overflow-hidden backdrop-blur-md shadow-[0_0_30px_rgba(45,212,191,0.10)] pb-4',
                   viewerSeatCards.length === 1
@@ -7338,7 +7342,7 @@ const showFallback =
                 }
 
                {/* -- GRID MODE: Individual seat tiles rendered as direct grid children -- */}
-               {layoutMode === 'grid' && viewerSeatCards.map((seat) => {
+               {layoutMode === 'grid' && seatsEnabled && viewerSeatCards.map((seat) => {
                  const matchedParticipant = seat.remoteParticipant
                  const participantDisplayName = matchedParticipant
                    ? getParticipantLabel(matchedParticipant, seat.displayName)
@@ -7670,20 +7674,35 @@ const showFallback =
                           setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
                           setChatInput('')
 
-                           // Auto-remove after 60 seconds
-                           trackedTimeout(() => {
-                             setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                           }, 60_000)
+                            // Auto-remove after 60 seconds
+                            trackedTimeout(() => {
+                              setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                            }, 60_000)
 
-                           try {
-                             const result = await sendChatThroughGate({ streamId, content: text })
-                             if (!result.ok) {
-                               setFloatingMessages(prev => prev.filter(message => message.id !== msgId))
-                               toast.error(result.error || 'Could not send chat message.')
-                             }
-                           } catch (err) {
-                             console.warn('[BroadcastPage] send-message failed:', err)
-                           }
+                            try {
+                              const result = await sendChatThroughGate({ streamId, content: text })
+                              if (!result.ok) {
+                                setFloatingMessages(prev => prev.filter(message => message.id !== msgId))
+                                toast.error(result.error || 'Could not send chat message.')
+                                return
+                              }
+
+                              const chatChannel = floatingChatChannelRef.current
+                              if (chatChannel) {
+                                try {
+                                  await chatChannel.send({
+                                    type: 'broadcast',
+                                    event: 'floating_chat',
+                                    payload: { username, content: text },
+                                  })
+                                } catch {
+                                  // DB message already succeeded; broadcast failure is non-fatal.
+                                }
+                              }
+                            } catch (err) {
+                              console.warn('[BroadcastPage] send-message failed:', err)
+                              setFloatingMessages(prev => prev.filter(message => message.id !== msgId))
+                            }
                         }}
                         className="mt-auto shrink-0 border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
                       >
@@ -8213,7 +8232,7 @@ const showFallback =
             {isMobileHost && (
               <>
                 {/* Seats overlay on broadcaster video — NOT in grid mode (grid renders seats inside <main>) */}
-                {layoutMode === 'split' && viewerSeatCards.length > 0 && (
+                {layoutMode === 'split' && seatsEnabled && viewerSeatCards.length > 0 && (
                   <div
                     className="absolute inset-x-0 bottom-0 z-20 flex flex-col pointer-events-none"
                     style={{
@@ -9034,7 +9053,7 @@ const showFallback =
                         setIsPaidChatModalOpen(true)
                       }}
                       onOpenMessage={() => setIsMessagePopupOpen(true)}
- onOpenSeatsModal={handleOpenSeatsModal}
+                      onOpenSeatsModal={seatsEnabled ? handleOpenSeatsModal : undefined}
                      onTrollUp={() => setShowTrollUpModal(true)}
                    />
                 </div>
@@ -9217,20 +9236,35 @@ const showFallback =
                          setFloatingMessages(prev => [{ id: msgId, username, content: text, createdAt: Date.now() }, ...prev].slice(-50))
                          recentChatKeysRef.current.set(`${username}:${text}`, Date.now())
                          setChatInput('')
-                         trackedTimeout(() => {
-                           setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                         }, 3000)
-                          try {
+                          trackedTimeout(() => {
+                            setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
+                          }, 3000)
+                            try {
                               const result = await sendChatThroughGate({ streamId, content: text })
                               if (!result.ok) {
                                 setFloatingMessages(prev => prev.filter(message => message.id !== msgId))
                                 toast.error(result.error || 'Could not send chat message.')
+                                return
+                              }
+
+                              const chatChannel = floatingChatChannelRef.current
+                              if (chatChannel) {
+                                try {
+                                  await chatChannel.send({
+                                    type: 'broadcast',
+                                    event: 'floating_chat',
+                                    payload: { username, content: text },
+                                  })
+                                } catch {
+                                  // DB message already succeeded; broadcast failure is non-fatal.
+                                }
                               }
                             } catch (err) {
                               console.warn('[BroadcastPage] send-message failed:', err)
+                              setFloatingMessages(prev => prev.filter(message => message.id !== msgId))
                             }
-                         }}
-                         className="mt-auto shrink-0 border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
+                          }}
+                          className="mt-auto shrink-0 border-t border-white/10 bg-black/15 px-3 py-2 backdrop-blur-md"
                        >
                       <input
                         type="text"

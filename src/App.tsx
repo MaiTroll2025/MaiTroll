@@ -565,6 +565,7 @@ const JobsApplicationPage = lazyWithRetry(() => import("./pages/ApplicationPage.
 const JobsStatusPage = lazyWithRetry(() => import("./pages/Jobs.tsx"));
 const SetupPage = lazyWithRetry(() => import("./pages/broadcast/SetupPage.js"));
 const GamingSetupPage = lazyWithRetry(() => import("./pages/broadcast/GamingSetupPage.tsx"));
+const BroadcastSchoolPage = lazyWithRetry(() => import("./pages/broadcast/BroadcastSchoolPage.tsx"));
 const GamingAnalytics = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingAnalytics.tsx"));
 const GamingCommunity = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingCommunity.tsx"));
 const GamingMonetization = lazyWithRetry(() => import("./pages/broadcast/gaming/GamingMonetization.tsx"));
@@ -1863,8 +1864,9 @@ const appShell = (
                        </RequireRole>
                      }
                    />
-                   <Route path="/broadcast/setup" element={<SetupPage />} />
-<Route path="/broadcast/setup/gaming" element={<GamingSetupPage />}>
+                    <Route path="/broadcast/setup" element={<SetupPage />} />
+                    <Route path="/broadcast/school" element={<BroadcastSchoolPage />} />
+                    <Route path="/broadcast/setup/gaming" element={<GamingSetupPage />}>
   <Route path="analytics" element={<GamingAnalytics />} />
   <Route path="community" element={<GamingCommunity />} />
   <Route path="monetization" element={<GamingMonetization />} />

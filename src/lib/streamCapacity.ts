@@ -92,3 +92,62 @@ export async function startBroadcastWithCapacityCheck(
     start_cap: Number(result.start_cap ?? 0),
   }
 }
+
+/**
+ * Broadcast School guard. Checks whether a user is restricted from starting
+ * a broadcast due to an active Broadcast School referral, cooldown, or
+ * incomplete review. Database-authoritative — frontend state is never trusted.
+ */
+export interface BroadcastSchoolStartGuardResult {
+  allowed: boolean
+  reason: string | null
+  code: string | null
+  in_broadcast_school: boolean
+  review_status: string | null
+  cooldown_until: string | null
+  attempts_count: number
+}
+
+export async function checkBroadcastSchoolBeforeStart(
+  userId: string | null,
+): Promise<BroadcastSchoolStartGuardResult> {
+  if (!userId) {
+    return {
+      allowed: false,
+      reason: 'Not signed in',
+      code: 'NOT_SIGNED_IN',
+      in_broadcast_school: false,
+      review_status: null,
+      cooldown_until: null,
+      attempts_count: 0,
+    }
+  }
+
+  const { data, error } = await supabase.rpc('can_start_broadcast_school_check', {
+    p_user_id: userId,
+  })
+
+  if (error) {
+    console.warn('[checkBroadcastSchoolBeforeStart] RPC error', error)
+    return {
+      allowed: false,
+      reason: 'Unable to verify Broadcast School status.',
+      code: 'VERIFICATION_ERROR',
+      in_broadcast_school: false,
+      review_status: null,
+      cooldown_until: null,
+      attempts_count: 0,
+    }
+  }
+
+  const result = (data ?? {}) as BroadcastSchoolStartGuardResult
+  return {
+    allowed: Boolean(result.allowed),
+    reason: result.reason ?? null,
+    code: result.code ?? null,
+    in_broadcast_school: Boolean(result.in_broadcast_school),
+    review_status: result.review_status ?? null,
+    cooldown_until: result.cooldown_until ?? null,
+    attempts_count: Number(result.attempts_count ?? 0),
+  }
+}

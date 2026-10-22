@@ -38,7 +38,7 @@ import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
-import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
+import { MAX_GUEST_SEATS, areBroadcastSeatsDisabled } from '@/config/broadcastCategories'
 
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import PetPresence from '@/components/pets/PetPresence'
@@ -192,6 +192,17 @@ export default function PhoneBroadcastPage() {
 
   const [chatInput, setChatInput] =
     useState('')
+
+  const msgBoxRef = useRef<HTMLDivElement>(null)
+
+  const [msgBoxHeight, setMsgBoxHeight] = useState(0)
+
+  useEffect(() => {
+    if (msgBoxRef.current) {
+      setMsgBoxHeight(msgBoxRef.current.offsetHeight)
+    }
+  }, [msgBoxRef.current, floatingMessages.length, chatInput])
+
 
   const [recentGifts, setRecentGifts] =
     useState<BroadcastGift[]>([])
@@ -1089,6 +1100,10 @@ export default function PhoneBroadcastPage() {
             return
           }
 
+          if (user?.id && payload?.payload?.user_id === user.id) {
+            return
+          }
+
           if (blockedUsernames.has(username.toLowerCase())) {
             return
           }
@@ -1157,7 +1172,7 @@ export default function PhoneBroadcastPage() {
         channel,
       )
     }
-  }, [streamId, blockedUsernames])
+   }, [streamId, blockedUsernames, user?.id])
 
   /*
    * ============================================================
@@ -1760,10 +1775,11 @@ export default function PhoneBroadcastPage() {
               await channel.send({
                 type: 'broadcast',
                 event: 'floating_chat',
-                payload: {
-                  username,
-                  content: text,
-                },
+              payload: {
+                username,
+                content: text,
+                user_id: user?.id,
+              },
               })
             } catch {
               // Database message already succeeded.
@@ -1789,6 +1805,7 @@ export default function PhoneBroadcastPage() {
         chatInput,
         streamId,
         user?.email,
+        user?.id,
       ],
     )
 
@@ -2255,7 +2272,10 @@ export default function PhoneBroadcastPage() {
       }
     >
       <GiftFlyOverlay streamId={streamId} />
-      <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black text-white">
+      <div
+        className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black text-white"
+        style={{ paddingBottom: msgBoxHeight }}
+      >
         {/* ======================================================
             BROADCAST VIDEO REGION
 
@@ -2313,7 +2333,6 @@ export default function PhoneBroadcastPage() {
             onClick={handleVideoTap}
             onTouchEnd={handleVideoTap}
           />
-          <PetPresence ownerId={stream?.user_id} streamId={streamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
         </div>
 
         <CashoutProgressBanner
@@ -2505,10 +2524,10 @@ export default function PhoneBroadcastPage() {
         )}
 
         {/* ======================================================
-            REMOTE SEATS ROW (top-left, compact)
+            REMOTE SEATS ROW (bottom, compact like PhoneViewerPage)
         ====================================================== */}
-        {phoneSeatSlots.length > 0 && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+7rem)]">
+        {!areBroadcastSeatsDisabled() && phoneSeatSlots.length > 0 && (
+          <div className="pointer-events-none absolute left-0 right-0 z-40 flex justify-center gap-1.5 px-2 transition-all duration-300 bottom-[calc(86px+env(safe-area-inset-bottom))]">
             {phoneSeatSlots.map((seat) => (
               seat.userId ? (
                 <RemoteSeatThumbnail
@@ -2537,13 +2556,13 @@ export default function PhoneBroadcastPage() {
             FLYING CHAT
         ====================================================== */}
         {floatingMessages.length > 0 && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-20 z-30 flex flex-col-reverse items-center gap-1 px-3">
+          <div className="pointer-events-none absolute inset-x-0 top-[calc(env(safe-area-inset-top)+100px)] z-30 flex flex-col items-center gap-1 px-3">
             {floatingMessages
               .slice(0, 8)
               .map((message) => (
                 <div
                   key={message.id}
-                  className="pointer-events-auto mobile-rise-chat"
+                  className="pointer-events-auto mobile-fall-chat"
                   onAnimationEnd={() =>
                     setFloatingMessages((previous) =>
                       previous.filter((item) => item.id !== message.id),
@@ -2614,7 +2633,7 @@ export default function PhoneBroadcastPage() {
                 onCameraOnAllSeats={cameraOnAllSeats}
                 seatControls={seatControls}
                 onTrollUp={() => setShowTrollUpModal(true)}
-                disabled={isEnding}
+                disabled={areBroadcastSeatsDisabled() || isEnding}
                 showCoinStore={false}
               />
           </div>
@@ -2739,6 +2758,42 @@ export default function PhoneBroadcastPage() {
           onComplete={maiVoice.completeClip}
         />
 
+        <div
+          ref={msgBoxRef}
+          className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/95 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] backdrop-blur-sm"
+        >
+          {floatingMessages.slice(0, 6).map((message) => (
+            <div
+              key={message.id}
+              className="mb-1.5 flex items-start gap-1.5"
+            >
+              <div className="min-w-0 flex-1">
+                {canClickFloatingChatUsername ? (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenFloatingChatUsername(message.username)}
+                    className="text-[9px] font-black text-cyan-300 transition-colors hover:text-cyan-100"
+                  >
+                    {message.username}
+                  </button>
+                ) : (
+                  <span className="text-[9px] font-black text-cyan-300">
+                    {message.username}
+                  </span>
+                )}
+                <div className="mt-0.5 text-[10px] font-semibold text-white/90 leading-snug">
+                  {message.text}
+                </div>
+              </div>
+              {message.isSystem && (
+                <span className="text-[8px] font-bold text-cyan-200/70">
+                  system
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
         {showMaiVoiceSettings && (
           <MaiVoiceSettingsPanel
             roomKind="stream"
@@ -2849,7 +2904,7 @@ onCameraOffAllSeats={cameraOffAllSeats}
                 onCameraOnAllSeats={cameraOnAllSeats}
                 seatControls={seatControls}
                 onTrollUp={() => setShowTrollUpModal(true)}
-                disabled={isEnding}
+                disabled={areBroadcastSeatsDisabled() || isEnding}
               />
             </div>
           </div>

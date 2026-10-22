@@ -30,6 +30,7 @@ import {
 
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
+import { checkBroadcastSchoolBeforeStart } from '@/lib/streamCapacity'
 import { PreflightStore } from '@/lib/preflightStore'
 import { usePreflightStore } from '@/lib/preflightStore'
 import { requestLiveKitToken } from '@/lib/livekitToken'
@@ -446,6 +447,13 @@ export default function PhoneGoLive() {
 
     if (!user?.id) {
       toast.error('You must be signed in to go live.')
+      return
+    }
+
+    // Broadcast School guard — database-authoritative, cannot be bypassed client-side.
+    const schoolGuard = await checkBroadcastSchoolBeforeStart(user.id);
+    if (!schoolGuard.allowed) {
+      toast.error(schoolGuard.reason || 'Broadcast School restriction prevents starting a broadcast.')
       return
     }
 

@@ -1,4 +1,4 @@
-import React, {
+﻿import React, {
   memo,
   useCallback,
   useEffect,
@@ -24,11 +24,12 @@ import {
 import { useCreditActivityHeartbeat } from '@/lib/hooks/useCreditActivityHeartbeat'
 import UserMiniProfile from '@/components/user/UserMiniProfile'
 import ChatMessageReportButton from '@/components/broadcast/ChatMessageReportButton'
-import { useBlockedUsers } from '@/hooks/useBlockedUsers'
+import { useChatBlockStatus } from '@/hooks/useChatBlockStatus'
 import ProtectionOrderGate from '@/components/ProtectionOrderGate'
 
 import {
   supabase,
+  getBlockedUserIds,
 } from '@/lib/supabase'
 import { recordSignalEventInBackground } from '@/lib/signalEngine'
 import { awardInvitePoint } from '@/lib/weeklyPointsService'
@@ -62,7 +63,6 @@ import {
 import UndoRecentGiftBar from '@/components/broadcast/UndoRecentGiftBar'
 import { BattlePot } from '@/components/broadcast/BattlePot'
 import { useTargetedGiftQueue, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
-import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
 
@@ -83,6 +83,7 @@ import {
 import {
   sendStreamBroadcast,
 } from '@/lib/realtime/streamRealtimeManager'
+import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 
 import {
   isValidUuid,
@@ -100,6 +101,10 @@ import {
   getAnonymousDisplayName,
   isAnonymousDisplayName,
 } from '@/lib/anonymousIdentity'
+
+import {
+  getBroadcastChatLockRemainingMs,
+} from '@/lib/broadcastModeration'
 
 import {
   toast,
@@ -938,6 +943,8 @@ function PhoneLocalVideo({
         track: videoTrack.mediaStreamTrack,
         isLocal: true,
       })
+      video.style.setProperty('transform', 'scaleX(-1)', 'important')
+      video.style.setProperty('scale', '1', 'important')
 
       video.play().catch(
         () => {},
@@ -962,6 +969,8 @@ function PhoneLocalVideo({
       track: videoTrack.mediaStreamTrack,
       isLocal: true,
     })
+    video.style.setProperty('transform', 'scaleX(-1)', 'important')
+    video.style.setProperty('scale', '1', 'important')
   }, [videoTrack])
 
   return (
@@ -1023,6 +1032,10 @@ export default function PhoneViewerPage() {
     profile,
   } = useAuthStore()
   useCreditActivityHeartbeat(resolvedStreamId, 'viewer', !!user?.id)
+  const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(
+    user?.id,
+    resolvedStreamId,
+  )
   const leaveCurrentRoomRef = useRef<() => Promise<void>>(async () => {})
   const leaveAudienceRef = useRef<() => Promise<void>>(async () => {})
 
@@ -1094,12 +1107,14 @@ export default function PhoneViewerPage() {
     const deltaY = touch.clientY - start.y
     const elapsed = Math.max(1, performance.now() - start.time)
 
-    if (Math.abs(deltaY) < 48 || Math.abs(deltaY) <= Math.abs(deltaX) * 1.15) return
+    // Stream navigation is horizontal: swipe left goes to the next stream;
+    // swipe right returns to the previous stream. Ignore vertical scrolling gestures.
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.15) return
 
-    const velocity = Math.abs(deltaY) / elapsed
-    if (Math.abs(deltaY) < 90 && velocity < 0.35) return
+    const velocity = Math.abs(deltaX) / elapsed
+    if (Math.abs(deltaX) < 90 && velocity < 0.35) return
 
-    navigateStreamBySwipe(deltaY < 0 ? 'next' : 'previous')
+    navigateStreamBySwipe(deltaX < 0 ? 'next' : 'previous')
   }, [navigateStreamBySwipe])
 
   useEffect(() => {
@@ -1190,10 +1205,28 @@ export default function PhoneViewerPage() {
   const [floatingMessages, setFloatingMessages] =
     useState<Array<{id: string, username: string, content: string, timestamp: number, isSystem?: boolean}>>([])
 
-  const { blockedUsernames } = useBlockedUsers()
+  const [blockedUsernames, setBlockedUsernames] =
+    useState<Set<string>>(new Set())
 
   const [chatInput, setChatInput] =
     useState('')
+
+  const chatBoxRef = useRef<HTMLDivElement>(null)
+
+  const [chatBoxHeight, setChatBoxHeight] = useState(0)
+
+  useEffect(() => {
+    if (chatBoxRef.current) {
+      setChatBoxHeight(chatBoxRef.current.offsetHeight)
+    }
+  }, [chatBoxRef.current, floatingMessages.length, chatInput])
+
+  const [hostChatDisabledByOfficerState, setHostChatDisabledByOfficerState] =
+    useState(false)
+  const [hostChatDisabledUntil, setHostChatDisabledUntil] =
+    useState<string | null>(null)
+  const [hostChatDisableRemainingMs, setHostChatDisableRemainingMs] =
+    useState(0)
 
   const [viewerCount, setViewerCount] =
     useState(0)
@@ -1756,57 +1789,6 @@ export default function PhoneViewerPage() {
     }
   }, [stream?.user_id])
 
-  /* ========================================================================
-     CHAT MESSAGES (FLYING CHAT)
-   ======================================================================== */
-
-  useEffect(() => {
-    if (!resolvedStreamId) return
-
-    const channel = supabase.channel(
-      `stream:${resolvedStreamId}`,
-    )
-
-    channel.on(
-      'broadcast',
-      { event: 'chat_message' },
-      (payload) => {
-        const chatData =
-          payload.payload || {}
-
-        const text =
-          chatData.text ||
-          chatData.content ||
-          ''
-
-        if (!text) return
-
-        const username =
-          chatData.username || 'Viewer'
-
-        const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-        setFloatingMessages((previous) =>
-          [{ id: msgId, username, content: text, timestamp: Date.now() }, ...previous].slice(0, 50),
-        )
-
-        setTimeout(() => {
-          setFloatingMessages((previous) =>
-            previous.filter((m) => m.id !== msgId),
-          )
-        }, 8000)
-      },
-    )
-
-    channel.subscribe()
-
-    return () => {
-      void supabase.removeChannel(
-        channel,
-      )
-    }
-  }, [resolvedStreamId])
-
 const canClickFloatingChatUsername =
       hasModActionsAccess(profile)
 
@@ -2075,6 +2057,93 @@ const canClickFloatingChatUsername =
       },
     )
   leaveAudienceRef.current = leaveAudience
+
+  /* Blocked usernames for chat filtering */
+  useEffect(() => {
+    if (!user?.id) {
+      setBlockedUsernames(new Set())
+      return
+    }
+    getBlockedUserIds().then(async (ids) => {
+      if (ids.length === 0) {
+        setBlockedUsernames(new Set())
+        return
+      }
+      const idList = Array.from(ids)
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('username, email')
+        .or(idList.map((id) => `id.eq.${id}`).join(','))
+      const names = new Set<string>()
+      profiles?.forEach((p: any) => {
+        if (p.username) names.add(p.username.toLowerCase())
+      })
+      setBlockedUsernames(names)
+    }).catch(() => {})
+  }, [user?.id])
+
+  /* Host chat lock (officer disabled) */
+  useEffect(() => {
+    const broadcasterId = stream?.user_id
+    if (!resolvedStreamId || !broadcasterId) {
+      setHostChatDisabledByOfficerState(false)
+      setHostChatDisabledUntil(null)
+      return
+    }
+
+    let mounted = true
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const applyLockState = (data: any) => {
+      if (!mounted) return
+      setHostChatDisabledByOfficerState(!!data?.broadcast_chat_disabled)
+      setHostChatDisabledUntil(data?.broadcast_chat_disabled_until ?? null)
+    }
+
+    const fetchHostChatLock = async () => {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('broadcast_chat_disabled, broadcast_chat_disabled_until, broadcast_chat_disabled_stream_id')
+        .eq('id', broadcasterId)
+        .maybeSingle()
+      if (!mounted) return
+      applyLockState(data)
+    }
+
+    channel = supabase
+      .channel(`broadcast-chat-lock:${resolvedStreamId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'user_profiles',
+        filter: `id=eq.${broadcasterId}`,
+      }, (payload) => {
+        applyLockState(payload.new)
+      })
+      .subscribe()
+
+    void fetchHostChatLock()
+    const interval = window.setInterval(fetchHostChatLock, 30_000)
+
+    return () => {
+      mounted = false
+      window.clearInterval(interval)
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [resolvedStreamId, stream?.user_id])
+
+  useEffect(() => {
+    const updateRemaining = () => {
+      setHostChatDisableRemainingMs(getBroadcastChatLockRemainingMs(hostChatDisabledUntil))
+    }
+
+    updateRemaining()
+    const interval = window.setInterval(updateRemaining, 1000)
+
+    return () => window.clearInterval(interval)
+  }, [hostChatDisabledUntil])
 
   const cashoutBanner = useCashoutBanner({
     userId: user?.id,
@@ -2496,6 +2565,7 @@ const canClickFloatingChatUsername =
         const username = newRow.user_name || newRow.username || 'Viewer'
         const content = newRow.content || ''
         if (!content) return
+        if (content.trimStart().startsWith('GIFT_EVENT:')) return
 
         const chatKey = `${username}:${content}`
         const now = Date.now()
@@ -2617,36 +2687,47 @@ const canClickFloatingChatUsername =
     stream?.battle_id ?? null,
   )
 
-  /* ========================================================================
-     FLOATING CHAT
-  ======================================================================== */
+/* ========================================================================
+   FLOATING CHAT — shared stream channel for phone viewers and broadcasters
+ ======================================================================== */
 
   useEffect(() => {
-    if (!resolvedStreamId) return
+    if (!resolvedStreamId) {
+      floatingChatChannelRef.current = null
+      return
+    }
 
     const channel = supabase.channel(`floating-chat:${resolvedStreamId}`)
     floatingChatChannelRef.current = channel
 
     channel
       .on('broadcast', { event: 'floating_chat' }, (payload: any) => {
-        const { username, content, isSystem } = payload.payload || {}
+        const { username, content, isSystem, message_id } = payload.payload || {}
         if (!username || !content) return
         if (blockedUsernames.has(username.toLowerCase())) return
-
-        const chatKey = `${username}:${content}`
-        const now = Date.now()
-        const existingTs = recentChatKeysRef.current.get(chatKey)
-        if (existingTs !== undefined && now - existingTs < 1500) return
-        recentChatKeysRef.current.set(chatKey, now)
-
-        const msgId = `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-        setFloatingMessages((prev) =>
-          [{ id: msgId, username, content, timestamp: Date.now(), isSystem }, ...prev].slice(0, 50)
-        )
+        const messageId = String(message_id || '').trim()
+        if (messageId && processedMessageIdsRef.current.has(messageId)) return
+        if (messageId) {
+          processedMessageIdsRef.current.add(messageId)
+          if (processedMessageIdsRef.current.size > 500) {
+            const oldest = processedMessageIdsRef.current.values().next().value
+            if (oldest) processedMessageIdsRef.current.delete(oldest)
+          }
+        }
+        const msgId = messageId || `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        setFloatingMessages((previous) => {
+          if (previous.some((message) => message.id === msgId)) return previous
+          return [{
+            id: msgId,
+            username,
+            content,
+            timestamp: Date.now(),
+            isSystem,
+          }, ...previous].slice(0, 50)
+        })
 
         window.setTimeout(() => {
-          setFloatingMessages((prev) => prev.filter((m) => m.id !== msgId))
+          setFloatingMessages((previous) => previous.filter((message) => message.id !== msgId))
         }, 30_000)
       })
       .subscribe()
@@ -2657,7 +2738,93 @@ const canClickFloatingChatUsername =
         supabase.removeChannel(channel)
       }
     }
-   }, [resolvedStreamId, blockedUsernames])
+  }, [blockedUsernames, resolvedStreamId])
+
+  /* Stream-chat subscription — receives messages broadcast via sendChatThroughGate
+     (web broadcaster + phone viewers that send through the gate). Same channel as
+     BroadcastPage so phone and web see each other's messages. */
+  const streamChatChannelRef =
+    useRef<ReturnType<typeof supabase.channel> | null>(null)
+
+  useEffect(() => {
+    if (!resolvedStreamId) {
+      streamChatChannelRef.current = null
+      return
+    }
+
+    const channel = supabase.channel(`stream-chat:${resolvedStreamId}`)
+    streamChatChannelRef.current = channel
+
+    channel
+      .on('broadcast', { event: 'chat' }, (payload: any) => {
+        // send-message publishes a signed envelope. The actual chat fields are
+        // nested in envelope.d (user_name, content, message_id), not at the
+        // top level. Keep legacy payload formats working as well.
+        const envelope = payload?.payload || payload || {}
+        const messageData =
+          envelope?.d ||
+          envelope?.data?.d ||
+          envelope?.data ||
+          envelope?.payload?.d ||
+          envelope?.payload ||
+          {}
+
+        const username = String(
+          messageData?.user_name ||
+          messageData?.username ||
+          envelope?.user_name ||
+          envelope?.username ||
+          'Viewer'
+        ).trim()
+        const content = String(
+          messageData?.content ||
+          envelope?.content ||
+          envelope?.message ||
+          ''
+        ).trim()
+        const messageId = String(
+          envelope?.message_id ||
+          messageData?.message_id ||
+          envelope?.txn_id ||
+          envelope?.id ||
+          ''
+        ).trim()
+
+        if (!username || !content) return
+        if (blockedUsernames.has(username.toLowerCase())) return
+
+        const msgId = messageId || `remote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        if (processedMessageIdsRef.current.has(msgId)) return
+        processedMessageIdsRef.current.add(msgId)
+        if (processedMessageIdsRef.current.size > 500) {
+          const oldest = processedMessageIdsRef.current.values().next().value
+          if (oldest) processedMessageIdsRef.current.delete(oldest)
+        }
+
+        setFloatingMessages((previous) => {
+          if (previous.some((message) => message.id === msgId)) return previous
+          return [{
+            id: msgId,
+            username,
+            content,
+            timestamp: Date.now(),
+            isSystem: false,
+          }, ...previous].slice(0, 50)
+        })
+
+        window.setTimeout(() => {
+          setFloatingMessages((previous) => previous.filter((message) => message.id !== msgId))
+        }, 30_000)
+      })
+      .subscribe()
+
+    return () => {
+      streamChatChannelRef.current = null
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [blockedUsernames, resolvedStreamId])
 
   /* ========================================================================
      BROADCASTER
@@ -3931,6 +4098,84 @@ useEffect(() => {
       hostId,
     ])
 
+  const handleSendChat = useCallback(
+    async (text: string) => {
+      if (!text.trim()) return
+
+      if (hostChatDisabledByOfficerState) {
+        toast.error(
+          hostChatDisableRemainingMs
+            ? `Chat is disabled by officer control. Try again in ${Math.ceil(hostChatDisableRemainingMs / 60000)} minute(s).`
+            : 'Chat is disabled by officer control'
+        )
+        return
+      }
+
+      if (userChatDisabled) {
+        toast.error(
+          chatDisabledRemainingMinutes
+            ? `Your chat is disabled. Try again in ${chatDisabledRemainingMinutes} minute${chatDisabledRemainingMinutes === 1 ? '' : 's'}.`
+            : 'Your chat has been permanently disabled in this stream.'
+        )
+        return
+      }
+
+      if (!user) {
+        return
+      }
+
+      const username =
+        profile?.username ||
+        user?.email?.split('@')?.[0] ||
+        anonDisplayName ||
+        'Viewer'
+      const trimmed = text.trim()
+      const optimisticId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+      setFloatingMessages((previous) => [{
+        id: optimisticId,
+        username,
+        content: trimmed,
+        timestamp: Date.now(),
+      }, ...previous].slice(0, 50))
+      setChatInput('')
+
+      try {
+        const result = await sendChatThroughGate({
+          streamId: resolvedStreamId || '',
+          content: trimmed,
+        })
+
+        if (!result.ok || !result.envelope) {
+          throw new Error(result.error || 'The chat service did not confirm the message.')
+        }
+
+        const { envelope } = result
+        const canonicalId = envelope.message_id
+
+        setFloatingMessages((previous) => {
+          let next = previous.filter((m) => m.id !== optimisticId)
+          if (!next.some((m) => m.id === canonicalId)) {
+            next = [{
+              id: canonicalId,
+              username: String(envelope.d?.user_name) || username,
+              content: String(envelope.d?.content) || trimmed,
+              timestamp: Date.now(),
+            }, ...next]
+          }
+          return next.slice(0, 50)
+        })
+        processedMessageIdsRef.current.add(canonicalId)
+
+      } catch (err) {
+        setFloatingMessages((previous) => previous.filter((message) => message.id !== optimisticId))
+        console.error('[PhoneViewerPage] chat send failed:', err)
+        toast.error('Could not send your chat message. Please try again.')
+      }
+    },
+    [hostChatDisabledByOfficerState, hostChatDisableRemainingMs, userChatDisabled, chatDisabledRemainingMinutes, user, profile, anonDisplayName, resolvedStreamId]
+  )
+
   const handleOpenShareModal = useCallback(() => {
     setIsShareModalOpen(true)
   }, [])
@@ -4400,8 +4645,6 @@ useEffect(() => {
             className="absolute inset-0 z-[2]"
             onClick={handleVideoTap}
           />
-          <PetPresence ownerId={broadcasterId} streamId={resolvedStreamId} className="left-2 right-auto top-1/2 bottom-auto -translate-y-1/2" />
-
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black-70" />
 
           {mySeat && !shouldShowRandomBattleArena && (
@@ -4468,7 +4711,7 @@ useEffect(() => {
 
         {stream && (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-            <div className="pointer-events-auto flex w-full items-center gap-1 rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
+            <div className="pointer-events-auto flex w-full items-center gap-1.5 rounded-[1.15rem] border border-cyan-300/25 bg-gradient-to-r from-[#070B18]/95 via-[#0B1326]/88 to-[#070B18]/95 px-2 py-0.5 shadow-[0_0_16px_rgba(0,229,255,0.10),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md">
               <div className="min-w-0 flex-1">
                 <MobileAudienceTicker
                   audience={audienceWithAnon}
@@ -4486,16 +4729,26 @@ useEffect(() => {
                   type="button"
                   onClick={leave}
                   aria-label="Go back"
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 bg-black/50 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-90"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-cyan-300/40 bg-gradient-to-br from-[#10253A]/95 to-[#080D1B]/95 text-white shadow-[0_0_16px_rgba(0,229,255,0.18),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-xl transition duration-200 hover:border-cyan-200/70 active:scale-90"
                 >
-                  <ArrowLeft size={22} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
+                  <ArrowLeft size={21} className="text-[#00E5FF] drop-shadow-[0_0_8px_rgba(0,229,255,0.65)]" />
                 </button>
               )}
             </div>
 
+            {stream?.user_id && (
+              <BattlePot
+                broadcasterId={stream.user_id}
+                streamId={resolvedStreamId}
+                isMobile
+                className="pointer-events-auto w-full overflow-hidden rounded-2xl border border-[#FFD166]/35 shadow-[0_0_20px_rgba(255,209,102,0.09)]"
+                onBattleStart={() => {}}
+              />
+            )}
+
             <div className="flex w-full items-start justify-between gap-2">
               {/* City Status Orb and Mai Bag stay directly under the ticker. */}
-              <div className="pointer-events-auto flex shrink-0 flex-col items-start gap-1.5">
+              <div className="pointer-events-auto flex shrink-0 flex-col items-start gap-1.5 bg-transparent border-0 p-0 shadow-none backdrop-blur-none">
                 {broadcasterCityStatus.data && (
                   <CityStatusOrb
                     data={broadcasterCityStatus.data}
@@ -4514,7 +4767,7 @@ useEffect(() => {
 
               {/* Like / Gift / Share / Invite stay directly under the ticker. */}
               <div className="pointer-events-auto flex min-w-0 flex-1 items-center justify-end gap-1.5">
-              <div className="ml-auto flex items-center gap-1.5">
+              <div className="ml-auto flex items-center gap-1.5 rounded-2xl border border-white/10 bg-[#070B18]/55 p-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.25)] backdrop-blur-xl">
                 <button
                   type="button"
                   onClick={() => {
@@ -4527,17 +4780,17 @@ useEffect(() => {
                       700,
                     )
                   }}
-                  className="flex h-8 w-8 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                  className="flex h-10 w-10 flex-col items-center justify-center rounded-full border border-[#FF36B7]/35 bg-gradient-to-br from-[#29132B]/95 to-[#090D1A]/95 shadow-[0_0_12px_rgba(255,54,183,0.12)] backdrop-blur-xl transition duration-200 hover:border-[#FF36B7]/70 active:scale-90"
                 >
                   <Heart
-                    size={12}
+                    size={15}
                     className={cn(
                       liked
-                        ? 'fill-pink-300 text-pink-300'
-                        : 'text-white',
+                        ? 'fill-[#FF36B7] text-[#FF36B7]'
+                        : 'text-[#FF70C8]',
                     )}
                   />
-                  <span className="text-[6px] font-black leading-none text-white">
+                  <span className="mt-0.5 text-[8px] font-black leading-none text-white">
                     {Math.max(
                       0,
                       Number(
@@ -4553,46 +4806,37 @@ useEffect(() => {
                 <button
                   type="button"
                   onClick={handleGift}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-violet-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[#8B5CFF]/45 bg-gradient-to-br from-[#20163B]/95 to-[#090D1A]/95 shadow-[0_0_13px_rgba(139,92,255,0.16)] backdrop-blur-xl transition duration-200 hover:border-[#8B5CFF]/80 active:scale-90"
                 >
                   <Gift
-                    size={12}
-                    className="text-violet-300"
+                    size={17}
+                    className="text-[#B49AFF] drop-shadow-[0_0_7px_rgba(139,92,255,0.55)]"
                   />
                 </button>
 
                 <button
                   type="button"
                   onClick={handleOpenShareModal}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-cyan-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[#00E5FF]/40 bg-gradient-to-br from-[#10283A]/95 to-[#080D1B]/95 shadow-[0_0_13px_rgba(0,229,255,0.14)] backdrop-blur-xl transition duration-200 hover:border-[#00E5FF]/75 active:scale-90"
                 >
                   <Share2
-                    size={12}
-                    className="text-cyan-300"
+                    size={17}
+                    className="text-[#00E5FF] drop-shadow-[0_0_7px_rgba(0,229,255,0.55)]"
                   />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => void handleInviteFollowers()}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-emerald-300/20 bg-black/40 backdrop-blur-xl transition active:scale-90"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[#00F5A0]/40 bg-gradient-to-br from-[#0D302A]/95 to-[#080D1B]/95 shadow-[0_0_13px_rgba(0,245,160,0.13)] backdrop-blur-xl transition duration-200 hover:border-[#00F5A0]/75 active:scale-90"
                   aria-label="Invite followers"
                   title="Invite followers"
                 >
-                  <Bell size={12} className="text-emerald-300" />
+                  <Users size={17} className="text-[#00F5A0] drop-shadow-[0_0_7px_rgba(0,245,160,0.50)]" />
                 </button>
               </div>
             </div>
           </div>
-          {stream?.user_id && (
-            <BattlePot
-              broadcasterId={stream.user_id}
-              streamId={resolvedStreamId}
-              isMobile
-              className="pointer-events-auto w-full"
-              onBattleStart={() => {}}
-            />
-          )}
         </div>
         )}
 
@@ -4662,10 +4906,10 @@ useEffect(() => {
         {!battleActive &&
           seatCards.length > 0 && (
             <div
-              className={cn(
-                'absolute left-0 right-0 z-40 px-2 transition-all duration-300',
-                'bottom-[calc(86px+env(safe-area-inset-bottom))]',
-              )}
+              className="absolute left-0 right-0 z-40 px-2"
+              style={{
+                bottom: `calc(176px + env(safe-area-inset-bottom))`,
+              }}
               onClick={event =>
                 event.stopPropagation()
               }
@@ -4923,24 +5167,22 @@ useEffect(() => {
             FLYING CHAT
         ================================================================= */}
 
-{!battleActive && floatingMessages.length > 0 && (
-          <div className="absolute inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col-reverse items-center gap-1 pointer-events-none px-3">
-            {floatingMessages.slice(0, 8).map((msg) => (
+{floatingMessages.length > 0 && (
+          <div className="absolute inset-x-0 top-[calc(env(safe-area-inset-top)+80px)] z-40 flex flex-col items-center gap-1 pointer-events-none px-3">
+            {floatingMessages.slice(0, 5).map((msg) => (
               <div
                 key={msg.id}
-                className="mobile-rise-chat pointer-events-auto"
-                onAnimationEnd={() =>
-                  setFloatingMessages((previous) =>
-                    previous.filter((item) => item.id !== msg.id),
-                  )
-                }
+                className="mobile-fall-chat pointer-events-auto"
+                // Do not remove the message when the flying animation ends.
+                // The same message is also rendered in the bottom chat box;
+                // removing it here made the chat appear to flash and disappear.
               >
                 {msg.isSystem ? (
-                  <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 backdrop-blur-md">
+                  <div className="rounded-full border border-[#00E5FF]/35 bg-[#070B18]/85 px-3 py-1.5 shadow-[0_0_14px_rgba(0,229,255,0.10)] backdrop-blur-xl">
                     <span className="text-[10px] font-semibold text-cyan-200/90">{msg.content}</span>
                   </div>
                 ) : (
-                  <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
+                  <div className="rounded-full border border-white/15 bg-gradient-to-r from-[#070B18]/95 to-[#0B1326]/90 px-3 py-1.5 shadow-[0_5px_18px_rgba(0,0,0,0.25)] backdrop-blur-xl">
                     {canClickFloatingChatUsername ? (
                       <button
                         type="button"
@@ -4975,53 +5217,51 @@ useEffect(() => {
 
         {!battleActive && (
           <div
-            className="absolute bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#050711]/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+            ref={chatBoxRef}
+            className="fixed bottom-0 left-0 right-0 z-50 border-t border-transparent bg-transparent px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] backdrop-blur-none"
             onClick={event =>
               event.stopPropagation()
             }
           >
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault()
-                  const text = chatInput.trim()
-                  if (!text || !resolvedStreamId) return
-
-                  if (!user) {
-                    return
-                  }
-
-                  const username = profile?.username || user?.email?.split('@')?.[0] || anonDisplayName || 'Viewer'
-                  const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-                  setFloatingMessages(prev => [{ id: msgId, username, content: text, timestamp: Date.now() }, ...prev].slice(0, 50))
-                  setChatInput('')
-
-                  window.setTimeout(() => {
-                    setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                  }, 30_000)
-
-                  try {
-                    const result = await sendChatThroughGate({ streamId: resolvedStreamId, content: text })
-                  if (!result.ok) {
-                    setFloatingMessages(prev => prev.filter(m => m.id !== msgId))
-                    const errMsg = String(result.error || '').toLowerCase()
-                    if (errMsg.includes('disabled')) {
-                      // chat disabled - silently remove optimistic message
-                    }
-                    return
-                  }
-
-                  const chatChannel = floatingChatChannelRef.current
-                  if (chatChannel) {
-                    chatChannel.send({
-                      type: 'broadcast',
-                      event: 'floating_chat',
-                      payload: { username, content: text },
-                    }).catch(() => {})
-                  }
-                } catch {
-                  // ignore
-                }
+            <div className="max-h-[112px] overflow-y-auto overscroll-contain bg-transparent [scrollbar-width:none]" style={{ scrollbarWidth: 'none' }}>
+            {floatingMessages.slice(0, 5).map((msg) => (
+              <div
+                key={msg.id}
+                className="mb-1.5 flex items-start gap-1.5"
+              >
+                <div className="min-w-0 flex-1">
+                  {canClickFloatingChatUsername ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenFloatingChatUsername(msg.username)}
+                      className="text-[9px] font-black text-cyan-300 transition-colors hover:text-cyan-100"
+                    >
+                      {msg.username}
+                    </button>
+                  ) : (
+                    <span className="text-[9px] font-black text-cyan-300">
+                      {msg.username}
+                    </span>
+                  )}
+                  <div className="mt-0.5 text-[10px] font-semibold text-white/90 leading-snug">
+                    {msg.content}
+                  </div>
+                </div>
+                {msg.isSystem && (
+                  <span className="text-[8px] font-bold text-cyan-200/70">
+                    system
+                  </span>
+                )}
+              </div>
+            ))}
+            </div>
+            {floatingMessages.length > 0 && (
+              <div className="h-px w-full bg-white/10 my-2" />
+            )}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                void handleSendChat(chatInput)
               }}
               className="flex items-center gap-2"
             >
@@ -5033,7 +5273,6 @@ useEffect(() => {
                 maxLength={280}
                 className="h-10 min-w-0 flex-1 rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
               />
-              <TrollUpFloatingButton />
             </form>
 
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -5281,15 +5520,4 @@ useEffect(() => {
   )
 }
 
-function TrollUpFloatingButton() {
-  const navigate = useNavigate()
-  return (
-    <button
-      type="button"
-      onClick={() => navigate('/troll-up')}
-      className="h-10 shrink-0 flex items-center gap-1.5 rounded-lg border border-cyan-400/40 bg-slate-950/90 px-3 text-xs font-black text-cyan-300 shadow-[0_0_18px_rgba(45,212,191,0.25)] backdrop-blur-xl active:scale-95"
-    >
-      <Zap className="h-4 w-4" /> Troll Up
-    </button>
-  )
-}
+

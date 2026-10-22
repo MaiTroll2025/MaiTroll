@@ -20,6 +20,8 @@ import { PhoneButton } from '../components/PhoneButton'
 import { PhoneBadgeDisplay } from '../components/PhoneBadgeDisplay'
 import { PhoneBadgeList } from '../components/PhoneBadgeDisplay'
 
+import PhoneBottomNav from '../layout/PhoneBottomNav'
+
 import AvatarUpload from '../../components/profile/AvatarUpload'
 import CoverPhotoUpload, {
   CoverPhotoUploadRef,
@@ -1654,7 +1656,8 @@ export default function PhoneProfile() {
    * NO QUICK ACCESS.
    */
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#03050B] text-white">
+    <>
+      <div className="relative min-h-screen w-full overflow-x-hidden bg-[#03050B] text-white pb-24">
       {/* Neon atmosphere */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -left-40 top-20 h-80 w-80 rounded-full bg-[#00BFFF]/10 blur-[110px]" />
@@ -2148,6 +2151,9 @@ export default function PhoneProfile() {
         </p>
       </main>
     </div>
+
+    <PhoneBottomNav />
+    </>
   )
 }
 

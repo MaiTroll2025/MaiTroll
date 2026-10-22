@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
+import { checkBroadcastSchoolBeforeStart } from '@/lib/streamCapacity';
 import { useTCNNRoles } from '@/hooks/useTCNNRoles';
 import TCNNVirtualStudio from '@/components/tcnn/TCNNVirtualStudio';
 import { Card } from '@/components/ui/card';
@@ -102,6 +103,15 @@ export default function TCNNSetupPage() {
       toast.error('Your driver license is currently suspended. You cannot go live.');
       return;
     }
+
+    // Broadcast School guard — database-authoritative.
+    const schoolGuard = await checkBroadcastSchoolBeforeStart(user.id);
+    if (!schoolGuard.allowed) {
+      toast.error(schoolGuard.reason || 'Broadcast School restriction prevents starting a broadcast.');
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
 
     try {

@@ -140,7 +140,7 @@ BEGIN
   -- Auxiliary: Coin Transaction for welcome bonus (Safe to fail)
   BEGIN
     INSERT INTO public.coin_transactions (user_id, type, amount, description, created_at)
-    VALUES (NEW.id, 'purchase', 100, 'Welcome bonus coins!', NOW())
+    VALUES (NEW.id, 'welcome_bonus', 1, 'Welcome bonus coins!', NOW())
     ON CONFLICT DO NOTHING;
   EXCEPTION WHEN OTHERS THEN
     RAISE WARNING 'Error inserting coin_transaction for %: %', NEW.id, SQLERRM;

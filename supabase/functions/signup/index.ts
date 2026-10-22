@@ -57,42 +57,6 @@ Deno.serve(async (req: Request) => {
       req.headers.get("x-real-ip") ||
       null
 
-    // Check for duplicate account on same IP (non-exempt users only)
-    if (clientIP) {
-      const { data: dupCheck, error: dupCheckError } = await supabase.rpc(
-        "check_duplicate_account_on_ip",
-        {
-          p_ip_address: clientIP,
-          p_email: cleanEmail,
-          p_role: role || "user",
-        },
-      )
-
-      if (dupCheckError) {
-        console.error(
-          `[Signup ${requestId}] Duplicate IP check error:`,
-          dupCheckError,
-        )
-      } else if (dupCheck?.is_duplicate) {
-        console.warn(
-          `[Signup ${requestId}] Duplicate account blocked for email ${cleanEmail} from IP ${clientIP}: ${dupCheck.message}`,
-        )
-        return withCors(
-          {
-            success: false,
-            error:
-              "An account already exists for this IP address. " +
-              "Each household member must use a different network. " +
-              "If you believe this is an error, please contact support.",
-            ip_blocked: true,
-            existing_username: dupCheck.existing_username,
-          },
-          403,
-          req,
-        )
-      }
-    }
-
     const { data: emailUser, error: emailCheckError } =
       await supabase
         .from("user_profiles")

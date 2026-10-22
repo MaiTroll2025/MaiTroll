@@ -17,7 +17,7 @@ import CameraOffImageUpload from '../../components/broadcast/CameraOffImageUploa
 import { toast } from 'sonner';
 import { useBroadcastLockdown } from '@/hooks/useBroadcastLockdown';
 import { useBroadcastViewerCap } from '@/hooks/useBroadcastViewerCap';
-import { startBroadcastWithCapacityCheck } from '@/lib/streamCapacity';
+import { startBroadcastWithCapacityCheck, checkBroadcastSchoolBeforeStart } from '@/lib/streamCapacity';
 import { requestLiveKitToken } from '@/lib/livekitToken';
 import { generateUUID } from '../../lib/uuid';
 import { RANDOM_BATTLE_ENABLED } from '../../config/featureFlags';
@@ -36,6 +36,7 @@ import {
   MIN_ADMIN_SEAT_COUNT,
   DEFAULT_SEAT_COUNT,
   MAX_GUEST_SEATS,
+  areBroadcastSeatsDisabled,
 } from '../../config/broadcastCategories';
 import { awardKeyToUser } from '../../services/keyService';
 import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore';
@@ -1441,6 +1442,15 @@ const handleStartStream = async () => {
       toast.error('You must agree to the Broadcast Agreement before starting.');
       return;
     }
+
+    // Broadcast School guard — database-authoritative, cannot be bypassed client-side.
+    const schoolGuard = await checkBroadcastSchoolBeforeStart(user.id);
+    if (!schoolGuard.allowed) {
+      toast.error(schoolGuard.reason || 'Broadcast School restriction prevents starting a broadcast.');
+      setInlineAgreementChecked(false);
+      return;
+    }
+
     setInlineAgreementChecked(false);
     await handleConfirmedStreamStart();
   };
@@ -1571,8 +1581,8 @@ const handleStartStream = async () => {
            status: 'starting',
            is_live: false,
            started_at: null,
-            box_count: seatCount === 0 ? 1 : Math.min(MAX_GUEST_SEATS, seatCount) + 1,
-            seat_count: Math.min(MAX_GUEST_SEATS, seatCount),
+             box_count: areBroadcastSeatsDisabled() ? 1 : (seatCount === 0 ? 1 : Math.min(MAX_GUEST_SEATS, seatCount) + 1),
+             seat_count: areBroadcastSeatsDisabled() ? 0 : Math.min(MAX_GUEST_SEATS, seatCount),
            layout_mode: layoutMode,
             random_battle_queue_enabled: RANDOM_BATTLE_ENABLED && category === 'general' && (battleMode === 'world' || battleMode === 'state') ? randomBattleQueueEnabled : false,
            random_battle_queued_at: null,
@@ -1724,7 +1734,7 @@ const handleStartStream = async () => {
         try {
             await supabase.rpc('start_smoke_event', {
               p_stream_id: data.id,
-              p_seat_count: Math.min(MAX_GUEST_SEATS, seatCount),
+              p_seat_count: areBroadcastSeatsDisabled() ? 0 : Math.min(MAX_GUEST_SEATS, seatCount),
             });
           console.log('[SetupPage] Smoke event created for stream:', data.id);
         } catch (smokeErr) {
@@ -2305,6 +2315,7 @@ const handleStartStream = async () => {
 
             {/* Seat Count Selector */}
             {(() => {
+              if (areBroadcastSeatsDisabled()) return null;
               const effectiveMaxSeats = seatCap.enabled ? Math.min(MAX_GUEST_SEATS, seatCap.max) : MAX_GUEST_SEATS;
               return (
                 <div className="flex-1 bg-zinc-900/80 rounded-xl border border-amber-500/20 p-3 flex flex-col justify-between">
