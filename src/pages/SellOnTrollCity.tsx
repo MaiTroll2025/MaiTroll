@@ -163,7 +163,7 @@ export default function SellOnTrollCity() {
     if (!name.trim()) return toast.error('Enter a shop name')
     const { data, error } = await supabase
       .from('MaiTroll_shops')
-      .insert([{ owner_id: user!.id, name }])
+      .insert([{ owner_id: user!.id, name, is_active: true }])
       .select('*')
       .maybeSingle()
     if (error) return toast.error(error.message)
@@ -203,8 +203,8 @@ export default function SellOnTrollCity() {
 
       toast.success('Seller application submitted successfully!')
 
-      // Redirect to home/dashboard with state
-      navigate('/live', {
+      // Redirect back to sell page so user can see application status
+      navigate('/sell', {
         state: { submitted: 'seller' }
       })
     } catch (error: any) {
@@ -466,9 +466,16 @@ export default function SellOnTrollCity() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
-                    <p className="text-yellow-400 text-sm">⚠️ You must apply and meet all requirements before creating a shop</p>
-                  </div>
+                  {!isVerifiedSeller && (
+                    <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
+                      <p className="text-yellow-400 text-sm">⚠️ You must apply and meet all requirements before creating a shop</p>
+                    </div>
+                  )}
+                  {isVerifiedSeller && (
+                    <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3">
+                      <p className="text-green-400 text-sm">✓ Application Approved! You can now create your shop.</p>
+                    </div>
+                  )}
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}

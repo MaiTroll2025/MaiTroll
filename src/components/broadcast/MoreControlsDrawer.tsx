@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { Mic, MicOff, Video, VideoOff, Camera, Shield, LogOut, Gift, Share2, Ban, UserMinus, Radio, Sparkles, X, Megaphone, MessageSquareOff, MessageSquare, Users, Zap } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Camera, Shield, LogOut, Gift, Share2, Ban, UserMinus, Radio, Sparkles, X, Megaphone, MessageSquareOff, MessageSquare, Users, Zap, ShoppingBag } from 'lucide-react';
 import { cn } from '../../lib/utils'
 import RecoveryBanner from './RecoveryBanner'
 
@@ -40,6 +40,8 @@ interface MoreControlsDrawerProps {
   onPaidChat?: () => void
   onOpenSeatsModal?: () => void
   onTrollUp?: () => void
+
+  onPinProducts?: () => void
 }
 
 export default function MoreControlsDrawer({
@@ -74,6 +76,7 @@ export default function MoreControlsDrawer({
   onPaidChat,
   onOpenSeatsModal,
   onTrollUp,
+  onPinProducts,
 }: MoreControlsDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
 
@@ -296,6 +299,14 @@ export default function MoreControlsDrawer({
                         icon={Zap}
                         label="Troll Up"
                         onClick={onTrollUp}
+                      />
+                    )}
+
+                    {isHost && onPinProducts && (
+                      <ControlButton
+                        icon={ShoppingBag}
+                        label="Shop Items"
+                        onClick={onPinProducts}
                       />
                     )}
                   </div>

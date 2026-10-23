@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { awardInvitePoint } from '@/lib/weeklyPointsService'
 
 import { useStreamSeats } from '@/hooks/useStreamSeats'
+import { useBroadcastPinnedProducts } from '@/hooks/useBroadcastPinnedProducts'
 import { useLiveBroadcast } from '@/hooks/useLiveBroadcast'
 import { applyCameraVideoPresentation } from '@/lib/cameraVideoPresentation'
 import { useStreamAudiencePresence, type StreamAudienceMember } from '@/hooks/useStreamAudiencePresence'
@@ -51,6 +52,7 @@ import { useCityStatusOrb } from '@/lib/hooks/useCityStatusOrb'
 import BattleView from '@/pages/broadcast/BattleView'
 
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
+import PinProductModal from '@/components/broadcast/PinProductModal'
 import MaiBag from '@/components/mai-bag/MaiBag'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import GiftFlyOverlay from '@/components/broadcast/GiftFlyOverlay'
@@ -171,6 +173,15 @@ export default function PhoneBroadcastPage() {
 
   const [showHostSettings, setShowHostSettings] =
     useState(false)
+
+  const [isPinProductModalOpen, setIsPinProductModalOpen] =
+    useState(false)
+
+  const { pinProduct } = useBroadcastPinnedProducts({
+    streamId: stream?.id || routeStreamId || '',
+    userId: user?.id,
+    isHost: stream?.user_id === user?.id,
+  })
 
   const [showRandomBattleBanner, setShowRandomBattleBanner] =
     useState(false)
@@ -2633,6 +2644,7 @@ export default function PhoneBroadcastPage() {
                 onCameraOnAllSeats={cameraOnAllSeats}
                 seatControls={seatControls}
                 onTrollUp={() => setShowTrollUpModal(true)}
+                onPinProducts={() => setIsPinProductModalOpen(true)}
                 disabled={areBroadcastSeatsDisabled() || isEnding}
                 showCoinStore={false}
               />
@@ -2904,9 +2916,25 @@ onCameraOffAllSeats={cameraOffAllSeats}
                 onCameraOnAllSeats={cameraOnAllSeats}
                 seatControls={seatControls}
                 onTrollUp={() => setShowTrollUpModal(true)}
+                onPinProducts={() => setIsPinProductModalOpen(true)}
                 disabled={areBroadcastSeatsDisabled() || isEnding}
               />
             </div>
+          </div>
+        )}
+
+        {isPinProductModalOpen && (
+          <div className="pointer-events-auto">
+          <PinProductModal
+            isOpen={isPinProductModalOpen}
+            onClose={() => setIsPinProductModalOpen(false)}
+            onProductPinned={async (productId) => {
+              const result = await pinProduct(productId);
+              if (!result.success) {
+                toast.error('Failed to pin product');
+              }
+            }}
+          />
           </div>
         )}
 

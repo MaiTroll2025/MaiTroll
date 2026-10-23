@@ -350,7 +350,7 @@ export function ProfileHeader({
                 {isOwnProfile && onCoverEdit && (
                     <button
                         onClick={onCoverEdit}
-                        className="absolute bottom-4 right-4 rounded-full bg-slate-950/80 border border-white/20 px-3 py-2 text-white hover:bg-slate-900 hover:border-white/40 transition flex items-center gap-1.5"
+                        className="absolute bottom-4 right-4 z-40 rounded-full bg-slate-950/80 border border-white/20 px-3 py-2 text-white hover:bg-slate-900 hover:border-white/40 transition flex items-center gap-1.5"
                         title="Change cover photo"
                     >
                         <Camera className="h-4 w-4" />

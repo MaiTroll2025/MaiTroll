@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Settings, X, Mic, MicOff, Video, VideoOff, Camera, Gift, Share2, Mail, Power, Sparkles, Megaphone, Users, ShieldCheck, Coins, UserPlus, MessageSquare, Zap } from 'lucide-react';
+import { Settings, X, Mic, MicOff, Video, VideoOff, Camera, Gift, Share2, Mail, Power, Sparkles, Megaphone, Users, ShieldCheck, Coins, UserPlus, MessageSquare, Zap, ShoppingBag } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { MAX_GUEST_SEATS } from '../../config/broadcastCategories';
 
@@ -37,6 +37,7 @@ interface MobileBroadcastHostSettingsProps {
   onCameraOffAllSeats?: () => void;
   onCameraOnAllSeats?: () => void;
   onTrollUp?: () => void;
+  onPinProducts?: () => void;
   seatControls?: Array<{
     index: number
     username: string
@@ -170,6 +171,7 @@ export default function MobileBroadcastHostSettings({
   onCameraOffAllSeats,
   onCameraOnAllSeats,
   onTrollUp,
+  onPinProducts,
   seatControls = [],
   disabled = false,
   showCoinStore = true,
@@ -238,6 +240,15 @@ export default function MobileBroadcastHostSettings({
       bgColor: 'bg-pink-500/15',
       borderColor: 'border-pink-400/30',
       action: onGift,
+    },
+    {
+      id: 'shop',
+      label: 'Shop Items',
+      icon: ShoppingBag,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/15',
+      borderColor: 'border-purple-400/30',
+      action: onPinProducts,
     },
     {
       id: 'share',

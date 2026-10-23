@@ -33,6 +33,7 @@ export default function PinProductModal({
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [userShopId, setUserShopId] = useState<string | null>(null);
 
   // Get user's shop
@@ -219,6 +220,19 @@ export default function PinProductModal({
                           {product.stock_quantity > 0 ? `${product.stock_quantity} left` : 'Out of stock'}
                         </span>
                       )}
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-gray-400 text-xs">Qty</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantities[product.id] ?? 1}
+                        onChange={(e) => {
+                          const val = Math.max(1, Number(e.target.value) || 1);
+                          setQuantities((prev) => ({ ...prev, [product.id]: val }));
+                        }}
+                        className="w-12 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white text-xs"
+                      />
                     </div>
                   </motion.button>
                 ))}

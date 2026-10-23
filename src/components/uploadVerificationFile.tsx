@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { Profile } from '../types/database'
 import { supabase } from '../lib/supabase'
+import { notifyNewUserSignup } from '../lib/notifications'
 import { AuthContext } from '../hooks/useVerificationAuth'
 
 export interface SignUpPayload {
@@ -139,6 +140,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (profileError) {
       throw profileError
     }
+
+    await notifyNewUserSignup(username, userId)
   }
 
   const signIn = async (email: string, password: string) => {

@@ -550,7 +550,7 @@ import { hydrateGiftForOverlay } from '@/lib/gifts'
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore'
-import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Ticket, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, ArrowLeft, Gamepad2, Image as Image, AlertTriangle, AlertCircle, SlidersHorizontal } from 'lucide-react'
+import { Maximize2, MessageSquare, Mic, MicOff, Video, VideoOff, Crown, X, Plus, Minus, Users, Pin, Lock, UserPlus, Wifi, ArrowLeft, Gamepad2, Image as Image, AlertTriangle, AlertCircle, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import AbilityBox from '@/components/broadcast/AbilityBox'
 import BattleView from '@/pages/broadcast/BattleView'
@@ -2731,7 +2731,7 @@ const ranked = senderIds
    // Quick Coin Store
    const [isCoinStoreOpen, setIsCoinStoreOpen] = useState(false)
 
-   const { pinnedProducts, pinProduct } = useBroadcastPinnedProducts({
+   const { pinProduct } = useBroadcastPinnedProducts({
     streamId: streamId || '',
     userId: user?.id,
     isHost,
@@ -7022,49 +7022,8 @@ const showFallback =
                   )} title={`camera ${cameraEnabled ? 'on' : 'off'}`}>
                     {cameraEnabled ? <Video className="h-3.5 w-3.5" /> : <VideoOff className="h-3.5 w-3.5" />}
                   </span>
-</div>
+                </div>
 
-                  {/* Pinned product overlay */}
-                 {(() => {
-                   const pinned = pinnedProducts.find((p: any) => p.stream_id === stream?.id);
-                   if (!pinned) return null;
-                   const imgSrc = (pinned as any).image_url || (pinned as any).imageUrl || (pinned as any)?.product?.image_url || null;
-                   const title = (pinned as any).title || (pinned as any).name || (pinned as any)?.product?.name || 'Product';
-                   const priceVal = (pinned as any).price_coins || (pinned as any).coin_price || (pinned as any).price || (pinned as any)?.product?.price || 0;
-                   return (
-                     <div className="absolute bottom-6 left-6 z-20 w-[min(310px,calc(100%-32px))] rounded-2xl border border-purple-400/30 bg-[#120b1f]/90 p-4 shadow-[0_0_30px_rgba(168,85,247,0.35)] backdrop-blur-xl">
-                       <div className="mb-3 flex items-center justify-between">
-                         <span className="rounded-lg bg-purple-500/40 px-2.5 py-1 text-[11px] font-black uppercase text-purple-100">
-                           Pinned Product
-                         </span>
-                         {isHost && (
-                           <button
-                             onClick={() => pinProduct(pinned.id)}
-                             className="rounded-md p-1 text-white/50 hover:text-white transition-colors"
-                             aria-label="Remove pinned product"
-                           >
-                             <X className="h-4 w-4" />
-                           </button>
-                         )}
-                       </div>
-                       <div className="flex items-center gap-3">
-                         <div className="h-16 w-16 shrink-0 rounded-xl bg-white/8 overflow-hidden">
-                           {imgSrc ? (
-                             <img src={imgSrc} alt={title} className="h-full w-full object-cover" />
-                           ) : (
-                             <div className="h-full w-full grid place-items-center text-violet-300">
-                               <Ticket className="h-7 w-7" />
-                              </div>
-                        )}
-                      </div>
-                         <div className="min-w-0">
-                           <p className="text-sm font-bold text-white truncate">{title}</p>
-                           <p className="mt-1 text-xs text-white/60">{priceVal.toLocaleString()} coins</p>
-                         </div>
-                       </div>
-                     </div>
-                   )
-                 })()}
                </section>
               )}
 
@@ -8828,20 +8787,20 @@ const showFallback =
                   </div>
                 </div>
               )}
-              {isPinProductModalOpen && (
-                <div className="pointer-events-auto">
-                <PinProductModal
-                  isOpen={isPinProductModalOpen}
-                  onClose={handleClosePinProductModal}
-                  onProductPinned={async (productId) => {
-                    const result = await pinProduct(productId);
-                    if (!result.success) {
-                      toast.error('Failed to pin product');
-                    }
-                  }}
-                />
-                </div>
-              )}
+               {isPinProductModalOpen && (
+                 <div className="pointer-events-auto">
+                 <PinProductModal
+                   isOpen={isPinProductModalOpen}
+                   onClose={handleClosePinProductModal}
+                   onProductPinned={async (productId) => {
+                     const result = await pinProduct(productId);
+                     if (!result.success) {
+                       toast.error('Failed to pin product');
+                     }
+                   }}
+                 />
+                 </div>
+               )}
 
               {/* User Action Modal (for gifts, mod actions, etc.) */}
               {userActionTarget && (
@@ -9055,6 +9014,7 @@ const showFallback =
                       onOpenMessage={() => setIsMessagePopupOpen(true)}
                       onOpenSeatsModal={seatsEnabled ? handleOpenSeatsModal : undefined}
                      onTrollUp={() => setShowTrollUpModal(true)}
+                    onPinProducts={() => setIsPinProductModalOpen(true)}
                    />
                 </div>
               )}

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Upload, Check } from 'lucide-react';
 import CoverPhotoEditor from './CoverPhotoEditor';
@@ -28,6 +29,8 @@ export default forwardRef<CoverPhotoUploadRef, CoverPhotoUploadProps>(function C
   userId: propUserId
 }: CoverPhotoUploadProps, ref) {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, _setIsUploading] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
@@ -43,7 +46,14 @@ export default forwardRef<CoverPhotoUploadRef, CoverPhotoUploadProps>(function C
     triggerFileSelect
   }), [triggerFileSelect]);
 
-  const effectiveUserId = propUserId || user?.id;
+  const effectiveUserId = user?.id;
+
+  if (propUserId && user?.id && propUserId !== user.id) {
+    console.error('[CoverPhotoUpload] User ID mismatch', {
+      authenticatedUserId: user.id,
+      requestedUserId: propUserId,
+    });
+  }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,6 +110,17 @@ export default forwardRef<CoverPhotoUploadRef, CoverPhotoUploadProps>(function C
       const fileExt = result.file.name.split('.').pop() || 'jpg';
       const filePath = `${effectiveUserId}/${timestamp}.${fileExt}`;
 
+      const { data: { user: authenticatedUser }, error: authError } =
+        await supabase.auth.getUser();
+
+      console.log('[Cover upload RLS diagnostic]', {
+        authenticatedUserId: authenticatedUser?.id,
+        effectiveUserId,
+        idsMatch: authenticatedUser?.id === effectiveUserId,
+        authError: authError?.message,
+        filePath,
+      });
+
       const { error: uploadError } = await supabase.storage
         .from('covers')
         .upload(filePath, result.file, {
@@ -144,6 +165,13 @@ export default forwardRef<CoverPhotoUploadRef, CoverPhotoUploadProps>(function C
       setPreview(null);
 
       onUploadComplete?.(publicUrl);
+
+      // Navigate to the appropriate profile page so users can see their cover photo
+      const isPhoneRoute = location.pathname.includes('/phone');
+      const targetPath = isPhoneRoute ? '/phone/profile' : '/profile';
+      if (location.pathname !== targetPath) {
+        navigate(targetPath, { replace: true });
+      }
 
       const user = useAuthStore.getState().user;
       const username = user?.user_metadata?.username || 'Someone';
