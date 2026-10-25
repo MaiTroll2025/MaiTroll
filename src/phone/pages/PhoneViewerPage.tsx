@@ -7,7 +7,7 @@
   useState,
 } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Bell, Gift, Heart, Mic, MicOff, Plus, Radio, Share2, Users, Video, VideoOff, X, Zap } from 'lucide-react';
+import { ArrowLeft, Gift, Heart, Mic, MicOff, Plus, Radio, Share2, Users, Video, VideoOff, X } from 'lucide-react';
 
 import {
   RoomEvent,
@@ -1213,13 +1213,14 @@ export default function PhoneViewerPage() {
 
   const chatBoxRef = useRef<HTMLDivElement>(null)
 
-  const [chatBoxHeight, setChatBoxHeight] = useState(0)
+  const [_chatBoxHeight, setChatBoxHeight] = useState(0)
 
   useEffect(() => {
-    if (chatBoxRef.current) {
-      setChatBoxHeight(chatBoxRef.current.offsetHeight)
+    const el = chatBoxRef.current
+    if (el) {
+      setChatBoxHeight(el.offsetHeight)
     }
-  }, [chatBoxRef.current, floatingMessages.length, chatInput])
+  }, [floatingMessages.length, chatInput])
 
   const [hostChatDisabledByOfficerState, setHostChatDisabledByOfficerState] =
     useState(false)

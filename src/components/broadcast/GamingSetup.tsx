@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { BarChart3, ChevronDown, Gamepad2, Loader2, Mail, Mic, MicOff, MonitorPlay, Pause, Power, Radio, Settings, ShieldCheck, Users, Video, VideoOff, Volume2, VolumeX, AlertTriangle, Eye, Activity, Layout } from 'lucide-react';
+import { BarChart3, ChevronDown, Eye, EyeOff, Gamepad2, Loader2, Mail, Mic, MicOff, MonitorPlay, Pause, Power, Radio, Settings, ShieldCheck, Users, Video, VideoOff, Volume2, VolumeX, AlertTriangle, Activity, Layout } from 'lucide-react';
 import { cn } from '@/lib/utils'
 import { SceneConfig } from '@/components/broadcast/GamingSceneManager'
 import TipBanner from '@/components/broadcast/TipBanner'
@@ -80,6 +80,25 @@ interface GamingSetupProps {
   onGenerateCredentials?: () => void | Promise<void>
   onRegenerateCredentials?: () => void | Promise<void>
   onTestStream?: () => void | Promise<void>
+  // Camera overlay layout (percent-based, synced to viewers)
+  cameraLayout?: {
+    xPercent: number
+    yPercent: number
+    widthPercent: number
+    radius: number
+  }
+  onUpdateCameraLayout?: (updates: Partial<{
+    xPercent: number
+    yPercent: number
+    widthPercent: number
+    radius: number
+  }>) => void
+  // On-screen overlay text
+  overlayText?: string
+  overlayTextVisible?: boolean
+  onSetOverlayText?: (text: string) => void
+  onToggleOverlayText?: () => void
+  onClearOverlayText?: () => void
 }
 
 // Two-phase flow: preview → live
@@ -129,7 +148,16 @@ export function GamingSetup({
   inlineAgreementChecked = false,
   onInlineAgreementChange,
 streamId,
-  userId
+  userId,
+  // Camera overlay layout
+  cameraLayout: _cameraLayout = { xPercent: 3, yPercent: 3, widthPercent: 32, radius: 12 },
+  onUpdateCameraLayout,
+  // Overlay text
+  overlayText = '',
+  overlayTextVisible = true,
+  onSetOverlayText,
+  onToggleOverlayText,
+  onClearOverlayText,
   }: GamingSetupProps) {
   const [showGameSearch, setShowGameSearch] = React.useState(false)
   const [gameSearchQuery, setGameSearchQuery] = React.useState('')
@@ -350,6 +378,38 @@ streamId,
             </div>
           </Panel>
           <Panel>
+            <PanelHeader icon={<Activity className="h-4 w-4" />} title="Camera &amp; Overlay" />
+            <div className="p-4 space-y-3">
+              <OverlayTextControls
+                text={overlayText}
+                visible={overlayTextVisible}
+                onSetText={onSetOverlayText}
+                onToggle={onToggleOverlayText}
+                onClear={onClearOverlayText}
+              />
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Camera Layout</div>
+              <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-slate-300 space-y-1">
+                <div className="flex justify-between">
+                  <span>X</span>
+                  <span>{Math.round(_cameraLayout.xPercent)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Y</span>
+                  <span>{Math.round(_cameraLayout.yPercent)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Width</span>
+                  <span>{Math.round(_cameraLayout.widthPercent)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Radius</span>
+                  <span>{Math.round(_cameraLayout.radius)}px</span>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-500">Drag the camera preview to reposition. Drag the bottom-right corner to resize. Layout syncs to viewers live.</p>
+            </div>
+          </Panel>
+          <Panel>
             <PanelHeader icon={<Settings className="h-4 w-4" />} title="Stream Settings" />
             <div className="divide-y divide-white/10 p-4">
               <div className="pb-4">
@@ -452,7 +512,11 @@ streamId,
 
               {/* Draggable camera overlay (like OBS) — shows during both preview and live */}
               {(isPreviewing || isLive) && isCameraEnabled && cameraStream && (
-                <DraggableCameraOverlay stream={cameraStream} />
+                <DraggableCameraOverlay
+                  stream={cameraStream}
+                  layout={_cameraLayout}
+                  onUpdate={onUpdateCameraLayout}
+                />
               )}
 
               {/* Stream info overlay */}
@@ -613,13 +677,30 @@ function LocalVideoPreview({ stream, muted = true }: { stream: MediaStream | nul
   );
 }
 
-/** Draggable camera overlay — like OBS webcam overlay */
-function DraggableCameraOverlay({ stream }: { stream: MediaStream | null }) {
+/** Draggable + resizable camera overlay — like OBS webcam overlay.
+    Position/size are percent-based and synced to viewers via stream metadata.
+    Supports mouse and touch input. */
+function DraggableCameraOverlay({
+  stream,
+  layout,
+  onUpdate,
+}: {
+  stream: MediaStream | null
+  layout: { xPercent: number; yPercent: number; widthPercent: number; radius: number }
+  onUpdate: (updates: Partial<{ xPercent: number; yPercent: number; widthPercent: number; radius: number }>) => void
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [position, setPosition] = useState({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = useState(false);
-  const dragOffset = useRef({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0, clientX: 0, clientY: 0 });
+  const resizeStart = useRef({ width: 0, clientX: 0, clientY: 0 });
+
+  // Keep latest props in refs so callbacks stay stable
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
   // Attach camera stream to video element
   useEffect(() => {
@@ -629,49 +710,98 @@ function DraggableCameraOverlay({ stream }: { stream: MediaStream | null }) {
     return () => { el.srcObject = null; };
   }, [stream]);
 
-  // Mouse drag handlers
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const MIN_WIDTH = 12;
+  const MAX_WIDTH = 60;
+
+  const applyUpdate = useCallback((next: Partial<{ xPercent: number; yPercent: number; widthPercent: number; radius: number }>) => {
+    const l = layoutRef.current;
+    const w = Number.isFinite(next.widthPercent) ? Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, next.widthPercent!)) : l.widthPercent;
+    const x = Number.isFinite(next.xPercent) ? Math.min(95 - w, Math.max(0, next.xPercent!)) : l.xPercent;
+    const y = Number.isFinite(next.yPercent) ? Math.min(85, Math.max(0, next.yPercent!)) : l.yPercent;
+    const r = Number.isFinite(next.radius) ? Math.min(28, Math.max(0, next.radius!)) : l.radius;
+    onUpdateRef.current({ xPercent: x, yPercent: y, widthPercent: w, radius: r });
+  }, []);
+
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent, clientX: number, clientY: number) => {
     e.preventDefault();
     setIsDragging(true);
-    dragOffset.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    };
-  }, [position]);
+    const l = layoutRef.current;
+    dragStart.current = { x: l.xPercent, y: l.yPercent, clientX, clientY };
+  }, []);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent | React.TouchEvent, clientX: number, clientY: number) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const l = layoutRef.current;
+    resizeStart.current = { width: l.widthPercent, clientX, clientY };
+  }, []);
+
+  const moveHandler = useCallback((clientX: number, clientY: number) => {
+    if (isDragging) {
+      const dx = clientX - dragStart.current.clientX;
+      const dy = clientY - dragStart.current.clientY;
+      const dxPct = (dx / window.innerWidth) * 100;
+      const dyPct = (dy / window.innerHeight) * 100;
+      applyUpdate({ xPercent: dragStart.current.x + dxPct, yPercent: dragStart.current.y + dyPct });
+    }
+    if (isResizing) {
+      const dx = clientX - resizeStart.current.clientX;
+      const dxPct = (dx / window.innerWidth) * 100;
+      applyUpdate({ widthPercent: resizeStart.current.width + dxPct });
+    }
+  }, [isDragging, isResizing, applyUpdate]);
+
+  const endHandler = useCallback(() => {
+    setIsDragging(false);
+    setIsResizing(false);
+  }, []);
 
   useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setPosition({
-        x: e.clientX - dragOffset.current.x,
-        y: e.clientY - dragOffset.current.y,
-      });
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    if (!isDragging && !isResizing) return;
+    const handleMove = (e: MouseEvent) => moveHandler(e.clientX, e.clientY);
+    const handleUp = () => endHandler();
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
     };
-  }, [isDragging]);
+  }, [isDragging, isResizing, moveHandler, endHandler]);
+
+  useEffect(() => {
+    if (!isDragging && !isResizing) return;
+    const handleMove = (e: TouchEvent) => {
+      const t = e.touches[0];
+      moveHandler(t.clientX, t.clientY);
+    };
+    const handleUp = () => endHandler();
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('touchend', handleUp);
+    return () => {
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleUp);
+    };
+  }, [isDragging, isResizing, moveHandler, endHandler]);
 
   return (
     <div
       ref={containerRef}
-      className="absolute z-30 cursor-move"
-      style={{ left: position.x, top: position.y }}
-      onMouseDown={handleMouseDown}
+      className="absolute z-30 pointer-events-auto"
+      style={{
+        left: `${layout.xPercent}%`,
+        top: `calc(env(safe-area-inset-top) + ${layout.yPercent}%)`,
+        width: `${layout.widthPercent}%`,
+        aspectRatio: '4 / 3',
+        borderRadius: `${layout.radius}px`,
+        maxWidth: '70vw',
+      }}
     >
-      <div className={cn(
-        'relative overflow-hidden rounded-xl border-2 shadow-2xl transition',
-        isDragging ? 'border-cyan-300 shadow-cyan-500/30' : 'border-white/20'
-      )} style={{ width: 200, height: 150 }}>
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-xl border-2 shadow-2xl transition',
+          (isDragging || isResizing) ? 'border-cyan-300 shadow-cyan-500/30' : 'border-white/20'
+        )}
+      >
         <video
           ref={videoRef}
           autoPlay
@@ -684,8 +814,89 @@ function DraggableCameraOverlay({ stream }: { stream: MediaStream | null }) {
           <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
           CAM
         </div>
+        {/* Drag handle (top edge) */}
+        <div
+          className="absolute top-0 left-0 right-0 h-2 cursor-move bg-black/40"
+          onMouseDown={(e) => handleDragStart(e, e.clientX, e.clientY)}
+          onTouchStart={(e) => handleDragStart(e, e.touches[0].clientX, e.touches[0].clientY)}
+        />
+        {/* Resize handle (bottom-right corner) */}
+        <div
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-white/20 rounded-bl-[inherit]"
+          onMouseDown={(e) => handleResizeStart(e, e.clientX, e.clientY)}
+          onTouchStart={(e) => handleResizeStart(e, e.touches[0].clientX, e.touches[0].clientY)}
+        />
       </div>
     </div>
+  );
+}
+
+/** On-screen text controls for the host. */
+function OverlayTextControls({
+  text,
+  visible,
+  onSetText,
+  onToggle,
+  onClear,
+}: {
+  text: string
+  visible: boolean
+  onSetText: (text: string) => void
+  onToggle: () => void
+  onClear: () => void
+}) {
+  const [input, setInput] = useState(text);
+
+  useEffect(() => { setInput(text); }, [text]);
+
+  return (
+    <Panel>
+      <PanelHeader icon={<Activity className="h-4 w-4" />} title="On-Screen Text" />
+      <div className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Display Text</span>
+          <button
+            type="button"
+            onClick={onToggle}
+            className={cn('grid h-7 w-7 place-items-center rounded-lg border transition', visible
+              ? 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200'
+              : 'border-red-300/30 bg-red-500/10 text-red-200')}
+          >
+            {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </button>
+        </div>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onBlur={() => onSetText(input)}
+          placeholder="Type on-screen text..."
+          className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none focus:border-cyan-300/50"
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => { setInput(''); onClear(); }}
+            disabled={!input}
+            className="flex-1 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Clear Text
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggle()}
+            className="flex-1 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/[0.08]"
+          >
+            {visible ? 'Hide' : 'Show'}
+          </button>
+        </div>
+        {input && (
+          <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs font-bold text-white/80">
+            Preview: {input}
+          </div>
+        )}
+      </div>
+    </Panel>
   );
 }
 

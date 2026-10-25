@@ -16,7 +16,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { applyCors, corsHeaders, handleCorsPreflight, withCors } from '../_shared/cors.ts';
+import { applyCors, handleCorsPreflight, withCors } from '../_shared/cors.ts';
 import {
   getMaiVoiceProvider,
   getFallbackVoiceId,
@@ -29,14 +29,14 @@ import {
 } from '../_shared/maiVoiceProvider.ts';
 import {
   canModerateRoom,
-  checkVoiceEligibility, checkMaiVoiceRestriction,
+  checkVoiceEligibility,
   normalizeSpeechText,
   resolveLiveKitRoomName,
 } from '../_shared/maiVoiceModeration.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const SIGNING_SECRET = Deno.env.get('SIGNING_SECRET_K1') || 'fallback-secret-k1-change-me';
+const _SIGNING_SECRET = Deno.env.get('SIGNING_SECRET_K1') || 'fallback-secret-k1-change-me';
 
 const CONSENT_VERSION = 'mai-voice-2026-10-21';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -1442,9 +1442,9 @@ async function processOneQueueItem(roomKind: 'stream' | 'battle', roomId: string
   }
 
   let storagePath = item.storage_path as string | null;
-  let durationMs = item.duration_ms as number | null;
-  let mimeType = 'audio/mpeg';
-  let isPersonalized = item.is_personalized === true;
+  const _durationMs = item.duration_ms as number | null;
+  const _mimeType = 'audio/mpeg';
+  const isPersonalized = item.is_personalized === true;
 
   if (item.kind === 'tts') {
     // Personalized speech needs the sender's *authorized* voice.

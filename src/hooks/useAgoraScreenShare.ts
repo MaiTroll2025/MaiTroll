@@ -57,6 +57,18 @@ export interface AgoraScreenShareState {
   screenAudioTrack: ILocalAudioTrack | null;  // Track D: Screen share / game / system audio
   micTrack: ILocalAudioTrack | null;          // Track C: Microphone audio
   cameraTrack: ILocalVideoTrack | null;       // Track B: Camera video
+
+  // Camera overlay layout (percent-based, synced to viewers)
+  cameraLayout: {
+    xPercent: number;
+    yPercent: number;
+    widthPercent: number;
+    radius: number;
+  };
+
+  // On-screen overlay text
+  overlayText: string;
+  overlayTextVisible: boolean;
 }
 
 export interface AgoraScreenShareActions {
@@ -66,6 +78,11 @@ export interface AgoraScreenShareActions {
   toggleMic: () => Promise<void>;
   toggleCamera: () => Promise<void>;
   stopPreview: () => void;                 // stop everything, back to idle
+  // Camera layout + overlay text controls
+  updateCameraLayout: (updates: Partial<{ xPercent: number; yPercent: number; widthPercent: number; radius: number }>) => void;
+  setOverlayText: (text: string) => void;
+  toggleOverlayText: () => void;
+  clearOverlayText: () => void;
 }
 
 export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareActions {
@@ -88,6 +105,26 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
   const [error, setError] = useState<string | null>(null);
   const [channelName, setChannelName] = useState<string | null>(null);
   const [streamId, setStreamId] = useState<string | null>(null);
+
+  // Camera overlay layout (percent-based, synced to viewers via stream metadata)
+  const [cameraLayout, setCameraLayoutState] = useState<{
+    xPercent: number;
+    yPercent: number;
+    widthPercent: number;
+    radius: number;
+  }>({ xPercent: 3, yPercent: 3, widthPercent: 32, radius: 12 });
+
+  // On-screen overlay text
+  const [overlayText, setOverlayTextState] = useState('');
+  const [overlayTextVisible, setOverlayTextVisible] = useState(true);
+
+  // Debounce refs for metadata persistence
+  const layoutDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingMetadataRef = useRef<{
+    hytro_camera_layout?: { xPercent: number; yPercent: number; widthPercent: number; radius: number };
+    hytro_overlay_text?: string;
+  }>({});
 
   // Agora tracks
   const [screenTrack, setScreenTrack] = useState<ILocalVideoTrack | null>(null);
@@ -122,6 +159,61 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
     if (!data?.token) throw new Error('No token received');
     return data.token;
   }, []);
+
+  // ── Camera layout normalization ──
+  const normalizeCameraLayout = useCallback((layout: {
+    xPercent?: number;
+    yPercent?: number;
+    widthPercent?: number;
+    radius?: number;
+  }): { xPercent: number; yPercent: number; widthPercent: number; radius: number } => {
+    const x = Number.isFinite(Number(layout.xPercent)) ? Number(layout.xPercent) : 3;
+    const y = Number.isFinite(Number(layout.yPercent)) ? Number(layout.yPercent) : 3;
+    const w = Number.isFinite(Number(layout.widthPercent)) ? Number(layout.widthPercent) : 32;
+    const r = Number.isFinite(Number(layout.radius)) ? Number(layout.radius) : 12;
+    return {
+      xPercent: Math.min(90, Math.max(0, x)),
+      yPercent: Math.min(90, Math.max(0, y)),
+      widthPercent: Math.min(60, Math.max(12, w)),
+      radius: Math.min(28, Math.max(0, r)),
+    };
+  }, []);
+
+  // ── Debounced metadata persistence ──
+  const flushMetadata = useCallback(async () => {
+    const patch = pendingMetadataRef.current;
+    pendingMetadataRef.current = {};
+    const keys = Object.keys(patch);
+    if (keys.length === 0 || !streamId) return;
+
+    const update: Record<string, any> = {};
+    if (patch.hytro_camera_layout !== undefined) {
+      update.hytro_camera_layout = patch.hytro_camera_layout;
+    }
+    if (patch.hytro_overlay_text !== undefined) {
+      update.hytro_overlay_text = patch.hytro_overlay_text;
+    }
+
+    try {
+      await supabase.from('streams').update(update).eq('id', streamId);
+    } catch (err) {
+      console.warn('[useAgoraScreenShare] Metadata persist failed:', err);
+    }
+  }, [streamId]);
+
+  const scheduleMetadataFlush = useCallback(() => {
+    if (layoutDebounceRef.current) clearTimeout(layoutDebounceRef.current);
+    if (textDebounceRef.current) clearTimeout(textDebounceRef.current);
+    layoutDebounceRef.current = setTimeout(() => {
+      layoutDebounceRef.current = null;
+      void flushMetadata();
+    }, 300);
+    textDebounceRef.current = setTimeout(() => {
+      textDebounceRef.current = null;
+      void flushMetadata();
+    }, 300);
+  }, [flushMetadata]);
+
 
   // ── Phase 1: Start Preview (no Agora) ──
   const startPreview = useCallback(async () => {
@@ -495,6 +587,58 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
     }
   }, [cameraEnabled, channelName, fetchToken]);
 
+  // ── Update camera layout (debounced persist) ──
+  const updateCameraLayout = useCallback((updates: Partial<{
+    xPercent: number;
+    yPercent: number;
+    widthPercent: number;
+    radius: number;
+  }>) => {
+    const next = normalizeCameraLayout({ ...cameraLayout, ...updates });
+    setCameraLayoutState(next);
+    pendingMetadataRef.current.hytro_camera_layout = next;
+    scheduleMetadataFlush();
+  }, [cameraLayout, normalizeCameraLayout, scheduleMetadataFlush]);
+
+  // ── Set overlay text (debounced persist) ──
+  const setOverlayText = useCallback((text: string) => {
+    const safe = String(text ?? '').trim();
+    setOverlayTextState(safe);
+    pendingMetadataRef.current.hytro_overlay_text = safe;
+    scheduleMetadataFlush();
+  }, [scheduleMetadataFlush]);
+
+  // ── Toggle overlay text visibility ──
+  const toggleOverlayText = useCallback(() => {
+    setOverlayTextVisible((prev) => !prev);
+  }, []);
+
+  // ── Clear overlay text ──
+  const clearOverlayText = useCallback(() => {
+    setOverlayTextState('');
+    pendingMetadataRef.current.hytro_overlay_text = '';
+    scheduleMetadataFlush();
+  }, [scheduleMetadataFlush]);
+
+  // ── Flush any pending metadata on unmount ──
+  useEffect(() => {
+    return () => {
+      if (layoutDebounceRef.current) clearTimeout(layoutDebounceRef.current);
+      if (textDebounceRef.current) clearTimeout(textDebounceRef.current);
+      // Best-effort flush of pending changes
+      const patch = pendingMetadataRef.current;
+      const keys = Object.keys(patch);
+      if (keys.length > 0 && streamId) {
+        const update: Record<string, any> = {};
+        if (patch.hytro_camera_layout !== undefined) update.hytro_camera_layout = patch.hytro_camera_layout;
+        if (patch.hytro_overlay_text !== undefined) update.hytro_overlay_text = patch.hytro_overlay_text;
+        void (async () => {
+          try { await supabase.from('streams').update(update).eq('id', streamId); } catch {}
+        })();
+      }
+    };
+  }, [streamId]);
+
   // Cleanup on unmount
   useEffect(() => {
     isMountedRef.current = true;
@@ -518,6 +662,8 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
     micEnabled, cameraEnabled,
     isLive, isConnecting, isConnected, isPaused, error, channelName,
     screenTrack, screenAudioTrack, micTrack, cameraTrack,
+    cameraLayout, overlayText, overlayTextVisible,
+    updateCameraLayout, setOverlayText, toggleOverlayText, clearOverlayText,
     startPreview, goLive, endStream, stopPreview, toggleMic, toggleCamera,
   };
 }

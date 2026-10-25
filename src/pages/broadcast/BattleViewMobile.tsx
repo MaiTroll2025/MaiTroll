@@ -108,9 +108,9 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
   // user ids to the MAIN broadcast-room identity (`viewer-<streamId>-<uuid>`),
   // which is meaningless inside the battle room. So we must match the remote
   // participant primarily by the bare user id, and never rely on that map for
-  // battles (the desktop Arena path works only because of its ULTRA-FALLBACK
-  // that assigns any camera-capable remote to a host slot). We replicate that
-  // fallback here so the mobile layout shows the same cameras.
+  // battles. We match by exact identity or exact normalized identity only — no
+  // fuzzy substring matching and no ULTRA-FALLBACK that could cross-map one
+  // broadcaster's video onto another participant's box.
   const isMobileDevice =
     typeof navigator !== "undefined" &&
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -120,47 +120,26 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     return remoteUsers.find((u) => {
       const id = String(u.identity || "");
       const n = normalizeId(id);
-      return id === identity || n === target || n.startsWith(target.substring(0, 8)) || target.startsWith(n.substring(0, 8));
+      return id === identity || n === target;
     });
   }, [remoteUsers]);
 
   // Track cache so a brief unsubscribe/reconnect doesn't drop a box back to the
   // profile picture (mirrors BattleArena's lastKnownTrackRef behaviour).
-  const trackCacheRef = React.useRef<Record<string, { videoTrack?: any; hasAudio: boolean }>>({});
+  const trackCacheRef = React.useRef<Record<string, { videoTrack?: any; hasAudio: boolean; audioMuted: boolean; hasVideo: boolean }>>({});
 
   const resolveTrack = useCallback((userId: string) => {
     // In the battle room, participants use bare user IDs as LiveKit identities.
     const remote = findRemoteByIdentity(userId);
 
-    // ULTRA-FALLBACK (matches desktop Arena): if no remote matched by identity
-    // yet this participant still needs a camera, grab any unmatched remote that
-    // already has a subscribed video track.
-    let resolvedRemote = remote;
-    if (!resolvedRemote) {
-      const usedIdentities = new Set(
-        (battleParticipants as any[])
-          .map((p) => {
-            const r = findRemoteByIdentity(p.user_id);
-            return r?.identity;
-          })
-          .filter(Boolean) as string[]
-      );
-      const anyRemoteWithVideo = remoteUsers.find((u) => {
-        if (usedIdentities.has(u.identity)) return false;
-        const pubs = getTrackPublications(u, "video");
-        return pubs.some((p: any) => p.track);
-      });
-      resolvedRemote = anyRemoteWithVideo;
-    }
-
-    if (!resolvedRemote) {
+    if (!remote) {
       const cached = trackCacheRef.current[userId];
       if (cached?.videoTrack || cached?.hasAudio) return cached;
-      return { videoTrack: undefined, hasAudio: false };
+      return { videoTrack: undefined, hasAudio: false, audioMuted: false, hasVideo: false };
     }
 
-    const videoPubs = getTrackPublications(resolvedRemote, "video");
-    const audioPubs = getTrackPublications(resolvedRemote, "audio");
+    const videoPubs = getTrackPublications(remote, "video");
+    const audioPubs = getTrackPublications(remote, "audio");
 
     const videoTrack =
       videoPubs.find((p: any) => p.isSubscribed && p.track && p.source === Track.Source.Camera)?.track ||
@@ -169,14 +148,17 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       videoPubs.find((p: any) => p.track)?.track ||
       (isMobileDevice ? videoPubs.find((p: any) => p.track)?.track : undefined);
 
-    const hasAudio = audioPubs.some((p: any) => p.isSubscribed && p.track) || audioPubs.some((p: any) => p.track);
+    const audioTrack = audioPubs.find((p: any) => p.isSubscribed && p.track)?.track || audioPubs.find((p: any) => p.track)?.track;
+    const hasAudio = !!audioTrack;
+    const audioMuted = hasAudio ? Boolean((audioTrack as any)?.isMuted) : false;
+    const hasVideo = !!videoTrack;
 
-    const result = { videoTrack, hasAudio };
+    const result = { videoTrack, hasAudio, audioMuted, hasVideo };
     if (videoTrack || hasAudio) {
       trackCacheRef.current[userId] = result;
     }
     return result;
-  }, [battleParticipants, findRemoteByIdentity, isMobileDevice, remoteUsers]);
+  }, [findRemoteByIdentity, isMobileDevice]);
 
   const { blueVMs, redVMs } = useMemo(() => {
     const blue: MobileParticipantVM[] = [];
@@ -188,13 +170,19 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
       const isLocal = effectiveUserId && p.user_id === effectiveUserId;
       let videoTrack = isLocal ? battleLocalVideoTrack : undefined;
       let hasAudio = isLocal ? !!battleLocalAudioTrack : false;
+      let hasVideo = isLocal ? !!battleLocalVideoTrack : undefined;
+      let audioMuted: boolean | undefined = undefined;
 
       if (!isLocal) {
         const fallback = resolveTrack(p.user_id);
         const fbVideo = fallback.videoTrack;
         const fbAudio = fallback.hasAudio;
+        const fbAudioMuted = fallback.audioMuted;
+        const fbHasVideo = fallback.hasVideo;
         if (fbVideo) videoTrack = fbVideo;
         if (fbAudio) hasAudio = true;
+        hasVideo = fbHasVideo;
+        audioMuted = fbAudioMuted;
       }
 
       const vm: MobileParticipantVM = {
@@ -207,6 +195,8 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
         points: participantContributions?.[p.user_id] || 0,
         videoTrack,
         hasAudio,
+        hasVideo,
+        audioMuted,
       };
       if (team === "blue") blue.push(vm);
       else red.push(vm);

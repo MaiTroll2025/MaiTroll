@@ -42,7 +42,6 @@ import { getGiftVisualConfig } from '@/lib/giftVisuals'
 import { MAX_GUEST_SEATS, areBroadcastSeatsDisabled } from '@/config/broadcastCategories'
 
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
-import PetPresence from '@/components/pets/PetPresence'
 import MobileBroadcastHostSettings from '@/components/broadcast/MobileBroadcastHostSettings'
 import LeagueProgressPanel from '@/components/broadcast/LeagueProgressPanel'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -209,10 +208,11 @@ export default function PhoneBroadcastPage() {
   const [msgBoxHeight, setMsgBoxHeight] = useState(0)
 
   useEffect(() => {
-    if (msgBoxRef.current) {
-      setMsgBoxHeight(msgBoxRef.current.offsetHeight)
+    const el = msgBoxRef.current
+    if (el) {
+      setMsgBoxHeight(el.offsetHeight)
     }
-  }, [msgBoxRef.current, floatingMessages.length, chatInput])
+  }, [floatingMessages.length, chatInput])
 
 
   const [recentGifts, setRecentGifts] =

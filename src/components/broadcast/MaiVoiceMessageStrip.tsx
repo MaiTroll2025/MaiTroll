@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Mic, Pause, Play, ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { maiVoiceInvoke, recordMaiVoiceMessageListen, type MaiVoiceMessageMeta } from '../../lib/maiVoice';
+import { maiVoiceInvoke, type MaiVoiceMessageMeta } from '../../lib/maiVoice';
 
 interface MaiVoiceMessageStripProps {
   messages: MaiVoiceMessageMeta[];

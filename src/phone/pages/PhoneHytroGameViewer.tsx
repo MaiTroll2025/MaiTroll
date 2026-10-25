@@ -29,6 +29,7 @@ import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import ShareModal from '@/components/broadcast/ShareModal'
 import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
 import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
+import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 
 type FloatingMessage = {
   id: string
@@ -51,7 +52,7 @@ const TIP_ITEMS = [
   { id: '3', name: 'Mega Tip', icon: '👑', cost: 100 },
 ]
 
-function AgoraVideoPlayer({ track, className }: { track: any; className?: string }) {
+function AgoraVideoPlayer({ track, className, fit = 'contain' }: { track: any; className?: string; fit?: 'contain' | 'cover' }) {
   const nodeRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -62,7 +63,7 @@ function AgoraVideoPlayer({ track, className }: { track: any; className?: string
 
     try {
       if (typeof track.play === 'function') {
-        track.play(node, { fit: 'contain' })
+        track.play(node, { fit })
       }
     } catch (err) {
       console.warn('[AgoraVideoPlayer] play failed', err)
@@ -80,7 +81,7 @@ function AgoraVideoPlayer({ track, className }: { track: any; className?: string
         node.innerHTML = ''
       }
     }
-  }, [track])
+  }, [track, fit])
 
   return <div ref={nodeRef} className={cn('h-full w-full', className)} />
 }
@@ -136,6 +137,17 @@ export default function PhoneHytroGameViewer() {
 
   const broadcasterProfile = useMemo(() => currentStream?.broadcaster_profile || null, [currentStream])
   const hostName = broadcasterProfile?.username || broadcasterProfile?.display_name || 'Gamer'
+
+  // These values are published by the HytroGame host page to the stream record/realtime channel.
+  // Keep defensive fallbacks so older streams continue to render correctly.
+  const hostOverlayText = String(
+    currentStream?.hytro_overlay_text ?? currentStream?.overlay_text ?? currentStream?.on_screen_text ?? '',
+  ).trim()
+  const cameraLayout = currentStream?.hytro_camera_layout || currentStream?.camera_layout || {}
+  const cameraWidth = Math.min(60, Math.max(18, Number(cameraLayout.widthPercent) || 32))
+  const cameraX = Math.min(95 - cameraWidth, Math.max(0, Number(cameraLayout.xPercent) || 3))
+  const cameraY = Math.min(85, Math.max(0, Number(cameraLayout.yPercent) || 3))
+  const cameraRadius = Math.min(28, Math.max(0, Number(cameraLayout.radius) || 12))
 
   const joinedChannelRef = useRef<string | null>(null)
   const joinRef = useRef(agora.join)
@@ -399,11 +411,12 @@ export default function PhoneHytroGameViewer() {
   }
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
+    <GiftSystemProvider streamId={streamId || ''} defaultReceiverId={currentStream?.broadcaster_id || ''}>
+      <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
       {/* Screen share area */}
       <div className="absolute inset-0 z-0">
         {agora.remoteVideoTrack ? (
-          <AgoraVideoPlayer track={agora.remoteVideoTrack} />
+          <AgoraVideoPlayer track={agora.remoteVideoTrack} fit="contain" />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center bg-[#050711]">
             <div className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-cyan-300/20 bg-cyan-500/10 shadow-[0_0_50px_rgba(34,211,238,0.12)]">
@@ -418,18 +431,38 @@ export default function PhoneHytroGameViewer() {
           </div>
         )}
 
-        {/* Camera overlay */}
+        {/* Host camera: position and size are controlled by the HytroGame host page and
+            synchronized through stream metadata, so every viewer sees the same layout. */}
         {agora.remoteCameraTrack && (
-          <div className="absolute left-3 top-3 z-20 h-28 w-40 overflow-hidden rounded-lg border-2 border-cyan-400/40 bg-black/60 shadow-xl backdrop-blur-sm">
+          <div
+            className="absolute z-20 overflow-hidden border border-cyan-300/60 bg-black/70 shadow-[0_8px_32px_rgba(0,0,0,0.45)]"
+            style={{
+              left: `${cameraX}%`,
+              top: `calc(env(safe-area-inset-top) + ${cameraY}%)`,
+              width: `${cameraWidth}%`,
+              aspectRatio: '4 / 3',
+              borderRadius: `${cameraRadius}px`,
+              maxWidth: '70vw',
+            }}
+          >
             <AgoraVideoPlayer track={agora.remoteCameraTrack} />
-            <div className="absolute bottom-1 left-1.5 flex items-center gap-1">
-              <span className="h-1 w-1 animate-pulse rounded-full bg-red-400" />
-              <span className="truncate text-[8px] font-bold text-white/70">{hostName}</span>
+            <div className="absolute inset-x-0 bottom-0 flex items-center gap-1 bg-gradient-to-t from-black/85 to-transparent px-2 pb-1.5 pt-4">
+              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-red-400" />
+              <span className="truncate text-[9px] font-bold text-white drop-shadow">{hostName}</span>
             </div>
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70" />
+        {/* Host-authored on-screen text. The host page should publish updates live. */}
+        {hostOverlayText && (
+          <div className="pointer-events-none absolute inset-x-5 top-[30%] z-20 flex justify-center">
+            <div className="max-w-[90%] whitespace-pre-wrap break-words rounded-xl border border-white/15 bg-black/65 px-4 py-2 text-center text-lg font-black leading-tight text-white shadow-[0_4px_24px_rgba(0,0,0,0.55)] backdrop-blur-sm sm:text-2xl">
+              {hostOverlayText}
+            </div>
+          </div>
+        )}
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/65" />
 
         {/* Top bar */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
@@ -460,24 +493,24 @@ export default function PhoneHytroGameViewer() {
         </div>
 
         {/* Right action bar */}
-        <div className="absolute bottom-[calc(76px+env(safe-area-inset-bottom))] right-3 z-20 flex flex-col items-center gap-3">
-          <button onClick={handleLike} className="flex flex-col items-center gap-1">
-            <div className={cn('grid h-12 w-12 place-items-center rounded-full backdrop-blur-sm transition-all active:scale-90', liked ? 'bg-pink-500/40 shadow-[0_0_20px_rgba(236,72,153,0.5)]' : 'bg-black/40')}>
-              <Heart className={cn('h-7 w-7 transition-all', liked && 'fill-pink-400 text-pink-400 scale-110')} />
+        <div className="absolute bottom-[calc(76px+env(safe-area-inset-bottom))] right-3 z-20 flex flex-col items-center gap-2">
+          <button onClick={handleLike} className="flex flex-col items-center gap-0.5">
+            <div className={cn('grid h-9 w-9 place-items-center rounded-full backdrop-blur-sm transition-all active:scale-90', liked ? 'bg-pink-500/40 shadow-[0_0_20px_rgba(236,72,153,0.5)]' : 'bg-black/40')}>
+              <Heart className={cn('h-5 w-5 transition-all', liked && 'fill-pink-400 text-pink-400 scale-110')} />
             </div>
-            <span className={cn('text-[9px] font-black drop-shadow', liked ? 'text-pink-300' : 'text-white/80')}>{formatCompactNumber(likeCount)}</span>
+            <span className={cn('text-[8px] font-black drop-shadow', liked ? 'text-pink-300' : 'text-white/80')}>{formatCompactNumber(likeCount)}</span>
           </button>
-          <button onClick={() => setShowTipPanel(true)} className="flex flex-col items-center gap-1">
-            <div className="grid h-12 w-12 place-items-center rounded-full bg-black/40 backdrop-blur-sm">
-              <Gift className="h-7 w-7 text-amber-400" />
+          <button onClick={() => setIsGiftModalOpen(true)} className="flex flex-col items-center gap-0.5">
+            <div className="grid h-9 w-9 place-items-center rounded-full bg-black/45 backdrop-blur-sm">
+              <Gift className="h-5 w-5 text-amber-400" />
             </div>
-            <span className="text-[9px] font-black text-white/80">Tips</span>
+            <span className="text-[8px] font-black text-white/80">Gift</span>
           </button>
-          <button onClick={handleShare} className="flex flex-col items-center gap-1">
-            <div className="grid h-12 w-12 place-items-center rounded-full bg-black/40 backdrop-blur-sm">
-              <Share2 className="h-7 w-7" />
+          <button onClick={handleShare} className="flex flex-col items-center gap-0.5">
+            <div className="grid h-9 w-9 place-items-center rounded-full bg-black/45 backdrop-blur-sm">
+              <Share2 className="h-5 w-5" />
             </div>
-            <span className="text-[9px] font-black text-white/80">Share</span>
+            <span className="text-[8px] font-black text-white/80">Share</span>
           </button>
           {currentStream?.id && (
             <FacebookPublishButton sourceType="gaming_stream" sourceId={currentStream.id} compact />
@@ -667,6 +700,7 @@ export default function PhoneHytroGameViewer() {
 
       {/* Featured gift banner */}
       <FeaturedGiftBanner streamId={streamId || ''} broadcasterId={currentStream?.broadcaster_id} isMobile={true} />
-    </div>
+      </div>
+    </GiftSystemProvider>
   )
 }

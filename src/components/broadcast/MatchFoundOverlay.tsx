@@ -36,13 +36,13 @@ const MatchFoundOverlay = React.memo(({
     const fetchProfiles = async () => {
       const { data: cData } = await supabase
         .from('user_profiles')
-        .select('username, avatar_url, level, state_code')
+        .select('username, avatar_url, level')
         .eq('id', challengerUserId)
         .maybeSingle();
 
       const { data: oData } = await supabase
         .from('user_profiles')
-        .select('username, avatar_url, level, state_code')
+        .select('username, avatar_url, level')
         .eq('id', opponentUserId)
         .maybeSingle();
 
@@ -52,7 +52,7 @@ const MatchFoundOverlay = React.memo(({
           username: cData.username || 'Broadcaster',
           avatarUrl: cData.avatar_url,
           level: cData.level || 1,
-          stateCode: challengerStateCode || cData.state_code,
+          stateCode: challengerStateCode,
           stateName: null,
         });
       }
@@ -63,7 +63,7 @@ const MatchFoundOverlay = React.memo(({
           username: oData.username || 'Broadcaster',
           avatarUrl: oData.avatar_url,
           level: oData.level || 1,
-          stateCode: opponentStateCode || oData.state_code,
+          stateCode: opponentStateCode,
           stateName: null,
         });
       }

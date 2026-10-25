@@ -4,7 +4,6 @@ import { Gamepad2 } from 'lucide-react'
 import GamingSetup from '@/components/broadcast/GamingSetup'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
-import { activateAutomatedAudience } from '@/lib/automatedAudience'
 import { generateUUID } from '@/lib/uuid'
 import { toast } from 'sonner'
 import { useAgoraScreenShare } from '@/hooks/useAgoraScreenShare'
@@ -69,6 +68,16 @@ function GamingSetupPageInner() {
 
   // ── Agora screen share ──
   const agora = useAgoraScreenShare()
+
+  const {
+    cameraLayout,
+    overlayText,
+    overlayTextVisible,
+    updateCameraLayout,
+    setOverlayText,
+    toggleOverlayText,
+    clearOverlayText,
+  } = agora
 
   // HytroGaming lockdown check
   const { isLocked: isGamingLockedDown } = useHytroGamingLockdown();
@@ -299,18 +308,12 @@ function GamingSetupPageInner() {
       }
       await agora.goLive(channelName, streamData.id);
       setIsLive(true);
-      if (isAdmin && user?.id) {
-        void activateAutomatedAudience(streamData.id).catch((activationError) => {
-          console.error('[GamingSetupPage] Automated audience activation failed:', activationError);
-          toast.warning(`HytroGaming is live, but automated audience stayed inactive: ${activationError instanceof Error ? activationError.message : 'Request failed'}`);
-        });
-      }
       toast.success('You are now LIVE on HytroGaming!');
     } catch (err: any) {
       console.error('[GamingSetupPage] Go live failed:', err);
       toast.error(err?.message || 'Failed to go live');
     }
-  }, [isGamingLockedDown, streamData?.id, channelName, agora, user?.id, isAdmin]);
+  }, [isGamingLockedDown, streamData?.id, channelName, agora, user?.id]);
 
   const handleGoLive = useCallback(() => {
     if (!inlineAgreementChecked) {
@@ -465,6 +468,13 @@ function GamingSetupPageInner() {
       inlineAgreementChecked={inlineAgreementChecked}
       onInlineAgreementChange={setInlineAgreementChecked}
       streamId={streamData?.id || null}
+      cameraLayout={cameraLayout}
+      overlayText={overlayText}
+      overlayTextVisible={overlayTextVisible}
+      onUpdateCameraLayout={updateCameraLayout}
+      onSetOverlayText={setOverlayText}
+      onToggleOverlayText={toggleOverlayText}
+      onClearOverlayText={clearOverlayText}
     />
   );
 }

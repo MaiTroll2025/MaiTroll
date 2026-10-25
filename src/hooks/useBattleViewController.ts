@@ -1258,7 +1258,7 @@ export function useBattleViewController({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [battle?.id, battle?.started_at, battle?.status, isRandomBattle]);
+  }, [battle, isRandomBattle]);
 
   // Arena readiness check
   useEffect(() => {

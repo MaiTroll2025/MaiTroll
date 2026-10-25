@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Coins, Gift, MicOff, User } from "lucide-react";
+import { Coins, Gift, Mic, MicOff, User, Video, VideoOff } from "lucide-react";
 
 export interface MobileParticipantVM {
   userId: string;
@@ -11,6 +11,8 @@ export interface MobileParticipantVM {
   points: number;
   videoTrack?: any;
   hasAudio?: boolean;
+  hasVideo?: boolean;
+  audioMuted?: boolean;
 }
 
 export default function MobileBattleParticipant({
@@ -124,14 +126,27 @@ export default function MobileBattleParticipant({
           </div>
         )}
 
-        {/* Top row: seat + muted */}
+        {/* Top row: seat + camera + mic */}
         <div className="absolute left-1.5 top-1.5 flex items-center gap-1">
           <span className="rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white/80">
             #{typeof vm.seatIndex === "number" ? vm.seatIndex + 1 : "·"}
           </span>
-          {vm.hasAudio === false && (
+          {vm.hasVideo === false ? (
+            <span className="rounded-full bg-red-500/80 p-1">
+              <VideoOff size={10} className="text-white" />
+            </span>
+          ) : (
+            <span className="rounded-full bg-emerald-500/80 p-1">
+              <Video size={10} className="text-white" />
+            </span>
+          )}
+          {vm.hasAudio === false || vm.audioMuted === true ? (
             <span className="rounded-full bg-red-500/80 p-1">
               <MicOff size={10} className="text-white" />
+            </span>
+          ) : (
+            <span className="rounded-full bg-emerald-500/80 p-1">
+              <Mic size={10} className="text-white" />
             </span>
           )}
         </div>
