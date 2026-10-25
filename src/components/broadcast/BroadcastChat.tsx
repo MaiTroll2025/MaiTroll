@@ -22,7 +22,7 @@ import { useChatBlockStatus } from '../../hooks/useChatBlockStatus';
 import { useStreamRealtime } from '../../hooks/useStreamRealtime';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration';
 import { sendChatThroughGate } from '../../lib/sendChatThroughGate';
-import { moderation } from '@/services/maitrollModeration';
+import { checkModeration } from '../../lib/moderationCheck';
 import { useUserSubscriptionTier } from '@/hooks/useCreatorSubscription';
 import { getEmotesForTier, parseEmotesInText, type SubscriberEmote } from '@/lib/subscriberEmotes';
 import { useSubscriberBadges } from '@/hooks/useCreatorSubscription';
@@ -1475,6 +1475,12 @@ const fetchMessages = async () => {
         const modResult = await moderation.checkContent(user.id, content, 'chat');
         if (!modResult.allowed) {
           toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
+          return;
+        }
+        // Server-side keyword moderation
+        const kwResult = await checkModeration(content, 'chat');
+        if (!kwResult.allowed) {
+          toast.error(kwResult.message || 'That message violates chat rules and was not sent.');
           return;
         }
       }

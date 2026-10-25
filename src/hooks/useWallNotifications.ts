@@ -47,7 +47,7 @@ export function useWallNotifications(isWallActive: boolean) {
         .gt('created_at', lastSeen)
 
       if (error) {
-        console.error('[useWallNotifications] Failed to count new posts:', error)
+        console.error('[useWallNotifications] Failed to count new posts:', error.message, error.code, error.details, error.hint)
         return
       }
 

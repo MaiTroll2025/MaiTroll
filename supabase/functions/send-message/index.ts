@@ -711,7 +711,7 @@ serve(async (req) => {
       // distributed rate limit, but the guards above (chat blocks, moderation
       // actions, high traffic sampling) still apply and the message is
       // delivered instead of failing the whole chat.
-      console.warn("[AUTH] Redis not configured, continuing without the distributed rate limit");
+
     }
 
     // 6. Enrich Data (Denormalize server-side for security)
