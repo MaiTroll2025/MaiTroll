@@ -11,6 +11,7 @@ import {
   Gift,
   Wallet,
   Swords,
+  Gamepad2,
   ShieldCheck,
   MessageCircle,
   Home,
