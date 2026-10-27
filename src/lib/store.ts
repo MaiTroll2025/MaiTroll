@@ -352,6 +352,8 @@ function announceGlobalEvent(event: { title: string; icon: string; priority: num
     p_title: event.title,
     p_icon: event.icon,
     p_priority: event.priority,
+    p_dedupe_key: `system:${event.title.toLowerCase()}`,
+    p_source: 'auth',
   }).then(({ error }) => {
     if (error) {
       console.error('Failed to announce global event:', error)

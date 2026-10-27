@@ -54,6 +54,9 @@ import PhoneCeoDashboard from './pages/PhoneCeoDashboard'
 import PhoneSupport from './pages/PhoneSupport'
 import PhoneSafety from './pages/PhoneSafety'
 import PhoneLegal from './pages/PhoneLegal'
+import PhoneForum from './pages/PhoneForum'
+import PhoneForumPost from './pages/PhoneForumPost'
+import PhoneInsights from './pages/PhoneInsights'
 import TermsOfService from '../pages/legal/TermsOfService'
 import PrivacyPolicy from '../pages/legal/PrivacyPolicy'
 import PhoneJailPage from './pages/PhoneJailPage'
@@ -80,6 +83,8 @@ import MaiLifePage from '../pages/MaiLifePage'
 import TrollAnimalShelterPage from '../pages/TrollAnimalShelterPage'
 import OwnerPage from '../pages/OwnerPage'
 import TromailPage from '../pages/tromail/TromailPage'
+
+import GamesPage from '../pages/games/GamesPage'
 
 const PhoneNotifications = lazy(() => import('../pages/Notifications'))
 
@@ -238,6 +243,8 @@ export default function PhoneApp() {
               }
             />
             <Route path="/mai-life" element={<MaiLifePage />} />
+            <Route path="/games" element={<GamesPage />} />
+
             <Route path="/troll-animal-shelter" element={<TrollAnimalShelterPage />} />
             <Route path="/owner" element={<OwnerPage />} />
             <Route path="/following" element={<PhoneFollowing />} />
@@ -268,6 +275,9 @@ export default function PhoneApp() {
             <Route path="/rtcadminmonitor" element={<PhoneRtcAdminMonitor />} />
             <Route path="/support" element={<PhoneSupport />} />
             <Route path="/safety" element={<PhoneSafety />} />
+            <Route path="/community" element={<PhoneForum />} />
+            <Route path="/community/post/:postId" element={<PhoneForumPost />} />
+            <Route path="/insights" element={<PhoneInsights />} />
             <Route path="/legal" element={<PhoneLegal />} />
             <Route path="/legal/terms" element={<TermsOfService />} />
             <Route path="/legal/privacy" element={<PrivacyPolicy />} />

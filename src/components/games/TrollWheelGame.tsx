@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
+import { createCityActivityEvent } from '@/lib/events/createCityActivityEvent';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins, Gem, RotateCw, Package, Zap } from 'lucide-react';
@@ -910,14 +911,51 @@ export default function TrollWheelGame({
       }
       
       // Record spin
+      let spinRecordId: string | null = null;
       try {
-        supabase.from('troll_wheel_wins').insert({
-          user_id: profile.id,
-          cost_trollz: currentBidCost,
-          reward_type: result.type,
-          reward_amount: finalCoins,
-        });
+        const { data: inserted } = await supabase
+          .from('troll_wheel_wins')
+          .insert({
+            user_id: profile.id,
+            cost_trollz: currentBidCost,
+            reward_type: result.type,
+            reward_amount: finalCoins,
+          })
+          .select('id')
+          .single();
+        spinRecordId = inserted?.id ?? null;
       } catch (_e) { console.warn('Failed to record spin'); }
+
+      // Publish a single, deduplicated ticker event per genuine spin outcome.
+      // Bankruptcy and legendary (major) wins use the game's own result data;
+      // no amounts or balances are exposed in the ticker message.
+      const username = profile?.username || 'A user';
+      if (spinRecordId) {
+        const dedupeKey = `wheel:${result.type}:${spinRecordId}`;
+        if (result.type === 'bankrupt') {
+          await createCityActivityEvent({
+            type: 'wheel',
+            title: `${username} went bankrupt on Troll Wheel`,
+            icon: 'bankrupt',
+            priority: 2,
+            sourceEventId: spinRecordId,
+            route: `/user/${username}`,
+            source: 'wheel',
+            metadata: { category: 'wheel_bankrupt', user_id: profile.id, dedupe_key: dedupeKey },
+          });
+        } else if (result.type === 'trollmonds' && result.rarity === 'legendary') {
+          await createCityActivityEvent({
+            type: 'wheel',
+            title: `${username} hit a major Troll Wheel win`,
+            icon: 'win',
+            priority: 2,
+            sourceEventId: spinRecordId,
+            route: `/user/${username}`,
+            source: 'wheel',
+            metadata: { category: 'wheel_big_win', user_id: profile.id, coins: finalCoins, dedupe_key: dedupeKey },
+          });
+        }
+      }
     } catch (err) {
       console.error('[TrollWheel] Error in finishSpin:', err);
     } finally {

@@ -54,6 +54,11 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
       { label: 'Treelz', path: '/treelz', icon: 'Video' },
       { label: 'Auctions', path: '/auctions', icon: 'Gavel' },
       { label: 'HytroGaming', path: '/hytro', icon: 'Gamepad2' },
+      { label: 'Games', path: '/games', icon: 'Gamepad2' },
+      {
+
+        icon: 'Building2',
+      },
       { label: 'Careers', path: '/careers', icon: 'Briefcase' },
       { label: 'Live', path: '/broadcast/setup', icon: 'Radio', show: !!(profile as any)?.is_broadcaster || isAdmin },
     ])

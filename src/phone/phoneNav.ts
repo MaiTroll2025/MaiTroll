@@ -23,8 +23,9 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     if (visible.length) sections.push({ title, items: visible })
   }
 
-  add('Menu', [
+    add('Menu', [
     { label: 'Home', path: '/', icon: Home },
+    { label: 'Community', path: '/community', icon: Users },
     { label: 'Coins', path: '/store', icon: Coins, show: true },
     { label: 'Mai Pay', path: '/wallet', icon: Wallet },
     { label: 'Mai Piks', path: '/mai-piks', icon: Image },
@@ -59,6 +60,14 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     { label: 'MAI Business', path: '/mai-business', icon: Building2 },
     // ⭐ Founder Program — shown only to ACTIVE Founders (server-verified).
     { label: 'Founder Hub', path: '/founder', icon: Sparkles, show: a.isFounder },
+  ])
+
+  add('Games', [
+    { label: 'Games', path: '/games', icon: Gamepad2 },
+    {
+
+      icon: Building2,
+    },
   ])
 
   add('City Services', [

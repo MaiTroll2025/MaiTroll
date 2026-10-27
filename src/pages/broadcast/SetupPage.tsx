@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore';
 import requestBroadcastMediaAccess from '@/lib/media/requestBroadcastMediaAccess';
 import { activateAutomatedAudience } from '@/lib/automatedAudience';
+import { applyBroadcastTrackZoom } from '@/lib/broadcastTrackZoom';
 import { useStreamStore } from '@/lib/streamStore';
 import { LocalAudioTrack, LocalVideoTrack, Room, Track } from 'livekit-client';
 import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame, Bot } from 'lucide-react';
@@ -433,7 +434,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
             videoEl.style.width = '100%';
             videoEl.style.height = '100%';
             videoEl.style.objectFit = 'cover';
-            videoEl.style.transform = 'scaleX(-1)';
+            applyBroadcastTrackZoom(videoEl, { isLocal: true, facingMode: 'user' });
             cameraOverlayContainerRef.current.appendChild(videoEl);
           }
 
@@ -686,7 +687,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       videoEl.style.width = '100%';
       videoEl.style.height = '100%';
       videoEl.style.objectFit = 'cover';
-      videoEl.style.transform = 'scaleX(-1)';
+      applyBroadcastTrackZoom(videoEl, { isLocal: true, facingMode });
       videoEl.play().catch(() => {
         // Autoplay may still be blocked in some contexts; muted should help.
       });
@@ -696,7 +697,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   }, [previewStream, facingMode]);
 
   // Attach a native browser video element for preview directly from a MediaStream
-  const attachNativePreview = (stream: MediaStream, facing: 'user' | 'environment') => {
+  const attachNativePreview = (stream: MediaStream, _facing: 'user' | 'environment') => {
     setPreviewStream(stream);
 
     if (!videoContainerRef.current) return;
@@ -724,7 +725,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     videoEl.style.width = '100%';
     videoEl.style.height = '100%';
     videoEl.style.objectFit = 'cover';
-    videoEl.style.transform = facing === 'user' ? 'scaleX(-1)' : 'none';
+    applyBroadcastTrackZoom(videoEl, { isLocal: true, facingMode });
 
     videoContainerRef.current.appendChild(videoEl);
     videoEl.onloadedmetadata = () => {
@@ -1973,6 +1974,10 @@ const handleStartStream = async () => {
         p_title: `${profile.username} just went live!`,
         p_icon: 'live',
         p_priority: 2,
+        p_dedupe_key: `live:stream:${data.id}`,
+        p_source_event_id: data.id,
+        p_route: `/broadcast/${data.id}`,
+        p_source: 'live',
       }).then(() => {}, () => {});
     } catch (err: any) {
       broadcastStartError(failureStage, {

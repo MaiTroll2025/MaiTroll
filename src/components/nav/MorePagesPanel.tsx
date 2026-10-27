@@ -52,6 +52,7 @@ import {
   BarChart3,
   MessageCircle,
   LogOut,
+  Lightbulb,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { useCoins } from '@/lib/hooks/useCoins';
@@ -112,6 +113,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
           { label: 'Home', icon: Home, path: '/home' },
           { label: 'Search', icon: Search, path: '/search' },
           { label: 'Explore', icon: Compass as React.ElementType, path: '/explore' },
+          { label: 'Insights', icon: Lightbulb, path: '/insights' },
           { label: 'Notifications', icon: Bell, path: '/notifications' },
           { label: 'Profile', icon: User, path: profile?.username ? `/profile/${profile.username}` : '/profile/setup' },
         ],
@@ -132,6 +134,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
       {
         category: 'Community',
         items: [
+          { label: 'Community Forum', icon: MessageCircle, path: '/community' },
           { label: 'HydroGaming', icon: Gamepad2, path: '/hytrogaming' },
           { label: 'Live Auctions', icon: Gavel, path: '/auctions' },
           { label: 'Agencies', icon: Building2, path: '/agencies' },

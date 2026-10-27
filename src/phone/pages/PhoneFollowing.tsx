@@ -1,6 +1,6 @@
 
 import React, { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../../lib/store'
 import { supabase, UserProfile } from '../../lib/supabase'
 import {
@@ -61,13 +61,19 @@ export default function PhoneFollowing() {
     username?: string
   }>()
 
+  const [searchParams] = useSearchParams()
+  const initialTab = (searchParams.get('tab') as
+    | 'following'
+    | 'followers'
+    | null) ?? 'following'
+
   const [rows, setRows] = useState<FollowRow[]>([])
   const [followers, setFollowers] = useState<FollowRow[]>([])
   const [loading, setLoading] = useState(true)
 
   const [activeTab, setActiveTab] = useState<
     'following' | 'followers'
-  >('following')
+  >(initialTab)
 
   const [counts, setCounts] = useState({
     following: 0,

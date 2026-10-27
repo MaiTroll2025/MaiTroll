@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Users, Shield, Search, Circle, MapPin, Clock, AlertTriangle, FileText, StickyNote, Save, RefreshCw, HeadphonesIcon } from "lucide-react";
 import { useAuthStore } from "../../lib/store";
+import { usePresenceStore } from "../../lib/presenceStore";
 import { supabase } from "../../lib/supabase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -31,12 +32,23 @@ export default function CustomerServiceDashboard() {
   const { profile } = useAuthStore();
   const navigate = useNavigate();
   const { users, loading: usersLoading, refetch } = useCustomerServiceUsers();
+  const onlineUserIds = usePresenceStore((state) => state.onlineUserIds);
   const [selectedUser, setSelectedUser] = useState<CSUser | null>(null);
   const [notes, setNotes] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [recentNotes, setRecentNotes] = useState<any[]>([]);
 
   const isAdmin = profile?.is_admin === true || profile?.role === "admin";
+
+  const usersWithPresence = useMemo(
+    () => users.map((user) => ({ ...user, is_online: onlineUserIds.has(user.id) })),
+    [users, onlineUserIds],
+  );
+  const onlineCount = onlineUserIds.size;
+  const issuesCount = users.filter(
+    (u) => u.bug_report_count > 0 || u.support_ticket_count > 0
+  ).length;
+  const bannedCount = users.filter((u) => u.account_status === "banned").length;
 
   // Redirect non-admin
   useEffect(() => {
@@ -102,12 +114,6 @@ export default function CustomerServiceDashboard() {
       </div>
     );
   }
-
-  const onlineCount = users.filter((u) => u.is_online).length;
-  const issuesCount = users.filter(
-    (u) => u.bug_report_count > 0 || u.support_ticket_count > 0
-  ).length;
-  const bannedCount = users.filter((u) => u.account_status === "banned").length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white relative overflow-y-auto overflow-x-hidden md:overflow-hidden">
@@ -196,7 +202,7 @@ export default function CustomerServiceDashboard() {
               </div>
             ) : (
               <UserSupportSelector
-                users={users}
+                users={usersWithPresence}
                 selectedUserId={selectedUser?.id || null}
                 onSelectUser={handleSelectUser}
               />

@@ -14,6 +14,7 @@ import { useCreditActivityHeartbeat } from '../../lib/hooks/useCreditActivityHea
 import { cn } from '../../lib/utils'
 import { getLiveKitRoomName } from '../../lib/liveUtils'
 import { applyCameraVideoPresentation } from '../../lib/cameraVideoPresentation'
+import { applyBroadcastTrackZoom } from '../../lib/broadcastTrackZoom'
 import { isStaffProfile } from '../../lib/staff'
 import {
   getAnonymousDisplayName,
@@ -109,7 +110,6 @@ import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import GiftFlyOverlay from '@/components/broadcast/GiftFlyOverlay'
 import VirtualAudienceActivityOverlay from '@/components/broadcast/VirtualAudienceActivityOverlay'
 import MaiBag from '../../components/mai-bag/MaiBag'
-import RecoveryBanner from '../../components/broadcast/RecoveryBanner'
 import FeaturedGiftBanner from '../../components/broadcast/FeaturedGiftBanner'
 import ProtectionOrderGate from '@/components/ProtectionOrderGate'
 import MaiVoiceComposerActions from '@/components/broadcast/MaiVoiceComposerActions'
@@ -465,14 +465,14 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
          } else {
            return
          }
-         applyCameraVideoPresentation(videoEl, {
-           track: mediaTrack,
-           isLocal: false,
-         })
-         if (mirror) {
-           videoEl.style.setProperty('transform', 'scaleX(-1)', 'important')
-         }
-         attachedVideoTrackRef.current = videoTrack
+          applyCameraVideoPresentation(videoEl, {
+            track: mediaTrack,
+            isLocal: false,
+          })
+          if (mirror) {
+            applyBroadcastTrackZoom(videoEl, { isLocal: true, facingMode: 'user' })
+          }
+          attachedVideoTrackRef.current = videoTrack
 
          if (!cancelled) {
            await videoEl.play()
@@ -512,7 +512,7 @@ const RemoteVideoSurface = memo(function RemoteVideoSurface({
       isLocal: false,
     })
     if (mirror) {
-      videoEl.style.setProperty('transform', 'scaleX(-1)', 'important')
+      applyBroadcastTrackZoom(videoEl, { isLocal: true, facingMode: 'user' })
     }
   }, [videoTrack, videoTrackId, trackTick, mirror])
 
@@ -4050,7 +4050,6 @@ useStreamRealtime(
   return (
     <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
       <GiftFlyOverlay streamId={streamId} />
-      <RecoveryBanner onRefresh={() => window.location.reload()} />
       <UndoRecentGiftBar />
       <VirtualAudienceActivityOverlay streamId={streamId} />
       {isFeaturedEvent && (
@@ -4379,7 +4378,7 @@ useStreamRealtime(
                     ? layoutMode === 'grid'
                       ? 'grid overflow-hidden pr-12'
                       : 'flex-col overflow-hidden px-0 pt-0'
-                    : 'grid gap-4 px-5 py-4',
+                    : 'grid gap-4 px-5 py-4 overflow-y-auto',
                     !isMobileViewer && layoutMode === 'grid' ? 'grid-rows-[1fr_1fr]' : '',
                 )}
                  style={
@@ -4400,8 +4399,8 @@ useStreamRealtime(
                         : {
                             gridTemplateColumns:
                               seatCards.length > 0
-                                ? 'minmax(430px, 1.05fr) minmax(360px, 1fr) 360px'
-                                : 'minmax(560px, 1fr) 360px',
+                                ? 'minmax(408px, 1.05fr) minmax(360px, 1fr) 360px'
+                                : 'minmax(532px, 1fr) 360px',
                           }
                      : undefined
                }
@@ -4451,11 +4450,10 @@ useStreamRealtime(
                     />
                   ) : (
                   <>
-                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (grid):', { mirror: true, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
+                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (grid):', { mirror: false, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
                   <RemoteVideoSurface
                     participant={broadcasterState.participant}
                     className="absolute inset-0"
-                    mirror
                     onTap={handleLike}
                     onDoubleTap={handleNextBroadcast}
                     room={room}
@@ -4630,12 +4628,11 @@ useStreamRealtime(
                   />
                 ) : (
                   <>
-                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (split):', { mirror: true, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
+                    {(() => { console.log('[ViewerPage] DEBUG rendering broadcaster RemoteVideoSurface (split):', { mirror: false, participantIdentity: broadcasterState.participant?.identity, hasVideoTrack: !!broadcasterState.videoTrack }); return null })()}
  <RemoteVideoSurface
-                  participant={broadcasterState.participant}
-                  className="absolute inset-0"
-                  mirror
-                  onTap={handleLike}
+                   participant={broadcasterState.participant}
+                   className="absolute inset-0"
+                   onTap={handleLike}
                   onDoubleTap={handleNextBroadcast}
                   room={room}
                   fallback={

@@ -216,8 +216,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: slide-right-to-left 15s linear infinite;
-}
+  animation: slide-right-to-left 30s linear infinite;}
 
 /* ─── Two-System Ticker: Activity + SEO Links ─── */
 .ticker-two-system {

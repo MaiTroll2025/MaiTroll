@@ -9,7 +9,6 @@ interface PresenceState {
   // Store room viewer counts as a map to avoid large array replacements
   roomViewerCounts: Record<string, number>;
 
-  setOnlineCount: (count: number) => void;
   setOnlineUserIds: (userIds: string[]) => void;
   setRoomViewerCount: (roomId: string, count: number) => void;
 }
@@ -19,9 +18,16 @@ export const usePresenceStore = create<PresenceState>((set) => ({
   onlineUserIds: new Set<string>(),
   roomViewerCounts: {},
 
-  setOnlineCount: (count) => set({ onlineCount: count }),
-
-  setOnlineUserIds: (userIds) => set({ onlineUserIds: new Set(userIds) }),
+  setOnlineUserIds: (userIds) => set((state) => {
+    const nextIds = new Set(userIds);
+    if (
+      state.onlineUserIds.size === nextIds.size &&
+      Array.from(nextIds).every((userId) => state.onlineUserIds.has(userId))
+    ) {
+      return state;
+    }
+    return { onlineUserIds: nextIds, onlineCount: nextIds.size };
+  }),
 
   setRoomViewerCount: (roomId, count) => set((state) => {
     // Only update if the count actually changed to avoid unnecessary re-renders

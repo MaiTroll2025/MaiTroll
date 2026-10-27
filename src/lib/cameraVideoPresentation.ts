@@ -28,6 +28,8 @@ export function getCameraFacingMode(
     : fallback
 }
 
+import { applyBroadcastTrackZoom } from './broadcastTrackZoom'
+
 export function applyCameraVideoPresentation(
   video: HTMLVideoElement,
   options: {
@@ -36,13 +38,9 @@ export function applyCameraVideoPresentation(
     isLocal: boolean
   },
 ): void {
-  const facingMode = getCameraFacingMode(options.track, options.facingMode)
-  const shouldMirror = options.isLocal && facingMode === 'user'
-
-  video.style.setProperty(
-    'transform',
-    shouldMirror ? 'scaleX(-1)' : 'none',
-    'important',
-  )
-  video.style.setProperty('scale', '1', 'important')
+  applyBroadcastTrackZoom(video, {
+    track: options.track,
+    facingMode: options.facingMode,
+    isLocal: options.isLocal,
+  })
 }

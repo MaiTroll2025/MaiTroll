@@ -21,6 +21,8 @@ const PHONE_NATIVE_ROUTE_PATTERNS = [
   '/profile',
   '/notifications',
   '/mai-life',
+  '/games',
+
   '/troll-animal-shelter',
   '/owner',
   '/following',

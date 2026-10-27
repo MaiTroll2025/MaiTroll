@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Coins, Eye, Gamepad2, Plus, Radio, Shield, Sparkles, Target, Trophy, Users, Waves } from 'lucide-react'
+import { Coins, Eye, Gamepad2, Plus, Radio, Shield, Shuffle, Sparkles, Target, Trophy, Users, Waves } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { isAdminEmail } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { useTrocean } from '@/hooks/useTrocean'
 
@@ -15,7 +16,15 @@ interface GameDashboard {
 
 export default function GamesPage() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user, profile } = useAuthStore()
+  const role = String(profile?.role || '').toLowerCase()
+  const trollRole = String(profile?.troll_role || '').toLowerCase()
+  const _isAdmin = isAdminEmail(user?.email) || Boolean(
+    profile?.is_admin ||
+    (profile as any)?.is_superadmin ||
+    ['admin', 'superadmin', 'owner', 'ceo'].includes(role) ||
+    ['admin', 'superadmin', 'owner', 'ceo'].includes(trollRole)
+  )
   const { createLobby } = useTrocean(undefined, user?.id)
   const [dashboard, setDashboard] = useState<GameDashboard | null>(null)
   const [loading, setLoading] = useState(true)
@@ -50,7 +59,7 @@ export default function GamesPage() {
   return <div className="min-h-screen bg-[#030712] text-white">
     <main className="mx-auto max-w-[1500px] px-4 pb-24 pt-6 md:px-6">
       <header className="mb-6 overflow-hidden rounded-[30px] border border-cyan-400/20 bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,.16),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(217,70,239,.14),transparent_32%),#050816] p-6 shadow-[0_0_45px_rgba(34,211,238,.08)]">
-        <div className="flex flex-wrap items-end justify-between gap-5"><div><div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.32em] text-cyan-300"><Gamepad2 className="h-4 w-4"/>MAI Troll Games</div><h1 className="mt-2 text-4xl font-black md:text-6xl">Play live. Think faster.</h1><p className="mt-3 max-w-2xl text-slate-300">Original multiplayer games powered by LiveKit, Troll Coins, strategy, and MAI Troll broadcasting.</p></div><button onClick={create} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 px-5 py-3 font-black shadow-[0_0_25px_rgba(217,70,239,.3)]"><Plus className="h-4 w-4"/>Create Trocean lobby</button></div>
+        <div className="flex flex-wrap items-end justify-between gap-5"><div><div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.32em] text-cyan-300"><Gamepad2 className="h-4 w-4"/>MAI Troll Games</div><h1 className="mt-2 text-4xl font-black md:text-6xl">Play live. Think faster.</h1><p className="mt-3 max-w-2xl text-slate-300">Original multiplayer games powered by LiveKit, Troll Coins, strategy, and MAI Troll broadcasting.</p></div><div className="flex flex-wrap gap-3"><button onClick={() => navigate('/troll-wheel')} className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/10 px-5 py-3 font-black text-amber-100 transition hover:bg-amber-400/20"><Shuffle className="h-4 w-4"/>Troll Wheel</button><button onClick={create} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 px-5 py-3 font-black shadow-[0_0_25px_rgba(217,70,239,.3)]"><Plus className="h-4 w-4"/>Create Trocean lobby</button></div></div>
       </header>
 
       <section className="grid gap-5 xl:grid-cols-[1.55fr_.75fr]">

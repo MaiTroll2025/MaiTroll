@@ -1,5 +1,5 @@
 import React from "react";
-import { Bell, Crown, FileText, Gavel, GraduationCap, Home, Lock, MessageCircle, Mic, Radio, Scan, Settings, Shield, Sparkles, Store, User, Wrench, Heart, Gamepad2, DollarSign, Newspaper } from "lucide-react";
+import { Bell, Crown, FileText, Gavel, GraduationCap, Home, Lock, MessageCircle, Radio, Scan, Settings, Shield, Sparkles, Store, User, Wrench, Heart, Gamepad2, DollarSign, Newspaper, BarChart3 } from "lucide-react";
 
 import MobileHomePage from "./pages/MobileHomepage";
 import MobileSetupPage from "./pages/MobileSetupPage";
@@ -16,7 +16,6 @@ import MobileTreelzPage from "./pages/MobileTreelzPage";
 import MobileTreelzUpload from "./pages/MobileTreelzUpload";
 import MobileTreelzSettings from "./pages/MobileTreelzSettings";
 import MobileTreelzSaved from "./pages/MobileTreelzSaved";
-import MobilePodcastPage from "./pages/MobilePodcastPage";
 
 import MobilePlaceholder from "./components/MobilePlaceholder";
 import AuctioneerScanner from "../pages/auction/AuctioneerScanner";
@@ -142,12 +141,12 @@ export const mobileRoutes: MobileRouteItem[] = [
     showInBottomBubble: true,
   },
   {
-    key: "podcast",
-    label: "Podcast",
-    path: "/podcast",
-    element: <MobilePodcastPage />,
-    icon: Mic,
-    priority: 62,
+    key: "insights",
+    label: "Insights",
+    path: "/insights",
+    element: <MobilePlaceholder title="Insights" />,
+    icon: BarChart3,
+    priority: 63,
     regular: true,
     public: true,
     showInBottomBubble: true,

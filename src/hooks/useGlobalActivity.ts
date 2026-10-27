@@ -56,7 +56,8 @@ const useGlobalActivity = () => {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       const { data, error } = await supabase
         .from('global_events')
-        .select('id,type,title,icon,priority,metadata,created_at,duration_minutes')
+        .select('id,type,title,icon,priority,metadata,created_at,duration_minutes,dedupe_key,source_event_id,status,route,source,actor_id,expires_at')
+        .eq('status', 'published')
         .gte('created_at', since)
         .order('created_at', { ascending: false })
         .limit(50)

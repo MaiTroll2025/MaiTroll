@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronRight, Crown, Gavel, MessageCircle, FileText, HelpCircle, Home, Mail, Play, Plus, Radio, Search, Smartphone, Sparkles, Trophy, Users, Shield, Gamepad2, Download } from 'lucide-react';
+import { ArrowRight, ChevronRight, Crown, Gavel, MessageCircle, FileText, HelpCircle, Home, Mail, Play, Radio, Search, Sparkles, Trophy, Users, Shield, Gamepad2, Download } from 'lucide-react';
 
 import PhoneHeader from '../PhoneHeader'
 import { useAuthStore } from '@/lib/store'
@@ -815,53 +815,21 @@ export default function PhoneHomepage({
         )}
 
         {/* ---------------------------------------------------------------- */}
-        {/* App Download Buttons                                              */}
+        {/* What is MaiTroll                                                   */}
         {/* ---------------------------------------------------------------- */}
 
-        <section className="mb-4 flex gap-1.5">
-          <a
-            href="https://play.google.com/store/apps/details?id=com.maitroll.app&pli=1"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative flex-1 flex items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-[#FF7A00]/30 bg-gradient-to-r from-[#FF7A00]/20 via-[#0D0814] to-[#F97316]/20 px-2.5 py-2.5 text-white shadow-[0_0_18px_rgba(0,191,255,0.12)] transition-all active:scale-[0.98] hover:border-[#FF7A00]/50 hover:shadow-[0_0_20px_rgba(0,191,255,0.2)]"
-          >
-            <Smartphone size={16} className="text-white drop-shadow-[0_0_4px_rgba(0,191,255,0.6)]" />
-            <div className="min-w-0 text-left leading-tight">
-              <p className="text-[7px] font-black uppercase tracking-wider text-[#FF7A00]/70">
-                Get the App
-              </p>
-              <p className="text-[9px] font-black text-white">
-                Google Play
-              </p>
-            </div>
-            <ChevronRight size={12} className="text-[#FF7A00]/50 transition-transform group-hover:translate-x-0.5" />
-          </a>
+        <PhoneButton
+          variant="outline"
+          size="lg"
+          icon={<Sparkles size={15} />}
+          onClick={() => go('/insights')}
+          className="w-full justify-start gap-2.5 px-4 py-3"
+        >
+          <span className="flex-1 text-xs font-bold text-zinc-500">What is MaiTroll?</span>
+        </PhoneButton>
 
-          <button
-            type="button"
-            onClick={() => {
-              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream
-              const message = isIOS
-                ? 'To add MaiTroll to your Home Screen:\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right'
-                : 'To add MaiTroll to your Home Screen on iOS:\n1. Open this page in Safari on your iPhone/iPad\n2. Tap the Share button (square with arrow up)\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add" in the top right'
-              alert(message)
-            }}
-            className="group relative flex-1 flex items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-[#A855F7]/30 bg-gradient-to-r from-[#A855F7]/20 via-[#0D0814] to-[#FF7A00]/20 px-2.5 py-2.5 text-white shadow-[0_0_18px_rgba(191,0,255,0.12)] transition-all active:scale-[0.98] hover:border-[#A855F7]/50 hover:shadow-[0_0_20px_rgba(191,0,255,0.2)]"
-          >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#A855F7]/30 bg-[#A855F7]/10">
-              <Plus size={16} className="text-white drop-shadow-[0_0_4px_rgba(191,0,255,0.6)]" />
-            </div>
-            <div className="min-w-0 text-left leading-tight">
-              <p className="text-[7px] font-black uppercase tracking-wider text-[#A855F7]/70">
-                Add to Home
-              </p>
-              <p className="text-[9px] font-black text-white">
-                iOS Safari
-              </p>
-            </div>
-            <ChevronRight size={12} className="text-[#A855F7]/50 transition-transform group-hover:translate-x-0.5" />
-          </button>
-        </section>
+        {/* Placeholder: add your file/button content below */}
+        {/* <PhoneButton variant="outline" size="lg" onClick={handlePlaceholder} className="w-full justify-start gap-2.5 px-4 py-3">Placeholder</PhoneButton> */}
 
         {/* ---------------------------------------------------------------- */}
         {/* Stats + Go Live                                                   */}

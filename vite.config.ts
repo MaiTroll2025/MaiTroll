@@ -97,6 +97,7 @@ export default defineConfig(({ mode }) => {
           globIgnores: [
             '**/*.chunk.js',
             '**/*.chunk.mjs',
+            '**/vendor-babylon-*.js',
             '**/*-??-??-??.js',
             '**/*-??-??-??.mjs'
           ],
@@ -225,7 +226,10 @@ export default defineConfig(({ mode }) => {
               if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('clsx') || id.includes('tailwind-merge') || id.includes('sonner') || id.includes('recharts') || id.includes('react-swipeable')) {
                 return 'vendor-ui'
               }
-              if (id.includes('@babylonjs') || id.includes('three') || id.includes('@react-three') || id.includes('gsap')) {
+              if (id.includes('@babylonjs')) {
+                return 'vendor-babylon'
+              }
+              if (id.includes('three') || id.includes('@react-three') || id.includes('gsap')) {
                 return 'vendor-3d'
               }
               if (id.includes('hls.js') || id.includes('livekit') || id.includes('socket.io')) {

@@ -1,9 +1,8 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MessageCircle, Mic, Radio, Sparkles, FileText, Trophy, PenSquare, Shuffle, Newspaper, Coins, Gem, Crown, Plus, Building2 } from 'lucide-react';
+import { MessageCircle, Mic, Radio, Sparkles, FileText, Trophy, PenSquare, Newspaper, Coins, Gem, Crown, Plus, Building2, Shuffle } from 'lucide-react';
 
 import FloatingPoster from './FloatingPoster'
-import { grantNavCoins } from '@/lib/grantNavCoins'
 import { useAuthStore } from '@/lib/store'
 import { useCoins } from '@/lib/hooks/useCoins'
 import { useXPStore } from '@/stores/useXPStore'
@@ -187,8 +186,6 @@ export default function LeftNavSidebar({
     ]
 
   const handleTabClick = (tab: NavTab) => {
-    grantNavCoins(tab.label)
-
     if (tab.isExternal && tab.path) {
       navigate(tab.path)
       return
@@ -200,7 +197,6 @@ export default function LeftNavSidebar({
   }
 
   const handleMoreClick = () => {
-    grantNavCoins('More')
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('open-more-panel'))
     }

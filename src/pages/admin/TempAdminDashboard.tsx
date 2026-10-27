@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
+import { usePresenceStore } from '../../lib/presenceStore'
 import { toast } from 'sonner'
 import { Shield, Clock, Radio, Gavel, FileText, Gift, Megaphone, BarChart, AlertTriangle, CheckCircle, Users, UserMinus, Search } from 'lucide-react';
 import { MaiTrollTheme } from '../../styles/trollCityTheme'
@@ -9,6 +10,7 @@ import { formatDistanceToNow } from 'date-fns'
 
 export default function TempAdminDashboard() {
   const { profile } = useAuthStore()
+  const onlineUserIds = usePresenceStore((state) => state.onlineUserIds)
   const [_loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [adminTerm, setAdminTerm] = useState<any>(null)
@@ -96,51 +98,29 @@ export default function TempAdminDashboard() {
     const loadOnlineUsers = async () => {
       setIsLoadingUsers(true)
       try {
-        // Get users who are active in the last 5 minutes
-        const { data } = await supabase
-          .from('online_users')
-          .select('*, user_profiles(id, username, avatar_url, role, troll_role, is_banned)')
-          .order('last_seen', { ascending: false })
-          .limit(100)
-        
-        if (data) {
-          // Flatten the data
-          const flattened = data.map(u => ({
-            id: u.user_id,
-            username: u.user_profiles?.username || 'Unknown',
-            avatar_url: u.user_profiles?.avatar_url,
-            role: u.user_profiles?.role,
-            troll_role: u.user_profiles?.troll_role,
-            is_banned: u.user_profiles?.is_banned,
-            last_seen: u.last_seen,
-          }))
-          setOnlineUsers(flattened)
+        const userIds = Array.from(onlineUserIds)
+        if (userIds.length === 0) {
+          setOnlineUsers([])
+          return
         }
+
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id, username, avatar_url, role, troll_role, is_banned')
+          .in('id', userIds)
+          .order('username')
+        if (error) throw error
+        setOnlineUsers(data || [])
       } catch (err) {
         console.error('Error loading online users:', err)
+        setOnlineUsers([])
       } finally {
         setIsLoadingUsers(false)
       }
     }
 
-    loadOnlineUsers()
-
-    // Subscribe to realtime updates
-    const channel = supabase
-      .channel('admin-online-users')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'online_users' 
-      }, loadOnlineUsers)
-      .subscribe()
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
-    }
-  }, [])
+    void loadOnlineUsers()
+  }, [onlineUserIds])
 
   // Handle arrest user
   const handleArrestUser = async () => {

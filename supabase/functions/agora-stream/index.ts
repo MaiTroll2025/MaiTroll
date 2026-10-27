@@ -384,6 +384,41 @@ async function handleEndStream(body: any, supabase: any) {
       .eq("id", session.stream_id);
   }
 
+  // Publish a single, deduplicated ticker event for this genuine broadcast end.
+  // Runs after the stream is ended so a failure here never interrupts the end flow.
+  try {
+    if (session.stream_id) {
+      const { data: stream } = await supabase
+        .from("streams")
+        .select("user_id, title")
+        .eq("id", session.stream_id)
+        .single();
+      let username = "A broadcaster";
+      if (stream?.user_id) {
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("username")
+          .eq("id", stream.user_id)
+          .single();
+        if (profile?.username) username = profile.username;
+      }
+      await supabase.from("global_events").insert({
+        type: "live",
+        title: `${username} ended their broadcast`,
+        icon: "live",
+        priority: 1,
+        metadata: { category: "broadcast_end", stream_id: session.stream_id, user_id: stream?.user_id },
+        dedupe_key: `broadcast:end:${session.stream_id}`,
+        source_event_id: session.stream_id,
+        status: "published",
+        route: `/broadcast/${session.stream_id}`,
+        source: "live",
+      });
+    }
+  } catch (err) {
+    console.warn("[agora-stream] failed to publish broadcast-end ticker event:", err);
+  }
+
   return {
     ok: true,
     session: { id: session.id, status: "ended", endedAt: now },

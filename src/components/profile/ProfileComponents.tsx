@@ -48,6 +48,7 @@ interface UserProfile {
     is_chief_news_caster?: boolean;
     is_pastor?: boolean;
     is_secretary?: boolean;
+    troll_coins?: number;
 }
 
 interface ProfileHeaderProps {
@@ -72,6 +73,8 @@ interface ProfileHeaderProps {
     onFollowingClick?: () => void;
     isBlocked?: boolean;
     onBlockChange?: (isBlocked: boolean) => void;
+    showCoinsStat?: boolean;
+    coinsStatValue?: number;
 }
 
 interface ProfileActionsDropdownProps {
@@ -266,6 +269,8 @@ export function ProfileHeader({
     onFollowingClick,
     isBlocked = false,
     onBlockChange,
+    showCoinsStat = false,
+    coinsStatValue,
 }: ProfileHeaderProps) {
     const { theme } = useTheme()
     const themeColor = profile.theme_color || '#9333ea';
@@ -505,6 +510,7 @@ export function ProfileHeader({
                         { label: 'Followers', value: profile.followers_count, clickable: !!onFollowersClick, onClick: onFollowersClick },
                         { label: 'Following', value: profile.following_count, clickable: !!onFollowingClick, onClick: onFollowingClick },
                         ...(showModActionsStat ? [{ label: 'Mod Actions', value: modActionsCount, clickable: true, onClick: onModActionsClick }] : []),
+                        ...(showCoinsStat ? [{ label: 'Coins', value: coinsStatValue ?? 0, clickable: false }] : []),
                     ].map(stat => (
                         <div key={stat.label} className={`rounded-2xl border border-white/10 bg-black/40 p-3 text-center transition ${stat.clickable ? 'cursor-pointer hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-cyan-500/5' : 'hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/5'}`} onClick={stat.clickable ? stat.onClick : undefined}>
                             <div className="text-sm font-black text-white sm:text-2xl">{stat.value.toLocaleString()}</div>

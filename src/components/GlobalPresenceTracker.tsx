@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useAuthStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { usePresenceStore } from '../lib/presenceStore';
@@ -17,13 +17,13 @@ import { usePresenceStore } from '../lib/presenceStore';
  */
 export default function GlobalPresenceTracker() {
   const { user, profile } = useAuthStore();
-  const setOnlineCount = usePresenceStore(state => state.setOnlineCount);
   const setOnlineUserIds = usePresenceStore(state => state.setOnlineUserIds);
-  const isVisibleRef = useRef<boolean>(!document.hidden);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
-    if (!user?.id || !profile?.id) return;
+    if (!user?.id || !profile?.id) {
+      setOnlineUserIds([]);
+      return;
+    }
 
     // Use a single global presence channel — Supabase Presence handles
     // join/leave/sync without any DB writes.
@@ -35,116 +35,32 @@ export default function GlobalPresenceTracker() {
       },
     });
 
-    channelRef.current = channel;
-
-    // On sync, derive online users from presence state — zero DB queries
+    // Presence keys are user IDs, so multiple tabs for one account count once.
     channel.on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState();
-      const userIds = Object.keys(state);
-      setOnlineCount(userIds.length);
+      const userIds = [...new Set(
+        Object.values(state).flatMap((metas: any[]) =>
+          metas.map((m: any) => m?.user_id).filter(Boolean)
+        )
+      )];
       setOnlineUserIds(userIds);
     });
 
-    channel.subscribe(async (status) => {
+    channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
-        // Track this user as online — no DB write needed
-        await channel.track({
+        void channel.track({
           user_id: user.id,
           online_at: new Date().toISOString(),
         });
-
-        // Set initial DB online status (one-time write on connect)
-        try {
-          await supabase
-            .from('user_profiles')
-            .update({
-              is_online: true,
-              last_active: new Date().toISOString()
-            })
-            .eq('id', user.id);
-        } catch {
-          // Silently fail — presence tracking is non-critical
-        }
       }
     });
 
-    // Handle visibility changes — update DB is_online only on transitions
-    const handleVisibilityChange = async () => {
-      const isVisible = !document.hidden;
-      isVisibleRef.current = isVisible;
-
-      if (!isVisible) {
-        // Mark offline in DB (single write on hide)
-        try {
-          await supabase
-            .from('user_profiles')
-            .update({
-              is_online: false,
-              last_active: new Date().toISOString()
-            })
-            .eq('id', user.id);
-        } catch {
-          // Silently fail
-        }
-        return;
-      }
-
-      // Mark online in DB (single write on show)
-      try {
-        await supabase
-          .from('user_profiles')
-          .update({
-            is_online: true,
-            last_active: new Date().toISOString()
-          })
-          .eq('id', user.id);
-      } catch {
-        // Silently fail
-      }
-    };
-
-    // Handle beforeunload — mark as offline
-    const handleBeforeUnload = () => {
-      if (user?.id) {
-        const payload = JSON.stringify({
-          is_online: false,
-          last_active: new Date().toISOString()
-        });
-        navigator.sendBeacon(
-          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_profiles?id=eq.${user.id}`,
-          payload
-        );
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-
-      // Untrack presence and remove channel
-      if (channelRef.current) {
-        channelRef.current.untrack();
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-
-      // Mark as offline on unmount
-      if (user?.id) {
-        supabase
-          .from('user_profiles')
-          .update({
-            is_online: false,
-            last_active: new Date().toISOString()
-          })
-          .eq('id', user.id)
-           .then(() => {})
-           .then(undefined, () => {});
-      }
+      void channel.untrack();
+      void supabase.removeChannel(channel);
+      setOnlineUserIds([]);
     };
-  }, [user?.id, profile?.id, setOnlineCount, setOnlineUserIds]);
+  }, [user?.id, profile?.id, setOnlineUserIds]);
 
   return null;
 }

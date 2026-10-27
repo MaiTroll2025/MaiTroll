@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { BookOpen, Crown, FileText, MessageCircle, Radio, Shield, Sparkles, Star, Trophy, Users, Vote, X, Zap } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
+import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
 import TrollWallFeed from '@/components/home/TrollWallFeed'
 import CityLawsFeesTab from '@/components/home/CityLawsFeesTab'
@@ -397,6 +398,7 @@ function LeftSidebar({ liveItems, user }: { liveItems: LiveItem[]; user: any }) 
   const topLive = liveItems.slice(0, 5)
   const [trendingTopics, setTrendingTopics] = useState<Array<{ name: string; count: number }>>([])
   const [onlineFriends, setOnlineFriends] = useState<any[]>([])
+  const onlineUserIds = usePresenceStore((state) => state.onlineUserIds)
 
   // Fetch trending topics from wall posts
   useEffect(() => {
@@ -460,18 +462,16 @@ function LeftSidebar({ liveItems, user }: { liveItems: LiveItem[]; user: any }) 
           .from('user_profiles')
           .select('id, username, avatar_url, is_online, currently_streaming')
           .in('id', friendIds)
-          .eq('is_online', true)
-          .limit(5)
 
         if (profilesError) throw profilesError
-        setOnlineFriends(profiles || [])
+        setOnlineFriends((profiles || []).filter((profile) => onlineUserIds.has(profile.id)).slice(0, 5))
       } catch (err) {
         console.error('Error fetching online friends:', err)
       }
     }
 
     fetchFriends()
-  }, [user?.id])
+  }, [user?.id, onlineUserIds])
   
   return (
     <aside className="hidden space-y-3 lg:block">

@@ -176,9 +176,9 @@ function StatCard({ label, value, tone, icon }: { label: string; value: React.Re
 }
 
 export default function RTCAdminMonitor({ fullPage = false, onClose }: { fullPage?: boolean; onClose?: () => void } = {}) {
-const { profile } = useAuthStore();
+  const { profile } = useAuthStore();
   const navigate = useNavigate();
-  const onlineCount = usePresenceStore((state) => state.onlineCount);
+  const onlineUserIds = usePresenceStore((state) => state.onlineUserIds);
   
   const {
     isConnected: _isConnected,
@@ -210,6 +210,8 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [now, setNow] = useState(() => Date.now());
   const timerRef = useRef<number | null>(null);
+  const streamClickRef = useRef<{ id: string; time: number } | null>(null);
+  const streamClickTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { isMobileWidth } = useIsMobile();
 
   // Draggable panel state
@@ -255,6 +257,10 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
     liveStreamDetails: [],
     totalUsers: 0,
   });
+
+  const displayOnlineCount = onlineUserIds.size;
+  const [onlineUsersPopupOpen, setOnlineUsersPopupOpen] = useState(false);
+  const [onlineUsersList, setOnlineUsersList] = useState<UserListItem[]>([]);
 
   // RTC minutes reset state — manual restart only, never auto-resets on live creation
   const [rtcMinutesResetAt, setRtcMinutesResetAt] = useState<Date | null>(null);
@@ -1899,6 +1905,30 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       }
     }, [handleFloatingButtonClick])
 
+    const openOnlineUsersPopup = useCallback(async () => {
+      setOnlineUsersPopupOpen(true)
+      setIsOpen(true)
+      setIsManuallyClosed(false)
+      setActiveMainTab('rtc')
+      try {
+        const presenceIds = Array.from(usePresenceStore.getState().onlineUserIds)
+        if (presenceIds.length === 0) {
+          setOnlineUsersList([])
+          return
+        }
+        const { data: presenceData, error: presenceError } = await supabase
+          .from('user_profiles')
+          .select('id, username, avatar_url, role, is_admin, last_seen_at')
+          .in('id', presenceIds)
+        if (presenceError) throw presenceError
+
+        setOnlineUsersList((presenceData || []) as UserListItem[])
+      } catch (err) {
+        console.error('[RTC Monitor] Error fetching online users:', err)
+        setOnlineUsersList([])
+      }
+    }, [])
+
     // Close dropdown when clicking outside or scrolling/resizing
     useEffect(() => {
       if (!openDropdownUserId) return;
@@ -1999,17 +2029,20 @@ const renderFloatingButton = () => {
               title={`RTC Monitor - ${stats.liveStreams} live streams${showErrorFlash ? ' ⚠ ERROR' : ''}${showReportFlash ? ' 📋 NEW REPORT' : ''}${showLiveFlash ? ' 🔴 NEW LIVE' : ''}`}
            >
              <Monitor className={`${iconSize} text-white`} />
-             <span className={`inline-flex items-center justify-center rounded-full bg-emerald-300 ${badgePx} ${badgePy} ${badgeTextSize} font-bold leading-none text-black`}>
-               {onlineCount}
-             </span>
+              <span
+                onClick={(e) => { e.stopPropagation(); openOnlineUsersPopup() }}
+                className={`inline-flex items-center justify-center rounded-full bg-emerald-300 ${badgePx} ${badgePy} ${badgeTextSize} font-bold leading-none text-black`}
+              >
+                {displayOnlineCount}
+              </span>
            </button>
-           {canUseWalkieTalkie && (
-             <div className="hidden group-hover:flex">
-               <StaffWalkieTalkieButton />
-             </div>
-           )}
-         </div>
-       );
+            {canUseWalkieTalkie && (
+              <div className="hidden group-hover:flex">
+                <StaffWalkieTalkieButton />
+              </div>
+            )}
+          </div>
+        );
     };
 
    const monitorTabs: Array<{ id: MainTab; label: string; icon: React.ReactNode; adminOnly?: boolean; staffOnly?: boolean }> = [
@@ -2110,9 +2143,39 @@ const renderRtcTab = () => (
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <StatCard label="Streams" value={stats.liveStreams} tone="border-red-500/20 bg-red-500/10 text-red-400" icon={<Radio className="h-3 w-3" />} />
-          <StatCard label="Viewers" value={totalViewers} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<Users className="h-3 w-3" />} />
-          <StatCard label="Sessions" value={stats.activeSessions} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Clock className="h-3 w-3" />} />
-          <StatCard label="Online" value={onlineCount} tone="border-green-500/20 bg-green-500/10 text-green-400" icon={<Activity className="h-3 w-3" />} />
+          <div
+            className="rounded-md border p-2 border-cyan-500/20 bg-cyan-500/10 cursor-pointer hover:bg-cyan-500/20"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => openOnlineUsersPopup()}
+          >
+            <div className="mb-0.5 flex items-center gap-1 text-[9px] uppercase leading-none opacity-90">
+              <Users className="h-3 w-3 text-cyan-400" />
+              <span className="truncate">Viewers</span>
+            </div>
+            <div className="text-base font-bold leading-tight text-white">{totalViewers}</div>
+          </div>
+          <div
+            className="rounded-md border p-2 border-yellow-500/20 bg-yellow-500/10 cursor-pointer hover:bg-yellow-500/20"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => openOnlineUsersPopup()}
+          >
+            <div className="mb-0.5 flex items-center gap-1 text-[9px] uppercase leading-none opacity-90">
+              <Clock className="h-3 w-3 text-yellow-400" />
+              <span className="truncate">Sessions</span>
+            </div>
+            <div className="text-base font-bold leading-tight text-white">{stats.activeSessions}</div>
+          </div>
+          <div
+            className="rounded-md border p-2 border-green-500/20 bg-green-500/10 cursor-pointer hover:bg-green-500/20"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => openOnlineUsersPopup()}
+          >
+            <div className="mb-0.5 flex items-center gap-1 text-[9px] uppercase leading-none opacity-90">
+              <Activity className="h-3 w-3 text-green-400" />
+              <span className="truncate">Online</span>
+            </div>
+            <div className="text-base font-bold leading-tight text-white">{displayOnlineCount}</div>
+          </div>
           <StatCard label="Users" value={stats.totalUsers} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Users className="h-3 w-3" />} />
            <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-2">
              <div className="mb-0.5 flex items-center gap-1 text-[9px] uppercase leading-none text-blue-400">
@@ -2180,12 +2243,37 @@ return (
                   <button
                     key={stream.id}
                     type="button"
-                    onClick={() => {
-                      if (stream.kind === 'mai-sing-off' && stream.sessionId) {
-                        navigate(`/mai-sing-off/live/${stream.sessionId}`);
+                    onMouseDown={(e) => {
+                      if (e.button !== 0) return;
+                      const nowClick = Date.now();
+                      const last = streamClickRef.current;
+                      if (last && last.id === stream.id && nowClick - last.time < 300) {
+                        if (streamClickTimeout.current) clearTimeout(streamClickTimeout.current);
+                        streamClickRef.current = null;
+                        streamClickTimeout.current = null;
+                        e.stopPropagation();
+                        void openStreamModal(stream);
                         return;
                       }
-                      void openStreamModal(stream);
+                      streamClickRef.current = { id: stream.id, time: nowClick };
+                      streamClickTimeout.current = setTimeout(() => {
+                        streamClickRef.current = null;
+                        streamClickTimeout.current = null;
+                        if (stream.kind === 'mai-sing-off' && stream.sessionId) {
+                          navigate(`/mai-sing-off/live/${stream.sessionId}`);
+                          return;
+                        }
+                        navigate(`/live/${encodeURIComponent(stream.broadcasterId || stream.id)}`);
+                      }, 300);
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const nowClick = Date.now();
+                      const last = streamClickRef.current;
+                      if (!last || last.id !== stream.id || nowClick - last.time >= 300) {
+                        // single click handled via mouseDown timing; prevent default navigation here
+                        return;
+                      }
                     }}
                     className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition-colors hover:bg-white/10"
                   >
@@ -3555,7 +3643,7 @@ return (
                  <div className="space-y-2">
                    {streamViewers.map((viewer) => (
                      <div key={viewer.user_id} className="flex items-center justify-between rounded bg-white/5 px-3 py-2">
-                        <span className="truncate text-sm text-white cursor-pointer hover:text-blue-300" onClick={() => navigate(`/profile/id/${viewer.user_id}`)}>@{viewer.username}</span>
+                         <span className="truncate text-sm text-white cursor-pointer hover:text-blue-300" onClick={(e) => { e.stopPropagation(); openAction({ id: viewer.user_id, username: viewer.username, avatar_url: viewer.avatar_url, role: viewer.role || null, is_admin: viewer.is_admin || false } as UserListItem, 'warn'); }}>@{viewer.username}</span>
                        <div className="flex gap-1">
                          <button type="button" onClick={() => kickUserFromStream(viewer.user_id, viewer.username)} className="rounded bg-red-600 px-2 py-1 text-xs text-white">Kick</button>
                          <button type="button" onClick={() => summonFromStream(viewer.user_id, viewer.username)} className="rounded bg-purple-600 px-2 py-1 text-xs text-white">Court</button>
@@ -3598,8 +3686,6 @@ return (
       >
         <div
           ref={panelRef}
-          onMouseDown={handleMonitorDragStart}
-          onTouchStart={handleMonitorDragStart}
           style={{
             ...panelStyle,
             position: 'fixed',
@@ -3613,6 +3699,8 @@ return (
         >
           {/* Header — drag handle */}
           <div
+            onMouseDown={handleMonitorDragStart}
+            onTouchStart={handleMonitorDragStart}
             className={`flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-blue-900/45 to-purple-900/45 px-3 py-2 select-none ${fullPage ? '' : 'cursor-grab'}`}
           >
             <div className="min-w-0">
@@ -3621,7 +3709,14 @@ return (
                 <span className="truncate text-sm font-bold text-white">RTC Monitor</span>
               </div>
               <div className="mt-0.5 text-[10px] text-gray-400">
-                {stats.liveStreams} live • {onlineCount} online
+                {stats.liveStreams} live •{' '}
+                <span
+                  className="cursor-pointer hover:text-cyan-400"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={() => openOnlineUsersPopup()}
+                >
+                  {displayOnlineCount} online
+                </span>
               </div>
             </div>
             <button
@@ -3642,7 +3737,51 @@ return (
             <div className="space-y-2 p-2.5">
               {renderTabNavigation()}
               <div className="rounded-xl border border-white/5 bg-black/10 p-2">
-                {renderActiveTab()}
+                {onlineUsersPopupOpen ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Users className="w-4 h-4 text-cyan-400" />
+                        Online Users
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setOnlineUsersPopupOpen(false)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    {onlineUsersList.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-4">No online users</p>
+                    ) : (
+                      <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                        {onlineUsersList.map((user) => (
+                          <div key={user.id} className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/5 cursor-default">
+                            <div className="w-7 h-7 rounded-full bg-slate-800 flex-shrink-0 overflow-hidden border border-slate-700">
+                              {user.avatar_url ? (
+                                <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                  {String(user.username || 'U').charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-white truncate">{user.username}</p>
+                              <p className="text-[9px] text-slate-500 truncate">
+                                {user.role || 'user'} {user.is_admin ? '• admin' : ''}
+                              </p>
+                            </div>
+                            <span className="text-[10px] text-green-400 font-bold">●</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  renderActiveTab()
+                )}
               </div>
             </div>
           </div>
@@ -3695,7 +3834,7 @@ return (
                 <div className="text-[10px] text-gray-400">Live</div>
               </div>
               <div className="rounded bg-white/5 p-2 text-center">
-                <div className="text-lg font-bold text-cyan-400">{onlineCount}</div>
+                <div className="text-lg font-bold text-cyan-400">{displayOnlineCount}</div>
                 <div className="text-[10px] text-gray-400">Online</div>
               </div>
               <div className="rounded bg-white/5 p-2 text-center">

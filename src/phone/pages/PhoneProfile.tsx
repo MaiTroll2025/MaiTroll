@@ -1939,7 +1939,17 @@ export default function PhoneProfile() {
 
             {/* Profile stats */}
             <div className="mt-3 grid grid-cols-3 gap-2">
-              <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3 text-center">
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    isViewingOwnProfile
+                      ? '/following?tab=followers'
+                      : `/following/${usernameParam}?tab=followers`,
+                  )
+                }
+                className="rounded-xl border border-white/10 bg-white/[0.025] p-3 text-center active:scale-95 transition"
+              >
                 <p className="text-lg font-black">
                   {followersCount}
                 </p>
@@ -1947,7 +1957,7 @@ export default function PhoneProfile() {
                 <p className="mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-white/30">
                   Followers
                 </p>
-              </div>
+              </button>
 
               <button
                 type="button"

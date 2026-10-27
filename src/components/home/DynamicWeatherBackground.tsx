@@ -26,7 +26,7 @@ type BuildingMetaExtended = BuildingMeta
 const DEFAULT_BUILDINGS: BuildingMetaExtended[] = [
   { label: 'Apartment Building', to: '/home', type: 'home' },
   { label: 'City Post Office', to: '/utromail', type: 'standard' },
-  { label: 'Mai City Bank', to: '/store', type: 'bank' },
+  
   { label: 'Treelz Cinema', to: '/treelz', type: 'standard' },
   { label: 'Broadcast Tower', to: '/broadcast/setup', type: 'broadcast' },
   { label: 'Municipal Court', to: '/troll-court', type: 'court' },

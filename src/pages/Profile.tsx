@@ -966,6 +966,10 @@ if (loading) {
 
                     isJailed={!!profile?.is_jailed}
 
+                    showCoinsStat={isAdminViewer}
+
+                    coinsStatValue={Number(profile?.troll_coins || 0)}
+
                     onAvatarEdit={() => navigate('/profile/settings')}
 
                     onCoverEdit={() => navigate('/profile/settings', { state: { openCoverUpload: true } })}

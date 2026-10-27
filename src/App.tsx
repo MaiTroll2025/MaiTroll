@@ -116,6 +116,8 @@ const AgencyDashboard = lazyWithRetry(() => import("./pages/agency-dashboard"));
 const HytroGaming = lazyWithRetry(() => import("./pages/gaming/HytroGaming"));
 const HytroGamingApply = lazyWithRetry(() => import("./pages/gaming/HytroGamingApply"));
 const HytroGamingContract = lazyWithRetry(() => import("./pages/gaming/HytroGamingContract"));
+
+const GamesPage = lazyWithRetry(() => import("./pages/games/GamesPage"));
 const AgencyHRDashboard = lazyWithRetry(() => import("./pages/agency-hr-dashboard"));
 const AttorneyDashboard = lazyWithRetry(() => import("./pages/attorney/AttorneyDashboard"));
 const ProsecutorDashboard = lazyWithRetry(() => import("./pages/prosecutor/ProsecutorDashboard"));
@@ -180,7 +182,7 @@ const HytroGamingViewer = lazyWithRetry(() => import("./pages/gaming/HytroGaming
 const Trollifications = lazyWithRetry(() => import("./pages/Trollifications"));
 const Trollifieds = lazyWithRetry(() => import("./pages/Trollifieds"));
 const HowToVideosPage = lazyWithRetry(() => import("./pages/JobsHowToPage"));
-const _JobsPage = lazyWithRetry(() => import("./pages/Jobs"));
+const JobsOpportunitiesPage = lazyWithRetry(() => import("./pages/Jobs"));
 const _OfficerScheduling = lazyWithRetry(() => import("./pages/OfficerScheduling"));
 const PolicyCenter = lazyWithRetry(() => import("./pages/PolicyCenter"));
 const UniverseEventPage = lazyWithRetry(() => import("./pages/UniverseEventPage"));
@@ -205,6 +207,10 @@ const SEOFAQPage = lazyWithRetry(() => import("./pages/seo/FAQPage"));
 const SEOPrivacyPage = lazyWithRetry(() => import("./pages/seo/PrivacyPage"));
 const SEOTermsPage = lazyWithRetry(() => import("./pages/seo/TermsPage"));
 const SEOAppDownloadsPage = lazyWithRetry(() => import("./pages/seo/AppDownloadsPage"));
+const SEOForumPage = lazyWithRetry(() => import("./pages/seo/ForumPage"));
+const SEOForumPostPage = lazyWithRetry(() => import("./pages/seo/ForumPostPage"));
+// Insights page
+const SEOInsightsPage = lazyWithRetry(() => import("./pages/seo/InsightsPage"));
 const BroadcastingAppPage = lazyWithRetry(() => import("./pages/seo/FeatureLandingPages").then((module) => ({ default: module.BroadcastingAppPage })));
 const SocialMediaFeaturePage = lazyWithRetry(() => import("./pages/seo/FeatureLandingPages").then((module) => ({ default: module.SocialMediaFeaturePage })));
 const SiteUpdatesPage = lazyWithRetry(() => import("./pages/SiteUpdatesPage"));
@@ -1714,7 +1720,10 @@ const appShell = (
                  <Route path="/live-swipe" element={<StreamSwipePage />} />
                 <Route path="/embed/:id" element={<EmbedPage />} />
                 <Route path="/jobs" element={<HowToVideosPage />} />
-                 <Route path="/hytrogaming" element={<HytroGaming />} />
+                <Route path="/jobs/opportunities" element={<JobsOpportunitiesPage />} />
+                <Route path="/games" element={<GamesPage />} />
+
+                <Route path="/hytrogaming" element={<HytroGaming />} />
                  <Route path="/hytrogaming/apply" element={<HytroGamingApply />} />
                  <Route path="/hytrogaming/contract/:id" element={<HytroGamingContract />} />
                  <Route path="/hytro/:id" element={<HytroGaming />} />
@@ -1734,6 +1743,9 @@ const appShell = (
                 <Route path="/privacy" element={<SEOPrivacyPage />} />
                 <Route path="/terms" element={<SEOTermsPage />} />
                 <Route path="/app-downloads" element={<SEOAppDownloadsPage />} />
+                <Route path="/community" element={<SEOForumPage />} />
+                <Route path="/community/post/:postId" element={<SEOForumPostPage />} />
+                <Route path="/insights" element={<SEOInsightsPage />} />
                 <Route path="/features/broadcasting-app" element={<BroadcastingAppPage />} />
                 <Route path="/features/social-media" element={<SocialMediaFeaturePage />} />
                 <Route path="/updates" element={<SiteUpdatesPage postType="update" />} />
