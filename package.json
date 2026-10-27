@@ -32,6 +32,10 @@
     "cap:sync:both": "npm run check:phone-routes && npm run build && cap sync ios && cap sync android",
     "cap:open:ios": "cap open ios",
     "cap:open:android": "cap open android",
+    "capawesome:login": "npx capawesome login",
+    "capawesome:app:create": "npx capawesome app:create",
+    "capawesome:build:ios": "npm run build && npx capawesome build ios",
+    "capawesome:submit:ios": "npx capawesome submit ios",
     "cap:run:android": "npm run cap:sync:android && cap run android --livereload --external",
     "deploy:edge": "supabase functions deploy --no-verify-jwt",
     "deploy:mux-webhook": "supabase functions deploy mux-webhook --no-verify-jwt",
@@ -137,6 +141,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@capawesome/cli": "^4.27.2",
     "@eslint/js": "^9.16.0",
     "@rolldown/pluginutils": "^1.0.0-rc.10",
     "@supabase/supabase-js": "^2.47.2",
