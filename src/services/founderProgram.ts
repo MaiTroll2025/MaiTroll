@@ -612,6 +612,96 @@ export interface FounderGiftBreakdown {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Founder Invite / Referral Program                                           */
+/* -------------------------------------------------------------------------- */
+
+export interface FounderReferral {
+  id: string;
+  invited_user_id: string;
+  invited_username: string;
+  invited_display_name?: string | null;
+  invited_avatar_url?: string | null;
+  invited_coins?: number;
+  invited_at: string;
+  verified_at?: string | null;
+  payout_status: 'pending' | 'verified' | 'paid' | 'rejected';
+  payout_amount_usd: number;
+  paid_at?: string | null;
+}
+
+export interface FounderReferralStats {
+  total_invited: number;
+  verified: number;
+  paid: number;
+  earnings_usd: number;
+}
+
+export async function getMyFounderInviteCode(): Promise<string | null> {
+  const res = await rpc<{ code: string }>('founder_get_my_invite_code');
+  return res.ok ? (res.data?.code ?? null) : null;
+}
+
+export async function redeemFounderInviteCode(code: string, invitedUserId?: string | null) {
+  return rpc('founder_redeem_invite_code', {
+    p_code: code,
+    p_invited_user_id: invitedUserId ?? null,
+  });
+}
+
+export async function listMyFounderReferrals(limit = 100): Promise<FounderReferral[]> {
+  const res = await rpc<{ referrals: FounderReferral[] }>('founder_list_my_referrals', {
+    p_limit: limit,
+  });
+  return res.ok ? (res.data?.referrals ?? []) : [];
+}
+
+export async function getMyFounderReferralStats(): Promise<FounderReferralStats | null> {
+  const res = await rpc<FounderReferralStats>('founder_referral_stats');
+  return res.ok ? (res.data as FounderReferralStats) : null;
+}
+
+export async function verifyFounderReferral(referralId: string) {
+  return rpc('founder_verify_referral', { p_referral_id: referralId });
+}
+
+export async function markFounderReferralPaid(referralId: string) {
+  return rpc('founder_mark_referral_paid', { p_referral_id: referralId });
+}
+
+export async function adminListFounderReferrals(limit = 200): Promise<FounderReferral[]> {
+  // admin view uses the same RLS-allowed read via supabase direct
+  try {
+    const { data, error } = await supabase
+      .from('founder_referrals')
+      .select('id, founder_user_id, invited_user_id, invite_code, invited_at, verified_at, payout_status, payout_amount_usd, paid_at')
+      .order('invited_at', { ascending: false })
+      .limit(limit);
+    if (error) return [];
+    const rows = (data ?? []) as any[];
+    // enrich with usernames
+    const userIds = Array.from(new Set(rows.flatMap((r) => [r.founder_user_id, r.invited_user_id])));
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('id, username, display_name')
+      .in('id', userIds);
+    const pmap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+    return rows.map((r) => ({
+      id: r.id,
+      invited_user_id: r.invited_user_id,
+      invited_username: pmap.get(r.invited_user_id)?.username ?? 'Unknown',
+      invited_display_name: pmap.get(r.invited_user_id)?.display_name ?? null,
+      invited_at: r.invited_at,
+      verified_at: r.verified_at,
+      payout_status: r.payout_status,
+      payout_amount_usd: Number(r.payout_amount_usd ?? 5),
+      paid_at: r.paid_at,
+    })) as FounderReferral[];
+  } catch {
+    return [];
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* Admin                                                                        */
 /* -------------------------------------------------------------------------- */
 
@@ -850,6 +940,13 @@ export const founderProgram = {
   adminUpdateFounder,
   adminRemoveFounder,
   adminListFounderActions,
+  getMyFounderInviteCode,
+  redeemFounderInviteCode,
+  listMyFounderReferrals,
+  getMyFounderReferralStats,
+  verifyFounderReferral,
+  markFounderReferralPaid,
+  adminListFounderReferrals,
   adminGetFounderSettings,
   adminUpdateFounderSettings,
 };

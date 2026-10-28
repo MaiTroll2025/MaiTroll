@@ -26,9 +26,9 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     add('Menu', [
     { label: 'Home', path: '/', icon: Home },
     { label: 'Community', path: '/community', icon: Users },
-    { label: 'Coins', path: '/store', icon: Coins, show: true },
-    { label: 'Mai Pay', path: '/wallet', icon: Wallet },
-    { label: 'Mai Piks', path: '/mai-piks', icon: Image },
+    { label: 'Coins', path: '/store', icon: Coins, show: a.isAuthenticated },
+    { label: 'Mai Pay', path: '/wallet', icon: Wallet, show: a.isAuthenticated },
+    { label: 'Mai Piks', path: '/mai-piks', icon: Image, show: a.isAuthenticated },
     { label: 'Troll Court', path: '/troll-court', icon: Scale, show: true },
     { label: 'Treelz', path: '/treelz', icon: Video },
     { label: 'Troll Up', path: '/troll-up', icon: Zap },
@@ -36,9 +36,9 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     { label: 'HytroGaming', path: '/hytro', icon: Gamepad2 },
     { label: 'HytroSpot', path: '#', icon: Star, show: true, onClick: () => window.dispatchEvent(new Event('open-hytrospot-modal')) },
     { label: 'Careers', path: '/careers', icon: Briefcase },
-    { label: 'Profile', path: '/profile', icon: Users, show: true },
+    { label: 'Profile', path: '/profile', icon: Users, show: a.isAuthenticated },
     { label: 'MaiLife', path: '/mai-life', icon: Sparkles, show: true },
-    { label: 'Troll Animal Shelter', path: '/troll-animal-shelter', icon: PawPrint, show: true },
+    { label: 'Troll Animal Shelter', path: '/troll-animal-shelter', icon: PawPrint, show: a.isAuthenticated },
   ])
 
   add('Broadcasting', [
@@ -64,10 +64,6 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
 
   add('Games', [
     { label: 'Games', path: '/games', icon: Gamepad2 },
-    {
-
-      icon: Building2,
-    },
   ])
 
   add('City Services', [

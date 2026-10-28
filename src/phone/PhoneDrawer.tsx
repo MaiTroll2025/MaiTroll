@@ -47,18 +47,14 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
       { label: 'MaiLife', path: '/mai-life', icon: 'Sparkles', show: !!user },
       { label: 'Troll Animal Shelter', path: '/troll-animal-shelter', icon: 'PawPrint', show: !!user },
       { label: 'Marketing', path: '/admin/marketing', icon: 'Megaphone', show: isAdmin || isMarketingAgent(profile) },
-      { label: 'Coins', path: '/store', icon: 'Coins' },
-      { label: 'Mai Pay', path: '/wallet', icon: 'Wallet' },
-      { label: 'Mai Piks', path: '/mai-piks', icon: 'Image' },
-      { label: 'Troll Court', path: '/troll-court', icon: 'Scale' },
+      { label: 'Coins', path: '/store', icon: 'Coins', show: !!user },
+      { label: 'Mai Pay', path: '/wallet', icon: 'Wallet', show: !!user },
+      { label: 'Mai Piks', path: '/mai-piks', icon: 'Image', show: !!user },
+      { label: 'Troll Court', path: '/troll-court', icon: 'Scale', show: !!user },
       { label: 'Treelz', path: '/treelz', icon: 'Video' },
       { label: 'Auctions', path: '/auctions', icon: 'Gavel' },
       { label: 'HytroGaming', path: '/hytro', icon: 'Gamepad2' },
       { label: 'Games', path: '/games', icon: 'Gamepad2' },
-      {
-
-        icon: 'Building2',
-      },
       { label: 'Careers', path: '/careers', icon: 'Briefcase' },
       { label: 'Live', path: '/broadcast/setup', icon: 'Radio', show: !!(profile as any)?.is_broadcaster || isAdmin },
     ])

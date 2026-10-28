@@ -14,6 +14,7 @@ import ProtectionOrderFiling from '../components/ProtectionOrderFiling'
 import ProtectionOrderCases from '../components/ProtectionOrderCases'
 import { UserSearchInput } from '../components/UserSearchDropdown'
 import { generateUUID } from '../lib/uuid'
+import TrollCourtLanding from './TrollCourtLanding';
 
 const CASE_TYPE_MAP: Record<string, string> = {
   'Harassment / Threats': 'criminal',
@@ -52,7 +53,7 @@ const CASE_TYPES = [
 ]
 
 export default function TrollCourt() {
-  const { user, profile } = useAuthStore()
+  const { user, profile, isLoading } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
   const [poPrefill, setPoPrefill] = useState<{ id: string; username: string; avatar_url?: string | null }[]>([])
@@ -128,6 +129,7 @@ export default function TrollCourt() {
 
   useEffect(() => {
     const fetchCases = async () => {
+      if (!user) return
       const { data } = await supabase
         .from('court_cases')
         .select('*, defendant:defendant_id!left(username, avatar_url), plaintiff:plaintiff_id!left(username, avatar_url)')
@@ -139,7 +141,7 @@ export default function TrollCourt() {
     }
 
     fetchCases()
-  }, [])
+  }, [user])
 
   useEffect(() => {
     if (!user) return
@@ -171,6 +173,7 @@ export default function TrollCourt() {
   }, [user, isFileLawsuitModalOpen, selectedCaseForRuling, profile?.role])
 
   const fetchDockets = useCallback(async () => {
+    if (!user) return
     const startStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-01`
     const lastDay = new Date(calendarYear, calendarMonth + 1, 0).getDate()
     const endStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
@@ -191,7 +194,7 @@ export default function TrollCourt() {
       .order('court_date', { ascending: true })
 
     if (data) setAllDockets(data)
-  }, [calendarMonth, calendarYear])
+  }, [calendarMonth, calendarYear, user])
 
   useEffect(() => {
     fetchDockets()
@@ -560,6 +563,23 @@ export default function TrollCourt() {
       toast.success('Case file updated')
       setRecentCases((prev) => prev.map((item) => (item.id === c.id ? { ...item, ...updates } : item)))
     }
+  }
+
+  // Session still being restored: loading shell, never court data.
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0814] text-white">
+        <div className="animate-pulse px-6 py-3 rounded bg-[#121212] border border-[#2C2C2C]">
+          Loading Troll Court…
+        </div>
+      </div>
+    );
+  }
+
+  // Signed out: public Troll Court information page. No dockets, cases, or
+  // restricted records are loaded.
+  if (!user) {
+    return <TrollCourtLanding />;
   }
 
   return (

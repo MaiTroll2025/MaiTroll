@@ -16,6 +16,7 @@ import { useIsActiveFounder } from '../hooks/useFounderProgram'
  */
 export interface PhoneRoleAccess {
   [x: string]: any
+  isAuthenticated: boolean
   role: string
   trollRole: string
   isAdmin: boolean
@@ -50,6 +51,7 @@ export interface PhoneRoleAccess {
 }
 
 const FALSE_ACCESS: PhoneRoleAccess = {
+  isAuthenticated: false,
   role: '',
   trollRole: '',
   isAdmin: false,
@@ -358,6 +360,7 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     // (Admins land on the in-page "Manage Founders" tab). `isActiveFounder` is
     // the status check, not the badge check.
     isFounder: isActiveFounder || isAdmin,
+    isAuthenticated: !!user,
     isJailed,
     isBroadcastLockedDown,
     isShareAThonRestricted,

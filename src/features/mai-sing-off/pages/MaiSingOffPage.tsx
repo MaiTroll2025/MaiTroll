@@ -19,6 +19,7 @@ import { RolesLobby } from '../components/RolesLobby';
 import { StatisticsLobby } from '../components/StatisticsLobby';
 import type { SingOffDecision, SingOffRound } from '../types';
 import { toast } from 'sonner';
+import MaiSingOffLanding from './MaiSingOffLanding';
 
 type LobbyView = 'shows' | 'championship' | 'roles' | 'stats';
 
@@ -63,7 +64,7 @@ function attachMediaTrack(element: HTMLMediaElement | null, track: MediaStreamTr
 }
 
 export default function MaiSingOffPage() {
-  const user = useAuthStore((state) => state.user);
+  const { user, isLoading } = useAuthStore();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -366,8 +367,20 @@ export default function MaiSingOffPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0814] text-white">
+        <div className="animate-pulse px-6 py-3 rounded bg-[#121212] border border-[#2C2C2C]">
+          Loading Mai Sing Off…
+        </div>
+      </div>
+    );
+  }
+
+  // Signed out: public Mai Sing Off landing page. No stage, queue, contestant,
+  // judge, or session workflow is started without an authenticated user.
   if (!user) {
-    return <SignedOutView onSignIn={() => navigate('/auth')} />;
+    return <MaiSingOffLanding />;
   }
 
   /* ============ MAIN / LOBBY PAGE ============ */
@@ -1575,21 +1588,6 @@ function MobileStageTab({
 /* ============================================================
    ERROR / LOADING / AUTH
    ============================================================ */
-
-function SignedOutView({ onSignIn }: { onSignIn: () => void }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-black p-4 text-white">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-950 p-8 text-center">
-        <Mic2 className="mx-auto h-10 w-10 text-pink-400" />
-        <h1 className="mt-4 text-3xl font-black">Mai Talent Show</h1>
-        <p className="mt-3 text-sm text-white/45">Sign in to enter the virtual talent show.</p>
-        <button type="button" onClick={onSignIn} className="mt-6 w-full rounded-xl bg-pink-600 px-4 py-3 font-black hover:bg-pink-500">
-          Sign In
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function StageLoading({ onBack, onRetry }: { onBack: () => void; onRetry: () => void }) {
   return (

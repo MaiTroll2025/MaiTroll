@@ -19,6 +19,7 @@ import {
   Settings2,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
+import FounderInvitesPage from './FounderInvitesPage';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import {
@@ -47,7 +48,7 @@ import { FounderUpcomingBroadcastChip } from '@/components/founder/FounderSchedu
 import FounderAdminPanel from '@/components/founder/FounderAdminPanel';
 import { useFounderChat } from '@/hooks/useFounderProgram';
 
-type Tab = 'chat' | 'schedule' | 'rewards' | 'reports' | 'court' | 'settings' | 'admin';
+type Tab = 'chat' | 'schedule' | 'rewards' | 'reports' | 'court' | 'settings' | 'invites' | 'admin';
 
 const TABS: { id: Tab; label: string; icon: typeof Users; permission?: keyof FounderMyStatus['permissions'] }[] = [
   { id: 'chat', label: 'Founder Chat', icon: Users, permission: 'chat' },
@@ -56,6 +57,7 @@ const TABS: { id: Tab; label: string; icon: typeof Users; permission?: keyof Fou
   { id: 'reports', label: 'Reports', icon: FileText, permission: 'view_reports' },
   { id: 'court', label: 'Court Tools', icon: Gavel, permission: 'summon' },
   { id: 'settings', label: 'Program', icon: Sparkles },
+  { id: 'invites', label: 'Invites', icon: Gift },
 ];
 
 /** Admin-only tab. Mounted only when the DB reports admin, and every action
@@ -989,6 +991,20 @@ function ProgramScreen({ status }: { status: FounderMyStatus }) {
         </div>
       )}
 
+      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-5">
+        <h3 className="text-xs font-black uppercase tracking-widest text-amber-300">
+          Founder invite rules
+        </h3>
+        <ul className="mt-3 space-y-1.5 text-[12px] text-white/70 list-disc pl-5">
+          <li>Maximum of 50 active founders at any time.</li>
+          <li>Each founder receives a unique 7-digit invite code.</li>
+          <li>Share your code at signup; new users enter it during registration.</li>
+          <li>A referral verifies when the invited user completes a cashout of 3,500+ coins earned entirely from broadcast gifts.</li>
+          <li>Founders earn $5 per verified referral.</li>
+          <li>Invitee coin progress is visible until they reach a qualifying cashout, then removed from the live view and kept in the log.</li>
+        </ul>
+      </div>
+
       <p className="text-center text-[11px] italic text-white/25">
         Founder status does not change your account role. You keep every permission you already
         had.
@@ -1025,9 +1041,13 @@ export default function FounderHub() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, user]);
 
   useEffect(() => {
+    if (!user) {
+      setStatus(null);
+      return;
+    }
     if (!status) return;
 
     console.log('[FounderHub] status:', status);
@@ -1183,6 +1203,7 @@ export default function FounderHub() {
       {tab === 'reports' && <ReportsScreen />}
       {tab === 'court' && <CourtToolsScreen />}
       {tab === 'settings' && <ProgramScreen status={status} />}
+      {tab === 'invites' && <FounderInvitesPage />}
       {tab === 'admin' && isAdmin && <FounderAdminPanel />}
     </div>
   );

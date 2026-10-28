@@ -82,6 +82,12 @@ export const PUBLIC_WEB_ONLY_ROUTES: string[] = [
   '/wall',
   '/marketplace',
   '/stat-rankings',
+  '/utromail',
+  '/mai-pay',
+  '/troll-court',
+  '/mai-life',
+  '/mai-sing-off',
+  '/hytrogaming',
 
 // Public content with a web-only route shape
   '/tcnn/article/:id',
@@ -137,7 +143,6 @@ export const PRIVATE_ROUTE_PREFIXES: string[] = [
   '/wallet',
   '/coins',
   '/coins/complete',
-  '/mai-pay',
   '/inventory',
   '/earnings',
   '/bonuses',
@@ -162,7 +167,6 @@ export const PRIVATE_ROUTE_PREFIXES: string[] = [
 
   // Messaging / social-private
   '/search',
-  '/utromail',
   '/tromail',
   '/notifications',
   '/following',
@@ -220,7 +224,6 @@ export const PRIVATE_ROUTE_PREFIXES: string[] = [
   '/founder',
   '/agency-dashboard',
   '/agency-hr-dashboard',
-  '/mai-sing-off',
   '/xtrollz',
   '/mai-business',
   '/agency-apply',

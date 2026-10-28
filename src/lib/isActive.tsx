@@ -35,6 +35,7 @@ type GridItemProps = {
   collapsed?: boolean
   tone?: GridItemTone
   badge?: string
+  show?: boolean
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -770,6 +771,7 @@ function GridItem({
   tone = 'default',
   badge,
   underConstruction = false,
+  show = true,
 }: GridItemProps) {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (underConstruction) {
@@ -803,6 +805,7 @@ function GridItem({
   const isUnderConstruction = underConstruction ?? false
   const effectiveActive = !isUnderConstruction && active
 
+  if (show === false) return null
   return (
     <SafeLink
       to={isUnderConstruction ? '#' : to}

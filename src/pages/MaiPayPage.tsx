@@ -32,6 +32,7 @@ import type { CashoutRequest, PayoutMethod } from '../types/cashout';
 import FastPayProgram from '../components/FastPayProgram';
 import FastPayApplication from './FastPayApplication';
 import { WeeklyCashbackCard } from '@/components/supporter-economy/WeeklyCashbackCard';
+import MaiPayLanding from './MaiPayLanding';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ const PAYOUT_PROVIDERS: PayoutProvider[] = [
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function MaiPayPage() {
-  const { user, profile } = useAuthStore();
+  const { user, profile, isLoading } = useAuthStore();
   const navigate = useNavigate();
 
   // ── State ────────────────────────────────────────────────────────────────
@@ -570,6 +571,23 @@ export default function MaiPayPage() {
         </div>
       </div>
     );
+  }
+
+  // Session still being restored: loading shell, never balances or financial data.
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0814] text-white">
+        <div className="animate-pulse px-6 py-3 rounded bg-[#121212] border border-[#2C2C2C]">
+          Loading Mai Pay…
+        </div>
+      </div>
+    );
+  }
+
+  // Signed out: public Mai Pay landing page. No balances, transactions, or
+  // payment data is loaded.
+  if (!user) {
+    return <MaiPayLanding />;
   }
 
   return (

@@ -581,8 +581,8 @@ export default function BottomNavigation() {
       { category: 'City Center', label: 'Live Auctions', icon: Gavel, path: '/auctions' },
       { category: 'City Center', label: 'Marketplace', icon: Store, path: '/marketplace' },
       { category: 'City Center', label: 'Crown Redemption', icon: Crown, path: '/crowns/redeem' },
-      { category: 'City Center', label: 'Troll Court', icon: Scale, path: '/troll-court' },
-      { category: 'City Center', label: 'Wallet', icon: Banknote, path: '/wallet' },
+      { category: 'City Center', label: 'Troll Court', icon: Scale, path: '/troll-court', show: !!user },
+      { category: 'City Center', label: 'Wallet', icon: Banknote, path: '/wallet', show: !!user },
 
       { category: 'Community', label: 'Agencies', icon: Building2, path: '/agencies' },
       { category: 'Community', label: 'Inventory', icon: Package, path: '/inventory' },

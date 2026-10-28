@@ -290,6 +290,7 @@ const StateRankings = lazyWithRetry(() => import("./pages/StateRankings"));
 const StateDetail = lazyWithRetry(() => import("./pages/StateDetail"));
 const VerifiedBadgePage = lazyWithRetry(() => import("./pages/VerifiedBadgePage"));
 const FounderHub = lazyWithRetry(() => import("./pages/FounderHub"));
+const FounderInvitesPage = lazyWithRetry(() => import("./pages/FounderInvitesPage"));
 const TMFamilyInviteHandler = lazyWithRetry(() => import("./components/trollmatch/TMFamilyInviteHandler"));
 const EmbedPage = lazyWithRetry(() => import("./pages/broadcast/EmbedPage"));
 
@@ -1727,7 +1728,13 @@ const appShell = (
                  <Route path="/hytrogaming/apply" element={<HytroGamingApply />} />
                  <Route path="/hytrogaming/contract/:id" element={<HytroGamingContract />} />
                  <Route path="/hytro/:id" element={<HytroGaming />} />
-                <Route path="/dev/theme-preview" element={<ThemePreviewPage />} />
+
+                 {/* 🎤 Mai Sing Off — public landing when signed out; competition app when signed in */}
+                 <Route path="/mai-sing-off/live/:sessionId" element={<MaiSingOffPage />} />
+                 <Route path="/mai-sing-off/*" element={<MaiSingOffPage />} />
+                 <Route path="/xtrollz/*" element={<Navigate to="/mai-sing-off" replace />} />
+
+                 <Route path="/dev/theme-preview" element={<ThemePreviewPage />} />
                 <Route path="/dev/homepage-preview" element={<HomepageBackgroundShowcase />} />
 
                  {/* Safety Page (standalone) */}
@@ -1811,6 +1818,7 @@ const appShell = (
 
                 {/* ⭐ Founder Program Hub — gated in-page by founder_my_status() */}
                 <Route path="/founder" element={<FounderHub />} />
+                <Route path="/founder/invites" element={<FounderInvitesPage />} />
 
 
                 {/* 📨 UTroMail */}
@@ -1825,6 +1833,9 @@ const appShell = (
 
                   {/* 🛰️ Universe Arena Dev Preview — public, fake data, no auth */}
                   <Route path="/universe/dev-preview" element={<UniverseArenaDevPreview />} />
+
+                  {/* 💰 Mai Pay — public landing when signed out; app when signed in */}
+                  <Route path="/mai-pay" element={<MaiPayPage />} />
 
                   {/* 🔐 Protected Routes */}
                  <Route element={<RequireAuth />}>
@@ -2181,9 +2192,8 @@ const appShell = (
                    <Route path="/earnings" element={<EarningsDashboard />} />
 
                   <Route path="/bonuses" element={<BonusesPage />} />
-                   <Route path="/cashout" element={<CashoutPage />} />
+                    <Route path="/cashout" element={<CashoutPage />} />
                     <Route path="/fast-pay-application" element={<FastPayApplication />} />
-                    <Route path="/mai-pay" element={<MaiPayPage />} />
 
                   <Route path="/shop-partner" element={<ShopPartnerPage />} />
                   <Route path="/sell" element={<SellOnTrollCity />} />
@@ -2825,12 +2835,7 @@ const appShell = (
                 <Route path="/podcast" element={<PodcastCentral />} />
                 <Route path="/podcast/:id" element={<PodcastRoom />} />
 
-{/* 🎤 Mai Sing Off — live singing competition */}
-                  <Route path="/mai-sing-off/live/:sessionId" element={<MaiSingOffPage />} />
-                  <Route path="/mai-sing-off/*" element={<MaiSingOffPage />} />
-                  <Route path="/xtrollz/*" element={<Navigate to="/mai-sing-off" replace />} />
-
-                  {/* 🏢 MAI Business — entrepreneurship platform */}
+                {/* 🏢 MAI Business — entrepreneurship platform */}
                   <Route path="/mai-business" element={<MaiBusinessLanding />} />
                   <Route path="/mai-business/dashboard" element={<MaiBusinessDashboard />} />
                   <Route path="/mai-business/start" element={<MaiBusinessStart />} />

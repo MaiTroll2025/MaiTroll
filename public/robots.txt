@@ -88,10 +88,9 @@ Disallow: /tax-onboarding
 Disallow: /founding-officer-trial
 
 # ------------------------------------------------------------
-# STRICT DISALLOWS: PRIVATE COMMUNICATIONS & ACCOUNT INTERNALS
+# PRIVATE COMMUNICATIONS & ACCOUNT INTERNALS
 # ------------------------------------------------------------
 Disallow: /messages
-Disallow: /utromail
 Disallow: /tromail
 Disallow: /call/
 Disallow: /interview/

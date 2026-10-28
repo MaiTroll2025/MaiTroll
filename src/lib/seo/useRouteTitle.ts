@@ -51,6 +51,12 @@ const TITLES: Record<string, string> = {
   '/jobs': 'Jobs at Mai Troll',
   '/apply': 'Apply to Mai Troll',
   '/church': 'Mai Troll Church | Community',
+  '/utromail': 'MaiTroll Post Office | Private Messaging | Mai Troll',
+  '/mai-pay': 'Mai Pay | Troll Coins & Cash-outs | Mai Troll',
+  '/troll-court': 'Troll Court | Virtual Court System | Mai Troll',
+  '/mai-life': 'Mai Life | City Identity & Progression | Mai Troll',
+  '/mai-sing-off': 'Mai Sing Off | Live Singing Competition | Mai Troll',
+  '/hytrogaming': 'HytroGaming | Game Streaming & Gaming | Mai Troll',
 }
 
 const PAGE_PREFIXES: Array<[string, string]> = [

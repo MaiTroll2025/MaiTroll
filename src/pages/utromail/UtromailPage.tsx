@@ -44,6 +44,7 @@ import type {
 } from "@/types/mail";
 import { usePresenceStore } from "@/lib/presenceStore";
 import UtromailCompose from "./UtromailCompose";
+import PostOfficeLanding from "./PostOfficeLanding";
 import { toast } from "sonner";
 
 function formatTime(dateStr: string): string {
@@ -118,7 +119,7 @@ export default function UtromailPage() {
   const { threadId } = useParams();
   const [searchParams] = useSearchParams();
 
-  const { user, profile } = useAuthStore();
+  const { user, profile, isLoading } = useAuthStore();
 
   const onlineUserIds = usePresenceStore((s) => s.onlineUserIds);
 
@@ -213,7 +214,7 @@ export default function UtromailPage() {
     } finally {
       setLoading(false);
     }
-  }, [user.id]);
+  }, [user?.id]);
 
   fetchThreadsRef.current = fetchThreads;
 
@@ -965,6 +966,23 @@ export default function UtromailPage() {
   // ============================================================
   // AUTO COMPOSE
   // ============================================================
+
+  // Session still being restored: show a loading shell, never user data.
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0814] text-white">
+        <div className="animate-pulse px-6 py-3 rounded bg-[#121212] border border-[#2C2C2C]">
+          Loading Post Office…
+        </div>
+      </div>
+    );
+  }
+
+  // Signed out: public Post Office landing page. Never render the compose UI
+  // or any user-specific message surface without an authenticated session.
+  if (!user) {
+    return <PostOfficeLanding />;
+  }
 
   const recipientId =
     searchParams.get("recipientId") ||

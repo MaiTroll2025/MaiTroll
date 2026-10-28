@@ -96,6 +96,12 @@ for (const route of [
   '/features/social-media',
   '/updates',
   '/blog',
+  '/utromail',
+  '/mai-pay',
+  '/troll-court',
+  '/mai-life',
+  '/mai-sing-off',
+  '/hytrogaming',
 ]) {
   urls.push(urlEntry(`${BASE_URL}${route}`, today, 'weekly', '0.8'))
 }

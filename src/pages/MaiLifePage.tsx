@@ -4,10 +4,28 @@ import MaiSubPanel from '../components/profile/MaiSubPanel'
 import PetShelterPanel from '../components/pets/PetShelterPanel'
 import { useCityStatus } from '../hooks/useCityStatus'
 import { useAuthStore } from '../lib/store'
+import MaiLifeLanding from './MaiLifeLanding';
 
 export default function MaiLifePage() {
-  const user = useAuthStore((state) => state.user)
+  const { user, isLoading } = useAuthStore()
   const { status, loading } = useCityStatus(user?.id)
+
+  // Session still being restored: loading shell, never user data.
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#050714] text-white">
+        <div className="animate-pulse px-6 py-3 rounded bg-[#0a0c16] border border-white/10">
+          Loading Mai Life…
+        </div>
+      </div>
+    );
+  }
+
+  // Signed out: public Mai Life introduction. No city identity, progression,
+  // pet, or subscription data is loaded.
+  if (!user) {
+    return <MaiLifeLanding />;
+  }
 
   return (
     <main className="min-h-screen bg-[#050714] px-4 pb-12 pt-24 text-white md:px-8">

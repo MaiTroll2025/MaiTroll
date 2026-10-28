@@ -5,7 +5,7 @@ import { post, API_ENDPOINTS } from '../lib/api'
 import { toast } from 'sonner'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
-import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Shield, Users, ChevronDown, ChevronUp, Building2, Globe } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, AlertTriangle, Shield, Users, ChevronDown, ChevronUp, Building2, Globe, Gift } from 'lucide-react'
 import NavBubble from '../components/NavBubble';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { moderation } from '@/services/maitrollModeration';
@@ -209,6 +209,7 @@ const Auth = ({ embedded = false, onClose: _onClose, initialMode }: AuthProps = 
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [founderInviteCode, setFounderInviteCode] = useState('')
 const [showPassword, setShowPassword] = useState(false)
    const [platform] = useState('')
   const [selectedRole, setSelectedRole] = useState<'user' | 'staff' | 'admin'>('user')
@@ -554,6 +555,22 @@ try {
             // The App.tsx jail guard will redirect to /jail
           }
           await notifyNewUserSignup(finalUsername, loggedInUser.id)
+
+        // Redeem founder invite code if provided
+        const codeToRedeem = founderInviteCode.trim() || localStorage.getItem('founder_invite_code')
+        if (codeToRedeem && loggedInUser?.id) {
+          try {
+            const { error: redeemErr } = await supabase.rpc('founder_redeem_invite_code', {
+              p_code: codeToRedeem,
+              p_invited_user_id: loggedInUser.id,
+            })
+            if (redeemErr) console.error('Founder invite redeem failed:', redeemErr)
+            else toast.success('Founder invite code applied!')
+          } catch (e) {
+            console.error('Founder invite redeem error:', e)
+          }
+          localStorage.removeItem('founder_invite_code')
+        }
         }
 
         // Check IP for anonymous arrests — auto-arrest new account if IP is flagged
@@ -871,6 +888,24 @@ try {
                         placeholder="Username"
                         autoComplete="username"
                         required
+                      />
+                    </div>
+                  )}
+
+                  {/* Founder Invite Code (Sign Up Only, optional) */}
+                  {!isLogin && selectedRole !== 'staff' && selectedRole !== 'admin' && (
+                    <div className="relative group">
+                      <Gift className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400/60 group-focus-within:text-cyan-400 transition-colors" />
+                      <input
+                        type="text"
+                        id="founder_invite_code"
+                        name="founder_invite_code"
+                        value={founderInviteCode}
+                        onChange={(e) => setFounderInviteCode(e.target.value.replace(/\D/g, '').slice(0, 7))}
+                        className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/40 focus:bg-slate-800/70 transition-all focus:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                        placeholder="Founder invite code (optional, 7 digits)"
+                        inputMode="numeric"
+                        maxLength={7}
                       />
                     </div>
                   )}

@@ -31,6 +31,7 @@ import useSEO from '@/hooks/useSEO';
 import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { isStandalone } from '@/pwa/install';
+import HytroGamingLanding from './HytroGamingLanding';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -293,7 +294,7 @@ function GamingStreamCard({
 
 export default function HytroGaming() {
   const navigate = useNavigate();
-  const { user, profile } = useAuthStore();
+  const { user, profile, isLoading } = useAuthStore();
   const { isMobile } = useIsMobile();
   const isPWA = isStandalone();
   const isMobileOrPWA = isMobile || isPWA;
@@ -356,7 +357,7 @@ export default function HytroGaming() {
     };
 
     void checkAgency();
-  }, [user.id, profile?.role, profile]);
+  }, [user?.id, profile?.role, profile]);
 
   useSEO({
     title: 'HydroGaming | Live Game Streaming & Screen Sharing | Mai Troll',
@@ -536,6 +537,22 @@ export default function HytroGaming() {
     });
   }, []);
 
+  // Session still being restored: loading shell, never user data.
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#050714] text-white">
+        <div className="animate-pulse px-6 py-3 rounded bg-[#0a0c16] border border-white/10">
+          Loading HytroGaming…
+        </div>
+      </div>
+    );
+  }
+
+  // Signed out: public HytroGaming landing page. No user-specific data loaded.
+  if (!user) {
+    return <HytroGamingLanding />;
+  }
+
   return (
     <div className="relative min-h-screen overflow-y-auto overflow-x-hidden md:overflow-hidden bg-slate-950 text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(34,211,238,0.18),transparent_30%),radial-gradient(circle_at_84%_18%,rgba(168,85,247,0.16),transparent_32%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.10),transparent_34%)]" />
@@ -691,8 +708,8 @@ export default function HytroGaming() {
         )}
 
         {/* ── Streams Content ───────────────────────────────────────────────── */}
-        {/* Mobile/PWA always shows streams. Desktop requires approved/exempt. */}
-        {(isMobileOrPWA || agencyStatus === 'approved' || agencyStatus === 'exempt') && (
+        {/* Mobile/PWA always shows streams. Desktop requires approved/exempt, or public viewing when not signed in. */}
+        {(isMobileOrPWA || agencyStatus === 'approved' || agencyStatus === 'exempt' || !user) && (
         <>
         {/* Hero */}
         <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-8 lg:p-10">

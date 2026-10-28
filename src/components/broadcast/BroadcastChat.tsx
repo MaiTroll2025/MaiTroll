@@ -23,6 +23,7 @@ import { useStreamRealtime } from '../../hooks/useStreamRealtime';
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration';
 import { sendChatThroughGate } from '../../lib/sendChatThroughGate';
 import { checkModeration } from '../../lib/moderationCheck';
+import { moderation } from '@/services/maitrollModeration';
 import { useUserSubscriptionTier } from '@/hooks/useCreatorSubscription';
 import { getEmotesForTier, parseEmotesInText, type SubscriberEmote } from '@/lib/subscriberEmotes';
 import { useSubscriberBadges } from '@/hooks/useCreatorSubscription';
