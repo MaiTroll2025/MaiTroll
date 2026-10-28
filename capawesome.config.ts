@@ -4,6 +4,7 @@ export default defineConfig({
   app: {
     name: 'Maitroll',
     identifier: 'com.maitroll.app',
+    type: 'capacitor',
   },
   ios: {
     teamId: process.env.CAPAWESOME_IOS_TEAM_ID ?? '',
