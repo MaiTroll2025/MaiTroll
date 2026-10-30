@@ -19,6 +19,7 @@ const TITLES: Record<string, string> = {
   '/privacy': 'Privacy Policy | Mai Troll',
   '/terms': 'Terms of Service | Mai Troll',
   '/app-downloads': 'App Downloads | Mai Troll',
+  '/donate': 'Support MaiTroll City | Help Our Live Streaming Community Grow',
   '/terms-of-service': 'Terms of Service | Mai Troll',
   '/privacy-policy': 'Privacy Policy | Mai Troll',
   '/payment-terms': 'Payment Terms | Mai Troll',

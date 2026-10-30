@@ -21,7 +21,7 @@ function expect(label: string, actual: unknown, wanted: unknown) {
 
 console.log('\n== PUBLIC routes must stay indexable ==')
 for (const p of [
-  '/', '/about', '/faq', '/contact', '/legal', '/legal/terms', '/legal/privacy',
+  '/', '/about', '/faq', '/contact', '/donate', '/legal', '/legal/terms', '/legal/privacy',
   '/legal/refunds', '/legal/payouts', '/legal/safety', '/legal/creator-earnings',
   '/legal/gambling-disclosure', '/explore', '/trending', '/categories', '/categories/gaming',
   '/creators', '/careers', '/jobs', '/safety', '/support', '/help',
@@ -52,7 +52,7 @@ for (const p of [
 
 console.log('\n== Public routes with NO phone page must use the web renderer ==')
 for (const p of [
-  '/about', '/faq', '/contact', '/legal/terms', '/legal/privacy',
+  '/about', '/faq', '/contact', '/donate', '/legal/terms', '/legal/privacy',
   '/terms', '/terms-of-service', '/features/broadcasting-app', '/features/social-media',
   '/updates', '/updates/example-update', '/blog', '/blog/example-article',
   '/trending', '/creators', '/categories', '/categories/gaming',

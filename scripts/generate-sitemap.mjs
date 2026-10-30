@@ -91,6 +91,7 @@ const urls = []
 for (const route of [
   '/',
   '/about',
+  '/donate',
   '/terms',
   '/features/broadcasting-app',
   '/features/social-media',
@@ -103,7 +104,8 @@ for (const route of [
   '/mai-sing-off',
   '/hytrogaming',
 ]) {
-  urls.push(urlEntry(`${BASE_URL}${route}`, today, 'weekly', '0.8'))
+  const location = route === '/donate' ? 'https://www.maitroll.com/donate' : `${BASE_URL}${route}`
+  urls.push(urlEntry(location, today, 'weekly', '0.8'))
 }
 
 // ============================================================

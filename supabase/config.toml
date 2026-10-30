@@ -459,3 +459,25 @@ entrypoint = "./functions/facebook-integration/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/facebook-publish/index.ts"
+
+# Donations use the existing PAYPAL_CLIENT_ID/PAYPAL_CLIENT_SECRET and
+# PAYPAL_MODE/PAYPAL_ENV settings. Webhook verification reads PAYPAL_WEBHOOK_ID.
+[functions.paypal-donation-create-order]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/paypal-donation-create-order/index.ts"
+
+[functions.paypal-donation-capture]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/paypal-donation-capture/index.ts"
+
+[functions.paypal-donation-cancel]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/paypal-donation-cancel/index.ts"
+
+[functions.paypal-donation-webhook]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/paypal-donation-webhook/index.ts"

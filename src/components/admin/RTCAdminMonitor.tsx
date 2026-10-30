@@ -176,7 +176,11 @@ function StatCard({ label, value, tone, icon }: { label: string; value: React.Re
   );
 }
 
-export default function RTCAdminMonitor({ fullPage = false, onClose }: { fullPage?: boolean; onClose?: () => void } = {}) {
+export default function RTCAdminMonitor({
+  fullPage = false,
+  onClose,
+  canViewClickAnalytics = false,
+}: { fullPage?: boolean; onClose?: () => void; canViewClickAnalytics?: boolean } = {}) {
   const { profile } = useAuthStore();
   const navigate = useNavigate();
   const onlineUserIds = usePresenceStore((state) => state.onlineUserIds);
@@ -200,6 +204,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
     || profile?.is_lead_officer === true
     || [profile?.role, profile?.troll_role].some((role) => String(role || '').toLowerCase() === 'lead_troll_officer');
   const canUseWalkieTalkie = contextCanAccessWalkieTalkie;
+  const canFetchClickStats = isStaff || canViewClickAnalytics;
 
   const isTargetAdmin = useCallback((target: UserListItem | StreamViewer | any): boolean => {
     return target.role === 'admin' || target.role === 'superadmin' || target.role === 'ceo' || target.is_admin === true;
@@ -353,6 +358,7 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, MaiTroll: 0, googlePlay: 0, topUrls: [], recentClicks: [] });
   const [clickLoading, setClickLoading] = useState(false);
   const [clickFlash, setClickFlash] = useState(false);
+  const [clickError, setClickError] = useState(false);
 
   const [cashoutBonusData, setCashoutBonusData] = useState<any[]>([]);
   const [cashoutLoading, setCashoutLoading] = useState(false);
@@ -639,20 +645,27 @@ return {
   }, [isStaff]);
 
   const fetchClickStats = useCallback(async () => {
-    if (!isStaff) return;
+    if (!canFetchClickStats) return;
     setClickLoading(true);
+    setClickError(false);
     try {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: total }, { count: MaiTroll }, { count: googlePlay }, { data: topUrlsData }, { data: recentData }] = await Promise.all([
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }),
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%MaiTroll.com%'),
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.Mai Troll.twa%'),
-        supabase.from('outbound_clicks').select('url, created_at').gte('created_at', sevenDaysAgo),
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - (analyticsRange - 1));
+      startDate.setHours(0, 0, 0, 0);
+      const startDateIso = startDate.toISOString();
+      const [totalResult, maiTrollResult, googlePlayResult, topUrlsResult, recentResult] = await Promise.all([
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).gte('clicked_at', startDateIso),
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%MaiTroll.com%').gte('clicked_at', startDateIso),
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.Mai Troll.twa%').gte('clicked_at', startDateIso),
+        supabase.from('outbound_clicks').select('url, clicked_at').gte('clicked_at', startDateIso),
         supabase.from('outbound_clicks').select('ip_address, url, clicked_at').order('clicked_at', { ascending: false }).limit(25),
       ]);
+      const queryError = [totalResult.error, maiTrollResult.error, googlePlayResult.error, topUrlsResult.error, recentResult.error]
+        .find((error) => error !== null);
+      if (queryError) throw queryError;
 
       const counts: Record<string, number> = {};
-      (topUrlsData || []).forEach((click: any) => {
+      (topUrlsResult.data || []).forEach((click) => {
         counts[String(click.url || 'unknown')] = (counts[String(click.url || 'unknown')] || 0) + 1;
       });
 
@@ -660,7 +673,7 @@ return {
       // same visitor keeps the same label between refreshes. IPs are never shown.
       const ipToLabel = new Map<string, string>();
       const seenIps = new Set<string>();
-      (recentData || []).forEach((row: any) => {
+      (recentResult.data || []).forEach((row) => {
         const ip = String(row?.ip_address || 'unknown');
         if (!seenIps.has(ip)) seenIps.add(ip);
       });
@@ -669,25 +682,26 @@ return {
         ipToLabel.set(ip, `Random User #${n++}`);
       });
 
-      const recentClicks = (recentData || []).map((row: any) => ({
+      const recentClicks = (recentResult.data || []).map((row) => ({
         url: String(row?.url || 'unknown'),
         clickedAt: String(row?.clicked_at || ''),
         label: ipToLabel.get(String(row?.ip_address || 'unknown')) || 'Random User #1',
       }));
 
       setClickStats({
-        total: total || 0,
-        MaiTroll: MaiTroll || 0,
-        googlePlay: googlePlay || 0,
+        total: totalResult.count || 0,
+        MaiTroll: maiTrollResult.count || 0,
+        googlePlay: googlePlayResult.count || 0,
         topUrls: Object.entries(counts).map(([url, count]) => ({ url, count })).sort((a, b) => b.count - a.count).slice(0, 5),
         recentClicks,
       });
     } catch (err) {
       console.error('[RTC Monitor] Error fetching click stats:', err);
+      setClickError(true);
     } finally {
       setClickLoading(false);
     }
-  }, [isStaff]);
+  }, [analyticsRange, canFetchClickStats]);
 
   const fetchStreamAnalytics = useCallback(async () => {
     if (!isStaff) return;
@@ -1356,12 +1370,10 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     if (activeMainTab === 'rtc') {
       fetchRTCStats();
       fetchStreamAnalytics();
-      fetchClickStats();
       const interval = window.setInterval(() => {
         if (document.visibilityState === 'visible') {
           fetchRTCStats();
           fetchStreamAnalytics();
-          fetchClickStats();
         }
       }, 30000);
       return () => window.clearInterval(interval);
@@ -1375,11 +1387,9 @@ const openAction = useCallback((user: UserListItem, action: string) => {
 
     if (activeMainTab === 'analytics') {
       fetchStreamAnalytics();
-      fetchClickStats();
       const interval = window.setInterval(() => {
         if (document.visibilityState === 'visible') {
           fetchStreamAnalytics();
-          fetchClickStats();
         }
       }, 30000);
       return () => window.clearInterval(interval);
@@ -1411,7 +1421,17 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       const interval = window.setInterval(fetchNotaryDocs, 30000);
       return () => window.clearInterval(interval);
     }
-  }, [activeMainTab, fetchCashoutBonusData, fetchClickStats, fetchRTCStats, fetchSignupData, fetchStreamAnalytics, isStaff]);
+  }, [activeMainTab, fetchCashoutBonusData, fetchRTCStats, fetchSignupData, fetchStreamAnalytics, isStaff]);
+
+  useEffect(() => {
+    if (!canFetchClickStats || !['rtc', 'analytics'].includes(activeMainTab)) return;
+
+    fetchClickStats();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') fetchClickStats();
+    }, 30000);
+    return () => window.clearInterval(interval);
+  }, [activeMainTab, canFetchClickStats, fetchClickStats]);
 
   // Live website-click monitor: subscribe to outbound_clicks INSERTs so the
   // admin Analytics tab shows clicks in real time (no polling delay).
@@ -1419,7 +1439,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
   // recent-click list always reconcile exactly (no drift from incremental
   // updates). The fetch is cheap and capped at 25 recent rows.
   useEffect(() => {
-    if (!isStaff) return;
+    if (!canFetchClickStats) return;
 
     const channel = supabase
       .channel('admin-website-click-monitor')
@@ -1445,7 +1465,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [isStaff, fetchClickStats]);
+  }, [canFetchClickStats, fetchClickStats]);
 
   // Monitor for new user signups via realtime instead of polling
   useEffect(() => {
@@ -2413,7 +2433,9 @@ return (
              <span className="text-xs font-semibold text-cyan-300">Website Clicks (Live)</span>
              <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${clickFlash ? 'bg-cyan-400 text-black' : 'bg-cyan-500/20 text-cyan-300'}`}>{clickFlash ? 'NEW!' : 'LIVE'}</span>
            </div>
-           {clickLoading && clickStats.recentClicks.length === 0 ? (
+           {clickError ? (
+             <div className="py-3 text-center text-xs text-red-300">Click analytics could not be loaded.</div>
+           ) : clickLoading && clickStats.recentClicks.length === 0 ? (
              <div className="py-3 text-center text-xs text-gray-500">Loading recent clicks...</div>
            ) : clickStats.recentClicks.length === 0 ? (
              <div className="py-3 text-center text-xs text-gray-500">No clicks yet</div>
@@ -2716,7 +2738,7 @@ return (
       <div className="border-t border-white/10 pt-2">
         <span className="text-xs text-gray-500">Top URLs</span>
         <div className="mt-2 space-y-1">
-          {clickStats.topUrls.length === 0 ? <div className="text-xs text-gray-500">No click data</div> : clickStats.topUrls.map((item) => (
+          {clickError ? <div className="text-xs text-red-300">Click analytics could not be loaded.</div> : clickStats.topUrls.length === 0 ? <div className="text-xs text-gray-500">No click data</div> : clickStats.topUrls.map((item) => (
             <div key={item.url} className="flex items-center justify-between rounded bg-white/5 px-2 py-1.5 text-xs">
               <span className="truncate text-gray-300">{item.url}</span>
               <span className="ml-2 text-white">{item.count}</span>

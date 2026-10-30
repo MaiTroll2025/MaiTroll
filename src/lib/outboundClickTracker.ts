@@ -10,7 +10,8 @@
  * the UI — the admin panel masks each visitor as "Random User #N".
  */
 
-import { supabase } from './supabase';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 let initialized = false;
 
@@ -29,16 +30,27 @@ export function trackOutboundClick(url: string, referrer?: string): void {
   if (typeof window === 'undefined' || !url) return;
   if (!isExternalUrl(url)) return;
 
-  // Fire-and-forget with keepalive so it survives page unload.
-  try {
-    void supabase.from('outbound_clicks').insert({
+  void fetch(`${supabaseUrl}/rest/v1/outbound_clicks`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${supabaseAnonKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
       url,
       referrer: referrer || document.referrer || null,
       user_agent: navigator.userAgent || null,
-    });
-  } catch (err) {
+    }),
+    keepalive: true,
+  }).then((response) => {
+    if (!response.ok) {
+      console.warn('[outboundClickTracker] Failed to record click:', response.status);
+    }
+  }).catch((err) => {
     console.warn('[outboundClickTracker] Failed to record click:', err);
-  }
+  });
 }
 
 export function initOutboundClickTracker(): void {

@@ -13,6 +13,9 @@ interface SEOPageProps {
   author?: string
   publishedTime?: string
   section?: string
+  titleIsExact?: boolean
+  canonical?: string
+  structuredData?: object | object[]
 }
 
 const navLinks = [
@@ -32,11 +35,14 @@ export default function SEOLayout({
   author,
   publishedTime,
   section,
+  titleIsExact = false,
+  canonical,
+  structuredData,
 }: SEOPageProps) {
   const location = useLocation()
 
   useSEO({
-    title: `${title} | MaiTroll`,
+    title: titleIsExact ? title : `${title} | MaiTroll`,
     description,
     keywords,
     ogImage,
@@ -44,16 +50,19 @@ export default function SEOLayout({
     author,
     publishedTime,
     section,
+    canonical,
+    structuredData,
   })
 
   React.useEffect(() => {
     window.scrollTo(0, 0)
   }, [location.pathname])
 
-  const canonicalUrl = `https://www.maitroll.com${location.pathname}`
+  const canonicalUrl = canonical || `https://www.maitroll.com${location.pathname}`
+  const pageTitle = titleIsExact ? title : `${title} | MaiTroll`
 
   const handleShare = async () => {
-    const shareData = { title: `${title} | MaiTroll`, url: canonicalUrl }
+    const shareData = { title: pageTitle, url: canonicalUrl }
     if (navigator.share) {
       try { await navigator.share(shareData) } catch {}
     } else {

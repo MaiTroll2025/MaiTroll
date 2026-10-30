@@ -45,9 +45,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ['/features/broadcasting-app', 0.8, 'monthly'], ['/features/social-media', 0.8, 'monthly'],
       ['/updates', 0.8, 'daily'], ['/blog', 0.8, 'daily'],
       ['/about', 0.5, 'monthly'], ['/privacy', 0.3, 'monthly'],
+      ['/donate', 0.7, 'monthly'],
     ] as const
     for (const [route, priority, changefreq] of staticPages) {
-      addUrl(urls, new URL(route, APP_URL).toString(), today, changefreq, priority)
+      const location = route === '/donate'
+        ? 'https://www.maitroll.com/donate'
+        : new URL(route, APP_URL).toString()
+      addUrl(urls, location, today, changefreq, priority)
     }
 
     const { data: posts, error: postError } = await supabase

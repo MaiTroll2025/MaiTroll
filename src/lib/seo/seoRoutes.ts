@@ -34,6 +34,7 @@ export const PUBLIC_WEB_ONLY_ROUTES: string[] = [
   '/terms',
   '/terms-of-service',
   '/app-downloads',
+  '/donate',
   '/terms-of-service-web',
   '/privacy-policy',
   '/payment-terms',

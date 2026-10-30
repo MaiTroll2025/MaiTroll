@@ -21,12 +21,11 @@ const MESSAGE_LIFETIME_MS = 7000;
 /**
  * Mobile battle chat — floating messages that fly up on the left side plus a
  * compact input bar pinned above the page footer. Messages are received via the
- * same realtime channel the desktop BattleChat uses and sent to both streams.
+ * same realtime channel the desktop BattleChat uses, with one shared database row.
  */
 export default function MobileBattleFloatingChat({
   battleId,
   challengerStream,
-  opponentStream,
   currentStreamId: _currentStreamId,
   currentUserId,
   participantRole: _participantRole,
@@ -43,6 +42,7 @@ export default function MobileBattleFloatingChat({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [nowMs, setNowMs] = useState(Date.now());
   const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const { profile } = useAuthStore();
   const { recordChatMessage } = useTrollFamilyActivity();
   const channelRef = useRef<any>(null);
@@ -50,9 +50,6 @@ export default function MobileBattleFloatingChat({
     (profile as any)?.username?.trim() ||
     (profile as any)?.display_name?.trim() ||
     null;
-  const recentBattleChatKeysRef =
-    useRef<Map<string, number>>(new Map());
-
   const normalizeMessage = useCallback((raw: any): ChatMessage => {
     const rawUsername = raw.username || "";
     const isPlaceholder = rawUsername === "You" || rawUsername === "Unknown";
@@ -80,7 +77,7 @@ export default function MobileBattleFloatingChat({
       const { data, error } = await supabase
         .from("stream_chat")
         .select("id, stream_id, user_id, username, content, created_at, avatar_url")
-        .in("stream_id", [challengerStream.id, opponentStream.id])
+        .eq("stream_id", challengerStream.id)
         .order("created_at", { ascending: false })
         .limit(20);
       if (error || cancelled) return;
@@ -91,7 +88,7 @@ export default function MobileBattleFloatingChat({
     return () => {
       cancelled = true;
     };
-  }, [challengerStream.id, normalizeMessage, opponentStream.id]);
+  }, [challengerStream.id, normalizeMessage]);
 
   // Subscribe to realtime chat (postgres + broadcast).
   useEffect(() => {
@@ -103,17 +100,10 @@ export default function MobileBattleFloatingChat({
           event: "INSERT",
           schema: "public",
           table: "stream_chat",
-          filter: `stream_id=in.(${challengerStream.id},${opponentStream.id})`,
+          filter: `stream_id=eq.${challengerStream.id}`,
         },
         (payload) => {
           const msg = normalizeMessage(payload.new);
-          const chatKey = `${msg.user_id}:${msg.content}:${msg.stream_id}`;
-          const now = Date.now();
-          const existingTs = recentBattleChatKeysRef.current.get(chatKey);
-          if (existingTs !== undefined && now - existingTs < 1500) {
-            return;
-          }
-          recentBattleChatKeysRef.current.set(chatKey, now);
           setMessages((prev) =>
             prev.some((m) => m.id === msg.id) ? prev : [...prev.slice(-19), msg]
           );
@@ -132,7 +122,7 @@ export default function MobileBattleFloatingChat({
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
-  }, [battleId, challengerStream.id, normalizeMessage, opponentStream.id]);
+  }, [battleId, challengerStream.id, normalizeMessage]);
 
   // Prune expired messages so they fly up and fade out.
   useEffect(() => {
@@ -146,45 +136,54 @@ export default function MobileBattleFloatingChat({
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUserId) return;
+    const content = newMessage.trim();
+    if (!content || !currentUserId || sending) return;
 
-    const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const senderUsername = profileUsername || "Troll Citizen";
-
-    const chatMessage = {
-      id: messageId,
-      stream_id: battleId,
-      user_id: currentUserId,
-      username: senderUsername,
-      content: newMessage.trim(),
-      created_at: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev.slice(-19), chatMessage]);
-
-    const [insertA, insertB] = await Promise.all([
-      supabase.from("stream_chat").insert({
+    setSending(true);
+    try {
+      const { data: inserted, error } = await supabase
+        .from("stream_chat")
+        .insert({
         stream_id: challengerStream.id,
         user_id: currentUserId,
         username: senderUsername,
-        content: newMessage.trim(),
-      }),
-      supabase.from("stream_chat").insert({
-        stream_id: opponentStream.id,
-        user_id: currentUserId,
-        username: senderUsername,
-        content: newMessage.trim(),
-      }),
-    ]);
+        content,
+      })
+        .select("id, stream_id, user_id, username, content, created_at, avatar_url")
+        .single();
 
-    if (insertA.error || insertB.error) {
-      console.error("Error sending battle message:", insertA.error || insertB.error);
+      if (error) throw error;
+
+      const message = normalizeMessage(inserted);
+      setMessages((prev) =>
+        prev.some((item) => item.id === message.id) ? prev : [...prev.slice(-19), message]
+      );
+      setNewMessage("");
+      try {
+        const broadcastStatus = await channelRef.current?.send({
+          type: "broadcast",
+          event: "chat_message",
+          payload: inserted,
+        });
+        if (broadcastStatus && broadcastStatus !== "ok") {
+          console.warn("[MobileBattleChat] Realtime broadcast failed; message is saved:", broadcastStatus);
+        }
+      } catch (broadcastError) {
+        console.warn("[MobileBattleChat] Realtime broadcast failed; message is saved:", broadcastError);
+      }
+
+      try {
+        await recordChatMessage(content.length, battleId);
+      } catch (activityError) {
+        console.error("[MobileBattleChat] Failed to record chat activity:", activityError);
+      }
+    } catch (error) {
+      console.error("Error sending battle message:", error);
       toast.error("Failed to send message");
-      return;
+    } finally {
+      setSending(false);
     }
-
-    await recordChatMessage(newMessage.trim().length, battleId);
-    setNewMessage("");
   };
 
   return (
@@ -228,8 +227,9 @@ export default function MobileBattleFloatingChat({
           />
           <button
             type="submit"
+            disabled={!newMessage.trim() || sending}
             aria-label="Send"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white active:scale-95"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white active:scale-95 disabled:opacity-50"
           >
             <ArrowUp size={16} />
           </button>

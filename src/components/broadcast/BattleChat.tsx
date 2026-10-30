@@ -60,6 +60,7 @@ export default function BattleChat({
    const [modActionTargetUser, setModActionTargetUser] = useState<{ id: string; username: string; avatar_url?: string; role?: string; troll_role?: string } | null>(null);
    const messagesEndRef = useRef<HTMLDivElement>(null);
    const channelRef = useRef<any>(null);
+   const [sending, setSending] = useState(false);
 
    // Mai Voice — both battle sides share one room, so everyone hears the same
    // spoken chat and the same recorded voice messages.
@@ -96,9 +97,6 @@ export default function BattleChat({
      (profile as any)?.display_name?.trim() ||
      null;
     const profileCacheRef = useRef<Record<string, any>>({});
-    const recentBattleChatKeysRef =
-      useRef<Map<string, number>>(new Map());
-
    // Determine which team the current user is on
    const getUserTeam = (userId: string) => {
      if (userId === challengerStream.user_id) return 'challenger';
@@ -204,7 +202,7 @@ export default function BattleChat({
     fetchMessages();
   }, [challengerStream.id, normalizeMessage]);
 
-// Subscribe to real-time chat messages from both streams
+// Subscribe to the shared battle chat stream and its low-latency broadcast.
   useEffect(() => {
     // Use challenger stream as the primary chat stream (both sides share this)
     const primaryStreamId = challengerStream.id;
@@ -247,15 +245,7 @@ export default function BattleChat({
           }
           
           const newMsg = normalizeMessage(newMsgRaw, profile ? { [newMsgRaw.user_id]: profile } : {});
-          const chatKey = `${newMsg.user_id}:${newMsg.content}:${newMsg.stream_id}`;
-          const now = Date.now();
-          const existingTs = recentBattleChatKeysRef.current.get(chatKey);
-          if (existingTs !== undefined && now - existingTs < 1500) {
-            return;
-          }
-          recentBattleChatKeysRef.current.set(chatKey, now);
           setMessages((prev) => {
-            // Prevent duplicates
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev.slice(-49), newMsg];
           });
@@ -291,15 +281,7 @@ export default function BattleChat({
         
         const newMsg = normalizeMessage(newMsgRaw, profile ? { [newMsgRaw.user_id]: profile } : {});
         if (newMsg && newMsg.id) {
-          const chatKey = `${newMsg.user_id}:${newMsg.content}:${newMsg.stream_id}`;
-          const now = Date.now();
-          const existingTs = recentBattleChatKeysRef.current.get(chatKey);
-          if (existingTs !== undefined && now - existingTs < 1500) {
-            return;
-          }
-          recentBattleChatKeysRef.current.set(chatKey, now);
           setMessages((prev) => {
-            // Prevent duplicates
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev.slice(-49), newMsg];
           });
@@ -327,58 +309,77 @@ export default function BattleChat({
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUserId) return;
+    const content = newMessage.trim();
+    if (!content || !currentUserId || sending) return;
+    setSending(true);
 
-    // Check if user's chat is disabled by moderation action
-    const canBypassModeration = isOfficer;
-    if (!canBypassModeration) {
-      const modResult = await moderation.checkContent(currentUserId, newMessage.trim(), 'battle_chat');
-      if (!modResult.allowed) {
-        toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
-        return;
+    try {
+      if (!isOfficer) {
+        const modResult = await moderation.checkContent(currentUserId, content, 'battle_chat');
+        if (!modResult.allowed) {
+          toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.');
+          return;
+        }
       }
-    }
 
-    // Always prefer auth/profile username to avoid writing placeholders like "You".
-    const existingMessage = messages.find(m => m.user_id === currentUserId);
-    const existingUsername =
-      existingMessage?.username && existingMessage.username !== 'You' && existingMessage.username !== 'Unknown'
-        ? existingMessage.username
-        : null;
-    const senderUsername = profileUsername || existingUsername || 'Troll Citizen';
-    
-    // Insert to challenger stream only (shared battle chat)
-    const { data: inserted, error } = await supabase
-      .from('stream_chat')
-      .insert({
-        stream_id: challengerStream.id,
-        user_id: currentUserId,
-        username: senderUsername,
-        content: newMessage.trim(),
-      })
-      .select('id')
-      .maybeSingle();
+      const existingMessage = messages.find(m => m.user_id === currentUserId);
+      const existingUsername =
+        existingMessage?.username && existingMessage.username !== 'You' && existingMessage.username !== 'Unknown'
+          ? existingMessage.username
+          : null;
+      const senderUsername = profileUsername || existingUsername || 'Troll Citizen';
 
-    if (error) {
+      const { data: inserted, error } = await supabase
+        .from('stream_chat')
+        .insert({
+          stream_id: challengerStream.id,
+          user_id: currentUserId,
+          username: senderUsername,
+          content,
+        })
+        .select('id, stream_id, user_id, username, content, created_at, avatar_url')
+        .single();
+
+      if (error) throw error;
+
+      const message = normalizeMessage(inserted, {});
+      setMessages((prev) =>
+        prev.some((item) => item.id === message.id) ? prev : [...prev.slice(-49), message]
+      );
+      setNewMessage('');
+      try {
+        const broadcastStatus = await channelRef.current?.send({
+          type: 'broadcast',
+          event: 'chat_message',
+          payload: inserted,
+        });
+        if (broadcastStatus && broadcastStatus !== 'ok') {
+          console.warn('[BattleChat] Realtime broadcast failed; message is saved:', broadcastStatus);
+        }
+      } catch (broadcastError) {
+        console.warn('[BattleChat] Realtime broadcast failed; message is saved:', broadcastError);
+      }
+
+      void maiVoiceInvoke({
+        action: 'enqueue-tts',
+        roomKind: 'battle',
+        roomId: battleId,
+        sourceMessageId: inserted.id,
+        text: content,
+        presentation: 'chat',
+      }).catch(() => undefined);
+
+      try {
+        await recordChatMessage(content.length, battleId);
+      } catch (activityError) {
+        console.error('[BattleChat] Failed to record chat activity:', activityError);
+      }
+    } catch (error) {
       console.error('Error sending message:', error);
-      return;
+      toast.error('Failed to send message');
+    } finally {
+      setSending(false);
     }
-
-    // Mai Voice — queue the spoken version of this battle chat message.
-    // The server re-checks eligibility before anything is generated.
-    void maiVoiceInvoke({
-      action: 'enqueue-tts',
-      roomKind: 'battle',
-      roomId: battleId,
-      sourceMessageId: inserted?.id ?? null,
-      text: newMessage.trim(),
-      presentation: 'chat',
-    }).catch(() => undefined);
-
-    // Record family activity for chat message
-    await recordChatMessage(newMessage.trim().length, battleId);
-
-    setNewMessage('');
   };
 
   const formatTime = (timestamp: string) => {
@@ -490,7 +491,7 @@ export default function BattleChat({
           />
           <button
             type="submit"
-            disabled={!newMessage.trim()}
+            disabled={!newMessage.trim() || sending}
             className="p-2 rounded-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-black transition"
           >
             <Send size={18} />

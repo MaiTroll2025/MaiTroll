@@ -57,6 +57,7 @@ export default function PayPalPaymentModal({
 
   const paypalButtonsRef = useRef<HTMLDivElement | null>(null)
   const paypalOrderIdRef = useRef<string | null>(null)
+  const paypalOrderCreationRef = useRef<Promise<string> | null>(null)
   const paypalInstanceRef = useRef<any>(null)
   const renderKeyRef = useRef<string>('')
   const paypalFlowActiveRef = useRef(false)
@@ -173,9 +174,11 @@ export default function PayPalPaymentModal({
     const localRenderKey = modalRenderKey
     renderKeyRef.current = localRenderKey
 
-    const createOrder = async () => {
-        // Mark flow as active so the Dialog won't auto-close
-        paypalFlowActiveRef.current = true
+    const createOrder = () => {
+      if (paypalOrderCreationRef.current) return paypalOrderCreationRef.current
+
+      paypalFlowActiveRef.current = true
+      paypalOrderCreationRef.current = (async () => {
         try {
           const { data, error } = await supabase.functions.invoke('create-paypal-order', {
             body: {
@@ -206,11 +209,13 @@ export default function PayPalPaymentModal({
         } catch (err: any) {
           console.error('[PayPalPaymentModal] PayPal order creation error:', err)
           toast.error(err?.message || 'Failed to create PayPal order')
-          // Flow failed – allow dialog to close again
           paypalFlowActiveRef.current = false
           throw err
         }
-      }
+      })()
+
+      return paypalOrderCreationRef.current
+    }
 
     const onApprove = async (data: any) => {
         setStep('processing')
@@ -276,6 +281,8 @@ export default function PayPalPaymentModal({
     const onCancel = () => {
         toast.info('Payment cancelled')
         setStep('select')
+        paypalOrderIdRef.current = null
+        paypalOrderCreationRef.current = null
         // User cancelled – allow dialog to close again
         paypalFlowActiveRef.current = false
       }
@@ -314,6 +321,8 @@ export default function PayPalPaymentModal({
     setPaymentResult(null)
     setPaypalError(false)
     paypalOrderIdRef.current = null
+    paypalOrderCreationRef.current = null
+    paypalFlowActiveRef.current = false
 
     loadPayPalSDK().catch((err: any) => {
       console.error('[PayPalPaymentModal] SDK load failed:', err)
@@ -380,6 +389,7 @@ export default function PayPalPaymentModal({
     setStep('select')
     setPaymentResult(null)
     paypalOrderIdRef.current = null
+    paypalOrderCreationRef.current = null
     safelyClosePayPalButtons()
     clearPayPalContainer()
     setLocalOpen(false)

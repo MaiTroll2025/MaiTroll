@@ -59,6 +59,14 @@ const STATIC_PAGES: Record<string, { title: string; description: string; paragra
       'MaiTroll brings broadcasting and social interaction into one platform, so creators can build relationships with viewers and audiences can participate in more than passive viewing.',
     ],
   },
+  '/donate': {
+    title: 'Support MaiTroll City | Help Our Live Streaming Community Grow',
+    description: 'Help MaiTroll City grow! Support live-streaming infrastructure, platform development, future hiring, and community expansion through secure PayPal contributions.',
+    paragraphs: [
+      'MaiTroll is more than a live-streaming platform. We are building an interactive digital city where people can broadcast, compete in live battles, connect, create content, and build communities.',
+      'As an independently growing platform, we welcome voluntary financial contributions from people who believe in our vision.',
+    ],
+  },
 }
 
 function escapeHtml(value: unknown): string {
@@ -76,6 +84,34 @@ function renderBody(title: string, paragraphs: string[], links: Array<{ href: st
     `<li><a href="${escapeHtml(href)}">${escapeHtml(label)}</a></li>`,
   ).join('')
   return `<main><h1>${escapeHtml(title)}</h1>${text}${linkList ? `<ul>${linkList}</ul>` : ''}</main>`
+}
+
+function renderDonationBody(): string {
+  const areas: Array<[string, string[]]> = [
+    ['Infrastructure & Technology', ['Live-streaming servers', 'Database infrastructure', 'Bandwidth and hosting', 'Security and platform reliability']],
+    ['Future Payroll & Hiring', ['Future paid employment opportunities', 'Developers and engineers', 'Community moderators', 'Customer support and marketing staff']],
+    ['Platform Development', ['Broadcasting improvements', 'Live battle enhancements', 'Mobile optimization', 'New city features']],
+    ['Community Growth', ['Creator recruitment', 'College outreach', 'Marketing campaigns', 'Community events']],
+  ];
+  const areaHtml = areas.map(([title, items]) =>
+    `<section><h3>${escapeHtml(title)}</h3><ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section>`,
+  ).join('');
+  return `<main>
+    <h1>Help Build the Future of MaiTroll City</h1>
+    <p><strong>A New Era of Live Broadcasting. A City Built Around Its Community.</strong></p>
+    <p>MaiTroll is more than a live-streaming platform. We&apos;re building an interactive digital city where people can broadcast, compete in live battles, connect, create content, and build communities.</p>
+    <p>As an independently growing platform, we welcome voluntary financial contributions from people who believe in our vision.</p>
+    <h2>Where Your Contributions Go</h2>
+    <p>Contributions support the platform as a whole and are not restricted to any individual category.</p>
+    ${areaHtml}
+    <h2>Support MaiTroll City</h2>
+    <p>Choose a contribution amount of $5, $10, $25, $50, $100, or a custom amount. Secure checkout is handled by PayPal. Guest contributions are supported without a MaiTroll account.</p>
+    <p>Contributions to MaiTroll are voluntary and support the development, operation, and growth of our platform. MaiTroll is a commercial platform, not a charitable organization. Contributions are not tax-deductible charitable donations and do not provide ownership, investment returns, or guaranteed benefits.</p>
+    <h2>Refunds and support</h2>
+    <p>Because contributions are voluntary, they are generally non-refundable. We will review requests involving duplicate, unauthorized, or accidental payments and any refund required by law. Contact us through the <a href="/support">support center</a> or at <a href="mailto:ceo@maitroll.com">ceo@maitroll.com</a>. Refunds, when approved, are returned through PayPal to the original payment method.</p>
+    <p><a href="/legal/privacy">Privacy Policy</a> · <a href="/legal/terms">Terms of Service</a> · <a href="/legal/refunds">Refund &amp; Purchase Policy</a></p>
+    <noscript><p>JavaScript is required to start a PayPal checkout. The contribution details, policies, and platform information on this page are available without JavaScript.</p></noscript>
+  </main>`;
 }
 
 function getPath(req: VercelRequest): string {
@@ -118,6 +154,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       { href: '/features/broadcasting-app', label: 'MaiTroll broadcasting features' },
       { href: '/features/social-media', label: 'MaiTroll social community' },
     ])
+    if (pathname === '/donate') bodyHtml = renderDonationBody()
   }
 
   const profileMatch = pathname.match(/^\/profile\/([a-zA-Z0-9_-]{2,30})$/)
@@ -216,14 +253,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     let html = await readFile(path.join(process.cwd(), 'dist', 'index.html'), 'utf8')
-    const pageUrl = new URL(canonicalPath, APP_URL).toString()
+    const pageUrl = pathname === '/donate'
+      ? 'https://www.maitroll.com/donate'
+      : new URL(canonicalPath, APP_URL).toString()
     html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     html = html.replace(/<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${escapeHtml(description)}" />`)
     html = html.replace(/<meta\s+property=["']og:title["'][^>]*>/i, `<meta property="og:title" content="${escapeHtml(title)}" />`)
     html = html.replace(/<meta\s+property=["']og:description["'][^>]*>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`)
     html = html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${escapeHtml(pageUrl)}" />`)
     html = html.replace(/<meta\s+property=["']og:url["'][^>]*>/i, `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`)
-    if (noindex) html = html.replace('</head>', '<meta name="robots" content="noindex, nofollow" />\n  </head>')
+    html = html.replace(/<meta\s+name=["']twitter:title["'][^>]*>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`)
+    html = html.replace(/<meta\s+name=["']twitter:description["'][^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`)
+    html = html.replace(/<meta\s+name=["']twitter:image["'][^>]*>/i, '<meta name="twitter:image" content="https://www.maitroll.com/assets/maitrolllogo.png" />')
+    const robots = noindex ? 'noindex, nofollow' : 'index, follow'
+    if (/<meta\s+name=["']robots["'][^>]*>/i.test(html)) {
+      html = html.replace(/<meta\s+name=["']robots["'][^>]*>/i, `<meta name="robots" content="${robots}" />`)
+    } else {
+      html = html.replace('</head>', `<meta name="robots" content="${robots}" />\n  </head>`)
+    }
+    if (pathname === '/donate') {
+      const organizationSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'MaiTroll',
+        url: 'https://www.maitroll.com',
+        logo: 'https://www.maitroll.com/assets/maitrolllogo.png',
+      }
+      html = html.replace('</head>', `<script type="application/ld+json">${JSON.stringify(organizationSchema)}</script>\n  </head>`)
+    }
     if (bodyHtml) html = html.replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`)
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300')

@@ -14,17 +14,30 @@ export async function fetchUserWeather(latitude?: number, longitude?: number): P
     let lon = longitude;
 
     if (!lat || !lon) {
-      // Try to get from geolocation
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 5000,
-          maximumAge: 300000 // 5 minutes cache
+      // Try to get from geolocation. A denied/blocked geolocation is not an
+      // error -- fall back to the default weather below.
+      let geoError: GeolocationPositionError | null = null;
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 5000,
+            maximumAge: 300000 // 5 minutes cache
+          });
         });
-      });
-      lat = position.coords.latitude;
-      lon = position.coords.longitude;
-    }
+        lat = position.coords.latitude;
+        lon = position.coords.longitude;
+      } catch (err) {
+        geoError = err as GeolocationPositionError;
+      }
 
+      if (geoError) {
+        // A denied/blocked geolocation is not an error -- fall back to default
+        const isPermissionDenied = geoError?.code === 1; // PERMISSION_DENIED
+        if (!isPermissionDenied) {
+          console.warn('[Weather] Geolocation unavailable, using default:', geoError.message);
+        }
+      }
+    }
     // Use Open-Meteo (free, no API key needed)
     const response = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,windspeed_10m,weathercode,is_day&timezone=auto`

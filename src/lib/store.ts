@@ -347,20 +347,25 @@ function announceGlobalEvent(event: { title: string; icon: string; priority: num
 
   // Route through the SECURITY DEFINER RPC instead of a direct INSERT so
   // that the database never accepts writes from an anonymous client.
-  supabase.rpc('create_global_event', {
-    p_type: 'system',
-    p_title: event.title,
-    p_icon: event.icon,
-    p_priority: event.priority,
-    p_dedupe_key: `system:${event.title.toLowerCase()}`,
-    p_source: 'auth',
-  }).then(({ error }) => {
-    if (error) {
-      console.error('Failed to announce global event:', error)
+  void (async () => {
+    try {
+      const { error } = await supabase.rpc('create_global_event', {
+        p_type: 'system',
+        p_title: event.title,
+        p_icon: event.icon,
+        p_priority: event.priority,
+        p_metadata: {
+          dedupe_key: `system:${event.title.toLowerCase()}`,
+          source: 'auth',
+        },
+      })
+      if (error) {
+        console.error('Failed to announce global event:', error)
+      }
+    } catch (err) {
+      console.error('Failed to announce global event (unhandled):', err)
     }
-  }).catch((err) => {
-    console.error('Failed to announce global event (unhandled):', err)
-  })
+  })()
 }
 
 function areProfilesShallowEqual(a: Partial<UserProfile> | null, b: Partial<UserProfile> | null) {
@@ -1248,8 +1253,6 @@ export async function initAuthAndData() {
 
   return initPromise
 }
-
-
 
 
 

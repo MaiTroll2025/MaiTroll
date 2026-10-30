@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase, ensureSupabaseSession, UserProfile } from '@/lib/supabase'
+import { supabase, UserProfile } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { toast } from 'sonner'
 
@@ -77,14 +77,12 @@ export function useCoins() {
          return
        }
 
-       if (!session?.user?.id) {
-         console.debug('[useCoins] Skipping coin refresh: no session yet')
-         return
-       }
+        if (!session?.user?.id) {
+          console.debug('[useCoins] Skipping coin refresh: no session yet')
+          return
+        }
 
-       await ensureSupabaseSession(supabase)
-
-         const { data: profileData, error: profileError } = await supabase
+          const { data: profileData, error: profileError } = await supabase
            .from('user_profiles')
            .select('troll_coins, hype_coins, total_earned_coins, total_spent_coins, battle_crowns')
            .eq('id', user.id)

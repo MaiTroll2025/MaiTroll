@@ -82,7 +82,7 @@ export default function RtcAdminMonitorGate({
         </div>
       }
     >
-      <RTCAdminMonitor fullPage={fullPage} onClose={onClose} />
+      <RTCAdminMonitor fullPage={fullPage} onClose={onClose} canViewClickAnalytics />
     </Suspense>
   )
 }

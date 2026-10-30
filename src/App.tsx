@@ -207,6 +207,7 @@ const SEOFAQPage = lazyWithRetry(() => import("./pages/seo/FAQPage"));
 const SEOPrivacyPage = lazyWithRetry(() => import("./pages/seo/PrivacyPage"));
 const SEOTermsPage = lazyWithRetry(() => import("./pages/seo/TermsPage"));
 const SEOAppDownloadsPage = lazyWithRetry(() => import("./pages/seo/AppDownloadsPage"));
+const SEODonatePage = lazyWithRetry(() => import("./pages/seo/DonatePage"));
 const SEOForumPage = lazyWithRetry(() => import("./pages/seo/ForumPage"));
 const SEOForumPostPage = lazyWithRetry(() => import("./pages/seo/ForumPostPage"));
 // Insights page
@@ -1755,6 +1756,7 @@ const appShell = (
                 <Route path="/privacy" element={<SEOPrivacyPage />} />
                 <Route path="/terms" element={<SEOTermsPage />} />
                 <Route path="/app-downloads" element={<SEOAppDownloadsPage />} />
+                <Route path="/donate" element={<SEODonatePage />} />
                 <Route path="/community" element={<SEOForumPage />} />
                 <Route path="/community/post/:postId" element={<SEOForumPostPage />} />
                 <Route path="/insights" element={<SEOInsightsPage />} />

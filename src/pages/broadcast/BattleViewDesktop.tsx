@@ -350,7 +350,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md"
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
             >
               <motion.div
                 initial={{ scale: 0.9, y: 20 }}
@@ -476,7 +476,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
         )}
 
         {/* Mobile Bottom Action Bar */}
-        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-t border-white/10" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-t border-white/10" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
           <div className="flex items-center justify-around px-4 py-3">
             {/* Chat Button */}
             <button
@@ -564,7 +564,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="xl:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md"
+              className="lg:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md"
               onClick={() => setShowMobileChat(false)}
             >
               <motion.div
@@ -598,7 +598,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
       </main>
 
       {/* RIGHT CHAT PANEL — system activity + battle chat (desktop) */}
-      <aside className="hidden w-80 shrink-0 flex-col border-l border-purple-500/20 bg-zinc-950/80 xl:flex">
+      <aside className="hidden w-80 shrink-0 flex-col border-l border-purple-500/20 bg-zinc-950/80 lg:flex">
         <BattleActivityFeed
           battleId={battleId}
           challengerName={challengerStream?.title}
